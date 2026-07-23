@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0d0a18">
+<title>善缘 · 旺运头像</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0a18;--card:#15112a;--mid:#1e1938;
+  --jade:#5bbfa0;--gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
+  --purple:#9b6fd4;--purple-mid:#c4a0f0;
+  --text:rgba(235,225,255,0.88);--sub:rgba(190,170,230,0.48);
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:120px;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 50% -5%,rgba(155,111,212,0.13) 0%,transparent 55%),
+             radial-gradient(ellipse at 90% 80%,rgba(201,168,76,0.05) 0%,transparent 45%);
+  pointer-events:none;z-index:0}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(155,111,212,0.55);cursor:pointer}
+
+/* header */
+.header{position:relative;z-index:1;text-align:center;padding:52px 20px 24px}
+.header-icon{font-size:46px;display:block;margin-bottom:10px;animation:float 4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.header-title{font-size:22px;font-weight:400;letter-spacing:0.26em}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;letter-spacing:0.2em;color:var(--purple-mid);opacity:0.65;margin-top:6px}
+.deco-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--purple),var(--gold),transparent);margin:14px auto 0}
+
+/* section wrapper */
+.section{position:relative;z-index:1;padding:0 16px;margin-bottom:18px}
+.sec-label{font-size:10px;letter-spacing:0.22em;color:var(--sub);margin-bottom:10px}
+
+/* element cards */
+.elem-row{display:flex;gap:7px}
+.elem-card{flex:1;background:var(--card);border:1.5px solid rgba(255,255,255,0.07);border-radius:10px;padding:10px 4px;text-align:center;cursor:pointer;transition:all 0.22s;position:relative;overflow:hidden}
+.elem-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.22s;border-radius:9px}
+.elem-card.active::before{opacity:1}
+.elem-card:active{transform:scale(0.94)}
+.elem-emoji{font-size:20px;display:block;margin-bottom:4px}
+.elem-name{font-size:11px;letter-spacing:0.08em;color:var(--sub)}
+.elem-dot{width:6px;height:6px;border-radius:50%;margin:5px auto 0}
+.elem-card.active .elem-name{color:var(--text)}
+
+/* water */
+.elem-card[data-e="水"].active{border-color:rgba(80,160,255,0.6);box-shadow:0 0 16px rgba(30,100,200,0.3)}
+.elem-card[data-e="水"].active::before{background:rgba(30,100,200,0.1)}
+/* wood */
+.elem-card[data-e="木"].active{border-color:rgba(80,200,80,0.6);box-shadow:0 0 16px rgba(60,160,60,0.3)}
+.elem-card[data-e="木"].active::before{background:rgba(60,160,60,0.1)}
+/* fire */
+.elem-card[data-e="火"].active{border-color:rgba(255,100,40,0.6);box-shadow:0 0 16px rgba(200,60,20,0.3)}
+.elem-card[data-e="火"].active::before{background:rgba(200,60,20,0.1)}
+/* earth */
+.elem-card[data-e="土"].active{border-color:rgba(200,150,40,0.6);box-shadow:0 0 16px rgba(180,120,20,0.3)}
+.elem-card[data-e="土"].active::before{background:rgba(180,120,20,0.1)}
+/* metal */
+.elem-card[data-e="金"].active{border-color:rgba(200,200,200,0.6);box-shadow:0 0 16px rgba(180,180,180,0.3)}
+.elem-card[data-e="金"].active::before{background:rgba(180,180,180,0.08)}
+
+/* style tabs */
+.style-section{display:none;animation:slideIn 0.3s ease}
+.style-section.show{display:block}
+@keyframes slideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.style-tabs{display:flex;background:var(--card);border-radius:8px;padding:3px;gap:3px;border:1px solid rgba(155,111,212,0.1)}
+.style-tab{flex:1;padding:9px 0;border-radius:6px;text-align:center;cursor:pointer;font-size:12px;letter-spacing:0.1em;color:var(--sub);transition:all 0.2s}
+.style-tab.active{background:linear-gradient(135deg,rgba(155,111,212,0.25),rgba(201,168,76,0.15));color:var(--text);border:1px solid rgba(155,111,212,0.3)}
+.style-desc{font-size:10px;color:var(--sub);text-align:center;margin-top:8px;line-height:1.7;letter-spacing:0.04em}
+
+/* upload */
+.upload-box{background:var(--card);border:1.5px dashed rgba(155,111,212,0.2);border-radius:10px;padding:22px 16px;text-align:center;cursor:pointer;transition:border-color 0.2s;position:relative}
+.upload-box:active{border-color:var(--purple)}
+.upload-box.has-img{border-style:solid;border-color:rgba(155,111,212,0.35)}
+.upload-icon{font-size:28px;margin-bottom:7px;display:block}
+.upload-txt{font-size:12px;color:var(--text);letter-spacing:0.06em;margin-bottom:3px}
+.upload-hint{font-size:9px;color:var(--sub);letter-spacing:0.04em}
+input[type=file]{display:none}
+.thumb-preview{width:64px;height:64px;border-radius:50%;object-fit:cover;margin:0 auto 8px;display:block;border:2px solid rgba(155,111,212,0.4)}
+
+/* generate btn */
+.gen-btn{width:100%;padding:15px 0;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light));border:none;border-radius:5px;color:rgba(13,10,24,0.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:0.2em;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,0.25);transition:opacity 0.2s}
+.gen-btn:disabled{opacity:0.35;cursor:not-allowed}
+
+/* loading */
+.loading-wrap{display:none;position:relative;z-index:1;text-align:center;padding:52px 20px}
+.loading-wrap.show{display:block}
+.spin-ring{width:64px;height:64px;margin:0 auto 18px;border-radius:50%;border:2px solid rgba(155,111,212,0.15);border-top-color:var(--purple);animation:spin 0.9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-step{font-size:11px;color:var(--sub);letter-spacing:0.12em;margin-top:10px;opacity:0;transition:opacity 0.4s}
+.load-step.show{opacity:1}
+
+/* results */
+.results{display:none;position:relative;z-index:1}
+.results.show{display:block;animation:fadeUp 0.45s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.result-title{text-align:center;font-size:14px;letter-spacing:0.14em;padding:8px 0 16px;color:var(--gold-light)}
+.avatar-main-wrap{text-align:center;margin-bottom:20px}
+.avatar-main{width:130px;height:130px;border-radius:50%;margin:0 auto;display:flex;align-items:center;justify-content:center;font-size:58px;border:2px solid rgba(201,168,76,0.3);box-shadow:0 0 30px rgba(201,168,76,0.15),0 0 60px rgba(155,111,212,0.1)}
+.avatar-label{font-size:10px;color:var(--sub);margin-top:10px;letter-spacing:0.1em}
+.avatar-label span{font-family:'Cormorant Garamond',serif;font-style:italic;color:var(--gold);font-size:13px;margin-left:4px}
+
+.variants-row{display:flex;justify-content:center;gap:14px;margin-bottom:20px}
+.variant{text-align:center;cursor:pointer}
+.variant-circle{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:26px;border:1.5px solid rgba(201,168,76,0.15);margin:0 auto 5px;transition:transform 0.2s,border-color 0.2s}
+.variant-circle:active{transform:scale(0.92)}
+.variant-circle.selected{border-color:var(--gold);box-shadow:0 0 12px rgba(201,168,76,0.3)}
+.variant-num{font-size:9px;color:var(--sub)}
+
+.result-actions{padding:0 16px;display:flex;gap:8px;margin-bottom:16px}
+.dl-btn{flex:1;padding:13px 0;background:linear-gradient(135deg,var(--gold-deep),var(--gold));border:none;border-radius:4px;color:rgba(13,10,24,0.95);font-family:'Noto Serif SC',serif;font-size:13px;font-weight:500;letter-spacing:0.14em;cursor:pointer}
+.regen-btn{padding:13px 16px;background:none;border:1px solid rgba(155,111,212,0.3);border-radius:4px;color:var(--purple-mid);font-family:'Noto Serif SC',serif;font-size:12px;letter-spacing:0.1em;cursor:pointer}
+
+.share-row{margin:0 16px 16px;background:var(--card);border:1px solid rgba(155,111,212,0.12);border-radius:8px;padding:14px;text-align:center}
+.share-txt{font-size:11px;color:var(--sub);margin-bottom:10px;line-height:1.7}
+.share-btns{display:flex;gap:8px;justify-content:center}
+.share-btn{padding:7px 16px;background:rgba(155,111,212,0.1);border:1px solid rgba(155,111,212,0.2);border-radius:16px;font-size:11px;color:var(--purple-mid);letter-spacing:0.06em;cursor:pointer}
+.preview-note{font-size:9px;color:rgba(190,170,230,0.3);text-align:center;margin-bottom:16px;letter-spacing:0.06em}
+
+/* upsell */
+.upsell-card{margin:0 16px;background:linear-gradient(135deg,rgba(155,111,212,0.1),rgba(201,168,76,0.06));border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:16px}
+.upsell-tag{font-size:9px;letter-spacing:0.18em;color:var(--gold);border:1px solid rgba(201,168,76,0.25);padding:3px 10px;border-radius:8px;display:inline-block;margin-bottom:8px}
+.upsell-title{font-size:14px;letter-spacing:0.1em;margin-bottom:6px}
+.upsell-desc{font-size:10px;color:var(--sub);line-height:1.8;margin-bottom:12px;letter-spacing:0.02em}
+.upsell-price{display:flex;align-items:baseline;gap:8px;margin-bottom:12px}
+.upsell-amount{font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--gold)}
+.upsell-or{font-size:10px;color:var(--sub)}
+.upsell-free{font-size:11px;color:var(--jade);border:1px solid rgba(91,191,160,0.25);padding:2px 8px;border-radius:8px}
+.upsell-btn{width:100%;padding:12px 0;background:linear-gradient(135deg,rgba(155,111,212,0.8),var(--purple));border:none;border-radius:4px;color:#fff;font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:0.16em;cursor:pointer}
+
+/* sticky bar */
+.sticky-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:390px;padding:12px 16px 24px;background:linear-gradient(180deg,transparent,rgba(13,10,24,0.97) 30%);z-index:90}
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">← 返回</button>
+
+<div class="header">
+  <span class="header-icon">🌟</span>
+  <div class="header-title">旺运头像</div>
+  <div class="header-sub">五行注能 · AI生成专属旺运形象</div>
+  <div class="deco-line"></div>
+</div>
+
+<!-- 五行选择 -->
+<div class="section">
+  <div class="sec-label">第一步 · 选择您的五行</div>
+  <div class="elem-row">
+    <div class="elem-card" data-e="水" onclick="selectElem(this)">
+      <span class="elem-emoji">💧</span>
+      <div class="elem-name">水</div>
+      <div class="elem-dot" style="background:#4a90e2"></div>
+    </div>
+    <div class="elem-card" data-e="木" onclick="selectElem(this)">
+      <span class="elem-emoji">🌿</span>
+      <div class="elem-name">木</div>
+      <div class="elem-dot" style="background:#4cae4c"></div>
+    </div>
+    <div class="elem-card" data-e="火" onclick="selectElem(this)">
+      <span class="elem-emoji">🔥</span>
+      <div class="elem-name">火</div>
+      <div class="elem-dot" style="background:#e05c2a"></div>
+    </div>
+    <div class="elem-card" data-e="土" onclick="selectElem(this)">
+      <span class="elem-emoji">🪨</span>
+      <div class="elem-name">土</div>
+      <div class="elem-dot" style="background:#c9a030"></div>
+    </div>
+    <div class="elem-card" data-e="金" onclick="selectElem(this)">
+      <span class="elem-emoji">⚪</span>
+      <div class="elem-name">金</div>
+      <div class="elem-dot" style="background:#b0b0b0"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 风格选择 -->
+<div class="section style-section" id="styleSection">
+  <div class="sec-label">第二步 · 选择风格</div>
+  <div class="style-tabs">
+    <div class="style-tab active" id="tabAnime" onclick="selectStyle('anime')">动漫风</div>
+    <div class="style-tab" id="tabInk" onclick="selectStyle('ink')">水墨风</div>
+  </div>
+  <div class="style-desc" id="styleDesc">精致日系动漫画风，五行灵气融入发色与服饰，生动活泼</div>
+</div>
+
+<!-- 照片上传 -->
+<div class="section style-section" id="uploadSection">
+  <div class="sec-label">第三步 · 上传照片（选填）</div>
+  <label class="upload-box" for="photoInput" id="uploadBox">
+    <span class="upload-icon" id="uploadIcon">📸</span>
+    <div class="upload-txt" id="uploadTxt">点击上传 或 拍照</div>
+    <div class="upload-hint">上传照片提升相似度，不上传则生成通用旺运头像</div>
+  </label>
+  <input type="file" id="photoInput" accept="image/*" capture="user" onchange="handlePhoto(this)">
+</div>
+
+<!-- 生成按钮 -->
+<div class="section" id="genSection" style="display:none">
+  <button class="gen-btn" id="genBtn" onclick="generate()">生成我的旺运头像 · $9.9</button>
+</div>
+
+<!-- Loading -->
+<div class="loading-wrap" id="loadingWrap">
+  <div class="spin-ring" id="spinRing"></div>
+  <div class="load-step" id="ls1">① 分析您的五行能量…</div>
+  <div class="load-step" id="ls2">② AI融合旺运元素…</div>
+  <div class="load-step" id="ls3">③ 渲染专属灵气…</div>
+</div>
+
+<!-- Results -->
+<div class="results" id="results">
+  <div class="result-title" id="resultTitle">您的旺运头像</div>
+
+  <div class="avatar-main-wrap">
+    <div class="avatar-main" id="avatarMain"></div>
+    <div class="avatar-label">主推款<span id="avatarStyleLabel"></span></div>
+  </div>
+
+  <div class="variants-row" id="variantsRow"></div>
+
+  <div class="result-actions">
+    <button class="dl-btn" onclick="downloadAvatar()">下载头像</button>
+    <button class="regen-btn" onclick="regenerate()">重新生成</button>
+  </div>
+
+  <div class="share-row">
+    <div class="share-txt">分享给朋友，让TA也生成旺运头像<br>好运一起旺 ✨</div>
+    <div class="share-btns">
+      <div class="share-btn" onclick="shareWechat()">微信分享</div>
+      <div class="share-btn" onclick="copyLink()">复制链接</div>
+    </div>
+  </div>
+
+  <div class="preview-note">真实AI头像生成需上传照片，当前为预览版效果展示</div>
+
+  <div class="upsell-card">
+    <div class="upsell-tag">升级体验</div>
+    <div class="upsell-title">真人照片变身旺运头像</div>
+    <div class="upsell-desc">上传您的真实照片，AI保留您的面容特征，同时融入五行旺运灵气元素，生成专属于您的旺运形象</div>
+    <div class="upsell-price">
+      <div class="upsell-amount">$19.9</div>
+      <div class="upsell-or">/张，或</div>
+      <div class="upsell-free">会员免费</div>
+    </div>
+    <button class="upsell-btn" onclick="window.location.href='member.html'">立即体验 →</button>
+  </div>
+</div>
+
+<script>
+const ELEM_DATA = {
+  水:{bg:'linear-gradient(135deg,#0a2a6e,#1a4a9e,#2a6abe)',ring:'rgba(30,100,200,0.6)',emojis:['🌊','💙','🔮'],name:'水命'},
+  木:{bg:'linear-gradient(135deg,#0a2a0e,#1a5a1e,#2a8a3e)',ring:'rgba(60,160,60,0.6)',emojis:['🌸','🍃','🎋'],name:'木命'},
+  火:{bg:'linear-gradient(135deg,#5a1a0a,#8a2a0e,#c04a20)',ring:'rgba(200,60,20,0.6)',emojis:['🌅','🌺','✨'],name:'火命'},
+  土:{bg:'linear-gradient(135deg,#3a2a0a,#6a4a0e,#9a7030)',ring:'rgba(180,120,20,0.6)',emojis:['🌾','🍂','🏯'],name:'土命'},
+  金:{bg:'linear-gradient(135deg,#2a2a3a,#4a4a6a,#7a7aaa)',ring:'rgba(180,180,220,0.6)',emojis:['🤍','❄️','🦢'],name:'金命'},
+};
+const STYLE_DESC = {
+  anime:'精致日系动漫画风，五行灵气融入发色与服饰，生动活泼',
+  ink:'传统中国水墨画风，写意留白，古典仙气感十足',
+};
+
+let curElem = null, curStyle = 'anime', curVariant = 0;
+
+function selectElem(el){
+  document.querySelectorAll('.elem-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  curElem = el.dataset.e;
+  document.getElementById('styleSection').classList.add('show');
+  document.getElementById('uploadSection').classList.add('show');
+  document.getElementById('genSection').style.display='block';
+  document.getElementById('spinRing').style.borderTopColor = ELEM_DATA[curElem].ring;
+}
+
+function selectStyle(s){
+  curStyle = s;
+  document.getElementById('tabAnime').classList.toggle('active', s==='anime');
+  document.getElementById('tabInk').classList.toggle('active', s==='ink');
+  document.getElementById('styleDesc').textContent = STYLE_DESC[s];
+}
+
+function handlePhoto(input){
+  if(!input.files[0]) return;
+  const url = URL.createObjectURL(input.files[0]);
+  const box = document.getElementById('uploadBox');
+  box.classList.add('has-img');
+  box.innerHTML = `<img class="thumb-preview" src="${url}"><div class="upload-txt">照片已上传</div><div class="upload-hint">将提升头像相似度</div>`;
+}
+
+function generate(){
+  if(!curElem) return;
+  document.getElementById('genSection').style.display='none';
+  document.getElementById('styleSection').style.display='none';
+  document.getElementById('uploadSection').style.display='none';
+  document.querySelector('.section:first-of-type').style.display='none';
+  const lw = document.getElementById('loadingWrap');
+  lw.classList.add('show');
+  ['ls1','ls2','ls3'].forEach((id,i)=>setTimeout(()=>document.getElementById(id).classList.add('show'),(i+1)*700));
+  setTimeout(showResults, 2600);
+}
+
+function showResults(){
+  document.getElementById('loadingWrap').classList.remove('show');
+  const d = ELEM_DATA[curElem];
+  document.getElementById('resultTitle').textContent = `您的${d.name}旺运头像`;
+  const main = document.getElementById('avatarMain');
+  main.style.background = d.bg;
+  main.textContent = d.emojis[0];
+  main.style.boxShadow = `0 0 30px ${d.ring.replace('0.6','0.25')}, 0 0 60px rgba(155,111,212,0.1)`;
+  document.getElementById('avatarStyleLabel').textContent = curStyle==='anime'?' 动漫款':' 水墨款';
+
+  // variants
+  const vr = document.getElementById('variantsRow');
+  vr.innerHTML = d.emojis.map((e,i)=>
+    `<div class="variant" onclick="selectVariant(${i})">
+      <div class="variant-circle ${i===0?'selected':''}" id="vc${i}" style="background:${d.bg};">${e}</div>
+      <div class="variant-num">款式${i+1}</div>
+    </div>`
+  ).join('');
+  document.getElementById('results').classList.add('show');
+}
+
+function selectVariant(i){
+  const d = ELEM_DATA[curElem];
+  document.querySelectorAll('.variant-circle').forEach((c,j)=>c.classList.toggle('selected',j===i));
+  document.getElementById('avatarMain').textContent = d.emojis[i];
+  curVariant = i;
+}
+
+function downloadAvatar(){
+  alert('正在准备下载…\n（完整功能即将上线）');
+}
+
+function regenerate(){
+  location.reload();
+}
+
+function shareWechat(){
+  if(navigator.share){
+    navigator.share({title:'我的旺运头像',text:`我刚用善缘生成了专属${ELEM_DATA[curElem].name}旺运头像，你也来试试！`,url:location.href});
+  } else {
+    alert('请截图分享给朋友 ✨');
+  }
+}
+
+function copyLink(){
+  navigator.clipboard.writeText(location.href).then(()=>alert('链接已复制！'));
+}
+</script>
+</body>
+</html>
