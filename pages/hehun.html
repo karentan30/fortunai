@@ -27,7 +27,7 @@ body::before{content:'';position:fixed;inset:0;
 .back-btn:hover{color:var(--rose)}
 
 /* ── header ── */
-.header{position:relative;z-index:1;text-align:center;padding:60px 20px 24px}
+.header{position:relative;z-index:1;text-align:center;padding:60px 20px 28px}
 .header-smoke{width:100px;height:80px;margin:0 auto 14px;display:flex;gap:12px;justify-content:center;align-items:flex-end}
 .smoke-col{display:flex;flex-direction:column;gap:8px}
 .smoke-particle{width:3px;border-radius:1px;background:linear-gradient(to top,rgba(208,120,145,0.5),transparent);
@@ -73,7 +73,9 @@ body::before{content:'';position:fixed;inset:0;
 
 /* submit */
 .submit-wrap{padding:14px 16px 0;position:relative;z-index:1}
-.btn-calc{width:100%;padding:14px 0;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light));border:none;border-radius:5px;color:rgba(15,8,10,0.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:0.2em;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,0.2)}
+.btn-calc{width:100%;padding:14px 0;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light));border:none;border-radius:6px;color:rgba(15,8,10,0.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:0.2em;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,0.2);transition:all 0.2s;transform:translateY(0)}
+.btn-calc:hover{box-shadow:0 6px 28px rgba(201,168,76,0.35);transform:translateY(-1px)}
+.btn-calc:active{transform:translateY(0)}
 
 /* loading */
 .loading-wrap{display:none;position:relative;z-index:1;text-align:center;padding:52px 20px}
@@ -398,7 +400,7 @@ function startCalc(){
   if(!ay||!by){ alert('请选择两人的出生年份'); return; }
   document.getElementById('inputScreen').style.display='none';
   document.getElementById('loadingWrap').classList.add('show');
-  setTimeout(()=>showResults(ay,by), 2500);
+  setTimeout(()=>showResults(ay,by), 3200);
 }
 
 function showResults(ay,by){
@@ -440,47 +442,67 @@ function showResults(ay,by){
   document.getElementById('scoreGrade').textContent=grade[0];
   document.getElementById('scoreSub').textContent=grade[1];
 
-  // 你们的故事 - 麦玲玲风格叙事
+  // 辅助函数：安全的月份计算（保证范围1-12）
+  const safeMonth = (base, offset) => {
+    let m = (base + offset - 1) % 12 + 1;
+    return Math.max(1, Math.min(12, m));
+  };
+  const m1 = safeMonth(6, Math.abs((ay+by)%4));
+  const m2 = safeMonth(8, Math.abs((ay+by)%3));
+  const m3 = safeMonth(5, Math.abs((ay-by)%4));
+  const m4 = safeMonth(9, Math.abs((ay+by)%3));
+  const m5 = safeMonth(7, Math.abs((am*by)%5));
+  const m6 = safeMonth(8, Math.abs((am*by)%4));
+  const m7 = safeMonth(10, Math.abs((ay+by)%2));
+
+  // 你们的故事 - 麦玲玲风格叙事（先坏后救的完整弧线）
   const storyLines = score>=85 ? [
-    `你们是命中注定的一对。${ay}年与${by}年的两人，八字天生相合，五行相生，就像是为彼此而生。`,
-    `${rel.includes('大吉')?'你们的五行'+aElem+'与'+bElem+'相生，能量互补，相伴相持。':'五行虽有细微差异，却能互相完善。'}`,
-    `建议：在${6+Math.abs((ay+by)%4)}月前后，选一个吉日举行婚礼。佩戴配对的水晶（TA戴紫晶，你戴粉晶），卧室朝向${['东','南','西','北'][(ay+by)%4]}方，能强化两人的感情磁场。`
+    `你们是命中注定的一对。${ay}年与${by}年的两人，八字天生相合，${aElem}与${bElem}相生相助，就像是为彼此而生的灵魂伴侣。`,
+    `命格高度契合，感情磁场相通。你们不仅在爱情上互补，更在人生的每个阶段都能相扶相持、共同成长。这样的缘分，世间罕见。`,
+    `🔮 行动建议：在**${m1}月**前后，选择一个吉日举行婚礼——这是你们婚运最旺的时刻。卧室朝向${['东','南','西','北'][(ay+by)%4]}方放置开光水晶，能进一步强化两人的感情磁场。这不只是形式，而是用八字智慧护佑你们的婚姻。`
   ] : score>=70 ? [
-    `你们有着稳固的缘分基础。${ay}年生的你，与${by}年生的TA，命格相合，感情频率接近。`,
-    `这样的搭配需要用心经营。${rel.includes('大吉')?'幸运的是，你们的五行'+aElem+'与'+bElem+'相生，能自然补足彼此的能量。':'你们的五行虽略有克制，但可通过用心化解。'}`,
-    `建议：在${8+Math.abs((ay+by)%3)}月选吉日举办仪式。家中${['东北','西南','东南','西北'][(ay+by)%4]}位置放置开光水晶，定期沟通感情，共同成长。`
+    `你们有着稳固的缘分基础。${ay}年生的你，与${by}年生的TA，命格相合度高，感情频率接近——这是顺畅婚姻的基础。`,
+    `唯一需要用心的是经营。${rel.includes('大吉')?`幸运的是，你们的${aElem}与${bElem}五行相生，能自然补足彼此的能量——你们只需要给彼此一点耐心。`:`你们的五行虽略有克制，但这恰好能形成互补。关键是彼此理解。`}`,
+    `🔮 行动建议：在**${m2}月**选择一个吉日举办仪式。家中${['东北','西南','东南','西北'][(ay+by)%4]}位置放置开光水晶球，让家运稳定。最重要的是：定期坦诚沟通，把感情当作生活中最珍贵的种子来浇灌。`
   ] : score>=55 ? [
-    `你们的缘分需要双方用心灌溉。${ay}年与${by}年，两人命格虽有差异，但这种差异正是互补的机会。`,
-    `你们的${rel.includes('克')?'五行有所冲克，但并非绝对':'五行平稳相处，需细心体察'}。这正是考验你们真心的时刻。`,
-    `建议：先在${5+Math.abs((ay-by)%4)}月完成登记，大婚可考虑选在${9+Math.abs((ay+by)%3)}月的吉日。佩戴化煞的黑曜石，家中摆放五帝钱，能化解两人的冲克。咨询大师获取更多化解方案。`
+    `你们的缘分需要双方用心灌溉。${ay}年与${by}年，两人命格存在差异，但这种差异正是**互补**的机会——你的不足正好是TA的优势。`,
+    `坦诚说：五行有所${rel.includes('克')?'冲克，但这并非绝对的障碍':'克制，需要细心体察'}。这是考验你们真心的时刻。如果你们愿意为彼此改变一点、妥协一点，就能化解所有障碍。`,
+    `🔮 行动建议：先在**${m3}月**完成登记，让法律力量帮助稳定这份缘分。大婚可考虑选在**${m4}月**的吉日。佩戴黑曜石手链化煞，家中客厅摆放五帝钱，这些都是化解命理冲克的具体方式。强烈建议咨询大师获取个性化的化解方案。`
   ] : [
-    `你们的命格存在一定的冲突，但这并不意味着不能相守。${ay}年与${by}年的组合需要更多的用心和理解。`,
-    `五行${aElem}与${bElem}有克制关系。这时刻考验你们对彼此的承诺。`,
-    `强烈建议咨询大师获取专业的化解方案。通过选择恰当的吉日婚配、佩戴开光饰品、调整家中风水，可以大幅改善你们的命理契合度。`
+    `你们的命格存在一定的冲突。这不是诅咒，而是**考验**。许多伟大的爱情，恰好因为有冲突才变得珍贵——因为需要用心去克服，所以弥足珍贵。`,
+    `五行${aElem}与${bElem}有克制关系，这意味着你们的婚姻需要**更多的自觉和努力**。但如果你们愿意相信彼此，任何困难都可以化解。`,
+    `🔮 行动建议：**强烈建议您咨询专业大师**，获取针对你们组合的个性化化解方案。通过选择最佳婚配吉日（建议**${m4}月**）、佩戴开光护身符、调整家中风水方位等多管齐下，可以大幅改善你们的命理契合度。记住：没有绝对的不合适，只有不够用心的爱情。`
   ];
 
-  document.getElementById('storyText').innerHTML = storyLines.map(line=>line.replace(/(\d月)/g,'<strong>$1</strong>')).join('<br/><br/>');
+  document.getElementById('storyText').innerHTML = storyLines.map(line=>line.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')).join('<br/><br/>');
 
   // 六维 - 麦玲玲风格具体建议
+  const m_love = safeMonth(6, Math.abs((ay+am)%3));
+  const m_money = safeMonth(9, Math.abs((ay*3)%3));
+  const m_life = safeMonth(6, Math.abs((ay+ad)%2));
+  const m_child1 = safeMonth(7, Math.abs((am*by)%5));
+  const m_child2 = safeMonth(8, Math.abs((am*by)%4));
+  const m_career = safeMonth(10, Math.abs((ay+by)%2));
+
   const DIMS=[
     {icon:'💕',name:'感情契合度',base:det(ay+am,by+bm,58,96),
-      desc_hi:`两人情感频率相近，容易产生心灵共鸣。建议在${6+Math.abs((ay+am)%3)}月后的吉日表达深层感受，穿着${['玫粉','酒红','宝蓝'][(ay+am)%3]}色会增强亲密度。`,
-      desc_lo:`需要主动沟通，用心理解对方。卧室床头朝向${['西','东','南','北'][(ay+am)%4]}方，放置粉晶球，有助于增进感情。`},
+      desc_hi:`两人情感频率相近，心灵共鸣自然产生。建议在**${m_love}月**选一个吉日，对彼此坦诚表达内心最深的想法——这个月份，你们的沟通能量特别强。穿着粉色或酒红色会进一步增强亲密度。`,
+      desc_lo:`需要主动开启沟通。卧室床头朝向${['西','东','南','北'][(ay+am)%4]}方放置一块粉晶球，每周用它冥想两人的感情——这是古老的能量调谐法，能帮助你们更快理解彼此。`},
     {icon:'💰',name:'财运相合度',base:det(ay*3,by*3,52,92),
-      desc_hi:`财运互补，共同理财可积累丰厚家产。建议联合投资在${9+Math.abs((ay*3)%3)}月，钱包放金色玉带，吸纳共同财运。`,
-      desc_lo:`理财观念有差异。婚前坦诚沟通，财务独立各占50%。客厅西南角放黄水晶球，招揽家庭财气。`},
+      desc_hi:`两人财运互补，共同管理资金能积累丰厚家产。建议在**${m_money}月**启动联合投资计划，钱包里放一条金色玉带，寓意金运相伴。`,
+      desc_lo:`理财观念存在差异，这并不稀奇。婚前必须坦诚沟通财务目标，建议财务各占50%独立。客厅西南角放黄水晶球，每天看一眼提醒自己：金钱是为了共同的梦想。`},
     {icon:'🏠',name:'生活默契度',base:det(ay+ad,by+bd,55,94),
-      desc_hi:`生活习惯相近，日常相处轻松自然。家中${['东南','西北','东','西'][(ay+ad)%4]}位宜放绿植，增强生活的生机与和谐。`,
-      desc_lo:`生活节奏略有差异，需要磨合。建议每周定下两个"陪伴时间"，家中卧室避免${['子','午','卯','酉'][(ay+ad)%4]}方位，减少摩擦。`},
+      desc_hi:`生活习惯相近，日常相处轻松自然。家中${['东南','西北','东','西'][(ay+ad)%4]}位放置绿植，增强生活的生机感——这不只是装饰，而是用植物的生长力来强化家中的和谐之气。`,
+      desc_lo:`生活节奏略有差异，需要耐心磨合。建议每周定下两个"陪伴时间"，不看手机，只看彼此。家中卧室最好避免${['北','南','东','西'][(ay+ad)%4]}方位放置冰冷的金属物品，用温暖的木制家具取代。`},
     {icon:'👶',name:'子嗣缘分',base:det(am*by,bm*ay,60,95),
-      desc_hi:`子嗣缘分深厚。建议在${7+Math.abs((am*by)%5)}月开始备孕，佩戴白水晶或玉观音，有助好孕降临。`,
-      desc_lo:`子嗣需等待时机。先调理身体，${8+Math.abs((am*by)%4)}月起配合贵人时节备孕。家中北方放置开光麒麟，护佑后代。`},
+      desc_hi:`子嗣缘分深厚，天注定会有健康聪慧的孩子。建议在**${m_child1}月**开始备孕准备，佩戴白水晶或玉观音吊坠，这是催旺子嗣最直接的方式。`,
+      desc_lo:`子嗣需要等待时机成熟。先用**${m_child2}月**开始调理身体，与此同时家中北方放置一尊开光麒麟摆件——它是护佑子嗣最强的灵物。耐心等待，好孕必然降临。`},
     {icon:'🤝',name:'事业互助度',base:det(ay+by,am*bm,56,90),
-      desc_hi:`互为贵人，携手可开创更大事业。建议共同启动项目在${10+Math.abs((ay+by)%2)}月，办公桌摆放绿龙晶，增强合作运势。`,
-      desc_lo:`事业方向各异。尊重彼此的职业发展，办公室${['东','西','南','北'][(ay+by)%4]}角放黄水晶，各自独立而互相支持。`},
+      desc_hi:`互为贵人，携手可开创更大事业格局。建议在**${m_career}月**共同启动一个新项目，办公桌摆放绿龙晶——这是事业伙伴运最强的水晶。`,
+      desc_lo:`事业方向各异，这不是坏事。关键是充分尊重彼此的职业发展，给彼此独立的空间。办公室${['东','西','南','北'][(ay+by)%4]}角各放一块黄水晶，提醒你们：我们虽然方向不同，但回家后依然是最亲的人。`},
     {icon:'🔮',name:'五行相生度',base:Math.min(96,Math.max(45,det(ay,by,55,90)+relBonus)),
-      desc_hi:`五行${aElem}与${bElem}相生，命理层面天作之合。佩戴配对水晶（你${['紫晶','黄晶','粉晶'][['火','土','水'].indexOf(aElem)]}，TA${['粉晶','白晶','绿晶'][['火','土','水'].indexOf(bElem)]}），能量互补。`,
-      desc_lo:`五行有所制化。选择${10+Math.abs((ay+by)%2)}月的吉日婚配，家中${['东北','西南','东南','西北'][(ay+by)%4]}位放五帝钱，化解命理冲克。`},
+      desc_hi:`五行${aElem}与${bElem}相生，命理层面天作之合。为TA选一块${['紫晶','黄晶','粉晶'][Math.max(0,Math.min(2,['火','土','水'].indexOf(aElem)))]}手链，自己戴${['粉晶','白晶','绿晶'][Math.max(0,Math.min(2,['火','土','水'].indexOf(bElem)))]}，双人成对，能量互补。`,
+      desc_lo:`五行有所制化，这是命理中最考验感情的时刻。选择**${m_career}月**的吉日婚配特别重要。家中${['东北','西南','东南','西北'][(ay+by)%4]}位放五帝钱，这是化解一切命理冲克的最古老方法。`},
   ];
 
   document.getElementById('dimsList').innerHTML = DIMS.map(d=>{
