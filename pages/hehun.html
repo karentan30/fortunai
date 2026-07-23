@@ -11,7 +11,7 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#0f080a;--card:#1c0f12;--mid:#261520;
-  --rose:#c9607a;--rose-light:#e8a0b0;--rose-dark:#8a3050;
+  --rose:#d07891;--rose-light:#e8a0b0;--rose-dark:#a84866;
   --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
   --jade:#5bbfa0;--jade-mid:#8dd9bf;
   --text:rgba(245,225,230,0.88);--sub:rgba(200,170,178,0.5);
@@ -19,24 +19,31 @@
 html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:antialiased}
 body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:130px;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;
-  background:radial-gradient(ellipse at 30% 0%,rgba(201,96,122,0.1) 0%,transparent 50%),
-             radial-gradient(ellipse at 70% 0%,rgba(91,191,160,0.07) 0%,transparent 50%);
+  background:radial-gradient(ellipse at 30% 0%,rgba(201,96,122,0.08) 0%,transparent 50%),
+             radial-gradient(ellipse at 70% 0%,rgba(91,191,160,0.05) 0%,transparent 50%);
   pointer-events:none;z-index:0}
 
-.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(201,96,122,0.55);cursor:pointer}
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(201,96,122,0.55);cursor:pointer;transition:color 0.2s}
+.back-btn:hover{color:var(--rose)}
 
 /* ── header ── */
-.header{position:relative;z-index:1;text-align:center;padding:52px 20px 20px}
-.orbit-wrap{width:72px;height:72px;margin:0 auto 12px;position:relative}
-.orb-a{position:absolute;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle,var(--rose-light),var(--rose));top:50%;left:50%;
-  animation:orbitA 4s linear infinite;margin:-15px 0 0 -15px}
-.orb-b{position:absolute;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle,var(--jade-mid),var(--jade));top:50%;left:50%;
-  animation:orbitB 4s linear infinite;margin:-15px 0 0 -15px}
-@keyframes orbitA{0%{transform:translate(-20px,-8px)}25%{transform:translate(0,-20px)}50%{transform:translate(20px,-8px)}75%{transform:translate(0,4px)}100%{transform:translate(-20px,-8px)}}
-@keyframes orbitB{0%{transform:translate(20px,8px)}25%{transform:translate(0,20px)}50%{transform:translate(-20px,8px)}75%{transform:translate(0,-4px)}100%{transform:translate(20px,8px)}}
-.header-title{font-size:22px;font-weight:400;letter-spacing:0.26em}
-.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;letter-spacing:0.2em;color:var(--rose);margin-top:5px;opacity:0.7}
-.rose-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--rose),transparent);margin:12px auto 0}
+.header{position:relative;z-index:1;text-align:center;padding:60px 20px 24px}
+.header-smoke{width:100px;height:80px;margin:0 auto 14px;display:flex;gap:12px;justify-content:center;align-items:flex-end}
+.smoke-col{display:flex;flex-direction:column;gap:8px}
+.smoke-particle{width:3px;border-radius:1px;background:linear-gradient(to top,rgba(208,120,145,0.5),transparent);
+  animation:riseSmokeHe var(--dur,3s) ease-in-out infinite;transform-origin:bottom center}
+.smoke-particle:nth-child(1){height:20px;--dur:2.8s;animation-delay:0s}
+.smoke-particle:nth-child(2){height:28px;--dur:3.3s;animation-delay:0.4s}
+.smoke-particle:nth-child(3){height:24px;--dur:2.9s;animation-delay:0.8s}
+@keyframes riseSmokeHe{
+  0%{height:4px;opacity:0.7;transform:scaleX(1) translateY(0)}
+  40%{opacity:0.4;transform:scaleX(1.3) translateY(-14px)}
+  80%{opacity:0.1;transform:scaleX(1.6) translateY(-36px)}
+  100%{height:3px;opacity:0;transform:scaleX(0.8) translateY(-50px)}
+}
+.header-title{font-size:24px;font-weight:300;letter-spacing:0.16em;margin-bottom:6px}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;letter-spacing:0.18em;color:rgba(201,96,122,0.7);margin-bottom:1px}
+.rose-line{width:70px;height:1px;background:linear-gradient(90deg,transparent,var(--rose),transparent);margin:14px auto 0}
 
 /* ── input section ── */
 .input-screen{position:relative;z-index:1}
@@ -93,6 +100,11 @@ body::before{content:'';position:fixed;inset:0;
 .score-grade{font-size:20px;letter-spacing:0.14em;margin-bottom:4px}
 .score-sub{font-size:10px;color:var(--sub);letter-spacing:0.1em}
 
+/* 你们的故事 */
+.story-section{padding:24px 16px;margin-bottom:8px;background:linear-gradient(135deg,rgba(208,120,145,0.06),rgba(91,191,160,0.03));border-radius:12px;border:1px solid rgba(208,120,145,0.1);animation:fadeUp 0.6s 0.3s ease both}
+.story-text{font-size:13px;line-height:1.9;color:rgba(245,225,230,0.82);letter-spacing:0.05em;font-weight:300}
+.story-text strong{color:var(--rose-light);font-weight:400}
+
 /* dimensions */
 .dims-section{padding:0 16px;margin-bottom:14px}
 .dims-label{font-size:10px;letter-spacing:0.2em;color:var(--sub);margin-bottom:10px}
@@ -144,12 +156,25 @@ body::before{content:'';position:fixed;inset:0;
 <button class="back-btn" onclick="history.back()">← 返回</button>
 
 <div class="header">
-  <div class="orbit-wrap">
-    <div class="orb-a"></div>
-    <div class="orb-b"></div>
+  <div class="header-smoke">
+    <div class="smoke-col">
+      <div class="smoke-particle"></div>
+      <div class="smoke-particle"></div>
+      <div class="smoke-particle"></div>
+    </div>
+    <div class="smoke-col">
+      <div class="smoke-particle"></div>
+      <div class="smoke-particle"></div>
+      <div class="smoke-particle"></div>
+    </div>
+    <div class="smoke-col">
+      <div class="smoke-particle"></div>
+      <div class="smoke-particle"></div>
+      <div class="smoke-particle"></div>
+    </div>
   </div>
-  <div class="header-title">合婚配对</div>
-  <div class="header-sub">天作之合 · 八字合婚精算</div>
+  <div class="header-title">你们的合婚</div>
+  <div class="header-sub">八字合缘 · 共识同心</div>
   <div class="rose-line"></div>
 </div>
 
@@ -266,6 +291,11 @@ body::before{content:'';position:fixed;inset:0;
     </div>
     <div class="score-grade" id="scoreGrade">—</div>
     <div class="score-sub" id="scoreSub">—</div>
+  </div>
+
+  <!-- 你们的故事 -->
+  <div class="story-section">
+    <div id="storyText" class="story-text"></div>
   </div>
 
   <!-- dimensions -->
@@ -410,14 +440,47 @@ function showResults(ay,by){
   document.getElementById('scoreGrade').textContent=grade[0];
   document.getElementById('scoreSub').textContent=grade[1];
 
-  // 六维
+  // 你们的故事 - 麦玲玲风格叙事
+  const storyLines = score>=85 ? [
+    `你们是命中注定的一对。${ay}年与${by}年的两人，八字天生相合，五行相生，就像是为彼此而生。`,
+    `${rel.includes('大吉')?'你们的五行'+aElem+'与'+bElem+'相生，能量互补，相伴相持。':'五行虽有细微差异，却能互相完善。'}`,
+    `建议：在${6+Math.abs((ay+by)%4)}月前后，选一个吉日举行婚礼。佩戴配对的水晶（TA戴紫晶，你戴粉晶），卧室朝向${['东','南','西','北'][(ay+by)%4]}方，能强化两人的感情磁场。`
+  ] : score>=70 ? [
+    `你们有着稳固的缘分基础。${ay}年生的你，与${by}年生的TA，命格相合，感情频率接近。`,
+    `这样的搭配需要用心经营。${rel.includes('大吉')?'幸运的是，你们的五行'+aElem+'与'+bElem+'相生，能自然补足彼此的能量。':'你们的五行虽略有克制，但可通过用心化解。'}`,
+    `建议：在${8+Math.abs((ay+by)%3)}月选吉日举办仪式。家中${['东北','西南','东南','西北'][(ay+by)%4]}位置放置开光水晶，定期沟通感情，共同成长。`
+  ] : score>=55 ? [
+    `你们的缘分需要双方用心灌溉。${ay}年与${by}年，两人命格虽有差异，但这种差异正是互补的机会。`,
+    `你们的${rel.includes('克')?'五行有所冲克，但并非绝对':'五行平稳相处，需细心体察'}。这正是考验你们真心的时刻。`,
+    `建议：先在${5+Math.abs((ay-by)%4)}月完成登记，大婚可考虑选在${9+Math.abs((ay+by)%3)}月的吉日。佩戴化煞的黑曜石，家中摆放五帝钱，能化解两人的冲克。咨询大师获取更多化解方案。`
+  ] : [
+    `你们的命格存在一定的冲突，但这并不意味着不能相守。${ay}年与${by}年的组合需要更多的用心和理解。`,
+    `五行${aElem}与${bElem}有克制关系。这时刻考验你们对彼此的承诺。`,
+    `强烈建议咨询大师获取专业的化解方案。通过选择恰当的吉日婚配、佩戴开光饰品、调整家中风水，可以大幅改善你们的命理契合度。`
+  ];
+
+  document.getElementById('storyText').innerHTML = storyLines.map(line=>line.replace(/(\d月)/g,'<strong>$1</strong>')).join('<br/><br/>');
+
+  // 六维 - 麦玲玲风格具体建议
   const DIMS=[
-    {icon:'💕',name:'感情契合度',base:det(ay+am,by+bm,58,96),desc_hi:'两人情感频率相近，容易产生心灵共鸣',desc_lo:'需要主动沟通，用心理解对方的情感需求'},
-    {icon:'💰',name:'财运相合度',base:det(ay*3,by*3,52,92),desc_hi:'财运互补，共同理财可积累丰厚家产',desc_lo:'理财观念有差异，建议婚前坦诚沟通财务规划'},
-    {icon:'🏠',name:'生活默契度',base:det(ay+ad,by+bd,55,94),desc_hi:'生活习惯相近，日常相处轻松自然',desc_lo:'生活节奏略有差异，需要磨合与包容'},
-    {icon:'👶',name:'子嗣缘分',base:det(am*by,bm*ay,60,95),desc_hi:'子嗣缘分深厚，后代聪慧有福',desc_lo:'子嗣需等待时机，建议调理身体迎接新生命'},
-    {icon:'🤝',name:'事业互助度',base:det(ay+by,am*bm,56,90),desc_hi:'互为贵人，携手可开创更大事业',desc_lo:'事业方向各异，但可以互相学习借鉴'},
-    {icon:'🔮',name:'五行相生度',base:Math.min(96,Math.max(45,det(ay,by,55,90)+relBonus)),desc_hi:'五行相生，命理层面天作之合',desc_lo:'五行有所制化，建议选吉时婚配'},
+    {icon:'💕',name:'感情契合度',base:det(ay+am,by+bm,58,96),
+      desc_hi:`两人情感频率相近，容易产生心灵共鸣。建议在${6+Math.abs((ay+am)%3)}月后的吉日表达深层感受，穿着${['玫粉','酒红','宝蓝'][(ay+am)%3]}色会增强亲密度。`,
+      desc_lo:`需要主动沟通，用心理解对方。卧室床头朝向${['西','东','南','北'][(ay+am)%4]}方，放置粉晶球，有助于增进感情。`},
+    {icon:'💰',name:'财运相合度',base:det(ay*3,by*3,52,92),
+      desc_hi:`财运互补，共同理财可积累丰厚家产。建议联合投资在${9+Math.abs((ay*3)%3)}月，钱包放金色玉带，吸纳共同财运。`,
+      desc_lo:`理财观念有差异。婚前坦诚沟通，财务独立各占50%。客厅西南角放黄水晶球，招揽家庭财气。`},
+    {icon:'🏠',name:'生活默契度',base:det(ay+ad,by+bd,55,94),
+      desc_hi:`生活习惯相近，日常相处轻松自然。家中${['东南','西北','东','西'][(ay+ad)%4]}位宜放绿植，增强生活的生机与和谐。`,
+      desc_lo:`生活节奏略有差异，需要磨合。建议每周定下两个"陪伴时间"，家中卧室避免${['子','午','卯','酉'][(ay+ad)%4]}方位，减少摩擦。`},
+    {icon:'👶',name:'子嗣缘分',base:det(am*by,bm*ay,60,95),
+      desc_hi:`子嗣缘分深厚。建议在${7+Math.abs((am*by)%5)}月开始备孕，佩戴白水晶或玉观音，有助好孕降临。`,
+      desc_lo:`子嗣需等待时机。先调理身体，${8+Math.abs((am*by)%4)}月起配合贵人时节备孕。家中北方放置开光麒麟，护佑后代。`},
+    {icon:'🤝',name:'事业互助度',base:det(ay+by,am*bm,56,90),
+      desc_hi:`互为贵人，携手可开创更大事业。建议共同启动项目在${10+Math.abs((ay+by)%2)}月，办公桌摆放绿龙晶，增强合作运势。`,
+      desc_lo:`事业方向各异。尊重彼此的职业发展，办公室${['东','西','南','北'][(ay+by)%4]}角放黄水晶，各自独立而互相支持。`},
+    {icon:'🔮',name:'五行相生度',base:Math.min(96,Math.max(45,det(ay,by,55,90)+relBonus)),
+      desc_hi:`五行${aElem}与${bElem}相生，命理层面天作之合。佩戴配对水晶（你${['紫晶','黄晶','粉晶'][['火','土','水'].indexOf(aElem)]}，TA${['粉晶','白晶','绿晶'][['火','土','水'].indexOf(bElem)]}），能量互补。`,
+      desc_lo:`五行有所制化。选择${10+Math.abs((ay+by)%2)}月的吉日婚配，家中${['东北','西南','东南','西北'][(ay+by)%4]}位放五帝钱，化解命理冲克。`},
   ];
 
   document.getElementById('dimsList').innerHTML = DIMS.map(d=>{
