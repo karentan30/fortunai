@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#050e08">
+<title>善缘 · 风水评测</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#050e08;--card:#0a1a0e;--mid:#0f2214;
+  --jade:#5bbfa0;--jade-mid:#8dd9bf;--jade-dark:#3a8f76;
+  --gold:#c9a84c;--gold-light:#e8d08a;
+  --text:rgba(210,245,225,0.88);--sub:rgba(160,210,180,0.45);
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:120px;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(91,191,160,0.08) 0%,transparent 55%);
+  pointer-events:none;z-index:0}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(91,191,160,0.55);cursor:pointer}
+
+/* header */
+.header{position:relative;z-index:1;text-align:center;padding:52px 20px 20px}
+.compass{font-size:44px;margin-bottom:10px;display:block;animation:rotate 20s linear infinite}
+@keyframes rotate{to{transform:rotate(360deg)}}
+.header-title{font-size:20px;font-weight:400;letter-spacing:0.26em}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:0.22em;color:var(--jade);opacity:0.6;margin-top:5px}
+.jade-line{width:50px;height:1px;background:linear-gradient(90deg,transparent,var(--jade),transparent);margin:12px auto 0}
+
+/* step indicator */
+.steps{display:flex;align-items:center;justify-content:center;gap:0;padding:20px 16px 8px;position:relative;z-index:1}
+.step{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1}
+.step-dot{width:28px;height:28px;border-radius:50%;border:1px solid rgba(91,191,160,0.2);display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--sub);transition:all 0.3s}
+.step-dot.active{border-color:var(--jade);background:rgba(91,191,160,0.12);color:var(--jade)}
+.step-dot.done{border-color:var(--jade-dark);background:var(--jade-dark);color:#fff}
+.step-label{font-size:9px;color:var(--sub);letter-spacing:0.06em}
+.step-line{flex:1;height:1px;background:rgba(91,191,160,0.12);margin-top:-20px;max-width:30px}
+
+/* form sections */
+.form-section{position:relative;z-index:1;padding:0 16px;margin-bottom:14px}
+.sec-title{font-size:10px;letter-spacing:0.2em;color:var(--jade);opacity:0.6;margin-bottom:10px}
+.field-group{background:var(--card);border:1px solid rgba(91,191,160,0.1);border-radius:8px;overflow:hidden}
+.field-row{display:flex;align-items:center;padding:0 14px;border-bottom:1px solid rgba(91,191,160,0.06)}
+.field-row:last-child{border-bottom:none}
+.field-label{font-size:11px;color:var(--sub);min-width:72px;flex-shrink:0;letter-spacing:0.04em}
+.field-select,.field-input{flex:1;background:none;border:none;outline:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--text);padding:12px 8px;-webkit-appearance:none;letter-spacing:0.04em}
+.field-select option{background:var(--card);color:var(--text)}
+.field-input::placeholder{color:rgba(160,210,180,0.2)}
+
+/* direction grid */
+.dir-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:0}
+.dir-btn{background:var(--card);border:1px solid rgba(91,191,160,0.1);border-radius:6px;padding:10px 4px;text-align:center;cursor:pointer;transition:all 0.2s;font-size:11px;color:var(--sub);letter-spacing:0.04em}
+.dir-btn.active{border-color:var(--jade);background:rgba(91,191,160,0.1);color:var(--jade-mid)}
+
+/* floor plan upload */
+.upload-box{background:var(--card);border:1px dashed rgba(91,191,160,0.2);border-radius:8px;padding:24px 16px;text-align:center;cursor:pointer;transition:border-color 0.2s}
+.upload-box:active{border-color:var(--jade)}
+.upload-icon{font-size:28px;margin-bottom:8px;display:block}
+.upload-txt{font-size:11px;color:var(--sub);letter-spacing:0.06em}
+.upload-hint{font-size:9px;color:rgba(91,191,160,0.3);margin-top:4px}
+input[type=file]{display:none}
+
+/* concern chips */
+.chip-grid{display:flex;flex-wrap:wrap;gap:7px}
+.chip{padding:7px 12px;background:var(--card);border:1px solid rgba(91,191,160,0.1);border-radius:16px;font-size:11px;color:var(--sub);cursor:pointer;transition:all 0.2s;letter-spacing:0.04em}
+.chip.active{border-color:var(--jade);background:rgba(91,191,160,0.1);color:var(--jade-mid)}
+
+/* submit btn */
+.submit-section{position:relative;z-index:1;padding:0 16px}
+.btn-analyze{width:100%;padding:15px 0;background:linear-gradient(135deg,var(--jade-dark),var(--jade),var(--jade-mid));border:none;border-radius:5px;color:#050e08;font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:0.2em;cursor:pointer;box-shadow:0 4px 20px rgba(91,191,160,0.2)}
+
+/* loading */
+.loading-wrap{display:none;position:relative;z-index:1;text-align:center;padding:48px 20px}
+.loading-wrap.show{display:block}
+.feng-loader{width:60px;height:60px;margin:0 auto 16px;position:relative}
+.feng-loader::before,.feng-loader::after{content:'☯';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:32px}
+.feng-loader::before{animation:spin 2s linear infinite;color:var(--jade);opacity:0.8}
+.feng-loader::after{animation:spin 3s linear infinite reverse;color:var(--gold);opacity:0.4}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-steps{display:flex;flex-direction:column;gap:6px;margin-top:16px}
+.load-step{font-size:10px;color:var(--sub);letter-spacing:0.1em;opacity:0;transition:opacity 0.4s}
+.load-step.show{opacity:1}
+
+/* results */
+.results{display:none;position:relative;z-index:1}
+.results.show{display:block;animation:fadeUp 0.5s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* score ring */
+.score-section{padding:20px 16px 16px;text-align:center}
+.score-ring{width:110px;height:110px;margin:0 auto 12px;position:relative}
+.score-ring svg{transform:rotate(-90deg)}
+.score-ring-bg{stroke:rgba(91,191,160,0.1);fill:none;stroke-width:6}
+.score-ring-fill{fill:none;stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 1.2s ease;stroke:url(#ringGrad)}
+.score-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-val{font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--jade)}
+.score-label{font-size:9px;color:var(--sub);letter-spacing:0.1em;margin-top:-2px}
+.score-title{font-size:16px;letter-spacing:0.1em;margin-bottom:4px}
+.score-sub{font-size:10px;color:var(--jade);letter-spacing:0.1em;opacity:0.7}
+
+/* bagua compass */
+.bagua-section{padding:0 16px 16px}
+.bagua-label{font-size:10px;letter-spacing:0.18em;color:var(--sub);margin-bottom:10px}
+.bagua-ring{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.bagua-cell{background:var(--card);border:1px solid rgba(91,191,160,0.1);border-radius:6px;padding:10px 5px;text-align:center}
+.bagua-cell.center{background:linear-gradient(135deg,rgba(91,191,160,0.08),rgba(201,168,76,0.05));border-color:rgba(91,191,160,0.2)}
+.bagua-dir{font-size:9px;color:var(--sub);margin-bottom:3px;letter-spacing:0.06em}
+.bagua-gua{font-size:16px;margin-bottom:3px}
+.bagua-score{font-size:10px;font-family:'Cormorant Garamond',serif}
+.bagua-name{font-size:9px;color:var(--sub)}
+
+/* issue cards */
+.issues-section{padding:0 16px;margin-bottom:6px}
+.issues-label{font-size:10px;letter-spacing:0.18em;color:var(--sub);margin-bottom:10px}
+.issue-card{background:var(--card);border-radius:8px;padding:12px 14px;margin-bottom:8px;border-left:2px solid}
+.issue-card.high{border-color:#e05050}
+.issue-card.mid{border-color:var(--gold)}
+.issue-card.low{border-color:var(--jade)}
+.issue-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.issue-title{font-size:12px;letter-spacing:0.06em}
+.issue-badge{font-size:9px;padding:2px 7px;border-radius:8px;letter-spacing:0.06em}
+.badge-high{background:rgba(224,80,80,0.12);color:#e08080;border:1px solid rgba(224,80,80,0.2)}
+.badge-mid{background:rgba(201,168,76,0.1);color:var(--gold);border:1px solid rgba(201,168,76,0.2)}
+.badge-low{background:rgba(91,191,160,0.1);color:var(--jade);border:1px solid rgba(91,191,160,0.2)}
+.issue-desc{font-size:10px;color:var(--sub);line-height:1.7}
+.issue-fix{font-size:10px;color:var(--jade-mid);margin-top:5px;padding-top:5px;border-top:1px solid rgba(91,191,160,0.08)}
+
+/* room tips */
+.rooms-section{padding:0 16px;margin-bottom:6px}
+.room-row{background:var(--card);border:1px solid rgba(91,191,160,0.08);border-radius:8px;padding:12px 14px;margin-bottom:7px;display:flex;gap:12px;align-items:flex-start}
+.room-icon{font-size:20px;flex-shrink:0;margin-top:2px}
+.room-info{}
+.room-name{font-size:12px;letter-spacing:0.06em;margin-bottom:3px}
+.room-tip{font-size:10px;color:var(--sub);line-height:1.7}
+.room-score{font-family:'Cormorant Garamond',serif;font-size:16px;margin-left:auto;flex-shrink:0}
+
+/* locked section */
+.locked-card{position:relative;margin:0 16px 12px;background:var(--card);border:1px solid rgba(91,191,160,0.1);border-radius:10px;overflow:hidden}
+.locked-inner{padding:16px;filter:blur(3px);user-select:none;pointer-events:none}
+.locked-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,14,8,0.6)}
+.lock-icon{font-size:24px;margin-bottom:8px}
+.lock-cta{padding:9px 20px;background:linear-gradient(135deg,var(--jade-dark),var(--jade));border:none;border-radius:4px;color:#050e08;font-family:'Noto Serif SC',serif;font-size:12px;font-weight:500;letter-spacing:0.14em;cursor:pointer}
+
+/* sticky */
+.sticky-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:390px;padding:12px 16px;background:linear-gradient(180deg,transparent,rgba(5,14,8,0.97) 30%);z-index:90}
+.sticky-cta{width:100%;padding:13px 0;background:linear-gradient(135deg,var(--jade-dark),var(--jade),var(--jade-mid));border:none;border-radius:4px;color:#050e08;font-family:'Noto Serif SC',serif;font-size:13px;font-weight:500;letter-spacing:0.16em;cursor:pointer}
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">← 返回</button>
+
+<div class="header">
+  <span class="compass">🧭</span>
+  <div class="header-title">风水评测</div>
+  <div class="header-sub">山水藏风聚气 · 居宅旺运堪舆</div>
+  <div class="jade-line"></div>
+</div>
+
+<!-- steps -->
+<div class="steps">
+  <div class="step"><div class="step-dot active" id="s1">一</div><div class="step-label">基本信息</div></div>
+  <div class="step-line"></div>
+  <div class="step"><div class="step-dot" id="s2">二</div><div class="step-label">空间布局</div></div>
+  <div class="step-line"></div>
+  <div class="step"><div class="step-dot" id="s3">三</div><div class="step-label">关注点</div></div>
+</div>
+
+<!-- STEP 1: 基本信息 -->
+<div id="step1">
+  <div class="form-section" style="margin-top:16px">
+    <div class="sec-title">居所基本信息</div>
+    <div class="field-group">
+      <div class="field-row">
+        <div class="field-label">房屋类型</div>
+        <select class="field-select" id="houseType">
+          <option value="">请选择</option>
+          <option>公寓/高层</option>
+          <option>别墅/独栋</option>
+          <option>联排/洋房</option>
+          <option>平层/大宅</option>
+          <option>商铺/办公室</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field-label">楼层</div>
+        <select class="field-select" id="floor">
+          <option value="">请选择</option>
+          <option>1-3层（低层）</option>
+          <option>4-9层（中低层）</option>
+          <option>10-19层（中层）</option>
+          <option>20-30层（高层）</option>
+          <option>30层以上（超高层）</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field-label">面积</div>
+        <select class="field-select" id="area">
+          <option value="">请选择</option>
+          <option>60㎡以下</option>
+          <option>60-90㎡</option>
+          <option>90-120㎡</option>
+          <option>120-180㎡</option>
+          <option>180㎡以上</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field-label">入住年限</div>
+        <select class="field-select" id="years">
+          <option value="">请选择</option>
+          <option>未入住/准备搬入</option>
+          <option>不足1年</option>
+          <option>1-3年</option>
+          <option>3-10年</option>
+          <option>10年以上</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="sec-title">大门朝向</div>
+    <div class="dir-grid">
+      <div class="dir-btn" onclick="selDir(this)">北</div>
+      <div class="dir-btn" onclick="selDir(this)">东北</div>
+      <div class="dir-btn" onclick="selDir(this)">东</div>
+      <div class="dir-btn" onclick="selDir(this)">西北</div>
+      <div class="dir-btn" onclick="selDir(this)" style="visibility:hidden"></div>
+      <div class="dir-btn" onclick="selDir(this)">东南</div>
+      <div class="dir-btn" onclick="selDir(this)">西</div>
+      <div class="dir-btn" onclick="selDir(this)">西南</div>
+      <div class="dir-btn" onclick="selDir(this)">南</div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="submit-section" style="padding:0">
+      <button class="btn-analyze" onclick="goStep(2)">下一步 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 2: 空间布局 -->
+<div id="step2" style="display:none">
+  <div class="form-section" style="margin-top:16px">
+    <div class="sec-title">上传户型图（选填，提升准确率）</div>
+    <label class="upload-box" for="floorPlanInput">
+      <span class="upload-icon" id="uploadIcon">🏠</span>
+      <div class="upload-txt" id="uploadTxt">点击上传户型图</div>
+      <div class="upload-hint">支持JPG/PNG，无户型图可跳过</div>
+    </label>
+    <input type="file" id="floorPlanInput" accept="image/*" onchange="handleUpload(this)">
+  </div>
+
+  <div class="form-section">
+    <div class="sec-title">户型特点（可多选）</div>
+    <div class="chip-grid">
+      <div class="chip" onclick="toggleChip(this)">开放式厨房</div>
+      <div class="chip" onclick="toggleChip(this)">南北通透</div>
+      <div class="chip" onclick="toggleChip(this)">入门见卫</div>
+      <div class="chip" onclick="toggleChip(this)">入门见床</div>
+      <div class="chip" onclick="toggleChip(this)">中间无窗</div>
+      <div class="chip" onclick="toggleChip(this)">L型走廊</div>
+      <div class="chip" onclick="toggleChip(this)">顶层复式</div>
+      <div class="chip" onclick="toggleChip(this)">不规则形</div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="submit-section" style="padding:0;display:flex;gap:10px">
+      <button class="btn-analyze" style="background:var(--card);color:var(--jade);border:1px solid rgba(91,191,160,0.2);box-shadow:none;flex:0 0 80px" onclick="goStep(1)">← 上一步</button>
+      <button class="btn-analyze" style="flex:1" onclick="goStep(3)">下一步 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 3: 关注点 -->
+<div id="step3" style="display:none">
+  <div class="form-section" style="margin-top:16px">
+    <div class="sec-title">最近遇到的困扰（可多选）</div>
+    <div class="chip-grid">
+      <div class="chip" onclick="toggleChip(this)">💰 财运不顺</div>
+      <div class="chip" onclick="toggleChip(this)">💕 感情问题</div>
+      <div class="chip" onclick="toggleChip(this)">💼 事业卡顿</div>
+      <div class="chip" onclick="toggleChip(this)">😴 睡眠不好</div>
+      <div class="chip" onclick="toggleChip(this)">🤒 家人健康</div>
+      <div class="chip" onclick="toggleChip(this)">👶 求子不孕</div>
+      <div class="chip" onclick="toggleChip(this)">📚 子女学业</div>
+      <div class="chip" onclick="toggleChip(this)">🏠 家庭不和</div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="sec-title">您的出生年份（用于配合宅卦）</div>
+    <div class="field-group">
+      <div class="field-row">
+        <div class="field-label">出生年</div>
+        <input class="field-input" type="number" id="birthYear" placeholder="例如 1990" min="1920" max="2010">
+      </div>
+      <div class="field-row">
+        <div class="field-label">性别</div>
+        <select class="field-select" id="gender">
+          <option value="female">女</option>
+          <option value="male">男</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <div class="submit-section" style="padding:0;display:flex;gap:10px">
+      <button class="btn-analyze" style="background:var(--card);color:var(--jade);border:1px solid rgba(91,191,160,0.2);box-shadow:none;flex:0 0 80px" onclick="goStep(2)">← 上一步</button>
+      <button class="btn-analyze" style="flex:1" onclick="startAnalysis()">开始风水评测 →</button>
+    </div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-wrap" id="loadingWrap">
+  <div class="feng-loader"></div>
+  <div style="font-size:11px;color:var(--jade);letter-spacing:0.18em;opacity:0.7">正在推算宅卦…</div>
+  <div class="load-steps">
+    <div class="load-step" id="ls1">① 计算命卦与宅卦配合…</div>
+    <div class="load-step" id="ls2">② 推算八宅方位吉凶…</div>
+    <div class="load-step" id="ls3">③ 分析户型五行能量…</div>
+    <div class="load-step" id="ls4">④ 生成化解调整建议…</div>
+  </div>
+</div>
+
+<!-- Results -->
+<div class="results" id="results">
+
+  <!-- 综合评分 -->
+  <div class="score-section">
+    <div class="score-ring">
+      <svg width="110" height="110" viewBox="0 0 110 110">
+        <defs>
+          <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" style="stop-color:#3a8f76"/>
+            <stop offset="100%" style="stop-color:#8dd9bf"/>
+          </linearGradient>
+        </defs>
+        <circle class="score-ring-bg" cx="55" cy="55" r="48"/>
+        <circle class="score-ring-fill" id="ringFill" cx="55" cy="55" r="48"
+          stroke-dasharray="301.6" stroke-dashoffset="301.6"/>
+      </svg>
+      <div class="score-num">
+        <div class="score-val" id="scoreVal">0</div>
+        <div class="score-label">综合分</div>
+      </div>
+    </div>
+    <div class="score-title" id="scoreTitle">宅运评级</div>
+    <div class="score-sub" id="scoreSub">正在分析</div>
+  </div>
+
+  <!-- 八宅方位 -->
+  <div class="bagua-section">
+    <div class="bagua-label">八宅方位吉凶</div>
+    <div class="bagua-ring" id="baguaGrid"></div>
+  </div>
+
+  <!-- 风水问题 -->
+  <div class="issues-section">
+    <div class="issues-label">发现的风水问题</div>
+    <div id="issuesList"></div>
+  </div>
+
+  <!-- 房间建议 -->
+  <div class="rooms-section">
+    <div class="issues-label">各空间优化建议</div>
+    <div id="roomsList"></div>
+  </div>
+
+  <!-- 深度报告 (锁定) -->
+  <div class="locked-card">
+    <div class="locked-inner">
+      <div style="font-size:12px;margin-bottom:8px">五行化解完整方案</div>
+      <div style="font-size:10px;color:var(--sub);line-height:1.8">
+        · 财位精确坐标 + 催财摆件推荐<br>
+        · 卧室床头方向调整（按命卦）<br>
+        · 化煞植物/水晶精确摆放图<br>
+        · 一对一大师上门堪舆预约
+      </div>
+    </div>
+    <div class="locked-overlay">
+      <div class="lock-icon">🔒</div>
+      <div style="font-size:11px;color:var(--sub);margin-bottom:12px;letter-spacing:0.1em">完整化解方案</div>
+      <button class="lock-cta" onclick="window.location.href='master.html'">解锁深度报告 · $29.9</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- sticky -->
+<div class="sticky-bar" id="stickyBar" style="display:none">
+  <button class="sticky-cta" onclick="window.location.href='master.html'">预约大师上门堪舆 · 专业服务</button>
+</div>
+
+<script>
+let curStep = 1, selDirVal = '';
+
+function goStep(n){
+  document.getElementById('step'+curStep).style.display='none';
+  document.getElementById('step'+n).style.display='block';
+  curStep = n;
+  ['s1','s2','s3'].forEach((id,i)=>{
+    const el = document.getElementById(id);
+    if(i+1 < n) el.className='step-dot done';
+    else if(i+1 === n) el.className='step-dot active';
+    else el.className='step-dot';
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function selDir(el){
+  document.querySelectorAll('.dir-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  selDirVal = el.textContent;
+}
+
+function toggleChip(el){ el.classList.toggle('active') }
+
+function handleUpload(input){
+  if(input.files[0]){
+    document.getElementById('uploadIcon').textContent='✅';
+    document.getElementById('uploadTxt').textContent='户型图已上传';
+  }
+}
+
+function startAnalysis(){
+  ['step1','step2','step3'].forEach(id=>document.getElementById(id).style.display='none');
+  const lw = document.getElementById('loadingWrap');
+  lw.classList.add('show');
+  const steps = ['ls1','ls2','ls3','ls4'];
+  steps.forEach((id,i)=>{ setTimeout(()=>document.getElementById(id).classList.add('show'), i*700+300) });
+  setTimeout(showResults, 3200);
+}
+
+function showResults(){
+  document.getElementById('loadingWrap').classList.remove('show');
+
+  // Deterministic score based on inputs
+  const dir = selDirVal || '南';
+  const year = parseInt(document.getElementById('birthYear').value) || 1990;
+  const gender = document.getElementById('gender').value;
+
+  // Ming gua calculation
+  const mingGuaNum = calcMingGua(year, gender);
+  const score = 65 + (mingGuaNum * 3 + (dir === '南'||dir === '东'||dir === '东南' ? 12 : dir==='西北'||dir==='西南' ? -5 : 5)) % 25;
+  const finalScore = Math.min(92, Math.max(55, score));
+
+  // Animate score
+  document.getElementById('results').classList.add('show');
+  document.getElementById('stickyBar').style.display='block';
+  let n = 0;
+  const timer = setInterval(()=>{
+    n = Math.min(n+2, finalScore);
+    document.getElementById('scoreVal').textContent = n;
+    const offset = 301.6 * (1 - n/100);
+    document.getElementById('ringFill').style.strokeDashoffset = offset;
+    if(n>=finalScore) clearInterval(timer);
+  }, 25);
+
+  const grade = finalScore>=85 ? ['旺宅','适合居住，五行藏风聚气'] :
+                finalScore>=70 ? ['平宅','基本合适，局部需调整'] :
+                                 ['损宅','多处需化解，建议调整'];
+  document.getElementById('scoreTitle').textContent = grade[0];
+  document.getElementById('scoreSub').textContent = grade[1];
+
+  // Bagua grid
+  const dirs = ['西北','北','东北','西','中','东','西南','南','东南'];
+  const guas = ['乾','坎','艮','兑','☯','震','坤','离','巽'];
+  const scores = [72,85,68,80,95,88,65,90,78];
+  const names = ['天门','水运','山运','财门','命宫','东方','地运','名运','巽位'];
+  document.getElementById('baguaGrid').innerHTML = dirs.map((d,i)=>
+    `<div class="bagua-cell${d==='中'?' center':''}">
+      <div class="bagua-dir">${d}</div>
+      <div class="bagua-gua">${guas[i]}</div>
+      <div class="bagua-score" style="color:${scores[i]>=80?'var(--jade)':scores[i]>=70?'var(--gold)':'#e08080'}">${scores[i]}分</div>
+      <div class="bagua-name">${names[i]}</div>
+    </div>`
+  ).join('');
+
+  // Issues
+  const chips = [...document.querySelectorAll('.chip.active')].map(c=>c.textContent.trim());
+  const issues = [
+    {level:'high',title:'入门见煞',desc:'大门正对楼梯口或电梯，气口外泄，财运、健康均受影响。',fix:'化解：门口放屏风或挂五帝钱，阻断煞气入门。'},
+    {level:'mid',title:'卧室床位偏西',desc:'床头朝西属金，与您的命卦有冲，可能导致睡眠质量下降。',fix:'建议：床头朝东或东南，配合命卦旺位，改善睡眠。'},
+    chips.includes('💰 财运不顺') ? {level:'high',title:'财位空旷',desc:'东南角财位缺乏遮挡，气场不聚，财来财去留不住。',fix:'化解：财位放绿植、鱼缸或聚宝盆，稳固财气。'} : null,
+    chips.includes('💕 感情问题') ? {level:'mid',title:'桃花位欠旺',desc:'西南方（桃花位）有杂物堆积，压住感情能量。',fix:'建议：清理西南角，放粉色水晶球或双联竹。'} : null,
+  ].filter(Boolean);
+
+  document.getElementById('issuesList').innerHTML = issues.map(iss=>
+    `<div class="issue-card ${iss.level}">
+      <div class="issue-head">
+        <div class="issue-title">${iss.title}</div>
+        <span class="issue-badge badge-${iss.level}">${iss.level==='high'?'优先处理':iss.level==='mid'?'建议调整':'轻微影响'}</span>
+      </div>
+      <div class="issue-desc">${iss.desc}</div>
+      <div class="issue-fix">💡 ${iss.fix}</div>
+    </div>`
+  ).join('');
+
+  // Rooms
+  const rooms = [
+    {icon:'🚪',name:'大门玄关',tip:'保持整洁明亮，换鞋柜须带门，不可正对镜子，建议放小盆绿植。',score:78},
+    {icon:'🛋️',name:'客厅',tip:'沙发背须靠实墙，电视墙避免水景装饰，西南角摆财运摆件。',score:85},
+    {icon:'🛏️',name:'主卧',tip:'床头避免横梁压顶，床尾不对卫生间门，窗帘用遮光款助眠。',score:70},
+    {icon:'🍳',name:'厨房',tip:'炉灶背靠实墙，灶口不对大门，冰箱避免正对炉口（水火相克）。',score:82},
+  ];
+  document.getElementById('roomsList').innerHTML = rooms.map(r=>
+    `<div class="room-row">
+      <span class="room-icon">${r.icon}</span>
+      <div class="room-info"><div class="room-name">${r.name}</div><div class="room-tip">${r.tip}</div></div>
+      <div class="room-score" style="color:${r.score>=80?'var(--jade)':'var(--gold)'}">${r.score}</div>
+    </div>`
+  ).join('');
+}
+
+function calcMingGua(year, gender){
+  let y = year % 100;
+  let sum = Math.floor(y/10) + (y%10);
+  while(sum>=10) sum = Math.floor(sum/10) + (sum%10);
+  if(gender==='male') return (10-sum)%9 || 9;
+  else return (sum+5)%9 || 9;
+}
+</script>
+</body>
+</html>

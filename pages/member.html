@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#08060f">
+<title>善缘 · 会员中心</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08060f;--card:#120f1c;--mid:#1a1628;
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;--gold-pale:rgba(201,168,76,0.08);
+  --jade:#5bbfa0;--jade-mid:#8dd9bf;
+  --purple:#9b6fd4;--purple-mid:#c4a0f0;
+  --text:rgba(240,230,255,0.88);--sub:rgba(200,180,240,0.45);
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:40px;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 50% -10%,rgba(155,111,212,0.12) 0%,transparent 55%),
+             radial-gradient(ellipse at 80% 90%,rgba(201,168,76,0.06) 0%,transparent 50%);
+  pointer-events:none;z-index:0}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(155,111,212,0.5);cursor:pointer}
+
+/* ── hero ── */
+.hero{position:relative;z-index:1;text-align:center;padding:52px 20px 28px}
+.crown{font-size:48px;margin-bottom:12px;display:block;animation:float 3s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.hero-tag{display:inline-block;font-size:9px;letter-spacing:0.22em;color:var(--gold);border:1px solid rgba(201,168,76,0.25);padding:4px 14px;border-radius:10px;margin-bottom:12px}
+.hero-title{font-size:24px;font-weight:300;letter-spacing:0.2em;background:linear-gradient(135deg,var(--gold-light),var(--purple-mid),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;letter-spacing:0.18em;color:var(--sub);margin-top:6px}
+.divider{width:80px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),var(--purple),transparent);margin:16px auto 0}
+
+/* ── plan cards ── */
+.plans{padding:20px 16px 0;position:relative;z-index:1}
+.plan-card{border-radius:12px;padding:20px 18px;margin-bottom:12px;cursor:pointer;transition:all 0.25s;border:1.5px solid}
+.plan-card.monthly{background:var(--card);border-color:rgba(201,168,76,0.15)}
+.plan-card.yearly{background:linear-gradient(135deg,rgba(155,111,212,0.1),rgba(201,168,76,0.06));border-color:rgba(201,168,76,0.35);position:relative;overflow:hidden}
+.plan-card.lifetime{background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(155,111,212,0.08));border-color:rgba(201,168,76,0.5)}
+.plan-card.selected{box-shadow:0 0 20px rgba(201,168,76,0.2)}
+.plan-card.monthly.selected{border-color:var(--jade)}
+.plan-card.yearly.selected{border-color:var(--gold)}
+.plan-card.lifetime.selected{border-color:var(--gold-light)}
+
+.popular-badge{position:absolute;top:0;right:0;background:linear-gradient(135deg,var(--gold-deep),var(--gold));color:rgba(8,6,15,0.95);font-size:9px;letter-spacing:0.1em;padding:5px 12px;border-radius:0 0 0 8px}
+.plan-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.plan-name{font-size:14px;letter-spacing:0.12em}
+.plan-cycle{font-size:9px;color:var(--sub);letter-spacing:0.1em}
+.plan-price{text-align:right}
+.plan-amount{font-family:'Cormorant Garamond',serif;font-size:28px;line-height:1}
+.plan-amount.monthly-c{color:var(--jade)}
+.plan-amount.yearly-c{color:var(--gold)}
+.plan-amount.lifetime-c{color:var(--gold-light)}
+.plan-unit{font-size:10px;color:var(--sub);margin-top:2px}
+.plan-save{font-size:9px;color:var(--gold);margin-top:3px}
+.plan-divider{height:1px;background:rgba(255,255,255,0.06);margin:10px 0}
+.plan-perks{display:flex;flex-direction:column;gap:5px}
+.perk-row{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--sub);letter-spacing:0.04em}
+.perk-icon{font-size:12px;flex-shrink:0;width:16px;text-align:center}
+.perk-row.highlight{color:var(--text)}
+
+/* ── feature comparison ── */
+.compare{padding:24px 16px 0;position:relative;z-index:1}
+.compare-title{font-size:10px;letter-spacing:0.22em;color:var(--sub);margin-bottom:14px}
+.compare-row{display:grid;grid-template-columns:1fr 40px 40px 40px;gap:4px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+.compare-row:last-child{border-bottom:none}
+.compare-feat{font-size:10px;color:var(--sub);letter-spacing:0.04em}
+.compare-feat.header{font-size:9px;color:rgba(255,255,255,0.3);letter-spacing:0.14em}
+.compare-cell{text-align:center;font-size:12px}
+.compare-cell.header{font-size:9px;color:var(--sub);letter-spacing:0.06em}
+
+/* ── testimonials ── */
+.testimonials{padding:24px 16px 0;position:relative;z-index:1}
+.test-title{font-size:10px;letter-spacing:0.22em;color:var(--sub);margin-bottom:12px}
+.test-card{background:var(--card);border:1px solid rgba(201,168,76,0.1);border-radius:8px;padding:14px;margin-bottom:10px}
+.test-stars{color:var(--gold);font-size:12px;letter-spacing:2px;margin-bottom:6px}
+.test-text{font-size:11px;color:var(--text);line-height:1.8;letter-spacing:0.02em;font-style:italic}
+.test-author{font-size:9px;color:var(--sub);margin-top:8px;letter-spacing:0.1em}
+
+/* ── sticky cta ── */
+.sticky-bottom{position:sticky;bottom:0;padding:16px 16px 24px;background:linear-gradient(180deg,transparent,rgba(8,6,15,0.98) 25%);z-index:90;margin-top:24px}
+.sub-btn{width:100%;padding:15px 0;border:none;border-radius:5px;font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:0.2em;cursor:pointer;transition:all 0.2s}
+.sub-btn.monthly-btn{background:linear-gradient(135deg,var(--jade-dark,#3a8f76),var(--jade),var(--jade-mid));color:#050e08}
+.sub-btn.yearly-btn{background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light));color:rgba(8,6,15,0.95);box-shadow:0 4px 24px rgba(201,168,76,0.3)}
+.sub-btn.lifetime-btn{background:linear-gradient(135deg,#5a3a8a,var(--purple),var(--purple-mid));color:#fff}
+.sub-note{text-align:center;font-size:9px;color:var(--sub);margin-top:8px;letter-spacing:0.06em}
+
+/* radio dot */
+.plan-radio{width:18px;height:18px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.plan-radio.checked::after{content:'';width:8px;height:8px;border-radius:50%;background:var(--gold)}
+
+/* guarantee */
+.guarantee{padding:16px 16px 0;position:relative;z-index:1;text-align:center}
+.guarantee-row{display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap}
+.g-item{display:flex;flex-direction:column;align-items:center;gap:4px}
+.g-icon{font-size:20px}
+.g-text{font-size:9px;color:var(--sub);letter-spacing:0.06em}
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">← 返回</button>
+
+<!-- hero -->
+<div class="hero">
+  <span class="crown">👑</span>
+  <div class="hero-tag">SHEN YUAN PREMIUM</div>
+  <div class="hero-title">善缘会员</div>
+  <div class="hero-sub">解锁全部命理 · 无限次占算 · 专属大师服务</div>
+  <div class="divider"></div>
+</div>
+
+<!-- plan cards -->
+<div class="plans">
+  <!-- 月度 -->
+  <div class="plan-card monthly selected" id="planMonthly" onclick="selectPlan('monthly')">
+    <div class="plan-top">
+      <div>
+        <div class="plan-radio checked" id="rMonthly"><div></div></div>
+      </div>
+      <div style="flex:1;margin-left:10px">
+        <div class="plan-name">月度会员</div>
+        <div class="plan-cycle">按月订阅 · 随时取消</div>
+      </div>
+      <div class="plan-price">
+        <div class="plan-amount monthly-c">$6.9</div>
+        <div class="plan-unit">/ 月</div>
+      </div>
+    </div>
+    <div class="plan-divider"></div>
+    <div class="plan-perks">
+      <div class="perk-row highlight"><span class="perk-icon">✨</span>全部AI占算无限次</div>
+      <div class="perk-row highlight"><span class="perk-icon">📖</span>完整命理报告（不锁定）</div>
+      <div class="perk-row"><span class="perk-icon">🎴</span>高级塔罗牌阵 · 每日1次</div>
+      <div class="perk-row"><span class="perk-icon">🌟</span>每日专属运势推送</div>
+    </div>
+  </div>
+
+  <!-- 年度 -->
+  <div class="plan-card yearly" id="planYearly" onclick="selectPlan('yearly')">
+    <div class="popular-badge">最受欢迎</div>
+    <div class="plan-top">
+      <div>
+        <div class="plan-radio" id="rYearly"></div>
+      </div>
+      <div style="flex:1;margin-left:10px">
+        <div class="plan-name">年度会员</div>
+        <div class="plan-cycle">一次付清 · 全年畅用</div>
+      </div>
+      <div class="plan-price">
+        <div class="plan-amount yearly-c">$49</div>
+        <div class="plan-unit">/ 年</div>
+        <div class="plan-save">省 $33.8（相当于$4.08/月）</div>
+      </div>
+    </div>
+    <div class="plan-divider"></div>
+    <div class="plan-perks">
+      <div class="perk-row highlight"><span class="perk-icon">✨</span>月度会员全部权益</div>
+      <div class="perk-row highlight"><span class="perk-icon">💎</span>每年1次免费水晶挂件（价值$29）</div>
+      <div class="perk-row highlight"><span class="perk-icon">🎤</span>大师语音解读 · 每季1次</div>
+      <div class="perk-row"><span class="perk-icon">🏆</span>会员专属活动 · 优先邀请</div>
+      <div class="perk-row"><span class="perk-icon">🌙</span>中元节/清明专属祭祀服务折扣</div>
+    </div>
+  </div>
+
+  <!-- 终身 -->
+  <div class="plan-card lifetime" id="planLifetime" onclick="selectPlan('lifetime')">
+    <div class="plan-top">
+      <div>
+        <div class="plan-radio" id="rLifetime"></div>
+      </div>
+      <div style="flex:1;margin-left:10px">
+        <div class="plan-name">终身会员</div>
+        <div class="plan-cycle">一次解锁 · 永久畅享</div>
+      </div>
+      <div class="plan-price">
+        <div class="plan-amount lifetime-c">$188</div>
+        <div class="plan-unit">永久</div>
+        <div class="plan-save">最划算 · 终身陪伴</div>
+      </div>
+    </div>
+    <div class="plan-divider"></div>
+    <div class="plan-perks">
+      <div class="perk-row highlight"><span class="perk-icon">♾️</span>年度会员全部权益（永久）</div>
+      <div class="perk-row highlight"><span class="perk-icon">🧧</span>专属节日礼盒（每年）</div>
+      <div class="perk-row highlight"><span class="perk-icon">👨‍🏫</span>大师1对1视频咨询 · 每年1次</div>
+      <div class="perk-row highlight"><span class="perk-icon">🥇</span>专属命盘档案 · 永久保存</div>
+      <div class="perk-row"><span class="perk-icon">🎁</span>亲友赠礼解读 · 每年3次</div>
+    </div>
+  </div>
+</div>
+
+<!-- feature comparison -->
+<div class="compare">
+  <div class="compare-title">功能对比</div>
+  <div class="compare-row">
+    <div class="compare-feat header">功能</div>
+    <div class="compare-cell header">月</div>
+    <div class="compare-cell header">年</div>
+    <div class="compare-cell header">终身</div>
+  </div>
+  <div class="compare-row">
+    <div class="compare-feat">AI八字命理报告</div>
+    <div class="compare-cell">✅</div><div class="compare-cell">✅</div><div class="compare-cell">✅</div>
+  </div>
+  <div class="compare-row">
+    <div class="compare-feat">紫微斗数完整版</div>
+    <div class="compare-cell">✅</div><div class="compare-cell">✅</div><div class="compare-cell">✅</div>
+  </div>
+  <div class="compare-row">
+    <div class="compare-feat">塔罗每日抽牌</div>
+    <div class="compare-cell">1次</div><div class="compare-cell">3次</div><div class="compare-cell">无限</div>
+  </div>
+  <div class="compare-row">
+    <div class="compare-feat">风水评测报告</div>
+    <div class="compare-cell">基础</div><div class="compare-cell">完整</div><div class="compare-cell">完整+</div>
+  </div>
+  <div class="compare-row">
+    <div class="compare-feat">大师语音解读</div>
+    <div class="compare-cell">—</div><div class="compare-cell">季1次</div><div class="compare-cell">年3次</div>
+  </div>
+  <div class="compare-row">
+    <div class="compare-feat">水晶挂件福利</div>
+    <div class="compare-cell">—</div><div class="compare-cell">年1件</div><div class="compare-cell">年2件</div>
+  </div>
+  <div class="compare-row">
+    <div class="compare-feat">代供代祭折扣</div>
+    <div class="compare-cell">—</div><div class="compare-cell">8折</div><div class="compare-cell">7折</div>
+  </div>
+  <div class="compare-row">
+    <div class="compare-feat">1对1视频咨询</div>
+    <div class="compare-cell">—</div><div class="compare-cell">—</div><div class="compare-cell">年1次</div>
+  </div>
+</div>
+
+<!-- testimonials -->
+<div class="testimonials">
+  <div class="test-title">会员真实反馈</div>
+  <div class="test-card">
+    <div class="test-stars">★★★★★</div>
+    <div class="test-text">「入手年度会员后，八字报告说我今年应该往西南方向发展，我就真的去了成都出差，结果谈成了一个大单。以前觉得命理是迷信，现在相信了。」</div>
+    <div class="test-author">— Lin W. · 年度会员 · 新加坡</div>
+  </div>
+  <div class="test-card">
+    <div class="test-stars">★★★★★</div>
+    <div class="test-text">「用了快两年了，最喜欢每天早上的运势推送，帮我安排了好几次时机，2025年的姻缘运真的准了，现在已经在一起了！」</div>
+    <div class="test-author">— Mei T. · 终身会员 · 马来西亚</div>
+  </div>
+  <div class="test-card">
+    <div class="test-stars">★★★★☆</div>
+    <div class="test-text">「性价比极高，年度$49比找真人大师算一次还便宜，可以无限次问。风水报告帮我调整了卧室布局，失眠问题明显改善了。」</div>
+    <div class="test-author">— David K. · 年度会员 · 多伦多</div>
+  </div>
+</div>
+
+<!-- guarantee -->
+<div class="guarantee">
+  <div class="guarantee-row">
+    <div class="g-item"><span class="g-icon">🔒</span><span class="g-text">安全加密支付</span></div>
+    <div class="g-item"><span class="g-icon">↩️</span><span class="g-text">7天无理由退款</span></div>
+    <div class="g-item"><span class="g-icon">🌐</span><span class="g-text">全球华人可用</span></div>
+    <div class="g-item"><span class="g-icon">💬</span><span class="g-text">7×24客服支持</span></div>
+  </div>
+</div>
+
+<!-- sticky bottom -->
+<div class="sticky-bottom">
+  <button class="sub-btn monthly-btn" id="subBtn" onclick="subscribe()">开通月度会员 · $6.9/月</button>
+  <div class="sub-note" id="subNote">随时取消 · 首月立享全部权益 · 安全支付</div>
+</div>
+
+<script>
+let curPlan = 'monthly';
+const BTN_COPY = {
+  monthly:{text:'开通月度会员 · $6.9/月',cls:'monthly-btn',note:'随时取消 · 首月立享全部权益 · 安全支付'},
+  yearly:{text:'开通年度会员 · $49/年',cls:'yearly-btn',note:'省$33.8 · 相当于$4.08/月 · 7天退款保障'},
+  lifetime:{text:'开通终身会员 · $188',cls:'lifetime-btn',note:'一次开通 · 永久有效 · 最高性价比'},
+};
+
+function selectPlan(p){
+  document.querySelectorAll('.plan-card').forEach(c=>c.classList.remove('selected'));
+  document.querySelectorAll('.plan-radio').forEach(r=>{r.classList.remove('checked');r.innerHTML='';});
+  document.getElementById('plan'+p[0].toUpperCase()+p.slice(1)).classList.add('selected');
+  const r = document.getElementById('r'+p[0].toUpperCase()+p.slice(1));
+  r.classList.add('checked');
+  r.innerHTML = '<div style="width:8px;height:8px;border-radius:50%;background:var(--gold)"></div>';
+  curPlan = p;
+  const btn = document.getElementById('subBtn');
+  const note = document.getElementById('subNote');
+  btn.className = 'sub-btn '+BTN_COPY[p].cls;
+  btn.textContent = BTN_COPY[p].text;
+  note.textContent = BTN_COPY[p].note;
+}
+
+function subscribe(){
+  alert('支付功能即将上线，感谢您的支持！');
+}
+
+// init radio
+document.getElementById('rMonthly').innerHTML = '<div style="width:8px;height:8px;border-radius:50%;background:var(--jade)"></div>';
+</script>
+</body>
+</html>

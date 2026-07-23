@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0a0f14">
+<title>善缘 · 旺运生活局</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0f14;--card:#101820;--mid:#161f2a;
+  --jade:#5bbfa0;--jade-mid:#8dd9bf;--jade-dark:#3a8f76;
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
+  --amber:#c9820a;
+  --text:rgba(220,240,255,0.88);--sub:rgba(180,210,240,0.45);
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:120px;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 20% 10%,rgba(91,191,160,0.08) 0%,transparent 50%),
+             radial-gradient(ellipse at 80% 80%,rgba(201,168,76,0.06) 0%,transparent 50%);
+  pointer-events:none;z-index:0}
+
+/* ── back btn ── */
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(91,191,160,0.6);cursor:pointer;padding:4px 0}
+
+/* ── header ── */
+.header{position:relative;z-index:1;text-align:center;padding:52px 20px 24px}
+.header-title{font-size:22px;font-weight:400;letter-spacing:0.28em;color:var(--text)}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;letter-spacing:0.22em;color:var(--jade);margin-top:6px;opacity:0.7}
+.jade-line{width:50px;height:1px;background:linear-gradient(90deg,transparent,var(--jade),transparent);margin:12px auto 0}
+
+/* ── zodiac picker ── */
+.section{position:relative;z-index:1;padding:0 16px;margin-bottom:18px}
+.sec-label{font-size:10px;letter-spacing:0.22em;color:var(--jade);opacity:0.6;margin-bottom:10px}
+.zodiac-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.z-btn{background:var(--card);border:1px solid rgba(91,191,160,0.1);border-radius:8px;padding:10px 4px;text-align:center;cursor:pointer;transition:all 0.2s}
+.z-btn:active{transform:scale(0.93)}
+.z-btn.active{border-color:var(--jade);background:rgba(91,191,160,0.1);box-shadow:0 0 12px rgba(91,191,160,0.2)}
+.z-emoji{font-size:22px;display:block;margin-bottom:3px}
+.z-name{font-size:10px;color:var(--sub);letter-spacing:0.1em}
+.z-btn.active .z-name{color:var(--jade-mid)}
+
+/* 五行badge */
+.element-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:20px;font-size:11px;letter-spacing:0.12em;margin:10px 0 0;border:1px solid;opacity:0}
+.element-badge.show{opacity:1;animation:fadeUp 0.4s ease forwards}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── cta button ── */
+.cta-btn{width:100%;padding:14px 0;background:linear-gradient(135deg,var(--jade-dark),var(--jade),var(--jade-mid));border:none;border-radius:6px;color:#0a1a14;font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:0.2em;cursor:pointer;box-shadow:0 4px 20px rgba(91,191,160,0.25);margin-top:4px;transition:opacity 0.2s}
+.cta-btn:disabled{opacity:0.4;cursor:not-allowed}
+
+/* ── loading ── */
+.loading-wrap{display:none;text-align:center;padding:40px 20px}
+.loading-wrap.show{display:block}
+.spin-ring{width:48px;height:48px;border:2px solid rgba(91,191,160,0.15);border-top-color:var(--jade);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-txt{font-size:11px;color:var(--jade);letter-spacing:0.18em;opacity:0.7}
+
+/* ── results ── */
+.results{display:none;position:relative;z-index:1}
+.results.show{display:block;animation:fadeUp 0.5s ease}
+
+/* ── category card ── */
+.cat-card{margin:0 16px 12px;background:var(--card);border:1px solid rgba(91,191,160,0.1);border-radius:10px;overflow:hidden}
+.cat-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;cursor:pointer}
+.cat-left{display:flex;align-items:center;gap:10px}
+.cat-icon{font-size:20px}
+.cat-title{font-size:13px;letter-spacing:0.1em}
+.cat-arrow{font-size:12px;color:var(--jade);transition:transform 0.25s}
+.cat-card.open .cat-arrow{transform:rotate(180deg)}
+.cat-body{display:none;padding:0 16px 14px;border-top:1px solid rgba(91,191,160,0.07)}
+.cat-card.open .cat-body{display:block}
+
+/* item rows */
+.item-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(91,191,160,0.06)}
+.item-row:last-child{border-bottom:none}
+.item-dot{width:6px;height:6px;border-radius:50%;background:var(--jade);flex-shrink:0;margin-top:5px}
+.item-content{}
+.item-name{font-size:12px;color:var(--text);margin-bottom:2px;letter-spacing:0.04em}
+.item-desc{font-size:10px;color:var(--sub);line-height:1.7;letter-spacing:0.02em}
+
+/* color swatches */
+.color-row{display:flex;gap:8px;flex-wrap:wrap;padding:10px 0}
+.swatch{display:flex;align-items:center;gap:6px;background:var(--mid);border-radius:6px;padding:7px 10px;border:1px solid rgba(91,191,160,0.08)}
+.swatch-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;border:1px solid rgba(255,255,255,0.1)}
+.swatch-info{}
+.swatch-name{font-size:11px;color:var(--text);letter-spacing:0.06em}
+.swatch-use{font-size:9px;color:var(--sub)}
+
+/* shop items */
+.shop-row{display:flex;gap:8px;overflow-x:auto;padding:10px 0;scrollbar-width:none}
+.shop-row::-webkit-scrollbar{display:none}
+.shop-item{flex-shrink:0;width:100px;background:var(--mid);border:1px solid rgba(201,168,76,0.12);border-radius:8px;overflow:hidden;cursor:pointer}
+.shop-thumb{width:100%;height:90px;background:linear-gradient(135deg,rgba(91,191,160,0.1),rgba(201,168,76,0.05));display:flex;align-items:center;justify-content:center;font-size:32px}
+.shop-info{padding:6px 8px}
+.shop-name{font-size:10px;color:var(--text);letter-spacing:0.04em;margin-bottom:2px}
+.shop-price{font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--gold)}
+
+/* avatar samples */
+.avatar-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:10px 0}
+.avatar-sample{aspect-ratio:1;border-radius:50%;background:linear-gradient(135deg,rgba(91,191,160,0.15),rgba(201,168,76,0.08));display:flex;align-items:center;justify-content:center;font-size:28px;border:1px solid rgba(91,191,160,0.15);cursor:pointer;transition:transform 0.2s}
+.avatar-sample:active{transform:scale(0.93)}
+.avatar-label{font-size:9px;color:var(--sub);text-align:center;margin-top:4px;letter-spacing:0.04em}
+.avatar-wrap{text-align:center}
+
+/* ── sticky bottom ── */
+.sticky-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:390px;padding:12px 16px;background:linear-gradient(180deg,transparent 0%,rgba(10,15,20,0.96) 30%,rgba(10,15,20,1) 100%);z-index:90}
+.sticky-inner{display:flex;align-items:center;gap:10px}
+.sticky-cta{flex:1;padding:13px 0;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light));border:none;border-radius:4px;color:rgba(14,10,4,0.95);font-family:'Noto Serif SC',serif;font-size:13px;font-weight:500;letter-spacing:0.14em;cursor:pointer}
+
+/* ── tip tag ── */
+.tip-tag{display:inline-block;font-size:9px;padding:2px 7px;border-radius:10px;letter-spacing:0.06em;vertical-align:middle;margin-left:6px}
+.tip-tag.lucky{background:rgba(91,191,160,0.15);color:var(--jade-mid);border:1px solid rgba(91,191,160,0.2)}
+.tip-tag.warn{background:rgba(201,130,10,0.12);color:var(--amber);border:1px solid rgba(201,130,10,0.2)}
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">← 返回</button>
+
+<div class="header">
+  <div class="header-title">旺运生活局</div>
+  <div class="header-sub">五行相生 · 万物皆可旺</div>
+  <div class="jade-line"></div>
+</div>
+
+<!-- 选生肖 -->
+<div class="section">
+  <div class="sec-label">选择您的生肖</div>
+  <div class="zodiac-grid" id="zodiacGrid">
+    <div class="z-btn" data-z="rat"    onclick="selectZ(this)"><span class="z-emoji">🐭</span><span class="z-name">鼠</span></div>
+    <div class="z-btn" data-z="ox"     onclick="selectZ(this)"><span class="z-emoji">🐮</span><span class="z-name">牛</span></div>
+    <div class="z-btn" data-z="tiger"  onclick="selectZ(this)"><span class="z-emoji">🐯</span><span class="z-name">虎</span></div>
+    <div class="z-btn" data-z="rabbit" onclick="selectZ(this)"><span class="z-emoji">🐰</span><span class="z-name">兔</span></div>
+    <div class="z-btn" data-z="dragon" onclick="selectZ(this)"><span class="z-emoji">🐲</span><span class="z-name">龙</span></div>
+    <div class="z-btn" data-z="snake"  onclick="selectZ(this)"><span class="z-emoji">🐍</span><span class="z-name">蛇</span></div>
+    <div class="z-btn" data-z="horse"  onclick="selectZ(this)"><span class="z-emoji">🐴</span><span class="z-name">马</span></div>
+    <div class="z-btn" data-z="goat"   onclick="selectZ(this)"><span class="z-emoji">🐑</span><span class="z-name">羊</span></div>
+    <div class="z-btn" data-z="monkey" onclick="selectZ(this)"><span class="z-emoji">🐵</span><span class="z-name">猴</span></div>
+    <div class="z-btn" data-z="rooster"onclick="selectZ(this)"><span class="z-emoji">🐓</span><span class="z-name">鸡</span></div>
+    <div class="z-btn" data-z="dog"    onclick="selectZ(this)"><span class="z-emoji">🐶</span><span class="z-name">狗</span></div>
+    <div class="z-btn" data-z="pig"    onclick="selectZ(this)"><span class="z-emoji">🐷</span><span class="z-name">猪</span></div>
+  </div>
+  <div id="elemBadge" class="element-badge"></div>
+</div>
+
+<div class="section">
+  <button class="cta-btn" id="genBtn" onclick="generate()" disabled>选择生肖后查看旺运局 →</button>
+</div>
+
+<div class="loading-wrap" id="loadingWrap">
+  <div class="spin-ring"></div>
+  <div class="loading-txt">正在推算五行旺运局…</div>
+</div>
+
+<div class="results" id="results">
+
+  <!-- 旺运植物 -->
+  <div class="cat-card" onclick="toggleCat(this)">
+    <div class="cat-header">
+      <div class="cat-left"><span class="cat-icon">🌿</span><span class="cat-title">旺运植物</span></div>
+      <span class="cat-arrow">▾</span>
+    </div>
+    <div class="cat-body" id="plants-body"></div>
+  </div>
+
+  <!-- 旺运动物 -->
+  <div class="cat-card" onclick="toggleCat(this)">
+    <div class="cat-header">
+      <div class="cat-left"><span class="cat-icon">🐟</span><span class="cat-title">旺运鱼 · 宠物</span></div>
+      <span class="cat-arrow">▾</span>
+    </div>
+    <div class="cat-body" id="pets-body"></div>
+  </div>
+
+  <!-- 旺运发型 -->
+  <div class="cat-card" onclick="toggleCat(this)">
+    <div class="cat-header">
+      <div class="cat-left"><span class="cat-icon">💇</span><span class="cat-title">旺运发型</span></div>
+      <span class="cat-arrow">▾</span>
+    </div>
+    <div class="cat-body" id="hair-body"></div>
+  </div>
+
+  <!-- 穿衣颜色 -->
+  <div class="cat-card" onclick="toggleCat(this)">
+    <div class="cat-header">
+      <div class="cat-left"><span class="cat-icon">👗</span><span class="cat-title">穿衣旺运色</span></div>
+      <span class="cat-arrow">▾</span>
+    </div>
+    <div class="cat-body" id="cloth-body"></div>
+  </div>
+
+  <!-- 床单被罩 -->
+  <div class="cat-card" onclick="toggleCat(this)">
+    <div class="cat-header">
+      <div class="cat-left"><span class="cat-icon">🛏️</span><span class="cat-title">床品 · 卧室色</span></div>
+      <span class="cat-arrow">▾</span>
+    </div>
+    <div class="cat-body" id="bed-body"></div>
+  </div>
+
+  <!-- 鞋子 -->
+  <div class="cat-card" onclick="toggleCat(this)">
+    <div class="cat-header">
+      <div class="cat-left"><span class="cat-icon">👟</span><span class="cat-title">旺运鞋色</span></div>
+      <span class="cat-arrow">▾</span>
+    </div>
+    <div class="cat-body" id="shoes-body"></div>
+  </div>
+
+  <!-- 家具木材 -->
+  <div class="cat-card" onclick="toggleCat(this)">
+    <div class="cat-header">
+      <div class="cat-left"><span class="cat-icon">🪑</span><span class="cat-title">家具 · 木材色</span></div>
+      <span class="cat-arrow">▾</span>
+    </div>
+    <div class="cat-body" id="furniture-body"></div>
+  </div>
+
+  <!-- 旺运头像 -->
+  <div class="cat-card" onclick="toggleCat(this)">
+    <div class="cat-header">
+      <div class="cat-left"><span class="cat-icon">🖼️</span><span class="cat-title">旺运头像推荐</span></div>
+      <span class="cat-arrow">▾</span>
+    </div>
+    <div class="cat-body" id="avatar-body"></div>
+  </div>
+
+  <!-- 风景挂画 -->
+  <div class="cat-card" onclick="toggleCat(this)">
+    <div class="cat-header">
+      <div class="cat-left"><span class="cat-icon">🏔️</span><span class="cat-title">旺运风景挂画</span></div>
+      <span class="cat-arrow">▾</span>
+    </div>
+    <div class="cat-body" id="painting-body"></div>
+  </div>
+
+  <!-- 挂饰摆件项链 -->
+  <div class="cat-card" onclick="toggleCat(this)">
+    <div class="cat-header">
+      <div class="cat-left"><span class="cat-icon">💎</span><span class="cat-title">旺运挂饰 · 摆件 · 项链</span></div>
+      <span class="cat-arrow">▾</span>
+    </div>
+    <div class="cat-body" id="jewelry-body"></div>
+  </div>
+
+</div>
+
+<!-- sticky -->
+<div class="sticky-bar" id="stickyBar" style="display:none">
+  <div class="sticky-inner">
+    <button class="sticky-cta" onclick="window.location.href='bazi.html'">结合八字精算完整旺运局 · $9.9</button>
+  </div>
+</div>
+
+<script>
+// ── Data ──────────────────────────────────────────────────────────────────────
+const ELEM = {
+  rat:'水',ox:'土',tiger:'木',rabbit:'木',dragon:'土',snake:'火',
+  horse:'火',goat:'土',monkey:'金',rooster:'金',dog:'土',pig:'水'
+};
+const ELEM_COLOR = {
+  水:{bg:'rgba(30,80,160,0.15)',border:'rgba(80,140,255,0.3)',text:'#88b8ff'},
+  木:{bg:'rgba(30,120,60,0.15)',border:'rgba(80,200,100,0.3)',text:'#88e0a0'},
+  火:{bg:'rgba(160,50,30,0.15)',border:'rgba(255,100,60,0.3)',text:'#ffaa88'},
+  土:{bg:'rgba(120,80,20,0.15)',border:'rgba(200,160,60,0.3)',text:'#e8c870'},
+  金:{bg:'rgba(100,100,100,0.15)',border:'rgba(200,200,200,0.3)',text:'#d8d8d8'},
+};
+const ELEM_EMOJI = {水:'💧',木:'🌿',火:'🔥',土:'🪨',金:'⚪'};
+
+const DATA = {
+  水:{
+    plants:[
+      {name:'富贵竹',desc:'单数9根最旺，置于东南角，象征节节高升，招财纳福。'},
+      {name:'铜钱草',desc:'圆叶像铜钱，专旺偏财，放书桌或财位，入账加速。'},
+      {name:'水培绿萝',desc:'水命最爱水培植物，玻璃瓶装清水，净化气场同时旺事业。'},
+    ],
+    pets:[
+      {name:'锦鲤·9条',desc:'8条金色+1条黑色，黑鱼吸煞，金鱼旺财，鱼缸放大门斜对角。'},
+      {name:'乌龟',desc:'水命养龟最合，放北方，龟寿绵长同时稳住财运，不流失。'},
+      {name:'蓝色孔雀鱼',desc:'小巧好养，蓝色属水，成群养比单条旺运效果更好。'},
+    ],
+    hair:[
+      {name:'发型推荐',desc:'深黑或深蓝黑发色最旺，中长直发或微微波浪均可。'},
+      {name:'发色禁忌',desc:'避免染亮黄金色（金克水），建议保留深色系。'},
+      {name:'造型重点',desc:'头发要有光泽感，干枯分叉损运势，定期护理是关键。'},
+    ],
+    clothes:{colors:[
+      {hex:'#0a2a6e',name:'深海蓝',use:'工作/谈判'},
+      {hex:'#1a1a2e',name:'午夜黑',use:'重要场合'},
+      {hex:'#c0c8d8',name:'银灰色',use:'日常通勤'},
+      {hex:'#4a6fa5',name:'矢车菊蓝',use:'约会/社交'},
+    ],avoid:'避免亮红色（火克水），正红上衣会影响财运流动。'},
+    bed:{main:'#1a3a6e',mainName:'深蓝',accent:'#8ab0d8',accentName:'浅蓝银',desc:'被罩选深蓝或午夜蓝，枕套可用银灰或浅蓝配色，营造平静流动的水能量，改善睡眠质量和财运。避免红色床品。'},
+    shoes:{colors:[
+      {hex:'#1a2a4e',name:'深蓝色',use:'上班首选'},
+      {hex:'#2a2a3e',name:'深黑色',use:'正式场合'},
+      {hex:'#8898b8',name:'灰蓝色',use:'休闲外出'},
+    ],tip:'鞋底干净是关键，旧鞋破洞阻碍气运，定期清洁或更换。'},
+    furniture:{main:'深色胡桃木或黑檀',tip:'选深色木纹家具，颜色偏深棕到黑，线条流畅无棱角，玻璃配件加分（水元素）。桌面镜面材质极旺水命财运。'},
+    avatar:{type:'山水风景蓝色系',desc:'头像用山水图或大海日落，主色蓝/黑/银，忌用大红底色。水墨画风格最佳，给人深邃有内涵的印象。',samples:['🌊','🏔️','🌙']},
+    painting:{name:'流水旺财图',desc:'大海、瀑布、湖泊题材，挂在家中北方或大厅正对门处，取"财水滚滚来"之意。',dir:'北方'},
+    jewelry:[
+      {name:'青金石项链',desc:'深蓝色宝石，水命专属，旺智慧旺贵人，适合常戴。',price:'$38'},
+      {name:'海蓝宝手串',desc:'浅蓝透明宝石，水气充足，旺感情缘分，女生尤佳。',price:'$45'},
+      {name:'黑曜石摆件',desc:'黑色火山玻璃，挡煞首选，放门口或桌角辟邪护宅。',price:'$29'},
+      {name:'水晶球（透明）',desc:'摆财位，折射光线，招气纳财，直径5cm以上效果最佳。',price:'$39'},
+    ],
+  },
+  木:{
+    plants:[
+      {name:'绿萝',desc:'生命力极强，旺事业升职，放办公桌左侧（青龙位）最有效。'},
+      {name:'发财树',desc:'木命旺树，客厅东南角放棵大发财树，财气旺整个家。'},
+      {name:'兰花',desc:'高雅旺贵气，吸引贵人缘，品种选蝴蝶兰，白色或紫色均佳。'},
+    ],
+    pets:[
+      {name:'仓鼠',desc:'圆润可爱，木命养仓鼠极旺，毛色以棕色/米色为佳，每天喂食增感情运。'},
+      {name:'绿色草龟',desc:'绿壳龟属木，木命养龟旺健康和稳定，放东方是最佳位置。'},
+      {name:'孔雀鱼（绿尾）',desc:'绿色尾巴品种，木命专属，多几条活跃气场，旺事业冲劲。'},
+    ],
+    hair:[
+      {name:'发型推荐',desc:'自然棕色或深棕发色最佳，中长微卷或自然波浪，贴近大地自然感。'},
+      {name:'发色加分',desc:'茶棕/原木色/枫叶棕，以自然植物色为准，旺木命生命力。'},
+      {name:'禁忌',desc:'避免全白全灰发色（金克木），偶尔挑染细高光可以，不要全头漂色。'},
+    ],
+    clothes:{colors:[
+      {hex:'#2d6a2d',name:'森林绿',use:'工作谈判'},
+      {hex:'#8b5a2b',name:'原木棕',use:'日常首选'},
+      {hex:'#a8c5a0',name:'薄荷绿',use:'约会/休闲'},
+      {hex:'#5c8a3c',name:'橄榄绿',use:'重要场合'},
+    ],avoid:'避免纯白（金克木），白色上衣搭配困难，建议用奶白或米色替代。'},
+    bed:{main:'#2d5a2d',mainName:'深绿',accent:'#c8a070',accentName:'原木棕',desc:'被罩选绿色系或自然棕色，营造森林感，帮助睡眠同时增强木命生命力，床头柜放小植物加分。'},
+    shoes:{colors:[
+      {hex:'#4a3018',name:'深棕色',use:'上班/约会'},
+      {hex:'#2d6a2d',name:'墨绿色',use:'休闲'},
+      {hex:'#8b6914',name:'焦糖棕',use:'通勤'},
+    ],tip:'皮质棕色鞋最旺木命，鞋带整齐、鞋面干净是运势加持的基础。'},
+    furniture:{main:'浅色原木或橡木',tip:'浅木色家具最旺，原木纹理、北欧简约风格，白蜡木、橡木、松木均佳。植物摆件配合绿植，营造森系气场。'},
+    avatar:{type:'花卉植物绿色系',desc:'头像用花朵、竹林、森林照片，主色绿/棕/原木，给人亲和、有活力的印象，适合社交拓展人脉。',samples:['🌸','🎋','🌿']},
+    painting:{name:'苍松翠竹图',desc:'青山绿树或竹林挂画，放东方墙面，旺健康旺事业生命力，竹子代表节节高升。',dir:'东方'},
+    jewelry:[
+      {name:'绿幽灵手串',desc:'绿色金字塔水晶，木命最强旺财石，旺事业正财，越戴越有钱。',price:'$58'},
+      {name:'翡翠观音吊坠',desc:'绿色翡翠属木，旺贵人保平安，质量越高效果越持久。',price:'$88'},
+      {name:'竹节摆件',desc:'实木竹节雕刻摆件，放书桌或客厅，节节高升好寓意。',price:'$35'},
+      {name:'木质佛珠手链',desc:'檀香或沉香材质，木命护体法器，安神辟邪旺运三合一。',price:'$42'},
+    ],
+  },
+  火:{
+    plants:[
+      {name:'红掌',desc:'鲜红色花朵，火上加火，旺名气和人气，放南方或客厅正中。'},
+      {name:'桂花树',desc:'香气四溢，旺贵人缘和口才，常见考试前养桂花树的风俗。'},
+      {name:'玫瑰',desc:'红色玫瑰旺感情，黄色旺财，火命养玫瑰两者兼得，室内盆栽即可。'},
+    ],
+    pets:[
+      {name:'橘猫',desc:'橘色等于金色，旺财又亲人，火命养橘猫家庭氛围活跃，好事连连。'},
+      {name:'红色金鱼',desc:'朱砂红金鱼，火命专属，9条养在南方，人气财气双旺。'},
+      {name:'鹦鹉',desc:'色彩鲜艳的鹦鹉活跃气场，火命养鸟旺口才和社交运，人缘大增。'},
+    ],
+    hair:[
+      {name:'发型推荐',desc:'烫卷发或波浪卷，红棕/枫红/酒红发色最旺，增加火的热情活力感。'},
+      {name:'发色加分',desc:'铜红、酒红、暖棕，避免冷色系染发，暖调颜色让气场更旺盛。'},
+      {name:'禁忌',desc:'避免蓝黑色（水克火），冷色染发会削弱火命的热情和行动力。'},
+    ],
+    clothes:{colors:[
+      {hex:'#c0392b',name:'正红色',use:'重要谈判/面试'},
+      {hex:'#e67e22',name:'橙色',use:'日常/约会'},
+      {hex:'#8e44ad',name:'紫罗兰',use:'社交/演讲'},
+      {hex:'#f39c12',name:'金黄色',use:'旺财场合'},
+    ],avoid:'避免深蓝黑（水克火），穿深蓝会压制火命热情，重要场合尤其注意。'},
+    bed:{main:'#8b0000',mainName:'酒红',accent:'#f4a460',accentName:'沙橙',desc:'床品选酒红色或温暖橙棕色系，增加卧室暖意，火命在温暖色系中睡眠更香，感情运也更旺。'},
+    shoes:{colors:[
+      {hex:'#c0392b',name:'红色系',use:'重要场合'},
+      {hex:'#8b4513',name:'暖棕色',use:'日常'},
+      {hex:'#e8820a',name:'橙棕色',use:'休闲'},
+    ],tip:'红色或暖棕色鞋最旺火命行动力，皮革材质比帆布更聚气，鞋跟略高提升气场。'},
+    furniture:{main:'红木或樱桃木',tip:'深红木材（红木、樱桃木）最旺，家具颜色偏暖红棕，圆润曲线造型配合，灯光用暖黄色光增加火元素。'},
+    avatar:{type:'夕阳花卉暖色系',desc:'头像用夕阳、红花、篝火等暖色调图片，主色红/橙/金，展现热情活力，人缘好、名气涨。',samples:['🌅','🌺','🔥']},
+    painting:{name:'旭日东升图',desc:'日出、凤凰、或红色牡丹挂画，挂在南方墙面，旺名气事业，逢贵人，出人头地。',dir:'南方'},
+    jewelry:[
+      {name:'红玛瑙手串',desc:'火命最强旺运石，深红色旺财旺名气，常戴防小人、增贵人。',price:'$48'},
+      {name:'石榴石项链',desc:'暗红宝石，旺感情旺桃花，火命女生佩戴增加魅力值。',price:'$55'},
+      {name:'朱砂葫芦摆件',desc:'红色葫芦收煞纳福，放在门口或床头，化解是非口舌。',price:'$32'},
+      {name:'红绳貔貅',desc:'红绳串貔貅，招财辟邪双效合一，火命佩戴效果最强。',price:'$28'},
+    ],
+  },
+  土:{
+    plants:[
+      {name:'芦荟',desc:'土命养芦荟最旺健康，摆放西南方，皮肤变好同时稳固家宅运。'},
+      {name:'仙人掌',desc:'挡煞第一植物，放窗台，土命配仙人掌增强稳定性，减少小人。'},
+      {name:'虎皮兰',desc:'叶片挺立，旺事业稳定性，不需多浇水好养活，土命最爱。'},
+    ],
+    pets:[
+      {name:'田园犬',desc:'土命养狗旺家宅安全感，田园犬或金毛均可，忠诚护家，家庭运大升。'},
+      {name:'黄色金鱼',desc:'黄色属土，养6-9条，旺稳健财运，家中西南角放鱼缸最佳。'},
+      {name:'陆龟',desc:'土命特别旺龟类，陆龟象征稳固，放在土命财位，长寿旺运双收。'},
+    ],
+    hair:[
+      {name:'发型推荐',desc:'中长发、大地色系，棕色/亚麻/深金棕，给人稳重可靠的印象。'},
+      {name:'发色加分',desc:'巧克力棕、焦糖色、亚麻金，自然过渡色最旺，不建议做单色。'},
+      {name:'禁忌',desc:'避免绿色发色（木克土），绿发色会让土命变得动荡不稳。'},
+    ],
+    clothes:{colors:[
+      {hex:'#d4a843',name:'姜黄色',use:'上班/谈事'},
+      {hex:'#8b6914',name:'焦糖棕',use:'日常首选'},
+      {hex:'#c8a05a',name:'驼色米色',use:'约会'},
+      {hex:'#7a5c3a',name:'深棕色',use:'正式场合'},
+    ],avoid:'避免大面积绿色（木克土），尤其是鲜绿上衣，影响土命稳定性。'},
+    bed:{main:'#c8a050',mainName:'暖黄',accent:'#8b6914',accentName:'棕色',desc:'床品选暖黄、驼色或米棕色系，大地色调卧室让土命安心入睡，家庭关系和谐，稳固财运不流失。'},
+    shoes:{colors:[
+      {hex:'#8b6914',name:'棕色皮鞋',use:'上班/出行'},
+      {hex:'#c8a050',name:'驼色',use:'休闲'},
+      {hex:'#4a3018',name:'深棕色',use:'正式场合'},
+    ],tip:'棕色系皮鞋最旺土命，鞋跟厚实稳重，代表踏实接地，避免细高跟（不稳定）。'},
+    furniture:{main:'厚实深色实木',tip:'选厚重实木家具，颜色深棕到黑棕，传统中式或美式乡村风格，稳重大气，土命在这种环境中气场最强。'},
+    avatar:{type:'古风人像或棕色系风景',desc:'头像用国风古装、山野田园或大地色调风景，主色棕/黄/米，给人沉稳可信赖的印象，适合职场建立权威。',samples:['🏯','🌾','🗿']},
+    painting:{name:'满山金秋图',desc:'秋天金色山林或丰收麦田挂画，放西南方，旺家庭运和稳定财运，土命最适合大地系挂画。',dir:'西南方'},
+    jewelry:[
+      {name:'黄水晶手串',desc:'土命最强旺财石，明亮黄色聚财能量，旺正财旺偏财双效。',price:'$52'},
+      {name:'琥珀项链',desc:'天然琥珀温润大地色，土命佩戴增加稳定感，辟邪旺健康。',price:'$65'},
+      {name:'麒麟铜摆件',desc:'铜制麒麟镇宅纳财，放大门右侧，土命用铜器效果加倍。',price:'$48'},
+      {name:'黄玉葫芦吊坠',desc:'葫芦形状收纳福气，黄玉材质旺土命财运，居家出行均宜。',price:'$38'},
+    ],
+  },
+  金:{
+    plants:[
+      {name:'白掌',desc:'白色花朵属金，金命养白掌旺贵气和清洁感，放西方或西北方。'},
+      {name:'马蹄莲',desc:'纯白优雅，旺金命高洁气质，吸引高质量人脉和机会。'},
+      {name:'栀子花',desc:'白色香花，旺财旺口才，金命养栀子增加说话的说服力。'},
+    ],
+    pets:[
+      {name:'白猫或银灰猫',desc:'白色或灰色猫属金，金命养白猫家宅干净，气场清正，人际关系变好。'},
+      {name:'龙鱼',desc:'龙鱼旺财王中王，金命单养一条气势最强，鱼缸要大，放西北方。'},
+      {name:'白色兔子',desc:'白兔属金，金命养兔增加温柔亲和力，同时旺贵人缘。'},
+    ],
+    hair:[
+      {name:'发型推荐',desc:'直发或轻盈飘逸中长发，黑色或冷棕色发色，干净利落是关键。'},
+      {name:'发色加分',desc:'冷棕、灰调棕、高级灰，冷色调发色让金命的气场更凌厉，更有型。'},
+      {name:'禁忌',desc:'避免大红色发色（火克金），红发会消耗金命的精气，变得浮躁。'},
+    ],
+    clothes:{colors:[
+      {hex:'#f0f0f0',name:'纯白色',use:'重要场合'},
+      {hex:'#c0c0c0',name:'银灰色',use:'日常/上班'},
+      {hex:'#c9a84c',name:'金色',use:'旺财场合'},
+      {hex:'#e8e0d0',name:'象牙白',use:'约会'},
+    ],avoid:'避免大红火红色（火克金），重要日子穿红会破财，建议以白金灰为主色调。'},
+    bed:{main:'#e8e8e8',mainName:'白色',accent:'#c0c0c0',accentName:'银灰',desc:'床品选纯白或银灰色，高支数棉质最佳，干净的白色卧室让金命睡眠精力充沛，气场干净无杂念。'},
+    shoes:{colors:[
+      {hex:'#f0f0f0',name:'白色球鞋',use:'休闲/约会'},
+      {hex:'#888888',name:'灰色',use:'日常通勤'},
+      {hex:'#c9a84c',name:'金属色',use:'正式场合'},
+    ],tip:'干净白色鞋最旺金命，鞋面要保持极致干净，一点污渍都影响气场，金命的鞋是人设的一部分。'},
+    furniture:{main:'白色烤漆或浅色金属',tip:'现代简约白色家具，或带金属（铁/铝）配件，线条简洁利落，金命在极简空间中思维最清晰，决策最准。'},
+    avatar:{type:'简约白色几何或水墨',desc:'头像用白底简约设计、雪山、白鹤，主色白/银/灰，冷调高级感，给人专业、值得信赖的印象，适合打造个人品牌。',samples:['🤍','🦢','❄️']},
+    painting:{name:'雄鹰展翅图',desc:'白鹤或雄鹰飞翔挂画，放西方或西北方，旺事业腾飞、升职加薪，金命最适合鸟类主题挂画。',dir:'西方'},
+    jewelry:[
+      {name:'白水晶手串',desc:'金命最强净化石，旺清晰判断力，消除负能量，越戴越聪明。',price:'$42'},
+      {name:'银质貔貅项链',desc:'银属金，貔貅旺财，金命戴银制貔貅招财效果翻倍，防小人。',price:'$68'},
+      {name:'白玉观音吊坠',desc:'白玉温润，观音护体，金命佩戴逢凶化吉，贵人相助增多。',price:'$128'},
+      {name:'金属风铃摆件',desc:'放西北方，清脆声音净化气场，驱邪纳气，金命专属摆件。',price:'$36'},
+    ],
+  },
+};
+
+let curZ = null, curElem = null;
+
+function selectZ(el){
+  document.querySelectorAll('.z-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  curZ = el.dataset.z;
+  curElem = ELEM[curZ];
+  const ec = ELEM_COLOR[curElem];
+  const badge = document.getElementById('elemBadge');
+  badge.style.background = ec.bg;
+  badge.style.borderColor = ec.border;
+  badge.style.color = ec.text;
+  badge.textContent = `${ELEM_EMOJI[curElem]} 五行属${curElem}`;
+  badge.classList.remove('show');
+  void badge.offsetWidth;
+  badge.classList.add('show');
+  document.getElementById('genBtn').disabled = false;
+  document.getElementById('genBtn').textContent = `查看${curElem}命旺运生活局 →`;
+}
+
+function generate(){
+  if(!curElem) return;
+  document.getElementById('genBtn').style.display = 'none';
+  document.getElementById('loadingWrap').classList.add('show');
+  setTimeout(()=>{
+    document.getElementById('loadingWrap').classList.remove('show');
+    fillResults();
+    document.getElementById('results').classList.add('show');
+    document.getElementById('stickyBar').style.display = 'block';
+    document.getElementById('genBtn').style.display = 'block';
+    document.getElementById('genBtn').textContent = '重新选择生肖';
+    document.getElementById('genBtn').onclick = ()=>{location.reload()};
+  }, 1800);
+}
+
+function fillResults(){
+  const d = DATA[curElem];
+
+  // plants
+  document.getElementById('plants-body').innerHTML = d.plants.map(p=>
+    `<div class="item-row"><div class="item-dot"></div><div class="item-content"><div class="item-name">${p.name}</div><div class="item-desc">${p.desc}</div></div></div>`
+  ).join('');
+
+  // pets
+  document.getElementById('pets-body').innerHTML = d.pets.map(p=>
+    `<div class="item-row"><div class="item-dot"></div><div class="item-content"><div class="item-name">${p.name}</div><div class="item-desc">${p.desc}</div></div></div>`
+  ).join('');
+
+  // hair
+  document.getElementById('hair-body').innerHTML = d.hair.map(h=>
+    `<div class="item-row"><div class="item-dot"></div><div class="item-content"><div class="item-name">${h.name}</div><div class="item-desc">${h.desc}</div></div></div>`
+  ).join('');
+
+  // clothes
+  const cl = d.clothes;
+  document.getElementById('cloth-body').innerHTML = `
+    <div class="color-row">${cl.colors.map(c=>
+      `<div class="swatch"><div class="swatch-dot" style="background:${c.hex}"></div><div class="swatch-info"><div class="swatch-name">${c.name}</div><div class="swatch-use">${c.use}</div></div></div>`
+    ).join('')}</div>
+    <div class="item-row" style="border:none;padding-top:6px"><div class="item-dot" style="background:#e8820a;margin-top:5px"></div><div class="item-content"><div class="item-name" style="color:var(--amber)">注意</div><div class="item-desc">${cl.avoid}</div></div></div>`;
+
+  // bed
+  const bed = d.bed;
+  document.getElementById('bed-body').innerHTML = `
+    <div style="display:flex;gap:8px;padding:10px 0 8px">
+      <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--mid);border-radius:6px;border:1px solid rgba(91,191,160,0.08)">
+        <div style="width:24px;height:24px;border-radius:4px;background:${bed.main};border:1px solid rgba(255,255,255,0.1)"></div>
+        <div><div style="font-size:11px;color:var(--text)">${bed.mainName}</div><div style="font-size:9px;color:var(--sub)">主色</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;padding:8px 12px;background:var(--mid);border-radius:6px;border:1px solid rgba(91,191,160,0.08)">
+        <div style="width:24px;height:24px;border-radius:4px;background:${bed.accent};border:1px solid rgba(255,255,255,0.1)"></div>
+        <div><div style="font-size:11px;color:var(--text)">${bed.accentName}</div><div style="font-size:9px;color:var(--sub)">配色</div></div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--sub);line-height:1.8;padding-bottom:4px">${bed.desc}</div>`;
+
+  // shoes
+  const sh = d.shoes;
+  document.getElementById('shoes-body').innerHTML = `
+    <div class="color-row">${sh.colors.map(c=>
+      `<div class="swatch"><div class="swatch-dot" style="background:${c.hex}"></div><div class="swatch-info"><div class="swatch-name">${c.name}</div><div class="swatch-use">${c.use}</div></div></div>`
+    ).join('')}</div>
+    <div style="font-size:10px;color:var(--sub);line-height:1.8;padding:6px 0 2px">💡 ${sh.tip}</div>`;
+
+  // furniture
+  const fu = d.furniture;
+  document.getElementById('furniture-body').innerHTML = `
+    <div class="item-row"><div class="item-dot"></div><div class="item-content">
+      <div class="item-name">推荐材质</div><div class="item-desc">${fu.main}</div>
+    </div></div>
+    <div class="item-row" style="border:none"><div class="item-dot" style="background:var(--gold)"></div><div class="item-content">
+      <div class="item-name" style="color:var(--gold-light)">风水建议</div><div class="item-desc">${fu.tip}</div>
+    </div></div>`;
+
+  // avatar
+  const av = d.avatar;
+  document.getElementById('avatar-body').innerHTML = `
+    <div style="padding:10px 0 6px">
+      <div style="font-size:11px;color:var(--jade-mid);margin-bottom:4px">推荐类型：${av.type}</div>
+      <div style="font-size:10px;color:var(--sub);line-height:1.8;margin-bottom:10px">${av.desc}</div>
+      <div style="display:flex;gap:10px;align-items:center">
+        ${av.samples.map(s=>`<div style="width:52px;height:52px;border-radius:50%;background:var(--mid);border:1px solid rgba(91,191,160,0.2);display:flex;align-items:center;justify-content:center;font-size:26px">${s}</div>`).join('')}
+        <div style="flex:1;padding-left:8px">
+          <div style="font-size:10px;color:var(--sub);line-height:1.8">AI生成专属旺运头像<br>即将上线</div>
+          <div style="font-size:9px;color:var(--jade);margin-top:4px;border:1px solid rgba(91,191,160,0.2);padding:3px 8px;border-radius:10px;display:inline-block">即将开放</div>
+        </div>
+      </div>
+    </div>`;
+
+  // painting
+  const pa = d.painting;
+  document.getElementById('painting-body').innerHTML = `
+    <div class="item-row"><div class="item-dot" style="background:var(--gold)"></div><div class="item-content">
+      <div class="item-name">${pa.name} <span class="tip-tag lucky">挂${pa.dir}</span></div>
+      <div class="item-desc">${pa.desc}</div>
+    </div></div>
+    <div class="shop-row">
+      <div class="shop-item" onclick="window.location.href='shop.html'">
+        <div class="shop-thumb">🏔️</div>
+        <div class="shop-info"><div class="shop-name">${pa.name}·定制</div><div class="shop-price">$38</div></div>
+      </div>
+      <div class="shop-item" onclick="window.location.href='shop.html'">
+        <div class="shop-thumb">🎨</div>
+        <div class="shop-info"><div class="shop-name">AI风水画·个性定制</div><div class="shop-price">$58</div></div>
+      </div>
+    </div>`;
+
+  // jewelry
+  const je = d.jewelry;
+  document.getElementById('jewelry-body').innerHTML =
+    je.map(j=>`<div class="item-row"><div class="item-dot" style="background:var(--gold)"></div><div class="item-content" style="flex:1;display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+      <div><div class="item-name">${j.name}</div><div class="item-desc">${j.desc}</div></div>
+      <div onclick="window.location.href='shop.html'" style="flex-shrink:0;padding:5px 10px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.25);border-radius:4px;font-family:'Cormorant Garamond',serif;font-size:14px;color:var(--gold);cursor:pointer;white-space:nowrap">${j.price}</div>
+    </div></div>`).join('');
+
+  // open first card
+  document.querySelector('.cat-card').classList.add('open');
+}
+
+function toggleCat(card){
+  const wasOpen = card.classList.contains('open');
+  card.classList.toggle('open');
+}
+</script>
+</body>
+</html>
