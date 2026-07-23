@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#FAFAF8">
+<title>善缘 · 命理大师咨询</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --jade-deep:    #3d9e82;
+  --jade-main:    #5bbfa0;
+  --jade-mid:     #8dd9bf;
+  --jade-bright:  #c8f0e0;
+  --jade-glow:    rgba(141,217,191,0.35);
+  --gold:         #c9a84c;
+  --gold-light:   #e8d08a;
+  --ink:          #1a1a18;
+  --ink-mid:      #4a4a46;
+  --ink-light:    #8a8a84;
+  --bg:           #FAFAF8;
+  --bg-card:      #FFFFFF;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  font-family: 'Noto Serif SC', serif;
+  color: var(--ink);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 0 20px 40px;
+  overflow-y: auto;
+}
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(18px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+@keyframes jade-breathe {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+/* ── Master Avatar ── */
+.master-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 36px 0 20px;
+}
+
+.master-avatar {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 34% 27%, rgba(255,255,255,0.88) 0%, rgba(255,255,255,0.3) 7%, transparent 20%),
+    radial-gradient(circle at 70% 68%, var(--jade-deep) 0%, transparent 38%),
+    radial-gradient(circle at 20% 72%, rgba(0,180,80,0.2) 0%, transparent 35%),
+    radial-gradient(ellipse at 42% 38%, var(--jade-bright) 0%, var(--jade-mid) 22%, var(--jade-main) 52%, var(--jade-deep) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38px;
+  box-shadow: 0 8px 30px var(--jade-glow);
+  animation: jade-breathe 5s ease-in-out infinite;
+  margin-bottom: 16px;
+}
+
+.master-name {
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.master-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  color: var(--gold);
+  margin-bottom: 18px;
+}
+
+.gold-line {
+  width: 60px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 0 auto;
+}
+
+/* ── Credentials ── */
+.cred-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 18px 0 24px;
+  padding: 16px;
+  background: var(--bg-card);
+  border: 1px solid #eeeee8;
+  border-radius: 8px;
+}
+
+.cred-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.cred-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--jade-main);
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+.cred-text {
+  font-size: 12px;
+  color: var(--ink-mid);
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+}
+
+/* ── Section Header ── */
+.section-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.section-head span { font-size: 12px; letter-spacing: 0.18em; color: var(--gold); white-space: nowrap; }
+.section-head::before, .section-head::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4));
+}
+.section-head::after {
+  background: linear-gradient(90deg, rgba(201,168,76,0.4), transparent);
+}
+
+/* ── Package Cards ── */
+.pkg-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pkg-card {
+  background: var(--bg-card);
+  border: 1.5px solid #e0e0da;
+  border-radius: 8px;
+  padding: 16px 16px 14px;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.pkg-card.active {
+  border-color: var(--jade-main);
+  background: rgba(91,191,160,0.08);
+  box-shadow: 0 4px 18px rgba(91,191,160,0.18);
+}
+
+.pkg-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(91,191,160,0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.pkg-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.pkg-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 0.08em;
+}
+
+.pkg-desc {
+  font-size: 10px;
+  color: var(--ink-light);
+  letter-spacing: 0.05em;
+  line-height: 1.5;
+}
+
+.pkg-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--gold);
+  white-space: nowrap;
+}
+
+.pkg-price .unit {
+  font-size: 12px;
+  font-family: 'Noto Serif SC', serif;
+}
+
+/* ── Button ── */
+.btn-gold {
+  width: 100%;
+  padding: 15px 0;
+  margin-top: 22px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.btn-gold:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(201,168,76,0.35);
+}
+.btn-gold:active { transform: scale(0.97); }
+
+/* ── Urgency ── */
+.urgency-bar {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 12px 14px;
+  background: rgba(201,168,76,0.08);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 6px;
+}
+
+.urgency-bar .u-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  flex-shrink: 0;
+  animation: pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.urgency-bar .u-text {
+  font-size: 11px;
+  color: var(--ink-mid);
+  letter-spacing: 0.08em;
+}
+
+.urgency-bar .u-text strong {
+  color: var(--gold);
+  font-weight: 500;
+}
+
+/* ── Tag ── */
+.tag-gold {
+  display: inline-block;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  padding: 3px 10px;
+  border-radius: 2px;
+}
+</style>
+</head>
+<body>
+
+<button onclick="history.back()" style="position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--gold);letter-spacing:0.08em;cursor:pointer;padding:4px 8px">← 返回</button>
+
+<div class="master-section">
+  <div class="master-avatar">👁</div>
+  <div class="master-name">命理大师 · 玲</div>
+  <div class="master-title">MASTER LING · DESTINY READER</div>
+  <div class="gold-line"></div>
+</div>
+
+<div class="cred-wrap">
+  <div class="cred-item">
+    <div class="cred-dot"></div>
+    <div class="cred-text">易学世家传承，研习命理风水二十余载</div>
+  </div>
+  <div class="cred-item">
+    <div class="cred-dot"></div>
+    <div class="cred-text">曾为多位知名企业家及演艺界人士指点运势</div>
+  </div>
+  <div class="cred-item">
+    <div class="cred-dot"></div>
+    <div class="cred-text">擅长紫微斗数、八字合婚、流年趋吉避凶</div>
+  </div>
+</div>
+
+<div class="section-head"><span>咨询套餐</span></div>
+
+<div class="pkg-list">
+  <div class="pkg-card active" onclick="selectPkg(this, 0)">
+    <div class="pkg-icon">📝</div>
+    <div class="pkg-body">
+      <div class="pkg-name">文字咨询</div>
+      <div class="pkg-desc">详细文字解答 · 24小时内回复</div>
+    </div>
+    <div class="pkg-price"><span class="unit">¥</span>388</div>
+  </div>
+
+  <div class="pkg-card" onclick="selectPkg(this, 1)">
+    <div class="pkg-icon">🎙</div>
+    <div class="pkg-body">
+      <div class="pkg-name">30分钟语音</div>
+      <div class="pkg-desc">一对一语音通话 · 即时交流解答</div>
+    </div>
+    <div class="pkg-price"><span class="unit">¥</span>888</div>
+  </div>
+
+  <div class="pkg-card" onclick="selectPkg(this, 2)">
+    <div class="pkg-icon">📖</div>
+    <div class="pkg-body">
+      <div class="pkg-name">面批命书</div>
+      <div class="pkg-desc">整本命书详批 · 含流年大运解析</div>
+    </div>
+    <div class="pkg-price"><span class="unit">¥</span>1,888</div>
+  </div>
+</div>
+
+<button class="btn-gold">立即预约</button>
+
+<div class="urgency-bar">
+  <div class="u-dot"></div>
+  <div class="u-text">名额有限，当日仅接 <strong>3 位</strong></div>
+  <div class="u-dot"></div>
+</div>
+
+<script>
+function selectPkg(el, idx) {
+  document.querySelectorAll('.pkg-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+</script>
+
+</body>
+</html>

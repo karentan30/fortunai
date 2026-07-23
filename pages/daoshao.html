@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#FAFAF8">
+<title>善缘 · 代烧祈福</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --jade-deep:    #3d9e82;
+  --jade-main:    #5bbfa0;
+  --jade-mid:     #8dd9bf;
+  --jade-bright:  #c8f0e0;
+  --jade-glow:    rgba(141,217,191,0.35);
+  --gold:         #c9a84c;
+  --gold-light:   #e8d08a;
+  --ink:          #1a1a18;
+  --ink-mid:      #4a4a46;
+  --ink-light:    #8a8a84;
+  --bg:           #FAFAF8;
+  --bg-card:      #FFFFFF;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  font-family: 'Noto Serif SC', serif;
+  color: var(--ink);
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 0 20px 40px;
+  overflow-y: auto;
+}
+
+/* ── Animations ── */
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(18px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ── Header ── */
+.header {
+  width: 100%;
+  text-align: center;
+  padding: 34px 0 24px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+
+.gold-line {
+  width: 60px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 0 auto;
+}
+
+.subhead {
+  margin-top: 12px;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--ink-mid);
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* ── Service Tabs ── */
+.tab-wrap {
+  width: 100%;
+  display: flex;
+  gap: 10px;
+  margin: 24px 0 20px;
+}
+
+.tab-card {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1.5px solid #e0e0da;
+  border-radius: 8px;
+  padding: 16px 10px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.25s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab-card.active {
+  border-color: var(--jade-main);
+  background: rgba(91,191,160,0.08);
+}
+
+.tab-card .tab-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.tab-card .tab-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ink);
+  letter-spacing: 0.08em;
+}
+
+.tab-card .tab-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  color: var(--gold);
+  font-weight: 400;
+}
+
+.tab-card .tab-desc {
+  font-size: 10px;
+  color: var(--ink-light);
+  line-height: 1.5;
+  letter-spacing: 0.05em;
+}
+
+/* ── Form ── */
+.form-section {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.form-label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--gold);
+  margin-bottom: 8px;
+}
+
+.form-textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 14px;
+  background: var(--bg-card);
+  border: 1.5px solid #e0e0da;
+  border-radius: 6px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13px;
+  color: var(--ink);
+  line-height: 1.7;
+  outline: none;
+  resize: vertical;
+  transition: border-color 0.25s;
+}
+
+.form-textarea:focus {
+  border-color: var(--jade-main);
+}
+
+.form-textarea::placeholder {
+  color: var(--ink-light);
+  font-size: 12px;
+}
+
+/* ── Info Row ── */
+.info-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  background: rgba(91,191,160,0.06);
+  border-radius: 6px;
+  border: 1px solid rgba(91,191,160,0.15);
+}
+
+.info-row .info-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--jade-main);
+  flex-shrink: 0;
+}
+
+.info-row .info-text {
+  font-size: 12px;
+  color: var(--ink-mid);
+  letter-spacing: 0.06em;
+}
+
+.info-row .info-text strong {
+  color: var(--jade-main);
+  font-weight: 500;
+}
+
+/* ── Button ── */
+.btn-primary {
+  width: 100%;
+  padding: 15px 0;
+  margin-top: 24px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(201,168,76,0.35);
+}
+.btn-primary:active { transform: scale(0.97); }
+
+/* ── Footer ── */
+.footer-note {
+  width: 100%;
+  text-align: center;
+  margin-top: 18px;
+  font-size: 10px;
+  color: var(--ink-light);
+  letter-spacing: 0.12em;
+}
+
+.footer-note strong {
+  color: var(--gold);
+  font-weight: 500;
+  margin-left: 4px;
+}
+</style>
+</head>
+<body>
+
+<button onclick="history.back()" style="position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--gold);letter-spacing:0.08em;cursor:pointer;padding:4px 8px">← 返回</button>
+
+<div class="header">
+  <div class="title">🕯 代烧祈福</div>
+  <div class="gold-line"></div>
+  <div class="subhead">为你诵经祈愿，传递心意</div>
+</div>
+
+<div class="tab-wrap">
+  <div class="tab-card active" onclick="selectTab(this, 0)">
+    <div class="tab-icon">🕯</div>
+    <div class="tab-name">平安烛</div>
+    <div class="tab-price">¥68</div>
+    <div class="tab-desc">祈福平安顺遂<br>阖家安康</div>
+  </div>
+  <div class="tab-card" onclick="selectTab(this, 1)">
+    <div class="tab-icon">🌸</div>
+    <div class="tab-name">月老烛</div>
+    <div class="tab-price">¥128</div>
+    <div class="tab-desc">祈愿良缘早至<br>姻缘圆满</div>
+  </div>
+  <div class="tab-card" onclick="selectTab(this, 2)">
+    <div class="tab-icon">💰</div>
+    <div class="tab-name">财神烛</div>
+    <div class="tab-price">¥198</div>
+    <div class="tab-desc">招财纳福聚宝<br>财源广进</div>
+  </div>
+</div>
+
+<div class="form-section">
+  <label class="form-label">祈愿内容</label>
+  <textarea class="form-textarea" placeholder="请写下您的心愿…&#10;我们将为您诵经回向，将心愿送达。"></textarea>
+</div>
+
+<div class="info-row">
+  <div class="info-dot"></div>
+  <div class="info-text"><strong>直播代烧</strong> · 法师现场诵经，全程可见</div>
+</div>
+
+<button class="btn-primary">预约下一场直播</button>
+
+<div class="footer-note">
+  下次直播时间 <strong>每周五 晚8点</strong>
+</div>
+<div class="footer-note" style="margin-top:10px;font-size:11px">
+  距下次直播 <strong id="countdown" style="color:var(--jade-main);font-weight:500;letter-spacing:0.05em">--:--:--</strong>
+</div>
+
+<script>
+function selectTab(el, idx) {
+  document.querySelectorAll('.tab-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+}
+function getNextFriday8pm() {
+  var now = new Date();
+  var day = now.getDay();
+  var daysUntilFri = (5 - day + 7) % 7 || 7;
+  var next = new Date(now);
+  next.setDate(now.getDate() + daysUntilFri);
+  next.setHours(20, 0, 0, 0);
+  if (next <= now) next.setDate(next.getDate() + 7);
+  return next;
+}
+function updateCountdown() {
+  var diff = getNextFriday8pm() - new Date();
+  var el = document.getElementById('countdown');
+  if (diff <= 0) { el.textContent = '🔴 直播中'; return; }
+  var h = Math.floor(diff / 3600000);
+  var m = Math.floor((diff % 3600000) / 60000);
+  var s = Math.floor((diff % 60000) / 1000);
+  el.textContent = [h, m, s].map(function(n){ return String(n).padStart(2,'0'); }).join(':');
+}
+updateCountdown();
+setInterval(updateCountdown, 1000);
+</script>
+
+</body>
+</html>

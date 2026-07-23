@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#FAFAF8">
+<title>命書 · 善缘完整命盘报告</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --jade-deep:    #3d9e82;
+  --jade-main:    #5bbfa0;
+  --jade-mid:     #8dd9bf;
+  --jade-bright:  #c8f0e0;
+  --jade-glow:    rgba(141,217,191,0.35);
+  --gold:         #c9a84c;
+  --gold-light:   #e8d08a;
+  --ink:          #1a1a18;
+  --ink-mid:      #4a4a46;
+  --ink-light:    #8a8a84;
+  --bg:           #FAFAF8;
+  --bg-card:      #FFFFFF;
+  --seal-red:     #8B1A1A;
+}
+
+html {
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'Noto Serif SC', serif;
+  color: var(--ink);
+  background: var(--bg);
+  max-width: 420px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 0 20px 40px;
+  overflow-y: auto;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Keyframes ── */
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(18px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+@keyframes jade-breathe {
+  0%,100% {
+    box-shadow: 0 10px 40px rgba(0,102,51,0.38), 0 3px 12px rgba(0,102,51,0.22), inset 0 -6px 18px rgba(0,60,28,0.28);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 14px 60px rgba(0,163,80,0.52), 0 5px 20px rgba(0,120,60,0.3), inset 0 -6px 18px rgba(0,60,28,0.28);
+    transform: scale(1.025);
+  }
+}
+
+@keyframes revealWidth {
+  from { width: 0; }
+  to   { width: 120px; }
+}
+
+@keyframes progressRing {
+  from { stroke-dashoffset: var(--circ); }
+  to   { stroke-dashoffset: var(--offset); }
+}
+
+@keyframes ringFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes stampPress {
+  0%   { transform: scale(0.3) rotate(-8deg); opacity: 0; }
+  50%  { transform: scale(1.15) rotate(3deg); opacity: 1; }
+  70%  { transform: scale(0.92) rotate(-1deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+/* ── Peace Clasp (平安扣) ── */
+.peace-clasp {
+  position: relative;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background:
+    radial-gradient(circle at 34% 27%, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.35) 7%, transparent 18%),
+    radial-gradient(circle at 70% 68%, var(--jade-deep) 0%, transparent 38%),
+    radial-gradient(circle at 20% 72%, rgba(0,180,80,0.25) 0%, transparent 35%),
+    radial-gradient(ellipse at 42% 38%, var(--jade-bright) 0%, var(--jade-mid) 22%, var(--jade-main) 52%, var(--jade-deep) 100%);
+  box-shadow:
+    0 10px 40px rgba(0,102,51,0.38),
+    0 3px 12px rgba(0,102,51,0.22),
+    inset 0 -6px 18px rgba(0,60,28,0.28),
+    inset 0 2px 6px rgba(180,255,210,0.12);
+}
+.peace-clasp::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: var(--bg);
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.12), inset 0 -1px 4px rgba(0,80,30,0.08);
+}
+.peace-clasp.sm { width: 36px; height: 36px; }
+.peace-clasp.sm::after { width: 10px; height: 10px; }
+.peace-clasp.xs { width: 22px; height: 22px; }
+.peace-clasp.xs::after { width: 6px; height: 6px; }
+
+/* ── Back Button ── */
+.back-btn {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 16px 0 8px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: var(--ink-mid);
+  cursor: pointer;
+  background: var(--bg);
+  transition: color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.back-btn:hover { color: var(--jade-main); }
+.back-btn .arrow { font-size: 16px; line-height: 1; }
+
+/* ── Gold Line ── */
+.gold-line {
+  width: 60px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 0 auto;
+}
+.gold-line.wide { width: 120px; }
+
+/* ── Tag ── */
+.tag-gold {
+  display: inline-block;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 9px;
+  letter-spacing: 0.25em;
+  padding: 3px 10px;
+  border-radius: 2px;
+}
+
+/* ── Seal Title ── */
+.seal-wrap {
+  text-align: center;
+  padding: 40px 0 12px;
+  animation: fadeUp 0.8s ease both;
+}
+
+.seal-box {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 28px 10px;
+  background: var(--seal-red);
+  border: 2px solid var(--gold);
+  border-radius: 4px;
+  box-shadow: 0 4px 20px rgba(139,26,26,0.20);
+  animation: stampPress 0.8s cubic-bezier(0.34,1.56,0.64,1) both;
+  position: relative;
+}
+.seal-box::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border: 1px solid rgba(201,168,76,0.4);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.seal-char {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 42px;
+  font-weight: 500;
+  color: var(--gold-light);
+  letter-spacing: 0.3em;
+  line-height: 1.1;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.seal-sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 9px;
+  color: rgba(232,208,138,0.7);
+  letter-spacing: 0.25em;
+  margin-top: 2px;
+  font-style: italic;
+}
+
+.seal-tagline {
+  margin-top: 14px;
+  font-size: 10px;
+  letter-spacing: 0.45em;
+  color: var(--ink-light);
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+}
+
+/* ── Section Header ── */
+.section-head {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.section-head span {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  color: var(--gold);
+  white-space: nowrap;
+}
+.section-head::before, .section-head::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4));
+}
+.section-head::after {
+  background: linear-gradient(90deg, rgba(201,168,76,0.4), transparent);
+}
+
+/* ── Header Area ── */
+.header-area {
+  text-align: center;
+  padding: 28px 0 16px;
+  animation: fadeUp 0.8s 0.3s ease both;
+}
+
+.name-title {
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.name-sub {
+  font-size: 10px;
+  letter-spacing: 0.35em;
+  color: var(--ink-light);
+  margin-bottom: 20px;
+}
+
+/* ── Four Pillars ── */
+.pillars {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.pillar {
+  flex: 1;
+  max-width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.pillar-label {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: var(--ink-light);
+  margin-bottom: 6px;
+}
+
+.pillar-blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+
+.pillar-tg, .pillar-dz {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0;
+  border-radius: 3px;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  font-family: 'Noto Serif SC', serif;
+}
+
+.pillar-tg {
+  background: rgba(61,158,130,0.12);
+  color: var(--jade-deep);
+}
+
+.pillar-dz {
+  background: rgba(201,168,76,0.12);
+  color: var(--gold);
+}
+
+/* ── Mingge Tags ── */
+.mingge-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 18px;
+}
+
+.mingge-tag {
+  display: inline-block;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  padding: 4px 14px;
+  border-radius: 3px;
+  background: rgba(201,168,76,0.06);
+}
+
+/* ── Wuxing Section ── */
+.wuxing-section {
+  padding: 12px 0;
+}
+
+.wuxing-title {
+  text-align: center;
+  font-size: 14px;
+  letter-spacing: 0.2em;
+  color: var(--ink);
+  margin-bottom: 24px;
+  font-weight: 400;
+}
+
+.wuxing-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.wuxing-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  max-width: 64px;
+}
+
+.wuxing-item svg {
+  width: 56px;
+  height: 56px;
+  display: block;
+}
+
+.wuxing-name {
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--ink-mid);
+}
+
+.wuxing-pct {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px;
+  color: var(--ink-light);
+}
+
+/* ── Chapter Style ── */
+.chapter {
+  padding: 28px 0 24px;
+  animation: fadeUp 0.6s ease both;
+}
+
+.chapter-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 28px;
+  font-weight: 500;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.chapter-title {
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+
+.chapter-body {
+  display: flex;
+  gap: 14px;
+  padding-left: 2px;
+}
+
+.chapter-line {
+  width: 3px;
+  flex-shrink: 0;
+  border-radius: 2px;
+  background: linear-gradient(to bottom, var(--jade-main), var(--jade-mid));
+}
+
+.chapter-text {
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--ink-mid);
+  letter-spacing: 0.04em;
+  text-align: justify;
+}
+
+/* ── Chapter Separator ── */
+.chapter-sep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0;
+}
+
+.chapter-sep .sep-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent);
+}
+
+/* ── Footer ── */
+.report-footer {
+  text-align: center;
+  padding: 36px 0 80px;
+  animation: fadeUp 0.6s 0.8s ease both;
+}
+
+.footer-brand {
+  margin-top: 14px;
+  font-size: 12px;
+  letter-spacing: 0.35em;
+  color: var(--gold);
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.footer-disclaimer {
+  margin-top: 8px;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--ink-light);
+  line-height: 1.6;
+}
+
+.footer-btns {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btn-share, .btn-retry {
+  flex: 1;
+  padding: 14px 0;
+  border: none;
+  border-radius: 4px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all 0.25s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-share {
+  background: var(--jade-main);
+  color: #fff;
+}
+.btn-share:hover {
+  background: #4daf92;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(61,158,130,0.3);
+}
+
+.btn-retry {
+  background: linear-gradient(135deg, var(--gold), var(--gold-light));
+  color: #fff;
+}
+.btn-retry:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(201,168,76,0.35);
+}
+
+.btn-share:active, .btn-retry:active {
+  transform: scale(0.97);
+}
+</style>
+</head>
+<body>
+
+<!-- ═══ Back Button ═══ -->
+<div class="back-btn" onclick="history.back()">
+  <span class="arrow">←</span>
+  <span>返回</span>
+</div>
+
+<!-- ═══ Seal Title ═══ -->
+<div class="seal-wrap">
+  <div class="seal-box">
+    <div class="seal-char">命 書</div>
+    <div class="seal-sub">Destiny Scripture</div>
+  </div>
+  <div class="seal-tagline">天干地支 · 子平八字 · 星盘推演</div>
+</div>
+
+<!-- ═══ Gold Divider ═══ -->
+<div class="gold-line" style="margin-bottom: 28px;"></div>
+
+<!-- ═══ Header Area ═══ -->
+<div class="header-area">
+  <div class="name-title">林语棠</div>
+  <div class="name-sub">PURSUER OF HEAVEN'S WAY</div>
+
+  <!-- Four Pillars -->
+  <div class="pillars">
+    <div class="pillar">
+      <div class="pillar-label">年柱</div>
+      <div class="pillar-blocks">
+        <div class="pillar-tg">庚</div>
+        <div class="pillar-dz">子</div>
+      </div>
+    </div>
+    <div class="pillar">
+      <div class="pillar-label">月柱</div>
+      <div class="pillar-blocks">
+        <div class="pillar-tg">甲</div>
+        <div class="pillar-dz">午</div>
+      </div>
+    </div>
+    <div class="pillar">
+      <div class="pillar-label">日柱</div>
+      <div class="pillar-blocks">
+        <div class="pillar-tg">甲</div>
+        <div class="pillar-dz">寅</div>
+      </div>
+    </div>
+    <div class="pillar">
+      <div class="pillar-label">时柱</div>
+      <div class="pillar-blocks">
+        <div class="pillar-tg">壬</div>
+        <div class="pillar-dz">申</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mingge Tags -->
+  <div class="mingge-row">
+    <span class="mingge-tag">正官格</span>
+    <span class="mingge-tag">从旺格</span>
+  </div>
+
+  <div class="gold-line" style="margin-top: 4px;"></div>
+</div>
+
+<!-- ═══ Wuxing Energy ═══ -->
+<div class="wuxing-section">
+  <div class="section-head" style="margin-bottom: 22px;"><span>五行能量</span></div>
+  <div class="wuxing-row">
+
+    <!-- 金 28% -->
+    <div class="wuxing-item">
+      <svg viewBox="0 0 56 56">
+        <defs>
+          <linearGradient id="g-metal" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#999"/>
+            <stop offset="100%" stop-color="#ccc"/>
+          </linearGradient>
+        </defs>
+        <circle cx="28" cy="28" r="23" fill="none" stroke="#eee" stroke-width="3.5"/>
+        <circle cx="28" cy="28" r="23" fill="none" stroke="url(#g-metal)" stroke-width="3.5"
+          stroke-dasharray="144.51" stroke-dashoffset="var(--circ)"
+          stroke-linecap="round" transform="rotate(-90,28,28)"
+          style="--circ:144.51; --offset:104.05; animation: progressRing 1.5s ease-out 0.2s both;"/>
+      </svg>
+      <span class="wuxing-name">金</span>
+      <span class="wuxing-pct">28%</span>
+    </div>
+
+    <!-- 木 82% -->
+    <div class="wuxing-item">
+      <svg viewBox="0 0 56 56">
+        <defs>
+          <linearGradient id="g-wood" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#3d9e82"/>
+            <stop offset="100%" stop-color="#8dd9bf"/>
+          </linearGradient>
+        </defs>
+        <circle cx="28" cy="28" r="23" fill="none" stroke="#eee" stroke-width="3.5"/>
+        <circle cx="28" cy="28" r="23" fill="none" stroke="url(#g-wood)" stroke-width="3.5"
+          stroke-dasharray="144.51" stroke-dashoffset="var(--circ)"
+          stroke-linecap="round" transform="rotate(-90,28,28)"
+          style="--circ:144.51; --offset:26.01; animation: progressRing 1.5s ease-out 0.35s both;"/>
+      </svg>
+      <span class="wuxing-name">木</span>
+      <span class="wuxing-pct">82%</span>
+    </div>
+
+    <!-- 水 63% -->
+    <div class="wuxing-item">
+      <svg viewBox="0 0 56 56">
+        <defs>
+          <linearGradient id="g-water" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#1a5580"/>
+            <stop offset="100%" stop-color="#3a8abf"/>
+          </linearGradient>
+        </defs>
+        <circle cx="28" cy="28" r="23" fill="none" stroke="#eee" stroke-width="3.5"/>
+        <circle cx="28" cy="28" r="23" fill="none" stroke="url(#g-water)" stroke-width="3.5"
+          stroke-dasharray="144.51" stroke-dashoffset="var(--circ)"
+          stroke-linecap="round" transform="rotate(-90,28,28)"
+          style="--circ:144.51; --offset:53.47; animation: progressRing 1.5s ease-out 0.5s both;"/>
+      </svg>
+      <span class="wuxing-name">水</span>
+      <span class="wuxing-pct">63%</span>
+    </div>
+
+    <!-- 火 55% -->
+    <div class="wuxing-item">
+      <svg viewBox="0 0 56 56">
+        <defs>
+          <linearGradient id="g-fire" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#c0391b"/>
+            <stop offset="100%" stop-color="#e85d3a"/>
+          </linearGradient>
+        </defs>
+        <circle cx="28" cy="28" r="23" fill="none" stroke="#eee" stroke-width="3.5"/>
+        <circle cx="28" cy="28" r="23" fill="none" stroke="url(#g-fire)" stroke-width="3.5"
+          stroke-dasharray="144.51" stroke-dashoffset="var(--circ)"
+          stroke-linecap="round" transform="rotate(-90,28,28)"
+          style="--circ:144.51; --offset:65.03; animation: progressRing 1.5s ease-out 0.65s both;"/>
+      </svg>
+      <span class="wuxing-name">火</span>
+      <span class="wuxing-pct">55%</span>
+    </div>
+
+    <!-- 土 42% -->
+    <div class="wuxing-item">
+      <svg viewBox="0 0 56 56">
+        <defs>
+          <linearGradient id="g-earth" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#8b6914"/>
+            <stop offset="100%" stop-color="#c9a84c"/>
+          </linearGradient>
+        </defs>
+        <circle cx="28" cy="28" r="23" fill="none" stroke="#eee" stroke-width="3.5"/>
+        <circle cx="28" cy="28" r="23" fill="none" stroke="url(#g-earth)" stroke-width="3.5"
+          stroke-dasharray="144.51" stroke-dashoffset="var(--circ)"
+          stroke-linecap="round" transform="rotate(-90,28,28)"
+          style="--circ:144.51; --offset:83.82; animation: progressRing 1.5s ease-out 0.8s both;"/>
+      </svg>
+      <span class="wuxing-name">土</span>
+      <span class="wuxing-pct">42%</span>
+    </div>
+
+  </div>
+</div>
+
+<div class="gold-line" style="margin: 24px auto;"></div>
+
+<!-- ═══ Chapter 1 ═══ -->
+<div class="chapter" style="animation-delay: 0.1s;">
+  <div class="chapter-num">壹</div>
+  <div class="chapter-title">命格总论</div>
+  <div class="chapter-body">
+    <div class="chapter-line"></div>
+    <div class="chapter-text">
+      命主生于甲木旺令，天干透出正官，格局清正，气质温文而雅。一生主得贵人相助，遇难逢吉，逢凶化吉之命格也。木火通明，心性仁厚而志向高远，早年虽有小波折，终归坦途。
+    </div>
+  </div>
+</div>
+
+<div class="chapter-sep">
+  <div class="sep-line"></div>
+  <div class="peace-clasp xs"></div>
+  <div class="sep-line"></div>
+</div>
+
+<!-- ═══ Chapter 2 ═══ -->
+<div class="chapter" style="animation-delay: 0.2s;">
+  <div class="chapter-num">贰</div>
+  <div class="chapter-title">感情姻缘</div>
+  <div class="chapter-body">
+    <div class="chapter-line"></div>
+    <div class="chapter-text">
+      桃花星入命宫，异性缘深，然情深易困。三十岁前感情多波折，宜静待有缘之人，勿急于求成。正缘多在贵人引荐而遇，对方性情温厚，与你志趣相投。婚后夫妻和谐，彼此成就。
+    </div>
+  </div>
+</div>
+
+<div class="chapter-sep">
+  <div class="sep-line"></div>
+  <div class="peace-clasp xs"></div>
+  <div class="sep-line"></div>
+</div>
+
+<!-- ═══ Chapter 3 ═══ -->
+<div class="chapter" style="animation-delay: 0.3s;">
+  <div class="chapter-num">叁</div>
+  <div class="chapter-title">事业财运</div>
+  <div class="chapter-body">
+    <div class="chapter-line"></div>
+    <div class="chapter-text">
+      财星有气，正财偏财兼备，适合从商或专业领域。四十岁后财运入旺，大运流年配合，当有积累之机。宜以正业为本，偏财为辅，切忌投机取巧。中年后资产渐丰，晚年富足。
+    </div>
+  </div>
+</div>
+
+<div class="chapter-sep">
+  <div class="sep-line"></div>
+  <div class="peace-clasp xs"></div>
+  <div class="sep-line"></div>
+</div>
+
+<!-- ═══ Chapter 4 ═══ -->
+<div class="chapter" style="animation-delay: 0.4s;">
+  <div class="chapter-num">肆</div>
+  <div class="chapter-title">流年大运</div>
+  <div class="chapter-body">
+    <div class="chapter-line"></div>
+    <div class="chapter-text">
+      今年甲辰年，木旺生火，事业有冲破之机。感情宜稳不宜动，健康注意肝木之调养。明年乙巳年财星入局，宜把握机会，布局长远。流年与命局相生，整体运势呈上升之势。
+    </div>
+  </div>
+</div>
+
+<!-- ═══ Footer ═══ -->
+<div class="report-footer">
+  <div class="peace-clasp sm" style="margin: 0 auto;"></div>
+  <div class="footer-brand">善缘 · FortunAI</div>
+  <div class="footer-disclaimer">
+    此命书由AI天机推演生成，仅供参考<br>
+    人生之路，终由己握
+  </div>
+  <div class="footer-btns">
+    <button class="btn-share" onclick="shareReport()">分享命书</button>
+    <button class="btn-retry" onclick="retryReading()">再测一次</button>
+  </div>
+</div>
+
+<script>
+function shareReport() {
+  // Placeholder: trigger native share or copy link
+  if (navigator.share) {
+    navigator.share({
+      title: '我的善缘命书',
+      text: '我刚刚在善缘完成了命盘解读，来看看你的命盘吧！',
+      url: window.location.href
+    }).catch(function(){});
+  } else {
+    // fallback: copy to clipboard
+    var input = document.createElement('input');
+    input.value = window.location.href;
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+    alert('链接已复制，可分享给好友');
+  }
+}
+
+function retryReading() {
+  // Navigate back to the main app index or input page
+  window.location.href = '../shenyuan_h5_v11.html';
+}
+</script>
+
+</body>
+</html>
