@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#FAFAF8">
+<title>善缘 FortunAI · 天机命盘解读</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+/* ════════════ CSS Variables ════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --jade-deep:   #3d9e82;
+  --jade-main:   #5bbfa0;
+  --jade-mid:    #8dd9bf;
+  --jade-bright: #c8f0e0;
+  --jade-glow:   rgba(91,191,160,0.32);
+  --gold:        #c9a84c;
+  --gold-light:  #e8d08a;
+  --gold-deep:   #9e7b2a;
+  --ink:         #1a1a18;
+  --ink-mid:     #4a4a46;
+  --ink-light:   #8a8a84;
+  --ink-ghost:   #c4c4be;
+  --bg:          #FAFAF8;
+  --bg-warm:     #F6F3EE;
+  --bg-card:     #FFFFFF;
+  --shadow-jade: rgba(0,102,51,0.18);
+  --shadow-gold: rgba(201,168,76,0.25);
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  font-family: 'Noto Serif SC', serif;
+  color: var(--ink);
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ════════════ Screen System ════════════ */
+.screen {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg);
+  overflow-y: auto;
+  overflow-x: hidden;
+  transition: transform 0.55s cubic-bezier(0.77, 0, 0.18, 1);
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ════════════ Peace Clasp 平安扣 ════════════ */
+.peace-clasp {
+  position: relative;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background:
+    radial-gradient(circle at 34% 27%, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0.35) 7%, transparent 18%),
+    radial-gradient(circle at 70% 68%, var(--jade-deep) 0%, transparent 38%),
+    radial-gradient(circle at 20% 72%, rgba(0,180,80,0.25) 0%, transparent 35%),
+    radial-gradient(ellipse at 42% 38%, var(--jade-bright) 0%, var(--jade-mid) 22%, var(--jade-main) 52%, var(--jade-deep) 100%);
+  box-shadow:
+    0 10px 40px rgba(0,102,51,0.38),
+    0 3px 12px rgba(0,102,51,0.22),
+    inset 0 -6px 18px rgba(0,60,28,0.28),
+    inset 0 2px 6px rgba(180,255,210,0.12);
+  animation: jade-breathe 4s ease-in-out infinite;
+}
+.peace-clasp::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  background: var(--bg);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.12), inset 0 -1px 4px rgba(0,80,30,0.08);
+}
+.peace-clasp.xl { width: 200px; height: 200px; }
+.peace-clasp.xl::after { width: 58px; height: 58px; }
+.peace-clasp.lg { width: 160px; height: 160px; }
+.peace-clasp.lg::after { width: 46px; height: 46px; }
+.peace-clasp.md { width: 100px; height: 100px; }
+.peace-clasp.md::after { width: 29px; height: 29px; }
+.peace-clasp.sm { width: 36px; height: 36px; }
+.peace-clasp.sm::after { width: 10px; height: 10px; }
+
+/* ════════════ Core Animations ════════════ */
+@keyframes jade-breathe {
+  0%, 100% {
+    box-shadow: 0 10px 40px rgba(0,102,51,0.38), 0 3px 12px rgba(0,102,51,0.22),
+                inset 0 -6px 18px rgba(0,60,28,0.28), inset 0 2px 6px rgba(180,255,210,0.12);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 16px 64px rgba(0,163,80,0.54), 0 6px 24px rgba(0,120,60,0.32),
+                inset 0 -6px 18px rgba(0,60,28,0.28), inset 0 2px 6px rgba(180,255,210,0.12);
+    transform: scale(1.03);
+  }
+}
+@keyframes orbit-spin {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+@keyframes orbit-spin-r {
+  from { transform: translate(-50%, -50%) rotate(0deg); }
+  to   { transform: translate(-50%, -50%) rotate(-360deg); }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+@keyframes spin-r {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(-360deg); }
+}
+@keyframes counter-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0.4; }
+  50%       { opacity: 0.9; }
+}
+@keyframes prog {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+@keyframes text-cycle {
+  0%   { opacity: 0; transform: translateY(10px); }
+  15%  { opacity: 1; transform: translateY(0); }
+  85%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-10px); }
+}
+@keyframes pulse-ring {
+  0%   { transform: translate(-50%, -50%) scale(1); opacity: 0.6; }
+  100% { transform: translate(-50%, -50%) scale(1.8); opacity: 0; }
+}
+
+/* ════════════ Shared Components ════════════ */
+.gold-line {
+  width: 60px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.gold-line-wide { width: 140px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+.gold-ornament {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+}
+.gold-ornament::before, .gold-ornament::after {
+  content: '';
+  flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.45));
+}
+.gold-ornament::after {
+  background: linear-gradient(90deg, rgba(201,168,76,0.45), transparent);
+}
+.gold-ornament span {
+  font-size: 11px; letter-spacing: 0.22em; color: var(--gold);
+  white-space: nowrap; font-family: 'Cormorant Garamond', serif; font-style: italic;
+}
+
+.tag-pill {
+  display: inline-flex; align-items: center;
+  border: 1px solid rgba(201,168,76,0.6);
+  color: var(--gold);
+  font-size: 9px; letter-spacing: 0.28em;
+  padding: 4px 12px; border-radius: 20px;
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+}
+
+/* Gold gradient CTA button */
+.btn-gold {
+  width: 100%; max-width: 300px;
+  padding: 16px 0;
+  background: linear-gradient(135deg, var(--gold-deep) 0%, var(--gold) 40%, var(--gold-light) 65%, var(--gold) 100%);
+  background-size: 200% auto;
+  color: #fff;
+  border: none; border-radius: 3px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 15px; font-weight: 400;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.25);
+  box-shadow: 0 4px 20px rgba(201,168,76,0.38), 0 1px 4px rgba(0,0,0,0.1);
+}
+.btn-gold:hover {
+  background-position: right center;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 32px rgba(201,168,76,0.5);
+}
+.btn-gold:active { transform: scale(0.97); }
+
+/* Jade secondary button */
+.btn-jade {
+  width: 100%; max-width: 300px;
+  padding: 15px 0;
+  background: transparent;
+  color: var(--jade-main);
+  border: 1.5px solid var(--jade-main);
+  border-radius: 3px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px; font-weight: 400;
+  letter-spacing: 0.15em;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.btn-jade:hover { background: rgba(91,191,160,0.08); }
+
+/* Back button */
+.back-btn {
+  position: absolute; top: 18px; left: 22px;
+  background: none; border: none;
+  font-size: 12px; letter-spacing: 0.1em;
+  color: var(--ink-light); cursor: pointer;
+  padding: 8px 4px;
+  display: flex; align-items: center; gap: 6px;
+  transition: color 0.2s;
+}
+.back-btn::before {
+  content: '‹';
+  font-size: 18px; line-height: 1;
+  color: var(--jade-main);
+}
+.back-btn:hover { color: var(--ink-mid); }
+
+/* Form elements */
+.form-group { width: 100%; margin-bottom: 26px; }
+.form-group label {
+  display: block;
+  font-size: 9px; letter-spacing: 0.28em; color: var(--gold);
+  margin-bottom: 10px; font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+}
+.form-group input,
+.form-group select {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--ink-ghost);
+  padding: 10px 0 10px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 15px; color: var(--ink);
+  outline: none;
+  transition: border-color 0.3s;
+  -webkit-appearance: none;
+  appearance: none;
+  border-radius: 0;
+}
+.form-group input:focus,
+.form-group select:focus { border-color: var(--jade-main); }
+.form-group input::placeholder { color: var(--ink-ghost); font-style: italic; font-size: 13px; }
+
+.form-row { display: flex; gap: 12px; }
+.form-row select { flex: 1; min-width: 0; text-align: center; }
+
+/* Intent chips */
+.chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip {
+  padding: 7px 15px;
+  border: 1px solid var(--ink-ghost);
+  border-radius: 2px;
+  font-size: 12px; letter-spacing: 0.08em;
+  color: var(--ink-light); cursor: pointer;
+  transition: all 0.2s;
+}
+.chip.active {
+  border-color: var(--jade-main);
+  color: var(--jade-main);
+  background: rgba(91,191,160,0.07);
+}
+
+/* Progress dots */
+.progress-dots {
+  display: flex; gap: 6px; align-items: center;
+}
+.prog-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--ink-ghost);
+  transition: all 0.3s;
+}
+.prog-dot.active {
+  background: var(--jade-main);
+  width: 14px; border-radius: 3px;
+}
+
+/* Oracle text */
+.oracle-text {
+  font-size: 14px; line-height: 2.0;
+  color: var(--ink-mid);
+  text-align: justify;
+  letter-spacing: 0.04em;
+  width: 100%;
+}
+
+/* Insight card */
+.insight-card {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid rgba(201,168,76,0.18);
+  border-radius: 4px;
+  border-left: 3px solid var(--jade-main);
+  font-size: 13px; line-height: 1.75;
+  color: var(--ink-mid);
+}
+
+/* Timeline */
+.timeline { display: flex; flex-direction: column; gap: 0; width: 100%; }
+.tl-item { display: flex; gap: 16px; }
+.tl-left { display: flex; flex-direction: column; align-items: center; }
+.tl-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: var(--jade-main);
+  border: 2px solid var(--bg);
+  box-shadow: 0 0 0 1px var(--jade-main);
+  flex-shrink: 0; margin-top: 4px;
+}
+.tl-dot.gold {
+  background: var(--gold);
+  box-shadow: 0 0 0 1px var(--gold);
+}
+.tl-line {
+  width: 1px; flex: 1;
+  background: linear-gradient(to bottom, var(--jade-main), rgba(91,191,160,0.1));
+  min-height: 36px;
+}
+.tl-right { padding-bottom: 24px; flex: 1; }
+.tl-year { font-size: 11px; color: var(--jade-deep); letter-spacing: 0.18em; margin-bottom: 5px; }
+.tl-year.gold { color: var(--gold); }
+.tl-desc { font-size: 13px; color: var(--ink-mid); line-height: 1.65; }
+
+/* Crystal shop cards */
+.crystal-scroll {
+  display: flex; gap: 12px;
+  overflow-x: auto; width: 100%;
+  padding-bottom: 10px;
+  -ms-overflow-style: none; scrollbar-width: none;
+}
+.crystal-scroll::-webkit-scrollbar { display: none; }
+.crystal-card {
+  flex-shrink: 0; width: 138px;
+  background: var(--bg-card);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 6px;
+  padding: 16px 13px;
+  display: flex; flex-direction: column; gap: 7px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.crystal-card:active { transform: scale(0.97); }
+.crystal-card:hover {
+  box-shadow: 0 4px 16px rgba(201,168,76,0.15);
+  border-color: rgba(201,168,76,0.4);
+}
+.crystal-icon-box {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 17px; font-weight: 300;
+  margin-bottom: 2px;
+}
+.crystal-name { font-size: 12px; font-weight: 500; letter-spacing: 0.05em; color: var(--ink); }
+.crystal-desc { font-size: 10px; color: var(--ink-light); line-height: 1.5; }
+.crystal-price { font-size: 12px; color: var(--jade-deep); letter-spacing: 0.05em; }
+
+/* Five elements bars (vertical) */
+.wuxing-bars { display: flex; gap: 16px; align-items: flex-end; width: 100%; justify-content: center; padding: 0 8px; }
+.wuxing-col { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; }
+.wuxing-bar-track { width: 100%; background: #eeeee8; border-radius: 2px; overflow: hidden; height: 80px; display: flex; align-items: flex-end; }
+.wuxing-bar-fill { width: 100%; border-radius: 2px; transition: height 1s ease; }
+.wuxing-char { font-size: 13px; font-weight: 400; letter-spacing: 0.05em; color: var(--ink-mid); }
+.wuxing-pct { font-size: 10px; color: var(--ink-light); }
+
+/* Section head */
+.section-head {
+  width: 100%;
+  display: flex; align-items: center; gap: 10px;
+}
+.section-head::before, .section-head::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.35));
+}
+.section-head::after {
+  background: linear-gradient(90deg, rgba(201,168,76,0.35), transparent);
+}
+.section-head span {
+  font-size: 11px; letter-spacing: 0.22em;
+  color: var(--gold); white-space: nowrap;
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+}
+
+/* nav link color fix */
+nav.bottom-nav a.nav-item { color: var(--ink-light); }
+nav.bottom-nav a.nav-item:visited { color: var(--ink-light); }
+
+/* ════════════ S1: Landing ════════════ */
+#s1 {
+  justify-content: center;
+  align-items: center;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* Starfield background */
+#s1::before {
+  content: '';
+  position: absolute; inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(201,168,76,0.7) 1px, transparent 1px),
+    radial-gradient(circle, rgba(201,168,76,0.5) 1px, transparent 1px),
+    radial-gradient(circle, rgba(201,168,76,0.4) 1px, transparent 1px),
+    radial-gradient(circle, rgba(91,191,160,0.4) 1px, transparent 1px),
+    radial-gradient(circle, rgba(201,168,76,0.35) 1px, transparent 1px);
+  background-size:
+    97px 93px,
+    163px 157px,
+    231px 211px,
+    177px 183px,
+    289px 267px;
+  background-position:
+    23px 41px,
+    67px 12px,
+    102px 87px,
+    48px 134px,
+    188px 55px;
+  pointer-events: none;
+  animation: star-twinkle 5s ease-in-out infinite alternate;
+}
+
+/* Concentric rings behind the clasp */
+#s1::after {
+  content: '';
+  position: absolute;
+  width: 340px; height: 340px;
+  border-radius: 50%;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(201,168,76,0.07);
+  box-shadow:
+    0 0 0 50px rgba(201,168,76,0.03),
+    0 0 0 100px rgba(201,168,76,0.02),
+    0 0 0 150px rgba(201,168,76,0.01);
+  pointer-events: none;
+}
+
+.s1-brand {
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  margin-bottom: 18px;
+  animation: fadeUp 0.8s ease both;
+}
+.s1-brand-zh {
+  font-size: 14px; letter-spacing: 0.55em;
+  color: var(--gold); font-weight: 300;
+}
+.s1-brand-en {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; font-size: 11px;
+  letter-spacing: 0.35em; color: var(--ink-light);
+}
+.s1-gold-line {
+  animation: fadeUp 0.8s 0.1s ease both; opacity: 0;
+  margin-bottom: 40px;
+}
+
+/* Orbit rings around peace clasp */
+.clasp-wrap {
+  position: relative;
+  width: 200px; height: 200px;
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeUp 0.8s 0.3s ease both; opacity: 0;
+}
+.orbit-ring {
+  position: absolute;
+  border-radius: 50%;
+  top: 50%; left: 50%;
+  border-style: solid;
+  border-color: transparent;
+  pointer-events: none;
+}
+.orbit-1 {
+  width: 244px; height: 244px;
+  border-top-color: rgba(201,168,76,0.35);
+  border-right-color: rgba(201,168,76,0.12);
+  border-width: 1px;
+  animation: orbit-spin 12s linear infinite;
+}
+.orbit-2 {
+  width: 278px; height: 278px;
+  border-top-color: rgba(91,191,160,0.25);
+  border-left-color: rgba(91,191,160,0.1);
+  border-width: 1px;
+  animation: orbit-spin-r 18s linear infinite;
+}
+.orbit-dot {
+  position: absolute;
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--gold);
+  top: 50%; left: 50%;
+  box-shadow: 0 0 6px 2px rgba(201,168,76,0.6);
+}
+
+.s1-tagline {
+  margin-top: 34px;
+  font-size: 22px; font-weight: 300;
+  letter-spacing: 0.24em; color: var(--ink);
+  animation: fadeUp 0.8s 0.5s ease both; opacity: 0;
+  text-align: center;
+}
+.s1-sub {
+  margin-top: 8px;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; font-size: 10px;
+  letter-spacing: 0.32em; color: var(--gold);
+  animation: fadeUp 0.8s 0.65s ease both; opacity: 0;
+}
+.s1-cta-wrap {
+  margin-top: 38px; width: 100%;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  animation: fadeUp 0.8s 0.8s ease both; opacity: 0;
+  padding: 0 28px;
+}
+.s1-count {
+  font-size: 11px; color: var(--ink-light); letter-spacing: 0.05em;
+  animation: fadeUp 0.8s 1.0s ease both; opacity: 0;
+}
+.s1-count strong { color: var(--ink-mid); }
+
+/* ════════════ S2: Input Form ════════════ */
+#s2 {
+  overflow-y: auto;
+  padding: 64px 28px 100px;
+  align-items: center;
+}
+#s2 .form-header {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 8px; margin-bottom: 32px; width: 100%;
+}
+#s2 .form-header h2 {
+  font-size: 20px; font-weight: 300; letter-spacing: 0.2em; color: var(--ink);
+}
+#s2 .form-header p {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: 11px; letter-spacing: 0.22em; color: var(--ink-light);
+}
+
+/* ════════════ S3: Loading ════════════ */
+#s3 {
+  justify-content: center; align-items: center;
+  gap: 28px; padding: 40px 28px; overflow: hidden;
+}
+
+/* Soft amber glow behind the clasp on loading */
+#s3::before {
+  content: '';
+  position: absolute;
+  width: 300px; height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(91,191,160,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.loading-clasp-wrap {
+  position: relative;
+  width: 160px; height: 160px;
+  display: flex; align-items: center; justify-content: center;
+}
+.load-ring {
+  position: absolute;
+  border-radius: 50%;
+  top: 50%; left: 50%;
+  border: 1.5px solid transparent;
+  pointer-events: none;
+}
+.load-ring-1 {
+  width: 192px; height: 192px;
+  border-top-color: rgba(91,191,160,0.6);
+  border-right-color: rgba(91,191,160,0.2);
+  animation: spin 3s linear infinite;
+  transform: translate(-50%,-50%);
+}
+.load-ring-2 {
+  width: 218px; height: 218px;
+  border-top-color: rgba(201,168,76,0.5);
+  border-left-color: rgba(201,168,76,0.15);
+  animation: spin-r 5s linear infinite;
+  transform: translate(-50%,-50%);
+}
+
+/* Pulse rings */
+.pulse-ring {
+  position: absolute;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  border: 1px solid rgba(91,191,160,0.4);
+  top: 50%; left: 50%;
+  animation: pulse-ring 2.5s ease-out infinite;
+}
+.pulse-ring:nth-child(2) { animation-delay: 0.8s; }
+.pulse-ring:nth-child(3) { animation-delay: 1.6s; }
+
+.loading-text-wrap {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  min-height: 64px;
+}
+#load-main {
+  font-size: 18px; font-weight: 300; letter-spacing: 0.22em;
+  color: var(--ink);
+}
+#load-sub {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: 11px; letter-spacing: 0.25em; color: var(--gold);
+}
+
+.progress-bar-wrap {
+  width: 180px; height: 1px;
+  background: var(--ink-ghost); border-radius: 1px; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--jade-main), var(--jade-mid));
+  width: 0;
+  border-radius: 1px;
+}
+
+/* ════════════ S4: Paywall / Preview ════════════ */
+#s4 {
+  padding: 56px 28px 120px;
+  gap: 18px;
+  overflow-y: auto;
+}
+#s4 .preview-header {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  width: 100%;
+}
+#s4 .preview-title {
+  font-size: 22px; font-weight: 300; letter-spacing: 0.18em;
+  color: var(--ink);
+}
+#s4 .preview-sub {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: 11px; letter-spacing: 0.2em; color: var(--ink-light);
+}
+
+.blur-section {
+  position: relative; width: 100%;
+}
+.oracle-blur {
+  filter: blur(5px);
+  color: transparent;
+  text-shadow: 0 0 8px rgba(0,0,0,0.22);
+  user-select: none;
+  pointer-events: none;
+}
+.blur-fade-mask {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 130px;
+  background: linear-gradient(transparent 0%, var(--bg) 60%);
+  pointer-events: none;
+}
+
+/* Social proof bar */
+.social-proof {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%;
+}
+.sp-avatars {
+  display: flex;
+}
+.sp-avatar {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid var(--bg);
+  margin-left: -8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 400; color: #fff;
+  font-family: 'Noto Serif SC', serif;
+}
+.sp-avatar:first-child { margin-left: 0; }
+.sp-text { font-size: 12px; color: var(--ink-mid); letter-spacing: 0.04em; line-height: 1.5; }
+.sp-text strong { color: var(--jade-deep); }
+
+.stars { color: var(--gold); letter-spacing: 0.08em; font-size: 14px; }
+
+.testimonial {
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--bg-card);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 4px;
+  border-left: 3px solid var(--gold);
+  font-size: 13px; line-height: 1.7;
+  color: var(--ink-mid); font-style: italic;
+}
+.testimonial cite {
+  display: block; margin-top: 8px;
+  font-size: 10px; letter-spacing: 0.12em;
+  color: var(--ink-light); font-style: normal;
+}
+
+.unlock-overlay {
+  position: sticky; bottom: 0;
+  width: 100%;
+  background: linear-gradient(transparent 0%, var(--bg) 22%);
+  padding: 40px 0 24px;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  margin-top: -60px;
+}
+.unlock-price-row {
+  display: flex; align-items: center; gap: 12px;
+}
+.price-original {
+  text-decoration: line-through;
+  color: var(--ink-light); font-size: 13px;
+}
+.price-current {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px; color: var(--jade-deep); font-weight: 400;
+}
+.price-badge {
+  background: rgba(201,168,76,0.1);
+  border: 1px solid var(--gold);
+  color: var(--gold); font-size: 9px;
+  letter-spacing: 0.18em; padding: 3px 8px; border-radius: 2px;
+}
+
+/* ════════════ S5: Payment ════════════ */
+#s5 {
+  padding: 64px 28px 100px;
+  align-items: center; gap: 16px;
+  overflow-y: auto;
+}
+#s5 .pay-header {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  width: 100%;
+}
+#s5 .pay-header h2 {
+  font-size: 20px; font-weight: 300; letter-spacing: 0.18em;
+}
+
+.order-card {
+  width: 100%; max-width: 320px;
+  background: var(--bg-card);
+  border: 1px solid rgba(201,168,76,0.25);
+  border-radius: 8px;
+  padding: 20px 18px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.order-row {
+  display: flex; justify-content: space-between; align-items: center;
+}
+.order-name { font-size: 14px; letter-spacing: 0.06em; color: var(--ink); }
+.order-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px; color: var(--jade-deep); font-weight: 300;
+}
+.order-items { display: flex; flex-direction: column; gap: 4px; }
+.order-item {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--ink-light);
+}
+.order-item::before {
+  content: '✦';
+  font-size: 8px; color: var(--jade-main);
+}
+
+.pay-methods {
+  width: 100%; max-width: 320px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.pay-label {
+  font-size: 9px; letter-spacing: 0.28em; color: var(--gold);
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  margin-bottom: 2px;
+}
+.pay-option {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--ink-ghost);
+  border-radius: 4px; cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.pay-option.selected {
+  border-color: var(--jade-main);
+  background: rgba(91,191,160,0.04);
+}
+.pay-option-icon {
+  width: 28px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 3px;
+  font-size: 11px; font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.pay-icon-wechat { background: #07C160; color: #fff; }
+.pay-icon-alipay { background: #1677FF; color: #fff; }
+.pay-icon-card { background: var(--ink-mid); color: #fff; }
+.pay-option-name { font-size: 14px; letter-spacing: 0.06em; color: var(--ink); }
+.pay-option-check {
+  position: absolute; right: 14px;
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 1.5px solid var(--ink-ghost);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+.pay-option.selected .pay-option-check {
+  border-color: var(--jade-main);
+  background: var(--jade-main);
+}
+.pay-option.selected .pay-option-check::after {
+  content: '✓'; font-size: 9px; color: #fff;
+}
+
+.trust-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 16px; width: 100%;
+}
+.trust-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 10px; color: var(--ink-light); letter-spacing: 0.05em;
+}
+.trust-dot { width: 3px; height: 3px; border-radius: 50%; background: var(--ink-ghost); }
+
+/* ════════════ S6: Full Report ════════════ */
+#s6 {
+  padding: 56px 24px 120px;
+  gap: 20px;
+  overflow-y: auto;
+}
+.report-header {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  width: 100%;
+}
+.report-title {
+  font-size: 20px; font-weight: 300; letter-spacing: 0.18em;
+}
+.report-meta {
+  font-size: 12px; color: var(--ink-mid); letter-spacing: 0.1em;
+}
+.report-date {
+  font-size: 10px; color: var(--ink-light); letter-spacing: 0.08em;
+}
+
+/* SVG 5-element pentagon */
+.wuxing-pentagon {
+  width: 100%; display: flex;
+  flex-direction: column; align-items: center;
+  gap: 12px;
+}
+.pentagon-labels {
+  display: flex; gap: 20px; justify-content: center;
+}
+.pent-label {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; color: var(--ink-mid);
+}
+.pent-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+.report-body {
+  font-size: 14px; line-height: 1.95;
+  color: var(--ink-mid); letter-spacing: 0.04em;
+  width: 100%;
+}
+
+/* ════════════ Bottom Nav ════════════ */
+.bottom-nav {
+  position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 480px;
+  background: rgba(250,250,248,0.96);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid rgba(201,168,76,0.15);
+  display: flex; justify-content: space-around;
+  padding: 8px 0 18px;
+  z-index: 100;
+}
+.nav-item {
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  font-size: 9px; letter-spacing: 0.16em;
+  color: var(--ink-light); cursor: pointer;
+  padding: 5px 12px;
+  transition: color 0.2s;
+}
+.nav-item.active { color: var(--jade-main); }
+.nav-glyph {
+  font-size: 20px; font-weight: 300; line-height: 1;
+  font-family: 'Noto Serif SC', serif;
+  text-shadow: 0 0 12px var(--jade-glow);
+}
+.nav-item.active .nav-glyph { text-shadow: 0 0 16px rgba(91,191,160,0.5); }
+</style>
+</head>
+<body>
+
+<!-- ════════════ S1: Landing ════════════ -->
+<div class="screen" id="s1">
+  <div class="s1-brand" style="margin-top:0">
+    <div class="s1-brand-zh">善 缘</div>
+    <div class="s1-brand-en">FORTUNAI · 天机解读</div>
+  </div>
+
+  <div class="gold-line-wide s1-gold-line"></div>
+
+  <div class="clasp-wrap">
+    <div class="orbit-ring orbit-1">
+      <!-- dot orbiting ring 1 -->
+      <div class="orbit-dot" style="top:-3px;left:50%;transform:translateX(-50%)"></div>
+    </div>
+    <div class="orbit-ring orbit-2"></div>
+    <div class="peace-clasp xl"></div>
+  </div>
+
+  <p class="s1-tagline">你的命，自有天机</p>
+  <p class="s1-sub">WHAT HEAVEN HOLDS FOR YOU</p>
+
+  <div class="s1-cta-wrap">
+    <button class="btn-gold" onclick="goTo(1)">解读我的天机</button>
+    <p class="s1-count">已为 <strong id="user-count">2,847,392</strong> 人解读命盘</p>
+  </div>
+</div>
+
+<!-- ════════════ S2: 八字输入 ════════════ -->
+<div class="screen" id="s2">
+  <button class="back-btn" onclick="goTo(0)">返回</button>
+
+  <div class="form-header">
+    <div class="peace-clasp sm" style="margin-bottom:8px"></div>
+    <h2>你的天机信息</h2>
+    <p>BAZI · FORTUNE READING</p>
+    <div class="progress-dots" style="margin-top:8px">
+      <div class="prog-dot active"></div>
+      <div class="prog-dot"></div>
+      <div class="prog-dot"></div>
+    </div>
+  </div>
+
+  <div style="width:100%;max-width:340px">
+    <div class="form-group">
+      <label>姓　名</label>
+      <input type="text" id="user-name" placeholder="你的名字" autocomplete="off">
+    </div>
+
+    <div class="form-group">
+      <label>出生年月日</label>
+      <div class="form-row">
+        <select id="birth-year" style="text-align:left;padding-left:2px"><option value="">年</option></select>
+        <select id="birth-month"><option value="">月</option></select>
+        <select id="birth-day"><option value="">日</option></select>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>出生时辰</label>
+      <select id="birth-hour">
+        <option value="">请选择时辰</option>
+        <option value="子">子时 (23:00–01:00)</option>
+        <option value="丑">丑时 (01:00–03:00)</option>
+        <option value="寅">寅时 (03:00–05:00)</option>
+        <option value="卯">卯时 (05:00–07:00)</option>
+        <option value="辰">辰时 (07:00–09:00)</option>
+        <option value="巳">巳时 (09:00–11:00)</option>
+        <option value="午">午时 (11:00–13:00)</option>
+        <option value="未">未时 (13:00–15:00)</option>
+        <option value="申">申时 (15:00–17:00)</option>
+        <option value="酉">酉时 (17:00–19:00)</option>
+        <option value="戌">戌时 (19:00–21:00)</option>
+        <option value="亥">亥时 (21:00–23:00)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>性　别</label>
+      <select id="user-gender">
+        <option value="male">男命</option>
+        <option value="female">女命</option>
+      </select>
+    </div>
+
+    <div class="form-group" style="margin-bottom:32px">
+      <label style="margin-bottom:12px">你最想了解</label>
+      <div class="chip-group">
+        <div class="chip active">爱情姻缘</div>
+        <div class="chip">事业财运</div>
+        <div class="chip">健康运势</div>
+        <div class="chip">综合命盘</div>
+      </div>
+    </div>
+
+    <button class="btn-gold" onclick="startReading()" style="max-width:100%">开启天机 · 免费初测</button>
+    <p style="text-align:center;font-size:10px;color:var(--ink-light);letter-spacing:0.05em;margin-top:12px">初测完全免费 · 解锁完整命书仅需¥138</p>
+  </div>
+</div>
+
+<!-- ════════════ S3: AI Loading ════════════ -->
+<div class="screen" id="s3">
+  <div class="loading-clasp-wrap">
+    <div class="pulse-ring"></div>
+    <div class="pulse-ring"></div>
+    <div class="pulse-ring"></div>
+    <div class="load-ring load-ring-1"></div>
+    <div class="load-ring load-ring-2"></div>
+    <div class="peace-clasp lg" style="animation:jade-breathe 4s ease-in-out infinite"></div>
+  </div>
+
+  <div class="loading-text-wrap">
+    <p id="load-main">正观星象，感应天机…</p>
+    <p id="load-sub">天机推演中</p>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="load-pbar"></div>
+  </div>
+</div>
+
+<!-- ════════════ S4: 预览 + 付费墙 ════════════ -->
+<div class="screen" id="s4">
+  <button class="back-btn" onclick="goTo(1)">返回</button>
+
+  <div class="preview-header" style="margin-top:20px">
+    <div class="tag-pill">命格初现</div>
+    <h2 class="preview-title" id="s4-title">甲木日主 · 偏印格</h2>
+    <p class="preview-sub">JIĀ MÙ · PIĀN YÌN GÉ</p>
+    <div class="stars">★★★★★</div>
+  </div>
+
+  <div class="gold-ornament" style="width:100%"><span>命主总论</span></div>
+
+  <p class="oracle-text" id="preview-text-1">命者，天之所赋也。阁下日主甲木，生于春月，木气当令，参天之势已成。木主仁，故性情刚直，心怀坦荡，有济世之志。偏印入格，心思机巧，见微知著；八字带天乙贵人，一生逢凶化吉，关键时刻常有贵人暗中相助。</p>
+
+  <p class="oracle-text" id="preview-text-2">然木过旺则刚，宜水来润，方成栋梁之材。大运逆行，三十岁后交丙火运，火木相生，事业将有重大转折。届时财星透出，正偏财俱旺，宜把握良机。然火旺亦耗木，需防精力透支，张弛有度方能行稳致远。</p>
+
+  <div class="blur-section" style="padding-bottom:120px">
+    <p class="oracle-text oracle-blur">大运流年之秘，非浅析可尽言。阁下三十三岁丁未年，流年与命局三合木局，事业宫有贵人星动，升迁机遇隐现。然流年冲月，亦主变动与挑战。此时当静心守志，不可急躁冒进。三十六岁庚戌年，正官星透干，催动事业与婚姻二宫，是年若遇良缘，当以诚相待，可成佳配。</p>
+    <p class="oracle-text oracle-blur" style="margin-top:16px">姻缘方面，正官星入命，桃花运旺而正缘迟来。阁下命有「红鸾」暗合，真命之缘当于三五至三七岁现身。此外，命格显示天生有偏财运，正财为主偏财为辅，方能长久积累。完整命书将详批：流年吉凶、开运方位、风水布局、专属护身之法，助您趋吉避凶，运筹帷幄。</p>
+    <div class="blur-fade-mask"></div>
+  </div>
+
+  <div class="unlock-overlay">
+    <div class="social-proof">
+      <div class="sp-avatars">
+        <div class="sp-avatar" style="background:linear-gradient(135deg,#5bbfa0,#3d9e82)">月</div>
+        <div class="sp-avatar" style="background:linear-gradient(135deg,#c9a84c,#a07828)">雯</div>
+        <div class="sp-avatar" style="background:linear-gradient(135deg,#8dd9bf,#5bbfa0)">晨</div>
+      </div>
+      <p class="sp-text">已有 <strong>8,847</strong> 人解锁完整命书</p>
+    </div>
+
+    <div class="testimonial">
+      「这份命书说的太准了，连我三十岁那年的贵人变动都预测到了……」
+      <cite>— 晓月，洛杉矶 · 2025.11</cite>
+    </div>
+
+    <div class="unlock-price-row">
+      <span class="price-original">¥280</span>
+      <span class="price-current">¥138</span>
+      <span class="price-badge">限时半价</span>
+    </div>
+
+    <button class="btn-gold" onclick="goTo(4)" style="max-width:300px;width:100%">解锁完整命书</button>
+    <p style="font-size:10px;color:var(--ink-light);letter-spacing:0.04em">含大运流年 · 姻缘财运 · 开运建议</p>
+  </div>
+</div>
+
+<!-- ════════════ S5: 支付 ════════════ -->
+<div class="screen" id="s5">
+  <button class="back-btn" onclick="goTo(3)">返回</button>
+
+  <div class="pay-header" style="margin-top:24px">
+    <div class="peace-clasp md" style="margin-bottom:8px"></div>
+    <h2>解封命书</h2>
+    <p style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:0.22em;color:var(--ink-light)">UNLOCK FULL DESTINY READING</p>
+  </div>
+
+  <div class="order-card">
+    <div class="order-row">
+      <span class="order-name">完整命盘解读</span>
+      <span class="order-price">¥138</span>
+    </div>
+    <div class="order-items">
+      <div class="order-item">五行能量全析 · 大运流年批注（2025–2045）</div>
+      <div class="order-item">姻缘桃花深度解读 · 婚配建议</div>
+      <div class="order-item">事业财运密码 · 贵人方位</div>
+      <div class="order-item">专属开运水晶推荐</div>
+    </div>
+    <div style="height:1px;background:rgba(201,168,76,0.18);margin:4px 0"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <span style="font-size:11px;color:var(--ink-light)">原价 ¥280 · 限时半价</span>
+      <span style="font-size:9px;letter-spacing:0.1em;color:var(--gold);border:1px solid rgba(201,168,76,0.5);padding:2px 8px;border-radius:2px">立省 ¥142</span>
+    </div>
+  </div>
+
+  <div class="pay-methods">
+    <p class="pay-label">选择支付方式</p>
+    <div class="pay-option selected" onclick="selectPay(this)">
+      <div class="pay-option-icon pay-icon-wechat">微</div>
+      <span class="pay-option-name">微信支付</span>
+      <div class="pay-option-check"></div>
+    </div>
+    <div class="pay-option" onclick="selectPay(this)">
+      <div class="pay-option-icon pay-icon-alipay">支</div>
+      <span class="pay-option-name">支付宝</span>
+      <div class="pay-option-check"></div>
+    </div>
+    <div class="pay-option" onclick="selectPay(this)">
+      <div class="pay-option-icon pay-icon-card">卡</div>
+      <span class="pay-option-name">银行卡 / Visa / Stripe</span>
+      <div class="pay-option-check"></div>
+    </div>
+  </div>
+
+  <button class="btn-gold" onclick="goTo(5)" style="max-width:100%;max-width:320px">立即解封 · ¥138</button>
+
+  <div class="trust-row">
+    <div class="trust-item">
+      <span style="font-size:10px;color:var(--jade-main)">▣</span>
+      <span>SSL加密</span>
+    </div>
+    <div class="trust-dot"></div>
+    <div class="trust-item">
+      <span style="font-size:10px;color:var(--jade-main)">◈</span>
+      <span>隐私保护</span>
+    </div>
+    <div class="trust-dot"></div>
+    <div class="trust-item">
+      <span style="font-size:10px;color:var(--jade-main)">◇</span>
+      <span>永久保存</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ S6: 完整命书 ════════════ -->
+<div class="screen" id="s6">
+  <button class="back-btn" onclick="goTo(4)">返回</button>
+
+  <div class="report-header" style="margin-top:20px">
+    <div class="tag-pill">完整命书</div>
+    <h2 class="report-title">你的天命书</h2>
+    <div class="gold-line-wide" style="margin:6px 0"></div>
+    <p class="report-meta" id="report-name">命主：某某</p>
+    <p class="report-date" id="report-date">庚子年 寅月 甲午日 辰时</p>
+  </div>
+
+  <!-- 五行能量 SVG -->
+  <div class="gold-ornament" style="width:100%"><span>五行能量</span></div>
+
+  <div class="wuxing-pentagon">
+    <svg width="200" height="200" viewBox="-110 -110 220 220" style="overflow:visible">
+      <defs>
+        <linearGradient id="grad-mu" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#2d7a2d"/>
+          <stop offset="100%" stop-color="#4aaa4a"/>
+        </linearGradient>
+        <linearGradient id="grad-huo" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#c0391b"/>
+          <stop offset="100%" stop-color="#e85d3a"/>
+        </linearGradient>
+        <linearGradient id="grad-tu" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#9e7b2a"/>
+          <stop offset="100%" stop-color="#c9a84c"/>
+        </linearGradient>
+        <linearGradient id="grad-jin" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#888"/>
+          <stop offset="100%" stop-color="#c0c0c0"/>
+        </linearGradient>
+        <linearGradient id="grad-shui" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#1a5580"/>
+          <stop offset="100%" stop-color="#3a8abf"/>
+        </linearGradient>
+      </defs>
+      <!-- Background pentagon -->
+      <polygon points="0,-95 90.3,-29.4 55.8,77.1 -55.8,77.1 -90.3,-29.4"
+               fill="none" stroke="#eeeee8" stroke-width="1"/>
+      <polygon points="0,-76 72.2,-23.5 44.6,61.7 -44.6,61.7 -72.2,-23.5"
+               fill="none" stroke="#eeeee8" stroke-width="0.5"/>
+      <polygon points="0,-57 54.2,-17.6 33.5,46.3 -33.5,46.3 -54.2,-17.6"
+               fill="none" stroke="#eeeee8" stroke-width="0.5"/>
+      <!-- Radial lines -->
+      <line x1="0" y1="0" x2="0" y2="-95" stroke="#eeeee8" stroke-width="0.5"/>
+      <line x1="0" y1="0" x2="90.3" y2="-29.4" stroke="#eeeee8" stroke-width="0.5"/>
+      <line x1="0" y1="0" x2="55.8" y2="77.1" stroke="#eeeee8" stroke-width="0.5"/>
+      <line x1="0" y1="0" x2="-55.8" y2="77.1" stroke="#eeeee8" stroke-width="0.5"/>
+      <line x1="0" y1="0" x2="-90.3" y2="-29.4" stroke="#eeeee8" stroke-width="0.5"/>
+      <!-- Data polygon: 木82% 火55% 土42% 金28% 水63%  (R=95, angles: top=-90°, +72° each step) -->
+      <!-- 木(0,-77.9) 火(49.7,-16.1) 土(23.5,32.3) 金(-15.6,21.5) 水(-56.9,-18.5) -->
+      <polygon
+        points="0,-77.9 49.7,-16.1 23.5,32.3 -15.6,21.5 -56.9,-18.5"
+        fill="rgba(91,191,160,0.18)"
+        stroke="var(--jade-main)"
+        stroke-width="1.5"/>
+      <!-- Data points -->
+      <circle cx="0"     cy="-77.9" r="4" fill="url(#grad-mu)"/>
+      <circle cx="49.7"  cy="-16.1" r="4" fill="url(#grad-huo)"/>
+      <circle cx="23.5"  cy="32.3"  r="4" fill="url(#grad-tu)"/>
+      <circle cx="-15.6" cy="21.5"  r="4" fill="url(#grad-jin)"/>
+      <circle cx="-56.9" cy="-18.5" r="4" fill="url(#grad-shui)"/>
+      <!-- Element labels -->
+      <text x="0"    y="-103" text-anchor="middle" font-family="Noto Serif SC,serif" font-size="13" fill="#2d7a2d">木</text>
+      <text x="100"  y="-29"  text-anchor="start"  font-family="Noto Serif SC,serif" font-size="13" fill="#c0391b">火</text>
+      <text x="62"   y="90"   text-anchor="middle" font-family="Noto Serif SC,serif" font-size="13" fill="#9e7b2a">土</text>
+      <text x="-62"  y="90"   text-anchor="middle" font-family="Noto Serif SC,serif" font-size="13" fill="#888">金</text>
+      <text x="-100" y="-29"  text-anchor="end"    font-family="Noto Serif SC,serif" font-size="13" fill="#1a5580">水</text>
+      <!-- Percentage labels near data points -->
+      <text x="0"    y="-82"  text-anchor="middle" font-family="sans-serif" font-size="8" fill="#2d7a2d">82%</text>
+      <text x="56"   y="-17"  text-anchor="start"  font-family="sans-serif" font-size="8" fill="#c0391b">55%</text>
+      <text x="30"   y="41"   text-anchor="start"  font-family="sans-serif" font-size="8" fill="#9e7b2a">42%</text>
+      <text x="-21"  y="30"   text-anchor="end"    font-family="sans-serif" font-size="8" fill="#888">28%</text>
+      <text x="-62"  y="-22"  text-anchor="end"    font-family="sans-serif" font-size="8" fill="#1a5580">63%</text>
+    </svg>
+  </div>
+
+  <div class="gold-ornament" style="width:100%"><span>命主总论</span></div>
+  <p class="report-body">甲木者，参天大树之象，生于庚子年，木旺得令。您天性刚正，富有远见，内心有着强烈的使命感。偏印入格，学识广博，思维超前，常有旁人未见之洞察。一生贵人不断，尤其三十五岁后进入人生上升通道，财富与地位并进。感情路上，您重情义，然需防止付出过多、索取过少。2027年后，正缘渐近，遇则珍之。</p>
+
+  <div class="gold-ornament" style="width:100%"><span>感情姻缘</span></div>
+  <p class="report-body">正官星入命，桃花旺而正缘迟来。命有「红鸾」暗合，二八至三二岁间所遇之人，或为过客，实为引路。真命之缘，当于三五至三七岁现身，属相以兔、羊、虎为上配。感情宜主动，不宜守株待兔——您的命格显示，缘分往往需要一次勇敢的开口。</p>
+
+  <div class="gold-ornament" style="width:100%"><span>关键时间节点</span></div>
+  <div class="timeline">
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-dot"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-year">2027 · 丁亥大运</div>
+        <div class="tl-desc">事业转折关键年，贵人提携，适合跨越式发展。偏财星旺，主横财或投资收益，切勿错失良机。</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-dot gold"></div><div class="tl-line"></div></div>
+      <div class="tl-right">
+        <div class="tl-year gold">2031 · 桃花贵人年</div>
+        <div class="tl-desc">姻缘宫动，命中正缘大概率在此年前后出现，感情线趋于稳定，宜主动表达心意。</div>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-left"><div class="tl-dot"></div></div>
+      <div class="tl-right">
+        <div class="tl-year">2038 · 财运鼎盛期</div>
+        <div class="tl-desc">正财偏财双旺，事业到达高峰，财富积累进入加速通道，宜稳健布局资产。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="gold-ornament" style="width:100%"><span>开运水晶推荐</span></div>
+  <div class="crystal-scroll">
+    <div class="crystal-card" onclick="amazonGo('jade peace clasp pendant necklace green')">
+      <div class="crystal-icon-box" style="background:linear-gradient(135deg,rgba(91,191,160,0.15),rgba(61,158,130,0.1))">
+        <span style="color:var(--jade-main);font-size:18px">玉</span>
+      </div>
+      <div class="crystal-name">帝王绿翡翠</div>
+      <div class="crystal-desc">甲木命人首选，强化贵人运与事业运</div>
+      <div class="crystal-price">¥1,980起 →</div>
+    </div>
+    <div class="crystal-card" onclick="amazonGo('amethyst crystal bracelet healing purple')">
+      <div class="crystal-icon-box" style="background:linear-gradient(135deg,rgba(160,91,191,0.15),rgba(120,61,158,0.1))">
+        <span style="color:#8b5cf6;font-size:18px">晶</span>
+      </div>
+      <div class="crystal-name">紫水晶手链</div>
+      <div class="crystal-desc">增强直觉与灵感，助偏印格发挥才华</div>
+      <div class="crystal-price">¥380起 →</div>
+    </div>
+    <div class="crystal-card" onclick="amazonGo('black obsidian pixiu bracelet wealth protection')">
+      <div class="crystal-icon-box" style="background:linear-gradient(135deg,rgba(30,30,30,0.1),rgba(60,60,60,0.07))">
+        <span style="color:var(--ink-mid);font-size:18px">貔</span>
+      </div>
+      <div class="crystal-name">黑曜石貔貅</div>
+      <div class="crystal-desc">招财辟邪，旺偏财，适合财运弱时佩戴</div>
+      <div class="crystal-price">¥520起 →</div>
+    </div>
+    <div class="crystal-card" onclick="amazonGo('white crystal ball clear quartz sphere')">
+      <div class="crystal-icon-box" style="background:linear-gradient(135deg,rgba(200,200,200,0.2),rgba(240,240,240,0.1))">
+        <span style="color:var(--ink-light);font-size:18px">球</span>
+      </div>
+      <div class="crystal-name">白水晶球</div>
+      <div class="crystal-desc">净化气场，放大其他水晶能量</div>
+      <div class="crystal-price">¥280起 →</div>
+    </div>
+  </div>
+
+  <div class="gold-ornament" style="width:100%"><span>预约大师</span></div>
+  <div style="width:100%;padding:18px;background:var(--bg-card);border:1px solid rgba(201,168,76,0.2);border-radius:6px;display:flex;flex-direction:column;gap:10px">
+    <p style="font-size:13px;color:var(--ink);letter-spacing:0.06em;line-height:1.6">想要更深入的解读？预约资深命理师，一对一详批您的完整命书。</p>
+    <p style="font-size:11px;color:var(--gold);letter-spacing:0.08em">⬤ 当日仅余 3 个名额</p>
+    <a href="master.html" style="text-decoration:none">
+      <button class="btn-jade" style="max-width:100%">预约名师咨询</button>
+    </a>
+  </div>
+</div>
+
+<!-- ════════════ Bottom Nav ════════════ -->
+<nav class="bottom-nav" id="bnav">
+  <div class="nav-item active" id="nav0" onclick="navTo(0)">
+    <div class="nav-glyph">命</div>
+    <span>命盘</span>
+  </div>
+  <a class="nav-item" href="pages/daoshao.html" style="text-decoration:none">
+    <div class="nav-glyph">祈</div>
+    <span>祈福</span>
+  </a>
+  <a class="nav-item" href="pages/shop.html" style="text-decoration:none">
+    <div class="nav-glyph">玉</div>
+    <span>好物</span>
+  </a>
+  <a class="nav-item" href="pages/master.html" style="text-decoration:none">
+    <div class="nav-glyph">师</div>
+    <span>名师</span>
+  </a>
+  <div class="nav-item" id="nav4" onclick="navTo(4)">
+    <div class="nav-glyph" style="font-size:16px">○</div>
+    <span>我的</span>
+  </div>
+</nav>
+
+<script>
+/* ── Amazon Affiliate ── */
+var AMZ_TAG = 'fabulousslim-20';
+function amazonGo(q) {
+  window.open('https://www.amazon.com/s?k=' + encodeURIComponent(q) + '&tag=' + AMZ_TAG, '_blank', 'noopener');
+}
+
+/* ── Screen Navigation ── */
+var cur = 0;
+var screens = document.querySelectorAll('.screen');
+var N = screens.length;
+
+// Init positions
+screens.forEach(function(s, i) {
+  s.style.transform = 'translateX(' + (i * 100) + 'vw)';
+});
+
+function goTo(idx) {
+  if (idx < 0 || idx >= N) return;
+  screens.forEach(function(s, i) {
+    s.style.transform = 'translateX(' + ((i - idx) * 100) + 'vw)';
+  });
+  cur = idx;
+  // Scroll to top of target screen
+  setTimeout(function() { screens[idx].scrollTop = 0; }, 50);
+
+  // S3 loading: cycle text and auto-advance
+  if (idx === 2) { startLoadingAnim(); }
+}
+
+/* ── Loading Animation ── */
+var LOADING_PHASES = [
+  { main: '正观星象，感应天机…',  sub: '天机推演中' },
+  { main: '推演八字，排布命盘…',  sub: '五行排布中' },
+  { main: '五行能量，分析完成…',  sub: '命格成象中' },
+  { main: '✦ 天机初现，命书已就', sub: '解读完成' },
+];
+var loadTimer = null;
+
+function startLoadingAnim() {
+  if (loadTimer) clearTimeout(loadTimer);
+  var lm = document.getElementById('load-main');
+  var ls = document.getElementById('load-sub');
+  var pb = document.getElementById('load-pbar');
+  if (lm) lm.textContent = LOADING_PHASES[0].main;
+  if (ls) ls.textContent = LOADING_PHASES[0].sub;
+  if (pb) { pb.style.transition = 'none'; pb.style.width = '0%';
+    setTimeout(function() { pb.style.transition = 'width 3.5s ease'; pb.style.width = '100%'; }, 50);
+  }
+  var p = 0;
+  function tick() {
+    p++;
+    if (p < LOADING_PHASES.length) {
+      if (lm) lm.textContent = LOADING_PHASES[p].main;
+      if (ls) ls.textContent = LOADING_PHASES[p].sub;
+      loadTimer = setTimeout(tick, 900);
+    }
+  }
+  loadTimer = setTimeout(tick, 900);
+  setTimeout(function() { goTo(3); }, 3600);
+}
+
+/* ── Start Reading ── */
+function startReading() {
+  var name = document.getElementById('user-name').value.trim();
+  var yr = document.getElementById('birth-year').value;
+  var mo = document.getElementById('birth-month').value;
+  var dy = document.getElementById('birth-day').value;
+  var hr = document.getElementById('birth-hour').value;
+  if (!name || !yr || !mo || !dy || !hr) {
+    var first = !name ? document.getElementById('user-name') :
+                !yr ? document.getElementById('birth-year') :
+                !hr ? document.getElementById('birth-hour') : null;
+    if (first) {
+      first.style.borderColor = '#e05a5a';
+      first.focus();
+      setTimeout(function() { first.style.borderColor = ''; }, 2000);
+    }
+    return;
+  }
+  // Store user data
+  window.userData = { name: name, year: yr, month: mo, day: dy, hour: hr };
+  goTo(2);
+}
+
+/* ── Payment option selection ── */
+function selectPay(el) {
+  document.querySelectorAll('.pay-option').forEach(function(o) { o.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+
+/* ── Nav ── */
+function navTo(idx) {
+  document.querySelectorAll('.nav-item').forEach(function(n, j) {
+    n.classList.toggle('active', j === idx);
+  });
+  if (idx === 0) goTo(0);
+}
+
+/* ── Populate date selects ── */
+(function() {
+  var yr = document.getElementById('birth-year');
+  for (var i = 2010; i >= 1940; i--) {
+    var o = document.createElement('option'); o.value = i; o.textContent = i + '年'; yr.appendChild(o);
+  }
+  var mo = document.getElementById('birth-month');
+  for (var i = 1; i <= 12; i++) {
+    var o = document.createElement('option'); o.value = i; o.textContent = i + '月'; mo.appendChild(o);
+  }
+  var dy = document.getElementById('birth-day');
+  for (var i = 1; i <= 31; i++) {
+    var o = document.createElement('option'); o.value = i; o.textContent = i + '日'; dy.appendChild(o);
+  }
+})();
+
+/* ── Intent chip toggle ── */
+document.querySelectorAll('.chip').forEach(function(c) {
+  c.addEventListener('click', function() {
+    document.querySelectorAll('.chip').forEach(function(x) { x.classList.remove('active'); });
+    c.classList.add('active');
+  });
+});
+
+/* ── Animated counter on S1 ── */
+(function() {
+  var el = document.getElementById('user-count');
+  if (!el) return;
+  var target = 2847392;
+  var start = target - 1200;
+  var current = start;
+  var duration = 1800;
+  var step = (target - start) / (duration / 16);
+  var timer = setInterval(function() {
+    current += step;
+    if (current >= target) { current = target; clearInterval(timer); }
+    el.textContent = Math.floor(current).toLocaleString('zh-CN');
+  }, 16);
+})();
+</script>
+</body>
+</html>
