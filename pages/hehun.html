@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0f080a">
+<title>善缘 · 合婚配对</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f080a;--card:#1c0f12;--mid:#261520;
+  --rose:#c9607a;--rose-light:#e8a0b0;--rose-dark:#8a3050;
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
+  --jade:#5bbfa0;--jade-mid:#8dd9bf;
+  --text:rgba(245,225,230,0.88);--sub:rgba(200,170,178,0.5);
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:130px;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 30% 0%,rgba(201,96,122,0.1) 0%,transparent 50%),
+             radial-gradient(ellipse at 70% 0%,rgba(91,191,160,0.07) 0%,transparent 50%);
+  pointer-events:none;z-index:0}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(201,96,122,0.55);cursor:pointer}
+
+/* ── header ── */
+.header{position:relative;z-index:1;text-align:center;padding:52px 20px 20px}
+.orbit-wrap{width:72px;height:72px;margin:0 auto 12px;position:relative}
+.orb-a{position:absolute;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle,var(--rose-light),var(--rose));top:50%;left:50%;
+  animation:orbitA 4s linear infinite;margin:-15px 0 0 -15px}
+.orb-b{position:absolute;width:30px;height:30px;border-radius:50%;background:radial-gradient(circle,var(--jade-mid),var(--jade));top:50%;left:50%;
+  animation:orbitB 4s linear infinite;margin:-15px 0 0 -15px}
+@keyframes orbitA{0%{transform:translate(-20px,-8px)}25%{transform:translate(0,-20px)}50%{transform:translate(20px,-8px)}75%{transform:translate(0,4px)}100%{transform:translate(-20px,-8px)}}
+@keyframes orbitB{0%{transform:translate(20px,8px)}25%{transform:translate(0,20px)}50%{transform:translate(-20px,8px)}75%{transform:translate(0,-4px)}100%{transform:translate(20px,8px)}}
+.header-title{font-size:22px;font-weight:400;letter-spacing:0.26em}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;letter-spacing:0.2em;color:var(--rose);margin-top:5px;opacity:0.7}
+.rose-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--rose),transparent);margin:12px auto 0}
+
+/* ── input section ── */
+.input-screen{position:relative;z-index:1}
+.persons-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:20px 16px 0}
+.person-card{background:var(--card);border-radius:10px;padding:12px;border:1px solid}
+.person-a{border-color:rgba(201,96,122,0.2)}
+.person-b{border-color:rgba(91,191,160,0.2)}
+.person-label{font-size:10px;letter-spacing:0.16em;margin-bottom:8px;text-align:center}
+.person-a .person-label{color:var(--rose)}
+.person-b .person-label{color:var(--jade)}
+.mini-select{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:5px;color:var(--text);font-family:'Noto Serif SC',serif;font-size:11px;padding:7px 6px;margin-bottom:6px;-webkit-appearance:none;outline:none}
+.mini-select option{background:var(--card)}
+.gender-row{display:flex;gap:5px;margin-top:4px}
+.g-opt{flex:1;text-align:center;padding:6px 0;border-radius:4px;font-size:11px;cursor:pointer;border:1px solid rgba(255,255,255,0.07);color:var(--sub);transition:all 0.2s}
+.person-a .g-opt.sel{border-color:var(--rose);background:rgba(201,96,122,0.12);color:var(--rose-light)}
+.person-b .g-opt.sel{border-color:var(--jade);background:rgba(91,191,160,0.1);color:var(--jade-mid)}
+
+/* tier selector */
+.tier-section{padding:16px 16px 0;position:relative;z-index:1}
+.tier-label{font-size:10px;letter-spacing:0.2em;color:var(--sub);margin-bottom:10px}
+.tier-row{display:flex;gap:7px}
+.tier-card{flex:1;background:var(--card);border:1px solid rgba(201,96,122,0.1);border-radius:8px;padding:10px 8px;text-align:center;cursor:pointer;transition:all 0.2s}
+.tier-card.sel{border-color:var(--gold);background:rgba(201,168,76,0.06)}
+.tier-name{font-size:11px;letter-spacing:0.04em;margin-bottom:3px}
+.tier-price{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold)}
+.tier-desc{font-size:9px;color:var(--sub);margin-top:2px}
+
+/* submit */
+.submit-wrap{padding:14px 16px 0;position:relative;z-index:1}
+.btn-calc{width:100%;padding:14px 0;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light));border:none;border-radius:5px;color:rgba(15,8,10,0.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:0.2em;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,0.2)}
+
+/* loading */
+.loading-wrap{display:none;position:relative;z-index:1;text-align:center;padding:52px 20px}
+.loading-wrap.show{display:block}
+.yin-yang{font-size:48px;margin-bottom:16px;display:block;animation:spin 2.5s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-txt{font-size:11px;color:var(--rose);letter-spacing:0.18em;opacity:0.8}
+
+/* results */
+.results{display:none;position:relative;z-index:1}
+.results.show{display:block;animation:fadeUp 0.5s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* score ring */
+.score-wrap{text-align:center;padding:24px 16px 16px}
+.score-ring{width:120px;height:120px;margin:0 auto 14px;position:relative}
+.score-ring svg{transform:rotate(-90deg)}
+.ring-bg{stroke:rgba(255,255,255,0.06);fill:none;stroke-width:7}
+.ring-fill{fill:none;stroke-width:7;stroke-linecap:round;transition:stroke-dasharray 1.4s ease}
+.score-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num{font-family:'Cormorant Garamond',serif;font-size:36px;line-height:1}
+.score-pct{font-size:13px;margin-left:1px;opacity:0.7}
+.score-lbl{font-size:9px;color:var(--sub);letter-spacing:0.1em;margin-top:2px}
+.score-grade{font-size:20px;letter-spacing:0.14em;margin-bottom:4px}
+.score-sub{font-size:10px;color:var(--sub);letter-spacing:0.1em}
+
+/* dimensions */
+.dims-section{padding:0 16px;margin-bottom:14px}
+.dims-label{font-size:10px;letter-spacing:0.2em;color:var(--sub);margin-bottom:10px}
+.dim-card{background:var(--card);border:1px solid rgba(201,96,122,0.08);border-radius:8px;padding:12px 14px;margin-bottom:7px}
+.dim-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.dim-name{font-size:12px;letter-spacing:0.06em}
+.dim-score{font-family:'Cormorant Garamond',serif;font-size:16px}
+.dim-bar-bg{height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;margin-bottom:5px}
+.dim-bar-fill{height:100%;border-radius:2px;transition:width 1s ease}
+.dim-desc{font-size:10px;color:var(--sub);line-height:1.7}
+
+/* 五行分析 */
+.wuxing-section{padding:0 16px;margin-bottom:14px}
+.wx-card{background:var(--card);border-radius:10px;padding:14px;border:1px solid rgba(201,168,76,0.1)}
+.wx-row{display:flex;align-items:center;justify-content:space-around;padding:10px 0}
+.wx-person{text-align:center}
+.wx-elem-icon{font-size:32px;margin-bottom:4px}
+.wx-elem-name{font-size:11px;letter-spacing:0.1em}
+.wx-elem-sub{font-size:9px;color:var(--sub);margin-top:2px}
+.wx-arrow{font-size:22px;color:var(--gold)}
+.wx-rel{text-align:center;margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.05)}
+.wx-rel-tag{display:inline-block;font-size:10px;padding:4px 14px;border-radius:10px;letter-spacing:0.1em}
+
+/* 今年运程 */
+.year-section{padding:0 16px;margin-bottom:14px}
+.year-card{background:var(--card);border-radius:10px;padding:14px;border:1px solid rgba(91,191,160,0.1)}
+.year-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.year-icon{font-size:18px}
+.year-title{font-size:13px;letter-spacing:0.08em}
+.year-badge{margin-left:auto;font-size:9px;padding:3px 9px;border-radius:8px}
+.year-text{font-size:10px;color:var(--sub);line-height:1.8}
+
+/* locked */
+.locked-card{position:relative;margin:0 16px 14px;background:var(--card);border:1px solid rgba(201,96,122,0.1);border-radius:10px;overflow:hidden}
+.locked-inner{padding:16px;filter:blur(3px);pointer-events:none;user-select:none}
+.locked-inner-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:11px;color:var(--sub)}
+.locked-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(15,8,10,0.65)}
+.lock-icon{font-size:26px;margin-bottom:8px}
+.lock-title{font-size:11px;color:var(--sub);margin-bottom:12px;letter-spacing:0.1em}
+.lock-btn{padding:10px 24px;background:linear-gradient(135deg,var(--rose-dark),var(--rose),var(--rose-light));border:none;border-radius:4px;color:#fff;font-family:'Noto Serif SC',serif;font-size:12px;font-weight:500;letter-spacing:0.14em;cursor:pointer}
+
+/* sticky */
+.sticky-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:390px;padding:12px 16px;background:linear-gradient(180deg,transparent,rgba(15,8,10,0.97) 30%);z-index:90;display:none}
+.sticky-cta{width:100%;padding:13px 0;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light));border:none;border-radius:4px;color:rgba(15,8,10,0.95);font-family:'Noto Serif SC',serif;font-size:13px;font-weight:500;letter-spacing:0.16em;cursor:pointer}
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">← 返回</button>
+
+<div class="header">
+  <div class="orbit-wrap">
+    <div class="orb-a"></div>
+    <div class="orb-b"></div>
+  </div>
+  <div class="header-title">合婚配对</div>
+  <div class="header-sub">天作之合 · 八字合婚精算</div>
+  <div class="rose-line"></div>
+</div>
+
+<!-- input -->
+<div class="input-screen" id="inputScreen">
+  <div class="persons-row">
+    <!-- Person A -->
+    <div class="person-card person-a">
+      <div class="person-label">本命 / 您</div>
+      <select class="mini-select" id="aYear">
+        <option value="">年份</option>
+        <script>for(let y=2005;y>=1950;y--) document.write(`<option value="${y}">${y}</option>`)</script>
+      </select>
+      <select class="mini-select" id="aMonth">
+        <option value="">月份</option>
+        <script>for(let m=1;m<=12;m++) document.write(`<option value="${m}">${m}月</option>`)</script>
+      </select>
+      <select class="mini-select" id="aDay">
+        <option value="">日期</option>
+        <script>for(let d=1;d<=31;d++) document.write(`<option value="${d}">${d}日</option>`)</script>
+      </select>
+      <select class="mini-select" id="aHour">
+        <option value="0">时辰（选填）</option>
+        <option value="0">子时(23-1)</option><option value="1">丑时(1-3)</option>
+        <option value="2">寅时(3-5)</option><option value="3">卯时(5-7)</option>
+        <option value="4">辰时(7-9)</option><option value="5">巳时(9-11)</option>
+        <option value="6">午时(11-13)</option><option value="7">未时(13-15)</option>
+        <option value="8">申时(15-17)</option><option value="9">酉时(17-19)</option>
+        <option value="10">戌时(19-21)</option><option value="11">亥时(21-23)</option>
+      </select>
+      <div class="gender-row">
+        <div class="g-opt sel" id="aM" onclick="selG('a','male')">男</div>
+        <div class="g-opt" id="aF" onclick="selG('a','female')">女</div>
+      </div>
+    </div>
+    <!-- Person B -->
+    <div class="person-card person-b">
+      <div class="person-label">TA / 对方</div>
+      <select class="mini-select" id="bYear">
+        <option value="">年份</option>
+        <script>for(let y=2005;y>=1950;y--) document.write(`<option value="${y}">${y}</option>`)</script>
+      </select>
+      <select class="mini-select" id="bMonth">
+        <option value="">月份</option>
+        <script>for(let m=1;m<=12;m++) document.write(`<option value="${m}">${m}月</option>`)</script>
+      </select>
+      <select class="mini-select" id="bDay">
+        <option value="">日期</option>
+        <script>for(let d=1;d<=31;d++) document.write(`<option value="${d}">${d}日</option>`)</script>
+      </select>
+      <select class="mini-select" id="bHour">
+        <option value="0">时辰（选填）</option>
+        <option value="0">子时(23-1)</option><option value="1">丑时(1-3)</option>
+        <option value="2">寅时(3-5)</option><option value="3">卯时(5-7)</option>
+        <option value="4">辰时(7-9)</option><option value="5">巳时(9-11)</option>
+        <option value="6">午时(11-13)</option><option value="7">未时(13-15)</option>
+        <option value="8">申时(15-17)</option><option value="9">酉时(17-19)</option>
+        <option value="10">戌时(19-21)</option><option value="11">亥时(21-23)</option>
+      </select>
+      <div class="gender-row">
+        <div class="g-opt" id="bM" onclick="selG('b','male')">男</div>
+        <div class="g-opt sel" id="bF" onclick="selG('b','female')">女</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- tier -->
+  <div class="tier-section">
+    <div class="tier-label">选择合婚报告</div>
+    <div class="tier-row">
+      <div class="tier-card" id="t1" onclick="selTier(1)">
+        <div class="tier-name">基础合婚</div>
+        <div class="tier-price">$9.9</div>
+        <div class="tier-desc">相合度+五行</div>
+      </div>
+      <div class="tier-card sel" id="t2" onclick="selTier(2)">
+        <div class="tier-name">完整合婚</div>
+        <div class="tier-price">$19.9</div>
+        <div class="tier-desc">全维度+化解</div>
+      </div>
+      <div class="tier-card" id="t3" onclick="selTier(3)">
+        <div class="tier-name">大师批婚</div>
+        <div class="tier-price">$49</div>
+        <div class="tier-desc">语音解读</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="submit-wrap">
+    <button class="btn-calc" onclick="startCalc()">推算合婚 →</button>
+  </div>
+</div>
+
+<!-- loading -->
+<div class="loading-wrap" id="loadingWrap">
+  <span class="yin-yang">☯</span>
+  <div class="load-txt">正在推算两人命盘合婚…</div>
+</div>
+
+<!-- results -->
+<div class="results" id="results">
+
+  <div class="score-wrap">
+    <div class="score-ring">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle class="ring-bg" cx="60" cy="60" r="52"/>
+        <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="52"
+          stroke-dasharray="0 326.7" stroke-linecap="round"/>
+      </svg>
+      <div class="score-inner">
+        <div class="score-num" id="scoreNum">0<span class="score-pct">%</span></div>
+        <div class="score-lbl">合婚指数</div>
+      </div>
+    </div>
+    <div class="score-grade" id="scoreGrade">—</div>
+    <div class="score-sub" id="scoreSub">—</div>
+  </div>
+
+  <!-- dimensions -->
+  <div class="dims-section">
+    <div class="dims-label">六维合婚分析</div>
+    <div id="dimsList"></div>
+  </div>
+
+  <!-- 五行分析 -->
+  <div class="wuxing-section">
+    <div class="dims-label">五行相合关系</div>
+    <div class="wx-card">
+      <div class="wx-row">
+        <div class="wx-person">
+          <div class="wx-elem-icon" id="wxIconA">🔥</div>
+          <div class="wx-elem-name" id="wxNameA">火命</div>
+          <div class="wx-elem-sub" id="wxYearA">本命</div>
+        </div>
+        <div class="wx-arrow" id="wxArrow">⇌</div>
+        <div class="wx-person">
+          <div class="wx-elem-icon" id="wxIconB">🪨</div>
+          <div class="wx-elem-name" id="wxNameB">土命</div>
+          <div class="wx-elem-sub" id="wxYearB">对方</div>
+        </div>
+      </div>
+      <div class="wx-rel">
+        <span class="wx-rel-tag" id="wxRelTag">相生 · 大吉</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 今年运程 -->
+  <div class="year-section">
+    <div class="dims-label">2026年婚姻运程</div>
+    <div class="year-card">
+      <div class="year-head">
+        <span class="year-icon">📅</span>
+        <span class="year-title">2026丙午年</span>
+        <span class="year-badge" id="yearBadge">吉年</span>
+      </div>
+      <div class="year-text" id="yearText">正在分析…</div>
+    </div>
+  </div>
+
+  <!-- locked -->
+  <div class="locked-card">
+    <div class="locked-inner">
+      <div class="locked-inner-row">📅 大凶日期回避（婚宴/领证）</div>
+      <div class="locked-inner-row">🌟 最佳婚期推荐（3个吉日）</div>
+      <div class="locked-inner-row">🔮 五行冲克化解方案</div>
+      <div class="locked-inner-row">💍 婚戒宝石旺婚推荐</div>
+    </div>
+    <div class="locked-overlay">
+      <div class="lock-icon">🔒</div>
+      <div class="lock-title">解锁完整合婚报告</div>
+      <button class="lock-btn" onclick="alert('支付功能即将上线')">解锁完整报告 · $19.9</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- sticky -->
+<div class="sticky-bar" id="stickyBar">
+  <button class="sticky-cta" onclick="window.location.href='master.html'">预约大师批婚 · $49 · 专业语音解读</button>
+</div>
+
+<script>
+const ELEM = {
+  甲:['木','🌿'],乙:['木','🌿'],丙:['火','🔥'],丁:['火','🔥'],
+  戊:['土','🪨'],己:['土','🪨'],庚:['金','⚪'],辛:['金','⚪'],
+  壬:['水','💧'],癸:['水','💧'],
+};
+const TIANGAN = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+const ELEM_NAMES = {'木':'木命','火':'火命','土':'土命','金':'金命','水':'水命'};
+const SHENGS = {'木火':true,'火土':true,'土金':true,'金水':true,'水木':true};
+const KES   = {'木土':true,'土水':true,'水火':true,'火金':true,'金木':true};
+
+let gA = 'male', gB = 'female', curTier = 2;
+
+function selG(p, g){
+  if(p==='a'){ gA=g; document.getElementById('aM').className='g-opt'+(g==='male'?' sel':''); document.getElementById('aF').className='g-opt'+(g==='female'?' sel':''); }
+  else { gB=g; document.getElementById('bM').className='g-opt'+(g==='male'?' sel':''); document.getElementById('bF').className='g-opt'+(g==='female'?' sel':''); }
+}
+
+function selTier(n){
+  curTier=n;
+  [1,2,3].forEach(i=>{ document.getElementById('t'+i).classList.toggle('sel', i===n) });
+}
+
+function getElem(year){
+  const tg = TIANGAN[(year-4)%10];
+  return ELEM[tg] || ['木','🌿'];
+}
+
+function det(a,b,min,max){ return min + Math.abs((a*31+b*17+a*b)%(max-min+1)); }
+
+function startCalc(){
+  const ay=+document.getElementById('aYear').value;
+  const by=+document.getElementById('bYear').value;
+  if(!ay||!by){ alert('请选择两人的出生年份'); return; }
+  document.getElementById('inputScreen').style.display='none';
+  document.getElementById('loadingWrap').classList.add('show');
+  setTimeout(()=>showResults(ay,by), 2500);
+}
+
+function showResults(ay,by){
+  document.getElementById('loadingWrap').classList.remove('show');
+
+  const am=+document.getElementById('aMonth').value||6;
+  const bm=+document.getElementById('bMonth').value||6;
+  const ad=+document.getElementById('aDay').value||15;
+  const bd=+document.getElementById('bDay').value||15;
+
+  const [aElem,aIcon] = getElem(ay);
+  const [bElem,bIcon] = getElem(by);
+  const rel = SHENGS[aElem+bElem]||SHENGS[bElem+aElem] ? '相生·大吉' :
+              KES[aElem+bElem]||KES[bElem+aElem] ? '相克·需化解' : '相合·平稳';
+  const relColor = rel.includes('大吉')?'rgba(91,191,160,0.15)':rel.includes('克')?'rgba(220,60,60,0.12)':'rgba(201,168,76,0.12)';
+  const relText  = rel.includes('大吉')?'var(--jade-mid)':rel.includes('克')?'#e08080':'var(--gold)';
+
+  const base = det(ay,by,55,95);
+  const relBonus = rel.includes('大吉')?8:rel.includes('克')?-8:0;
+  const score = Math.min(97,Math.max(42, base+relBonus));
+
+  // Animate score ring
+  document.getElementById('results').classList.add('show');
+  document.getElementById('stickyBar').style.display='block';
+  let n=0;
+  const tm=setInterval(()=>{
+    n=Math.min(n+2,score);
+    document.getElementById('scoreNum').innerHTML=n+'<span class="score-pct">%</span>';
+    const circ=326.7;
+    document.getElementById('ringFill').setAttribute('stroke-dasharray',`${circ*n/100} ${circ}`);
+    document.getElementById('ringFill').setAttribute('stroke', n>=76?'#5bbfa0':n>=55?'#c9a84c':'#c9607a');
+    if(n>=score) clearInterval(tm);
+  },22);
+
+  const grade = score>=85?['天作之合','两人命格高度契合，相扶相持，共同成长']:
+                score>=70?['相辅相成','命格相合，感情稳固，需用心经营']:
+                score>=55?['缘分天定','有一定差异，互补性强，用心可克服']:
+                          ['需要经营','命格有冲，建议咨询大师化解'];
+  document.getElementById('scoreGrade').textContent=grade[0];
+  document.getElementById('scoreSub').textContent=grade[1];
+
+  // 六维
+  const DIMS=[
+    {icon:'💕',name:'感情契合度',base:det(ay+am,by+bm,58,96),desc_hi:'两人情感频率相近，容易产生心灵共鸣',desc_lo:'需要主动沟通，用心理解对方的情感需求'},
+    {icon:'💰',name:'财运相合度',base:det(ay*3,by*3,52,92),desc_hi:'财运互补，共同理财可积累丰厚家产',desc_lo:'理财观念有差异，建议婚前坦诚沟通财务规划'},
+    {icon:'🏠',name:'生活默契度',base:det(ay+ad,by+bd,55,94),desc_hi:'生活习惯相近，日常相处轻松自然',desc_lo:'生活节奏略有差异，需要磨合与包容'},
+    {icon:'👶',name:'子嗣缘分',base:det(am*by,bm*ay,60,95),desc_hi:'子嗣缘分深厚，后代聪慧有福',desc_lo:'子嗣需等待时机，建议调理身体迎接新生命'},
+    {icon:'🤝',name:'事业互助度',base:det(ay+by,am*bm,56,90),desc_hi:'互为贵人，携手可开创更大事业',desc_lo:'事业方向各异，但可以互相学习借鉴'},
+    {icon:'🔮',name:'五行相生度',base:Math.min(96,Math.max(45,det(ay,by,55,90)+relBonus)),desc_hi:'五行相生，命理层面天作之合',desc_lo:'五行有所制化，建议选吉时婚配'},
+  ];
+
+  document.getElementById('dimsList').innerHTML = DIMS.map(d=>{
+    const sc = Math.min(97,Math.max(45,d.base));
+    const color = sc>=76?'var(--jade)':sc>=55?'var(--gold)':'var(--rose)';
+    return `<div class="dim-card">
+      <div class="dim-head">
+        <div class="dim-name">${d.icon} ${d.name}</div>
+        <div class="dim-score" style="color:${color}">${sc}分</div>
+      </div>
+      <div class="dim-bar-bg"><div class="dim-bar-fill" style="width:${sc}%;background:${color}"></div></div>
+      <div class="dim-desc">${sc>=70?d.desc_hi:d.desc_lo}</div>
+    </div>`;
+  }).join('');
+
+  // 五行
+  document.getElementById('wxIconA').textContent=aIcon;
+  document.getElementById('wxNameA').textContent=ELEM_NAMES[aElem];
+  document.getElementById('wxYearA').textContent=ay+'年';
+  document.getElementById('wxIconB').textContent=bIcon;
+  document.getElementById('wxNameB').textContent=ELEM_NAMES[bElem];
+  document.getElementById('wxYearB').textContent=by+'年';
+  document.getElementById('wxArrow').textContent=rel.includes('大吉')?'→生←':rel.includes('克')?'⚡':'⇌';
+  const rt=document.getElementById('wxRelTag');
+  rt.textContent=rel; rt.style.background=relColor; rt.style.color=relText;
+  rt.style.border=`1px solid ${relText}`; rt.style.padding='4px 16px'; rt.style.borderRadius='12px';
+
+  // 2026运程
+  const yrScore = det(ay+2026,by+2026,1,10);
+  const isGood = yrScore>=6;
+  const yb=document.getElementById('yearBadge');
+  yb.textContent=isGood?'✨ 适宜成婚':'⚠ 宜缓行';
+  yb.style.background=isGood?'rgba(91,191,160,0.12)':'rgba(201,168,76,0.1)';
+  yb.style.color=isGood?'var(--jade-mid)':'var(--gold)';
+  yb.style.border=`1px solid ${isGood?'rgba(91,191,160,0.2)':'rgba(201,168,76,0.2)'}`;
+  yb.style.borderRadius='8px'; yb.style.padding='2px 9px';
+  document.getElementById('yearText').textContent = isGood
+    ? `2026年火气旺盛，两人合婚命格相合，属于佳婚之年。建议选在${3+yrScore%4}月前后良辰，登记+婚宴双喜临门，家运兴旺。`
+    : `2026年流年对合婚略有阻滞，建议先巩固感情基础，或选在${yrScore+2}月某吉日小婚，大婚可考虑2027年。`;
+}
+</script>
+</body>
+</html>
