@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#FAFAF8">
+<title>善缘 · 善缘公益池</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --jade-deep:  #3d9e82;
+  --jade-main:  #5bbfa0;
+  --jade-mid:   #8dd9bf;
+  --jade-bright:#c8f0e0;
+  --gold:       #c9a84c;
+  --gold-light: #e8d08a;
+  --ink:        #1a1a18;
+  --ink-mid:    #4a4a46;
+  --ink-light:  #8a8a84;
+  --bg:         #FAFAF8;
+  --bg-card:    #FFFFFF;
+}
+
+html, body {
+  background: var(--bg);
+  font-family: 'Noto Serif SC', serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100vh;
+  overflow-y: auto;
+  padding-bottom: 52px;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(91,191,160,0.08) 0%, transparent 55%);
+  pointer-events: none; z-index: 0;
+}
+
+.back-btn {
+  position: fixed; top: 16px; left: 16px; z-index: 99;
+  background: none; border: none;
+  font-family: 'Noto Serif SC', serif; font-size: 13px;
+  color: var(--jade-main); letter-spacing: 0.06em; cursor: pointer; padding: 4px 0;
+}
+
+/* ── Header ── */
+.header {
+  position: relative; z-index: 1;
+  text-align: center;
+  padding: 44px 20px 22px;
+}
+
+.header-title {
+  font-size: 20px; font-weight: 400;
+  letter-spacing: 0.22em; color: var(--ink);
+  margin-bottom: 6px;
+}
+.header-sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; font-size: 11px;
+  letter-spacing: 0.26em; color: rgba(91,191,160,0.6);
+  margin-bottom: 14px;
+}
+.jade-line {
+  width: 60px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--jade-main), transparent);
+  margin: 0 auto;
+}
+
+/* ── Total pool ── */
+.pool-hero {
+  position: relative; z-index: 1;
+  margin: 16px 16px 12px;
+  background: linear-gradient(135deg, rgba(91,191,160,0.08), rgba(200,240,224,0.2));
+  border: 1px solid rgba(91,191,160,0.2);
+  border-radius: 12px;
+  padding: 24px 20px;
+  text-align: center;
+}
+
+.pool-label {
+  font-size: 10px; letter-spacing: 0.28em;
+  color: rgba(91,191,160,0.7); margin-bottom: 8px;
+}
+
+.pool-amount {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 48px; font-weight: 300;
+  color: var(--jade-deep);
+  letter-spacing: 0.02em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.pool-unit {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px; color: var(--jade-main);
+  margin-right: 4px;
+}
+
+.pool-sub {
+  font-size: 11px; color: var(--ink-light);
+  letter-spacing: 0.12em;
+}
+
+/* ── Stats row ── */
+.stats-row {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 8px; padding: 0 16px 16px;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid #eeeee8;
+  border-radius: 8px;
+  padding: 14px 10px;
+  text-align: center;
+  display: flex; flex-direction: column; gap: 4px;
+}
+
+.stat-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px; font-weight: 400;
+  color: var(--jade-deep); line-height: 1;
+}
+
+.stat-label {
+  font-size: 9px; letter-spacing: 0.12em;
+  color: var(--ink-light);
+}
+
+.stat-sub {
+  font-size: 9px; color: rgba(91,191,160,0.6);
+  letter-spacing: 0.06em;
+}
+
+/* ── Section head ── */
+.sec-head {
+  position: relative; z-index: 1;
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 0 16px 12px;
+}
+.sec-head span { font-size: 11px; letter-spacing: 0.2em; color: var(--gold); white-space: nowrap; }
+.sec-head::before, .sec-head::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3));
+}
+.sec-head::after { background: linear-gradient(90deg, rgba(201,168,76,0.3), transparent); }
+
+/* ── Distribution donut ── */
+.dist-wrap {
+  position: relative; z-index: 1;
+  margin: 0 16px 16px;
+  background: var(--bg-card);
+  border: 1px solid #eeeee8;
+  border-radius: 10px;
+  padding: 20px 18px;
+  display: flex; align-items: center; gap: 18px;
+}
+
+.donut-svg { flex-shrink: 0; }
+
+.dist-legend {
+  flex: 1; display: flex; flex-direction: column; gap: 10px;
+}
+
+.leg-row {
+  display: flex; align-items: center; gap: 8px;
+}
+.leg-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.leg-text { flex: 1; }
+.leg-name { font-size: 11px; color: var(--ink-mid); letter-spacing: 0.04em; }
+.leg-pct {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px; color: var(--ink); font-weight: 400;
+}
+
+/* ── Breakdown ── */
+.breakdown-wrap {
+  position: relative; z-index: 1;
+  margin: 0 16px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+
+.bk-row {
+  background: var(--bg-card);
+  border: 1px solid #eeeee8;
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.bk-left { display: flex; align-items: center; gap: 10px; }
+
+.bk-icon {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: rgba(91,191,160,0.1);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px; color: var(--jade-main); font-weight: 300;
+  flex-shrink: 0;
+}
+
+.bk-name { font-size: 12px; letter-spacing: 0.06em; color: var(--ink); }
+.bk-desc { font-size: 10px; color: var(--ink-light); margin-top: 2px; }
+
+.bk-amount {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px; color: var(--jade-deep);
+}
+.bk-unit { font-family: 'Noto Serif SC', serif; font-size: 10px; }
+
+/* ── CTA ── */
+.cta-wrap {
+  position: relative; z-index: 1;
+  padding: 22px 16px 0;
+}
+
+.pledge-box {
+  background: linear-gradient(135deg, rgba(91,191,160,0.08), rgba(200,240,224,0.15));
+  border: 1px solid rgba(91,191,160,0.2);
+  border-radius: 8px;
+  padding: 14px 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--ink-mid);
+  letter-spacing: 0.06em;
+  line-height: 1.8;
+  margin-bottom: 12px;
+}
+
+.pledge-box strong {
+  color: var(--jade-main); font-weight: 500;
+}
+
+.btn-jade {
+  width: 100%; padding: 14px 0;
+  background: linear-gradient(135deg, var(--jade-deep), var(--jade-main), var(--jade-mid), var(--jade-main));
+  border: none; border-radius: 4px;
+  color: rgba(12,31,24,0.95);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px; font-weight: 500; letter-spacing: 0.18em;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(91,191,160,0.3);
+  transition: all 0.25s;
+}
+.btn-jade:active { transform: scale(0.97); }
+
+/* ── Counter animation ── */
+@keyframes countUp {
+  from { opacity: 0.3; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.pool-amount { animation: countUp 0.9s 0.3s ease both; }
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">‹ 返回</button>
+
+<div class="header">
+  <div class="header-title">善缘公益池</div>
+  <div class="header-sub">MERIT POOL · TRANSPARENT GIVING</div>
+  <div class="jade-line"></div>
+</div>
+
+<div class="pool-hero">
+  <div class="pool-label">本月善款总额（实时）</div>
+  <div class="pool-amount"><span class="pool-unit">$</span>12,840</div>
+  <div class="pool-sub">来自 1,847 笔供奉 · 本月持续累积中</div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="stat-num">23</div>
+    <div class="stat-label">受益孤儿</div>
+    <div class="stat-sub">本月资助</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">6</div>
+    <div class="stat-label">放生场次</div>
+    <div class="stat-sub">鱼·鸟·龟</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-num">4</div>
+    <div class="stat-label">寺庙修缮</div>
+    <div class="stat-sub">参与建设</div>
+  </div>
+</div>
+
+<div class="sec-head"><span>善款分配</span></div>
+
+<div class="dist-wrap">
+  <svg class="donut-svg" width="100" height="100" viewBox="0 0 36 36">
+    <!-- 善款池 20% (jade) -->
+    <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(91,191,160,0.15)" stroke-width="3.8"/>
+    <!-- 法师 50% -->
+    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#c9a84c" stroke-width="3.8"
+      stroke-dasharray="50 50" stroke-dashoffset="25" stroke-linecap="round"/>
+    <!-- 平台 30% -->
+    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#8a8a84" stroke-width="3.8"
+      stroke-dasharray="30 70" stroke-dashoffset="-25" stroke-linecap="round"/>
+    <!-- 善款 20% -->
+    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#5bbfa0" stroke-width="3.8"
+      stroke-dasharray="20 80" stroke-dashoffset="-55" stroke-linecap="round"/>
+    <text x="18" y="20" text-anchor="middle" fill="#1a1a18"
+      font-family="Noto Serif SC" font-size="4.5">分配</text>
+  </svg>
+  <div class="dist-legend">
+    <div class="leg-row">
+      <div class="leg-dot" style="background:var(--gold)"></div>
+      <div class="leg-text">
+        <div class="leg-name">法师·僧人</div>
+      </div>
+      <div class="leg-pct">50%</div>
+    </div>
+    <div class="leg-row">
+      <div class="leg-dot" style="background:#8a8a84"></div>
+      <div class="leg-text">
+        <div class="leg-name">平台运营</div>
+      </div>
+      <div class="leg-pct">30%</div>
+    </div>
+    <div class="leg-row">
+      <div class="leg-dot" style="background:var(--jade-main)"></div>
+      <div class="leg-text">
+        <div class="leg-name">善款公益</div>
+      </div>
+      <div class="leg-pct">20%</div>
+    </div>
+  </div>
+</div>
+
+<div class="sec-head"><span>善款流向明细</span></div>
+
+<div class="breakdown-wrap">
+  <div class="bk-row">
+    <div class="bk-left">
+      <div class="bk-icon">寺</div>
+      <div>
+        <div class="bk-name">寺庙建设·修缮</div>
+        <div class="bk-desc">善款池的 50% · 参与山西五台山</div>
+      </div>
+    </div>
+    <div class="bk-amount"><span class="bk-unit">$</span>1,284</div>
+  </div>
+  <div class="bk-row">
+    <div class="bk-left">
+      <div class="bk-icon">孤</div>
+      <div>
+        <div class="bk-name">孤儿院·儿童</div>
+        <div class="bk-desc">善款池的 30% · 资助23位孤儿</div>
+      </div>
+    </div>
+    <div class="bk-amount"><span class="bk-unit">$</span>770</div>
+  </div>
+  <div class="bk-row">
+    <div class="bk-left">
+      <div class="bk-icon">生</div>
+      <div>
+        <div class="bk-name">放生·环保</div>
+        <div class="bk-desc">善款池的 20% · 6场放生</div>
+      </div>
+    </div>
+    <div class="bk-amount"><span class="bk-unit">$</span>514</div>
+  </div>
+</div>
+
+<div class="cta-wrap">
+  <div class="pledge-box">
+    你的每一笔消费，自动有 <strong>20%</strong> 流入善缘公益池。<br>
+    消费即行善，无需额外捐款。
+  </div>
+  <button class="btn-jade">加入善缘 · 每消费即行善</button>
+</div>
+
+</body>
+</html>

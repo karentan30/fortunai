@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#FAFAF8">
+<title>善缘 · 每日天机</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --jade-deep:  #3d9e82;
+  --jade-main:  #5bbfa0;
+  --jade-mid:   #8dd9bf;
+  --jade-bright:#c8f0e0;
+  --gold:       #c9a84c;
+  --gold-light: #e8d08a;
+  --gold-deep:  #a07830;
+  --ink:        #1a1a18;
+  --ink-mid:    #4a4a46;
+  --ink-light:  #8a8a84;
+  --bg:         #FAFAF8;
+  --bg-card:    #FFFFFF;
+  --dawn:       #fdf6ee;
+}
+
+html, body {
+  background: var(--dawn);
+  font-family: 'Noto Serif SC', serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100vh;
+  overflow-y: auto;
+  padding-bottom: 52px;
+}
+
+/* Dawn gradient */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(232,208,138,0.25) 0%, transparent 55%),
+    radial-gradient(ellipse at 100% 30%, rgba(91,191,160,0.08) 0%, transparent 40%);
+  pointer-events: none; z-index: 0;
+}
+
+.back-btn {
+  position: fixed; top: 16px; left: 16px; z-index: 99;
+  background: none; border: none;
+  font-family: 'Noto Serif SC', serif; font-size: 13px;
+  color: var(--gold); letter-spacing: 0.06em; cursor: pointer; padding: 4px 0;
+}
+
+/* ── Date hero ── */
+.date-hero {
+  position: relative; z-index: 1;
+  width: 100%;
+  padding: 44px 20px 24px;
+  text-align: center;
+}
+
+.date-en {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 10px; font-style: italic;
+  letter-spacing: 0.35em; color: rgba(201,168,76,0.6);
+  margin-bottom: 6px;
+}
+
+.date-zh {
+  font-size: 15px; letter-spacing: 0.22em;
+  color: var(--ink); margin-bottom: 4px;
+}
+
+.date-ganzhi {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; letter-spacing: 0.18em;
+  color: var(--gold); font-weight: 400;
+  margin-bottom: 12px;
+}
+
+.gold-line {
+  width: 50px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 0 auto;
+}
+
+/* ── Element energy bar ── */
+.energy-wrap {
+  position: relative; z-index: 1;
+  margin: 20px 16px 12px;
+  background: var(--bg-card);
+  border: 1px solid #eeeee8;
+  border-radius: 10px;
+  padding: 18px 16px;
+}
+
+.energy-title {
+  font-size: 10px; letter-spacing: 0.22em;
+  color: var(--gold); margin-bottom: 14px;
+}
+
+.energy-rows { display: flex; flex-direction: column; gap: 9px; }
+
+.e-row { display: flex; align-items: center; gap: 10px; }
+
+.e-label {
+  font-size: 12px; width: 14px;
+  text-align: center; flex-shrink: 0;
+  color: var(--ink-mid);
+}
+
+.e-bar-bg {
+  flex: 1; height: 5px;
+  background: #f0f0ec; border-radius: 3px;
+  overflow: hidden;
+}
+
+.e-bar-fill {
+  height: 100%; border-radius: 3px;
+  background: var(--jade-main);
+  transition: width 0.8s ease;
+}
+.e-bar-fill.w { background: linear-gradient(90deg, #4a9fd4, #7ac4e8); }
+.e-bar-fill.f { background: linear-gradient(90deg, #e05a30, #f08060); }
+.e-bar-fill.e { background: linear-gradient(90deg, #c9a84c, #e8d08a); }
+.e-bar-fill.m { background: linear-gradient(90deg, #5bbfa0, #8dd9bf); }
+.e-bar-fill.me { background: linear-gradient(90deg, #888, #bbb); }
+
+.e-pct {
+  font-size: 10px; width: 28px;
+  text-align: right; color: var(--ink-light);
+  flex-shrink: 0;
+}
+
+/* ── Today cards ── */
+.cards-wrap {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; padding: 0 16px 12px;
+}
+
+.today-card {
+  background: var(--bg-card);
+  border: 1px solid #eeeee8;
+  border-radius: 8px;
+  padding: 14px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.tc-label {
+  font-size: 9px; letter-spacing: 0.22em;
+  color: var(--gold); opacity: 0.75;
+}
+
+.tc-value {
+  font-size: 16px; font-weight: 400;
+  letter-spacing: 0.08em; color: var(--ink);
+}
+
+.tc-sub {
+  font-size: 10px; color: var(--ink-light);
+  letter-spacing: 0.04em; line-height: 1.5;
+}
+
+/* Color swatch */
+.color-swatch {
+  width: 28px; height: 28px; border-radius: 50%;
+  margin-bottom: 2px;
+}
+
+/* ── Affirmation ── */
+.affirmation-wrap {
+  position: relative; z-index: 1;
+  margin: 0 16px 12px;
+  background: linear-gradient(135deg, rgba(200,240,224,0.3) 0%, rgba(245,240,230,0.5) 100%);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 10px;
+  padding: 20px 18px;
+}
+
+.aff-label {
+  font-size: 9px; letter-spacing: 0.3em;
+  color: rgba(201,168,76,0.6); margin-bottom: 10px;
+}
+
+.aff-text {
+  font-size: 14px; line-height: 2;
+  color: var(--ink);
+  letter-spacing: 0.08em;
+  font-weight: 300;
+}
+
+.aff-text em {
+  font-style: normal;
+  color: var(--jade-deep);
+}
+
+/* ── Subscribe CTA ── */
+.sub-wrap {
+  position: relative; z-index: 1;
+  margin: 0 16px;
+  background: var(--bg-card);
+  border: 1px solid #eeeee8;
+  border-radius: 10px;
+  padding: 18px 16px;
+}
+
+.sub-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.sub-title {
+  font-size: 14px; letter-spacing: 0.08em; color: var(--ink);
+}
+
+.sub-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px; color: var(--gold);
+}
+.sub-price .unit { font-family: 'Noto Serif SC', serif; font-size: 10px; }
+.sub-price .per  { font-size: 10px; color: var(--ink-light); }
+
+.sub-perks {
+  display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;
+}
+
+.sub-perk {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--ink-mid); letter-spacing: 0.04em;
+}
+
+.perk-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%; background: var(--jade-main); flex-shrink: 0;
+}
+
+.btn-gold {
+  width: 100%; padding: 14px 0;
+  background: linear-gradient(135deg, var(--gold-deep), var(--gold), var(--gold-light), var(--gold));
+  border: none; border-radius: 4px;
+  color: rgba(26,26,24,0.95);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px; font-weight: 500; letter-spacing: 0.2em;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(201,168,76,0.3);
+  transition: all 0.25s;
+}
+.btn-gold:active { transform: scale(0.97); }
+
+.preview-note {
+  text-align: center; font-size: 10px;
+  color: var(--ink-light); letter-spacing: 0.08em;
+  margin-top: 10px;
+}
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">‹ 返回</button>
+
+<div class="date-hero">
+  <div class="date-en">TODAY · HEAVENLY GUIDANCE</div>
+  <div class="date-zh" id="dateZh">2026年7月23日 · 星期三</div>
+  <div class="date-ganzhi">丙午年 · 辛未月 · 壬辰日</div>
+  <div class="gold-line"></div>
+</div>
+
+<div class="energy-wrap">
+  <div class="energy-title">今日五行能量</div>
+  <div class="energy-rows">
+    <div class="e-row">
+      <div class="e-label">木</div>
+      <div class="e-bar-bg"><div class="e-bar-fill m" style="width:72%"></div></div>
+      <div class="e-pct">72%</div>
+    </div>
+    <div class="e-row">
+      <div class="e-label">火</div>
+      <div class="e-bar-bg"><div class="e-bar-fill f" style="width:45%"></div></div>
+      <div class="e-pct">45%</div>
+    </div>
+    <div class="e-row">
+      <div class="e-label">土</div>
+      <div class="e-bar-bg"><div class="e-bar-fill e" style="width:88%"></div></div>
+      <div class="e-pct">88%</div>
+    </div>
+    <div class="e-row">
+      <div class="e-label">金</div>
+      <div class="e-bar-bg"><div class="e-bar-fill me" style="width:30%"></div></div>
+      <div class="e-pct">30%</div>
+    </div>
+    <div class="e-row">
+      <div class="e-label">水</div>
+      <div class="e-bar-bg"><div class="e-bar-fill w" style="width:58%"></div></div>
+      <div class="e-pct">58%</div>
+    </div>
+  </div>
+</div>
+
+<div class="cards-wrap">
+  <div class="today-card">
+    <div class="tc-label">幸运色</div>
+    <div class="color-swatch" style="background:linear-gradient(135deg,#8dd9bf,#5bbfa0)"></div>
+    <div class="tc-value">翠绿</div>
+    <div class="tc-sub">今日穿绿系，木气加持</div>
+  </div>
+  <div class="today-card">
+    <div class="tc-label">幸运数字</div>
+    <div class="tc-value" style="font-size:32px;color:var(--gold);font-family:'Cormorant Garamond',serif">8</div>
+    <div class="tc-sub">手机尾号含8最吉</div>
+  </div>
+  <div class="today-card">
+    <div class="tc-label">宜</div>
+    <div class="tc-value" style="font-size:13px">签约·出行·创业</div>
+    <div class="tc-sub">贵人星入命，万事逢缘</div>
+  </div>
+  <div class="today-card">
+    <div class="tc-label">忌</div>
+    <div class="tc-value" style="font-size:13px">争执·大手笔投资</div>
+    <div class="tc-sub">土旺冲水，宜静不宜动</div>
+  </div>
+</div>
+
+<div class="affirmation-wrap">
+  <div class="aff-label">今日命盘 · 专属指引</div>
+  <div class="aff-text">
+    你是<em>土命之人</em>，今日土气极旺，正是你能量最充沛的一天。<br>
+    这一天，<em>你说的话有分量</em>，你提出的想法会被认真对待。<br>
+    去推进那件你一直想开口的事吧。
+  </div>
+</div>
+
+<div class="sub-wrap">
+  <div class="sub-head">
+    <div class="sub-title">每日天机订阅</div>
+    <div class="sub-price">
+      <span class="unit">$</span>6.9<span class="per">/月</span>
+    </div>
+  </div>
+  <div class="sub-perks">
+    <div class="sub-perk"><div class="perk-dot"></div>每日专属Affirmation（基于你的八字）</div>
+    <div class="sub-perk"><div class="perk-dot"></div>五行能量值 · 幸运色/数字</div>
+    <div class="sub-perk"><div class="perk-dot"></div>每日宜忌 · 流年提醒</div>
+    <div class="sub-perk"><div class="perk-dot"></div>月度大运预警（提前7天）</div>
+  </div>
+  <button class="btn-gold">开启每日天机 · 首月免费</button>
+  <p class="preview-note">此为预览版 · 开通后内容基于你的真实八字生成</p>
+</div>
+
+</body>
+</html>

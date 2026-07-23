@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a0e06">
+<title>善缘 · 祭祖寄哀</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --amber:      #c9820a;
+  --amber-light:#e8b86a;
+  --amber-deep: #8a5500;
+  --jade-main:  #5bbfa0;
+  --jade-mid:   #8dd9bf;
+  --ink:        #1a1a18;
+  --bg:         #FAFAF8;
+  --night:      #1a0e06;
+  --night-mid:  #2a180a;
+  --night-card: #221404;
+  --warm-dim:   rgba(201,130,10,0.08);
+}
+
+html, body {
+  background: var(--night);
+  font-family: 'Noto Serif SC', serif;
+  color: #f0e6d8;
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100vh;
+  overflow-y: auto;
+  padding-bottom: 48px;
+}
+
+/* ── Ember bg ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(201,130,10,0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 30% 100%, rgba(91,191,160,0.05) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Header ── */
+.header {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  text-align: center;
+  padding: 52px 20px 28px;
+}
+
+.back-btn {
+  position: fixed; top: 16px; left: 16px; z-index: 99;
+  background: none; border: none;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13px; color: rgba(201,130,10,0.7);
+  letter-spacing: 0.06em; cursor: pointer; padding: 4px 0;
+}
+
+/* ── Candle CSS ── */
+.candle-wrap {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin-bottom: 22px;
+}
+
+.candle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.candle-flame {
+  width: 10px; height: 20px;
+  border-radius: 50% 50% 35% 35% / 60% 60% 40% 40%;
+  background: radial-gradient(ellipse at 50% 80%, #fffde0 0%, #ffe066 30%, #f4a020 65%, transparent 100%);
+  box-shadow: 0 0 8px 4px rgba(255,220,50,0.35), 0 0 18px 6px rgba(255,140,0,0.2);
+  animation: flicker 2.4s ease-in-out infinite;
+}
+.candle-flame.sm { width: 7px; height: 14px; animation-delay: 0.6s; }
+
+@keyframes flicker {
+  0%,100% { transform: scaleX(1) rotate(-1deg); opacity: 1; }
+  25%      { transform: scaleX(0.85) rotate(2deg); opacity: 0.92; }
+  50%      { transform: scaleX(1.1) rotate(-0.5deg); opacity: 0.96; }
+  75%      { transform: scaleX(0.9) rotate(1.5deg); opacity: 0.88; }
+}
+
+.candle-wick {
+  width: 1.5px; height: 6px;
+  background: linear-gradient(to bottom, #888, #333);
+}
+
+.candle-body {
+  width: 16px; height: 52px;
+  background: linear-gradient(to right, #f5e8d0 0%, #fdf5e8 35%, #f0dbb8 70%, #e0c898 100%);
+  border-radius: 2px 2px 1px 1px;
+  box-shadow: inset -2px 0 6px rgba(0,0,0,0.15);
+  position: relative;
+  overflow: hidden;
+}
+.candle-body::after {
+  content: '';
+  position: absolute;
+  left: 3px; top: 0; bottom: 0;
+  width: 2px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 1px;
+}
+.candle-body.sm { width: 11px; height: 38px; }
+
+.candle-plate {
+  width: 24px; height: 4px;
+  background: linear-gradient(90deg, #8a6800, #c9a84c, #8a6800);
+  border-radius: 2px;
+}
+.candle-plate.sm { width: 16px; }
+
+.header-title {
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  color: #f0e6d8;
+  margin-bottom: 8px;
+}
+
+.header-sub {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  color: rgba(201,130,10,0.65);
+}
+
+.amber-line {
+  width: 70px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--amber), transparent);
+  margin: 14px auto 0;
+}
+
+/* ── Live badge ── */
+.live-badge {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0 20px 20px;
+  padding: 10px 18px;
+  background: rgba(201,130,10,0.1);
+  border: 1px solid rgba(201,130,10,0.25);
+  border-radius: 6px;
+}
+
+.live-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #ff4040;
+  animation: blink 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.25} }
+
+.live-text {
+  font-size: 11px;
+  color: rgba(240,230,216,0.8);
+  letter-spacing: 0.08em;
+}
+
+.live-countdown {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  color: var(--amber-light);
+  letter-spacing: 0.05em;
+  margin-left: auto;
+}
+
+/* ── Service tabs ── */
+.tab-row {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 0 16px 16px;
+}
+
+.svc-tab {
+  background: var(--night-card);
+  border: 1px solid rgba(201,130,10,0.15);
+  border-radius: 6px;
+  padding: 12px 6px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.22s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+.svc-tab.active {
+  border-color: var(--amber);
+  background: rgba(201,130,10,0.1);
+}
+.svc-tab .tab-zh {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: rgba(240,230,216,0.8);
+}
+.svc-tab .tab-glyph {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 20px;
+  color: var(--amber-light);
+  font-weight: 300;
+}
+.svc-tab.active .tab-zh { color: var(--amber-light); }
+
+/* ── Service panel ── */
+.svc-panels {
+  position: relative; z-index: 1;
+  padding: 0 16px;
+}
+
+.svc-panel { display: none; }
+.svc-panel.active { display: block; }
+
+.panel-card {
+  background: var(--night-card);
+  border: 1px solid rgba(201,130,10,0.15);
+  border-radius: 8px;
+  padding: 18px;
+  margin-bottom: 10px;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.panel-name {
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  color: #f0e6d8;
+}
+
+.panel-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px;
+  color: var(--amber-light);
+}
+
+.panel-price .unit { font-family: 'Noto Serif SC', serif; font-size: 11px; }
+
+.panel-desc {
+  font-size: 11px;
+  color: rgba(240,230,216,0.55);
+  letter-spacing: 0.06em;
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+
+.panel-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ptag {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--jade-mid);
+  border: 1px solid rgba(91,191,160,0.25);
+  border-radius: 2px;
+  padding: 3px 8px;
+}
+
+/* ── Letter form ── */
+.letter-label {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: rgba(201,130,10,0.65);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.letter-textarea {
+  width: 100%;
+  min-height: 110px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(201,130,10,0.2);
+  border-radius: 6px;
+  padding: 12px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13px;
+  color: rgba(240,230,216,0.9);
+  line-height: 1.8;
+  outline: none;
+  resize: vertical;
+}
+.letter-textarea:focus { border-color: rgba(201,130,10,0.5); }
+.letter-textarea::placeholder { color: rgba(240,230,216,0.25); font-size: 12px; }
+
+/* ── CTA ── */
+.cta-wrap {
+  position: relative; z-index: 1;
+  padding: 18px 16px 0;
+}
+
+.btn-amber {
+  width: 100%;
+  padding: 15px 0;
+  background: linear-gradient(135deg, var(--amber-deep), var(--amber), var(--amber-light), var(--amber));
+  border: none;
+  border-radius: 4px;
+  color: rgba(26,14,6,0.95);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(201,130,10,0.3);
+  transition: all 0.25s;
+}
+.btn-amber:active { transform: scale(0.97); }
+
+.cta-note {
+  text-align: center;
+  font-size: 10px;
+  color: rgba(240,230,216,0.3);
+  letter-spacing: 0.1em;
+  margin-top: 10px;
+}
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">‹ 返回</button>
+
+<div class="header">
+  <div class="candle-wrap">
+    <div class="candle">
+      <div class="candle-flame sm"></div>
+      <div class="candle-wick"></div>
+      <div class="candle-body sm"></div>
+      <div class="candle-plate sm"></div>
+    </div>
+    <div class="candle" style="margin-top:-12px">
+      <div class="candle-flame"></div>
+      <div class="candle-wick"></div>
+      <div class="candle-body"></div>
+      <div class="candle-plate"></div>
+    </div>
+    <div class="candle">
+      <div class="candle-flame sm"></div>
+      <div class="candle-wick"></div>
+      <div class="candle-body sm"></div>
+      <div class="candle-plate sm"></div>
+    </div>
+  </div>
+  <div class="header-title">祭祖寄哀</div>
+  <div class="header-sub">ANCESTRAL MEMORIAL · IN LOVING MEMORY</div>
+  <div class="amber-line"></div>
+</div>
+
+<div class="live-badge">
+  <div class="live-dot"></div>
+  <div class="live-text">下次直播代烧</div>
+  <div class="live-countdown" id="liveCountdown">--:--:--</div>
+</div>
+
+<div class="tab-row">
+  <div class="svc-tab active" onclick="selectSvc(this,'p0')">
+    <div class="tab-glyph">烧</div>
+    <div class="tab-zh">代烧纸钱</div>
+  </div>
+  <div class="svc-tab" onclick="selectSvc(this,'p1')">
+    <div class="tab-glyph">扫</div>
+    <div class="tab-zh">清明代祭</div>
+  </div>
+  <div class="svc-tab" onclick="selectSvc(this,'p2')">
+    <div class="tab-glyph">书</div>
+    <div class="tab-zh">写信给逝者</div>
+  </div>
+  <div class="svc-tab" onclick="selectSvc(this,'p3')">
+    <div class="tab-glyph">冥</div>
+    <div class="tab-zh">定制冥器</div>
+  </div>
+</div>
+
+<div class="svc-panels">
+
+  <div id="p0" class="svc-panel active">
+    <div class="panel-card">
+      <div class="panel-head">
+        <div class="panel-name">基础代烧</div>
+        <div class="panel-price"><span class="unit">$</span>19</div>
+      </div>
+      <div class="panel-desc">纸钱·元宝·金银锭，法师现场诵经，实时直播全程可见，完成后发送视频存档。</div>
+      <div class="panel-tags">
+        <span class="ptag">直播可见</span>
+        <span class="ptag">视频存档</span>
+        <span class="ptag">冥币·元宝</span>
+      </div>
+    </div>
+    <div class="panel-card">
+      <div class="panel-head">
+        <div class="panel-name">豪华祭祀套</div>
+        <div class="panel-price"><span class="unit">$</span>68</div>
+      </div>
+      <div class="panel-desc">大套纸钱·三牲供品·鲜花·香烛，法师专属诵经回向，发《祭祀证书》。</div>
+      <div class="panel-tags">
+        <span class="ptag">专属诵经</span>
+        <span class="ptag">祭祀证书</span>
+        <span class="ptag">三牲供品</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="p1" class="svc-panel">
+    <div class="panel-card">
+      <div class="panel-head">
+        <div class="panel-name">清明代祭扫</div>
+        <div class="panel-price"><span class="unit">$</span>59</div>
+      </div>
+      <div class="panel-desc">专人前往墓地，鲜花·香烛·纸钱一应俱全，全程手机直播，结束发照片存档。</div>
+      <div class="panel-tags">
+        <span class="ptag">墓地直播</span>
+        <span class="ptag">照片存档</span>
+        <span class="ptag">鲜花香烛</span>
+      </div>
+    </div>
+    <div class="panel-card">
+      <div class="panel-head">
+        <div class="panel-name">超度法事</div>
+        <div class="panel-price"><span class="unit">$</span>199</div>
+      </div>
+      <div class="panel-desc">法师主持超度念经，视频存档，颁发《超度证书》，附往生咒一卷。</div>
+      <div class="panel-tags">
+        <span class="ptag">超度证书</span>
+        <span class="ptag">往生咒</span>
+        <span class="ptag">视频存档</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="p2" class="svc-panel">
+    <div class="panel-card">
+      <div class="panel-head">
+        <div class="panel-name">写信给逝者</div>
+        <div class="panel-price"><span class="unit">$</span>29</div>
+      </div>
+      <div class="panel-desc">法师在直播仪式上代为宣读，读完后将信件焚化，让思念随烟到达彼岸。</div>
+    </div>
+    <label class="letter-label" style="padding:0 2px">写下想说的话</label>
+    <textarea class="letter-textarea" placeholder="亲爱的爸爸/妈妈/……&#10;&#10;今天想告诉你……"></textarea>
+  </div>
+
+  <div id="p3" class="svc-panel">
+    <div class="panel-card">
+      <div class="panel-head">
+        <div class="panel-name">标准定制冥器</div>
+        <div class="panel-price"><span class="unit">$</span>49</div>
+      </div>
+      <div class="panel-desc">纸iPhone / MacBook / 名车 / 名包，精工定制，直播焚化，视频存档。</div>
+      <div class="panel-tags">
+        <span class="ptag">纸iPhone</span>
+        <span class="ptag">纸豪车</span>
+        <span class="ptag">精工定制</span>
+      </div>
+    </div>
+    <div class="panel-card">
+      <div class="panel-head">
+        <div class="panel-name">1:1照片定制</div>
+        <div class="panel-price"><span class="unit">$</span>299</div>
+      </div>
+      <div class="panel-desc">上传逝者照片，按真实样貌1:1定制精工冥器，极致还原，尊享特别仪式焚化。</div>
+      <div class="panel-tags">
+        <span class="ptag">照片1:1还原</span>
+        <span class="ptag">专属仪式</span>
+        <span class="ptag">精工级别</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="cta-wrap">
+  <button class="btn-amber">预约下次直播 · 告慰先人</button>
+  <p class="cta-note">每周五晚8点 · 直播代烧 · 全球华人同时祭祀</p>
+</div>
+
+<script>
+function selectSvc(el, panelId) {
+  document.querySelectorAll('.svc-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.svc-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(panelId).classList.add('active');
+}
+function getNextFriday8pm() {
+  var now = new Date(), day = now.getDay();
+  var daysUntil = (5 - day + 7) % 7 || 7;
+  var next = new Date(now);
+  next.setDate(now.getDate() + daysUntil);
+  next.setHours(20,0,0,0);
+  if (next <= now) next.setDate(next.getDate() + 7);
+  return next;
+}
+function tick() {
+  var diff = getNextFriday8pm() - new Date();
+  var el = document.getElementById('liveCountdown');
+  if (diff <= 0) { el.textContent = '🔴 直播中'; return; }
+  var h = Math.floor(diff/3600000), m = Math.floor((diff%3600000)/60000), s = Math.floor((diff%60000)/1000);
+  el.textContent = [h,m,s].map(n=>String(n).padStart(2,'0')).join(':');
+}
+tick(); setInterval(tick, 1000);
+</script>
+</body>
+</html>

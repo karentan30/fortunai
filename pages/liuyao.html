@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0a1510">
+<title>善缘 · 六爻占卜</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a1510;--card:#0e1a12;--card2:#111f14;
+  --jade:#5bbfa0;--jade-mid:#8dd9bf;--jade-light:#c8f0e0;
+  --gold:#c9a84c;--gold-light:#e8d08a;
+  --text:#e0f0e8;--text-dim:rgba(224,240,232,.5);--text-faint:rgba(224,240,232,.25)
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:52px}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(91,191,160,.12) 0%,transparent 50%),radial-gradient(ellipse at 80% 90%,rgba(201,168,76,.06) 0%,transparent 40%);pointer-events:none;z-index:0}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(141,217,191,.7);cursor:pointer;padding:4px 0}
+
+/* Header */
+.header{position:relative;z-index:1;text-align:center;padding:44px 20px 20px}
+.header-title{font-size:20px;font-weight:400;letter-spacing:.22em;margin-bottom:6px}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:.26em;color:rgba(91,191,160,.55);margin-bottom:14px}
+.jade-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--jade),transparent);margin:0 auto}
+
+/* Question area */
+.q-wrap{position:relative;z-index:1;padding:16px 16px 8px}
+.q-label{font-size:10px;letter-spacing:.2em;color:rgba(91,191,160,.45);margin-bottom:8px}
+.q-box{background:var(--card);border:1px solid rgba(91,191,160,.15);border-radius:8px;padding:12px 14px}
+.q-input{width:100%;background:none;border:none;outline:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(224,240,232,.82);letter-spacing:.04em;line-height:1.8;resize:none;min-height:56px}
+.q-input::placeholder{color:rgba(224,240,232,.2)}
+
+/* Coins area */
+.coins-wrap{position:relative;z-index:1;padding:8px 16px 0}
+.coins-label{font-size:10px;letter-spacing:.2em;color:rgba(91,191,160,.45);margin-bottom:12px}
+
+/* Line accumulator */
+.lines-display{display:flex;flex-direction:column-reverse;gap:8px;min-height:160px;padding:12px 0;margin-bottom:12px}
+.yao-row{display:flex;align-items:center;gap:12px;opacity:0;transform:translateY(8px);transition:all .4s ease}
+.yao-row.visible{opacity:1;transform:none}
+.yao-num{font-family:'Cormorant Garamond',serif;font-size:11px;color:var(--text-faint);width:18px;text-align:right;flex-shrink:0}
+.yao-line{flex:1;display:flex;align-items:center;gap:6px}
+.line-solid{height:3px;background:var(--jade);border-radius:2px;flex:1}
+.line-broken{height:3px;flex:1;display:flex;gap:6px}
+.line-broken span{height:100%;background:var(--jade);border-radius:2px;flex:1}
+.yao-name{font-size:11px;color:var(--text-dim);min-width:40px}
+.yao-coins{display:flex;gap:4px}
+.coin-pip{width:16px;height:16px;border-radius:50%;border:1px solid;display:flex;align-items:center;justify-content:center;font-size:8px;flex-shrink:0;transition:all .3s}
+.coin-yang{border-color:rgba(201,168,76,.5);color:var(--gold);background:rgba(201,168,76,.08)}
+.coin-yin{border-color:rgba(91,191,160,.4);color:var(--jade);background:rgba(91,191,160,.06)}
+
+/* Shake button */
+.shake-area{display:flex;flex-direction:column;align-items:center;gap:10px;padding:4px 0 16px}
+.toss-count{font-size:11px;color:var(--text-dim);letter-spacing:.08em}
+.btn-toss{width:80px;height:80px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(141,217,191,.6),rgba(91,191,160,.4) 50%,rgba(20,50,30,1));border:1px solid rgba(91,191,160,.4);display:flex;align-items:center;justify-content:center;font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:.12em;color:var(--jade-light);cursor:pointer;box-shadow:0 4px 20px rgba(91,191,160,.2);transition:transform .15s}
+.btn-toss:active{transform:scale(.93)}
+.btn-toss.shake{animation:coin-shake .35s ease}
+@keyframes coin-shake{0%,100%{transform:rotate(0)}20%{transform:rotate(-12deg)}50%{transform:rotate(10deg)}80%{transform:rotate(-6deg)}}
+
+/* Hexagram display */
+.hex-display{position:relative;z-index:1;margin:0 16px 12px;background:var(--card);border:1px solid rgba(91,191,160,.18);border-radius:10px;padding:16px;display:none}
+.hex-display.show{display:block}
+.hex-head{text-align:center;margin-bottom:14px}
+.hex-num{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(91,191,160,.45);letter-spacing:.2em;margin-bottom:4px}
+.hex-name{font-size:20px;letter-spacing:.18em;color:var(--jade-light);margin-bottom:4px}
+.hex-sub{font-size:11px;color:var(--text-dim);letter-spacing:.08em}
+.hex-verdict{margin:10px 0;padding:10px 14px;background:rgba(91,191,160,.06);border:1px solid rgba(91,191,160,.12);border-radius:6px;font-size:11px;color:rgba(224,240,232,.6);line-height:1.85;letter-spacing:.04em}
+
+/* 三卦 sections */
+.trigram-sections{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.trigram-sec{background:var(--card2);border:1px solid rgba(91,191,160,.1);border-radius:7px;padding:11px 13px}
+.trig-label{font-size:9px;letter-spacing:.2em;color:rgba(201,168,76,.5);margin-bottom:6px}
+.trig-text{font-size:11px;color:rgba(224,240,232,.55);line-height:1.85;letter-spacing:.04em}
+
+/* CTA */
+.cta-wrap{position:relative;z-index:1;padding:0 16px 16px}
+.btn-cta{width:100%;padding:14px 0;background:linear-gradient(135deg,rgba(20,60,30,1),var(--jade),var(--jade-light),var(--jade));border:none;border-radius:4px;color:rgba(10,21,16,.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:.2em;cursor:pointer;box-shadow:0 4px 18px rgba(91,191,160,.3)}
+.btn-redo{width:100%;padding:12px 0;background:transparent;border:1px solid rgba(91,191,160,.25);border-radius:4px;color:rgba(141,217,191,.6);font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:.16em;cursor:pointer;margin-top:8px}
+</style>
+</head>
+<body>
+<button class="back-btn" onclick="history.back()">‹ 返回</button>
+
+<div class="header">
+  <div class="header-title">六爻占卜 · 易经问卦</div>
+  <div class="header-sub">SIX LINES ORACLE · I CHING DIVINATION</div>
+  <div class="jade-line"></div>
+</div>
+
+<div class="q-wrap">
+  <div class="q-label">心中默念问题</div>
+  <div class="q-box">
+    <textarea class="q-input" id="qInput" placeholder="心存一念，静心问卦&#10;例：此次生意能否顺利？&#10;例：我们之间还有缘分吗？"></textarea>
+  </div>
+</div>
+
+<div class="coins-wrap">
+  <div class="q-label">摇钱出爻 · 起卦（点击6次）</div>
+  <div class="lines-display" id="linesDisplay">
+    <div id="placeholder" style="display:flex;align-items:center;justify-content:center;flex:1;font-size:11px;color:var(--text-faint);letter-spacing:.08em">六爻待起</div>
+  </div>
+  <div class="shake-area">
+    <div class="toss-count" id="tossCount">第 <strong id="tossNum">1</strong> 爻 · 点击摇卦</div>
+    <button class="btn-toss" id="tossBtn" onclick="toss()">摇卦</button>
+  </div>
+</div>
+
+<div class="hex-display" id="hexDisplay">
+  <div class="hex-head">
+    <div class="hex-num" id="hexNum"></div>
+    <div class="hex-name" id="hexName"></div>
+    <div class="hex-sub" id="hexSub"></div>
+  </div>
+  <div class="hex-verdict" id="hexVerdict"></div>
+  <div class="trigram-sections">
+    <div class="trigram-sec"><div class="trig-label">本卦 · 当前局势</div><div class="trig-text" id="trigBen"></div></div>
+    <div class="trigram-sec"><div class="trig-label">变卦 · 发展走向</div><div class="trig-text" id="trigBian"></div></div>
+    <div class="trigram-sec"><div class="trig-label">综合断卦</div><div class="trig-text" id="trigZong"></div></div>
+  </div>
+</div>
+
+<div class="cta-wrap" id="ctaWrap" style="display:none">
+  <button class="btn-cta">请大师逐爻详解 · $9.9</button>
+  <button class="btn-redo" onclick="resetAll()">重新起卦</button>
+</div>
+
+<script>
+var lines = [];
+var YAO_NAMES = ['初爻','二爻','三爻','四爻','五爻','上爻'];
+
+// 64 hexagrams indexed by (upper-trigram * 8 + lower-trigram)
+// Trigram binary: 乾=7,兑=6,离=5,震=4,巽=3,坎=2,艮=1,坤=0
+var TRIG_NAME = ['坤','艮','坎','巽','震','离','兑','乾'];
+var HEXAGRAMS = {
+  '77':{n:'乾为天',num:'第一卦',sub:'刚健·自强',v:'天行健，君子以自强不息。大局宏观，行事果断，进取时机已至。',ben:'当前局势阳刚充盛，具备推进条件，可大胆出击，但须防刚极而折。',bian:'变化之后偏向收敛，凡事适可而止，过犹不及。',z:'综合来看，此卦主动进取，大势在手，宜把握时机果断行动。'},
+  '00':{n:'坤为地',num:'第二卦',sub:'柔顺·包容',v:'地势坤，君子以厚德载物。此刻宜守不宜攻，积累内功，顺势而为。',ben:'当前局势柔顺稳健，急于求成反而事与愿违，宜等待合适时机。',bian:'变卦后渐有生机涌现，耐心等候将有好转。',z:'综合来看，此卦宜静不宜动，以柔克刚，厚积薄发，终有所成。'},
+  '76':{n:'天泽履',num:'第十卦',sub:'谨慎·进退有度',v:'履虎尾，不咥人，亨。处于危险环境，但凭借谨慎可化险为夷。',ben:'局势虽险，但当事人能力足以应对，关键在于态度谨慎、不轻举妄动。',bian:'变化后局势趋于平稳，危机逐步化解。',z:'综合来看，此卦象征步步为营，当下看似险峻，坚守本分则可逢凶化吉。'},
+  '75':{n:'天火同人',num:'第十三卦',sub:'合作·共同目标',v:'同人于野，亨。利于团结合作，与志同道合者一起行动，可成大事。',ben:'当前适合联合他人力量，单打独斗不如众志成城。',bian:'合作格局进一步稳固，团队凝聚力增强。',z:'综合来看，此卦利于协作，与人分享资源、共担风险，将收获丰硕成果。'},
+  '55':{n:'离为火',num:'第三十卦',sub:'光明·文采',v:'离，利贞，亨。附丽于正道，光明磊落，凡事皆可成。',ben:'局势如日中天，才华与机遇并行，是展现能力的最佳时刻。',bian:'光芒渐收，需注意防止功高震主或过度张扬。',z:'综合来看，此卦主光明才华，适合展示、发表、推广，有贵人相助。'},
+  '22':{n:'坎为水',num:'第二十九卦',sub:'险难·坚持',v:'习坎，有孚，维心亨，行有尚。重重险难之中，坚守诚信方可渡过。',ben:'当前确实存在较大困难，但问题在于意志力是否足够坚定。',bian:'险难正在逐步化解，坚持即将见到曙光。',z:'综合来看，此卦不宜贸然行动，需稳住心神，以真诚和坚韧化解困局。'},
+  '11':{n:'艮为山',num:'第五十二卦',sub:'静止·沉淀',v:'艮其背，不获其身，行其庭，不见其人，无咎。当止则止，宁静方能致远。',ben:'当前局势适合沉淀修养，不是出击的时机，需静待时变。',bian:'静极生动，沉淀结束后将迎来新的出发机会。',z:'综合来看，此卦主静，当下宜修身养性，思考规划，行动时机尚未成熟。'},
+  '71':{n:'天山遁',num:'第三十三卦',sub:'退守·蓄势',v:'遁，亨，小利贞。小人来临之际，君子暂时退避，以静制动。',ben:'当前外部环境不利，直接对抗无益，适合退一步、积蓄力量。',bian:'退守之后形势将逐渐好转，静待机会重新出击。',z:'综合来看，此卦主暂时收敛，退一步方能海阔天空，勿强行推进。'},
+  '60':{n:'水地比',num:'第八卦',sub:'联合·亲近',v:'比，吉；原筮，元永贞，无咎。和睦相处，亲密合作，情感与事业皆宜推进。',ben:'当前人际关系良好，是建立深度合作或感情关系的好时机。',bian:'合作关系更加稳固，双方互信增强。',z:'综合来看，此卦利于社交、合作与感情，主动走近对方，将收获美好结果。'}
+};
+
+function toss() {
+  if (lines.length >= 6) return;
+  var btn = document.getElementById('tossBtn');
+  btn.classList.add('shake');
+  setTimeout(function(){btn.classList.remove('shake')}, 350);
+
+  // Remove placeholder
+  var ph = document.getElementById('placeholder');
+  if (ph) ph.remove();
+
+  // Generate 3 coins: heads(阳)=1, tails(阴)=0
+  var coins = [Math.random()>.5?1:0, Math.random()>.5?1:0, Math.random()>.5?1:0];
+  var sum = coins.reduce(function(a,b){return a+b},0);
+  // sum: 0→老阴(6), 1→少阳(7), 2→少阴(8), 3→老阳(9)
+  // Actually in coin method: heads=3, tails=2 for sum
+  var vals = coins.map(function(c){return c?3:2});
+  var total = vals.reduce(function(a,b){return a+b},0);
+  // 6=老阴(变), 7=少阳, 8=少阴, 9=老阳(变)
+  var isYang = total === 7 || total === 9;
+  var isChanging = total === 6 || total === 9;
+  lines.push({yang: isYang, changing: isChanging, coins: coins, total: total});
+
+  // Render line
+  var linesDiv = document.getElementById('linesDisplay');
+  var row = document.createElement('div');
+  row.className = 'yao-row';
+  var lineN = lines.length;
+  var coinHtml = coins.map(function(c){
+    return '<div class="coin-pip '+(c?'coin-yang':'coin-yin')+'">'+(c?'正':'反')+'</div>';
+  }).join('');
+  var lineVisual = isYang
+    ? '<div class="line-solid"></div>'
+    : '<div class="line-broken"><span></span><span></span></div>';
+  row.innerHTML = '<div class="yao-num">'+lineN+'</div><div class="yao-line">'+lineVisual+(isChanging?'<span style="font-size:9px;color:var(--gold);margin-left:4px">变</span>':'')+'</div><div class="yao-name">'+YAO_NAMES[lineN-1]+'</div><div class="yao-coins">'+coinHtml+'</div>';
+  linesDiv.insertBefore(row, linesDiv.firstChild);
+  setTimeout(function(){row.classList.add('visible')}, 30);
+
+  if (lines.length < 6) {
+    document.getElementById('tossNum').textContent = lines.length + 1;
+  } else {
+    document.getElementById('tossCount').textContent = '六爻已起 · 卦象生成';
+    document.getElementById('tossBtn').disabled = true;
+    document.getElementById('tossBtn').style.opacity = '0.4';
+    setTimeout(showHexagram, 500);
+  }
+}
+
+function showHexagram() {
+  // Lines 1-3 = lower trigram, 4-6 = upper trigram
+  // Each line: yang=1, yin=0
+  var lower = 0, upper = 0;
+  for (var i = 0; i < 3; i++) {
+    if (lines[i].yang) lower |= (1 << i);
+    if (lines[i+3].yang) upper |= (1 << i);
+  }
+  var key = '' + upper + lower;
+  var hex = HEXAGRAMS[key] || HEXAGRAMS['55']; // fallback
+
+  document.getElementById('hexNum').textContent = hex.num;
+  document.getElementById('hexName').textContent = hex.n;
+  document.getElementById('hexSub').textContent = hex.sub;
+  document.getElementById('hexVerdict').textContent = hex.v;
+  document.getElementById('trigBen').textContent = hex.ben;
+  document.getElementById('trigBian').textContent = hex.bian;
+  document.getElementById('trigZong').textContent = hex.z;
+
+  document.getElementById('hexDisplay').classList.add('show');
+  document.getElementById('ctaWrap').style.display = 'block';
+}
+
+function resetAll() {
+  lines = [];
+  document.getElementById('linesDisplay').innerHTML = '<div id="placeholder" style="display:flex;align-items:center;justify-content:center;flex:1;font-size:11px;color:var(--text-faint);letter-spacing:.08em">六爻待起</div>';
+  document.getElementById('tossNum').textContent = '1';
+  document.getElementById('tossCount').textContent = '第 <strong id="tossNum">1</strong> 爻 · 点击摇卦';
+  document.getElementById('tossBtn').disabled = false;
+  document.getElementById('tossBtn').style.opacity = '1';
+  document.getElementById('hexDisplay').classList.remove('show');
+  document.getElementById('ctaWrap').style.display = 'none';
+  document.getElementById('qInput').value = '';
+}
+</script>
+</body>
+</html>

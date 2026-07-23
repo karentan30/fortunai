@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a0e06">
+<title>善缘 · 祈福下单</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --amber: #c9820a; --amber-light: #e8b86a; --amber-deep: #8a5500;
+  --gold: #c9a84c; --gold-light: #e8d08a;
+  --jade: #5bbfa0;
+  --night: #1a0e06; --night-mid: #2a180a; --night-card: #221404;
+}
+html, body { background: var(--night); font-family: 'Noto Serif SC', serif; color: #f0e6d8; -webkit-font-smoothing: antialiased; }
+body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 120px; }
+body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(201,130,10,0.12) 0%, transparent 50%); pointer-events: none; z-index: 0; }
+.back-btn { position: fixed; top: 16px; left: 16px; z-index: 99; background: none; border: none; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(201,130,10,0.7); cursor: pointer; padding: 4px 0; }
+
+.header { position: relative; z-index: 1; text-align: center; padding: 44px 20px 20px; }
+.header-title { font-size: 18px; font-weight: 400; letter-spacing: 0.2em; margin-bottom: 5px; }
+.header-sub { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 11px; letter-spacing: 0.24em; color: rgba(201,130,10,0.5); margin-bottom: 14px; }
+.amber-line { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, var(--amber), transparent); margin: 0 auto; }
+
+/* ── Steps indicator ── */
+.steps { position: relative; z-index: 1; display: flex; align-items: center; padding: 16px 24px 20px; }
+.step-dot { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(201,130,10,0.3); display: flex; align-items: center; justify-content: center; font-family: 'Cormorant Garamond', serif; font-size: 13px; color: rgba(201,130,10,0.4); flex-shrink: 0; transition: all 0.3s; }
+.step-dot.active { border-color: var(--amber); background: rgba(201,130,10,0.15); color: var(--amber-light); }
+.step-dot.done { border-color: var(--jade); background: rgba(91,191,160,0.1); color: var(--jade); }
+.step-line { flex: 1; height: 1px; background: rgba(201,130,10,0.15); margin: 0 6px; }
+.step-line.done { background: rgba(91,191,160,0.35); }
+
+/* ── Form sections ── */
+.form-section { position: relative; z-index: 1; padding: 0 16px; margin-bottom: 16px; }
+.section-label { font-size: 10px; letter-spacing: 0.2em; color: rgba(201,130,10,0.55); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.section-label::after { content: ''; flex: 1; height: 1px; background: rgba(201,130,10,0.12); }
+
+.field-group { background: var(--night-card); border: 1px solid rgba(201,130,10,0.12); border-radius: 8px; overflow: hidden; }
+.field-row { display: flex; align-items: center; padding: 0 14px; border-bottom: 1px solid rgba(201,130,10,0.08); }
+.field-row:last-child { border-bottom: none; }
+.field-label { font-size: 11px; color: rgba(240,230,216,0.5); letter-spacing: 0.06em; min-width: 68px; flex-shrink: 0; }
+.field-input { flex: 1; background: none; border: none; outline: none; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(240,230,216,0.88); padding: 13px 8px; letter-spacing: 0.04em; }
+.field-input::placeholder { color: rgba(240,230,216,0.2); }
+.field-select { flex: 1; background: none; border: none; outline: none; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(240,230,216,0.88); padding: 13px 8px; letter-spacing: 0.04em; -webkit-appearance: none; cursor: pointer; }
+.field-select option { background: var(--night-card); color: #f0e6d8; }
+
+.field-textarea { width: 100%; background: none; border: none; outline: none; font-family: 'Noto Serif SC', serif; font-size: 12px; color: rgba(240,230,216,0.8); padding: 13px 14px; letter-spacing: 0.04em; line-height: 1.8; resize: none; min-height: 90px; }
+.field-textarea::placeholder { color: rgba(240,230,216,0.2); }
+.char-count { font-size: 9px; color: rgba(240,230,216,0.2); text-align: right; padding: 0 14px 10px; }
+
+/* ── Temple picker ── */
+.temple-picker { position: relative; z-index: 1; padding: 0 16px; margin-bottom: 16px; }
+.temple-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.temple-option { background: var(--night-card); border: 1px solid rgba(201,130,10,0.1); border-radius: 7px; padding: 11px 12px; cursor: pointer; transition: all 0.2s; }
+.temple-option.selected { border-color: var(--amber); background: rgba(201,130,10,0.1); }
+.temple-name { font-size: 13px; letter-spacing: 0.08em; color: rgba(240,230,216,0.85); margin-bottom: 2px; }
+.temple-loc { font-size: 10px; color: rgba(201,130,10,0.5); letter-spacing: 0.06em; margin-bottom: 5px; }
+.temple-tags { display: flex; flex-wrap: wrap; gap: 3px; }
+.ttag { font-size: 8px; color: rgba(201,168,76,0.6); border: 1px solid rgba(201,168,76,0.15); border-radius: 2px; padding: 2px 5px; }
+
+/* ── Items summary ── */
+.items-summary { position: relative; z-index: 1; padding: 0 16px; margin-bottom: 16px; }
+.item-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 14px; background: var(--night-card); border-bottom: 1px solid rgba(201,130,10,0.06); }
+.item-row:first-child { border-radius: 8px 8px 0 0; }
+.item-row:last-child { border-bottom: none; border-radius: 0 0 8px 8px; }
+.item-name { font-size: 12px; color: rgba(240,230,216,0.75); letter-spacing: 0.04em; }
+.item-price { font-family: 'Cormorant Garamond', serif; font-size: 16px; color: var(--amber-light); }
+.item-price .unit { font-family: 'Noto Serif SC', serif; font-size: 9px; }
+
+/* ── Submit bar ── */
+.submit-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px; z-index: 10; background: var(--night-card); border-top: 1px solid rgba(201,130,10,0.15); padding: 12px 16px 20px; }
+.total-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 11px; }
+.total-label { font-size: 11px; color: rgba(240,230,216,0.5); letter-spacing: 0.08em; }
+.total-amount { font-family: 'Cormorant Garamond', serif; font-size: 26px; color: var(--amber-light); }
+.total-amount .unit { font-family: 'Noto Serif SC', serif; font-size: 11px; }
+.btn-submit { width: 100%; padding: 14px 0; background: linear-gradient(135deg, var(--amber-deep), var(--amber), var(--amber-light), var(--amber)); border: none; border-radius: 4px; color: rgba(26,14,6,0.95); font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 500; letter-spacing: 0.2em; cursor: pointer; box-shadow: 0 4px 16px rgba(201,130,10,0.3); }
+
+/* ── Notes ── */
+.form-note { position: relative; z-index: 1; font-size: 9px; color: rgba(240,230,216,0.22); text-align: center; padding: 0 24px 16px; line-height: 1.7; letter-spacing: 0.04em; }
+
+/* ── Burn timing ── */
+.timing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.timing-opt { background: var(--night-card); border: 1px solid rgba(201,130,10,0.1); border-radius: 7px; padding: 11px 12px; cursor: pointer; transition: all 0.2s; text-align: center; }
+.timing-opt.selected { border-color: var(--amber); background: rgba(201,130,10,0.1); }
+.timing-name { font-size: 12px; color: rgba(240,230,216,0.8); letter-spacing: 0.06em; margin-bottom: 3px; }
+.timing-desc { font-size: 9px; color: rgba(240,230,216,0.35); letter-spacing: 0.04em; }
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">‹ 返回</button>
+
+<div class="header">
+  <div class="header-title">发愿 · 代供下单</div>
+  <div class="header-sub">SACRED OFFERINGS · RITUAL ORDER</div>
+  <div class="amber-line"></div>
+</div>
+
+<div class="steps">
+  <div class="step-dot active" id="step1">一</div>
+  <div class="step-line" id="line1"></div>
+  <div class="step-dot" id="step2">二</div>
+  <div class="step-line" id="line2"></div>
+  <div class="step-dot" id="step3">三</div>
+</div>
+
+<!-- 一 施主信息 -->
+<div class="form-section">
+  <div class="section-label">施主信息</div>
+  <div class="field-group">
+    <div class="field-row">
+      <span class="field-label">施主姓名</span>
+      <input class="field-input" type="text" id="donorName" placeholder="您的姓名（联系用）" maxlength="20">
+    </div>
+    <div class="field-row">
+      <span class="field-label">供奉对象</span>
+      <input class="field-input" type="text" id="recipientName" placeholder="先人姓名 / 自己（留空为自己）" maxlength="20">
+    </div>
+    <div class="field-row">
+      <span class="field-label">联系方式</span>
+      <input class="field-input" type="text" id="contact" placeholder="微信 / WhatsApp（发回视频用）" maxlength="40">
+    </div>
+  </div>
+</div>
+
+<!-- 二 祝愿词 -->
+<div class="form-section">
+  <div class="section-label">心愿 · 祝愿词</div>
+  <div class="field-group">
+    <textarea class="field-textarea" id="wishText" placeholder="写下您最真诚的祝愿或心愿&#10;例如：愿父亲在天之灵安息，生活无忧，保佑家人平安健康&#10;例如：祈求财运亨通，事业顺利，家庭幸福" maxlength="200" oninput="updateCount(this)"></textarea>
+    <div class="char-count" id="wishCount">0 / 200</div>
+  </div>
+</div>
+
+<!-- 三 选择道场 -->
+<div class="form-section">
+  <div class="section-label">选择道场</div>
+</div>
+<div class="temple-picker">
+  <div class="temple-grid" id="templePicker">
+    <!-- rendered by JS -->
+  </div>
+</div>
+
+<!-- 四 焚化时机 -->
+<div class="form-section">
+  <div class="section-label">焚化时机</div>
+  <div class="timing-grid">
+    <div class="timing-opt selected" onclick="selectTiming(this)">
+      <div class="timing-name">择吉日焚化</div>
+      <div class="timing-desc">师傅选最吉利的日子</div>
+    </div>
+    <div class="timing-opt" onclick="selectTiming(this)">
+      <div class="timing-name">指定日期</div>
+      <div class="timing-desc">忌日 / 生日 / 节日</div>
+    </div>
+    <div class="timing-opt" onclick="selectTiming(this)">
+      <div class="timing-name">清明节</div>
+      <div class="timing-desc">最传统祭祖时机</div>
+    </div>
+    <div class="timing-opt" onclick="selectTiming(this)">
+      <div class="timing-name">中元节</div>
+      <div class="timing-desc">鬼门开·超度最佳</div>
+    </div>
+  </div>
+</div>
+
+<!-- 五 特殊要求 -->
+<div class="form-section">
+  <div class="section-label">特殊要求（选填）</div>
+  <div class="field-group">
+    <div class="field-row">
+      <span class="field-label">指定日期</span>
+      <input class="field-input" type="date" id="specDate">
+    </div>
+    <textarea class="field-textarea" id="specialReq" placeholder="其他要求，如：请师傅诵特定经文 / 烧完的灰如何处理 / 是否需要邮寄结缘品..." maxlength="150"></textarea>
+  </div>
+</div>
+
+<div class="form-note">
+  所有供奉均在正规道场由有传承的师傅操办·全程录像·视频48h内通过微信/WhatsApp发回·附电子祈福证书·
+  结果因个人缘分而异·本平台提供精神支持服务
+</div>
+
+<!-- Submit bar -->
+<div class="submit-bar">
+  <div class="total-row">
+    <div class="total-label">合计（含代供服务费）</div>
+    <div class="total-amount"><span class="unit">$</span><span id="finalTotal">--</span></div>
+  </div>
+  <button class="btn-submit" onclick="submitOrder()">确认发愿 · 提交代供</button>
+</div>
+
+<script>
+var TEMPLES_DATA = [
+  { id:'yonghegong', name:'雍和宫', loc:'北京', tags:['求财','消灾'] },
+  { id:'putuo', name:'普陀山', loc:'浙江', tags:['求子','姻缘'] },
+  { id:'lingyin', name:'灵隐寺', loc:'杭州', tags:['求财','学业'] },
+  { id:'wutai', name:'五台山', loc:'山西', tags:['智慧','考运'] },
+  { id:'emei', name:'峨眉山', loc:'四川', tags:['健康','消灾'] },
+  { id:'jiuhua', name:'九华山', loc:'安徽', tags:['超度','祖先'] },
+  { id:'guandi', name:'关帝庙', loc:'全国', tags:['生意','化煞'] },
+  { id:'jiming', name:'鸡鸣寺', loc:'南京', tags:['姻缘','脱单'] }
+];
+
+var selectedTemple = null;
+var selectedTiming = null;
+
+// URL params
+var params = new URLSearchParams(window.location.search);
+var preTemple = params.get('temple');
+var preTempleName = params.get('templeName');
+
+// Render temple picker
+var tg = document.getElementById('templePicker');
+TEMPLES_DATA.forEach(function(t) {
+  var tags = t.tags.map(function(tag){ return '<span class="ttag">'+tag+'</span>'; }).join('');
+  var div = document.createElement('div');
+  div.className = 'temple-option' + (t.id === preTemple ? ' selected' : '');
+  div.dataset.id = t.id;
+  div.innerHTML = '<div class="temple-name">'+t.name+'</div><div class="temple-loc">'+t.loc+'</div><div class="temple-tags">'+tags+'</div>';
+  div.onclick = function() {
+    document.querySelectorAll('.temple-option').forEach(function(el){ el.classList.remove('selected'); });
+    this.classList.add('selected');
+    selectedTemple = this.dataset.id;
+  };
+  tg.appendChild(div);
+});
+if (preTemple) selectedTemple = preTemple;
+
+// Total from localStorage or URL
+var total = 0;
+try {
+  var t = localStorage.getItem('sy_cart_total');
+  if (t) total = parseInt(t);
+} catch(e) {}
+if (!total) total = parseInt(params.get('total') || 0);
+document.getElementById('finalTotal').textContent = total || '--';
+
+function updateCount(el) {
+  document.getElementById('wishCount').textContent = el.value.length + ' / 200';
+}
+
+function selectTiming(el) {
+  document.querySelectorAll('.timing-opt').forEach(function(o){ o.classList.remove('selected'); });
+  el.classList.add('selected');
+  selectedTiming = el.querySelector('.timing-name').textContent;
+}
+
+function submitOrder() {
+  var donor = document.getElementById('donorName').value.trim();
+  var wish = document.getElementById('wishText').value.trim();
+  var contact = document.getElementById('contact').value.trim();
+  if (!donor) { alert('请填写施主姓名'); return; }
+  if (!wish) { alert('请填写祝愿词'); return; }
+  if (!selectedTemple) { alert('请选择焚化道场'); return; }
+  if (!contact) { alert('请填写联系方式，用于发回视频'); return; }
+  // TODO: POST to backend /api/order
+  alert('发愿已提交！师傅将在48小时内与您联系确认。愿善缘相伴，心愿达成。');
+}
+</script>
+</body>
+</html>

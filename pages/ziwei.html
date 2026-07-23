@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#08101a">
+<title>善缘 · 紫微斗数</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --navy: #08101a; --navy-mid: #0e1a2a; --navy-card: #0b1520;
+  --purple: #6b3fa0; --violet: #9b6fc4;
+  --star-gold: #f5e98a; --gold: #c9a84c; --gold-light: #e8d08a;
+  --azure: #4a9fd4; --azure-light: #8ac4e8;
+  --rose: #d4607a;
+}
+html, body { background: var(--navy); font-family: 'Noto Serif SC', serif; color: #e8f0ff; -webkit-font-smoothing: antialiased; }
+body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 52px; }
+
+/* Star background */
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(107,63,160,0.25) 0%, transparent 40%),
+    radial-gradient(ellipse at 20% 70%, rgba(74,159,212,0.12) 0%, transparent 35%),
+    radial-gradient(ellipse at 80% 90%, rgba(245,233,138,0.06) 0%, transparent 30%);
+}
+/* Tiny stars */
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    radial-gradient(circle, rgba(245,233,138,0.7) 1px, transparent 1px),
+    radial-gradient(circle, rgba(138,196,232,0.5) 1px, transparent 1px),
+    radial-gradient(circle, rgba(245,233,138,0.4) 1px, transparent 1px);
+  background-size: 120px 120px, 80px 80px, 160px 160px;
+  background-position: 15px 20px, 60px 40px, 30px 80px;
+}
+
+.back-btn { position: fixed; top: 16px; left: 16px; z-index: 99; background: none; border: none; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(138,196,232,0.7); cursor: pointer; padding: 4px 0; }
+
+/* ── Header ── */
+.header { position: relative; z-index: 1; text-align: center; padding: 44px 20px 22px; }
+.header-title { font-size: 20px; font-weight: 400; letter-spacing: 0.22em; margin-bottom: 5px; }
+.header-sub { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 11px; letter-spacing: 0.26em; color: rgba(138,196,232,0.5); margin-bottom: 14px; }
+.azure-line { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, var(--azure), transparent); margin: 0 auto; }
+
+/* ── Birth form ── */
+.form-wrap { position: relative; z-index: 1; padding: 16px 16px 8px; }
+.form-label { font-size: 10px; letter-spacing: 0.18em; color: rgba(138,196,232,0.5); margin-bottom: 10px; }
+.field-group { background: var(--navy-card); border: 1px solid rgba(74,159,212,0.15); border-radius: 8px; overflow: hidden; }
+.field-row { display: flex; align-items: center; padding: 0 14px; border-bottom: 1px solid rgba(74,159,212,0.08); }
+.field-row:last-child { border-bottom: none; }
+.field-label { font-size: 11px; color: rgba(232,240,255,0.45); letter-spacing: 0.06em; min-width: 64px; flex-shrink: 0; }
+.field-input, .field-select { flex: 1; background: none; border: none; outline: none; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(232,240,255,0.85); padding: 12px 8px; letter-spacing: 0.04em; -webkit-appearance: none; }
+.field-select option { background: var(--navy-card); color: #e8f0ff; }
+.field-input::placeholder { color: rgba(232,240,255,0.2); }
+
+/* ── Gender row ── */
+.gender-row { display: flex; gap: 8px; padding: 0 16px; margin: 10px 0; }
+.gender-opt { flex: 1; background: var(--navy-card); border: 1px solid rgba(74,159,212,0.15); border-radius: 6px; padding: 10px 0; text-align: center; cursor: pointer; transition: all 0.2s; font-size: 13px; color: rgba(232,240,255,0.6); letter-spacing: 0.12em; }
+.gender-opt.selected { border-color: var(--azure); background: rgba(74,159,212,0.15); color: var(--azure-light); }
+
+/* ── Submit ── */
+.submit-wrap { position: relative; z-index: 1; padding: 8px 16px 16px; }
+.btn-calc { width: 100%; padding: 15px 0; background: linear-gradient(135deg, #0a2050, var(--azure), var(--azure-light), var(--azure)); border: none; border-radius: 4px; color: rgba(8,16,26,0.95); font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 500; letter-spacing: 0.2em; cursor: pointer; box-shadow: 0 4px 20px rgba(74,159,212,0.35); }
+.btn-calc:active { transform: scale(0.97); }
+.pricing-note { text-align: center; font-size: 9px; color: rgba(232,240,255,0.25); margin-top: 8px; letter-spacing: 0.06em; }
+
+/* ── Loading ── */
+.loading-wrap { position: relative; z-index: 1; display: none; flex-direction: column; align-items: center; padding: 32px 16px; gap: 16px; }
+.loading-wrap.show { display: flex; }
+.star-ring { width: 64px; height: 64px; position: relative; animation: star-rotate 8s linear infinite; }
+.star-ring::before, .star-ring::after {
+  content: ''; position: absolute; border-radius: 50%; animation: ring-pulse 2s ease-in-out infinite;
+}
+.star-ring::before { inset: 0; border: 1px solid rgba(74,159,212,0.4); }
+.star-ring::after { inset: 8px; border: 1px solid rgba(245,233,138,0.3); animation-delay: 0.5s; }
+@keyframes star-rotate { to { transform: rotate(360deg); } }
+@keyframes ring-pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+.loading-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px; letter-spacing: 0.16em; color: rgba(138,196,232,0.6); animation: pulse-txt 1.8s ease-in-out infinite; }
+@keyframes pulse-txt { 0%,100%{opacity:0.4} 50%{opacity:1} }
+
+/* ── Result ── */
+.result-wrap { position: relative; z-index: 1; padding: 0 16px; display: none; }
+.result-wrap.show { display: block; }
+
+/* Palace grid - 4×3 standard Zi Wei layout */
+.palace-label { font-size: 10px; letter-spacing: 0.2em; color: rgba(74,159,212,0.45); margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.palace-label::after { content: ''; flex: 1; height: 1px; background: rgba(74,159,212,0.1); }
+
+.palace-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 18px; aspect-ratio: 4/3; }
+.palace { background: var(--navy-card); border: 1px solid rgba(74,159,212,0.12); border-radius: 4px; padding: 5px 4px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; min-height: 70px; }
+.palace.center-empty { background: rgba(8,16,26,0.8); border: 1px solid rgba(74,159,212,0.06); display: flex; align-items: center; justify-content: center; }
+.palace.highlight { border-color: rgba(245,233,138,0.4); background: rgba(245,233,138,0.06); }
+.palace.main-star { border-color: rgba(155,111,196,0.4); background: rgba(107,63,160,0.1); }
+
+.palace-name { font-size: 8px; color: rgba(74,159,212,0.5); letter-spacing: 0.08em; }
+.palace-stars { font-size: 8.5px; color: rgba(245,233,138,0.8); line-height: 1.5; }
+.palace-stars .main { font-size: 9.5px; color: var(--star-gold); font-weight: 500; }
+.palace-stars .sub { color: rgba(138,196,232,0.55); font-size: 7.5px; }
+.palace-earthly { font-size: 7px; color: rgba(232,240,255,0.25); position: absolute; bottom: 3px; right: 4px; }
+
+.center-title { text-align: center; }
+.center-main { font-size: 12px; letter-spacing: 0.14em; color: rgba(245,233,138,0.8); margin-bottom: 2px; }
+.center-sub { font-family: 'Cormorant Garamond', serif; font-size: 10px; color: rgba(138,196,232,0.45); letter-spacing: 0.12em; }
+
+/* Key stars section */
+.stars-section { background: var(--navy-card); border: 1px solid rgba(74,159,212,0.12); border-radius: 10px; padding: 14px; margin-bottom: 14px; }
+.star-row { display: flex; align-items: baseline; gap: 10px; padding: 7px 0; border-bottom: 1px solid rgba(74,159,212,0.06); }
+.star-row:last-child { border-bottom: none; }
+.star-name { font-size: 12px; color: var(--star-gold); letter-spacing: 0.08em; min-width: 48px; }
+.star-palace { font-size: 10px; color: rgba(74,159,212,0.6); min-width: 28px; }
+.star-meaning { font-size: 11px; color: rgba(232,240,255,0.55); letter-spacing: 0.04em; line-height: 1.6; }
+
+/* Fortune panels */
+.fortune-section { margin-bottom: 14px; }
+.fortune-head { background: var(--navy-card); border: 1px solid rgba(74,159,212,0.12); border-radius: 10px 10px 0 0; padding: 12px 14px; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.fortune-icon { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+.fortune-title { font-size: 13px; letter-spacing: 0.1em; color: rgba(232,240,255,0.85); flex: 1; }
+.fortune-score { font-family: 'Cormorant Garamond', serif; font-size: 18px; }
+.fortune-body { background: rgba(11,21,32,0.8); border: 1px solid rgba(74,159,212,0.1); border-top: none; border-radius: 0 0 10px 10px; padding: 12px 14px; font-size: 11px; color: rgba(232,240,255,0.55); letter-spacing: 0.04em; line-height: 1.9; }
+.fortune-body.hidden { display: none; }
+
+/* Year fortune */
+.year-strip { background: var(--navy-card); border: 1px solid rgba(245,233,138,0.15); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
+.year-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.year-title { font-size: 12px; letter-spacing: 0.1em; color: var(--star-gold); }
+.year-val { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: var(--gold-light); }
+.year-bars { display: flex; gap: 4px; height: 4px; margin-bottom: 10px; }
+.year-bar { flex: 1; height: 100%; border-radius: 2px; background: rgba(74,159,212,0.15); overflow: hidden; }
+.year-bar .fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--azure), var(--star-gold)); }
+.year-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.year-item { background: rgba(8,16,26,0.6); border: 1px solid rgba(74,159,212,0.08); border-radius: 5px; padding: 7px 10px; }
+.year-item-name { font-size: 9px; color: rgba(232,240,255,0.3); letter-spacing: 0.08em; margin-bottom: 2px; }
+.year-item-val { font-size: 12px; color: rgba(232,240,255,0.75); letter-spacing: 0.06em; }
+
+/* CTA */
+.cta-section { position: relative; z-index: 1; padding: 0 16px 16px; }
+.btn-deep { width: 100%; padding: 14px 0; background: linear-gradient(135deg, rgba(107,63,160,0.4), rgba(74,159,212,0.5)); border: 1px solid rgba(74,159,212,0.3); border-radius: 4px; color: rgba(232,240,255,0.9); font-family: 'Noto Serif SC', serif; font-size: 13px; letter-spacing: 0.18em; cursor: pointer; }
+.btn-deep:active { opacity: 0.8; }
+.cta-note { text-align: center; font-size: 9px; color: rgba(232,240,255,0.2); margin-top: 8px; letter-spacing: 0.06em; }
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">‹ 返回</button>
+
+<div class="header">
+  <div class="header-title">紫微斗数 · 星盘解读</div>
+  <div class="header-sub">ZI WEI DOU SHU · PURPLE STAR ASTROLOGY</div>
+  <div class="azure-line"></div>
+</div>
+
+<div class="form-wrap">
+  <div class="form-label">出生信息</div>
+  <div class="field-group">
+    <div class="field-row">
+      <span class="field-label">出生年</span>
+      <select class="field-select" id="birthYear"></select>
+    </div>
+    <div class="field-row">
+      <span class="field-label">出生月</span>
+      <select class="field-select" id="birthMonth">
+        <option value="1">一月</option><option value="2">二月</option><option value="3">三月</option>
+        <option value="4">四月</option><option value="5">五月</option><option value="6">六月</option>
+        <option value="7">七月</option><option value="8">八月</option><option value="9">九月</option>
+        <option value="10">十月</option><option value="11">十一月</option><option value="12">十二月</option>
+      </select>
+    </div>
+    <div class="field-row">
+      <span class="field-label">出生日</span>
+      <select class="field-select" id="birthDay"></select>
+    </div>
+    <div class="field-row">
+      <span class="field-label">出生时辰</span>
+      <select class="field-select" id="birthHour">
+        <option value="0">子时 (23:00–00:59)</option>
+        <option value="1">丑时 (01:00–02:59)</option>
+        <option value="2">寅时 (03:00–04:59)</option>
+        <option value="3">卯时 (05:00–06:59)</option>
+        <option value="4">辰时 (07:00–08:59)</option>
+        <option value="5">巳时 (09:00–10:59)</option>
+        <option value="6">午时 (11:00–12:59)</option>
+        <option value="7">未时 (13:00–14:59)</option>
+        <option value="8">申时 (15:00–16:59)</option>
+        <option value="9">酉时 (17:00–18:59)</option>
+        <option value="10">戌时 (19:00–20:59)</option>
+        <option value="11">亥时 (21:00–22:59)</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="gender-row">
+  <div class="gender-opt selected" onclick="selectGender(this,'male')">男命</div>
+  <div class="gender-opt" onclick="selectGender(this,'female')">女命</div>
+</div>
+
+<div class="submit-wrap">
+  <button class="btn-calc" onclick="calcZiwei()">排盘 · 解读命宫</button>
+  <div class="pricing-note">基础命盘免费 · 完整大运流年解读 $19.9</div>
+</div>
+
+<div class="loading-wrap" id="loadingWrap">
+  <div class="star-ring"></div>
+  <div class="loading-text">紫微星正在入命…</div>
+</div>
+
+<div class="result-wrap" id="resultWrap">
+
+  <div class="palace-label">十二宫盘</div>
+  <div class="palace-grid" id="palaceGrid"></div>
+
+  <div class="palace-label">命盘主星</div>
+  <div class="stars-section" id="starsSection"></div>
+
+  <div id="fortuneSections"></div>
+
+  <div class="year-strip" id="yearStrip">
+    <div class="year-head">
+      <div class="year-title">2026年流年</div>
+      <div class="year-val" id="yearScore">—</div>
+    </div>
+    <div class="year-bars" id="yearBars"></div>
+    <div class="year-grid" id="yearGrid"></div>
+  </div>
+
+  <div class="cta-section">
+    <button class="btn-deep">深度大运流年 · 完整解读 $19.9</button>
+    <div class="cta-note">含十年大运·每月运势·四大运势趋势图</div>
+  </div>
+
+</div>
+
+<script>
+// Year selector
+var ySel = document.getElementById('birthYear');
+for (var y = 2005; y >= 1940; y--) {
+  ySel.innerHTML += '<option value="'+y+'">'+(y > 1990 ? y + '年' : y+'年')+'</option>';
+}
+// Day selector
+var dSel = document.getElementById('birthDay');
+for (var d = 1; d <= 31; d++) dSel.innerHTML += '<option value="'+d+'">'+d+'日</option>';
+
+var gender = 'male';
+function selectGender(el, g) {
+  document.querySelectorAll('.gender-opt').forEach(function(o){ o.classList.remove('selected'); });
+  el.classList.add('selected');
+  gender = g;
+}
+
+var PALACES = ['命宫','兄弟','夫妻','子女','财帛','疾厄','迁移','交友','事业','田宅','福德','父母'];
+var MAIN_STARS = ['紫微','天机','太阳','武曲','天同','廉贞','天府','太阴','贪狼','巨门','天相','天梁','七杀','破军'];
+var SUB_STARS = ['文昌','文曲','左辅','右弼','天魁','天钺','化禄','化权','化科','化忌'];
+var EB = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+
+function rng(seed, max) { return Math.abs(Math.sin(seed * 127.3 + 317.8) * max | 0) % max; }
+
+function calcZiwei() {
+  var y = parseInt(document.getElementById('birthYear').value);
+  var m = parseInt(document.getElementById('birthMonth').value);
+  var d = parseInt(document.getElementById('birthDay').value);
+  var h = parseInt(document.getElementById('birthHour').value);
+  var seed = y * 10000 + m * 100 + d + h * 0.1;
+
+  document.getElementById('loadingWrap').classList.add('show');
+  document.getElementById('resultWrap').classList.remove('show');
+  document.querySelector('.btn-calc').style.display = 'none';
+
+  setTimeout(function(){ renderResult(seed, y, m, d, h); }, 2500);
+}
+
+function renderResult(seed, y, m, d, h) {
+  document.getElementById('loadingWrap').classList.remove('show');
+
+  // Assign main stars to palaces
+  var assignment = [];
+  for (var i = 0; i < 12; i++) assignment.push([]);
+  var usedPalaces = new Set();
+  MAIN_STARS.forEach(function(star, si) {
+    var palaceIdx = rng(seed + si * 37, 12);
+    while (usedPalaces.has(palaceIdx)) palaceIdx = (palaceIdx + 1) % 12;
+    usedPalaces.add(palaceIdx);
+    assignment[palaceIdx].push(star);
+  });
+
+  // Ming palace = h position
+  var mingPalace = h % 12;
+
+  // Render 4×3 grid (12 palaces around, center = 命主 info)
+  // Standard ZiWei layout: outer ring clockwise from bottom-left
+  var layoutOrder = [8,9,10,11,0,1,2,3,4,5,6,7]; // palace indices mapped to grid cells
+  // 4×3 grid, center 2 cells merge = 4 corners + 8 outer
+  var grid = document.getElementById('palaceGrid');
+  grid.innerHTML = '';
+  var cellPos = [
+    {row:0,col:0},{row:0,col:1},{row:0,col:2},{row:0,col:3},
+    {row:1,col:3},{row:2,col:3},{row:2,col:2},{row:2,col:1},
+    {row:2,col:0},{row:1,col:0},
+    // center 2×2
+    {row:1,col:1},{row:1,col:2}
+  ];
+
+  grid.style.display = 'grid';
+  grid.style.gridTemplateColumns = 'repeat(4,1fr)';
+  grid.style.gridTemplateRows = 'repeat(3,1fr)';
+
+  for (var i = 0; i < 12; i++) {
+    var palIdx = layoutOrder[i];
+    var isCenter = (i === 10 || i === 11);
+    var isMing = palIdx === mingPalace;
+    var stars = assignment[palIdx] || [];
+
+    var cell = document.createElement('div');
+    if (i === 10) {
+      cell.className = 'palace center-empty';
+      cell.style.gridColumn = '2/4';
+      cell.style.gridRow = '2/3';
+      cell.innerHTML = '<div class="center-title"><div class="center-main">'+EB[h]+'时命</div><div class="center-sub">'+(gender==='male'?'男':'女')+'命</div></div>';
+      grid.appendChild(cell);
+      continue;
+    }
+    if (i === 11) continue;
+
+    cell.className = 'palace' + (isMing ? ' main-star' : (stars.length > 0 ? ' highlight' : ''));
+    cell.innerHTML = '<div class="palace-name">'+PALACES[palIdx]+(isMing?' ★':'')+'</div>' +
+      '<div class="palace-stars">' +
+        stars.map(function(s, si){ return '<div class="'+(si===0?'main':'sub')+'">'+s+'</div>'; }).join('') +
+      '</div>' +
+      '<div class="palace-earthly">'+EB[palIdx]+'</div>';
+    grid.appendChild(cell);
+  }
+
+  // Main stars in ming palace
+  var mingStars = assignment[mingPalace];
+  var STAR_MEANINGS = {
+    '紫微':'帝王之星，主贵气与领导力，命带紫微者一生有主见，做事稳重，容易得人脉尊重',
+    '天机':'智慧星，思维敏捷，变化快，适合规划与策略型工作',
+    '太阳':'光明磊落，慷慨大方，男命主权威，女命主父夫缘',
+    '武曲':'财星兼杀星，做事雷厉风行，适合金融军警，财运旺但要防孤独',
+    '天同':'福星，性情温和随缘，享福多却容易安于现状',
+    '廉贞':'才华横溢但性情复杂，感情多变，命运大起大落',
+    '天府':'南斗主星，稳重保守，财库丰厚，适合管理与行政',
+    '太阴':'富贵之星，阴柔内敛，财运佳，对房地产有缘分',
+    '贪狼':'欲望之星，多才多艺，社交活跃，一生追求享乐',
+    '巨门':'口才星，适合演讲谈判，但口是非多，需谨言慎行',
+    '天相':'印星，能力全面，善于协调，容易得上司赏识',
+    '天梁':'荫星，正直爱管闲事，适合医疗公益，能逢凶化吉',
+    '七杀':'将星，有冲劲魄力，做事果断不顾虑，起伏大',
+    '破军':'改革星，不走寻常路，善于突破，但破坏力也强'
+  };
+  var starsHtml = '';
+  (mingStars.length > 0 ? mingStars : [MAIN_STARS[rng(seed, MAIN_STARS.length)]]).forEach(function(star) {
+    starsHtml += '<div class="star-row"><div class="star-name">'+star+'</div><div class="star-palace">命宫</div><div class="star-meaning">'+(STAR_MEANINGS[star]||'主运势变化，详见完整命盘')+'</div></div>';
+  });
+  // Add 2 more random stars
+  ['化禄','文昌','左辅'].forEach(function(s,si){
+    var p = PALACES[rng(seed+si*19, 12)];
+    starsHtml += '<div class="star-row"><div class="star-name">'+s+'</div><div class="star-palace">'+p+'</div><div class="star-meaning">'+(si===0?'当前大运化禄，'+p+'宫有财喜之气，宜把握机会':si===1?'文昌入'+p+'宫，读书考试运旺，适合学习进修':'贵人星在'+p+'宫，多得异性或长辈相助')+'</div></div>';
+  });
+  document.getElementById('starsSection').innerHTML = starsHtml;
+
+  // Fortune sections
+  var FORTUNES = [
+    {icon:'事', title:'事业运', score: 60+rng(seed+1,35), color:'rgba(74,159,212,0.6)',
+     text:'命盘显示今年事业宫有'+(rng(seed,2)?'紫微':'武曲')+'过宫，职场贵人运强。适合主动争取晋升，年中（5-8月）为最佳时机。需注意人际关系维护，避免直言得罪同事。'},
+    {icon:'财', title:'财运', score: 55+rng(seed+2,40), color:'rgba(201,168,76,0.6)',
+     text:'财帛宫今年'+(rng(seed+5,2)?'化权':'化科')+'入驻，正财稳健，偏财有机。适合投资稳健型产品，年底前（10-12月）有意外进财机会。注意防止不必要的大额支出。'},
+    {icon:'情', title:'感情运', score: 50+rng(seed+3,45), color:'rgba(212,96,122,0.6)',
+     text:(gender==='male'?'夫妻宫今年动静较大，单身者有结识心仪对象的机缘，建议多参加朋友聚会。已婚者注意沟通，避免因工作繁忙忽略伴侣。':'夫妻宫今年有活跃迹象，感情有新进展。单身者下半年易遇缘，已婚者感情升温，是谈婚论嫁的好时机。')},
+    {icon:'健', title:'健康运', score: 65+rng(seed+4,30), color:'rgba(91,191,160,0.6)',
+     text:'疾厄宫今年相对平稳，无重大凶星入驻。注意'+（rng(seed+7,2)?'脾胃':'肝胆')+'养护，切勿过度劳累。春季和秋季各做一次体检为宜。'}
+  ];
+  var fsHtml = '';
+  FORTUNES.forEach(function(f) {
+    var score = f.score;
+    fsHtml += '<div class="fortune-section">' +
+      '<div class="fortune-head" onclick="toggleFortune(this)">' +
+        '<div class="fortune-icon" style="background:'+f.color+'">'+f.icon+'</div>' +
+        '<div class="fortune-title">'+f.title+'</div>' +
+        '<div class="fortune-score" style="color:'+(score>75?'#8dd9bf':score>60?'#e8d08a':'#d4607a')+'">'+score+'</div>' +
+      '</div>' +
+      '<div class="fortune-body">'+f.text+'</div>' +
+    '</div>';
+  });
+  document.getElementById('fortuneSections').innerHTML = fsHtml;
+
+  // Year fortune
+  var yearScore = 60 + rng(seed*2, 35);
+  document.getElementById('yearScore').textContent = yearScore + '分';
+  var bars = ['事业','财运','感情','健康'].map(function(n,i){ return {name:n, val: 40+rng(seed+i*11,55)}; });
+  document.getElementById('yearBars').innerHTML = bars.map(function(b){ return '<div class="year-bar"><div class="fill" style="width:'+b.val+'%"></div></div>'; }).join('');
+  document.getElementById('yearGrid').innerHTML = [
+    {n:'吉星', v:['文昌','化禄','天魁'][rng(seed,3)]},
+    {n:'流年命宫', v:PALACES[rng(seed+3,12)]},
+    {n:'本命大运', v:(30+rng(seed,40))+'–'+(38+rng(seed,10))+'岁'},
+    {n:'旺季', v:['春季2-4月','夏季6-8月','秋季9-11月'][rng(seed+6,3)]}
+  ].map(function(it){ return '<div class="year-item"><div class="year-item-name">'+it.n+'</div><div class="year-item-val">'+it.v+'</div></div>'; }).join('');
+
+  document.getElementById('resultWrap').classList.add('show');
+}
+
+function toggleFortune(head) {
+  var body = head.nextElementSibling;
+  body.classList.toggle('hidden');
+}
+</script>
+</body>
+</html>

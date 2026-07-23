@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a0e06">
+<title>善缘 · 冥器定制</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --amber: #c9820a; --amber-light: #e8b86a; --amber-deep: #8a5500;
+  --gold: #c9a84c; --gold-light: #e8d08a;
+  --jade: #5bbfa0; --jade-mid: #8dd9bf;
+  --ink: #1a1a18; --bg: #FAFAF8;
+  --night: #1a0e06; --night-mid: #2a180a; --night-card: #221404;
+}
+html, body { background: var(--night); font-family: 'Noto Serif SC', serif; color: #f0e6d8; -webkit-font-smoothing: antialiased; }
+body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 60px; }
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(201,130,10,0.15) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+.back-btn { position: fixed; top: 16px; left: 16px; z-index: 99; background: none; border: none; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(201,130,10,0.7); cursor: pointer; padding: 4px 0; }
+
+/* ── Header ── */
+.header { position: relative; z-index: 1; text-align: center; padding: 44px 20px 20px; }
+.header-title { font-size: 20px; font-weight: 400; letter-spacing: 0.22em; margin-bottom: 6px; }
+.header-sub { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 11px; letter-spacing: 0.26em; color: rgba(201,130,10,0.55); margin-bottom: 8px; }
+.header-note { font-size: 10px; color: rgba(240,230,216,0.35); letter-spacing: 0.1em; margin-bottom: 14px; }
+.amber-line { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, var(--amber), transparent); margin: 0 auto; }
+
+/* ── Category tabs ── */
+.cat-tabs { position: relative; z-index: 1; display: flex; gap: 6px; padding: 14px 14px 10px; overflow-x: auto; scrollbar-width: none; }
+.cat-tabs::-webkit-scrollbar { display: none; }
+.cat-tab { flex-shrink: 0; padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(201,130,10,0.2); background: transparent; font-family: 'Noto Serif SC', serif; font-size: 11px; letter-spacing: 0.08em; color: rgba(240,230,216,0.5); cursor: pointer; transition: all 0.2s; }
+.cat-tab.active { background: rgba(201,130,10,0.15); border-color: var(--amber); color: var(--amber-light); }
+
+/* ── Product grid ── */
+.prod-grid { position: relative; z-index: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 12px 12px; }
+
+.prod-card { background: var(--night-card); border: 1px solid rgba(201,130,10,0.12); border-radius: 8px; overflow: hidden; cursor: pointer; transition: all 0.22s; }
+.prod-card:active { transform: scale(0.97); }
+.prod-card.selected { border-color: var(--amber); box-shadow: 0 0 0 1px rgba(201,130,10,0.3); }
+
+.prod-img {
+  width: 100%; aspect-ratio: 3/4;
+  background: var(--night-mid);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.prod-img img { width: 100%; height: 100%; object-fit: cover; }
+.prod-img-placeholder {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  font-family: 'Noto Serif SC', serif;
+}
+.placeholder-glyph { font-size: 36px; color: rgba(201,130,10,0.4); font-weight: 300; }
+.placeholder-label { font-size: 10px; color: rgba(240,230,216,0.25); letter-spacing: 0.06em; }
+
+/* Candle glow overlay on img */
+.prod-img::after {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 90%, rgba(201,130,10,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.custom-badge { position: absolute; top: 8px; right: 8px; background: rgba(201,130,10,0.85); color: rgba(26,14,6,0.95); font-size: 9px; letter-spacing: 0.1em; padding: 3px 7px; border-radius: 2px; }
+.hot-badge { position: absolute; top: 8px; left: 8px; background: rgba(180,40,40,0.85); color: #fff; font-size: 9px; letter-spacing: 0.06em; padding: 3px 7px; border-radius: 2px; }
+
+.prod-info { padding: 10px 10px 12px; }
+.prod-name { font-size: 12px; letter-spacing: 0.06em; color: rgba(240,230,216,0.88); margin-bottom: 3px; line-height: 1.4; }
+.prod-desc { font-size: 9px; color: rgba(240,230,216,0.35); letter-spacing: 0.04em; margin-bottom: 6px; line-height: 1.5; }
+.prod-price { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--amber-light); }
+.prod-price .unit { font-family: 'Noto Serif SC', serif; font-size: 10px; }
+.prod-sold { font-size: 9px; color: rgba(240,230,216,0.25); margin-top: 2px; }
+
+/* ── Cart / bundle ── */
+.cart-bar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 390px; z-index: 10; background: var(--night-card); border-top: 1px solid rgba(201,130,10,0.2); padding: 12px 16px; display: none; }
+.cart-bar.visible { display: block; }
+.cart-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.cart-label { font-size: 11px; color: rgba(240,230,216,0.6); letter-spacing: 0.08em; }
+.cart-total { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: var(--amber-light); }
+.btn-order { width: 100%; padding: 13px 0; background: linear-gradient(135deg, var(--amber-deep), var(--amber), var(--amber-light), var(--amber)); border: none; border-radius: 4px; color: rgba(26,14,6,0.95); font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 500; letter-spacing: 0.18em; cursor: pointer; box-shadow: 0 4px 16px rgba(201,130,10,0.3); }
+
+/* ── Section head ── */
+.sec-head { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; padding: 4px 14px 10px; }
+.sec-head span { font-size: 10px; letter-spacing: 0.22em; color: rgba(201,130,10,0.55); white-space: nowrap; }
+.sec-head::before, .sec-head::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, transparent, rgba(201,130,10,0.2)); }
+.sec-head::after { background: linear-gradient(90deg, rgba(201,130,10,0.2), transparent); }
+
+/* ── Promise strip ── */
+.promise-strip { position: relative; z-index: 1; margin: 4px 14px 16px; display: flex; gap: 0; background: var(--night-card); border: 1px solid rgba(201,130,10,0.12); border-radius: 6px; overflow: hidden; }
+.promise-item { flex: 1; padding: 10px 6px; text-align: center; border-right: 1px solid rgba(201,130,10,0.1); }
+.promise-item:last-child { border-right: none; }
+.p-icon { font-family: 'Noto Serif SC', serif; font-size: 16px; color: var(--amber-light); font-weight: 300; display: block; margin-bottom: 3px; }
+.p-text { font-size: 9px; color: rgba(240,230,216,0.45); letter-spacing: 0.04em; line-height: 1.4; }
+
+/* Hide/show by category */
+.prod-card { display: none; }
+.prod-card.show { display: block; }
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">‹ 返回</button>
+
+<div class="header">
+  <div class="header-title">冥器定制 · 寄往彼岸</div>
+  <div class="header-sub">SACRED OFFERINGS · HANDCRAFTED FOR THE BEYOND</div>
+  <div class="header-note">真实焚烧 · 全程录像 · 视频发回施主</div>
+  <div class="amber-line"></div>
+</div>
+
+<div class="cat-tabs">
+  <div class="cat-tab active" onclick="filterCat('all',this)">全部</div>
+  <div class="cat-tab" onclick="filterCat('tech',this)">科技数码</div>
+  <div class="cat-tab" onclick="filterCat('car',this)">豪车</div>
+  <div class="cat-tab" onclick="filterCat('house',this)">豪宅</div>
+  <div class="cat-tab" onclick="filterCat('luxury',this)">奢侈品</div>
+  <div class="cat-tab" onclick="filterCat('wealth',this)">财富</div>
+  <div class="cat-tab" onclick="filterCat('ultra',this)">顶奢</div>
+  <div class="cat-tab" onclick="filterCat('custom',this)">定制</div>
+</div>
+
+<div class="promise-strip">
+  <div class="promise-item"><span class="p-icon">烧</span><span class="p-text">真实焚烧<br>非AI生成</span></div>
+  <div class="promise-item"><span class="p-icon">录</span><span class="p-text">全程录像<br>法师主持</span></div>
+  <div class="promise-item"><span class="p-icon">发</span><span class="p-text">视频发回<br>48h内</span></div>
+  <div class="promise-item"><span class="p-icon">证</span><span class="p-text">附焚烧<br>证书</span></div>
+</div>
+
+<div class="sec-head"><span>科技数码</span></div>
+<div class="prod-grid">
+
+  <div class="prod-card show" data-cat="tech" data-price="29" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">机</div><div class="placeholder-label">图片生成中</div></div>
+      <div class="hot-badge">热销</div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 iPhone 16 Pro Max</div>
+      <div class="prod-desc">钛金外壳·香槟色·含充电器配件</div>
+      <div class="prod-price"><span class="unit">$</span>29</div>
+      <div class="prod-sold">已送达 2,841 件</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="tech" data-price="29" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">脑</div><div class="placeholder-label">图片生成中</div></div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 MacBook Pro</div>
+      <div class="prod-desc">16寸·太空黑·含鼠标键盘</div>
+      <div class="prod-price"><span class="unit">$</span>29</div>
+      <div class="prod-sold">已送达 1,203 件</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="tech" data-price="19" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">板</div><div class="placeholder-label">图片生成中</div></div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 iPad Pro</div>
+      <div class="prod-desc">含 Apple Pencil</div>
+      <div class="prod-price"><span class="unit">$</span>19</div>
+      <div class="prod-sold">已送达 876 件</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="tech" data-price="19" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">表</div><div class="placeholder-label">图片生成中</div></div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 Apple Watch Ultra</div>
+      <div class="prod-desc">橙色登山表带版</div>
+      <div class="prod-price"><span class="unit">$</span>19</div>
+      <div class="prod-sold">已送达 542 件</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="sec-head"><span>豪车</span></div>
+<div class="prod-grid">
+
+  <div class="prod-card show" data-cat="car" data-price="49" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">劳</div><div class="placeholder-label">图片生成中</div></div>
+      <div class="hot-badge">热销</div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 劳斯莱斯幻影</div>
+      <div class="prod-desc">黑色·星空顶·含司机</div>
+      <div class="prod-price"><span class="unit">$</span>49</div>
+      <div class="prod-sold">已送达 1,027 件</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="car" data-price="49" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">宾</div><div class="placeholder-label">图片生成中</div></div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 宾利慕尚</div>
+      <div class="prod-desc">香槟金·真皮内饰</div>
+      <div class="prod-price"><span class="unit">$</span>49</div>
+      <div class="prod-sold">已送达 683 件</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="car" data-price="39" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">法</div><div class="placeholder-label">图片生成中</div></div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 法拉利 SF90</div>
+      <div class="prod-desc">法拉利红·跑车版</div>
+      <div class="prod-price"><span class="unit">$</span>39</div>
+      <div class="prod-sold">已送达 449 件</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="car" data-price="39" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">保</div><div class="placeholder-label">图片生成中</div></div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 保时捷 911</div>
+      <div class="prod-desc">银色·Carrera S</div>
+      <div class="prod-price"><span class="unit">$</span>39</div>
+      <div class="prod-sold">已送达 328 件</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="sec-head"><span>豪宅</span></div>
+<div class="prod-grid">
+
+  <div class="prod-card show" data-cat="house" data-price="68" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">墅</div><div class="placeholder-label">图片生成中</div></div>
+      <div class="hot-badge">热销</div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 欧式豪华别墅</div>
+      <div class="prod-desc">三层·花园泳池·含仆人</div>
+      <div class="prod-price"><span class="unit">$</span>68</div>
+      <div class="prod-sold">已送达 892 件</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="house" data-price="68" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">院</div><div class="placeholder-label">图片生成中</div></div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 中式四合院</div>
+      <div class="prod-desc">红木家具·含假山庭院</div>
+      <div class="prod-price"><span class="unit">$</span>68</div>
+      <div class="prod-sold">已送达 514 件</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="house" data-price="88" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">楼</div><div class="placeholder-label">图片生成中</div></div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 摩天大楼顶层套房</div>
+      <div class="prod-desc">全景落地窗·香港海景</div>
+      <div class="prod-price"><span class="unit">$</span>88</div>
+      <div class="prod-sold">已送达 203 件</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="sec-head"><span>奢侈品</span></div>
+<div class="prod-grid">
+
+  <div class="prod-card show" data-cat="luxury" data-price="49" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">铂</div><div class="placeholder-label">图片生成中</div></div>
+      <div class="hot-badge">热销</div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 爱马仕铂金包</div>
+      <div class="prod-desc">橙色·金扣·含丝巾</div>
+      <div class="prod-price"><span class="unit">$</span>49</div>
+      <div class="prod-sold">已送达 1,847 件</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="luxury" data-price="39" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">劳</div><div class="placeholder-label">图片生成中</div></div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 劳力士手表</div>
+      <div class="prod-desc">迪通拿·金钢款</div>
+      <div class="prod-price"><span class="unit">$</span>39</div>
+      <div class="prod-sold">已送达 762 件</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="luxury" data-price="39" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">宝</div><div class="placeholder-label">图片生成中</div></div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 珠宝首饰套装</div>
+      <div class="prod-desc">钻戒+项链+耳环</div>
+      <div class="prod-price"><span class="unit">$</span>39</div>
+      <div class="prod-sold">已送达 1,203 件</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="luxury" data-price="39" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">香</div><div class="placeholder-label">图片生成中</div></div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 Chanel No.5 套装</div>
+      <div class="prod-desc">香水+化妆品礼盒</div>
+      <div class="prod-price"><span class="unit">$</span>39</div>
+      <div class="prod-sold">已送达 934 件</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="sec-head"><span>财富</span></div>
+<div class="prod-grid">
+
+  <div class="prod-card show" data-cat="wealth" data-price="19" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">金</div><div class="placeholder-label">图片生成中</div></div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 黄金金条套装</div>
+      <div class="prod-desc">十根·足金款</div>
+      <div class="prod-price"><span class="unit">$</span>19</div>
+      <div class="prod-sold">已送达 3,201 件</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="wealth" data-price="19" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">元</div><div class="placeholder-label">图片生成中</div></div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">传统元宝·纸钱</div>
+      <div class="prod-desc">金银元宝百个·冥币千张</div>
+      <div class="prod-price"><span class="unit">$</span>19</div>
+      <div class="prod-sold">已送达 8,842 件</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="wealth" data-price="29" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">币</div><div class="placeholder-label">图片生成中</div></div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 美元百元大钞</div>
+      <div class="prod-desc">100万美元·独立包装</div>
+      <div class="prod-price"><span class="unit">$</span>29</div>
+      <div class="prod-sold">已送达 2,104 件</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="sec-head"><span>顶奢特供</span></div>
+<div class="prod-grid">
+
+  <div class="prod-card show" data-cat="ultra" data-price="99" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">机</div><div class="placeholder-label">图片生成中</div></div>
+      <div class="custom-badge">顶奢</div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 私人飞机</div>
+      <div class="prod-desc">湾流G700·含机组人员</div>
+      <div class="prod-price"><span class="unit">$</span>99</div>
+      <div class="prod-sold">已送达 187 件</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="ultra" data-price="99" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">艇</div><div class="placeholder-label">图片生成中</div></div>
+      <div class="custom-badge">顶奢</div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 私人游艇</div>
+      <div class="prod-desc">60米超级游艇·地中海款</div>
+      <div class="prod-price"><span class="unit">$</span>99</div>
+      <div class="prod-sold">已送达 143 件</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="ultra" data-price="79" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">升</div><div class="placeholder-label">图片生成中</div></div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 私人直升机</div>
+      <div class="prod-desc">空客H175·城际通勤款</div>
+      <div class="prod-price"><span class="unit">$</span>79</div>
+      <div class="prod-sold">已送达 92 件</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="ultra" data-price="149" onclick="toggleSelect(this)">
+    <div class="prod-img">
+      <div class="prod-img-placeholder"><div class="placeholder-glyph">宫</div><div class="placeholder-label">图片生成中</div></div>
+      <div class="custom-badge">顶奢</div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">纸 皇家豪华套装</div>
+      <div class="prod-desc">别墅+劳斯莱斯+私机全套</div>
+      <div class="prod-price"><span class="unit">$</span>149</div>
+      <div class="prod-sold">已送达 68 件</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="sec-head"><span>1:1定制</span></div>
+<div class="prod-grid">
+
+  <div class="prod-card show" data-cat="custom" data-price="299" onclick="toggleSelect(this)">
+    <div class="prod-img" style="background:linear-gradient(135deg,rgba(201,130,10,0.08),rgba(201,130,10,0.03))">
+      <div class="prod-img-placeholder">
+        <div class="placeholder-glyph">定</div>
+        <div class="placeholder-label">上传照片定制</div>
+      </div>
+      <div class="custom-badge">定制</div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">照片1:1定制冥器</div>
+      <div class="prod-desc">按真实物品照片精工复刻，极致还原</div>
+      <div class="prod-price"><span class="unit">$</span>299<span style="font-family:'Noto Serif SC',serif;font-size:10px;color:rgba(240,230,216,0.35)">起</span></div>
+      <div class="prod-sold">专属制作 7-10 天</div>
+    </div>
+  </div>
+
+  <div class="prod-card show" data-cat="custom" data-price="499" onclick="toggleSelect(this)">
+    <div class="prod-img" style="background:linear-gradient(135deg,rgba(201,130,10,0.08),rgba(201,130,10,0.03))">
+      <div class="prod-img-placeholder">
+        <div class="placeholder-glyph">人</div>
+        <div class="placeholder-label">按逝者照复刻</div>
+      </div>
+      <div class="custom-badge">定制</div>
+    </div>
+    <div class="prod-info">
+      <div class="prod-name">逝者生活场景复刻</div>
+      <div class="prod-desc">将逝者生前喜爱的场景完整重现</div>
+      <div class="prod-price"><span class="unit">$</span>499<span style="font-family:'Noto Serif SC',serif;font-size:10px;color:rgba(240,230,216,0.35)">起</span></div>
+      <div class="prod-sold">专属制作 14 天</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Cart Bar -->
+<div class="cart-bar" id="cartBar">
+  <div class="cart-row">
+    <div class="cart-label">已选 <span id="cartCount">0</span> 件 · 将一同焚化</div>
+    <div class="cart-total"><span style="font-size:11px;font-family:'Noto Serif SC',serif">$</span><span id="cartTotal">0</span></div>
+  </div>
+  <button class="btn-order">预约焚化 · 视频发回施主</button>
+</div>
+
+<script>
+var selected = new Set();
+
+function toggleSelect(card) {
+  var id = Array.from(document.querySelectorAll('.prod-card')).indexOf(card);
+  if (selected.has(id)) { selected.delete(id); card.classList.remove('selected'); }
+  else { selected.add(id); card.classList.add('selected'); }
+  updateCart();
+}
+
+function updateCart() {
+  var total = 0, count = 0;
+  document.querySelectorAll('.prod-card.selected').forEach(function(c) {
+    total += parseInt(c.dataset.price || 0);
+    count++;
+  });
+  document.getElementById('cartCount').textContent = count;
+  document.getElementById('cartTotal').textContent = total;
+  var bar = document.getElementById('cartBar');
+  if (count > 0) bar.classList.add('visible'); else bar.classList.remove('visible');
+}
+
+function filterCat(cat, el) {
+  document.querySelectorAll('.cat-tab').forEach(function(t) { t.classList.remove('active'); });
+  el.classList.add('active');
+  document.querySelectorAll('.prod-card').forEach(function(c) {
+    if (cat === 'all' || c.dataset.cat === cat) c.classList.add('show');
+    else c.classList.remove('show');
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0f1218">
+<title>善缘 · 面相手相</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --ink-deep: #0f1218; --ink-mid: #171c25; --ink-card: #131820;
+  --teal: #4a8fa0; --teal-light: #7abfcc; --teal-mid: #a8d8e0;
+  --gold: #c9a84c; --gold-light: #e8d08a;
+  --rose: #c96a6a; --rose-light: #e8a0a0;
+}
+html, body { background: var(--ink-deep); font-family: 'Noto Serif SC', serif; color: #e0ecf0; -webkit-font-smoothing: antialiased; }
+body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 52px; }
+body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(74,143,160,0.15) 0%, transparent 45%); pointer-events: none; z-index: 0; }
+.back-btn { position: fixed; top: 16px; left: 16px; z-index: 99; background: none; border: none; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(122,191,204,0.7); cursor: pointer; padding: 4px 0; }
+
+.header { position: relative; z-index: 1; text-align: center; padding: 44px 20px 20px; }
+.header-title { font-size: 20px; font-weight: 400; letter-spacing: 0.22em; margin-bottom: 6px; }
+.header-sub { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 11px; letter-spacing: 0.26em; color: rgba(74,143,160,0.55); margin-bottom: 14px; }
+.teal-line { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, var(--teal), transparent); margin: 0 auto; }
+
+/* ── Mode tabs ── */
+.mode-tabs { position: relative; z-index: 1; display: flex; gap: 0; margin: 16px 16px 0; background: var(--ink-card); border: 1px solid rgba(74,143,160,0.15); border-radius: 6px; overflow: hidden; }
+.mode-tab { flex: 1; padding: 11px 0; text-align: center; font-size: 13px; letter-spacing: 0.1em; color: rgba(224,236,240,0.45); cursor: pointer; transition: all 0.2s; border-right: 1px solid rgba(74,143,160,0.1); }
+.mode-tab:last-child { border-right: none; }
+.mode-tab.active { background: rgba(74,143,160,0.18); color: var(--teal-light); }
+
+/* ── Upload area ── */
+.upload-wrap { position: relative; z-index: 1; padding: 14px 16px; }
+.upload-area { background: var(--ink-card); border: 1.5px dashed rgba(74,143,160,0.25); border-radius: 10px; min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
+.upload-area:active { border-color: var(--teal); background: rgba(74,143,160,0.06); }
+.upload-area.has-image { border-style: solid; border-color: rgba(74,143,160,0.3); }
+.upload-icon { width: 52px; height: 52px; border-radius: 50%; border: 1px solid rgba(74,143,160,0.25); display: flex; align-items: center; justify-content: center; font-size: 22px; color: rgba(74,143,160,0.4); font-weight: 300; }
+.upload-text { font-size: 13px; color: rgba(224,236,240,0.5); letter-spacing: 0.08em; }
+.upload-hint { font-size: 9px; color: rgba(224,236,240,0.2); letter-spacing: 0.06em; }
+.upload-area img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+.upload-area .img-overlay { position: absolute; inset: 0; background: rgba(15,18,24,0.4); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.img-overlay-text { font-size: 12px; color: rgba(224,236,240,0.8); letter-spacing: 0.1em; background: rgba(15,18,24,0.6); padding: 6px 16px; border-radius: 3px; }
+input[type=file] { display: none; }
+
+/* Camera option */
+.camera-row { display: flex; gap: 8px; margin-top: 8px; }
+.cam-btn { flex: 1; background: var(--ink-card); border: 1px solid rgba(74,143,160,0.15); border-radius: 6px; padding: 10px 0; text-align: center; font-size: 11px; color: rgba(224,236,240,0.5); letter-spacing: 0.08em; cursor: pointer; transition: all 0.2s; }
+.cam-btn:active { border-color: var(--teal); color: var(--teal-light); }
+
+/* ── Question ── */
+.q-wrap { position: relative; z-index: 1; padding: 0 16px 14px; }
+.q-label { font-size: 10px; letter-spacing: 0.18em; color: rgba(74,143,160,0.45); margin-bottom: 8px; }
+.q-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.q-chip { padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(74,143,160,0.18); background: transparent; font-size: 10px; color: rgba(224,236,240,0.5); cursor: pointer; letter-spacing: 0.06em; transition: all 0.2s; }
+.q-chip.sel { border-color: var(--teal); background: rgba(74,143,160,0.15); color: var(--teal-light); }
+
+/* ── Submit ── */
+.submit-wrap { position: relative; z-index: 1; padding: 0 16px; }
+.btn-analyze { width: 100%; padding: 15px 0; background: linear-gradient(135deg, #1a3a45, var(--teal), var(--teal-light), var(--teal)); border: none; border-radius: 4px; color: rgba(15,18,24,0.95); font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 500; letter-spacing: 0.22em; cursor: pointer; box-shadow: 0 4px 18px rgba(74,143,160,0.3); }
+.btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Loading ── */
+.loading-wrap { position: relative; z-index: 1; display: none; flex-direction: column; align-items: center; padding: 30px 16px; gap: 14px; }
+.loading-wrap.show { display: flex; }
+.scan-anim { width: 120px; height: 120px; border-radius: 50%; border: 1px solid rgba(74,143,160,0.3); position: relative; animation: scan-spin 4s linear infinite; }
+.scan-line { position: absolute; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--teal), transparent); top: 30%; animation: scan-move 1.5s ease-in-out infinite; }
+@keyframes scan-spin { to { border-color: rgba(74,143,160,0.8); box-shadow: 0 0 20px rgba(74,143,160,0.2); } }
+@keyframes scan-move { 0%,100% { top: 20%; opacity: 0.3; } 50% { top: 80%; opacity: 1; } }
+.loading-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 13px; color: rgba(122,191,204,0.6); letter-spacing: 0.16em; animation: pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+/* ── Results ── */
+.result-wrap { position: relative; z-index: 1; padding: 16px 16px 0; display: none; }
+.result-wrap.show { display: block; }
+
+/* Feature map */
+.face-map { width: 100%; max-width: 280px; margin: 0 auto 18px; display: block; position: relative; }
+.feature-card { background: var(--ink-card); border: 1px solid rgba(74,143,160,0.12); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+.feature-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.feature-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.feature-title { font-size: 13px; letter-spacing: 0.1em; }
+.feature-score { margin-left: auto; font-family: 'Cormorant Garamond', serif; font-size: 18px; }
+.feature-bar { height: 3px; background: rgba(74,143,160,0.1); border-radius: 2px; margin-bottom: 8px; overflow: hidden; }
+.feature-fill { height: 100%; border-radius: 2px; }
+.feature-text { font-size: 11px; color: rgba(224,236,240,0.5); letter-spacing: 0.04em; line-height: 1.85; }
+
+.overall-box { background: rgba(74,143,160,0.07); border: 1px solid rgba(74,143,160,0.2); border-radius: 10px; padding: 14px; margin-bottom: 14px; text-align: center; }
+.overall-label { font-size: 9px; letter-spacing: 0.2em; color: rgba(74,143,160,0.5); margin-bottom: 8px; }
+.overall-quote { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 15px; color: rgba(224,236,240,0.8); letter-spacing: 0.08em; line-height: 1.6; }
+
+.cta-btn { width: 100%; padding: 13px 0; background: transparent; border: 1px solid rgba(74,143,160,0.3); border-radius: 4px; color: var(--teal-light); font-family: 'Noto Serif SC', serif; font-size: 13px; letter-spacing: 0.18em; cursor: pointer; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">‹ 返回</button>
+
+<div class="header">
+  <div class="header-title">面相 · 手相解读</div>
+  <div class="header-sub">FACE & PALM READING · PHYSIOGNOMY</div>
+  <div class="teal-line"></div>
+</div>
+
+<div class="mode-tabs">
+  <div class="mode-tab active" onclick="switchMode('face',this)">面相</div>
+  <div class="mode-tab" onclick="switchMode('palm',this)">手相</div>
+</div>
+
+<div class="upload-wrap">
+  <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+    <div class="upload-icon" id="uploadIcon">面</div>
+    <div class="upload-text" id="uploadText">上传正面照片</div>
+    <div class="upload-hint" id="uploadHint">光线均匀·正面·无遮挡</div>
+  </div>
+  <input type="file" id="fileInput" accept="image/*" capture="user" onchange="handleFile(this)">
+  <div class="camera-row">
+    <div class="cam-btn" onclick="document.getElementById('fileInput').click()">从相册选择</div>
+    <div class="cam-btn" onclick="openCamera()">拍照上传</div>
+  </div>
+</div>
+
+<div class="q-wrap">
+  <div class="q-label">你最想了解</div>
+  <div class="q-chips" id="qChips">
+    <div class="q-chip sel" onclick="toggleChip(this)">财运格局</div>
+    <div class="q-chip" onclick="toggleChip(this)">感情婚姻</div>
+    <div class="q-chip" onclick="toggleChip(this)">事业官运</div>
+    <div class="q-chip" onclick="toggleChip(this)">健康寿元</div>
+    <div class="q-chip" onclick="toggleChip(this)">性格特质</div>
+    <div class="q-chip" onclick="toggleChip(this)">贵人小人</div>
+  </div>
+</div>
+
+<div class="submit-wrap">
+  <button class="btn-analyze" id="analyzeBtn" onclick="startAnalysis()" disabled>上传照片后开始解读</button>
+</div>
+
+<div class="loading-wrap" id="loadingWrap">
+  <div class="scan-anim"><div class="scan-line"></div></div>
+  <div class="loading-text" id="loadingText">面相扫描中…</div>
+</div>
+
+<div class="result-wrap" id="resultWrap">
+  <!-- Dynamic results -->
+</div>
+
+<script>
+var currentMode = 'face';
+var hasImage = false;
+
+function switchMode(mode, el) {
+  document.querySelectorAll('.mode-tab').forEach(function(t){ t.classList.remove('active'); });
+  el.classList.add('active');
+  currentMode = mode;
+  document.getElementById('uploadIcon').textContent = mode === 'face' ? '面' : '手';
+  document.getElementById('uploadText').textContent = mode === 'face' ? '上传正面照片' : '上传手掌照片';
+  document.getElementById('uploadHint').textContent = mode === 'face' ? '光线均匀·正面·无遮挡' : '手掌朝上·五指舒展·清晰';
+  document.getElementById('loadingText').textContent = mode === 'face' ? '面相扫描中…' : '手相解析中…';
+}
+
+function handleFile(input) {
+  if (!input.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var area = document.getElementById('uploadArea');
+    area.innerHTML = '<img src="'+e.target.result+'" alt=""><div class="img-overlay"><div class="img-overlay-text">已上传 · 点击更换</div></div>';
+    area.classList.add('has-image');
+    area.onclick = function(){ document.getElementById('fileInput').click(); };
+    hasImage = true;
+    var btn = document.getElementById('analyzeBtn');
+    btn.textContent = '开始'+（currentMode==='face'?'面相':'手相')+'解读';
+    btn.disabled = false;
+  };
+  reader.readAsDataURL(input.files[0]);
+}
+
+function openCamera() {
+  var inp = document.getElementById('fileInput');
+  inp.setAttribute('capture', currentMode === 'face' ? 'user' : 'environment');
+  inp.click();
+}
+
+function toggleChip(el) {
+  el.classList.toggle('sel');
+}
+
+function startAnalysis() {
+  if (!hasImage) return;
+  document.getElementById('loadingWrap').classList.add('show');
+  document.getElementById('resultWrap').classList.remove('show');
+  document.getElementById('resultWrap').innerHTML = '';
+  document.getElementById('analyzeBtn').style.display = 'none';
+  setTimeout(function(){
+    document.getElementById('loadingWrap').classList.remove('show');
+    renderResult();
+  }, 3000);
+}
+
+function renderResult() {
+  var mode = currentMode;
+  var chips = Array.from(document.querySelectorAll('.q-chip.sel')).map(function(c){ return c.textContent; });
+
+  var FACE_FEATURES = [
+    { part:'额头', dot:'#e8d08a', title:'额头·官运格局', score:72+Math.random()*22|0, color:'rgba(201,168,76,0.5)',
+      text:'额头宽广饱满，主思维清晰、具管理才能，官运贵气皆备。中年后（35-45岁）事业进入上升期，有机会做到一方领导。忌冲动，凡事三思后行，情绪稳定是你最大的优势。' },
+    { part:'眼睛', dot:'#8ac4e8', title:'眼神·智慧财运', score:68+Math.random()*25|0, color:'rgba(74,143,160,0.6)',
+      text:'眼神灵动有神，主聪慧善察，财运与眼力成正比。善于发现机会，投资眼光准。感情方面多情善感，需注意不要因为过度分析而错失真缘。' },
+    { part:'鼻子', dot:'#c0e8b0', title:'鼻·财帛正财', score:60+Math.random()*35|0, color:'rgba(91,191,160,0.5)',
+      text:'鼻梁端直丰厚，财帛宫有力，主一生正财稳健。适合稳中求进，切忌冒险投机。鼻头圆润饱满者，晚年积累丰厚，越到晚年越旺。' },
+    { part:'嘴唇', dot:'#d4a0c8', title:'唇·感情口才', score:65+Math.random()*30|0, color:'rgba(180,80,160,0.5)',
+      text:'唇型饱满，口才出众，适合销售、谈判、演讲等需要表达的工作。感情方面善于表达爱意，但需注意言多必失，控制说话分寸。' }
+  ];
+
+  var PALM_FEATURES = [
+    { part:'生命线', dot:'#e8d08a', title:'生命线·寿元健康', score:75+Math.random()*20|0, color:'rgba(201,168,76,0.5)',
+      text:'生命线清晰绕大鱼际，弧度饱满，主体力充沛、生命力旺盛。整体健康状况良好，中年前后注意保养，尤其注意脾胃与心肺。' },
+    { part:'感情线', dot:'#c96a6a', title:'感情线·姻缘', score:62+Math.random()*30|0, color:'rgba(201,106,106,0.5)',
+      text:'感情线长而清晰，主感情专一、对爱情认真。感情路上会遇到真心之人，但需耐心等候。不宜将就，真缘份出现时会有强烈的直觉感应。' },
+    { part:'事业线', dot:'#8ac4e8', title:'事业线·成就', score:70+Math.random()*25|0, color:'rgba(74,143,160,0.6)',
+      text:'事业线（命运线）明显深刻，主事业有方向、进展稳健。30岁后进入人生上升期，依靠自身努力而非外力，实力型选手，越努力越幸运。' },
+    { part:'财运线', dot:'#c0e8b0', title:'财运线·偏财', score:55+Math.random()*40|0, color:'rgba(91,191,160,0.5)',
+      text:'财运线（太阳线）可见，偏财有机。适合副业、投资类收入，不宜孤注一掷。建议多元化理财，以正财为主、偏财为辅。' }
+  ];
+
+  var features = mode === 'face' ? FACE_FEATURES : PALM_FEATURES;
+  var overall = mode === 'face'
+    ? '面相整体和气有神，天庭饱满、地阁方圆，五官搭配协调，是福泽绵长的相格。财运与智慧并重，中年后运势持续上升，晚年安康。'
+    : '手相线条清晰，三大主线完整，掌心红润厚实，是"手厚有福"的好相。感情专一，事业靠实力，财运稳中有升。';
+
+  var html = '<div class="overall-box"><div class="overall-label">整体批示</div><div class="overall-quote">「'+overall+'」</div></div>';
+  features.forEach(function(f) {
+    html += '<div class="feature-card">' +
+      '<div class="feature-head"><div class="feature-dot" style="background:'+f.dot+'"></div><div class="feature-title">'+f.title+'</div><div class="feature-score" style="color:'+f.dot+'">'+f.score+'</div></div>' +
+      '<div class="feature-bar"><div class="feature-fill" style="width:'+f.score+'%;background:'+f.color+'"></div></div>' +
+      '<div class="feature-text">'+f.text+'</div>' +
+    '</div>';
+  });
+  html += '<button class="cta-btn" onclick="resetScan()">换张照片 · 重新解读</button>';
+  html += '<button class="cta-btn" style="border-color:rgba(201,130,10,0.3);color:rgba(232,176,106,0.8);margin-bottom:16px">深度面相+命理合参 · $29</button>';
+
+  document.getElementById('resultWrap').innerHTML = html;
+  document.getElementById('resultWrap').classList.add('show');
+}
+
+function resetScan() {
+  document.getElementById('resultWrap').classList.remove('show');
+  document.getElementById('analyzeBtn').style.display = 'block';
+  var area = document.getElementById('uploadArea');
+  area.innerHTML = '<div class="upload-icon" id="uploadIcon">'+(currentMode==='face'?'面':'手')+'</div><div class="upload-text" id="uploadText">上传'+(currentMode==='face'?'正面':'手掌')+'照片</div><div class="upload-hint" id="uploadHint">'+(currentMode==='face'?'光线均匀·正面·无遮挡':'手掌朝上·五指舒展·清晰')+'</div>';
+  area.classList.remove('has-image');
+  area.onclick = function(){ document.getElementById('fileInput').click(); };
+  hasImage = false;
+  document.getElementById('analyzeBtn').textContent = '上传照片后开始解读';
+  document.getElementById('analyzeBtn').disabled = true;
+}
+</script>
+</body>
+</html>

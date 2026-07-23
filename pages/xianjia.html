@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#100a1f">
+<title>善缘 · 仙家</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --purple:     #7a4fa8;
+  --purple-mid: #9b6fc4;
+  --purple-light:#c4a0e0;
+  --amber:      #c9820a;
+  --amber-light:#e8b86a;
+  --jade-main:  #5bbfa0;
+  --jade-mid:   #8dd9bf;
+  --gold:       #c9a84c;
+  --gold-light: #e8d08a;
+  --ink:        #1a1a18;
+  --bg:         #FAFAF8;
+  --night:      #100a1f;
+  --night-mid:  #1a1030;
+  --night-card: #140e26;
+}
+
+html, body {
+  background: var(--night);
+  font-family: 'Noto Serif SC', serif;
+  color: #f0eaff;
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100vh;
+  overflow-y: auto;
+  padding-bottom: 52px;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(122,79,168,0.22) 0%, transparent 55%),
+    radial-gradient(ellipse at 20% 100%, rgba(201,130,10,0.08) 0%, transparent 40%);
+  pointer-events: none; z-index: 0;
+}
+
+.back-btn {
+  position: fixed; top: 16px; left: 16px; z-index: 99;
+  background: none; border: none;
+  font-family: 'Noto Serif SC', serif; font-size: 13px;
+  color: rgba(196,160,224,0.7); letter-spacing: 0.06em; cursor: pointer; padding: 4px 0;
+}
+
+/* ── Header ── */
+.header {
+  position: relative; z-index: 1;
+  text-align: center;
+  padding: 44px 20px 22px;
+}
+
+.header-title {
+  font-size: 20px; font-weight: 400;
+  letter-spacing: 0.22em; color: #f0eaff; margin-bottom: 6px;
+}
+.header-sub {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: 11px; letter-spacing: 0.26em;
+  color: rgba(196,160,224,0.55); margin-bottom: 6px;
+}
+.header-note {
+  font-size: 10px; letter-spacing: 0.08em;
+  color: rgba(240,234,255,0.35); margin-bottom: 14px;
+}
+.purple-line {
+  width: 60px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--purple-mid), transparent);
+  margin: 0 auto;
+}
+
+/* ── Five families ── */
+.families-wrap {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  gap: 6px; padding: 16px 14px 12px;
+}
+
+.family-card {
+  background: var(--night-card);
+  border: 1.5px solid rgba(122,79,168,0.15);
+  border-radius: 8px;
+  padding: 12px 6px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.22s;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+}
+.family-card.active {
+  border-color: var(--purple-mid);
+  background: rgba(122,79,168,0.15);
+}
+
+.family-glyph {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 22px; font-weight: 300;
+  color: var(--purple-light); line-height: 1;
+}
+
+.family-name {
+  font-size: 11px; letter-spacing: 0.04em;
+  color: rgba(240,234,255,0.75);
+}
+
+.family-type {
+  font-size: 9px; color: rgba(201,130,10,0.6);
+  letter-spacing: 0.04em;
+}
+
+/* ── Family detail ── */
+.detail-wrap {
+  position: relative; z-index: 1;
+  margin: 0 14px 12px;
+  background: var(--night-card);
+  border: 1px solid rgba(122,79,168,0.2);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.detail-head {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+
+.detail-emblem {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(196,160,224,0.8), rgba(122,79,168,0.6) 50%, rgba(74,41,112,1));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 22px; color: rgba(255,255,255,0.88); font-weight: 300;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(122,79,168,0.4);
+}
+
+.detail-info { flex: 1; }
+.detail-name { font-size: 16px; letter-spacing: 0.14em; color: #f0eaff; }
+.detail-role {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: 10px; letter-spacing: 0.18em; color: rgba(201,130,10,0.65);
+  margin-top: 2px;
+}
+
+.detail-desc {
+  font-size: 11px; color: rgba(240,234,255,0.55);
+  letter-spacing: 0.04em; line-height: 1.8;
+}
+
+/* ── Services ── */
+.sec-head {
+  position: relative; z-index: 1;
+  width: 100%; display: flex; align-items: center; gap: 10px;
+  padding: 0 14px 10px;
+}
+.sec-head span { font-size: 11px; letter-spacing: 0.2em; color: var(--amber-light); white-space: nowrap; opacity: 0.7; }
+.sec-head::before, .sec-head::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,130,10,0.25));
+}
+.sec-head::after { background: linear-gradient(90deg, rgba(201,130,10,0.25), transparent); }
+
+.svc-wrap {
+  position: relative; z-index: 1;
+  padding: 0 14px;
+  display: flex; flex-direction: column; gap: 7px;
+}
+
+.svc-row {
+  background: var(--night-card);
+  border: 1px solid rgba(122,79,168,0.12);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  cursor: pointer; transition: border-color 0.2s;
+}
+.svc-row:active { border-color: var(--purple-mid); }
+
+.svc-left { display: flex; flex-direction: column; gap: 2px; }
+.svc-name { font-size: 13px; letter-spacing: 0.08em; color: #f0eaff; }
+.svc-desc { font-size: 10px; color: rgba(240,234,255,0.4); letter-spacing: 0.04em; }
+
+.svc-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px; color: var(--amber-light);
+}
+.svc-unit { font-family: 'Noto Serif SC', serif; font-size: 10px; }
+
+/* ── CTA ── */
+.cta-wrap {
+  position: relative; z-index: 1;
+  padding: 18px 14px 0;
+}
+
+.btn-purple {
+  width: 100%; padding: 15px 0;
+  background: linear-gradient(135deg, #4a2970, var(--purple), var(--purple-light), var(--purple));
+  border: none; border-radius: 4px;
+  color: rgba(240,234,255,0.95);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px; font-weight: 500; letter-spacing: 0.2em;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(122,79,168,0.4);
+  transition: all 0.25s;
+}
+.btn-purple:active { transform: scale(0.97); }
+
+.cta-note {
+  text-align: center; font-size: 10px;
+  color: rgba(240,234,255,0.22); letter-spacing: 0.08em; margin-top: 10px;
+}
+
+/* Families data */
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">‹ 返回</button>
+
+<div class="header">
+  <div class="header-title">仙家 · 东北五大家</div>
+  <div class="header-sub">THE FIVE DIVINE FAMILIES · NORTHEAST TRADITION</div>
+  <div class="header-note">东北最古老的灵修体系 · 海外无数字化平台</div>
+  <div class="purple-line"></div>
+</div>
+
+<div class="families-wrap">
+  <div class="family-card active" onclick="selectFamily(this,0)">
+    <div class="family-glyph">胡</div>
+    <div class="family-name">胡仙</div>
+    <div class="family-type">狐狸</div>
+  </div>
+  <div class="family-card" onclick="selectFamily(this,1)">
+    <div class="family-glyph">黄</div>
+    <div class="family-name">黄仙</div>
+    <div class="family-type">黄鼠狼</div>
+  </div>
+  <div class="family-card" onclick="selectFamily(this,2)">
+    <div class="family-glyph">白</div>
+    <div class="family-name">白仙</div>
+    <div class="family-type">蛇</div>
+  </div>
+  <div class="family-card" onclick="selectFamily(this,3)">
+    <div class="family-glyph">柳</div>
+    <div class="family-name">柳仙</div>
+    <div class="family-type">柳树精</div>
+  </div>
+  <div class="family-card" onclick="selectFamily(this,4)">
+    <div class="family-glyph">灰</div>
+    <div class="family-name">灰仙</div>
+    <div class="family-type">老鼠</div>
+  </div>
+</div>
+
+<div class="detail-wrap" id="familyDetail">
+  <div class="detail-head">
+    <div class="detail-emblem" id="detailGlyph">胡</div>
+    <div class="detail-info">
+      <div class="detail-name" id="detailName">胡仙 · 狐狸</div>
+      <div class="detail-role" id="detailRole">WEALTH & BUSINESS</div>
+    </div>
+  </div>
+  <div class="detail-desc" id="detailDesc">
+    胡仙主财运·生意，东北民间信仰最广。供奉胡仙，可化解财路阻碍，开启偏财正财。做生意者最宜供奉。
+  </div>
+</div>
+
+<div class="sec-head"><span>供仙服务</span></div>
+
+<div class="svc-wrap">
+  <div class="svc-row">
+    <div class="svc-left">
+      <div class="svc-name">供仙直播</div>
+      <div class="svc-desc">法师主持 · 上香·摆供品·诵咒 · 直播全程</div>
+    </div>
+    <div class="svc-price"><span class="svc-unit">$</span>49</div>
+  </div>
+  <div class="svc-row">
+    <div class="svc-left">
+      <div class="svc-name">问仙</div>
+      <div class="svc-desc">法师代问仙家 · 48h文字回复</div>
+    </div>
+    <div class="svc-price"><span class="svc-unit">$</span>69</div>
+  </div>
+  <div class="svc-row">
+    <div class="svc-left">
+      <div class="svc-name">化小人</div>
+      <div class="svc-desc">化解职场·家庭小人 · 发化小人符</div>
+    </div>
+    <div class="svc-price"><span class="svc-unit">$</span>49</div>
+  </div>
+  <div class="svc-row">
+    <div class="svc-left">
+      <div class="svc-name">接运</div>
+      <div class="svc-desc">接引仙气运势 · 三天仪式</div>
+    </div>
+    <div class="svc-price"><span class="svc-unit">$</span>99</div>
+  </div>
+  <div class="svc-row">
+    <div class="svc-left">
+      <div class="svc-name">安仙</div>
+      <div class="svc-desc">安抚家中仙家 · 化解家宅不宁</div>
+    </div>
+    <div class="svc-price"><span class="svc-unit">$</span>149</div>
+  </div>
+</div>
+
+<div class="cta-wrap">
+  <button class="btn-purple">向胡仙祈福 · 开运求财</button>
+  <p class="cta-note">由东北正统仙家传承法师主持 · 有传承有根基</p>
+</div>
+
+<script>
+var families = [
+  { glyph:'胡', name:'胡仙 · 狐狸', role:'WEALTH & BUSINESS', desc:'胡仙主财运·生意，东北民间信仰最广。供奉胡仙，可化解财路阻碍，开启偏财正财。做生意者最宜供奉。' },
+  { glyph:'黄', name:'黄仙 · 黄鼠狼', role:'HOME PROTECTION', desc:'黄仙主家宅平安，最擅化解家中戾气、煞气。家中不宁、子女不安、家宅时常出事者，宜请黄仙坐镇。' },
+  { glyph:'白', name:'白仙 · 蛇', role:'LOVE & FERTILITY', desc:'白仙主姻缘·子嗣，蛇为龙之近亲，主感情与生育。单身求缘、婚姻不顺、求子难育者，可拜白仙。' },
+  { glyph:'柳', name:'柳仙 · 柳树精', role:'HEALTH & LONGEVITY', desc:'柳仙主健康长寿，体弱多病、久病不愈、家中长辈健康堪忧者，请柳仙护佑，常有奇效。' },
+  { glyph:'灰', name:'灰仙 · 老鼠', role:'TREASURY & SAVINGS', desc:'灰仙主财库，善守财聚财。赚钱容易留不住、总是漏财者，宜供奉灰仙，守住财库。' }
+];
+function selectFamily(el, idx) {
+  document.querySelectorAll('.family-card').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  var f = families[idx];
+  document.getElementById('detailGlyph').textContent = f.glyph;
+  document.getElementById('detailName').textContent = f.name;
+  document.getElementById('detailRole').textContent = f.role;
+  document.getElementById('detailDesc').textContent = f.desc;
+  var btn = document.querySelector('.btn-purple');
+  btn.textContent = '向' + f.glyph + '仙祈福 · 开运求' + (idx===0?'财':idx===1?'安':idx===2?'缘':idx===3?'健':' 守财');
+}
+</script>
+</body>
+</html>

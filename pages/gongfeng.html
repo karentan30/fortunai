@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0a1a10">
+<title>善缘 · 名山名寺</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --forest: #0a1a10; --forest-mid: #112418; --forest-card: #0e1f14;
+  --jade: #5bbfa0; --jade-mid: #8dd9bf; --jade-light: #c8f0e0;
+  --gold: #c9a84c; --gold-light: #e8d08a;
+  --amber: #c9820a;
+}
+html, body { background: var(--forest); font-family: 'Noto Serif SC', serif; color: #e8f5ef; -webkit-font-smoothing: antialiased; }
+body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 52px; }
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(91,191,160,0.12) 0%, transparent 50%),
+              radial-gradient(ellipse at 80% 100%, rgba(201,168,76,0.06) 0%, transparent 40%);
+  pointer-events: none; z-index: 0;
+}
+.back-btn { position: fixed; top: 16px; left: 16px; z-index: 99; background: none; border: none; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(141,217,191,0.7); cursor: pointer; padding: 4px 0; }
+
+.header { position: relative; z-index: 1; text-align: center; padding: 44px 20px 20px; }
+.header-title { font-size: 20px; font-weight: 400; letter-spacing: 0.22em; margin-bottom: 6px; }
+.header-sub { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 11px; letter-spacing: 0.26em; color: rgba(91,191,160,0.55); margin-bottom: 8px; }
+.header-note { font-size: 10px; color: rgba(232,245,239,0.35); letter-spacing: 0.1em; margin-bottom: 14px; }
+.jade-line { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, var(--jade), transparent); margin: 0 auto; }
+
+.filter-wrap { position: relative; z-index: 1; display: flex; gap: 6px; padding: 14px 14px 10px; overflow-x: auto; scrollbar-width: none; }
+.filter-wrap::-webkit-scrollbar { display: none; }
+.fpill { flex-shrink: 0; padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(91,191,160,0.2); background: transparent; font-family: 'Noto Serif SC', serif; font-size: 11px; letter-spacing: 0.06em; color: rgba(232,245,239,0.5); cursor: pointer; transition: all 0.2s; }
+.fpill.active { background: rgba(91,191,160,0.15); border-color: var(--jade); color: var(--jade-mid); }
+
+.temple-list { position: relative; z-index: 1; padding: 4px 14px; display: flex; flex-direction: column; gap: 10px; }
+
+.temple-card { background: var(--forest-card); border-left: 2px solid rgba(91,191,160,0.2); border-radius: 0 8px 8px 0; overflow: hidden; cursor: pointer; transition: border-color 0.2s; }
+.temple-card.open { border-left-color: var(--jade); }
+
+.card-img { width: 100%; height: 130px; overflow: hidden; background: var(--forest-mid); display: flex; align-items: center; justify-content: center; position: relative; }
+.card-img img { width: 100%; height: 100%; object-fit: cover; }
+.img-placeholder { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.img-glyph { font-size: 38px; color: rgba(91,191,160,0.25); font-weight: 300; }
+.img-label { font-size: 9px; color: rgba(232,245,239,0.2); letter-spacing: 0.06em; }
+.card-img-overlay { position: absolute; bottom: 0; left: 0; right: 0; height: 50px; background: linear-gradient(transparent, rgba(10,26,16,0.85)); }
+
+.card-head { padding: 11px 14px 10px; display: flex; align-items: flex-start; gap: 10px; }
+.card-rank { font-family: 'Cormorant Garamond', serif; font-size: 20px; color: rgba(91,191,160,0.25); flex-shrink: 0; line-height: 1; margin-top: 3px; }
+.card-info { flex: 1; }
+.card-name { font-size: 15px; letter-spacing: 0.1em; color: #e8f5ef; margin-bottom: 3px; }
+.card-location { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 10px; letter-spacing: 0.18em; color: rgba(91,191,160,0.5); margin-bottom: 5px; }
+.card-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.ctag { font-size: 9px; color: rgba(201,168,76,0.7); border: 1px solid rgba(201,168,76,0.2); border-radius: 2px; padding: 2px 7px; letter-spacing: 0.06em; }
+.card-chevron { font-size: 14px; color: rgba(91,191,160,0.35); flex-shrink: 0; margin-top: 4px; transition: transform 0.3s; }
+.temple-card.open .card-chevron { transform: rotate(90deg); }
+
+.card-body { display: none; padding: 0 14px 14px; }
+.temple-card.open .card-body { display: block; }
+
+.lore-label { font-size: 9px; letter-spacing: 0.2em; color: rgba(91,191,160,0.45); margin-bottom: 7px; display: flex; align-items: center; gap: 8px; }
+.lore-label::after { content: ''; flex: 1; height: 1px; background: rgba(91,191,160,0.1); }
+.lore-text { font-size: 11px; color: rgba(232,245,239,0.55); letter-spacing: 0.04em; line-height: 1.9; margin-bottom: 12px; }
+
+.miracle-box { background: rgba(201,168,76,0.05); border: 1px solid rgba(201,168,76,0.12); border-radius: 6px; padding: 10px 12px; margin-bottom: 12px; }
+.miracle-label { font-size: 9px; letter-spacing: 0.2em; color: rgba(201,168,76,0.55); margin-bottom: 6px; }
+.miracle-quote { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 12.5px; color: rgba(232,245,239,0.72); letter-spacing: 0.04em; line-height: 1.75; }
+.miracle-attr { font-size: 9px; color: rgba(232,245,239,0.28); margin-top: 6px; letter-spacing: 0.06em; }
+
+.wish-label { font-size: 9px; letter-spacing: 0.2em; color: rgba(91,191,160,0.45); margin-bottom: 8px; }
+.wish-categories { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 13px; }
+.wcatg { font-size: 10px; color: var(--jade-mid); background: rgba(91,191,160,0.07); border: 1px solid rgba(91,191,160,0.14); border-radius: 3px; padding: 4px 10px; letter-spacing: 0.04em; }
+
+.btn-offer { width: 100%; padding: 12px 0; background: linear-gradient(135deg, rgba(91,191,160,0.15), rgba(91,191,160,0.3)); border: 1px solid rgba(91,191,160,0.35); border-radius: 4px; color: var(--jade-light); font-family: 'Noto Serif SC', serif; font-size: 13px; letter-spacing: 0.16em; cursor: pointer; }
+.btn-offer:active { background: rgba(91,191,160,0.4); }
+
+.sec-head { position: relative; z-index: 1; display: flex; align-items: center; gap: 10px; padding: 8px 14px 12px; }
+.sec-head span { font-size: 10px; letter-spacing: 0.22em; color: rgba(91,191,160,0.4); white-space: nowrap; }
+.sec-head::before, .sec-head::after { content: ''; flex: 1; height: 1px; background: rgba(91,191,160,0.08); }
+
+.promise-strip { position: relative; z-index: 1; margin: 0 14px 18px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+.promise-item { background: var(--forest-card); border: 1px solid rgba(91,191,160,0.08); border-radius: 6px; padding: 10px 6px; text-align: center; }
+.p-icon { font-size: 18px; color: var(--jade); font-weight: 300; display: block; margin-bottom: 4px; }
+.p-text { font-size: 9px; color: rgba(232,245,239,0.38); letter-spacing: 0.04em; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">‹ 返回</button>
+
+<div class="header">
+  <div class="header-title">名山名寺 · 灵应道场</div>
+  <div class="header-sub">SACRED MOUNTAINS & TEMPLES OF CHINA</div>
+  <div class="header-note">汇聚最灵验的佛教 · 道教 · 民间信仰道场</div>
+  <div class="jade-line"></div>
+</div>
+
+<div class="filter-wrap">
+  <div class="fpill active" onclick="filterTemple('all',this)">全部</div>
+  <div class="fpill" onclick="filterTemple('wealth',this)">求财</div>
+  <div class="fpill" onclick="filterTemple('love',this)">姻缘</div>
+  <div class="fpill" onclick="filterTemple('child',this)">求子</div>
+  <div class="fpill" onclick="filterTemple('health',this)">健康</div>
+  <div class="fpill" onclick="filterTemple('protection',this)">保佑</div>
+  <div class="fpill" onclick="filterTemple('exam',this)">考运</div>
+  <div class="fpill" onclick="filterTemple('ancestor',this)">超度</div>
+</div>
+
+<div class="temple-list" id="templeList"></div>
+
+<div class="sec-head"><span>代供承诺</span></div>
+<div class="promise-strip">
+  <div class="promise-item"><span class="p-icon">真</span><span class="p-text">真实道场<br>有根有据</span></div>
+  <div class="promise-item"><span class="p-icon">录</span><span class="p-text">全程录像<br>实况发回</span></div>
+  <div class="promise-item"><span class="p-icon">证</span><span class="p-text">发祈福<br>电子证书</span></div>
+</div>
+
+<script>
+var TEMPLES = [
+  { id:'yonghegong', rank:'01', name:'雍和宫', nameEn:'Yonghe Lama Temple', location:'北京', cat:['wealth','protection'],
+    tags:['求财','化小人','消灾','藏传佛教'],
+    history:'雍和宫始建于1694年（康熙33年），原为清朝皇帝行宫，1744年乾隆将其改建为藏传佛教寺庙。宫内供奉的18米紫檀木大佛，被列入吉尼斯世界纪录。每逢春节期间抢头香，上千信众彻夜排队，灵应传说遍布京城。北京本地人将雍和宫称为"首都最灵的道场"，财神殿前的香火一年四季不断。',
+    miracle:'「2019年，我公司濒临破产，朋友引荐来雍和宫做财神供养。三个月后意外接到一笔海外订单，彻底扭转局面。现在每年必来，这是我的福地。」',
+    miracleFrom:'张先生 · 北京企业家',
+    wishes:['求财运','化小人','生意兴隆','消灾解厄','家宅平安','考试顺利'] },
+
+  { id:'putuo', rank:'02', name:'普陀山', nameEn:'Putuo Mountain', location:'浙江', cat:['love','child','health'],
+    tags:['观世音','求子','姻缘','治病'],
+    history:'普陀山是中国四大佛教名山之一，素有"海天佛国"之称，是观世音菩萨的道场。岛上寺庙始建于唐代，历经千年。南海观音立像高33米，面朝大海，慈悲庇佑苦难众生。千年以来无数人在此求子成功、疾病痊愈、姻缘喜结，是华人世界供奉观音最重要的道场之一。',
+    miracle:'「我四十岁备孕多年未果，朋友推荐到普陀山观音殿虔诚祈求，并请法师开光平安扣。半年后，我以自然受孕方式诞下健康男婴。观音菩萨听到了我的心声。」',
+    miracleFrom:'陈太太 · 新加坡',
+    wishes:['求子嗣','求姻缘','治病痊愈','平安健康','出行平安'] },
+
+  { id:'lingyin', rank:'03', name:'灵隐寺', nameEn:'Lingyin Temple', location:'杭州', cat:['wealth','protection','exam'],
+    tags:['飞来峰','弥勒佛','求财','学业'],
+    history:'灵隐寺创建于东晋326年，是中国最早的佛教寺院之一，也是江南最大的佛教寺院。寺前飞来峰镌刻五代至元代佛教摩崖造像338尊，历经近两千年。冷泉亭旁的弥勒佛笑口常开，相传抚摸其大肚能得财运——每年有上百万人次来此祈福，是杭州香火最旺的道场。',
+    miracle:'「女儿申请大学被十二次拒绝，回国探亲时我带她到灵隐寺诚心祈愿。三周后，她收到了哈佛大学录取通知书。那次拜佛她哭了很久，但心里突然很平静。」',
+    miracleFrom:'王女士 · 上海，女儿现哈佛在读',
+    wishes:['求学业','求财运','家宅平安','生意顺利','高考顺利'] },
+
+  { id:'wutai', rank:'04', name:'五台山', nameEn:'Wutai Mountain', location:'山西', cat:['exam','wealth','health'],
+    tags:['文殊菩萨','智慧','考运','功名'],
+    history:'五台山是文殊菩萨的道场，也是中国唯一兼有汉传和藏传佛教的佛教圣地，被列为世界遗产。唐玄奘法师曾在此礼佛，唐太宗赐名"文殊道场"。文殊菩萨代表"大智慧"，凡需要考运、职场晋升、商业决策的人，到五台山祈愿最为直接有效。',
+    miracle:'「连续三年CFA考试未过，朋友建议去五台山文殊殿供智慧灯。当年第四次考试，一次性通过三级。文殊菩萨赐我的不是答案，是一颗静得下来的心。」',
+    miracleFrom:'梁先生 · 香港 CFA持证人',
+    wishes:['求智慧','求考运','职场晋升','学业有成','思路清晰'] },
+
+  { id:'emei', rank:'05', name:'峨眉山', nameEn:'Mount Emei', location:'四川', cat:['health','protection','child'],
+    tags:['普贤菩萨','消灾','长寿','行愿'],
+    history:'峨眉山是普贤菩萨的道场，世界自然与文化双遗产，"峨眉天下秀"。金顶海拔3077米，晴日可见"佛光"——自己的影子被投射在云海之上，光环环绕，信徒视为菩萨显灵。普贤菩萨以"行愿无边"著称，凡有所求、有所愿，供奉普贤最为灵验。',
+    miracle:'「我患顽固性皮肤病多年，遍寻中西医无效。在峨眉山金顶诚心拜祭后，当月病情开始好转，半年后完全痊愈，连医生也无法解释。」',
+    miracleFrom:'翁小姐 · 台湾',
+    wishes:['求健康长寿','消灾解厄','慢性病好转','出行平安','心愿达成'] },
+
+  { id:'jiuhua', rank:'06', name:'九华山', nameEn:'Jiuhua Mountain', location:'安徽', cat:['ancestor','protection'],
+    tags:['地藏菩萨','超度','祖先','冥阳两利'],
+    history:'九华山是地藏菩萨的道场，以超度亡灵、荐拔先祖著称。地藏菩萨立誓"地狱不空，誓不成佛"，专门救度已故亡魂。每年清明和中元节，数十万信众前往做超度法事——是海外华人远程为先人做超度最重要的道场，代供冥器、法事均可在此完成。',
+    miracle:'「父亲骤然离世，我内疚多年未能尽孝。委托九华山高僧做三天超度法事后，夜里不再梦见父亲愁眉苦脸。最后一个梦里，父亲第一次对我笑了。」',
+    miracleFrom:'谭先生 · 吉隆坡',
+    wishes:['超度亡灵','祖先安息','冥界传物','消除愧疚','家族平安'] },
+
+  { id:'guandi', rank:'07', name:'关帝庙', nameEn:'Guan Di Temple', location:'全国', cat:['wealth','protection'],
+    tags:['关圣帝君','生意兴旺','义气','驱邪'],
+    history:'关帝庙奉祀三国名将关羽，封为"协天大帝""武圣"，是商界最广泛供奉的神明之一。香港、台湾、东南亚各地唐人街的关帝庙，都是华人生意人的精神依托。关二爷"义"字当先，凡做生意、守信义者，供奉关帝可得财运、消除小人，历来商会必拜。',
+    miracle:'「开业那天我请师傅来给关老爷上香。三年后，我们扩店三次，如今在墨尔本唐人街已是龙头。关二爷保我，我年年还愿。」',
+    miracleFrom:'黄先生 · 澳洲餐饮创业者',
+    wishes:['生意兴隆','化解小人','守财聚财','出行平安','义气来财'] },
+
+  { id:'jiming', rank:'08', name:'鸡鸣寺', nameEn:'Jiming Temple', location:'南京', cat:['love'],
+    tags:['求姻缘','脱单','爱情','许愿'],
+    history:'鸡鸣寺始建于西晋300年，是南京最古老的佛寺之一，供奉药师佛，以求姻缘著称。每年情人节前后，数千单身男女前往许愿，将红丝带系于许愿树。南京本地流传："求姻缘，去鸡鸣；求子嗣，去普陀。"药师如来发十二大愿，其中便有"令诸有情，皆得端严"——意为让众生获得美好的缘分。',
+    miracle:'「三十岁生日在鸡鸣寺许愿"一年内遇到真命天子"，六个月后在朋友婚宴上认识了现在的丈夫。我许愿的时候，心里知道他会来的。」',
+    miracleFrom:'陈小姐 · 上海，现已成家',
+    wishes:['脱单求缘','感情稳定','婚姻幸福','异地结缘','前缘续结'] }
+];
+
+function renderTemples(list) {
+  var c = document.getElementById('templeList');
+  c.innerHTML = '';
+  list.forEach(function(t) {
+    var tags = t.tags.map(function(g){ return '<span class="ctag">'+g+'</span>'; }).join('');
+    var wishes = t.wishes.map(function(w){ return '<span class="wcatg">'+w+'</span>'; }).join('');
+    c.innerHTML += '<div class="temple-card" id="tc-'+t.id+'">' +
+      '<div class="card-img" onclick="toggleCard(\''+t.id+'\')"><div class="img-placeholder"><div class="img-glyph">'+t.name[0]+'</div><div class="img-label">图片生成中</div></div><div class="card-img-overlay"></div></div>' +
+      '<div class="card-head" onclick="toggleCard(\''+t.id+'\')"><div class="card-rank">'+t.rank+'</div>' +
+      '<div class="card-info"><div class="card-name">'+t.name+'</div><div class="card-location">'+t.location+' · '+t.nameEn+'</div><div class="card-tags">'+tags+'</div></div>' +
+      '<div class="card-chevron">›</div></div>' +
+      '<div class="card-body">' +
+        '<div class="lore-label">历史渊源</div><div class="lore-text">'+t.history+'</div>' +
+        '<div class="miracle-box"><div class="miracle-label">灵验见证</div><div class="miracle-quote">'+t.miracle+'</div><div class="miracle-attr">— '+t.miracleFrom+'</div></div>' +
+        '<div class="wish-label">可祈求项目</div><div class="wish-categories">'+wishes+'</div>' +
+        '<button class="btn-offer" onclick="selectTemple(\''+t.id+'\',\''+encodeURIComponent(t.name)+'\')">在此道场代供 · 祈福发愿</button>' +
+      '</div></div>';
+  });
+}
+
+function toggleCard(id) {
+  var el = document.getElementById('tc-'+id);
+  el.classList.toggle('open');
+}
+function filterTemple(cat, el) {
+  document.querySelectorAll('.fpill').forEach(function(p){ p.classList.remove('active'); });
+  el.classList.add('active');
+  var f = cat === 'all' ? TEMPLES : TEMPLES.filter(function(t){ return t.cat.indexOf(cat) > -1; });
+  renderTemples(f);
+}
+function selectTemple(id, name) {
+  window.location.href = 'order.html?temple='+id+'&templeName='+name;
+}
+
+renderTemples(TEMPLES);
+</script>
+</body>
+</html>

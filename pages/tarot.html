@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0d0820">
+<title>善缘 · 塔罗占卜</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --deep: #0d0820; --deep-mid: #140d30; --deep-card: #100c28;
+  --violet: #6b3fa0; --violet-mid: #9b6fc4; --violet-light: #c4a0e0;
+  --gold: #c9a84c; --gold-light: #e8d08a;
+  --rose: #d4607a;
+  --star: #f8f4ff;
+}
+html, body { background: var(--deep); font-family: 'Noto Serif SC', serif; color: #f0eaff; -webkit-font-smoothing: antialiased; }
+body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 52px; }
+
+/* Starfield */
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse at 30% 15%, rgba(107,63,160,0.35) 0%, transparent 45%),
+    radial-gradient(ellipse at 70% 85%, rgba(212,96,122,0.18) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 50%, rgba(107,63,160,0.08) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+.back-btn { position: fixed; top: 16px; left: 16px; z-index: 99; background: none; border: none; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(196,160,224,0.7); cursor: pointer; padding: 4px 0; }
+
+/* ── Header ── */
+.header { position: relative; z-index: 1; text-align: center; padding: 44px 20px 20px; }
+.header-title { font-size: 20px; font-weight: 400; letter-spacing: 0.22em; margin-bottom: 6px; }
+.header-sub { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 11px; letter-spacing: 0.26em; color: rgba(155,111,196,0.6); margin-bottom: 14px; }
+.violet-line { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, var(--violet-mid), transparent); margin: 0 auto; }
+
+/* ── Topic selector ── */
+.topic-wrap { position: relative; z-index: 1; padding: 14px 16px 8px; }
+.topic-label { font-size: 10px; letter-spacing: 0.18em; color: rgba(155,111,196,0.5); margin-bottom: 10px; }
+.topic-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+.topic-btn { background: var(--deep-card); border: 1px solid rgba(107,63,160,0.2); border-radius: 6px; padding: 10px 6px; text-align: center; cursor: pointer; transition: all 0.22s; }
+.topic-btn.selected { border-color: var(--violet-mid); background: rgba(107,63,160,0.2); }
+.topic-icon { font-size: 18px; color: var(--violet-light); font-weight: 300; margin-bottom: 4px; display: block; }
+.topic-name { font-size: 11px; color: rgba(240,234,255,0.7); letter-spacing: 0.06em; }
+
+/* ── Question input ── */
+.q-wrap { position: relative; z-index: 1; padding: 14px 16px 8px; }
+.q-label { font-size: 10px; letter-spacing: 0.18em; color: rgba(155,111,196,0.5); margin-bottom: 10px; }
+.q-box { background: var(--deep-card); border: 1px solid rgba(107,63,160,0.18); border-radius: 8px; padding: 12px 14px; }
+.q-input { width: 100%; background: none; border: none; outline: none; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(240,234,255,0.82); letter-spacing: 0.04em; line-height: 1.8; resize: none; min-height: 60px; }
+.q-input::placeholder { color: rgba(240,234,255,0.2); }
+
+/* ── Spread selector ── */
+.spread-wrap { position: relative; z-index: 1; padding: 8px 16px 16px; }
+.spread-row { display: flex; gap: 7px; }
+.spread-opt { flex: 1; background: var(--deep-card); border: 1px solid rgba(107,63,160,0.18); border-radius: 7px; padding: 10px 8px; text-align: center; cursor: pointer; transition: all 0.2s; }
+.spread-opt.selected { border-color: var(--violet-mid); background: rgba(107,63,160,0.18); }
+.spread-num { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: rgba(155,111,196,0.6); font-weight: 300; }
+.spread-opt.selected .spread-num { color: var(--violet-light); }
+.spread-name { font-size: 10px; color: rgba(240,234,255,0.5); letter-spacing: 0.04em; margin-top: 3px; }
+.spread-price { font-size: 10px; color: var(--gold); margin-top: 3px; }
+
+/* ── Draw button ── */
+.draw-wrap { position: relative; z-index: 1; padding: 0 16px 0; }
+.btn-draw { width: 100%; padding: 15px 0; background: linear-gradient(135deg, #3a1870, var(--violet), var(--violet-light), var(--violet)); border: none; border-radius: 4px; color: rgba(240,234,255,0.95); font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 500; letter-spacing: 0.22em; cursor: pointer; box-shadow: 0 4px 20px rgba(107,63,160,0.4); transition: all 0.25s; }
+.btn-draw:active { transform: scale(0.97); }
+
+/* ── Loading state ── */
+.loading-wrap { position: relative; z-index: 1; display: none; flex-direction: column; align-items: center; padding: 28px 16px; }
+.loading-wrap.show { display: flex; }
+.orb { width: 56px; height: 56px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, rgba(196,160,224,0.8), rgba(107,63,160,0.8) 50%, rgba(40,15,90,1)); animation: orb-spin 2.5s ease-in-out infinite; box-shadow: 0 0 30px rgba(107,63,160,0.5); margin-bottom: 16px; }
+@keyframes orb-spin { 0%,100% { box-shadow: 0 0 20px rgba(107,63,160,0.5); } 50% { box-shadow: 0 0 40px rgba(196,160,224,0.6); } }
+.loading-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px; letter-spacing: 0.18em; color: rgba(196,160,224,0.6); animation: pulse-text 1.5s ease-in-out infinite; }
+@keyframes pulse-text { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+/* ── Result area ── */
+.result-wrap { position: relative; z-index: 1; padding: 0 16px; display: none; }
+.result-wrap.show { display: block; }
+
+/* Card trio */
+.card-trio { display: flex; gap: 8px; margin-bottom: 20px; justify-content: center; }
+.tarot-slot { flex: 1; max-width: 110px; }
+.tarot-card { aspect-ratio: 5/9; background: var(--deep-card); border: 1px solid rgba(107,63,160,0.3); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; transition: transform 0.5s; transform-style: preserve-3d; animation: card-reveal 0.6s ease-out both; }
+.tarot-card:nth-child(1) { animation-delay: 0.1s; }
+.tarot-card:nth-child(2) { animation-delay: 0.3s; }
+.tarot-card:nth-child(3) { animation-delay: 0.5s; }
+@keyframes card-reveal { from { opacity: 0; transform: rotateY(90deg) translateY(20px); } to { opacity: 1; transform: rotateY(0) translateY(0); } }
+.tarot-card::before {
+  content: ''; position: absolute; inset: 2px; border-radius: 6px;
+  background: radial-gradient(ellipse at 50% 0%, rgba(107,63,160,0.25) 0%, transparent 60%);
+}
+.card-glyph { font-size: 28px; color: rgba(196,160,224,0.6); font-weight: 300; margin-bottom: 6px; position: relative; z-index: 1; }
+.card-num { font-family: 'Cormorant Garamond', serif; font-size: 10px; color: rgba(201,168,76,0.5); letter-spacing: 0.12em; position: relative; z-index: 1; }
+.card-name-sm { font-size: 10px; color: rgba(240,234,255,0.6); letter-spacing: 0.04em; margin-top: 3px; position: relative; z-index: 1; text-align: center; padding: 0 4px; }
+
+.slot-label { font-size: 9px; color: rgba(155,111,196,0.5); text-align: center; margin-top: 6px; letter-spacing: 0.08em; }
+
+/* Interpretation */
+.interp-section { background: var(--deep-card); border: 1px solid rgba(107,63,160,0.15); border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+.interp-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.interp-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--violet-mid); flex-shrink: 0; }
+.interp-title { font-size: 13px; letter-spacing: 0.1em; color: rgba(196,160,224,0.9); }
+.interp-text { font-size: 12px; color: rgba(240,234,255,0.6); letter-spacing: 0.04em; line-height: 1.9; }
+.interp-highlight { color: var(--gold-light); }
+
+.advice-box { background: rgba(201,168,76,0.05); border: 1px solid rgba(201,168,76,0.15); border-radius: 8px; padding: 12px 14px; margin-top: 12px; }
+.advice-label { font-size: 9px; letter-spacing: 0.2em; color: rgba(201,168,76,0.5); margin-bottom: 7px; }
+.advice-text { font-size: 11px; color: rgba(240,234,255,0.65); letter-spacing: 0.04em; line-height: 1.8; }
+
+.btn-redo { width: 100%; padding: 12px 0; background: transparent; border: 1px solid rgba(107,63,160,0.3); border-radius: 4px; color: rgba(196,160,224,0.6); font-family: 'Noto Serif SC', serif; font-size: 13px; letter-spacing: 0.16em; cursor: pointer; margin-top: 4px; transition: all 0.2s; }
+.btn-redo:active { background: rgba(107,63,160,0.15); }
+
+/* ── Sample cards ── */
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">‹ 返回</button>
+
+<div class="header">
+  <div class="header-title">塔罗占卜</div>
+  <div class="header-sub">TAROT ORACLE · ANCIENT WISDOM</div>
+  <div class="violet-line"></div>
+</div>
+
+<div class="topic-wrap">
+  <div class="topic-label">问询主题</div>
+  <div class="topic-grid">
+    <div class="topic-btn selected" onclick="selectTopic(this,'love')"><span class="topic-icon">缘</span><span class="topic-name">感情姻缘</span></div>
+    <div class="topic-btn" onclick="selectTopic(this,'wealth')"><span class="topic-icon">财</span><span class="topic-name">财运事业</span></div>
+    <div class="topic-btn" onclick="selectTopic(this,'health')"><span class="topic-icon">康</span><span class="topic-name">健康运势</span></div>
+    <div class="topic-btn" onclick="selectTopic(this,'decision')"><span class="topic-icon">择</span><span class="topic-name">抉择指引</span></div>
+    <div class="topic-btn" onclick="selectTopic(this,'year')"><span class="topic-icon">运</span><span class="topic-name">年度整体</span></div>
+    <div class="topic-btn" onclick="selectTopic(this,'custom')"><span class="topic-icon">问</span><span class="topic-name">自由提问</span></div>
+  </div>
+</div>
+
+<div class="q-wrap">
+  <div class="q-label">写下你的问题（越具体越准）</div>
+  <div class="q-box">
+    <textarea class="q-input" id="question" placeholder="例：我和他还有没有机会？&#10;例：这份工作offer该不该接？&#10;例：今年下半年我的财运如何？"></textarea>
+  </div>
+</div>
+
+<div class="spread-wrap">
+  <div class="spread-row">
+    <div class="spread-opt selected" onclick="selectSpread(this,1,'single')">
+      <div class="spread-num">一</div>
+      <div class="spread-name">单张牌</div>
+      <div class="spread-price">FREE</div>
+    </div>
+    <div class="spread-opt" onclick="selectSpread(this,3,'past_now_future')">
+      <div class="spread-num">三</div>
+      <div class="spread-name">过去现在未来</div>
+      <div class="spread-price">$9</div>
+    </div>
+    <div class="spread-opt" onclick="selectSpread(this,5,'celtic')">
+      <div class="spread-num">五</div>
+      <div class="spread-name">五芒星牌阵</div>
+      <div class="spread-price">$19</div>
+    </div>
+  </div>
+</div>
+
+<div class="draw-wrap">
+  <button class="btn-draw" onclick="drawCards()">静心 · 抽牌</button>
+</div>
+
+<div class="loading-wrap" id="loadingWrap">
+  <div class="orb"></div>
+  <div class="loading-text">宇宙正在排列牌阵中…</div>
+</div>
+
+<div class="result-wrap" id="resultWrap">
+  <div class="card-trio" id="cardTrio"></div>
+  <div class="interp-section" id="interpSection">
+    <div class="interp-head"><div class="interp-dot"></div><div class="interp-title" id="interpTitle">综合解读</div></div>
+    <div class="interp-text" id="interpText"></div>
+    <div class="advice-box"><div class="advice-label">建议行动</div><div class="advice-text" id="adviceText"></div></div>
+  </div>
+  <button class="btn-redo" onclick="resetDraw()">换个问题 · 重新抽牌</button>
+</div>
+
+<script>
+var CARDS = [
+  {name:'愚者', roman:'0', glyph:'零', energy:'新开始·冒险·天真', desc:'象征全新旅程的开始，带着纯粹的心上路，无所畏惧。'},
+  {name:'魔术师', roman:'I', glyph:'一', energy:'意志·创造·主导', desc:'你拥有实现目标所需的一切工具，关键在于能否善加利用。'},
+  {name:'女祭司', roman:'II', glyph:'二', energy:'直觉·内在智慧·神秘', desc:'聆听内心深处的声音，答案早已存在于你的直觉之中。'},
+  {name:'皇后', roman:'III', glyph:'三', energy:'丰盛·创造·母性', desc:'丰饶与美好即将到来，放开双臂去接纳，不要抗拒。'},
+  {name:'皇帝', roman:'IV', glyph:'四', energy:'权威·结构·稳定', desc:'建立秩序，掌握主动权。此刻需要你的决断力。'},
+  {name:'教皇', roman:'V', glyph:'五', energy:'传统·引导·智慧', desc:'寻求值得信任的长者或导师的建议，不要独自扛。'},
+  {name:'恋人', roman:'VI', glyph:'六', energy:'选择·结合·价值观', desc:'面临重要选择，请遵从内心最深处的真实价值观。'},
+  {name:'战车', roman:'VII', glyph:'七', energy:'意志力·胜利·掌控', desc:'你有能力克服障碍，但需要坚定意志，不能动摇。'},
+  {name:'力量', roman:'VIII', glyph:'八', energy:'内在力量·耐心·勇气', desc:'真正的强大来自温柔与耐心，而非蛮力。'},
+  {name:'隐者', roman:'IX', glyph:'九', energy:'内省·沉淀·独处', desc:'这是一个需要向内寻找答案的时期，暂时独处并不孤独。'},
+  {name:'命运之轮', roman:'X', glyph:'十', energy:'转折·命运·循环', desc:'一个周期即将完结，新的机遇正在拐角处等待。'},
+  {name:'正义', roman:'XI', glyph:'义', energy:'公平·真相·因果', desc:'因果自有定论，诚实面对真相才能真正前行。'},
+  {name:'倒吊人', roman:'XII', glyph:'吊', energy:'暂停·新视角·牺牲', desc:'暂时停下来，换个角度看，往往会豁然开朗。'},
+  {name:'死神', roman:'XIII', glyph:'变', energy:'结束·转化·重生', desc:'旧有的东西正在离去，不必恐慌，腾出空间才能迎接新生。'},
+  {name:'节制', roman:'XIV', glyph:'融', energy:'平衡·整合·耐心', desc:'找到中庸之道，不急不躁，水到渠成。'},
+  {name:'恶魔', roman:'XV', glyph:'缚', energy:'束缚·执念·物质', desc:'你被某种执念或恐惧束缚，是时候正视并释放它了。'},
+  {name:'塔', roman:'XVI', glyph:'崩', energy:'突变·瓦解·解放', desc:'表面的崩塌往往是解放的开始，不牢固的东西该放手了。'},
+  {name:'星星', roman:'XVII', glyph:'星', energy:'希望·治愈·引导', desc:'黑夜之后必有星光，保持希望，治愈正在发生。'},
+  {name:'月亮', roman:'XVIII', glyph:'月', energy:'幻觉·恐惧·潜意识', desc:'现实并不如你所见，请小心辨别真相与幻象。'},
+  {name:'太阳', roman:'XIX', glyph:'日', energy:'喜悦·成功·光明', desc:'最明亮的好消息之一，事情正朝最好的方向发展。'},
+  {name:'审判', roman:'XX', glyph:'醒', energy:'觉醒·召唤·重生', desc:'内心的召唤已经足够清晰，是时候回应它了。'},
+  {name:'世界', roman:'XXI', glyph:'圆', energy:'完整·成就·整合', desc:'一个完整的旅程即将圆满，你应得到这份成就。'}
+];
+
+var POSITIONS_3 = ['过去 · 根源', '现在 · 核心', '未来 · 走向'];
+var POSITIONS_5 = ['自我·当下', '挑战·阻碍', '潜意识·隐情', '建议·方向', '结果·可能'];
+var currentSpread = 1;
+var currentTopic = 'love';
+
+function selectTopic(el, t) {
+  document.querySelectorAll('.topic-btn').forEach(function(b){ b.classList.remove('selected'); });
+  el.classList.add('selected');
+  currentTopic = t;
+}
+function selectSpread(el, n, type) {
+  document.querySelectorAll('.spread-opt').forEach(function(o){ o.classList.remove('selected'); });
+  el.classList.add('selected');
+  currentSpread = n;
+}
+
+function drawCards() {
+  var q = document.getElementById('question').value.trim();
+  if (!q) { alert('请先写下你的问题'); return; }
+  document.getElementById('loadingWrap').classList.add('show');
+  document.getElementById('resultWrap').classList.remove('show');
+  document.querySelector('.btn-draw').style.display = 'none';
+  setTimeout(function(){
+    document.getElementById('loadingWrap').classList.remove('show');
+    showResult(q);
+  }, 2200);
+}
+
+function showResult(question) {
+  var n = currentSpread;
+  var drawn = [];
+  var pool = CARDS.slice();
+  for (var i = 0; i < n; i++) {
+    var idx = Math.floor(Math.random() * pool.length);
+    var card = pool.splice(idx, 1)[0];
+    var reversed = Math.random() < 0.3;
+    drawn.push({ card: card, reversed: reversed });
+  }
+
+  var positions = n === 1 ? ['当前启示'] : n === 3 ? POSITIONS_3 : POSITIONS_5;
+  var trio = document.getElementById('cardTrio');
+  trio.innerHTML = '';
+  drawn.forEach(function(d, i) {
+    trio.innerHTML += '<div class="tarot-slot">' +
+      '<div class="tarot-card" style="transform:rotate('+(d.reversed?180:0)+'deg)">' +
+        '<div class="card-glyph">'+d.card.glyph+'</div>' +
+        '<div class="card-num">'+d.card.roman+'</div>' +
+        '<div class="card-name-sm">'+d.card.name+(d.reversed?' 逆位':''+'</div>') +
+      '</div>' +
+      '<div class="slot-label">'+positions[i]+'</div></div>';
+  });
+
+  // Generate interpretation
+  var mainCard = drawn[Math.floor(drawn.length/2)].card;
+  var rev = drawn[Math.floor(drawn.length/2)].reversed;
+  var interpMap = {
+    love: { title: '情感方向', prefix: '在你问询的感情与姻缘问题上，' },
+    wealth: { title: '财运启示', prefix: '在你的财运与事业方向上，' },
+    health: { title: '健康运势', prefix: '关于你的健康与身心状态，' },
+    decision: { title: '决策指引', prefix: '在你面临的抉择上，' },
+    year: { title: '年度解读', prefix: '关于你的整体运势，' },
+    custom: { title: '塔罗回应', prefix: '宇宙通过牌阵给你的启示是：' }
+  };
+  var im = interpMap[currentTopic] || interpMap['custom'];
+
+  document.getElementById('interpTitle').textContent = im.title;
+  document.getElementById('interpText').innerHTML = im.prefix +
+    (rev ? '「<span class="interp-highlight">'+mainCard.name+'</span> 逆位」提醒你：'+mainCard.desc.replace('你','此刻的你') + ' 逆位时能量受阻，建议放慢脚步，重新审视内心真正的渴望。'
+         : '「<span class="interp-highlight">'+mainCard.name+'</span>」正位的能量是：'+mainCard.desc + ' ' + mainCard.energy + '是此刻最需要关注的核心能量。') +
+    (drawn.length > 1 ? '<br><br>从整体牌阵来看，'+drawn[0].card.name+'（'+positions[0]+'）与'+drawn[drawn.length-1].card.name+'（'+positions[drawn.length-1]+'）形成了呼应——过去的积累正在为未来的结果铺路。' : '');
+
+  document.getElementById('adviceText').textContent = rev
+    ? '此刻不宜强行推进，给自己一段沉淀的时间。观察自己对这个问题最深层的情绪，那里有你需要的答案。'
+    : '顺势而为，相信自己的判断。'+mainCard.energy.split('·')[0]+'是你现在最强大的资源，用好它。';
+
+  document.getElementById('resultWrap').classList.add('show');
+  document.querySelector('.btn-draw').style.display = 'none';
+}
+
+function resetDraw() {
+  document.getElementById('resultWrap').classList.remove('show');
+  document.querySelector('.btn-draw').style.display = 'block';
+  document.getElementById('question').value = '';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>生肖运势 · 善缘 ShenYuan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-dim:#7a6030;
+  --jade:#5bbfa0;--jade-dim:#2a5f4e;
+  --bg:#0a0a12;--bg2:#0f0f1a;--bg3:#141426;
+  --ink:#e8e0d0;--ink-dim:#8a8070;
+  --red:#c94c4c;--red-dim:#6b2828;
+}
+html,body{height:100%;background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* ── Stars bg ── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:
+    radial-gradient(1px 1px at 15% 20%,rgba(255,255,255,.7) 0%,transparent 100%),
+    radial-gradient(1px 1px at 40% 60%,rgba(255,255,255,.5) 0%,transparent 100%),
+    radial-gradient(1px 1px at 70% 15%,rgba(255,255,255,.6) 0%,transparent 100%),
+    radial-gradient(1px 1px at 85% 75%,rgba(255,255,255,.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 25% 85%,rgba(255,255,255,.5) 0%,transparent 100%),
+    radial-gradient(1px 1px at 55% 35%,rgba(255,255,255,.3) 0%,transparent 100%),
+    radial-gradient(1.5px 1.5px at 90% 45%,rgba(201,168,76,.6) 0%,transparent 100%),
+    radial-gradient(1px 1px at 10% 50%,rgba(91,191,160,.4) 0%,transparent 100%);
+  pointer-events:none;z-index:0;
+}
+
+.page{position:relative;z-index:1;max-width:390px;margin:0 auto;min-height:100vh;padding:0 0 120px;overflow-x:hidden}
+
+/* ── Header ── */
+.header{padding:48px 24px 32px;text-align:center;position:relative}
+.header-wheel{width:72px;height:72px;margin:0 auto 20px;position:relative}
+.wheel-ring{
+  width:72px;height:72px;border-radius:50%;
+  border:1.5px solid var(--gold-dim);
+  position:absolute;inset:0;
+  animation:spin 30s linear infinite;
+}
+.wheel-dot{
+  position:absolute;width:6px;height:6px;border-radius:50%;
+  background:var(--gold);top:50%;left:50%;
+  transform-origin:0 0;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.wheel-center{
+  position:absolute;inset:20px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,168,76,.2),transparent);
+  border:1px solid rgba(201,168,76,.3);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;
+}
+.header h1{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:600;color:var(--gold);letter-spacing:4px;margin-bottom:8px}
+.header-sub{font-size:12px;color:var(--ink-dim);letter-spacing:2px}
+
+/* ── Section ── */
+.section{padding:0 16px;margin-bottom:32px}
+.section-title{font-size:13px;color:var(--gold-dim);letter-spacing:3px;margin-bottom:16px;padding-left:4px}
+
+/* ── Zodiac grid ── */
+.zodiac-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.zodiac-card{
+  background:var(--bg3);border:1.5px solid rgba(255,255,255,.07);
+  border-radius:12px;padding:14px 4px;
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  cursor:pointer;transition:all .25s;position:relative;overflow:hidden;
+}
+.zodiac-card::after{
+  content:'';position:absolute;inset:0;border-radius:12px;
+  opacity:0;transition:opacity .25s;
+  background:radial-gradient(circle at center,rgba(201,168,76,.15),transparent 70%);
+}
+.zodiac-card:active{transform:scale(.96)}
+.zodiac-card.selected{border-color:var(--gold);background:rgba(201,168,76,.08)}
+.zodiac-card.selected::after{opacity:1}
+.zodiac-emoji{font-size:26px;line-height:1;transition:transform .25s}
+.zodiac-card.selected .zodiac-emoji{transform:scale(1.15)}
+.zodiac-name{font-size:12px;color:var(--ink-dim);transition:color .25s}
+.zodiac-card.selected .zodiac-name{color:var(--gold)}
+
+/* Dragon special */
+.zodiac-card[data-z="dragon"].selected{border-color:#ffd700;box-shadow:0 0 20px rgba(255,215,0,.3)}
+.zodiac-card[data-z="rabbit"].selected{border-color:#c0c0c0;box-shadow:0 0 20px rgba(192,192,192,.2)}
+.zodiac-card[data-z="snake"].selected{border-color:var(--jade);box-shadow:0 0 16px rgba(91,191,160,.25)}
+
+/* ── Year selector ── */
+.year-section{display:none;padding:0 16px;margin-bottom:28px;animation:fadeUp .4s ease}
+.year-section.visible{display:block}
+.year-label{font-size:13px;color:var(--gold-dim);letter-spacing:3px;margin-bottom:12px}
+.year-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}
+.year-scroll::-webkit-scrollbar{display:none}
+.year-chip{
+  flex-shrink:0;padding:8px 16px;border-radius:20px;
+  border:1.5px solid rgba(255,255,255,.1);
+  background:var(--bg3);font-size:13px;color:var(--ink-dim);
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.year-chip.selected{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.1)}
+
+/* ── CTA button ── */
+.cta-wrap{padding:0 16px;margin-bottom:28px}
+.cta-btn{
+  width:100%;padding:16px;border-radius:14px;border:none;
+  background:linear-gradient(135deg,#c9a84c,#e8d08a,#c9a84c);
+  background-size:200% auto;
+  color:#1a1000;font-family:'Noto Serif SC',serif;font-size:15px;font-weight:700;
+  letter-spacing:2px;cursor:pointer;
+  animation:shimmer 3s linear infinite;
+  transition:transform .2s,box-shadow .2s;
+}
+.cta-btn:active{transform:scale(.98)}
+.cta-btn:disabled{opacity:.5;cursor:default;animation:none}
+@keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+
+/* ── Loading ── */
+.loading-stars{display:none;text-align:center;padding:32px 16px;animation:fadeUp .3s ease}
+.loading-stars.visible{display:block}
+.star-row{display:flex;justify-content:center;gap:12px;margin-bottom:16px}
+.ld-star{font-size:22px;opacity:0;animation:starPop .4s ease forwards}
+.ld-star:nth-child(1){animation-delay:.0s}
+.ld-star:nth-child(2){animation-delay:.2s}
+.ld-star:nth-child(3){animation-delay:.4s}
+.ld-star:nth-child(4){animation-delay:.6s}
+.ld-star:nth-child(5){animation-delay:.8s}
+.ld-star:nth-child(6){animation-delay:1.0s}
+.ld-star:nth-child(7){animation-delay:1.2s}
+@keyframes starPop{0%{opacity:0;transform:scale(.5)}60%{opacity:1;transform:scale(1.2)}100%{opacity:1;transform:scale(1)}}
+.loading-text{font-size:13px;color:var(--ink-dim);letter-spacing:2px;animation:pulse 1.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* ── Results ── */
+.results{display:none;padding:0 16px;animation:fadeUp .5s ease}
+.results.visible{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+
+/* Score card */
+.score-card{
+  background:linear-gradient(145deg,var(--bg3),rgba(201,168,76,.06));
+  border:1px solid rgba(201,168,76,.2);border-radius:16px;
+  padding:24px;margin-bottom:20px;text-align:center;
+}
+.score-stars{display:flex;justify-content:center;gap:6px;margin-bottom:12px}
+.score-star{font-size:24px;opacity:0;animation:starPop .4s ease forwards}
+.score-num{font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;color:var(--gold);line-height:1}
+.score-label{font-size:12px;color:var(--ink-dim);letter-spacing:3px;margin-top:6px}
+.score-tag{
+  display:inline-block;margin-top:10px;padding:4px 14px;border-radius:12px;
+  background:rgba(201,168,76,.15);border:1px solid rgba(201,168,76,.3);
+  font-size:12px;color:var(--gold);letter-spacing:2px;
+}
+
+/* Month bar */
+.month-bar{margin-bottom:24px}
+.month-scroll{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none}
+.month-scroll::-webkit-scrollbar{display:none}
+.month-item{
+  flex-shrink:0;width:56px;background:var(--bg3);border-radius:10px;
+  padding:10px 6px;text-align:center;border:1px solid rgba(255,255,255,.06);
+}
+.month-dot{width:8px;height:8px;border-radius:50%;margin:0 auto 6px}
+.month-dot.good{background:var(--gold)}
+.month-dot.mid{background:var(--jade-dim)}
+.month-dot.low{background:var(--red-dim)}
+.month-num{font-size:10px;color:var(--ink-dim);margin-bottom:4px}
+.month-word{font-size:10px;color:var(--ink);line-height:1.3}
+
+/* Dimension cards */
+.dim-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
+.dim-card{background:var(--bg3);border-radius:12px;padding:14px;border:1px solid rgba(255,255,255,.06)}
+.dim-title{font-size:12px;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.dim-score{font-size:22px;font-family:'Cormorant Garamond',serif;color:var(--ink);margin-bottom:6px}
+.dim-bar{height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-bottom:8px;overflow:hidden}
+.dim-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--jade-dim),var(--jade));animation:fillAnim .8s ease forwards}
+@keyframes fillAnim{from{width:0}to{width:var(--w)}}
+.dim-text{font-size:11px;color:var(--ink-dim);line-height:1.6}
+
+/* Lucky grid */
+.lucky-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:24px}
+.lucky-item{
+  background:var(--bg3);border-radius:12px;padding:14px;
+  border:1px solid rgba(255,255,255,.06);
+}
+.lucky-label{font-size:10px;color:var(--ink-dim);letter-spacing:2px;margin-bottom:6px}
+.lucky-value{font-size:16px;color:var(--gold);font-weight:500}
+
+/* Locked card */
+.locked-card{
+  position:relative;background:var(--bg3);border-radius:16px;
+  padding:24px;margin-bottom:24px;border:1px solid rgba(201,168,76,.15);
+  overflow:hidden;
+}
+.locked-blur{filter:blur(5px);pointer-events:none;user-select:none;margin-bottom:16px}
+.locked-overlay{
+  position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  background:rgba(10,10,18,.7);backdrop-filter:blur(2px);
+}
+.locked-icon{font-size:28px;margin-bottom:10px}
+.locked-cta{
+  padding:12px 28px;border-radius:10px;border:none;
+  background:linear-gradient(135deg,var(--gold),var(--gold-light));
+  color:#1a1000;font-family:'Noto Serif SC',serif;font-size:14px;font-weight:700;
+  cursor:pointer;letter-spacing:1px;
+}
+
+/* Events */
+.events-list{margin-bottom:20px}
+.event-item{
+  display:flex;gap:14px;padding:14px 0;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.event-date{flex-shrink:0;width:48px;text-align:center;padding:6px 4px;
+  background:rgba(201,168,76,.08);border-radius:8px;
+  font-size:11px;color:var(--gold);line-height:1.5;
+}
+.event-text{font-size:13px;color:var(--ink);line-height:1.6;padding-top:2px}
+
+/* Bottom bar */
+.bottom-bar{
+  position:fixed;bottom:0;left:50%;transform:translateX(-50%);
+  width:100%;max-width:390px;
+  padding:16px 16px calc(16px + env(safe-area-inset-bottom));
+  background:linear-gradient(to top,var(--bg) 70%,transparent);
+  z-index:100;
+}
+.bottom-link{
+  display:block;width:100%;padding:15px;border-radius:14px;
+  background:rgba(91,191,160,.12);border:1.5px solid rgba(91,191,160,.3);
+  color:var(--jade);font-family:'Noto Serif SC',serif;font-size:14px;
+  text-align:center;letter-spacing:2px;text-decoration:none;
+  transition:all .2s;
+}
+.bottom-link:active{background:rgba(91,191,160,.2)}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-wheel">
+      <div class="wheel-ring" id="wheelRing"></div>
+      <div class="wheel-center">☯</div>
+    </div>
+    <h1>生肖运势</h1>
+    <p class="header-sub">千年星命 · 十二灵兽守护</p>
+  </div>
+
+  <!-- Zodiac selector -->
+  <div class="section">
+    <div class="section-title">— 选择您的生肖 —</div>
+    <div class="zodiac-grid" id="zodiacGrid">
+      <div class="zodiac-card" data-z="rat" data-years="1948,1960,1972,1984,1996,2008,2020" onclick="selectZodiac(this)">
+        <div class="zodiac-emoji">🐭</div><div class="zodiac-name">鼠</div>
+      </div>
+      <div class="zodiac-card" data-z="ox" data-years="1949,1961,1973,1985,1997,2009,2021" onclick="selectZodiac(this)">
+        <div class="zodiac-emoji">🐂</div><div class="zodiac-name">牛</div>
+      </div>
+      <div class="zodiac-card" data-z="tiger" data-years="1950,1962,1974,1986,1998,2010,2022" onclick="selectZodiac(this)">
+        <div class="zodiac-emoji">🐯</div><div class="zodiac-name">虎</div>
+      </div>
+      <div class="zodiac-card" data-z="rabbit" data-years="1951,1963,1975,1987,1999,2011,2023" onclick="selectZodiac(this)">
+        <div class="zodiac-emoji">🐰</div><div class="zodiac-name">兔</div>
+      </div>
+      <div class="zodiac-card" data-z="dragon" data-years="1952,1964,1976,1988,2000,2012,2024" onclick="selectZodiac(this)">
+        <div class="zodiac-emoji">🐲</div><div class="zodiac-name">龙</div>
+      </div>
+      <div class="zodiac-card" data-z="snake" data-years="1953,1965,1977,1989,2001,2013,2025" onclick="selectZodiac(this)">
+        <div class="zodiac-emoji">🐍</div><div class="zodiac-name">蛇</div>
+      </div>
+      <div class="zodiac-card" data-z="horse" data-years="1954,1966,1978,1990,2002,2014,2026" onclick="selectZodiac(this)">
+        <div class="zodiac-emoji">🐴</div><div class="zodiac-name">马</div>
+      </div>
+      <div class="zodiac-card" data-z="goat" data-years="1955,1967,1979,1991,2003,2015" onclick="selectZodiac(this)">
+        <div class="zodiac-emoji">🐑</div><div class="zodiac-name">羊</div>
+      </div>
+      <div class="zodiac-card" data-z="monkey" data-years="1956,1968,1980,1992,2004,2016" onclick="selectZodiac(this)">
+        <div class="zodiac-emoji">🐵</div><div class="zodiac-name">猴</div>
+      </div>
+      <div class="zodiac-card" data-z="rooster" data-years="1957,1969,1981,1993,2005,2017" onclick="selectZodiac(this)">
+        <div class="zodiac-emoji">🐓</div><div class="zodiac-name">鸡</div>
+      </div>
+      <div class="zodiac-card" data-z="dog" data-years="1958,1970,1982,1994,2006,2018" onclick="selectZodiac(this)">
+        <div class="zodiac-emoji">🐶</div><div class="zodiac-name">狗</div>
+      </div>
+      <div class="zodiac-card" data-z="pig" data-years="1959,1971,1983,1995,2007,2019" onclick="selectZodiac(this)">
+        <div class="zodiac-emoji">🐷</div><div class="zodiac-name">猪</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Year selector -->
+  <div class="year-section" id="yearSection">
+    <div class="year-label">— 确认您的出生年份 —</div>
+    <div class="year-scroll" id="yearScroll"></div>
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-wrap" id="ctaWrap" style="display:none">
+    <button class="cta-btn" id="ctaBtn" onclick="startReading()">查看 2026 年完整运势 →</button>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-stars" id="loadingEl">
+    <div class="star-row">
+      <span class="ld-star">✦</span><span class="ld-star">⋆</span><span class="ld-star">✧</span>
+      <span class="ld-star">✦</span><span class="ld-star">⋆</span><span class="ld-star">✧</span><span class="ld-star">✦</span>
+    </div>
+    <p class="loading-text">星盘推演中 · 请静心片刻…</p>
+  </div>
+
+  <!-- Results -->
+  <div class="results" id="resultsEl">
+
+    <div id="animalBanner" style="text-align:center;padding:0 16px 20px;font-size:13px;color:var(--ink-dim);letter-spacing:2px"></div>
+
+    <!-- Score -->
+    <div class="section-title" style="padding:0 16px;margin-bottom:12px">— 2026年总运势 —</div>
+    <div style="padding:0 16px;margin-bottom:20px">
+      <div class="score-card">
+        <div class="score-stars" id="scoreStars"></div>
+        <div class="score-num" id="scoreNum">—</div>
+        <div class="score-label">年度综合运势指数</div>
+        <div class="score-tag" id="scoreTag">—</div>
+      </div>
+    </div>
+
+    <!-- Monthly -->
+    <div class="section-title" style="padding:0 16px;margin-bottom:12px">— 月份运势 —</div>
+    <div style="padding:0 16px;margin-bottom:20px">
+      <div class="month-scroll" id="monthScroll"></div>
+    </div>
+
+    <!-- Dimensions -->
+    <div class="section-title" style="padding:0 16px;margin-bottom:12px">— 四大维度 —</div>
+    <div style="padding:0 16px">
+      <div class="dim-grid" id="dimGrid"></div>
+    </div>
+
+    <!-- Lucky -->
+    <div class="section-title" style="padding:0 16px;margin-bottom:12px">— 幸运元素 —</div>
+    <div style="padding:0 16px;margin-bottom:8px">
+      <div class="lucky-grid" id="luckyGrid"></div>
+    </div>
+
+    <!-- Locked deep read -->
+    <div style="padding:0 16px;margin-bottom:16px">
+      <div class="section-title" style="margin-bottom:12px">— 深度解读 —</div>
+      <div class="locked-card">
+        <div class="locked-blur">
+          <div style="font-size:13px;line-height:2;color:var(--ink-dim)">
+            本命年影响分析···贵人方位指引···化煞转运关键月···
+            桃花运详细走势···财库位开启时机···
+          </div>
+        </div>
+        <div class="locked-overlay">
+          <div class="locked-icon">🔮</div>
+          <div style="font-size:13px;color:var(--ink-dim);margin-bottom:14px;letter-spacing:1px">解锁完整生肖报告</div>
+          <button class="locked-cta">$9.9 · 立即解锁</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2026 Events locked -->
+    <div style="padding:0 16px;margin-bottom:16px">
+      <div class="section-title" style="margin-bottom:12px">— 2026 流年大事 —</div>
+      <div class="locked-card" style="padding-bottom:16px">
+        <div class="events-list locked-blur" id="eventsListBlur">
+          <div class="event-item">
+            <div class="event-date">3月<br>春</div>
+            <div class="event-text">重要机遇窗口期，宜大胆出击</div>
+          </div>
+          <div class="event-item">
+            <div class="event-date">6月<br>夏</div>
+            <div class="event-text">感情/合作关键节点，慎防误解</div>
+          </div>
+          <div class="event-item">
+            <div class="event-date">9月<br>秋</div>
+            <div class="event-text">财运旺盛期，适合投资布局</div>
+          </div>
+          <div class="event-item" style="border-bottom:none">
+            <div class="event-date">12月<br>冬</div>
+            <div class="event-text">年末收成季，清算过往开新篇</div>
+          </div>
+        </div>
+        <div class="locked-overlay">
+          <div class="locked-icon">📅</div>
+          <div style="font-size:13px;color:var(--ink-dim);margin-bottom:14px;letter-spacing:1px">解锁精准流年大事</div>
+          <button class="locked-cta">$9.9 · 立即解锁</button>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /results -->
+
+</div><!-- /page -->
+
+<!-- Bottom bar -->
+<div class="bottom-bar">
+  <a class="bottom-link" href="bazi.html">生成专属命盘 · 结合八字精算 →</a>
+</div>
+
+<script>
+// ── Zodiac data ──────────────────────────────────────────────────────────────
+const ZD = {
+  rat:     {name:'鼠',emoji:'🐭',score:82,tag:'贵人扶持年',color:'#c9a84c',finance:78,love:85,health:72,career:88,lucky:{color:'墨绿·金色',num:'3 · 9',dir:'北方·东南',stone:'黑曜石'}},
+  ox:      {name:'牛',emoji:'🐂',score:76,tag:'稳中求胜年',color:'#8b9b6e',finance:80,love:65,health:82,career:79,lucky:{color:'黄色·棕色',num:'1 · 6',dir:'西南·正北',stone:'黄水晶'}},
+  tiger:   {name:'虎',emoji:'🐯',score:91,tag:'运势大开年',color:'#c9820a',finance:88,love:90,health:86,career:92,lucky:{color:'橙色·金色',num:'3 · 7',dir:'正东·正南',stone:'虎眼石'}},
+  rabbit:  {name:'兔',emoji:'🐰',score:84,tag:'桃花旺运年',color:'#c0c0c0',finance:72,love:95,health:80,career:75,lucky:{color:'粉色·银色',num:'3 · 4',dir:'东方·东南',stone:'粉水晶'}},
+  dragon:  {name:'龙',emoji:'🐲',score:96,tag:'天命大吉年',color:'#ffd700',finance:94,love:88,career:97,health:85,lucky:{color:'金色·黄色',num:'1 · 7',dir:'东南·正东',stone:'黄金发晶'}},
+  snake:   {name:'蛇',emoji:'🐍',score:79,tag:'暗藏玄机年',color:'#5bbfa0',finance:76,love:72,health:90,career:81,lucky:{color:'墨绿·红色',num:'2 · 8',dir:'正南·东北',stone:'碧玺'}},
+  horse:   {name:'马',emoji:'🐴',score:87,tag:'马到功成年',color:'#c94c4c',finance:85,love:80,health:78,career:90,lucky:{color:'红色·紫色',num:'3 · 9',dir:'正南·东南',stone:'红玉髓'}},
+  goat:    {name:'羊',emoji:'🐑',score:73,tag:'韬光养晦年',color:'#6b8e23',finance:68,love:82,health:75,career:70,lucky:{color:'绿色·红色',num:'3 · 4',dir:'正东·正南',stone:'绿幽灵'}},
+  monkey:  {name:'猴',emoji:'🐵',score:88,tag:'灵机一动年',color:'#9b59b6',finance:90,love:78,health:83,career:88,lucky:{color:'金色·白色',num:'4 · 9',dir:'北方·西北',stone:'月光石'}},
+  rooster: {name:'鸡',emoji:'🐓',score:80,tag:'破旧立新年',color:'#e74c3c',finance:82,love:70,health:77,career:84,lucky:{color:'金色·棕色',num:'5 · 7',dir:'西方·西南',stone:'太阳石'}},
+  dog:     {name:'狗',emoji:'🐶',score:83,tag:'忠信吉祥年',color:'#e67e22',finance:75,love:88,health:80,career:82,lucky:{color:'红色·绿色',num:'3 · 9',dir:'正东·正南',stone:'绿松石'}},
+  pig:     {name:'猪',emoji:'🐷',score:85,tag:'福星高照年',color:'#e91e8c',finance:86,love:84,health:79,career:83,lucky:{color:'黄色·灰色',num:'2 · 6',dir:'东北·北方',stone:'紫水晶'}},
+};
+
+const DIM_TEXTS = {
+  finance:{high:'财星入命，偏财运旺，把握三月与九月投资良机。',mid:'财运平稳，宜守成为主，避免冲动消费。',low:'财运略显压力，节流为上，静待时机。'},
+  love:{high:'桃花朵朵开，单身者有机缘，已婚者感情升温。',mid:'感情平稳推进，用心经营是关键。',low:'感情需多沟通，避免误解积累。'},
+  health:{high:'精力充沛，适合开展新运动习惯，体检指标良好。',mid:'注意作息规律，保持运动习惯，防季节性不适。',low:'需关注睡眠与饮食，情绪管理尤为重要。'},
+  career:{high:'事业鸿图大展，贵人相助，升职加薪均有望。',mid:'工作稳中有进，踏实积累是今年主旋律。',low:'职场有小阻，保持低调蓄力，年末反转。'},
+};
+
+const MONTH_DATA = {
+  rat:     ['好','好','中','好','中','差','好','中','好','好','中','好'],
+  ox:      ['中','好','好','中','中','好','中','差','中','好','好','中'],
+  tiger:   ['好','好','好','中','好','好','好','好','中','好','好','好'],
+  rabbit:  ['好','中','好','好','差','好','中','好','好','中','好','好'],
+  dragon:  ['好','好','好','好','好','中','好','好','好','好','好','好'],
+  snake:   ['中','好','中','好','好','中','差','中','好','好','中','好'],
+  horse:   ['好','中','好','好','好','好','中','好','中','好','好','好'],
+  goat:    ['差','中','好','中','好','好','中','中','好','中','好','中'],
+  monkey:  ['好','好','中','好','好','好','中','好','好','好','差','好'],
+  rooster: ['中','好','好','中','好','中','好','差','好','好','中','好'],
+  dog:     ['好','好','中','好','好','中','好','好','中','好','好','好'],
+  pig:     ['好','好','好','中','好','好','好','中','好','好','好','好'],
+};
+
+const MONTH_WORDS = {
+  好:['顺风顺水','贵人临门','大展宏图','财星高照','喜事连连','诸事顺遂'],
+  中:['平稳推进','蓄力待发','步步为营','稳中求胜','韬光养晦','循序渐进'],
+  差:['谨慎为上','静待时机','低调蓄力','守成护本','以静制动','柔以克刚'],
+};
+
+let selectedZ = null;
+let selectedYear = null;
+
+function selectZodiac(el) {
+  document.querySelectorAll('.zodiac-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedZ = el.dataset.z;
+
+  const years = el.dataset.years.split(',');
+  const ys = document.getElementById('yearScroll');
+  ys.innerHTML = years.map(y =>
+    `<div class="year-chip" data-y="${y}" onclick="selectYear(this)">${y}</div>`
+  ).join('');
+
+  document.getElementById('yearSection').classList.add('visible');
+  document.getElementById('ctaWrap').style.display = 'none';
+  document.getElementById('resultsEl').classList.remove('visible');
+  document.getElementById('loadingEl').classList.remove('visible');
+  selectedYear = null;
+
+  ys.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function selectYear(el) {
+  document.querySelectorAll('.year-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedYear = el.dataset.y;
+  document.getElementById('ctaWrap').style.display = 'block';
+}
+
+function startReading() {
+  if (!selectedZ || !selectedYear) return;
+  document.getElementById('ctaWrap').style.display = 'none';
+  document.getElementById('loadingEl').classList.add('visible');
+
+  setTimeout(() => {
+    document.getElementById('loadingEl').classList.remove('visible');
+    buildResults();
+    document.getElementById('resultsEl').classList.add('visible');
+    document.getElementById('resultsEl').scrollIntoView({behavior:'smooth',block:'start'});
+  }, 2200);
+}
+
+function buildResults() {
+  const d = ZD[selectedZ];
+  document.getElementById('animalBanner').textContent = `${d.emoji} 属${d.name} · ${selectedYear}年 · 2026年运势`;
+
+  // Stars
+  const starsEl = document.getElementById('scoreStars');
+  const full = Math.floor(d.score / 20);
+  starsEl.innerHTML = Array.from({length:5},(_,i) =>
+    `<span class="score-star" style="animation-delay:${i*.15}s;color:${i<full?'#c9a84c':'rgba(255,255,255,.2)'}">${i<full?'★':'☆'}</span>`
+  ).join('');
+  document.getElementById('scoreNum').textContent = d.score + '分';
+  document.getElementById('scoreTag').textContent = d.tag;
+
+  // Months
+  const months = MONTH_DATA[selectedZ];
+  const monthEl = document.getElementById('monthScroll');
+  const cn = ['一','二','三','四','五','六','七','八','九','十','十一','十二'];
+  monthEl.innerHTML = months.map((m,i) => {
+    const words = MONTH_WORDS[m];
+    const word = words[(i + d.score) % words.length];
+    return `<div class="month-item">
+      <div class="month-dot ${m==='好'?'good':m==='中'?'mid':'low'}"></div>
+      <div class="month-num">${cn[i]}月</div>
+      <div class="month-word">${word.slice(0,2)}</div>
+    </div>`;
+  }).join('');
+
+  // Dimensions
+  const dims = [
+    {key:'finance',icon:'💰',label:'财运',val:d.finance},
+    {key:'love',icon:'💕',label:'感情',val:d.love},
+    {key:'health',icon:'🌿',label:'健康',val:d.health},
+    {key:'career',icon:'✦',label:'事业',val:d.career},
+  ];
+  document.getElementById('dimGrid').innerHTML = dims.map(dim => {
+    const level = dim.val>=85?'high':dim.val>=72?'mid':'low';
+    return `<div class="dim-card">
+      <div class="dim-title"><span>${dim.icon}</span>${dim.label}</div>
+      <div class="dim-score">${dim.val}分</div>
+      <div class="dim-bar"><div class="dim-fill" style="--w:${dim.val}%"></div></div>
+      <div class="dim-text">${DIM_TEXTS[dim.key][level]}</div>
+    </div>`;
+  }).join('');
+
+  // Lucky
+  const lk = d.lucky;
+  const luckyItems = [
+    {label:'幸运色',value:lk.color,icon:'🎨'},
+    {label:'幸运数字',value:lk.num,icon:'🔢'},
+    {label:'幸运方位',value:lk.dir,icon:'🧭'},
+    {label:'幸运石',value:lk.stone,icon:'💎'},
+  ];
+  document.getElementById('luckyGrid').innerHTML = luckyItems.map(li =>
+    `<div class="lucky-item">
+      <div class="lucky-label">${li.icon} ${li.label}</div>
+      <div class="lucky-value">${li.value}</div>
+    </div>`
+  ).join('');
+}
+
+// Build wheel dots
+const ring = document.getElementById('wheelRing');
+for(let i=0;i<12;i++){
+  const dot = document.createElement('div');
+  dot.className = 'wheel-dot';
+  const angle = (i/12)*360 * Math.PI/180;
+  const r = 32;
+  dot.style.cssText = `left:${36+r*Math.cos(angle-Math.PI/2)}px;top:${36+r*Math.sin(angle-Math.PI/2)}px;transform:translate(-50%,-50%);width:${i%3===0?7:4}px;height:${i%3===0?7:4}px;opacity:${i%3===0?1:.4}`;
+  ring.appendChild(dot);
+}
+</script>
+</body>
+</html>
