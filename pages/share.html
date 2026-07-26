@@ -3,32 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#0d1a14">
+<meta name="theme-color" content="#0e0a04">
 <title>善缘 · 我的命盘</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root {
-  --jade-deep:   #3d9e82;
-  --jade-main:   #5bbfa0;
-  --jade-mid:    #8dd9bf;
+:root {  --bg: #0e0a04; --card: #170e06; --mid: #1f1408;
+  --gold: #c9a84c; --gold-light: #e8d08a; --gold-deep: #8a6420;
+  --jade: #5bbfa0; --jade-mid: #8dd9bf;
+  --amber: #c9820a; --amber-light: #e8b86a;
+  --ink-text: rgba(255,245,220,0.85);
+  --sub-text: rgba(255,245,220,0.45);
+  --border: rgba(201,168,76,0.12);
+  --border-light: rgba(201,168,76,0.2);
+  /* backward compat */
+  --jade-main: var(--jade);
+  --jade-deep: #3d9e82;
   --jade-bright: #c8f0e0;
-  --gold:        #c9a84c;
-  --gold-light:  #e8d08a;
-  --gold-deep:   #a07830;
-  --ink:         #1a1a18;
-  --bg:          #FAFAF8;
-  --night:       #0d1a14;
-  --night-mid:   #152b1e;
+  --jade-glow: rgba(141,217,191,0.35);
+  --ink: var(--ink-text);
+  --ink-mid: var(--ink-text);
+  --ink-light: var(--sub-text);
+  --bg-card: var(--card);
+  --night: #0d1a14;
+  --night-mid: #152b1e;
 }
 
 html, body {
   min-height: 100%;
-  background: var(--night);
+  background: var(--bg);
   font-family: 'Noto Serif SC', serif;
-  color: var(--bg);
+  color: var(--ink-text);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -39,12 +46,14 @@ body {
   padding: 0 0 60px;
 }
 
-/* ── Starfield bg ── */
+/* ── Glow bg ── */
 body::before {
   content: '';
-  position: fixed;
-  inset: 0;
-  background-image:
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
     radial-gradient(1px 1px at 18% 12%, rgba(255,255,255,0.55) 0%, transparent 100%),
     radial-gradient(1px 1px at 73% 8%,  rgba(255,255,255,0.4) 0%, transparent 100%),
     radial-gradient(1.5px 1.5px at 41% 27%, rgba(255,255,255,0.35) 0%, transparent 100%),
@@ -85,7 +94,7 @@ body::before {
 .header-label {
   font-size: 11px;
   letter-spacing: 0.35em;
-  color: rgba(201,168,76,0.6);
+  color: var(--sub-text);
   font-weight: 300;
 }
 
@@ -104,7 +113,7 @@ body::before {
   border-radius: 16px;
   overflow: hidden;
   position: relative;
-  background: var(--night-mid);
+  background: var(--card);
   border: 1px solid rgba(201,168,76,0.22);
   box-shadow:
     0 0 0 1px rgba(91,191,160,0.08),
@@ -178,7 +187,7 @@ body::before {
   position: absolute;
   width: 20px; height: 20px;
   border-radius: 50%;
-  background: var(--night-mid);
+  background: var(--card);
   top: 50%; left: 50%;
   transform: translate(-50%,-50%);
   box-shadow: inset 0 1px 4px rgba(0,0,0,0.3);
@@ -319,14 +328,14 @@ body::before {
 .fate-score-label {
   font-size: 10px;
   letter-spacing: 0.2em;
-  color: rgba(201,168,76,0.6);
+  color: var(--sub-text);
 }
 
 .fate-score-bar {
   flex: 1;
   margin: 0 14px;
   height: 3px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,245,220,0.08);
   border-radius: 2px;
   overflow: hidden;
 }
@@ -380,7 +389,7 @@ body::before {
   align-items: center;
   justify-content: space-between;
   padding-top: 18px;
-  border-top: 1px solid rgba(255,255,255,0.06);
+  border-top: 1px solid var(--border);
 }
 
 .card-footer-brand {
@@ -459,7 +468,7 @@ body::before {
 .share-hint {
   text-align: center;
   font-size: 10px;
-  color: rgba(255,255,255,0.25);
+  color: var(--sub-text);
   letter-spacing: 0.1em;
   margin-top: 4px;
 }

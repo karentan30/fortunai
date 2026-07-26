@@ -3,34 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<meta name="theme-color" content="#100a1f">
+<meta name="theme-color" content="#0e0a04">
 <title>善缘 · 仙家</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-:root {
-  --purple:     #7a4fa8;
+:root {  --bg: #0e0a04; --card: #170e06; --mid: #1f1408;
+  --gold: #c9a84c; --gold-light: #e8d08a; --gold-deep: #8a6420;
+  --jade: #5bbfa0; --jade-mid: #8dd9bf;
+  --amber: #c9820a; --amber-light: #e8b86a;
+  --ink-text: rgba(255,245,220,0.85);
+  --sub-text: rgba(255,245,220,0.45);
+  --border: rgba(201,168,76,0.12);
+  --border-light: rgba(201,168,76,0.2);
+  /* backward compat */
+  --jade-main: var(--jade);
+  --jade-deep: #3d9e82;
+  --jade-bright: #c8f0e0;
+  --jade-glow: rgba(141,217,191,0.35);
+  --ink: var(--ink-text);
+  --ink-mid: var(--ink-text);
+  --ink-light: var(--sub-text);
+  --bg-card: var(--card);
+  --purple: #7a4fa8;
   --purple-mid: #9b6fc4;
-  --purple-light:#c4a0e0;
-  --amber:      #c9820a;
-  --amber-light:#e8b86a;
-  --jade-main:  #5bbfa0;
-  --jade-mid:   #8dd9bf;
-  --gold:       #c9a84c;
-  --gold-light: #e8d08a;
-  --ink:        #1a1a18;
-  --bg:         #FAFAF8;
-  --night:      #100a1f;
-  --night-mid:  #1a1030;
+  --purple-light: #c4a0e0;
+  --night: #100a1f;
+  --night-mid: #1a1030;
   --night-card: #140e26;
 }
 
 html, body {
-  background: var(--night);
+  background: var(--bg);
   font-family: 'Noto Serif SC', serif;
-  color: #f0eaff;
+  color: var(--ink-text);
   -webkit-font-smoothing: antialiased;
 }
 body {
@@ -45,8 +53,7 @@ body::before {
   content: '';
   position: fixed; inset: 0;
   background:
-    radial-gradient(ellipse at 50% 0%, rgba(122,79,168,0.22) 0%, transparent 55%),
-    radial-gradient(ellipse at 20% 100%, rgba(201,130,10,0.08) 0%, transparent 40%);
+    radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 50%);
   pointer-events: none; z-index: 0;
 }
 
@@ -54,7 +61,7 @@ body::before {
   position: fixed; top: 16px; left: 16px; z-index: 99;
   background: none; border: none;
   font-family: 'Noto Serif SC', serif; font-size: 13px;
-  color: rgba(196,160,224,0.7); letter-spacing: 0.06em; cursor: pointer; padding: 4px 0;
+  color: var(--gold); letter-spacing: 0.06em; cursor: pointer; padding: 4px 0;
 }
 
 /* ── Header ── */
@@ -66,20 +73,20 @@ body::before {
 
 .header-title {
   font-size: 20px; font-weight: 400;
-  letter-spacing: 0.22em; color: #f0eaff; margin-bottom: 6px;
+  letter-spacing: 0.22em; color: var(--ink-text); margin-bottom: 6px;
 }
 .header-sub {
   font-family: 'Cormorant Garamond', serif; font-style: italic;
   font-size: 11px; letter-spacing: 0.26em;
-  color: rgba(196,160,224,0.55); margin-bottom: 6px;
+  color: var(--sub-text); margin-bottom: 6px;
 }
 .header-note {
   font-size: 10px; letter-spacing: 0.08em;
-  color: rgba(240,234,255,0.35); margin-bottom: 14px;
+  color: var(--sub-text); margin-bottom: 14px;
 }
 .purple-line {
   width: 60px; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--purple-mid), transparent);
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
   margin: 0 auto;
 }
 
@@ -91,8 +98,8 @@ body::before {
 }
 
 .family-card {
-  background: var(--night-card);
-  border: 1.5px solid rgba(122,79,168,0.15);
+  background: var(--card);
+  border: 1.5px solid var(--border);
   border-radius: 8px;
   padding: 12px 6px 10px;
   text-align: center;
@@ -101,8 +108,8 @@ body::before {
   display: flex; flex-direction: column; align-items: center; gap: 5px;
 }
 .family-card.active {
-  border-color: var(--purple-mid);
-  background: rgba(122,79,168,0.15);
+  border-color: var(--gold);
+  background: var(--mid);
 }
 
 .family-glyph {
@@ -113,11 +120,11 @@ body::before {
 
 .family-name {
   font-size: 11px; letter-spacing: 0.04em;
-  color: rgba(240,234,255,0.75);
+  color: var(--ink-text);
 }
 
 .family-type {
-  font-size: 9px; color: rgba(201,130,10,0.6);
+  font-size: 9px; color: var(--sub-text);
   letter-spacing: 0.04em;
 }
 
@@ -125,8 +132,8 @@ body::before {
 .detail-wrap {
   position: relative; z-index: 1;
   margin: 0 14px 12px;
-  background: var(--night-card);
-  border: 1px solid rgba(122,79,168,0.2);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 16px;
 }
@@ -138,24 +145,24 @@ body::before {
 .detail-emblem {
   width: 44px; height: 44px;
   border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, rgba(196,160,224,0.8), rgba(122,79,168,0.6) 50%, rgba(74,41,112,1));
+  background: radial-gradient(circle at 35% 30%, rgba(201,168,76,0.3), var(--mid) 50%, var(--card));
   display: flex; align-items: center; justify-content: center;
   font-family: 'Noto Serif SC', serif;
-  font-size: 22px; color: rgba(255,255,255,0.88); font-weight: 300;
+  font-size: 22px; color: var(--ink-text); font-weight: 300;
   flex-shrink: 0;
   box-shadow: 0 4px 16px rgba(122,79,168,0.4);
 }
 
 .detail-info { flex: 1; }
-.detail-name { font-size: 16px; letter-spacing: 0.14em; color: #f0eaff; }
+.detail-name { font-size: 16px; letter-spacing: 0.14em; color: var(--ink-text); }
 .detail-role {
   font-family: 'Cormorant Garamond', serif; font-style: italic;
-  font-size: 10px; letter-spacing: 0.18em; color: rgba(201,130,10,0.65);
+  font-size: 10px; letter-spacing: 0.18em; color: var(--sub-text);
   margin-top: 2px;
 }
 
 .detail-desc {
-  font-size: 11px; color: rgba(240,234,255,0.55);
+  font-size: 11px; color: var(--sub-text);
   letter-spacing: 0.04em; line-height: 1.8;
 }
 
@@ -165,10 +172,10 @@ body::before {
   width: 100%; display: flex; align-items: center; gap: 10px;
   padding: 0 14px 10px;
 }
-.sec-head span { font-size: 11px; letter-spacing: 0.2em; color: var(--amber-light); white-space: nowrap; opacity: 0.7; }
+.sec-head span { font-size: 11px; letter-spacing: 0.2em; color: var(--gold); white-space: nowrap; }
 .sec-head::before, .sec-head::after {
   content: ''; flex: 1; height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(201,130,10,0.25));
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.15));
 }
 .sec-head::after { background: linear-gradient(90deg, rgba(201,130,10,0.25), transparent); }
 
@@ -179,22 +186,22 @@ body::before {
 }
 
 .svc-row {
-  background: var(--night-card);
-  border: 1px solid rgba(122,79,168,0.12);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 8px;
   padding: 12px 14px;
   display: flex; align-items: center; justify-content: space-between;
   cursor: pointer; transition: border-color 0.2s;
 }
-.svc-row:active { border-color: var(--purple-mid); }
+.svc-row:active { border-color: var(--gold); }
 
 .svc-left { display: flex; flex-direction: column; gap: 2px; }
-.svc-name { font-size: 13px; letter-spacing: 0.08em; color: #f0eaff; }
-.svc-desc { font-size: 10px; color: rgba(240,234,255,0.4); letter-spacing: 0.04em; }
+.svc-name { font-size: 13px; letter-spacing: 0.08em; color: var(--ink-text); }
+.svc-desc { font-size: 10px; color: var(--sub-text); letter-spacing: 0.04em; }
 
 .svc-price {
   font-family: 'Cormorant Garamond', serif;
-  font-size: 18px; color: var(--amber-light);
+  font-size: 18px; color: var(--gold);
 }
 .svc-unit { font-family: 'Noto Serif SC', serif; font-size: 10px; }
 
@@ -206,7 +213,7 @@ body::before {
 
 .btn-purple {
   width: 100%; padding: 15px 0;
-  background: linear-gradient(135deg, #4a2970, var(--purple), var(--purple-light), var(--purple));
+  background: linear-gradient(135deg, var(--gold-deep), var(--gold), var(--gold-light), var(--gold));
   border: none; border-radius: 4px;
   color: rgba(240,234,255,0.95);
   font-family: 'Noto Serif SC', serif;
@@ -219,7 +226,7 @@ body::before {
 
 .cta-note {
   text-align: center; font-size: 10px;
-  color: rgba(240,234,255,0.22); letter-spacing: 0.08em; margin-top: 10px;
+  color: var(--sub-text); letter-spacing: 0.08em; margin-top: 10px;
 }
 
 /* Families data */

@@ -15,7 +15,7 @@
   --jade: #5bbfa0; --jade-mid: #8dd9bf;
   --amber: #c9820a; --amber-light: #e8b86a;
   --ink-text: rgba(255,245,220,0.85);
-  --sub-text: rgba(255,245,220,0.45);
+  --sub-text: rgba(255,245,220,0.58);
 }
 html, body { background: var(--bg); font-family: 'Noto Serif SC', serif; color: var(--ink-text); -webkit-font-smoothing: antialiased; }
 body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 120px; }
@@ -237,7 +237,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 <script>
 // Init year/day selectors
 var ySel = document.getElementById('year');
-for (var y = 2006; y >= 1940; y--) ySel.innerHTML += '<option value="'+y+'">'+y+'年</option>';
+for (var y = 2010; y >= 1920; y--) ySel.innerHTML += '<option value="'+y+'">'+y+'年</option>';
 var dSel = document.getElementById('day');
 for (var d = 1; d <= 31; d++) dSel.innerHTML += '<option value="'+d+'">'+d+'日</option>';
 
@@ -394,7 +394,7 @@ function showReport() {
      tip:'最佳结缘时段：'+['春天（2-4月）','夏天（6-8月）','金秋（9-11月）','冬末（1月/12月）'][rng(seed+7,4)]},
     {icon:'康', title:'健康格局', color:'rgba(91,191,160,0.6)',
      score: 65+rng(seed+4,30),
-     text:'命盘整体健康宫'+（rng(seed+8,2)?'平稳，无重大凶星入驻。总体体质较好，但需注意':' 中年后需特别关注。建议定期检查，注意')+['脾胃消化系统','肝胆循环系统','心肺呼吸系统','肾脏泌尿系统'][rng(seed+9,4)]+'。保持规律作息是最有效的开运方式。',
+     text:'命盘整体健康宫'+(rng(seed+8,2)?'平稳，无重大凶星入驻。总体体质较好，但需注意':' 中年后需特别关注。建议定期检查，注意')+['脾胃消化系统','肝胆循环系统','心肺呼吸系统','肾脏泌尿系统'][rng(seed+9,4)]+'。保持规律作息是最有效的开运方式。',
      tip:'健康开运色：'+['绿色·青色','红色·橙色','黄色·土色','白色·银色','蓝色·黑色'][Object.keys(elemCount).indexOf(Object.keys(elemCount).sort(function(a,b){return elemCount[a]-elemCount[b];})[0])]}
   ];
 
@@ -426,8 +426,27 @@ function showReport() {
   reportEl.classList.add('show');
 
   if (tier === 'basic') {
-    reportEl.innerHTML += '<div class="sticky-cta" id="stickyCta"><div class="cta-row"><div class="cta-desc">解锁完整命盘 · 流月大运·人生时间点</div><div class="cta-price">$19.9</div></div><button class="btn-unlock">立即解锁完整命盘</button></div>';
+    reportEl.innerHTML += '<div class="sticky-cta" id="stickyCta"><div class="cta-row"><div class="cta-desc">解锁完整命盘 · 流月大运·人生时间点</div><div class="cta-price">$19.9</div></div><button class="btn-unlock" onclick="createCheckout(this, \'full\', 19.9)">立即解锁完整命盘</button></div>';
   }
+}
+
+function createCheckout(btn, tier, price) {
+  btn.disabled = true;
+  btn.textContent = '跳转支付…';
+  fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      product: 'bazi',
+      tier: tier,
+      price: price
+    })
+  }).then(function(r){ return r.json(); }).then(function(data){
+    if(data.url) window.location.href = data.url;
+    else { alert('跳转失败，请重试'); btn.disabled = false; btn.textContent = '立即解锁完整命盘'; }
+  }).catch(function(){
+    alert('网络异常，请重试'); btn.disabled = false; btn.textContent = '立即解锁完整命盘';
+  });
 }
 
 function toggleFortune(head) {

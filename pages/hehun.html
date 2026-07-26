@@ -199,7 +199,7 @@ body::before{content:'';position:fixed;inset:0;
         <script>for(let d=1;d<=31;d++) document.write(`<option value="${d}">${d}日</option>`)</script>
       </select>
       <select class="mini-select" id="aHour">
-        <option value="0">时辰（选填）</option>
+        <option value="">时辰（选填）</option>
         <option value="0">子时(23-1)</option><option value="1">丑时(1-3)</option>
         <option value="2">寅时(3-5)</option><option value="3">卯时(5-7)</option>
         <option value="4">辰时(7-9)</option><option value="5">巳时(9-11)</option>
@@ -228,7 +228,7 @@ body::before{content:'';position:fixed;inset:0;
         <script>for(let d=1;d<=31;d++) document.write(`<option value="${d}">${d}日</option>`)</script>
       </select>
       <select class="mini-select" id="bHour">
-        <option value="0">时辰（选填）</option>
+        <option value="">时辰（选填）</option>
         <option value="0">子时(23-1)</option><option value="1">丑时(1-3)</option>
         <option value="2">寅时(3-5)</option><option value="3">卯时(5-7)</option>
         <option value="4">辰时(7-9)</option><option value="5">巳时(9-11)</option>
@@ -353,7 +353,7 @@ body::before{content:'';position:fixed;inset:0;
     <div class="locked-overlay">
       <div class="lock-icon">🔒</div>
       <div class="lock-title">解锁完整合婚报告</div>
-      <button class="lock-btn" onclick="alert('支付功能即将上线')">解锁完整报告 · $19.9</button>
+      <button class="lock-btn" onclick="createCheckout(this, 'full', 19.9)">解锁完整报告 · $19.9</button>
     </div>
   </div>
 
@@ -361,7 +361,7 @@ body::before{content:'';position:fixed;inset:0;
 
 <!-- sticky -->
 <div class="sticky-bar" id="stickyBar">
-  <button class="sticky-cta" onclick="window.location.href='master.html'">预约大师批婚 · $49 · 专业语音解读</button>
+  <button class="sticky-cta" onclick="createCheckout(this, 'master', 49)">预约大师批婚 · $49 · 专业语音解读</button>
 </div>
 
 <script>
@@ -397,7 +397,13 @@ function det(a,b,min,max){ return min + Math.abs((a*31+b*17+a*b)%(max-min+1)); }
 function startCalc(){
   const ay=+document.getElementById('aYear').value;
   const by=+document.getElementById('bYear').value;
+  const am=document.getElementById('aMonth').value;
+  const bm=document.getElementById('bMonth').value;
+  const ad=document.getElementById('aDay').value;
+  const bd=document.getElementById('bDay').value;
   if(!ay||!by){ alert('请选择两人的出生年份'); return; }
+  if(!am||!bm){ alert('请选择两人的出生月份'); return; }
+  if(!ad||!bd){ alert('请选择两人的出生日期'); return; }
   document.getElementById('inputScreen').style.display='none';
   document.getElementById('loadingWrap').classList.add('show');
   setTimeout(()=>showResults(ay,by), 3200);
@@ -542,6 +548,25 @@ function showResults(ay,by){
   document.getElementById('yearText').textContent = isGood
     ? `2026年火气旺盛，两人合婚命格相合，属于佳婚之年。建议选在${3+yrScore%4}月前后良辰，登记+婚宴双喜临门，家运兴旺。`
     : `2026年流年对合婚略有阻滞，建议先巩固感情基础，或选在${yrScore+2}月某吉日小婚，大婚可考虑2027年。`;
+}
+
+function createCheckout(btn, tier, price) {
+  btn.disabled = true;
+  btn.textContent = '跳转支付…';
+  fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      product: 'hehun',
+      tier: tier,
+      price: price
+    })
+  }).then(function(r){ return r.json(); }).then(function(data){
+    if(data.url) window.location.href = data.url;
+    else { alert('跳转失败，请重试'); btn.disabled = false; btn.textContent = '解锁完整报告'; }
+  }).catch(function(){
+    alert('网络异常，请重试'); btn.disabled = false; btn.textContent = '解锁完整报告';
+  });
 }
 </script>
 </body>
