@@ -119,6 +119,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(10,21,16,1) 0%,rgba(10,21,16,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
 .page-enter{animation:fadeUp .8s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+/* Hexagram display */
+.hexagram-display{display:none;margin-bottom:16px;padding:16px;background:var(--card);border:1px solid rgba(201,168,76,0.15);border-radius:10px;text-align:center}
+.hexagram-display.show{display:block}
+.hexa-label{font-size:10px;letter-spacing:0.2em;color:rgba(201,168,76,0.5);margin-bottom:10px}
+.hexa-lines-wrap{display:flex;flex-direction:column-reverse;align-items:center;gap:4px;padding:4px 0}
+.hexa-row{display:flex;align-items:center;gap:10px;padding:4px 0}
+.hexa-bar-solid{height:3px;width:64px;background:var(--gold);border-radius:2px}
+.hexa-bar-broken{display:flex;gap:8px;width:64px}
+.hexa-bar-broken span{flex:1;height:3px;background:var(--gold);border-radius:2px}
+.hexa-name{font-size:14px;color:var(--gold);letter-spacing:0.12em;margin-top:6px}
+@keyframes yao-flash{0%,100%{opacity:1}50%{opacity:0.3}}
+.yao-flash{animation:yao-flash 1s ease-in-out infinite}
 </style>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 </head>
@@ -164,6 +177,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <!-- AI Submit -->
 <div class="submit-wrap" id="submitWrap">
   <button class="btn-submit" id="submitBtn" onclick="submitReading()">请AI解卦 · 深度解读</button>
+</div>
+
+<!-- Hexagram Display -->
+<div class="hexagram-display" id="hexagramDisplay">
+  <div class="hexa-label">本卦</div>
+  <div class="hexa-lines-wrap" id="hexagramLines"></div>
+  <div class="hexa-name" id="hexagramName"></div>
 </div>
 
 <!-- Loading -->
@@ -414,6 +434,52 @@ function askQuestion() {
   }
   setTimeout(function(){ c.querySelectorAll('span').forEach(function(s){ s.style.opacity = '1'; }); }, 100);
 })();</script>
+
+<script>
+/* Expanded SECTION_ICONS for renderUltimateReport */
+var SECTION_ICONS={'📜':'rgba(91,191,160,0.3)','💰':'rgba(201,168,76,0.3)','💼':'rgba(74,143,160,0.3)','❤️':'rgba(201,96,106,0.3)','🌟':'rgba(201,168,76,0.3)','🔮':'rgba(141,103,191,0.3)','💪':'rgba(91,191,160,0.3)','🔥':'rgba(201,80,40,0.3)','💧':'rgba(74,159,212,0.3)','🌿':'rgba(91,191,160,0.3)','📈':'rgba(74,191,130,0.3)','💕':'rgba(201,96,140,0.3)','🤝':'rgba(91,160,140,0.3)','🎯':'rgba(201,130,40,0.3)','🏆':'rgba(201,168,76,0.3)','🎁':'rgba(201,100,76,0.3)','📝':'rgba(160,160,160,0.3)','💡':'rgba(201,180,60,0.3)','⚱':'rgba(140,100,80,0.3)','🔔':'rgba(201,168,76,0.3)','🗝':'rgba(160,140,100,0.3)','🪷':'rgba(201,140,180,0.3)','☯':'rgba(160,160,160,0.3)','🌙':'rgba(100,120,180,0.3)','☀️':'rgba(201,168,76,0.3)','🌊':'rgba(60,130,180,0.3)','⛰':'rgba(100,140,100,0.3)'};
+
+/* renderUltimateReport - emoji章节拆分+可折叠卡片 */
+function renderUltimateReport(text,containerId,opts){
+  opts=opts||{};var secs=parseSections(text);var el=document.getElementById(containerId);if(!el)return;
+  var c=opts.cardClass||'ai-section',h=opts.headClass||'ai-section-head',i=opts.iconClass||'ai-section-icon',t=opts.titleClass||'ai-section-title',a=opts.arrowClass||'ai-section-arrow',b=opts.bodyClass||'ai-section-body',x=opts.textClass||'ai-section-text',w=opts.wrapClass||'ai-section-wrap',db=opts.defaultBg||'rgba(91,191,160,0.2)';var im=opts.iconMap||SECTION_ICONS;
+  var html='';if(secs.length>0){html+='<div class="'+w+'">';for(var j=0;j<secs.length;j++){var s=secs[j];var bg=im[s.emoji]||db;
+    html+='<div class="'+c+' open"><div class="'+h+'" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.'+a+'\').classList.toggle(\'open\')"><div class="'+i+'" style="background:'+bg+'">'+(s.emoji||'📜')+'</div><div class="'+t+'">'+(s.title||'')+'</div><div class="'+a+'">⬇</div></div><div class="'+b+' open"><div class="'+x+'">'+s.lines.join('\n')+'</div></div></div>';}
+    html+='</div>';}else{html+='<div style="padding:0 16px;font-size:11px;color:var(--text-dim);letter-spacing:0.04em;line-height:1.9;white-space:pre-wrap">'+text+'</div>';}
+  el.innerHTML=html;
+}
+
+/* Extract hexagram name from AI response */
+function extractHexagramInfo(text){
+  var p=[/本卦[：:]\s*([^\n，,。.]+)/,/卦名[：:]\s*([^\n，,。.]+)/,/得卦[：:]\s*([^\n，,。.]+)/,/卦象[：:]\s*([^\n，,。.]+)/];
+  for(var i=0;i<p.length;i++){var m=text.match(p[i]);if(m)return m[1].trim();}return '';
+}
+
+/* Enhanced renderReport with hexagram display + ultimate report */
+function renderReport(text,question){
+  var hd=document.getElementById('hexagramDisplay');
+  if(hd){hd.classList.add('show');
+    var hl=document.getElementById('hexagramLines');hl.innerHTML='';
+    for(var i=0;i<lines.length;i++){var l=lines[i];var r=document.createElement('div');r.className='hexa-row';if(l.changing)r.classList.add('yao-flash');
+      r.innerHTML=l.yang?'<div class="hexa-bar-solid"></div>':'<div class="hexa-bar-broken"><span></span><span></span></div>';hl.appendChild(r);}
+    var hn=extractHexagramInfo(text);document.getElementById('hexagramName').textContent=hn||'';}
+  var re=document.getElementById('reportScreen');
+  var hh='<div class="report-header"><div class="q-label">你所问：</div><div class="report-question">'+question.replace(/</g,'&lt;')+'</div></div>';
+  renderUltimateReport(text,'reportScreen',{});
+  re.innerHTML=hh+re.innerHTML+'<div style="height:80px"></div>';re.classList.add('show');re.dataset.contextId=lastContextId||'';
+}
+
+/* Enhanced resetAll */
+function resetAll(){
+  lines=[];document.getElementById('linesDisplay').innerHTML='<div id="placeholder" style="display:flex;align-items:center;justify-content:center;flex:1;font-size:11px;color:var(--text-faint);letter-spacing:.08em">六爻待起</div>';
+  document.getElementById('tossNum').textContent='1';document.getElementById('tossCount').innerHTML='第 <strong id="tossNum">1</strong> 爻 · 点击摇卦';
+  document.getElementById('tossBtn').disabled=false;document.getElementById('submitWrap').style.display='none';
+  var hd=document.getElementById('hexagramDisplay');if(hd)hd.classList.remove('show');
+  document.getElementById('reportScreen').classList.remove('show');document.getElementById('reportScreen').innerHTML='';
+  document.getElementById('qaSection').style.display='none';document.getElementById('qaHistory').innerHTML='';
+  document.querySelector('.topic-bar').style.display='flex';document.querySelector('.q-wrap').style.display='block';document.querySelector('.coins-wrap').style.display='block';
+}
+</script>
 
 <div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
   <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--jade),transparent);margin:0 auto 12px"></div>

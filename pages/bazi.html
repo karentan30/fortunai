@@ -223,6 +223,42 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .stardust span{position:absolute;width:3px;height:3px;background:rgba(201,168,76,0.6);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
 @keyframes twinkle{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
 .bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(14,10,4,1) 0%,rgba(14,10,4,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
+
+/* ── Ultimate Report ── */
+.ultimate-report{display:flex;flex-direction:column;gap:8px;padding:0 4px}
+.ur-card{background:linear-gradient(135deg,rgba(23,14,6,0.8),rgba(23,14,6,0.95));border:1px solid rgba(201,168,76,0.12);border-radius:10px;overflow:hidden;animation:fadeUp 0.5s ease both;transition:all 0.3s}
+.ur-card:hover{border-color:rgba(201,168,76,0.25);box-shadow:0 4px 20px rgba(201,168,76,0.08)}
+.ur-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none}
+.ur-emoji{font-size:18px;width:28px;text-align:center;flex-shrink:0}
+.ur-title{flex:1;font-size:13px;letter-spacing:0.08em;color:rgba(255,245,220,0.85)}
+.ur-arrow{font-size:12px;color:rgba(201,168,76,0.3);transition:transform 0.3s;flex-shrink:0}
+.ur-arrow.open{transform:rotate(180deg)}
+.ur-body{display:none}
+.ur-body.open{display:block}
+.ur-text{font-size:11.5px;line-height:2;color:rgba(255,245,220,0.7);letter-spacing:0.04em;white-space:pre-wrap;padding:0 14px 14px}
+
+/* ── Ring Charts ── */
+.elem-ring-wrap{display:flex;justify-content:space-around;align-items:flex-start;padding:4px 0}
+.elem-ring-item{display:flex;flex-direction:column;align-items:center;gap:4px;animation:fadeUp 0.6s ease both}
+.elem-ring-item:nth-child(1){animation-delay:0s}
+.elem-ring-item:nth-child(2){animation-delay:0.08s}
+.elem-ring-item:nth-child(3){animation-delay:0.16s}
+.elem-ring-item:nth-child(4){animation-delay:0.24s}
+.elem-ring-item:nth-child(5){animation-delay:0.32s}
+.score-rings{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:4px 0}
+.score-ring-item{display:flex;flex-direction:column;align-items:center;gap:4px;animation:fadeUp 0.6s ease both}
+.score-ring-item:nth-child(1){animation-delay:0s}
+.score-ring-item:nth-child(2){animation-delay:0.1s}
+.score-ring-item:nth-child(3){animation-delay:0.2s}
+.score-ring-item:nth-child(4){animation-delay:0.3s}
+
+/* ── Text Highlights ── */
+.hl-year{color:var(--gold);font-weight:500}
+.hl-score{color:var(--jade-mid);font-weight:500}
+.hl-money{color:var(--gold);font-weight:500}
+
+/* ── Overview section ── */
+.overview-section{padding:0 16px;margin-bottom:4px}
 </style>
 </head>
 <body>
@@ -457,7 +493,7 @@ function showReport(aiText, contextId) {
     elemCount[ELEM_DI[zhu.di]] = (elemCount[ELEM_DI[zhu.di]]||0) + 1;
   });
   var totalElems = Object.values(elemCount).reduce(function(a,b){return a+b;},0);
-  var ELEM_COLORS = {木:'#5bbfa0',火:'#e8603a',土:'#c9a84c',金:'#c0c8d0',水:'#4a9fd4'};
+  // ELEM_COLORS moved to global scope
 
   // Dayun (大运)
   var dayunStart = rng(seed, 5) + 3;
@@ -487,15 +523,19 @@ function showReport(aiText, contextId) {
   });
   html += '</div>';
 
-  // Elements
-  html += '<div class="elements-section"><div class="elements-title">五行能量</div>';
-  Object.keys(elemCount).forEach(function(el) {
+  // Elements - Ring Charts
+  html += '<div style="margin:0 16px 14px;background:var(--card);border:1px solid rgba(201,168,76,0.1);border-radius:10px;padding:14px">';
+  html += '<div style="font-size:10px;letter-spacing:0.2em;color:rgba(201,168,76,0.5);margin-bottom:10px">五行能量</div>';
+  html += '<div class="elem-ring-wrap">';
+  var ELEM_ORDER = ['木','火','土','金','水'];
+  ELEM_ORDER.forEach(function(el) {
     var pct = Math.round(elemCount[el] / totalElems * 100);
-    var strong = pct > 25 ? '旺' : pct < 10 ? '弱' : '';
-    var strongColor = pct > 25 ? '#e8a060' : pct < 10 ? '#8a8a8a' : 'rgba(255,245,220,0.4)';
-    html += '<div class="elem-row"><div class="elem-name" style="color:'+ELEM_COLORS[el]+'">'+el+'</div><div class="elem-bar-bg"><div class="elem-fill" style="width:'+pct+'%;background:'+ELEM_COLORS[el]+'"></div></div><div class="elem-score" style="color:'+ELEM_COLORS[el]+'">'+pct+'%</div><div class="elem-status" style="color:'+strongColor+'">'+strong+'</div></div>';
+    html += '<div class="elem-ring-item" style="animation-delay:'+(ELEM_ORDER.indexOf(el)*0.08)+'s">'+
+      genRingSvg(pct, 52, 4, ELEM_COLORS[el]) +
+      '<span style="font-size:9px;color:'+ELEM_COLORS[el]+'">'+el+'</span>' +
+      '<span style="font-size:8px;color:rgba(255,245,220,0.25)">'+(pct>25?'旺':pct<10?'弱':'')+'</span></div>';
   });
-  html += '</div>';
+  html += '</div></div>';
 
   // Daymaster
   html += '<div class="daymaster-card"><div class="dm-head"><div class="dm-glyph">'+daymaster+'</div><div class="dm-info"><div class="dm-title">'+DAYMASTER[daymaster]+'</div><div class="dm-sub">'+(gender==='male'?'男':'女')+'命 · '+dmElem+'行日主</div></div></div><div class="dm-desc">'+DM_TRAIT[daymaster]+'</div></div>';
@@ -522,7 +562,7 @@ function showReport(aiText, contextId) {
 
   html += '<div class="fortune-wrap">';
   fortunes.forEach(function(f) {
-    html += '<div class="fortune-sec"><div class="fortune-head" onclick="toggleFortune(this)"><div class="fortune-icon" style="background:'+f.color+'">'+f.icon+'</div><div class="fortune-title">'+f.title+'</div><div class="fortune-score" style="color:'+(f.score>75?'#8dd9bf':f.score>60?'#e8d08a':'#d4607a')+'">'+f.score+'</div></div><div class="fortune-body"><div class="fortune-text">'+f.text+'</div><div class="fortune-tip">'+f.tip+'</div></div></div>';
+    html += '<div class="fortune-sec"><div class="fortune-head" onclick="toggleFortune(this)"><div class="fortune-icon" style="background:'+f.color+'">'+f.icon+'</div><div class="fortune-title">'+f.title+'</div>'+genRingSvg(f.score,36,3,f.score>75?'#8dd9bf':f.score>60?'#e8d08a':'#d4607a')+'</div><div class="fortune-body"><div class="fortune-text">'+f.text+'</div><div class="fortune-tip">'+f.tip+'</div></div></div>';
   });
   html += '</div>';
 
@@ -605,35 +645,50 @@ function renderAITextReport(text, contextId) {
   if (contextId) {
     document.getElementById('reportScreen').dataset.contextId = contextId;
   }
-  var sections = parseAISections(text);
   var reportEl = document.getElementById('reportScreen');
   var html = '';
+
+  // Header
   if (lastBaziInput) {
     var n = lastBaziInput.name || (lastBaziInput.gender === 'male' ? '先生' : '女士');
     html += '<div class="chart-header">';
     html += '<div class="name-row"><div class="report-name">'+n+'</div><div class="report-tag">AI 命理分析</div></div>';
     html += '<div class="divider"></div></div>';
   }
-  if (sections.length > 0) {
-    html += '<div class="fortune-wrap">';
-    for (var i = 0; i < sections.length; i++) {
-      var sec = sections[i];
-      html += '<div class="ai-section">';
-      html += '<div class="ai-section-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ai-section-arrow\').classList.toggle(\'open\')">';
-      html += '<div class="ai-section-icon">'+sec.emoji+'</div>';
-      html += '<div class="ai-section-title">'+(sec.title||'命理分析')+'</div>';
-      html += '<div class="ai-section-arrow open">⬇</div>';
-      html += '</div>';
-      html += '<div class="ai-section-body open"><div class="ai-section-text">'+sec.lines.join('\n')+'</div></div>';
-      html += '</div>';
+
+  // Parse bazi data from text
+  var parsed = tryParseBaziData(text);
+
+  // Fallback: compute from lastBaziInput if available
+  if (parsed.hasDaymaster && lastBaziInput && !parsed.pillars) {
+    var y = lastBaziInput.year, m = lastBaziInput.month, d = lastBaziInput.day, h = lastBaziInput.hour;
+    var computed = getBazi(y, m, d, h);
+    parsed.pillars = computed;
+    if (!parsed.daymaster) parsed.daymaster = computed[2].tian;
+    if (!parsed.elements) {
+      var ec = {木:0,火:0,土:0,金:0,水:0};
+      computed.forEach(function(z) {
+        ec[ELEM[z.tian]] = (ec[ELEM[z.tian]]||0) + 2;
+        ec[ELEM_DI[z.di]] = (ec[ELEM_DI[z.di]]||0) + 1;
+      });
+      var tot = 0; Object.keys(ec).forEach(function(k){tot += ec[k];});
+      parsed.elements = {};
+      Object.keys(ec).forEach(function(k){ parsed.elements[k] = Math.round(ec[k] / tot * 100); });
     }
-    html += '</div>';
-  } else {
-    html += '<div class="ai-plain-text">'+text+'</div>';
   }
+
+  // Build overview section (四柱八字 + 五行能量环 + 评分环)
+  html += buildBaziOverview(parsed);
+
+  // Container for ultimate report
+  html += '<div id="reportContent"></div>';
   html += '<div style="height:40px"></div>';
+
   reportEl.innerHTML = html;
   reportEl.classList.add('show');
+
+  // Render ultimate report with collapsible section cards
+  renderUltimateReport(text, 'reportContent');
 }
 
 function askQuestion() {
@@ -677,6 +732,139 @@ function askQuestion() {
     h.innerHTML += '<div style="margin-bottom:10px;font-size:10px;color:rgba(200,80,80,0.6);letter-spacing:0.04em">网络错误，请稍后重试</div>';
     q.disabled = false;
   });
+}
+
+// ── 全局五行颜色 ──
+var ELEM_COLORS = {木:'#5bbfa0',火:'#e8603a',土:'#c9a84c',金:'#c0c8d0',水:'#4a9fd4'};
+
+// ── 环形SVG生成 ──
+function genRingSvg(pct, size, strokeW, color) {
+  var r = (size - strokeW - 2) / 2;
+  var circ = 2 * Math.PI * r;
+  var offset = circ * (1 - Math.min(Math.max(pct||0,0),100) / 100);
+  var c = size / 2;
+  var fs = Math.round(size * 0.22);
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'">'+
+    '<circle cx="'+c+'" cy="'+c+'" r="'+r+'" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="'+strokeW+'"/>'+
+    '<circle cx="'+c+'" cy="'+c+'" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="'+strokeW+'" '+
+    'stroke-dasharray="'+circ+'" stroke-dashoffset="'+offset+'" transform="rotate(-90 '+c+' '+c+')" stroke-linecap="round"/>'+
+    '<text x="'+c+'" y="'+(c+fs*0.35)+'" text-anchor="middle" fill="rgba(255,245,220,.85)" '+
+    'font-size="'+fs+'" font-family="\'Cormorant Garamond\',serif">'+(pct||0)+'</text></svg>';
+}
+
+// ── 从文本解析八字数据 ──
+function tryParseBaziData(text) {
+  var result = { hasDaymaster: text.indexOf('日主') !== -1, pillars: null, elements: null, scores: null, daymaster: null };
+  if (!result.hasDaymaster) return result;
+  var pillarLabels = ['年柱','月柱','日柱','时柱'];
+  var pillars = [];
+  pillarLabels.forEach(function(lbl) {
+    var m = text.match(new RegExp(lbl+'[：:][\\s]*([甲乙丙丁戊己庚辛壬癸])([子丑寅卯辰巳午未申酉戌亥])'));
+    if (m && pillars.length < 4) pillars.push({label:lbl, tian:m[1], di:m[2]});
+  });
+  if (pillars.length === 4) result.pillars = pillars;
+  var dm = text.match(/日主[：:][\\s]*([甲乙丙丁戊己庚辛壬癸])([木火土金水])/);
+  if (dm) result.daymaster = dm[1];
+  var elems = {};
+  ['木','火','土','金','水'].forEach(function(el) {
+    var m = text.match(new RegExp(el+'[\\s]*[：:]\\s*(\\d+)[\\s]*%'));
+    if (m) elems[el] = parseInt(m[1]);
+  });
+  if (Object.keys(elems).length > 0) result.elements = elems;
+  var scoreAliases = {'财运':'财','事业':'事','感情':'情','健康':'康','财富':'财','运势':'运'};
+  var scores = {};
+  Object.keys(scoreAliases).forEach(function(label) {
+    var m = text.match(new RegExp(label+'[\\s]*[：:][\\s]*(\\d+)[\\s]*分'));
+    if (m) scores[scoreAliases[label]] = parseInt(m[1]);
+  });
+  if (Object.keys(scores).length > 0) result.scores = scores;
+  return result;
+}
+
+// ── 构建命盘概览HTML ──
+function buildBaziOverview(parsed) {
+  if (!parsed || !parsed.hasDaymaster) return '';
+  var ec = ELEM_COLORS;
+  var html = '';
+  if (parsed.pillars) {
+    html += '<div class="overview-section"><div class="sizhu-label" style="padding:0">命盘概览</div>';
+    html += '<div class="sizhu-grid" style="padding:0">';
+    parsed.pillars.forEach(function(z, i) {
+      html += '<div class="zhu'+(z.label==='日柱'?' daymaster':'')+'" style="animation-delay:'+(i*0.1)+'s">';
+      html += '<div class="zhu-label">'+z.label+'</div>';
+      html += '<div class="zhu-tian">'+z.tian+'</div>';
+      html += '<div class="zhu-di">'+z.di+'</div>';
+      html += '<div class="zhu-elem">'+(ELEM[z.tian]||'')+'/'+(ELEM_DI[z.di]||'')+'</div></div>';
+    });
+    html += '</div></div>';
+  }
+  if (parsed.elements && Object.keys(parsed.elements).length > 0) {
+    html += '<div style="margin:0 16px 10px;background:var(--card);border:1px solid rgba(201,168,76,.1);border-radius:10px;padding:14px">';
+    html += '<div style="font-size:10px;letter-spacing:.2em;color:rgba(201,168,76,.5);margin-bottom:10px">五行能量</div>';
+    html += '<div class="elem-ring-wrap">';
+    ['木','火','土','金','水'].forEach(function(el, i) {
+      if (parsed.elements[el] !== undefined) {
+        html += '<div class="elem-ring-item" style="animation-delay:'+(i*0.08)+'s">'+
+          genRingSvg(parsed.elements[el],52,4,ec[el]) +
+          '<span style="font-size:9px;color:'+ec[el]+'">'+el+'</span></div>';
+      }
+    });
+    html += '</div></div>';
+  }
+  if (parsed.scores && Object.keys(parsed.scores).length > 0) {
+    var sc = {'财':'var(--gold)','事':'#4a9fd4','情':'#e8605a','康':'#5bbfa0','运':'var(--amber)'};
+    var sl = {'财':'财运','事':'事业','情':'感情','康':'健康','运':'运势'};
+    html += '<div style="margin:0 16px 12px;background:var(--card);border:1px solid rgba(201,168,76,.1);border-radius:10px;padding:14px">';
+    html += '<div style="font-size:10px;letter-spacing:.2em;color:rgba(201,168,76,.5);margin-bottom:10px">命格评鉴</div>';
+    html += '<div class="score-rings">';
+    var idx = 0;
+    Object.keys(parsed.scores).forEach(function(key) {
+      html += '<div class="score-ring-item" style="animation-delay:'+(idx*0.1)+'s">'+
+        genRingSvg(parsed.scores[key],56,4,sc[key]||'var(--gold)') +
+        '<span style="font-size:9px;color:rgba(255,245,220,.4);letter-spacing:.1em">'+(sl[key]||key)+'</span></div>';
+      idx++;
+    });
+    html += '</div></div>';
+  }
+  return html;
+}
+
+// ── 通用AI报告渲染器 v2.0 — 极致版 ──
+function renderUltimateReport(text, containerId) {
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  var sections = [];
+  var lines = text.split('\n');
+  var currentSection = null;
+  lines.forEach(function(line) {
+    var trimmed = line.trim();
+    if (!trimmed) return;
+    var sectionMatch = trimmed.match(/^([\u{1F300}-\u{1FAFF}✦✧▪▸▶]\s*)(.*?)$/u) ||
+                       trimmed.match(/^\*{2}([^*]+)\*{2}/) ||
+                       trimmed.match(/^(\d+[\.、]\s*.*)$/);
+    if (sectionMatch) {
+      if (currentSection) sections.push(currentSection);
+      currentSection = { emoji: sectionMatch[1]||'', title: (sectionMatch[2]||sectionMatch[1]||trimmed).trim(), content: [] };
+    } else if (currentSection) { currentSection.content.push(trimmed); }
+  });
+  if (currentSection) sections.push(currentSection);
+  if (sections.length===0) sections.push({emoji:'📜', title:'命理分析', content:lines});
+  var html = '<div class="ultimate-report">';
+  sections.forEach(function(sec, i) {
+    var ct = sec.content.join('<br>');
+    ct = ct.replace(/\*\*(.+?)\*\*/g,'<strong style="color:var(--gold-light)">$1</strong>')
+           .replace(/(\d{4})年/g,'<span class="hl-year">$1年</span>')
+           .replace(/(\d+)分/g,'<span class="hl-score">$1分</span>')
+           .replace(/\$(\d+\.?\d*)/g,'<span class="hl-money">$$$1</span>');
+    html += '<div class="ur-card" style="animation-delay:'+(i*0.08)+'s">';
+    html += '<div class="ur-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ur-arrow\').classList.toggle(\'open\')">';
+    html += '<span class="ur-emoji">'+(sec.emoji||'📜')+'</span>';
+    html += '<span class="ur-title">'+sec.title+'</span>';
+    html += '<span class="ur-arrow open">▾</span></div>';
+    html += '<div class="ur-body open"><div class="ur-text">'+ct+'</div></div></div>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
 }
 </script>
 

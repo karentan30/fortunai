@@ -169,6 +169,28 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(26,14,4,1) 0%,rgba(26,14,4,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
 .page-enter{animation:fadeUp .8s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+/* Qian display */
+.qian-display{display:none;margin-bottom:16px;padding:20px 16px;background:linear-gradient(145deg,rgba(23,14,6,0.9),rgba(30,18,8,0.95));border:1px solid rgba(201,168,76,0.2);border-radius:10px;text-align:center;position:relative;overflow:hidden}
+.qian-display.show{display:block}
+.qian-glow{position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(201,168,76,0.05),transparent 70%);pointer-events:none}
+.qian-label{font-size:10px;letter-spacing:0.2em;color:rgba(201,168,76,0.4);margin-bottom:8px}
+.qian-number{font-family:'Cormorant Garamond',serif;font-size:48px;color:var(--gold);letter-spacing:0.04em}
+.qian-type{font-size:11px;letter-spacing:0.2em;margin-top:2px}
+.qian-poem{margin-top:12px;font-size:13px;line-height:2.2;color:rgba(255,245,220,0.75);letter-spacing:0.06em;white-space:pre-line}
+.qian-grade-excellent{color:#f5e98a;text-shadow:0 0 20px rgba(245,233,138,0.3)}
+.qian-grade-good{color:#8dd9bf}
+.qian-grade-mid{color:#e8d08a}
+.qian-grade-bad{color:#c0a0a0}
+.qian-grade-worst{color:#a05555;text-shadow:0 0 8px rgba(160,85,85,0.3)}
+
+/* Enhanced shake */
+.tube-wrap.shaking-hard{animation:tube-shake-hard .6s ease}
+@keyframes tube-shake-hard{0%,100%{transform:rotate(0)}10%{transform:rotate(-12deg) translateY(-6px)}25%{transform:rotate(10deg) translateY(-4px)}40%{transform:rotate(-8deg) translateY(-2px)}55%{transform:rotate(14deg) translateY(-3px)}70%{transform:rotate(-6deg)}85%{transform:rotate(8deg)}}
+
+/* Flying stick */
+.flying-stick{position:absolute;bottom:100px;left:50%;width:4px;height:60px;background:linear-gradient(180deg,rgba(210,175,100,1),rgba(190,150,70,1));border-radius:2px;z-index:20;pointer-events:none;animation:stick-eject 0.8s ease-out forwards}
+@keyframes stick-eject{0%{transform:translate(-50%,0) rotate(0deg);opacity:1}20%{transform:translate(-50%,-30px) rotate(5deg);opacity:1}40%{transform:translate(-60%,-80px) rotate(15deg);opacity:0.9}70%{transform:translate(-80%,-150px) rotate(35deg);opacity:0.5}100%{transform:translate(-90%,-220px) rotate(50deg);opacity:0}}
 </style>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 </head>
@@ -228,6 +250,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <!-- AI Submit after shaking -->
 <div class="submit-wrap" id="submitWrap">
   <button class="btn-submit" id="submitBtn" onclick="submitReading()">AI解签 · 深度解读</button>
+</div>
+
+<!-- Qian Display -->
+<div class="qian-display" id="qianDisplay">
+  <div class="qian-glow"></div>
+  <div class="qian-label">灵签</div>
+  <div class="qian-number" id="qianNumber">--</div>
+  <div class="qian-type" id="qianType">--</div>
+  <div class="qian-poem" id="qianPoem"></div>
 </div>
 
 <!-- Loading -->
@@ -531,6 +562,69 @@ function askQuestion() {
   }
   setTimeout(function(){ c.querySelectorAll('span').forEach(function(s){ s.style.opacity = '1'; }); }, 100);
 })();</script>
+
+<script>
+/* SECTION_ICONS for lingqian */
+var SECTION_ICONS={'📜':'rgba(201,130,10,0.3)','💰':'rgba(201,168,76,0.3)','💼':'rgba(74,143,160,0.3)','❤️':'rgba(201,96,106,0.3)','🌟':'rgba(201,168,76,0.3)','🔮':'rgba(141,103,191,0.3)','💪':'rgba(91,160,130,0.3)','🔥':'rgba(201,80,40,0.3)','💧':'rgba(74,159,212,0.3)','🌿':'rgba(91,160,100,0.3)','📈':'rgba(74,191,130,0.3)','💕':'rgba(201,96,140,0.3)','🤝':'rgba(160,120,80,0.3)','🎯':'rgba(201,130,40,0.3)','🏆':'rgba(201,168,76,0.3)','🎁':'rgba(201,100,76,0.3)','📝':'rgba(160,140,100,0.3)','💡':'rgba(201,180,60,0.3)','⚱':'rgba(140,100,80,0.3)','🔔':'rgba(201,168,76,0.3)','🗝':'rgba(160,140,100,0.3)','🪷':'rgba(201,140,180,0.3)','☯':'rgba(160,140,100,0.3)','🌙':'rgba(100,120,180,0.3)','☀️':'rgba(201,168,76,0.3)','🌊':'rgba(60,130,180,0.3)','⛰':'rgba(100,140,100,0.3)','🎋':'rgba(100,160,100,0.3)','🏮':'rgba(201,80,40,0.3)','🎐':'rgba(160,160,180,0.3)','⌛':'rgba(160,140,100,0.3)'};
+
+/* renderUltimateReport */
+function renderUltimateReport(text,containerId,opts){
+  opts=opts||{};var secs=parseSections(text);var el=document.getElementById(containerId);if(!el)return;
+  var c=opts.cardClass||'ai-section',h=opts.headClass||'ai-section-head',i=opts.iconClass||'ai-section-icon',t=opts.titleClass||'ai-section-title',a=opts.arrowClass||'ai-section-arrow',b=opts.bodyClass||'ai-section-body',x=opts.textClass||'ai-section-text',w=opts.wrapClass||'ai-section-wrap',db=opts.defaultBg||'rgba(201,130,10,0.2)';var im=opts.iconMap||SECTION_ICONS;
+  var html='';if(secs.length>0){html+='<div class="'+w+'">';for(var j=0;j<secs.length;j++){var s=secs[j];var bg=im[s.emoji]||db;
+    html+='<div class="'+c+' open"><div class="'+h+'" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.'+a+'\').classList.toggle(\'open\')"><div class="'+i+'" style="background:'+bg+'">'+(s.emoji||'📜')+'</div><div class="'+t+'">'+(s.title||'')+'</div><div class="'+a+'">⬇</div></div><div class="'+b+' open"><div class="'+x+'">'+s.lines.join('\n')+'</div></div></div>';}
+    html+='</div>';}else{html+='<div style="padding:0 16px;font-size:11px;color:var(--text-dim);letter-spacing:0.04em;line-height:1.9;white-space:pre-wrap">'+text+'</div>';}
+  el.innerHTML=html;
+}
+
+/* Grade color helper */
+function getGradeClass(g){if(g.indexOf('上上')>=0)return'qian-grade-excellent';if(g.indexOf('上签')>=0)return'qian-grade-good';if(g.indexOf('中签')>=0)return'qian-grade-mid';if(g.indexOf('下下')>=0)return'qian-grade-worst';if(g.indexOf('下签')>=0)return'qian-grade-bad';return'qian-grade-mid';}
+
+/* Enhanced showPreview with qianDisplay */
+function showPreview(){
+  var lots=LOTS[currentTemple]||LOTS['观音'];var lot=lots[Math.floor(Math.random()*lots.length)];lotNumber=lot.n;
+  document.getElementById('qianNumber').textContent='第 '+lot.n+' 签 · '+currentTemple;
+  var qt=document.getElementById('qianType');qt.textContent=lot.grade;qt.className='qian-type '+getGradeClass(lot.grade);
+  document.getElementById('qianPoem').textContent=lot.poem.join('　');
+  document.getElementById('qianDisplay').classList.add('show');
+  document.getElementById('resultDivider').style.display='flex';
+  document.getElementById('submitWrap').style.display='block';
+}
+
+/* Flying stick */
+function createFlyingStick(){var t=document.getElementById('tubeWrap');var s=document.createElement('div');s.className='flying-stick';t.appendChild(s);setTimeout(function(){if(s.parentNode)s.remove();},1000);}
+
+/* Enhanced shakeTube with flying stick */
+function shakeTube(){
+  if(shaken)return;var tube=document.getElementById('tubeWrap'),btn=document.getElementById('shakeBtn');
+  btn.disabled=true;tube.classList.add('shaking','shaking-hard');
+  document.getElementById('shakeInstruction').textContent='一支灵签飞出…';
+  setTimeout(function(){tube.classList.remove('shaking','shaking-hard');tube.classList.add('revealed');createFlyingStick();setTimeout(function(){showPreview();},900);},650);
+  shaken=true;
+}
+
+/* Enhanced renderAIInterpretation with renderUltimateReport */
+function renderAIInterpretation(text){
+  renderUltimateReport(text,'aiInterp',{cardClass:'ai-card',headClass:'ai-card-head',iconClass:'ai-card-icon',titleClass:'ai-card-title',arrowClass:'ai-card-arrow',bodyClass:'ai-card-body',textClass:'ai-card-text',wrapClass:'ai-interp',defaultBg:'rgba(201,130,10,0.2)'});
+  var el=document.getElementById('aiInterp');el.innerHTML+='<div style="height:80px"></div>';el.style.display='block';
+}
+
+/* Enhanced resetQian */
+function resetQian(){
+  shaken=false;lotNumber=null;var tube=document.getElementById('tubeWrap');tube.classList.remove('shaking','shaking-hard','revealed');
+  document.getElementById('shakeBtn').disabled=false;
+  document.getElementById('shakeInstruction').textContent='默念心中所求之事，\n诚心摇签';
+  document.getElementById('resultDivider').style.display='none';
+  document.getElementById('qianDisplay').classList.remove('show');
+  document.getElementById('resultCardPreview').classList.remove('show');
+  document.getElementById('submitWrap').style.display='none';
+  document.getElementById('aiInterp').style.display='none';document.getElementById('aiInterp').innerHTML='';
+  document.getElementById('ctaWrap').classList.remove('show');
+  document.getElementById('qaSection').style.display='none';document.getElementById('qaHistory').innerHTML='';
+  document.querySelector('.q-wrap').style.display='block';document.querySelector('.temple-tabs').style.display='flex';document.querySelector('.tube-section').style.display='flex';
+  var fs=document.querySelector('.flying-stick');if(fs)fs.remove();
+}
+</script>
 
 <div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
   <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--amber),transparent);margin:0 auto 12px"></div>
