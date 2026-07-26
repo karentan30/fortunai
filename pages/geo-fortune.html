@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0e0a04">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>善缘 · 地理命理</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0e0a04; --card: #170e06; --mid: #1f1408;
+  --gold: #c9a84c; --gold-light: #e8d08a; --gold-deep: #8a6420;
+  --jade: #5bbfa0; --jade-mid: #8dd9bf;
+  --amber: #c9820a; --amber-light: #e8b86a;
+  --ink-text: rgba(255,245,220,0.85);
+  --sub-text: rgba(255,245,220,0.58);
+}
+html, body { background: var(--bg); font-family: 'Noto Serif SC', serif; color: var(--ink-text); -webkit-font-smoothing: antialiased; }
+body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 120px; }
+body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.1) 0%, transparent 50%); pointer-events:none; z-index:0; }
+
+.back-btn { position:fixed; top:16px; left:16px; z-index:99; background:none; border:none; font-family:'Noto Serif SC',serif; font-size:13px; color:rgba(201,168,76,0.6); cursor:pointer; padding:4px 0; }
+
+/* ── Input screen ── */
+.input-screen { position:relative; z-index:1; }
+.header { text-align:center; padding:44px 20px 20px; }
+.header-title { font-size:20px; font-weight:400; letter-spacing:0.22em; margin-bottom:5px; }
+.header-sub { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:11px; letter-spacing:0.26em; color:rgba(201,168,76,0.45); margin-bottom:14px; }
+.gold-line { width:60px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:0 auto; }
+
+.form-section { padding:14px 16px; }
+.form-label { font-size:10px; letter-spacing:0.18em; color:rgba(201,168,76,0.5); margin-bottom:10px; }
+.field-group { background:var(--card); border:1px solid rgba(201,168,76,0.12); border-radius:8px; overflow:hidden; }
+.field-row { display:flex; align-items:center; padding:0 14px; border-bottom:1px solid rgba(201,168,76,0.08); }
+.field-row:last-child { border-bottom:none; }
+.field-label { font-size:11px; color:var(--sub-text); letter-spacing:0.06em; min-width:64px; flex-shrink:0; }
+.field-input, .field-select { flex:1; background:none; border:none; outline:none; font-family:'Noto Serif SC',serif; font-size:13px; color:var(--ink-text); padding:12px 8px; letter-spacing:0.04em; -webkit-appearance:none; }
+.field-select option { background:var(--card); color:var(--ink-text); }
+.field-input::placeholder { color:rgba(255,245,220,0.18); }
+
+.gender-row { display:flex; gap:8px; padding:0 16px; margin-bottom:12px; }
+.gender-opt { flex:1; background:var(--card); border:1px solid rgba(201,168,76,0.12); border-radius:6px; padding:10px 0; text-align:center; font-size:13px; color:var(--sub-text); letter-spacing:0.12em; cursor:pointer; transition:all 0.2s; }
+.gender-opt.selected { border-color:var(--gold); background:rgba(201,168,76,0.12); color:var(--gold-light); }
+
+/* ── City quick-select pills ── */
+.city-row { display:flex; flex-wrap:wrap; gap:6px; padding:0 16px; margin-bottom:16px; }
+.city-pill { padding:6px 12px; background:var(--card); border:1px solid rgba(201,168,76,0.25); border-radius:14px; font-size:10px; color:var(--sub-text); letter-spacing:0.06em; cursor:pointer; transition:all 0.2s; font-family:'Noto Serif SC',serif; }
+.city-pill:active { transform:scale(0.95); border-color:var(--gold); background:rgba(201,168,76,0.08); color:var(--gold-light); }
+
+.submit-section { padding:0 16px 16px; }
+.btn-gen { width:100%; padding:15px 0; background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light),var(--gold)); border:none; border-radius:4px; color:rgba(14,10,4,0.95); font-family:'Noto Serif SC',serif; font-size:14px; font-weight:500; letter-spacing:0.22em; cursor:pointer; box-shadow:0 4px 20px rgba(201,168,76,0.3); }
+
+/* ── Loading ── */
+.loading-screen { position:relative; z-index:1; display:none; flex-direction:column; align-items:center; padding:80px 20px; gap:20px; }
+.loading-screen.show { display:flex; }
+.load-glyph { font-size:60px; color:rgba(201,168,76,0.3); font-weight:300; animation:load-breathe 2s ease-in-out infinite; }
+@keyframes load-breathe { 0%,100%{opacity:0.3;transform:scale(1)} 50%{opacity:0.7;transform:scale(1.05)} }
+.load-text { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:14px; color:rgba(201,168,76,0.5); letter-spacing:0.18em; }
+.load-steps { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+.load-step { font-size:10px; color:rgba(255,245,220,0.3); letter-spacing:0.08em; animation:step-fade 0.5s ease-out both; }
+
+/* ── Report screen ── */
+.report-screen { position:relative; z-index:1; display:none; }
+.report-screen.show { display:block; }
+
+.chart-header { padding:20px 16px 0; }
+.name-row { display:flex; align-items:baseline; gap:12px; margin-bottom:4px; flex-wrap:wrap; }
+.report-name { font-size:22px; letter-spacing:0.14em; }
+.report-tag { font-size:10px; color:var(--gold); border:1px solid rgba(201,168,76,0.3); padding:3px 8px; border-radius:2px; letter-spacing:0.1em; }
+.birth-info { font-size:10px; color:var(--sub-text); letter-spacing:0.06em; margin-bottom:14px; }
+.divider { height:1px; background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent); margin:0 16px 14px; }
+
+/* AI Report section cards */
+.ai-section { background:var(--card); border:1px solid rgba(201,168,76,0.1); border-radius:10px; margin:0 16px 10px; overflow:hidden; }
+.ai-section-head { display:flex; align-items:center; padding:12px 14px; gap:10px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.ai-section-icon { font-size:20px; flex-shrink:0; }
+.ai-section-title { font-size:13px; letter-spacing:0.08em; flex:1; }
+.ai-section-arrow { font-size:10px; color:rgba(255,245,220,0.25); transition:transform 0.25s; }
+.ai-section-body { padding:0 14px 14px; display:none; }
+.ai-section-body.open { display:block; }
+.ai-section-text { font-size:11px; color:var(--sub-text); letter-spacing:0.04em; line-height:1.9; white-space:pre-wrap; }
+.ai-plain-text { padding:0 16px 14px; font-size:11px; color:var(--sub-text); letter-spacing:0.04em; line-height:1.9; white-space:pre-wrap; }
+
+/* ── QA section ── */
+#qaSection { position:relative; z-index:1; display:none; padding:16px 0 80px; }
+.qa-label { font-size:10px; color:rgba(201,168,76,0.5); letter-spacing:0.2em; margin-bottom:10px; padding:0 16px; }
+.qa-row { display:flex; gap:8px; padding:0 16px; }
+.qa-input { flex:1; background:var(--card); border:1px solid rgba(201,168,76,0.12); border-radius:6px; padding:10px 12px; font-family:Noto Serif SC,serif; font-size:12px; color:var(--ink-text); outline:none; }
+.qa-input:focus { border-color:rgba(201,168,76,0.3); }
+.qa-btn { padding:10px 16px; background:linear-gradient(135deg,var(--gold-deep),var(--gold)); border:none; border-radius:6px; color:#0e0a04; font-family:Noto Serif SC,serif; font-size:12px; letter-spacing:0.1em; cursor:pointer; white-space:nowrap; }
+.qa-btn:active { transform:scale(0.97); }
+.qa-btn:disabled { opacity:0.4; cursor:default; }
+.qa-history { padding:12px 16px 0; }
+
+/* ── Animations ── */
+@keyframes gold-shimmer { 0%{background-position:-300% center} 100%{background-position:300% center} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+.page-enter { animation:fadeUp .8s ease both }
+.page-enter-d1 { animation-delay:.1s } .page-enter-d2 { animation-delay:.2s }
+.page-enter-d3 { animation-delay:.3s } .page-enter-d4 { animation-delay:.4s }
+.page-enter-d5 { animation-delay:.5s } .page-enter-d6 { animation-delay:.6s }
+
+.btn-gen { background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a,#c9a84c,#8a6420) !important; background-size:300% auto !important; animation:gold-shimmer 3s linear infinite !important; }
+
+/* Stardust */
+.stardust { position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden }
+.stardust span { position:absolute; width:3px; height:3px; background:rgba(201,168,76,0.6); border-radius:50%; animation:twinkle 3s ease-in-out infinite; opacity:0; transition:opacity .5s }
+@keyframes twinkle { 0%,100%{opacity:.2;transform:scale(.8)} 50%{opacity:1;transform:scale(1.2)} }
+.bottom-gradient { position:fixed; bottom:0; left:0; right:0; height:100px; background:linear-gradient(to top,rgba(14,10,4,1) 0%,rgba(14,10,4,.8) 30%,transparent 100%); pointer-events:none; z-index:998 }
+</style>
+</head>
+<body>
+<div class="stardust" id="stardust"></div>
+<div class="bottom-gradient"></div>
+
+<button class="back-btn" onclick="history.back()">← 返回</button>
+
+<!-- Input screen -->
+<div class="input-screen" id="inputScreen">
+  <div class="header page-enter page-enter-d1">
+    <div class="header-title">地理命理</div>
+    <div class="header-sub">GEO FORTUNE · LOCATION ENERGY</div>
+    <div class="gold-line"></div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-label">位置信息</div>
+    <div class="field-group">
+      <div class="field-row">
+        <span class="field-label">纬度</span>
+        <input class="field-input" type="number" id="latitude" step="0.0001" placeholder="例如：39.9042（北京）">
+      </div>
+      <div class="field-row">
+        <span class="field-label">经度</span>
+        <input class="field-input" type="number" id="longitude" step="0.0001" placeholder="例如：116.4074（北京）">
+      </div>
+    </div>
+  </div>
+
+  <div class="form-label" style="padding:0 16px 6px;font-size:10px;letter-spacing:0.12em;color:rgba(201,168,76,0.5);">快速选择城市</div>
+  <div class="city-row" id="cityRow">
+    <span class="city-pill" data-lat="39.9" data-lng="116.4">北京</span>
+    <span class="city-pill" data-lat="31.2" data-lng="121.5">上海</span>
+    <span class="city-pill" data-lat="22.3" data-lng="114.2">香港</span>
+    <span class="city-pill" data-lat="40.7" data-lng="-74.0">纽约</span>
+    <span class="city-pill" data-lat="51.5" data-lng="-0.1">伦敦</span>
+    <span class="city-pill" data-lat="35.7" data-lng="139.7">东京</span>
+    <span class="city-pill" data-lat="1.3" data-lng="103.8">新加坡</span>
+    <span class="city-pill" data-lat="-33.9" data-lng="151.2">悉尼</span>
+  </div>
+
+  <div class="form-section">
+    <div class="form-label">出生信息（可选）</div>
+    <div class="field-group">
+      <div class="field-row">
+        <span class="field-label">出生年</span>
+        <select class="field-select" id="year">
+          <option value="">不填</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">月</span>
+        <select class="field-select" id="month">
+          <option value="">不填</option>
+          <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option><option value="4">4月</option>
+          <option value="5">5月</option><option value="6">6月</option><option value="7">7月</option><option value="8">8月</option>
+          <option value="9">9月</option><option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">日</span>
+        <select class="field-select" id="day"><option value="">不填</option></select>
+      </div>
+    </div>
+  </div>
+
+  <div class="gender-row">
+    <div class="gender-opt" onclick="selectGender(this,'male')">男命</div>
+    <div class="gender-opt" onclick="selectGender(this,'female')">女命</div>
+    <div class="gender-opt selected" onclick="selectGender(this,'')">保密</div>
+  </div>
+
+  <div class="submit-section">
+    <button class="btn-gen" onclick="generateReport()">分析地理命理</button>
+  </div>
+
+  <div style="text-align:center;font-size:9px;color:rgba(255,245,220,0.2);padding:0 24px 20px;letter-spacing:0.06em;position:relative;z-index:1">
+    地域能量场分析 · 结合方位与命理 · 报告结果仅供参考
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="load-glyph">⛰</div>
+  <div class="load-text">分析地域能量中…</div>
+  <div class="load-steps" id="loadSteps"></div>
+</div>
+
+<!-- Report screen -->
+<div class="report-screen" id="reportScreen"></div>
+
+<!-- QA section -->
+<div id="qaSection">
+  <div class="qa-label">追问地理命理师</div>
+  <div class="qa-row">
+    <input id="qaInput" type="text" placeholder="输入你的问题…例如：这个方位对我财运如何？" class="qa-input">
+    <button onclick="askQuestion()" class="qa-btn">追问</button>
+  </div>
+  <div class="qa-history" id="qaHistory"></div>
+</div>
+
+<script>
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
+  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
+  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); };
+  document.body.appendChild(t);
+  if (t._toastTimer) clearTimeout(t._toastTimer);
+  t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
+}
+
+// Init year/day selectors
+var ySel = document.getElementById('year');
+for (var y = 2010; y >= 1920; y--) ySel.innerHTML += '<option value="'+y+'">'+y+'年</option>';
+var dSel = document.getElementById('day');
+for (var d = 1; d <= 31; d++) dSel.innerHTML += '<option value="'+d+'">'+d+'日</option>';
+
+var gender = '';
+
+function selectGender(el, g) {
+  document.querySelectorAll('.gender-opt').forEach(function(o){ o.classList.remove('selected'); });
+  el.classList.add('selected'); gender = g;
+}
+
+// City quick-select
+document.querySelectorAll('.city-pill').forEach(function(pill){
+  pill.addEventListener('click', function(){
+    var lat = this.dataset.lat;
+    var lng = this.dataset.lng;
+    document.getElementById('latitude').value = lat;
+    document.getElementById('longitude').value = lng;
+    this.style.borderColor = '#c9a84c';
+    this.style.background = 'rgba(201,168,76,0.08)';
+    this.style.color = '#e8d08a';
+    document.querySelectorAll('.city-pill').forEach(function(p){
+      if (p !== pill) {
+        p.style.borderColor = 'rgba(201,168,76,0.25)';
+        p.style.background = '';
+        p.style.color = '';
+      }
+    });
+  });
+});
+
+var knownEmojis = ['📜','💰','💼','❤️','💪','🌟','🔮','📊','🎯','🔥','💧','🌿','🌊','⛰','⚔️','🛡️','✨','💫','⭐','☯','🌙','☀️','📈','💕','🤝','🎓','🏠','🚗','❄️','⚡','🌪','🏆','🎁','📝','💡','🕯','⚱','🧿','🔔','🗝','🪷','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','📍','🗺'];
+
+function parseAISections(text) {
+  var lines = text.split('\n');
+  var sections = [];
+  var current = null;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var matched = null;
+    for (var k = 0; k < knownEmojis.length; k++) {
+      if (line.indexOf(knownEmojis[k]) === 0) { matched = knownEmojis[k]; break; }
+    }
+    if (matched) {
+      if (current && current.lines.length) sections.push(current);
+      current = { emoji: matched, title: line.substring(matched.length).trim(), lines: [] };
+    } else if (current) {
+      current.lines.push(line);
+    } else if (line.trim()) {
+      current = { emoji: '📍', title: '地域分析', lines: [line] };
+    }
+  }
+  if (current && current.lines.length) sections.push(current);
+  return sections;
+}
+
+function renderAITextReport(text, ctxId) {
+  var sections = parseAISections(text);
+  var reportEl = document.getElementById('reportScreen');
+  var html = '';
+  var lat = document.getElementById('latitude').value;
+  var lng = document.getElementById('longitude').value;
+  html += '<div class="chart-header">';
+  html += '<div class="name-row"><div class="report-name">地理命理分析</div><div class="report-tag">'+lat+', '+lng+'</div></div>';
+  html += '<div class="divider"></div></div>';
+  if (sections.length > 0) {
+    html += '<div class="fortune-wrap">';
+    for (var i = 0; i < sections.length; i++) {
+      var sec = sections[i];
+      html += '<div class="ai-section">';
+      html += '<div class="ai-section-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ai-section-arrow\').classList.toggle(\'open\')">';
+      html += '<div class="ai-section-icon">'+sec.emoji+'</div>';
+      html += '<div class="ai-section-title">'+(sec.title||'地域分析')+'</div>';
+      html += '<div class="ai-section-arrow open">⬇</div>';
+      html += '</div>';
+      html += '<div class="ai-section-body open"><div class="ai-section-text">'+sec.lines.join('\n')+'</div></div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  } else {
+    html += '<div class="ai-plain-text">'+text+'</div>';
+  }
+  html += '<div style="height:40px"></div>';
+  reportEl.innerHTML = html;
+  reportEl.classList.add('show');
+}
+
+function generateReport() {
+  var lat = document.getElementById('latitude').value.trim();
+  var lng = document.getElementById('longitude').value.trim();
+  if (!lat) { showToast('请输入纬度', 'error'); return; }
+  if (!lng) { showToast('请输入经度', 'error'); return; }
+
+  document.getElementById('inputScreen').style.display = 'none';
+  document.getElementById('loadingScreen').classList.add('show');
+  var steps = ['接收位置坐标…','调用地域能量数据库…','对比出生命盘…','分析方位吉凶…','生成地理命理报告…'];
+  var stepsEl = document.getElementById('loadSteps');
+  stepsEl.innerHTML = '';
+  steps.forEach(function(s, i) {
+    setTimeout(function(){
+      stepsEl.innerHTML += '<div class="load-step">✓ '+s+'</div>';
+    }, i * 350);
+  });
+
+  var year = document.getElementById('year').value;
+  var month = document.getElementById('month').value;
+  var day = document.getElementById('day').value;
+
+  var body = { latitude: parseFloat(lat), longitude: parseFloat(lng), gender: gender };
+  if (year) body.birthYear = parseInt(year);
+  if (month) body.birthMonth = parseInt(month);
+  if (day) body.birthDay = parseInt(day);
+
+  setTimeout(function() {
+    fetch('/api/geo-fortune', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      document.getElementById('loadingScreen').classList.remove('show');
+      var ctxId = d.contextId || '';
+      renderAITextReport(d.answer || d.report || '', ctxId);
+      var reportScreen = document.getElementById('reportScreen');
+      if (ctxId) reportScreen.dataset.contextId = ctxId;
+      document.getElementById('qaSection').style.display = 'block';
+    })
+    .catch(function() {
+      document.getElementById('loadingScreen').classList.remove('show');
+      document.getElementById('inputScreen').style.display = 'block';
+      showToast('网络错误，请稍后重试', 'error');
+    });
+  }, steps.length * 350 + 400);
+}
+
+function askQuestion() {
+  var ctxId = document.getElementById('reportScreen').dataset.contextId;
+  var q = document.getElementById('qaInput');
+  if (!q.value.trim()) return;
+
+  var h = document.getElementById('qaHistory');
+  h.innerHTML += '<div style="text-align:right;margin-bottom:8px"><span style="display:inline-block;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.15);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--ink-text)">' + q.value.replace(/</g,'&lt;') + '</span></div>';
+
+  var question = q.value;
+  q.value = '';
+  q.disabled = true;
+
+  var loadEl = document.createElement('div');
+  loadEl.id = 'qaLoading';
+  loadEl.style.cssText = 'text-align:left;margin-bottom:8px;font-size:10px;color:rgba(255,245,220,0.3);letter-spacing:0.06em';
+  loadEl.textContent = '地理命理师正在思考…';
+  h.appendChild(loadEl);
+  h.scrollTop = h.scrollHeight;
+
+  fetch('/api/ask-followup', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({contextId: ctxId, question: question})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    document.getElementById('qaLoading').remove();
+    if (d.answer) {
+      var answer = d.answer.replace(/</g,'&lt;').replace(/\\n/g,'<br>');
+      h.innerHTML += '<div style="margin-bottom:10px"><span style="display:inline-block;background:var(--card);border:1px solid rgba(201,168,76,0.1);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--ink-text);line-height:1.8">' + answer + '</span></div>';
+    }
+    q.disabled = false;
+  })
+  .catch(function(){
+    document.getElementById('qaLoading').remove();
+    h.innerHTML += '<div style="margin-bottom:10px;font-size:10px;color:rgba(200,80,80,0.6);letter-spacing:0.04em">网络错误，请稍后重试</div>';
+    q.disabled = false;
+  });
+}
+</script>
+
+<!-- Stardust -->
+<script>
+(function(){
+  var c = document.getElementById('stardust');
+  if (!c) return;
+  for (var i = 0; i < 30; i++) {
+    var s = document.createElement('span');
+    s.style.cssText = 'left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;width:'+(1.5+Math.random()*2.5)+'px;height:'+(1.5+Math.random()*2.5)+'px;--dur:'+(2+Math.random()*4)+'s;animation-delay:'+(Math.random()*5)+'s';
+    c.appendChild(s);
+  }
+  setTimeout(function(){ c.querySelectorAll('span').forEach(function(s){ s.style.opacity = '1'; }); }, 100);
+})();</script>
+
+<div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
+  <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 12px"></div>
+  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(201,168,76,0.35);letter-spacing:0.3em">一方水土 · 一方命</div>
+</div>
+
+</body>
+</html>

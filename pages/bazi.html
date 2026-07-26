@@ -432,9 +432,9 @@ function generateReport() {
   }, steps.length * 350 + 400);
 }
 
-function showReport(aiText) {
+function showReport(aiText, contextId) {
   if (aiText && typeof aiText === 'string') {
-    renderAITextReport(aiText);
+    renderAITextReport(aiText, contextId);
     document.getElementById('qaSection').style.display = 'block';
     return;
   }
@@ -601,7 +601,10 @@ function parseAISections(text) {
   return sections;
 }
 
-function renderAITextReport(text) {
+function renderAITextReport(text, contextId) {
+  if (contextId) {
+    document.getElementById('reportScreen').dataset.contextId = contextId;
+  }
   var sections = parseAISections(text);
   var reportEl = document.getElementById('reportScreen');
   var html = '';
@@ -634,22 +637,46 @@ function renderAITextReport(text) {
 }
 
 function askQuestion() {
+  var ctxId = document.getElementById('reportScreen').dataset.contextId;
   var q = document.getElementById('qaInput');
-  if (!q || !q.value.trim()) return;
+  if (!q.value.trim()) return;
+
+  // 显示问题气泡
   var h = document.getElementById('qaHistory');
-  if (!h) return;
-  var msg = q.value.trim();
-  h.innerHTML += '<div class="qa-my-msg"><span>' + msg.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span></div>';
+  h.innerHTML += '<div style="text-align:right;margin-bottom:8px"><span style="display:inline-block;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.15);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--ink-text)">' + q.value.replace(/</g,'&lt;') + '</span></div>';
+
+  var question = q.value;
+  q.value = '';
   q.disabled = true;
-  var btn = document.querySelector('.qa-btn');
-  if (btn) btn.disabled = true;
-  setTimeout(function() {
-    h.innerHTML += '<div class="qa-ai-msg"><span>命理师正在思考中…追问功能即将上线，敬请期待。</span></div>';
-    h.scrollIntoView({behavior:'smooth', block:'end'});
+
+  // 显示加载
+  var loadEl = document.createElement('div');
+  loadEl.id = 'qaLoading';
+  loadEl.style.cssText = 'text-align:left;margin-bottom:8px;font-size:10px;color:rgba(255,245,220,0.3);letter-spacing:0.06em';
+  loadEl.textContent = '命理师正在思考…';
+  h.appendChild(loadEl);
+  h.scrollTop = h.scrollHeight;
+
+  // 调用后端
+  fetch('/api/ask-followup', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({contextId: ctxId, question: question})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    document.getElementById('qaLoading').remove();
+    if (d.answer) {
+      var answer = d.answer.replace(/</g,'&lt;').replace(/\\n/g,'<br>');
+      h.innerHTML += '<div style="margin-bottom:10px"><span style="display:inline-block;background:var(--card);border:1px solid rgba(201,168,76,0.1);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--ink-text);line-height:1.8">' + answer + '</span></div>';
+    }
     q.disabled = false;
-    if (btn) btn.disabled = false;
-    q.value = '';
-  }, 1200);
+  })
+  .catch(function(){
+    document.getElementById('qaLoading').remove();
+    h.innerHTML += '<div style="margin-bottom:10px;font-size:10px;color:rgba(200,80,80,0.6);letter-spacing:0.04em">网络错误，请稍后重试</div>';
+    q.disabled = false;
+  });
 }
 </script>
 

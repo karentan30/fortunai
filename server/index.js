@@ -485,6 +485,26 @@ app.get('/api/success', (req, res) => {
   res.send(html);
 });
 
+// ── AI追问上下文缓存 ──
+var qaContext = {};
+
+// 每次生成报告时保存上下文（在bazi/hehun/tarot等路由中调用）
+function saveQaContext(endpoint, input, reading) {
+  var id = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  qaContext[id] = {
+    endpoint: endpoint,
+    input: input,
+    reading: reading,
+    createdAt: Date.now()
+  };
+  // 清理超过30分钟的旧上下文
+  var cutoff = Date.now() - 30 * 60 * 1000;
+  Object.keys(qaContext).forEach(function(k) {
+    if (qaContext[k].createdAt < cutoff) delete qaContext[k];
+  });
+  return id;
+}
+
 // ════════════════════════════════════════════
 // AI READING ENDPOINTS
 // ════════════════════════════════════════════
@@ -613,8 +633,9 @@ app.post('/api/bazi', async (req, res) => {
 
     const result = await deepseekChat(messages, { maxTokens: 4096 });
     insertReading.run('bazi', JSON.stringify(req.body), result);
+    var ctxId = saveQaContext('bazi', req.body, result);
 
-    res.json({ reading: result });
+    res.json({ reading: result, contextId: ctxId });
   } catch (err) {
     console.error('[BAZI ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试', detail: err.message });
@@ -668,8 +689,9 @@ ${cardDesc ? '牌面信息：\n' + cardDesc : '使用随机三张塔罗牌（过
 
     const result = await deepseekChat(messages, { maxTokens: 3072 });
     insertReading.run('tarot', JSON.stringify(req.body), result);
+    var ctxId = saveQaContext('tarot', req.body, result);
 
-    res.json({ reading: result });
+    res.json({ reading: result, contextId: ctxId });
   } catch (err) {
     console.error('[TAROT ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用', detail: err.message });
@@ -746,8 +768,9 @@ app.post('/api/ziwei', async (req, res) => {
 
     const result = await deepseekChat(messages, { maxTokens: 6144 });
     insertReading.run('ziwei', JSON.stringify(req.body), result);
+    var ctxId = saveQaContext('ziwei', req.body, result);
 
-    res.json({ analysis: result });
+    res.json({ analysis: result, contextId: ctxId });
   } catch (err) {
     console.error('[ZIWEI ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用', detail: err.message });
@@ -884,8 +907,9 @@ B方：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined ? p2Hour+'时'
 
     const result = await deepseekChat(messages, { maxTokens: 4096 });
     insertReading.run('hehun', JSON.stringify(req.body), result);
+    var ctxId = saveQaContext('hehun', req.body, result);
 
-    res.json({ reading: result });
+    res.json({ reading: result, contextId: ctxId });
   } catch (err) {
     console.error('[HEHUN ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用', detail: err.message });
@@ -949,6 +973,94 @@ app.post('/api/daily', async (req, res) => {
   } catch (err) {
     console.error('[DAILY ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用', detail: err.message });
+  }
+});
+
+// POST /api/ask-followup — 追问命理师
+app.post('/api/ask-followup', async (req, res) => {
+  try {
+    const { contextId, question } = req.body;
+    if (!contextId || !question) {
+      return res.status(400).json({ error: '缺少上下文ID或问题' });
+    }
+
+    const ctx = qaContext[contextId];
+    if (!ctx) {
+      return res.status(404).json({ error: '上下文已过期，请重新生成报告' });
+    }
+
+    const messages = [
+      { role: 'system', content: '你是一位善缘命理平台的资深命理师。用户刚刚看了他们的命理报告，现在有后续问题要问你。\n请基于以下报告内容回答用户的问题。语气亲切、专业、具体，给出时间点和建议。\n\n之前的报告内容：\n' + ctx.reading.slice(0, 3000) },
+      { role: 'user', content: question }
+    ];
+
+    const answer = await deepseekChat(messages, { maxTokens: 2048 });
+    res.json({ answer });
+  } catch (err) {
+    console.error('[QA ERR]', err.message);
+    res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
+  }
+});
+
+// GET /api/context/:id — 获取QA上下文（前端连接用）
+app.get('/api/context/:id', (req, res) => {
+  var ctx = qaContext[req.params.id];
+  if (!ctx) return res.status(404).json({ error: '上下文不存在' });
+  res.json({ endpoint: ctx.endpoint });
+});
+
+// POST /api/fengshui — AI风水评测
+app.post('/api/fengshui', async (req, res) => {
+  try {
+    const { houseDirection, floor, rooms, occupants, address, question } = req.body;
+    if (!houseDirection) {
+      return res.status(400).json({ error: '请提供房屋朝向' });
+    }
+
+    const messages = [
+      { role: 'system', content: '你是一位精通八宅风水与玄空飞星的风水大师，从业30年。语气亲切专业，给出具体可操作的建议。' },
+      { role: 'user', content: '房屋朝向：' + (houseDirection || '') + '\n楼层：' + (floor || '未提供') + '\n房间布局：' + (rooms || '未提供') + '\n居住成员：' + (occupants || '未提供') + '\n地址：' + (address || '未提供') + '\n用户问题：' + (question || '请综合分析房屋风水') + '\n\n请按以下结构详细分析（要求3000+字）：\n1. 🏠 房屋格局总评\n2. 🧭 八宅吉凶位分析（每个方位逐一分析）\n3. 🛏️ 各房间风水建议（卧室/客厅/厨房/书房/卫生间）\n4. 💰 财位分析及催财布局\n5. ❤️ 桃花位/人缘位布局\n6. 🏃 健康位分析\n7. 🪴 化解与开运建议（植物/摆件/颜色）\n8. 📐 户型改造建议\n9. 🎯 一句话总结' }
+    ];
+
+    const analysis = await deepseekChat(messages, { maxTokens: 4096 });
+    res.json({ analysis });
+  } catch (err) {
+    console.error('[FENGSHUI ERR]', err.message);
+    res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
+  }
+});
+
+// POST /api/geo-fortune — 基于经纬度的地域命理分析
+app.post('/api/geo-fortune', async (req, res) => {
+  try {
+    const { latitude, longitude, birthYear, birthMonth, birthDay, gender } = req.body;
+    if (latitude === undefined || longitude === undefined) {
+      return res.status(400).json({ error: '请提供经纬度' });
+    }
+
+    // 根据经纬度判断地域五行属性
+    var latDir = latitude >= 0 ? '北半球' : '南半球';
+    var longDir = longitude >= 0 ? '东经' : '西经';
+
+    // 粗略地域五行
+    var regionElement = '土';
+    if (longitude > 0 && longitude < 60) regionElement = '土';
+    else if (longitude >= 60 && longitude < 120) regionElement = '木';
+    else if (longitude >= -60 && longitude < 0) regionElement = '金';
+    else regionElement = '水';
+    if (Math.abs(latitude) > 45) regionElement = '水';
+    else if (Math.abs(latitude) < 15) regionElement = '火';
+
+    const messages = [
+      { role: 'system', content: '你是一位结合传统风水与现代地理学的命理师。擅长分析不同地域对个人运势的影响。' },
+      { role: 'user', content: '用户位置：纬度 ' + latitude + '（' + latDir + '），经度 ' + longitude + '（' + longDir + '）\n地域五行属性：' + regionElement + '\n出生信息：' + (birthYear ? birthYear + '年' : '') + (birthMonth ? birthMonth + '月' : '') + (birthDay ? birthDay + '日' : '') + '\n性别：' + (gender || '未提供') + '\n\n请分析：\n1. 🌍 此地的地理能量特点\n2. 🧭 在此地居住/工作的五行影响\n3. 💰 此地财运分析\n4. ❤️ 此地感情/人际运势\n5. 🏃 此地健康提醒\n6. 🎯 在此地发展的建议\n7. 📍 更适合此人的其他方位建议' }
+    ];
+
+    const analysis = await deepseekChat(messages, { maxTokens: 3072 });
+    res.json({ analysis, location: { lat: latitude, lng: longitude, regionElement: regionElement } });
+  } catch (err) {
+    console.error('[GEO ERR]', err.message);
+    res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
   }
 });
 
