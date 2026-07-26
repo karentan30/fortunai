@@ -354,7 +354,24 @@ body::before {
 
 <script>
 function subscribeDaily() {
-  window.location.href = '/api/create-checkout?product=daily_sub';
+  var btn = event.target;
+  btn.disabled = true;
+  btn.textContent = '跳转中…';
+  fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({product: 'daily_sub', token: localStorage.getItem('sy_token') || ''})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if (d.url) { window.location.href = d.url; }
+    else { alert('支付系统暂不可用'); btn.disabled = false; btn.textContent = '开启每日天机 · 首月免费'; }
+  })
+  .catch(function(){
+    alert('网络错误，请稍后重试');
+    btn.disabled = false;
+    btn.textContent = '开启每日天机 · 首月免费';
+  });
 }
 </script>
 </body>
