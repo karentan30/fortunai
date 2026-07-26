@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0e0a04">
+<title>善缘 · 我的账户</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0a04;--card:#170e06;--mid:#1f1408;
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
+  --jade:#5bbfa0;--jade-mid:#8dd9bf;
+  --amber:#c9820a;--amber-light:#e8b86a;
+  --ink-text:rgba(255,245,220,0.85);
+  --sub-text:rgba(255,245,220,0.58);
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink-text);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:80px}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,0.1) 0%,transparent 50%);pointer-events:none;z-index:0}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(201,168,76,0.6);cursor:pointer;padding:4px 0}
+
+.header{position:relative;z-index:1;text-align:center;padding:52px 20px 24px}
+.header-icon{font-size:40px;margin-bottom:10px;display:block;opacity:0.7}
+.header-title{font-size:20px;font-weight:400;letter-spacing:0.22em;margin-bottom:5px}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:0.26em;color:rgba(201,168,76,0.45);margin-bottom:14px}
+.gold-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto}
+
+.content{position:relative;z-index:1;padding:0 16px}
+
+/* Profile card */
+.profile-card{background:var(--card);border:1px solid rgba(201,168,76,0.12);border-radius:10px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:14px}
+.profile-avatar{width:44px;height:44px;border-radius:50%;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.2);display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--gold);flex-shrink:0}
+.profile-info{flex:1;min-width:0}
+.profile-email{font-size:13px;letter-spacing:0.06em;color:var(--ink-text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.profile-label{font-size:9px;color:var(--sub-text);letter-spacing:0.08em;margin-top:3px}
+.profile-status{font-size:11px;font-family:'Cormorant Garamond',serif;color:var(--jade-mid);font-style:italic}
+
+.section-label{font-size:10px;letter-spacing:0.2em;color:rgba(201,168,76,0.5);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(201,168,76,0.15),transparent)}
+
+/* Order list */
+.order-list{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.order-card{background:var(--card);border:1px solid rgba(201,168,76,0.1);border-radius:8px;padding:14px;display:flex;align-items:center;gap:12px;transition:border-color 0.2s}
+.order-card:hover{border-color:rgba(201,168,76,0.25)}
+.order-icon{width:36px;height:36px;border-radius:8px;background:rgba(201,168,76,0.08);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.order-info{flex:1;min-width:0}
+.order-name{font-size:13px;letter-spacing:0.06em;color:var(--ink-text);margin-bottom:4px}
+.order-meta{font-size:10px;color:var(--sub-text);letter-spacing:0.04em}
+.order-right{text-align:right;flex-shrink:0}
+.order-price{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold);letter-spacing:0.02em}
+.order-price .unit{font-family:'Noto Serif SC',serif;font-size:10px}
+.order-status{font-size:9px;margin-top:3px;letter-spacing:0.04em;padding:2px 6px;border-radius:3px;display:inline-block}
+.status-paid{color:var(--jade-mid);background:rgba(91,191,160,0.1)}
+.status-unpaid{color:var(--amber-light);background:rgba(201,130,10,0.1)}
+.status-pending{color:rgba(200,200,180,0.5);background:rgba(200,200,180,0.06)}
+.status-completed{color:var(--jade-mid);background:rgba(91,191,160,0.1)}
+
+/* Empty state */
+.empty-state{text-align:center;padding:40px 20px}
+.empty-icon{font-size:48px;opacity:0.25;margin-bottom:12px;display:block}
+.empty-text{font-size:12px;color:var(--sub-text);letter-spacing:0.08em}
+
+/* Loading skeleton */
+.skeleton{background:rgba(201,168,76,0.06);border-radius:6px;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:0.8}}
+
+.section{padding:0 16px;position:relative;z-index:1;margin-bottom:20px}
+
+/* Logout button */
+.btn-logout{width:100%;padding:14px 0;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:8px;color:rgba(201,168,76,0.6);font-family:'Noto Serif SC',serif;font-size:12px;letter-spacing:0.16em;cursor:pointer;transition:all 0.2s}
+.btn-logout:hover{background:rgba(180,60,60,0.1);border-color:rgba(180,60,60,0.25);color:rgba(200,100,100,0.7)}
+
+.footer-links{position:relative;z-index:1;text-align:center;margin-top:20px}
+.footer-links a{font-size:10px;color:rgba(255,245,220,0.25);letter-spacing:0.08em;text-decoration:none;margin:0 8px}
+.footer-links a:hover{color:rgba(201,168,76,0.5)}
+
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;line-height:1.6;text-align:center;display:none;font-family:'Noto Serif SC',serif;pointer-events:none}
+.toast.error{background:rgba(180,40,40,0.92);border:1px solid rgba(220,80,80,0.4);color:rgba(255,220,220,0.95);display:block}
+
+/* Divider */
+.divider{margin:16px 0;height:1px;position:relative;z-index:1}
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">‹ 返回</button>
+
+<!-- Header -->
+<div class="header">
+  <span class="header-icon">👤</span>
+  <div class="header-title">我的账户</div>
+  <div class="header-sub">MY ACCOUNT · SHEN YUAN</div>
+  <div class="gold-line"></div>
+</div>
+
+<!-- Profile -->
+<div class="content">
+  <div class="profile-card">
+    <div class="profile-avatar">☯</div>
+    <div class="profile-info">
+      <div class="profile-email" id="profileEmail">加载中…</div>
+      <div class="profile-label">善缘用户</div>
+    </div>
+    <div class="profile-status" id="profileStatus">● 已登录</div>
+  </div>
+</div>
+
+<!-- Orders section -->
+<div class="section">
+  <div class="section-label">我的订单</div>
+  <div class="order-list" id="orderList">
+    <!-- loading skeleton -->
+    <div class="order-card">
+      <div class="skeleton" style="width:36px;height:36px;border-radius:8px"></div>
+      <div style="flex:1">
+        <div class="skeleton" style="width:60%;height:13px;margin-bottom:6px"></div>
+        <div class="skeleton" style="width:40%;height:10px"></div>
+      </div>
+      <div style="text-align:right">
+        <div class="skeleton" style="width:50px;height:18px;margin-bottom:4px;margin-left:auto"></div>
+        <div class="skeleton" style="width:40px;height:9px;margin-left:auto"></div>
+      </div>
+    </div>
+    <div class="order-card">
+      <div class="skeleton" style="width:36px;height:36px;border-radius:8px"></div>
+      <div style="flex:1">
+        <div class="skeleton" style="width:55%;height:13px;margin-bottom:6px"></div>
+        <div class="skeleton" style="width:35%;height:10px"></div>
+      </div>
+      <div style="text-align:right">
+        <div class="skeleton" style="width:45px;height:18px;margin-bottom:4px;margin-left:auto"></div>
+        <div class="skeleton" style="width:35px;height:9px;margin-left:auto"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Logout -->
+<div class="content">
+  <button class="btn-logout" onclick="handleLogout()">退出登录</button>
+</div>
+
+<div class="footer-links">
+  <a href="../index.html">返回首页</a>
+  <a href="member.html">善缘会员</a>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var BASE = '';
+
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  setTimeout(function(){ t.className = 'toast'; }, 3000);
+}
+
+function getToken() {
+  return localStorage.getItem('sy_token');
+}
+
+function parseEmailFromToken(token) {
+  try {
+    var parts = token.split('.');
+    if (parts.length === 3) {
+      var payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+      return payload.email || payload.sub || null;
+    }
+  } catch(e) {}
+  return null;
+}
+
+function STATUS_MAP(status) {
+  switch (status) {
+    case 'paid': case 'completed': return { label: '已完成', cls: 'status-completed' };
+    case 'unpaid': return { label: '未付款', cls: 'status-unpaid' };
+    case 'pending': return { label: '处理中', cls: 'status-pending' };
+    default: return { label: status || '未知', cls: 'status-pending' };
+  }
+}
+
+// Product icon mapping
+function productIcon(name) {
+  if (!name) return '📄';
+  var n = name.toLowerCase();
+  if (n.indexOf('八字') >= 0 || n.indexOf('bazi') >= 0) return '命';
+  if (n.indexOf('紫微') >= 0) return '紫';
+  if (n.indexOf('塔罗') >= 0 || n.indexOf('tarot') >= 0) return '牌';
+  if (n.indexOf('六爻') >= 0) return '爻';
+  if (n.indexOf('面相') >= 0 || n.indexOf('手相') >= 0) return '相';
+  if (n.indexOf('灵签') >= 0 || n.indexOf('求签') >= 0) return '签';
+  if (n.indexOf('风水') >= 0) return '宅';
+  if (n.indexOf('生肖') >= 0) return '生';
+  if (n.indexOf('合婚') >= 0) return '合';
+  if (n.indexOf('会员') >= 0 || n.indexOf('member') >= 0) return '👑';
+  if (n.indexOf('水晶') >= 0 || n.indexOf('crystal') >= 0) return '💎';
+  if (n.indexOf('供奉') >= 0 || n.indexOf('道场') >= 0 || n.indexOf('代烧') >= 0) return '香';
+  if (n.indexOf('冥器') >= 0 || n.indexOf('祭品') >= 0) return '焚';
+  if (n.indexOf('祭祖') >= 0) return '祖';
+  if (n.indexOf('求子') >= 0) return '嗣';
+  if (n.indexOf('旺运') >= 0) return '旺';
+  if (n.indexOf('头像') >= 0) return '🖼️';
+  if (n.indexOf('大师') >= 0 || n.indexOf('咨询') >= 0) return '师';
+  return '📄';
+}
+
+function renderOrders(orders) {
+  var list = document.getElementById('orderList');
+  if (!orders || orders.length === 0) {
+    list.innerHTML = '<div class="empty-state"><span class="empty-icon">📋</span><div class="empty-text">暂无订单记录</div></div>';
+    return;
+  }
+  var html = '';
+  orders.forEach(function(o) {
+    var name = o.product_name || o.productName || o.name || '善缘服务';
+    var amount = o.amount || o.price || o.total || 0;
+    var statusInfo = STATUS_MAP(o.payment_status || o.status || o.paymentStatus || 'unknown');
+    var time = o.created_at || o.createdAt || o.time || o.date || '';
+    // Format time
+    if (time) {
+      try { time = time.substring(0, 10); } catch(e) {}
+    }
+    var icon = productIcon(name);
+    html += '<div class="order-card">';
+    html += '<div class="order-icon">' + icon + '</div>';
+    html += '<div class="order-info"><div class="order-name">' + name + '</div><div class="order-meta">' + time + '</div></div>';
+    html += '<div class="order-right"><div class="order-price"><span class="unit">$</span>' + amount + '</div><div class="order-status ' + statusInfo.cls + '">' + statusInfo.label + '</div></div>';
+    html += '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function loadProfile() {
+  var emailEl = document.getElementById('profileEmail');
+  var token = getToken();
+
+  // Try parsing email from token first (JWT)
+  var email = parseEmailFromToken(token);
+  if (email) {
+    emailEl.textContent = email;
+  }
+
+  // Also try /api/auth/me for latest profile
+  fetch(BASE + '/api/auth/me', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var user = data.user || data;
+    if (user.email) {
+      emailEl.textContent = user.email;
+    }
+  })
+  .catch(function() {
+    // Token parse already handled, silent fallback
+  });
+}
+
+function loadOrders() {
+  var token = getToken();
+  if (!token) {
+    document.getElementById('orderList').innerHTML = '<div class="empty-state"><span class="empty-icon">🔒</span><div class="empty-text">请先登录</div></div>';
+    return;
+  }
+
+  fetch(BASE + '/api/orders?token=' + encodeURIComponent(token))
+  .then(function(r) {
+    if (!r.ok) throw new Error('加载订单失败');
+    return r.json();
+  })
+  .then(function(data) {
+    var orders = data.orders || data.data || data;
+    if (Array.isArray(orders)) {
+      renderOrders(orders);
+    } else if (orders && typeof orders === 'object') {
+      // Might be wrapped in a key
+      var keys = Object.keys(orders);
+      for (var i = 0; i < keys.length; i++) {
+        if (Array.isArray(orders[keys[i]])) {
+          renderOrders(orders[keys[i]]);
+          return;
+        }
+      }
+      renderOrders([]);
+    } else {
+      renderOrders([]);
+    }
+  })
+  .catch(function(err) {
+    var list = document.getElementById('orderList');
+    list.innerHTML = '<div class="empty-state"><span class="empty-icon">⚠️</span><div class="empty-text">加载失败，请稍后重试</div></div>';
+    console.error('Order load error:', err);
+  });
+}
+
+function handleLogout() {
+  localStorage.removeItem('sy_token');
+  showToast('已退出登录', 'error');
+  setTimeout(function(){ window.location.href = 'login.html'; }, 600);
+}
+
+// Init
+(function(){
+  var token = getToken();
+  if (!token) {
+    window.location.href = 'login.html';
+    return;
+  }
+  loadProfile();
+  loadOrders();
+})();
+</script>
+</body>
+</html>

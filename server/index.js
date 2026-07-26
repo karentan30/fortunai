@@ -40,18 +40,28 @@ db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
 db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    name TEXT DEFAULT '',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS orders (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     order_no TEXT UNIQUE,
     product TEXT,
     amount INTEGER,
     currency TEXT DEFAULT 'usd',
+    user_id INTEGER,
     donor_name TEXT,
     contact TEXT,
     wish_text TEXT,
     payment_status TEXT DEFAULT 'pending',
     stripe_session_id TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
   );
 
   CREATE TABLE IF NOT EXISTS readings (
@@ -69,10 +79,40 @@ db.exec(`
     status TEXT DEFAULT 'active',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
+
+  CREATE TABLE IF NOT EXISTS auth_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token TEXT UNIQUE NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
 `);
 
+// Add user_id column to orders if missing (migration)
+try { db.exec('ALTER TABLE orders ADD COLUMN user_id INTEGER REFERENCES users(id)'); } catch(e) {}
+
+const insertUser = db.prepare(
+  'INSERT INTO users (email, password_hash) VALUES (?, ?)'
+);
+const getUserByEmail = db.prepare(
+  'SELECT * FROM users WHERE email = ?'
+);
+const getUserById = db.prepare(
+  'SELECT id, email, name, created_at FROM users WHERE id = ?'
+);
+const insertToken = db.prepare(
+  'INSERT INTO auth_tokens (user_id, token) VALUES (?, ?)'
+);
+const getToken = db.prepare(
+  'SELECT t.*, u.email, u.name FROM auth_tokens t JOIN users u ON t.user_id = u.id WHERE t.token = ?'
+);
+const getUserOrders = db.prepare(
+  "SELECT * FROM orders WHERE user_id = ? AND payment_status = 'completed' ORDER BY created_at DESC"
+);
+
 const insertOrder = db.prepare(
-  'INSERT INTO orders (order_no, product, amount, currency, donor_name, contact, wish_text, stripe_session_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+  'INSERT INTO orders (order_no, product, amount, currency, user_id, donor_name, contact, wish_text, stripe_session_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
 );
 const insertReading = db.prepare(
   'INSERT INTO readings (type, input, result) VALUES (?, ?, ?)'
@@ -138,6 +178,114 @@ app.get('/api/health', (req, res) => {
 });
 
 // ════════════════════════════════════════════
+// AUTHENTICATION
+// ════════════════════════════════════════════
+
+function sha256(s) {
+  return crypto.createHash('sha256').update(s).digest('hex');
+}
+
+function generateToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+// Middleware: extract user from token
+function authMiddleware(req, res, next) {
+  const token = req.headers['authorization'] || req.query.token;
+  if (!token) {
+    req.user = null;
+    return next();
+  }
+  const t = token.replace('Bearer ', '');
+  const row = getToken.get(t);
+  req.user = row ? { id: row.user_id, email: row.email, name: row.name } : null;
+  next();
+}
+
+// POST /api/auth/register
+app.post('/api/auth/register', (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: '请提供邮箱和密码' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: '密码至少6位' });
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: '邮箱格式不正确' });
+    }
+
+    // Check existing
+    const existing = getUserByEmail.get(email);
+    if (existing) {
+      return res.status(409).json({ error: '该邮箱已注册' });
+    }
+
+    const hash = sha256(password);
+    const result = insertUser.run(email, hash);
+    const token = generateToken();
+    insertToken.run(result.lastInsertRowid, token);
+
+    console.log(`[AUTH] Register: ${email}`);
+    res.json({ token, user: { id: result.lastInsertRowid, email } });
+  } catch (err) {
+    console.error('[AUTH ERR]', err);
+    res.status(500).json({ error: '注册失败，请稍后重试' });
+  }
+});
+
+// POST /api/auth/login
+app.post('/api/auth/login', (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ error: '请提供邮箱和密码' });
+    }
+
+    const user = getUserByEmail.get(email);
+    if (!user) {
+      return res.status(401).json({ error: '邮箱或密码错误' });
+    }
+
+    const hash = sha256(password);
+    if (user.password_hash !== hash) {
+      return res.status(401).json({ error: '邮箱或密码错误' });
+    }
+
+    const token = generateToken();
+    insertToken.run(user.id, token);
+
+    console.log(`[AUTH] Login: ${email}`);
+    res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
+  } catch (err) {
+    console.error('[AUTH ERR]', err);
+    res.status(500).json({ error: '登录失败，请稍后重试' });
+  }
+});
+
+// GET /api/auth/me
+app.get('/api/auth/me', authMiddleware, (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: '未登录' });
+  }
+  res.json({ user: req.user });
+});
+
+// GET /api/orders/mine — 当前用户订单
+app.get('/api/orders/mine', authMiddleware, (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: '请先登录' });
+  }
+  try {
+    const orders = getUserOrders.all(req.user.id);
+    res.json({ orders });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ════════════════════════════════════════════
 // STRIPE PAYMENT
 // ════════════════════════════════════════════
 
@@ -148,10 +296,18 @@ app.post('/api/create-checkout', async (req, res) => {
       return res.status(503).json({ error: '支付系统暂未开通' });
     }
 
-    const { product, donorName, contact, wishText, email, successUrl, cancelUrl } = req.body;
+    const { product, donorName, contact, wishText, email, successUrl, cancelUrl, token } = req.body;
     const prod = PRODUCTS[product];
     if (!prod) {
       return res.status(400).json({ error: '无效的产品 ID', valid: Object.keys(PRODUCTS) });
+    }
+
+    // Resolve user from token (optional)
+    let userId = null;
+    if (token) {
+      const t = token.replace('Bearer ', '');
+      const row = getToken.get(t);
+      if (row) userId = row.user_id;
     }
 
     const orderNo = 'SY-' + Date.now() + '-' + crypto.randomBytes(3).toString('hex');
@@ -176,7 +332,7 @@ app.post('/api/create-checkout', async (req, res) => {
 
     // Save pending order
     insertOrder.run(
-      orderNo, product, prod.amount, 'usd',
+      orderNo, product, prod.amount, 'usd', userId,
       donorName || '', contact || '', wishText || '', session.id
     );
 

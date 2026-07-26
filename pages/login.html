@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0e0a04">
+<title>善缘 · 登录</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0a04;--card:#170e06;--mid:#1f1408;
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
+  --jade:#5bbfa0;--jade-mid:#8dd9bf;
+  --amber:#c9820a;--amber-light:#e8b86a;
+  --ink-text:rgba(255,245,220,0.85);
+  --sub-text:rgba(255,245,220,0.58);
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink-text);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:80px}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,0.1) 0%,transparent 50%);pointer-events:none;z-index:0}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(201,168,76,0.6);cursor:pointer;padding:4px 0}
+
+.header{position:relative;z-index:1;text-align:center;padding:52px 20px 24px}
+.header-icon{font-size:42px;margin-bottom:12px;display:block;opacity:0.7}
+.header-title{font-size:20px;font-weight:400;letter-spacing:0.22em;margin-bottom:5px}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:0.26em;color:rgba(201,168,76,0.45);margin-bottom:14px}
+.gold-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto}
+
+.form-wrap{position:relative;z-index:1;padding:0 16px}
+.form-section{margin-bottom:8px}
+.form-label{font-size:10px;letter-spacing:0.18em;color:rgba(201,168,76,0.5);margin-bottom:10px}
+
+.field-group{background:var(--card);border:1px solid rgba(201,168,76,0.12);border-radius:8px;overflow:hidden}
+.field-row{display:flex;align-items:center;padding:0 14px;border-bottom:1px solid rgba(201,168,76,0.08)}
+.field-row:last-child{border-bottom:none}
+.field-label{font-size:11px;color:var(--sub-text);letter-spacing:0.06em;min-width:64px;flex-shrink:0}
+.field-input{flex:1;background:none;border:none;outline:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--ink-text);padding:13px 8px;letter-spacing:0.04em}
+.field-input::placeholder{color:rgba(255,245,220,0.18)}
+
+.btn-submit{width:100%;padding:15px 0;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light),var(--gold));border:none;border-radius:4px;color:rgba(14,10,4,0.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:0.22em;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,0.3);transition:opacity 0.2s}
+.btn-submit:disabled{opacity:0.5;cursor:not-allowed}
+.btn-submit:not(:disabled):hover{opacity:0.92}
+
+.toggle-link{display:block;text-align:center;margin-top:14px;font-size:12px;color:rgba(201,168,76,0.6);letter-spacing:0.06em;cursor:pointer;transition:color 0.2s}
+.toggle-link:hover{color:var(--gold-light)}
+
+.form-screen{display:none}
+.form-screen.active{display:block}
+
+.footer-links{position:relative;z-index:1;text-align:center;margin-top:24px}
+.footer-links a{font-size:10px;color:rgba(255,245,220,0.25);letter-spacing:0.08em;text-decoration:none;margin:0 8px}
+.footer-links a:hover{color:rgba(201,168,76,0.5)}
+
+/* Error toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;line-height:1.6;text-align:center;display:none;font-family:'Noto Serif SC',serif;pointer-events:none}
+.toast.error{background:rgba(180,40,40,0.92);border:1px solid rgba(220,80,80,0.4);color:rgba(255,220,220,0.95);display:block}
+.toast.success{background:rgba(40,130,80,0.92);border:1px solid rgba(80,200,120,0.4);color:rgba(220,255,230,0.95);display:block}
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">‹ 返回</button>
+
+<!-- Header -->
+<div class="header">
+  <span class="header-icon">☯</span>
+  <div class="header-title">欢迎来到善缘</div>
+  <div class="header-sub">WELCOME · SHEN YUAN</div>
+  <div class="gold-line"></div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Login Form -->
+<div class="form-screen active" id="loginScreen">
+  <div class="form-wrap">
+    <div class="form-section">
+      <div class="form-label">账号登录</div>
+      <div class="field-group">
+        <div class="field-row">
+          <span class="field-label">邮箱</span>
+          <input class="field-input" type="email" id="loginEmail" placeholder="请输入邮箱地址" autocomplete="email" inputmode="email">
+        </div>
+        <div class="field-row">
+          <span class="field-label">密码</span>
+          <input class="field-input" type="password" id="loginPassword" placeholder="请输入密码（至少6位）" autocomplete="current-password">
+        </div>
+      </div>
+    </div>
+    <button class="btn-submit" id="loginBtn" onclick="handleLogin()">登录</button>
+    <span class="toggle-link" onclick="showRegister()">没有账号？立即注册</span>
+  </div>
+</div>
+
+<!-- Register Form -->
+<div class="form-screen" id="registerScreen">
+  <div class="form-wrap">
+    <div class="form-section">
+      <div class="form-label">注册新账号</div>
+      <div class="field-group">
+        <div class="field-row">
+          <span class="field-label">邮箱</span>
+          <input class="field-input" type="email" id="regEmail" placeholder="请输入邮箱地址" autocomplete="email" inputmode="email">
+        </div>
+        <div class="field-row">
+          <span class="field-label">密码</span>
+          <input class="field-input" type="password" id="regPassword" placeholder="至少6位密码" autocomplete="new-password">
+        </div>
+        <div class="field-row">
+          <span class="field-label">确认密码</span>
+          <input class="field-input" type="password" id="regConfirm" placeholder="再次输入密码" autocomplete="new-password">
+        </div>
+      </div>
+    </div>
+    <button class="btn-submit" id="registerBtn" onclick="handleRegister()">注册</button>
+    <span class="toggle-link" onclick="showLogin()">已有账号？立即登录</span>
+  </div>
+</div>
+
+<div class="footer-links">
+  <a href="javascript:void(0)" onclick="logoutAndBack()">返回首页</a>
+  <a href="member.html">善缘会员</a>
+</div>
+
+<script>
+var BASE = ''; // same-origin, adjust if needed
+
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast ' + type;
+  setTimeout(function(){ t.className = 'toast'; }, 3000);
+}
+
+function showRegister() {
+  document.getElementById('loginScreen').classList.remove('active');
+  document.getElementById('registerScreen').classList.add('active');
+}
+
+function showLogin() {
+  document.getElementById('registerScreen').classList.remove('active');
+  document.getElementById('loginScreen').classList.add('active');
+}
+
+function validateEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function handleLogin() {
+  var email = document.getElementById('loginEmail').value.trim();
+  var password = document.getElementById('loginPassword').value;
+  var btn = document.getElementById('loginBtn');
+
+  if (!email) { showToast('请输入邮箱地址', 'error'); return; }
+  if (!validateEmail(email)) { showToast('邮箱格式不正确，请检查', 'error'); return; }
+  if (!password) { showToast('请输入密码', 'error'); return; }
+  if (password.length < 6) { showToast('密码至少6位', 'error'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '登录中…';
+
+  fetch(BASE + '/api/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email, password: password })
+  })
+  .then(function(r) {
+    return r.json().then(function(data) { return { status: r.status, data: data }; });
+  })
+  .then(function(res) {
+    if (res.status >= 200 && res.status < 300 && res.data.token) {
+      localStorage.setItem('sy_token', res.data.token);
+      showToast('登录成功，正在跳转…', 'success');
+      setTimeout(function(){ window.location.href = 'account.html'; }, 600);
+    } else {
+      throw new Error(res.data.message || res.data.error || '登录失败，请重试');
+    }
+  })
+  .catch(function(err) {
+    showToast(err.message || '网络异常，请检查连接后重试', 'error');
+    btn.disabled = false;
+    btn.textContent = '登录';
+  });
+}
+
+function handleRegister() {
+  var email = document.getElementById('regEmail').value.trim();
+  var password = document.getElementById('regPassword').value;
+  var confirm = document.getElementById('regConfirm').value;
+  var btn = document.getElementById('registerBtn');
+
+  if (!email) { showToast('请输入邮箱地址', 'error'); return; }
+  if (!validateEmail(email)) { showToast('邮箱格式不正确，请检查', 'error'); return; }
+  if (!password) { showToast('请输入密码', 'error'); return; }
+  if (password.length < 6) { showToast('密码至少6位', 'error'); return; }
+  if (password !== confirm) { showToast('两次输入的密码不一致', 'error'); return; }
+
+  btn.disabled = true;
+  btn.textContent = '注册中…';
+
+  fetch(BASE + '/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: email, password: password })
+  })
+  .then(function(r) {
+    return r.json().then(function(data) { return { status: r.status, data: data }; });
+  })
+  .then(function(res) {
+    if (res.status >= 200 && res.status < 300 && res.data.token) {
+      localStorage.setItem('sy_token', res.data.token);
+      showToast('注册成功，正在跳转…', 'success');
+      setTimeout(function(){ window.location.href = 'account.html'; }, 600);
+    } else {
+      throw new Error(res.data.message || res.data.error || '注册失败，请重试');
+    }
+  })
+  .catch(function(err) {
+    showToast(err.message || '网络异常，请检查连接后重试', 'error');
+    btn.disabled = false;
+    btn.textContent = '注册';
+  });
+}
+
+function logoutAndBack() {
+  localStorage.removeItem('sy_token');
+  window.location.href = '../index.html';
+}
+
+// Redirect if already logged in
+(function(){
+  var token = localStorage.getItem('sy_token');
+  if (token) {
+    window.location.href = 'account.html';
+  }
+})();
+</script>
+</body>
+</html>
