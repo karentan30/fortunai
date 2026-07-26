@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0e0a04">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>善缘 · 供奉方案</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0a04;--card:#170e06;--mid:#1f1408;
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
+  --jade:#5bbfa0;--jade-mid:#8dd9bf;
+  --amber:#c9820a;--amber-light:#e8b86a;
+  --ink-text:rgba(255,245,220,0.85);
+  --sub-text:rgba(255,245,220,0.58);
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink-text);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:120px}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,0.1) 0%,transparent 50%);pointer-events:none;z-index:0}
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(201,168,76,0.6);cursor:pointer;padding:4px 0}
+.header{position:relative;z-index:1;text-align:center;padding:44px 20px 16px}
+.header-title{font-size:20px;font-weight:400;letter-spacing:0.22em;margin-bottom:5px}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:0.26em;color:rgba(201,168,76,0.45);margin-bottom:14px}
+.gold-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto}
+.form-section{padding:8px 16px;position:relative;z-index:1}
+.form-label{font-size:10px;letter-spacing:0.18em;color:rgba(201,168,76,0.5);margin-bottom:8px}
+.shortcut-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.shortcut-btn{padding:7px 12px;border-radius:20px;border:1px solid rgba(201,168,76,0.15);background:transparent;font-family:'Noto Serif SC',serif;font-size:11px;color:var(--sub-text);letter-spacing:0.04em;cursor:pointer;transition:all 0.2s}
+.shortcut-btn:active,.shortcut-btn.selected{background:rgba(201,168,76,0.1);border-color:var(--gold);color:var(--gold-light)}
+.field-group{background:var(--card);border:1px solid rgba(201,168,76,0.12);border-radius:8px;overflow:hidden;margin-bottom:12px}
+.field-row{display:flex;align-items:flex-start;padding:0 14px;border-bottom:1px solid rgba(201,168,76,0.08)}
+.field-row:last-child{border-bottom:none}
+.field-label{font-size:11px;color:var(--sub-text);letter-spacing:0.06em;min-width:60px;flex-shrink:0;padding-top:12px}
+.field-input,.field-textarea,.field-select{flex:1;background:none;border:none;outline:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--ink-text);padding:12px 8px;letter-spacing:0.04em}
+.field-textarea{min-height:72px;line-height:1.8;resize:none}
+.field-select{-webkit-appearance:none;appearance:none}
+.field-select option{background:var(--card);color:var(--ink-text)}
+.field-input::placeholder,.field-textarea::placeholder{color:rgba(255,245,220,0.18)}
+.btn-gen{width:100%;padding:15px 0;background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a,#c9a84c,#8a6420);background-size:300% auto;border:none;border-radius:4px;color:rgba(14,10,4,0.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:0.22em;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,0.3);animation:gold-shimmer 3s linear infinite}
+@keyframes gold-shimmer{0%{background-position:-300% center}100%{background-position:300% center}}
+.btn-gen:active{transform:scale(0.97)}
+.loading-screen{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;padding:60px 20px;gap:16px}
+.loading-screen.show{display:flex}
+.load-glyph{font-size:48px;color:rgba(201,168,76,0.3);font-weight:300;animation:load-breathe 2s ease-in-out infinite}
+@keyframes load-breathe{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.7;transform:scale(1.05)}}
+.load-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:rgba(201,168,76,0.5);letter-spacing:0.18em}
+.load-steps{display:flex;flex-direction:column;gap:5px}
+.load-step{font-size:10px;color:rgba(255,245,220,0.3);letter-spacing:0.08em;animation:step-fade 0.5s ease-out both}
+@keyframes step-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.report-screen{position:relative;z-index:1;display:none}
+.report-screen.show{display:block}
+.chart-header{padding:20px 16px 0}
+.name-row{display:flex;align-items:baseline;gap:12px;margin-bottom:4px}
+.report-name{font-size:20px;letter-spacing:0.14em}
+.report-tag{font-size:10px;color:var(--gold);border:1px solid rgba(201,168,76,0.3);padding:3px 8px;border-radius:2px;letter-spacing:0.1em}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 16px 14px}
+.offering-plan{padding:0 16px;display:flex;flex-direction:column;gap:10px}
+.offering-card{background:var(--card);border:1px solid rgba(201,168,76,0.15);border-radius:10px;overflow:hidden}
+.offering-card.open{border-color:rgba(201,168,76,0.35)}
+.oc-head{display:flex;align-items:center;padding:12px 14px;gap:10px;cursor:pointer}
+.oc-icon{font-size:22px;flex-shrink:0}
+.oc-info{flex:1}
+.oc-name{font-size:13px;letter-spacing:0.08em;margin-bottom:2px}
+.oc-sub{font-size:10px;color:rgba(201,168,76,0.5);letter-spacing:0.08em}
+.oc-arrow{font-size:10px;color:rgba(255,245,220,0.25);transition:transform 0.25s}
+.oc-body{padding:0 14px 14px;display:none}
+.oc-body.open{display:block}
+.oc-text{font-size:11px;color:var(--sub-text);letter-spacing:0.04em;line-height:1.9;margin-bottom:10px;white-space:pre-wrap}
+.oc-tip{background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.12);border-radius:6px;padding:8px 10px;font-size:10px;color:rgba(201,168,76,0.7);letter-spacing:0.06em;line-height:1.7}
+.oc-items{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.oc-item{display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(201,168,76,0.04);border-radius:6px;font-size:11px;color:var(--sub-text);letter-spacing:0.04em}
+.oc-item input[type="checkbox"]{accent-color:var(--gold);width:14px;height:14px;flex-shrink:0}
+.oc-price{text-align:right;font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold-light);margin-bottom:8px}
+.btn-order{width:100%;padding:12px 0;background:linear-gradient(135deg,var(--gold-deep),var(--gold));border:none;border-radius:4px;color:rgba(14,10,4,0.95);font-family:'Noto Serif SC',serif;font-size:13px;font-weight:500;letter-spacing:0.18em;cursor:pointer}
+.btn-order:active{transform:scale(0.97)}
+.stardust{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.stardust span{position:absolute;width:3px;height:3px;background:rgba(201,168,76,0.6);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
+@keyframes twinkle{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+.bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(14,10,4,1) 0%,rgba(14,10,4,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
+.qa-section{position:relative;z-index:1;display:none;padding:16px 0 80px}
+.qa-label{font-size:10px;color:rgba(201,168,76,0.5);letter-spacing:0.2em;margin-bottom:10px;padding:0 16px}
+.qa-row{display:flex;gap:8px;padding:0 16px}
+.qa-input{flex:1;background:var(--card);border:1px solid rgba(201,168,76,0.12);border-radius:6px;padding:10px 12px;font-family:Noto Serif SC,serif;font-size:12px;color:var(--ink-text);outline:none}
+.qa-input:focus{border-color:rgba(201,168,76,0.3)}
+.qa-btn{padding:10px 16px;background:linear-gradient(135deg,var(--gold-deep),var(--gold));border:none;border-radius:6px;color:#0e0a04;font-family:Noto Serif SC,serif;font-size:12px;letter-spacing:0.1em;cursor:pointer;white-space:nowrap}
+.qa-btn:active{transform:scale(0.97)}
+.qa-btn:disabled{opacity:0.4;cursor:default}
+.qa-history{padding:12px 16px 0}
+.qa-my-msg{text-align:right;margin-bottom:8px}
+.qa-my-msg span{display:inline-block;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.15);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--ink-text)}
+.qa-ai-msg{margin-bottom:10px}
+.qa-ai-msg span{display:inline-block;background:var(--card);border:1px solid rgba(201,168,76,0.1);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--sub-text);line-height:1.8}
+.page-enter{animation:fadeUp .8s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.page-enter-d1{animation-delay:.1s}.page-enter-d2{animation-delay:.2s}
+.page-enter-d3{animation-delay:.3s}.page-enter-d4{animation-delay:.4s}
+</style>
+</head>
+<body>
+<div class="stardust" id="stardust"></div>
+<div class="bottom-gradient"></div>
+
+<button class="back-btn" onclick="history.back()">← 返回</button>
+
+<!-- Input screen -->
+<div class="input-screen" id="inputScreen">
+  <div class="header page-enter page-enter-d1">
+    <div class="header-title">供奉方案</div>
+    <div class="header-sub">DIVINE OFFERING PLAN · ELECTRONIC OFFERING & OIL LAMP</div>
+    <div class="gold-line"></div>
+  </div>
+
+  <div class="form-section">
+    <div class="form-label">供奉对象</div>
+    <div class="shortcut-row" id="deityShortcut">
+      <button class="shortcut-btn" data-val="观音菩萨">🙏观音菩萨</button>
+      <button class="shortcut-btn" data-val="妈祖">⛵妈祖</button>
+      <button class="shortcut-btn" data-val="关公">⚔️关公</button>
+      <button class="shortcut-btn" data-val="土地公">🌾土地公</button>
+      <button class="shortcut-btn" data-val="财神爷">💼财神爷</button>
+      <button class="shortcut-btn" data-val="药王菩萨">🧑‍⚕️药王菩萨</button>
+    </div>
+    <div class="field-group">
+      <div class="field-row">
+        <span class="field-label">对象</span>
+        <input class="field-input" type="text" id="deityInput" placeholder="请输入供奉对象名称">
+      </div>
+    </div>
+
+    <div class="form-label">所求事项</div>
+    <div class="field-group">
+      <div class="field-row">
+        <textarea class="field-textarea" id="wishInput" placeholder="请描述你的心愿…示例：保佑家人平安健康，事业顺利发展。"></textarea>
+      </div>
+    </div>
+
+    <div class="form-label">供奉设置（选填）</div>
+    <div class="field-group">
+      <div class="field-row">
+        <span class="field-label">预算</span>
+        <input class="field-input" type="text" id="budgetInput" placeholder="如：$20-$50">
+      </div>
+      <div class="field-row">
+        <span class="field-label">时长</span>
+        <select class="field-select" id="durationSelect">
+          <option value="">请选择</option>
+          <option value="7">7天</option>
+          <option value="15">15天</option>
+          <option value="30">30天</option>
+          <option value="49">49天</option>
+          <option value="long">长期</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-gen" onclick="generateOffering()">生成供奉方案</button>
+  </div>
+
+  <div style="text-align:center;font-size:9px;color:rgba(255,245,220,0.2);padding:0 24px 20px;letter-spacing:0.06em;position:relative;z-index:1">
+    善缘平台 · 电子供奉 · 全程录像反馈
+  </div>
+</div>
+
+<!-- Loading screen -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="load-glyph">🕯</div>
+  <div class="load-text">燃灯祈福中…</div>
+  <div class="load-steps" id="loadSteps"></div>
+</div>
+
+<!-- Report screen -->
+<div class="report-screen" id="reportScreen"></div>
+
+<!-- QA section -->
+<div id="qaSection">
+  <div class="qa-label">追问供奉事宜</div>
+  <div class="qa-row">
+    <input id="qaInput" type="text" placeholder="输入问题…例如：有哪些供品需要准备？" class="qa-input">
+    <button onclick="askQuestion()" class="qa-btn">追问</button>
+  </div>
+  <div class="qa-history" id="qaHistory"></div>
+</div>
+
+<script>
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
+  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
+  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); };
+  document.body.appendChild(t);
+  if (t._toastTimer) clearTimeout(t._toastTimer);
+  t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
+}
+
+// Shortcut buttons
+document.getElementById('deityShortcut').addEventListener('click', function(e){
+  var btn = e.target.closest('.shortcut-btn');
+  if (!btn) return;
+  document.querySelectorAll('.shortcut-btn').forEach(function(b){ b.classList.remove('selected'); });
+  btn.classList.add('selected');
+  document.getElementById('deityInput').value = btn.dataset.val;
+});
+
+var lastContextId = null;
+
+function generateOffering() {
+  var deity = document.getElementById('deityInput').value.trim();
+  var wish = document.getElementById('wishInput').value.trim();
+  if (!deity) { showToast('请输入供奉对象', 'error'); return; }
+  if (!wish) { showToast('请描述你所求事项', 'error'); return; }
+
+  document.getElementById('inputScreen').style.display = 'none';
+  document.getElementById('loadingScreen').classList.add('show');
+  var stepsEl = document.getElementById('loadSteps');
+  stepsEl.innerHTML = '';
+  var steps = ['感应供奉对象…','查阅经典仪轨…','制定供奉方案…','计算吉日吉时…','生成供奉报告…'];
+  steps.forEach(function(s,i){
+    setTimeout(function(){
+      stepsEl.innerHTML += '<div class="load-step">✓ '+s+'</div>';
+    }, i * 350);
+  });
+
+  setTimeout(function(){
+    fetch('/api/offering-plan', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        deity: deity,
+        wish: wish,
+        budget: document.getElementById('budgetInput').value || null,
+        duration: document.getElementById('durationSelect').value || null,
+        token: localStorage.getItem('sy_token') || ''
+      })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      document.getElementById('loadingScreen').classList.remove('show');
+      if (d.error) { showToast(d.error, 'error'); document.getElementById('inputScreen').style.display = 'block'; return; }
+      if (d.contextId) lastContextId = d.contextId;
+      renderReport(d.plan || d.report || d.result || d.answer || '暂无回应，请重试');
+      document.getElementById('qaSection').style.display = 'block';
+    })
+    .catch(function(){
+      document.getElementById('loadingScreen').classList.remove('show');
+      document.getElementById('inputScreen').style.display = 'block';
+      showToast('网络异常，请重试', 'error');
+    });
+  }, steps.length * 350 + 300);
+}
+
+function parseSections(text) {
+  var known = ['🕯','🔥','🙏','💼','⚔️','🌾','⛵','🧑','🌟','🔮','💫','✨','☯','🌙','🪷','📜','💡','🎯','💰','💧','🌿','🌊','⛰','⚜','🏛','🔔','🗝','🧿','⭐','📈','❤️','🤝','🎓','🏠','⚡','🍊','🍎','🍇','🥛','🍵','🌸','🌺','🎐','🔱'];
+  var lines = text.split('\n');
+  var sections = [];
+  var current = null;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var matched = null;
+    for (var k = 0; k < known.length; k++) {
+      if (line.indexOf(known[k]) === 0) { matched = known[k]; break; }
+    }
+    if (matched) {
+      if (current && current.lines.length) sections.push(current);
+      current = { emoji: matched, title: line.substring(matched.length).trim(), lines: [] };
+    } else if (current) {
+      current.lines.push(line);
+    } else if (line.trim()) {
+      current = { emoji: '🕯', title: '供奉指引', lines: [line] };
+    }
+  }
+  if (current && current.lines.length) sections.push(current);
+  return sections;
+}
+
+function renderReport(text) {
+  var sections = parseSections(text);
+  var reportEl = document.getElementById('reportScreen');
+  var html = '<div class="chart-header">';
+  html += '<div class="name-row"><div class="report-name">供奉方案</div><div class="report-tag">AI 仪轨</div></div>';
+  html += '<div class="divider"></div></div>';
+  if (sections.length > 0) {
+    html += '<div class="offering-plan">';
+    for (var i = 0; i < sections.length; i++) {
+      var sec = sections[i];
+      html += '<div class="offering-card">';
+      html += '<div class="oc-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.oc-arrow\').classList.toggle(\'open\')">';
+      html += '<div class="oc-icon">'+(sec.emoji || '🕯')+'</div>';
+      html += '<div class="oc-info"><div class="oc-name">'+(sec.title||'供奉说明')+'</div><div class="oc-sub">点击展开详情</div></div>';
+      html += '<div class="oc-arrow">⬇</div>';
+      html += '</div>';
+      html += '<div class="oc-body open"><div class="oc-text">'+sec.lines.join('\n')+'</div></div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  } else {
+    html += '<div class="ai-plain-text" style="padding:0 16px;font-size:11px;color:var(--sub-text);letter-spacing:0.04em;line-height:1.9;white-space:pre-wrap">'+text+'</div>';
+  }
+  html += '<div style="height:80px"></div>';
+  reportEl.innerHTML = html;
+  reportEl.classList.add('show');
+  reportEl.dataset.contextId = lastContextId || '';
+}
+
+function askQuestion() {
+  var ctxId = document.getElementById('reportScreen').dataset.contextId;
+  var q = document.getElementById('qaInput');
+  if (!q.value.trim()) return;
+  var h = document.getElementById('qaHistory');
+  h.innerHTML += '<div class="qa-my-msg"><span>' + q.value.replace(/</g,'&lt;') + '</span></div>';
+  var question = q.value;
+  q.value = ''; q.disabled = true;
+  var loadEl = document.createElement('div');
+  loadEl.id = 'qaLoading';
+  loadEl.style.cssText = 'text-align:left;margin-bottom:8px;font-size:10px;color:rgba(255,245,220,0.3);letter-spacing:0.06em';
+  loadEl.textContent = '法师正在查阅…';
+  h.appendChild(loadEl);
+  fetch('/api/ask-followup', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({contextId: ctxId, question: question})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    document.getElementById('qaLoading').remove();
+    if (d.answer) {
+      var answer = d.answer.replace(/</g,'&lt;').replace(/\\n/g,'<br>');
+      h.innerHTML += '<div class="qa-ai-msg"><span>' + answer + '</span></div>';
+    }
+    q.disabled = false;
+  })
+  .catch(function(){
+    document.getElementById('qaLoading').remove();
+    h.innerHTML += '<div style="margin-bottom:10px;font-size:10px;color:rgba(200,80,80,0.6);letter-spacing:0.04em">网络错误，请稍后重试</div>';
+    q.disabled = false;
+  });
+}
+</script>
+<script>
+(function(){
+  var c = document.getElementById('stardust');
+  if (!c) return;
+  for (var i = 0; i < 30; i++) {
+    var s = document.createElement('span');
+    s.style.cssText = 'left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;width:'+(1.5+Math.random()*2.5)+'px;height:'+(1.5+Math.random()*2.5)+'px;--dur:'+(2+Math.random()*4)+'s;animation-delay:'+(Math.random()*5)+'s';
+    c.appendChild(s);
+  }
+  setTimeout(function(){ c.querySelectorAll('span').forEach(function(s){ s.style.opacity = '1'; }); }, 100);
+})();</script>
+
+<div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
+  <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 12px"></div>
+  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(201,168,76,0.35);letter-spacing:0.3em">一柱清香 · 直达天听</div>
+</div>
+
+</body>
+</html>

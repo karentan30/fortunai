@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0a1218">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>善缘 · 妈祖文化</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a1218;--card:#0e1820;--card2:#14222e;
+  --sea:#3a7ca5;--sea-light:#6ba3cc;--sea-deep:#1a4a6a;
+  --gold:#c9a84c;--gold-light:#e8d08a;
+  --beige:#d4c5a9;--beige-light:#e8dcc8;
+  --ink-text:rgba(220,235,245,0.85);
+  --sub-text:rgba(180,200,215,0.55);
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink-text);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:120px}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(58,124,165,0.12) 0%,transparent 50%),radial-gradient(ellipse at 80% 100%,rgba(201,168,76,0.06) 0%,transparent 40%);pointer-events:none;z-index:0}
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(107,163,204,0.7);cursor:pointer;padding:4px 0}
+.header{position:relative;z-index:1;text-align:center;padding:44px 20px 20px}
+.header-title{font-size:20px;font-weight:400;letter-spacing:0.22em;margin-bottom:5px}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:0.26em;color:rgba(107,163,204,0.5);margin-bottom:14px}
+.sea-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--sea),transparent);margin:0 auto}
+
+/* Introduction */
+.intro-section{position:relative;z-index:1;margin:12px 16px;background:var(--card);border:1px solid rgba(58,124,165,0.15);border-radius:10px;padding:16px;text-align:center}
+.intro-icon{font-size:36px;margin-bottom:8px;display:block}
+.intro-title{font-size:14px;letter-spacing:0.1em;color:var(--gold-light);margin-bottom:6px}
+.intro-text{font-size:11px;color:var(--sub-text);letter-spacing:0.04em;line-height:1.9}
+.intro-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:12px 0 0;padding-top:12px;border-top:1px solid rgba(58,124,165,0.1)}
+.intro-stat{text-align:center}
+.intro-stat-num{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--sea-light)}
+.intro-stat-label{font-size:8px;color:var(--sub-text);letter-spacing:0.06em;margin-top:2px}
+
+/* Date card */
+.date-strip{position:relative;z-index:1;display:flex;gap:8px;padding:8px 16px 4px;overflow-x:auto;scrollbar-width:none}
+.date-strip::-webkit-scrollbar{display:none}
+.date-card{flex-shrink:0;background:var(--card);border:1px solid rgba(58,124,165,0.12);border-radius:8px;padding:10px 12px;text-align:center;min-width:80px}
+.date-card .day{font-family:'Cormorant Garamond',serif;font-size:16px;color:var(--sea-light)}
+.date-card .label{font-size:9px;color:var(--sub-text);letter-spacing:0.04em;margin-top:3px}
+
+/* Tab bar */
+.tab-bar{position:relative;z-index:1;display:flex;gap:0;margin:10px 16px 0;background:var(--card);border:1px solid rgba(58,124,165,0.12);border-radius:6px;overflow:hidden}
+.tab-btn{flex:1;padding:8px 4px;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:10px;letter-spacing:0.06em;color:var(--sub-text);cursor:pointer;transition:all 0.2s}
+.tab-btn.active{background:rgba(58,124,165,0.12);color:var(--sea-light)}
+.tab-content{position:relative;z-index:1;display:none}
+.tab-content.active{display:block}
+.tab-pad{padding:12px 16px}
+.form-label{font-size:10px;letter-spacing:0.18em;color:rgba(201,168,76,0.5);margin-bottom:8px}
+.field-group{background:var(--card);border:1px solid rgba(58,124,165,0.12);border-radius:8px;overflow:hidden;margin-bottom:12px}
+.field-row{display:flex;align-items:flex-start;padding:0 14px;border-bottom:1px solid rgba(58,124,165,0.08)}
+.field-row:last-child{border-bottom:none}
+.field-label{font-size:11px;color:var(--sub-text);letter-spacing:0.06em;min-width:60px;flex-shrink:0;padding-top:12px}
+.field-textarea{flex:1;background:none;border:none;outline:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--ink-text);padding:12px 8px;letter-spacing:0.04em;resize:none;min-height:72px;line-height:1.8}
+.field-textarea::placeholder{color:rgba(255,245,220,0.18)}
+.btn-gen{width:100%;padding:14px 0;background:linear-gradient(135deg,var(--sea-deep),var(--sea),var(--sea-light),var(--sea));border:none;border-radius:4px;color:rgba(10,18,24,0.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:0.2em;cursor:pointer;box-shadow:0 4px 20px rgba(58,124,165,0.3)}
+.btn-gen:active{transform:scale(0.97)}
+
+/* Offering guidance */
+.guide-text{font-size:11px;color:var(--sub-text);letter-spacing:0.04em;line-height:1.9;margin-bottom:10px}
+.guide-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:var(--card);border:1px solid rgba(58,124,165,0.1);border-radius:8px;margin-bottom:6px}
+.guide-item-icon{font-size:18px;flex-shrink:0;padding-top:2px}
+.guide-item-text{font-size:11px;color:var(--sub-text);letter-spacing:0.04em;line-height:1.7}
+
+/* Result sections (collapsible) */
+.result-section{position:relative;z-index:1;display:flex;flex-direction:column;gap:8px;padding:0 16px}
+.collapsible-card{background:var(--card);border:1px solid rgba(58,124,165,0.15);border-radius:10px;overflow:hidden}
+.collapsible-card.open{border-color:rgba(58,124,165,0.35)}
+.cc-head{display:flex;align-items:center;padding:12px 14px;gap:10px;cursor:pointer}
+.cc-icon{width:30px;height:30px;border-radius:50%;background:rgba(58,124,165,0.2);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.cc-info{flex:1}
+.cc-name{font-size:13px;letter-spacing:0.08em}
+.cc-sub{font-size:9px;color:var(--sub-text);letter-spacing:0.06em}
+.cc-arrow{font-size:10px;color:rgba(255,245,220,0.25);transition:transform 0.25s}
+.cc-body{padding:0 14px 14px;display:none}
+.cc-body.open{display:block}
+.cc-text{font-size:11px;color:var(--sub-text);letter-spacing:0.04em;line-height:1.9;white-space:pre-wrap}
+
+/* Loading */
+.loading-screen{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;padding:60px 20px;gap:16px}
+.loading-screen.show{display:flex}
+.load-glyph{font-size:48px;color:rgba(58,124,165,0.3);font-weight:300;animation:load-breathe 2s ease-in-out infinite}
+@keyframes load-breathe{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.7;transform:scale(1.05)}}
+.load-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:rgba(107,163,204,0.5);letter-spacing:0.18em}
+.load-steps{display:flex;flex-direction:column;gap:5px}
+.load-step{font-size:10px;color:rgba(255,245,220,0.3);letter-spacing:0.08em;animation:step-fade 0.5s ease-out both}
+@keyframes step-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.stardust{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.stardust span{position:absolute;width:3px;height:3px;background:rgba(107,163,204,0.5);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
+@keyframes twinkle{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+.bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(10,18,24,1) 0%,rgba(10,18,24,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
+.page-enter{animation:fadeUp .8s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.page-enter-d1{animation-delay:.1s}.page-enter-d2{animation-delay:.2s}
+</style>
+</head>
+<body>
+<div class="stardust" id="stardust"></div>
+<div class="bottom-gradient"></div>
+
+<button class="back-btn" onclick="history.back()">← 返回</button>
+
+<div class="header page-enter page-enter-d1">
+  <div class="header-title">妈祖文化 · 天后庇佑</div>
+  <div class="header-sub">MAZU · HEAVENLY QUEEN · PROTECTOR OF THE SEAS</div>
+  <div class="sea-line"></div>
+</div>
+
+<!-- Introduction -->
+<div class="intro-section page-enter page-enter-d2">
+  <span class="intro-icon">⛵</span>
+  <div class="intro-title">天上圣母 · 妈祖</div>
+  <div class="intro-text">
+    妈祖（林默娘），北宋建隆元年（960年）生于福建莆田湄洲岛。她自幼聪慧，通晓天文海象，常在海难中救助渔民，28岁羽化升天。此后千年来，妈祖被尊为"海上保护神"，封号"天后""天上圣母"。
+    <br><br>
+    妈祖信仰已传播全球46个国家和地区，拥有超过3亿信众。2009年，"妈祖信俗"被列入联合国教科文组织人类非物质文化遗产代表作名录。她不仅是航海人的守护神，也护佑求子、消灾、祛病、平安，是华人世界最广受敬仰的女性神祇之一。
+  </div>
+  <div class="intro-stats">
+    <div class="intro-stat"><div class="intro-stat-num">3+亿</div><div class="intro-stat-label">全球信众</div></div>
+    <div class="intro-stat"><div class="intro-stat-num">46</div><div class="intro-stat-label">国家和地区</div></div>
+    <div class="intro-stat"><div class="intro-stat-num">1000+</div><div class="intro-stat-label">妈祖庙宇</div></div>
+  </div>
+</div>
+
+<!-- Important Dates -->
+<div class="date-strip page-enter page-enter-d3">
+  <div class="date-card"><div class="day">三月廿三</div><div class="label">妈祖诞辰</div></div>
+  <div class="date-card"><div class="day">九月初九</div><div class="label">羽化升天</div></div>
+  <div class="date-card"><div class="day">正月初一</div><div class="label">新春祈福</div></div>
+  <div class="date-card"><div class="day">三月十五</div><div class="label">绕境巡安</div></div>
+</div>
+
+<!-- Tabs -->
+<div class="tab-bar page-enter page-enter-d3">
+  <button class="tab-btn active" onclick="switchTab(this,'divination')">妈祖占卜</button>
+  <button class="tab-btn" onclick="switchTab(this,'offering')">供奉指导</button>
+</div>
+
+<!-- Tab: Divination -->
+<div class="tab-content active" id="tabDivination">
+  <div class="tab-pad">
+    <div class="form-label">向妈祖问事</div>
+    <div class="field-group">
+      <div class="field-row">
+        <textarea class="field-textarea" id="divineInput" placeholder="默念心中所求之事，向妈祖娘娘请益…例如：此次出海是否顺利？家人病情能否好转？"></textarea>
+      </div>
+    </div>
+    <button class="btn-gen" onclick="askMazu()">诚心问卜</button>
+  </div>
+</div>
+
+<!-- Tab: Offering Guide -->
+<div class="tab-content" id="tabOffering">
+  <div class="tab-pad">
+    <div class="guide-text">妈祖最喜清静、慈悲，供奉时以诚心为上。以下为传统妈祖供奉指导：</div>
+    <div class="guide-item"><span class="guide-item-icon">🕯</span><span class="guide-item-text"><strong style="color:var(--gold-light)">供品：</strong>鲜花（以白/粉色为佳）、清茶三杯、鲜果（苹果、柑橘等）、素斋。忌荤腥、忌酒。</span></div>
+    <div class="guide-item"><span class="guide-item-icon">🌊</span><span class="guide-item-text"><strong style="color:var(--gold-light)">最佳时间：</strong>农历三月廿三（诞辰）、九月初九（升天日）、每月的初一和十五为最佳供奉日。</span></div>
+    <div class="guide-item"><span class="guide-item-icon">🧘</span><span class="guide-item-text"><strong style="color:var(--gold-light)">供奉方式：</strong>在妈祖像前（或面向东南方向）上香三炷，诚心默念心愿，行三跪九叩礼。</span></div>
+    <div class="guide-item"><span class="guide-item-icon">💡</span><span class="guide-item-text"><strong style="color:var(--gold-light)">供奉时长：</strong>建议至少连续7天，49天为圆满周期。可点燃长明灯或莲花灯，灯火不息、福运不断。</span></div>
+    <div class="guide-item"><span class="guide-item-icon">🙏</span><span class="guide-item-text"><strong style="color:var(--gold-light)">妈祖庇佑范围：</strong>出海平安、家宅安宁、祛病消灾、求子嗣、姻缘美满、事业顺遂。</span></div>
+    <div style="margin-top:12px"><button class="btn-gen" onclick="window.location.href='offering.html'">定制供奉方案 →</button></div>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="load-glyph">⛵</div>
+  <div class="load-text">妈祖赐签中…</div>
+  <div class="load-steps" id="loadSteps"></div>
+</div>
+
+<!-- Result -->
+<div class="result-section" id="resultSection" style="display:none"></div>
+
+<script>
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
+  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
+  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); };
+  document.body.appendChild(t);
+  if (t._toastTimer) clearTimeout(t._toastTimer);
+  t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
+}
+
+function switchTab(el, tab) {
+  document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.tab-content').forEach(function(c){ c.classList.remove('active'); });
+  el.classList.add('active');
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+}
+
+var lastContextId = null;
+
+function askMazu() {
+  var question = document.getElementById('divineInput').value.trim();
+  if (!question) { showToast('请输入你想问的事', 'error'); return; }
+
+  document.getElementById('tabDivination').style.display = 'none';
+  document.getElementById('tabOffering').style.display = 'none';
+  document.getElementById('loadingScreen').classList.add('show');
+
+  var stepsEl = document.getElementById('loadSteps');
+  stepsEl.innerHTML = '';
+  var steps = ['默诵妈祖圣号…','妈祖感应中…','查阅天机…','赐签解签…'];
+  steps.forEach(function(s,i){
+    setTimeout(function(){
+      stepsEl.innerHTML += '<div class="load-step">✓ '+s+'</div>';
+    }, i * 350);
+  });
+
+  setTimeout(function(){
+    fetch('/api/liuyao', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        question: '妈祖占卜：' + question,
+        token: localStorage.getItem('sy_token') || ''
+      })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      document.getElementById('loadingScreen').classList.remove('show');
+      if (d.error) { showToast(d.error, 'error'); document.getElementById('tabDivination').style.display = 'block'; return; }
+      if (d.contextId) lastContextId = d.contextId;
+      var resultText = d.interpretation || d.report || d.result || d.answer || '妈祖已降圣意，请静心参悟。';
+      renderMazuResult(resultText, question);
+    })
+    .catch(function(){
+      document.getElementById('loadingScreen').classList.remove('show');
+      document.getElementById('tabDivination').style.display = 'block';
+      showToast('网络异常，请重试', 'error');
+    });
+  }, steps.length * 350 + 300);
+}
+
+function parseSections(text) {
+  var known = ['⛵','🙏','🕯','🌟','🔮','💫','✨','☯','🌙','🌊','📜','💡','🎯','🔥','💧','🌿','⛰','🔔','🗝','🧿','⭐','📈','❤️','🤝','🎓','🏠','🚢','⚓','🎐','🪷'];
+  var lines = text.split('\n');
+  var sections = [];
+  var current = null;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var matched = null;
+    for (var k = 0; k < known.length; k++) {
+      if (line.indexOf(known[k]) === 0) { matched = known[k]; break; }
+    }
+    if (matched) {
+      if (current && current.lines.length) sections.push(current);
+      current = { emoji: matched, title: line.substring(matched.length).trim(), lines: [] };
+    } else if (current) {
+      current.lines.push(line);
+    } else if (line.trim()) {
+      current = { emoji: '⛵', title: '妈祖圣谕', lines: [line] };
+    }
+  }
+  if (current && current.lines.length) sections.push(current);
+  return sections;
+}
+
+function renderMazuResult(text, question) {
+  var sections = parseSections(text);
+  var resultEl = document.getElementById('resultSection');
+  var html = '';
+  if (question) {
+    html += '<div style="padding:12px 16px 8px"><div class="form-label">你所问：</div><div style="background:var(--card);border:1px solid rgba(58,124,165,0.1);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--ink-text);letter-spacing:0.04em">' + question.replace(/</g,'&lt;') + '</div></div>';
+  }
+  if (sections.length > 0) {
+    for (var i = 0; i < sections.length; i++) {
+      var sec = sections[i];
+      html += '<div class="collapsible-card open">';
+      html += '<div class="cc-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.cc-arrow\').classList.toggle(\'open\')">';
+      html += '<div class="cc-icon">'+(sec.emoji || '⛵')+'</div>';
+      html += '<div class="cc-info"><div class="cc-name">'+(sec.title||'妈祖圣谕')+'</div><div class="cc-sub">点击展开详情</div></div>';
+      html += '<div class="cc-arrow">⬇</div>';
+      html += '</div>';
+      html += '<div class="cc-body open"><div class="cc-text">'+sec.lines.join('\n')+'</div></div>';
+      html += '</div>';
+    }
+  } else {
+    html += '<div style="padding:12px 16px;font-size:11px;color:var(--sub-text);letter-spacing:0.04em;line-height:1.9;white-space:pre-wrap">'+text+'</div>';
+  }
+  html += '<div style="height:80px"></div>';
+  resultEl.innerHTML = html;
+  resultEl.style.display = 'block';
+  document.querySelector('.tab-bar').style.display = 'none';
+  document.getElementById('tabDivination').style.display = 'none';
+  document.getElementById('tabOffering').style.display = 'none';
+}
+</script>
+<script>
+(function(){
+  var c = document.getElementById('stardust');
+  if (!c) return;
+  for (var i = 0; i < 30; i++) {
+    var s = document.createElement('span');
+    s.style.cssText = 'left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;width:'+(1.5+Math.random()*2.5)+'px;height:'+(1.5+Math.random()*2.5)+'px;--dur:'+(2+Math.random()*4)+'s;animation-delay:'+(Math.random()*5)+'s';
+    c.appendChild(s);
+  }
+  setTimeout(function(){ c.querySelectorAll('span').forEach(function(s){ s.style.opacity = '1'; }); }, 100);
+})();</script>
+
+<div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
+  <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--sea),transparent);margin:0 auto 12px"></div>
+  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(107,163,204,0.35);letter-spacing:0.3em">海上女神 · 慈航普渡</div>
+</div>
+
+</body>
+</html>

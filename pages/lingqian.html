@@ -13,31 +13,42 @@
   --bg:#1a0e04;--card:#221404;--card2:#2a1908;
   --amber:#c9820a;--amber-light:#e8b86a;--amber-deep:#8a5500;
   --gold:#c9a84c;--gold-light:#e8d08a;
-  --text:#f0e6d8;--text-dim:rgba(240,230,216,.5);--text-faint:rgba(240,230,216,.25)
+  --text:#f0e6d8;--text-dim:rgba(240,230,216,.5);--text-faint:rgba(240,230,216,.25);
+  --ink-text:rgba(255,245,220,0.85);
+  --sub-text:rgba(255,245,220,0.58);
 }
 html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:antialiased}
-body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:52px}
+body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:120px}
 body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,130,10,.15) 0%,transparent 50%);pointer-events:none;z-index:0}
 
 .back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(201,130,10,.7);cursor:pointer;padding:4px 0}
 
 /* Header */
-.header{position:relative;z-index:1;text-align:center;padding:44px 20px 20px}
+.header{position:relative;z-index:1;text-align:center;padding:44px 20px 16px}
 .header-title{font-size:20px;font-weight:400;letter-spacing:.22em;margin-bottom:6px}
 .header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:.26em;color:rgba(201,130,10,.5);margin-bottom:14px}
 .amber-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--amber),transparent);margin:0 auto}
 
-/* Temple selector */
-.temple-tabs{position:relative;z-index:1;display:flex;gap:6px;padding:14px 16px 4px;overflow-x:auto;scrollbar-width:none}
+/* Question field */
+.q-wrap{position:relative;z-index:1;padding:10px 16px 4px}
+.q-label{font-size:10px;letter-spacing:.2em;color:rgba(201,130,10,.45);margin-bottom:6px}
+.field-group{background:var(--card);border:1px solid rgba(201,130,10,.12);border-radius:8px;overflow:hidden;margin-bottom:8px}
+.field-row{display:flex;align-items:flex-start;padding:0 14px;border-bottom:1px solid rgba(201,130,10,.08)}
+.field-row:last-child{border-bottom:none}
+.field-label{font-size:11px;color:var(--text-dim);letter-spacing:0.06em;min-width:56px;flex-shrink:0;padding-top:12px}
+.field-textarea{flex:1;background:none;border:none;outline:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--text);padding:12px 8px;letter-spacing:0.04em;resize:none;min-height:60px;line-height:1.8}
+.field-input{flex:1;background:none;border:none;outline:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--text);padding:12px 8px;letter-spacing:0.04em}
+.field-input::placeholder,.field-textarea::placeholder{color:rgba(240,230,216,.18)}
+
+/* Temple tabs */
+.temple-tabs{position:relative;z-index:1;display:flex;gap:6px;padding:6px 16px 4px;overflow-x:auto;scrollbar-width:none}
 .temple-tabs::-webkit-scrollbar{display:none}
 .ttab{flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid rgba(201,130,10,.2);background:transparent;font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:.06em;color:rgba(240,230,216,.45);cursor:pointer;transition:all .2s}
 .ttab.active{background:rgba(201,130,10,.15);border-color:var(--amber);color:var(--amber-light)}
 
 /* Bamboo tube */
-.tube-section{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;padding:20px 16px 8px;gap:14px}
-
+.tube-section{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;padding:12px 16px 8px;gap:14px}
 .tube-wrap{position:relative;width:80px;height:140px}
-/* Cylinder body */
 .tube-body{
   position:absolute;bottom:0;left:50%;transform:translateX(-50%);
   width:60px;height:120px;
@@ -51,7 +62,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   background:linear-gradient(90deg,rgba(70,40,10,1),rgba(140,80,22,1),rgba(70,40,10,1));
   border-radius:4px 4px 0 0;
 }
-/* Sticks poking out */
 .sticks{position:absolute;bottom:110px;left:50%;transform:translateX(-50%);width:44px;height:60px;display:flex;align-items:flex-end;justify-content:center;gap:3px;overflow:hidden}
 .stick{
   width:4px;height:var(--h,50px);
@@ -68,7 +78,6 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   70%{transform:rotate(4deg)}
   85%{transform:rotate(-2deg)}
 }
-/* Fallen stick */
 .fallen-stick{
   position:absolute;bottom:-16px;left:50%;
   width:4px;height:70px;
@@ -78,23 +87,39 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   opacity:0;transition:all .5s ease .2s;
 }
 .tube-wrap.revealed .fallen-stick{opacity:1;transform:translateX(-50%) rotate(75deg) translateY(0)}
-
 .shake-instruction{font-size:12px;color:var(--text-dim);letter-spacing:.1em;text-align:center}
 .btn-shake{padding:12px 36px;background:linear-gradient(135deg,var(--amber-deep),var(--amber),var(--amber-light),var(--amber));border:none;border-radius:4px;color:rgba(26,14,4,.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:.2em;cursor:pointer;box-shadow:0 4px 16px rgba(201,130,10,.3)}
 .btn-shake:active{transform:scale(.97)}
 .btn-shake:disabled{opacity:.4;cursor:not-allowed}
+.btn-shake.hidden{display:none}
+
+/* AI Submit */
+.submit-wrap{position:relative;z-index:1;padding:0 16px 12px;display:none}
+.btn-submit{width:100%;padding:15px 0;background:linear-gradient(90deg,#8a5500,#c9820a,#e8b86a,#c9820a,#8a5500);background-size:300% auto;border:none;border-radius:4px;color:rgba(26,14,4,.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:.22em;cursor:pointer;animation:gold-shimmer 3s linear infinite;box-shadow:0 4px 20px rgba(201,130,10,.3)}
+@keyframes gold-shimmer{0%{background-position:-300% center}100%{background-position:300% center}}
+.btn-submit:active{transform:scale(0.97)}
+
+/* Loading */
+.loading-screen{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;padding:60px 20px;gap:16px}
+.loading-screen.show{display:flex}
+.load-glyph{font-size:48px;color:rgba(201,130,10,0.3);font-weight:300;animation:load-breathe 2s ease-in-out infinite}
+@keyframes load-breathe{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.7;transform:scale(1.05)}}
+.load-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:rgba(201,130,10,.5);letter-spacing:0.18em}
+.load-steps{display:flex;flex-direction:column;gap:5px}
+.load-step{font-size:10px;color:rgba(255,245,220,0.3);letter-spacing:0.08em;animation:step-fade 0.5s ease-out both}
+@keyframes step-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
 /* Divider */
-.sec-head{position:relative;z-index:1;display:flex;align-items:center;gap:10px;padding:12px 16px 10px}
+.sec-head{position:relative;z-index:1;display:flex;align-items:center;gap:10px;padding:8px 16px 6px}
 .sec-head span{font-size:10px;letter-spacing:.2em;color:rgba(201,130,10,.4);white-space:nowrap}
 .sec-head::before,.sec-head::after{content:'';flex:1;height:1px;background:rgba(201,130,10,.12)}
 
-/* Result card */
-.result-card{position:relative;z-index:1;margin:0 16px;background:var(--card);border:1px solid rgba(201,130,10,.2);border-radius:10px;overflow:hidden;display:none}
-.result-card.show{display:block}
+/* Result card (static pre-display) */
+.result-card-preview{position:relative;z-index:1;margin:0 16px;background:var(--card);border:1px solid rgba(201,130,10,.2);border-radius:10px;overflow:hidden;display:none}
+.result-card-preview.show{display:block}
 .result-top{
   background:linear-gradient(135deg,rgba(138,85,0,.3),rgba(201,130,10,.15));
-  padding:20px 18px 16px;text-align:center;border-bottom:1px solid rgba(201,130,10,.12)
+  padding:18px 18px 14px;text-align:center;border-bottom:1px solid rgba(201,130,10,.12)
 }
 .lot-num{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(201,130,10,.5);letter-spacing:.3em;margin-bottom:4px}
 .lot-grade{font-size:15px;letter-spacing:.18em;margin-bottom:10px}
@@ -102,32 +127,78 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .grade-good{color:var(--amber-light)}
 .grade-mid{color:rgba(240,230,216,.7)}
 .grade-bad{color:rgba(180,100,100,.8)}
-.lot-poem{border:1px solid rgba(201,130,10,.15);border-radius:6px;padding:12px 16px;background:rgba(0,0,0,.15);margin-bottom:2px}
+.lot-poem{border:1px solid rgba(201,130,10,.15);border-radius:6px;padding:10px 14px;background:rgba(0,0,0,.15)}
 .poem-line{font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:.18em;color:rgba(240,230,216,.82);line-height:2.1}
-.result-body{padding:14px 16px}
-.category-rows{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
-.cat-row{display:flex;align-items:flex-start;gap:10px;padding:8px 12px;background:var(--card2);border-radius:6px}
-.cat-name{font-size:10px;color:var(--amber);letter-spacing:.1em;min-width:30px;flex-shrink:0;padding-top:2px}
-.cat-text{font-size:11px;color:rgba(240,230,216,.55);letter-spacing:.04em;line-height:1.75}
+
+/* AI interpretation */
+.ai-interp{padding:0 16px;display:flex;flex-direction:column;gap:8px}
+.ai-card{background:var(--card);border:1px solid rgba(201,130,10,.15);border-radius:10px;overflow:hidden}
+.ai-card.open{border-color:rgba(201,130,10,.3)}
+.ai-card-head{display:flex;align-items:center;padding:12px 14px;gap:10px;cursor:pointer}
+.ai-card-icon{width:28px;height:28px;border-radius:50%;background:rgba(201,130,10,0.2);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.ai-card-title{font-size:13px;letter-spacing:.08em;flex:1}
+.ai-card-arrow{font-size:10px;color:rgba(255,245,220,0.25);transition:transform 0.25s}
+.ai-card-body{padding:0 14px 14px;display:none}
+.ai-card-body.open{display:block}
+.ai-card-text{font-size:11px;color:var(--text-dim);letter-spacing:0.04em;line-height:1.9;white-space:pre-wrap}
 
 /* CTAs */
 .cta-wrap{position:relative;z-index:1;padding:12px 16px 8px;display:none}
 .cta-wrap.show{display:block}
 .btn-cta{width:100%;padding:14px 0;background:linear-gradient(135deg,var(--amber-deep),var(--amber),var(--amber-light),var(--amber));border:none;border-radius:4px;color:rgba(26,14,4,.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:.2em;cursor:pointer;box-shadow:0 4px 16px rgba(201,130,10,.3);margin-bottom:8px}
 .btn-redo{width:100%;padding:11px 0;background:transparent;border:1px solid rgba(201,130,10,.25);border-radius:4px;color:rgba(201,130,10,.6);font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:.16em;cursor:pointer}
+
+/* QA */
+.qa-section{position:relative;z-index:1;display:none;padding:16px 0 80px}
+.qa-label{font-size:10px;color:rgba(201,130,10,.5);letter-spacing:0.2em;margin-bottom:10px;padding:0 16px}
+.qa-row{display:flex;gap:8px;padding:0 16px}
+.qa-input{flex:1;background:var(--card);border:1px solid rgba(201,130,10,.15);border-radius:6px;padding:10px 12px;font-family:Noto Serif SC,serif;font-size:12px;color:var(--text);outline:none}
+.qa-input:focus{border-color:rgba(201,130,10,.3)}
+.qa-btn{padding:10px 16px;background:linear-gradient(135deg,var(--amber-deep),var(--amber));border:none;border-radius:6px;color:#1a0e04;font-family:Noto Serif SC,serif;font-size:12px;letter-spacing:0.1em;cursor:pointer;white-space:nowrap}
+.qa-btn:active{transform:scale(0.97)}
+.qa-btn:disabled{opacity:0.4;cursor:default}
+.qa-history{padding:12px 16px 0}
+.qa-my-msg{text-align:right;margin-bottom:8px}
+.qa-my-msg span{display:inline-block;background:rgba(201,130,10,0.1);border:1px solid rgba(201,130,10,0.15);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--text)}
+.qa-ai-msg{margin-bottom:10px}
+.qa-ai-msg span{display:inline-block;background:var(--card);border:1px solid rgba(201,130,10,0.1);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--text-dim);line-height:1.8}
+
+.stardust{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.stardust span{position:absolute;width:3px;height:3px;background:rgba(201,130,10,0.5);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
+@keyframes twinkle{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+.bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(26,14,4,1) 0%,rgba(26,14,4,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
+.page-enter{animation:fadeUp .8s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 </style>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 </head>
 <body>
+<div class="stardust" id="stardust"></div>
+<div class="bottom-gradient"></div>
+
 <button class="back-btn" onclick="history.back()">‹ 返回</button>
 
-<div class="header">
+<div class="header page-enter page-enter-d1">
   <div class="header-title">求签问事 · 灵签指引</div>
   <div class="header-sub">SACRED LOT ORACLE · DIVINE GUIDANCE</div>
   <div class="amber-line"></div>
 </div>
 
-<div class="temple-tabs">
+<!-- Question -->
+<div class="q-wrap page-enter page-enter-d2">
+  <div class="q-label">默念心中所求之事</div>
+  <div class="field-group">
+    <div class="field-row">
+      <textarea class="field-textarea" id="qInput" placeholder="例：求事业前程、姻缘归宿、财运运势…（越具体越灵验）"></textarea>
+    </div>
+    <div class="field-row">
+      <span class="field-label">地点</span>
+      <input class="field-input" type="text" id="locationInput" placeholder="求签地（选填）如：湄洲妈祖庙">
+    </div>
+  </div>
+</div>
+
+<div class="temple-tabs page-enter page-enter-d2">
   <div class="ttab active" onclick="selectTemple(this,'观音')">观音签</div>
   <div class="ttab" onclick="selectTemple(this,'关帝')">关帝签</div>
   <div class="ttab" onclick="selectTemple(this,'月老')">月老签</div>
@@ -135,7 +206,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="ttab" onclick="selectTemple(this,'文昌')">文昌签</div>
 </div>
 
-<div class="tube-section">
+<div class="tube-section page-enter page-enter-d3">
   <div class="tube-wrap" id="tubeWrap">
     <div class="sticks">
       <div class="stick" style="--h:52px;transform:rotate(-4deg)"></div>
@@ -154,52 +225,79 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <button class="btn-shake" id="shakeBtn" onclick="shakeTube()">摇签</button>
 </div>
 
+<!-- AI Submit after shaking -->
+<div class="submit-wrap" id="submitWrap">
+  <button class="btn-submit" id="submitBtn" onclick="submitReading()">AI解签 · 深度解读</button>
+</div>
+
+<!-- Loading -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="load-glyph">签</div>
+  <div class="load-text">求签中，请诚心等待…</div>
+  <div class="load-steps" id="loadSteps"></div>
+</div>
+
+<!-- Result divider -->
 <div class="sec-head" id="resultDivider" style="display:none"><span>签文解读</span></div>
 
-<div class="result-card" id="resultCard">
+<!-- Preview result card (static) -->
+<div class="result-card-preview" id="resultCardPreview">
   <div class="result-top">
     <div class="lot-num" id="lotNum"></div>
     <div class="lot-grade" id="lotGrade"></div>
     <div class="lot-poem" id="lotPoem"></div>
   </div>
-  <div class="result-body">
-    <div class="category-rows" id="catRows"></div>
-  </div>
 </div>
 
+<!-- AI interpretation -->
+<div class="ai-interp" id="aiInterp" style="display:none"></div>
+
+<!-- CTAs -->
 <div class="cta-wrap" id="ctaWrap">
   <button class="btn-cta" onclick="createCheckout(this)">请大师详解此签 · $9.9</button>
   <button class="btn-redo" onclick="resetQian()">重新求签</button>
 </div>
 
+<!-- QA section -->
+<div id="qaSection">
+  <div class="qa-label">追问签意</div>
+  <div class="qa-row">
+    <input id="qaInput" type="text" placeholder="输入问题…例如：此签是好是坏？" class="qa-input">
+    <button onclick="askQuestion()" class="qa-btn">追问</button>
+  </div>
+  <div class="qa-history" id="qaHistory"></div>
+</div>
+
 <script>
 var currentTemple = '观音';
 var shaken = false;
+var lotNumber = null;
+var lastContextId = null;
 
 var LOTS = {
   '观音': [
-    {n:1, grade:'上上签', cls:'grade-excellent', poem:['慈悲普度众生灵','功德圆满有前程','心诚自有观音助','吉星高照福自生'], cats:{事业:'贵人相助，近期有升迁或重要机遇，宜主动把握，不可错失。',财运:'财源广进，投资谨慎则有厚利，偏财运旺，可适当尝试。',感情:'单身者近期有真缘出现，有伴者感情甜蜜，是求婚好时机。',健康:'身心皆旺，注意休息，保持良好作息即可安康。',出行:'出行大吉，远行顺利，宜择吉日动身。'}},
-    {n:7, grade:'上签', cls:'grade-good', poem:['天边明月照归途','佳期将近莫迟疑','守得云开见月明','功名利禄自然来'], cats:{事业:'当前有阻碍，但坚持下去终将成功，勿因困难而放弃。',财运:'财运稳步上升，不宜冒险，稳健理财方为上策。',感情:'缘分即将到来，耐心等候，强求则适得其反。',健康:'注意脾胃调养，饮食规律，可保健康。',出行:'出行平安，宜结伴同行，独行须注意安全。'}},
-    {n:13, grade:'中签', cls:'grade-mid', poem:['半途风雨不须愁','守正持中自可谋','且将闲事放一旁','终见前程似锦绣'], cats:{事业:'局势平稳，无大进展也无大退步，宜深耕现有岗位。',财运:'财运普通，量入为出，切勿铺张浪费。',感情:'感情需要双方用心经营，主动沟通可改善现状。',健康:'身体无大碍，保持运动习惯，防微杜渐。',出行:'出行无碍，小心为上，行前做好准备。'}},
-    {n:21, grade:'下签', cls:'grade-bad', poem:['此时运势多不顺','且须忍耐莫强求','山重水复疑无路','柳暗花明又一村'], cats:{事业:'近期宜守不宜攻，主动出击反易碰壁，静待时机转变。',财运:'破财之兆，管好钱包，切忌借贷或高风险投资。',感情:'感情易生变故，多沟通，避免误解加深裂痕。',健康:'注意身体信号，如有不适及时就医，勿拖延。',出行:'暂缓出行，若必须出行请做好充分准备并注意安全。'}},
-    {n:36, grade:'上签', cls:'grade-good', poem:['一声雷响动乾坤','好运频来不须问','把握当下勤耕耘','金榜题名定有份'], cats:{事业:'突破时机已至，大胆争取晋升或新项目，贵人暗中相助。',财运:'有意外之财，可抓住时机，但需辨别真伪，防受骗。',感情:'桃花运旺，已有心仪对象者可大胆表白，成功率高。',健康:'精神状态佳，宜趁此机会锻炼身体，调理虚弱之处。',出行:'出行有贵人相遇，远行可有惊喜收获。'}},
+    {n:1, grade:'上上签', cls:'grade-excellent', poem:['慈悲普度众生灵','功德圆满有前程','心诚自有观音助','吉星高照福自生']},
+    {n:7, grade:'上签', cls:'grade-good', poem:['天边明月照归途','佳期将近莫迟疑','守得云开见月明','功名利禄自然来']},
+    {n:13, grade:'中签', cls:'grade-mid', poem:['半途风雨不须愁','守正持中自可谋','且将闲事放一旁','终见前程似锦绣']},
+    {n:21, grade:'下签', cls:'grade-bad', poem:['此时运势多不顺','且须忍耐莫强求','山重水复疑无路','柳暗花明又一村']},
+    {n:36, grade:'上签', cls:'grade-good', poem:['一声雷响动乾坤','好运频来不须问','把握当下勤耕耘','金榜题名定有份']},
   ],
   '关帝': [
-    {n:3, grade:'上上签', cls:'grade-excellent', poem:['忠义千秋万古传','生意兴隆福绵绵','关圣护佑诚心者','财源滚滚自心田'], cats:{事业:'关帝保佑，生意合伙大吉，可谈重要合同，签约最佳。',财运:'财运亨通，正财偏财皆旺，投资有回报，贷款可获批。',感情:'夫妻感情稳固如磐石，家庭和睦，是添丁之吉兆。',健康:'身强体健，宜适度运动，保持活力。',出行:'行商出差大吉，远行可得厚利。'}},
-    {n:15, grade:'上签', cls:'grade-good', poem:['义气当先利自来','小人退散福门开','守正不阿天地证','功成名就是今朝'], cats:{事业:'有小人阻碍，但凭借诚信与能力必能化解，坚守原则即可。',财运:'财运稳健，防合伙不顺或财务纠纷，合约须谨慎审看。',感情:'感情需要经得起考验，真金不怕火炼，感情同理。',健康:'注意肝胆调养，少饮酒，保持良好生活习惯。',出行:'可出行，防途中遇小人，重要证件随身携带。'}},
-    {n:28, grade:'中签', cls:'grade-mid', poem:['平步青云需时机','守正待变勿心急','时来运转自有日','此刻耕耘明日收'], cats:{事业:'当前时机未到，宜积累人脉资源，等待发力时机。',财运:'财运一般，稳字当头，守住现有资产为上。',感情:'平淡期，用心陪伴，感情会因此稳固。',健康:'亚健康状态，注意作息，减少不必要的应酬。',出行:'普通出行无碍，长途出差效果有限。'}},
+    {n:3, grade:'上上签', cls:'grade-excellent', poem:['忠义千秋万古传','生意兴隆福绵绵','关圣护佑诚心者','财源滚滚自心田']},
+    {n:15, grade:'上签', cls:'grade-good', poem:['义气当先利自来','小人退散福门开','守正不阿天地证','功成名就是今朝']},
+    {n:28, grade:'中签', cls:'grade-mid', poem:['平步青云需时机','守正待变勿心急','时来运转自有日','此刻耕耘明日收']},
   ],
   '月老': [
-    {n:5, grade:'上上签', cls:'grade-excellent', poem:['红线已系有情人','花好月圆情更深','月老赐缘天注定','今生共结百年心'], cats:{事业:'感情顺遂带来工作顺心，合作伙伴关系融洽，团队凝聚。',财运:'因缘生财，人脉带来财运，适合通过人际关系拓展生意。',感情:'上上大吉！单身者此签预示真缘即将降临；有伴者近期将有浪漫突破。',健康:'心情愉快则百病不侵，保持好心情即是最好的保养。',出行:'出行可遇贵人，或邂逅有缘之人，保持开放心态。'}},
-    {n:19, grade:'中签', cls:'grade-mid', poem:['缘分天定莫强求','月老有时也难留','且将心事付流水','有缘终会相聚头'], cats:{事业:'专注工作，减少分心，感情上的烦恼会影响工作效率。',财运:'财运中平，因情感问题易有额外支出，量力而行。',感情:'此签提醒：缘分需要机缘，刻意强求反生反效，顺其自然为上策。',健康:'情绪波动影响健康，注意调节压力，多与朋友倾诉。',出行:'可出行，出行中可能有新认识，保持友好开放态度。'}},
+    {n:5, grade:'上上签', cls:'grade-excellent', poem:['红线已系有情人','花好月圆情更深','月老赐缘天注定','今生共结百年心']},
+    {n:19, grade:'中签', cls:'grade-mid', poem:['缘分天定莫强求','月老有时也难留','且将心事付流水','有缘终会相聚头']},
   ],
   '财神': [
-    {n:8, grade:'上签', cls:'grade-good', poem:['财神驾到喜盈门','金银满库福不尽','一帆风顺万事成','富贵荣华自天成'], cats:{事业:'财神赐运，事业有突破，把握商机，主动出击有厚利。',财运:'财运上上，正财偏财皆有，投资、理财均宜在近期行动。',感情:'财运旺带动姻缘旺，有伴者感情甜蜜，可计划重要决策。',健康:'保持身心平衡，财运旺时勿太操劳，注意劳逸结合。',出行:'商务出行大吉，外地出差可带来意想不到的机遇。'}},
-    {n:25, grade:'下签', cls:'grade-bad', poem:['财路暂闭莫强求','守好钱袋度难关','潮落自有潮涨时','忍得一时海阔天'], cats:{事业:'切勿轻易投资或扩张，守住现有业务，减少损失为上。',财运:'财运低迷，防破财、被骗，签约前务必仔细核查。',感情:'经济压力影响感情，坦诚沟通，共同面对困难。',健康:'压力大，注意心脏和血压，减少焦虑和负面思考。',出行:'此时不宜远行出差，若必须出行需格外谨慎。'}},
+    {n:8, grade:'上签', cls:'grade-good', poem:['财神驾到喜盈门','金银满库福不尽','一帆风顺万事成','富贵荣华自天成']},
+    {n:25, grade:'下签', cls:'grade-bad', poem:['财路暂闭莫强求','守好钱袋度难关','潮落自有潮涨时','忍得一时海阔天']},
   ],
   '文昌': [
-    {n:12, grade:'上上签', cls:'grade-excellent', poem:['文星高照金榜题','学海扬帆志四方','勤学苦读有今日','功名富贵皆自来'], cats:{事业:'适合考试、晋升、学习新技能，文昌星入命，才华被认可。',财运:'靠才华和知识变现，知识类收入有突破，可考虑出书或授课。',感情:'文质彬彬者有魅力，因才华结缘，学历或职业是加分项。',健康:'脑力消耗大，注意充分休息，保护眼睛和颈椎。',出行:'求学出行大吉，异地深造或参加培训均有收获。'}},
-    {n:30, grade:'中签', cls:'grade-mid', poem:['学途曲折莫气馁','勤能补拙是良方','积跬步方至千里','功到自然百花香'], cats:{事业:'学习有阻力，但坚持钻研必有所成，切勿半途而废。',财运:'财运平稳，靠本职工作稳定收入，暂不宜副业分心。',感情:'感情平淡，专注自身成长往往反而吸引有缘人。',健康:'用脑过度，注意休息，多补充营养，不要熬夜。',出行:'外出学习机会平平，在本地深耕也有好的结果。'}},
+    {n:12, grade:'上上签', cls:'grade-excellent', poem:['文星高照金榜题','学海扬帆志四方','勤学苦读有今日','功名富贵皆自来']},
+    {n:30, grade:'中签', cls:'grade-mid', poem:['学途曲折莫气馁','勤能补拙是良方','积跬步方至千里','功到自然百花香']},
   ]
 };
 
@@ -220,14 +318,15 @@ function shakeTube() {
   setTimeout(function(){
     tube.classList.remove('shaking');
     tube.classList.add('revealed');
-    setTimeout(showResult, 400);
+    setTimeout(showPreview, 400);
   }, 520);
   shaken = true;
 }
 
-function showResult() {
+function showPreview() {
   var lots = LOTS[currentTemple] || LOTS['观音'];
   var lot = lots[Math.floor(Math.random() * lots.length)];
+  lotNumber = lot.n;
 
   document.getElementById('lotNum').textContent = '第 ' + lot.n + ' 签 · ' + currentTemple + '庙';
   document.getElementById('lotGrade').innerHTML = '<span class="' + lot.cls + '">' + lot.grade + '</span>';
@@ -235,25 +334,125 @@ function showResult() {
     return '<div class="poem-line">' + l + '</div>';
   }).join('');
 
-  var catHtml = Object.keys(lot.cats).map(function(k){
-    return '<div class="cat-row"><div class="cat-name">' + k + '</div><div class="cat-text">' + lot.cats[k] + '</div></div>';
-  }).join('');
-  document.getElementById('catRows').innerHTML = catHtml;
-
   document.getElementById('resultDivider').style.display = 'flex';
-  document.getElementById('resultCard').classList.add('show');
-  document.getElementById('ctaWrap').classList.add('show');
+  document.getElementById('resultCardPreview').classList.add('show');
+  document.getElementById('submitWrap').style.display = 'block';
+}
+
+function submitReading() {
+  var question = document.getElementById('qInput').value.trim();
+  if (!question) { showToast('请描述你所求之事', 'error'); return; }
+
+  document.querySelector('.q-wrap').style.display = 'none';
+  document.querySelector('.temple-tabs').style.display = 'none';
+  document.querySelector('.tube-section').style.display = 'none';
+  document.getElementById('submitWrap').style.display = 'none';
+  document.getElementById('loadingScreen').classList.add('show');
+
+  var stepsEl = document.getElementById('loadSteps');
+  stepsEl.innerHTML = '';
+  var steps = ['诚心感应…','查阅签文…','推演命运轨迹…','结合所求之事…','生成解签报告…'];
+  steps.forEach(function(s,i){
+    setTimeout(function(){
+      stepsEl.innerHTML += '<div class="load-step">✓ '+s+'</div>';
+    }, i * 350);
+  });
+
+  setTimeout(function(){
+    fetch('/api/lingqian', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        question: question,
+        temple: currentTemple,
+        signNumber: lotNumber,
+        location: document.getElementById('locationInput').value || null,
+        token: localStorage.getItem('sy_token') || ''
+      })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      document.getElementById('loadingScreen').classList.remove('show');
+      if (d.error) { showToast(d.error, 'error'); resetQian(); return; }
+      if (d.contextId) lastContextId = d.contextId;
+      renderAIInterpretation(d.interpretation || d.report || d.result || d.answer || '暂无回应，请重试');
+      document.getElementById('ctaWrap').classList.add('show');
+      document.getElementById('qaSection').style.display = 'block';
+    })
+    .catch(function(){
+      document.getElementById('loadingScreen').classList.remove('show');
+      showToast('网络异常，请重试', 'error');
+      resetQian();
+    });
+  }, steps.length * 350 + 300);
+}
+
+function parseSections(text) {
+  var known = ['📜','💰','💼','❤️','💪','🌟','🔮','📊','🎯','🔥','💧','🌿','🌊','⛰','⚔️','🛡️','✨','💫','⭐','☯','🌙','☀️','📈','💕','🤝','🎓','🏠','🚗','❄️','⚡','🌪','🏆','🎁','📝','💡','🕯','⚱','🧿','🔔','🗝','🪷','🎋','🏮','🎐','⌛'];
+  var lines = text.split('\n');
+  var sections = [];
+  var current = null;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var matched = null;
+    for (var k = 0; k < known.length; k++) {
+      if (line.indexOf(known[k]) === 0) { matched = known[k]; break; }
+    }
+    if (matched) {
+      if (current && current.lines.length) sections.push(current);
+      current = { emoji: matched, title: line.substring(matched.length).trim(), lines: [] };
+    } else if (current) {
+      current.lines.push(line);
+    } else if (line.trim()) {
+      current = { emoji: '📜', title: '签文解读', lines: [line] };
+    }
+  }
+  if (current && current.lines.length) sections.push(current);
+  return sections;
+}
+
+function renderAIInterpretation(text) {
+  var sections = parseSections(text);
+  var interpEl = document.getElementById('aiInterp');
+  var html = '';
+  if (sections.length > 0) {
+    for (var i = 0; i < sections.length; i++) {
+      var sec = sections[i];
+      html += '<div class="ai-card open">';
+      html += '<div class="ai-card-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ai-card-arrow\').classList.toggle(\'open\')">';
+      html += '<div class="ai-card-icon">'+(sec.emoji||'📜')+'</div>';
+      html += '<div class="ai-card-title">'+(sec.title||'签文解读')+'</div>';
+      html += '<div class="ai-card-arrow">⬇</div>';
+      html += '</div>';
+      html += '<div class="ai-card-body open"><div class="ai-card-text">'+sec.lines.join('\n')+'</div></div>';
+      html += '</div>';
+    }
+  } else {
+    html += '<div style="font-size:11px;color:var(--text-dim);letter-spacing:0.04em;line-height:1.9;white-space:pre-wrap">'+text+'</div>';
+  }
+  html += '<div style="height:80px"></div>';
+  interpEl.innerHTML = html;
+  interpEl.style.display = 'block';
 }
 
 function resetQian() {
   shaken = false;
+  lotNumber = null;
   var tube = document.getElementById('tubeWrap');
   tube.classList.remove('shaking', 'revealed');
   document.getElementById('shakeBtn').disabled = false;
   document.getElementById('shakeInstruction').textContent = '默念心中所求之事，\n诚心摇签';
   document.getElementById('resultDivider').style.display = 'none';
-  document.getElementById('resultCard').classList.remove('show');
+  document.getElementById('resultCardPreview').classList.remove('show');
+  document.getElementById('submitWrap').style.display = 'none';
+  document.getElementById('aiInterp').style.display = 'none';
+  document.getElementById('aiInterp').innerHTML = '';
   document.getElementById('ctaWrap').classList.remove('show');
+  document.getElementById('qaSection').style.display = 'none';
+  document.getElementById('qaHistory').innerHTML = '';
+  document.querySelector('.q-wrap').style.display = 'block';
+  document.querySelector('.temple-tabs').style.display = 'flex';
+  document.querySelector('.tube-section').style.display = 'flex';
 }
 
 function showToast(msg, type) {
@@ -286,6 +485,57 @@ function createCheckout(btn) {
     showToast('网络异常，请重试', 'error'); btn.disabled = false; btn.textContent = '请大师详解此签 · $9.9';
   });
 }
+
+function askQuestion() {
+  var ctxId = document.getElementById('aiInterp').dataset ? document.getElementById('aiInterp').dataset.contextId : lastContextId;
+  var q = document.getElementById('qaInput');
+  if (!q.value.trim()) return;
+  var h = document.getElementById('qaHistory');
+  h.innerHTML += '<div class="qa-my-msg"><span>' + q.value.replace(/</g,'&lt;') + '</span></div>';
+  var question = q.value;
+  q.value = ''; q.disabled = true;
+  var loadEl = document.createElement('div');
+  loadEl.id = 'qaLoading';
+  loadEl.style.cssText = 'text-align:left;margin-bottom:8px;font-size:10px;color:rgba(255,245,220,0.3);letter-spacing:0.06em';
+  loadEl.textContent = '解签中…';
+  h.appendChild(loadEl);
+  fetch('/api/ask-followup', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({contextId: ctxId, question: question})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    document.getElementById('qaLoading').remove();
+    if (d.answer) {
+      var answer = d.answer.replace(/</g,'&lt;').replace(/\\n/g,'<br>');
+      h.innerHTML += '<div class="qa-ai-msg"><span>' + answer + '</span></div>';
+    }
+    q.disabled = false;
+  })
+  .catch(function(){
+    document.getElementById('qaLoading').remove();
+    h.innerHTML += '<div style="margin-bottom:10px;font-size:10px;color:rgba(200,80,80,0.6);letter-spacing:0.04em">网络错误，请稍后重试</div>';
+    q.disabled = false;
+  });
+}
 </script>
+<script>
+(function(){
+  var c = document.getElementById('stardust');
+  if (!c) return;
+  for (var i = 0; i < 30; i++) {
+    var s = document.createElement('span');
+    s.style.cssText = 'left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;width:'+(1.5+Math.random()*2.5)+'px;height:'+(1.5+Math.random()*2.5)+'px;--dur:'+(2+Math.random()*4)+'s;animation-delay:'+(Math.random()*5)+'s';
+    c.appendChild(s);
+  }
+  setTimeout(function(){ c.querySelectorAll('span').forEach(function(s){ s.style.opacity = '1'; }); }, 100);
+})();</script>
+
+<div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
+  <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--amber),transparent);margin:0 auto 12px"></div>
+  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(201,130,10,0.35);letter-spacing:0.3em">心诚则灵 · 有求必应</div>
+</div>
+
 </body>
 </html>
