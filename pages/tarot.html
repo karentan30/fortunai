@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#0d0820">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>善缘 · 塔罗占卜</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
@@ -17,7 +18,7 @@
   --star: #f8f4ff;
 }
 html, body { background: var(--deep); font-family: 'Noto Serif SC', serif; color: #f0eaff; -webkit-font-smoothing: antialiased; }
-body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 52px; }
+body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 100px; }
 
 /* Starfield */
 body::before {
@@ -181,10 +182,35 @@ body::before {
     <div class="interp-text" id="interpText"></div>
     <div class="advice-box"><div class="advice-label">建议行动</div><div class="advice-text" id="adviceText"></div></div>
   </div>
+
+  <!-- Upgrade CTA (hidden for paid spreads) -->
+  <div class="interp-section" id="upgradeCta" style="display:none;border-color:rgba(201,168,76,0.2);background:linear-gradient(135deg,rgba(201,168,76,0.06),rgba(155,111,196,0.04))">
+    <div class="interp-head"><div class="interp-dot" style="background:var(--gold)"></div><div class="interp-title" style="color:var(--gold-light)">深度解读</div></div>
+    <div style="font-size:11px;color:rgba(240,234,255,0.55);letter-spacing:0.04em;line-height:1.9;margin-bottom:12px">
+      单张牌只能看到表层启示。<strong style="color:var(--gold-light)">三张牌阵（过去·现在·未来）</strong>或<strong style="color:var(--gold-light)">五芒星牌阵</strong>能给你完整的方向。
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn-redo" style="flex:1;border-color:rgba(201,168,76,0.3);color:var(--gold-light)" onclick="upgradeTarot(this, 3)">三张牌阵 · $9</button>
+      <button class="btn-redo" style="flex:1;border-color:rgba(155,111,196,0.3);color:var(--violet-light)" onclick="upgradeTarot(this, 5)">五芒星牌阵 · $19</button>
+    </div>
+  </div>
+
   <button class="btn-redo" onclick="resetDraw()">换个问题 · 重新抽牌</button>
 </div>
 
 <script>
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
+  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
+  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){ t.style.opacity = "0"; t.style.transition = "opacity 0.3s"; setTimeout(function(){ t.remove(); },300); };
+  document.body.appendChild(t);
+  if (t._toastTimer) clearTimeout(t._toastTimer);
+  t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
+}
 var CARDS = [
   {name:'愚者', roman:'0', glyph:'零', energy:'新开始·冒险·天真', desc:'象征全新旅程的开始，带着纯粹的心上路，无所畏惧。'},
   {name:'魔术师', roman:'I', glyph:'一', energy:'意志·创造·主导', desc:'你拥有实现目标所需的一切工具，关键在于能否善加利用。'},
@@ -228,7 +254,7 @@ function selectSpread(el, n, type) {
 
 function drawCards() {
   var q = document.getElementById('question').value.trim();
-  if (!q) { alert('请先写下你的问题'); return; }
+  if (!q) { showToast('请先写下你的问题'); return; }
   document.getElementById('loadingWrap').classList.add('show');
   document.getElementById('resultWrap').classList.remove('show');
   document.querySelector('.btn-draw').style.display = 'none';
@@ -257,7 +283,7 @@ function showResult(question) {
       '<div class="tarot-card" style="transform:rotate('+(d.reversed?180:0)+'deg)">' +
         '<div class="card-glyph">'+d.card.glyph+'</div>' +
         '<div class="card-num">'+d.card.roman+'</div>' +
-        '<div class="card-name-sm">'+d.card.name+(d.reversed?' 逆位':''+'</div>') +
+        '<div class="card-name-sm">'+d.card.name+(d.reversed?' 逆位':'')+'</div>' +
       '</div>' +
       '<div class="slot-label">'+positions[i]+'</div></div>';
   });
@@ -287,6 +313,33 @@ function showResult(question) {
 
   document.getElementById('resultWrap').classList.add('show');
   document.querySelector('.btn-draw').style.display = 'none';
+
+  // Show upgrade CTA for free single-card reading
+  var upgradeEl = document.getElementById('upgradeCta');
+  if (upgradeEl) {
+    upgradeEl.style.display = (n === 1) ? 'block' : 'none';
+  }
+}
+
+function upgradeTarot(btnEl, n) {
+  var price = n === 3 ? 9 : 19;
+  btnEl.disabled = true;
+  btnEl.textContent = '跳转支付…';
+  fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      product: 'bazi_basic',
+      price: price,
+      token: localStorage.getItem('sy_token') || ''
+    })
+  }).then(function(r){ return r.json(); }).then(function(data){
+    if(data.url) window.location.href = data.url;
+    else { btnEl.disabled = false; btnEl.textContent = n===3?'三张牌阵 · $9':'五芒星牌阵 · $19'; }
+  }).catch(function(){
+    btnEl.disabled = false;
+    btnEl.textContent = n===3?'三张牌阵 · $9':'五芒星牌阵 · $19';
+  });
 }
 
 function resetDraw() {
@@ -295,5 +348,12 @@ function resetDraw() {
   document.getElementById('question').value = '';
 }
 </script>
+
+<!-- Brand tagline -->
+<div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
+  <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(155,111,196,0.4),transparent);margin:0 auto 12px"></div>
+  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(155,111,196,0.35);letter-spacing:0.3em">你求什么 · 自有天机</div>
+</div>
+
 </body>
 </html>

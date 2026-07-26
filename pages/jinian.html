@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>思念·寄语 — 善缘</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>善缘 · 思念寄语</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -392,7 +393,7 @@
   </div>
 
   <div class="reply-actions">
-    <button class="reply-btn" onclick="alert('功能即将开放，届时可保存为图片')">保存回信</button>
+    <button class="reply-btn" onclick="showToast('功能即将开放，届时可保存为图片')">保存回信</button>
     <button class="reply-btn" onclick="showShare()">分享这封信</button>
   </div>
   <div class="share-icons" id="share-icons" style="display:none">
@@ -412,10 +413,20 @@
     <div class="cert-meta" id="cert-meta">2026年7月23日 · 编号 SY-20260723-000</div>
   </div>
 
-  <button class="share-btn" onclick="alert('证书分享功能即将开放')">🌸 分享功德证书</button>
+  <button class="share-btn" onclick="showToast('证书分享功能即将开放')">🌸 分享功德证书</button>
 </div>
 
 <script>
+  function showToast(msg, type) {
+    var t = document.createElement('div');
+    t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
+    t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+    t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
+    t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
+    t.textContent = msg;
+    document.body.appendChild(t);
+    setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
+  }
   // ── chip toggle ──
   document.getElementById('hobbies').addEventListener('click', e => {
     if (e.target.classList.contains('chip')) e.target.classList.toggle('selected');
@@ -497,7 +508,7 @@
     const name = document.getElementById('name').value.trim();
     const letter = document.getElementById('letter').value.trim();
 
-    if (!rel) { alert('请选择称谓'); return; }
+    if (!rel) { showToast('请选择称谓'); return; }
 
     // show loading
     show('screen-loading');

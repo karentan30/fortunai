@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#1a0e06">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>善缘 · 冥器定制</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
@@ -17,7 +18,7 @@
   --night: #1a0e06; --night-mid: #2a180a; --night-card: #221404;
 }
 html, body { background: var(--night); font-family: 'Noto Serif SC', serif; color: #f0e6d8; -webkit-font-smoothing: antialiased; }
-body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 60px; }
+body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 100px; }
 body::before {
   content: ''; position: fixed; inset: 0;
   background: radial-gradient(ellipse at 50% 0%, rgba(201,130,10,0.15) 0%, transparent 50%);
@@ -104,7 +105,7 @@ body::before {
 </head>
 <body>
 
-<button class="back-btn" onclick="history.back()">‹ 返回</button>
+<button class="back-btn" onclick="history.back()">← 返回</button>
 
 <div class="header">
   <div class="header-title">冥器定制 · 寄往彼岸</div>
@@ -475,10 +476,22 @@ body::before {
     <div class="cart-label">已选 <span id="cartCount">0</span> 件 · 将一同焚化</div>
     <div class="cart-total"><span style="font-size:11px;font-family:'Noto Serif SC',serif">$</span><span id="cartTotal">0</span></div>
   </div>
-  <button class="btn-order">预约焚化 · 视频发回施主</button>
+  <button class="btn-order" onclick="submitJossOrder()">预约焚化 · 视频发回施主</button>
 </div>
 
 <script>
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
+  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
+  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){ t.style.opacity = "0"; t.style.transition = "opacity 0.3s"; setTimeout(function(){ t.remove(); },300); };
+  document.body.appendChild(t);
+  if (t._toastTimer) clearTimeout(t._toastTimer);
+  t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
+}
 var selected = new Set();
 
 function toggleSelect(card) {
@@ -507,6 +520,22 @@ function filterCat(cat, el) {
     if (cat === 'all' || c.dataset.cat === cat) c.classList.add('show');
     else c.classList.remove('show');
   });
+}
+
+function submitJossOrder() {
+  if (selected.size === 0) { showToast('请先选择要焚化的物品'); return; }
+  var total = 0, items = [];
+  document.querySelectorAll('.prod-card.selected').forEach(function(c) {
+    total += parseInt(c.dataset.price || 0);
+    items.push(c.querySelector('.prod-name')?.textContent || '物品');
+  });
+  try { localStorage.setItem('sy_cart_total', total);
+        localStorage.setItem('sy_cart_items', JSON.stringify(items)); } catch(e) {}
+  // Reset selection
+  selected.clear();
+  document.querySelectorAll('.prod-card').forEach(function(c) { c.classList.remove('selected'); });
+  document.getElementById('cartBar').classList.remove('visible');
+  location.href = 'order.html';
 }
 </script>
 </body>

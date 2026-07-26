@@ -17,7 +17,7 @@
   --rose: #d4607a;
 }
 html, body { background: var(--navy); font-family: 'Noto Serif SC', serif; color: #e8f0ff; -webkit-font-smoothing: antialiased; }
-body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 52px; }
+body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 80px; }
 
 /* Star background */
 body::before {
@@ -142,10 +142,11 @@ body::after {
 .btn-deep:active { opacity: 0.8; }
 .cta-note { text-align: center; font-size: 9px; color: rgba(232,240,255,0.2); margin-top: 8px; letter-spacing: 0.06em; }
 </style>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 </head>
 <body>
 
-<button class="back-btn" onclick="history.back()">‹ 返回</button>
+<button class="back-btn" onclick="history.back()">← 返回</button>
 
 <div class="header">
   <div class="header-title">紫微斗数 · 星盘解读</div>
@@ -228,7 +229,7 @@ body::after {
   </div>
 
   <div class="cta-section">
-    <button class="btn-deep">深度大运流年 · 完整解读 $19.9</button>
+    <button class="btn-deep" onclick="unlockZiwei(this)">深度大运流年 · 完整解读 $19.9</button>
     <div class="cta-note">含十年大运·每月运势·四大运势趋势图</div>
   </div>
 
@@ -263,6 +264,7 @@ function calcZiwei() {
   var m = parseInt(document.getElementById('birthMonth').value);
   var d = parseInt(document.getElementById('birthDay').value);
   var h = parseInt(document.getElementById('birthHour').value);
+  if (!y || !m || !d || isNaN(h)) { showToast('请填写完整的出生信息', 'error'); return; }
   var seed = y * 10000 + m * 100 + d + h * 0.1;
 
   document.getElementById('loadingWrap').classList.add('show');
@@ -371,7 +373,7 @@ function renderResult(seed, y, m, d, h) {
     {icon:'情', title:'感情运', score: 50+rng(seed+3,45), color:'rgba(212,96,122,0.6)',
      text:(gender==='male'?'夫妻宫今年动静较大，单身者有结识心仪对象的机缘，建议多参加朋友聚会。已婚者注意沟通，避免因工作繁忙忽略伴侣。':'夫妻宫今年有活跃迹象，感情有新进展。单身者下半年易遇缘，已婚者感情升温，是谈婚论嫁的好时机。')},
     {icon:'健', title:'健康运', score: 65+rng(seed+4,30), color:'rgba(91,191,160,0.6)',
-     text:'疾厄宫今年相对平稳，无重大凶星入驻。注意'+（rng(seed+7,2)?'脾胃':'肝胆')+'养护，切勿过度劳累。春季和秋季各做一次体检为宜。'}
+     text:'疾厄宫今年相对平稳，无重大凶星入驻。注意'+(rng(seed+7,2)?'脾胃':'肝胆')+'养护，切勿过度劳累。春季和秋季各做一次体检为宜。'}
   ];
   var fsHtml = '';
   FORTUNES.forEach(function(f) {
@@ -406,6 +408,33 @@ function toggleFortune(head) {
   var body = head.nextElementSibling;
   body.classList.toggle('hidden');
 }
+
+function unlockZiwei(btn) {
+  btn.disabled = true;
+  btn.textContent = '跳转支付…';
+  fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      product: 'bazi_full',
+      price: 19.9,
+      token: localStorage.getItem('sy_token') || ''
+    })
+  }).then(function(r){ return r.json(); }).then(function(data){
+    if(data.url) window.location.href = data.url;
+    else { btn.disabled = false; btn.textContent = '深度大运流年 · 完整解读 $19.9'; }
+  }).catch(function(){
+    btn.disabled = false;
+    btn.textContent = '深度大运流年 · 完整解读 $19.9';
+  });
+}
 </script>
+
+<!-- Brand tagline -->
+<div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
+  <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(74,159,212,0.4),transparent);margin:0 auto 12px"></div>
+  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(74,159,212,0.35);letter-spacing:0.3em">你求什么 · 自有天机</div>
+</div>
+
 </body>
 </html>

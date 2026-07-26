@@ -78,12 +78,18 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .footer-links a{font-size:10px;color:rgba(255,245,220,0.25);letter-spacing:0.08em;text-decoration:none;margin:0 8px}
 .footer-links a:hover{color:rgba(201,168,76,0.5)}
 
-.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;line-height:1.6;text-align:center;display:none;font-family:'Noto Serif SC',serif;pointer-events:none}
-.toast.error{background:rgba(180,40,40,0.92);border:1px solid rgba(220,80,80,0.4);color:rgba(255,220,220,0.95);display:block}
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;line-height:1.6;text-align:center;font-family:'Noto Serif SC',serif;cursor:pointer;transition:opacity 0.3s}
+.toast.error{background:rgba(180,40,40,0.92);border:1px solid rgba(220,80,80,0.4);color:rgba(255,220,220,0.95)}
+.toast.success{background:rgba(40,130,80,0.92);border:1px solid rgba(80,200,120,0.4);color:rgba(220,255,230,0.95)}
+
+/* Share buttons */
+.share-btn:hover{opacity:0.85}
+.share-btn:active{transform:scale(0.96)}
 
 /* Divider */
 .divider{margin:16px 0;height:1px;position:relative;z-index:1}
 </style>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 </head>
 <body>
 
@@ -106,6 +112,22 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
       <div class="profile-label">善缘用户</div>
     </div>
     <div class="profile-status" id="profileStatus">● 已登录</div>
+  </div>
+</div>
+
+<!-- Share section -->
+<div class="content" style="margin:0 0 16px">
+  <div class="section-label" style="margin-bottom:10px">分享善缘</div>
+  <div style="display:flex;gap:8px">
+    <button class="share-btn" data-share="wechat" onclick="handleShare('wechat')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 10px;background:rgba(91,191,160,0.1);border:1px solid rgba(91,191,160,0.2);border-radius:8px;color:var(--jade-mid);font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:0.06em;cursor:pointer;transition:all 0.22s">
+      <span style="font-size:16px">💬</span> 微信
+    </button>
+    <button class="share-btn" data-share="twitter" onclick="handleShare('twitter')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 10px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.15);border-radius:8px;color:var(--gold);font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:0.06em;cursor:pointer;transition:all 0.22s">
+      <span style="font-size:16px">𝕏</span> Twitter
+    </button>
+    <button class="share-btn" data-share="copy" onclick="handleShare('copy')" style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:11px 10px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.12);border-radius:8px;color:var(--sub-text);font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:0.06em;cursor:pointer;transition:all 0.22s">
+      <span style="font-size:16px">🔗</span> 复制链接
+    </button>
   </div>
 </div>
 
@@ -157,8 +179,10 @@ var BASE = '';
 function showToast(msg, type) {
   var t = document.getElementById('toast');
   t.textContent = msg;
-  t.className = 'toast ' + type;
-  setTimeout(function(){ t.className = 'toast'; }, 3000);
+  t.className = 'toast ' + (type||'');
+  t.onclick = function(){ t.className = 'toast'; };
+  if (t._toastTimer) clearTimeout(t._toastTimer);
+  t._toastTimer = setTimeout(function(){ t.className = 'toast'; }, 3000);
 }
 
 function getToken() {
@@ -297,6 +321,57 @@ function loadOrders() {
     list.innerHTML = '<div class="empty-state"><span class="empty-icon">⚠️</span><div class="empty-text">加载失败，请稍后重试</div></div>';
     console.error('Order load error:', err);
   });
+}
+
+function handleShare(platform) {
+  var shareText = '我在善缘算了八字，很准！来看看你的命盘 → https://shenyuan.mylumee.cn';
+  var url = 'https://shenyuan.mylumee.cn';
+
+  // Try Web Share API first
+  if (platform === 'wechat' && navigator.share) {
+    navigator.share({
+      title: '善缘ShenYuan · 东方灵性平台',
+      text: shareText,
+      url: url
+    }).catch(function() {});
+    return;
+  }
+
+  if (platform === 'twitter') {
+    var twUrl = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent(shareText);
+    window.open(twUrl, '_blank', 'width=600,height=400');
+    return;
+  }
+
+  if (platform === 'copy') {
+    var textarea = document.createElement('textarea');
+    textarea.value = shareText;
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      showToast('链接已复制，快去分享给朋友吧！');
+    } catch(e) {
+      showToast('复制失败，请手动复制链接', 'error');
+    }
+    document.body.removeChild(textarea);
+    return;
+  }
+
+  // WeChat fallback: copy text for manual sharing
+  if (platform === 'wechat') {
+    var textarea = document.createElement('textarea');
+    textarea.value = shareText;
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      showToast('已复制，打开微信分享给好友');
+    } catch(e) {
+      showToast('复制失败，请手动复制', 'error');
+    }
+    document.body.removeChild(textarea);
+  }
 }
 
 function handleLogout() {

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#0e0a04">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>善缘 · 每日天机</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
@@ -36,7 +37,7 @@ body {
   margin: 0 auto;
   min-height: 100vh;
   overflow-y: auto;
-  padding-bottom: 52px;
+  padding-bottom: 80px;
 }
 
 /* Dawn gradient */
@@ -89,10 +90,84 @@ body::before {
   margin: 0 auto;
 }
 
+/* ── Birth input form ── */
+.input-wrap {
+  position: relative; z-index: 1;
+  margin: 0 16px 16px;
+  background: var(--bg-card);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 10px;
+  padding: 18px 16px;
+}
+.field-group {
+  background: rgba(14,10,4,0.5);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 8px; overflow: hidden; margin-bottom: 10px;
+}
+.field-row {
+  display: flex; align-items: center;
+  padding: 0 14px;
+  border-bottom: 1px solid rgba(201,168,76,0.08);
+}
+.field-row:last-child { border-bottom: none; }
+.field-label {
+  font-size: 11px; color: var(--ink-mid);
+  letter-spacing: 0.06em; min-width: 64px; flex-shrink: 0;
+}
+.field-select {
+  flex: 1; background: none; border: none; outline: none;
+  font-family: 'Noto Serif SC', serif; font-size: 13px;
+  color: var(--ink); padding: 12px 8px;
+  letter-spacing: 0.04em; -webkit-appearance: none;
+}
+.field-select option { background: var(--bg-card); color: var(--ink); }
+.gender-row {
+  display: flex; gap: 8px; margin-bottom: 12px;
+}
+.gender-opt {
+  flex: 1; background: rgba(14,10,4,0.5);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 6px; padding: 10px 0;
+  text-align: center; font-size: 13px;
+  color: var(--ink-mid); letter-spacing: 0.12em;
+  cursor: pointer; transition: all 0.2s;
+}
+.gender-opt.selected { border-color: var(--gold); background: rgba(201,168,76,0.12); color: var(--gold-light); }
+
+/* ── Loading ── */
+.loading-screen {
+  display: none; position: relative; z-index: 1;
+  flex-direction: column; align-items: center;
+  padding: 60px 20px; gap: 16px;
+}
+.loading-screen.show { display: flex; }
+.load-glyph {
+  font-size: 56px; color: rgba(201,168,76,0.3);
+  font-weight: 300; animation: load-breathe 2s ease-in-out infinite;
+}
+@keyframes load-breathe {
+  0%,100%{opacity:0.3;transform:scale(1)}
+  50%{opacity:0.7;transform:scale(1.05)}
+}
+.load-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; font-size: 14px;
+  color: rgba(201,168,76,0.5); letter-spacing: 0.18em;
+}
+.load-steps { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.load-step {
+  font-size: 10px; color: rgba(255,245,220,0.3);
+  letter-spacing: 0.08em; animation: step-fade 0.5s ease-out both;
+}
+@keyframes step-fade {
+  from{opacity:0;transform:translateY(4px)}
+  to{opacity:1;transform:none}
+}
+
 /* ── Element energy bar ── */
 .energy-wrap {
   position: relative; z-index: 1;
-  margin: 20px 16px 12px;
+  margin: 0 16px 12px;
   background: var(--bg-card);
   border: 1px solid rgba(201,168,76,0.12);
   border-radius: 10px;
@@ -258,6 +333,13 @@ body::before {
   color: var(--ink-light); letter-spacing: 0.08em;
   margin-top: 10px;
 }
+
+/* ── Result fade ── */
+@keyframes fadeUp {
+  from{opacity:0;transform:translateY(12px)}
+  to{opacity:1;transform:none}
+}
+#resultArea { animation: fadeUp 0.6s ease both; }
 </style>
 </head>
 <body>
@@ -266,73 +348,98 @@ body::before {
 
 <div class="date-hero">
   <div class="date-en">TODAY · HEAVENLY GUIDANCE</div>
-  <div class="date-zh" id="dateZh">2026年7月23日 · 星期三</div>
-  <div class="date-ganzhi">丙午年 · 辛未月 · 壬辰日</div>
+  <div class="date-zh" id="dateZh"></div>
+  <div class="date-ganzhi" id="dateGanzhi"></div>
   <div class="gold-line"></div>
 </div>
 
-<div class="energy-wrap">
-  <div class="energy-title">今日五行能量</div>
-  <div class="energy-rows">
-    <div class="e-row">
-      <div class="e-label">木</div>
-      <div class="e-bar-bg"><div class="e-bar-fill m" style="width:72%"></div></div>
-      <div class="e-pct">72%</div>
+<!-- Input form -->
+<div class="input-wrap" id="inputWrap">
+  <div class="energy-title" style="margin-bottom:10px">输入生辰 · 获取每日天机</div>
+  <div class="field-group">
+    <div class="field-row">
+      <span class="field-label">出生年</span>
+      <select class="field-select" id="year"></select>
     </div>
-    <div class="e-row">
-      <div class="e-label">火</div>
-      <div class="e-bar-bg"><div class="e-bar-fill f" style="width:45%"></div></div>
-      <div class="e-pct">45%</div>
+    <div class="field-row">
+      <span class="field-label">月</span>
+      <select class="field-select" id="month"></select>
     </div>
-    <div class="e-row">
-      <div class="e-label">土</div>
-      <div class="e-bar-bg"><div class="e-bar-fill e" style="width:88%"></div></div>
-      <div class="e-pct">88%</div>
+    <div class="field-row">
+      <span class="field-label">日</span>
+      <select class="field-select" id="day"></select>
     </div>
-    <div class="e-row">
-      <div class="e-label">金</div>
-      <div class="e-bar-bg"><div class="e-bar-fill me" style="width:30%"></div></div>
-      <div class="e-pct">30%</div>
-    </div>
-    <div class="e-row">
-      <div class="e-label">水</div>
-      <div class="e-bar-bg"><div class="e-bar-fill w" style="width:58%"></div></div>
-      <div class="e-pct">58%</div>
+    <div class="field-row">
+      <span class="field-label">时辰</span>
+      <select class="field-select" id="hour">
+        <option value="">不详</option>
+        <option value="0">子时 (23-01)</option><option value="1">丑时 (01-03)</option>
+        <option value="2">寅时 (03-05)</option><option value="3">卯时 (05-07)</option>
+        <option value="4">辰时 (07-09)</option><option value="5">巳时 (09-11)</option>
+        <option value="6">午时 (11-13)</option><option value="7">未时 (13-15)</option>
+        <option value="8">申时 (15-17)</option><option value="9">酉时 (17-19)</option>
+        <option value="10">戌时 (19-21)</option><option value="11">亥时 (21-23)</option>
+      </select>
     </div>
   </div>
+  <div class="gender-row">
+    <div class="gender-opt selected" onclick="selectGender(this,'male')">男命</div>
+    <div class="gender-opt" onclick="selectGender(this,'female')">女命</div>
+  </div>
+  <button class="btn-gold" onclick="getDailyReading()" id="genBtn">获取今日天机</button>
+  <p class="preview-note" style="margin-top:8px">根据你的真实八字生成专属每日运势</p>
 </div>
 
-<div class="cards-wrap">
-  <div class="today-card">
-    <div class="tc-label">幸运色</div>
-    <div class="color-swatch" style="background:linear-gradient(135deg,#8dd9bf,#5bbfa0)"></div>
-    <div class="tc-value">翠绿</div>
-    <div class="tc-sub">今日穿绿系，木气加持</div>
-  </div>
-  <div class="today-card">
-    <div class="tc-label">幸运数字</div>
-    <div class="tc-value" style="font-size:32px;color:var(--gold);font-family:'Cormorant Garamond',serif">8</div>
-    <div class="tc-sub">手机尾号含8最吉</div>
-  </div>
-  <div class="today-card">
-    <div class="tc-label">宜</div>
-    <div class="tc-value" style="font-size:13px">签约·出行·创业</div>
-    <div class="tc-sub">贵人星入命，万事逢缘</div>
-  </div>
-  <div class="today-card">
-    <div class="tc-label">忌</div>
-    <div class="tc-value" style="font-size:13px">争执·大手笔投资</div>
-    <div class="tc-sub">土旺冲水，宜静不宜动</div>
-  </div>
+<!-- Loading -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="load-glyph">天</div>
+  <div class="load-text">天机推演中…</div>
+  <div class="load-steps" id="loadSteps"></div>
 </div>
 
-<div class="affirmation-wrap">
-  <div class="aff-label">今日命盘 · 专属指引</div>
-  <div class="aff-text">
-    你是<em>土命之人</em>，今日土气极旺，正是你能量最充沛的一天。<br>
-    这一天，<em>你说的话有分量</em>，你提出的想法会被认真对待。<br>
-    去推进那件你一直想开口的事吧。
+<!-- Results (hidden initially) -->
+<div id="resultArea" style="display:none">
+
+  <div class="energy-wrap">
+    <div class="energy-title">今日五行能量</div>
+    <div class="energy-rows" id="energyRows">
+      <div class="e-row"><div class="e-label">木</div><div class="e-bar-bg"><div class="e-bar-fill m" style="width:0%"></div></div><div class="e-pct" id="pctWood">0%</div></div>
+      <div class="e-row"><div class="e-label">火</div><div class="e-bar-bg"><div class="e-bar-fill f" style="width:0%"></div></div><div class="e-pct" id="pctFire">0%</div></div>
+      <div class="e-row"><div class="e-label">土</div><div class="e-bar-bg"><div class="e-bar-fill e" style="width:0%"></div></div><div class="e-pct" id="pctEarth">0%</div></div>
+      <div class="e-row"><div class="e-label">金</div><div class="e-bar-bg"><div class="e-bar-fill me" style="width:0%"></div></div><div class="e-pct" id="pctMetal">0%</div></div>
+      <div class="e-row"><div class="e-label">水</div><div class="e-bar-bg"><div class="e-bar-fill w" style="width:0%"></div></div><div class="e-pct" id="pctWater">0%</div></div>
+    </div>
   </div>
+
+  <div class="cards-wrap">
+    <div class="today-card">
+      <div class="tc-label">幸运色</div>
+      <div class="color-swatch" id="luckyColorSwatch" style="background:#5bbfa0"></div>
+      <div class="tc-value" id="luckyColorName">—</div>
+      <div class="tc-sub" id="luckyColorHint">—</div>
+    </div>
+    <div class="today-card">
+      <div class="tc-label">幸运数字</div>
+      <div class="tc-value" style="font-size:32px;color:var(--gold);font-family:'Cormorant Garamond',serif" id="luckyNumber">—</div>
+      <div class="tc-sub" id="luckyNumberHint">—</div>
+    </div>
+    <div class="today-card">
+      <div class="tc-label">宜</div>
+      <div class="tc-value" style="font-size:13px" id="yiText">—</div>
+      <div class="tc-sub" id="yiHint">—</div>
+    </div>
+    <div class="today-card">
+      <div class="tc-label">忌</div>
+      <div class="tc-value" style="font-size:13px" id="jiText">—</div>
+      <div class="tc-sub" id="jiHint">—</div>
+    </div>
+  </div>
+
+  <div class="affirmation-wrap">
+    <div class="aff-label">今日命盘 · 专属指引</div>
+    <div class="aff-text" id="affirmationText"></div>
+  </div>
+
 </div>
 
 <div class="sub-wrap">
@@ -352,11 +459,95 @@ body::before {
   <p class="preview-note">此为预览版 · 开通后内容基于你的真实八字生成</p>
 </div>
 
+<!-- Brand tagline -->
+<div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
+  <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 12px"></div>
+  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(201,168,76,0.35);letter-spacing:0.3em">你求什么 · 自有天机</div>
+</div>
+
 <script>
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
+  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
+  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); };
+  document.body.appendChild(t);
+  if (t._toastTimer) clearTimeout(t._toastTimer);
+  t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
+}
+// Init year/day selectors
+var ySel = document.getElementById('year');
+for (var y = 2010; y >= 1920; y--) ySel.innerHTML += '<option value="'+y+'">'+y+'年</option>';
+var mSel = document.getElementById('month');
+for (var m = 1; m <= 12; m++) mSel.innerHTML += '<option value="'+m+'">'+m+'月</option>';
+var dSel = document.getElementById('day');
+for (var d = 1; d <= 31; d++) dSel.innerHTML += '<option value="'+d+'">'+d+'日</option>';
+
+// Auto-fill today's date
+var today = new Date();
+var dateStr = today.getFullYear() + '年' + (today.getMonth()+1) + '月' + today.getDate() + '日 · ' + ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][today.getDay()];
+document.getElementById('dateZh').textContent = dateStr;
+
+var gender = 'male';
+
+function selectGender(el, g) {
+  document.querySelectorAll('.gender-opt').forEach(function(o){ o.classList.remove('selected'); });
+  el.classList.add('selected'); gender = g;
+}
+
+function getDailyReading() {
+  var year = parseInt(document.getElementById('year').value);
+  var month = parseInt(document.getElementById('month').value);
+  var day = parseInt(document.getElementById('day').value);
+  if (!year || !month || !day) { showToast('请填写完整的出生年月日'); return; }
+
+  document.getElementById('inputWrap').style.display = 'none';
+  document.getElementById('loadingScreen').classList.add('show');
+  var steps = ['读取生辰信息…','推算今日天干地支…','分析五行能量…','生成专属运势…','写今日Affirmation…'];
+  var stepsEl = document.getElementById('loadSteps');
+  stepsEl.innerHTML = '';
+  steps.forEach(function(s, i) {
+    setTimeout(function(){
+      stepsEl.innerHTML += '<div class="load-step">✦ '+s+'</div>';
+    }, i * 400);
+  });
+
+  var hour = document.getElementById('hour').value;
+  var body = { birthYear: year, birthMonth: month, birthDay: day, gender: gender };
+  if (hour) body.birthHour = parseInt(hour);
+
+  fetch('/api/daily', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    document.getElementById('loadingScreen').classList.remove('show');
+    if (data.reading) {
+      // Show the result area with the raw AI reading
+      document.getElementById('affirmationText').innerHTML = data.reading.replace(/\n/g, '<br>');
+      document.getElementById('dateGanzhi').textContent = '';
+      document.getElementById('resultArea').style.display = 'block';
+      document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      showToast('获取天机失败，请稍后重试', 'error');
+      document.getElementById('inputWrap').style.display = 'block';
+    }
+  })
+  .catch(function(err){
+    document.getElementById('loadingScreen').classList.remove('show');
+    showToast('网络异常，请稍后重试', 'error');
+    document.getElementById('inputWrap').style.display = 'block';
+  });
+}
+
 function subscribeDaily() {
-  var btn = event.target;
-  btn.disabled = true;
-  btn.textContent = '跳转中…';
+  var btns = document.querySelectorAll('.btn-gold');
+  btns.forEach(function(b){ b.disabled = true; b.textContent = '跳转中…'; });
   fetch('/api/create-checkout', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -365,12 +556,10 @@ function subscribeDaily() {
   .then(function(r){ return r.json(); })
   .then(function(d){
     if (d.url) { window.location.href = d.url; }
-    else { alert('支付系统暂不可用'); btn.disabled = false; btn.textContent = '开启每日天机 · 首月免费'; }
+    else { showToast('支付系统暂不可用', 'error'); var btns2 = document.querySelectorAll('.btn-gold'); btns2.forEach(function(b){ b.disabled = false; b.textContent = '开启每日天机 · 首月免费'; }); }
   })
   .catch(function(){
-    alert('网络错误，请稍后重试');
-    btn.disabled = false;
-    btn.textContent = '开启每日天机 · 首月免费';
+    showToast('网络错误，请稍后重试', 'error'); var btns2 = document.querySelectorAll('.btn-gold'); btns2.forEach(function(b){ b.disabled = false; b.textContent = '开启每日天机 · 首月免费'; });
   });
 }
 </script>

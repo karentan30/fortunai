@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#1a0e06">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>善缘 · 祈福下单</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
@@ -87,11 +88,13 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 .timing-opt.selected { border-color: var(--amber); background: rgba(201,130,10,0.1); }
 .timing-name { font-size: 12px; color: rgba(240,230,216,0.8); letter-spacing: 0.06em; margin-bottom: 3px; }
 .timing-desc { font-size: 9px; color: rgba(240,230,216,0.35); letter-spacing: 0.04em; }
+.btn-submit:active{transform:scale(0.97)}
+.back-btn:active{transform:scale(0.97)}
 </style>
 </head>
 <body>
 
-<button class="back-btn" onclick="history.back()">‹ 返回</button>
+<button class="back-btn" onclick="history.back()">← 返回</button>
 
 <div class="header">
   <div class="header-title">发愿 · 代供下单</div>
@@ -195,6 +198,18 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 </div>
 
 <script>
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
+  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
+  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); };
+  document.body.appendChild(t);
+  if (t._toastTimer) clearTimeout(t._toastTimer);
+  t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
+}
 var TEMPLES_DATA = [
   { id:'yonghegong', name:'雍和宫', loc:'北京', tags:['求财','消灾'] },
   { id:'putuo', name:'普陀山', loc:'浙江', tags:['求子','姻缘'] },
@@ -254,12 +269,46 @@ function submitOrder() {
   var donor = document.getElementById('donorName').value.trim();
   var wish = document.getElementById('wishText').value.trim();
   var contact = document.getElementById('contact').value.trim();
-  if (!donor) { alert('请填写施主姓名'); return; }
-  if (!wish) { alert('请填写祝愿词'); return; }
-  if (!selectedTemple) { alert('请选择焚化道场'); return; }
-  if (!contact) { alert('请填写联系方式，用于发回视频'); return; }
-  // TODO: POST to backend /api/order
-  alert('发愿已提交！师傅将在48小时内与您联系确认。愿善缘相伴，心愿达成。');
+  var recipient = document.getElementById('recipientName').value.trim();
+  var special = document.getElementById('specialReq').value.trim();
+  if (!donor) { showToast('请填写施主姓名'); return; }
+  if (!wish) { showToast('请填写祝愿词'); return; }
+  if (!selectedTemple) { showToast('请选择焚化道场'); return; }
+  if (!contact) { showToast('请填写联系方式，用于发回视频'); return; }
+  var totalText = document.getElementById('finalTotal').textContent;
+  if (totalText === '--') { showToast('请先选择冥器套餐', 'error'); return; }
+  var total = totalText;
+  var btn = document.querySelector('.btn-submit');
+  btn.disabled = true;
+  btn.textContent = '提交中…';
+  fetch('/api/order', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      donorName: donor,
+      wishText: wish,
+      contact: contact,
+      recipientName: recipient || '未指定',
+      temple: selectedTemple,
+      timing: selectedTiming,
+      total: parseInt(total) || 0,
+      specialReq: special
+    })
+  }).then(function(r){ return r.json(); }).then(function(data){
+    if(data.success) {
+      try { localStorage.removeItem('sy_cart_total'); localStorage.removeItem('sy_cart_items'); } catch(e) {}
+      showToast('发愿已提交！师傅将在48小时内与您联系确认。愿善缘相伴，心愿达成。');
+      window.location.href = '/';
+    } else {
+      showToast('提交失败：' + (data.error || '请重试'), 'error');
+      btn.disabled = false;
+      btn.textContent = '确认发愿 · 提交代供';
+    }
+  }).catch(function(){
+    showToast('网络异常，请重试', 'error');
+    btn.disabled = false;
+    btn.textContent = '确认发愿 · 提交代供';
+  });
 }
 </script>
 </body>

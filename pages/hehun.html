@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#0f080a">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>善缘 · 合婚配对</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
@@ -365,6 +366,18 @@ body::before{content:'';position:fixed;inset:0;
 </div>
 
 <script>
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
+  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
+  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){ t.style.opacity = "0"; t.style.transition = "opacity 0.3s"; setTimeout(function(){ t.remove(); },300); };
+  document.body.appendChild(t);
+  if (t._toastTimer) clearTimeout(t._toastTimer);
+  t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
+}
 const ELEM = {
   甲:['木','🌿'],乙:['木','🌿'],丙:['火','🔥'],丁:['火','🔥'],
   戊:['土','🪨'],己:['土','🪨'],庚:['金','⚪'],辛:['金','⚪'],
@@ -401,9 +414,9 @@ function startCalc(){
   const bm=document.getElementById('bMonth').value;
   const ad=document.getElementById('aDay').value;
   const bd=document.getElementById('bDay').value;
-  if(!ay||!by){ alert('请选择两人的出生年份'); return; }
-  if(!am||!bm){ alert('请选择两人的出生月份'); return; }
-  if(!ad||!bd){ alert('请选择两人的出生日期'); return; }
+  if(!ay||!by){ showToast('请选择两人的出生年份'); return; }
+  if(!am||!bm){ showToast('请选择两人的出生月份'); return; }
+  if(!ad||!bd){ showToast('请选择两人的出生日期'); return; }
   document.getElementById('inputScreen').style.display='none';
   document.getElementById('loadingWrap').classList.add('show');
   setTimeout(()=>showResults(ay,by), 3200);
@@ -559,13 +572,14 @@ function createCheckout(btn, tier, price) {
     body: JSON.stringify({
       product: 'hehun',
       tier: tier,
-      price: price
+      price: price,
+      token: localStorage.getItem('sy_token') || ''
     })
   }).then(function(r){ return r.json(); }).then(function(data){
     if(data.url) window.location.href = data.url;
-    else { alert('跳转失败，请重试'); btn.disabled = false; btn.textContent = '解锁完整报告'; }
+    else { showToast('跳转失败，请重试', 'error'); btn.disabled = false; btn.textContent = '解锁完整报告'; }
   }).catch(function(){
-    alert('网络异常，请重试'); btn.disabled = false; btn.textContent = '解锁完整报告';
+    showToast('网络异常，请重试', 'error'); btn.disabled = false; btn.textContent = '解锁完整报告';
   });
 }
 </script>

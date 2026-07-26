@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#08060f">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>善缘 · 会员中心</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
@@ -17,7 +18,7 @@
   --text:rgba(240,230,255,0.88);--sub:rgba(200,180,240,0.45);
 }
 html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:antialiased}
-body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:40px;overflow-x:hidden}
+body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:60px;overflow-x:hidden}
 body::before{content:'';position:fixed;inset:0;
   background:radial-gradient(ellipse at 50% -10%,rgba(155,111,212,0.12) 0%,transparent 55%),
              radial-gradient(ellipse at 80% 90%,rgba(201,168,76,0.06) 0%,transparent 50%);
@@ -98,6 +99,7 @@ body::before{content:'';position:fixed;inset:0;
 .g-item{display:flex;flex-direction:column;align-items:center;gap:4px}
 .g-icon{font-size:20px}
 .g-text{font-size:9px;color:var(--sub);letter-spacing:0.06em}
+.sub-btn:active{transform:scale(0.97)}
 </style>
 </head>
 <body>
@@ -260,7 +262,7 @@ body::before{content:'';position:fixed;inset:0;
 <div class="guarantee">
   <div class="guarantee-row">
     <div class="g-item"><span class="g-icon">🔒</span><span class="g-text">安全加密支付</span></div>
-    <div class="g-item"><span class="g-icon">↩️</span><span class="g-text">7天无理由退款</span></div>
+  <div class="g-item"><span class="g-icon">↩️</span><span class="g-text">订阅可随时取消</span></div>
     <div class="g-item"><span class="g-icon">🌐</span><span class="g-text">全球华人可用</span></div>
     <div class="g-item"><span class="g-icon">💬</span><span class="g-text">7×24客服支持</span></div>
   </div>
@@ -273,10 +275,22 @@ body::before{content:'';position:fixed;inset:0;
 </div>
 
 <script>
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
+  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
+  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); };
+  document.body.appendChild(t);
+  if (t._toastTimer) clearTimeout(t._toastTimer);
+  t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
+}
 let curPlan = 'monthly';
 const BTN_COPY = {
   monthly:{text:'开通月度会员 · $6.9/月',cls:'monthly-btn',note:'随时取消 · 首月立享全部权益 · 安全支付'},
-  yearly:{text:'开通年度会员 · $49/年',cls:'yearly-btn',note:'省$33.8 · 相当于$4.08/月 · 7天退款保障'},
+  yearly:{text:'开通年度会员 · $49/年',cls:'yearly-btn',note:'省$33.8 · 相当于$4.08/月 · 随时可取消'},
   lifetime:{text:'开通终身会员 · $188',cls:'lifetime-btn',note:'一次开通 · 永久有效 · 最高性价比'},
 };
 
@@ -296,11 +310,35 @@ function selectPlan(p){
 }
 
 function subscribe(){
-  alert('支付功能即将上线，感谢您的支持！');
+  var btn = document.getElementById('subBtn');
+  btn.disabled = true;
+  btn.textContent = '跳转支付…';
+  fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      product: 'member_' + curPlan,
+      token: localStorage.getItem('sy_token') || '',
+      successUrl: window.location.origin + '/pages/member.html?paid=1',
+      cancelUrl: window.location.href
+    })
+  }).then(function(r){ return r.json(); }).then(function(data){
+    if(data.url) window.location.href = data.url;
+    else { showToast('跳转失败，请重试', 'error'); btn.disabled = false; btn.textContent = BTN_COPY[curPlan].text; }
+  }).catch(function(){
+    showToast('网络异常，请重试', 'error'); btn.disabled = false; btn.textContent = BTN_COPY[curPlan].text;
+  });
 }
 
 // init radio
 document.getElementById('rMonthly').innerHTML = '<div style="width:8px;height:8px;border-radius:50%;background:var(--jade)"></div>';
 </script>
+
+<!-- Brand tagline -->
+<div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
+  <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 12px"></div>
+  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(201,168,76,0.35);letter-spacing:0.3em">你求什么 · 自有天机</div>
+</div>
+
 </body>
 </html>

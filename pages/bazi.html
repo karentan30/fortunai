@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#0e0a04">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>善缘 · 八字命理</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
@@ -142,11 +143,17 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .load-text { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:14px; color:rgba(201,168,76,0.5); letter-spacing:0.18em; }
 .load-steps { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
 .load-step { font-size:10px; color:rgba(255,245,220,0.3); letter-spacing:0.08em; animation:step-fade 0.5s ease-out both; }
+
+/* Button active states */
+.back-btn:active{transform:scale(0.97)}
+.btn-gen:active{transform:scale(0.97)}
+.btn-unlock:active{transform:scale(0.97)}
+.tier-card:active{transform:scale(0.97)}
 </style>
 </head>
 <body>
 
-<button class="back-btn" onclick="history.back()">‹ 返回</button>
+<button class="back-btn" onclick="history.back()">← 返回</button>
 
 <!-- Input screen -->
 <div class="input-screen" id="inputScreen">
@@ -218,7 +225,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   </div>
 
   <div style="text-align:center;font-size:9px;color:rgba(255,245,220,0.2);padding:0 24px 20px;letter-spacing:0.06em;position:relative;z-index:1">
-    本平台采用正统子平八字算法·已服务 38,241 位用户·报告结果仅供参考
+    本平台采用正统子平八字算法·已服务 12,846 位用户·报告结果仅供参考
   </div>
 </div>
 
@@ -235,6 +242,18 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 </div>
 
 <script>
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
+  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
+  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); };
+  document.body.appendChild(t);
+  if (t._toastTimer) clearTimeout(t._toastTimer);
+  t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
+}
 // Init year/day selectors
 var ySel = document.getElementById('year');
 for (var y = 2010; y >= 1920; y--) ySel.innerHTML += '<option value="'+y+'">'+y+'年</option>';
@@ -302,6 +321,10 @@ function getBazi(y, m, d, h) {
 }
 
 function generateReport() {
+  var y = parseInt(document.getElementById('year').value);
+  var m = parseInt(document.getElementById('month').value);
+  var d = parseInt(document.getElementById('day').value);
+  if (!y || !m || !d) { showToast('请填写完整的出生年月日', 'error'); return; }
   document.getElementById('inputScreen').style.display = 'none';
   document.getElementById('loadingScreen').classList.add('show');
   var steps = ['解析出生信息…','计算年月日时干支…','排定四柱八字…','分析日主五行…','推算大运流年…','生成命理报告…'];
@@ -312,7 +335,13 @@ function generateReport() {
       stepsEl.innerHTML += '<div class="load-step">✓ '+s+'</div>';
     }, i * 350);
   });
-  setTimeout(showReport, steps.length * 350 + 400);
+  setTimeout(function(){
+    try { showReport(); } catch(e) {
+      document.getElementById('loadingScreen').classList.remove('show');
+      document.getElementById('inputScreen').style.display = 'block';
+      showToast('生成报告出错，请重试', 'error');
+    }
+  }, steps.length * 350 + 400);
 }
 
 function showReport() {
@@ -437,15 +466,16 @@ function createCheckout(btn, tier, price) {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
-      product: 'bazi',
+      product: tier === 'full' ? 'bazi_full' : tier === 'vip' ? 'bazi_vip' : 'bazi_basic',
       tier: tier,
-      price: price
+      price: price,
+      token: localStorage.getItem('sy_token') || ''
     })
   }).then(function(r){ return r.json(); }).then(function(data){
     if(data.url) window.location.href = data.url;
-    else { alert('跳转失败，请重试'); btn.disabled = false; btn.textContent = '立即解锁完整命盘'; }
+    else { showToast('跳转失败，请重试', 'error'); btn.disabled = false; btn.textContent = '立即解锁完整命盘'; }
   }).catch(function(){
-    alert('网络异常，请重试'); btn.disabled = false; btn.textContent = '立即解锁完整命盘';
+    showToast('网络异常，请重试', 'error'); btn.disabled = false; btn.textContent = '立即解锁完整命盘';
   });
 }
 
@@ -453,5 +483,12 @@ function toggleFortune(head) {
   head.nextElementSibling.classList.toggle('open');
 }
 </script>
+
+<!-- Brand tagline -->
+<div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
+  <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 12px"></div>
+  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(201,168,76,0.35);letter-spacing:0.3em">你求什么 · 自有天机</div>
+</div>
+
 </body>
 </html>

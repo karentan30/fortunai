@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#0d0a18">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>善缘 · 旺运头像</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
@@ -254,6 +255,18 @@ input[type=file]{display:none}
 </div>
 
 <script>
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
+  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
+  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){ t.style.opacity = "0"; t.style.transition = "opacity 0.3s"; setTimeout(function(){ t.remove(); },300); };
+  document.body.appendChild(t);
+  if (t._toastTimer) clearTimeout(t._toastTimer);
+  t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
+}
 const ELEM_DATA = {
   水:{bg:'linear-gradient(135deg,#0a2a6e,#1a4a9e,#2a6abe)',ring:'rgba(30,100,200,0.6)',emojis:['🌊','💙','🔮'],name:'水命'},
   木:{bg:'linear-gradient(135deg,#0a2a0e,#1a5a1e,#2a8a3e)',ring:'rgba(60,160,60,0.6)',emojis:['🌸','🍃','🎋'],name:'木命'},
@@ -290,7 +303,7 @@ function handlePhoto(input){
   const url = URL.createObjectURL(input.files[0]);
   const box = document.getElementById('uploadBox');
   box.classList.add('has-img');
-  box.innerHTML = `<img class="thumb-preview" src="${url}"><div class="upload-txt">照片已上传</div><div class="upload-hint">将提升头像相似度</div>`;
+  box.innerHTML = `<img class="thumb-preview" src="${url}" loading="lazy"><div class="upload-txt">照片已上传</div><div class="upload-hint">将提升头像相似度</div>`;
 }
 
 function generate(){
@@ -334,7 +347,7 @@ function selectVariant(i){
 }
 
 function downloadAvatar(){
-  alert('正在准备下载…\n（完整功能即将上线）');
+  showToast('正在准备下载…完整功能即将上线');
 }
 
 function regenerate(){
@@ -345,12 +358,12 @@ function shareWechat(){
   if(navigator.share){
     navigator.share({title:'我的旺运头像',text:`我刚用善缘生成了专属${ELEM_DATA[curElem].name}旺运头像，你也来试试！`,url:location.href});
   } else {
-    alert('请截图分享给朋友 ✨');
+    showToast('请截图分享给朋友 ✨');
   }
 }
 
 function copyLink(){
-  navigator.clipboard.writeText(location.href).then(()=>alert('链接已复制！'));
+  navigator.clipboard.writeText(location.href).then(()=>showToast('链接已复制！'));
 }
 </script>
 </body>

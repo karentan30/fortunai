@@ -24,8 +24,37 @@ try {
   console.log('ℹ Stripe not available (stripe package not installed)');
 }
 
-// ── CORS (allow all origins for dev) ──
-app.use(cors());
+// ── CORS (restrict to known origins) ──
+var ALLOWED_ORIGINS = [
+  'http://localhost:3021',
+  'http://47.242.80.65:3021',
+  'https://shenyuan.mylumee.cn',
+  'https://shenyuan.vercel.app',
+  'https://shenyuan-fabulousslim.vercel.app',
+  'https://shenyuan-karentan30-fabulousslim.vercel.app'
+];
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin || ALLOWED_ORIGINS.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+}));
+
+// ── Request logging ──
+app.use(function(req, res, next) {
+  var start = Date.now();
+  res.on('finish', function() {
+    var ms = Date.now() - start;
+    if (req.path.startsWith('/api/')) {
+      console.log('[REQ]', req.method, req.path, res.statusCode, ms + 'ms');
+    }
+  });
+  next();
+});
+
 app.use(express.json({ limit: '10mb' }));
 
 // Stripe webhook needs raw body
@@ -145,7 +174,8 @@ async function deepseekChat(messages, opts = {}) {
   }
 
   const data = await res.json();
-  return data.choices?.[0]?.message?.content || '';
+  const msg = data.choices?.[0]?.message;
+  return msg?.content || msg?.reasoning_content || '';
 }
 
 function buildReadingPrompt(system, user) {
@@ -157,12 +187,15 @@ function buildReadingPrompt(system, user) {
 
 // ── Product prices (cents) ──
 const PRODUCTS = {
-  bazi_basic:   { name: '基础命盘',     amount: 990,  desc: '日主+五行+今年运势' },
-  bazi_full:    { name: '完整命盘',     amount: 1990, desc: '六维+十年大运+流月' },
-  bazi_vip:     { name: '深度批命',     amount: 3990, desc: '大师级·终身档案' },
-  daily_sub:    { name: '每日天机订阅', amount: 690,  desc: '月订阅·五行+Affirmation' },
-  tarot:        { name: '塔罗占卜',     amount: 390,  desc: 'AI塔罗解读' },
-  hehun:        { name: '合婚配对',     amount: 1990, desc: '双方八字合婚分析' },
+  bazi_basic:   { name: '基础命盘',         amount: 990,  desc: '日主+五行+今年运势' },
+  bazi_full:    { name: '完整命盘',         amount: 1990, desc: '六维+十年大运+流月' },
+  bazi_vip:     { name: '深度批命',         amount: 3990, desc: '大师级·终身档案' },
+  daily_sub:    { name: '每日天机订阅',     amount: 690,  desc: '月订阅·五行+Affirmation' },
+  tarot:        { name: '塔罗占卜',         amount: 390,  desc: 'AI塔罗解读' },
+  hehun:        { name: '合婚配对',         amount: 1990, desc: '双方八字合婚分析' },
+  member_monthly:  { name: '月度会员',      amount: 690,  desc: '全部AI占算无限次·完整报告不锁定' },
+  member_yearly:   { name: '年度会员',      amount: 4900, desc: '全年畅用·大师语音·水晶挂件' },
+  member_lifetime: { name: '终身会员',      amount: 18800, desc: '永久畅享·大师1对1·专属档案' },
 };
 
 // ── Health ──
@@ -181,12 +214,39 @@ app.get('/api/health', (req, res) => {
 // AUTHENTICATION
 // ════════════════════════════════════════════
 
-function sha256(s) {
-  return crypto.createHash('sha256').update(s).digest('hex');
+function hashPassword(password) {
+  var salt = crypto.randomBytes(16).toString('hex');
+  var hash = crypto.scryptSync(password, salt, 64).toString('hex');
+  return salt + ':' + hash;
+}
+function verifyPassword(password, stored) {
+  var parts = stored.split(':');
+  var salt = parts[0];
+  var hash = parts[1];
+  var check = crypto.scryptSync(password, salt, 64).toString('hex');
+  return hash === check;
 }
 
 function generateToken() {
   return crypto.randomBytes(32).toString('hex');
+}
+
+// ── Rate limiting ──
+var rateLimit = {};
+function checkRateLimit(ip) {
+  var now = Date.now();
+  if (!rateLimit[ip]) rateLimit[ip] = [];
+  rateLimit[ip] = rateLimit[ip].filter(function(t) { return now - t < 60000; });
+  if (rateLimit[ip].length > 60) return false;
+  rateLimit[ip].push(now);
+  return true;
+}
+function rateLimitMiddleware(req, res, next) {
+  var ip = req.ip || req.connection.remoteAddress || 'unknown';
+  if (!checkRateLimit(ip)) {
+    return res.status(429).json({ error: '请求过于频繁，请稍后再试' });
+  }
+  next();
 }
 
 // Middleware: extract user from token
@@ -203,7 +263,7 @@ function authMiddleware(req, res, next) {
 }
 
 // POST /api/auth/register
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', rateLimitMiddleware, (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -222,7 +282,7 @@ app.post('/api/auth/register', (req, res) => {
       return res.status(409).json({ error: '该邮箱已注册' });
     }
 
-    const hash = sha256(password);
+    const hash = hashPassword(password);
     const result = insertUser.run(email, hash);
     const token = generateToken();
     insertToken.run(result.lastInsertRowid, token);
@@ -236,7 +296,7 @@ app.post('/api/auth/register', (req, res) => {
 });
 
 // POST /api/auth/login
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', rateLimitMiddleware, (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -248,8 +308,7 @@ app.post('/api/auth/login', (req, res) => {
       return res.status(401).json({ error: '邮箱或密码错误' });
     }
 
-    const hash = sha256(password);
-    if (user.password_hash !== hash) {
+    if (!verifyPassword(password, user.password_hash)) {
       return res.status(401).json({ error: '邮箱或密码错误' });
     }
 
@@ -290,7 +349,7 @@ app.get('/api/orders/mine', authMiddleware, (req, res) => {
 // ════════════════════════════════════════════
 
 // POST /api/create-checkout — Create Stripe Checkout Session
-app.post('/api/create-checkout', async (req, res) => {
+app.post('/api/create-checkout', rateLimitMiddleware, async (req, res) => {
   try {
     if (!stripe) {
       return res.status(503).json({ error: '支付系统暂未开通' });
@@ -629,6 +688,37 @@ app.get('/api/orders', (req, res) => {
 // GET /api/products — 产品列表
 app.get('/api/products', (req, res) => {
   res.json({ products: PRODUCTS });
+});
+
+// POST /api/order — 代供/冥器订单
+app.post('/api/order', (req, res) => {
+  try {
+    const { donorName, contact, wishText, recipientName, temple, timing, total, specialReq } = req.body;
+    if (!donorName || !contact) {
+      return res.status(400).json({ error: '请填写施主姓名和联系方式' });
+    }
+    const orderNo = 'SY-JOSS-' + Date.now() + '-' + crypto.randomBytes(3).toString('hex');
+    const fullWish = '【往生者】' + (recipientName || '未指定') +
+                     ' 【道场】' + (temple || '未指定') +
+                     ' 【时间】' + (timing || '未指定') +
+                     '\n祝愿词：' + (wishText || '') +
+                     (specialReq ? '\n特别要求：' + specialReq : '');
+    const amount = total ? parseInt(total) : 0;
+    db.prepare(
+      'INSERT INTO orders (order_no, product, amount, currency, donor_name, contact, wish_text, payment_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(orderNo, 'joss_burning', amount, 'usd', donorName, contact, fullWish, 'pending');
+    console.log('[JOSS ORDER]', orderNo, '-', donorName, '- $' + (amount/100).toFixed(2));
+    res.json({ success: true, orderNo: orderNo });
+  } catch (err) {
+    console.error('[JOSS ORDER ERR]', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Global error handler ──
+app.use(function(err, req, res, next) {
+  console.error('[FATAL]', err.message);
+  res.status(500).json({ error: '服务暂时不可用，请稍后重试' });
 });
 
 // ── Start ──
