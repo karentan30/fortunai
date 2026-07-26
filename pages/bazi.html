@@ -149,15 +149,91 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .btn-gen:active{transform:scale(0.97)}
 .btn-unlock:active{transform:scale(0.97)}
 .tier-card:active{transform:scale(0.97)}
+
+/* AI Report section cards */
+.ai-section { background:var(--card); border:1px solid rgba(201,168,76,0.1); border-radius:10px; margin:0 16px 10px; overflow:hidden; }
+.ai-section-head { display:flex; align-items:center; padding:12px 14px; gap:10px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.ai-section-icon { font-size:20px; flex-shrink:0; }
+.ai-section-title { font-size:13px; letter-spacing:0.08em; flex:1; }
+.ai-section-arrow { font-size:10px; color:rgba(255,245,220,0.25); transition:transform 0.25s; }
+.ai-section-body { padding:0 14px 14px; display:none; }
+.ai-section-body.open { display:block; }
+.ai-section-text { font-size:11px; color:var(--sub-text); letter-spacing:0.04em; line-height:1.9; white-space:pre-wrap; }
+.ai-plain-text { padding:0 16px 14px; font-size:11px; color:var(--sub-text); letter-spacing:0.04em; line-height:1.9; white-space:pre-wrap; }
+
+/* QA section */
+#qaSection { position:relative; z-index:1; display:none; padding:16px 0 80px; }
+.qa-label { font-size:10px; color:rgba(201,168,76,0.5); letter-spacing:0.2em; margin-bottom:10px; padding:0 16px; }
+.qa-row { display:flex; gap:8px; padding:0 16px; }
+.qa-input { flex:1; background:var(--card); border:1px solid rgba(201,168,76,0.12); border-radius:6px; padding:10px 12px; font-family:Noto Serif SC,serif; font-size:12px; color:var(--ink-text); outline:none; }
+.qa-input:focus { border-color:rgba(201,168,76,0.3); }
+.qa-btn { padding:10px 16px; background:linear-gradient(135deg,var(--gold-deep),var(--gold)); border:none; border-radius:6px; color:#0e0a04; font-family:Noto Serif SC,serif; font-size:12px; letter-spacing:0.1em; cursor:pointer; white-space:nowrap; }
+.qa-btn:active { transform:scale(0.97); }
+.qa-btn:disabled { opacity:0.4; cursor:default; }
+.qa-history { padding:12px 16px 0; }
+.qa-my-msg { text-align:right; margin-bottom:8px; }
+.qa-my-msg span { display:inline-block; background:rgba(201,168,76,0.1); border:1px solid rgba(201,168,76,0.15); border-radius:6px; padding:8px 12px; font-size:11px; color:var(--ink-text); }
+.qa-ai-msg { margin-bottom:10px; }
+.qa-ai-msg span { display:inline-block; background:var(--card); border:1px solid rgba(201,168,76,0.1); border-radius:6px; padding:8px 12px; font-size:11px; color:var(--sub-text); line-height:1.8; }
+
+/* ✦ 升级动画层 ✦ */
+
+/* 四柱逐个飞入 */
+@keyframes zhuEnter{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:none}
+}
+.zhu{opacity:0;transform:translateY(20px);animation:zhuEnter 0.5s ease forwards}
+.zhu:nth-child(1){animation-delay:0s}
+.zhu:nth-child(2){animation-delay:0.15s}
+.zhu:nth-child(3){animation-delay:0.3s}
+.zhu:nth-child(4){animation-delay:0.45s}
+
+/* 天干金色光泽 */
+@keyframes gold-shimmer{0%{background-position:-300% center}100%{background-position:300% center}}
+.zhu-tian{
+  background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a,#c9a84c,#8a6420);
+  background-size:300% auto;
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  animation:gold-shimmer 3s linear infinite;
+}
+
+/* 按钮金色光泽 */
+.btn-gen,.btn-unlock{
+  background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a,#c9a84c,#8a6420) !important;
+  background-size:300% auto !important;
+  animation:gold-shimmer 3s linear infinite !important;
+}
+
+/* 通用入场动画 */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.page-enter{animation:fadeUp .8s ease both}
+.page-enter-d1{animation-delay:.1s}.page-enter-d2{animation-delay:.2s}
+.page-enter-d3{animation-delay:.3s}.page-enter-d4{animation-delay:.4s}
+.page-enter-d5{animation-delay:.5s}.page-enter-d6{animation-delay:.6s}
+
+/* 悬浮增强 */
+.fortune-sec,.dayun-item,.locked-section,.daymaster-card,.header,.input-screen{transition:transform .3s ease,box-shadow .3s ease}
+.fortune-sec:hover,.dayun-item:hover,.locked-section:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.3)}
+
+/* 星尘背景 */
+.stardust{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.stardust span{position:absolute;width:3px;height:3px;background:rgba(201,168,76,0.6);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
+@keyframes twinkle{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+.bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(14,10,4,1) 0%,rgba(14,10,4,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
 </style>
 </head>
 <body>
+<div class="stardust" id="stardust"></div>
+<div class="bottom-gradient"></div>
 
 <button class="back-btn" onclick="history.back()">← 返回</button>
 
 <!-- Input screen -->
 <div class="input-screen" id="inputScreen">
-  <div class="header">
+  <div class="header page-enter page-enter-d1">
     <div class="header-title">八字命理 · 完整解读</div>
     <div class="header-sub">BAZI · FOUR PILLARS OF DESTINY</div>
     <div class="gold-line"></div>
@@ -241,6 +317,16 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   <!-- Populated by JS -->
 </div>
 
+<!-- QA section -->
+<div id="qaSection">
+  <div class="qa-label">追问命理师</div>
+  <div class="qa-row">
+    <input id="qaInput" type="text" placeholder="输入你的问题…例如：我适合做什么行业？" class="qa-input">
+    <button onclick="askQuestion()" class="qa-btn">追问</button>
+  </div>
+  <div class="qa-history" id="qaHistory"></div>
+</div>
+
 <script>
 function showToast(msg, type) {
   var t = document.createElement('div');
@@ -261,6 +347,7 @@ var dSel = document.getElementById('day');
 for (var d = 1; d <= 31; d++) dSel.innerHTML += '<option value="'+d+'">'+d+'日</option>';
 
 var gender = 'male', tier = 'basic', tierPrice = 9.9;
+var lastBaziInput = null;
 
 function selectGender(el, g) {
   document.querySelectorAll('.gender-opt').forEach(function(o){ o.classList.remove('selected'); });
@@ -325,6 +412,7 @@ function generateReport() {
   var m = parseInt(document.getElementById('month').value);
   var d = parseInt(document.getElementById('day').value);
   if (!y || !m || !d) { showToast('请填写完整的出生年月日', 'error'); return; }
+  lastBaziInput = { year: y, month: m, day: d, hour: parseInt(document.getElementById('hour').value), name: document.getElementById('name').value || '', gender: gender, tier: tier };
   document.getElementById('inputScreen').style.display = 'none';
   document.getElementById('loadingScreen').classList.add('show');
   var steps = ['解析出生信息…','计算年月日时干支…','排定四柱八字…','分析日主五行…','推算大运流年…','生成命理报告…'];
@@ -344,7 +432,12 @@ function generateReport() {
   }, steps.length * 350 + 400);
 }
 
-function showReport() {
+function showReport(aiText) {
+  if (aiText && typeof aiText === 'string') {
+    renderAITextReport(aiText);
+    document.getElementById('qaSection').style.display = 'block';
+    return;
+  }
   var y = parseInt(document.getElementById('year').value);
   var m = parseInt(document.getElementById('month').value);
   var d = parseInt(document.getElementById('day').value);
@@ -457,6 +550,7 @@ function showReport() {
   if (tier === 'basic') {
     reportEl.innerHTML += '<div class="sticky-cta" id="stickyCta"><div class="cta-row"><div class="cta-desc">解锁完整命盘 · 流月大运·人生时间点</div><div class="cta-price">$19.9</div></div><button class="btn-unlock" onclick="createCheckout(this, \'full\', 19.9)">立即解锁完整命盘</button></div>';
   }
+  document.getElementById('qaSection').style.display = 'block';
 }
 
 function createCheckout(btn, tier, price) {
@@ -482,7 +576,95 @@ function createCheckout(btn, tier, price) {
 function toggleFortune(head) {
   head.nextElementSibling.classList.toggle('open');
 }
+
+function parseAISections(text) {
+  var known = ['📜','💰','💼','❤️','💪','🌟','🔮','📊','🎯','🔥','💧','🌿','🌊','⛰','⚔️','🛡️','✨','💫','⭐','☯','🌙','☀️','📈','💕','🤝','🎓','🏠','🚗','❄️','⚡','🌪','🏆','🎁','📝','💡','🕯','⚱','🧿','🔔','🗝','🪷','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓'];
+  var lines = text.split('\n');
+  var sections = [];
+  var current = null;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var matched = null;
+    for (var k = 0; k < known.length; k++) {
+      if (line.indexOf(known[k]) === 0) { matched = known[k]; break; }
+    }
+    if (matched) {
+      if (current && current.lines.length) sections.push(current);
+      current = { emoji: matched, title: line.substring(matched.length).trim(), lines: [] };
+    } else if (current) {
+      current.lines.push(line);
+    } else if (line.trim()) {
+      current = { emoji: '📜', title: '命理分析', lines: [line] };
+    }
+  }
+  if (current && current.lines.length) sections.push(current);
+  return sections;
+}
+
+function renderAITextReport(text) {
+  var sections = parseAISections(text);
+  var reportEl = document.getElementById('reportScreen');
+  var html = '';
+  if (lastBaziInput) {
+    var n = lastBaziInput.name || (lastBaziInput.gender === 'male' ? '先生' : '女士');
+    html += '<div class="chart-header">';
+    html += '<div class="name-row"><div class="report-name">'+n+'</div><div class="report-tag">AI 命理分析</div></div>';
+    html += '<div class="divider"></div></div>';
+  }
+  if (sections.length > 0) {
+    html += '<div class="fortune-wrap">';
+    for (var i = 0; i < sections.length; i++) {
+      var sec = sections[i];
+      html += '<div class="ai-section">';
+      html += '<div class="ai-section-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ai-section-arrow\').classList.toggle(\'open\')">';
+      html += '<div class="ai-section-icon">'+sec.emoji+'</div>';
+      html += '<div class="ai-section-title">'+(sec.title||'命理分析')+'</div>';
+      html += '<div class="ai-section-arrow open">⬇</div>';
+      html += '</div>';
+      html += '<div class="ai-section-body open"><div class="ai-section-text">'+sec.lines.join('\n')+'</div></div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  } else {
+    html += '<div class="ai-plain-text">'+text+'</div>';
+  }
+  html += '<div style="height:40px"></div>';
+  reportEl.innerHTML = html;
+  reportEl.classList.add('show');
+}
+
+function askQuestion() {
+  var q = document.getElementById('qaInput');
+  if (!q || !q.value.trim()) return;
+  var h = document.getElementById('qaHistory');
+  if (!h) return;
+  var msg = q.value.trim();
+  h.innerHTML += '<div class="qa-my-msg"><span>' + msg.replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span></div>';
+  q.disabled = true;
+  var btn = document.querySelector('.qa-btn');
+  if (btn) btn.disabled = true;
+  setTimeout(function() {
+    h.innerHTML += '<div class="qa-ai-msg"><span>命理师正在思考中…追问功能即将上线，敬请期待。</span></div>';
+    h.scrollIntoView({behavior:'smooth', block:'end'});
+    q.disabled = false;
+    if (btn) btn.disabled = false;
+    q.value = '';
+  }, 1200);
+}
 </script>
+
+<!-- 星尘粒子生成 -->
+<script>
+(function(){
+  var c = document.getElementById('stardust');
+  if (!c) return;
+  for (var i = 0; i < 30; i++) {
+    var s = document.createElement('span');
+    s.style.cssText = 'left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;width:'+(1.5+Math.random()*2.5)+'px;height:'+(1.5+Math.random()*2.5)+'px;--dur:'+(2+Math.random()*4)+'s;animation-delay:'+(Math.random()*5)+'s';
+    c.appendChild(s);
+  }
+  setTimeout(function(){ c.querySelectorAll('span').forEach(function(s){ s.style.opacity = '1'; }); }, 100);
+})();</script>
 
 <!-- Brand tagline -->
 <div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
