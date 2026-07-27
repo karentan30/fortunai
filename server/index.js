@@ -1828,6 +1828,47 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
+
+// POST /api/zhiyuan — 高考志愿
+app.post('/api/zhiyuan', async (req, res) => {
+  try {
+    const { birthYear, birthMonth, birthDay, birthHour, gender, score, province, subjectType, ranking } = req.body;
+    const lan = req.headers['accept-language'] || 'zh';
+    if (!birthYear || !score || !province) {
+      return res.status(400).json({ error: '请提供出生信息和高考分数' });
+    }
+
+    const sysPrompt = `你是一位精通八字命理的高考志愿规划师。根据用户的出生信息和高考分数，提供专业、城市、学校选择建议。用大白话写，不要古文。
+
+必须包含以下章节（每个至少200字）：
+1. 📜 八字命格适合行业
+2. 🔥 适合的专业方向（具体专业名+理由）
+3. 🌆 旺你的城市（五行匹配+就业机会）
+4. 🏫 可报考的学校建议（冲/稳/保三层）
+5. 💰 毕业薪资展望
+6. 🎯 总结建议
+总字数4000-6000字。`;
+
+    const cityElement = { 北京:'水',上海:'金',广州:'火',深圳:'火',杭州:'木',成都:'土',武汉:'木',南京:'金',西安:'金',重庆:'土',长沙:'火',天津:'水',苏州:'金',青岛:'水',大连:'水',厦门:'木' };
+
+    const userPrompt = `出生：${birthYear}年${birthMonth||'?'}月${birthDay||'?'}日${birthHour!==undefined?birthHour+'时':''}
+性别：${gender === "male" ? "男" : "女"}
+高考分数：${score}分（${province}省）
+科目：${subjectType || "理科"}
+全省排名：${ranking || "未知"}
+
+请给出高考志愿填报建议。`;
+
+    const messages = [{ role: 'system', content: sysPrompt }, { role: 'user', content: userPrompt }];
+    const reading = await deepseekChat(messages, { maxTokens: 8192 });
+    var ctxId = saveQaContext('zhiyuan', req.body, reading);
+    res.json({ reading, contextId: ctxId });
+  } catch (err) {
+    console.error('[ZHIYUAN ERR]', err.message);
+    res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
+  }
+});
+
 // ── Global error handler ──
 app.use(function(err, req, res, next) {
   console.error('[FATAL]', err.message);
