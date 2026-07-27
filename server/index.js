@@ -64,7 +64,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }));
 
 // ── Static files ──
-// app.use(express.static(path.join(__dirname, '..')));  // Vercel handles static files
+app.use(express.static(path.join(__dirname, '..')));  // Vercel handles static files
 
 // ── In-memory Data Store (Vercel-compatible, replaces better-sqlite3) ──
 const _M = { users:[], tokens:[], orders:[], readings:[], subs:[], _id:{u:1,t:1,o:1,r:1,s:1} };
