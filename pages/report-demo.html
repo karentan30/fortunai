@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#5bbfa0">
+<title>善缘 · 高考志愿报告</title>
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--jade:#5bbfa0;--jade-deep:#3d9e82;--jade-light:#8dd9bf;--gold:#c9a84c;--bg:#faf8f5;--card:#fff;--ink:#1a1a18;--ink-mid:#4a4a46;--ink-light:#8a8a84;--radius:12px}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+body{max-width:420px;margin:0 auto;min-height:100vh;padding:0 0 120px}
+
+/* ── Header ── */
+.report-header{background:linear-gradient(135deg,var(--jade-deep),var(--jade));padding:40px 20px 30px;text-align:center;color:#fff}
+.report-badge{display:inline-block;background:rgba(255,255,255,0.15);padding:4px 14px;border-radius:10px;font-size:10px;letter-spacing:2px;margin-bottom:14px}
+.report-title{font-size:22px;font-weight:500;letter-spacing:3px;margin-bottom:4px}
+.report-sub{font-size:12px;opacity:0.7;letter-spacing:1px}
+.report-line{width:40px;height:2px;background:rgba(255,255,255,0.3);margin:14px auto;border-radius:1px}
+.report-meta{display:flex;justify-content:center;gap:20px;font-size:11px;opacity:0.75;letter-spacing:0.5px}
+
+/* ── Score summary ── */
+.score-bar{display:flex;gap:8px;margin:-16px 16px 16px;padding:16px;background:var(--card);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,0.06);position:relative;z-index:2}
+.score-item{flex:1;text-align:center}
+.score-val{font-size:18px;color:var(--jade-deep);font-weight:500}
+.score-label{font-size:9px;color:var(--ink-light);letter-spacing:1px;margin-top:2px}
+
+/* ── Sections ── */
+.section{margin:0 16px 10px;background:var(--card);border-radius:var(--radius);overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,0.04)}
+.section-head{display:flex;align-items:center;gap:10px;padding:14px 16px;cursor:pointer;user-select:none}
+.section-emoji{font-size:22px;width:30px;text-align:center;flex-shrink:0}
+.section-title{flex:1;font-size:13px;letter-spacing:1px;color:var(--ink)}
+.section-arrow{font-size:11px;color:var(--ink-light);transition:transform 0.3s;flex-shrink:0}
+.section-arrow.open{transform:rotate(180deg)}
+.section-body{display:none;padding:0 16px 16px}
+.section-body.open{display:block}
+.section-text{font-size:12px;line-height:1.9;color:var(--ink-mid);letter-spacing:0.5px}
+.section-text strong{color:var(--jade-deep)}
+
+/* ── School cards ── */
+.school-grid{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.school-card{border:1px solid rgba(91,191,160,0.1);border-radius:10px;padding:12px 14px}
+.school-card .s-name{font-size:13px;color:var(--ink);letter-spacing:0.5px}
+.school-card .s-major{font-size:10px;color:var(--jade-deep);margin-top:2px}
+.school-card .s-prob{font-size:10px;color:var(--ink-light);margin-top:2px}
+.school-card .s-row{display:flex;justify-content:space-between;align-items:center}
+.school-card .s-tag{font-size:9px;padding:2px 8px;border-radius:6px;background:rgba(91,191,160,0.08);color:var(--jade-deep)}
+.school-card.chong{border-left:3px solid var(--gold)}
+.school-card.wen{border-left:3px solid var(--jade)}
+.school-card.bao{border-left:3px solid var(--jade-light)}
+
+/* ── City cards ── */
+.city-grid{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.city-card{flex:1;min-width:80px;text-align:center;padding:12px 8px;border:1px solid rgba(91,191,160,0.08);border-radius:10px;background:rgba(91,191,160,0.02)}
+.city-card .c-icon{font-size:24px;margin-bottom:4px}
+.city-card .c-name{font-size:11px;color:var(--ink);letter-spacing:0.5px}
+.city-card .c-element{font-size:9px;color:var(--jade-deep);margin-top:2px}
+
+/* ── Salary table ── */
+.salary-table{width:100%;border-collapse:collapse;margin-top:8px;font-size:11px}
+.salary-table th{background:rgba(91,191,160,0.06);padding:8px 10px;text-align:left;color:var(--ink-mid);font-weight:400;letter-spacing:0.5px;border-bottom:1px solid rgba(91,191,160,0.08)}
+.salary-table td{padding:8px 10px;border-bottom:1px solid rgba(91,191,160,0.04);color:var(--ink-mid)}
+.salary-table tr:last-child td{border-bottom:none}
+
+/* ── CTA ── */
+.sticky-cta{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;background:var(--card);border-top:1px solid rgba(91,191,160,0.1);padding:12px 16px 20px;box-shadow:0 -4px 20px rgba(0,0,0,0.04)}
+.cta-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.cta-price{font-size:22px;color:var(--jade-deep);font-weight:500;font-family:'Cormorant Garamond',serif}
+.cta-price span{font-size:12px;color:var(--ink-light);font-weight:400}
+.cta-original{font-size:12px;color:var(--ink-light);text-decoration:line-through}
+.cta-btn{display:block;width:100%;padding:14px 0;border:none;border-radius:8px;background:linear-gradient(135deg,var(--jade-deep),var(--jade));color:#fff;font-family:'Noto Serif SC',serif;font-size:14px;cursor:pointer;letter-spacing:2px;text-align:center;text-decoration:none;box-shadow:0 4px 16px rgba(91,191,160,0.2)}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="report-header">
+  <div class="report-badge">AI高考志愿报告 · 模拟预览</div>
+  <div class="report-title">人生规划报告</div>
+  <div class="report-sub">天赋测评 + 八字命理 + 数据分析</div>
+  <div class="report-line"></div>
+  <div class="report-meta"><span>广东考生</span><span>物理类</span><span>2025年</span></div>
+</div>
+
+<!-- Score Summary -->
+<div class="score-bar">
+  <div class="score-item"><div class="score-val">598</div><div class="score-label">高考分数</div></div>
+  <div class="score-item"><div class="score-val">28,000</div><div class="score-label">全省排名</div></div>
+  <div class="score-item"><div class="score-val">钻研型</div><div class="score-label">天赋类型</div></div>
+  <div class="score-item"><div class="score-val">🔥火</div><div class="score-label">喜用五行</div></div>
+</div>
+
+<!-- Section 1: 八字命格 -->
+<div class="section">
+  <div class="section-head" onclick="toggle(this)">
+    <span class="section-emoji">📜</span>
+    <span class="section-title">八字命格 · 适合行业</span>
+    <span class="section-arrow open">▼</span>
+  </div>
+  <div class="section-body open">
+    <div class="section-text">
+      你的日主为<strong>己土</strong>，生于酉月，金旺土虚，身弱喜火土。<br><br>
+      火代表：互联网、科技、传媒、教育<br>
+      土代表：建筑、地产、人力资源、管理<br><br>
+      <strong>最适合你的三大行业方向：</strong><br>
+      1. 🔥 互联网/科技（火）— 深圳、广州、杭州<br>
+      2. 🟫 设计/创意（土）— 注重审美和细节<br>
+      3. 🔥 教育培训（火）— 分享知识、影响他人<br><br>
+      <strong>建议避开：</strong>金融投资（金水太旺，泄身）
+    </div>
+  </div>
+</div>
+
+<!-- Section 2: 专业推荐 -->
+<div class="section">
+  <div class="section-head" onclick="toggle(this)">
+    <span class="section-emoji">📚</span>
+    <span class="section-title">匹配专业方向</span>
+    <span class="section-arrow">▼</span>
+  </div>
+  <div class="section-body">
+    <div class="section-text">
+      根据你的天赋测评（钻研型）和八字喜火土，推荐以下专业：
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px">
+      <div style="border:1px solid rgba(91,191,160,0.1);border-radius:8px;padding:10px 12px">
+        <div style="font-size:13px;color:var(--ink)">🔥 计算机科学与技术</div>
+        <div style="font-size:10px;color:var(--jade-deep);margin-top:2px">匹配度 95% · 年薪¥15-25万</div>
+      </div>
+      <div style="border:1px solid rgba(91,191,160,0.1);border-radius:8px;padding:10px 12px">
+        <div style="font-size:13px;color:var(--ink)">🔥 软件工程</div>
+        <div style="font-size:10px;color:var(--jade-deep);margin-top:2px">匹配度 92% · 年薪¥14-22万</div>
+      </div>
+      <div style="border:1px solid rgba(91,191,160,0.1);border-radius:8px;padding:10px 12px">
+        <div style="font-size:13px;color:var(--ink)">🟫 数字媒体技术</div>
+        <div style="font-size:10px;color:var(--jade-deep);margin-top:2px">匹配度 88% · 年薪¥12-20万</div>
+      </div>
+      <div style="border:1px solid rgba(91,191,160,0.1);border-radius:8px;padding:10px 12px">
+        <div style="font-size:13px;color:var(--ink)">🟫 人工智能</div>
+        <div style="font-size:10px;color:var(--jade-deep);margin-top:2px">匹配度 85% · 年薪¥18-30万</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 3: 城市 -->
+<div class="section">
+  <div class="section-head" onclick="toggle(this)">
+    <span class="section-emoji">🌆</span>
+    <span class="section-title">旺运城市 · 地域分析</span>
+    <span class="section-arrow">▼</span>
+  </div>
+  <div class="section-body">
+    <div class="section-text">
+      你八字喜火土，以下城市对你发展最有利：
+    </div>
+    <div class="city-grid">
+      <div class="city-card"><div class="c-icon">🔥</div><div class="c-name">深圳</div><div class="c-element">火 · 最旺</div></div>
+      <div class="city-card"><div class="c-icon">🔥</div><div class="c-name">广州</div><div class="c-element">火 · 旺</div></div>
+      <div class="city-card"><div class="c-icon">🔥</div><div class="c-name">杭州</div><div class="c-element">火 · 旺</div></div>
+      <div class="city-card"><div class="c-icon">🟫</div><div class="c-name">成都</div><div class="c-element">土 · 次旺</div></div>
+    </div>
+    <div class="section-text" style="margin-top:10px">
+      <strong>城市分析：</strong><br>
+      🥇 <strong>深圳</strong> — 五行属火，IT产业聚集，实习机会多，毕业生平均起薪¥12,000<br>
+      🥇 <strong>广州</strong> — 五行属火，大学城资源丰富，生活成本低于深圳<br>
+      🥇 <strong>杭州</strong> — 五行属火，互联网重镇，阿里系企业多<br><br>
+      <strong>建议避开：</strong>北京（水）、上海（金）、天津（水）
+    </div>
+  </div>
+</div>
+
+<!-- Section 4: 学校推荐 -->
+<div class="section">
+  <div class="section-head" onclick="toggle(this)">
+    <span class="section-emoji">🏫</span>
+    <span class="section-title">可报考学校 · 冲稳保</span>
+    <span class="section-arrow">▼</span>
+  </div>
+  <div class="section-body">
+    <div class="section-text">基于你598分（广东物理类，全省28000名）的推荐方案：</div>
+    <div style="margin-top:8px">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:1px;margin-bottom:4px">🚀 冲一冲</div>
+      <div class="school-grid">
+        <div class="school-card chong">
+          <div class="s-row"><span class="s-name">深圳大学 · 计算机科学与技术</span><span class="s-tag">冲</span></div>
+          <div class="s-major">2024录取最低分601，位次26000</div>
+          <div class="s-prob">录取概率：约35%</div>
+        </div>
+        <div class="school-card chong">
+          <div class="s-row"><span class="s-name">华南理工大学 · 软件工程</span><span class="s-tag">冲</span></div>
+          <div class="s-major">2024录取最低分603，位次25000</div>
+          <div class="s-prob">录取概率：约30%</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--jade);letter-spacing:1px;margin:10px 0 4px">✅ 稳一稳</div>
+      <div class="school-grid">
+        <div class="school-card wen">
+          <div class="s-row"><span class="s-name">广东工业大学 · 计算机科学与技术</span><span class="s-tag">稳</span></div>
+          <div class="s-major">2024录取最低分590，位次32000</div>
+          <div class="s-prob">录取概率：约75%</div>
+        </div>
+        <div class="school-card wen">
+          <div class="s-row"><span class="s-name">广州大学 · 软件工程</span><span class="s-tag">稳</span></div>
+          <div class="s-major">2024录取最低分585，位次35000</div>
+          <div class="s-prob">录取概率：约80%</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--jade-light);letter-spacing:1px;margin:10px 0 4px">🛡️ 保一保</div>
+      <div class="school-grid">
+        <div class="school-card bao">
+          <div class="s-row"><span class="s-name">东莞理工学院 · 计算机科学与技术</span><span class="s-tag">保</span></div>
+          <div class="s-major">2024录取最低分570，位次45000</div>
+          <div class="s-prob">录取概率：约95%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 5: 薪资 -->
+<div class="section">
+  <div class="section-head" onclick="toggle(this)">
+    <span class="section-emoji">💰</span>
+    <span class="section-title">毕业薪资展望</span>
+    <span class="section-arrow">▼</span>
+  </div>
+  <div class="section-body">
+    <div class="section-text">深圳/广州地区IT类专业毕业生薪酬参考：</div>
+    <table class="salary-table">
+      <tr><th>专业</th><th>起薪</th><th>3年后</th><th>5年后</th></tr>
+      <tr><td>计算机科学与技术</td><td>¥12-18K</td><td>¥20-30K</td><td>¥30-50K</td></tr>
+      <tr><td>软件工程</td><td>¥11-16K</td><td>¥18-28K</td><td>¥28-45K</td></tr>
+      <tr><td>人工智能</td><td>¥15-22K</td><td>¥25-40K</td><td>¥40-70K</td></tr>
+      <tr><td>数字媒体技术</td><td>¥10-15K</td><td>¥15-25K</td><td>¥22-35K</td></tr>
+    </table>
+    <div class="section-text" style="margin-top:8px;font-size:10px;color:var(--ink-light)">
+      * 数据来源：薪酬网 · 2024年毕业生薪酬报告
+    </div>
+  </div>
+</div>
+
+<!-- Section 6: 总结 -->
+<div class="section">
+  <div class="section-head" onclick="toggle(this)">
+    <span class="section-emoji">🎯</span>
+    <span class="section-title">总结建议</span>
+    <span class="section-arrow">▼</span>
+  </div>
+  <div class="section-body">
+    <div class="section-text">
+      <strong>综合建议：</strong><br><br>
+      1️⃣ <strong>专业优先选择：</strong>计算机科学与技术 / 软件工程<br>
+      2️⃣ <strong>首选城市：</strong>深圳（火旺你，IT产业密集）<br>
+      3️⃣ <strong>报考策略：</strong>冲深大/华工，稳广工/广大，保莞工<br>
+      4️⃣ <strong>长远规划：</strong>大二开始找实习积累经验，毕业后留深发展<br><br>
+      <strong style="color:#c9a84c">⚡ 你的八字喜火，深圳的"火"会旺你的事业运。</strong>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="sticky-cta">
+  <div class="cta-row">
+    <div><span class="cta-original">原价¥1,999</span></div>
+    <div><span class="cta-price">¥999<span> 限时</span></span></div>
+  </div>
+  <a class="cta-btn" href="zhiyuan.html">🎯 生成我的完整报告</a>
+</div>
+
+<script>
+function toggle(el) {
+  var body = el.nextElementSibling;
+  var arrow = el.querySelector('.section-arrow');
+  body.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+</script>
+</body>
+</html>
