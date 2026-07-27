@@ -284,6 +284,15 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 /* ── Overview section ── */
 .overview-section{padding:0 16px;margin-bottom:4px}
+
+/* ── Share buttons ── */
+.share-bar{display:none;justify-content:center;gap:14px;padding:20px 16px 10px;position:relative;z-index:1}
+.share-bar.show{display:flex}
+.share-btn{display:flex;flex-direction:column;align-items:center;gap:5px;background:rgba(23,14,6,0.4);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(201,168,76,0.1);border-radius:14px;padding:12px 16px;cursor:pointer;transition:all .25s;min-width:76px;font-family:'Noto Serif SC',serif;-webkit-tap-highlight-color:transparent}
+.share-btn:hover{border-color:rgba(201,168,76,0.25);background:rgba(23,14,6,0.55);transform:translateY(-2px)}
+.share-btn:active{transform:scale(0.95)}
+.share-icon{font-size:20px;line-height:1}
+.share-label{font-size:10px;color:rgba(255,245,220,0.5);letter-spacing:.1em;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -406,6 +415,22 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
     <button onclick="askQuestion()" class="qa-btn">追问</button>
   </div>
   <div class="qa-history" id="qaHistory"></div>
+</div>
+
+<!-- Share bar -->
+<div class="share-bar" id="shareBar">
+  <div class="share-btn" onclick="shareWechat()">
+    <span class="share-icon">💬</span>
+    <span class="share-label">微信分享</span>
+  </div>
+  <div class="share-btn" onclick="shareTwitter()">
+    <span class="share-icon">𝕏</span>
+    <span class="share-label">Twitter</span>
+  </div>
+  <div class="share-btn" onclick="shareCopyLink()">
+    <span class="share-icon">🔗</span>
+    <span class="share-label">复制链接</span>
+  </div>
 </div>
 
 <script>
@@ -533,6 +558,7 @@ function showReport(aiText, contextId) {
   if (aiText && typeof aiText === 'string') {
     renderAITextReport(aiText, contextId);
     document.getElementById('qaSection').style.display = 'block';
+    document.getElementById('shareBar').classList.add('show');
     return;
   }
   var y = parseInt(document.getElementById('year').value);
@@ -653,6 +679,7 @@ function showReport(aiText, contextId) {
   }
   injectDisclaimer('reportScreen');
   document.getElementById('qaSection').style.display = 'block';
+  document.getElementById('shareBar').classList.add('show');
 }
 
 function injectDisclaimer(containerId) {
@@ -937,6 +964,33 @@ function renderUltimateReport(text, containerId) {
   });
   html += '</div>';
   container.innerHTML = html;
+}
+
+// ── Share functions ──
+function shareWechat(url) {
+  if (!url) url = window.location.href;
+  var t = document.createElement('textarea');
+  t.value = '我在善缘算了八字，太准了！来看看你的命盘\n' + url;
+  t.style.position = 'fixed'; t.style.left = '-9999px';
+  document.body.appendChild(t); t.select();
+  try { document.execCommand('copy'); showToast('链接已复制，快去微信分享给好友吧！'); }
+  catch(e) { showToast('复制失败，请手动复制链接', 'error'); }
+  document.body.removeChild(t);
+}
+function shareTwitter(url) {
+  if (!url) url = window.location.href;
+  var text = encodeURIComponent('我在善缘算了八字，太准了！来看看你的命盘');
+  window.open('https://twitter.com/intent/tweet?text='+text+'&url='+encodeURIComponent(url), '_blank');
+}
+function shareCopyLink(url) {
+  if (!url) url = window.location.href;
+  var t = document.createElement('textarea');
+  t.value = url;
+  t.style.position = 'fixed'; t.style.left = '-9999px';
+  document.body.appendChild(t); t.select();
+  try { document.execCommand('copy'); showToast('链接已复制！'); }
+  catch(e) { showToast('复制失败', 'error'); }
+  document.body.removeChild(t);
 }
 </script>
 
