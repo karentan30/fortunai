@@ -1,0 +1,959 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0e0a04">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>善缘 · 好友合盘 · Friend Compatibility</title>
+<meta name="description" content="善缘好友合盘 — 输入你和朋友的出生信息，AI星盘对比分析，合盘评分+匹配解读+可分享对比卡片">
+<meta property="og:title" content="善缘 · 好友合盘">
+<meta property="og:description" content="善缘好友合盘 — AI星盘对比分析，看看你们的星座是否合拍">
+<meta property="og:image" content="/favicon.svg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="善缘 · 好友合盘">
+<meta name="twitter:description" content="善缘好友合盘 — AI星盘对比分析，看看你们的星座是否合拍">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0a04;--card:#170e06;--mid:#1f1408;
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
+  --jade:#5bbfa0;--jade-mid:#8dd9bf;--jade-deep:#3d9e82;
+  --rose:#d07891;--rose-light:#e8a0b0;
+  --amber:#c9820a;--amber-light:#e8b86a;
+  --ink-text:rgba(255,245,220,0.88);
+  --sub-text:rgba(255,245,220,0.45);
+  --radius:10px;
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink-text);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:120px;position:relative}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,0.06) 0%,transparent 55%);pointer-events:none;z-index:0}
+body>*{position:relative;z-index:1}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--sub-text);cursor:pointer;transition:color 0.2s;letter-spacing:0.06em;display:flex;align-items:center;gap:4px}
+.back-btn:hover{color:var(--gold)}
+
+.header{text-align:center;padding:52px 20px 24px}
+.header-icon{font-size:36px;margin-bottom:8px;display:block}
+.header h1{font-size:20px;font-weight:500;letter-spacing:0.12em;color:var(--gold);margin-bottom:4px}
+.header .sub{font-size:10px;color:var(--sub-text);letter-spacing:0.22em;font-weight:300}
+.gold-line{height:1px;width:80px;margin:14px auto;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+
+/* ── Input Section ── */
+.section{padding:0 16px;margin-bottom:16px}
+.section-title{font-size:13px;font-weight:500;color:var(--gold);letter-spacing:0.08em;margin-bottom:10px;text-align:center}
+.person-card{background:rgba(23,14,6,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(201,168,76,0.12);border-radius:12px;padding:16px;margin-bottom:12px;transition:border-color 0.3s}
+.person-card:focus-within{border-color:rgba(201,168,76,0.35)}
+.person-label{font-size:11px;font-weight:500;letter-spacing:0.08em;color:var(--gold-light);margin-bottom:12px;text-align:center}
+.person-label .label-icon{margin-right:4px}
+.form-group{margin-bottom:10px}
+.form-group label{display:block;font-size:10px;color:var(--sub-text);letter-spacing:0.06em;margin-bottom:4px}
+.form-group input,.form-group select{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.12);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--ink-text);font-family:'Noto Serif SC',serif;outline:none;transition:border-color 0.2s}
+.form-group input:focus,.form-group select:focus{border-color:rgba(201,168,76,0.4)}
+.form-group input::placeholder{color:rgba(255,245,220,0.25)}
+.form-group select option{background:var(--card);color:var(--ink-text)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* ── Submit ── */
+.submit-wrap{padding:0 16px;margin-bottom:24px}
+.btn-submit{width:100%;padding:14px 0;border:none;border-radius:10px;background:linear-gradient(135deg,rgba(201,168,76,0.6),rgba(201,168,76,0.35));color:var(--ink-text);font-size:15px;font-family:'Noto Serif SC',serif;letter-spacing:0.12em;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden}
+.btn-submit:hover:not(:disabled){background:linear-gradient(135deg,rgba(201,168,76,0.75),rgba(201,168,76,0.45));transform:translateY(-2px);box-shadow:0 8px 24px rgba(201,168,76,0.2)}
+.btn-submit:disabled{opacity:0.4;cursor:not-allowed}
+.btn-submit.loading{pointer-events:none}
+.btn-submit .spinner{display:none;width:18px;height:18px;border:2px solid rgba(255,245,220,0.2);border-top-color:var(--gold);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto}
+.btn-submit.loading .btn-text{display:none}
+.btn-submit.loading .spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ── Results ── */
+.results{margin-top:8px}
+.result-section{animation:fadeUp 0.6s ease both}
+
+/* ── Zodiac Card Side by Side ── */
+.zodiac-pair{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 16px;margin-bottom:18px}
+.zodiac-card{background:rgba(23,14,6,0.7);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(201,168,76,0.12);border-radius:12px;padding:14px 10px 12px;text-align:center}
+.zodiac-card.p1{border-color:rgba(201,168,76,0.2)}
+.zodiac-card.p2{border-color:rgba(201,168,76,0.2)}
+.zc-name{font-size:12px;font-weight:500;color:var(--gold-light);margin-bottom:8px;letter-spacing:0.06em}
+.zc-icon{font-size:28px;margin-bottom:6px;display:block}
+.zc-sign-zh{font-size:15px;font-weight:500;margin-bottom:2px}
+.zc-sign-en{font-size:9px;color:var(--sub-text);letter-spacing:0.06em;margin-bottom:6px}
+.zc-detail{font-size:10px;color:var(--sub-text);line-height:1.6}
+.zc-detail span{display:block}
+
+/* ── Compatibility Score Ring ── */
+.score-section{display:flex;flex-direction:column;align-items:center;padding:0 16px;margin-bottom:18px}
+.score-ring{position:relative;width:120px;height:120px;margin-bottom:10px}
+.score-ring svg{transform:rotate(-90deg)}
+.score-ring .bg{fill:none;stroke:rgba(201,168,76,0.08);stroke-width:6}
+.score-ring .progress{fill:none;stroke:var(--gold);stroke-width:6;stroke-linecap:round;transition:stroke-dashoffset 1.5s ease}
+.score-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:500;color:var(--gold);font-family:'Cormorant Garamond',serif}
+.score-label{font-size:11px;color:var(--sub-text);letter-spacing:0.08em}
+.score-tag{display:inline-block;padding:3px 14px;border-radius:20px;font-size:11px;border:1px solid;margin-top:4px;letter-spacing:0.06em}
+.score-tag.high{color:#5bbfa0;border-color:rgba(91,191,160,0.3);background:rgba(91,191,160,0.06)}
+.score-tag.mid{color:var(--amber-light);border-color:rgba(232,184,106,0.3);background:rgba(232,184,106,0.06)}
+.score-tag.low{color:var(--rose);border-color:rgba(208,120,145,0.3);background:rgba(208,120,145,0.06)}
+
+/* ── Interpretation Cards ── */
+.interp-grid{padding:0 16px;display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+.interp-card{background:rgba(23,14,6,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(201,168,76,0.1);border-radius:10px;padding:14px 14px 12px}
+.interp-card-title{font-size:12px;font-weight:500;color:var(--gold);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.interp-card-text{font-size:11px;line-height:1.7;color:rgba(255,245,220,0.7);letter-spacing:0.04em}
+.interp-bar{height:4px;border-radius:2px;background:rgba(201,168,76,0.08);margin-top:8px;overflow:hidden}
+.interp-bar-fill{height:100%;border-radius:2px;transition:width 1.2s ease;background:linear-gradient(90deg,var(--gold-deep),var(--gold),var(--gold-light))}
+
+/* ── Element Balance ── */
+.element-compare{padding:0 16px;margin-bottom:18px}
+.el-card{background:rgba(23,14,6,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(201,168,76,0.08);border-radius:10px;padding:14px}
+.el-title{font-size:11px;font-weight:500;color:var(--gold);margin-bottom:10px;text-align:center;letter-spacing:0.06em}
+.el-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.el-item{text-align:center;padding:8px;border-radius:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(201,168,76,0.06)}
+.el-name{font-size:14px;margin-bottom:2px}
+.el-p1{font-size:10px;color:var(--gold-light);margin-bottom:1px}
+.el-p2{font-size:10px;color:var(--rose-light)}
+.el-match{font-size:18px;margin-top:4px}
+
+/* ── Share Card ── */
+.share-section{padding:0 16px;margin-bottom:18px}
+.share-card{background:linear-gradient(135deg,rgba(23,14,6,0.95),rgba(31,20,8,0.95));border:1px solid rgba(201,168,76,0.2);border-radius:14px;padding:24px 20px;text-align:center;position:relative;overflow:hidden}
+.share-card::before{content:'';position:absolute;top:-30px;right:-30px;width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,0.08),transparent);pointer-events:none}
+.share-card::after{content:'';position:absolute;bottom:-30px;left:-30px;width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,0.06),transparent);pointer-events:none}
+.share-header{font-size:9px;letter-spacing:0.2em;color:var(--sub-text);margin-bottom:12px}
+.share-names{display:flex;justify-content:center;align-items:center;gap:14px;margin-bottom:10px}
+.share-name{font-size:14px;font-weight:500;color:var(--ink-text);letter-spacing:0.06em}
+.share-vs{font-size:12px;color:var(--gold);font-family:'Cormorant Garamond',serif;font-style:italic}
+.share-signs{display:flex;justify-content:center;gap:14px;margin-bottom:10px}
+.share-sign{font-size:12px;color:var(--sub-text);letter-spacing:0.06em}
+.share-score{font-size:38px;font-weight:500;color:var(--gold);font-family:'Cormorant Garamond',serif;margin-bottom:4px}
+.share-score-label{font-size:9px;color:var(--sub-text);letter-spacing:0.14em;margin-bottom:10px}
+.share-summary{font-size:11px;line-height:1.6;color:rgba(255,245,220,0.6);letter-spacing:0.04em;margin-bottom:14px;padding:0 10px}
+.share-badge{display:inline-block;padding:3px 16px;border-radius:20px;font-size:9px;letter-spacing:0.16em;border:1px solid rgba(201,168,76,0.15);color:var(--sub-text);background:rgba(201,168,76,0.04)}
+.share-footer{font-size:8px;color:rgba(255,245,220,0.2);margin-top:12px;letter-spacing:0.12em}
+.share-actions{display:flex;gap:8px;margin-top:12px;justify-content:center}
+.share-btn{display:flex;align-items:center;gap:4px;padding:8px 16px;border-radius:8px;border:1px solid rgba(201,168,76,0.2);background:rgba(201,168,76,0.06);color:var(--gold);font-size:11px;font-family:'Noto Serif SC',serif;cursor:pointer;transition:all 0.2s}
+.share-btn:hover{background:rgba(201,168,76,0.12);border-color:rgba(201,168,76,0.35)}
+
+/* ── Follow up ── */
+.followup-section{padding:0 16px}
+.followup-card{background:rgba(23,14,6,0.6);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid rgba(201,168,76,0.08);border-radius:10px;padding:14px}
+.followup-title{font-size:11px;font-weight:500;color:var(--gold-light);margin-bottom:8px;letter-spacing:0.06em}
+.followup-input{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.1);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--ink-text);font-family:'Noto Serif SC',serif;outline:none;resize:none;min-height:60px;transition:border-color 0.2s}
+.followup-input:focus{border-color:rgba(201,168,76,0.3)}
+.followup-input::placeholder{color:rgba(255,245,220,0.2)}
+.followup-actions{display:flex;gap:8px;margin-top:8px}
+.followup-btn{flex:1;padding:9px 0;border:none;border-radius:8px;background:rgba(201,168,76,0.12);color:var(--gold);font-size:12px;font-family:'Noto Serif SC',serif;cursor:pointer;transition:all 0.2s}
+.followup-btn:hover{background:rgba(201,168,76,0.22)}
+.followup-btn:disabled{opacity:0.3;cursor:not-allowed}
+.followup-answer{font-size:11px;line-height:1.7;color:rgba(255,245,220,0.6);margin-top:10px;padding:10px;border-radius:8px;background:rgba(201,168,76,0.03);border:1px solid rgba(201,168,76,0.06);display:none}
+.followup-answer.show{display:block;animation:fadeUp 0.4s ease both}
+
+/* ── Toast ── */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:'Noto Serif SC',serif;cursor:pointer;transition:opacity 0.3s}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+</style>
+</head>
+<body>
+
+<!-- Back button -->
+<button class="back-btn" onclick="goBack()">&#x2039; 返回</button>
+
+<!-- Header -->
+<div class="header">
+  <span class="header-icon">&#10025;&#10025;</span>
+  <h1>好友合盘</h1>
+  <div class="sub">Friend Compatibility</div>
+  <div class="gold-line"></div>
+</div>
+
+<!-- Input: Self -->
+<div class="section">
+  <div class="person-card" id="person1Card">
+    <div class="person-label"><span class="label-icon">&#9786;</span> 自己 · You</div>
+    <div class="form-group">
+      <label>姓名 Name</label>
+      <input type="text" id="p1Name" placeholder="你的名字" maxlength="20">
+    </div>
+    <div class="form-row-3">
+      <div class="form-group">
+        <label>年 Year</label>
+        <input type="number" id="p1Year" placeholder="1990" min="1900" max="2030">
+      </div>
+      <div class="form-group">
+        <label>月 Month</label>
+        <select id="p1Month">
+          <option value="">月</option>
+          <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+          <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+          <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+          <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>日 Day</label>
+        <input type="number" id="p1Day" placeholder="15" min="1" max="31">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>出生时间 Birth Time</label>
+        <select id="p1Hour">
+          <option value="">不详</option>
+          <option value="0">00:00</option><option value="1">01:00</option><option value="2">02:00</option>
+          <option value="3">03:00</option><option value="4">04:00</option><option value="5">05:00</option>
+          <option value="6">06:00</option><option value="7">07:00</option><option value="8">08:00</option>
+          <option value="9">09:00</option><option value="10">10:00</option><option value="11">11:00</option>
+          <option value="12">12:00</option><option value="13">13:00</option><option value="14">14:00</option>
+          <option value="15">15:00</option><option value="16">16:00</option><option value="17">17:00</option>
+          <option value="18">18:00</option><option value="19">19:00</option><option value="20">20:00</option>
+          <option value="21">21:00</option><option value="22">22:00</option><option value="23">23:00</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>性别 Gender</label>
+        <select id="p1Gender">
+          <option value="male">男 Male</option>
+          <option value="female">女 Female</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Input: Friend -->
+<div class="section">
+  <div class="person-card" id="person2Card">
+    <div class="person-label"><span class="label-icon">&#9786;</span> 朋友 · Friend</div>
+    <div class="form-group">
+      <label>姓名 Name</label>
+      <input type="text" id="p2Name" placeholder="朋友的名字" maxlength="20">
+    </div>
+    <div class="form-row-3">
+      <div class="form-group">
+        <label>年 Year</label>
+        <input type="number" id="p2Year" placeholder="1990" min="1900" max="2030">
+      </div>
+      <div class="form-group">
+        <label>月 Month</label>
+        <select id="p2Month">
+          <option value="">月</option>
+          <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+          <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+          <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+          <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>日 Day</label>
+        <input type="number" id="p2Day" placeholder="15" min="1" max="31">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>出生时间 Birth Time</label>
+        <select id="p2Hour">
+          <option value="">不详</option>
+          <option value="0">00:00</option><option value="1">01:00</option><option value="2">02:00</option>
+          <option value="3">03:00</option><option value="4">04:00</option><option value="5">05:00</option>
+          <option value="6">06:00</option><option value="7">07:00</option><option value="8">08:00</option>
+          <option value="9">09:00</option><option value="10">10:00</option><option value="11">11:00</option>
+          <option value="12">12:00</option><option value="13">13:00</option><option value="14">14:00</option>
+          <option value="15">15:00</option><option value="16">16:00</option><option value="17">17:00</option>
+          <option value="18">18:00</option><option value="19">19:00</option><option value="20">20:00</option>
+          <option value="21">21:00</option><option value="22">22:00</option><option value="23">23:00</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>性别 Gender</label>
+        <select id="p2Gender">
+          <option value="male">男 Male</option>
+          <option value="female">女 Female</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Submit button -->
+<div class="submit-wrap">
+  <button class="btn-submit" id="btnSubmit" onclick="generateCompatibility()">
+    <span class="btn-text">&#10025; 开始合盘分析</span>
+    <span class="spinner"></span>
+  </button>
+</div>
+
+<!-- Results container -->
+<div class="results" id="resultsContainer" style="display:none">
+
+  <!-- Zodiac cards side by side -->
+  <div class="zodiac-pair" id="zodiacPair"></div>
+
+  <!-- Score section -->
+  <div class="score-section result-section" style="animation-delay:0.1s">
+    <div class="score-ring">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle class="bg" cx="60" cy="60" r="52"/>
+        <circle class="progress" id="scoreCircle" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+      </svg>
+      <div class="score-num" id="scoreNum">0%</div>
+    </div>
+    <div class="score-label">合盘匹配度</div>
+    <div class="score-tag" id="scoreTag"></div>
+  </div>
+
+  <!-- Interpretation grid -->
+  <div class="interp-grid" id="interpGrid"></div>
+
+  <!-- Element comparison -->
+  <div class="element-compare result-section" id="elementSection" style="animation-delay:0.4s"></div>
+
+  <!-- Share card -->
+  <div class="share-section result-section" style="animation-delay:0.5s">
+    <div class="share-card" id="shareCard">
+      <div class="share-header">&#10025; 善缘 · 好友合盘 &#10025;</div>
+      <div class="share-names">
+        <span class="share-name" id="shareName1">--</span>
+        <span class="share-vs">&#10025;</span>
+        <span class="share-name" id="shareName2">--</span>
+      </div>
+      <div class="share-signs">
+        <span class="share-sign" id="shareSign1">--</span>
+        <span class="share-sign" id="shareSign2">--</span>
+      </div>
+      <div class="share-score" id="shareScore">0%</div>
+      <div class="share-score-label">COMPATIBILITY</div>
+      <div class="share-summary" id="shareSummary">加载中...</div>
+      <div class="share-badge">&#10025; SHENYUAN</div>
+      <div class="share-footer">shenyuan.mylumee.cn</div>
+    </div>
+    <div class="share-actions">
+      <button class="share-btn" onclick="shareResult()">&#128228; 分享</button>
+      <button class="share-btn" onclick="copyShareLink()">&#128203; 复制链接</button>
+    </div>
+  </div>
+
+  <!-- Follow-up -->
+  <div class="followup-section result-section" style="animation-delay:0.6s">
+    <div class="followup-card">
+      <div class="followup-title">&#10068; 追问合盘解读</div>
+      <textarea class="followup-input" id="followupInput" placeholder="例如：我们在事业上合拍吗？有哪些需要注意的地方..."></textarea>
+      <div class="followup-actions">
+        <button class="followup-btn" id="btnFollowup" onclick="askFollowup()">追问</button>
+      </div>
+      <div class="followup-answer" id="followupAnswer"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// CONSTANTS
+// ════════════════════════════════════════════
+var SIGNS_ZH = ['白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手','摩羯','水瓶','双鱼'];
+var SIGNS_EN = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+var ELEMENTS = ['火','土','风','水','火','土','风','水','火','土','风','水'];
+var ELEMENTS_EN = ['Fire','Earth','Air','Water','Fire','Earth','Air','Water','Fire','Earth','Air','Water'];
+var MODALITIES = ['开创','固定','变动','开创','固定','变动','开创','固定','变动','开创','固定','变动'];
+var SIGN_ICONS = ['&#9800;','&#9801;','&#9802;','&#9803;','&#9804;','&#9805;','&#9806;','&#9807;','&#9808;','&#9809;','&#9810;','&#9811;'];
+var ELEMENT_ICONS = { '火':'&#128293;','土':'&#127811;','风':'&#127744;','水':'&#127754;' };
+
+var chartData = { p1: null, p2: null };
+var contextIds = { p1: null, p2: null };
+
+// Element compatibility matrix (Chinese elements)
+// Same element: strong harmony
+// Fire + Air (wind feeds fire): strong
+// Earth + Water (water nurtures earth): strong
+// Fire + Water: conflict
+// Earth + Air: neutral
+var EL_MATCH = {
+  '火+火': {score:15,desc:'同属火元素，热情共振，充满活力'},
+  '土+土': {score:15,desc:'同属土元素，稳重踏实，价值观一致'},
+  '风+风': {score:15,desc:'同属风元素，思想共鸣，交流顺畅'},
+  '水+水': {score:15,desc:'同属水元素，情感深沉，默契十足'},
+  '火+风': {score:20,desc:'火借风势，相互激发，创意无限'},
+  '风+火': {score:20,desc:'风助火势，热情与思想的完美结合'},
+  '土+水': {score:18,desc:'水土相生，务实与感性的完美平衡'},
+  '水+土': {score:18,desc:'水土相生，滋养与被滋养的和谐关系'},
+  '火+土': {score:8,desc:'火土相生但节奏不同，热情需要落地'},
+  '土+火': {score:8,desc:'土火相生，稳定中需要激情'},
+  '火+水': {score:3,desc:'火水相冲，热情与敏感需要磨合'},
+  '水+火': {score:3,desc:'水火相冲，情绪需要更多理解'},
+  '风+土': {score:5,desc:'风土相克，理想与现实需要调和'},
+  '土+风': {score:5,desc:'土风相克，务实与自由需要找到平衡'},
+  '风+水': {score:10,desc:'风水交融，理性与感性的对话'},
+  '水+风': {score:10,desc:'水风交融，情感与思想的碰撞'},
+};
+var DEFAULT_EL_DESC = '元素能量互补，关系和谐';
+
+// Modality compatibility
+var MOD_MATCH = {
+  '开创+开创': {score:10,desc:'双双开创，强强联手但可能争主导'},
+  '固定+固定': {score:12,desc:'固定相守，稳定持久但需防固执'},
+  '变动+变动': {score:10,desc:'双双灵活，适应性强但缺乏根基'},
+  '开创+固定': {score:8,desc:'开创带动固定，一个推动一个坚持'},
+  '固定+开创': {score:8,desc:'固定提供稳定，开创带来变化'},
+  '开创+变动': {score:6,desc:'开创者需要变动的配合，但方向易变'},
+  '变动+开创': {score:6,desc:'变动提供灵活，开创提供方向'},
+  '固定+变动': {score:5,desc:'固定与变动节奏不同，需互相理解'},
+  '变动+固定': {score:5,desc:'变动与固定的拉锯，需要包容'},
+};
+
+// ════════════════════════════════════════════
+// UTILITY
+// ════════════════════════════════════════════
+
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.className = 'toast';
+  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
+  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){ t.style.opacity = '0'; setTimeout(function(){ t.remove(); },300); };
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.opacity = '0'; setTimeout(function(){ t.remove(); },300); }, 3000);
+}
+
+function goBack() {
+  history.back();
+}
+
+function $(id) { return document.getElementById(id); }
+
+// ════════════════════════════════════════════
+// INPUT VALIDATION
+// ════════════════════════════════════════════
+
+function getPersonData(prefix) {
+  var name = $(prefix + 'Name').value.trim() || '未命名';
+  var year = parseInt($(prefix + 'Year').value);
+  var month = parseInt($(prefix + 'Month').value);
+  var day = parseInt($(prefix + 'Day').value);
+  var hour = $(prefix + 'Hour').value;
+  var gender = $(prefix + 'Gender').value;
+  if (!year || !month || !day) return null;
+  if (year < 1900 || year > 2030) return null;
+  if (month < 1 || month > 12) return null;
+  if (day < 1 || day > 31) return null;
+  return { name: name, birthYear: year, birthMonth: month, birthDay: day, birthHour: hour || undefined, gender: gender };
+}
+
+// ════════════════════════════════════════════
+// API CALLS
+// ════════════════════════════════════════════
+
+function callAstrology(data) {
+  return fetch('/api/astrology', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      birthYear: data.birthYear,
+      birthMonth: data.birthMonth,
+      birthDay: data.birthDay,
+      birthHour: data.birthHour,
+      gender: data.gender,
+      latitude: 40.0,
+      longitude: 116.0
+    })
+  }).then(function(r) {
+    if (!r.ok) return r.json().then(function(e) { throw new Error(e.error || '请求失败'); });
+    return r.json();
+  });
+}
+
+// ════════════════════════════════════════════
+// COMPATIBILITY CALCULATION
+// ════════════════════════════════════════════
+
+function calcElementScore(el1, el2) {
+  var key = el1 + '+' + el2;
+  var match = EL_MATCH[key];
+  return match || {score:10,desc:'关系和谐，互有补充'};
+}
+
+function calcModalityScore(m1, m2) {
+  var key = m1 + '+' + m2;
+  var match = MOD_MATCH[key];
+  return match || {score:7,desc:'模式互补，需要协调'};
+}
+
+function getSunSignFromChart(c) {
+  return c.chart ? c.chart.sun.sign : 0;
+}
+
+function getMoonSignFromChart(c) {
+  return c.chart ? c.chart.moon.sign : 0;
+}
+
+function getVenusSignFromChart(c) {
+  return c.chart && c.chart.planets ? c.chart.planets.venus.sign : 0;
+}
+
+function getMarsSignFromChart(c) {
+  return c.chart && c.chart.planets ? c.chart.planets.mars.sign : 0;
+}
+
+function getRisingSignFromChart(c) {
+  return c.chart ? c.chart.rising.sign : 0;
+}
+
+function getElementBySign(signIndex) {
+  return ELEMENTS[signIndex];
+}
+
+function getModalityBySign(signIndex) {
+  return MODALITIES[signIndex];
+}
+
+function getElementEnBySign(signIndex) {
+  return ELEMENTS_EN[signIndex];
+}
+
+function computeCompatibility(c1, c2) {
+  var sun1 = getSunSignFromChart(c1);
+  var sun2 = getSunSignFromChart(c2);
+  var moon1 = getMoonSignFromChart(c1);
+  var moon2 = getMoonSignFromChart(c2);
+  var venus1 = getVenusSignFromChart(c1);
+  var venus2 = getVenusSignFromChart(c2);
+  var mars1 = getMarsSignFromChart(c1);
+  var mars2 = getMarsSignFromChart(c2);
+  var rising1 = getRisingSignFromChart(c1);
+  var rising2 = getRisingSignFromChart(c2);
+
+  var elSun1 = getElementBySign(sun1);
+  var elSun2 = getElementBySign(sun2);
+  var elMoon1 = getElementBySign(moon1);
+  var elMoon2 = getElementBySign(moon2);
+  var elVenus1 = getElementBySign(venus1);
+  var elVenus2 = getElementBySign(venus2);
+  var elMars1 = getElementBySign(mars1);
+  var elMars2 = getElementBySign(mars2);
+  var elRising1 = getElementBySign(rising1);
+  var elRising2 = getElementBySign(rising2);
+
+  var mod1 = getModalityBySign(sun1);
+  var mod2 = getModalityBySign(sun2);
+
+  // 1. Sun sign element compatibility (weight: 25)
+  var sunEl = calcElementScore(elSun1, elSun2);
+  var sunScore = sunEl.score * 1.5; // 0-30
+
+  // 2. Moon sign (emotional) compatibility (weight: 20)
+  var moonEl = calcElementScore(elMoon1, elMoon2);
+  var moonScore = moonEl.score * 0.9; // 0-18
+
+  // 3. Venus (love) compatibility (weight: 15)
+  var venusEl = calcElementScore(elVenus1, elVenus2);
+  var venusScore = venusEl.score * 0.8; // 0-16
+
+  // 4. Mars (drive) compatibility (weight: 10)
+  var marsEl = calcElementScore(elMars1, elMars2);
+  var marsScore = marsEl.score * 0.6; // 0-12
+
+  // 5. Rising sign compatibility (weight: 10)
+  var risingEl = calcElementScore(elRising1, elRising2);
+  var risingScore = risingEl.score * 0.5; // 0-10
+
+  // 6. Modality (weight: 10)
+  var modMatch = calcModalityScore(mod1, mod2);
+  var modScore = modMatch.score; // 0-12
+
+  // 7. Shared elements bonus (weight: 5)
+  var shares = 0;
+  if (sun1 === sun2) shares++;
+  if (moon1 === moon2) shares++;
+  if (venus1 === venus2) shares++;
+  if (mars1 === mars2) shares++;
+  if (rising1 === rising2) shares++;
+  var shareBonus = Math.min(shares * 3, 12); // 0-12
+
+  var rawScore = sunScore + moonScore + venusScore + marsScore + risingScore + modScore + shareBonus;
+  var finalScore = Math.min(Math.max(Math.round(rawScore), 0), 100);
+
+  // Generate interpretation texts
+  var interps = [];
+  var sunDesc = sunEl.desc;
+  interps.push({
+    title: '&#9728; 核心性格',
+    desc: sunDesc + '。太阳' + SIGNS_ZH[sun1] + '与' + SIGNS_ZH[sun2] + '的互动决定了你们最基本的相处基调。',
+    score: Math.round(sunScore / 30 * 100)
+  });
+  interps.push({
+    title: '&#127769; 情感沟通',
+    desc: moonEl.desc + '。月亮' + SIGNS_ZH[moon1] + '与' + SIGNS_ZH[moon2] + '反映了你们情绪表达方式的契合度。',
+    score: Math.round(moonScore / 18 * 100)
+  });
+  interps.push({
+    title: '&#10084; 人际关系',
+    desc: '金星' + SIGNS_ZH[venus1] + '与' + SIGNS_ZH[venus2] + '的结合体现了你们在社交和关系中的风格。' + venusEl.desc + '。',
+    score: Math.round(venusScore / 16 * 100)
+  });
+  interps.push({
+    title: '&#9889; 行动合作',
+    desc: '火星' + SIGNS_ZH[mars1] + '与' + SIGNS_ZH[mars2] + '决定了你们一起行动时的默契。' + marsEl.desc + '。',
+    score: Math.round(marsScore / 12 * 100)
+  });
+  interps.push({
+    title: '&#127919; 价值观',
+    desc: modMatch.desc + '。开创/固定/变动的组合方式影响着你们面对生活决策时的协调性。',
+    score: Math.round(modScore / 12 * 100)
+  });
+
+  var scoreTag, summary;
+  if (finalScore >= 78) {
+    scoreTag = { text: '&#10025; 天作之合', cls: 'high' };
+    summary = '你们的星盘能量高度和谐，是一对令人羡慕的组合。太阳与月亮元素相生相成，沟通顺畅，互相理解无需多言。无论是作为朋友还是合作伙伴，都能激发出彼此最好的一面。这份缘分值得珍惜。';
+  } else if (finalScore >= 60) {
+    scoreTag = { text: '&#10025; 和合相宜', cls: 'mid' };
+    summary = '你们的星盘有很好的互补性，虽然有些地方需要磨合，但整体能量流向积极。性格上有差异反而成为彼此的补充，只要多一份理解和包容，关系会越来越深厚。';
+  } else if (finalScore >= 40) {
+    scoreTag = { text: '&#9888; 有待磨合', cls: 'mid' };
+    summary = '你们在某些核心领域存在差异，但这并不意味着不能成为好朋友。差异本身也可以成为互相学习的契机。多一些耐心和换位思考，你们能找到彼此舒适的相处方式。';
+  } else {
+    scoreTag = { text: '&#9888; 能量相冲', cls: 'low' };
+    summary = '你们的星盘能量存在较大冲突，核心价值观和表达方式差异明显。但这不代表不能相处，保持适当的距离和充分的理解，反而可能因为差异而学到更多。';
+  }
+
+  return {
+    score: finalScore,
+    scoreTag: scoreTag,
+    interps: interps,
+    summary: summary,
+    details: {
+      sunSign1: sun1, sunSign2: sun2,
+      sunEl1: elSun1, sunEl2: elSun2,
+      moonSign1: moon1, moonSign2: moon2,
+      venusSign1: venus1, venusSign2: venus2,
+      marsSign1: mars1, marsSign2: mars2,
+      risingSign1: rising1, risingSign2: rising2,
+      mod1: mod1, mod2: mod2,
+      sunElDesc: sunEl.desc,
+      moonElDesc: moonEl.desc,
+      venusElDesc: venusEl.desc,
+      marsElDesc: marsEl.desc,
+      risingElDesc: risingEl.desc,
+      modDesc: modMatch.desc
+    }
+  };
+}
+
+// ════════════════════════════════════════════
+// RENDER
+// ════════════════════════════════════════════
+
+function renderResults(comp, name1, name2) {
+  var container = $('resultsContainer');
+  container.style.display = 'block';
+  container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Zodiac pair
+  renderZodiacPair(comp, name1, name2);
+
+  // Score ring
+  renderScoreRing(comp.score);
+
+  // Score tag
+  var tag = $('scoreTag');
+  tag.textContent = comp.scoreTag.text;
+  tag.className = 'score-tag ' + comp.scoreTag.cls;
+
+  // Interpretation grid
+  renderInterps(comp.interps);
+
+  // Element comparison
+  renderElementCompare(comp);
+
+  // Share card
+  $('shareName1').textContent = name1;
+  $('shareName2').textContent = name2;
+  $('shareSign1').textContent = SIGNS_ZH[comp.details.sunSign1] + ' ' + SIGNS_EN[comp.details.sunSign1];
+  $('shareSign2').textContent = SIGNS_ZH[comp.details.sunSign2] + ' ' + SIGNS_EN[comp.details.sunSign2];
+  $('shareScore').textContent = comp.score + '%';
+  $('shareSummary').textContent = comp.summary;
+}
+
+function renderZodiacPair(comp, name1, name2) {
+  var p1Chart = chartData.p1;
+  var p2Chart = chartData.p2;
+  var container = $('zodiacPair');
+  container.innerHTML = '';
+
+  var cards = [
+    { name: name1, chart: p1Chart, cls: 'p1', prefix: '' },
+    { name: name2, chart: p2Chart, cls: 'p2', prefix: '' }
+  ];
+
+  cards.forEach(function(c) {
+    var ch = c.chart.chart;
+    var sun = ch.sun;
+    var moon = ch.moon;
+    var rising = ch.rising;
+    var elIcon = ELEMENT_ICONS[sun.element] || '';
+    var card = document.createElement('div');
+    card.className = 'zodiac-card ' + c.cls;
+    card.innerHTML =
+      '<div class="zc-name">' + c.name + '</div>' +
+      '<span class="zc-icon">' + SIGN_ICONS[sun.sign] + '</span>' +
+      '<div class="zc-sign-zh">' + sun.signZh + ' ' + sun.signEn + '</div>' +
+      '<div class="zc-sign-en">' + elIcon + ' ' + sun.element + ' · ' + MODALITIES[sun.sign] + '</div>' +
+      '<div class="zc-detail">' +
+        '<span>&#127769; 月亮 ' + moon.signZh + '</span>' +
+        '<span>&#9729; 上升 ' + rising.signZh + '</span>' +
+        '<span>&#9790; 金星 ' + (ch.planets.venus ? ch.planets.venus.signZh : '') + '</span>' +
+        '<span>&#9794; 火星 ' + (ch.planets.mars ? ch.planets.mars.signZh : '') + '</span>' +
+      '</div>';
+    container.appendChild(card);
+  });
+}
+
+function renderScoreRing(score) {
+  var circle = $('scoreCircle');
+  var num = $('scoreNum');
+  var circumference = 2 * Math.PI * 52;
+  var offset = circumference - (score / 100) * circumference;
+  circle.style.strokeDasharray = circumference;
+  num.textContent = score + '%';
+  setTimeout(function() {
+    circle.style.strokeDashoffset = offset;
+  }, 300);
+}
+
+function renderInterps(interps) {
+  var grid = $('interpGrid');
+  grid.innerHTML = '';
+  interps.forEach(function(interp, i) {
+    var card = document.createElement('div');
+    card.className = 'interp-card result-section';
+    card.style.animationDelay = (0.2 + i * 0.1) + 's';
+    var pct = interp.score;
+    card.innerHTML =
+      '<div class="interp-card-title">' + interp.title + ' <span style="font-size:10px;color:var(--sub-text)">' + pct + '%</span></div>' +
+      '<div class="interp-card-text">' + interp.desc + '</div>' +
+      '<div class="interp-bar"><div class="interp-bar-fill" style="width:0%" data-target="' + pct + '"></div></div>';
+    grid.appendChild(card);
+  });
+
+  // Animate bars after render
+  setTimeout(function() {
+    grid.querySelectorAll('.interp-bar-fill').forEach(function(bar) {
+      bar.style.width = bar.getAttribute('data-target') + '%';
+    });
+  }, 500);
+}
+
+function renderElementCompare(comp) {
+  var section = $('elementSection');
+  var d = comp.details;
+  var elements = [
+    { name: '&#128293; 火 Fire', p1: d.sunEl1 === '火' ? SIGNS_ZH[d.sunSign1] : (d.moonSign1 === 0 || d.moonSign1 === 4 || d.moonSign1 === 8 ? '&#9679;' : ''), p2: d.sunEl2 === '火' ? SIGNS_ZH[d.sunSign2] : (d.moonSign2 === 0 || d.moonSign2 === 4 || d.moonSign2 === 8 ? '&#9679;' : ''), match: '火+火' },
+    { name: '&#127811; 土 Earth', p1: d.sunEl1 === '土' ? SIGNS_ZH[d.sunSign1] : '', p2: d.sunEl2 === '土' ? SIGNS_ZH[d.sunSign2] : '', match: '土+土' },
+    { name: '&#127744; 风 Air', p1: d.sunEl1 === '风' ? SIGNS_ZH[d.sunSign1] : '', p2: d.sunEl2 === '风' ? SIGNS_ZH[d.sunSign2] : '', match: '风+风' },
+    { name: '&#127754; 水 Water', p1: d.sunEl1 === '水' ? SIGNS_ZH[d.sunSign1] : '', p2: d.sunEl2 === '水' ? SIGNS_ZH[d.sunSign2] : '', match: '水+水' },
+  ];
+
+  var sunElKey = d.sunEl1 + '+' + d.sunEl2;
+  var elMatch = EL_MATCH[sunElKey];
+
+  section.innerHTML =
+    '<div class="el-card">' +
+      '<div class="el-title">&#10025; 元素分布 · Element Balance</div>' +
+      '<div class="el-grid" id="elGrid">' +
+        elements.map(function(e) {
+          return '<div class="el-item">' +
+            '<div class="el-name">' + e.name + '</div>' +
+            '<div class="el-p1">' + name1 + ': ' + e.p1 + '</div>' +
+            '<div class="el-p2">' + name2 + ': ' + e.p2 + '</div>' +
+          '</div>';
+        }).join('') +
+      '</div>' +
+      '<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(201,168,76,0.06);text-align:center">' +
+        '<div style="font-size:11px;color:var(--gold-light);margin-bottom:4px">太阳元素搭配</div>' +
+        '<div style="font-size:10px;color:rgba(255,245,220,0.55)">' + d.sunEl1 + ' + ' + d.sunEl2 + ' &rarr; ' + (elMatch ? elMatch.desc : '和谐') + '</div>' +
+      '</div>' +
+    '</div>';
+}
+
+// ════════════════════════════════════════════
+// MAIN GENERATION
+// ════════════════════════════════════════════
+
+var name1 = '', name2 = '';
+
+function generateCompatibility() {
+  var btn = $('btnSubmit');
+  var p1 = getPersonData('p1');
+  var p2 = getPersonData('p2');
+
+  if (!p1 || !p2) {
+    showToast('请完整填写你和朋友的出生信息（年月日必填）', 'error');
+    return;
+  }
+
+  name1 = p1.name;
+  name2 = p2.name;
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  // Make two parallel API calls
+  Promise.all([callAstrology(p1), callAstrology(p2)])
+    .then(function(results) {
+      chartData.p1 = results[0];
+      chartData.p2 = results[1];
+      contextIds.p1 = results[0].contextId;
+      contextIds.p2 = results[1].contextId;
+
+      var comp = computeCompatibility(results[0], results[1]);
+      renderResults(comp, name1, name2);
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    })
+    .catch(function(err) {
+      showToast('分析失败：' + (err.message || '请稍后重试'), 'error');
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    });
+}
+
+// ════════════════════════════════════════════
+// SHARE
+// ════════════════════════════════════════════
+
+function shareResult() {
+  var shareData = {
+    title: '善缘 · 好友合盘',
+    text: name1 + ' 与 ' + name2 + ' 的合盘匹配度：' + $('shareScore').textContent + '！' + $('shareSummary').textContent,
+    url: window.location.href + '?share=' + encodeURIComponent(JSON.stringify({
+      n1: name1, n2: name2,
+      s1: SIGNS_ZH[chartData.p1.chart.sun.sign] + ' ' + SIGNS_EN[chartData.p1.chart.sun.sign],
+      s2: SIGNS_ZH[chartData.p2.chart.sun.sign] + ' ' + SIGNS_EN[chartData.p2.chart.sun.sign],
+      sc: chartData.compatibilityScore || $('shareScore').textContent
+    }))
+  };
+
+  if (navigator.share) {
+    navigator.share(shareData).catch(function() {});
+  } else {
+    // Fallback: copy text
+    copyShareLink();
+  }
+}
+
+function copyShareLink() {
+  var text = '&#10025; 善缘 · 好友合盘 &#10025;\n' +
+    name1 + ' &#10025; ' + name2 + '\n' +
+    $('shareSign1').textContent + ' | ' + $('shareSign2').textContent + '\n' +
+    '合盘匹配度：' + $('shareScore').textContent + '\n' +
+    $('shareSummary').textContent + '\n' +
+    '&#8594; shenyuan.mylumee.cn/pages/friends.html';
+
+  // Strip HTML entities for clipboard
+  var plainText = text.replace(/&#\d+;/g, function(m) {
+    return String.fromCharCode(parseInt(m.replace(/[&#;]/g, '')));
+  }).replace(/&rarr;/g, '→').replace(/&larr;/g, '←');
+
+  if (navigator.share && navigator.canShare && navigator.canShare({ text: plainText })) {
+    navigator.share({ text: plainText }).catch(function() {});
+    return;
+  }
+
+  // Fallback: copy to clipboard
+  var ta = document.createElement('textarea');
+  ta.value = plainText;
+  ta.style.position = 'fixed';
+  ta.style.opacity = '0';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    showToast('已复制分享内容');
+  } catch(e) {
+    showToast('复制失败，请手动截图分享');
+  }
+  document.body.removeChild(ta);
+}
+
+// ════════════════════════════════════════════
+// FOLLOW-UP
+// ════════════════════════════════════════════
+
+function askFollowup() {
+  var input = $('followupInput');
+  var question = input.value.trim();
+  var btn = $('btnFollowup');
+  var answerDiv = $('followupAnswer');
+
+  if (!question) {
+    showToast('请输入你的追问', 'error');
+    return;
+  }
+
+  var ctxId = contextIds.p1 || contextIds.p2;
+  if (!ctxId) {
+    showToast('请先生成合盘分析', 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '思考中...';
+  answerDiv.classList.remove('show');
+
+  fetch('/api/ask-followup', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contextId: ctxId,
+      question: '关于我与' + name2 + '的合盘分析，' + question
+    })
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error('请求失败');
+    return r.json();
+  })
+  .then(function(data) {
+    answerDiv.innerHTML = data.answer.replace(/\n/g, '<br>');
+    answerDiv.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = '追问';
+    input.value = '';
+  })
+  .catch(function(err) {
+    showToast('追问失败：' + (err.message || '请稍后重试'), 'error');
+    btn.disabled = false;
+    btn.textContent = '追问';
+  });
+}
+
+// ════════════════════════════════════════════
+// PRESET FILL (from URL params)
+// ════════════════════════════════════════════
+
+(function(){
+  try {
+    var params = new URLSearchParams(window.location.search);
+    ['p1','p2'].forEach(function(p) {
+      var n = params.get(p + 'Name');
+      var y = params.get(p + 'Year');
+      var m = params.get(p + 'Month');
+      var d = params.get(p + 'Day');
+      var h = params.get(p + 'Hour');
+      var g = params.get(p + 'Gender');
+      if (n) $(p + 'Name').value = n;
+      if (y) $(p + 'Year').value = y;
+      if (m) $(p + 'Month').value = m;
+      if (d) $(p + 'Day').value = d;
+      if (h) $(p + 'Hour').value = h;
+      if (g) $(p + 'Gender').value = g;
+    });
+  } catch(e) {}
+})();
+</script>
+</body>
+</html>

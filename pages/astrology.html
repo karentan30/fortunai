@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#060d1a">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>善缘 · 占星星盘 · Western Astrology</title>
+<meta name="description" content="善缘西方占星 — AI星盘解读，太阳星座/月亮星座/上升星座/行星落座/宫位分析">
+<meta property="og:title" content="善缘 · 占星星盘">
+<meta property="og:description" content="善缘西方占星 — AI星盘解读，太阳星座/月亮星座/上升星座/行星落座/宫位分析">
+<meta property="og:image" content="/favicon.svg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="善缘 · 占星星盘">
+<meta name="twitter:description" content="善缘西方占星 — AI星盘解读，太阳星座/月亮星座/上升星座/行星落座/宫位分析">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --deep: #060d1a; --deep-mid: #0c1a30; --deep-card: #0a1428;
+  --blue: #2a5c8a; --blue-mid: #4a8cc4; --blue-light: #7ab8e8;
+  --gold: #c9a84c; --gold-light: #e8d08a;
+  --star: #f0f4ff; --star-dim: rgba(200,215,240,0.5);
+}
+html, body { background: var(--deep); font-family: 'Noto Serif SC', serif; color: var(--star); -webkit-font-smoothing: antialiased; }
+body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 100px; }
+
+/* Starfield background */
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(42,92,138,0.25) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 60%, rgba(74,140,196,0.12) 0%, transparent 40%),
+    radial-gradient(ellipse at 50% 80%, rgba(201,168,76,0.05) 0%, transparent 50%);
+  pointer-events: none; z-index: 0;
+}
+
+/* Stars decoration */
+body::after {
+  content: ''; position: fixed; inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 50% 15%, rgba(255,255,255,0.7), transparent),
+    radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 85% 35%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 15% 85%, rgba(255,255,255,0.6), transparent),
+    radial-gradient(1px 1px at 60% 45%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 40% 90%, rgba(255,255,255,0.5), transparent),
+    radial-gradient(1.5px 1.5px at 5% 50%, rgba(255,255,255,0.35), transparent),
+    radial-gradient(1px 1px at 95% 70%, rgba(255,255,255,0.45), transparent),
+    radial-gradient(1px 1px at 25% 5%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 75% 25%, rgba(255,255,255,0.4), transparent),
+    radial-gradient(1px 1px at 45% 40%, rgba(255,255,255,0.3), transparent),
+    radial-gradient(1px 1px at 55% 55%, rgba(255,255,255,0.35), transparent);
+  pointer-events: none; z-index: 0;
+}
+
+.back-btn { position: fixed; top: 16px; left: 16px; z-index: 99; background: none; border: none; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(74,140,196,0.7); cursor: pointer; padding: 4px 0; text-decoration: none; }
+
+/* ── Header ── */
+.header { position: relative; z-index: 1; text-align: center; padding: 44px 20px 18px; }
+.header-icon { font-size: 36px; margin-bottom: 8px; display: block; }
+.header-title { font-size: 18px; font-weight: 400; letter-spacing: 0.22em; margin-bottom: 4px; color: var(--star); }
+.header-sub { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 11px; letter-spacing: 0.26em; color: rgba(74,140,196,0.6); margin-bottom: 12px; }
+.blue-line { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, var(--blue-mid), transparent); margin: 0 auto; }
+.header-desc { font-size: 10px; color: rgba(200,215,240,0.4); letter-spacing: 0.08em; margin-top: 12px; line-height: 1.6; }
+
+/* ── Form ── */
+.form-wrap { position: relative; z-index: 1; padding: 12px 16px 8px; }
+.field-group { margin-bottom: 14px; }
+.field-label { font-size: 10px; letter-spacing: 0.18em; color: rgba(74,140,196,0.5); margin-bottom: 8px; }
+.field-label .en { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 9px; color: rgba(74,140,196,0.35); margin-left: 6px; }
+
+.field-box { background: var(--deep-card); border: 1px solid rgba(42,92,138,0.2); border-radius: 8px; padding: 10px 14px; }
+.field-row { display: flex; gap: 8px; }
+.field-row .field-box { flex: 1; }
+
+input, select { width: 100%; background: none; border: none; outline: none; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(240,244,255,0.82); letter-spacing: 0.04em; }
+input::placeholder { color: rgba(240,244,255,0.2); }
+select { appearance: none; -webkit-appearance: none; cursor: pointer; }
+select option { background: var(--deep-mid); color: var(--star); }
+
+/* ── Submit button ── */
+.submit-wrap { position: relative; z-index: 1; padding: 4px 16px 0; }
+.btn-submit { width: 100%; padding: 15px 0; background: linear-gradient(135deg, #1a3a5c, var(--blue), var(--blue-mid), var(--blue)); border: none; border-radius: 4px; color: rgba(240,244,255,0.95); font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 500; letter-spacing: 0.22em; cursor: pointer; box-shadow: 0 4px 20px rgba(42,92,138,0.4); transition: all 0.25s; }
+.btn-submit:active { transform: scale(0.97); }
+.btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ── Loading ── */
+.loading-wrap { position: relative; z-index: 1; display: none; flex-direction: column; align-items: center; padding: 28px 16px; }
+.loading-wrap.show { display: flex; }
+.astro-orb { width: 56px; height: 56px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, rgba(122,184,232,0.6), rgba(42,92,138,0.6) 50%, rgba(6,13,26,1)); animation: orb-pulse 2.5s ease-in-out infinite; box-shadow: 0 0 30px rgba(42,92,138,0.5); margin-bottom: 16px; display: flex; align-items: center; justify-content: center; }
+.astro-orb .orb-sym { font-size: 22px; color: rgba(240,244,255,0.8); }
+@keyframes orb-pulse { 0%,100% { box-shadow: 0 0 20px rgba(42,92,138,0.5); } 50% { box-shadow: 0 0 40px rgba(122,184,232,0.6); } }
+.loading-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px; letter-spacing: 0.18em; color: rgba(122,184,232,0.6); animation: pulse-text 1.5s ease-in-out infinite; }
+@keyframes pulse-text { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+
+/* ── Result area ── */
+.result-wrap { position: relative; z-index: 1; padding: 0 16px; display: none; }
+.result-wrap.show { display: block; }
+
+/* Big Three Cards */
+.big-three { display: flex; gap: 8px; margin-bottom: 18px; justify-content: center; }
+.bt-card { flex: 1; background: var(--deep-card); border: 1px solid rgba(42,92,138,0.25); border-radius: 10px; padding: 14px 8px 12px; text-align: center; animation: card-in 0.5s ease-out both; }
+.bt-card:nth-child(1) { animation-delay: 0.1s; }
+.bt-card:nth-child(2) { animation-delay: 0.25s; }
+.bt-card:nth-child(3) { animation-delay: 0.4s; }
+@keyframes card-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+.bt-label { font-size: 9px; letter-spacing: 0.12em; color: rgba(74,140,196,0.5); margin-bottom: 4px; }
+.bt-sym { font-size: 22px; margin-bottom: 3px; display: block; }
+.bt-sign-zh { font-size: 16px; font-weight: 500; color: rgba(240,244,255,0.9); letter-spacing: 0.04em; }
+.bt-sign-en { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 11px; color: rgba(122,184,232,0.6); }
+.bt-deg { font-size: 9px; color: var(--gold); margin-top: 2px; }
+
+/* Summary bar */
+.summary-bar { background: rgba(10,20,40,0.6); border: 1px solid rgba(42,92,138,0.15); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; text-align: center; animation: fadeUp 0.5s 0.5s ease both; }
+.summary-bar .sb-text { font-size: 11px; color: rgba(200,215,240,0.7); letter-spacing: 0.04em; line-height: 1.6; }
+
+/* Reading content */
+.reading-content { background: rgba(10,20,40,0.5); border: 1px solid rgba(42,92,138,0.12); border-radius: 10px; padding: 18px 16px; margin-bottom: 16px; animation: fadeUp 0.5s 0.6s ease both; }
+.reading-content h1, .reading-content h2, .reading-content h3 { color: var(--blue-light); font-weight: 400; letter-spacing: 0.08em; margin-top: 20px; margin-bottom: 8px; font-size: 14px; }
+.reading-content h1 { font-size: 16px; color: var(--gold); text-align: center; }
+.reading-content h2 { font-size: 14px; border-bottom: 1px solid rgba(42,92,138,0.2); padding-bottom: 6px; }
+.reading-content h3 { font-size: 13px; }
+.reading-content p { font-size: 12px; line-height: 1.8; color: rgba(200,215,240,0.8); margin-bottom: 10px; letter-spacing: 0.04em; }
+.reading-content strong { color: rgba(240,244,255,0.95); }
+.reading-content em { color: var(--blue-light); font-style: italic; }
+.reading-content ul, .reading-content ol { padding-left: 18px; margin-bottom: 10px; }
+.reading-content li { font-size: 12px; line-height: 1.7; color: rgba(200,215,240,0.8); margin-bottom: 4px; }
+.reading-content blockquote { border-left: 2px solid var(--blue); padding-left: 12px; margin: 10px 0; color: rgba(122,184,232,0.6); font-style: italic; font-size: 11px; }
+.reading-content hr { border: none; height: 1px; background: linear-gradient(90deg, transparent, rgba(42,92,138,0.3), transparent); margin: 16px 0; }
+
+/* ── Follow-up ── */
+.followup-wrap { position: relative; z-index: 1; padding: 0 16px 60px; display: none; }
+.followup-wrap.show { display: block; }
+.followup-input { width: 100%; background: var(--deep-card); border: 1px solid rgba(42,92,138,0.2); border-radius: 8px; padding: 12px 14px; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(240,244,255,0.82); outline: none; resize: none; min-height: 50px; }
+.followup-input::placeholder { color: rgba(240,244,255,0.2); }
+.followup-btn { width: 100%; margin-top: 8px; padding: 12px 0; background: linear-gradient(135deg, #1a3a5c, var(--blue)); border: none; border-radius: 4px; color: rgba(240,244,255,0.9); font-family: 'Noto Serif SC', serif; font-size: 13px; letter-spacing: 0.16em; cursor: pointer; transition: all 0.2s; }
+.followup-btn:active { transform: scale(0.97); }
+.followup-answer { margin-top: 12px; padding: 14px; background: rgba(10,20,40,0.6); border: 1px solid rgba(42,92,138,0.12); border-radius: 8px; display: none; }
+.followup-answer.show { display: block; }
+.followup-answer .fa-text { font-size: 12px; line-height: 1.7; color: rgba(200,215,240,0.8); letter-spacing: 0.04em; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Error ── */
+.error-msg { position: relative; z-index: 1; margin: 12px 16px; padding: 12px 14px; background: rgba(180,40,40,0.15); border: 1px solid rgba(180,40,40,0.3); border-radius: 8px; color: rgba(255,200,200,0.8); font-size: 12px; letter-spacing: 0.04em; display: none; text-align: center; }
+.error-msg.show { display: block; }
+
+/* ── City presets ── */
+.city-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.city-btn { padding: 5px 12px; border: 1px solid rgba(42,92,138,0.2); border-radius: 14px; background: var(--deep-card); color: rgba(200,215,240,0.5); font-family: 'Noto Serif SC', serif; font-size: 10px; letter-spacing: 0.04em; cursor: pointer; transition: all 0.2s; }
+.city-btn:hover { border-color: rgba(42,92,138,0.5); color: rgba(200,215,240,0.8); }
+
+/* ── Astrolabe SVG chart ── */
+.chart-wrap {
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto 18px;
+  aspect-ratio: 1;
+}
+.chart-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.chart-segment {
+  transition: opacity 0.3s;
+  cursor: pointer;
+}
+.chart-segment:hover {
+  opacity: 0.5;
+}
+.chart-center-circle {
+  filter: drop-shadow(0 0 10px rgba(42,92,138,0.35));
+}
+.chart-sym {
+  pointer-events: none;
+}
+.chart-name {
+  animation: chart-name-glow 3s ease-in-out infinite;
+}
+@keyframes chart-name-glow {
+  0%, 100% { opacity: 0.85; }
+  50% { opacity: 1; }
+}
+</style>
+</head>
+<body>
+<div class="back-btn" onclick="history.back()">&larr; 返回</div>
+
+<div class="header">
+  <span class="header-icon">&#10025;</span>
+  <div class="header-title">占星星盘</div>
+  <div class="header-sub">Western Astrology &mdash; Natal Chart</div>
+  <div class="blue-line"></div>
+  <div class="header-desc">输入你的出生信息，AI占星师将为你解读本命星盘<br>
+  太阳星座 &bull; 月亮星座 &bull; 上升星座 &bull; 行星落座 &bull; 宫位分析</div>
+</div>
+
+<!-- Form -->
+<div class="form-wrap" id="formWrap">
+  <div class="field-group">
+    <div class="field-label">姓名 <span class="en">Name</span></div>
+    <div class="field-box">
+      <input type="text" id="nameInput" placeholder="请输入您的姓名" maxlength="50">
+    </div>
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">出生日期 <span class="en">Date of Birth</span></div>
+    <div class="field-row">
+      <div class="field-box">
+        <select id="birthYear">
+          <script>
+            (function() {
+              var sel = document.getElementById('birthYear');
+              var y = new Date().getFullYear();
+              for (var i = y; i >= y - 80; i--) {
+                var opt = document.createElement('option');
+                opt.value = i; opt.textContent = i + '年';
+                if (i === y - 25) opt.selected = true;
+                sel.appendChild(opt);
+              }
+            })();
+          </script>
+        </select>
+      </div>
+      <div class="field-box">
+        <select id="birthMonth">
+          <script>
+            (function() {
+              var sel = document.getElementById('birthMonth');
+              for (var i = 1; i <= 12; i++) {
+                var opt = document.createElement('option');
+                opt.value = i; opt.textContent = i + '月';
+                if (i === 6) opt.selected = true;
+                sel.appendChild(opt);
+              }
+            })();
+          </script>
+        </select>
+      </div>
+      <div class="field-box">
+        <select id="birthDay">
+          <script>
+            (function() {
+              var sel = document.getElementById('birthDay');
+              for (var i = 1; i <= 31; i++) {
+                var opt = document.createElement('option');
+                opt.value = i; opt.textContent = i + '日';
+                if (i === 15) opt.selected = true;
+                sel.appendChild(opt);
+              }
+            })();
+          </script>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">出生时间 <span class="en">Time of Birth <span style="color:rgba(74,140,196,0.3);font-size:9px">（可选，填了可算上升星座）</span></span></div>
+    <div class="field-row">
+      <div class="field-box">
+        <select id="birthHour">
+          <option value="">--</option>
+          <script>
+            (function() {
+              var sel = document.getElementById('birthHour');
+              for (var i = 0; i <= 23; i++) {
+                var opt = document.createElement('option');
+                opt.value = i; opt.textContent = i + '时';
+                sel.appendChild(opt);
+              }
+            })();
+          </script>
+        </select>
+      </div>
+      <div class="field-box">
+        <select id="birthMinute">
+          <option value="">--</option>
+          <script>
+            (function() {
+              var sel = document.getElementById('birthMinute');
+              for (var i = 0; i < 60; i += 5) {
+                var opt = document.createElement('option');
+                opt.value = i; opt.textContent = (i < 10 ? '0' : '') + i + '分';
+                sel.appendChild(opt);
+              }
+            })();
+          </script>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">出生地 <span class="en">Place of Birth</span></div>
+    <div class="field-box">
+      <input type="text" id="birthCity" placeholder="输入城市名（如北京、上海、New York）" maxlength="100">
+    </div>
+    <div class="city-row">
+      <span class="city-btn" data-lat="39.9042" data-lng="116.4074">北京</span>
+      <span class="city-btn" data-lat="31.2304" data-lng="121.4737">上海</span>
+      <span class="city-btn" data-lat="23.1291" data-lng="113.2644">广州</span>
+      <span class="city-btn" data-lat="22.5431" data-lng="114.0579">深圳</span>
+      <span class="city-btn" data-lat="30.2741" data-lng="120.1551">杭州</span>
+      <span class="city-btn" data-lat="40.7128" data-lng="-74.0060">New York</span>
+      <span class="city-btn" data-lat="51.5074" data-lng="-0.1278">London</span>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">经纬度 <span class="en">Latitude &amp; Longitude</span></div>
+    <div class="field-row">
+      <div class="field-box">
+        <input type="text" id="latitudeInput" placeholder="纬度 Latitude" maxlength="15">
+      </div>
+      <div class="field-box">
+        <input type="text" id="longitudeInput" placeholder="经度 Longitude" maxlength="15">
+      </div>
+    </div>
+  </div>
+
+  <div class="field-group">
+    <div class="field-label">性别 <span class="en">Gender</span></div>
+    <div class="field-row">
+      <div class="field-box" style="flex:1">
+        <select id="genderSelect">
+          <option value="male">男 Male</option>
+          <option value="female">女 Female</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="submit-wrap">
+  <button class="btn-submit" id="submitBtn">&#10025; 解读我的星盘</button>
+</div>
+
+<!-- Loading -->
+<div class="loading-wrap" id="loadingWrap">
+  <div class="astro-orb"><span class="orb-sym">&#10025;</span></div>
+  <div class="loading-text">Calculating your celestial blueprint...</div>
+</div>
+
+<!-- Error -->
+<div class="error-msg" id="errorMsg"></div>
+
+<!-- Result -->
+<div class="result-wrap" id="resultWrap">
+  <div class="big-three" id="bigThreeCards"></div>
+  <div class="summary-bar" id="summaryBar"></div>
+  <div class="chart-wrap" id="chartWrap"></div>
+  <div class="reading-content" id="readingContent"></div>
+</div>
+
+<!-- Follow-up -->
+<div class="followup-wrap" id="followupWrap">
+  <div class="field-label" style="padding:0 0 8px;font-size:10px;letter-spacing:0.18em;color:rgba(74,140,196,0.5);">
+    追问占星师 <span class="en">Ask the Astrologer</span>
+  </div>
+  <textarea class="followup-input" id="followupInput" placeholder="对您的星盘解读还有什么疑问？比如「我的感情运势如何」「哪方面事业最适合我」..." rows="2" maxlength="500"></textarea>
+  <button class="followup-btn" id="followupBtn">发送追问 &rarr;</button>
+  <div class="followup-answer" id="followupAnswer">
+    <div class="fa-text" id="faText"></div>
+  </div>
+</div>
+
+<script>
+// ── City preset coordinates ──
+var CITY_COORDS = {
+  '北京': { lat: 39.9042, lng: 116.4074 },
+  '上海': { lat: 31.2304, lng: 121.4737 },
+  '广州': { lat: 23.1291, lng: 113.2644 },
+  '深圳': { lat: 22.5431, lng: 114.0579 },
+  '杭州': { lat: 30.2741, lng: 120.1551 },
+  '成都': { lat: 30.5728, lng: 104.0668 },
+  '武汉': { lat: 30.5928, lng: 114.3055 },
+  '南京': { lat: 32.0603, lng: 118.7969 },
+  '重庆': { lat: 29.4316, lng: 106.9123 },
+  '西安': { lat: 34.3416, lng: 108.9398 },
+  '长沙': { lat: 28.2282, lng: 112.9388 },
+  '天津': { lat: 39.3434, lng: 117.3616 },
+  '苏州': { lat: 31.2990, lng: 120.5853 },
+  'Singapore': { lat: 1.3521, lng: 103.8198 },
+  'Tokyo': { lat: 35.6762, lng: 139.6503 },
+  'Seoul': { lat: 37.5665, lng: 126.9780 },
+  'Paris': { lat: 48.8566, lng: 2.3522 },
+  'Sydney': { lat: -33.8688, lng: 151.2093 },
+  'New York': { lat: 40.7128, lng: -74.0060 },
+  'Los Angeles': { lat: 34.0522, lng: -118.2437 },
+  'London': { lat: 51.5074, lng: -0.1278 },
+  'San Francisco': { lat: 37.7749, lng: -122.4194 }
+};
+
+// City autocomplete
+document.getElementById('birthCity').addEventListener('input', function() {
+  var val = this.value.trim();
+  if (CITY_COORDS[val]) {
+    document.getElementById('latitudeInput').value = CITY_COORDS[val].lat;
+    document.getElementById('longitudeInput').value = CITY_COORDS[val].lng;
+  }
+});
+
+// City preset buttons
+document.querySelectorAll('.city-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    var lat = this.dataset.lat;
+    var lng = this.dataset.lng;
+    document.getElementById('latitudeInput').value = lat;
+    document.getElementById('longitudeInput').value = lng;
+    document.getElementById('birthCity').value = this.textContent;
+  });
+});
+
+// ── Zodiac symbols ──
+var ZODIAC_SYMBOLS = ['&#9800;','&#9801;','&#9802;','&#9803;','&#9804;','&#9805;','&#9806;','&#9807;','&#9808;','&#9809;','&#9810;','&#9811;'];
+var ZODIAC_ZH = ['白羊座','金牛座','双子座','巨蟹座','狮子座','处女座','天秤座','天蝎座','射手座','摩羯座','水瓶座','双鱼座'];
+var ZODIAC_EN = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+
+function signSymbol(index) {
+  if (index === undefined || index < 0 || index > 11) return '&#10025;';
+  return ZODIAC_SYMBOLS[index];
+}
+
+// ── Submit ──
+var btn = document.getElementById('submitBtn');
+btn.addEventListener('click', doReading);
+
+async function doReading() {
+  var name = document.getElementById('nameInput').value.trim();
+  var birthYear = parseInt(document.getElementById('birthYear').value);
+  var birthMonth = parseInt(document.getElementById('birthMonth').value);
+  var birthDay = parseInt(document.getElementById('birthDay').value);
+  var birthHour = document.getElementById('birthHour').value;
+  var birthMinute = document.getElementById('birthMinute').value;
+  var latitude = document.getElementById('latitudeInput').value.trim();
+  var longitude = document.getElementById('longitudeInput').value.trim();
+  var gender = document.getElementById('genderSelect').value;
+
+  if (!birthYear || !birthMonth || !birthDay) {
+    showError('请填写出生日期');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '占星运算中...';
+  document.getElementById('loadingWrap').classList.add('show');
+  document.getElementById('resultWrap').classList.remove('show');
+  document.getElementById('followupWrap').classList.remove('show');
+  document.getElementById('errorMsg').classList.remove('show');
+
+  var body = {
+    birthYear: birthYear,
+    birthMonth: birthMonth,
+    birthDay: birthDay,
+    gender: gender
+  };
+  if (birthHour !== '') body.birthHour = parseInt(birthHour);
+  if (birthMinute !== '') body.birthMinute = parseInt(birthMinute);
+  if (latitude !== '') body.latitude = parseFloat(latitude);
+  if (longitude !== '') body.longitude = parseFloat(longitude);
+
+  try {
+    var res = await fetch('/api/astrology', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || '占星解读失败');
+    }
+
+    // Hide form
+    document.getElementById('formWrap').style.display = 'none';
+    document.querySelector('.submit-wrap').style.display = 'none';
+    document.getElementById('loadingWrap').classList.remove('show');
+
+    // Show result
+    showResult(data);
+  } catch (err) {
+    document.getElementById('loadingWrap').classList.remove('show');
+    btn.disabled = false;
+    btn.textContent = '&#10025; 解读我的星盘';
+    showError(err.message);
+  }
+}
+
+function showResult(data) {
+  var chart = data.chart;
+
+  // Big Three cards
+  var cardsHtml = '';
+  var three = [
+    { label: '太阳 Sun', sign: chart.sun.signEn, signZh: chart.sun.signZh, deg: chart.sun.degree + '°', sym: signSymbol(ZODIAC_EN.indexOf(chart.sun.signEn)) },
+    { label: '月亮 Moon', sign: chart.moon.signEn, signZh: chart.moon.signZh, deg: chart.moon.degree + '°', sym: signSymbol(ZODIAC_EN.indexOf(chart.moon.signEn)) },
+    { label: '上升 Rising', sign: chart.rising.signEn, signZh: chart.rising.signZh, deg: chart.rising.degree + '°', sym: signSymbol(ZODIAC_EN.indexOf(chart.rising.signEn)) }
+  ];
+  three.forEach(function(t) {
+    cardsHtml += '<div class="bt-card"><div class="bt-label">' + t.label + '</div><div class="bt-sym">' + t.sym + '</div><div class="bt-sign-zh">' + t.signZh + '</div><div class="bt-sign-en">' + t.sign + '</div><div class="bt-deg">' + t.deg + '</div></div>';
+  });
+  document.getElementById('bigThreeCards').innerHTML = cardsHtml;
+
+  // Summary
+  document.getElementById('summaryBar').innerHTML = '<div class="sb-text">' + chart.bigThree + '</div>';
+
+  // SVG Astrolabe chart
+  var userName = document.getElementById('nameInput').value.trim() || 'Your Chart';
+  document.getElementById('chartWrap').innerHTML = generateAstrolabe(userName);
+
+  // Reading content
+  var readingHtml = data.reading;
+  // Render markdown-like content
+  document.getElementById('readingContent').innerHTML = renderReading(readingHtml);
+
+  document.getElementById('resultWrap').classList.add('show');
+  document.getElementById('followupWrap').classList.add('show');
+
+  // Save context ID for follow-up
+  window._astrologyContextId = data.contextId;
+
+  btn.disabled = false;
+  btn.textContent = '&#10025; 解读我的星盘';
+
+  // Scroll to result
+  document.getElementById('resultWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderReading(text) {
+  if (!text) return '';
+  // Basic markdown-like rendering
+  var html = text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    // Headers
+    .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+    .replace(/^## (.+)$/gm, '<h2>$1</h2>')
+    .replace(/^# (.+)$/gm, '<h1>$1</h1>')
+    // Bold + italic
+    .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Inline code
+    .replace(/`(.+?)`/g, '<code>$1</code>')
+    // Blockquote
+    .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
+    // Horizontal rule
+    .replace(/^---$/gm, '<hr>')
+    // Lists
+    .replace(/^(\d+)\. (.+)$/gm, '<li value="$1">$2</li>')
+    .replace(/^- (.+)$/gm, '<li>$1</li>')
+    // Paragraphs (double newline)
+    .replace(/\n\n/g, '</p><p>')
+    // Single newline within paragraph
+    .replace(/\n/g, '<br>');
+
+  return '<p>' + html + '</p>';
+}
+
+// ── Follow-up ──
+document.getElementById('followupBtn').addEventListener('click', async function() {
+  var input = document.getElementById('followupInput');
+  var question = input.value.trim();
+  if (!question) return;
+  var ctxId = window._astrologyContextId;
+  if (!ctxId) {
+    showError('上下文已过期，请重新生成星盘解读');
+    return;
+  }
+
+  var btn = this;
+  btn.disabled = true;
+  btn.textContent = '正在回答...';
+
+  var answerEl = document.getElementById('followupAnswer');
+  var textEl = document.getElementById('faText');
+  answerEl.classList.remove('show');
+
+  try {
+    var res = await fetch('/api/ask-followup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contextId: ctxId, question: question })
+    });
+    var data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    textEl.textContent = data.answer;
+    answerEl.classList.add('show');
+    input.value = '';
+  } catch (err) {
+    textEl.textContent = '追问失败：' + err.message;
+    answerEl.classList.add('show');
+  }
+
+  btn.disabled = false;
+  btn.textContent = '发送追问 →';
+});
+
+function generateAstrolabe(name) {
+  name = name || 'Your Chart';
+  var cx = 170, cy = 170;
+  var R = 148;
+  var innerR = 42;
+  var symOuterR = 130;
+  var symInnerR = 108;
+  var houseR = 90;
+
+  var deg = Math.PI / 180;
+  function pt(a, r) {
+    return {
+      x: cx + r * Math.cos(a * deg),
+      y: cy + r * Math.sin(a * deg)
+    };
+  }
+
+  var ZOD = '♈♉♊♋♌♍♎♏♐♑♒♓';
+  var ZN  = ['白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手','摩羯','水瓶','双鱼'];
+  var ZE  = ['fire','earth','air','water','fire','earth','air','water','fire','earth','air','water'];
+  var signs = [];
+  for (var zi = 0; zi < 12; zi++) {
+    signs.push({ sym: ZOD[zi], zh: ZN[zi], elem: ZE[zi] });
+  }
+
+  var elemColors = {
+    fire:  { dim: 'rgba(224,90,79,0.12)',  fill: '#E05A4F', light: '#F07A6F' },
+    earth: { dim: 'rgba(90,143,74,0.12)',  fill: '#5A8F4A', light: '#7AAF6A' },
+    air:   { dim: 'rgba(201,168,76,0.12)', fill: '#C9A84C', light: '#E9C86C' },
+    water: { dim: 'rgba(74,140,196,0.12)', fill: '#4A8CC4', light: '#6AACE4' }
+  };
+
+  function arcPath(i) {
+    var sa = -90 + i * 30;
+    var ea = -90 + (i + 1) * 30;
+    var p1 = pt(sa, R);
+    var p2 = pt(ea, R);
+    return 'M ' + p1.x.toFixed(1) + ' ' + p1.y.toFixed(1) +
+           ' A ' + R + ' ' + R + ' 0 0 1 ' + p2.x.toFixed(1) + ' ' + p2.y.toFixed(1) +
+           ' L ' + cx + ' ' + cy + ' Z';
+  }
+
+  var svg = '';
+
+  // Background circle
+  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="rgba(6,13,26,0.5)"/>';
+
+  // 12 pie segments - Aries at top, going clockwise
+  for (var i = 0; i < 12; i++) {
+    var ec = elemColors[signs[i].elem];
+    svg += '<path d="' + arcPath(i) + '" class="chart-segment" fill="' + ec.dim + '" stroke="' + ec.fill + '" stroke-width="0.5" data-house="' + (i + 1) + '" title="' + signs[i].zh + '"/>';
+  }
+
+  // Dividing lines from outer edge to inner circle
+  for (var i = 0; i < 12; i++) {
+    var la = -90 + i * 30;
+    var po = pt(la, R - 2);
+    var pi = pt(la, innerR + 4);
+    svg += '<line x1="' + po.x.toFixed(1) + '" y1="' + po.y.toFixed(1) + '" x2="' + pi.x.toFixed(1) + '" y2="' + pi.y.toFixed(1) + '" stroke="rgba(42,92,138,0.2)" stroke-width="0.5"/>';
+  }
+
+  // Outer ring borders
+  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + R + '" fill="none" stroke="rgba(42,92,138,0.25)" stroke-width="1.5"/>';
+  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (R + 2) + '" fill="none" stroke="rgba(42,92,138,0.1)" stroke-width="0.5"/>';
+
+  // Inner ring border
+  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (innerR + 4) + '" fill="none" stroke="rgba(42,92,138,0.15)" stroke-width="0.5"/>';
+
+  // Zodiac symbols (outer ring)
+  for (var i = 0; i < 12; i++) {
+    var ma = -90 + i * 30 + 15;
+    var ps = pt(ma, symOuterR);
+    var ec = elemColors[signs[i].elem];
+    svg += '<text x="' + ps.x.toFixed(1) + '" y="' + ps.y.toFixed(1) + '" text-anchor="middle" dominant-baseline="central" font-size="20" fill="' + ec.light + '" class="chart-sym">' + signs[i].sym + '</text>';
+  }
+
+  // Chinese sign names (inner ring)
+  for (var i = 0; i < 12; i++) {
+    var ma = -90 + i * 30 + 15;
+    var pn = pt(ma, symInnerR);
+    svg += '<text x="' + pn.x.toFixed(1) + '" y="' + pn.y.toFixed(1) + '" text-anchor="middle" dominant-baseline="central" font-size="9" fill="rgba(200,215,240,0.45)">' + signs[i].zh + '</text>';
+  }
+
+  // House numbers
+  for (var i = 0; i < 12; i++) {
+    var ma = -90 + i * 30 + 15;
+    var ph = pt(ma, houseR);
+    svg += '<text x="' + ph.x.toFixed(1) + '" y="' + ph.y.toFixed(1) + '" text-anchor="middle" dominant-baseline="central" font-size="8" fill="rgba(74,140,196,0.3)">' + (i + 1) + '</text>';
+  }
+
+  // Center circle
+  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + innerR + '" fill="rgba(10,20,40,0.95)" stroke="rgba(42,92,138,0.3)" stroke-width="1.5" class="chart-center-circle"/>';
+  svg += '<circle cx="' + cx + '" cy="' + cy + '" r="' + (innerR - 6) + '" fill="none" stroke="rgba(42,92,138,0.1)" stroke-width="0.5"/>';
+
+  // Center text
+  var displayName = name.length > 6 ? name.slice(0, 6) + '…' : name;
+  svg += '<text x="' + cx + '" y="' + (cy - 5) + '" text-anchor="middle" dominant-baseline="central" font-size="13" fill="rgba(240,244,255,0.9)" class="chart-name">' + displayName + '</text>';
+  svg += '<text x="' + cx + '" y="' + (cy + 12) + '" text-anchor="middle" dominant-baseline="central" font-size="8" fill="rgba(74,140,196,0.4)">Natal Chart</text>';
+
+  // Four element indicators at cardinal points
+  svg += '<text x="' + cx + '" y="' + (cy - R + 14) + '" text-anchor="middle" font-size="7" fill="' + elemColors.fire.fill + '" opacity="0.6">▲ 火</text>';
+  svg += '<text x="' + (cx + R - 20) + '" y="' + cy + '" text-anchor="middle" font-size="7" fill="' + elemColors.earth.fill + '" opacity="0.6">● 土</text>';
+  svg += '<text x="' + cx + '" y="' + (cy + R - 14) + '" text-anchor="middle" font-size="7" fill="' + elemColors.water.fill + '" opacity="0.6">▼ 水</text>';
+  svg += '<text x="' + (cx - R + 20) + '" y="' + cy + '" text-anchor="middle" font-size="7" fill="' + elemColors.air.fill + '" opacity="0.6">◆ 风</text>';
+
+  return '<svg viewBox="0 0 340 340" class="chart-svg">' + svg + '</svg>';
+}
+
+function showError(msg) {
+  var el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(function() { el.classList.remove('show'); }, 5000);
+}
+</script>
+</body>
+</html>

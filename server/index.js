@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
+const astrology = require('./astrology.js');
 
 const app = express();
 const PORT = process.env.PORT || 3021;
@@ -73,7 +74,8 @@ const insertToken = { run(uid,t){_M.tokens.push({id:_M._id.t++,user_id:uid,token
 const getToken = { get(t){const tok=_M.tokens.find(x=>x.token===t);if(!tok)return null;const u=_M.users.find(x=>x.id===tok.user_id);return u?{...tok,email:u.email,name:u.name}:null;} };
 const getUserOrders = { all(uid){return _M.orders.filter(o=>o.user_id===uid&&o.payment_status==='completed').sort((a,b)=>b.created_at.localeCompare(a.created_at));} };
 const insertOrder = { run(oNo,p,amt,cur,uid,dN,c,wT,sId){_M.orders.push({id:_M._id.o++,order_no:oNo,product:p,amount:amt,currency:cur,user_id:uid,donor_name:dN,contact:c,wish_text:wT,stripe_session_id:sId,payment_status:'pending',created_at:new Date().toISOString()});} };
-const insertReading = { run(t,i,r){_M.readings.push({id:_M._id.r++,type:t,input:i,result:r,created_at:new Date().toISOString()});} };
+const insertReading = { run(t,i,r,u){_M.readings.push({id:_M._id.r++,type:t,input:i,result:r,user_id:u||null,created_at:new Date().toISOString()});} };
+const getReadingsByUser = { all(uId){return _M.readings.filter(r=>r.user_id===uId).sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,5);} };
 function _updOrder(s,oNo){const o=_M.orders.find(x=>x.order_no===oNo);if(o)o.payment_status=s;}
 function _insSub(e,sId){if(!_M.subs.find(x=>x.stripe_subscription_id===sId))_M.subs.push({email:e,stripe_subscription_id:sId,status:'active',created_at:new Date().toISOString()});}
 function _allOrders(){return[..._M.orders].sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,50);}
@@ -128,10 +130,101 @@ const PRODUCTS = {
   member_monthly:  { name: '月度会员',      amount: 690,  desc: '全部AI占算无限次·完整报告不锁定' },
   member_yearly:   { name: '年度会员',      amount: 4900, desc: '全年畅用·大师语音·水晶挂件' },
   member_lifetime: { name: '终身会员',      amount: 18800, desc: '永久畅享·大师1对1·专属档案' },
+  member_daily:     { name: '日会员',       amount: 299,  desc: '24小时无限使用' },
+  member_quarterly: { name: '季会员',       amount: 1499, desc: '三个月畅享' },
+  member_3year:     { name: '三年会员',     amount: 3999, desc: '超值三年' },
   daliuren:    { name: '大六壬预测',      amount: 990,  desc: '三传四课' },
   qimen:       { name: '奇门遁甲',        amount: 990,  desc: '八门九星' },
   bazi_trial:  { name: '体验命盘',        amount: 199,  desc: '快速简批' },
 };
+
+// ── Inspiration quotes library ──
+var INSPIRATION_QUOTES = [
+  {cn:'万物皆有裂痕，那是光照进来的地方', en:'There is a crack in everything, that is how the light gets in', src:'Leonard Cohen'},
+  {cn:'当你真心渴望某件事，整个宇宙都会来帮忙', en:'When you truly want something, the universe conspires to help you', src:'Paulo Coelho'},
+  {cn:'顺其自然，不是放弃而是让一切发生', en:'Go with the flow, not giving up but letting things happen', src:'Tao Te Ching'},
+  {cn:'此心安处是吾乡', en:'Where the heart finds peace, there is home', src:'Su Shi'},
+  {cn:'行到水穷处，坐看云起时', en:'Walk to the edge of water, sit and watch clouds rise', src:'Wang Wei'},
+  {cn:'心若向阳，无畏悲伤', en:'Face the sun and the shadows fall behind you', src:'Chinese Proverb'},
+  {cn:'一念放下，万般自在', en:'Let go of one thought and find ten thousand freedoms', src:'Zen Wisdom'},
+  {cn:'天行健，君子以自强不息', en:'As heaven moves with strength, the noble strives unceasingly', src:'I Ching'},
+  {cn:'知足者常乐，能忍者自安', en:'Contentment brings lasting joy, patience brings inner peace', src:'Ancient Wisdom'},
+  {cn:'塞翁失马，焉知非福', en:'A blessing in disguise — who knows what fortune misfortune brings', src:'Huainanzi'},
+  {cn:'红尘万丈，只为渡你一人', en:'Through ten thousand worlds, I cross only for you', src:'Buddhist Proverb'},
+  {cn:'本来无一物，何处惹尘埃', en:'From nothing comes nothing — where can dust gather', src:'Huineng'},
+  {cn:'不忘初心，方得始终', en:'Stay true to your heart and you will find your way', src:'Buddhist Scripture'},
+  {cn:'上善若水，水善利万物而不争', en:'The highest good is like water, benefiting all without striving', src:'Lao Tzu'},
+  {cn:'山不向我走来，我便向山走去', en:'If the mountain won\'t come to me, I will go to the mountain', src:'Chinese Idiom'},
+  {cn:'命里有时终须有，命里无时莫强求', en:'What is meant for you will come; what is not, let it go', src:'Ancient Proverb'},
+  {cn:'大音希声，大象无形', en:'Great sound is silent, great form is formless', src:'Lao Tzu'},
+  {cn:'人生如逆旅，我亦是行人', en:'Life is a journey, and I too am a traveler', src:'Su Shi'},
+  {cn:'长风破浪会有时，直挂云帆济沧海', en:'The wind will rise and break the waves, set sail across the vast sea', src:'Li Bai'},
+  {cn:'不以物喜，不以己悲', en:'Let not joy from possessions nor sorrow from self prevail', src:'Fan Zhongyan'},
+  {cn:'The only way out is through', en:'The only way out is through', src:'Robert Frost'},
+  {cn:'This too shall pass', en:'This too shall pass', src:'Sufi Wisdom'},
+  {cn:'Be the change you wish to see in the world', en:'Be the change you wish to see in the world', src:'Mahatma Gandhi'},
+  {cn:'In the middle of difficulty lies opportunity', en:'In the middle of difficulty lies opportunity', src:'Albert Einstein'},
+  {cn:'The soul becomes dyed with the color of its thoughts', en:'The soul becomes dyed with the color of its thoughts', src:'Marcus Aurelius'},
+  {cn:'To love oneself is the beginning of a lifelong romance', en:'To love oneself is the beginning of a lifelong romance', src:'Oscar Wilde'},
+  {cn:'What you seek is seeking you', en:'What you seek is seeking you', src:'Rumi'},
+  {cn:'Let the beauty of what you love be what you do', en:'Let the beauty of what you love be what you do', src:'Rumi'},
+  {cn:'The wound is the place where the light enters you', en:'The wound is the place where the light enters you', src:'Rumi'},
+  {cn:'You are the universe experiencing itself', en:'You are the universe experiencing itself', src:'Alan Watts'},
+  {cn:'The quieter you become, the more you can hear', en:'The quieter you become, the more you can hear', src:'Rumi'},
+  {cn:'知之者不如好之者，好之者不如乐之者', en:'To know is good, to love is better, to delight is best', src:'Confucius'},
+  {cn:'己所不欲，勿施于人', en:'Do not do to others what you do not want done to yourself', src:'Confucius'},
+  {cn:'学而不思则罔，思而不学则殆', en:'Learning without thought is lost; thought without learning is perilous', src:'Confucius'},
+  {cn:'道生一，一生二，二生三，三生万物', en:'The Tao gives birth to one, one to two, two to three, three to all things', src:'Lao Tzu'},
+  {cn:'天地与我并生，万物与我为一', en:'Heaven and earth exist with me; all things and I are one', src:'Zhuangzi'},
+  {cn:'至人无己，神人无功，圣人无名', en:'The perfect man has no self; the spiritual man has no achievement; the sage has no name', src:'Zhuangzi'},
+  {cn:'祸兮福之所倚，福兮祸之所伏', en:'Misfortune rests upon fortune; fortune conceals misfortune', src:'Lao Tzu'},
+  {cn:'柔弱胜刚强', en:'Gentleness overcomes strength', src:'Lao Tzu'},
+  {cn:'千里之行，始于足下', en:'A journey of a thousand miles begins with a single step', src:'Lao Tzu'}
+];
+
+// ── Masters data (真人大师入驻) ──
+const MASTERS = [
+  { id: 1, name: "张明远", title: "八字命理师", exp: "30年",
+    specialty: "八字/风水", rating: 4.9, price: "$19.9/次",
+    desc: "师承正统子平命理，擅长八字批命和家居风水。为数百位企业家指点过运势，客户遍及海内外。",
+    avatarInitial: "张", tags: ["命理泰斗", "风水"] },
+  { id: 2, name: "李灵素", title: "塔罗占卜师", exp: "15年",
+    specialty: "塔罗/感情", rating: 4.8, price: "$9.9/次",
+    desc: "精通韦特塔罗和雷诺曼，擅长感情和事业占卜。以温暖细腻的解牌风格深受用户喜爱。",
+    avatarInitial: "李", tags: ["情感专家", "塔罗"] },
+  { id: 3, name: "Sarah Moon", title: "Astrologer", exp: "20年",
+    specialty: "西方占星/合盘", rating: 4.7, price: "$14.9/次",
+    desc: "Western astrology specialist. Natal charts, synastry, and transit analysis in English & Chinese.",
+    avatarInitial: "S", tags: ["Western", "Astrology"] },
+  { id: 4, name: "王道正", title: "奇门遁甲师", exp: "25年",
+    specialty: "奇门遁甲/六壬", rating: 4.6, price: "$24.9/次",
+    desc: "道家正一派传人，深研奇门遁甲与大六壬。擅长择吉、趋吉避凶、商业决策咨询。",
+    avatarInitial: "王", tags: ["奇门", "道家"] },
+  { id: 5, name: "陈慧心", title: "心理咨询师", exp: "12年",
+    specialty: "心理占星/性格分析", rating: 4.9, price: "$12.9/次",
+    desc: "心理学硕士，融合西方心理学与东方命理。擅长用MBTI+星盘帮你认识真正的自己。",
+    avatarInitial: "陈", tags: ["心理学", "星盘"] },
+  { id: 6, name: "玄机子", title: "紫微斗数命理师", exp: "40年",
+    specialty: "紫微斗数/风水", rating: 4.8, price: "$29.9/次",
+    desc: "台湾紫微斗数名家，著作等身。精通紫微斗数排盘与阳宅风水，桃李遍天下。",
+    avatarInitial: "玄", tags: ["紫微泰斗", "风水"] }
+];
+
+// GET /api/masters — 大师列表
+app.get('/api/masters', (req, res) => {
+  res.json({ masters: MASTERS });
+});
+
+// GET /api/inspiration — Daily inspiration quote
+app.get('/api/inspiration', (req, res) => {
+  var now = new Date();
+  var idx = (now.getFullYear() * 365 + (now.getMonth() + 1) * 31 + now.getDate()) % INSPIRATION_QUOTES.length;
+  res.json({
+    date: now.toISOString().split('T')[0],
+    quote: INSPIRATION_QUOTES[idx],
+    total: INSPIRATION_QUOTES.length
+  });
+});
 
 // ── Health ──
 app.get('/api/health', (req, res) => {
@@ -439,6 +532,19 @@ function saveQaContext(endpoint, input, reading) {
   return id;
 }
 
+// ── Optional auth for reading routes (attach userId if token present) ──
+app.use(function(req, res, next) {
+  if (req.path.startsWith('/api/') && !req.path.startsWith('/api/auth/') && !req.path.startsWith('/api/stripe-webhook') && !req.path.startsWith('/api/health') && !req.path.startsWith('/api/success') && !req.path.startsWith('/api/orders') && !req.path.startsWith('/api/products') && !req.path.startsWith('/api/create-checkout') && !req.path.startsWith('/api/inspiration')) {
+    const token = req.headers['authorization'] || req.query.token;
+    if (token) {
+      const t = token.replace('Bearer ', '');
+      const row = getToken.get(t);
+      if (row) req.userId = row.user_id;
+    }
+  }
+  next();
+});
+
 // ════════════════════════════════════════════
 // AI READING ENDPOINTS
 // ════════════════════════════════════════════
@@ -598,7 +704,7 @@ app.post('/api/bazi', async (req, res) => {
     );
 
     const result = await deepseekChat(messages, { maxTokens: 16384 });
-    insertReading.run('bazi', JSON.stringify(req.body), result);
+    insertReading.run('bazi', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('bazi', req.body, result);
 
     res.json({ reading: result, contextId: ctxId });
@@ -654,7 +760,7 @@ ${cardDesc ? '牌面信息：\n' + cardDesc : '使用随机三张塔罗牌（过
     );
 
     const result = await deepseekChat(messages, { maxTokens: 3072 });
-    insertReading.run('tarot', JSON.stringify(req.body), result);
+    insertReading.run('tarot', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('tarot', req.body, result);
 
     res.json({ reading: result, contextId: ctxId });
@@ -733,7 +839,7 @@ app.post('/api/ziwei', async (req, res) => {
     );
 
     const result = await deepseekChat(messages, { maxTokens: 8192 });
-    insertReading.run('ziwei', JSON.stringify(req.body), result);
+    insertReading.run('ziwei', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('ziwei', req.body, result);
 
     res.json({ analysis: result, contextId: ctxId });
@@ -809,7 +915,7 @@ app.post('/api/mianxiang', async (req, res) => {
     );
 
     const result = await deepseekChat(messages, { maxTokens: 3072 });
-    insertReading.run('mianxiang', JSON.stringify({ question }), result);
+    insertReading.run('mianxiang', JSON.stringify({ question }), result, req.userId);
 
     res.json({ reading: result });
   } catch (err) {
@@ -886,7 +992,7 @@ B方：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined ? p2Hour+'时'
     );
 
     const result = await deepseekChat(messages, { maxTokens: 8192 });
-    insertReading.run('hehun', JSON.stringify(req.body), result);
+    insertReading.run('hehun', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('hehun', req.body, result);
 
     res.json({ reading: result, contextId: ctxId });
@@ -947,7 +1053,7 @@ app.post('/api/daily', async (req, res) => {
     );
 
     const result = await deepseekChat(messages, { maxTokens: 3072 });
-    insertReading.run('daily', JSON.stringify(req.body), result);
+    insertReading.run('daily', JSON.stringify(req.body), result, req.userId);
 
     res.json({ reading: result });
   } catch (err) {
@@ -1427,13 +1533,269 @@ app.post('/api/xingming', async (req, res) => {
     );
 
     const result = await deepseekChat(messages, { maxTokens: 8192 });
-    insertReading.run('xingming', JSON.stringify(req.body), result);
+    insertReading.run('xingming', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('xingming', req.body, result);
 
     res.json({ reading: result, contextId: ctxId });
   } catch (err) {
     console.error('[XINGMING ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试', detail: err.message });
+  }
+});
+
+// POST /api/astrology — 西方占星
+app.post('/api/astrology', async (req, res) => {
+  try {
+    const { birthYear, birthMonth, birthDay, birthHour, birthMinute, latitude, longitude, gender } = req.body;
+    if (!birthYear || !birthMonth || !birthDay) {
+      return res.status(400).json({ error: '请提供出生日期' });
+    }
+
+    // 1. Calculate astrology chart
+    const chart = astrology.calcAstrology(
+      parseInt(birthYear), parseInt(birthMonth), parseInt(birthDay),
+      birthHour !== undefined ? parseInt(birthHour) : undefined,
+      birthMinute !== undefined ? parseInt(birthMinute) : undefined,
+      latitude !== undefined ? parseFloat(latitude) : 40.0,
+      longitude !== undefined ? parseFloat(longitude) : 116.0
+    );
+
+    // 2. Build chart summary for AI prompt
+    const chartSummary = `【星盘基本数据】
+出生时间：${birthYear}/${birthMonth}/${birthDay} ${birthHour !== undefined ? birthHour + ':' + (birthMinute || '00') : '时间不详'}
+性别：${gender === 'male' ? '男 Male' : gender === 'female' ? '女 Female' : '未知'}
+经纬度：${latitude || '40°N'}, ${longitude || '116°E'}
+
+【三大重要星座】
+太阳 Sun：${chart.sun.signZh}(${chart.sun.signEn}) ${chart.sun.degree}°
+月亮 Moon：${chart.moon.signZh}(${chart.moon.signEn}) ${chart.moon.degree}°
+上升 Ascendant：${chart.rising.signZh}(${chart.rising.signEn}) ${chart.rising.degree}°
+
+【行星落座】
+水星 Mercury：${chart.planets.mercury.signZh}(${chart.planets.mercury.signEn}) ${chart.planets.mercury.degree}°
+金星 Venus：${chart.planets.venus.signZh}(${chart.planets.venus.signEn}) ${chart.planets.venus.degree}°
+火星 Mars：${chart.planets.mars.signZh}(${chart.planets.mars.signEn}) ${chart.planets.mars.degree}°
+木星 Jupiter：${chart.planets.jupiter.signZh}(${chart.planets.jupiter.signEn}) ${chart.planets.jupiter.degree}°
+土星 Saturn：${chart.planets.saturn.signZh}(${chart.planets.saturn.signEn}) ${chart.planets.saturn.degree}°
+
+【元素分布】
+${chart.elements.map(function(e) { return e.name + ': ' + e.percentage + '% (' + e.count + '个)'; }).join('\n')}
+
+【模式分布】
+${chart.modalities.map(function(m) { return m.name + ': ' + m.percentage + '% (' + m.count + '个)'; }).join('\n')}
+
+【月亮相位】${chart.moonPhase.phase} (照明度 ${chart.moonPhase.illumination})
+
+【宫位系统】（基于上升点的等宫制）
+${chart.houses.map(function(h) { return '第' + h.number + '宫: ' + h.signZh + '(' + h.signEn + ')'; }).join('\n')}
+
+【星盘概要】${chart.summary.bigThree} · 主导元素: ${chart.summary.dominantElement} · 主导模式: ${chart.summary.dominantModality}`;
+
+    // 3. Send to DeepSeek for detailed reading
+    const messages = [
+      { role: 'system', content: '你是一位精通西方占星学的资深占星师，从业20年，为上千人解读过本命星盘。你融合古典占星与现代心理占星，分析深刻且温暖。你的语言：70%中文 + 30%英文关键术语（星座名、行星名用英文给出，其余用中文解释），让用户既能看懂又能学到占星知识。每次解读详细、具体、有深度。' },
+      { role: 'user', content: `请根据以下星盘数据，为用户出具一份详细的西方占星解读报告。
+
+${chartSummary}
+
+请按以下结构展开详细的星盘解读（总字数4000-6000字）。
+
+## 一、星盘格局总览（300-400字）
+概述此星盘的核心能量格局。上升星座如何塑造外在形象，太阳星座如何驱动内在自我，月亮星座如何折射情感需求。一句话总结此星盘的最大特质。
+
+## 二、三大支柱详解（500-700字）
+
+### 2.1 太阳星座 — ${chart.sun.signEn}
+太阳在${chart.sun.signEn}的特质：核心性格、生命目标、创造力表现。此配置的正面面和需要成长的阴影面。
+
+### 2.2 月亮星座 — ${chart.moon.signEn}
+月亮在${chart.moon.signEn}的特质：情感需求、情绪模式、安全感来源。内在小孩的样貌和照顾自己的方式。
+
+### 2.3 上升星座 — ${chart.rising.signEn}
+上升${chart.rising.signEn}的外在形象：给人的第一印象、外在气质、人生面具。上升星座如何影响人生方向。
+
+## 三、行星落座详析（800-1000字）
+逐一行星分析其落座的深层含义。每个行星100-200字。
+
+### 3.1 水星 ${chart.planets.mercury.signEn} — 沟通与思维
+### 3.2 金星 ${chart.planets.venus.signEn} — 爱情与审美
+### 3.3 火星 ${chart.planets.mars.signEn} — 行动与欲望
+### 3.4 木星 ${chart.planets.jupiter.signEn} — 幸运与扩张
+### 3.5 土星 ${chart.planets.saturn.signEn} — 责任与功课
+
+## 四、元素与模式分析（300-400字）
+分析四元素（火土风水）的分布比例以及主导元素${chart.summary.dominantElement}对你性格的影响。
+分析开创/固定/变动三种模式的分布，主导模式${chart.summary.dominantModality}如何塑造你面对世界的方式。
+
+## 五、宫位简析（400-500字）
+简述每个宫位的落座及其对人生领域的影响。重点看上升星座起始的第1宫，以及四角宫（1/4/7/10）。
+
+## 六、月亮相位（200-300字）
+当前月亮${chart.moonPhase.phase}，照明度${chart.moonPhase.illumination}，对情绪和直觉的影响。
+
+## 七、主要人生领域分析（600-800字）
+
+### 7.1 事业与使命
+基于太阳、中天（第10宫${chart.houses[9].signEn}）、土星${chart.planets.saturn.signEn}的提示，适合的职业方向和发展建议。
+
+### 7.2 感情与人际
+基于金星${chart.planets.venus.signEn}、月亮${chart.moon.signEn}、第7宫${chart.houses[6].signEn}的提示，爱情模式和理想伴侣特征。
+
+### 7.3 财运与资源
+基于第2宫${chart.houses[1].signEn}、木星${chart.planets.jupiter.signEn}的提示，财富格局和理财建议。
+
+## 八、成长方向与年度提醒（300-400字）
+综合全盘，给出3条切实可行的成长建议。以及未来一年重要的星象提醒。
+
+## 九、占星师的寄语（100-200字）
+温暖、有洞见的收尾，让用户感到被理解且有力量前行。`
+      }
+    ];
+
+    const result = await deepseekChat(messages, { maxTokens: 8192 });
+    insertReading.run('astrology', JSON.stringify(req.body), result, req.userId);
+    var ctxId = saveQaContext('astrology', req.body, result);
+
+    res.json({
+      chart: {
+        sun: { signZh: chart.sun.signZh, signEn: chart.sun.signEn, degree: chart.sun.degree },
+        moon: { signZh: chart.moon.signZh, signEn: chart.moon.signEn, degree: chart.moon.degree },
+        rising: { signZh: chart.rising.signZh, signEn: chart.rising.signEn, degree: chart.rising.degree },
+        planets: chart.planets,
+        elements: chart.elements,
+        modalities: chart.modalities,
+        moonPhase: chart.moonPhase,
+        houses: chart.houses,
+        summary: chart.summary,
+        bigThree: chart.summary.bigThree
+      },
+      reading: result,
+      contextId: ctxId
+    });
+  } catch (err) {
+    console.error('[ASTROLOGY ERR]', err.message);
+    res.status(500).json({ error: 'AI暂时不可用，请稍后重试', detail: err.message });
+  }
+});
+
+
+
+// ════════════════════════════════════════════
+// CHAT HISTORY & SUMMARY
+// ════════════════════════════════════════════
+
+const READING_TYPE_NAMES = {
+  bazi: '八字命理', tarot: '塔罗占卜', ziwei: '紫微斗数',
+  mianxiang: '面相手相', hehun: '合婚配对', daily: '每日运势',
+  xingming: '姓名学', astrology: '西方占星', liuyao: '六爻占卜',
+  lingqian: '求神灵签', daliuren: '大六壬', qimen: '奇门遁甲',
+  fengshui: '风水评测', geo_fortune: '地理命理'
+};
+
+// GET /api/chat-history
+app.get('/api/chat-history', authMiddleware, (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: '请先登录' });
+  }
+  try {
+    const readings = getReadingsByUser.all(req.user.id);
+    const mapped = readings.map(r => ({
+      id: r.id,
+      type: r.type,
+      typeName: READING_TYPE_NAMES[r.type] || r.type,
+      input: r.input,
+      result: r.result,
+      summary: r.input ? JSON.parse(r.input) : null,
+      createdAt: r.created_at
+    }));
+    res.json({ readings: mapped });
+  } catch (err) {
+    console.error('[HISTORY ERR]', err.message);
+    res.status(500).json({ error: '获取历史记录失败' });
+  }
+});
+
+// POST /api/chat-summary
+app.post('/api/chat-summary', authMiddleware, async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: '请先登录' });
+  }
+  try {
+    const readings = _M.readings
+      .filter(r => r.user_id === req.user.id)
+      .sort((a, b) => b.created_at.localeCompare(a.created_at))
+      .slice(0, 10);
+
+    if (!readings || readings.length === 0) {
+      return res.json({ summary: '您还没有命理咨询记录。快去体验算命占卜吧！' });
+    }
+
+    const historyText = readings.map((r, i) => {
+      const typeName = READING_TYPE_NAMES[r.type] || r.type;
+      let inputPreview = '';
+      try {
+        const parsed = JSON.parse(r.input);
+        inputPreview = Object.keys(parsed).map(k => k + ': ' + parsed[k]).join(', ').slice(0, 200);
+      } catch(e) {
+        inputPreview = r.input.slice(0, 200);
+      }
+      return '[' + '咨询' + (i+1) + '] ' + r.created_at + ' | 类型: ' + typeName + '\n内容: ' + inputPreview;
+    }).join('\n\n');
+
+    const messages = [
+      { role: 'system', content: '你是善缘平台的高级命理分析师。请根据用户近期的命理咨询记录，生成一份综合的命理趋势总结。\n\n要求：\n1. 提炼用户关注的核心问题领域（如事业、感情、财运等）\n2. 分析命理趋势和阶段性特征\n3. 给出持续的改进建议\n4. 语气温暖亲切，有洞察力\n5. 用简体中文，总字数600-1000字\n6. 用Markdown格式，有小标题和分段' },
+      { role: 'user', content: '以下是用户近期的命理咨询记录：\n\n' + historyText + '\n\n请为用户生成一份命理趋势总结，分析他们关心的主要问题领域和命理趋势。' }
+    ];
+
+    const summary = await deepseekChat(messages, { maxTokens: 2048 });
+    res.json({ summary, count: readings.length });
+  } catch (err) {
+    console.error('[SUMMARY ERR]', err.message);
+    res.status(500).json({ error: '总结生成失败，请稍后重试' });
+  }
+});
+
+
+// POST /api/pastlife — 前世预测
+app.post('/api/pastlife', async (req, res) => {
+  try {
+    const { birthYear, birthMonth, birthDay, birthHour, gender, birthPlace } = req.body;
+    if (!birthYear) return res.status(400).json({ error: '请提供出生信息' });
+
+    const lan = req.headers['accept-language'] || 'zh';
+    const isEn = lan.startsWith('en');
+    const zodiacs = ['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig'];
+    const zi = ['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪'];
+    const currZodiac = zi[(birthYear - 4) % 12];
+
+    const sysPrompt = isEn
+      ? 'You are a mystical past-life regression guide. Generate a vivid, detailed past-life story based on the person birth data. Write in English. Be specific: time period, location, occupation, personality, appearance, key life events, and how it connects to their current life. 2000-3000 words.'
+      : '你是一位通晓三世因果的灵性导师。根据用户的出生信息，回溯其前世的身份、经历和因果。语言生动、细节丰富，像在讲一个真实的故事。给出具体的前世身份（年代+地点+职业）、外貌特征、关键人生事件、以及今生与此的关联。2000-3000字。';
+
+    const userPrompt = isEn
+      ? 'Birth: ' + birthYear + '/' + (birthMonth || '?') + '/' + (birthDay || '?')
+        + (birthHour !== undefined ? ' at ' + birthHour + ':00' : '')
+        + ' Gender: ' + (gender || 'unknown')
+        + ' Birthplace: ' + (birthPlace || 'unknown')
+        + ' Chinese zodiac: ' + zodiacs[(birthYear - 4) % 12]
+        + '\n\nTell me my past life in vivid detail.'
+      : '出生：' + (birthYear || '?') + '年' + (birthMonth || '?') + '月' + (birthDay || '?') + '日'
+        + (birthHour !== undefined ? ' ' + birthHour + '时' : '')
+        + '\n性别：' + (gender === 'male' ? '男' : '女')
+        + '\n出生地：' + (birthPlace || '未知')
+        + '\n生肖：' + currZodiac
+        + '\n\n请详细描述我的前世：我是什么人？生活在什么年代和地方？做过什么？和今生的关联是什么？';
+
+    const messages = [
+      { role: 'system', content: sysPrompt },
+      { role: 'user', content: userPrompt }
+    ];
+    const reading = await deepseekChat(messages, { maxTokens: 4096 });
+    var ctxId = saveQaContext('pastlife', req.body, reading);
+    res.json({ reading, contextId: ctxId });
+  } catch (err) {
+    console.error('[PASTLIFE ERR]', err.message);
+    res.status(500).json({ error: isEn ? 'AI temporarily unavailable' : 'AI暂时不可用，请稍后重试' });
   }
 });
 

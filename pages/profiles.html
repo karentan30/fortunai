@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0e0a04">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>善缘 · 多人档案</title>
+<meta name="description" content="善缘多人档案管理 — 为家人朋友创建多个八字档案，快速切换命理解读">
+<meta property="og:title" content="善缘 · 多人档案">
+<meta property="og:description" content="善缘多人档案管理 — 为家人朋友创建多个八字档案">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0a04;--card:#170e06;--mid:#1f1408;
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
+  --jade:#5bbfa0;--jade-mid:#8dd9bf;
+  --amber:#c9820a;--amber-light:#e8b86a;
+  --ink-text:rgba(255,245,220,0.85);
+  --sub-text:rgba(255,245,220,0.58);
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink-text);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:120px}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,0.1) 0%,transparent 50%);pointer-events:none;z-index:0}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(201,168,76,0.6);cursor:pointer;padding:4px 0;text-decoration:none}
+.back-btn:hover{color:var(--gold)}
+
+/* Header */
+.header{text-align:center;padding:44px 20px 16px;position:relative;z-index:1}
+.header-title{font-size:18px;font-weight:400;letter-spacing:0.2em;margin-bottom:4px}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:0.26em;color:rgba(201,168,76,0.45);margin-bottom:12px}
+.gold-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto}
+
+/* Profile list */
+.profile-section{position:relative;z-index:1;padding:0 16px}
+.section-label{font-size:10px;letter-spacing:0.18em;color:rgba(201,168,76,0.5);margin-bottom:12px}
+
+.profile-card{
+  background:rgba(23,14,6,0.6);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border:1px solid rgba(201,168,76,0.15);
+  border-radius:12px;
+  padding:16px;
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:14px;
+  cursor:pointer;
+  transition:all 0.3s ease;
+  position:relative;
+}
+.profile-card:hover{
+  transform:translateY(-2px);
+  border-color:rgba(201,168,76,0.35);
+  box-shadow:0 8px 24px rgba(201,168,76,0.12);
+}
+
+.profile-avatar{
+  width:48px;height:48px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  font-size:20px;
+  border:1.5px solid rgba(201,168,76,0.25);
+  background:rgba(201,168,76,0.08);
+}
+.profile-avatar.male{background:rgba(91,191,160,0.1);border-color:rgba(91,191,160,0.3);color:var(--jade)}
+.profile-avatar.female{background:rgba(232,184,106,0.1);border-color:rgba(232,184,106,0.3);color:var(--amber-light)}
+
+.profile-info{flex:1;min-width:0}
+.profile-name{font-size:15px;font-weight:500;letter-spacing:0.06em;color:var(--gold-light);margin-bottom:3px}
+.profile-meta{font-size:10px;color:var(--sub-text);letter-spacing:0.04em;line-height:1.6}
+.profile-relation{
+  display:inline-block;
+  font-size:9px;
+  color:rgba(201,168,76,0.5);
+  border:1px solid rgba(201,168,76,0.12);
+  border-radius:3px;
+  padding:1px 6px;
+  letter-spacing:0.04em;
+  margin-top:3px;
+}
+
+.profile-actions{
+  display:flex;gap:6px;flex-shrink:0;
+  opacity:0.6;
+  transition:opacity 0.2s;
+}
+.profile-card:hover .profile-actions{opacity:1}
+.profile-action-btn{
+  width:32px;height:32px;border-radius:50%;
+  border:1px solid rgba(201,168,76,0.15);
+  background:rgba(23,14,6,0.8);
+  color:var(--sub-text);
+  font-size:13px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all 0.2s;
+  font-family:inherit;
+}
+.profile-action-btn.edit:hover{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,0.1)}
+.profile-action-btn.del:hover{border-color:rgba(220,80,80,0.5);color:rgba(220,80,80,0.85);background:rgba(220,80,80,0.08)}
+
+/* Service links */
+.service-links{
+  display:flex;gap:6px;margin-top:10px;padding-top:10px;
+  border-top:1px solid rgba(201,168,76,0.08);
+}
+.svc-link{
+  flex:1;text-align:center;padding:6px 4px;border-radius:6px;
+  font-size:10px;letter-spacing:0.04em;
+  color:var(--sub-text);
+  text-decoration:none;
+  border:1px solid rgba(201,168,76,0.08);
+  background:rgba(201,168,76,0.04);
+  transition:all 0.2s;
+}
+.svc-link:hover{color:var(--gold-light);border-color:rgba(201,168,76,0.25);background:rgba(201,168,76,0.08)}
+
+/* Add button */
+.add-btn{
+  width:100%;
+  padding:14px 0;
+  border:1px dashed rgba(201,168,76,0.25);
+  border-radius:12px;
+  background:rgba(201,168,76,0.04);
+  color:var(--gold);
+  font-family:'Noto Serif SC',serif;
+  font-size:14px;
+  letter-spacing:0.1em;
+  cursor:pointer;
+  transition:all 0.3s ease;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin-bottom:16px;
+}
+.add-btn:hover{
+  border-color:rgba(201,168,76,0.5);
+  background:rgba(201,168,76,0.08);
+  transform:translateY(-2px);
+}
+.add-btn-icon{font-size:18px}
+
+/* Empty state */
+.empty-state{text-align:center;padding:60px 20px 40px}
+.empty-icon{font-size:40px;margin-bottom:16px;opacity:0.4}
+.empty-text{font-size:13px;color:var(--sub-text);letter-spacing:0.06em;line-height:1.8;margin-bottom:20px}
+.empty-sub{font-size:10px;color:rgba(255,245,220,0.25);letter-spacing:0.04em}
+
+/* Modal overlay */
+.modal-overlay{
+  position:fixed;inset:0;z-index:1000;
+  background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;
+  padding:20px;
+}
+.modal-overlay.show{display:flex}
+.modal{
+  width:100%;max-width:360px;
+  background:rgba(23,14,6,0.97);
+  border:1px solid rgba(201,168,76,0.2);
+  border-radius:16px;
+  padding:24px 20px 20px;
+  position:relative;
+  max-height:90vh;overflow-y:auto;
+}
+.modal-close{
+  position:absolute;top:12px;right:14px;
+  background:none;border:none;
+  color:rgba(255,245,220,0.4);
+  font-size:20px;cursor:pointer;
+  padding:4px;line-height:1;
+  font-family:inherit;
+}
+.modal-title{text-align:center;font-size:15px;font-weight:500;color:var(--gold);letter-spacing:0.08em;margin-bottom:20px}
+
+.form-field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.form-field label{font-size:10px;color:var(--sub-text);letter-spacing:0.06em}
+.form-field input,.form-field select{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(201,168,76,0.15);
+  border-radius:8px;
+  padding:10px 12px;
+  font-size:13px;
+  color:var(--ink-text);
+  font-family:'Noto Serif SC',serif;
+  outline:none;
+  transition:border-color 0.2s;
+  -webkit-appearance:none;
+}
+.form-field input:focus,.form-field select:focus{border-color:rgba(201,168,76,0.5)}
+.form-field select option{background:var(--card);color:var(--ink-text)}
+
+.form-gender{display:flex;gap:8px}
+.gender-opt{
+  flex:1;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(201,168,76,0.15);
+  border-radius:8px;
+  padding:10px 0;
+  text-align:center;
+  font-size:13px;
+  color:var(--sub-text);
+  letter-spacing:0.12em;
+  cursor:pointer;
+  transition:all 0.2s;
+  font-family:'Noto Serif SC',serif;
+}
+.gender-opt.selected{border-color:var(--gold);background:rgba(201,168,76,0.12);color:var(--gold-light)}
+
+.form-row{display:flex;gap:8px}
+.form-row .form-field{flex:1}
+
+.form-submit{
+  width:100%;
+  padding:11px 0;
+  border:none;
+  border-radius:8px;
+  background:rgba(201,168,76,0.7);
+  color:rgba(255,245,220,0.95);
+  font-size:14px;
+  letter-spacing:0.08em;
+  cursor:pointer;
+  transition:background 0.2s;
+  font-family:'Noto Serif SC',serif;
+  margin-top:8px;
+}
+.form-submit:hover{background:rgba(201,168,76,0.9)}
+
+/* Delete confirm modal */
+.del-modal-text{text-align:center;font-size:13px;color:var(--ink-text);letter-spacing:0.04em;line-height:1.8;margin-bottom:20px}
+.del-modal-name{color:var(--gold-light);font-weight:500}
+.del-actions{display:flex;gap:10px}
+.del-cancel,.del-confirm{
+  flex:1;padding:10px 0;border-radius:8px;
+  font-size:13px;letter-spacing:0.06em;
+  cursor:pointer;font-family:'Noto Serif SC',serif;
+  transition:all 0.2s;
+}
+.del-cancel{background:rgba(255,255,255,0.06);border:1px solid rgba(201,168,76,0.12);color:var(--sub-text)}
+.del-cancel:hover{background:rgba(255,255,255,0.1)}
+.del-confirm{background:rgba(180,40,40,0.7);border:none;color:rgba(255,220,220,0.9)}
+.del-confirm:hover{background:rgba(180,40,40,0.85)}
+
+/* Toast */
+.toast{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;
+  max-width:360px;width:90%;padding:12px 16px;border-radius:8px;
+  font-size:12px;letter-spacing:0.06em;text-align:center;
+  font-family:'Noto Serif SC',serif;cursor:pointer;
+  background:rgba(23,14,6,0.95);
+  border:1px solid rgba(201,168,76,0.2);
+  color:rgba(255,245,220,0.9);
+}
+.toast.error{background:rgba(180,40,40,0.92);border:1px solid rgba(220,80,80,0.4);color:rgba(255,220,220,0.95)}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.fade-in{animation:fadeUp 0.4s ease both}
+.delay-1{animation-delay:0.1s}
+.delay-2{animation-delay:0.2s}
+.delay-3{animation-delay:0.3s}
+.delay-4{animation-delay:0.4s}
+.delay-5{animation-delay:0.5s}
+</style>
+</head>
+<body>
+
+<div style="position:relative;z-index:1">
+  <a class="back-btn" href="../index.html">&larr; 返回首页</a>
+
+  <div class="header">
+    <div class="header-title">我的档案</div>
+    <div class="header-sub">My Profiles</div>
+    <div class="gold-line"></div>
+  </div>
+
+  <div class="profile-section">
+    <div class="section-label fade-in delay-1" id="profileCount">— 0 个档案 —</div>
+
+    <!-- Profile list -->
+    <div id="profileList"></div>
+
+    <!-- Empty state -->
+    <div class="empty-state fade-in delay-2" id="emptyState">
+      <div class="empty-icon">👤</div>
+      <div class="empty-text">
+        还没有家人朋友的档案<br>
+        为ta们创建一个，快速查看命理运势
+      </div>
+      <div class="empty-sub">点击下方按钮开始添加</div>
+    </div>
+
+    <!-- Add button -->
+    <button class="add-btn fade-in delay-3" id="addProfileBtn">
+      <span class="add-btn-icon">+</span>
+      添加新档案
+    </button>
+  </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div class="modal-overlay" id="formModal">
+  <div class="modal">
+    <button class="modal-close" id="formModalClose">&times;</button>
+    <div class="modal-title" id="formModalTitle">添加档案</div>
+
+    <div class="form-field">
+      <label>姓名</label>
+      <input type="text" id="fieldName" placeholder="请输入姓名" maxlength="20">
+    </div>
+
+    <div class="form-field">
+      <label>关系</label>
+      <select id="fieldRelation">
+        <option value="">请选择关系</option>
+        <option value="本人">本人</option>
+        <option value="配偶">配偶</option>
+        <option value="父亲">父亲</option>
+        <option value="母亲">母亲</option>
+        <option value="儿子">儿子</option>
+        <option value="女儿">女儿</option>
+        <option value="兄弟">兄弟</option>
+        <option value="姐妹">姐妹</option>
+        <option value="朋友">朋友</option>
+        <option value="恋人">恋人</option>
+        <option value="其他">其他</option>
+      </select>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label>出生年</label>
+        <select id="fieldYear"></select>
+      </div>
+      <div class="form-field">
+        <label>月</label>
+        <select id="fieldMonth"></select>
+      </div>
+      <div class="form-field">
+        <label>日</label>
+        <select id="fieldDay"></select>
+      </div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-field">
+        <label>时辰</label>
+        <select id="fieldHour">
+          <option value="">未知</option>
+          <option value="23-1">子时 23:00-1:00</option>
+          <option value="1-3">丑时 1:00-3:00</option>
+          <option value="3-5">寅时 3:00-5:00</option>
+          <option value="5-7">卯时 5:00-7:00</option>
+          <option value="7-9">辰时 7:00-9:00</option>
+          <option value="9-11">巳时 9:00-11:00</option>
+          <option value="11-13">午时 11:00-13:00</option>
+          <option value="13-15">未时 13:00-15:00</option>
+          <option value="15-17">申时 15:00-17:00</option>
+          <option value="17-19">酉时 17:00-19:00</option>
+          <option value="19-21">戌时 19:00-21:00</option>
+          <option value="21-23">亥时 21:00-23:00</option>
+        </select>
+      </div>
+      <div class="form-field" style="flex:2">
+        <label>性别</label>
+        <div class="form-gender">
+          <div class="gender-opt" data-value="male" id="genderMale">男</div>
+          <div class="gender-opt" data-value="female" id="genderFemale">女</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="form-submit" id="formSubmit">保存档案</button>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal-overlay" id="delModal">
+  <div class="modal" style="padding:24px 20px 16px">
+    <div class="del-modal-text">
+      确定要删除 <span class="del-modal-name" id="delName"></span> 的档案吗？<br>
+      此操作不可恢复。
+    </div>
+    <div class="del-actions">
+      <button class="del-cancel" id="delCancel">取消</button>
+      <button class="del-confirm" id="delConfirm">删除</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var STORAGE_KEY = 'shenyuan_profiles';
+
+  function getProfiles(){
+    try{return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];}catch(e){return [];}
+  }
+
+  function saveProfiles(p){
+    try{localStorage.setItem(STORAGE_KEY, JSON.stringify(p));}catch(e){}
+  }
+
+  // Generate ID
+  function genId(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+
+  // Populate year/month/day selects
+  function populateDateSelects(){
+    var ySel = document.getElementById('fieldYear');
+    var mSel = document.getElementById('fieldMonth');
+    var dSel = document.getElementById('fieldDay');
+    var now = new Date();
+    var curYear = now.getFullYear();
+    for(var y = curYear; y >= 1920; y--){
+      var o = document.createElement('option');
+      o.value = y.toString();
+      o.textContent = y + '年';
+      ySel.appendChild(o);
+    }
+    for(var m = 1; m <= 12; m++){
+      var o = document.createElement('option');
+      o.value = m < 10 ? '0'+m : m.toString();
+      o.textContent = m + '月';
+      mSel.appendChild(o);
+    }
+    for(var d = 1; d <= 31; d++){
+      var o = document.createElement('option');
+      o.value = d < 10 ? '0'+d : d.toString();
+      o.textContent = d + '日';
+      dSel.appendChild(o);
+    }
+  }
+
+  // Render profile list
+  function renderProfiles(){
+    var profiles = getProfiles();
+    var list = document.getElementById('profileList');
+    var empty = document.getElementById('emptyState');
+    var countEl = document.getElementById('profileCount');
+
+    countEl.textContent = '— ' + profiles.length + ' 个档案 —';
+    list.innerHTML = '';
+
+    if(profiles.length === 0){
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+
+    profiles.forEach(function(p, idx){
+      var card = document.createElement('div');
+      card.className = 'profile-card fade-in';
+      card.style.animationDelay = (idx * 0.08) + 's';
+
+      // Avatar
+      var avatar = document.createElement('div');
+      avatar.className = 'profile-avatar ' + (p.gender === 'female' ? 'female' : 'male');
+      avatar.textContent = p.gender === 'female' ? '♀' : '♂';
+
+      // Info
+      var info = document.createElement('div');
+      info.className = 'profile-info';
+
+      var nameLine = document.createElement('div');
+      nameLine.className = 'profile-name';
+      nameLine.textContent = p.name || '(未命名)';
+
+      var relationBadge = document.createElement('span');
+      relationBadge.className = 'profile-relation';
+      relationBadge.textContent = p.relation || '其他';
+
+      var meta = document.createElement('div');
+      meta.className = 'profile-meta';
+      var birthStr = (p.birthYear || '?') + '年';
+      if(p.birthMonth && p.birthDay){
+        birthStr += ' ' + parseInt(p.birthMonth) + '月' + parseInt(p.birthDay) + '日';
+      }
+      if(p.birthHour){
+        birthStr += ' ' + p.birthHour.replace('-','-') + '时';
+      }
+      meta.textContent = birthStr + ' · ' + (p.gender === 'female' ? '女' : '男');
+
+      nameLine.appendChild(relationBadge);
+      info.appendChild(nameLine);
+      info.appendChild(meta);
+
+      // Service links
+      var svcLinks = document.createElement('div');
+      svcLinks.className = 'service-links';
+      var services = [
+        {label:'八字命理', href:'bazi.html?profile=' + p.id, icon:'命'},
+        {label:'紫微斗数', href:'ziwei.html?profile=' + p.id, icon:'紫'},
+        {label:'西方占星', href:'astrology.html?profile=' + p.id, icon:'&#10025;'}
+      ];
+      services.forEach(function(svc){
+        var a = document.createElement('a');
+        a.className = 'svc-link';
+        a.href = svc.href;
+        a.innerHTML = svc.icon + ' ' + svc.label;
+        svcLinks.appendChild(a);
+      });
+      info.appendChild(svcLinks);
+
+      // Actions
+      var actions = document.createElement('div');
+      actions.className = 'profile-actions';
+
+      var editBtn = document.createElement('button');
+      editBtn.className = 'profile-action-btn edit';
+      editBtn.textContent = '✎';
+      editBtn.title = '编辑';
+      editBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        openEditModal(p.id);
+      });
+
+      var delBtn = document.createElement('button');
+      delBtn.className = 'profile-action-btn del';
+      delBtn.textContent = '✕';
+      delBtn.title = '删除';
+      delBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        openDelConfirm(p.id, p.name);
+      });
+
+      actions.appendChild(editBtn);
+      actions.appendChild(delBtn);
+
+      card.appendChild(avatar);
+      card.appendChild(info);
+      card.appendChild(actions);
+
+      list.appendChild(card);
+    });
+  }
+
+  // Gender selection
+  var selectedGender = 'male';
+  function setupGender(){
+    var male = document.getElementById('genderMale');
+    var female = document.getElementById('genderFemale');
+    function select(el, val){
+      document.querySelectorAll('.gender-opt').forEach(function(g){g.classList.remove('selected');});
+      el.classList.add('selected');
+      selectedGender = val;
+    }
+    male.addEventListener('click', function(){select(male, 'male');});
+    female.addEventListener('click', function(){select(female, 'female');});
+    select(male, 'male');
+  }
+
+  // Open add modal
+  function openAddModal(){
+    document.getElementById('formModalTitle').textContent = '添加档案';
+    document.getElementById('fieldName').value = '';
+    document.getElementById('fieldRelation').value = '';
+    document.getElementById('fieldYear').value = '';
+    document.getElementById('fieldMonth').value = '';
+    document.getElementById('fieldDay').value = '';
+    document.getElementById('fieldHour').value = '';
+    var male = document.getElementById('genderMale');
+    document.querySelectorAll('.gender-opt').forEach(function(g){g.classList.remove('selected');});
+    male.classList.add('selected');
+    selectedGender = 'male';
+    document.getElementById('formModal').dataset.editId = '';
+    document.getElementById('formModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  // Open edit modal
+  function openEditModal(id){
+    var profiles = getProfiles();
+    var p = profiles.find(function(x){return x.id === id;});
+    if(!p) return;
+
+    document.getElementById('formModalTitle').textContent = '编辑档案';
+    document.getElementById('fieldName').value = p.name || '';
+    document.getElementById('fieldRelation').value = p.relation || '';
+    document.getElementById('fieldYear').value = p.birthYear || '';
+    document.getElementById('fieldMonth').value = p.birthMonth || '';
+    document.getElementById('fieldDay').value = p.birthDay || '';
+    document.getElementById('fieldHour').value = p.birthHour || '';
+
+    document.querySelectorAll('.gender-opt').forEach(function(g){g.classList.remove('selected');});
+    if(p.gender === 'female'){
+      document.getElementById('genderFemale').classList.add('selected');
+      selectedGender = 'female';
+    } else {
+      document.getElementById('genderMale').classList.add('selected');
+      selectedGender = 'male';
+    }
+
+    document.getElementById('formModal').dataset.editId = id;
+    document.getElementById('formModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  // Save from modal
+  function saveFromModal(){
+    var name = document.getElementById('fieldName').value.trim();
+    var relation = document.getElementById('fieldRelation').value;
+    var year = document.getElementById('fieldYear').value;
+    var month = document.getElementById('fieldMonth').value;
+    var day = document.getElementById('fieldDay').value;
+    var hour = document.getElementById('fieldHour').value;
+
+    if(!name){
+      showToast('请输入姓名', 'error');
+      return;
+    }
+    if(!relation){
+      showToast('请选择关系', 'error');
+      return;
+    }
+    if(!year || !month || !day){
+      showToast('请选择完整的出生日期', 'error');
+      return;
+    }
+
+    var profiles = getProfiles();
+    var editId = document.getElementById('formModal').dataset.editId;
+
+    if(editId){
+      // Edit existing
+      var idx = profiles.findIndex(function(x){return x.id === editId;});
+      if(idx !== -1){
+        profiles[idx].name = name;
+        profiles[idx].relation = relation;
+        profiles[idx].birthYear = year;
+        profiles[idx].birthMonth = month;
+        profiles[idx].birthDay = day;
+        profiles[idx].birthHour = hour;
+        profiles[idx].gender = selectedGender;
+      }
+      showToast('档案已更新');
+    } else {
+      // Add new
+      var profile = {
+        id: genId(),
+        name: name,
+        relation: relation,
+        birthYear: year,
+        birthMonth: month,
+        birthDay: day,
+        birthHour: hour,
+        gender: selectedGender
+      };
+      profiles.push(profile);
+      showToast('档案已添加');
+    }
+
+    saveProfiles(profiles);
+    document.getElementById('formModal').classList.remove('show');
+    document.body.style.overflow = '';
+    renderProfiles();
+  }
+
+  // Delete confirm
+  var delTargetId = null;
+  function openDelConfirm(id, name){
+    delTargetId = id;
+    document.getElementById('delName').textContent = name || '(未命名)';
+    document.getElementById('delModal').classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function confirmDelete(){
+    if(!delTargetId) return;
+    var profiles = getProfiles();
+    profiles = profiles.filter(function(x){return x.id !== delTargetId;});
+    saveProfiles(profiles);
+    document.getElementById('delModal').classList.remove('show');
+    document.body.style.overflow = '';
+    delTargetId = null;
+    showToast('档案已删除');
+    renderProfiles();
+  }
+
+  // Toast
+  function showToast(msg, type){
+    var t = document.createElement('div');
+    t.className = 'toast' + (type === 'error' ? ' error' : '');
+    t.textContent = msg;
+    t.onclick = function(){
+      t.style.opacity = '0';
+      t.style.transition = 'opacity 0.3s';
+      setTimeout(function(){t.remove();}, 300);
+    };
+    document.body.appendChild(t);
+    if(t._toastTimer) clearTimeout(t._toastTimer);
+    t._toastTimer = setTimeout(function(){
+      t.style.opacity = '0';
+      t.style.transition = 'opacity 0.3s';
+      setTimeout(function(){t.remove();}, 300);
+    }, 2500);
+  }
+
+  // Init
+  populateDateSelects();
+  setupGender();
+  renderProfiles();
+
+  // Event listeners
+  document.getElementById('addProfileBtn').addEventListener('click', openAddModal);
+  document.getElementById('formModalClose').addEventListener('click', function(){
+    document.getElementById('formModal').classList.remove('show');
+    document.body.style.overflow = '';
+  });
+  document.getElementById('formModal').addEventListener('click', function(e){
+    if(e.target === this){
+      this.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+  });
+  document.getElementById('formSubmit').addEventListener('click', saveFromModal);
+
+  document.getElementById('delCancel').addEventListener('click', function(){
+    document.getElementById('delModal').classList.remove('show');
+    document.body.style.overflow = '';
+    delTargetId = null;
+  });
+  document.getElementById('delModal').addEventListener('click', function(e){
+    if(e.target === this){
+      this.classList.remove('show');
+      document.body.style.overflow = '';
+      delTargetId = null;
+    }
+  });
+  document.getElementById('delConfirm').addEventListener('click', confirmDelete);
+
+  // Handle keyboard enter on modal
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape'){
+      document.getElementById('formModal').classList.remove('show');
+      document.getElementById('delModal').classList.remove('show');
+      document.body.style.overflow = '';
+      delTargetId = null;
+    }
+  });
+
+})();
+</script>
+</body>
+</html>

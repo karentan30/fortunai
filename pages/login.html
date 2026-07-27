@@ -146,6 +146,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 <script>
 var BASE = ''; // same-origin, adjust if needed
+var REDIRECT_URL = new URLSearchParams(window.location.search).get('redirect') || 'account.html';
 
 function showToast(msg, type) {
   var t = document.getElementById('toast');
@@ -195,7 +196,7 @@ function handleLogin() {
     if (res.status >= 200 && res.status < 300 && res.data.token) {
       localStorage.setItem('sy_token', res.data.token);
       showToast('登录成功，正在跳转…', 'success');
-      setTimeout(function(){ window.location.href = 'account.html'; }, 600);
+      setTimeout(function(){ window.location.href = REDIRECT_URL; }, 600);
     } else {
       throw new Error(res.data.message || res.data.error || '登录失败，请重试');
     }
@@ -234,7 +235,7 @@ function handleRegister() {
     if (res.status >= 200 && res.status < 300 && res.data.token) {
       localStorage.setItem('sy_token', res.data.token);
       showToast('注册成功，正在跳转…', 'success');
-      setTimeout(function(){ window.location.href = 'account.html'; }, 600);
+      setTimeout(function(){ window.location.href = REDIRECT_URL; }, 600);
     } else {
       throw new Error(res.data.message || res.data.error || '注册失败，请重试');
     }
@@ -256,7 +257,7 @@ function logoutAndBack() {
   var token = localStorage.getItem('sy_token');
   if (token) {
     showToast('您已登录，正在跳转', '');
-    setTimeout(function(){ window.location.href = 'account.html'; }, 400);
+    setTimeout(function(){ window.location.href = REDIRECT_URL; }, 400);
   }
 })();
 </script>

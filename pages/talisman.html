@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#1a0808">
+<title>善缘 · 灵符</title>
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#1a0808;--card:#2a1010;--gold:#c9a84c;--gold-light:#e8d08a;--red:#c94040;--red-light:#e87070;--ink:rgba(255,230,220,0.85);--sub:rgba(255,200,180,0.45)}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:120px;overflow-y:auto}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,64,64,0.08) 0%,transparent 50%);pointer-events:none;z-index:0}
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;color:rgba(201,168,76,0.5);font-size:13px;cursor:pointer;font-family:'Noto Serif SC',serif;padding:4px 0}
+.header{text-align:center;padding:44px 20px 20px;position:relative;z-index:1}
+.header-icon{font-size:56px;margin-bottom:8px}
+.header-title{font-size:20px;font-weight:400;letter-spacing:0.22em;margin-bottom:4px}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:0.26em;color:rgba(201,168,76,0.4);margin-bottom:14px}
+.gold-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto}
+.purpose-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:16px;position:relative;z-index:1}
+.purpose-card{background:var(--card);border:1px solid rgba(201,168,76,0.12);border-radius:8px;padding:16px 12px;text-align:center;cursor:pointer;transition:all 0.22s}
+.purpose-card.selected{border-color:var(--red);background:rgba(201,64,64,0.1);box-shadow:0 0 15px rgba(201,64,64,0.15)}
+.purpose-icon{font-size:28px;margin-bottom:6px}
+.purpose-name{font-size:12px;letter-spacing:0.1em;color:var(--ink)}
+.form-section{padding:0 16px 16px;position:relative;z-index:1}
+.field-group{background:var(--card);border:1px solid rgba(201,168,76,0.1);border-radius:8px;overflow:hidden}
+.field-row{display:flex;align-items:center;padding:0 14px;border-bottom:1px solid rgba(201,168,76,0.06)}
+.field-row:last-child{border-bottom:none}
+.field-label{font-size:11px;color:var(--sub);letter-spacing:0.06em;min-width:56px;flex-shrink:0}
+.field-input{flex:1;background:none;border:none;outline:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--ink);padding:12px 8px;letter-spacing:0.04em}
+.btn-gen{width:100%;padding:16px 0;background:linear-gradient(135deg,#8a2020,#c94040,#e87070);border:none;border-radius:4px;color:rgba(26,8,8,0.95);font-family:'Noto Serif SC',serif;font-size:14px;letter-spacing:0.22em;cursor:pointer;box-shadow:0 4px 20px rgba(201,64,64,0.3);margin-top:12px}
+.loading-screen{display:none;text-align:center;padding:60px 20px;position:relative;z-index:1}
+.loading-screen.show{display:block}
+.loading-ring{width:48px;height:48px;border:2px solid rgba(201,64,64,0.15);border-top-color:var(--red);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:12px;color:var(--sub);letter-spacing:0.1em}
+.result-screen{display:none;position:relative;z-index:1;padding:0 16px}
+.result-screen.show{display:block}
+.talisman-container{text-align:center;margin-bottom:20px;padding:20px}
+.talisman{width:180px;height:240px;margin:0 auto;position:relative;background:var(--card);border:2px solid var(--red);border-radius:8px;padding:20px;box-shadow:0 0 40px rgba(201,64,64,0.15),inset 0 0 40px rgba(201,64,64,0.05);display:flex;flex-direction:column;align-items:center;justify-content:center}
+.talisman-symbol{font-size:64px;margin-bottom:12px;color:var(--red-light);line-height:1;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:0.8;transform:scale(1)}50%{opacity:1;transform:scale(1.05)}}
+.talisman-text{font-size:13px;letter-spacing:0.3em;color:var(--gold);font-weight:500}
+.talisman-sub{font-size:9px;color:var(--sub);margin-top:8px;letter-spacing:0.15em}
+.talisman-label{margin-top:16px;font-size:10px;letter-spacing:0.1em;color:var(--sub)}
+.meaning-card{background:var(--card);border:1px solid rgba(201,168,76,0.1);border-radius:8px;padding:18px;margin-bottom:12px}
+.meaning-title{font-size:11px;color:var(--gold);letter-spacing:0.14em;margin-bottom:8px}
+.meaning-text{font-size:11px;line-height:1.9;color:var(--ink);letter-spacing:0.04em}
+.ritual-card{background:rgba(201,64,64,0.05);border:1px solid rgba(201,64,64,0.15);border-radius:8px;padding:16px;margin-bottom:16px}
+.ritual-title{font-size:11px;color:var(--red-light);letter-spacing:0.14em;margin-bottom:8px}
+.ritual-text{font-size:10px;line-height:1.9;color:var(--sub)}
+.share-bar{display:flex;gap:8px;margin-top:12px}
+.share-btn{flex:1;padding:10px 0;border:0.5px solid rgba(201,168,76,0.1);border-radius:6px;background:var(--card);color:var(--ink);font-family:'Noto Serif SC',serif;font-size:10px;letter-spacing:0.1em;cursor:pointer;text-align:center}
+</style>
+</head>
+<body>
+<div class="input-screen" id="inputScreen">
+  <button class="back-btn" onclick="history.back()">← 返回</button>
+  <div class="header">
+    <div class="header-icon">📿</div>
+    <div class="header-title">请灵符</div>
+    <div class="header-sub">Sacred Talisman</div>
+    <div class="gold-line"></div>
+  </div>
+  <div class="form-label" style="padding:0 16px;margin-top:8px">请选择所求</div>
+  <div class="purpose-grid" id="purposeGrid">
+    <div class="purpose-card" data-purpose="wealth" onclick="selectPurpose(this)">
+      <div class="purpose-icon">💰</div><div class="purpose-name">财运亨通</div>
+    </div>
+    <div class="purpose-card selected" data-purpose="love" onclick="selectPurpose(this)">
+      <div class="purpose-icon">💕</div><div class="purpose-name">正缘桃花</div>
+    </div>
+    <div class="purpose-card" data-purpose="health" onclick="selectPurpose(this)">
+      <div class="purpose-icon">🏥</div><div class="purpose-name">身体安康</div>
+    </div>
+    <div class="purpose-card" data-purpose="study" onclick="selectPurpose(this)">
+      <div class="purpose-icon">📚</div><div class="purpose-name">学业进步</div>
+    </div>
+    <div class="purpose-card" data-purpose="career" onclick="selectPurpose(this)">
+      <div class="purpose-icon">💼</div><div class="purpose-name">事业顺利</div>
+    </div>
+    <div class="purpose-card" data-purpose="safety" onclick="selectPurpose(this)">
+      <div class="purpose-icon">🛡️</div><div class="purpose-name">平安护身</div>
+    </div>
+  </div>
+  <div class="form-section">
+    <div class="field-group">
+      <div class="field-row"><span class="field-label">姓名</span><input class="field-input" id="userName" placeholder="你的名字"></div>
+      <div class="field-row"><span class="field-label">出生年</span><input class="field-input" id="birthYear" type="number" placeholder="1991"></div>
+    </div>
+    <button class="btn-gen" onclick="generate()">📿 请灵符</button>
+  </div>
+</div>
+
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-ring"></div>
+  <div class="loading-text" id="loadingText">正在请符...</div>
+</div>
+
+<div class="result-screen" id="resultScreen">
+  <button class="back-btn" onclick="resetPage()">← 重新请符</button>
+  <div class="talisman-container">
+    <div class="talisman">
+      <div class="talisman-symbol" id="talismanSymbol">☯</div>
+      <div class="talisman-text" id="talismanText">财运灵符</div>
+      <div class="talisman-sub" id="talismanSub">善缘 · ShenYuan</div>
+    </div>
+    <div class="talisman-label" id="talismanLabel">— 请下载保存或截图 —</div>
+  </div>
+  <div class="meaning-card" id="meaningCard"></div>
+  <div class="ritual-card" id="ritualCard"></div>
+  <div class="share-bar">
+    <button class="share-btn" onclick="shareCopy()">📋 复制</button>
+    <button class="share-btn" onclick="shareTwitter()">🐦 分享</button>
+  </div>
+  <div style="text-align:center;padding:16px 0;font-size:9px;color:rgba(201,168,76,0.2)">* AI生成灵符，仅供娱乐参考</div>
+</div>
+
+<script>
+var purpose = 'love';
+var symbols = {wealth:'💰',love:'💕',health:'🏥',study:'📚',career:'💼',safety:'🛡️'};
+var names = {wealth:'财运灵符',love:'桃花灵符',health:'安康灵符',study:'学业灵符',career:'事业灵符',safety:'护身灵符'};
+
+function selectPurpose(el) {
+  document.querySelectorAll('.purpose-card').forEach(function(e){e.classList.remove('selected')});
+  el.classList.add('selected');
+  purpose = el.dataset.purpose;
+}
+
+function generate() {
+  var name = document.getElementById('userName').value.trim() || '善信';
+  document.getElementById('inputScreen').style.display = 'none';
+  document.getElementById('loadingScreen').classList.add('show');
+  document.getElementById('talismanSymbol').textContent = symbols[purpose];
+  document.getElementById('talismanText').textContent = names[purpose];
+  setTimeout(function(){
+    document.getElementById('loadingScreen').classList.remove('show');
+    document.getElementById('resultScreen').classList.add('show');
+    var meanings = {
+      wealth:'此符引五路财神入命，催旺正财偏财。佩戴者可招八方之财，尤其利于正财稳定、偏财有得。适合经商、投资、业绩考核之人。建议随身佩戴或置于钱包中。',
+      love:'此符引月老红线牵缘，催旺桃花人缘。单身者可遇正缘，已婚者增感情和合。尤其利于提升异性缘、化解感情障碍。建议随身佩戴或置于枕下。',
+      health:'此符引药师佛光普照，消灾延寿。可化解体内浊气、增强免疫力，尤其适合体弱多病、久病不愈之人。建议随身佩戴或置于床头。',
+      study:'此符引文昌帝君赐慧，开启智慧。可提升学习效率、考试运，尤其适合备考学生、职场考证人士。建议随身佩戴或置于书桌左前方。',
+      career:'此符引天官赐福，事业通达。可化解职场小人、增强贵人运，尤其适合求职晋升、创业初期之人。建议随身佩戴或置于办公室。',
+      safety:'此符引六甲神明护体，辟邪化煞。可抵御外邪侵扰、保佑出行平安，尤其适合经常出差、夜归之人。建议随身佩戴。'
+    };
+    var rituals = {
+      wealth:'【佩戴吉时】辰时（7-9点）面向东方\n【最佳位置】钱包夹层或随身携带\n【注意事项】每月初一、十五晒月光净符',
+      love:'【佩戴吉时】戌时（19-21点）面向南方\n【最佳位置】随身携带或枕下\n【注意事项】心诚则灵，忌怀疑诋毁',
+      health:'【佩戴吉时】卯时（5-7点）面向东方\n【最佳位置】随身或床头\n【注意事项】配合健康作息，符为辅助',
+      study:'【佩戴吉时】巳时（9-11点）面向北方\n【最佳位置】书桌左前方\n【注意事项】考试前三天开始佩戴效果最佳',
+      career:'【佩戴吉时】寅时（3-5点）面向西北\n【最佳位置】办公桌或随身\n【注意事项】升职或面试前一晚佩戴睡觉',
+      safety:'【佩戴吉时】午时（11-13点）面向南方\n【最佳位置】随身佩戴\n【注意事项】每月更换一次，旧符红纸烧化'
+    };
+    document.getElementById('meaningCard').innerHTML = '<div class="meaning-title">✦ 灵符释义</div><div class="meaning-text">' + meanings[purpose] + '</div>';
+    document.getElementById('ritualCard').innerHTML = '<div class="ritual-title">📿 佩戴须知</div><div class="ritual-text">' + rituals[purpose] + '</div>';
+  }, 2000);
+}
+
+function shareCopy(){navigator.clipboard.writeText('我在善缘请了'+names[purpose]+'！来看看你的运势：shenyuan.mylumee.cn').then(function(){showToast('已复制','');});}
+function shareTwitter(){window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent('我在善缘请了'+names[purpose]+'🔮'));}
+function resetPage(){document.getElementById('inputScreen').style.display='block';document.getElementById('resultScreen').classList.remove('show');}
+function showToast(msg,type){var t=document.createElement('div');t.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;text-align:center;cursor:pointer;';t.style.background=type==='error'?'rgba(180,40,40,0.92)':'rgba(23,14,6,0.95)';t.style.border='1px solid '+(type==='error'?'rgba(220,80,80,0.4)':'rgba(201,168,76,0.2)');t.style.color='rgba(255,245,220,0.9)';t.textContent=msg;document.body.appendChild(t);setTimeout(function(){t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(function(){t.remove();},300);},3000);}
+</script>
+</body>
+</html>

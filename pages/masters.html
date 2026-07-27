@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0e0a04">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>大师咨询 · 善缘</title>
+<meta name="description" content="善缘大师咨询 — 真人命理大师在线咨询，八字、塔罗、占星、奇门遁甲">
+<meta property="og:title" content="大师咨询 · 善缘">
+<meta property="og:description" content="善缘大师咨询 — 真人命理大师在线咨询，八字、塔罗、占星、奇门遁甲">
+<meta property="og:image" content="/favicon.svg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="大师咨询 · 善缘">
+<meta name="twitter:description" content="善缘大师咨询 — 真人命理大师在线咨询">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0e0a04; --card-bg: #170e06;
+  --gold: #c9a84c; --gold-light: #e8d08a; --gold-deep: #8a6420;
+  --jade: #5bbfa0;
+  --ink: rgba(255,245,220,0.88);
+  --sub: rgba(255,245,220,0.45);
+  --border: rgba(201,168,76,0.12);
+  --border-light: rgba(201,168,76,0.2);
+  --radius: 10px;
+}
+html, body {
+  height: 100%;
+  background: var(--bg);
+  font-family: 'Noto Serif SC', serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 0 16px 40px;
+  overflow-y: auto;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 55%);
+  pointer-events: none; z-index: 0;
+}
+body > * { position: relative; z-index: 1; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+/* ── Header ── */
+.page-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 0 4px;
+  animation: fadeUp 0.6s ease both;
+}
+.back-btn {
+  background: none; border: none;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13px; color: var(--gold);
+  letter-spacing: 0.08em; cursor: pointer;
+  padding: 4px 2px;
+  transition: opacity 0.2s;
+}
+.back-btn:hover { opacity: 0.7; }
+
+.page-title {
+  text-align: center;
+  margin: 4px 0 2px;
+  animation: fadeUp 0.6s 0.05s ease both;
+}
+.page-title h1 {
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: var(--ink);
+}
+.page-title .en {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  color: var(--sub);
+  margin-top: 2px;
+}
+
+.gold-line {
+  width: 60px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 12px auto 20px;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+
+/* ── Master Card ── */
+.master-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.master-card {
+  width: 100%;
+  background: rgba(23,14,6,0.55);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  animation: fadeUp 0.5s ease both;
+  display: flex;
+  gap: 14px;
+}
+.master-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-light);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.3), 0 0 20px rgba(201,168,76,0.06);
+}
+.master-card:active { transform: scale(0.98); }
+
+.master-card:nth-child(1) { animation-delay: 0.05s; }
+.master-card:nth-child(2) { animation-delay: 0.1s; }
+.master-card:nth-child(3) { animation-delay: 0.15s; }
+.master-card:nth-child(4) { animation-delay: 0.2s; }
+.master-card:nth-child(5) { animation-delay: 0.25s; }
+.master-card:nth-child(6) { animation-delay: 0.3s; }
+
+/* Avatar placeholder */
+.master-avatar {
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 400;
+  color: rgba(255,245,220,0.9);
+  background: linear-gradient(135deg, rgba(201,168,76,0.25), rgba(91,191,160,0.15));
+  border: 1.5px solid rgba(201,168,76,0.2);
+  box-shadow: 0 4px 12px rgba(201,168,76,0.12);
+}
+
+.master-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.master-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 1px;
+}
+.master-name {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: var(--ink);
+}
+.master-title-tag {
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: var(--gold);
+  border: 1px solid rgba(201,168,76,0.25);
+  padding: 1px 8px;
+  border-radius: 10px;
+  background: rgba(201,168,76,0.07);
+}
+.master-exp {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 10px;
+  color: var(--sub);
+  letter-spacing: 0.08em;
+}
+.master-specialty {
+  font-size: 11px;
+  color: var(--sub);
+  letter-spacing: 0.04em;
+  line-height: 1.5;
+  margin-top: 2px;
+}
+
+.master-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.master-rating {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.rating-star {
+  color: #e8b86a;
+  font-size: 12px;
+}
+.rating-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px;
+  font-weight: 400;
+  color: var(--gold-light);
+  letter-spacing: 0.04em;
+}
+.rating-max {
+  font-size: 9px;
+  color: var(--sub);
+}
+
+.master-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px;
+  color: var(--gold);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.master-price .tag {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 8px;
+  color: var(--sub);
+  letter-spacing: 0.08em;
+}
+
+/* ── Tags ── */
+.master-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+.tag-pill {
+  font-size: 8px;
+  letter-spacing: 0.08em;
+  color: var(--jade);
+  background: rgba(91,191,160,0.08);
+  border: 1px solid rgba(91,191,160,0.18);
+  padding: 2px 10px;
+  border-radius: 10px;
+}
+
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+.modal-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 390px;
+  background: rgba(23,14,6,0.96);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-light);
+  border-radius: 20px 20px 0 0;
+  padding: 28px 20px 32px;
+  transform: translateY(30px);
+  transition: transform 0.35s ease;
+  position: relative;
+}
+.modal-overlay.show .modal-content {
+  transform: translateY(0);
+}
+
+.modal-handle {
+  width: 36px; height: 4px;
+  border-radius: 2px;
+  background: rgba(201,168,76,0.2);
+  margin: -14px auto 16px;
+}
+
+.modal-close {
+  position: absolute;
+  top: 16px; right: 16px;
+  background: none; border: none;
+  color: var(--sub); font-size: 20px;
+  cursor: pointer; padding: 6px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+.modal-close:hover { color: var(--ink); }
+
+.modal-avatar {
+  width: 72px; height: 72px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  margin: 0 auto 12px;
+  color: rgba(255,245,220,0.9);
+  background: linear-gradient(135deg, rgba(201,168,76,0.25), rgba(91,191,160,0.15));
+  border: 1.5px solid rgba(201,168,76,0.2);
+  box-shadow: 0 4px 16px rgba(201,168,76,0.12);
+}
+
+.modal-name {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+.modal-title-tag {
+  text-align: center;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--gold);
+  margin-bottom: 4px;
+}
+.modal-exp {
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 11px;
+  color: var(--sub);
+  letter-spacing: 0.1em;
+  margin-bottom: 16px;
+}
+
+.modal-divider {
+  width: 50px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 0 auto 16px;
+}
+
+.modal-rating-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.modal-rating-item {
+  text-align: center;
+}
+.modal-rating-item .num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px;
+  color: var(--gold-light);
+}
+.modal-rating-item .label {
+  font-size: 9px;
+  color: var(--sub);
+  letter-spacing: 0.08em;
+}
+
+.modal-desc {
+  font-size: 12px;
+  line-height: 1.7;
+  letter-spacing: 0.05em;
+  color: rgba(255,245,220,0.75);
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.modal-contact {
+  background: rgba(255,255,255,0.04);
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+.modal-contact .label {
+  font-size: 9px;
+  color: var(--sub);
+  letter-spacing: 0.12em;
+  margin-bottom: 4px;
+}
+.modal-contact .value {
+  font-size: 13px;
+  color: var(--gold);
+  letter-spacing: 0.08em;
+  word-break: break-all;
+}
+
+.modal-tags {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.modal-tags .tag-pill {
+  font-size: 9px;
+  padding: 3px 12px;
+}
+
+.btn-book {
+  width: 100%;
+  padding: 14px 0;
+  background: linear-gradient(135deg, var(--gold-deep), var(--gold), var(--gold-light));
+  border: none;
+  border-radius: 4px;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 15px;
+  font-weight: 400;
+  letter-spacing: 0.18em;
+  color: #0e0a04;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.btn-book:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(201,168,76,0.3);
+}
+.btn-book:active { transform: scale(0.97); }
+
+/* ── Empty / Loading ── */
+.empty-state {
+  width: 100%;
+  text-align: center;
+  padding: 60px 20px;
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+.empty-state .icon { font-size: 36px; margin-bottom: 12px; }
+.empty-state .text { font-size: 12px; color: var(--sub); letter-spacing: 0.08em; line-height: 1.6; }
+
+.loading-spinner {
+  width: 24px; height: 24px;
+  border: 2px solid var(--border);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 40px auto;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()" style="position:fixed;top:16px;left:16px;z-index:99">&#8592; 返回</button>
+
+<div class="page-title">
+  <h1>大师咨询</h1>
+  <div class="en">MASTER CONSULTATION</div>
+</div>
+<div class="gold-line"></div>
+
+<!-- Master List -->
+<div class="master-list" id="masterList"></div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-content">
+    <div class="modal-handle"></div>
+    <button class="modal-close" id="modalClose">&times;</button>
+    <div class="modal-avatar" id="modalAvatar">张</div>
+    <div class="modal-name" id="modalName"></div>
+    <div class="modal-title-tag" id="modalTitle"></div>
+    <div class="modal-exp" id="modalExp"></div>
+    <div class="modal-divider"></div>
+    <div class="modal-rating-row">
+      <div class="modal-rating-item">
+        <div class="num" id="modalRating"></div>
+        <div class="label">评分</div>
+      </div>
+      <div class="modal-rating-item">
+        <div class="num" id="modalPrice"></div>
+        <div class="label">起价</div>
+      </div>
+    </div>
+    <div class="modal-desc" id="modalDesc"></div>
+    <div class="modal-tags" id="modalTags"></div>
+    <div class="modal-contact">
+      <div class="label">联系方式</div>
+      <div class="value" id="modalContact">咨询前请联系大师确认档期</div>
+    </div>
+    <button class="btn-book" id="btnBook">预约咨询</button>
+  </div>
+</div>
+
+<script>
+// ── Data (fallback if API fails) ──
+var FALLBACK_MASTERS = [
+  { id: 1, name: "张明远", title: "八字命理师", exp: "30年",
+    specialty: "八字/风水", rating: 4.9, price: "$19.9/次",
+    desc: "师承正统子平命理，擅长八字批命和家居风水。为数百位企业家指点过运势，客户遍及海内外。",
+    avatarInitial: "张", tags: ["命理泰斗", "风水"] },
+  { id: 2, name: "李灵素", title: "塔罗占卜师", exp: "15年",
+    specialty: "塔罗/感情", rating: 4.8, price: "$9.9/次",
+    desc: "精通韦特塔罗和雷诺曼，擅长感情和事业占卜。以温暖细腻的解牌风格深受用户喜爱。",
+    avatarInitial: "李", tags: ["情感专家", "塔罗"] },
+  { id: 3, name: "Sarah Moon", title: "Astrologer", exp: "20年",
+    specialty: "西方占星/合盘", rating: 4.7, price: "$14.9/次",
+    desc: "Western astrology specialist. Natal charts, synastry, and transit analysis in English & Chinese.",
+    avatarInitial: "S", tags: ["Western", "Astrology"] },
+  { id: 4, name: "王道正", title: "奇门遁甲师", exp: "25年",
+    specialty: "奇门遁甲/六壬", rating: 4.6, price: "$24.9/次",
+    desc: "道家正一派传人，深研奇门遁甲与大六壬。擅长择吉、趋吉避凶、商业决策咨询。",
+    avatarInitial: "王", tags: ["奇门", "道家"] },
+  { id: 5, name: "陈慧心", title: "心理咨询师", exp: "12年",
+    specialty: "心理占星/性格分析", rating: 4.9, price: "$12.9/次",
+    desc: "心理学硕士，融合西方心理学与东方命理。擅长用MBTI+星盘帮你认识真正的自己。",
+    avatarInitial: "陈", tags: ["心理学", "星盘"] },
+  { id: 6, name: "玄机子", title: "紫微斗数命理师", exp: "40年",
+    specialty: "紫微斗数/风水", rating: 4.8, price: "$29.9/次",
+    desc: "台湾紫微斗数名家，著作等身。精通紫微斗数排盘与阳宅风水，桃李遍天下。",
+    avatarInitial: "玄", tags: ["紫微泰斗", "风水"] }
+];
+
+var mastersData = [];
+
+// ── Render ──
+function renderCards(masters) {
+  var container = document.getElementById('masterList');
+  container.innerHTML = '';
+  masters.forEach(function(m) {
+    var stars = '';
+    var full = Math.floor(m.rating);
+    var half = m.rating - full >= 0.5;
+    for (var i = 0; i < full; i++) stars += '<span class="rating-star">&#9733;</span>';
+    if (half) stars += '<span class="rating-star">&#9733;</span>';
+
+    var tagsHtml = '';
+    if (m.tags) {
+      tagsHtml = '<div class="master-tags">';
+      m.tags.forEach(function(t) { tagsHtml += '<span class="tag-pill">' + t + '</span>'; });
+      tagsHtml += '</div>';
+    }
+
+    var card = document.createElement('div');
+    card.className = 'master-card';
+    card.dataset.id = m.id;
+    card.innerHTML =
+      '<div class="master-avatar">' + (m.avatarInitial || m.name[0]) + '</div>' +
+      '<div class="master-info">' +
+        '<div class="master-name-row">' +
+          '<span class="master-name">' + m.name + '</span>' +
+          '<span class="master-title-tag">' + m.title + '</span>' +
+        '</div>' +
+        '<div class="master-exp">' + m.exp + ' experience</div>' +
+        '<div class="master-specialty">' + m.specialty + '</div>' +
+        tagsHtml +
+      '</div>' +
+      '<div class="master-right">' +
+        '<div class="master-rating">' + stars + '<span class="rating-num">' + m.rating + '</span></div>' +
+        '<div class="master-price">' + m.price.split('/')[0] + ' <span class="tag">/次</span></div>' +
+      '</div>';
+    card.addEventListener('click', function() { openModal(m); });
+    container.appendChild(card);
+  });
+}
+
+// ── Modal ──
+var currentMaster = null;
+
+function openModal(m) {
+  currentMaster = m;
+  document.getElementById('modalAvatar').textContent = m.avatarInitial || m.name[0];
+  document.getElementById('modalName').textContent = m.name;
+  document.getElementById('modalTitle').textContent = m.title;
+  document.getElementById('modalExp').textContent = m.exp + ' experience';
+  document.getElementById('modalRating').textContent = m.rating;
+  document.getElementById('modalPrice').textContent = m.price.split('/')[0];
+  document.getElementById('modalDesc').textContent = m.desc;
+
+  var tagsContainer = document.getElementById('modalTags');
+  tagsContainer.innerHTML = '';
+  if (m.tags) {
+    m.tags.forEach(function(t) {
+      var span = document.createElement('span');
+      span.className = 'tag-pill';
+      span.textContent = t;
+      tagsContainer.appendChild(span);
+    });
+  }
+
+  document.getElementById('modalOverlay').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+document.getElementById('modalClose').addEventListener('click', closeModal);
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ── Book button ──
+document.getElementById('btnBook').addEventListener('click', function() {
+  var name = currentMaster ? currentMaster.name : '大师';
+  alert('预约功能开发中\n\n请稍后再试。\n您可以直接联系' + name + '咨询具体档期。');
+});
+
+// ── Load Data ──
+(function() {
+  var container = document.getElementById('masterList');
+  container.innerHTML = '<div class="loading-spinner"></div>';
+
+  var apiBase = window.location.origin + '/api/masters';
+
+  fetch(apiBase)
+    .then(function(r) {
+      if (!r.ok) throw new Error('API error');
+      return r.json();
+    })
+    .then(function(data) {
+      mastersData = data.masters || [];
+      renderCards(mastersData);
+    })
+    .catch(function() {
+      // Fallback to local data
+      mastersData = FALLBACK_MASTERS;
+      renderCards(mastersData);
+    });
+})();
+</script>
+
+</body>
+</html>
