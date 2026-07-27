@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#5bbfa0">
+<title>善缘 · AI命理</title>
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--jade:#5bbfa0;--jade-light:#8dd9bf;--bg:#faf8f5;--card:#ffffff;--ink:#2a2520;--sub:#6a6050}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink);-webkit-font-smoothing:antialiased;height:100%}
+body{max-width:420px;margin:0 auto;display:flex;flex-direction:column;padding:0}
+.header{padding:16px;text-align:center;border-bottom:1px solid rgba(91,191,160,0.1);flex-shrink:0}
+.logo{font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:0.3em;color:var(--jade)}
+.back-btn{position:fixed;top:14px;left:14px;z-index:10;background:none;border:none;font-size:13px;color:var(--sub);cursor:pointer;font-family:'Noto Serif SC',serif}
+.chat-area{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:12px}
+.msg{max-width:85%;padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.7;letter-spacing:0.03em;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg.user{align-self:flex-end;background:var(--jade);color:#fff;border-radius:10px 10px 2px 10px}
+.msg.ai{align-self:flex-start;background:var(--card);color:var(--ink);border:1px solid rgba(91,191,160,0.1);border-radius:10px 10px 10px 2px}
+.msg.ai .role{font-size:9px;color:var(--jade);letter-spacing:0.08em;margin-bottom:4px}
+.input-bar{display:flex;gap:8px;padding:12px 16px;border-top:1px solid rgba(91,191,160,0.1);flex-shrink:0;background:var(--bg)}
+.input-bar input{flex:1;padding:10px 14px;border:1px solid rgba(91,191,160,0.15);border-radius:20px;background:var(--card);color:var(--ink);font-family:'Noto Serif SC',serif;font-size:13px;outline:none}
+.input-bar input:focus{border-color:var(--jade)}
+.input-bar button{width:40px;height:40px;border-radius:50%;border:none;background:var(--jade);color:#fff;font-size:18px;cursor:pointer;flex-shrink:0;transition:all 0.2s}
+.input-bar button:disabled{opacity:0.4}
+.quick-q{display:flex;gap:6px;padding:8px 16px 4px;flex-wrap:wrap;flex-shrink:0}
+.qq-btn{font-size:10px;padding:5px 10px;border:1px solid rgba(91,191,160,0.15);border-radius:12px;background:var(--card);color:var(--sub);cursor:pointer;font-family:'Noto Serif SC',serif;transition:all 0.2s}
+.qq-btn:hover{border-color:var(--jade);color:var(--jade)}
+.typing{display:flex;gap:3px;padding:4px 0}
+.typing span{width:5px;height:5px;border-radius:50%;background:var(--jade);animation:bounce 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-4px)}}
+.welcome{text-align:center;padding:40px 20px;color:var(--sub)}
+.welcome-icon{font-size:48px;margin-bottom:12px}
+.welcome h2{font-size:16px;color:var(--ink);font-weight:400;margin-bottom:8px}
+.welcome p{font-size:12px;line-height:1.8}
+</style>
+</head>
+<body>
+<button class="back-btn" onclick="history.back()">← 返回</button>
+<div class="header"><div class="logo">善 缘 · AI 命理</div></div>
+<div class="quick-q" id="quickQ">
+  <button class="qq-btn" onclick="ask('我今天运势怎么样？')">🔮 今日运势</button>
+  <button class="qq-btn" onclick="ask('我适合做什么工作？')">💼 职业方向</button>
+  <button class="qq-btn" onclick="ask('我的正缘什么时候出现？')">💕 感情姻缘</button>
+  <button class="qq-btn" onclick="ask('我的财运怎么样？')">💰 财运分析</button>
+</div>
+<div class="chat-area" id="chatArea">
+  <div class="welcome" id="welcome">
+    <div class="welcome-icon">☯</div>
+    <h2>有什么想问的？</h2>
+    <p>关于感情、事业、财运、健康……<br>任何问题都可以问我</p>
+  </div>
+</div>
+<div class="input-bar">
+  <input id="input" placeholder="输入你想问的问题..." onkeydown="if(event.key==='Enter')send()">
+  <button id="sendBtn" onclick="send()">➤</button>
+</div>
+
+<script>
+var msgs = [];
+var sending = false;
+
+function addMsg(text, role) {
+  var area = document.getElementById('chatArea');
+  document.getElementById('welcome').style.display = 'none';
+  var div = document.createElement('div');
+  div.className = 'msg ' + role;
+  if (role === 'ai') {
+    div.innerHTML = '<div class="role">✦ 命理师</div>' + text.replace(/\n/g, '<br>');
+  } else {
+    div.textContent = text;
+  }
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function send() {
+  var input = document.getElementById('input');
+  var text = input.value.trim();
+  if (!text || sending) return;
+  ask(text);
+}
+
+function ask(text) {
+  if (!text) return;
+  sending = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  addMsg(text, 'user');
+  document.getElementById('input').value = '';
+
+  // Show typing indicator
+  var area = document.getElementById('chatArea');
+  var typing = document.createElement('div');
+  typing.className = 'msg ai';
+  typing.id = 'typing';
+  typing.innerHTML = '<div class="role">✦ 命理师</div><div class="typing"><span></span><span></span><span></span></div>';
+  area.appendChild(typing);
+  area.scrollTop = area.scrollHeight;
+
+  msgs.push({role:'user', content: text});
+
+  fetch('/api/chat', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({messages: msgs})
+  }).then(function(r){return r.json()}).then(function(d){
+    document.getElementById('typing').remove();
+    sending = false;
+    document.getElementById('sendBtn').disabled = false;
+    if (d.answer) {
+      addMsg(d.answer, 'ai');
+      msgs.push({role:'assistant', content: d.answer});
+    } else {
+      addMsg('AI暂时不可用，请稍后再试', 'ai');
+    }
+  }).catch(function(){
+    document.getElementById('typing').remove();
+    sending = false;
+    document.getElementById('sendBtn').disabled = false;
+    addMsg('AI暂时不可用，请稍后再试', 'ai');
+  });
+}
+</script>
+</body>
+</html>

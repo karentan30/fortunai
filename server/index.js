@@ -760,7 +760,7 @@ ${cardDesc ? '牌面信息：\n' + cardDesc : '使用随机三张塔罗牌（过
 温暖、私人化的收尾，让用户感受到被理解和支持。可以是一句人生感悟，也可以是一句鼓励。`
     );
 
-    const result = await deepseekChat(messages, { maxTokens: 3072 });
+    const result = await deepseekChat(messages, { maxTokens: 8192 });
     insertReading.run('tarot', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('tarot', req.body, result);
 
@@ -839,7 +839,7 @@ app.post('/api/ziwei', async (req, res) => {
 用诗意的一句话总结此命盘的精华。`
     );
 
-    const result = await deepseekChat(messages, { maxTokens: 8192 });
+    const result = await deepseekChat(messages, { maxTokens: 16384 });
     insertReading.run('ziwei', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('ziwei', req.body, result);
 
@@ -915,7 +915,7 @@ app.post('/api/mianxiang', async (req, res) => {
 提醒用户：面相会变，心善则貌美。以上分析仅基于文字描述，如需精准分析请上传正面照片。`
     );
 
-    const result = await deepseekChat(messages, { maxTokens: 3072 });
+    const result = await deepseekChat(messages, { maxTokens: 8192 });
     insertReading.run('mianxiang', JSON.stringify({ question }), result, req.userId);
 
     res.json({ reading: result });
@@ -992,7 +992,7 @@ B方：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined ? p2Hour+'时'
 用诗意、温暖的语言总结这二人的姻缘。给一个让人心安、充满希望的收尾。`
     );
 
-    const result = await deepseekChat(messages, { maxTokens: 8192 });
+    const result = await deepseekChat(messages, { maxTokens: 16384 });
     insertReading.run('hehun', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('hehun', req.body, result);
 
@@ -1053,7 +1053,7 @@ app.post('/api/daily', async (req, res) => {
 最后给用户一句温暖有力的话，作为今天的"能量钥匙"——简短、上口、有力量，用户可以记住一整天。例如"今日____之势，助我____"的句式。`
     );
 
-    const result = await deepseekChat(messages, { maxTokens: 3072 });
+    const result = await deepseekChat(messages, { maxTokens: 8192 });
     insertReading.run('daily', JSON.stringify(req.body), result, req.userId);
 
     res.json({ reading: result });
@@ -1109,7 +1109,7 @@ app.post('/api/fengshui', async (req, res) => {
       { role: 'user', content: '房屋朝向：' + (houseDirection || '') + '\n楼层：' + (floor || '未提供') + '\n房间布局：' + (rooms || '未提供') + '\n居住成员：' + (occupants || '未提供') + '\n地址：' + (address || '未提供') + '\n用户问题：' + (question || '请综合分析房屋风水') + '\n\n请按以下结构详细分析（要求3000+字）：\n1. 🏠 房屋格局总评\n2. 🧭 八宅吉凶位分析（每个方位逐一分析）\n3. 🛏️ 各房间风水建议（卧室/客厅/厨房/书房/卫生间）\n4. 💰 财位分析及催财布局\n5. ❤️ 桃花位/人缘位布局\n6. 🏃 健康位分析\n7. 🪴 化解与开运建议（植物/摆件/颜色）\n8. 📐 户型改造建议\n9. 🎯 一句话总结' }
     ];
 
-    const analysis = await deepseekChat(messages, { maxTokens: 6144 });
+    const analysis = await deepseekChat(messages, { maxTokens: 12288 });
     res.json({ analysis });
   } catch (err) {
     console.error('[FENGSHUI ERR]', err.message);
@@ -1143,7 +1143,7 @@ app.post('/api/geo-fortune', async (req, res) => {
       { role: 'user', content: '用户位置：纬度 ' + latitude + '（' + latDir + '），经度 ' + longitude + '（' + longDir + '）\n地域五行属性：' + regionElement + '\n出生信息：' + (birthYear ? birthYear + '年' : '') + (birthMonth ? birthMonth + '月' : '') + (birthDay ? birthDay + '日' : '') + '\n性别：' + (gender || '未提供') + '\n\n请分析：\n1. 🌍 此地的地理能量特点\n2. 🧭 在此地居住/工作的五行影响\n3. 💰 此地财运分析\n4. ❤️ 此地感情/人际运势\n5. 🏃 此地健康提醒\n6. 🎯 在此地发展的建议\n7. 📍 更适合此人的其他方位建议' }
     ];
 
-    const analysis = await deepseekChat(messages, { maxTokens: 3072 });
+    const analysis = await deepseekChat(messages, { maxTokens: 8192 });
     res.json({ analysis, location: { lat: latitude, lng: longitude, regionElement: regionElement } });
   } catch (err) {
     console.error('[GEO ERR]', err.message);
@@ -1229,7 +1229,7 @@ ${guaYao[0]}  (初九)
 6. ⚠️ 注意事项`}
     ];
 
-    const reading = await deepseekChat(messages, { maxTokens: 6144 });
+    const reading = await deepseekChat(messages, { maxTokens: 12288 });
     var ctxId = saveQaContext('liuyao', req.body, reading);
     res.json({ reading, contextId: ctxId, hexagram: guaYao });
   } catch (err) {
@@ -1261,7 +1261,7 @@ app.post('/api/lingqian', async (req, res) => {
 5. 🙏 祈福方法`}
     ];
 
-    const reading = await deepseekChat(messages, { maxTokens: 3072 });
+    const reading = await deepseekChat(messages, { maxTokens: 8192 });
     var ctxId = saveQaContext('lingqian', req.body, reading);
     res.json({
       reading,
@@ -1298,7 +1298,7 @@ app.post('/api/deity-guide', async (req, res) => {
 8. 💌 仙家文化特别指导（如果是求仙家）`}
     ];
 
-    const reading = await deepseekChat(messages, { maxTokens: 6144 });
+    const reading = await deepseekChat(messages, { maxTokens: 12288 });
     res.json({ reading });
   } catch (err) {
     console.error('[DEITY ERR]', err.message);
@@ -1350,7 +1350,7 @@ app.post('/api/offering-plan', async (req, res) => {
   适合此愿望的专属回向文`}
     ];
 
-    const reading = await deepseekChat(messages, { maxTokens: 6144 });
+    const reading = await deepseekChat(messages, { maxTokens: 12288 });
     res.json({ reading });
   } catch (err) {
     console.error('[OFFERING ERR]', err.message);
@@ -1392,7 +1392,7 @@ app.post('/api/daliuren', async (req, res) => {
 6. ⚠️ 注意事项与化解方法`}
     ];
 
-    const reading = await deepseekChat(messages, { maxTokens: 6144 });
+    const reading = await deepseekChat(messages, { maxTokens: 12288 });
     var ctxId = saveQaContext('daliuren', req.body, reading);
     res.json({ reading, contextId: ctxId, lesson: { name: lesson, gods: randomDeities } });
   } catch (err) {
@@ -1438,7 +1438,7 @@ app.post('/api/qimen', async (req, res) => {
 7. 💡 行动建议（3条具体可执行建议）`}
     ];
 
-    const reading = await deepseekChat(messages, { maxTokens: 6144 });
+    const reading = await deepseekChat(messages, { maxTokens: 12288 });
     var ctxId = saveQaContext('qimen', req.body, reading);
     res.json({ reading, contextId: ctxId, door: currentDoor, star: currentStar });
   } catch (err) {
@@ -1533,7 +1533,7 @@ app.post('/api/xingming', async (req, res) => {
 
     );
 
-    const result = await deepseekChat(messages, { maxTokens: 8192 });
+    const result = await deepseekChat(messages, { maxTokens: 16384 });
     insertReading.run('xingming', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('xingming', req.body, result);
 
@@ -1653,7 +1653,7 @@ ${chartSummary}
       }
     ];
 
-    const result = await deepseekChat(messages, { maxTokens: 8192 });
+    const result = await deepseekChat(messages, { maxTokens: 16384 });
     insertReading.run('astrology', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('astrology', req.body, result);
 
@@ -1791,12 +1791,40 @@ app.post('/api/pastlife', async (req, res) => {
       { role: 'system', content: sysPrompt },
       { role: 'user', content: userPrompt }
     ];
-    const reading = await deepseekChat(messages, { maxTokens: 4096 });
+    const reading = await deepseekChat(messages, { maxTokens: 8192 });
     var ctxId = saveQaContext('pastlife', req.body, reading);
     res.json({ reading, contextId: ctxId });
   } catch (err) {
     console.error('[PASTLIFE ERR]', err.message);
     res.status(500).json({ error: isEn ? 'AI temporarily unavailable' : 'AI暂时不可用，请稍后重试' });
+  }
+});
+
+
+// POST /api/chat — AI命理对话
+app.post('/api/chat', async (req, res) => {
+  try {
+    const { messages } = req.body;
+    if (!messages || !messages.length) {
+      return res.status(400).json({ error: '请提供消息内容' });
+    }
+
+    const systemMsg = {
+      role: 'system',
+      content: '你是一位精通八字命理、紫微斗数、占星、塔罗的命理师。'
+        + '你像一位温暖的朋友，用大白话回答命理问题。'
+        + '不用文言文，不用"老朽""施主"。直接、温暖、具体。'
+        + '给出具体的年份、数字、颜色、方向建议。'
+        + '每次回答200-500字，不要太长。'
+        + '如果你不知道答案，就诚实说"这个我拿不准"。'
+    };
+
+    const allMessages = [systemMsg].concat(messages.slice(-10));
+    const answer = await deepseekChat(allMessages, { maxTokens: 1024 });
+    res.json({ answer });
+  } catch (err) {
+    console.error('[CHAT ERR]', err.message);
+    res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
   }
 });
 
