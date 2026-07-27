@@ -6,6 +6,14 @@
 <meta name="theme-color" content="#0e0a04">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>善缘 · 八字命理</title>
+<meta name="description" content="善缘八字命理 — AI深度解读八字命盘，5000-8000字完整命理报告，含五行分析、财运格局、大运流年">
+<meta property="og:title" content="善缘 · 八字命理">
+<meta property="og:description" content="善缘八字命理 — AI深度解读八字命盘，5000-8000字完整命理报告，含五行分析、财运格局、大运流年">
+<meta property="og:image" content="/favicon.svg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="善缘 · 八字命理">
+<meta name="twitter:description" content="善缘八字命理 — AI深度解读八字命盘，5000-8000字完整命理报告，含五行分析、财运格局、大运流年">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
@@ -50,14 +58,14 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .tier-row { display:flex; gap:8px; margin-bottom:12px; }
 .tier-card { flex:1; background:var(--card); border:1px solid rgba(201,168,76,0.12); border-radius:8px; padding:12px 10px; text-align:center; cursor:pointer; transition:all 0.22s; }
 .tier-card.selected { border-color:var(--gold); background:rgba(201,168,76,0.1); }
+.tier-card.jade.selected { border-color:var(--jade); background:rgba(91,191,160,0.1); }
+.tier-card.jade .tier-price { color:var(--jade); }
 .tier-name { font-size:12px; letter-spacing:0.06em; margin-bottom:4px; }
 .tier-price { font-family:'Cormorant Garamond',serif; font-size:20px; color:var(--gold); }
 .tier-desc { font-size:9px; color:var(--sub-text); margin-top:3px; letter-spacing:0.04em; }
 .btn-gen { width:100%; padding:15px 0; background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light),var(--gold)); border:none; border-radius:4px; color:rgba(14,10,4,0.95); font-family:'Noto Serif SC',serif; font-size:14px; font-weight:500; letter-spacing:0.22em; cursor:pointer; box-shadow:0 4px 20px rgba(201,168,76,0.3); }
 
 /* ── Report screen ── */
-.report-screen { position:relative; z-index:1; display:none; }
-.report-screen.show { display:block; }
 
 /* Chart header */
 .chart-header { padding:20px 16px 0; }
@@ -135,14 +143,35 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .cta-price { font-family:'Cormorant Garamond',serif; font-size:24px; color:var(--gold-light); }
 .btn-unlock { width:100%; padding:13px 0; background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light),var(--gold)); border:none; border-radius:4px; color:rgba(14,10,4,0.95); font-family:'Noto Serif SC',serif; font-size:14px; font-weight:500; letter-spacing:0.2em; cursor:pointer; box-shadow:0 4px 16px rgba(201,168,76,0.3); }
 
-/* Loading */
-.loading-screen { position:relative; z-index:1; display:none; flex-direction:column; align-items:center; padding:80px 20px; gap:20px; }
+/* Loading — 易经卦象旋转 + 逐字步骤 + 30秒提示 */
+.loading-screen { position:relative; z-index:1; display:none; flex-direction:column; align-items:center; justify-content:center; padding:60px 20px 40px; gap:24px; }
 .loading-screen.show { display:flex; }
-.load-glyph { font-size:60px; color:rgba(201,168,76,0.3); font-weight:300; animation:load-breathe 2s ease-in-out infinite; }
-@keyframes load-breathe { 0%,100%{opacity:0.3;transform:scale(1)} 50%{opacity:0.7;transform:scale(1.05)} }
+
+/* 卦象旋转容器 */
+.hexagram-wrap { position:relative; width:90px; height:90px; display:flex; align-items:center; justify-content:center; }
+.hexagram-ring { position:absolute; inset:0; border:1.5px solid rgba(201,168,76,0.25); border-radius:50%; animation:hex-spin 8s linear infinite; }
+.hexagram-ring2 { position:absolute; inset:-8px; border:1px solid rgba(201,168,76,0.1); border-radius:50%; animation:hex-spin 12s linear infinite reverse; }
+.hexagram { display:flex; flex-direction:column; gap:5px; align-items:center; animation:hex-spin 10s linear infinite; }
+.hex-line { width:44px; height:2px; background:var(--gold); border-radius:1px; opacity:0.7; }
+/* 阴爻（断线）— 第2/4/6条为断线，代表坤卦下三爻 */
+.hex-line:nth-child(2),
+.hex-line:nth-child(4),
+.hex-line:nth-child(6) { width:36px; background:linear-gradient(to right,var(--gold) 0%,var(--gold) 40%,transparent 40%,transparent 60%,var(--gold) 60%,var(--gold) 100%); }
+
+@keyframes hex-spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+
 .load-text { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:14px; color:rgba(201,168,76,0.5); letter-spacing:0.18em; }
-.load-steps { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
-.load-step { font-size:10px; color:rgba(255,245,220,0.3); letter-spacing:0.08em; animation:step-fade 0.5s ease-out both; }
+
+.load-steps { display:flex; flex-direction:column; gap:4px; margin-top:4px; align-items:center; }
+.load-step { font-size:10px; color:rgba(255,245,220,0.3); letter-spacing:0.08em; min-height:1.4em; text-align:center; transition:color 0.3s; }
+.load-step.active { color:var(--gold-light); }
+.load-step.done { color:rgba(201,168,76,0.5); }
+
+/* 30秒完成提示 */
+.load-timeout { font-size:9px; color:rgba(201,168,76,0.25); letter-spacing:0.12em; margin-top:4px; }
+.load-timeout-bar { width:140px; height:2px; background:rgba(201,168,76,0.08); border-radius:1px; margin:8px auto 0; overflow:hidden; }
+.load-timeout-bar-inner { height:100%; width:0%; background:var(--gold); border-radius:1px; animation:timeout-fill 30s linear forwards; }
+@keyframes timeout-fill { to { width:100%; } }
 
 /* Button active states */
 .back-btn:active{transform:scale(0.97)}
@@ -190,7 +219,6 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .zhu:nth-child(4){animation-delay:0.45s}
 
 /* 天干金色光泽 */
-@keyframes gold-shimmer{0%{background-position:-300% center}100%{background-position:300% center}}
 .zhu-tian{
   background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a,#c9a84c,#8a6420);
   background-size:300% auto;
@@ -209,7 +237,6 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 /* 通用入场动画 */
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.page-enter{animation:fadeUp .8s ease both}
 .page-enter-d1{animation-delay:.1s}.page-enter-d2{animation-delay:.2s}
 .page-enter-d3{animation-delay:.3s}.page-enter-d4{animation-delay:.4s}
 .page-enter-d5{animation-delay:.5s}.page-enter-d6{animation-delay:.6s}
@@ -219,9 +246,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .fortune-sec:hover,.dayun-item:hover,.locked-section:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.3)}
 
 /* 星尘背景 */
-.stardust{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
 .stardust span{position:absolute;width:3px;height:3px;background:rgba(201,168,76,0.6);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
-@keyframes twinkle{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
 .bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(14,10,4,1) 0%,rgba(14,10,4,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
 
 /* ── Ultimate Report ── */
@@ -317,6 +342,11 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   <div class="submit-section">
     <div class="form-label">选择报告类型</div>
     <div class="tier-row">
+      <div class="tier-card jade" onclick="selectTier(this,'trial',1.99)">
+        <div class="tier-name">体验命盘</div>
+        <div class="tier-price">$1.99</div>
+        <div class="tier-desc">快速简批·五行摘要</div>
+      </div>
       <div class="tier-card selected" onclick="selectTier(this,'basic',9.9)">
         <div class="tier-name">基础命盘</div>
         <div class="tier-price">$9.9</div>
@@ -341,11 +371,26 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   </div>
 </div>
 
-<!-- Loading screen -->
+<!-- Loading screen — 卦象旋转 + 逐字步骤 + 30秒提示 -->
 <div class="loading-screen" id="loadingScreen">
-  <div class="load-glyph">命</div>
+  <div class="hexagram-wrap">
+    <div class="hexagram-ring"></div>
+    <div class="hexagram-ring2"></div>
+    <div class="hexagram">
+      <div class="hex-line"></div>
+      <div class="hex-line"></div>
+      <div class="hex-line"></div>
+      <div class="hex-line"></div>
+      <div class="hex-line"></div>
+      <div class="hex-line"></div>
+    </div>
+  </div>
   <div class="load-text">排盘中，请稍候…</div>
   <div class="load-steps" id="loadSteps"></div>
+  <div class="load-timeout">
+    约30秒完成
+    <div class="load-timeout-bar"><div class="load-timeout-bar-inner"></div></div>
+  </div>
 </div>
 
 <!-- Report screen -->
@@ -456,7 +501,23 @@ function generateReport() {
   stepsEl.innerHTML = '';
   steps.forEach(function(s, i) {
     setTimeout(function(){
-      stepsEl.innerHTML += '<div class="load-step">✓ '+s+'</div>';
+      var div = document.createElement('div');
+      div.className = 'load-step active';
+      stepsEl.appendChild(div);
+      // 逐字显示
+      var chars = s.split('');
+      var ci = 0;
+      function typeChar() {
+        if (ci < chars.length) {
+          div.textContent = '✧ ' + chars.slice(0, ci + 1).join('');
+          ci++;
+          setTimeout(typeChar, 40);
+        } else {
+          div.className = 'load-step done';
+          div.textContent = '✓ ' + s;
+        }
+      }
+      typeChar();
     }, i * 350);
   });
   setTimeout(function(){
@@ -590,7 +651,17 @@ function showReport(aiText, contextId) {
   if (tier === 'basic') {
     reportEl.innerHTML += '<div class="sticky-cta" id="stickyCta"><div class="cta-row"><div class="cta-desc">解锁完整命盘 · 流月大运·人生时间点</div><div class="cta-price">$19.9</div></div><button class="btn-unlock" onclick="createCheckout(this, \'full\', 19.9)">立即解锁完整命盘</button></div>';
   }
+  injectDisclaimer('reportScreen');
   document.getElementById('qaSection').style.display = 'block';
+}
+
+function injectDisclaimer(containerId) {
+  var c = document.getElementById(containerId);
+  if (!c || c.querySelector('.sy-disclaimer')) return;
+  var d = document.createElement('div');
+  d.className = 'sy-disclaimer';
+  d.innerHTML = '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto;width:80%"></div><div style="font-size:10px;color:rgba(201,168,76,0.4);text-align:center;letter-spacing:0.06em;padding:10px 20px">仅供娱乐参考，切勿沉迷。命理是可能性的艺术，不是定数。</div>';
+  c.appendChild(d);
 }
 
 function createCheckout(btn, tier, price) {
@@ -689,6 +760,7 @@ function renderAITextReport(text, contextId) {
 
   // Render ultimate report with collapsible section cards
   renderUltimateReport(text, 'reportContent');
+  injectDisclaimer('reportScreen');
 }
 
 function askQuestion() {

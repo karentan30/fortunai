@@ -6,6 +6,14 @@
 <meta name="theme-color" content="#0e0a04">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>善缘 · 每日天机</title>
+<meta name="description" content="善缘每日天机 — 每日五行能量、幸运色、黄历宜忌">
+<meta property="og:title" content="善缘 · 每日天机">
+<meta property="og:description" content="善缘每日天机 — 每日五行能量、幸运色、黄历宜忌">
+<meta property="og:image" content="/favicon.svg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="善缘 · 每日天机">
+<meta name="twitter:description" content="善缘每日天机 — 每日五行能量、幸运色、黄历宜忌">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
@@ -145,10 +153,7 @@ body::before {
   font-size: 56px; color: rgba(201,168,76,0.3);
   font-weight: 300; animation: load-breathe 2s ease-in-out infinite;
 }
-@keyframes load-breathe {
-  0%,100%{opacity:0.3;transform:scale(1)}
-  50%{opacity:0.7;transform:scale(1.05)}
-}
+
 .load-text {
   font-family: 'Cormorant Garamond', serif;
   font-style: italic; font-size: 14px;
@@ -352,7 +357,6 @@ body::before {
 }
 
 /* 金色光泽动画 */
-@keyframes gold-shimmer{0%{background-position:-300% center}100%{background-position:300% center}}
 .gold-shimmer{
   background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a,#c9a84c,#8a6420) !important;
   background-size:300% auto !important;
@@ -379,7 +383,6 @@ body::before {
 
 /* 通用入场动画 */
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.page-enter{animation:fadeUp .8s ease both}
 .page-enter-d1{animation-delay:.1s}.page-enter-d2{animation-delay:.2s}
 .page-enter-d3{animation-delay:.3s}.page-enter-d4{animation-delay:.4s}
 .page-enter-d5{animation-delay:.5s}.page-enter-d6{animation-delay:.6s}
@@ -389,9 +392,7 @@ body::before {
 .energy-wrap:hover,.input-wrap:hover,.sub-wrap:hover,.today-card:hover,.affirmation-wrap:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.3);border-color:rgba(201,168,76,0.25)}
 
 /* 星尘背景 */
-.stardust{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
 .stardust span{position:absolute;width:3px;height:3px;background:rgba(201,168,76,0.6);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
-@keyframes twinkle{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
 .bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(14,10,4,1) 0%,rgba(14,10,4,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
 </style>
 </head>
@@ -588,6 +589,7 @@ function getDailyReading() {
       document.getElementById('dateGanzhi').textContent = '';
       document.getElementById('resultArea').style.display = 'block';
       document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      injectDisclaimer('resultArea');
     } else {
       showToast('获取天机失败，请稍后重试', 'error');
       document.getElementById('inputWrap').style.display = 'block';
@@ -630,6 +632,15 @@ function subscribeDaily() {
     c.appendChild(s);
   }
   setTimeout(function(){ c.querySelectorAll('span').forEach(function(s){ s.style.opacity = '1'; }); }, 100);
-})();</script>
+})();
+function injectDisclaimer(containerId) {
+  var c = document.getElementById(containerId);
+  if (!c || c.querySelector('.sy-disclaimer')) return;
+  var d = document.createElement('div');
+  d.className = 'sy-disclaimer';
+  d.innerHTML = '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto;width:80%"></div><div style="font-size:10px;color:rgba(201,168,76,0.4);text-align:center;letter-spacing:0.06em;padding:10px 20px">仅供娱乐参考，切勿沉迷。命理是可能性的艺术，不是定数。</div>';
+  c.appendChild(d);
+}
+</script>
 </body>
 </html>

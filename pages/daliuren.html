@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0e0a04">
+<title>善缘 · 大六壬占卜</title>
+<meta name="description" content="善缘大六壬占卜 — 大六壬神课，AI解课">
+<meta property="og:title" content="善缘 · 大六壬占卜">
+<meta property="og:description" content="善缘大六壬占卜 — 大六壬神课，AI解课">
+<meta property="og:image" content="/favicon.svg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="善缘 · 大六壬占卜">
+<meta name="twitter:description" content="善缘大六壬占卜 — 大六壬神课，AI解课">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0a04;--card:#14100a;--card2:#1a140e;
+  --jade:#5bbfa0;--jade-mid:#8dd9bf;--jade-light:#c8f0e0;
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
+  --text:#e0f0e8;--text-dim:rgba(224,240,232,.5);--text-faint:rgba(224,240,232,.25);
+  --ink-text:rgba(255,245,220,0.85);
+  --sub-text:rgba(255,245,220,0.58);
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:120px}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(91,191,160,.12) 0%,transparent 50%),radial-gradient(ellipse at 80% 90%,rgba(201,168,76,.06) 0%,transparent 40%);pointer-events:none;z-index:0}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(141,217,191,.7);cursor:pointer;padding:4px 0}
+
+/* Header */
+.header{position:relative;z-index:1;text-align:center;padding:44px 20px 16px}
+.header-title{font-size:20px;font-weight:400;letter-spacing:.22em;margin-bottom:6px}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:.26em;color:rgba(91,191,160,.55);margin-bottom:14px}
+.jade-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--jade),transparent);margin:0 auto}
+
+/* Topic selector */
+.topic-bar{position:relative;z-index:1;display:flex;gap:6px;padding:12px 16px 4px;overflow-x:auto;scrollbar-width:none}
+.topic-bar::-webkit-scrollbar{display:none}
+.topic-btn{flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid rgba(91,191,160,.2);background:transparent;font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:.06em;color:rgba(224,240,232,.45);cursor:pointer;transition:all .2s}
+.topic-btn.active{background:rgba(91,191,160,.15);border-color:var(--jade);color:var(--jade-mid)}
+
+/* Question area */
+.q-wrap{position:relative;z-index:1;padding:8px 16px 8px}
+.q-label{font-size:10px;letter-spacing:.2em;color:rgba(91,191,160,.45);margin-bottom:8px}
+.q-box{background:var(--card);border:1px solid rgba(91,191,160,.15);border-radius:8px;padding:12px 14px}
+.q-input{width:100%;background:none;border:none;outline:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(224,240,232,.82);letter-spacing:.04em;line-height:1.8;resize:none;min-height:56px}
+.q-input::placeholder{color:rgba(224,240,232,.2)}
+
+/* Extra fields */
+.extra-fields{position:relative;z-index:1;padding:0 16px 8px;display:flex;gap:8px}
+.extra-field{flex:1}
+.extra-field .q-label{margin-bottom:6px}
+.extra-field select,.extra-field input{width:100%;background:var(--card);border:1px solid rgba(91,191,160,.15);border-radius:6px;padding:8px 10px;font-family:'Noto Serif SC',serif;font-size:12px;color:rgba(224,240,232,.82);outline:none;appearance:none;-webkit-appearance:none}
+.extra-field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6' viewBox='0 0 8 6'%3E%3Cpath d='M1 1l3 3 3-3' stroke='rgba(91,191,160,.4)' fill='none' stroke-width='1.2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.extra-field select option{background:var(--card);color:rgba(224,240,232,.82)}
+.extra-field input::placeholder{color:rgba(224,240,232,.25)}
+
+/* Submit area */
+.submit-wrap{position:relative;z-index:1;padding:8px 16px 12px}
+.btn-submit{width:100%;padding:15px 0;background:linear-gradient(90deg,#1a4a3a,#5bbfa0,#8dd9bf,#5bbfa0,#1a4a3a);background-size:300% auto;border:none;border-radius:4px;color:rgba(10,21,16,.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:.22em;cursor:pointer;animation:gold-shimmer 3s linear infinite;box-shadow:0 4px 20px rgba(91,191,160,.3)}
+.btn-submit:active{transform:scale(0.97)}
+
+/* Loading */
+.loading-screen{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;padding:60px 20px;gap:16px}
+.load-glyph{font-size:48px;color:rgba(91,191,160,0.3);font-weight:300;animation:load-breathe 2s ease-in-out infinite}
+.load-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:rgba(91,191,160,.5);letter-spacing:0.18em}
+.load-steps{display:flex;flex-direction:column;gap:5px}
+@keyframes step-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* Report sections */
+.report-header{padding:12px 16px 8px}
+.report-header .q-label{margin-bottom:6px}
+.report-question{background:var(--card2);border:1px solid rgba(91,191,160,.1);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--text);letter-spacing:0.04em;margin-bottom:10px}
+.ai-section-wrap{display:flex;flex-direction:column;gap:8px;padding:0 16px}
+.ai-section{background:var(--card);border:1px solid rgba(91,191,160,.12);border-radius:10px;overflow:hidden}
+.ai-section.open{border-color:rgba(91,191,160,.28)}
+.ai-section-head{display:flex;align-items:center;padding:12px 14px;gap:10px;cursor:pointer}
+.ai-section-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.ai-section-title{font-size:13px;letter-spacing:.08em;flex:1;color:var(--jade-light)}
+.ai-section-arrow{font-size:10px;color:rgba(255,245,220,0.25);transition:transform 0.25s}
+.ai-section-body{padding:0 14px 14px;display:none}
+.ai-section-body.open{display:block}
+.ai-section-text{font-size:11px;color:var(--text-dim);letter-spacing:0.04em;line-height:1.9;white-space:pre-wrap}
+
+/* QA section */
+.qa-section{position:relative;z-index:1;display:none;padding:16px 0 80px}
+.qa-label{font-size:10px;color:rgba(91,191,160,.5);letter-spacing:0.2em;margin-bottom:10px;padding:0 16px}
+.qa-row{display:flex;gap:8px;padding:0 16px}
+.qa-input{flex:1;background:var(--card);border:1px solid rgba(91,191,160,.15);border-radius:6px;padding:10px 12px;font-family:Noto Serif SC,serif;font-size:12px;color:var(--text);outline:none}
+.qa-input:focus{border-color:rgba(91,191,160,.3)}
+.qa-btn{padding:10px 16px;background:linear-gradient(135deg,var(--jade),var(--jade-mid));border:none;border-radius:6px;color:#0e0a04;font-family:Noto Serif SC,serif;font-size:12px;letter-spacing:0.1em;cursor:pointer;white-space:nowrap}
+.qa-btn:active{transform:scale(0.97)}
+.qa-btn:disabled{opacity:0.4;cursor:default}
+.qa-history{padding:12px 16px 0}
+.qa-my-msg{text-align:right;margin-bottom:8px}
+.qa-my-msg span{display:inline-block;background:rgba(91,191,160,0.1);border:1px solid rgba(91,191,160,0.15);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--text)}
+.qa-ai-msg{margin-bottom:10px}
+.qa-ai-msg span{display:inline-block;background:var(--card);border:1px solid rgba(91,191,160,0.1);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--text-dim);line-height:1.8}
+
+/* Stardust */
+.stardust span{position:absolute;width:3px;height:3px;background:rgba(91,191,160,0.5);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
+.bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(14,10,4,1) 0%,rgba(14,10,4,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+</style>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<div class="stardust" id="stardust"></div>
+<div class="bottom-gradient"></div>
+
+<button class="back-btn" onclick="history.back()">‹ 返回</button>
+
+<div class="header page-enter page-enter-d1">
+  <div class="header-title">大六壬 · 神课占卜</div>
+  <div class="header-sub">GREAT SIX REN · HEAVENLY ORACULUM</div>
+  <div class="jade-line"></div>
+</div>
+
+<!-- Topic selector -->
+<div class="topic-bar page-enter page-enter-d2">
+  <button class="topic-btn active" onclick="selectTopic(this,'综合')">综合</button>
+  <button class="topic-btn" onclick="selectTopic(this,'感情')">❤️感情</button>
+  <button class="topic-btn" onclick="selectTopic(this,'事业')">💼事业</button>
+  <button class="topic-btn" onclick="selectTopic(this,'财运')">💰财运</button>
+  <button class="topic-btn" onclick="selectTopic(this,'健康')">🏥健康</button>
+</div>
+
+<div class="q-wrap page-enter page-enter-d2">
+  <div class="q-label">心中所求之事</div>
+  <div class="q-box">
+    <textarea class="q-input" id="qInput" placeholder="心存一念，静心问课&#10;例：此行是否顺利？&#10;例：所求之事能否如愿？"></textarea>
+  </div>
+</div>
+
+<!-- Extra fields: birth year + gender -->
+<div class="extra-fields page-enter page-enter-d2">
+  <div class="extra-field">
+    <div class="q-label">出生年份</div>
+    <input type="number" id="birthYear" placeholder="如：1990" min="1900" max="2025">
+  </div>
+  <div class="extra-field">
+    <div class="q-label">性别</div>
+    <select id="gender">
+      <option value="">请选择</option>
+      <option value="男">男</option>
+      <option value="女">女</option>
+    </select>
+  </div>
+</div>
+
+<!-- Submit -->
+<div class="submit-wrap page-enter page-enter-d3">
+  <button class="btn-submit" id="submitBtn" onclick="submitReading()">请AI占课 · 深度解读</button>
+</div>
+
+<!-- Loading -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="load-glyph">壬</div>
+  <div class="load-text">课象已成，推演天机…</div>
+  <div class="load-steps" id="loadSteps"></div>
+</div>
+
+<!-- Report -->
+<div class="report-screen" id="reportScreen">
+  <div class="report-header">
+    <div class="q-label">你所问：</div>
+    <div class="report-question" id="reportQuestion"></div>
+  </div>
+  <div id="reportContent"></div>
+  <div style="height:80px"></div>
+</div>
+
+<!-- QA -->
+<div id="qaSection" style="display:none">
+  <div class="qa-label">追问课象</div>
+  <div class="qa-row">
+    <input id="qaInput" type="text" placeholder="输入问题…例如：此课吉凶如何？" class="qa-input">
+    <button onclick="askQuestion()" class="qa-btn">追问</button>
+  </div>
+  <div class="qa-history" id="qaHistory"></div>
+</div>
+
+<script>
+var topic = '综合';
+var lastContextId = null;
+
+function selectTopic(el, t) {
+  document.querySelectorAll('.topic-btn').forEach(function(b){ b.classList.remove('active'); });
+  el.classList.add('active');
+  topic = t;
+}
+
+function submitReading() {
+  var question = document.getElementById('qInput').value.trim();
+  if (!question) { showToast('请输入你要问的事', 'error'); return; }
+  var birthYear = document.getElementById('birthYear').value.trim();
+  var gender = document.getElementById('gender').value;
+
+  document.querySelector('.topic-bar').style.display = 'none';
+  document.querySelector('.q-wrap').style.display = 'none';
+  document.querySelector('.extra-fields').style.display = 'none';
+  document.getElementById('submitWrap').style.display = 'none';
+  document.getElementById('loadingScreen').classList.add('show');
+
+  var stepsEl = document.getElementById('loadSteps');
+  stepsEl.innerHTML = '';
+  var steps = ['课象已定…','推演十二天将…','查阅壬学经义…','结合您的问题…','生成AI占课…'];
+  steps.forEach(function(s,i){
+    setTimeout(function(){
+      stepsEl.innerHTML += '<div class="load-step">✓ '+s+'</div>';
+    }, i * 350);
+  });
+
+  setTimeout(function(){
+    fetch('/api/daliuren', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        question: question,
+        topic: topic,
+        birthYear: birthYear || null,
+        gender: gender || null,
+        token: localStorage.getItem('sy_token') || ''
+      })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      document.getElementById('loadingScreen').classList.remove('show');
+      if (d.error) { showToast(d.error, 'error'); resetAll(); return; }
+      if (d.contextId) lastContextId = d.contextId;
+      renderReport(d.interpretation || d.report || d.result || d.answer || '暂无回应，请重试', question);
+      document.getElementById('qaSection').style.display = 'block';
+    })
+    .catch(function(){
+      document.getElementById('loadingScreen').classList.remove('show');
+      showToast('网络异常，请重试', 'error');
+      resetAll();
+    });
+  }, steps.length * 350 + 300);
+}
+
+var SECTION_ICONS={'📜':'rgba(91,191,160,0.3)','💰':'rgba(201,168,76,0.3)','💼':'rgba(74,143,160,0.3)','❤️':'rgba(201,96,106,0.3)','🌟':'rgba(201,168,76,0.3)','🔮':'rgba(141,103,191,0.3)','💪':'rgba(91,191,160,0.3)','🔥':'rgba(201,80,40,0.3)','💧':'rgba(74,159,212,0.3)','🌿':'rgba(91,191,160,0.3)','📈':'rgba(74,191,130,0.3)','💕':'rgba(201,96,140,0.3)','🤝':'rgba(91,160,140,0.3)','🎯':'rgba(201,130,40,0.3)','🏆':'rgba(201,168,76,0.3)','🎁':'rgba(201,100,76,0.3)','📝':'rgba(160,160,160,0.3)','💡':'rgba(201,180,60,0.3)','⚱':'rgba(140,100,80,0.3)','🔔':'rgba(201,168,76,0.3)','🗝':'rgba(160,140,100,0.3)','🪷':'rgba(201,140,180,0.3)','☯':'rgba(160,160,160,0.3)','🌙':'rgba(100,120,180,0.3)','☀️':'rgba(201,168,76,0.3)','🌊':'rgba(60,130,180,0.3)','⛰':'rgba(100,140,100,0.3)'};
+
+function parseSections(text) {
+  var known = ['📜','💰','💼','❤️','💪','🌟','🔮','📊','🎯','🔥','💧','🌿','🌊','⛰','⚔️','🛡️','✨','💫','⭐','☯','🌙','☀️','📈','💕','🤝','🎓','🏠','🚗','❄️','⚡','🌪','🏆','🎁','📝','💡','🕯','⚱','🧿','🔔','🗝','🪷','♈','♉','♊','♋','♌','♍','♎','♏','♐','♑','♒','♓','⚖️','🔱'];
+  var lines = text.split('\n');
+  var sections = [];
+  var current = null;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var matched = null;
+    for (var k = 0; k < known.length; k++) {
+      if (line.indexOf(known[k]) === 0) { matched = known[k]; break; }
+    }
+    if (matched) {
+      if (current && current.lines.length) sections.push(current);
+      current = { emoji: matched, title: line.substring(matched.length).trim(), lines: [] };
+    } else if (current) {
+      current.lines.push(line);
+    } else if (line.trim()) {
+      current = { emoji: '📜', title: '课象解读', lines: [line] };
+    }
+  }
+  if (current && current.lines.length) sections.push(current);
+  return sections;
+}
+
+function renderReport(text, question) {
+  document.getElementById('reportQuestion').textContent = question;
+  var secs = parseSections(text);
+  var el = document.getElementById('reportContent');
+  var html = '';
+  if (secs.length > 0) {
+    html += '<div class="ai-section-wrap">';
+    for (var j = 0; j < secs.length; j++) {
+      var s = secs[j];
+      var bg = SECTION_ICONS[s.emoji] || 'rgba(91,191,160,0.2)';
+      html += '<div class="ai-section open">';
+      html += '<div class="ai-section-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ai-section-arrow\').classList.toggle(\'open\')">';
+      html += '<div class="ai-section-icon" style="background:'+bg+'">'+(s.emoji||'📜')+'</div>';
+      html += '<div class="ai-section-title">'+(s.title||'课象解读')+'</div>';
+      html += '<div class="ai-section-arrow">⬇</div>';
+      html += '</div>';
+      html += '<div class="ai-section-body open"><div class="ai-section-text">'+s.lines.join('\n')+'</div></div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  } else {
+    html += '<div style="padding:0 16px;font-size:11px;color:var(--text-dim);letter-spacing:0.04em;line-height:1.9;white-space:pre-wrap">'+text+'</div>';
+  }
+  el.innerHTML = html;
+  document.getElementById('reportScreen').dataset.contextId = lastContextId || '';
+  document.getElementById('reportScreen').classList.add('show');
+  injectDisclaimer('reportScreen');
+}
+
+function resetAll() {
+  document.getElementById('reportScreen').classList.remove('show');
+  document.getElementById('reportContent').innerHTML = '';
+  document.getElementById('qaSection').style.display = 'none';
+  document.getElementById('qaHistory').innerHTML = '';
+  document.querySelector('.topic-bar').style.display = 'flex';
+  document.querySelector('.q-wrap').style.display = 'block';
+  document.querySelector('.extra-fields').style.display = 'flex';
+  document.getElementById('submitWrap').style.display = 'block';
+}
+
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
+  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
+  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); };
+  document.body.appendChild(t);
+  if (t._toastTimer) clearTimeout(t._toastTimer);
+  t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
+}
+
+function askQuestion() {
+  var ctxId = document.getElementById('reportScreen').dataset.contextId;
+  var q = document.getElementById('qaInput');
+  if (!q.value.trim()) return;
+  var h = document.getElementById('qaHistory');
+  h.innerHTML += '<div class="qa-my-msg"><span>' + q.value.replace(/</g,'&lt;') + '</span></div>';
+  var question = q.value;
+  q.value = ''; q.disabled = true;
+  var loadEl = document.createElement('div');
+  loadEl.id = 'qaLoading';
+  loadEl.style.cssText = 'text-align:left;margin-bottom:8px;font-size:10px;color:rgba(255,245,220,0.3);letter-spacing:0.06em';
+  loadEl.textContent = '课师推演中…';
+  h.appendChild(loadEl);
+  fetch('/api/ask-followup', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({contextId: ctxId, question: question})
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    document.getElementById('qaLoading').remove();
+    if (d.answer) {
+      var answer = d.answer.replace(/</g,'&lt;').replace(/\\n/g,'<br>');
+      h.innerHTML += '<div class="qa-ai-msg"><span>' + answer + '</span></div>';
+    }
+    q.disabled = false;
+  })
+  .catch(function(){
+    document.getElementById('qaLoading').remove();
+    h.innerHTML += '<div style="margin-bottom:10px;font-size:10px;color:rgba(200,80,80,0.6);letter-spacing:0.04em">网络错误，请稍后重试</div>';
+    q.disabled = false;
+  });
+}
+
+function injectDisclaimer(containerId) {
+  var c = document.getElementById(containerId);
+  if (!c || c.querySelector('.sy-disclaimer')) return;
+  var d = document.createElement('div');
+  d.className = 'sy-disclaimer';
+  d.innerHTML = '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto;width:80%"></div><div style="font-size:10px;color:rgba(201,168,76,0.4);text-align:center;letter-spacing:0.06em;padding:10px 20px">仅供娱乐参考，切勿沉迷。命理是可能性的艺术，不是定数。</div>';
+  c.appendChild(d);
+}
+</script>
+<script>
+(function(){
+  var c = document.getElementById('stardust');
+  if (!c) return;
+  for (var i = 0; i < 30; i++) {
+    var s = document.createElement('span');
+    s.style.cssText = 'left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;width:'+(1.5+Math.random()*2.5)+'px;height:'+(1.5+Math.random()*2.5)+'px;--dur:'+(2+Math.random()*4)+'s;animation-delay:'+(Math.random()*5)+'s';
+    c.appendChild(s);
+  }
+  setTimeout(function(){ c.querySelectorAll('span').forEach(function(s){ s.style.opacity = '1'; }); }, 100);
+})();
+</script>
+
+<div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
+  <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--jade),transparent);margin:0 auto 12px"></div>
+  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(91,191,160,0.35);letter-spacing:0.3em">神机兆于动 · 吉凶生于心</div>
+</div>
+
+</body>
+</html>

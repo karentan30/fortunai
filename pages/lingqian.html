@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#1a0e04">
 <title>善缘 · 求签问事</title>
+<meta name="description" content="善缘灵签 — 在线求签，AI解签诗">
+<meta property="og:title" content="善缘 · 求签问事">
+<meta property="og:description" content="善缘灵签 — 在线求签，AI解签诗">
+<meta property="og:image" content="/favicon.svg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="善缘 · 求签问事">
+<meta name="twitter:description" content="善缘灵签 — 在线求签，AI解签诗">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
@@ -96,17 +104,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* AI Submit */
 .submit-wrap{position:relative;z-index:1;padding:0 16px 12px;display:none}
 .btn-submit{width:100%;padding:15px 0;background:linear-gradient(90deg,#8a5500,#c9820a,#e8b86a,#c9820a,#8a5500);background-size:300% auto;border:none;border-radius:4px;color:rgba(26,14,4,.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:.22em;cursor:pointer;animation:gold-shimmer 3s linear infinite;box-shadow:0 4px 20px rgba(201,130,10,.3)}
-@keyframes gold-shimmer{0%{background-position:-300% center}100%{background-position:300% center}}
 .btn-submit:active{transform:scale(0.97)}
 
 /* Loading */
 .loading-screen{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;padding:60px 20px;gap:16px}
-.loading-screen.show{display:flex}
 .load-glyph{font-size:48px;color:rgba(201,130,10,0.3);font-weight:300;animation:load-breathe 2s ease-in-out infinite}
-@keyframes load-breathe{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.7;transform:scale(1.05)}}
 .load-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:rgba(201,130,10,.5);letter-spacing:0.18em}
 .load-steps{display:flex;flex-direction:column;gap:5px}
-.load-step{font-size:10px;color:rgba(255,245,220,0.3);letter-spacing:0.08em;animation:step-fade 0.5s ease-out both}
 @keyframes step-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
 /* Divider */
@@ -163,11 +167,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .qa-ai-msg{margin-bottom:10px}
 .qa-ai-msg span{display:inline-block;background:var(--card);border:1px solid rgba(201,130,10,0.1);border-radius:6px;padding:8px 12px;font-size:11px;color:var(--text-dim);line-height:1.8}
 
-.stardust{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
 .stardust span{position:absolute;width:3px;height:3px;background:rgba(201,130,10,0.5);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
-@keyframes twinkle{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
 .bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(26,14,4,1) 0%,rgba(26,14,4,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
-.page-enter{animation:fadeUp .8s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 
 /* Qian display */
@@ -464,6 +465,7 @@ function renderAIInterpretation(text) {
   html += '<div style="height:80px"></div>';
   interpEl.innerHTML = html;
   interpEl.style.display = 'block';
+  injectDisclaimer('aiInterp');
 }
 
 function resetQian() {
@@ -561,10 +563,16 @@ function askQuestion() {
     c.appendChild(s);
   }
   setTimeout(function(){ c.querySelectorAll('span').forEach(function(s){ s.style.opacity = '1'; }); }, 100);
-})();</script>
-
-<script>
-/* SECTION_ICONS for lingqian */
+})();
+function injectDisclaimer(containerId) {
+  var c = document.getElementById(containerId);
+  if (!c || c.querySelector('.sy-disclaimer')) return;
+  var d = document.createElement('div');
+  d.className = 'sy-disclaimer';
+  d.innerHTML = '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto;width:80%"></div><div style="font-size:10px;color:rgba(201,168,76,0.4);text-align:center;letter-spacing:0.06em;padding:10px 20px">仅供娱乐参考，切勿沉迷。命理是可能性的艺术，不是定数。</div>';
+  c.appendChild(d);
+}
+</script>
 var SECTION_ICONS={'📜':'rgba(201,130,10,0.3)','💰':'rgba(201,168,76,0.3)','💼':'rgba(74,143,160,0.3)','❤️':'rgba(201,96,106,0.3)','🌟':'rgba(201,168,76,0.3)','🔮':'rgba(141,103,191,0.3)','💪':'rgba(91,160,130,0.3)','🔥':'rgba(201,80,40,0.3)','💧':'rgba(74,159,212,0.3)','🌿':'rgba(91,160,100,0.3)','📈':'rgba(74,191,130,0.3)','💕':'rgba(201,96,140,0.3)','🤝':'rgba(160,120,80,0.3)','🎯':'rgba(201,130,40,0.3)','🏆':'rgba(201,168,76,0.3)','🎁':'rgba(201,100,76,0.3)','📝':'rgba(160,140,100,0.3)','💡':'rgba(201,180,60,0.3)','⚱':'rgba(140,100,80,0.3)','🔔':'rgba(201,168,76,0.3)','🗝':'rgba(160,140,100,0.3)','🪷':'rgba(201,140,180,0.3)','☯':'rgba(160,140,100,0.3)','🌙':'rgba(100,120,180,0.3)','☀️':'rgba(201,168,76,0.3)','🌊':'rgba(60,130,180,0.3)','⛰':'rgba(100,140,100,0.3)','🎋':'rgba(100,160,100,0.3)','🏮':'rgba(201,80,40,0.3)','🎐':'rgba(160,160,180,0.3)','⌛':'rgba(160,140,100,0.3)'};
 
 /* renderUltimateReport */

@@ -6,6 +6,14 @@
 <meta name="theme-color" content="#0a1218">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>善缘 · 妈祖文化</title>
+<meta name="description" content="善缘妈祖文化 — 妈祖占卜与供奉">
+<meta property="og:title" content="善缘 · 妈祖文化">
+<meta property="og:description" content="善缘妈祖文化 — 妈祖占卜与供奉">
+<meta property="og:image" content="/favicon.svg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="善缘 · 妈祖文化">
+<meta name="twitter:description" content="善缘妈祖文化 — 妈祖占卜与供奉">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
@@ -83,18 +91,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 /* Loading */
 .loading-screen{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;padding:60px 20px;gap:16px}
-.loading-screen.show{display:flex}
 .load-glyph{font-size:48px;color:rgba(58,124,165,0.3);font-weight:300;animation:load-breathe 2s ease-in-out infinite}
-@keyframes load-breathe{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.7;transform:scale(1.05)}}
 .load-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:rgba(107,163,204,0.5);letter-spacing:0.18em}
 .load-steps{display:flex;flex-direction:column;gap:5px}
-.load-step{font-size:10px;color:rgba(255,245,220,0.3);letter-spacing:0.08em;animation:step-fade 0.5s ease-out both}
 @keyframes step-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.stardust{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
 .stardust span{position:absolute;width:3px;height:3px;background:rgba(107,163,204,0.5);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
-@keyframes twinkle{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
 .bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(10,18,24,1) 0%,rgba(10,18,24,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
-.page-enter{animation:fadeUp .8s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 .page-enter-d1{animation-delay:.1s}.page-enter-d2{animation-delay:.2s}
 </style>
@@ -291,6 +293,7 @@ function renderMazuResult(text, question) {
   html += '<div style="height:80px"></div>';
   resultEl.innerHTML = html;
   resultEl.style.display = 'block';
+  injectDisclaimer('resultSection');
   document.querySelector('.tab-bar').style.display = 'none';
   document.getElementById('tabDivination').style.display = 'none';
   document.getElementById('tabOffering').style.display = 'none';
@@ -306,7 +309,16 @@ function renderMazuResult(text, question) {
     c.appendChild(s);
   }
   setTimeout(function(){ c.querySelectorAll('span').forEach(function(s){ s.style.opacity = '1'; }); }, 100);
-})();</script>
+})();
+function injectDisclaimer(containerId) {
+  var c = document.getElementById(containerId);
+  if (!c || c.querySelector('.sy-disclaimer')) return;
+  var d = document.createElement('div');
+  d.className = 'sy-disclaimer';
+  d.innerHTML = '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto;width:80%"></div><div style="font-size:10px;color:rgba(201,168,76,0.4);text-align:center;letter-spacing:0.06em;padding:10px 20px">仅供娱乐参考，切勿沉迷。命理是可能性的艺术，不是定数。</div>';
+  c.appendChild(d);
+}
+</script>
 
 <div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
   <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--sea),transparent);margin:0 auto 12px"></div>

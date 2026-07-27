@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0e0a04">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>善缘 · 每日灵签</title>
+<meta name="description" content="善缘每日灵签 — 每日一签，签到打卡，积累福缘">
+<meta property="og:title" content="善缘 · 每日灵签">
+<meta property="og:description" content="善缘每日灵签 — 每日一签，签到打卡，积累福缘">
+<meta property="og:image" content="/favicon.svg">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0a04;
+  --card-bg:#170e06;
+  --gold:#c9a84c;
+  --gold-light:#e8d08a;
+  --gold-deep:#8a6420;
+  --jade:#5bbfa0;
+  --jade-mid:#8dd9bf;
+  --jade-deep:#3d9e82;
+  --ink:rgba(255,245,220,0.88);
+  --ink-mid:rgba(255,245,220,0.60);
+  --ink-light:rgba(255,245,220,0.35);
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:60px}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 50% -10%,rgba(201,168,76,0.10) 0%,transparent 60%),
+    radial-gradient(ellipse at 50% 12%,rgba(201,168,76,0.04) 0%,transparent 45%);
+  pointer-events:none;z-index:0}
+body>*{position:relative;z-index:1}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes glow-pulse{0%,100%{box-shadow:0 0 20px rgba(201,168,76,0.25)}50%{box-shadow:0 0 40px rgba(201,168,76,0.50)}}
+@keyframes gold-shimmer{0%{background-position:-300% center}100%{background-position:300% center}}
+@keyframes halo-breathe{0%,100%{box-shadow:0 0 24px rgba(201,168,76,0.2),0 0 50px rgba(91,191,160,0.1)}50%{box-shadow:0 0 40px rgba(201,168,76,0.45),0 0 80px rgba(91,191,160,0.2)}}
+@keyframes flare{0%{opacity:0;transform:scale(0.5)}50%{opacity:1;transform:scale(1.1)}100%{opacity:1;transform:scale(1)}}
+@keyframes check-in{0%{opacity:0;transform:scale(0) rotate(-30deg)}60%{transform:scale(1.3) rotate(5deg)}100%{opacity:1;transform:scale(1) rotate(0deg)}}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--gold);letter-spacing:0.06em;cursor:pointer;padding:4px 0}
+.shimmer-text{background:linear-gradient(90deg,var(--gold-deep),var(--gold),var(--gold-light),var(--gold),var(--gold-deep));background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gold-shimmer 3s linear infinite}
+
+/* Header */
+.header{padding:50px 20px 18px;text-align:center;animation:fadeUp 0.7s ease both}
+.header-en{font-family:'Cormorant Garamond',serif;font-size:10px;font-style:italic;letter-spacing:0.35em;color:rgba(201,168,76,0.55);margin-bottom:4px}
+.header-zh{font-size:18px;letter-spacing:0.18em;font-weight:500;color:var(--ink)}
+.header-line{height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.3),transparent);width:80px;margin:8px auto 0}
+
+/* Fortune Card */
+.fortune-card{margin:0 16px 20px;padding:32px 24px 28px;border-radius:14px;text-align:center;
+  background:rgba(23,14,6,0.65);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(201,168,76,0.2);position:relative;overflow:hidden;
+  animation:fadeUp 0.7s 0.1s ease both,halo-breathe 4s ease-in-out infinite}
+.fortune-card::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(201,168,76,0.06) 0%,transparent 50%,rgba(91,191,160,0.04) 100%);
+  pointer-events:none}
+.fortune-date{font-family:'Cormorant Garamond',serif;font-size:11px;font-style:italic;letter-spacing:0.28em;color:rgba(201,168,76,0.5);margin-bottom:14px}
+.fortune-deco{font-size:28px;color:var(--gold);opacity:0.4;margin-bottom:10px;font-family:'Cormorant Garamond',serif;line-height:1}
+.fortune-poem{font-size:20px;line-height:1.6;letter-spacing:0.1em;color:var(--gold-light);margin-bottom:8px;font-weight:500}
+.fortune-interp{font-size:12px;line-height:1.7;letter-spacing:0.06em;color:var(--ink-mid);margin-top:6px;padding:0 8px}
+.fortune-tag{display:inline-block;margin-top:14px;padding:4px 16px;border-radius:20px;
+  font-size:10px;letter-spacing:0.12em;
+  background:linear-gradient(135deg,rgba(201,168,76,0.15),rgba(91,191,160,0.10));
+  border:1px solid rgba(201,168,76,0.2);color:var(--gold-light)}
+
+/* Sign-in Button */
+.sign-area{text-align:center;padding:0 16px;margin-bottom:16px;animation:fadeUp 0.7s 0.2s ease both}
+.sign-btn{width:100%;max-width:280px;height:52px;border-radius:26px;border:none;
+  font-family:'Noto Serif SC',serif;font-size:15px;letter-spacing:0.14em;
+  cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,var(--gold-deep),var(--gold));color:var(--bg);font-weight:500}
+.sign-btn::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent);
+  background-size:200% 100%;animation:gold-shimmer 2.5s ease-in-out infinite;pointer-events:none}
+.sign-btn:active{transform:scale(0.96)}
+.sign-btn.done{background:linear-gradient(135deg,rgba(201,168,76,0.2),rgba(91,191,160,0.15));color:var(--gold-light);border:1px solid rgba(201,168,76,0.25);cursor:default;pointer-events:none;animation:glow-pulse 2s ease-in-out infinite}
+.sign-btn.done::before{display:none}
+.sign-btn.done .sign-flare{position:absolute;inset:0;background:radial-gradient(circle at center,rgba(201,168,76,0.15),transparent 70%);animation:flare 0.6s ease both;pointer-events:none}
+
+/* Streak display */
+.streak-area{text-align:center;padding:0 16px;margin-bottom:18px;animation:fadeUp 0.7s 0.25s ease both}
+.streak-num{font-family:'Cormorant Garamond',serif;font-size:36px;color:var(--gold);font-weight:300;line-height:1}
+.streak-label{font-size:10px;letter-spacing:0.18em;color:var(--ink-light);margin-top:4px}
+.streak-hit{display:inline-block;animation:flare 0.5s ease both}
+.streak-records{font-size:10px;color:var(--ink-light);letter-spacing:0.06em;margin-top:4px}
+
+/* 7-day grid */
+.week-grid-wrap{padding:0 16px;margin-bottom:20px;animation:fadeUp 0.7s 0.3s ease both}
+.week-grid-title{text-align:center;font-size:10px;letter-spacing:0.18em;color:var(--ink-light);margin-bottom:10px}
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.week-day{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:rgba(23,14,6,0.4);border:1px solid rgba(201,168,76,0.08);transition:all 0.3s;position:relative}
+.week-day .day-label{font-size:8px;color:var(--ink-light);letter-spacing:0.04em}
+.week-day .day-num{font-size:11px;color:var(--ink-mid);font-family:'Cormorant Garamond',serif;margin-top:1px}
+.week-day.signed{border-color:var(--gold);background:linear-gradient(135deg,rgba(201,168,76,0.18),rgba(91,191,160,0.08))}
+.week-day.signed .day-label{color:var(--gold-light)}
+.week-day.signed .day-num{color:var(--gold)}
+.week-day.signed .check-icon{font-size:14px;animation:check-in 0.4s ease both}
+.week-day.today{border-color:rgba(201,168,76,0.35);box-shadow:0 0 12px rgba(201,168,76,0.12)}
+.week-day.today::after{content:'今';position:absolute;top:-4px;right:-4px;font-size:7px;color:var(--bg);
+  background:var(--gold);border-radius:6px;padding:1px 4px;line-height:1.2}
+
+/* Actions */
+.actions{padding:0 16px;display:flex;gap:10px;margin-bottom:32px;animation:fadeUp 0.7s 0.35s ease both}
+.action-btn{flex:1;height:42px;border-radius:10px;border:1px solid rgba(201,168,76,0.15);
+  background:rgba(23,14,6,0.5);color:var(--ink-mid);font-family:'Noto Serif SC',serif;
+  font-size:11px;letter-spacing:0.1em;cursor:pointer;transition:all 0.22s;display:flex;align-items:center;justify-content:center;gap:6px}
+.action-btn:active{transform:scale(0.96)}
+.action-btn:hover{border-color:rgba(201,168,76,0.35);color:var(--gold-light)}
+.action-btn.primary{background:rgba(201,168,76,0.1);border-color:rgba(201,168,76,0.25);color:var(--gold)}
+
+/* Toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;cursor:pointer;
+  background:rgba(23,14,6,0.95);border:1px solid rgba(201,168,76,0.2);color:rgba(255,245,220,0.9);
+  font-family:'Noto Serif SC',serif;transition:opacity 0.3s}
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">&#x2039; 返回</button>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-en">Daily Fortune</div>
+  <div class="header-zh">每日灵签</div>
+  <div class="header-line"></div>
+</div>
+
+<!-- Fortune Card -->
+<div class="fortune-card" id="fortuneCard">
+  <div class="fortune-date" id="fortuneDate"></div>
+  <div class="fortune-deco">&#x2726; &#x2726; &#x2726;</div>
+  <div class="fortune-poem" id="fortunePoem"></div>
+  <div class="fortune-interp" id="fortuneInterp"></div>
+  <div class="fortune-tag" id="fortuneTag"></div>
+</div>
+
+<!-- Sign-in Button -->
+<div class="sign-area">
+  <button class="sign-btn" id="signBtn" onclick="doSign()">&#x2714; 今日签到</button>
+</div>
+
+<!-- Streak -->
+<div class="streak-area">
+  <div class="streak-num" id="streakNum">0</div>
+  <div class="streak-label">连续签到天数</div>
+  <div class="streak-records" id="streakRecords"></div>
+</div>
+
+<!-- 7-day Grid -->
+<div class="week-grid-wrap">
+  <div class="week-grid-title">本周签到</div>
+  <div class="week-grid" id="weekGrid"></div>
+</div>
+
+<!-- Actions -->
+<div class="actions">
+  <button class="action-btn primary" onclick="shareFortune()">&#x1F4E4; 分享签文</button>
+  <button class="action-btn" onclick="goHome()">&#x1F3E0; 返回首页</button>
+</div>
+
+<script>
+var FORTUNES = [
+  {poem:'一帆风顺吉星照，万事如意福满堂', interp:'今日运势通达，诸事顺遂。心之所向，皆可成真。宜把握良机，主动出击。', tag:'上上签'},
+  {poem:'云开雾散见天晴，柳暗花明又一村', interp:'近日的迷茫即将消散，转机已在眼前。保持耐心，黎明前的黑暗最短暂。', tag:'上签'},
+  {poem:'山重水复疑无路，柳暗花明又一村', interp:'困境之中藏转机，看似无路，实则另有洞天。不妨换个角度思考问题。', tag:'中上签'},
+  {poem:'静坐常思己过，闲谈莫论人非', interp:'今日宜内省修身，少言多思。反思自身比评判他人更有益，积累的福报自会显现。', tag:'中签'},
+  {poem:'春风得意马蹄疾，一日看尽长安花', interp:'运势高涨，事事顺心。但需戒骄戒躁，得意之时更要谨慎行事，方能长久。', tag:'上上签'},
+  {poem:'宝剑锋从磨砺出，梅花香自苦寒来', interp:'今日的付出是明日的果实。磨砺是成长的必经之路，坚持下去必有回报。', tag:'中签'},
+  {poem:'海内存知己，天涯若比邻', interp:'缘分无处不在，今日宜联络旧友，或结识新朋。真诚相待，自会有贵人相助。', tag:'上签'},
+  {poem:'不畏浮云遮望眼，只缘身在最高层', interp:'眼光放长远，不要被眼前的琐事困扰。站在更高的维度看问题，一切豁然开朗。', tag:'上签'},
+  {poem:'人生得意须尽欢，莫使金樽空对月', interp:'今日宜享受生活，感恩拥有。适度放松，与亲朋好友分享快乐的时光。', tag:'中上签'},
+  {poem:'千磨万击还坚劲，任尔东西南北风', interp:'内心坚定，外界的风雨都无法动摇你。今日宜坚守原则，保持定力。', tag:'上签'},
+  {poem:'月有阴晴圆缺，人有旦夕祸福', interp:'万事皆有起伏，低谷是高峰的前奏。保持平常心，顺境不骄，逆境不馁。', tag:'中签'},
+  {poem:'问渠那得清如许，为有源头活水来', interp:'不断学习与更新，是保持活力的源泉。今日宜读书、学习新技能，为未来蓄力。', tag:'上签'},
+  {poem:'大鹏一日同风起，扶摇直上九万里', interp:'时机将至，蓄势待发。保持自信，机会一到便可一飞冲天。现在就是最好的准备期。', tag:'上上签'},
+  {poem:'落红不是无情物，化作春泥更护花', interp:'付出终有回报，今日的善举会在未来开花结果。宜行善积德，不求回报的善意最珍贵。', tag:'上签'},
+  {poem:'采菊东篱下，悠然见南山', interp:'今日宜放慢脚步，享受恬淡时光。简单的生活中藏着真正的幸福，知足常乐。', tag:'中上签'}
+];
+
+function getToday() {
+  var now = new Date();
+  var y = now.getFullYear();
+  var m = now.getMonth() + 1;
+  var d = now.getDate();
+  var idx = d % FORTUNES.length;
+  var wd = ['天','一','二','三','四','五','六'][now.getDay()];
+  return {year: y, month: m, day: d, weekday: wd, idx: idx, raw: now};
+}
+
+function pad2(n) { return n < 10 ? '0' + n : '' + n; }
+
+function dateStr(d) {
+  return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+}
+
+function getDates() {
+  var raw = localStorage.getItem('sy_sign_dates');
+  if (!raw) return [];
+  try { return JSON.parse(raw); } catch(e) { return []; }
+}
+
+function saveDates(dates) {
+  localStorage.setItem('sy_sign_dates', JSON.stringify(dates));
+}
+
+function isTodaySigned() {
+  var dates = getDates();
+  var today = dateStr(new Date());
+  return dates.indexOf(today) !== -1;
+}
+
+function getStreak() {
+  var dates = getDates();
+  if (dates.length === 0) return 0;
+  var sorted = dates.slice().sort().reverse();
+  var streak = 1;
+  var today = new Date();
+  var latest = new Date(sorted[0]);
+  var diff = Math.round((today - latest) / 86400000);
+  if (diff > 1) return 0; // missed a day, streak broken
+
+  for (var i = 0; i < sorted.length - 1; i++) {
+    var curr = new Date(sorted[i]);
+    var prev = new Date(sorted[i+1]);
+    var gap = Math.round((curr - prev) / 86400000);
+    if (gap === 1) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+function getTotalDays() {
+  return getDates().length;
+}
+
+function renderFortune() {
+  var t = getToday();
+  var f = FORTUNES[t.idx];
+  var mons = ['一','二','三','四','五','六','七','八','九','十','十一','十二'];
+  document.getElementById('fortuneDate').textContent = t.year + '年' + mons[t.month-1] + '月' + t.day + '日 · 星期' + t.weekday;
+  document.getElementById('fortunePoem').textContent = '「' + f.poem + '」';
+  document.getElementById('fortuneInterp').textContent = f.interp;
+  document.getElementById('fortuneTag').textContent = '✨ ' + f.tag + ' ✨';
+}
+
+function renderStreak() {
+  var streak = getStreak();
+  var total = getTotalDays();
+  document.getElementById('streakNum').textContent = streak;
+  document.getElementById('streakRecords').textContent = '累计签到 ' + total + ' 天';
+  if (streak > 0) {
+    document.getElementById('streakNum').classList.add('streak-hit');
+  }
+}
+
+function renderWeekGrid() {
+  var grid = document.getElementById('weekGrid');
+  var dates = getDates();
+  var today = new Date();
+  var dayOfWeek = today.getDay() || 7; // 1=Mon ... 7=Sun
+  var weekLabels = ['一','二','三','四','五','六','日'];
+  var html = '';
+
+  // Calculate the Monday of this week
+  var monday = new Date(today);
+  monday.setDate(today.getDate() - (dayOfWeek - 1));
+
+  for (var i = 0; i < 7; i++) {
+    var d = new Date(monday);
+    d.setDate(monday.getDate() + i);
+    var ds = dateStr(d);
+    var signed = dates.indexOf(ds) !== -1;
+    var isTodayD = dateStr(today) === ds;
+    var cls = 'week-day';
+    if (signed) cls += ' signed';
+    if (isTodayD) cls += ' today';
+    var content = signed
+      ? '<span class="check-icon">&#x2714;</span>'
+      : '<span class="day-label">' + weekLabels[i] + '</span><span class="day-num">' + d.getDate() + '</span>';
+    html += '<div class="' + cls + '">' + content + '</div>';
+  }
+  grid.innerHTML = html;
+}
+
+function renderSignBtn() {
+  var btn = document.getElementById('signBtn');
+  if (isTodaySigned()) {
+    btn.className = 'sign-btn done';
+    btn.innerHTML = '<span class="sign-flare"></span>&#x2714; 今日已签到';
+  } else {
+    btn.className = 'sign-btn';
+    btn.innerHTML = '&#x2714; 今日签到';
+  }
+}
+
+function doSign() {
+  if (isTodaySigned()) {
+    showToast('今日已签到，明日再来吧');
+    return;
+  }
+  var dates = getDates();
+  dates.push(dateStr(new Date()));
+  saveDates(dates);
+  renderSignBtn();
+  renderStreak();
+  renderWeekGrid();
+  showToast('&#x2728; 签到成功！福缘 +1');
+}
+
+function shareFortune() {
+  var t = getToday();
+  var f = FORTUNES[t.idx];
+  var text = '【善缘·每日灵签】\n' + t.year + '年' + (t.month) + '月' + t.day + '日\n\n' +
+    '「' + f.poem + '」\n' + f.interp + '\n' +
+    f.tag + ' — 善缘 ShenYuan';
+  if (navigator.share) {
+    navigator.share({title:'善缘每日灵签', text:text}).catch(function(){});
+  } else {
+    // Fallback: copy to clipboard
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      showToast('已复制签文，快去分享吧');
+    } catch(e) {
+      showToast('分享内容已生成');
+    }
+    document.body.removeChild(ta);
+  }
+}
+
+function goHome() {
+  window.location.href = '/';
+}
+
+function showToast(msg) {
+  var t = document.createElement('div');
+  t.className = 'toast';
+  t.innerHTML = msg;
+  t.onclick = function(){ t.style.opacity = '0'; setTimeout(function(){ t.remove(); }, 300); };
+  document.body.appendChild(t);
+  if (t._timer) clearTimeout(t._timer);
+  t._timer = setTimeout(function(){ t.style.opacity = '0'; setTimeout(function(){ t.remove(); }, 300); }, 3000);
+}
+
+// Init
+renderFortune();
+renderStreak();
+renderWeekGrid();
+renderSignBtn();
+</script>
+</body>
+</html>

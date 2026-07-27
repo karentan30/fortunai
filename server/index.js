@@ -128,6 +128,9 @@ const PRODUCTS = {
   member_monthly:  { name: '月度会员',      amount: 690,  desc: '全部AI占算无限次·完整报告不锁定' },
   member_yearly:   { name: '年度会员',      amount: 4900, desc: '全年畅用·大师语音·水晶挂件' },
   member_lifetime: { name: '终身会员',      amount: 18800, desc: '永久畅享·大师1对1·专属档案' },
+  daliuren:    { name: '大六壬预测',      amount: 990,  desc: '三传四课' },
+  qimen:       { name: '奇门遁甲',        amount: 990,  desc: '八门九星' },
+  bazi_trial:  { name: '体验命盘',        amount: 199,  desc: '快速简批' },
 };
 
 // ── Health ──
@@ -562,7 +565,7 @@ app.post('/api/bazi', async (req, res) => {
 - 一句祝福收尾`
     );
 
-    const result = await deepseekChat(messages, { maxTokens: 4096 });
+    const result = await deepseekChat(messages, { maxTokens: 8192 });
     insertReading.run('bazi', JSON.stringify(req.body), result);
     var ctxId = saveQaContext('bazi', req.body, result);
 
@@ -697,7 +700,7 @@ app.post('/api/ziwei', async (req, res) => {
 用诗意的一句话总结此命盘的精华。`
     );
 
-    const result = await deepseekChat(messages, { maxTokens: 6144 });
+    const result = await deepseekChat(messages, { maxTokens: 8192 });
     insertReading.run('ziwei', JSON.stringify(req.body), result);
     var ctxId = saveQaContext('ziwei', req.body, result);
 
@@ -836,7 +839,7 @@ B方：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined ? p2Hour+'时'
 用诗意、温暖的语言总结这二人的姻缘。给一个让人心安、充满希望的收尾。`
     );
 
-    const result = await deepseekChat(messages, { maxTokens: 4096 });
+    const result = await deepseekChat(messages, { maxTokens: 8192 });
     insertReading.run('hehun', JSON.stringify(req.body), result);
     var ctxId = saveQaContext('hehun', req.body, result);
 
@@ -953,7 +956,7 @@ app.post('/api/fengshui', async (req, res) => {
       { role: 'user', content: '房屋朝向：' + (houseDirection || '') + '\n楼层：' + (floor || '未提供') + '\n房间布局：' + (rooms || '未提供') + '\n居住成员：' + (occupants || '未提供') + '\n地址：' + (address || '未提供') + '\n用户问题：' + (question || '请综合分析房屋风水') + '\n\n请按以下结构详细分析（要求3000+字）：\n1. 🏠 房屋格局总评\n2. 🧭 八宅吉凶位分析（每个方位逐一分析）\n3. 🛏️ 各房间风水建议（卧室/客厅/厨房/书房/卫生间）\n4. 💰 财位分析及催财布局\n5. ❤️ 桃花位/人缘位布局\n6. 🏃 健康位分析\n7. 🪴 化解与开运建议（植物/摆件/颜色）\n8. 📐 户型改造建议\n9. 🎯 一句话总结' }
     ];
 
-    const analysis = await deepseekChat(messages, { maxTokens: 4096 });
+    const analysis = await deepseekChat(messages, { maxTokens: 6144 });
     res.json({ analysis });
   } catch (err) {
     console.error('[FENGSHUI ERR]', err.message);
@@ -1073,7 +1076,7 @@ ${guaYao[0]}  (初九)
 6. ⚠️ 注意事项`}
     ];
 
-    const reading = await deepseekChat(messages, { maxTokens: 4096 });
+    const reading = await deepseekChat(messages, { maxTokens: 6144 });
     var ctxId = saveQaContext('liuyao', req.body, reading);
     res.json({ reading, contextId: ctxId, hexagram: guaYao });
   } catch (err) {
@@ -1142,7 +1145,7 @@ app.post('/api/deity-guide', async (req, res) => {
 8. 💌 仙家文化特别指导（如果是求仙家）`}
     ];
 
-    const reading = await deepseekChat(messages, { maxTokens: 4096 });
+    const reading = await deepseekChat(messages, { maxTokens: 6144 });
     res.json({ reading });
   } catch (err) {
     console.error('[DEITY ERR]', err.message);
@@ -1194,10 +1197,99 @@ app.post('/api/offering-plan', async (req, res) => {
   适合此愿望的专属回向文`}
     ];
 
-    const reading = await deepseekChat(messages, { maxTokens: 4096 });
+    const reading = await deepseekChat(messages, { maxTokens: 6144 });
     res.json({ reading });
   } catch (err) {
     console.error('[OFFERING ERR]', err.message);
+    res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
+  }
+});
+
+// POST /api/daliuren — 大六壬预测
+app.post('/api/daliuren', async (req, res) => {
+  try {
+    const { question, birthYear, gender } = req.body;
+    if (!question) return res.status(400).json({ error: '请提供你要问的事情' });
+
+    // Simulate 大六壬 lesson selection (随机课名+神将)
+    var lessonNames = ['元首课', '重审课', '涉害课', '遥克课', '昴星课', '伏吟课', '返吟课', '别责课', '八专课', '三光课', '三阳课', '三奇课', '六仪课', '天赦课', '铸印课'];
+    var deities = ['贵人', '螣蛇', '朱雀', '六合', '勾陈', '青龙', '天空', '白虎', '太常', '玄武', '太阴', '天后'];
+    var lesson = lessonNames[Math.floor(Math.random() * lessonNames.length)];
+    var randomDeities = [];
+    for (var i = 0; i < 4; i++) {
+      randomDeities.push(deities[Math.floor(Math.random() * deities.length)]);
+    }
+
+    const messages = [
+      { role: 'system', content: '你是一位精通大六壬的玄学大师，民间尊称"六壬神断"，从业四十余年。你深谙六壬三传四课之精妙，能从课象中洞悉天机。你的语气平和笃定，引经据典但深入浅出，让求测者信服。' },
+      { role: 'user', content: `用户问题：${question}
+出生年份：${birthYear || '未提供'}
+性别：${gender === 'male' ? '男' : gender === 'female' ? '女' : '未提供'}
+
+起课结果（系统随机）：
+课名：${lesson}
+课将：${randomDeities[0]}、${randomDeities[1]}、${randomDeities[2]}、${randomDeities[3]}
+
+请按以下结构详细解读（3000+字）：
+1. 📜 课名解读（此课名的含义和格局）
+2. 🏮 课体传象（三传四课分析）
+3. 🎯 针对问题的具体断语
+4. ⏰ 应期判断（何时会有转机或结果）
+5. 💡 行动建议（3条具体可执行建议）
+6. ⚠️ 注意事项与化解方法`}
+    ];
+
+    const reading = await deepseekChat(messages, { maxTokens: 6144 });
+    var ctxId = saveQaContext('daliuren', req.body, reading);
+    res.json({ reading, contextId: ctxId, lesson: { name: lesson, gods: randomDeities } });
+  } catch (err) {
+    console.error('[DALIUREN ERR]', err.message);
+    res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
+  }
+});
+
+// POST /api/qimen — 奇门遁甲
+app.post('/api/qimen', async (req, res) => {
+  try {
+    const { question, direction, birthYear, gender } = req.body;
+    if (!question) return res.status(400).json({ error: '请提供你要问的事情' });
+
+    // Simulate 奇门局 (随机八门+九星)
+    var eightDoors = ['休门', '生门', '伤门', '杜门', '景门', '死门', '惊门', '开门'];
+    var nineStars = ['天蓬星', '天任星', '天冲星', '天辅星', '天英星', '天芮星', '天柱星', '天心星', '天禽星'];
+    var shuffledDoors = [...eightDoors].sort(function() { return Math.random() - 0.5; });
+    var shuffledStars = [...nineStars].sort(function() { return Math.random() - 0.5; });
+    var currentDoor = shuffledDoors[0];
+    var currentStar = shuffledStars[0];
+
+    const messages = [
+      { role: 'system', content: '你是一位精通奇门遁甲的高人，师承茅山道脉，精研奇门数十年。你擅长排盘布局，能从八门九星中洞察时空能量，为求测者指点迷津。你的语气沉稳、自信、有道家仙风，每个断语都有理有据。' },
+      { role: 'user', content: `用户问题：${question}
+出生年份：${birthYear || '未提供'}
+性别：${gender === 'male' ? '男' : gender === 'female' ? '女' : '未提供'}
+求测方位：${direction || '未提供'}
+
+起局结果（系统随机）：
+值使门（八门）：${currentDoor}
+值符星（九星）：${currentStar}
+其余八门：${shuffledDoors.slice(1).join('、')}
+其余九星：${shuffledStars.slice(1).join('、')}
+
+请按以下结构详细解读（3000+字）：
+1. 🌐 奇门局象总评（此局的整体格局判断）
+2. 🚪 八门分析（值使门${currentDoor}的含义及对求测事的影响）
+3. ⭐ 九星分析（值符星${currentStar}的能量及吉凶）
+4. 🎯 针对问题的具体局象指引
+5. ⏰ 时间窗口判断（何时行动最有利）
+6. 📍 方位建议（吉方和忌方）
+7. 💡 行动建议（3条具体可执行建议）`}
+    ];
+
+    const reading = await deepseekChat(messages, { maxTokens: 6144 });
+    var ctxId = saveQaContext('qimen', req.body, reading);
+    res.json({ reading, contextId: ctxId, door: currentDoor, star: currentStar });
+  } catch (err) {
+    console.error('[QIMEN ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
   }
 });
