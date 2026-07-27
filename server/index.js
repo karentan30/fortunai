@@ -1,8 +1,6 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const Database = require('better-sqlite3');
-const path = require('path');
 const crypto = require('crypto');
 
 const app = express();
@@ -27,15 +25,18 @@ try {
 // ── CORS (restrict to known origins) ──
 var ALLOWED_ORIGINS = [
   'http://localhost:3021',
+  'http://localhost:3000',
   'http://47.242.80.65:3021',
   'https://shenyuan.mylumee.cn',
   'https://shenyuan.vercel.app',
   'https://shenyuan-fabulousslim.vercel.app',
-  'https://shenyuan-karentan30-fabulousslim.vercel.app'
+  'https://shenyuan-karentan30-fabulousslim.vercel.app',
+  'https://fortunai.vercel.app',
+  'https://myfortuneai.vercel.app'
 ];
 app.use(cors({
   origin: function(origin, callback) {
-    if (!origin || ALLOWED_ORIGINS.indexOf(origin) !== -1) {
+    if (!origin || ALLOWED_ORIGINS.indexOf(origin) !== -1 || origin.endsWith('.vercel.app') || origin.startsWith('http://localhost')) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -61,91 +62,22 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }));
 
 // ── Static files ──
-app.use(express.static(path.join(__dirname, '..')));
+// app.use(express.static(path.join(__dirname, '..')));  // Vercel handles static files
 
-// ── Database ──
-const db = new Database(path.join(__dirname, 'shenyuan.db'));
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
-
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    name TEXT DEFAULT '',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS orders (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    order_no TEXT UNIQUE,
-    product TEXT,
-    amount INTEGER,
-    currency TEXT DEFAULT 'usd',
-    user_id INTEGER,
-    donor_name TEXT,
-    contact TEXT,
-    wish_text TEXT,
-    payment_status TEXT DEFAULT 'pending',
-    stripe_session_id TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-  );
-
-  CREATE TABLE IF NOT EXISTS readings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    type TEXT,
-    input TEXT,
-    result TEXT,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS subscriptions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT,
-    stripe_subscription_id TEXT UNIQUE,
-    status TEXT DEFAULT 'active',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS auth_tokens (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    token TEXT UNIQUE NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-  );
-`);
-
-// Add user_id column to orders if missing (migration)
-try { db.exec('ALTER TABLE orders ADD COLUMN user_id INTEGER REFERENCES users(id)'); } catch(e) {}
-
-const insertUser = db.prepare(
-  'INSERT INTO users (email, password_hash) VALUES (?, ?)'
-);
-const getUserByEmail = db.prepare(
-  'SELECT * FROM users WHERE email = ?'
-);
-const getUserById = db.prepare(
-  'SELECT id, email, name, created_at FROM users WHERE id = ?'
-);
-const insertToken = db.prepare(
-  'INSERT INTO auth_tokens (user_id, token) VALUES (?, ?)'
-);
-const getToken = db.prepare(
-  'SELECT t.*, u.email, u.name FROM auth_tokens t JOIN users u ON t.user_id = u.id WHERE t.token = ?'
-);
-const getUserOrders = db.prepare(
-  "SELECT * FROM orders WHERE user_id = ? AND payment_status = 'completed' ORDER BY created_at DESC"
-);
-
-const insertOrder = db.prepare(
-  'INSERT INTO orders (order_no, product, amount, currency, user_id, donor_name, contact, wish_text, stripe_session_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-);
-const insertReading = db.prepare(
-  'INSERT INTO readings (type, input, result) VALUES (?, ?, ?)'
-);
+// ── In-memory Data Store (Vercel-compatible, replaces better-sqlite3) ──
+const _M = { users:[], tokens:[], orders:[], readings:[], subs:[], _id:{u:1,t:1,o:1,r:1,s:1} };
+const insertUser = { run(e,h){const id=_M._id.u++;_M.users.push({id,email:e,password_hash:h,name:'',created_at:new Date().toISOString()});return{lastInsertRowid:id};} };
+const getUserByEmail = { get(e){return _M.users.find(u=>u.email===e);} };
+const getUserById = { get(id){const u=_M.users.find(x=>x.id===id);return u?{id:u.id,email:u.email,name:u.name,created_at:u.created_at}:undefined;} };
+const insertToken = { run(uid,t){_M.tokens.push({id:_M._id.t++,user_id:uid,token:t,created_at:new Date().toISOString()});} };
+const getToken = { get(t){const tok=_M.tokens.find(x=>x.token===t);if(!tok)return null;const u=_M.users.find(x=>x.id===tok.user_id);return u?{...tok,email:u.email,name:u.name}:null;} };
+const getUserOrders = { all(uid){return _M.orders.filter(o=>o.user_id===uid&&o.payment_status==='completed').sort((a,b)=>b.created_at.localeCompare(a.created_at));} };
+const insertOrder = { run(oNo,p,amt,cur,uid,dN,c,wT,sId){_M.orders.push({id:_M._id.o++,order_no:oNo,product:p,amount:amt,currency:cur,user_id:uid,donor_name:dN,contact:c,wish_text:wT,stripe_session_id:sId,payment_status:'pending',created_at:new Date().toISOString()});} };
+const insertReading = { run(t,i,r){_M.readings.push({id:_M._id.r++,type:t,input:i,result:r,created_at:new Date().toISOString()});} };
+function _updOrder(s,oNo){const o=_M.orders.find(x=>x.order_no===oNo);if(o)o.payment_status=s;}
+function _insSub(e,sId){if(!_M.subs.find(x=>x.stripe_subscription_id===sId))_M.subs.push({email:e,stripe_subscription_id:sId,status:'active',created_at:new Date().toISOString()});}
+function _allOrders(){return[..._M.orders].sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,50);}
+function _insJossOrder(oNo,p,amt,cur,dN,c,wT,ps){_M.orders.push({id:_M._id.o++,order_no:oNo,product:p,amount:amt,currency:cur,donor_name:dN,contact:c,wish_text:wT,payment_status:ps,created_at:new Date().toISOString()});}
 
 // ── DeepSeek chat ──
 async function deepseekChat(messages, opts = {}) {
@@ -427,7 +359,7 @@ app.post('/api/stripe-webhook', async (req, res) => {
         const session = event.data.object;
         const orderNo = session.metadata?.order_no;
         if (orderNo) {
-          db.prepare('UPDATE orders SET payment_status = ? WHERE order_no = ?').run('completed', orderNo);
+          _updOrder('completed', orderNo);
           console.log(`[PAYMENT] ${orderNo} — completed`);
         }
         break;
@@ -436,14 +368,13 @@ app.post('/api/stripe-webhook', async (req, res) => {
         const session = event.data.object;
         const orderNo = session.metadata?.order_no;
         if (orderNo) {
-          db.prepare('UPDATE orders SET payment_status = ? WHERE order_no = ?').run('expired', orderNo);
+          _updOrder('expired', orderNo);
         }
         break;
       }
       case 'customer.subscription.created': {
         const sub = event.data.object;
-        db.prepare('INSERT OR IGNORE INTO subscriptions (email, stripe_subscription_id) VALUES (?, ?)')
-          .run(sub.customer_email || '', sub.id);
+        _insSub(sub.customer_email || '', sub.id);
         break;
       }
     }
@@ -1067,7 +998,7 @@ app.post('/api/geo-fortune', async (req, res) => {
 // GET /api/orders — 查看订单（管理员用）
 app.get('/api/orders', (req, res) => {
   try {
-    const orders = db.prepare('SELECT * FROM orders ORDER BY created_at DESC LIMIT 50').all();
+    const orders = _allOrders();
     res.json({ orders });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -1093,9 +1024,7 @@ app.post('/api/order', (req, res) => {
                      '\n祝愿词：' + (wishText || '') +
                      (specialReq ? '\n特别要求：' + specialReq : '');
     const amount = total ? parseInt(total) : 0;
-    db.prepare(
-      'INSERT INTO orders (order_no, product, amount, currency, donor_name, contact, wish_text, payment_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(orderNo, 'joss_burning', amount, 'usd', donorName, contact, fullWish, 'pending');
+    _insJossOrder(orderNo, 'joss_burning', amount, 'usd', donorName, contact, fullWish, 'pending');
     console.log('[JOSS ORDER]', orderNo, '-', donorName, '- $' + (amount/100).toFixed(2));
     res.json({ success: true, orderNo: orderNo });
   } catch (err) {
@@ -1279,12 +1208,15 @@ app.use(function(err, req, res, next) {
   res.status(500).json({ error: '服务暂时不可用，请稍后重试' });
 });
 
-// ── Start ──
-app.listen(PORT, () => {
-  console.log(`\n╔═══════════════════════════════════╗`);
-  console.log(`║   善缘 ShenYuan v2.0              ║`);
-  console.log(`║   Port: ${PORT}                      ║`);
-  console.log(`║   LLM: ${DEEPSEEK_API_KEY ? 'DeepSeek ✓' : 'No LLM ✗'}          ║`);
-  console.log(`║   Stripe: ${stripe ? '✓' : '✗ (no key)'}             ║`);
-  console.log(`╚═══════════════════════════════════╝\n`);
-});
+// ── Start (local only — Vercel uses api/index.js) ──
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`\n╔═══════════════════════════════════╗`);
+    console.log(`║   善缘 ShenYuan v2.0              ║`);
+    console.log(`║   Port: ${PORT}                      ║`);
+    console.log(`║   LLM: ${DEEPSEEK_API_KEY ? 'DeepSeek ✓' : 'No LLM ✗'}          ║`);
+    console.log(`║   Stripe: ${stripe ? '✓' : '✗ (no key)'}             ║`);
+    console.log(`╚═══════════════════════════════════╝\n`);
+  });
+}
+module.exports = app;
