@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#5bbfa0">
+<title>善缘 · 天赋测评</title>
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--jade:#5bbfa0;--jade-deep:#3d9e82;--bg:#faf8f5;--card:#fff;--ink:#1a1a18;--ink-mid:#4a4a46;--ink-light:#8a8a84;--radius:12px}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+body{max-width:420px;margin:0 auto;min-height:100vh;padding:0 16px 40px}
+
+.header{text-align:center;padding:36px 20px 8px}
+.header-icon{font-size:40px;margin-bottom:6px}
+.header-title{font-size:18px;font-weight:500;letter-spacing:2px}
+.header-sub{font-size:11px;color:var(--ink-light);letter-spacing:1px;margin-top:4px}
+
+.progress-bar{height:4px;background:rgba(91,191,160,0.12);border-radius:2px;margin:16px 0;overflow:hidden}
+.progress-fill{height:100%;background:var(--jade);border-radius:2px;transition:width 0.4s ease}
+
+.q-screen{display:none}
+.q-screen.active{display:block;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.q-num{font-size:11px;color:var(--jade-deep);letter-spacing:2px;margin-bottom:4px}
+.q-category{font-size:10px;color:var(--ink-light);letter-spacing:1px;margin-bottom:12px}
+.q-text{font-size:16px;line-height:1.5;color:var(--ink);margin-bottom:16px;font-weight:500}
+
+.options{display:flex;flex-direction:column;gap:8px}
+.option{background:var(--card);border:1.5px solid rgba(91,191,160,0.1);border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.04)}
+.option:hover{border-color:rgba(91,191,160,0.25)}
+.option.selected{border-color:var(--jade);background:rgba(91,191,160,0.04);box-shadow:0 0 0 1px var(--jade)}
+.option-letter{width:24px;height:24px;border-radius:50%;background:rgba(91,191,160,0.08);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--jade-deep);flex-shrink:0}
+.option.selected .option-letter{background:var(--jade);color:#fff}
+.option-text{font-size:14px;color:var(--ink);letter-spacing:0.5px;line-height:1.4}
+
+.btn-row{display:flex;gap:10px;margin-top:20px}
+.btn-prev{flex:1;padding:12px 0;border:1px solid rgba(91,191,160,0.15);border-radius:8px;background:var(--card);color:var(--ink-mid);font-family:'Noto Serif SC',serif;font-size:13px;cursor:pointer}
+.btn-next{flex:2;padding:12px 0;border:none;border-radius:8px;background:linear-gradient(135deg,var(--jade-deep),var(--jade));color:#fff;font-family:'Noto Serif SC',serif;font-size:13px;cursor:pointer;letter-spacing:1px;transition:all 0.2s}
+.btn-next:disabled{opacity:0.4;cursor:default}
+.btn-next:active:not(:disabled){transform:scale(0.97)}
+
+.result-screen{display:none;padding:20px 0}
+.result-screen.show{display:block}
+.result-badge{display:inline-block;background:rgba(91,191,160,0.1);padding:4px 14px;border-radius:8px;font-size:10px;color:var(--jade-deep);letter-spacing:1px;margin-bottom:12px}
+.result-title{font-size:20px;font-weight:500;margin-bottom:4px}
+.result-sub{font-size:12px;color:var(--ink-mid);margin-bottom:20px;line-height:1.6}
+.result-card{background:var(--card);border:1px solid rgba(91,191,160,0.1);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,0.04)}
+.result-card-title{font-size:12px;color:var(--jade-deep);letter-spacing:1px;margin-bottom:6px;font-weight:500}
+.result-card-text{font-size:12px;color:var(--ink-mid);line-height:1.8;letter-spacing:0.5px}
+.result-btn{display:block;width:100%;padding:14px 0;border:none;border-radius:8px;background:linear-gradient(135deg,var(--jade-deep),var(--jade));color:#fff;font-family:'Noto Serif SC',serif;font-size:14px;cursor:pointer;letter-spacing:1px;text-align:center;text-decoration:none;margin-top:16px;box-shadow:0 4px 16px rgba(91,191,160,0.2)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-icon">🎯</div>
+  <div class="header-title">职业天赋深度测评</div>
+  <div class="header-sub">20题 · 约5分钟</div>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:5%"></div></div>
+
+<div id="quizContainer"></div>
+
+<div class="result-screen" id="resultScreen">
+  <div style="text-align:center;padding:30px 0 20px">
+    <div style="font-size:48px;margin-bottom:12px">🎉</div>
+    <div class="result-badge">测评完成</div>
+    <div class="result-title">你的天赋画像</div>
+    <div class="result-sub" id="resultSub">分析中...</div>
+  </div>
+  <div id="resultCards"></div>
+  <a class="result-btn" href="zhiyuan.html">🎓 查看完整专业推荐</a>
+  <div style="text-align:center;padding:16px 0;font-size:10px;color:var(--ink-light);letter-spacing:0.5px">* 本测评基于天赋特征分析，仅供参考</div>
+</div>
+
+<script>
+var questions = [
+  // ── 兴趣倾向（4题）──
+  {category:'兴趣倾向', text:'做什么事的时候你最有成就感？', options:[
+    {text:'独自钻研解决了一个难题', value:'tech'},
+    {text:'组织大家一起完成了任务', value:'manage'},
+    {text:'创作出大家认可的作品', value:'creative'},
+    {text:'帮别人解决了实际困难', value:'social'}
+  ]},
+  {category:'兴趣倾向', text:'你平时最享受什么样的时光？', options:[
+    {text:'安静地看书、研究、打游戏', value:'tech'},
+    {text:'跟朋友出去玩、聊聊天', value:'social'},
+    {text:'做手工、画画、拍东西', value:'creative'},
+    {text:'规划安排自己的事情', value:'manage'}
+  ]},
+  {category:'兴趣倾向', text:'你最羡慕什么样的人？', options:[
+    {text:'在一个领域做到顶尖的专家', value:'tech'},
+    {text:'人脉广、到哪都受欢迎的人', value:'social'},
+    {text:'自由创作、时间自由的人', value:'creative'},
+    {text:'事业成功、有影响力的人', value:'manage'}
+  ]},
+  {category:'兴趣倾向', text:'如果不考虑钱，你想做什么？', options:[
+    {text:'技术研究员/科学家', value:'tech'},
+    {text:'创业者/企业家', value:'manage'},
+    {text:'艺术家/设计师/作家', value:'creative'},
+    {text:'教师/心理咨询师', value:'social'}
+  ]},
+  // ── 性格特点（4题）──
+  {category:'性格特点', text:'朋友一般怎么形容你？', options:[
+    {text:'靠谱、做事踏实', value:'tech'},
+    {text:'有想法、点子多', value:'creative'},
+    {text:'随和、好相处', value:'social'},
+    {text:'有主见、不服输', value:'manage'}
+  ]},
+  {category:'性格特点', text:'在团队里你通常是什么角色？', options:[
+    {text:'默默做事的那个人', value:'tech'},
+    {text:'出主意的那个人', value:'creative'},
+    {text:'调和关系的那个人', value:'social'},
+    {text:'拍板决定的那个人', value:'manage'}
+  ]},
+  {category:'性格特点', text:'做决定时你更依赖什么？', options:[
+    {text:'逻辑分析、数据', value:'tech'},
+    {text:'直觉和灵感', value:'creative'},
+    {text:'跟别人商量', value:'social'},
+    {text:'自己的判断', value:'manage'}
+  ]},
+  {category:'性格特点', text:'面对压力时你通常会？', options:[
+    {text:'一个人冷静分析', value:'tech'},
+    {text:'找点别的事转移注意力', value:'creative'},
+    {text:'找朋友倾诉', value:'social'},
+    {text:'正面刚、想办法解决', value:'manage'}
+  ]},
+  // ── 能力倾向（4题）──
+  {category:'能力倾向', text:'你上学时最擅长的科目是？', options:[
+    {text:'数学/物理/化学', value:'tech'},
+    {text:'语文/英语/历史', value:'social'},
+    {text:'美术/音乐/体育', value:'creative'},
+    {text:'都还行，没有特别突出的', value:'manage'}
+  ]},
+  {category:'能力倾向', text:'让你做一个项目，你最擅长什么环节？', options:[
+    {text:'前期调研分析', value:'tech'},
+    {text:'方案设计创意', value:'creative'},
+    {text:'沟通协调推进', value:'social'},
+    {text:'统筹规划执行', value:'manage'}
+  ]},
+  {category:'能力倾向', text:'学习新东西时你更喜欢？', options:[
+    {text:'看教程、自己琢磨', value:'tech'},
+    {text:'边做边学、即兴发挥', value:'creative'},
+    {text:'跟着老师/朋友学', value:'social'},
+    {text:'先搞懂框架再学细节', value:'manage'}
+  ]},
+  {category:'能力倾向', text:'你觉得自己最强的能力是？', options:[
+    {text:'分析和解决问题', value:'tech'},
+    {text:'创意和想象力', value:'creative'},
+    {text:'沟通和共情', value:'social'},
+    {text:'组织和执行力', value:'manage'}
+  ]},
+  // ── 价值观（4题）──
+  {category:'价值观', text:'你理想的工作状态是什么？', options:[
+    {text:'稳定、专业、受人尊敬', value:'tech'},
+    {text:'自由、有创意、不枯燥', value:'creative'},
+    {text:'团队氛围好、大家都喜欢我', value:'social'},
+    {text:'有挑战、能上升、赚得多', value:'manage'}
+  ]},
+  {category:'价值观', text:'你对成功的定义是？', options:[
+    {text:'在自己的领域做到最好', value:'tech'},
+    {text:'做出有影响力的作品', value:'creative'},
+    {text:'帮助很多人、被大家需要', value:'social'},
+    {text:'实现财务自由、时间自由', value:'manage'}
+  ]},
+  {category:'价值观', text:'什么事会让你最有动力？', options:[
+    {text:'遇到一个感兴趣的技术难题', value:'tech'},
+    {text:'可以自由发挥创意的机会', value:'creative'},
+    {text:'得到大家的认可和喜欢', value:'social'},
+    {text:'一个明确的上升目标和回报', value:'manage'}
+  ]},
+  {category:'价值观', text:'你希望别人怎么评价你？', options:[
+    {text:'一个很专业的人', value:'tech'},
+    {text:'一个很有趣的人', value:'creative'},
+    {text:'一个很温暖的人', value:'social'},
+    {text:'一个很有能力的人', value:'manage'}
+  ]},
+  // ── 工作偏好（4题）──
+  {category:'工作偏好', text:'你更喜欢什么样的工作环境？', options:[
+    {text:'安静、独立的空间', value:'tech'},
+    {text:'自由、灵活的氛围', value:'creative'},
+    {text:'热闹、有人气的环境', value:'social'},
+    {text:'高效、有秩序的环境', value:'manage'}
+  ]},
+  {category:'工作偏好', text:'你更喜欢跟什么类型的人共事？', options:[
+    {text:'专业能力强的人', value:'tech'},
+    {text:'有创意有趣的人', value:'creative'},
+    {text:'好沟通、好相处的人', value:'social'},
+    {text:'有目标有执行力的人', value:'manage'}
+  ]},
+  {category:'工作偏好', text:'让你独立做一件事 vs 跟团队一起，你选？', options:[
+    {text:'独立做，自己掌控', value:'tech'},
+    {text:'看情况，都行', value:'creative'},
+    {text:'团队一起，更有意思', value:'social'},
+    {text:'我来带队，大家一起', value:'manage'}
+  ]},
+  {category:'工作偏好', text:'你理想的生活节奏是？', options:[
+    {text:'规律、安稳、可预期', value:'tech'},
+    {text:'自由、随性、每天不一样', value:'creative'},
+    {text:'充实、有人陪伴', value:'social'},
+    {text:'快节奏、不断向上', value:'manage'}
+  ]}
+];
+
+var answers = {};
+var currentQ = 0;
+
+function render() {
+  var container = document.getElementById('quizContainer');
+  container.innerHTML = '';
+
+  questions.forEach(function(q, idx) {
+    var div = document.createElement('div');
+    div.className = 'q-screen' + (idx === currentQ ? ' active' : '');
+    div.id = 'q' + idx;
+
+    var optsHtml = '';
+    var letters = ['A','B','C','D'];
+    q.options.forEach(function(opt, oi) {
+      var sel = answers[idx] === opt.value ? ' selected' : '';
+      optsHtml += '<div class="option' + sel + '" onclick="select(' + idx + ',\'' + opt.value + '\')">' +
+        '<div class="option-letter">' + letters[oi] + '</div>' +
+        '<div class="option-text">' + opt.text + '</div></div>';
+    });
+
+    var hasAnswer = answers[idx] !== undefined;
+
+    div.innerHTML =
+      '<div class="q-num">' + (idx+1) + '/' + questions.length + '</div>' +
+      '<div class="q-category">' + q.category + '</div>' +
+      '<div class="q-text">' + q.text + '</div>' +
+      '<div class="options">' + optsHtml + '</div>' +
+      '<div class="btn-row">' +
+        (idx > 0 ? '<button class="btn-prev" onclick="prev()">← 上一题</button>' : '<div></div>') +
+        '<button class="btn-next" id="btnNext' + idx + '" onclick="next()"' + (hasAnswer ? '' : ' disabled') + '>' +
+        (idx < questions.length - 1 ? '下一题 →' : '查看结果 ✓') + '</button>' +
+      '</div>';
+
+    container.appendChild(div);
+  });
+
+  updateProgress();
+}
+
+function select(idx, value) {
+  answers[idx] = value;
+  var btn = document.getElementById('btnNext' + idx);
+  if (btn) btn.disabled = false;
+  // Update visual
+  var qDiv = document.getElementById('q' + idx);
+  if (qDiv) {
+    var opts = qDiv.querySelectorAll('.option');
+    opts.forEach(function(o) {
+      o.classList.remove('selected');
+      if (o.querySelector('.option-text').textContent.trim() ===
+          questions[idx].options.find(function(x){return x.value===value}).text.trim()) {
+        o.classList.add('selected');
+      }
+    });
+  }
+}
+
+function next() {
+  if (currentQ < questions.length - 1 && answers[currentQ]) {
+    currentQ++;
+    render();
+  } else if (currentQ === questions.length - 1 && answers[currentQ]) {
+    showResult();
+  }
+}
+
+function prev() {
+  if (currentQ > 0) {
+    currentQ--;
+    render();
+  }
+}
+
+function updateProgress() {
+  var pct = ((currentQ + (answers[currentQ] ? 1 : 0)) / questions.length) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+}
+
+function showResult() {
+  document.getElementById('quizContainer').style.display = 'none';
+  document.querySelector('.header').style.display = 'none';
+  document.querySelector('.progress-bar').style.display = 'none';
+
+  var resultScreen = document.getElementById('resultScreen');
+  resultScreen.classList.add('show');
+
+  // Count scores
+  var scores = {tech:0, creative:0, social:0, manage:0};
+  for (var idx in answers) {
+    if (scores[answers[idx]] !== undefined) scores[answers[idx]]++;
+  }
+
+  // Find dominant type
+  var maxType = Object.keys(scores).reduce(function(a,b){return scores[a]>scores[b]?a:b});
+  var maxScore = scores[maxType];
+
+  var typeNames = {
+    tech:'钻研型 · 技术专家',
+    creative:'创造型 · 创意人才',
+    social:'社交型 · 协作能手',
+    manage:'领导型 · 管理潜力'
+  };
+
+  var typeDescs = {
+    tech:'你喜欢独处钻研，擅长逻辑分析和解决复杂问题。适合技术研发、数据分析、学术研究等方向。你命里印星旺，适合深耕一个领域做到顶尖。',
+    creative:'你有丰富的想象力和创造力，不喜欢被规则束缚。适合设计、媒体、艺术、内容创作等方向。你命里食伤旺，天生靠创意吃饭。',
+    social:'你善于与人沟通，有很强的共情能力。适合教育、咨询、人力资源、公共服务等方向。你命里比劫旺，跟人打交道就是你的天赋。',
+    manage:'你目标感强，喜欢统筹规划和组织协调。适合管理、创业、市场营销、项目管理等方向。你命里官杀旺，天生适合带团队。'
+  };
+
+  var typeIndustries = {
+    tech:['计算机科学','软件工程','人工智能','数据科学','电子信息','数学','物理'],
+    creative:['数字媒体','广告设计','编导','摄影','服装设计','音乐','写作'],
+    social:['教育学','心理学','人力资源','行政管理','传媒','外语','法学'],
+    manage:['工商管理','市场营销','金融','国际贸易','创业管理','项目管理']
+  };
+
+  document.getElementById('resultSub').textContent = '你的核心特质: ' + typeNames[maxType];
+
+  var cardsHtml = '';
+  cardsHtml += '<div class="result-card"><div class="result-card-title">🧬 天赋分布</div><div class="result-card-text">' +
+    '钻研型: ' + scores.tech + '题 | 创造型: ' + scores.creative +
+    '题 | 社交型: ' + scores.social + '题 | 领导型: ' + scores.manage + '题</div></div>';
+
+  cardsHtml += '<div class="result-card"><div class="result-card-title">🎯 核心天赋</div>' +
+    '<div class="result-card-text">' + typeDescs[maxType] + '</div></div>';
+
+  cardsHtml += '<div class="result-card"><div class="result-card-title">📚 推荐专业方向</div>' +
+    '<div class="result-card-text">' + typeIndustries[maxType].join('、') + '</div></div>';
+
+  cardsHtml += '<div class="result-card"><div class="result-card-title">💡 深度建议</div>' +
+    '<div class="result-card-text">结合您的出生信息再做一次AI命理分析，可以得到更精准的行业方向、旺运城市和学校推荐。<br>点击下方进入完整报告。</div></div>';
+
+  document.getElementById('resultCards').innerHTML = cardsHtml;
+}
+
+render();
+</script>
+</body>
+</html>
