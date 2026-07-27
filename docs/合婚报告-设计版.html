@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>善缘 · 合婚配对报告</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #1a1610;
+  color: rgba(250,245,235,0.95);
+  font-family: 'STSong', 'Georgia', 'Times New Roman', serif;
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+.cover {
+  height: 297mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  page-break-after: always;
+  background: radial-gradient(ellipse at 50% 25%, rgba(201,168,76,0.10) 0%, transparent 55%),
+              radial-gradient(ellipse at 50% 75%, rgba(212,115,107,0.06) 0%, transparent 45%),
+              linear-gradient(180deg, #1a1610 0%, #221c12 50%, #1a1610 100%);
+}
+
+.cover::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(1px 1px at 20% 30%, rgba(201,168,76,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 20%, rgba(212,115,107,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 50% 60%, rgba(201,168,76,0.15) 0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 80%, rgba(212,115,107,0.2) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.cover-border { position: absolute; top: 20mm; left: 20mm; right: 20mm; bottom: 20mm; border: 1px solid rgba(201,168,76,0.15); pointer-events: none; }
+.cover-border-inner { position: absolute; top: 24mm; left: 24mm; right: 24mm; bottom: 24mm; border: 0.5px solid rgba(201,168,76,0.08); pointer-events: none; }
+.cover-top-deco { position: absolute; top: 30mm; left: 50%; transform: translateX(-50%); width: 80px; height: 1px; background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4), transparent); }
+.cover-badge { font-family: 'Georgia', serif; font-style: italic; font-size: 14px; letter-spacing: 6px; color: rgba(201,168,76,0.5); margin-bottom: 30px; font-weight: 300; }
+.cover-icon { font-size: 64px; margin-bottom: 24px; opacity: 0.8; }
+.cover-title { font-size: 40px; font-weight: 300; letter-spacing: 10px; color: #c9a84c; margin-bottom: 8px; }
+.cover-subtitle { font-size: 14px; font-weight: 300; letter-spacing: 6px; color: rgba(250,245,235,0.5); margin-bottom: 40px; }
+.cover-gold-line { width: 120px; height: 1px; background: linear-gradient(90deg, transparent, #c9a84c, transparent); margin: 0 auto 40px; }
+
+.couple-row {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 20px;
+  justify-content: center;
+}
+
+.couple-card {
+  background: rgba(201,168,76,0.05);
+  border: 0.5px solid rgba(201,168,76,0.12);
+  border-radius: 6px;
+  padding: 16px 24px;
+  text-align: center;
+  min-width: 160px;
+}
+
+.couple-name { font-size: 15px; color: #c9a84c; letter-spacing: 2px; margin-bottom: 4px; }
+.couple-dob { font-size: 11px; color: rgba(250,245,235,0.4); letter-spacing: 1px; }
+.couple-heart { font-size: 28px; margin: 8px 0; }
+.couple-score { font-size: 24px; color: #d4736b; letter-spacing: 2px; }
+
+.cover-meta { font-size: 12px; letter-spacing: 2px; color: rgba(250,245,235,0.35); line-height: 2; }
+.cover-meta span { display: block; }
+.cover-bottom-deco { position: absolute; bottom: 30mm; left: 50%; transform: translateX(-50%); font-style: italic; font-size: 12px; letter-spacing: 4px; color: rgba(201,168,76,0.2); }
+
+/* PAGES */
+.page { padding: 28mm 22mm 22mm; position: relative; min-height: 297mm; page-break-after: always; background: linear-gradient(180deg, #1c1812 0%, #1e1a14 50%, #1c1812 100%); }
+.page::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, rgba(212,115,107,0.3), rgba(201,168,76,0.5), rgba(212,115,107,0.3), transparent); }
+.page-header { position: absolute; top: 16mm; left: 0; right: 0; text-align: center; font-size: 9px; letter-spacing: 4px; color: rgba(201,168,76,0.2); }
+.page-footer { position: absolute; bottom: 16mm; left: 0; right: 0; text-align: center; font-size: 9px; letter-spacing: 2px; color: rgba(250,245,235,0.12); }
+.section-header { text-align: center; margin-bottom: 24px; }
+.section-emoji { font-size: 32px; display: block; margin-bottom: 8px; }
+.section-title { font-size: 22px; font-weight: 400; letter-spacing: 4px; color: #c9a84c; margin-bottom: 4px; }
+.section-line { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, #c9a84c, transparent); margin: 12px auto 0; }
+/* BIGGER FONT - better readability */
+.section-body { font-size: 14px; line-height: 2.0; letter-spacing: 0.03em; color: rgba(250,245,235,0.92); }
+.section-body p { margin-bottom: 14px; text-indent: 2em; }
+.section-body strong { color: #c9a84c; font-weight: 500; }
+
+.highlight-box { background: rgba(201,168,76,0.08); border: 0.5px solid rgba(201,168,76,0.2); border-radius: 6px; padding: 18px 22px; margin: 18px 0; }
+.highlight-box-title { font-size: 13px; letter-spacing: 2px; color: #c9a84c; margin-bottom: 10px; font-weight: 500; }
+.highlight-box ul { list-style: none; padding: 0; }
+.highlight-box li { font-size: 14px; line-height: 1.9; padding-left: 18px; position: relative; margin-bottom: 6px; color: rgba(250,245,235,0.88); }
+.highlight-box li::before { content: '✦'; position: absolute; left: 0; color: rgba(201,168,76,0.4); font-size: 9px; top: 3px; }
+
+.rose-box { border-color: rgba(212,115,107,0.2); background: rgba(212,115,107,0.06); }
+.rose-title { color: #d4736b; }
+.rose-box li::before { color: rgba(212,115,107,0.4); }
+
+.quote { border-left: 2px solid rgba(212,115,107,0.3); padding: 14px 20px; margin: 18px 0; font-style: italic; color: rgba(250,245,235,0.75); font-size: 14px; background: rgba(212,115,107,0.03); line-height: 1.9; }
+
+.table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+.table th { background: rgba(201,168,76,0.12); color: #c9a84c; padding: 10px 14px; text-align: left; font-weight: 400; letter-spacing: 1px; border-bottom: 0.5px solid rgba(201,168,76,0.25); }
+.table td { padding: 10px 14px; border-bottom: 0.5px solid rgba(201,168,76,0.08); color: rgba(250,245,235,0.78); line-height: 1.7; font-size: 13px; }
+
+.score-bar { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+.score-label { font-size: 13px; color: rgba(250,245,235,0.6); min-width: 100px; }
+.score-track { flex: 1; height: 8px; background: rgba(255,255,255,0.06); border-radius: 4px; overflow: hidden; }
+.score-fill { height: 100%; border-radius: 4px; }
+.score-fill.gold { background: #c9a84c; }
+.score-fill.rose { background: #d4736b; }
+.score-fill.jade { background: #5bbfa0; }
+.score-val { font-size: 13px; color: #c9a84c; min-width: 32px; text-align: right; }
+
+ul, ol { padding-left: 24px; margin-bottom: 14px; }
+li { margin-bottom: 6px; font-size: 14px; line-height: 1.8; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <div class="cover-border"></div>
+  <div class="cover-border-inner"></div>
+  <div class="cover-top-deco"></div>
+  <div class="cover-badge">S H E N Y U A N</div>
+  <div class="cover-icon">💑</div>
+  <h1 class="cover-title">合婚配对报告</h1>
+  <p class="cover-subtitle">COMPATIBILITY READING</p>
+  <div class="cover-gold-line"></div>
+
+  <div class="couple-row">
+    <div class="couple-card">
+      <div class="couple-name">A方 · 女</div>
+      <div class="couple-dob">1991.10.6 卯时</div>
+      <div class="couple-heart">♀</div>
+      <div class="couple-score">戊土</div>
+    </div>
+    <div class="couple-card">
+      <div class="couple-name">B方 · 男</div>
+      <div class="couple-dob">1989.3.12 酉时</div>
+      <div class="couple-heart">♂</div>
+      <div class="couple-score">丙火</div>
+    </div>
+  </div>
+
+  <div class="cover-meta">
+    <span>合婚评分 · 78 / 100</span>
+    <span>中上等姻缘 · 互补深厚 · 需用心经营</span>
+  </div>
+  <div class="cover-bottom-deco">~ 缘分天定 · 姻缘人为 ~</div>
+</div>
+
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  C O M P A T I B I L I T Y  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">💑</span>
+    <h2 class="section-title">合婚总评</h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+
+    <p>A方戊土女 — 生于辛未年、丁酉月、戊戌日、乙卯时。戊土为城墙之土，厚重沉稳，内心坚韧但思虑多。</p>
+    <p>B方丙火男 — 生于己巳年、丁卯月、丙寅日、丁酉时。丙火为太阳之火，热情豪爽，行动力强但易急躁。</p>
+
+    <div class="score-bar">
+      <span class="score-label">合婚总分</span>
+      <div class="score-track"><div class="score-fill gold" style="width:78%"></div></div>
+      <span class="score-val">78</span>
+    </div>
+    <div class="score-bar">
+      <span class="score-label">五行互补</span>
+      <div class="score-track"><div class="score-fill jade" style="width:80%"></div></div>
+      <span class="score-val">16/20</span>
+    </div>
+    <div class="score-bar">
+      <span class="score-label">性格匹配</span>
+      <div class="score-track"><div class="score-fill rose" style="width:60%"></div></div>
+      <span class="score-val">12/20</span>
+    </div>
+    <div class="score-bar">
+      <span class="score-label">价值观兼容</span>
+      <div class="score-track"><div class="score-fill gold" style="width:80%"></div></div>
+      <span class="score-val">12/15</span>
+    </div>
+    <div class="score-bar">
+      <span class="score-label">气场合度</span>
+      <div class="score-track"><div class="score-fill rose" style="width:60%"></div></div>
+      <span class="score-val">6/10</span>
+    </div>
+
+    <div class="quote">此二人之合，属于中上等姻缘。根基尚可，有互补之处，亦有深刻缘分。戊土遇丙火——厚重的土地承接炽热的阳光，若懂得调和，便是天地交融；若不懂经营，便是干涸与灼烧。</div>
+
+    <p><strong>综合判断：</strong>姻缘可成，但须双方付出巨大努力。好处是五行有深层互补——A方的土能泄B方的火，B方的火能温暖A方的土。但问题也同样明显：沟通风格差异大（土慢火急），强弱暗争（外表火强内里土韧），需要极高的包容和智慧。</p>
+
+    <div class="highlight-box rose-box">
+      <div class="highlight-box-title rose-title">💡 相处关键</div>
+      <ul>
+        <li><strong>主动找"水"</strong> — 家中布置蓝色黑色，养鱼，去海边度假，多游泳</li>
+        <li><strong>B方（丙火男）</strong> — 必须学会控制脾气，主动向A方学习沉稳和坚韧</li>
+        <li><strong>A方（戊土女）</strong> — 要学会表达不满，不要沉默冷处理，B方需要热烈回应</li>
+        <li><strong>共同活动</strong> — 文化类（博物馆、音乐会）能增加共同语言，减少火土冲突</li>
+      </ul>
+    </div>
+  </div>
+  <div class="page-footer">— 03 —</div>
+</div>
+
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  C O M P A T I B I L I T Y  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">🟤</span>
+    <h2 class="section-title">五行互补详解</h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+
+    <table class="table">
+      <tr><th>维度</th><th>A方（戊土女）</th><th>B方（丙火男）</th></tr>
+      <tr><td>日主</td><td>戊土 — 城墙之土</td><td>丙火 — 太阳之火</td></tr>
+      <tr><td>身强/弱</td><td>身弱，喜火土</td><td>身旺，急需水调候</td></tr>
+      <tr><td>最旺五行</td><td>土（年支、日支）</td><td>木（地支三合木局）</td></tr>
+      <tr><td>最缺五行</td><td>水（全局无水）</td><td>水（全局无水）</td></tr>
+      <tr><td>月令格局</td><td>伤官格</td><td>正印格</td></tr>
+    </table>
+
+    <p><strong>A方补B方：</strong>A方的土可以泄B方过旺的火，起到中和作用。A方的金（伤官）可以间接生水，为B方提供所需的滋润。</p>
+
+    <p><strong>B方补A方：</strong>B方的火直接给A方提供温暖和力量，极大增强A方的自信心和行动力。B方的木能克制A方的官杀，让A方感到有靠山。</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">⚠ 失分点</div>
+      <p style="margin:0; text-indent:0; font-size:14px; line-height:1.9;">B方的火太旺，A方的土容易被"烤焦"。A方需要水来滋润却没有水，只能间接生水，这是一个缓慢的过程。在生活中，这意味着A方对B方的包容有极限，当B方过于急躁时，A方会感到窒息。</p>
+    </div>
+
+  </div>
+  <div class="page-footer">— 04 —</div>
+</div>
+
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  C O M P A T I B I L I T Y  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">💕</span>
+    <h2 class="section-title">性格与气场</h2>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+
+    <p><strong>A方（戊土女）性格：</strong>厚重、诚信、沉稳、包容。默默付出型，有原则有主见。内心聪慧有才华，但思虑过多，容易内耗。说话一针见血，有时伤人而不自知。</p>
+
+    <p><strong>B方（丙火男）性格：</strong>热情、慷慨、豪爽、冲动。走到哪里都带着光芒和热量，有强大的感染力和领袖气质。做事雷厉风行，但也容易急躁粗心。内心敏感，需要被认可和赞美。</p>
+
+    <div class="highlight-box rose-box">
+      <div class="highlight-box-title rose-title">💢 核心矛盾</div>
+      <ul>
+        <li><strong>沟通风格冲突：</strong>A方说话慢、讲逻辑、重事实；B方说话快、凭直觉、重气势。一个觉得对方"钻牛角尖"，一个觉得对方"敷衍了事"</li>
+        <li><strong>强弱暗争：</strong>表面B方主动强势，实则A方内里有股倔强。触及原则时，A方会沉默抵抗，B方暴跳如雷却无处着力</li>
+        <li><strong>付出模式不同：</strong>B方喜欢轰轰烈烈的爱，需要热烈回应；A方是"润物细无声"型，默默奉献但不擅长表达</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">💝 增进姻缘</div>
+      <ul>
+        <li><strong>最佳结婚年份：</strong>2026丙午年 或 2027丁未年</li>
+        <li><strong>最佳方向：</strong>往南方发展或旅行，增强火土能量</li>
+        <li><strong>开运色：</strong>红色、黄色（A方）；蓝色、黑色（B方）</li>
+        <li><strong>相处秘诀：</strong>A方多主动表达感情，B方多耐心倾听 — 火需要燃料，土需要雨水</li>
+      </ul>
+    </div>
+
+    <div class="quote">《三命通会》云：戊土遇丙火，乃"日照坤舆"之象——太阳照耀大地，本为吉格。但火过旺则土焦，须有雨露调和。你们之间的功课，正是找到那场恰到好处的雨。</div>
+
+    <p style="text-align:center; color:rgba(201,168,76,0.4); font-size:11px; margin-top:24px; text-indent:0;">*本报告由AI生成，仅供娱乐参考。命运终究掌握在自己手中。*</p>
+  </div>
+  <div class="page-footer">— 05 —</div>
+</div>
+
+</body>
+</html>

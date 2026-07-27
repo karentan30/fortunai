@@ -100,6 +100,43 @@
 .page-enter-d5{animation-delay:.5s}.page-enter-d6{animation-delay:.6s}
 .page-enter-d7{animation-delay:.7s}.page-enter-d8{animation-delay:.8s}
 
+/* ── CTA下方三小入口 ── */
+.daily-sub-entries {
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  margin:10px 16px 20px;
+  animation:fadeUp 0.7s 0.33s ease both;
+}
+.daily-sub-entry {
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;padding:12px 4px 10px;border-radius:8px;text-align:center;
+  text-decoration:none;min-height:70px;
+  background:rgba(201,168,76,0.07);
+  border:1px solid rgba(201,168,76,0.35);
+  transition:all 0.3s ease;
+}
+.daily-sub-entry:hover {
+  background:rgba(201,168,76,0.14);
+  border-color:rgba(201,168,76,0.6);
+  transform:translateY(-2px);
+}
+.daily-sub-entry .sub-icon{font-size:20px;line-height:1}
+.daily-sub-entry .sub-label{font-size:11px;font-weight:500;color:var(--ink-text);letter-spacing:0.04em}
+
+/* ── 今日运势Widget ── */
+.daily-widget{margin:0 16px 18px;padding:20px 20px 16px;border-radius:14px;display:flex;flex-direction:column;align-items:center;text-align:center;cursor:pointer;text-decoration:none;background:rgba(23,14,6,0.45);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border:1px solid rgba(201,168,76,0.2);box-shadow:0 8px 32px rgba(0,0,0,0.25),0 0 40px rgba(201,168,76,0.04);transition:all .3s ease;animation:fadeUp .7s .4s ease both;position:relative;overflow:hidden}
+.daily-widget::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 20%,rgba(201,168,76,0.06),transparent 70%);pointer-events:none}
+.daily-widget:hover{transform:translateY(-3px);border-color:rgba(201,168,76,0.4);box-shadow:0 12px 40px rgba(201,168,76,0.12),0 0 30px rgba(201,168,76,0.06)}
+.dw-label{font-size:9px;letter-spacing:.22em;color:var(--sub-text);margin-bottom:4px}
+.dw-date{font-size:15px;letter-spacing:.1em;color:var(--gold-light);font-weight:500;margin-bottom:14px}
+.dw-trigram{width:56px;height:56px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;position:relative}
+.dw-trigram::before{content:'';position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(201,168,76,0.18);box-shadow:0 0 24px rgba(201,168,76,0.06);animation:spin-bagua 10s linear infinite}
+.dw-trigram::after{content:'';position:absolute;inset:5px;border-radius:50%;border:1px dashed rgba(201,168,76,0.1);animation:spin-bagua-reverse 8s linear infinite}
+.trigram-sym{font-size:24px;color:var(--gold-light);z-index:1;animation:spin-bagua-reverse 14s linear infinite}
+.dw-keyword{font-size:16px;font-weight:500;letter-spacing:.16em;color:var(--gold);padding:3px 18px;border:1px solid rgba(201,168,76,0.18);border-radius:20px;background:rgba(201,168,76,0.06);margin-bottom:8px;min-height:26px}
+.dw-sub{font-size:10px;color:var(--sub-text);letter-spacing:.06em}
+@keyframes spin-bagua{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes spin-bagua-reverse{from{transform:rotate(0deg)}to{transform:rotate(-360deg)}}
+
 /* 卡片悬浮增强 */
 .menu-card:hover:not(:active) {
   transform:translateY(-4px) !important;
@@ -221,35 +258,27 @@
   <div class="testimonials-dots" id="testimonialsDots"></div>
 </div>
 
-<!-- 免费CTA -->
-<a class="cta-free" href="pages/daily.html">
-  <span class="cta-icon">🔮</span>
-  <div>
-    <div class="cta-text">免费测算今日运势</div>
-    <div class="cta-sub">财运 · 桃花 · 天机 · 宜忌</div>
+<!-- 今日运势Widget -->
+<a class="daily-widget" href="pages/daily.html">
+  <div class="dw-label">— 每日天机 —</div>
+  <div class="dw-date" id="dwDateWidget"></div>
+  <div class="dw-trigram">
+    <span class="trigram-sym" id="trigramSym">☯</span>
   </div>
-  <span class="cta-arr">›</span>
+  <div class="dw-keyword" id="dwKeyword"></div>
+  <div class="dw-sub">点击查看完整运势报告 →</div>
 </a>
 
-<!-- 今日运势入口 -->
-<a class="daily-banner" href="pages/daily.html">
-  <span class="daily-icon">🌙</span>
-  <div class="daily-info">
-    <div class="daily-title" id="dailyTitle">今日运势 · 加载中</div>
-    <div class="daily-sub">点击查看完整每日天机报告</div>
-  </div>
-  <span class="daily-arr">›</span>
-</a>
-
-<!-- 每日签到入口 -->
-<a class="daily-banner" href="pages/daily-sign.html" style="animation:fadeUp 0.7s 0.42s ease both">
-  <span class="daily-icon">☯</span>
-  <div class="daily-info">
-    <div class="daily-title">每日灵签 · 签到</div>
-    <div class="daily-sub">签到打卡 · 积累福缘 · 连续签到有惊喜</div>
-  </div>
-  <span class="daily-arr">›</span>
-</a>
+<div class="daily-sub-entries" style="margin-top:-12px">
+  <a class="daily-sub-entry" href="pages/daily-sign.html">
+    <span class="sub-icon">📿</span>
+    <span class="sub-label">每日灵签</span>
+  </a>
+  <a class="daily-sub-entry" href="pages/bazi.html?tier=trial">
+    <span class="sub-icon">💰</span>
+    <span class="sub-label">今日财运</span>
+  </a>
+</div>
 
 <!-- 算命占卜 -->
 <div class="cat-section">
@@ -302,6 +331,11 @@
       <div class="card-glyph">宅</div>
       <div class="card-zh">风水评测</div>
       <div class="card-en">Feng Shui</div>
+    </a>
+    <a class="menu-card glass-card new-badge" href="pages/xingming.html">
+      <div class="card-glyph">名</div>
+      <div class="card-zh">姓名称骨</div>
+      <div class="card-en">Name Analysis</div>
     </a>
   </div>
 </div>
@@ -556,15 +590,44 @@ function showToast(msg, type) {
   t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
 }
 
-// 动态日期
+// 今日运势Widget - 日期 & 关键词
 (function(){
   var d = new Date();
   var month = d.getMonth() + 1;
   var day = d.getDate();
   var weekdays = ['日','一','二','三','四','五','六'];
   var wd = weekdays[d.getDay()];
-  var el = document.getElementById('dailyTitle');
-  if (el) el.textContent = '今日运势 · ' + month + '月' + day + '日 周' + wd;
+  var dateStr = month + '月' + day + '日 周' + wd;
+
+  var dwDate = document.getElementById('dwDateWidget');
+  if (dwDate) dwDate.textContent = dateStr;
+
+  var keywords = ['诸事皆宜','谨言慎行','贵人临门','财星高照','否极泰来','柳暗花明','韬光养晦','顺势而为','佳期如梦','乘风破浪','厚积薄发','上上大吉','紫气东来','福星高照','六六大顺','万事胜意'];
+  var trigrams = ['☰','☱','☲','☳','☴','☵','☶','☷'];
+
+  var todayKey = 'sy_daily_widget';
+  var today = d.getFullYear() + '-' + (month<10?'0':'') + month + '-' + (day<10?'0':'') + day;
+  var saved = localStorage.getItem(todayKey);
+  var kw, tg;
+
+  if (saved) {
+    try {
+      var data = JSON.parse(saved);
+      if (data.date === today) { kw = data.keyword; tg = data.trigram; }
+    } catch(e) {}
+  }
+
+  if (!kw) {
+    kw = keywords[Math.floor(Math.random() * keywords.length)];
+    tg = trigrams[Math.floor(Math.random() * trigrams.length)];
+    try { localStorage.setItem(todayKey, JSON.stringify({date:today,keyword:kw,trigram:tg})); } catch(e) {}
+  }
+
+  var kwEl = document.getElementById('dwKeyword');
+  if (kwEl) kwEl.textContent = '✦ ' + kw + ' ✦';
+
+  var tgEl = document.getElementById('trigramSym');
+  if (tgEl) tgEl.textContent = tg;
 })();
 
 // 账户入口登录状态

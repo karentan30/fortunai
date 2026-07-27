@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0e0a04">
+<title>ShenYuan · Chinese Name</title>
+<meta property="og:title" content="ShenYuan · AI Chinese Name Generator">
+<meta property="og:description" content="Get a personalized Chinese name based on your birth date and personality">
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0e0a04;--card:#170e06;--gold:#c9a84c;--gold-light:#e8d08a;--jade:#5bbfa0;--ink:rgba(255,245,220,0.85);--sub:rgba(255,245,220,0.55)}
+html,body{background:var(--bg);font-family:'Cormorant Garamond','Georgia',serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:120px;overflow-y:auto}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,0.1) 0%,transparent 50%);pointer-events:none;z-index:0}
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(201,168,76,0.6);cursor:pointer;padding:4px 0}
+.header{text-align:center;padding:44px 20px 20px;position:relative;z-index:1}
+.header-icon{font-size:48px;margin-bottom:8px}
+.header-title{font-size:20px;font-weight:300;letter-spacing:0.16em;margin-bottom:4px}
+.header-title-en{font-size:11px;letter-spacing:0.2em;color:rgba(201,168,76,0.45);margin-bottom:14px;font-style:italic}
+.gold-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto}
+.form-section{padding:14px 16px;position:relative;z-index:1}
+.form-label{font-size:9px;letter-spacing:0.18em;color:rgba(201,168,76,0.5);margin-bottom:10px;font-family:'Noto Serif SC',serif}
+.field-group{background:var(--card);border:1px solid rgba(201,168,76,0.12);border-radius:8px;overflow:hidden}
+.field-row{display:flex;align-items:center;padding:0 14px;border-bottom:1px solid rgba(201,168,76,0.08)}
+.field-row:last-child{border-bottom:none}
+.field-label{font-size:11px;color:var(--sub);letter-spacing:0.04em;min-width:64px;flex-shrink:0;font-family:'Noto Serif SC',serif}
+.field-input,.field-select{flex:1;background:none;border:none;outline:none;color:var(--ink);padding:12px 8px;letter-spacing:0.04em;-webkit-appearance:none}
+.field-input{font-family:'Cormorant Garamond',serif;font-size:14px}
+.field-select{font-family:'Cormorant Garamond',serif;font-size:13px}
+.field-select option{background:var(--card);color:var(--ink)}
+.gender-row{display:flex;gap:8px;margin-bottom:12px;font-family:'Noto Serif SC',serif}
+.gender-opt{flex:1;background:var(--card);border:1px solid rgba(201,168,76,0.12);border-radius:6px;padding:10px 0;text-align:center;font-size:13px;color:var(--sub);letter-spacing:0.08em;cursor:pointer;transition:all 0.2s}
+.gender-opt.selected{border-color:var(--gold);background:rgba(201,168,76,0.12);color:var(--gold-light)}
+.btn-gen{width:100%;padding:15px 0;background:linear-gradient(135deg,#8a6420,#c9a84c,#e8d08a);border:none;border-radius:4px;color:rgba(14,10,4,0.95);font-family:'Noto Serif SC',serif;font-size:14px;letter-spacing:0.22em;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,0.3)}
+.loading-screen{display:none;text-align:center;padding:60px 20px;position:relative;z-index:1}
+.loading-screen.show{display:block}
+.loading-ring{width:48px;height:48px;border:2px solid rgba(201,168,76,0.1);border-top-color:var(--gold);border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-family:'Noto Serif SC',serif;font-size:12px;color:var(--sub);letter-spacing:0.1em}
+.result-screen{display:none;position:relative;z-index:1;padding:0 16px}
+.result-screen.show{display:block}
+.name-card{background:var(--card);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:28px 20px;text-align:center;margin-bottom:16px;box-shadow:0 8px 32px rgba(0,0,0,0.3);position:relative;overflow:hidden}
+.name-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),var(--jade),var(--gold),transparent)}
+.name-chinese-char{font-family:'Noto Serif SC',serif;font-size:52px;color:var(--gold-light);letter-spacing:8px;margin-bottom:8px;font-weight:300}
+.name-pinyin{font-size:14px;color:var(--jade);letter-spacing:2px;margin-bottom:12px;font-style:italic}
+.name-meaning-en{font-size:13px;color:var(--ink);line-height:1.7;letter-spacing:0.03em;margin-bottom:6px}
+.name-meaning-zh{font-size:11px;color:var(--sub);line-height:1.6;letter-spacing:0.06em;font-family:'Noto Serif SC',serif}
+.name-detail{background:var(--card);border:1px solid rgba(201,168,76,0.1);border-radius:8px;padding:16px;margin-bottom:12px}
+.name-detail.title{font-size:10px;color:var(--gold);letter-spacing:0.14em;margin-bottom:8px;font-family:'Noto Serif SC',serif}
+.name-detail p{font-size:11px;line-height:1.9;letter-spacing:0.04em;color:var(--ink);font-family:'Noto Serif SC',serif}
+.alt-list{display:flex;flex-direction:column;gap:8px}
+.alt-item{background:var(--card);border:1px solid rgba(201,168,76,0.08);border-radius:8px;padding:14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer}
+.alt-item .left{text-align:left}
+.alt-item .cn{font-family:'Noto Serif SC',serif;font-size:18px;color:var(--gold-light);letter-spacing:2px}
+.alt-item .py{font-size:11px;color:var(--jade);font-style:italic}
+.alt-item .mn{font-size:10px;color:var(--sub);font-family:'Noto Serif SC',serif}
+.share-bar{display:flex;gap:8px;margin:16px 0 20px}
+.share-btn{flex:1;padding:10px 0;border:0.5px solid rgba(201,168,76,0.15);border-radius:6px;background:var(--card);color:var(--ink);font-size:10px;letter-spacing:0.1em;cursor:pointer;text-align:center;font-family:'Noto Serif SC',serif}
+</style>
+</head>
+<body>
+<div class="input-screen" id="inputScreen">
+  <button class="back-btn" onclick="history.back()">← Back</button>
+  <div class="header">
+    <div class="header-icon">🀄</div>
+    <div class="header-title">Chinese Name</div>
+    <div class="header-title-en">Find Your Fortune Name</div>
+    <div class="gold-line"></div>
+  </div>
+  <div class="form-section">
+    <div class="form-label">YOUR NAME</div>
+    <div class="field-group">
+      <div class="field-row">
+        <span class="field-label" style="font-family:'Noto Serif SC',serif">Name</span>
+        <input class="field-input" id="engName" placeholder="Your English name">
+      </div>
+      <div class="field-row">
+        <span class="field-label" style="font-family:'Noto Serif SC',serif">Style</span>
+        <select class="field-select" id="style">
+          <option value="poetic">Poetic (诗意)</option>
+          <option value="strong">Strong (刚毅)</option>
+          <option value="nature">Nature (自然)</option>
+          <option value="prosperous">Prosperous (富贵)</option>
+          <option value="wise">Wise (智慧)</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-label" style="margin-top:12px;font-family:'Noto Serif SC',serif">GENDER</div>
+    <div class="gender-row">
+      <div class="gender-opt selected" onclick="selectGender(this,'female')">♀ Female</div>
+      <div class="gender-opt" onclick="selectGender(this,'male')">♂ Male</div>
+    </div>
+    <div class="form-label" style="margin-top:12px;font-family:'Noto Serif SC',serif">BIRTH DATE (for lucky elements)</div>
+    <div class="field-group">
+      <div class="field-row"><span class="field-label" style="font-family:'Noto Serif SC',serif">Year</span><input class="field-input" id="year" type="number" placeholder="e.g. 1991"></div>
+      <div class="field-row"><span class="field-label" style="font-family:'Noto Serif SC',serif">Month</span><input class="field-input" id="month" type="number" placeholder="e.g. 10"></div>
+      <div class="field-row"><span class="field-label" style="font-family:'Noto Serif SC',serif">Day</span><input class="field-input" id="day" type="number" placeholder="e.g. 6"></div>
+    </div>
+    <div style="padding:16px 0">
+      <button class="btn-gen" onclick="generate()">✨ Generate My Chinese Name</button>
+    </div>
+  </div>
+</div>
+
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-ring"></div>
+  <div class="loading-text">Consulting ancient Chinese wisdom...</div>
+</div>
+
+<div class="result-screen" id="resultScreen">
+  <button class="back-btn" onclick="resetPage()">← Try Again</button>
+  <div class="name-card" id="nameCard"></div>
+  <div class="name-detail" id="detailCard"></div>
+  <div class="form-label" style="font-family:'Noto Serif SC',serif">More Suggestions</div>
+  <div class="alt-list" id="altList"></div>
+  <div class="share-bar">
+    <button class="share-btn" onclick="shareTwitter()">🐦 Tweet</button>
+    <button class="share-btn" onclick="shareCopy()">📋 Copy</button>
+  </div>
+  <div style="text-align:center;padding:8px 0 20px">
+    <span style="font-size:9px;color:rgba(201,168,76,0.3);font-family:'Noto Serif SC',serif">* For entertainment. Destiny is in your own hands.</span>
+  </div>
+</div>
+
+<script>
+var gender = 'female';
+function selectGender(el, g) { gender = g; document.querySelectorAll('.gender-opt').forEach(function(e){e.classList.remove('selected')}); el.classList.add('selected'); }
+
+function generate() {
+  var name = document.getElementById('engName').value.trim();
+  if (!name) { showToast('Please enter your name','error'); return; }
+  document.getElementById('inputScreen').style.display = 'none';
+  document.getElementById('loadingScreen').classList.add('show');
+
+  fetch('/api/xingming', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      surname: name.split(' ')[0] || name,
+      givenName: name.split(' ').slice(1).join(' ') || '',
+      gender: gender,
+      birthYear: document.getElementById('year').value || undefined,
+      birthMonth: document.getElementById('month').value || undefined,
+      birthDay: document.getElementById('day').value || undefined,
+      style: document.getElementById('style').value,
+      mode: 'chinese_for_foreigner'
+    })
+  }).then(function(r){return r.json()}).then(function(d){
+    document.getElementById('loadingScreen').classList.remove('show');
+    document.getElementById('resultScreen').classList.add('show');
+    if (d.error) { showToast(d.error,'error'); resetPage(); return; }
+    renderResult(d);
+  }).catch(function(){
+    document.getElementById('loadingScreen').classList.remove('show');
+    showToast('AI temporarily unavailable','error'); resetPage();
+  });
+}
+
+function renderResult(d) {
+  var r = d.reading || 'Your Chinese name is...';
+  // Parse first line as main name
+  var lines = r.split('\n').filter(function(l){return l.trim()});
+  var mainName = '';
+  for (var i = 0; i < lines.length; i++) {
+    var m = lines[i].match(/[一-鿿]{2,4}/);
+    if (m) { mainName = m[0]; break; }
+  }
+  document.getElementById('nameCard').innerHTML =
+    '<div class="name-chinese-char">' + (mainName || '缘') + '</div>' +
+    '<div class="name-pinyin">' + (mainName ? 'Your Chinese Name' : '') + '</div>' +
+    '<div class="name-meaning-en">' + r.slice(0,300) + '</div>';
+  document.getElementById('detailCard').innerHTML =
+    '<div class="name-detail title">✦ ELEMENTS & MEANING</div>' +
+    '<p>' + r.slice(0,500) + '</p>';
+}
+
+function shareTwitter() {
+  var name = document.querySelector('.name-chinese-char')?.textContent || 'my Chinese name';
+  window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent('My Chinese name is ' + name + '! 🌟 Get yours at ShenYuan') + '&hashtags=ChineseName,ShenYuan');
+}
+function shareCopy() {
+  var name = document.querySelector('.name-chinese-char')?.textContent || '';
+  navigator.clipboard.writeText('My Chinese name from ShenYuan is ' + name + '! Find your fortune name at shenyuan.mylumee.cn').then(function(){showToast('Copied!','');});
+}
+
+function resetPage() { document.getElementById('inputScreen').style.display = 'block'; document.getElementById('resultScreen').classList.remove('show'); document.getElementById('loadingScreen').classList.remove('show'); }
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;text-align:center;cursor:pointer;color:rgba(255,245,220,0.9)';
+  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+  t.style.border = '1px solid ' + (type === 'error' ? 'rgba(220,80,80,0.4)' : 'rgba(201,168,76,0.2)');
+  t.textContent = msg; document.body.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(function(){t.remove();},300);},3000);
+}
+</script>
+</body>
+</html>
