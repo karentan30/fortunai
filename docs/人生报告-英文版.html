@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShenYuan · BaZi Life Reading</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0a0804;
+  color: rgba(245,235,215,0.92);
+  font-family: 'Cormorant Garamond', 'Georgia', 'Times New Roman', serif;
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* COVER */
+.cover {
+  height: 297mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  page-break-after: always;
+  background: radial-gradient(ellipse at 50% 30%, rgba(201,168,76,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 50% 80%, rgba(91,191,160,0.04) 0%, transparent 50%),
+              linear-gradient(180deg, #0a0804 0%, #120e06 50%, #0a0804 100%);
+}
+
+.cover::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(1px 1px at 20% 30%, rgba(201,168,76,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 20%, rgba(201,168,76,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 40% 60%, rgba(201,168,76,0.15) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 80%, rgba(201,168,76,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 10% 90%, rgba(201,168,76,0.1) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 50%, rgba(201,168,76,0.15) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.cover-border {
+  position: absolute;
+  top: 20mm; left: 20mm; right: 20mm; bottom: 20mm;
+  border: 1px solid rgba(201,168,76,0.15);
+  pointer-events: none;
+}
+
+.cover-border-inner {
+  position: absolute;
+  top: 24mm; left: 24mm; right: 24mm; bottom: 24mm;
+  border: 0.5px solid rgba(201,168,76,0.08);
+  pointer-events: none;
+}
+
+.cover-top-deco {
+  position: absolute;
+  top: 35mm;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4), transparent);
+}
+
+.cover-badge {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 14px;
+  letter-spacing: 6px;
+  color: rgba(201,168,76,0.5);
+  margin-bottom: 30px;
+  font-weight: 300;
+}
+
+.cover-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+  opacity: 0.8;
+}
+
+.cover-title {
+  font-size: 40px;
+  font-weight: 300;
+  letter-spacing: 8px;
+  color: #c9a84c;
+  margin-bottom: 8px;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.cover-subtitle {
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 6px;
+  color: rgba(245,235,215,0.5);
+  margin-bottom: 40px;
+  text-transform: uppercase;
+}
+
+.cover-gold-line {
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c9a84c, transparent);
+  margin: 0 auto 40px;
+}
+
+.cover-meta {
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: rgba(245,235,215,0.35);
+  line-height: 2.2;
+}
+
+.cover-meta span { display: block; }
+
+.cover-bottom-deco {
+  position: absolute;
+  bottom: 35mm;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: rgba(201,168,76,0.2);
+}
+
+/* PAGES */
+.page {
+  padding: 30mm 24mm 25mm;
+  position: relative;
+  min-height: 297mm;
+  page-break-after: always;
+  background: linear-gradient(180deg, #0c0a05 0%, #0e0c07 50%, #0c0a05 100%);
+}
+
+.page::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), rgba(201,168,76,0.6), rgba(201,168,76,0.3), transparent);
+}
+
+.page-header {
+  position: absolute;
+  top: 18mm; left: 0; right: 0;
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: rgba(201,168,76,0.2);
+}
+
+.page-footer {
+  position: absolute;
+  bottom: 18mm; left: 0; right: 0;
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(245,235,215,0.15);
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.section-emoji {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.section-title {
+  font-size: 24px;
+  font-weight: 300;
+  letter-spacing: 4px;
+  color: #c9a84c;
+  margin-bottom: 6px;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.section-title-zh {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: rgba(201,168,76,0.3);
+  margin-bottom: 4px;
+}
+
+.section-line {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c9a84c, transparent);
+  margin: 14px auto 0;
+}
+
+.section-body {
+  font-size: 12.5px;
+  line-height: 1.9;
+  letter-spacing: 0.02em;
+  color: rgba(245,235,215,0.85);
+}
+
+.section-body p {
+  margin-bottom: 14px;
+}
+
+.section-body strong {
+  color: #c9a84c;
+  font-weight: 500;
+}
+
+.highlight-box {
+  background: rgba(201,168,76,0.06);
+  border: 0.5px solid rgba(201,168,76,0.15);
+  border-radius: 4px;
+  padding: 16px 20px;
+  margin: 16px 0;
+}
+
+.highlight-box-title {
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #c9a84c;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.highlight-box ul {
+  list-style: none;
+  padding: 0;
+}
+
+.highlight-box li {
+  font-size: 12px;
+  line-height: 1.8;
+  padding-left: 16px;
+  position: relative;
+  margin-bottom: 6px;
+  color: rgba(245,235,215,0.8);
+}
+
+.highlight-box li::before {
+  content: '✦';
+  position: absolute;
+  left: 0;
+  color: rgba(201,168,76,0.4);
+  font-size: 8px;
+  top: 3px;
+}
+
+.quote {
+  border-left: 2px solid rgba(201,168,76,0.3);
+  padding: 14px 20px;
+  margin: 18px 0;
+  font-style: italic;
+  color: rgba(245,235,215,0.7);
+  font-size: 12.5px;
+  background: rgba(201,168,76,0.03);
+  line-height: 1.8;
+}
+
+.wuxing-bar {
+  display: flex;
+  height: 20px;
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+
+.wuxing-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 400;
+  letter-spacing: 1px;
+}
+
+.wuxing-seg.metal { background: #c9a84c; }
+.wuxing-seg.wood { background: #5bbfa0; }
+.wuxing-seg.fire { background: #d4736b; }
+.wuxing-seg.water { background: #4a7a9c; }
+.wuxing-seg.earth { background: #b8945c; }
+
+.wuxing-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+  font-size: 10.5px;
+  color: rgba(245,235,215,0.6);
+}
+
+.wuxing-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wuxing-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 11px;
+}
+
+.table th {
+  background: rgba(201,168,76,0.1);
+  color: #c9a84c;
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 400;
+  letter-spacing: 1px;
+  border-bottom: 0.5px solid rgba(201,168,76,0.2);
+}
+
+.table td {
+  padding: 8px 12px;
+  border-bottom: 0.5px solid rgba(201,168,76,0.06);
+  color: rgba(245,235,215,0.7);
+  line-height: 1.6;
+}
+
+.table tr:last-child td { border-bottom: none; }
+
+.score-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.score-card {
+  background: rgba(201,168,76,0.04);
+  border: 0.5px solid rgba(201,168,76,0.1);
+  border-radius: 4px;
+  padding: 12px 14px;
+  text-align: center;
+}
+
+.score-year {
+  font-size: 13px;
+  color: #c9a84c;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+.score-items {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  font-size: 10px;
+}
+
+.score-item { color: rgba(245,235,215,0.6); }
+.score-item .num { color: #c9a84c; font-size: 14px; font-weight: 500; }
+.score-reminder { font-size: 10px; color: rgba(245,235,215,0.5); margin-top: 6px; line-height: 1.5; }
+
+.chinese-term {
+  font-size: 11px;
+  color: rgba(201,168,76,0.4);
+  letter-spacing: 1px;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ COVER ═══════ -->
+<div class="cover">
+  <div class="cover-border"></div>
+  <div class="cover-border-inner"></div>
+  <div class="cover-top-deco"></div>
+  <div class="cover-badge">S H E N Y U A N</div>
+  <div class="cover-icon">☯</div>
+  <h1 class="cover-title">BaZi Life Reading</h1>
+  <p class="cover-subtitle">Destiny · Fortune · Wisdom</p>
+  <div class="cover-gold-line"></div>
+  <div class="cover-meta">
+    <span>Born · October 6, 1991 · 6:00 AM</span>
+    <span>Xin Wei · Ding You · Ji You · Ding Mao</span>
+    <span>Female · Earth · Moderate Constitution</span>
+  </div>
+  <div class="cover-bottom-deco">~ Know Thy Fate · Cultivate Thy Self ~</div>
+</div>
+
+<!-- ═══════ 01 OVERVIEW ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">☯</span>
+    <h2 class="section-title">Destiny Overview</h2>
+    <div class="section-title-zh">命盘总评</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>Your Day Master is <strong>Ji Earth</strong>, born in the autumn month of You, when Metal energy dominates and drains the Earth. Your chart reveals a pattern of <strong>"Jade concealed within stone, awaiting discovery"</strong> — a moderate but promising constitution, neither destined for extreme wealth nor hardship, with life's quality depending on seizing the right opportunities.</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ Three Strengths</div>
+      <ul>
+        <li><strong>Seal Stars guard you</strong> —天生的聪慧与贵人运，关键时刻总有助力</li>
+        <li><strong>Eating God reveals talent</strong> — 心思灵巧，口才佳，富有艺术天赋</li>
+        <li><strong>Wealth Star has roots</strong> — 追求财富的勇气与冒险精神</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(201,168,76,0.08); background: rgba(180,60,60,0.04);">
+      <div class="highlight-box-title">✦ Three Cautions</div>
+      <ul>
+        <li><strong>Constitution needs care</strong> — 日主身弱，精力易不济</li>
+        <li><strong>Conflict between Mao and You</strong> — 人生易有突发变故，内心常纠结</li>
+        <li><strong>Wealth as a double-edged sword</strong> — 求财辛苦，易为财所累</li>
+      </ul>
+    </div>
+
+    <div class="quote">"A jade scepter in its casket, waiting for its time to sound across the heavens. Your vessel is carved — the right stage awaits."</div>
+  </div>
+  <div class="page-footer">— 03 —</div>
+</div>
+
+<!-- ═══════ 02 DAY MASTER ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">🔥</span>
+    <h2 class="section-title">Day Master Analysis</h2>
+    <div class="section-title-zh">日主深度剖析</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>Your Day Master is <strong>Ji Earth</strong> — the fertile soil of gardens and fields. Gentle,包容, patient. Like the earth itself, you carry and nurture those around you without competition or fanfare. This is a wisdom that appears as simplicity.</p>
+
+    <p>But your earth was born in autumn. Autumn Metal drains the soil, weakening your foundation. Your constitution is classified as <strong>Body-Weak</strong> — the Metal elements in your chart are too strong, drawing energy away from your Earth self.</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ Your Elements</div>
+      <ul>
+        <li><strong style="color:#d4736b;">Fire (Useful God)</strong> — Warms your earth, provides strength and vitality</li>
+        <li><strong style="color:#b8945c;">Earth (Supporting God)</strong> — Gives you roots and resilience</li>
+        <li><strong>Avoid: Metal &amp; Water</strong> — These drain and chill your constitution</li>
+      </ul>
+    </div>
+
+    <p><strong>Natural Strengths:</strong> Quick-minded, strong learner, observant, aesthetically inclined. Responsible, unassuming — a classic behind-the-scenes achiever with a stubborn resilience.</p>
+
+    <p><strong>Tendencies to Watch:</strong> Overthinking, sensitivity to small matters, indecisiveness, lack of security. Under pressure, you may retreat or become avoidant.</p>
+
+    <div class="highlight-box" style="border-color: rgba(91,191,160,0.15);">
+      <div class="highlight-box-title" style="color:#5bbfa0;">✦ Best Career Paths</div>
+      <ul>
+        <li><strong>Education, Media, Publishing</strong> — Fire governs writing and communication</li>
+        <li><strong>Design, Art, Consulting</strong> — Eating God fuels creativity</li>
+        <li><strong>Administration, HR, Management</strong> — Earth thrives in stable environments</li>
+      </ul>
+    </div>
+  </div>
+  <div class="page-footer">— 04 —</div>
+</div>
+
+<!-- ═══════ 03 FIVE ELEMENTS ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">🟤</span>
+    <h2 class="section-title">Five Elements Analysis</h2>
+    <div class="section-title-zh">五行能量分析</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>Your Five Elements distribution:</p>
+
+    <div class="wuxing-bar">
+      <div class="wuxing-seg fire" style="width:30%;">Fire 30%</div>
+      <div class="wuxing-seg earth" style="width:25%;">Earth 25%</div>
+      <div class="wuxing-seg metal" style="width:30%;">Metal 30%</div>
+      <div class="wuxing-seg wood" style="width:10%;">Wood 10%</div>
+      <div class="wuxing-seg water" style="width:5%;">Water 5%</div>
+    </div>
+
+    <div class="wuxing-legend">
+      <span class="wuxing-legend-item"><span class="wuxing-legend-dot" style="background:#d4736b;"></span> Fire</span>
+      <span class="wuxing-legend-item"><span class="wuxing-legend-dot" style="background:#b8945c;"></span> Earth</span>
+      <span class="wuxing-legend-item"><span class="wuxing-legend-dot" style="background:#c9a84c;"></span> Metal</span>
+      <span class="wuxing-legend-item"><span class="wuxing-legend-dot" style="background:#5bbfa0;"></span> Wood</span>
+      <span class="wuxing-legend-item"><span class="wuxing-legend-dot" style="background:#4a7a9c;"></span> Water</span>
+    </div>
+
+    <p>Your chart is <strong>Metal-Strong, Fire-Weak</strong>. Water is nearly absent. This creates a pattern of <strong>"Metal Overflow, Clouded Waters"</strong> — excessive Metal energy draining your Earth, with insufficient Fire to warm and protect.</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ Health &amp; Wellness Guide</div>
+      <ul>
+        <li><strong>Eat more: Red &amp; Yellow foods</strong> — Dates, goji berries, red beans, millet, pumpkin (nourish Fire &amp; Earth)</li>
+        <li><strong>Reduce: Raw &amp; Cold foods</strong> — Ice cream, cold drinks, watermelon (damage your weak Fire)</li>
+        <li><strong>Best exercise:</strong> Yoga, walking, Tai Chi. Morning sunlight is your best remedy.</li>
+      </ul>
+    </div>
+
+    <table class="table">
+      <tr><th>Element</th><th>Organs</th><th>Attention Needed</th></tr>
+      <tr><td>Metal</td><td>Lungs, Large Intestine</td><td>Weak immunity, coughs, dry skin</td></tr>
+      <tr><td>Fire</td><td>Heart, Blood</td><td>Palpitations, insomnia</td></tr>
+      <tr><td>Wood</td><td>Liver, Gallbladder</td><td>Emotional sensitivity, hormones</td></tr>
+      <tr><td>Water</td><td>Kidneys, Bladder</td><td>Lower back fatigue, menstrual health</td></tr>
+    </table>
+  </div>
+  <div class="page-footer">— 05 —</div>
+</div>
+
+<!-- ═══════ 04 WEALTH ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">💰</span>
+    <h2 class="section-title">Wealth Analysis</h2>
+    <div class="section-title-zh">财运格局</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>Your wealth flows through the <strong>You</strong> character — both your Wealth Star and your Eating God. This creates two defining patterns:</p>
+
+    <div class="highlight-box">
+      <ul>
+        <li><strong>Earned Through Labor:</strong> Your wealth is not gifted — it is「吐」出来的，earned through skill, craft, and intelligence. This is earned wealth, not easy wealth.</li>
+        <li><strong>Wisdom Multiplier:</strong> Eating God generates wealth through cleverness. You succeed as a specialist, consultant, or craftsman — not as a speculator or entrepreneur.</li>
+      </ul>
+    </div>
+
+    <p><strong>Best Wealth Periods:</strong></p>
+    <ul>
+      <li><strong>Ages 31-40</strong> — Steady income growth through professional skill</li>
+      <li><strong>Ages 41-50</strong> — Your true wealth accumulation phase, especially <strong>2037, 2038, 2039</strong></li>
+    </ul>
+
+    <div class="highlight-box" style="border-color: rgba(180,60,60,0.15); background: rgba(180,60,60,0.03);">
+      <div class="highlight-box-title">✦ Avoid</div>
+      <ul>
+        <li><strong>Speculation:</strong> Stocks, crypto, gambling — your chart rejects these</li>
+        <li><strong>Partnerships:</strong> Especially with those born in Rooster years</li>
+      </ul>
+    </div>
+
+    <p><strong>5-Year Wealth Forecast:</strong></p>
+    <div class="score-grid">
+      <div class="score-card"><div class="score-year">2026</div><div class="score-items"><span class="score-item">Wealth <span class="num">85</span></span></div><div class="score-reminder">Fire + Earth boost year</div></div>
+      <div class="score-card"><div class="score-year">2027</div><div class="score-items"><span class="score-item">Wealth <span class="num">90</span></span></div><div class="score-reminder">Peak opportunity window</div></div>
+      <div class="score-card"><div class="score-year">2028</div><div class="score-items"><span class="score-item">Wealth <span class="num">65</span></span></div><div class="score-reminder">Conserve, do not expand</div></div>
+      <div class="score-card" style="border-color: rgba(201,168,76,0.3);"><div class="score-year">2036</div><div class="score-items"><span class="score-item">Wealth <span class="num">90</span></span></div><div class="score-reminder">⭐ Turning point decade begins!</div></div>
+    </div>
+  </div>
+  <div class="page-footer">— 06 —</div>
+</div>
+
+<!-- ═══════ 05 LOVE ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">💕</span>
+    <h2 class="section-title">Love &amp; Relationships</h2>
+    <div class="section-title-zh">感情姻缘</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>Your Palace of Marriage sits on You Metal (Eating God) — your future partner will be intelligent, talented, eloquent, but occasionally stubborn and particular.</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ Your Ideal Partner</div>
+      <ul>
+        <li><strong>Height:</strong> 172-178 cm</li>
+        <li><strong>Character:</strong> Stable, responsible, with an artist's pride</li>
+        <li><strong>Profession:</strong> Technology, design, education, culture — someone who lives by their craft</li>
+        <li><strong>How you'll meet:</strong> Through work, study, or mutual friends — a workshop, exhibition, or dinner party</li>
+      </ul>
+    </div>
+
+    <p><strong>Best Years for Love:</strong></p>
+    <ul>
+      <li><strong>2025</strong> — Relationship luck rises, excellent for meeting new people</li>
+      <li><strong>2026</strong> — The strongest year for marriage</li>
+      <li><strong>2027</strong> — Another window for meeting your match</li>
+    </ul>
+
+    <div class="quote">"To find your match: move toward the East, wear red and pink, let your talents shine, and release the need for perfection."</div>
+  </div>
+  <div class="page-footer">— 07 —</div>
+</div>
+
+<!-- ═══════ 06 CAREER ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">💼</span>
+    <h2 class="section-title">Career Analysis</h2>
+    <div class="section-title-zh">事业格局</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>Your career revolves around two pillars: <strong>Seal Star</strong> (protection, wisdom) and <strong>Eating God</strong> (talent, expression). You thrive on expertise and craftsmanship.</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ Recommended Paths</div>
+      <ul>
+        <li><strong>Best: Lifetime Learner in an Organization</strong> — Rise through deepening expertise within a stable system</li>
+        <li><strong>Alternative: High-Value Freelancer</strong> — Master a rare skill and command premium rates</li>
+        <li><strong>Avoid: Entrepreneurship</strong> — The pressure of 7 Kill Star weighs heavily on your constitution</li>
+      </ul>
+    </div>
+
+    <p><strong>Best Career Years:</strong></p>
+    <ul>
+      <li><strong>2026</strong> — Fire and Earth flourish. Promotion year. Especially the 5th lunar month.</li>
+      <li><strong>2027</strong> — Status and authority rise. Key month: 6th lunar month.</li>
+    </ul>
+
+    <p><strong>Your Benefactors:</strong> People born in Horse, Dog, or Goat years. They appear most often in summer.</p>
+  </div>
+  <div class="page-footer">— 08 —</div>
+</div>
+
+<!-- ═══════ 07 HEALTH ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">🏥</span>
+    <h2 class="section-title">Health Advisory</h2>
+    <div class="section-title-zh">健康提醒</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>Your constitution can be summarized as <strong>"Weak Earth, Shaking Wood, Overflowing Metal, Clouded Water"</strong> — naturally delicate, requiring more care than most.</p>
+
+    <table class="table">
+      <tr><th>System</th><th>Innate Condition</th><th>Watch For</th></tr>
+      <tr><td>Respiratory (Metal)</td><td>Low immunity</td><td>Colds, coughs, skin allergies</td></tr>
+      <tr><td>Cardiovascular (Fire)</td><td>Blood deficiency</td><td>Palpitations, insomnia, dizziness</td></tr>
+      <tr><td>Reproductive (Water)</td><td>Kidney qi deficiency</td><td>Lower back pain, menstrual irregularities</td></tr>
+    </table>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ Age-Specific Risks</div>
+      <ul>
+        <li><strong>Ages 35-40:</strong> Thyroid nodules, breast concerns, uterine health</li>
+        <li><strong>After 40:</strong> Blood pressure, cholesterol, heart health</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(91,191,160,0.15);">
+      <div class="highlight-box-title" style="color:#5bbfa0;">✦ Wellness Prescription</div>
+      <ul>
+        <li><strong>Exercise:</strong> Yoga (best), walking, Ba Duan Jin, Tai Chi. Sweat lightly, never heavily.</li>
+        <li><strong>Sleep:</strong> In bed by 10 PM, rise at 6-7 AM. This is your best medicine.</li>
+        <li><strong>Diet:</strong> Warm, easily digestible, high-protein. Dates, goji, yam, millet, red meat.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="page-footer">— 09 —</div>
+</div>
+
+<!-- ═══════ 08 FORTUNE CYCLES ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">📅</span>
+    <h2 class="section-title">Fortune Cycles</h2>
+    <div class="section-title-zh">大运流年</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>You began your current <strong>Xin Chou Decade Fortune</strong> at age 31 (2022-2031). This is a period of both opportunity and challenge.</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ Current Decade (Ages 31-40)</div>
+      <ul>
+        <li><strong>Positive:</strong> Chou Earth supports you. Career support emerges, talent gains recognition.</li>
+        <li><strong>Caution:</strong> Chou dims your Fire. Benefactor luck weakens. Guard against financial loss through acquaintances.</li>
+      </ul>
+    </div>
+
+    <p><strong>Annual Forecast (from 2036):</strong></p>
+
+    <div class="score-grid">
+      <div class="score-card" style="border-color: rgba(201,168,76,0.3);">
+        <div class="score-year">2036</div>
+        <div class="score-items"><span class="score-item">Wealth <span class="num">90</span></span><span class="score-item">Love <span class="num">85</span></span></div>
+        <div class="score-reminder">⭐ Life turning point! Strong benefactors</div>
+      </div>
+      <div class="score-card">
+        <div class="score-year">2037</div>
+        <div class="score-items"><span class="score-item">Wealth <span class="num">80</span></span><span class="score-item">Love <span class="num">70</span></span></div>
+        <div class="score-reminder">Learning year. Avoid impulsive decisions</div>
+      </div>
+      <div class="score-card">
+        <div class="score-year">2038</div>
+        <div class="score-items"><span class="score-item">Wealth <span class="num">85</span></span><span class="score-item">Love <span class="num">80</span></span></div>
+        <div class="score-reminder">Good for collaboration, side ventures</div>
+      </div>
+      <div class="score-card" style="border-color: rgba(201,168,76,0.3);">
+        <div class="score-year">2039</div>
+        <div class="score-items"><span class="score-item">Wealth <span class="num">95</span></span><span class="score-item">Love <span class="num">90</span></span></div>
+        <div class="score-reminder">⭐ Harvest year! Career peaks</div>
+      </div>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(180,60,60,0.15); background: rgba(180,60,60,0.03);">
+      <div class="highlight-box-title">⚠ 2040: Caution Year</div>
+      <p style="margin: 0; font-size: 11.5px; line-height: 1.8; color: rgba(245,235,215,0.7);">"When Hurt Official meets Officer, chaos follows." Avoid conflict, do NOT quit your job or start a business. Conserve energy. This too shall pass.</p>
+    </div>
+  </div>
+  <div class="page-footer">— 10 —</div>
+</div>
+
+<!-- ═══════ 09 LUCK ENHANCEMENT ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">🎯</span>
+    <h2 class="section-title">Fortune Enhancement</h2>
+    <div class="section-title-zh">开运锦囊</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ Lucky Colors</div>
+      <ul>
+        <li><strong style="color:#d4736b;">Red</strong> — Vermillion, coral</li>
+        <li><strong style="color:#c9a84c;">Yellow</strong> — Amber, golden</li>
+        <li><strong style="color:#9b6fd4;">Purple</strong> — Lavender, violet</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ Lucky Numbers</div>
+      <ul>
+        <li><strong>2</strong> · <strong>5</strong> · <strong>7</strong> — Use for passwords, addresses, phone numbers</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ Auspicious Directions</div>
+      <ul>
+        <li><strong>Wealth:</strong> South — Place red or yellow bamboo in the south of your home</li>
+        <li><strong>Love:</strong> East — Place fresh flowers or a mountain painting in the east of your bedroom</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(91,191,160,0.15);">
+      <div class="highlight-box-title" style="color:#5bbfa0;">✦ Recommended Crystals</div>
+      <ul>
+        <li>Red agate, citrine, garnet, amber</li>
+        <li>Wear a red agate bracelet on your left wrist</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(180,60,60,0.08); background: rgba(180,60,60,0.02);">
+      <div class="highlight-box-title">⚠ 2036-Year Avoidance</div>
+      <p style="margin: 0; font-size: 11.5px; line-height: 1.8; color: rgba(245,235,215,0.7);">Do NOT place water plants or a fish tank in the south of your home — this extinguishes your Fire energy. Avoid moving houses or renovating.</p>
+    </div>
+  </div>
+  <div class="page-footer">— 11 —</div>
+</div>
+
+<!-- ═══════ 10 CLASSICAL ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">📖</span>
+    <h2 class="section-title">Classical Wisdom</h2>
+    <div class="section-title-zh">古法断语</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <div class="quote" style="font-size:15px; text-align:center; border-left:none; padding:16px; line-height:2;">
+      <em>Three Lives Comprehensive Guide</em> (《三命通会》) states:<br>
+      <strong style="font-size:17px; color:#c9a84c;">"Ji Earth born in You month,<br>Metal revealed in the stems —<br>A rich house with a poor man,<br>Much learning, little achievement."</strong>
+    </div>
+
+    <p>This classical passage describes someone who appears to have every advantage — talent, education, opportunity — yet struggles to convert these into tangible results. The wealth is there in potential, but the constitution lacks the strength to claim it.</p>
+
+    <p>Your chart echoes this pattern: abundant Metal energy that suggests capability, but an Earth self too drained to execute consistently. The remedy is not more learning — it is disciplined, sustained action on a single path.</p>
+  </div>
+  <div class="page-footer">— 12 —</div>
+</div>
+
+<!-- ═══════ 11 MASTER'S WORDS ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">💌</span>
+    <h2 class="section-title">The Master's Words</h2>
+    <div class="section-title-zh">命理师的叮嘱</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>Your chart is like a traditional ink painting — bold strokes and deliberate empty spaces. You are not a crashing wave but a mountain stream, flowing slowly and steadily until you reach the sea.</p>
+
+    <div class="highlight-box" style="border-color: rgba(201,168,76,0.2);">
+      <div class="highlight-box-title">❶ Do not count the harvest, tend the soil</div>
+      <p style="margin:0; text-indent:0; font-size:12px; line-height:1.9;">A Body-Weak constitution cannot afford shortcuts. Heaven gave you skilled hands and a sharp mind — use them through patient, daily cultivation. Watch less of others' speed, protect your own pace.</p>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(201,168,76,0.2);">
+      <div class="highlight-box-title">❷ Seek warmth, avoid cold</div>
+      <p style="margin:0; text-indent:0; font-size:12px; line-height:1.9;">Winter, air conditioning, and solitude drain your energy. Go where the sun is. Surround yourself with warm-hearted people. Wear bright colors. You will find the whole world brighter.</p>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(201,168,76,0.2);">
+      <div class="highlight-box-title">❸ Trust your instinct, embrace imperfection</div>
+      <p style="margin:0; text-indent:0; font-size:12px; line-height:1.9;">Your overthinking mind is both gift and burden. Trust that your natural intuition is more reliable than your endless analysis. And accept your fragility, your hesitation, your moments of doubt. A perfect person has no story. Your imperfections are where your truth lives.</p>
+    </div>
+
+    <div class="quote" style="text-align:center; border-left:none; padding:20px;">
+      <strong style="font-size:15px; color:#c9a84c; line-height:2;">Heaven holds clear winds, mountains hold bright moons.<br>May your heart hold the cosmos,<br>Born from fire, live fully, and journey with song.</strong>
+    </div>
+  </div>
+  <div class="page-footer">— 13 —</div>
+</div>
+
+</body>
+</html>

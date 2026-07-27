@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>善缘 · 八字命理报告</title>
+<style>
+/* Using system fonts for offline PDF generation */
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0a0804;
+  color: rgba(245,235,215,0.92);
+  font-family: 'STSong', 'STSong', serif;
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ════════════════════════════════════════
+   COVER PAGE
+   ════════════════════════════════════════ */
+.cover {
+  height: 297mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  page-break-after: always;
+  background: radial-gradient(ellipse at 50% 30%, rgba(201,168,76,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 50% 80%, rgba(91,191,160,0.04) 0%, transparent 50%),
+              linear-gradient(180deg, #0a0804 0%, #120e06 50%, #0a0804 100%);
+}
+
+.cover::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(1px 1px at 20% 30%, rgba(201,168,76,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 20%, rgba(201,168,76,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 40% 60%, rgba(201,168,76,0.15) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 80%, rgba(201,168,76,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 10% 90%, rgba(201,168,76,0.1) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 50%, rgba(201,168,76,0.15) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.cover-border {
+  position: absolute;
+  top: 20mm; left: 20mm; right: 20mm; bottom: 20mm;
+  border: 1px solid rgba(201,168,76,0.15);
+  pointer-events: none;
+}
+
+.cover-border-inner {
+  position: absolute;
+  top: 24mm; left: 24mm; right: 24mm; bottom: 24mm;
+  border: 0.5px solid rgba(201,168,76,0.08);
+  pointer-events: none;
+}
+
+.cover-top-deco {
+  position: absolute;
+  top: 35mm;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.4), transparent);
+}
+
+.cover-badge {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 14px;
+  letter-spacing: 6px;
+  color: rgba(201,168,76,0.5);
+  margin-bottom: 30px;
+  font-weight: 300;
+}
+
+.cover-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+  opacity: 0.8;
+}
+
+.cover-title {
+  font-size: 42px;
+  font-weight: 300;
+  letter-spacing: 12px;
+  color: #c9a84c;
+  margin-bottom: 8px;
+}
+
+.cover-subtitle {
+  font-size: 16px;
+  font-weight: 300;
+  letter-spacing: 8px;
+  color: rgba(245,235,215,0.5);
+  margin-bottom: 40px;
+}
+
+.cover-gold-line {
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c9a84c, transparent);
+  margin: 0 auto 40px;
+}
+
+.cover-meta {
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: rgba(245,235,215,0.35);
+  line-height: 2.2;
+}
+
+.cover-meta span {
+  display: block;
+}
+
+.cover-bottom-deco {
+  position: absolute;
+  bottom: 35mm;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 12px;
+  letter-spacing: 4px;
+  color: rgba(201,168,76,0.2);
+}
+
+/* ════════════════════════════════════════
+   CONTENT PAGES
+   ════════════════════════════════════════ */
+.page {
+  padding: 30mm 24mm 25mm;
+  position: relative;
+  min-height: 297mm;
+  page-break-after: always;
+  background: linear-gradient(180deg, #0c0a05 0%, #0e0c07 50%, #0c0a05 100%);
+}
+
+.page::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), rgba(201,168,76,0.6), rgba(201,168,76,0.3), transparent);
+}
+
+.page-header {
+  position: absolute;
+  top: 18mm; left: 0; right: 0;
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: rgba(201,168,76,0.2);
+}
+
+.page-footer {
+  position: absolute;
+  bottom: 18mm; left: 0; right: 0;
+  text-align: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(245,235,215,0.15);
+}
+
+/* Section header */
+.section-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.section-emoji {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: 6px;
+  color: #c9a84c;
+  margin-bottom: 6px;
+}
+
+.section-title-en {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: rgba(201,168,76,0.3);
+  font-weight: 300;
+}
+
+.section-line {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #c9a84c, transparent);
+  margin: 14px auto 0;
+}
+
+/* Content text */
+.section-body {
+  font-size: 12px;
+  line-height: 2.0;
+  letter-spacing: 0.03em;
+  color: rgba(245,235,215,0.85);
+}
+
+.section-body p {
+  margin-bottom: 12px;
+  text-indent: 2em;
+}
+
+.section-body strong {
+  color: #c9a84c;
+  font-weight: 500;
+}
+
+.section-body em {
+  font-style: normal;
+  color: rgba(201,168,76,0.6);
+}
+
+/* Highlight boxes */
+.highlight-box {
+  background: rgba(201,168,76,0.06);
+  border: 0.5px solid rgba(201,168,76,0.15);
+  border-radius: 4px;
+  padding: 16px 20px;
+  margin: 16px 0;
+}
+
+.highlight-box-title {
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #c9a84c;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.highlight-box ul {
+  list-style: none;
+  padding: 0;
+}
+
+.highlight-box li {
+  font-size: 11.5px;
+  line-height: 1.9;
+  padding-left: 16px;
+  position: relative;
+  margin-bottom: 4px;
+  color: rgba(245,235,215,0.8);
+}
+
+.highlight-box li::before {
+  content: '✦';
+  position: absolute;
+  left: 0;
+  color: rgba(201,168,76,0.4);
+  font-size: 8px;
+  top: 3px;
+}
+
+/* Score cards */
+.score-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.score-card {
+  background: rgba(201,168,76,0.04);
+  border: 0.5px solid rgba(201,168,76,0.1);
+  border-radius: 4px;
+  padding: 12px 14px;
+  text-align: center;
+}
+
+.score-year {
+  font-size: 13px;
+  color: #c9a84c;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+.score-items {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  font-size: 10px;
+}
+
+.score-item {
+  color: rgba(245,235,215,0.6);
+}
+
+.score-item .num {
+  color: #c9a84c;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.score-reminder {
+  font-size: 10px;
+  color: rgba(245,235,215,0.5);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+/* List formatting */
+.section-body ul, .section-body ol {
+  padding-left: 20px;
+  margin-bottom: 12px;
+}
+
+.section-body li {
+  margin-bottom: 6px;
+}
+
+/* Highlight inline */
+.highlight-gold {
+  color: #c9a84c;
+  font-weight: 500;
+}
+
+.highlight-jade {
+  color: #5bbfa0;
+  font-weight: 500;
+}
+
+/* Quote */
+.quote {
+  border-left: 2px solid rgba(201,168,76,0.3);
+  padding: 12px 18px;
+  margin: 16px 0;
+  font-style: italic;
+  color: rgba(245,235,215,0.7);
+  font-size: 12px;
+  background: rgba(201,168,76,0.03);
+}
+
+/* Divider */
+.section-divider {
+  width: 40px;
+  height: 0.5px;
+  background: linear-gradient(90deg, transparent, rgba(201,168,76,0.3), transparent);
+  margin: 24px auto;
+}
+
+/* ════════════════════════════════════════
+   TOC PAGE
+   ════════════════════════════════════════ */
+.toc-page {
+  padding: 35mm 28mm;
+  min-height: 297mm;
+  page-break-after: always;
+}
+
+.toc-title {
+  font-size: 16px;
+  letter-spacing: 8px;
+  color: #c9a84c;
+  text-align: center;
+  margin-bottom: 40px;
+  font-weight: 300;
+}
+
+.toc-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 0.5px solid rgba(201,168,76,0.06);
+  font-size: 13px;
+  letter-spacing: 1px;
+  color: rgba(245,235,215,0.7);
+}
+
+.toc-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px;
+  color: rgba(201,168,76,0.4);
+  min-width: 32px;
+}
+
+.toc-icon {
+  margin-right: 12px;
+  font-size: 14px;
+}
+
+.toc-name {
+  flex: 1;
+}
+
+.toc-page-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px;
+  color: rgba(201,168,76,0.3);
+}
+
+/* ════════════════════════════════════════
+   SECTION SPECIAL STYLES
+   ════════════════════════════════════════ */
+.wuxing-bar {
+  display: flex;
+  height: 20px;
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+
+.wuxing-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 400;
+  letter-spacing: 1px;
+  transition: width 0.3s;
+}
+
+.wuxing-seg.gold { background: #c9a84c; }
+.wuxing-seg.wood { background: #5bbfa0; }
+.wuxing-seg.fire { background: #d4736b; }
+.wuxing-seg.water { background: #4a7a9c; }
+.wuxing-seg.earth { background: #b8945c; }
+
+.wuxing-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.wuxing-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: rgba(245,235,215,0.6);
+}
+
+.wuxing-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 11px;
+}
+
+.table th {
+  background: rgba(201,168,76,0.1);
+  color: #c9a84c;
+  padding: 8px 10px;
+  text-align: left;
+  font-weight: 400;
+  letter-spacing: 1px;
+  border-bottom: 0.5px solid rgba(201,168,76,0.2);
+}
+
+.table td {
+  padding: 8px 10px;
+  border-bottom: 0.5px solid rgba(201,168,76,0.06);
+  color: rgba(245,235,215,0.7);
+  line-height: 1.6;
+}
+
+.table tr:last-child td {
+  border-bottom: none;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ COVER ═══════ -->
+<div class="cover">
+  <div class="cover-border"></div>
+  <div class="cover-border-inner"></div>
+  <div class="cover-top-deco"></div>
+  <div class="cover-badge">S H E N Y U A N</div>
+  <div class="cover-icon">☯</div>
+  <h1 class="cover-title">八字命理报告</h1>
+  <p class="cover-subtitle">BAZI LIFE READING</p>
+  <div class="cover-gold-line"></div>
+  <div class="cover-meta">
+    <span>施主 · 女命</span>
+    <span>辛未年 丁酉月 己酉日 丁卯时</span>
+    <span>公历 1991年10月6日 卯时</span>
+  </div>
+  <div class="cover-bottom-deco">~ 知命 · 修身 · 达己 · 利人 ~</div>
+</div>
+
+<!-- ═══════ TOC ═══════ -->
+<div class="toc-page">
+  <div class="toc-title">目 录</div>
+  <div class="toc-item"><span class="toc-num">01</span><span class="toc-icon">📜</span><span class="toc-name">命盘总评</span><span class="toc-page-num">03</span></div>
+  <div class="toc-item"><span class="toc-num">02</span><span class="toc-icon">🔥</span><span class="toc-name">日主深度剖析</span><span class="toc-page-num">04</span></div>
+  <div class="toc-item"><span class="toc-num">03</span><span class="toc-icon">🟤</span><span class="toc-name">五行能量分析</span><span class="toc-page-num">05</span></div>
+  <div class="toc-item"><span class="toc-num">04</span><span class="toc-icon">💰</span><span class="toc-name">财运格局</span><span class="toc-page-num">06</span></div>
+  <div class="toc-item"><span class="toc-num">05</span><span class="toc-icon">💕</span><span class="toc-name">感情姻缘</span><span class="toc-page-num">07</span></div>
+  <div class="toc-item"><span class="toc-num">06</span><span class="toc-icon">💼</span><span class="toc-name">事业格局</span><span class="toc-page-num">08</span></div>
+  <div class="toc-item"><span class="toc-num">07</span><span class="toc-icon">🏥</span><span class="toc-name">健康提醒</span><span class="toc-page-num">09</span></div>
+  <div class="toc-item"><span class="toc-num">08</span><span class="toc-icon">📅</span><span class="toc-name">大运流年</span><span class="toc-page-num">10</span></div>
+  <div class="toc-item"><span class="toc-num">09</span><span class="toc-icon">🎯</span><span class="toc-name">开运锦囊</span><span class="toc-page-num">11</span></div>
+  <div class="toc-item"><span class="toc-num">10</span><span class="toc-icon">📖</span><span class="toc-name">古法断语</span><span class="toc-page-num">12</span></div>
+  <div class="toc-item"><span class="toc-num">11</span><span class="toc-icon">💌</span><span class="toc-name">命理师的叮嘱</span><span class="toc-page-num">13</span></div>
+</div>
+
+<!-- ═══════ 01 命盘总评 ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">📜</span>
+    <h2 class="section-title">命盘总评</h2>
+    <span class="section-title-en">Destiny Overview</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>施主此命，日主己土，生于仲秋酉月，金旺土虚，可谓是<strong>「玉韫珠辉，待时而发」</strong>之格。全局来看，双印透干，食神当令，虽有贵气与才华，但日主身弱，如无根之萍，根基稍显不稳。老朽斗胆一言，此命格属于<strong>中等格局</strong>，非大富大贵之极，亦非贫贱潦倒之流，一生起伏，贵在把握机遇。</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 三大优势</div>
+      <ul>
+        <li><strong>双印护身，贵气内藏：</strong>年、月、时三柱皆有印星为护，代表您天生聪慧，有学习能力和贵人缘，关键时刻总有人拉您一把。</li>
+        <li><strong>食神吐秀，才华横溢：</strong>月令酉金为食神，且两现于地支，说明您心思灵巧，口才佳，有艺术天赋，且懂得享受生活。</li>
+        <li><strong>财星有根，求财有路：</strong>月支酉金亦是偏财，时支卯木为七杀，卯酉相冲，虽主动荡，但也代表着您有追求财富和冒险的勇气。</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(201,168,76,0.08); background: rgba(180,60,60,0.04);">
+      <div class="highlight-box-title">✦ 三大短板</div>
+      <ul>
+        <li><strong>日主身弱，易感疲惫：</strong>己土生于酉月，金旺泄身太过，身体底子偏弱，精力容易不济。</li>
+        <li><strong>卯酉相冲，根基不稳：</strong>时柱卯木七杀与月柱酉金食神相冲，人生常现突发变故，内心也常有纠结与不安。</li>
+        <li><strong>财星为忌，易为财累：</strong>月令酉金为忌神，虽然会求财，但也容易被钱财所累，辛苦奔波，或因求财方法不当而破耗。</li>
+      </ul>
+    </div>
+
+    <div class="quote">老祖宗有句话，堪为总评：「玄圭白璧，蕴椟而藏。待时而发，声闻于天。」您这支玉璧，已经雕琢成型，但还需等待合适的时机和舞台，方能大放异彩。</div>
+  </div>
+  <div class="page-footer">— 03 —</div>
+</div>
+
+<!-- ═══════ 02 日主深度剖析 ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">🔥</span>
+    <h2 class="section-title">日主深度剖析</h2>
+    <span class="section-title-en">Day Master Analysis</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>您是<strong>己土日主</strong>。己土为田园之土，温和、包容、有耐心，如同大地一般，能承载万物。这天生的心性，让您在人群中不争不抢，颇有几分"大智若愚"的智慧。</p>
+
+    <p>但可惜，您这田园之土，生在了秋天。秋金当令，肃杀之气极重，金会泄耗土气，好比大地到了秋天，万木凋零，土气也变得薄弱。所以，您是<strong>「身弱」</strong>的格局。</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 用神与忌神</div>
+      <ul>
+        <li><strong class="highlight-gold">第一用神：火</strong> — 能温暖您这冰冷的身体，生助田园之土</li>
+        <li><strong class="highlight-jade">第二用神：土</strong> — 直接给您力量，让您有底气和依靠</li>
+        <li><strong>最忌：金、水</strong> — 金会加重泄身，水会克火伤身</li>
+      </ul>
+    </div>
+
+    <p><strong>优势性格：</strong>您非常聪明，学习能力强，心思细腻，善解人意，且有很高的审美能力。做事认真负责，不张扬，是典型的"幕后英雄"。您骨子里有一股不服输的韧劲。</p>
+
+    <p><strong>需要注意的性格倾向：</strong>由于身弱，您容易思虑过多，内心敏感，一点小事可能在心里翻来覆去。决策时容易犹豫不决，缺乏安全感。</p>
+
+    <div class="highlight-box" style="border-color: rgba(91,191,160,0.15);">
+      <div class="highlight-box-title" style="color:#5bbfa0;">✦ 适合的职业方向</div>
+      <ul>
+        <li><strong>文化教育、传媒、出版</strong> — 火主文，适合发挥智慧和口才的工作</li>
+        <li><strong>设计、艺术、咨询</strong> — 食神为用，艺术天赋和创造力强</li>
+        <li><strong>行政、管理、人力资源</strong> — 己土为用，耐心和细心能发挥优势</li>
+      </ul>
+    </div>
+  </div>
+  <div class="page-footer">— 04 —</div>
+</div>
+
+<!-- ═══════ 03 五行能量分析 ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">🟤</span>
+    <h2 class="section-title">五行能量分析</h2>
+    <span class="section-title-en">Five Elements Analysis</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>您八字中的五行分布如下：</p>
+
+    <div class="wuxing-bar">
+      <div class="wuxing-seg fire" style="width:30%;">火30%</div>
+      <div class="wuxing-seg earth" style="width:25%;">土25%</div>
+      <div class="wuxing-seg gold" style="width:30%;">金30%</div>
+      <div class="wuxing-seg wood" style="width:10%;">木10%</div>
+      <div class="wuxing-seg water" style="width:5%;">水5%</div>
+    </div>
+
+    <div class="wuxing-legend">
+      <span class="wuxing-legend-item"><span class="wuxing-legend-dot" style="background:#d4736b;"></span>火 30%</span>
+      <span class="wuxing-legend-item"><span class="wuxing-legend-dot" style="background:#b8945c;"></span>土 25%</span>
+      <span class="wuxing-legend-item"><span class="wuxing-legend-dot" style="background:#c9a84c;"></span>金 30%</span>
+      <span class="wuxing-legend-item"><span class="wuxing-legend-dot" style="background:#5bbfa0;"></span>木 10%</span>
+      <span class="wuxing-legend-item"><span class="wuxing-legend-dot" style="background:#4a7a9c;"></span>水 5%</span>
+    </div>
+
+    <p>很明显，您的命局是个<strong>「金强火旺」</strong>的格局。最弱的五行是<strong>水</strong>，几乎为零。由于金过旺（忌神），火土偏弱（用神），水又极缺，这就造成了您身体<strong>「金多水浊，火土生烟」</strong>的局面。</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 养生建议</div>
+      <ul>
+        <li><strong>多吃红色、黄色食物</strong> — 红枣、枸杞、红豆、小米、玉米、南瓜、红薯（补火土）</li>
+        <li><strong>少吃白色、黑色食物</strong> — 寒凉生冷尤其要忌（泄金补水）</li>
+        <li><strong>适合的运动</strong> — 瑜伽、散步、太极。多晒太阳，尤其是早晨的太阳</li>
+      </ul>
+    </div>
+
+    <table class="table">
+      <tr><th>五行</th><th>对应脏腑</th><th>注意事项</th></tr>
+      <tr><td>金</td><td>肺、大肠、呼吸道</td><td>肺气易虚，易咳嗽、皮肤干燥</td></tr>
+      <tr><td>火</td><td>心、小肠、血液</td><td>心血不足，易心悸、失眠</td></tr>
+      <tr><td>木</td><td>肝胆</td><td>肝胆偏弱，易情绪抑郁</td></tr>
+      <tr><td>水</td><td>肾、膀胱</td><td>肾气不足，易腰膝酸软</td></tr>
+    </table>
+  </div>
+  <div class="page-footer">— 05 —</div>
+</div>
+
+<!-- ═══════ 04 财运格局 ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">💰</span>
+    <h2 class="section-title">财运格局</h2>
+    <span class="section-title-en">Wealth Analysis</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>您的财，全在一个<strong>「酉」</strong>字上。这酉金既是您命里的偏财，也是您月令的食神。您的财运，有两大特点：</p>
+
+    <div class="highlight-box">
+      <ul>
+        <li><strong>财星坐下，求财劳碌：</strong>您这财，不是天上掉下来的，是自己靠手艺、口才、智慧"吐"出来的。财星为忌，赚钱会比较辛苦。</li>
+        <li><strong>食神生财，贵在巧思：</strong>好在食神生财，您不是靠蛮力，而是靠巧思、技术、创作来赚钱。适合做"乙方"，用才华和服务去换取财富。</li>
+      </ul>
+    </div>
+
+    <p><strong>命中有财库吗？</strong>有。年支未土，是您的财库。时柱的卯木七杀，是冲开这个财库的钥匙。当您遇到压力、挑战时，反而能爆发出求财的潜力。</p>
+
+    <p><strong>发财的最佳年龄段：</strong></p>
+    <ul>
+      <li><strong>31-40岁（辛丑大运）</strong> — 食神生财，收入稳定提升</li>
+      <li><strong>41-50岁（壬寅大运）</strong> — 真正发家致富的大好时机</li>
+    </ul>
+    <p>特别是<strong>2037（丁巳年）、2038（戊午年）、2039（己未年）</strong>，火土齐来，是您命中最关键的三年，务必把握。</p>
+
+    <div class="highlight-box" style="border-color: rgba(180,60,60,0.15); background: rgba(180,60,60,0.03);">
+      <div class="highlight-box-title">✦ 禁忌</div>
+      <ul>
+        <li><strong>忌投机：</strong>股票、期货、赌博，碰了十有八九是亏的</li>
+        <li><strong>忌与人合伙：</strong>尤其要小心与属鸡（酉）的合作</li>
+      </ul>
+    </div>
+
+    <p><strong>未来5年财运走势：</strong></p>
+    <div class="score-grid">
+      <div class="score-card">
+        <div class="score-year">2026 丙午</div>
+        <div class="score-items"><span class="score-item">财运 <span class="num">85</span></span><span class="score-item">事业 <span class="num">88</span></span></div>
+        <div class="score-reminder">火土齐来，财运提升之年</div>
+      </div>
+      <div class="score-card">
+        <div class="score-year">2027 丁未</div>
+        <div class="score-items"><span class="score-item">财运 <span class="num">90</span></span><span class="score-item">事业 <span class="num">92</span></span></div>
+        <div class="score-reminder">双印临库，机会众多</div>
+      </div>
+      <div class="score-card">
+        <div class="score-year">2028 戊申</div>
+        <div class="score-items"><span class="score-item">财运 <span class="num">65</span></span><span class="score-item">事业 <span class="num">70</span></span></div>
+        <div class="score-reminder">钱财易来易去，要守财</div>
+      </div>
+      <div class="score-card">
+        <div class="score-year">2036 丙辰</div>
+        <div class="score-items"><span class="score-item">财运 <span class="num">90</span></span><span class="score-item">事业 <span class="num">95</span></span></div>
+        <div class="score-reminder">未来十年运势的转折点！</div>
+      </div>
+    </div>
+  </div>
+  <div class="page-footer">— 06 —</div>
+</div>
+
+<!-- ═══════ 05 感情姻缘 ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">💕</span>
+    <h2 class="section-title">感情姻缘</h2>
+    <span class="section-title-en">Love &amp; Relationships</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>您的婚姻宫坐了个酉金（食神），这代表您未来的另一半，会是一个聪明、有才华、口才好，但有时候也会比较固执的人。</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 正缘特征</div>
+      <ul>
+        <li><strong>身高：</strong>约172-178cm</li>
+        <li><strong>性格：</strong>稳重、有责任感，骨子里带着艺术家的傲气</li>
+        <li><strong>职业：</strong>技术、设计、文化、教育相关，靠"手艺"吃饭</li>
+        <li><strong>认识场景：</strong>工作、学习或朋友介绍，培训班、研讨会、艺术展</li>
+      </ul>
+    </div>
+
+    <p><strong>遇到正缘的最佳年份：</strong></p>
+    <ul>
+      <li><strong>2025乙巳年（38-39岁）</strong> — 巳火合住酉金，感情运旺，适合相亲</li>
+      <li><strong>2026丙午年（39-40岁）</strong> — 结婚的最佳年份</li>
+      <li><strong>2027丁未年（40-41岁）</strong> — 七杀有情，也是遇到正缘的年份</li>
+    </ul>
+
+    <p><strong>桃花运分析：</strong>您命中的桃花，多为晚结的桃花，且多为正桃花。烂桃花来自时柱的卯木七杀，需擦亮眼睛。</p>
+
+    <div class="quote">单身提升正缘概率：多往东方走，多穿红色粉色，发挥您的才华，不要过于追求完美。</div>
+  </div>
+  <div class="page-footer">— 07 —</div>
+</div>
+
+<!-- ═══════ 06 事业格局 ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">💼</span>
+    <h2 class="section-title">事业格局</h2>
+    <span class="section-title-en">Career Analysis</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>您的事业，核心在于<strong>「印」</strong>和<strong>「食神」</strong>这两个字。印星护身，食神吐秀，靠技术和才华吃饭的格局。</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 职业路径建议</div>
+      <ul>
+        <li><strong>最推荐：终身学习型的打工模式</strong> — 靠不断提升专业技能，一步步往上走</li>
+        <li><strong>次推荐：自由职业者</strong> — 掌握一项稀缺技能，赚取更高报酬</li>
+      </ul>
+    </div>
+
+    <p><strong>升职/跳槽最佳时机：</strong></p>
+    <ul>
+      <li><strong>2026丙午年（39-40岁）</strong> — 火土两旺，升职加薪的绝佳年份，尤其农历五月</li>
+      <li><strong>2027丁未年（40-41岁）</strong> — 地位和权力提升，农历六月是关键</li>
+    </ul>
+
+    <p><strong>贵人特征：</strong>属马、狗、羊是您的天乙贵人。多出现在炎热的夏季。</p>
+
+    <p><strong>创业还是打工？</strong>老朽直言，打工更适合您。创业压力太大。如果非要创业，选择轻资产的知识型创业。</p>
+  </div>
+  <div class="page-footer">— 08 —</div>
+</div>
+
+<!-- ═══════ 07 健康提醒 ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">🏥</span>
+    <h2 class="section-title">健康提醒</h2>
+    <span class="section-title-en">Health Advisory</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>您的身体，归根结底是<strong>「土虚木摇，金多水浊」</strong>。先天体质偏弱，需要比常人更用心地保养。</p>
+
+    <table class="table">
+      <tr><th>脏腑</th><th>先天情况</th><th>注意事项</th></tr>
+      <tr><td>肺与大肠（金）</td><td>免疫力偏低</td><td>易感冒、咳嗽、皮肤过敏</td></tr>
+      <tr><td>心与小肠（火）</td><td>心血不足</td><td>易心悸、失眠、头晕</td></tr>
+      <tr><td>肾与膀胱（水）</td><td>肾气不足</td><td>易腰酸、乏力、月经不调</td></tr>
+    </table>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 高发病症预警</div>
+      <ul>
+        <li><strong>35-40岁：</strong>容易出现甲状腺结节、乳腺增生、子宫肌瘤等</li>
+        <li><strong>40岁以后：</strong>需要关注血压、血脂、心脏方面的问题</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(91,191,160,0.15);">
+      <div class="highlight-box-title" style="color:#5bbfa0;">✦ 养生建议</div>
+      <ul>
+        <li><strong>运动：</strong>瑜伽最佳，其次是散步、八段锦、太极拳。以微微出汗为度</li>
+        <li><strong>作息：</strong>晚上10点前入睡，早上6-7点起床</li>
+        <li><strong>饮食：</strong>温热、易消化、高蛋白。多吃红枣、枸杞、山药、小米</li>
+      </ul>
+    </div>
+  </div>
+  <div class="page-footer">— 09 —</div>
+</div>
+
+<!-- ═══════ 08 大运流年 ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">📅</span>
+    <h2 class="section-title">大运流年</h2>
+    <span class="section-title-en">Fortune Cycles</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>您从1岁起运，目前正行<strong>【辛丑大运】</strong>（31-40岁）。机遇与挑战并存的一步运。</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 当前大运影响</div>
+      <ul>
+        <li><strong>好的方面：</strong>丑土帮身，事业上有人支持，才华能得到施展</li>
+        <li><strong>不好的方面：</strong>丑土晦火，贵人运减弱，要防破财</li>
+      </ul>
+    </div>
+
+    <p><strong>未来5年逐年分析（从2036年起）：</strong></p>
+
+    <div class="score-grid">
+      <div class="score-card" style="border-color: rgba(201,168,76,0.3);">
+        <div class="score-year">2036 丙辰</div>
+        <div class="score-items"><span class="score-item">财运 <span class="num">90</span></span><span class="score-item">感情 <span class="num">85</span></span></div>
+        <div class="score-reminder">⭐ 运势转折点！贵人运极强</div>
+      </div>
+      <div class="score-card">
+        <div class="score-year">2037 丁巳</div>
+        <div class="score-items"><span class="score-item">财运 <span class="num">80</span></span><span class="score-item">感情 <span class="num">70</span></span></div>
+        <div class="score-reminder">学习提升之年，忌冲动</div>
+      </div>
+      <div class="score-card">
+        <div class="score-year">2038 戊午</div>
+        <div class="score-items"><span class="score-item">财运 <span class="num">85</span></span><span class="score-item">感情 <span class="num">80</span></span></div>
+        <div class="score-reminder">适合合作，也是创业良机</div>
+      </div>
+      <div class="score-card" style="border-color: rgba(201,168,76,0.3);">
+        <div class="score-year">2039 己未</div>
+        <div class="score-items"><span class="score-item">财运 <span class="num">95</span></span><span class="score-item">感情 <span class="num">90</span></span></div>
+        <div class="score-reminder">⭐ 丰收之年！事业稳如泰山</div>
+      </div>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(180,60,60,0.15); background: rgba(180,60,60,0.03);">
+      <div class="highlight-box-title">⚠ 2040年 庚申 需格外小心</div>
+      <p style="margin: 0; font-size: 11px; line-height: 1.8; color: rgba(245,235,215,0.7); text-indent: 0;">「伤官见官，为祸百端」。切忌与人发生正面冲突，更不可辞职创业。守成是最佳选择。</p>
+    </div>
+  </div>
+  <div class="page-footer">— 10 —</div>
+</div>
+
+<!-- ═══════ 09 开运锦囊 ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">🎯</span>
+    <h2 class="section-title">开运锦囊</h2>
+    <span class="section-title-en">Fortune Enhancement</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>老朽这里有几味"药"，施主不妨一试，皆为顺天应时之举。</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 幸运颜色</div>
+      <ul>
+        <li><strong style="color:#d4736b;">红色</strong> — 朱砂红、珊瑚红</li>
+        <li><strong style="color:#c9a84c;">黄色</strong> — 琥珀黄、明黄色</li>
+        <li><strong style="color:#9b6fd4;">紫色</strong> — 薰衣草紫</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 幸运数字</div>
+      <ul>
+        <li><strong>2</strong>（火之生数） · <strong>5</strong>（土之生数） · <strong>7</strong>（火之成数）</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 吉祥方位</div>
+      <ul>
+        <li><strong>求财：南方</strong> — 放红色或黄色富贵竹</li>
+        <li><strong>求姻缘：东方</strong> — 放一束鲜花或挂一幅山岳画</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(91,191,160,0.15);">
+      <div class="highlight-box-title" style="color:#5bbfa0;">✦ 推荐佩戴</div>
+      <ul>
+        <li><strong>材质：</strong>红玛瑙、黄水晶、石榴石、蜜蜡</li>
+        <li><strong>具体：</strong>佩戴一串红玛瑙手串或蜜蜡吊坠，在左手</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(180,60,60,0.08); background: rgba(180,60,60,0.02);">
+      <div class="highlight-box-title">⚠ 流年避讳</div>
+      <p style="margin: 0; font-size: 11px; line-height: 1.8; color: rgba(245,235,215,0.7); text-indent: 0;">今年【2036丙辰年】忌在南方放水养植物或鱼缸，这会泄了您的火气。也不要轻易搬家或装修。</p>
+    </div>
+  </div>
+  <div class="page-footer">— 11 —</div>
+</div>
+
+<!-- ═══════ 10 古法断语 ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">📖</span>
+    <h2 class="section-title">古法断语</h2>
+    <span class="section-title-en">Classical Wisdom</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <div class="quote" style="font-size:16px; text-align:center; border-left:none; padding:20px;">
+      《三命通会》云：<br>
+      <strong style="font-size:18px;">「己土生酉月，庚辛透干，富屋贫人，多学少成。」</strong>
+    </div>
+
+    <p>此断语的意思是，己土日主生在酉月，如果八字中庚金或辛金透出天干，就好比一个人住在金碧辉煌的豪宅里，却穷得叮当响。这代表此人学识渊博，想法很多，但常常因为不能坚持或行动力不足，而难以将想法变成财富。</p>
+
+    <p>对应您的命局，月支酉金即是偏财，天干虽无庚辛透出，但地支双酉一辛，金气极盛。正是这种"看起来有财，实则身弱受挫"的格局。</p>
+
+    <p>老朽劝施主，莫要好高骛远，先选定一条路，沉下心来，踏踏实实地走，把"学"和"成"之间的距离缩短，方是正途。</p>
+  </div>
+  <div class="page-footer">— 12 —</div>
+</div>
+
+<!-- ═══════ 11 命理师的叮嘱 ═══════ -->
+<div class="page">
+  <div class="page-header">S H E N Y U A N  ·  B A Z I  L I F E  R E A D I N G</div>
+  <div class="section-header">
+    <span class="section-emoji">💌</span>
+    <h2 class="section-title">命理师的叮嘱</h2>
+    <span class="section-title-en">Master's Words</span>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>施主，老朽观您的八字，如同欣赏一幅水墨画，有浓墨重彩，也有留白写意。您不是那惊涛骇浪，而是那山间清泉，缓缓流淌，终能汇入大海。</p>
+
+    <p>老朽赠您三句知心话：</p>
+
+    <div class="highlight-box" style="border-color: rgba(201,168,76,0.2);">
+      <div class="highlight-box-title">❶ 莫问收获，先问耕耘</div>
+      <p style="margin:0; text-indent:0; font-size:11.5px; line-height:1.9;">身弱的命，最忌急功近利。老天给您一双巧手和一个聪慧的头脑，就是让您靠日积月累的"笨功夫"去赢。不要总盯着别人的快，要守住自己的慢。</p>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(201,168,76,0.2);">
+      <div class="highlight-box-title">❷ 亲近温暖，远离阴寒</div>
+      <p style="margin:0; text-indent:0; font-size:11.5px; line-height:1.9;">冬天、空调房、孤独的环境都会削弱您的能量。多去温暖的地方，多与阳光开朗的人交往，多穿鲜艳的衣服，多晒太阳，您会发现，整个世界都明亮了。</p>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(201,168,76,0.2);">
+      <div class="highlight-box-title">❸ 相信直觉，接纳不完美</div>
+      <p style="margin:0; text-indent:0; font-size:11.5px; line-height:1.9;">您思虑过重，常陷于自我怀疑。请相信，您天生的直觉，往往是最准的。也请接纳自己偶尔的脆弱和失败。一个完美的人，不叫人生，您这些不完美，正是您最真实、最动人的地方。</p>
+    </div>
+
+    <div class="quote" style="text-align:center; border-left:none; padding:20px; font-size:13px;">
+      <strong style="font-size:16px; color:#c9a84c;">天地有清风，山川有明月。<br>愿您心有乾坤，沐火而生，此生尽兴，且行且歌。</strong>
+    </div>
+  </div>
+  <div class="page-footer">— 13 —</div>
+</div>
+
+</body>
+</html>
