@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#5bbfa0">
+<title>善缘 · 我的命理战报</title>
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --jade:#5bbfa0;--jade-deep:#3d9e82;--jade-light:#8dd9bf;
+  --gold:#c9a84c;--gold-light:#e0c66f;
+  --bg:#faf8f5;--card:#fff;
+  --ink:#1a1a18;--ink-mid:#4a4a46;--ink-light:#8a8a84;
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+body{min-height:100vh;padding:24px 16px 40px;display:flex;flex-direction:column;align-items:center}
+
+/* ─────────── SHARE CARD (3:4) ─────────── */
+.card-wrap{width:100%;max-width:360px}
+.card{
+  position:relative;width:100%;
+  /* 3:4 is the target ratio. `aspect-ratio` yields to min-content height, so if
+     content is taller than 3:4 (very narrow screens) the card grows instead of
+     clipping the footer/QR. At normal phone widths it renders as a clean 3:4. */
+  aspect-ratio:3/4;height:auto;
+  background:
+    radial-gradient(120% 80% at 50% -10%, rgba(141,217,191,0.28), transparent 60%),
+    linear-gradient(180deg,#ffffff 0%, #fbfaf6 55%, #f6f3ea 100%);
+  border-radius:20px;overflow:hidden;
+  box-shadow:0 18px 48px rgba(61,158,130,0.16), 0 2px 8px rgba(0,0,0,0.04);
+  padding:26px 24px 22px;
+  display:flex;flex-direction:column;
+}
+/* subtle corner ornaments */
+.card::before,.card::after{
+  content:"";position:absolute;width:56px;height:56px;
+  border:1px solid rgba(201,168,76,0.35);border-radius:2px;
+}
+.card::before{top:16px;left:16px;border-right:none;border-bottom:none}
+.card::after{bottom:16px;right:16px;border-left:none;border-top:none}
+
+/* seal / element mark top-right */
+.card-seal{
+  position:absolute;top:20px;right:20px;
+  width:38px;height:38px;border-radius:50%;
+  background:linear-gradient(135deg,var(--jade),var(--jade-deep));
+  color:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:17px;box-shadow:0 4px 12px rgba(61,158,130,0.35);
+}
+
+/* header */
+.card-brand{display:flex;align-items:center;gap:8px}
+.brand-mark{font-size:19px;color:var(--jade-deep)}
+.brand-name{font-size:16px;font-weight:600;letter-spacing:4px;color:var(--ink)}
+.brand-en{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:10px;letter-spacing:0.28em;color:rgba(201,168,76,0.75);margin-top:4px;margin-left:2px}
+
+.hairline{height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.4),transparent);margin:12px 0 2px}
+
+/* who */
+.card-for{font-size:11px;letter-spacing:2px;color:var(--ink-light);margin-top:10px}
+.card-for b{color:var(--jade-deep);font-weight:500}
+
+/* main highlight */
+.card-body{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;padding:4px 0}
+.mg-label{font-size:11px;letter-spacing:4px;color:var(--gold);margin-bottom:7px}
+.mg-title{font-size:25px;font-weight:500;letter-spacing:3px;line-height:1.24;color:var(--ink)}
+.mg-title .em{color:var(--jade-deep)}
+.mg-sub{font-size:11.5px;letter-spacing:1px;color:var(--ink-mid);line-height:1.65;margin-top:10px;padding:0 4px}
+
+/* score chips */
+.chips{display:flex;justify-content:center;gap:8px;margin-top:13px}
+.chip{
+  flex:1;max-width:96px;background:rgba(91,191,160,0.06);
+  border:1px solid rgba(91,191,160,0.16);border-radius:11px;
+  padding:8px 4px;text-align:center;
+}
+.chip-val{font-family:'Cormorant Garamond',serif;font-size:23px;font-weight:500;color:var(--jade-deep);line-height:1}
+.chip-val small{font-size:12px;color:var(--gold)}
+.chip-label{font-size:9px;letter-spacing:1px;color:var(--ink-light);margin-top:4px}
+
+/* footer: invite + qr */
+.card-footer{display:flex;align-items:center;gap:12px;margin-top:12px;padding-top:11px;border-top:1px solid rgba(201,168,76,0.18)}
+.qr-box{
+  width:66px;height:66px;flex-shrink:0;border-radius:8px;
+  background:#fff;border:1px solid rgba(0,0,0,0.06);
+  padding:4px;box-shadow:0 2px 6px rgba(0,0,0,0.05);
+}
+/* keep QR modules sharp — no smoothing when the 256px canvas is scaled to box */
+.qr-box img,.qr-box svg,.qr-box canvas{
+  width:100%!important;height:100%!important;display:block;border-radius:3px;
+  image-rendering:pixelated;image-rendering:-moz-crisp-edges;image-rendering:crisp-edges;
+}
+.foot-txt{flex:1;min-width:0}
+.foot-invite{font-size:10px;letter-spacing:1px;color:var(--ink-light)}
+.foot-code{font-family:'Cormorant Garamond',serif;font-size:19px;letter-spacing:2px;color:var(--jade-deep);font-weight:500;margin-top:1px}
+.foot-cta{font-size:10px;letter-spacing:0.5px;color:var(--ink-mid);margin-top:3px}
+.foot-cta b{color:var(--gold)}
+
+/* watermark */
+.card-mark{text-align:center;font-size:9px;letter-spacing:1.5px;color:rgba(138,138,132,0.7);margin-top:10px;line-height:1.5}
+.card-mark .slogan{color:rgba(201,168,76,0.6);font-family:'Cormorant Garamond',serif;font-style:italic;letter-spacing:0.2em;font-size:10px}
+
+/* ─────────── controls (not captured) ─────────── */
+.controls{width:100%;max-width:360px;margin-top:22px}
+.btn{
+  display:block;width:100%;padding:15px 0;border:none;border-radius:12px;
+  font-family:'Noto Serif SC',serif;font-size:15px;letter-spacing:3px;cursor:pointer;
+  background:linear-gradient(135deg,var(--jade-deep),var(--jade));color:#fff;
+  box-shadow:0 6px 18px rgba(61,158,130,0.28);transition:transform .15s,opacity .15s;
+}
+.btn:active{transform:translateY(1px)}
+.btn[disabled]{opacity:.6;cursor:progress}
+.hint{text-align:center;font-size:11px;color:var(--ink-light);letter-spacing:1px;margin-top:12px;min-height:16px;transition:opacity .3s}
+.hint.show{color:var(--jade-deep)}
+</style>
+</head>
+<body>
+
+<div class="card-wrap">
+  <!-- ===== CAPTURED CARD ===== -->
+  <div class="card" id="card">
+    <div class="card-seal" id="seal">火</div>
+
+    <div>
+      <div class="card-brand">
+        <span class="brand-mark">☯</span>
+        <span class="brand-name">善缘</span>
+      </div>
+      <div class="brand-en">ShenYuan · Destiny Reading</div>
+    </div>
+
+    <div class="card-for">为 <b id="who">有缘人</b> 揭示的命理亮点</div>
+
+    <div class="card-body">
+      <div class="mg-label" id="mgLabel">命 格</div>
+      <div class="mg-title" id="mgTitle">玉韫珠辉<br><span class="em">待时而发</span></div>
+      <div class="mg-sub" id="mgSub">金水藏辉，静水流深。<br>今岁运势渐启，宜守正待时，逢缘则发。</div>
+
+      <div class="chips" id="chips">
+        <div class="chip"><div class="chip-val" id="c1v">72<small>分</small></div><div class="chip-label" id="c1l">今年财运</div></div>
+        <div class="chip"><div class="chip-val" id="c2v">87</div><div class="chip-label" id="c2l">正缘兼容</div></div>
+        <div class="chip"><div class="chip-val" id="c3v">吉</div><div class="chip-label" id="c3l">流年综述</div></div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <div class="qr-box" id="qrBox"><img id="qrImg" alt="邀请二维码"></div>
+      <div class="foot-txt">
+        <div class="foot-invite">邀请码 · Invite Code</div>
+        <div class="foot-code" id="refCode">SY·8888</div>
+        <div class="foot-cta">扫码测你的命理 · <b>新缘礼遇</b></div>
+      </div>
+    </div>
+
+    <div class="card-mark">
+      善缘 ShenYuan · 命理内容仅供参考<br>
+      <span class="slogan">你求什么 · 自有天机</span>
+    </div>
+  </div>
+  <!-- ===== /CAPTURED CARD ===== -->
+</div>
+
+<div class="controls">
+  <button class="btn" id="saveBtn" onclick="exportCard()">保 存 分 享 图</button>
+  <div class="hint" id="hint">生成后长按图片即可保存 / 分享</div>
+</div>
+
+<script>
+/* ---------- data injection via URL params ---------- */
+(function(){
+  var p = new URLSearchParams(location.search);
+  var set = function(id, v){ if(v!=null){ var el=document.getElementById(id); if(el) el.textContent=v; } };
+
+  set('who', p.get('name'));
+  // highlight: "命格标题" — support "|" to split two lines, "·" kept as-is
+  var hl = p.get('highlight');
+  if(hl){
+    var parts = hl.split('|');
+    document.getElementById('mgTitle').innerHTML =
+      parts.length>1 ? (parts[0]+'<br><span class="em">'+parts[1]+'</span>')
+                     : ('<span class="em">'+parts[0]+'</span>');
+  }
+  set('mgLabel', p.get('label'));
+  set('mgSub', p.get('sub'));
+
+  // three chips: score / love / year  (val + optional label via *_l)
+  var chip = function(vid,lid, pv, pl, unit){
+    var v=p.get(pv);
+    if(v!=null){ document.getElementById(vid).innerHTML = v + (unit?'<small>'+unit+'</small>':''); }
+    var l=p.get(pl); if(l!=null) document.getElementById(lid).textContent=l;
+  };
+  chip('c1v','c1l','score','score_l','分');
+  chip('c2v','c2l','love','love_l');
+  chip('c3v','c3l','year','year_l');
+
+  var refCode = p.get('ref') || 'SY8888';
+  set('refCode', refCode);
+  var seal=p.get('seal'); if(seal!=null) document.getElementById('seal').textContent=seal;
+
+  // ---- REAL QR: encodes the invite link so scanning opens the referral page ----
+  buildRealQR(document.getElementById('qrBox'), refCode);
+})();
+
+// Build a genuinely-scannable QR encoding the full invite URL. Rendered fully
+// client-side to a same-origin data-URL, so html2canvas never taints the export.
+function buildRealQR(box, ref){
+  var origin = location.origin && location.origin !== 'null'
+             ? location.origin
+             : 'https://shenyuan.app';   // fallback for file:// / null origin
+  var url = origin + '/pages/invite.html?ref=' + encodeURIComponent(ref);
+  var qimg = document.getElementById('qrImg');
+  try {
+    // 1) Render QR into an offscreen holder at high native res.
+    var holder=document.createElement('div');
+    new QRCode(holder, {
+      text: url,
+      width: 300,
+      height: 300,
+      colorDark: '#1f6f5b',      // jade-deep, on-brand yet high-contrast
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H  // 30% error correction — robust to scaling/compression
+    });
+    var src = holder.querySelector('canvas');
+    // qrcodejs draws with NO quiet zone; QR spec needs a ~4-module white margin to
+    // stay scannable after downscaling. Re-composite onto a padded white canvas so
+    // both phones and the exported PNG can decode it.
+    var qr=src.width;                       // 300
+    var quiet=Math.round(qr/25*4);          // ~4 modules of margin
+    var out=document.createElement('canvas');
+    out.width=out.height=qr+quiet*2;
+    var octx=out.getContext('2d');
+    octx.imageSmoothingEnabled=false;
+    octx.fillStyle='#ffffff'; octx.fillRect(0,0,out.width,out.height);
+    octx.drawImage(src, quiet, quiet);
+    var dataURL = out.toDataURL('image/png');   // same-origin data-URL → no CORS taint
+    // Assign to a pre-existing <img> in the markup (html2canvas reliably clones &
+    // re-fetches declared <img> srcs) AND set it as the box background-image as a
+    // belt-and-suspenders fallback — one of the two always survives export.
+    qimg.src = dataURL;
+    box.style.backgroundImage = 'url("'+dataURL+'")';
+    box.style.backgroundSize = 'calc(100% - 8px) calc(100% - 8px)';
+    box.style.backgroundPosition = 'center';
+    box.style.backgroundRepeat = 'no-repeat';
+    box.setAttribute('data-qr-url', url);
+  } catch(e){
+    // If the QR lib fails to load, degrade gracefully to a scannable image API.
+    if(qimg){ qimg.crossOrigin='anonymous'; qimg.src='https://api.qrserver.com/v1/create-qr-code/?size=300x300&qzone=2&color=1f6f5b&data='+encodeURIComponent(url); }
+    box.setAttribute('data-qr-url', url);
+    console.warn('QRCode lib unavailable, fell back to image API', e);
+  }
+}
+
+/* ---------- export via html2canvas ---------- */
+// Wait for web fonts so we never capture a fallback-font (unstyled) frame.
+function fontsReady(){
+  if(document.fonts && document.fonts.ready){
+    return Promise.race([
+      document.fonts.ready,
+      new Promise(function(r){ setTimeout(r, 2500); }) // hard cap so we never hang
+    ]);
+  }
+  return Promise.resolve();
+}
+
+function exportCard(){
+  var btn=document.getElementById('saveBtn'), hint=document.getElementById('hint');
+  if(btn.disabled) return;
+  btn.disabled=true; var old=btn.textContent; btn.textContent='生成中…';
+  hint.textContent='正在生成高清分享图…'; hint.className='hint show';
+
+  // Pin the card to a fixed 360px design width during capture so EVERY device
+  // exports an identical, pixel-clean 3:4 image with nothing clipped — regardless
+  // of the phone's actual screen width. Restored immediately after.
+  var wrap=document.querySelector('.card-wrap');
+  var savedW=wrap.style.width, savedMax=wrap.style.maxWidth;
+  wrap.style.width='360px'; wrap.style.maxWidth='360px';
+
+  var restore=function(){ wrap.style.width=savedW; wrap.style.maxWidth=savedMax; };
+
+  fontsReady().then(function(){
+    // let layout settle at the pinned width before capturing
+    return new Promise(function(r){ setTimeout(r, 60); });
+  }).then(function(){
+    return html2canvas(document.getElementById('card'), {
+      scale: Math.max(2, Math.min(3, window.devicePixelRatio || 2)), // crisp for 小红书
+      backgroundColor: '#ffffff',   // solid bg — iOS Safari mishandles null
+      useCORS:true,
+      allowTaint:false,
+      logging:false,
+      imageTimeout: 4000
+    });
+  }).then(function(canvas){
+    var url = canvas.toDataURL('image/png');
+    var ref=(document.getElementById('refCode').textContent||'shenyuan').replace(/[^\w]/g,'');
+    var a=document.createElement('a');
+    a.download='善缘战报_'+ref+'.png';
+    a.href=url; document.body.appendChild(a); a.click(); a.remove();
+    hint.textContent='已生成！长按图片可保存 / 分享到小红书·朋友圈';
+    hint.className='hint show';
+  }).catch(function(e){
+    hint.textContent='生成失败，请重试'; hint.className='hint';
+    console.error(e);
+  }).finally(function(){
+    restore();
+    btn.disabled=false; btn.textContent=old;
+  });
+}
+</script>
+</body>
+</html>

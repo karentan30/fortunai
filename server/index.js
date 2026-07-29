@@ -67,10 +67,21 @@ app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }));
 app.use(express.static(path.join(__dirname, '..')));  // Vercel handles static files
 
 // ── In-memory Data Store (Vercel-compatible, replaces better-sqlite3) ──
-const _M = { users:[], tokens:[], orders:[], readings:[], subs:[], _id:{u:1,t:1,o:1,r:1,s:1} };
-const insertUser = { run(e,h){const id=_M._id.u++;_M.users.push({id,email:e,password_hash:h,name:'',created_at:new Date().toISOString()});return{lastInsertRowid:id};} };
+const _M = { users:[], tokens:[], orders:[], readings:[], subs:[], referrals:[], _id:{u:1,t:1,o:1,r:1,s:1,rf:1} };
+// 生成唯一 6位大写 base36 邀请码(crypto随机·查重防撞)
+function genRefCode(){
+  var chars='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  for(var attempt=0; attempt<50; attempt++){
+    var buf=crypto.randomBytes(6), code='';
+    for(var i=0;i<6;i++){ code+=chars[buf[i]%36]; }
+    if(!_M.users.some(u=>u.ref_code===code)) return code;
+  }
+  return crypto.randomBytes(4).toString('hex').toUpperCase().slice(0,6); // 兜底
+}
+const insertUser = { run(e,h){const id=_M._id.u++;_M.users.push({id,email:e,password_hash:h,name:'',ref_code:genRefCode(),created_at:new Date().toISOString()});return{lastInsertRowid:id};} };
 const getUserByEmail = { get(e){return _M.users.find(u=>u.email===e);} };
-const getUserById = { get(id){const u=_M.users.find(x=>x.id===id);return u?{id:u.id,email:u.email,name:u.name,created_at:u.created_at}:undefined;} };
+const getUserById = { get(id){const u=_M.users.find(x=>x.id===id);return u?{id:u.id,email:u.email,name:u.name,ref_code:u.ref_code,created_at:u.created_at}:undefined;} };
+const getUserByRefCode = { get(c){if(!c)return undefined;var code=String(c).trim().toUpperCase();if(!code)return undefined;return _M.users.find(u=>u.ref_code===code);} };
 const insertToken = { run(uid,t){_M.tokens.push({id:_M._id.t++,user_id:uid,token:t,created_at:new Date().toISOString()});} };
 const getToken = { get(t){const tok=_M.tokens.find(x=>x.token===t);if(!tok)return null;const u=_M.users.find(x=>x.id===tok.user_id);return u?{...tok,email:u.email,name:u.name}:null;} };
 const getUserOrders = { all(uid){return _M.orders.filter(o=>o.user_id===uid&&o.payment_status==='completed').sort((a,b)=>b.created_at.localeCompare(a.created_at));} };
@@ -81,6 +92,39 @@ function _updOrder(s,oNo){const o=_M.orders.find(x=>x.order_no===oNo);if(o)o.pay
 function _insSub(e,sId){if(!_M.subs.find(x=>x.stripe_subscription_id===sId))_M.subs.push({email:e,stripe_subscription_id:sId,status:'active',created_at:new Date().toISOString()});}
 function _allOrders(){return[..._M.orders].sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,50);}
 function _insJossOrder(oNo,p,amt,cur,dN,c,wT,ps){_M.orders.push({id:_M._id.o++,order_no:oNo,product:p,amount:amt,currency:cur,donor_name:dN,contact:c,wish_text:wT,payment_status:ps,created_at:new Date().toISOString()});}
+
+// ═══════════════════════════════════════════════════════════
+// ── 邀请追踪管道 (referrer → invitee 归因关系, 无货币/奖励) ──
+// 记录"谁邀请了谁", 供将来接 KOL 分销 / 解锁免费报告使用。
+// 该用户名下邀请成功人数(作为邀请人)
+function invitedCount(uid){
+  return _M.referrals.filter(r=>r.inviter_id===uid).length;
+}
+// 用户是否已被邀请过(作为被邀请人)
+function wasInvited(uid){
+  return _M.referrals.some(r=>r.invitee_id===uid);
+}
+// 建立 referral 归因记录(仅记录关系, 不发任何奖励); 返回 referral 对象
+function createReferral(inviterId, inviteeId){
+  var ref = {
+    id: _M._id.rf++,
+    inviter_id: inviterId,
+    invitee_id: inviteeId,
+    created_at: new Date().toISOString()
+  };
+  _M.referrals.push(ref);
+  return ref;
+}
+// 尝试用 ref code 为新注册/老用户(inviteeId) 绑定邀请人; 静默失败返回 false
+function tryApplyReferral(refCode, inviteeId){
+  if(!refCode) return false;
+  var inviter = getUserByRefCode.get(refCode);
+  if(!inviter) return false;              // ref 无效
+  if(inviter.id === inviteeId) return false; // 不能邀请自己
+  if(wasInvited(inviteeId)) return false;  // 已被邀请过, 不重复
+  createReferral(inviter.id, inviteeId);
+  return true;
+}
 
 // ── DeepSeek chat ──
 async function deepseekChat(messages, opts = {}) {
@@ -316,8 +360,13 @@ app.post('/api/auth/register', rateLimitMiddleware, (req, res) => {
     const token = generateToken();
     insertToken.run(result.lastInsertRowid, token);
 
-    console.log(`[AUTH] Register: ${email}`);
-    res.json({ token, user: { id: result.lastInsertRowid, email } });
+    // ── 邀请追踪: 接受邀请码(body.ref 或 ?ref), 有效则仅记录 referral 归因关系(不发任何奖励), 无效静默忽略 ──
+    const ref = req.body.ref || req.query.ref;
+    tryApplyReferral(ref, result.lastInsertRowid);
+
+    const newUser = getUserById.get(result.lastInsertRowid);
+    console.log(`[AUTH] Register: ${email}${ref ? ' (ref:' + ref + ')' : ''}`);
+    res.json({ token, user: { id: result.lastInsertRowid, email }, ref_code: newUser.ref_code });
   } catch (err) {
     console.error('[AUTH ERR]', err);
     res.status(500).json({ error: '注册失败，请稍后重试' });
@@ -357,7 +406,49 @@ app.get('/api/auth/me', authMiddleware, (req, res) => {
   if (!req.user) {
     return res.status(401).json({ error: '未登录' });
   }
-  res.json({ user: req.user });
+  const u = getUserById.get(req.user.id);
+  res.json({ user: { ...req.user, ref_code: u ? u.ref_code : null } });
+});
+
+// ── 裂变(邀请/奖励)端点 ──
+function buildShareUrl(refCode, req){
+  // 优先用配置的 FRONTEND_URL; 未配置(或仍是 localhost 默认)时用请求域名兜底, 避免分享出 localhost 死链
+  var base = FRONTEND_URL || '';
+  if ((!base || base.indexOf('localhost') !== -1) && req && req.headers && req.headers.host) {
+    var proto = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+    base = proto + '://' + req.headers.host;
+  }
+  return base + '/pages/invite.html?ref=' + encodeURIComponent(refCode);
+}
+
+// GET /api/referral/mine — 我的邀请码/分享链接/统计
+app.get('/api/referral/mine', authMiddleware, (req, res) => {
+  if (!req.user) return res.status(401).json({ error: '请先登录' });
+  const u = getUserById.get(req.user.id);
+  if (!u) return res.status(401).json({ error: '请先登录' });
+  const share_url = buildShareUrl(u.ref_code, req);
+  res.json({
+    ref_code: u.ref_code,
+    share_url,
+    invited_count: invitedCount(req.user.id),
+    share_text: `我在善缘算了命,挺准的,你也来测测 → ${share_url}`
+  });
+});
+
+// POST /api/referral/claim — 老用户补填邀请码(仅记录归因关系, 无奖励)
+app.post('/api/referral/claim', rateLimitMiddleware, authMiddleware, (req, res) => {
+  if (!req.user) return res.status(401).json({ error: '请先登录' });
+  const ref = req.body && req.body.ref;
+  if (!ref) return res.status(400).json({ error: '请提供邀请码' });
+  if (wasInvited(req.user.id)) return res.status(400).json({ error: '你已使用过邀请码' });
+  const inviter = getUserByRefCode.get(ref);
+  if (!inviter) return res.status(400).json({ error: '邀请码无效' });
+  if (inviter.id === req.user.id) return res.status(400).json({ error: '不能使用自己的邀请码' });
+  createReferral(inviter.id, req.user.id);
+  res.json({
+    ok: true,
+    invited_count: invitedCount(req.user.id)
+  });
 });
 
 // GET /api/orders/mine — 当前用户订单

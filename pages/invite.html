@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#5bbfa0">
+<title>善缘 · 邀请好友</title>
+<meta name="description" content="把你的命理分享给朋友，邀 TA 一起测测缘分">
+<meta property="og:title" content="善缘 · 邀请好友">
+<meta property="og:description" content="把你的命理分享给朋友，邀 TA 一起测测缘分">
+<meta property="og:image" content="/favicon.svg">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="善缘 · 邀请好友">
+<meta name="twitter:description" content="把你的命理分享给朋友，邀 TA 一起测测缘分">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#faf8f5;--card:#ffffff;--mid:#f5f0e8;
+  --gold:#b8944a;--gold-light:#d4b06a;--gold-deep:#8a7020;
+  --jade:#5bbfa0;--jade-mid:#8dd9bf;--jade-deep:#3d9e82;
+  --ink:rgba(40,35,30,0.92);--sub:rgba(80,70,55,0.7);}
+.dark-mode{--bg:#faf8f5;--card:#ffffff;--mid:#1f1408;
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
+  --jade:#5bbfa0;--jade-mid:#8dd9bf;--jade-deep:#3d9e82;
+  --ink:rgba(40,35,30,0.92);--sub:rgba(80,70,55,0.7);}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink-text);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:80px}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(91,191,160,0.05) 0%,transparent 50%);pointer-events:none;z-index:0}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(201,168,76,0.6);cursor:pointer;padding:4px 0}
+
+.header{position:relative;z-index:1;text-align:center;padding:52px 20px 24px}
+.header-icon{font-size:40px;margin-bottom:10px;display:block;opacity:0.7}
+.header-title{font-size:20px;font-weight:400;letter-spacing:0.22em;margin-bottom:5px}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:0.26em;color:rgba(201,168,76,0.45);margin-bottom:14px}
+.gold-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto}
+
+.content{position:relative;z-index:1;padding:0 16px}
+
+.section-label{font-size:10px;letter-spacing:0.2em;color:rgba(201,168,76,0.5);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(201,168,76,0.15),transparent)}
+
+/* ── invited count card ── */
+.invited-card{background:linear-gradient(135deg,rgba(91,191,160,0.1),rgba(201,168,76,0.06));border:1px solid rgba(201,168,76,0.25);border-radius:12px;padding:22px 18px;margin-bottom:16px;text-align:center}
+.invited-amount{font-family:'Cormorant Garamond',serif;font-size:44px;line-height:1;color:var(--jade-deep);letter-spacing:0.02em}
+.invited-label{font-size:10px;color:var(--sub-text);letter-spacing:0.1em;margin-top:8px}
+
+/* ── invite code (big, tap to copy) ── */
+.code-card{background:var(--card);border:1px solid rgba(201,168,76,0.15);border-radius:12px;padding:22px 18px;margin-bottom:16px;text-align:center;cursor:pointer;transition:border-color 0.2s}
+.code-card:hover{border-color:rgba(201,168,76,0.4)}
+.code-card:active{transform:scale(0.99)}
+.code-label{font-size:10px;color:var(--sub-text);letter-spacing:0.1em;margin-bottom:10px}
+.code-value{font-family:'Cormorant Garamond',serif;font-size:38px;letter-spacing:0.18em;color:var(--gold);font-weight:400;word-break:break-all}
+.code-hint{font-size:9px;color:rgba(201,168,76,0.5);letter-spacing:0.08em;margin-top:10px}
+
+/* ── invite link (one-tap copy) ── */
+.link-card{background:var(--card);border:1px solid rgba(201,168,76,0.12);border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.link-text{flex:1;min-width:0;font-size:11px;color:var(--sub-text);letter-spacing:0.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.link-copy{flex-shrink:0;padding:7px 12px;background:rgba(91,191,160,0.1);border:1px solid rgba(91,191,160,0.2);border-radius:7px;color:var(--jade-deep);font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:0.06em;cursor:pointer;transition:all 0.2s}
+.link-copy:hover{background:rgba(91,191,160,0.18)}
+.link-copy:active{transform:scale(0.96)}
+.link-copy:disabled{opacity:0.5;cursor:default}
+
+/* ── reward note ── */
+.reward-note{background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.12);border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px}
+.reward-note .r-icon{font-size:18px;flex-shrink:0;line-height:1.5}
+.reward-note .r-text{font-size:12px;color:var(--ink-text);line-height:1.7;letter-spacing:0.02em}
+.reward-note .r-text b{color:var(--gold)}
+
+/* ── share button ── */
+.share-cta{width:100%;padding:15px 0;border:none;border-radius:8px;background:linear-gradient(135deg,var(--jade-deep),var(--jade),var(--jade-mid));color:#050e08;font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:0.18em;cursor:pointer;transition:all 0.2s;margin-bottom:20px}
+.share-cta:hover{opacity:0.92}
+.share-cta:active{transform:scale(0.98)}
+.share-cta:disabled{opacity:0.5;cursor:default}
+
+/* ── states ── */
+.empty-state{text-align:center;padding:30px 20px}
+.empty-icon{font-size:44px;opacity:0.25;margin-bottom:12px;display:block}
+.empty-text{font-size:12px;color:var(--sub-text);letter-spacing:0.08em}
+.login-cta{display:inline-block;margin-top:14px;padding:10px 22px;background:rgba(91,191,160,0.1);border:1px solid rgba(91,191,160,0.25);border-radius:8px;color:var(--jade-deep);font-family:'Noto Serif SC',serif;font-size:12px;letter-spacing:0.1em;text-decoration:none;transition:all 0.2s}
+.login-cta:hover{background:rgba(91,191,160,0.18)}
+
+.skeleton{background:rgba(201,168,76,0.06);border-radius:6px;animation:pulse 1.5s ease-in-out infinite;display:inline-block}
+@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:0.8}}
+
+.footer-links{position:relative;z-index:1;text-align:center;margin-top:20px}
+.footer-links a{font-size:10px;color:rgba(201,168,76,0.4);letter-spacing:0.08em;text-decoration:none;margin:0 8px}
+.footer-links a:hover{color:rgba(201,168,76,0.7)}
+
+.footnote{text-align:center;padding:20px;position:relative;z-index:1;font-size:9px;color:var(--sub-text);letter-spacing:0.06em;line-height:1.7;opacity:0.7}
+
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;line-height:1.6;text-align:center;font-family:'Noto Serif SC',serif;cursor:pointer;transition:opacity 0.3s;opacity:0;pointer-events:none}
+.toast.show{opacity:1;pointer-events:auto}
+.toast.error{background:rgba(180,40,40,0.92);border:1px solid rgba(220,80,80,0.4);color:rgba(255,220,220,0.95)}
+.toast.success{background:rgba(40,130,80,0.92);border:1px solid rgba(80,200,120,0.4);color:rgba(220,255,230,0.95)}
+</style>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题" style="z-index:999">🌙</button>
+
+<button class="back-btn" onclick="history.back()">‹ 返回</button>
+
+<!-- Header -->
+<div class="header">
+  <span class="header-icon">🎁</span>
+  <div class="header-title">邀请好友</div>
+  <div class="header-sub">INVITE FRIENDS · SHEN YUAN</div>
+  <div class="gold-line"></div>
+</div>
+
+<!-- Main content (populated after auth check) -->
+<div id="mainView" style="display:none">
+  <!-- Invited count -->
+  <div class="content">
+    <div class="invited-card">
+      <div class="invited-amount" id="invitedVal">—</div>
+      <div class="invited-label">已邀请好友</div>
+    </div>
+  </div>
+
+  <!-- Invite code -->
+  <div class="content">
+    <div class="section-label">我的邀请码</div>
+    <div class="code-card" id="codeCard" onclick="copyCode()">
+      <div class="code-label">分享给好友填写</div>
+      <div class="code-value" id="refCode"><span class="skeleton" style="width:120px;height:38px"></span></div>
+      <div class="code-hint">轻触复制邀请码</div>
+    </div>
+  </div>
+
+  <!-- Invite link -->
+  <div class="content">
+    <div class="section-label">邀请链接</div>
+    <div class="link-card">
+      <div class="link-text" id="shareUrl"><span class="skeleton" style="width:180px;height:11px"></span></div>
+      <button class="link-copy" id="copyLinkBtn" onclick="copyLink()">复制</button>
+    </div>
+  </div>
+
+  <!-- Reward note -->
+  <div class="content">
+    <div class="reward-note">
+      <span class="r-icon">✨</span>
+      <div class="r-text">把你的命理分享给朋友，邀 TA 一起测测缘分。缘来是福，与好友同修。</div>
+    </div>
+  </div>
+
+  <!-- One-tap share -->
+  <div class="content">
+    <button class="share-cta" id="shareBtn" onclick="handleShare()">一键分享邀请</button>
+  </div>
+</div>
+
+<!-- Not-logged-in view -->
+<div id="guestView" class="content" style="display:none">
+  <div class="empty-state">
+    <span class="empty-icon">🔒</span>
+    <div class="empty-text">请先登录，再邀请好友</div>
+    <a class="login-cta" href="login.html">前往登录</a>
+  </div>
+</div>
+
+<!-- Error view -->
+<div id="errorView" class="content" style="display:none">
+  <div class="empty-state">
+    <span class="empty-icon">⚠️</span>
+    <div class="empty-text">加载失败，请稍后重试</div>
+    <a class="login-cta" href="javascript:location.reload()">重新加载</a>
+  </div>
+</div>
+
+<div class="footer-links">
+  <a href="../index.html">返回首页</a>
+  <a href="account.html">我的账户</a>
+  <a href="member.html">善缘会员</a>
+</div>
+
+<div class="footnote">命理内容仅供参考，愿君缘来是福。</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var BASE = '';
+var refState = { ref_code: '', share_url: '', share_text: '' };
+
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (type||'');
+  t.onclick = function(){ t.className = 'toast'; };
+  if (t._toastTimer) clearTimeout(t._toastTimer);
+  t._toastTimer = setTimeout(function(){ t.className = 'toast'; }, 3000);
+}
+
+function getToken() { return localStorage.getItem('sy_token'); }
+
+function copyText(text) {
+  var textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  var ok = false;
+  try { ok = document.execCommand('copy'); } catch(e) { ok = false; }
+  document.body.removeChild(textarea);
+  return ok;
+}
+
+function copyCode() {
+  if (!refState.ref_code) return;
+  if (copyText(refState.ref_code)) showToast('邀请码已复制', 'success');
+  else showToast('复制失败，请手动复制', 'error');
+}
+
+function copyLink() {
+  var btn = document.getElementById('copyLinkBtn');
+  var link = refState.share_url;
+  if (!link) return;
+  btn.disabled = true;
+  if (copyText(link)) showToast('邀请链接已复制，快去分享吧', 'success');
+  else showToast('复制失败，请手动复制', 'error');
+  setTimeout(function(){ btn.disabled = false; }, 800);
+}
+
+function handleShare() {
+  var btn = document.getElementById('shareBtn');
+  var text = refState.share_text || '我在善缘算了命,挺准的,你也来测测缘分。';
+  var url = refState.share_url || '';
+  if (navigator.share) {
+    btn.disabled = true;
+    navigator.share({ title: '善缘 · 邀你同修', text: text, url: url })
+      .catch(function(){})
+      .finally(function(){ btn.disabled = false; });
+    return;
+  }
+  // Fallback: copy combined text + link
+  var combined = url ? (text + ' ' + url) : text;
+  if (copyText(combined)) showToast('已复制邀请文案，粘贴给好友即可', 'success');
+  else showToast('复制失败，请手动复制链接', 'error');
+}
+
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function loadReferral(token) {
+  return fetch(BASE + '/api/referral/mine', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  }).then(function(r){
+    if (r.status === 401 || r.status === 403) { throw { auth: true }; }
+    if (!r.ok) throw new Error('referral load failed');
+    return r.json();
+  }).then(function(d){
+    refState.ref_code = d.ref_code || '';
+    refState.share_url = d.share_url || '';
+    refState.share_text = d.share_text || '';
+    document.getElementById('refCode').textContent = d.ref_code || '—';
+    document.getElementById('shareUrl').textContent = d.share_url || '—';
+    document.getElementById('invitedVal').textContent = (d.invited_count != null ? d.invited_count : '0');
+  });
+}
+
+(function init(){
+  var token = getToken();
+  if (!token) {
+    document.getElementById('guestView').style.display = 'block';
+    return;
+  }
+  document.getElementById('mainView').style.display = 'block';
+  loadReferral(token)
+    .catch(function(err){
+      if (err && err.auth) {
+        document.getElementById('mainView').style.display = 'none';
+        document.getElementById('guestView').style.display = 'block';
+      } else {
+        document.getElementById('mainView').style.display = 'none';
+        document.getElementById('errorView').style.display = 'block';
+      }
+    });
+})();
+</script>
+
+<script>
+(function(){var t=localStorage.getItem('sy_theme');if(t==='dark'){document.documentElement.classList.add('dark-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='🌙';}})();
+function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'🌙';localStorage.setItem('sy_theme',l?'dark':'dark');}
+</script>
+</body>
+</html>
