@@ -824,12 +824,13 @@ function switchMode(el, mode) {
   showToast('正在生成' + (mode === 'gentle' ? '鼓励' : '真相') + '模式报告…');
   fetch('/api/bazi', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('sy_token')||'')},
     body: JSON.stringify({
       birthYear: lastBaziInput.year, birthMonth: lastBaziInput.month,
       birthDay: lastBaziInput.day, birthHour: lastBaziInput.hour,
       gender: lastBaziInput.gender, mode: mode,
-      question: '请全面分析我的命盘'
+      question: '请全面分析我的命盘',
+      token: localStorage.getItem('sy_token')||''
     })
   })
   .then(function(r){ return r.json(); })

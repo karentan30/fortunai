@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 const astrology = require('./astrology.js');
+const pay = require('./pay.js');   // 中国支付：微信 NATIVE 扫码 + 支付宝当面付
 
 const app = express();
 const PORT = process.env.PORT || 3021;
@@ -63,6 +64,11 @@ app.use(express.json({ limit: '10mb' }));
 
 // Stripe webhook needs raw body
 app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }));
+
+// 微信支付回调是 XML(text) —— 需要原始文本用于验签
+app.use('/pay/wechat/notify', express.text({ type: '*/*', limit: '1mb' }));
+// 支付宝回调是 application/x-www-form-urlencoded —— 需要字段做验签
+app.use('/pay/alipay/notify', express.urlencoded({ extended: false, limit: '1mb' }));
 
 // ── Static files ──
 app.use(express.static(path.join(__dirname, '..')));  // Vercel handles static files
@@ -135,7 +141,8 @@ function hasFullAccess(req, productKeys){
   }catch(e){ return false; }
 }
 // 付费门+免责: 报告端点统一处理 — 追加AIGC免责声明; 未付费降级为基础版概览(堵curl白嫖)
-function gateMessages(req, keys, messages){
+function gateMessages(req, keys, messages, fullMax){
+  fullMax = fullMax || 16384;
   var full = hasFullAccess(req, keys);
   var addon = '\n\n【必须遵守】报告最后必须附一行免责声明:"本报告由AI生成,仅供参考娱乐,不构成医学、法律、投资或人生重大决策建议。"';
   if(!full){
@@ -144,9 +151,32 @@ function gateMessages(req, keys, messages){
   var out = (messages||[]).map(function(m){
     return (m && m.role==='system') ? { role:'system', content: (m.content||'') + addon } : m;
   });
-  return { messages: out, maxTokens: full ? 16384 : 3500, full: full };
+  return { messages: out, maxTokens: full ? fullMax : 3500, full: full };
 }
 function _updOrder(s,oNo){const o=_M.orders.find(x=>x.order_no===oNo);if(o){o.payment_status=s;_persist();}}
+// ── 中国支付(微信/支付宝)订单 helpers ── 复用同一套 _M.orders 结构 + _persist() 落盘
+function _findOrder(oNo){ return _M.orders.find(x=>x.order_no===oNo); }
+// 新建 pending 订单(微信/支付宝共用)。amount=分(与 PRODUCTS 一致)。
+function _insCnOrder(oNo, product, amountCents, uid, channel){
+  _M.orders.push({ id:_M._id.o++, order_no:oNo, product:product, amount:amountCents,
+    currency:'cny', user_id:uid||null, donor_name:'', contact:'', wish_text:'',
+    stripe_session_id:null, channel:channel, trade_no:'',
+    payment_status:'pending', created_at:new Date().toISOString() });
+  _persist();
+}
+// 幂等入账：校验金额(分)后把订单置 completed。返回 'paid'(本次新置) / 'already'(已入账) / 'notfound' / 'amount_mismatch'。
+// paidFeeCents 传 null 表示跳过金额校验(如主动查单已确认成功但未回金额时——但两条支付通道都能拿到金额，均会传)。
+function _completeCnOrder(oNo, paidFeeCents, tradeNo){
+  const o = _findOrder(oNo);
+  if(!o) return 'notfound';
+  if(paidFeeCents != null && Number(o.amount) !== Number(paidFeeCents)) return 'amount_mismatch';
+  if(o.payment_status === 'completed') return 'already';   // 幂等：只入账一次
+  o.payment_status = 'completed';
+  o.trade_no = tradeNo || o.trade_no || '';
+  o.paid_at = new Date().toISOString();
+  _persist();
+  return 'paid';
+}
 function _insSub(e,sId){if(!_M.subs.find(x=>x.stripe_subscription_id===sId)){_M.subs.push({email:e,stripe_subscription_id:sId,status:'active',created_at:new Date().toISOString()});_persist();}}
 function _allOrders(){return[..._M.orders].sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,50);}
 function _insJossOrder(oNo,p,amt,cur,dN,c,wT,ps){_M.orders.push({id:_M._id.o++,order_no:oNo,product:p,amount:amt,currency:cur,donor_name:dN,contact:c,wish_text:wT,payment_status:ps,created_at:new Date().toISOString()});_persist();}
@@ -1271,7 +1301,8 @@ app.post('/api/fengshui', rateLimitMiddleware, async (req, res) => {
       { role: 'user', content: '房屋朝向：' + (houseDirection || '') + '\n楼层：' + (floor || '未提供') + '\n房间布局：' + (rooms || '未提供') + '\n居住成员：' + (occupants || '未提供') + '\n地址：' + (address || '未提供') + '\n用户问题：' + (question || '请综合分析房屋风水') + '\n\n请按以下结构详细分析（要求3000+字）：\n1. 🏠 房屋格局总评\n2. 🧭 八宅吉凶位分析（每个方位逐一分析）\n3. 🛏️ 各房间风水建议（卧室/客厅/厨房/书房/卫生间）\n4. 💰 财位分析及催财布局\n5. ❤️ 桃花位/人缘位布局\n6. 🏃 健康位分析\n7. 🪴 化解与开运建议（植物/摆件/颜色）\n8. 📐 户型改造建议\n9. 🎯 一句话总结' }
     ];
 
-    const analysis = await deepseekChat(messages, { maxTokens: 12288 });
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 12288);
+    const analysis = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     res.json({ analysis });
   } catch (err) {
     console.error('[FENGSHUI ERR]', err.message);
@@ -1305,7 +1336,8 @@ app.post('/api/geo-fortune', rateLimitMiddleware, async (req, res) => {
       { role: 'user', content: '用户位置：纬度 ' + latitude + '（' + latDir + '），经度 ' + longitude + '（' + longDir + '）\n地域五行属性：' + regionElement + '\n出生信息：' + (birthYear ? birthYear + '年' : '') + (birthMonth ? birthMonth + '月' : '') + (birthDay ? birthDay + '日' : '') + '\n性别：' + (gender || '未提供') + '\n\n请分析：\n1. 🌍 此地的地理能量特点\n2. 🧭 在此地居住/工作的五行影响\n3. 💰 此地财运分析\n4. ❤️ 此地感情/人际运势\n5. 🏃 此地健康提醒\n6. 🎯 在此地发展的建议\n7. 📍 更适合此人的其他方位建议' }
     ];
 
-    const analysis = await deepseekChat(messages, { maxTokens: 8192 });
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 8192);
+    const analysis = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     res.json({ analysis, location: { lat: latitude, lng: longitude, regionElement: regionElement } });
   } catch (err) {
     console.error('[GEO ERR]', err.message);
@@ -1400,7 +1432,8 @@ ${guaYao[0]}  (初九)
 6. ⚠️ 注意事项`}
     ];
 
-    const reading = await deepseekChat(messages, { maxTokens: 12288 });
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 12288);
+    const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     var ctxId = saveQaContext('liuyao', req.body, reading);
     res.json({ reading, contextId: ctxId, hexagram: guaYao });
   } catch (err) {
@@ -1432,7 +1465,8 @@ app.post('/api/lingqian', rateLimitMiddleware, async (req, res) => {
 5. 🙏 祈福方法`}
     ];
 
-    const reading = await deepseekChat(messages, { maxTokens: 8192 });
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 8192);
+    const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     var ctxId = saveQaContext('lingqian', req.body, reading);
     res.json({
       reading,
@@ -1469,7 +1503,8 @@ app.post('/api/deity-guide', rateLimitMiddleware, async (req, res) => {
 8. 💌 仙家文化特别指导（如果是求仙家）`}
     ];
 
-    const reading = await deepseekChat(messages, { maxTokens: 12288 });
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 12288);
+    const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     res.json({ reading });
   } catch (err) {
     console.error('[DEITY ERR]', err.message);
@@ -1521,7 +1556,8 @@ app.post('/api/offering-plan', rateLimitMiddleware, async (req, res) => {
   适合此愿望的专属回向文`}
     ];
 
-    const reading = await deepseekChat(messages, { maxTokens: 12288 });
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 12288);
+    const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     res.json({ reading });
   } catch (err) {
     console.error('[OFFERING ERR]', err.message);
@@ -1563,7 +1599,8 @@ app.post('/api/daliuren', rateLimitMiddleware, async (req, res) => {
 6. ⚠️ 注意事项与化解方法`}
     ];
 
-    const reading = await deepseekChat(messages, { maxTokens: 12288 });
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 12288);
+    const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     var ctxId = saveQaContext('daliuren', req.body, reading);
     res.json({ reading, contextId: ctxId, lesson: { name: lesson, gods: randomDeities } });
   } catch (err) {
@@ -1609,7 +1646,8 @@ app.post('/api/qimen', rateLimitMiddleware, async (req, res) => {
 7. 💡 行动建议（3条具体可执行建议）`}
     ];
 
-    const reading = await deepseekChat(messages, { maxTokens: 12288 });
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 12288);
+    const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     var ctxId = saveQaContext('qimen', req.body, reading);
     res.json({ reading, contextId: ctxId, door: currentDoor, star: currentStar });
   } catch (err) {
@@ -1964,7 +2002,8 @@ app.post('/api/pastlife', rateLimitMiddleware, async (req, res) => {
       { role: 'system', content: sysPrompt },
       { role: 'user', content: userPrompt }
     ];
-    const reading = await deepseekChat(messages, { maxTokens: 8192 });
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 8192);
+    const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     var ctxId = saveQaContext('pastlife', req.body, reading);
     res.json({ reading, contextId: ctxId });
   } catch (err) {
@@ -2033,7 +2072,8 @@ app.post('/api/zhiyuan', rateLimitMiddleware, async (req, res) => {
 请给出高考志愿填报建议。`;
 
     const messages = [{ role: 'system', content: sysPrompt }, { role: 'user', content: userPrompt }];
-    const reading = await deepseekChat(messages, { maxTokens: 8192 });
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 8192);
+    const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     var ctxId = saveQaContext('zhiyuan', req.body, reading);
     res.json({ reading, contextId: ctxId });
   } catch (err) {
