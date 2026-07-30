@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>선연 · 사주 심층 리포트</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #f3ece0;
+  color: rgba(58,48,38,0.92);
+  font-family: 'Nanum Myeongjo', 'Noto Serif KR', 'Apple SD Gothic Neo', 'Georgia', serif;
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* COVER */
+.cover {
+  height: 297mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  page-break-after: always;
+  background: radial-gradient(ellipse at 50% 30%, rgba(154,117,41,0.08) 0%, transparent 60%),
+              radial-gradient(ellipse at 50% 80%, rgba(91,191,160,0.04) 0%, transparent 50%),
+              linear-gradient(180deg, #fbf7f0 0%, #f3ece0 50%, #fbf7f0 100%);
+}
+
+.cover::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background:
+    radial-gradient(1px 1px at 20% 30%, rgba(154,117,41,0.3) 0%, transparent 100%),
+    radial-gradient(1px 1px at 80% 20%, rgba(154,117,41,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 40% 60%, rgba(154,117,41,0.15) 0%, transparent 100%),
+    radial-gradient(1px 1px at 70% 80%, rgba(154,117,41,0.2) 0%, transparent 100%),
+    radial-gradient(1px 1px at 10% 90%, rgba(154,117,41,0.1) 0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 50%, rgba(154,117,41,0.15) 0%, transparent 100%);
+  pointer-events: none;
+}
+
+.cover-border {
+  position: absolute;
+  top: 20mm; left: 20mm; right: 20mm; bottom: 20mm;
+  border: 1px solid rgba(154,117,41,0.15);
+  pointer-events: none;
+}
+
+.cover-border-inner {
+  position: absolute;
+  top: 24mm; left: 24mm; right: 24mm; bottom: 24mm;
+  border: 0.5px solid rgba(154,117,41,0.08);
+  pointer-events: none;
+}
+
+.cover-top-deco {
+  position: absolute;
+  top: 35mm;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(154,117,41,0.4), transparent);
+}
+
+.cover-badge {
+  font-style: italic;
+  font-size: 14px;
+  letter-spacing: 6px;
+  color: rgba(154,117,41,0.5);
+  margin-bottom: 30px;
+  font-weight: 300;
+}
+
+.cover-icon {
+  font-size: 64px;
+  margin-bottom: 24px;
+  opacity: 0.8;
+}
+
+.cover-title {
+  font-size: 38px;
+  font-weight: 300;
+  letter-spacing: 10px;
+  color: #9a7529;
+  margin-bottom: 8px;
+}
+
+.cover-subtitle {
+  font-size: 13px;
+  font-weight: 300;
+  letter-spacing: 6px;
+  color: rgba(58,48,38,0.5);
+  margin-bottom: 40px;
+}
+
+.cover-gold-line {
+  width: 120px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #9a7529, transparent);
+  margin: 0 auto 40px;
+}
+
+.cover-meta {
+  font-size: 13px;
+  letter-spacing: 2px;
+  color: rgba(58,48,38,0.35);
+  line-height: 2.2;
+}
+
+.cover-meta span { display: block; }
+
+.cover-bottom-deco {
+  position: absolute;
+  bottom: 35mm;
+  left: 50%;
+  transform: translateX(-50%);
+  font-style: italic;
+  font-size: 12px;
+  letter-spacing: 3px;
+  color: rgba(154,117,41,0.25);
+}
+
+/* PAGES */
+.page {
+  padding: 30mm 24mm 25mm;
+  position: relative;
+  min-height: 297mm;
+  page-break-after: always;
+  background: linear-gradient(180deg, #faf6ee 0%, #f3ece0 50%, #faf6ee 100%);
+}
+
+.page::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(154,117,41,0.3), rgba(154,117,41,0.6), rgba(154,117,41,0.3), transparent);
+}
+
+.page-header {
+  position: absolute;
+  top: 18mm; left: 0; right: 0;
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 4px;
+  color: rgba(154,117,41,0.2);
+}
+
+.page-footer {
+  position: absolute;
+  bottom: 18mm; left: 0; right: 0;
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(58,48,38,0.15);
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.section-emoji {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.section-title {
+  font-size: 25px;
+  font-weight: 300;
+  letter-spacing: 6px;
+  color: #9a7529;
+  margin-bottom: 6px;
+}
+
+.section-title-zh {
+  font-size: 10px;
+  letter-spacing: 4px;
+  color: rgba(154,117,41,0.55);
+  margin-bottom: 4px;
+}
+
+.section-line {
+  width: 60px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #9a7529, transparent);
+  margin: 14px auto 0;
+}
+
+.section-body {
+  font-size: 12.5px;
+  line-height: 2.0;
+  letter-spacing: 0.01em;
+  color: rgba(58,48,38,0.92);
+}
+
+.section-body p {
+  margin-bottom: 14px;
+}
+
+.section-body strong {
+  color: #9a7529;
+  font-weight: 600;
+}
+
+.highlight-box {
+  background: rgba(154,117,41,0.10);
+  border: 1px solid rgba(154,117,41,0.30);
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin: 16px 0;
+  box-shadow: 0 1px 3px rgba(120,90,30,0.06);
+}
+
+.highlight-box-title {
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #9a7529;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.highlight-box ul {
+  list-style: none;
+  padding: 0;
+}
+
+.highlight-box li {
+  font-size: 12px;
+  line-height: 1.9;
+  padding-left: 16px;
+  position: relative;
+  margin-bottom: 6px;
+  color: rgba(58,48,38,0.8);
+}
+
+.highlight-box li::before {
+  content: '✦';
+  position: absolute;
+  left: 0;
+  color: rgba(154,117,41,0.4);
+  font-size: 8px;
+  top: 4px;
+}
+
+.quote {
+  border-left: 3px solid rgba(154,117,41,0.5);
+  padding: 14px 20px;
+  margin: 18px 0;
+  font-style: italic;
+  color: rgba(58,48,38,0.78);
+  font-size: 12.5px;
+  background: rgba(154,117,41,0.06);
+  line-height: 1.9;
+}
+
+.wuxing-bar {
+  display: flex;
+  height: 22px;
+  border-radius: 2px;
+  overflow: hidden;
+  margin: 12px 0;
+}
+
+.wuxing-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  color: rgba(255,255,255,0.75);
+  font-weight: 400;
+  letter-spacing: 1px;
+}
+
+.wuxing-seg.metal { background: #9a7529; }
+.wuxing-seg.wood { background: #5bbfa0; }
+.wuxing-seg.fire { background: #d4736b; }
+.wuxing-seg.water { background: #4a7a9c; }
+.wuxing-seg.earth { background: #b8945c; }
+
+.wuxing-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+  font-size: 10.5px;
+  color: rgba(58,48,38,0.6);
+}
+
+.wuxing-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wuxing-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.saju-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 18px 0;
+  text-align: center;
+}
+
+.saju-col {
+  background: rgba(154,117,41,0.07);
+  border: 1px solid rgba(154,117,41,0.22);
+  border-radius: 6px;
+  padding: 12px 6px;
+}
+
+.saju-col-label {
+  font-size: 10px;
+  color: rgba(154,117,41,0.5);
+  letter-spacing: 2px;
+  margin-bottom: 10px;
+}
+
+.saju-gan {
+  font-size: 26px;
+  color: #9a7529;
+  line-height: 1.3;
+  font-weight: 300;
+}
+
+.saju-ji {
+  font-size: 26px;
+  color: rgba(58,48,38,0.85);
+  line-height: 1.3;
+  font-weight: 300;
+}
+
+.saju-elem {
+  font-size: 9px;
+  color: rgba(58,48,38,0.45);
+  margin-top: 8px;
+  letter-spacing: 1px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 11px;
+}
+
+.table th {
+  background: rgba(154,117,41,0.1);
+  color: #9a7529;
+  padding: 8px 12px;
+  text-align: left;
+  font-weight: 400;
+  letter-spacing: 1px;
+  border-bottom: 0.5px solid rgba(154,117,41,0.2);
+}
+
+.table td {
+  padding: 8px 12px;
+  border-bottom: 0.5px solid rgba(154,117,41,0.06);
+  color: rgba(58,48,38,0.7);
+  line-height: 1.6;
+}
+
+.table tr:last-child td { border-bottom: none; }
+
+.score-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0;
+}
+
+.score-card {
+  background: rgba(154,117,41,0.04);
+  border: 0.5px solid rgba(154,117,41,0.1);
+  border-radius: 4px;
+  padding: 12px 14px;
+  text-align: center;
+}
+
+.score-year {
+  font-size: 13px;
+  color: #9a7529;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+}
+
+.score-items {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  font-size: 10px;
+}
+
+.score-item { color: rgba(58,48,38,0.6); }
+.score-item .num { color: #9a7529; font-size: 14px; font-weight: 600; }
+.score-reminder { font-size: 10px; color: rgba(58,48,38,0.5); margin-top: 6px; line-height: 1.5; }
+</style>
+</head>
+<body>
+
+<!-- ═══════ 표지 COVER ═══════ -->
+<div class="cover">
+  <div class="cover-border"></div>
+  <div class="cover-border-inner"></div>
+  <div class="cover-top-deco"></div>
+  <div class="cover-badge">S U N Y E O N · 善 緣</div>
+  <div class="cover-icon">☯</div>
+  <h1 class="cover-title">사주 심층 리포트</h1>
+  <p class="cover-subtitle">四柱命理 · 나를 아는 지혜</p>
+  <div class="cover-gold-line"></div>
+  <div class="cover-meta">
+    <span>서지은 님 · 여성</span>
+    <span>양력 1993년 9월 21일 (음력 8월 6일) · 묘시(卯時) 출생</span>
+    <span>일간 기토(己土) · 신약 사주 · 용신은 화(火)</span>
+  </div>
+  <div class="cover-bottom-deco">~ 나를 알고, 나를 가꾸다 ~</div>
+</div>
+
+<!-- ═══════ 01 총평 ═══════ -->
+<div class="page">
+  <div class="page-header">S U N Y E O N  ·  사 주  심 층  리 포 트</div>
+  <div class="section-header">
+    <span class="section-emoji">☯</span>
+    <h2 class="section-title">사주 총평</h2>
+    <div class="section-title-zh">四柱 總評 · Destiny Overview</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>지은 님의 일간(日干)은 <strong>기토(己土)</strong>입니다. 금(金) 기운이 왕성한 <strong>유월(酉月)</strong>에 태어나, 흙의 기운이 금에게 빼앗기는 자리에 서 있습니다. 사주 전체를 한마디로 표현하면 <strong>"돌 속에 숨은 옥(玉), 알아봐 줄 사람을 기다리는 격(格)"</strong> — 극단적인 부귀도, 극단적인 고생도 아닌 치우침 없는 그릇이며, 삶의 질은 결국 <strong>때를 알아보고 잡는 힘</strong>에 달려 있습니다.</p>
+
+    <div class="saju-grid">
+      <div class="saju-col"><div class="saju-col-label">연주 年</div><div class="saju-gan">癸</div><div class="saju-ji">酉</div><div class="saju-elem">계수 · 유금</div></div>
+      <div class="saju-col"><div class="saju-col-label">월주 月</div><div class="saju-gan">辛</div><div class="saju-ji">酉</div><div class="saju-elem">신금 · 유금</div></div>
+      <div class="saju-col" style="border-color:rgba(154,117,41,0.35);background:rgba(154,117,41,0.09);"><div class="saju-col-label">일주 日 · 나</div><div class="saju-gan">己</div><div class="saju-ji">酉</div><div class="saju-elem">기토 · 유금</div></div>
+      <div class="saju-col"><div class="saju-col-label">시주 時</div><div class="saju-gan">丁</div><div class="saju-ji">卯</div><div class="saju-elem">정화 · 묘목</div></div>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 타고난 세 가지 복(福)</div>
+      <ul>
+        <li><strong>인성(印星)이 지켜준다</strong> — 총명함과 귀인운을 타고나, 고비마다 도와주는 손길이 있습니다</li>
+        <li><strong>식신(食神)이 재능을 드러낸다</strong> — 섬세한 감각과 뛰어난 표현력, 예술적 재능이 빛납니다</li>
+        <li><strong>식신(食神)이 재물의 뿌리</strong> — 재주와 표현으로 재물을 일구어 내는 힘이 있습니다</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(212,115,107,0.2); background: rgba(180,60,60,0.04);">
+      <div class="highlight-box-title">✦ 살면서 다독여야 할 세 가지</div>
+      <ul>
+        <li><strong>기운이 약하다 (신약·身弱)</strong> — 체력과 정신력이 쉽게 소진되니 무리는 금물입니다</li>
+        <li><strong>묘유충(卯酉沖)의 파동</strong> — 갑작스러운 변화가 잦고, 마음속 갈등이 많은 편입니다</li>
+        <li><strong>재물은 양날의 검</strong> — 돈을 구하는 길이 수고롭고, 재물에 매이기 쉽습니다</li>
+      </ul>
+    </div>
+
+    <div class="quote">"함 속의 옥이 빛을 볼 때를 기다립니다. 그릇은 이미 다듬어졌으니, 이제 맞는 무대만 오면 됩니다."</div>
+  </div>
+  <div class="page-footer">— 03 —</div>
+</div>
+
+<!-- ═══════ 02 일간 ═══════ -->
+<div class="page">
+  <div class="page-header">S U N Y E O N  ·  사 주  심 층  리 포 트</div>
+  <div class="section-header">
+    <span class="section-emoji">🏞️</span>
+    <h2 class="section-title">일간 심층 분석</h2>
+    <div class="section-title-zh">日干 深層 · Day Master</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>지은 님의 일간은 <strong>기토(己土)</strong> — 정원과 밭의 촉촉하고 기름진 흙입니다. 온화하고, 품이 넓고, 인내심이 깊습니다. 흙이 그러하듯, 다투거나 내세우지 않으면서도 주변을 조용히 품고 길러냅니다. <strong>수수함으로 드러나는 지혜</strong>이지요.</p>
+
+    <p>다만 이 흙은 <strong>가을(酉月)</strong>에 태어났습니다. 가을의 금(金)이 흙의 기운을 설기(洩氣)하여, 뿌리가 약해집니다. 사주 구조상 <strong>신약(身弱)</strong> — 금 기운이 지나치게 강해 기토 본연의 힘을 자꾸 빼앗아 갑니다.</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 나에게 필요한 오행</div>
+      <ul>
+        <li><strong style="color:#d4736b;">화(火) · 용신(用神)</strong> — 차가운 흙을 데워 힘과 생기를 불어넣어 줍니다</li>
+        <li><strong style="color:#b8945c;">토(土) · 희신</strong> — 뿌리를 내리게 하고 회복력을 더해 줍니다</li>
+        <li><strong>피할 것: 금(金)·수(水)</strong> — 기운을 설기하고 몸을 차게 만듭니다</li>
+      </ul>
+    </div>
+
+    <p><strong>타고난 강점:</strong> 머리 회전이 빠르고, 배움이 깊으며, 관찰력과 심미안이 뛰어납니다. 책임감이 있으면서도 나서지 않는, 전형적인 "묵묵히 이뤄내는 사람"이며, 부드러움 속에 끈질긴 회복력을 지녔습니다.</p>
+
+    <p><strong>다독일 부분:</strong> 생각이 많고, 사소한 일에도 마음이 쓰이며, 결정을 미루는 경향이 있습니다. 압박이 심할 때는 뒤로 물러나거나 회피하려는 마음이 올라옵니다.</p>
+
+    <div class="highlight-box" style="border-color: rgba(91,191,160,0.15);">
+      <div class="highlight-box-title" style="color:#5bbfa0;">✦ 잘 맞는 진로</div>
+      <ul>
+        <li><strong>교육·미디어·출판</strong> — 화(火)는 글과 소통을 주관합니다</li>
+        <li><strong>디자인·예술·컨설팅</strong> — 식신(食神)이 창의력을 밀어 올립니다</li>
+        <li><strong>행정·인사·관리</strong> — 흙은 안정된 환경에서 가장 빛납니다</li>
+      </ul>
+    </div>
+  </div>
+  <div class="page-footer">— 04 —</div>
+</div>
+
+<!-- ═══════ 03 오행 ═══════ -->
+<div class="page">
+  <div class="page-header">S U N Y E O N  ·  사 주  심 층  리 포 트</div>
+  <div class="section-header">
+    <span class="section-emoji">🟤</span>
+    <h2 class="section-title">오행 에너지 분석</h2>
+    <div class="section-title-zh">五行 分析 · Five Elements</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>지은 님의 오행 분포입니다.</p>
+
+    <div class="wuxing-bar">
+      <div class="wuxing-seg metal" style="width:38%;">금 金 38%</div>
+      <div class="wuxing-seg earth" style="width:22%;">토 土 22%</div>
+      <div class="wuxing-seg fire" style="width:18%;">화 火 18%</div>
+      <div class="wuxing-seg water" style="width:14%;">수 水 14%</div>
+      <div class="wuxing-seg wood" style="width:8%;">목 木 8%</div>
+    </div>
+
+    <div class="wuxing-legend">
+      <span class="wuxing-legend-item"><span class="wuxing-legend-dot" style="background:#9a7529;"></span> 금(金)</span>
+      <span class="wuxing-legend-item"><span class="wuxing-legend-dot" style="background:#b8945c;"></span> 토(土)</span>
+      <span class="wuxing-legend-item"><span class="wuxing-legend-dot" style="background:#d4736b;"></span> 화(火)</span>
+      <span class="wuxing-legend-item"><span class="wuxing-legend-dot" style="background:#4a7a9c;"></span> 수(水)</span>
+      <span class="wuxing-legend-item"><span class="wuxing-legend-dot" style="background:#5bbfa0;"></span> 목(木)</span>
+    </div>
+
+    <p>지은 님의 사주는 <strong>금(金)은 강하고 화(火)는 약한</strong> 구조입니다. <strong>"금은 많고 흙은 허한(金多土虛)"</strong> 형국으로, 강한 금 기운이 흙을 설기하는 반면, 이를 데워 줄 화(火)가 부족합니다. 사주 전체에서 화는 <strong>시주의 정화(丁火) 하나</strong>에 기대고 있어, <strong>화(火)를 채우는 것</strong>이 이 사주의 열쇠입니다.</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 건강·생활 개운 가이드</div>
+      <ul>
+        <li><strong>가까이할 음식: 붉은색·노란색</strong> — 대추, 구기자, 팥, 수수, 단호박 (화·토 보강)</li>
+        <li><strong>줄일 것: 날것·찬 음식</strong> — 아이스크림, 찬 음료, 수박 (약한 화 기운을 해칩니다)</li>
+        <li><strong>가장 좋은 운동:</strong> 요가·걷기·태극권. 아침 햇살이 최고의 보약입니다.</li>
+      </ul>
+    </div>
+
+    <table class="table">
+      <tr><th>오행</th><th>관련 장기</th><th>살펴볼 부분</th></tr>
+      <tr><td>금(金)</td><td>폐·대장</td><td>면역력 저하, 기침, 피부 건조</td></tr>
+      <tr><td>화(火)</td><td>심장·혈액</td><td>가슴 두근거림, 불면</td></tr>
+      <tr><td>목(木)</td><td>간·담</td><td>감정 기복, 호르몬 변화</td></tr>
+      <tr><td>수(水)</td><td>신장·방광</td><td>허리 피로, 생리 건강</td></tr>
+    </table>
+  </div>
+  <div class="page-footer">— 05 —</div>
+</div>
+
+<!-- ═══════ 04 재물운 ═══════ -->
+<div class="page">
+  <div class="page-header">S U N Y E O N  ·  사 주  심 층  리 포 트</div>
+  <div class="section-header">
+    <span class="section-emoji">💰</span>
+    <h2 class="section-title">재물운</h2>
+    <div class="section-title-zh">財物運 · Wealth</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>지은 님의 재물은 <strong>식신(食神)</strong>의 힘으로 흐릅니다. 일간 기토에게 유금(酉金)은 식신 — 재주와 표현이 재물을 낳는 <strong>'식신생재(食神生財)'</strong>의 구조입니다.</p>
+
+    <div class="highlight-box">
+      <ul>
+        <li><strong>노력으로 버는 재물:</strong> 지은 님의 돈은 거저 주어지지 않습니다. 기술·솜씨·지혜로 <strong>"만들어 내는"</strong> 재물입니다. 쉬운 돈이 아니라, 실력이 낳는 돈입니다.</li>
+        <li><strong>지혜가 재물을 부른다:</strong> 식신이 총명함을 재물로 바꿔 줍니다. 한탕주의나 무리한 사업 확장보다는 <strong>전문가·컨설턴트·장인</strong>으로 성공하는 사주입니다.</li>
+      </ul>
+    </div>
+
+    <p><strong>재물이 왕성한 시기:</strong></p>
+    <ul>
+      <li><strong>31~40세</strong> — 전문성을 통해 안정적으로 수입이 늘어납니다</li>
+      <li><strong>41~50세</strong> — 진정한 재물 축적기, 특히 <strong>2037·2038·2039년</strong></li>
+    </ul>
+
+    <div class="highlight-box" style="border-color: rgba(180,60,60,0.15); background: rgba(180,60,60,0.03);">
+      <div class="highlight-box-title">✦ 피해야 할 것</div>
+      <ul>
+        <li><strong>투기:</strong> 주식 단타·코인·도박 — 지은 님의 사주와는 상극입니다</li>
+        <li><strong>동업:</strong> 특히 닭띠와의 동업은 신중히</li>
+      </ul>
+    </div>
+
+    <p><strong>향후 5년 재물운 흐름:</strong></p>
+    <div class="score-grid">
+      <div class="score-card"><div class="score-year">2026 병오</div><div class="score-items"><span class="score-item">재물 <span class="num">85</span></span></div><div class="score-reminder">화·토가 힘을 더하는 해</div></div>
+      <div class="score-card"><div class="score-year">2027 정미</div><div class="score-items"><span class="score-item">재물 <span class="num">90</span></span></div><div class="score-reminder">기회의 정점 구간</div></div>
+      <div class="score-card"><div class="score-year">2028 무신</div><div class="score-items"><span class="score-item">재물 <span class="num">65</span></span></div><div class="score-reminder">지키는 해, 확장은 자제</div></div>
+      <div class="score-card" style="border-color: rgba(154,117,41,0.3);"><div class="score-year">2036 병진</div><div class="score-items"><span class="score-item">재물 <span class="num">90</span></span></div><div class="score-reminder">⭐ 전환의 대운이 열립니다!</div></div>
+    </div>
+  </div>
+  <div class="page-footer">— 06 —</div>
+</div>
+
+<!-- ═══════ 05 애정·인연 ═══════ -->
+<div class="page">
+  <div class="page-header">S U N Y E O N  ·  사 주  심 층  리 포 트</div>
+  <div class="section-header">
+    <span class="section-emoji">💕</span>
+    <h2 class="section-title">애정 · 인연</h2>
+    <div class="section-title-zh">愛情 因緣 · Love</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>지은 님의 배우자 자리(일지·日支)는 유금(酉金) 식신입니다. 인연이 되는 분은 <strong>지적이고, 재능이 있으며, 말솜씨가 좋되, 때로 고집스럽고 까다로운</strong> 면을 지녔습니다.</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 잘 맞는 인연의 결</div>
+      <ul>
+        <li><strong>성향:</strong> 안정적이고 책임감 있으며, 예술가적 자부심을 지닌 사람</li>
+        <li><strong>직업:</strong> 기술·디자인·교육·문화 — 자기 손끝의 실력으로 사는 사람</li>
+        <li><strong>만남의 자리:</strong> 일·공부·소개를 통해 — 워크숍, 전시, 모임 자리에서</li>
+      </ul>
+    </div>
+
+    <p><strong>인연이 무르익는 해:</strong></p>
+    <ul>
+      <li><strong>2025년</strong> — 인연운이 상승, 새로운 만남에 좋은 해</li>
+      <li><strong>2026년</strong> — 결혼운이 가장 강한 해</li>
+      <li><strong>2027년</strong> — 또 한 번의 좋은 만남의 시기</li>
+    </ul>
+
+    <div class="quote">"인연을 부르려면 — 동쪽으로 향하고, 붉은빛과 분홍빛을 곁에 두며, 재능을 감추지 말고, '완벽해야 한다'는 마음을 조금 내려놓으세요."</div>
+
+    <div class="highlight-box" style="border-color: rgba(155,111,212,0.25); background: rgba(155,111,212,0.05);">
+      <div class="highlight-box-title" style="color:#b98fe0;">✦ 궁합이 궁금하다면</div>
+      <p style="margin:0; font-size:12px; line-height:1.9; color:rgba(58,48,38,0.8);">지금 마음에 둔 사람이 있다면, 두 분의 사주를 함께 놓고 보는 <strong>궁합(宮合) 리포트</strong>로 30년 대운의 결까지 맞춰 볼 수 있습니다. 잘 맞는 부분과, 서로 다독여야 할 부분을 함께 짚어 드립니다.</p>
+    </div>
+  </div>
+  <div class="page-footer">— 07 —</div>
+</div>
+
+<!-- ═══════ 06 직업·사업운 ═══════ -->
+<div class="page">
+  <div class="page-header">S U N Y E O N  ·  사 주  심 층  리 포 트</div>
+  <div class="section-header">
+    <span class="section-emoji">💼</span>
+    <h2 class="section-title">직업 · 사업운</h2>
+    <div class="section-title-zh">職業 事業 · Career</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>지은 님의 직업운은 두 기둥으로 돌아갑니다 — <strong>인성(印星)</strong>(보호·지혜)과 <strong>식신(食神)</strong>(재능·표현). 전문성과 장인정신 위에서 가장 크게 빛나는 사주입니다.</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 추천 진로</div>
+      <ul>
+        <li><strong>최선: 조직 안의 평생 전문가</strong> — 안정된 시스템 안에서 전문성을 깊게 쌓아 올라가는 길</li>
+        <li><strong>차선: 고부가가치 프리랜서</strong> — 희소한 기술 하나를 갈고닦아 높은 몸값을 받는 길</li>
+        <li><strong>주의: 무리한 창업</strong> — 편관(칠살)의 압박이 약한 몸에 무겁게 실립니다</li>
+      </ul>
+    </div>
+
+    <p><strong>직업운이 좋은 해:</strong></p>
+    <ul>
+      <li><strong>2026년</strong> — 화·토가 왕성. 승진의 해. 특히 음력 5월.</li>
+      <li><strong>2027년</strong> — 지위와 권한이 오릅니다. 핵심 시기: 음력 6월.</li>
+    </ul>
+
+    <p><strong>귀인(貴人):</strong> 말띠·개띠·양띠 해에 태어난 분들. 주로 여름철에 인연이 닿습니다.</p>
+  </div>
+  <div class="page-footer">— 08 —</div>
+</div>
+
+<!-- ═══════ 07 건강 ═══════ -->
+<div class="page">
+  <div class="page-header">S U N Y E O N  ·  사 주  심 층  리 포 트</div>
+  <div class="section-header">
+    <span class="section-emoji">🌿</span>
+    <h2 class="section-title">건강 조언</h2>
+    <div class="section-title-zh">健康 · Health Advisory</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>지은 님의 체질은 <strong>"흙은 약하고, 금은 넘치며, 화는 부족한"</strong> 구조로 요약됩니다. 본디 섬세한 체질이라, 남보다 조금 더 살뜰히 돌봐야 합니다. <em>(아래는 사주 오행에 근거한 생활 제안이며, 의학적 진단을 대신하지 않습니다.)</em></p>
+
+    <table class="table">
+      <tr><th>계통</th><th>타고난 성향</th><th>살펴볼 신호</th></tr>
+      <tr><td>호흡기 (금)</td><td>면역력이 약한 편</td><td>감기·기침·피부 알레르기</td></tr>
+      <tr><td>순환기 (화)</td><td>혈(血)이 부족한 편</td><td>두근거림·불면·어지럼</td></tr>
+      <tr><td>비뇨·생식 (수)</td><td>신장 기운이 약한 편</td><td>허리 통증·생리 불순</td></tr>
+    </table>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 나이대별 주의 신호</div>
+      <ul>
+        <li><strong>35~40세:</strong> 갑상선·유방·자궁 건강을 정기적으로 살피세요</li>
+        <li><strong>40세 이후:</strong> 혈압·콜레스테롤·심장 건강에 관심을</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(91,191,160,0.15);">
+      <div class="highlight-box-title" style="color:#5bbfa0;">✦ 나를 위한 웰니스 처방</div>
+      <ul>
+        <li><strong>운동:</strong> 요가(최선)·걷기·태극권. 땀은 가볍게, 과하지 않게.</li>
+        <li><strong>수면:</strong> 밤 10시 취침, 아침 6~7시 기상 — 이것이 최고의 보약입니다.</li>
+        <li><strong>식사:</strong> 따뜻하고, 소화 잘 되며, 단백질이 넉넉하게. 대추·구기자·마·수수.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="page-footer">— 09 —</div>
+</div>
+
+<!-- ═══════ 08 대운·세운 ═══════ -->
+<div class="page">
+  <div class="page-header">S U N Y E O N  ·  사 주  심 층  리 포 트</div>
+  <div class="section-header">
+    <span class="section-emoji">📅</span>
+    <h2 class="section-title">대운 · 세운</h2>
+    <div class="section-title-zh">大運 歲運 · Fortune Cycles</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>지은 님은 31세(2024)부터 <strong>신축(辛丑) 대운</strong>에 들어섰습니다(2024~2033). 기회와 시련이 함께 오는 10년입니다.</p>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 현재 대운 (31~40세)</div>
+      <ul>
+        <li><strong>순풍:</strong> 축토(丑土)가 몸을 받쳐 줍니다. 직업적 지원이 생기고, 재능이 인정받기 시작합니다.</li>
+        <li><strong>주의:</strong> 축(丑)이 화 기운을 눌러 귀인운이 약해질 수 있습니다. 지인을 통한 금전 손실을 경계하세요.</li>
+      </ul>
+    </div>
+
+    <p><strong>연도별 흐름 (2036년부터):</strong></p>
+
+    <div class="score-grid">
+      <div class="score-card" style="border-color: rgba(154,117,41,0.3);">
+        <div class="score-year">2036 병진</div>
+        <div class="score-items"><span class="score-item">재물 <span class="num">90</span></span><span class="score-item">애정 <span class="num">85</span></span></div>
+        <div class="score-reminder">⭐ 인생의 전환점! 든든한 귀인</div>
+      </div>
+      <div class="score-card">
+        <div class="score-year">2037 정사</div>
+        <div class="score-items"><span class="score-item">재물 <span class="num">80</span></span><span class="score-item">애정 <span class="num">70</span></span></div>
+        <div class="score-reminder">배움의 해. 충동적 결정은 자제</div>
+      </div>
+      <div class="score-card">
+        <div class="score-year">2038 무오</div>
+        <div class="score-items"><span class="score-item">재물 <span class="num">85</span></span><span class="score-item">애정 <span class="num">80</span></span></div>
+        <div class="score-reminder">협업·부업에 좋은 해</div>
+      </div>
+      <div class="score-card" style="border-color: rgba(154,117,41,0.3);">
+        <div class="score-year">2039 기미</div>
+        <div class="score-items"><span class="score-item">재물 <span class="num">95</span></span><span class="score-item">애정 <span class="num">90</span></span></div>
+        <div class="score-reminder">⭐ 수확의 해! 커리어 정점</div>
+      </div>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(180,60,60,0.15); background: rgba(180,60,60,0.03);">
+      <div class="highlight-box-title">⚠ 2040년: 조심의 해</div>
+      <p style="margin: 0; font-size: 11.5px; line-height: 1.9; color: rgba(58,48,38,0.7);">"상관이 관을 보면 화(禍)를 부른다(傷官見官)"는 자리입니다. 다툼을 피하고, 이 해에는 <strong>퇴사나 창업을 삼가세요.</strong> 힘을 아끼면, 이 시기도 지나갑니다.</p>
+    </div>
+  </div>
+  <div class="page-footer">— 10 —</div>
+</div>
+
+<!-- ═══════ 09 개운 ═══════ -->
+<div class="page">
+  <div class="page-header">S U N Y E O N  ·  사 주  심 층  리 포 트</div>
+  <div class="section-header">
+    <span class="section-emoji">🎯</span>
+    <h2 class="section-title">개운 비법</h2>
+    <div class="section-title-zh">開運 秘法 · Enhancement</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 행운의 색</div>
+      <ul>
+        <li><strong style="color:#d4736b;">붉은색</strong> — 주홍, 코랄</li>
+        <li><strong style="color:#9a7529;">노란색</strong> — 호박색, 골드</li>
+        <li><strong style="color:#9b6fd4;">보라색</strong> — 라벤더, 바이올렛</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 행운의 숫자</div>
+      <ul>
+        <li><strong>2</strong> · <strong>5</strong> · <strong>7</strong> — 비밀번호·주소·전화번호에 활용해 보세요</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box">
+      <div class="highlight-box-title">✦ 길한 방위</div>
+      <ul>
+        <li><strong>재물:</strong> 남쪽 — 집의 남쪽에 붉은색·노란색 소품이나 식물을</li>
+        <li><strong>애정:</strong> 동쪽 — 침실 동쪽에 생화(生花)나 산 그림을</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(91,191,160,0.15);">
+      <div class="highlight-box-title" style="color:#5bbfa0;">✦ 잘 맞는 보석·크리스털</div>
+      <ul>
+        <li>홍옥수(레드 아게이트), 시트린, 가넷, 호박</li>
+        <li>왼쪽 손목에 홍옥수 팔찌를 권합니다</li>
+      </ul>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(180,60,60,0.1); background: rgba(180,60,60,0.02);">
+      <div class="highlight-box-title">⚠ 삼가야 할 것</div>
+      <p style="margin: 0; font-size: 11.5px; line-height: 1.9; color: rgba(58,48,38,0.7);">집 남쪽에 수생식물이나 어항을 두지 마세요 — 약한 화(火) 기운을 꺼뜨립니다. 화 기운이 약한 해에는 무리한 이사·리모델링을 피하는 편이 좋습니다.</p>
+    </div>
+  </div>
+  <div class="page-footer">— 11 —</div>
+</div>
+
+<!-- ═══════ 10 고전 ═══════ -->
+<div class="page">
+  <div class="page-header">S U N Y E O N  ·  사 주  심 층  리 포 트</div>
+  <div class="section-header">
+    <span class="section-emoji">📖</span>
+    <h2 class="section-title">명리 고전의 지혜</h2>
+    <div class="section-title-zh">命理 古典 · Classical Wisdom</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <div class="quote" style="font-size:15px; text-align:center; border-left:none; padding:16px; line-height:2;">
+      명리 고전은 이 자리를 이렇게 풀이합니다:<br>
+      <strong style="font-size:17px; color:#9a7529;">"기토(己土)가 유월(酉月)에 나고<br>천간에 금(金)이 드러나면 —<br>넉넉한 집안의 검소한 사람,<br>배움은 많되 이루기는 더디다."</strong>
+    </div>
+
+    <p>이 구절은 <strong>모든 것을 갖춘 듯 보이는 사람</strong> — 재능, 교육, 기회 — 그러나 그것을 손에 잡히는 결실로 바꾸는 데 애를 먹는 이를 그립니다. 재물은 잠재력으로는 이미 있으나, 그것을 온전히 거둘 힘(身)이 아직 여물지 않은 것이지요.</p>
+
+    <p>지은 님의 사주도 이 결을 닮았습니다 — 능력을 말해 주는 풍부한 금 기운, 그러나 그것을 꾸준히 실행하기엔 조금 지친 흙. <strong>해답은 '더 많은 배움'이 아니라, 하나의 길 위에서 규칙적으로 이어 가는 실행</strong>에 있습니다.</p>
+  </div>
+  <div class="page-footer">— 12 —</div>
+</div>
+
+<!-- ═══════ 11 명리사의 편지 ═══════ -->
+<div class="page">
+  <div class="page-header">S U N Y E O N  ·  사 주  심 층  리 포 트</div>
+  <div class="section-header">
+    <span class="section-emoji">💌</span>
+    <h2 class="section-title">명리사의 편지</h2>
+    <div class="section-title-zh">命理師의 편지 · The Master's Words</div>
+    <div class="section-line"></div>
+  </div>
+  <div class="section-body">
+    <p>지은 님의 사주는 한 폭의 수묵화 같습니다 — 힘 있는 붓질과, 일부러 비워 둔 여백. 지은 님은 부서지는 파도가 아니라, 천천히 그러나 쉼 없이 바다에 이르는 산속 시냇물입니다.</p>
+
+    <div class="highlight-box" style="border-color: rgba(154,117,41,0.2);">
+      <div class="highlight-box-title">❶ 수확을 세지 말고, 흙을 돌보세요</div>
+      <p style="margin:0; text-indent:0; font-size:12px; line-height:2;">신약한 체질은 지름길을 감당하기 어렵습니다. 하늘은 지은 님에게 솜씨 좋은 손과 예리한 머리를 주었으니, 조급함 대신 매일의 성실로 그것을 쓰세요. 남의 속도를 덜 보고, 나의 걸음을 지키세요.</p>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(154,117,41,0.2);">
+      <div class="highlight-box-title">❷ 따뜻함을 찾고, 차가움을 피하세요</div>
+      <p style="margin:0; text-indent:0; font-size:12px; line-height:2;">겨울, 냉방, 그리고 고립은 지은 님의 기운을 앗아 갑니다. 햇살이 있는 곳으로 가고, 마음 따뜻한 사람들 곁에 머무세요. 밝은 색을 입으면, 세상 전체가 조금 더 환해집니다.</p>
+    </div>
+
+    <div class="highlight-box" style="border-color: rgba(154,117,41,0.2);">
+      <div class="highlight-box-title">❸ 직관을 믿고, 불완전함을 껴안으세요</div>
+      <p style="margin:0; text-indent:0; font-size:12px; line-height:2;">생각 많은 마음은 재능이자 짐입니다. 끝없는 분석보다 타고난 직관이 더 믿을 만하다는 것을, 이제는 믿어 보세요. 그리고 자신의 연약함과 망설임, 흔들리는 순간들을 받아들이세요. 완벽한 사람에겐 이야기가 없습니다. 지은 님의 불완전함이야말로, 지은 님의 진실이 사는 자리입니다.</p>
+    </div>
+
+    <div class="quote" style="text-align:center; border-left:none; padding:20px;">
+      <strong style="font-size:15px; color:#9a7529; line-height:2.1;">맑은 바람과 산 위의 밝은 달처럼,<br>지은 님의 삶에도 늘 은은한 빛이 함께하기를.<br>따뜻함 속에서 피어나, 온전히 살아가기를.</strong>
+    </div>
+
+    <div style="text-align:center; margin-top:28px; font-size:11px; letter-spacing:2px; color:rgba(154,117,41,0.4);">— 선연(善緣) 명리 연구팀 감수 · AI 심층 명리 —</div>
+  </div>
+  <div class="page-footer">— 13 —</div>
+</div>
+
+</body>
+</html>
