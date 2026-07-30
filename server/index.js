@@ -1,4 +1,4 @@
-require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+require('dotenv').config({ path: require('path').join(__dirname, '.env'), override: true });
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
@@ -133,6 +133,18 @@ function hasFullAccess(req, productKeys){
     var orders = getUserOrders.all(t.user_id) || []; // 已过滤 payment_status==='completed'
     return orders.some(function(o){ return productKeys.some(function(k){ return String(o.product||'').indexOf(k) >= 0; }); });
   }catch(e){ return false; }
+}
+// 付费门+免责: 报告端点统一处理 — 追加AIGC免责声明; 未付费降级为基础版概览(堵curl白嫖)
+function gateMessages(req, keys, messages){
+  var full = hasFullAccess(req, keys);
+  var addon = '\n\n【必须遵守】报告最后必须附一行免责声明:"本报告由AI生成,仅供参考娱乐,不构成医学、法律、投资或人生重大决策建议。"';
+  if(!full){
+    addon += '\n\n【基础版限制】本次为未付费的基础版,只输出最核心的前2~3个维度的概览(合计约2000字),其余维度不要展开。结尾必须明确告知:完整的详细分析(财运/姻缘/事业/大运流年/开运等)在【完整版报告】中付费解锁。';
+  }
+  var out = (messages||[]).map(function(m){
+    return (m && m.role==='system') ? { role:'system', content: (m.content||'') + addon } : m;
+  });
+  return { messages: out, maxTokens: full ? 16384 : 3500, full: full };
 }
 function _updOrder(s,oNo){const o=_M.orders.find(x=>x.order_no===oNo);if(o){o.payment_status=s;_persist();}}
 function _insSub(e,sId){if(!_M.subs.find(x=>x.stripe_subscription_id===sId)){_M.subs.push({email:e,stripe_subscription_id:sId,status:'active',created_at:new Date().toISOString()});_persist();}}
@@ -689,7 +701,7 @@ app.use(function(req, res, next) {
 // ════════════════════════════════════════════
 
 // POST /api/bazi — 八字命理
-app.post('/api/bazi', async (req, res) => {
+app.post('/api/bazi', rateLimitMiddleware, async (req, res) => {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, question, mode } = req.body;
     if (!birthYear || !birthMonth || !birthDay) {
@@ -851,6 +863,7 @@ app.post('/api/bazi', async (req, res) => {
         '请为以下命主生成【基础版】命盘概览(仅四柱+五行+今年运势,约2000字,结尾引导解锁完整版):\n出生:' + birthYear + '年' + birthMonth + '月' + birthDay + '日' + (birthHour !== undefined ? birthHour + '时' : '(时辰不详)') + '\n性别:' + (gender === 'male' ? '男' : '女')
       );
     }
+    useMessages = useMessages.map(function(m){ return (m&&m.role==='system')?{role:'system',content:(m.content||'')+'\n\n【必须遵守】报告最后必须附一行免责声明:"本报告由AI生成,仅供参考娱乐,不构成医学、法律、投资或人生重大决策建议。"'}:m; });
     const result = await deepseekChat(useMessages, { maxTokens: full ? 16384 : 3500 });
     insertReading.run('bazi', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('bazi', req.body, result);
@@ -863,7 +876,7 @@ app.post('/api/bazi', async (req, res) => {
 });
 
 // POST /api/tarot — 塔罗占卜
-app.post('/api/tarot', async (req, res) => {
+app.post('/api/tarot', rateLimitMiddleware, async (req, res) => {
   try {
     const { cards, question, topic } = req.body;
     if (!question) {
@@ -919,7 +932,7 @@ ${cardDesc ? '牌面信息：\n' + cardDesc : '使用随机三张塔罗牌（过
 });
 
 // POST /api/ziwei — 紫微斗数
-app.post('/api/ziwei', async (req, res) => {
+app.post('/api/ziwei', rateLimitMiddleware, async (req, res) => {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender } = req.body;
     if (!birthYear || !birthMonth || !birthDay || birthHour === undefined) {
@@ -986,7 +999,8 @@ app.post('/api/ziwei', async (req, res) => {
 用诗意的一句话总结此命盘的精华。`
     );
 
-    const result = await deepseekChat(messages, { maxTokens: 16384 });
+    var _g = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','八字','合婚','紫微','姓名','占星','星盘'], messages);
+    const result = await deepseekChat(_g.messages, { maxTokens: _g.maxTokens });
     insertReading.run('ziwei', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('ziwei', req.body, result);
 
@@ -1073,7 +1087,7 @@ app.post('/api/mianxiang', async (req, res) => {
 });
 
 // POST /api/hehun — 合婚配对
-app.post('/api/hehun', async (req, res) => {
+app.post('/api/hehun', rateLimitMiddleware, async (req, res) => {
   try {
     const { p1Year, p1Month, p1Day, p1Hour, p2Year, p2Month, p2Day, p2Hour, p1Gender, p2Gender } = req.body;
     if (!p1Year || !p2Year) {
@@ -1139,7 +1153,8 @@ B方：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined ? p2Hour+'时'
 用诗意、温暖的语言总结这二人的姻缘。给一个让人心安、充满希望的收尾。`
     );
 
-    const result = await deepseekChat(messages, { maxTokens: 16384 });
+    var _g = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','八字','合婚','紫微','姓名','占星','星盘'], messages);
+    const result = await deepseekChat(_g.messages, { maxTokens: _g.maxTokens });
     insertReading.run('hehun', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('hehun', req.body, result);
 
@@ -1211,7 +1226,7 @@ app.post('/api/daily', async (req, res) => {
 });
 
 // POST /api/ask-followup — 追问命理师
-app.post('/api/ask-followup', async (req, res) => {
+app.post('/api/ask-followup', rateLimitMiddleware, async (req, res) => {
   try {
     const { contextId, question } = req.body;
     if (!contextId || !question) {
@@ -1244,7 +1259,7 @@ app.get('/api/context/:id', (req, res) => {
 });
 
 // POST /api/fengshui — AI风水评测
-app.post('/api/fengshui', async (req, res) => {
+app.post('/api/fengshui', rateLimitMiddleware, async (req, res) => {
   try {
     const { houseDirection, floor, rooms, occupants, address, question } = req.body;
     if (!houseDirection) {
@@ -1265,7 +1280,7 @@ app.post('/api/fengshui', async (req, res) => {
 });
 
 // POST /api/geo-fortune — 基于经纬度的地域命理分析
-app.post('/api/geo-fortune', async (req, res) => {
+app.post('/api/geo-fortune', rateLimitMiddleware, async (req, res) => {
   try {
     const { latitude, longitude, birthYear, birthMonth, birthDay, gender } = req.body;
     if (latitude === undefined || longitude === undefined) {
@@ -1350,7 +1365,7 @@ app.post('/api/order', rateLimitMiddleware, (req, res) => {
 // ════════════════════════════════════════════
 
 // POST /api/liuyao — 六爻占卜
-app.post('/api/liuyao', async (req, res) => {
+app.post('/api/liuyao', rateLimitMiddleware, async (req, res) => {
   try {
     const { question, topic } = req.body;
     if (!question) return res.status(400).json({ error: '请提供你要问的事情' });
@@ -1395,7 +1410,7 @@ ${guaYao[0]}  (初九)
 });
 
 // POST /api/lingqian — 求神灵签
-app.post('/api/lingqian', async (req, res) => {
+app.post('/api/lingqian', rateLimitMiddleware, async (req, res) => {
   try {
     const { question, temple } = req.body;
 
@@ -1431,7 +1446,7 @@ app.post('/api/lingqian', async (req, res) => {
 });
 
 // POST /api/deity-guide — 求神指引
-app.post('/api/deity-guide', async (req, res) => {
+app.post('/api/deity-guide', rateLimitMiddleware, async (req, res) => {
   try {
     const { question, birthYear, gender, preference } = req.body;
     if (!question) return res.status(400).json({ error: '请说明你求什么事' });
@@ -1463,7 +1478,7 @@ app.post('/api/deity-guide', async (req, res) => {
 });
 
 // POST /api/offering-plan — 供奉方案
-app.post('/api/offering-plan', async (req, res) => {
+app.post('/api/offering-plan', rateLimitMiddleware, async (req, res) => {
   try {
     const { deity, purpose, budget, duration } = req.body;
     if (!deity || !purpose) {
@@ -1515,7 +1530,7 @@ app.post('/api/offering-plan', async (req, res) => {
 });
 
 // POST /api/daliuren — 大六壬预测
-app.post('/api/daliuren', async (req, res) => {
+app.post('/api/daliuren', rateLimitMiddleware, async (req, res) => {
   try {
     const { question, birthYear, gender } = req.body;
     if (!question) return res.status(400).json({ error: '请提供你要问的事情' });
@@ -1558,7 +1573,7 @@ app.post('/api/daliuren', async (req, res) => {
 });
 
 // POST /api/qimen — 奇门遁甲
-app.post('/api/qimen', async (req, res) => {
+app.post('/api/qimen', rateLimitMiddleware, async (req, res) => {
   try {
     const { question, direction, birthYear, gender } = req.body;
     if (!question) return res.status(400).json({ error: '请提供你要问的事情' });
@@ -1604,7 +1619,7 @@ app.post('/api/qimen', async (req, res) => {
 });
 
 // POST /api/xingming — 姓名学分析
-app.post('/api/xingming', async (req, res) => {
+app.post('/api/xingming', rateLimitMiddleware, async (req, res) => {
   try {
     const { surname, givenName, zodiac, gender } = req.body;
     if (!surname || !givenName) {
@@ -1689,7 +1704,8 @@ app.post('/api/xingming', async (req, res) => {
 
     );
 
-    const result = await deepseekChat(messages, { maxTokens: 16384 });
+    var _g = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','八字','合婚','紫微','姓名','占星','星盘'], messages);
+    const result = await deepseekChat(_g.messages, { maxTokens: _g.maxTokens });
     insertReading.run('xingming', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('xingming', req.body, result);
 
@@ -1701,7 +1717,7 @@ app.post('/api/xingming', async (req, res) => {
 });
 
 // POST /api/astrology — 西方占星
-app.post('/api/astrology', async (req, res) => {
+app.post('/api/astrology', rateLimitMiddleware, async (req, res) => {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, birthMinute, latitude, longitude, gender } = req.body;
     if (!birthYear || !birthMonth || !birthDay) {
@@ -1809,7 +1825,8 @@ ${chartSummary}
       }
     ];
 
-    const result = await deepseekChat(messages, { maxTokens: 16384 });
+    var _g = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','八字','合婚','紫微','姓名','占星','星盘'], messages);
+    const result = await deepseekChat(_g.messages, { maxTokens: _g.maxTokens });
     insertReading.run('astrology', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('astrology', req.body, result);
 
@@ -1914,7 +1931,7 @@ app.post('/api/chat-summary', authMiddleware, async (req, res) => {
 
 
 // POST /api/pastlife — 前世预测
-app.post('/api/pastlife', async (req, res) => {
+app.post('/api/pastlife', rateLimitMiddleware, async (req, res) => {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, birthPlace } = req.body;
     if (!birthYear) return res.status(400).json({ error: '请提供出生信息' });
@@ -1958,7 +1975,7 @@ app.post('/api/pastlife', async (req, res) => {
 
 
 // POST /api/chat — AI命理对话
-app.post('/api/chat', async (req, res) => {
+app.post('/api/chat', rateLimitMiddleware, async (req, res) => {
   try {
     const { messages } = req.body;
     if (!messages || !messages.length) {
@@ -1986,7 +2003,7 @@ app.post('/api/chat', async (req, res) => {
 
 
 // POST /api/zhiyuan — 高考志愿
-app.post('/api/zhiyuan', async (req, res) => {
+app.post('/api/zhiyuan', rateLimitMiddleware, async (req, res) => {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, score, province, subjectType, ranking } = req.body;
     const lan = req.headers['accept-language'] || 'zh';
