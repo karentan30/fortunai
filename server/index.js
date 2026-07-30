@@ -75,7 +75,7 @@ app.use(express.static(path.join(__dirname, '..')));  // Vercel handles static f
 
 // ── Data Store (内存运算 + JSON 快照落盘, 扛 PM2 重启 · 防丢单红线) ──
 // 结构不变; 每次写操作后 _persist() 去抖落盘。Vercel 无持久盘时降级为纯内存(读写失败静默)。
-const _M = { users:[], tokens:[], orders:[], readings:[], subs:[], referrals:[], _id:{u:1,t:1,o:1,r:1,s:1,rf:1} };
+const _M = { users:[], tokens:[], orders:[], readings:[], subs:[], referrals:[], chatUsage:{}, _id:{u:1,t:1,o:1,r:1,s:1,rf:1} };
 const _DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 // 启动加载: 把磁盘快照合并回 _M(保留结构与自增计数器), 损坏则跳过从空开始
 (function _loadStore(){
@@ -2214,6 +2214,18 @@ app.post('/api/chat', rateLimitMiddleware, async (req, res) => {
         + '\n\n每次回答200-400字，不要太长。建议要具体但诚实，不确定就说"这个我拿不准"。'
     };
 
+    // 付费定位(Karen 0730定): 免费每天5条, 会员($6.9/月)无限畅聊
+    var isMember = hasFullAccess(req, ['member']);
+    if (!isMember) {
+      var uid = _payResolveUser(req.headers['authorization'] || (req.body && req.body.token));
+      var day = new Date().toISOString().slice(0, 10);
+      var ckey = (uid || _payClientIp(req)) + '_' + day;
+      var used = _M.chatUsage[ckey] || 0;
+      if (used >= 5) {
+        return res.json({ answer: '今天的免费畅聊次数用完啦～开通会员($6.9/月)就能和命理师无限畅聊，还解锁全部完整报告哦。', limited: true, needMember: true });
+      }
+      _M.chatUsage[ckey] = used + 1;
+    }
     const allMessages = [systemMsg].concat(messages.slice(-10));
     const answer = await deepseekChat(allMessages, { maxTokens: 1024 });
     res.json({ answer });
