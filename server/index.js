@@ -580,13 +580,21 @@ app.post('/api/create-checkout', rateLimitMiddleware, async (req, res) => {
 
     const orderNo = 'SY-' + Date.now() + '-' + crypto.randomBytes(3).toString('hex');
 
+    // 韩国收款(香港Stripe账户·需Dashboard启用KakaoPay/NaverPay等): region=kr → KRW + 韩国本地支付方式
+    const region = (req.body.region || '').toLowerCase();
+    const isKR = region === 'kr';
+    const payCurrency = isKR ? 'krw' : 'usd';
+    const payMethods = isKR ? ['card', 'kakao_pay', 'naver_pay', 'samsung_pay', 'payco'] : ['card'];
+    // KRW 为 zero-decimal 货币(无分); amountKrw 未配时按占位汇率换算 — 上线前须在 PRODUCTS 配精确韩元价
+    const unitAmount = isKR ? (prod.amountKrw || Math.round(prod.amount / 100 * 1300)) : prod.amount;
+
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
+      payment_method_types: payMethods,
       line_items: [{
         price_data: {
-          currency: 'usd',
+          currency: payCurrency,
           product_data: { name: prod.name, description: prod.desc },
-          unit_amount: prod.amount,
+          unit_amount: unitAmount,
           recurring: product === 'daily_sub' ? { interval: 'month' } : undefined,
         },
         quantity: 1,
@@ -600,7 +608,7 @@ app.post('/api/create-checkout', rateLimitMiddleware, async (req, res) => {
 
     // Save pending order
     insertOrder.run(
-      orderNo, product, prod.amount, 'usd', userId,
+      orderNo, product, unitAmount, payCurrency, userId,
       donorName || '', contact || '', wishText || '', session.id
     );
 
@@ -691,6 +699,183 @@ app.get('/api/success', (req, res) => {
 </script>
 </body></html>`;
   res.send(html);
+});
+
+// ════════════════════════════════════════════
+// 中国支付：微信 NATIVE 扫码 + 支付宝当面付扫码
+// 复刻 Lumee 已实测流程。订单复用 _M.orders(sy_ 前缀) + _persist() 落盘。
+// 回调三件套：验签 + 金额校验 + 幂等。缺 env → 4xx「支付未配置」不崩。
+// ════════════════════════════════════════════
+
+function _payClientIp(req) {
+  var xff = req.headers['x-forwarded-for'];
+  if (xff) return String(xff).split(',')[0].trim();
+  return (req.ip || (req.connection && req.connection.remoteAddress) || '127.0.0.1').replace('::ffff:', '');
+}
+function _payResolveUser(token) {
+  if (!token) return null;
+  var t = String(token).replace('Bearer ', '');
+  var row = getToken.get(t);
+  return row ? row.user_id : null;
+}
+function _payProduct(product) {
+  return PRODUCTS[product] || null;
+}
+
+// ── 微信 NATIVE 扫码：下单 ──
+// POST /pay/wechat/create  body:{ product, uid?/token? }  → { ok, out_trade_no, code_url, amount }
+app.post('/pay/wechat/create', rateLimitMiddleware, async (req, res) => {
+  try {
+    var product = (req.body && req.body.product || '').trim();
+    var prod = _payProduct(product);
+    if (!prod) return res.status(400).json({ error: '无效的产品 ID', valid: Object.keys(PRODUCTS) });
+    if (!pay.wechatReady()) return res.status(400).json({ error: '微信支付未配置，请稍后再试或改用其他支付方式' });
+
+    var uid = _payResolveUser(req.body && (req.body.token || req.headers['authorization']));
+    var oid = pay.genOutTradeNo('wx');
+    _insCnOrder(oid, product, prod.amount, uid, 'wechat');
+
+    var r;
+    try {
+      r = await pay.wxUnifiedOrder(oid, prod.amount, '善缘 · ' + prod.name, _payClientIp(req));
+    } catch (e) {
+      console.error('[pay/wechat/create] 下单异常', e.message);
+      return res.status(502).json({ error: '发起支付失败，请稍后再试' });
+    }
+    if (r.return_code === 'SUCCESS' && r.result_code === 'SUCCESS' && r.code_url) {
+      console.log('[pay/wechat/create] ' + oid + ' — ' + prod.name + ' ¥' + (prod.amount/100).toFixed(2));
+      return res.json({ ok: true, out_trade_no: oid, code_url: r.code_url, amount: prod.amount });
+    }
+    var msg = r.err_code_des || r.return_msg || '未知错误';
+    console.error('[pay/wechat/create] 下单失败', r);
+    return res.status(400).json({ error: '微信下单失败：' + msg });
+  } catch (err) {
+    console.error('[pay/wechat/create ERR]', err);
+    return res.status(500).json({ error: '服务暂时不可用，请稍后重试' });
+  }
+});
+
+// ── 微信查单（前端轮询）──
+// GET /pay/wechat/query?out_trade_no=sy_...  → { status: 'paid'|'pending'|'unknown' }
+app.get('/pay/wechat/query', async (req, res) => {
+  try {
+    var oid = (req.query.out_trade_no || '').trim();
+    if (!oid) return res.status(400).json({ error: '缺少订单号' });
+    var o = _findOrder(oid);
+    if (!o) return res.json({ status: 'unknown' });
+    if (o.payment_status === 'completed') return res.json({ status: 'paid', product: o.product });
+    if (pay.wechatReady()) {
+      try {
+        var q = await pay.wxOrderQuery(oid);
+        if (q.return_code === 'SUCCESS' && q.trade_state === 'SUCCESS') {
+          // 主动查单也做金额校验(total_fee 分) + 幂等
+          var feeCents = q.total_fee != null ? Number(q.total_fee) : null;
+          var r = _completeCnOrder(oid, feeCents, q.transaction_id || '');
+          if (r === 'paid') console.log('[pay/wechat/query] PAID ' + oid);
+          if (r === 'amount_mismatch') { console.error('[pay/wechat/query] 金额不符 ' + oid); return res.json({ status: 'pending' }); }
+          return res.json({ status: 'paid', product: o.product });
+        }
+      } catch (e) { console.error('[pay/wechat/query]', e.message); }
+    }
+    return res.json({ status: 'pending' });
+  } catch (err) {
+    console.error('[pay/wechat/query ERR]', err);
+    return res.status(500).json({ error: '服务暂时不可用' });
+  }
+});
+
+// ── 微信回调（验签 + 金额校验 + 幂等）──
+// POST /pay/wechat/notify  body: XML(text)。必须回微信 XML 应答。
+app.post('/pay/wechat/notify', (req, res) => {
+  res.set('Content-Type', 'application/xml');
+  if (!pay.wechatReady()) return res.send(pay.wxReplyXml(false, 'not configured'));
+  var raw = typeof req.body === 'string' ? req.body : '';
+  var v = pay.wxVerifyNotify(raw);
+  if (!v.ok) { console.error('[wx/notify] 验签失败'); return res.send(pay.wxReplyXml(false, 'sign fail')); }
+  var d = v.data;
+  if (d.return_code !== 'SUCCESS' || d.result_code !== 'SUCCESS') {
+    return res.send(pay.wxReplyXml(true, 'OK'));  // 非成功通知：已收妥即可
+  }
+  var oid = d.out_trade_no || '';
+  var feeCents = d.total_fee != null ? Number(d.total_fee) : null;
+  var r = _completeCnOrder(oid, feeCents, d.transaction_id || '');
+  if (r === 'notfound') { console.error('[wx/notify] 未知订单 ' + oid); return res.send(pay.wxReplyXml(false, 'order not found')); }
+  if (r === 'amount_mismatch') { console.error('[wx/notify] 金额不符 ' + oid + ' paid=' + feeCents); return res.send(pay.wxReplyXml(false, 'amount mismatch')); }
+  if (r === 'paid') console.log('[wx/notify] PAID ' + oid);
+  return res.send(pay.wxReplyXml(true, 'OK'));   // paid / already 都回 SUCCESS(幂等)
+});
+
+// ── 支付宝当面付：预下单拿二维码串 ──
+// POST /pay/alipay/qr  body:{ product, token? }  → { ok, out_trade_no, qr_code, amount }
+app.post('/pay/alipay/qr', rateLimitMiddleware, async (req, res) => {
+  try {
+    var product = (req.body && req.body.product || '').trim();
+    var prod = _payProduct(product);
+    if (!prod) return res.status(400).json({ error: '无效的产品 ID', valid: Object.keys(PRODUCTS) });
+    if (!pay.alipayReady()) return res.status(400).json({ error: '支付宝未配置，请稍后再试或改用其他支付方式' });
+
+    var uid = _payResolveUser(req.body && (req.body.token || req.headers['authorization']));
+    var oid = pay.genOutTradeNo('ali');
+    var yuan = (prod.amount / 100).toFixed(2);   // 支付宝金额单位=元
+    var r = await pay.alipayPrecreate(oid, yuan, '善缘 · ' + prod.name);
+    if (!r.ok) {
+      console.error('[pay/alipay/qr] 失败', r.msg || r.raw);
+      return res.status(400).json({ error: '支付宝下单失败：' + (r.msg || '未知错误') });
+    }
+    // 下单成功才落 pending 单(避免下单失败留脏单)
+    _insCnOrder(oid, product, prod.amount, uid, 'alipay');
+    console.log('[pay/alipay/qr] ' + oid + ' — ' + prod.name + ' ¥' + yuan);
+    return res.json({ ok: true, out_trade_no: oid, qr_code: r.qr_code, amount: prod.amount });
+  } catch (err) {
+    console.error('[pay/alipay/qr ERR]', err);
+    return res.status(500).json({ error: '服务暂时不可用，请稍后重试' });
+  }
+});
+
+// ── 支付宝查单（前端轮询）──
+// GET /pay/alipay/query?out_trade_no=sy_...  → { status: 'paid'|'pending'|'unknown' }
+app.get('/pay/alipay/query', async (req, res) => {
+  try {
+    var oid = (req.query.out_trade_no || '').trim();
+    if (!oid) return res.status(400).json({ error: '缺少订单号' });
+    var o = _findOrder(oid);
+    if (!o) return res.json({ status: 'unknown' });
+    if (o.payment_status === 'completed') return res.json({ status: 'paid', product: o.product });
+    if (pay.alipayReady()) {
+      try {
+        var q = await pay.alipayQuery(oid);
+        if (q.paid) {
+          // total_amount(元) → 分 做金额校验 + 幂等
+          var paidCents = q.totalAmount ? Math.round(parseFloat(q.totalAmount) * 100) : null;
+          var r = _completeCnOrder(oid, paidCents, q.tradeNo || '');
+          if (r === 'paid') console.log('[pay/alipay/query] PAID ' + oid);
+          if (r === 'amount_mismatch') { console.error('[pay/alipay/query] 金额不符 ' + oid); return res.json({ status: 'pending' }); }
+          return res.json({ status: 'paid', product: o.product });
+        }
+      } catch (e) { console.error('[pay/alipay/query]', e.message); }
+    }
+    return res.json({ status: 'pending' });
+  } catch (err) {
+    console.error('[pay/alipay/query ERR]', err);
+    return res.status(500).json({ error: '服务暂时不可用' });
+  }
+});
+
+// ── 支付宝回调（验签 + 金额校验 + 幂等）──
+// POST /pay/alipay/notify  body: form-urlencoded。成功须回 'success'(纯文本)。
+app.post('/pay/alipay/notify', (req, res) => {
+  if (!pay.alipayReady()) return res.send('fail');
+  var d = req.body || {};
+  if (!pay.alipayVerifyNotify(d)) { console.error('[alipay/notify] 验签失败'); return res.send('fail'); }
+  var status = d.trade_status || '';
+  if (status !== 'TRADE_SUCCESS' && status !== 'TRADE_FINISHED') return res.send('success');  // 非成功状态：收妥
+  var oid = d.out_trade_no || '';
+  var paidCents = d.total_amount ? Math.round(parseFloat(d.total_amount) * 100) : null;
+  var r = _completeCnOrder(oid, paidCents, d.trade_no || '');
+  if (r === 'notfound') { console.error('[alipay/notify] 未知订单 ' + oid); return res.send('fail'); }
+  if (r === 'amount_mismatch') { console.error('[alipay/notify] 金额不符 ' + oid + ' paid=' + paidCents); return res.send('fail'); }
+  if (r === 'paid') console.log('[alipay/notify] PAID ' + oid);
+  return res.send('success');   // paid / already 都回 success(幂等)
 });
 
 // ── AI追问上下文缓存 ──
