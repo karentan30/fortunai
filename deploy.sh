@@ -39,7 +39,7 @@ deploy_frontend() {
 
 deploy_backend() {
   echo "📦 部署后端..."
-  scp server/index.js "$HK_SERVER:$HK_PATH/server/index.js"
+  scp server/*.js "$HK_SERVER:$HK_PATH/server/"   # 全部依赖(index.js+pay.js+astrology.js+bazi.js), 防漏模块导致 MODULE_NOT_FOUND
   ssh $HK_SERVER "cd $HK_PATH/server && npm install --silent 2>&1 | tail -2"
   ssh $HK_SERVER "pm2 restart shenyuan 2>&1 | head -3"
   echo "✓ 后端部署完成"
