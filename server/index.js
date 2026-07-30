@@ -122,6 +122,18 @@ const getUserOrders = { all(uid){return _M.orders.filter(o=>o.user_id===uid&&o.p
 const insertOrder = { run(oNo,p,amt,cur,uid,dN,c,wT,sId){_M.orders.push({id:_M._id.o++,order_no:oNo,product:p,amount:amt,currency:cur,user_id:uid,donor_name:dN,contact:c,wish_text:wT,stripe_session_id:sId,payment_status:'pending',created_at:new Date().toISOString()});_persist();} };
 const insertReading = { run(t,i,r,u){_M.readings.push({id:_M._id.r++,type:t,input:i,result:r,user_id:u||null,created_at:new Date().toISOString()});_persist();} };
 const getReadingsByUser = { all(uId){return _M.readings.filter(r=>r.user_id===uId).sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,5);} };
+// 付费墙: 判断请求用户是否已付费解锁某类完整报告(名下有 completed 订单且 product 匹配)
+function hasFullAccess(req, productKeys){
+  try{
+    var auth = req.headers['authorization'] || '';
+    var token = auth.indexOf('Bearer ')===0 ? auth.slice(7) : ((req.body && req.body.token) || '');
+    if(!token) return false;
+    var t = getToken.get(token);
+    if(!t) return false;
+    var orders = getUserOrders.all(t.user_id) || []; // 已过滤 payment_status==='completed'
+    return orders.some(function(o){ return productKeys.some(function(k){ return String(o.product||'').indexOf(k) >= 0; }); });
+  }catch(e){ return false; }
+}
 function _updOrder(s,oNo){const o=_M.orders.find(x=>x.order_no===oNo);if(o){o.payment_status=s;_persist();}}
 function _insSub(e,sId){if(!_M.subs.find(x=>x.stripe_subscription_id===sId)){_M.subs.push({email:e,stripe_subscription_id:sId,status:'active',created_at:new Date().toISOString()});_persist();}}
 function _allOrders(){return[..._M.orders].sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,50);}
@@ -830,11 +842,20 @@ app.post('/api/bazi', async (req, res) => {
 - 一句祝福收尾`
     );
 
-    const result = await deepseekChat(messages, { maxTokens: 16384 });
+    // 付费墙分级: 未付费只出基础版(四柱+五行+今年运), 完整12维需付费解锁 — 防 curl 白嫖全报告
+    var full = hasFullAccess(req, ['bazi', '八字']);
+    var useMessages = messages;
+    if (!full) {
+      useMessages = buildReadingPrompt(
+        '你是精通八字命理的命理师。为用户生成一份【基础版】命盘概览,只包含三部分:①四柱八字排盘(年月日时柱天干地支及简释)②五行能量分析(各五行百分比、最旺最弱、需补什么)③今年运势概览(一段)。语言简体中文,温暖白话,约2000字。结尾必须明确告知:更完整的财运格局、感情姻缘、事业升迁、健康预警、8步大运、未来10年流年详批、神煞、开运锦囊等共12个维度,在【完整版报告】中解锁。',
+        '请为以下命主生成【基础版】命盘概览(仅四柱+五行+今年运势,约2000字,结尾引导解锁完整版):\n出生:' + birthYear + '年' + birthMonth + '月' + birthDay + '日' + (birthHour !== undefined ? birthHour + '时' : '(时辰不详)') + '\n性别:' + (gender === 'male' ? '男' : '女')
+      );
+    }
+    const result = await deepseekChat(useMessages, { maxTokens: full ? 16384 : 3500 });
     insertReading.run('bazi', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('bazi', req.body, result);
 
-    res.json({ reading: result, contextId: ctxId });
+    res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId });
   } catch (err) {
     console.error('[BAZI ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试', detail: err.message });
