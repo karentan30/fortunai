@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>善缘 · 小红书卡片工坊</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'PingFang SC','Noto Sans SC','Apple SD Gothic Neo',sans-serif;background:#333}
+.card{width:1080px;height:1440px;display:none;position:relative;overflow:hidden}
+.card.show{display:flex}
+.disc{position:absolute;bottom:56px;left:0;right:0;text-align:center;font-size:24px;letter-spacing:1px}
+.logo{position:absolute;top:56px;left:0;right:0;text-align:center;font-size:28px;letter-spacing:8px;font-weight:300}
+
+/* 卡1 五行自测 */
+.c1{flex-direction:column;align-items:center;justify-content:center;padding:100px 90px;
+  background:radial-gradient(circle at 50% 32%,#fff3d9 0%,#f6dfae 55%,#efc985 100%)}
+.c1 .logo{color:#b07d2a}
+.c1 h1{font-size:82px;font-weight:800;color:#7a4a12;line-height:1.28;text-align:center;margin-bottom:22px;letter-spacing:-1px}
+.c1 .sub{font-size:36px;color:#a8722c;margin-bottom:60px;font-weight:500}
+.c1 .wheel{width:340px;height:340px;border-radius:50%;margin-bottom:56px;position:relative;
+  background:conic-gradient(#d9a441 0 20%,#5bbf7a 20% 40%,#4a6f9c 40% 60%,#d4635f 60% 80%,#b8894a 80% 100%);
+  box-shadow:0 20px 50px rgba(150,100,30,.28)}
+.c1 .wheel::after{content:'五行';position:absolute;inset:110px;border-radius:50%;background:#fff8ea;
+  display:flex;align-items:center;justify-content:center;font-size:52px;color:#7a4a12;font-weight:800}
+.c1 .list{width:100%;font-size:37px;color:#6a4415;line-height:2.0;font-weight:600}
+.c1 .list span{display:inline-block;width:30px}
+.c1 .disc{color:#a8722c}
+
+/* 卡2 凶字天赋 */
+.c2{flex-direction:column;justify-content:center;padding:110px 90px;background:linear-gradient(160deg,#1a1526 0%,#2c1f3f 100%)}
+.c2 .logo{color:rgba(226,180,120,.6)}
+.c2 h1{font-size:80px;font-weight:800;color:#fff;line-height:1.32;margin-bottom:20px}
+.c2 h1 .x{color:#e0605a;text-decoration:line-through;text-decoration-thickness:6px}
+.c2 h1 .g{color:#ffcf6b}
+.c2 .sub{font-size:38px;color:rgba(255,255,255,.6);margin-bottom:70px}
+.c2 .row{display:flex;align-items:baseline;gap:22px;margin-bottom:34px;font-size:42px}
+.c2 .row b{color:#ffcf6b;font-weight:800;min-width:150px}
+.c2 .row span{color:rgba(255,255,255,.9)}
+.c2 .disc{color:rgba(255,255,255,.4)}
+
+/* 卡3 复合3问 */
+.c3{flex-direction:column;justify-content:center;padding:110px 90px;background:linear-gradient(165deg,#12203a 0%,#1d2f4d 100%)}
+.c3 .logo{color:rgba(180,200,230,.5)}
+.c3 h1{font-size:78px;font-weight:800;color:#fff;line-height:1.3;margin-bottom:16px}
+.c3 .sub{font-size:36px;color:#9fc0e6;margin-bottom:64px}
+.c3 .q{display:flex;gap:26px;margin-bottom:40px;font-size:41px;color:rgba(255,255,255,.92);line-height:1.4}
+.c3 .q .num{color:#7fb3ea;font-weight:800;flex-shrink:0}
+.c3 .disc{color:rgba(255,255,255,.4)}
+
+/* 卡4 金句 */
+.c4{flex-direction:column;align-items:center;justify-content:center;padding:120px 100px;
+  background:radial-gradient(ellipse at 50% 40%,#20403a 0%,#122622 70%,#0d1c19 100%)}
+.c4 .logo{color:rgba(200,230,210,.4)}
+.c4 h1{font-size:96px;font-weight:800;color:#f4 efe8;color:#f4efe4;line-height:1.34;text-align:center;letter-spacing:-1px}
+.c4 h1 b{color:#8fd3b0}
+.c4 .sub{font-size:40px;color:rgba(244,239,228,.62);margin-top:44px;text-align:center;line-height:1.5}
+.c4 .sign{position:absolute;bottom:120px;left:0;right:0;text-align:center;font-size:28px;color:rgba(200,230,210,.5);letter-spacing:3px}
+
+/* 卡5 纪念 */
+.c5{flex-direction:column;justify-content:center;padding:110px 90px;
+  background:radial-gradient(ellipse at 50% 30%,#fbf1e0 0%,#f2e2c9 60%,#e8d2ad 100%)}
+.c5 .logo{color:#b58a55}
+.c5 h1{font-size:72px;font-weight:800;color:#5c4326;line-height:1.4;margin-bottom:24px;letter-spacing:-1px}
+.c5 .sub{font-size:36px;color:#a07d4c;margin-bottom:64px;font-weight:500}
+.c5 .row{font-size:40px;color:#6b4f2c;line-height:1.9;margin-bottom:18px;font-weight:500}
+.c5 .disc{color:#a07d4c;font-size:30px;letter-spacing:4px;font-weight:600}
+
+/* 卡6 清明代办 */
+.c6{flex-direction:column;justify-content:center;padding:110px 90px;
+  background:radial-gradient(ellipse at 50% 78%,#3a2f1a 0%,#1c1710 55%,#0e0b07 100%)}
+.c6 .logo{color:rgba(230,190,120,.6)}
+.c6 .lamp{position:absolute;bottom:210px;left:50%;transform:translateX(-50%);width:120px;height:120px;
+  border-radius:50%;background:radial-gradient(circle,#ffcf7a 0%,#e09a3a 45%,transparent 72%);
+  box-shadow:0 0 120px 60px rgba(255,180,90,.35)}
+.c6 h1{font-size:76px;font-weight:800;color:#f6e9d2;line-height:1.34;margin-bottom:22px}
+.c6 h1 b{color:#f0b860}
+.c6 .sub{font-size:36px;color:rgba(246,233,210,.62);margin-bottom:64px}
+.c6 .row{font-size:40px;color:rgba(246,233,210,.92);line-height:1.85;margin-bottom:16px}
+.c6 .disc{color:rgba(246,233,210,.5);font-size:28px}
+</style>
+</head>
+<body>
+
+<!-- 卡1 -->
+<div class="card c1" data-n="1">
+  <div class="logo">善 緣 · 八字小课堂</div>
+  <h1>测你八字里<br>最缺哪个五行</h1>
+  <div class="sub">报个生日 · 30秒出结果 · 免费</div>
+  <div class="wheel"></div>
+  <div class="list">
+    🟡 金 · 缺方向感<br>🟢 木 · 缺行动力<br>⚫ 水 · 易较真<br>🔴 火 · 提不起劲<br>🟤 土 · 易焦虑
+  </div>
+  <div class="disc">娱乐向 · 仅供参考</div>
+</div>
+
+<!-- 卡2 -->
+<div class="card c2" data-n="2">
+  <div class="logo">善 緣 · 八字小课堂</div>
+  <h1>八字里的<span class="x">"凶"</span>字，<br>其实是<span class="g">天赋</span></h1>
+  <div class="sub">别被一个字吓到</div>
+  <div class="row"><b>伤官</b><span>= 才华与表达欲</span></div>
+  <div class="row"><b>七杀</b><span>= 魄力与执行力</span></div>
+  <div class="row"><b>比劫</b><span>= 行动派社交力</span></div>
+  <div class="disc">命理没有纯粹的坏 · 仅供参考</div>
+</div>
+
+<!-- 卡3 -->
+<div class="card c3" data-n="3">
+  <div class="logo">善 緣 · 情感军师</div>
+  <h1>该不该跟他复合？<br>先问这3句</h1>
+  <div class="sub">三句都点头，再考虑</div>
+  <div class="q"><span class="num">01</span><span>你想的是他，还是没人陪的日子？</span></div>
+  <div class="q"><span class="num">02</span><span>上次分开的原因，变了吗？</span></div>
+  <div class="q"><span class="num">03</span><span>复合后，敢当第一次谈吗？</span></div>
+  <div class="disc">情感陪聊 · 仅供参考</div>
+</div>
+
+<!-- 卡4 -->
+<div class="card c4" data-n="4">
+  <div class="logo">善 緣 · 情感军师</div>
+  <h1>你不是<b>想太多</b>，<br>是<b>撑太久</b></h1>
+  <div class="sub">成年人的崩溃，<br>都是静音的</div>
+  <div class="sign">深夜也在 · 善缘军师</div>
+</div>
+
+<!-- 卡5 -->
+<div class="card c5" data-n="5">
+  <div class="logo">善 緣 · 想念有个家</div>
+  <h1>想念一个人的时候，<br>让TA有个能去的地方</h1>
+  <div class="sub">老照片修复 · 线上纪念 · 免费</div>
+  <div class="row">📷 模糊老照片，免费修复上色</div>
+  <div class="row">🕊️ 线上纪念页，永久保存</div>
+  <div class="row">💬 放上照片，和想说的话</div>
+  <div class="disc">思念，有处安放</div>
+</div>
+
+<!-- 卡6 -->
+<div class="card c6" data-n="6">
+  <div class="logo">善 緣 · 节气与故人</div>
+  <div class="lamp"></div>
+  <h1>回不去的清明中元，<br><b>我们替你回去</b></h1>
+  <div class="sub">真人代办 · 全程影像回传</div>
+  <div class="row">🕯️ 真人到坟前上香点灯</div>
+  <div class="row">📹 全程视频，拍给你看</div>
+  <div class="row">🏮 纸扎可定制</div>
+  <div class="disc">文化习俗服务 · 尽一份心意 · 不承诺改命</div>
+</div>
+
+<script>
+var n = new URLSearchParams(location.search).get('n') || '1';
+var el = document.querySelector('.card[data-n="'+n+'"]');
+if(el){ el.classList.add('show'); }
+</script>
+</body>
+</html>
