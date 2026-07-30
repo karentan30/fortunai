@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
 const path = require('path');
+const fs = require('fs');
 const astrology = require('./astrology.js');
 
 const app = express();
@@ -66,8 +67,41 @@ app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }));
 // ── Static files ──
 app.use(express.static(path.join(__dirname, '..')));  // Vercel handles static files
 
-// ── In-memory Data Store (Vercel-compatible, replaces better-sqlite3) ──
+// ── Data Store (内存运算 + JSON 快照落盘, 扛 PM2 重启 · 防丢单红线) ──
+// 结构不变; 每次写操作后 _persist() 去抖落盘。Vercel 无持久盘时降级为纯内存(读写失败静默)。
 const _M = { users:[], tokens:[], orders:[], readings:[], subs:[], referrals:[], _id:{u:1,t:1,o:1,r:1,s:1,rf:1} };
+const _DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
+// 启动加载: 把磁盘快照合并回 _M(保留结构与自增计数器), 损坏则跳过从空开始
+(function _loadStore(){
+  try {
+    if(!fs.existsSync(_DATA_FILE)) return;
+    const d = JSON.parse(fs.readFileSync(_DATA_FILE,'utf8'));
+    for(const k of ['users','tokens','orders','readings','subs','referrals']){
+      if(Array.isArray(d[k])) _M[k] = d[k];
+    }
+    if(d._id && typeof d._id==='object') Object.assign(_M._id, d._id);
+    console.log(`[store] 已加载快照: users=${_M.users.length} orders=${_M.orders.length} referrals=${_M.referrals.length}`);
+  } catch(e){ console.error('[store] 快照加载失败, 从空开始:', e.message); }
+})();
+// 去抖落盘(原子写: tmp→rename), 500ms 合并高频写
+let _persistTimer = null, _persistPending = false;
+function _writeStoreNow(){
+  _persistPending = false;
+  try {
+    const tmp = _DATA_FILE + '.tmp';
+    fs.writeFileSync(tmp, JSON.stringify(_M));
+    fs.renameSync(tmp, _DATA_FILE);
+  } catch(e){ console.error('[store] 落盘失败:', e.message); }
+}
+function _persist(){
+  _persistPending = true;
+  if(_persistTimer) return;
+  _persistTimer = setTimeout(()=>{ _persistTimer=null; _writeStoreNow(); }, 500);
+}
+// 进程退出前强制落盘, 不丢最后 500ms 内的写
+function _flushStore(){ if(_persistTimer){ clearTimeout(_persistTimer); _persistTimer=null; } if(_persistPending) _writeStoreNow(); }
+process.on('SIGTERM', ()=>{ _flushStore(); process.exit(0); });
+process.on('SIGINT',  ()=>{ _flushStore(); process.exit(0); });
 // 生成唯一 6位大写 base36 邀请码(crypto随机·查重防撞)
 function genRefCode(){
   var chars='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -78,20 +112,20 @@ function genRefCode(){
   }
   return crypto.randomBytes(4).toString('hex').toUpperCase().slice(0,6); // 兜底
 }
-const insertUser = { run(e,h){const id=_M._id.u++;_M.users.push({id,email:e,password_hash:h,name:'',ref_code:genRefCode(),created_at:new Date().toISOString()});return{lastInsertRowid:id};} };
+const insertUser = { run(e,h){const id=_M._id.u++;_M.users.push({id,email:e,password_hash:h,name:'',ref_code:genRefCode(),created_at:new Date().toISOString()});_persist();return{lastInsertRowid:id};} };
 const getUserByEmail = { get(e){return _M.users.find(u=>u.email===e);} };
 const getUserById = { get(id){const u=_M.users.find(x=>x.id===id);return u?{id:u.id,email:u.email,name:u.name,ref_code:u.ref_code,created_at:u.created_at}:undefined;} };
 const getUserByRefCode = { get(c){if(!c)return undefined;var code=String(c).trim().toUpperCase();if(!code)return undefined;return _M.users.find(u=>u.ref_code===code);} };
-const insertToken = { run(uid,t){_M.tokens.push({id:_M._id.t++,user_id:uid,token:t,created_at:new Date().toISOString()});} };
+const insertToken = { run(uid,t){_M.tokens.push({id:_M._id.t++,user_id:uid,token:t,created_at:new Date().toISOString()});_persist();} };
 const getToken = { get(t){const tok=_M.tokens.find(x=>x.token===t);if(!tok)return null;const u=_M.users.find(x=>x.id===tok.user_id);return u?{...tok,email:u.email,name:u.name}:null;} };
 const getUserOrders = { all(uid){return _M.orders.filter(o=>o.user_id===uid&&o.payment_status==='completed').sort((a,b)=>b.created_at.localeCompare(a.created_at));} };
-const insertOrder = { run(oNo,p,amt,cur,uid,dN,c,wT,sId){_M.orders.push({id:_M._id.o++,order_no:oNo,product:p,amount:amt,currency:cur,user_id:uid,donor_name:dN,contact:c,wish_text:wT,stripe_session_id:sId,payment_status:'pending',created_at:new Date().toISOString()});} };
-const insertReading = { run(t,i,r,u){_M.readings.push({id:_M._id.r++,type:t,input:i,result:r,user_id:u||null,created_at:new Date().toISOString()});} };
+const insertOrder = { run(oNo,p,amt,cur,uid,dN,c,wT,sId){_M.orders.push({id:_M._id.o++,order_no:oNo,product:p,amount:amt,currency:cur,user_id:uid,donor_name:dN,contact:c,wish_text:wT,stripe_session_id:sId,payment_status:'pending',created_at:new Date().toISOString()});_persist();} };
+const insertReading = { run(t,i,r,u){_M.readings.push({id:_M._id.r++,type:t,input:i,result:r,user_id:u||null,created_at:new Date().toISOString()});_persist();} };
 const getReadingsByUser = { all(uId){return _M.readings.filter(r=>r.user_id===uId).sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,5);} };
-function _updOrder(s,oNo){const o=_M.orders.find(x=>x.order_no===oNo);if(o)o.payment_status=s;}
-function _insSub(e,sId){if(!_M.subs.find(x=>x.stripe_subscription_id===sId))_M.subs.push({email:e,stripe_subscription_id:sId,status:'active',created_at:new Date().toISOString()});}
+function _updOrder(s,oNo){const o=_M.orders.find(x=>x.order_no===oNo);if(o){o.payment_status=s;_persist();}}
+function _insSub(e,sId){if(!_M.subs.find(x=>x.stripe_subscription_id===sId)){_M.subs.push({email:e,stripe_subscription_id:sId,status:'active',created_at:new Date().toISOString()});_persist();}}
 function _allOrders(){return[..._M.orders].sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,50);}
-function _insJossOrder(oNo,p,amt,cur,dN,c,wT,ps){_M.orders.push({id:_M._id.o++,order_no:oNo,product:p,amount:amt,currency:cur,donor_name:dN,contact:c,wish_text:wT,payment_status:ps,created_at:new Date().toISOString()});}
+function _insJossOrder(oNo,p,amt,cur,dN,c,wT,ps){_M.orders.push({id:_M._id.o++,order_no:oNo,product:p,amount:amt,currency:cur,donor_name:dN,contact:c,wish_text:wT,payment_status:ps,created_at:new Date().toISOString()});_persist();}
 
 // ═══════════════════════════════════════════════════════════
 // ── 邀请追踪管道 (referrer → invitee 归因关系, 无货币/奖励) ──
@@ -113,6 +147,7 @@ function createReferral(inviterId, inviteeId){
     created_at: new Date().toISOString()
   };
   _M.referrals.push(ref);
+  _persist();
   return ref;
 }
 // 尝试用 ref code 为新注册/老用户(inviteeId) 绑定邀请人; 静默失败返回 false
