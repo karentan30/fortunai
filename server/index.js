@@ -1,11 +1,14 @@
 require('dotenv').config({ path: require('path').join(__dirname, '.env'), override: true });
-const express = require('express');
-const cors = require('cors');
-const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
+// ⚡ Sentry 必须在 express/其他第三方之前 init（v10 补丁限制）
+const mon = require(process.env.MONITORING_PATH || require('path').join(__dirname, '../../shared/monitoring.js'))({project: 'shenyuan', require: require});
+const express = require('express');
+const cors = require('cors');
 const astrology = require('./astrology.js');
 const pay = require('./pay.js');   // 中国支付：微信 NATIVE 扫码 + 支付宝当面付
+const hub = require(process.env.HUB_CLIENT_PATH || require('path').join(__dirname, '../../shared/pay-hub-client.js'));
 
 const app = express();
 const PORT = process.env.PORT || 3021;
@@ -61,6 +64,7 @@ app.use(function(req, res, next) {
 });
 
 app.use(express.json({ limit: '10mb' }));
+
 
 // Stripe webhook needs raw body
 app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }));
@@ -722,40 +726,40 @@ function _payProduct(product) {
   return PRODUCTS[product] || null;
 }
 
-// ── 微信 NATIVE 扫码：下单 ──
+// ── 微信 NATIVE 扫码：下单（经 Payment Hub）──
 // POST /pay/wechat/create  body:{ product, uid?/token? }  → { ok, out_trade_no, code_url, amount }
 app.post('/pay/wechat/create', rateLimitMiddleware, async (req, res) => {
   try {
     var product = (req.body && req.body.product || '').trim();
     var prod = _payProduct(product);
     if (!prod) return res.status(400).json({ error: '无效的产品 ID', valid: Object.keys(PRODUCTS) });
-    if (!pay.wechatReady()) return res.status(400).json({ error: '微信支付未配置，请稍后再试或改用其他支付方式' });
+    if (!hub.HUB_SECRET) return res.status(400).json({ error: '支付服务暂不可用' });
 
     var uid = _payResolveUser(req.body && (req.body.token || req.headers['authorization']));
-    var oid = pay.genOutTradeNo('wx');
-    _insCnOrder(oid, product, prod.amount, uid, 'wechat');
+    var method = (req.body && (req.body.method || req.body.channel) || 'wechat').toLowerCase();
+    if (!['wechat', 'alipay', 'stripe'].includes(method)) method = 'wechat';
+    var oid = pay.genOutTradeNo(method === 'alipay' ? 'ali' : method === 'stripe' ? 'st' : 'wx');
+    _insCnOrder(oid, product, prod.amount, uid, method);
 
     var r;
     try {
-      r = await pay.wxUnifiedOrder(oid, prod.amount, '善缘 · ' + prod.name, _payClientIp(req));
+      r = await hub.create(method, '善缘 · ' + prod.name, prod.amount / 100, oid);
     } catch (e) {
-      console.error('[pay/wechat/create] 下单异常', e.message);
+      console.error('[pay/wechat/create] hub 下单异常', e.message);
       return res.status(502).json({ error: '发起支付失败，请稍后再试' });
     }
-    if (r.return_code === 'SUCCESS' && r.result_code === 'SUCCESS' && r.code_url) {
-      console.log('[pay/wechat/create] ' + oid + ' — ' + prod.name + ' ¥' + (prod.amount/100).toFixed(2));
-      return res.json({ ok: true, out_trade_no: oid, code_url: r.code_url, amount: prod.amount });
-    }
-    var msg = r.err_code_des || r.return_msg || '未知错误';
-    console.error('[pay/wechat/create] 下单失败', r);
-    return res.status(400).json({ error: '微信下单失败：' + msg });
+    console.log('[pay/wechat/create] ' + oid + ' — ' + prod.name + ' ¥' + (prod.amount/100).toFixed(2));
+    var resp = { ok: true, out_trade_no: oid, amount: prod.amount };
+    if (r.method === 'stripe') { resp.url = r.url; resp.session_id = r.session_id; }
+    else { resp.code_url = r.code_url; resp.method = r.method; }
+    return res.json(resp);
   } catch (err) {
     console.error('[pay/wechat/create ERR]', err);
     return res.status(500).json({ error: '服务暂时不可用，请稍后重试' });
   }
 });
 
-// ── 微信查单（前端轮询）──
+// ── 微信查单（经 Payment Hub 轮询）──
 // GET /pay/wechat/query?out_trade_no=sy_...  → { status: 'paid'|'pending'|'unknown' }
 app.get('/pay/wechat/query', async (req, res) => {
   try {
@@ -764,18 +768,15 @@ app.get('/pay/wechat/query', async (req, res) => {
     var o = _findOrder(oid);
     if (!o) return res.json({ status: 'unknown' });
     if (o.payment_status === 'completed') return res.json({ status: 'paid', product: o.product });
-    if (pay.wechatReady()) {
+    if (hub.HUB_SECRET) {
       try {
-        var q = await pay.wxOrderQuery(oid);
-        if (q.return_code === 'SUCCESS' && q.trade_state === 'SUCCESS') {
-          // 主动查单也做金额校验(total_fee 分) + 幂等
-          var feeCents = q.total_fee != null ? Number(q.total_fee) : null;
-          var r = _completeCnOrder(oid, feeCents, q.transaction_id || '');
-          if (r === 'paid') console.log('[pay/wechat/query] PAID ' + oid);
-          if (r === 'amount_mismatch') { console.error('[pay/wechat/query] 金额不符 ' + oid); return res.json({ status: 'pending' }); }
+        var s = await hub.status(oid);
+        if (s.status === 'paid') {
+          var ccr = _completeCnOrder(oid, null, oid);
+          if (ccr === 'paid') console.log('[pay/wechat/query] PAID via hub ' + oid);
           return res.json({ status: 'paid', product: o.product });
         }
-      } catch (e) { console.error('[pay/wechat/query]', e.message); }
+      } catch (e) { console.error('[pay/wechat/query] hub 查单异常', e.message); }
     }
     return res.json({ status: 'pending' });
   } catch (err) {
@@ -805,26 +806,27 @@ app.post('/pay/wechat/notify', (req, res) => {
   return res.send(pay.wxReplyXml(true, 'OK'));   // paid / already 都回 SUCCESS(幂等)
 });
 
-// ── 支付宝当面付：预下单拿二维码串 ──
+// ── 支付宝当面付：预下单（经 Payment Hub）──
 // POST /pay/alipay/qr  body:{ product, token? }  → { ok, out_trade_no, qr_code, amount }
 app.post('/pay/alipay/qr', rateLimitMiddleware, async (req, res) => {
   try {
     var product = (req.body && req.body.product || '').trim();
     var prod = _payProduct(product);
     if (!prod) return res.status(400).json({ error: '无效的产品 ID', valid: Object.keys(PRODUCTS) });
-    if (!pay.alipayReady()) return res.status(400).json({ error: '支付宝未配置，请稍后再试或改用其他支付方式' });
+    if (!hub.HUB_SECRET) return res.status(400).json({ error: '支付服务暂不可用' });
 
     var uid = _payResolveUser(req.body && (req.body.token || req.headers['authorization']));
     var oid = pay.genOutTradeNo('ali');
-    var yuan = (prod.amount / 100).toFixed(2);   // 支付宝金额单位=元
-    var r = await pay.alipayPrecreate(oid, yuan, '善缘 · ' + prod.name);
-    if (!r.ok) {
-      console.error('[pay/alipay/qr] 失败', r.msg || r.raw);
-      return res.status(400).json({ error: '支付宝下单失败：' + (r.msg || '未知错误') });
-    }
-    // 下单成功才落 pending 单(避免下单失败留脏单)
     _insCnOrder(oid, product, prod.amount, uid, 'alipay');
-    console.log('[pay/alipay/qr] ' + oid + ' — ' + prod.name + ' ¥' + yuan);
+
+    var r;
+    try {
+      r = await hub.create('alipay', '善缘 · ' + prod.name, prod.amount / 100, oid);
+    } catch (e) {
+      console.error('[pay/alipay/qr] hub 下单异常', e.message);
+      return res.status(502).json({ error: '发起支付失败，请稍后再试' });
+    }
+    console.log('[pay/alipay/qr] ' + oid + ' — ' + prod.name + ' ¥' + (prod.amount/100).toFixed(2));
     return res.json({ ok: true, out_trade_no: oid, qr_code: r.qr_code, amount: prod.amount });
   } catch (err) {
     console.error('[pay/alipay/qr ERR]', err);
@@ -832,7 +834,7 @@ app.post('/pay/alipay/qr', rateLimitMiddleware, async (req, res) => {
   }
 });
 
-// ── 支付宝查单（前端轮询）──
+// ── 支付宝查单（经 Payment Hub 轮询）──
 // GET /pay/alipay/query?out_trade_no=sy_...  → { status: 'paid'|'pending'|'unknown' }
 app.get('/pay/alipay/query', async (req, res) => {
   try {
@@ -841,18 +843,15 @@ app.get('/pay/alipay/query', async (req, res) => {
     var o = _findOrder(oid);
     if (!o) return res.json({ status: 'unknown' });
     if (o.payment_status === 'completed') return res.json({ status: 'paid', product: o.product });
-    if (pay.alipayReady()) {
+    if (hub.HUB_SECRET) {
       try {
-        var q = await pay.alipayQuery(oid);
-        if (q.paid) {
-          // total_amount(元) → 分 做金额校验 + 幂等
-          var paidCents = q.totalAmount ? Math.round(parseFloat(q.totalAmount) * 100) : null;
-          var r = _completeCnOrder(oid, paidCents, q.tradeNo || '');
-          if (r === 'paid') console.log('[pay/alipay/query] PAID ' + oid);
-          if (r === 'amount_mismatch') { console.error('[pay/alipay/query] 金额不符 ' + oid); return res.json({ status: 'pending' }); }
+        var s = await hub.status(oid);
+        if (s.status === 'paid') {
+          var ccr = _completeCnOrder(oid, null, oid);
+          if (ccr === 'paid') console.log('[pay/alipay/query] PAID via hub ' + oid);
           return res.json({ status: 'paid', product: o.product });
         }
-      } catch (e) { console.error('[pay/alipay/query]', e.message); }
+      } catch (e) { console.error('[pay/alipay/query] hub 查单异常', e.message); }
     }
     return res.json({ status: 'pending' });
   } catch (err) {
@@ -2285,6 +2284,15 @@ app.use(function(err, req, res, next) {
 
 // ── Start (local only — Vercel uses api/index.js) ──
 if (!process.env.VERCEL) {
+// ── Sentry error handler（必须放在所有路由之后）──
+if (mon.setupExpressErrorHandler) mon.setupExpressErrorHandler(app);
+// ── 全局兜底 ──
+app.use(function(err, req, res, next) {
+  console.error('[unhandled]', err.message || err);
+  mon.feishuAlert('未处理异常', (err && err.message) || 'unknown', 'error');
+  if (!res.headersSent) res.status(500).json({ error: '服务暂时不可用，请稍后重试' });
+});
+
   app.listen(PORT, () => {
     console.log(`\n╔═══════════════════════════════════╗`);
     console.log(`║   善缘 ShenYuan v2.0              ║`);

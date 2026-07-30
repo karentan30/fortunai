@@ -312,12 +312,12 @@ body::before {
     <div class="tier-row">
       <div class="tier-card" id="t1" onclick="selTier(1)">
         <div class="tier-name">基础合婚</div>
-        <div class="tier-price">$9.9</div>
+        <div class="tier-price">$9.90</div>
         <div class="tier-desc">相合度+五行</div>
       </div>
       <div class="tier-card sel" id="t2" onclick="selTier(2)">
         <div class="tier-name">完整合婚</div>
-        <div class="tier-price">$19.9</div>
+        <div class="tier-price">$19.90</div>
         <div class="tier-desc">全维度+化解</div>
       </div>
       <div class="tier-card" id="t3" onclick="selTier(3)">
@@ -406,7 +406,7 @@ body::before {
   </div>
 
   <!-- locked -->
-  <div class="locked-card">
+  <div class="locked-card" id="lockedCard">
     <div class="locked-inner">
       <div class="locked-inner-row">📅 大凶日期回避（婚宴/领证）</div>
       <div class="locked-inner-row">🌟 最佳婚期推荐（3个吉日）</div>
@@ -416,8 +416,14 @@ body::before {
     <div class="locked-overlay">
       <div class="lock-icon">🔒</div>
       <div class="lock-title">解锁完整合婚报告</div>
-      <button class="lock-btn" onclick="createCheckout(this, 'full', 19.9)">解锁完整报告 · $19.9</button>
+      <button class="lock-btn" onclick="createCheckout(this, 'full', 19.9)">解锁完整报告 · $19.90</button>
     </div>
+  </div>
+
+  <!-- full AI report (hidden, shown after paid return) -->
+  <div id="fullReportWrap" style="display:none;margin-top:20px">
+    <div style="font-size:13px;color:var(--gold-deep);letter-spacing:0.08em;text-align:center;margin-bottom:14px;font-weight:500">━━ 完整合婚报告 ━━</div>
+    <div id="fullReportContent" style="padding:0 4px;font-size:12.5px;line-height:1.9;color:var(--text);white-space:pre-wrap"></div>
   </div>
 
   <!-- Share bar -->
@@ -647,6 +653,21 @@ function createCheckout(btn, tier, price) {
   var originalLabel = btn.textContent;
   btn.disabled = true;
   btn.textContent = '跳转支付…';
+  try {
+    var d = {
+      p1Year: document.getElementById('aYear').value,
+      p1Month: document.getElementById('aMonth').value,
+      p1Day: document.getElementById('aDay').value,
+      p1Hour: document.getElementById('aHour').value,
+      p1Gender: gA,
+      p2Year: document.getElementById('bYear').value,
+      p2Month: document.getElementById('bMonth').value,
+      p2Day: document.getElementById('bDay').value,
+      p2Hour: document.getElementById('bHour').value,
+      p2Gender: gB
+    };
+    localStorage.setItem('sy_last_hehun', JSON.stringify(d));
+  } catch(e){}
   fetch('/api/create-checkout', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -654,13 +675,47 @@ function createCheckout(btn, tier, price) {
       product: 'hehun',
       tier: tier,
       price: price,
-      token: localStorage.getItem('sy_token') || ''
+      token: localStorage.getItem('sy_token') || '',
+      successUrl: location.origin + '/pages/hehun.html?paid=1'
     })
   }).then(function(r){ return r.json(); }).then(function(data){
     if(data.url) window.location.href = data.url;
     else { showToast('跳转失败，请重试', 'error'); btn.disabled = false; btn.textContent = originalLabel; }
   }).catch(function(){
     showToast('网络异常，请重试', 'error'); btn.disabled = false; btn.textContent = originalLabel;
+  });
+}
+// ── 付费回流 ──
+function handlePaidReturn() {
+  if (location.search.indexOf('paid=1') < 0) return;
+  var saved;
+  try { saved = JSON.parse(localStorage.getItem('sy_last_hehun') || 'null'); } catch(e){}
+  if (!saved) { showToast('请重新输入信息', 'error'); return; }
+  // 清除 ?paid=1
+  if (window.history.replaceState) window.history.replaceState({}, '', '/pages/hehun.html');
+  document.getElementById('lockedCard').style.display = 'none';
+  // 显示加载
+  var wrap = document.getElementById('fullReportWrap');
+  wrap.style.display = 'block';
+  document.getElementById('fullReportContent').textContent = 'AI 正在为你生成完整合婚报告（约30秒）…';
+  fetch('/api/hehun', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      p1Year: saved.p1Year, p1Month: saved.p1Month, p1Day: saved.p1Day,
+      p1Hour: saved.p1Hour || '', p1Gender: saved.p1Gender,
+      p2Year: saved.p2Year, p2Month: saved.p2Month, p2Day: saved.p2Day,
+      p2Hour: saved.p2Hour || '', p2Gender: saved.p2Gender,
+      token: localStorage.getItem('sy_token') || ''
+    })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.reading) {
+      document.getElementById('fullReportContent').innerHTML = d.reading.replace(/\n/g, '<br>').replace(/<br><br>/g, '</p><p>').replace(/(^|<\/p>)/, '<p>');
+    } else if (d.error) {
+      document.getElementById('fullReportContent').textContent = '获取失败：' + d.error;
+    }
+  }).catch(function(){
+    document.getElementById('fullReportContent').textContent = '网络异常，请刷新重试';
   });
 }
 // ── Share functions ──
@@ -714,7 +769,7 @@ function injectDisclaimer(containerId) {
 </script>
 
 <script>
-(function(){var t=localStorage.getItem('sy_theme');if(t==='dark'){document.documentElement.classList.add('dark-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='🌙';}})();
+(function(){var t=localStorage.getItem('sy_theme');if(t==='dark'){document.documentElement.classList.add('dark-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='🌙';}handlePaidReturn();})();
 function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'🌙';localStorage.setItem('sy_theme',l?'dark':'dark');}
 </script>
 </body>

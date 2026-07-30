@@ -200,6 +200,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <div class="report-screen" id="reportScreen"></div>
 
 <!-- QA -->
+<div id="unlockSection" style="display:none;text-align:center;padding:20px 16px 28px;border-top:1px solid rgba(201,168,76,0.12);margin-top:20px">
+  <div style="font-size:32px;margin-bottom:8px">🔒</div>
+  <div style="font-size:14px;color:var(--gold-deep);letter-spacing:0.08em;font-weight:500;margin-bottom:4px">完整姓名报告已锁定</div>
+  <div style="font-size:11px;color:var(--sub);margin-bottom:16px;line-height:1.6">解锁后可查看升级改名建议、完整五格数理<br>和资深姓名师一对一建议</div>
+  <button class="btn-submit" onclick="createCheckout(this)" style="max-width:260px;margin:0 auto">解锁完整报告 · $9.90</button>
+</div>
+
 <div id="qaSection">
   <div class="qa-label">追问姓名</div>
   <div class="qa-row">
@@ -260,8 +267,10 @@ function submitXingming() {
       if (d.error) { showToast(d.error, 'error'); resetAll(); return; }
       if (d.contextId) lastContextId = d.contextId;
       var fullName = surname + givenName;
-      renderReport(d.interpretation || d.report || d.result || d.answer || '暂无回应，请重试', fullName, zodiac, gender);
+      var reportText = d.reading || d.interpretation || d.report || d.result || d.answer || '暂无回应，请重试';
+      renderReport(reportText, fullName, zodiac, gender);
       document.getElementById('qaSection').style.display = 'block';
+      if (!d.hasFullAccess) document.getElementById('unlockSection').style.display = 'block';
     })
     .catch(function(){
       document.getElementById('loadingScreen').style.display = 'none';
@@ -401,6 +410,61 @@ function askQuestion() {
     q.disabled = false;
   });
 }
+function createCheckout(btn) {
+  var original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = '跳转支付…';
+  try {
+    var d = {
+      surname: document.getElementById('surnameInput').value,
+      givenName: document.getElementById('nameInput').value,
+      zodiac: document.getElementById('zodiacSelect').value,
+      gender: gender
+    };
+    localStorage.setItem('sy_last_xingming', JSON.stringify(d));
+  } catch(e){}
+  fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      product: 'bazi_full',
+      price: 9.9,
+      token: localStorage.getItem('sy_token') || '',
+      successUrl: location.origin + '/pages/xingming.html?paid=1'
+    })
+  }).then(function(r){ return r.json(); }).then(function(data){
+    if(data.url) window.location.href = data.url;
+    else { btn.disabled = false; btn.textContent = original; }
+  }).catch(function(){ btn.disabled = false; btn.textContent = original; });
+}
+function handlePaidReturn() {
+  if (location.search.indexOf('paid=1') < 0) return;
+  var saved;
+  try { saved = JSON.parse(localStorage.getItem('sy_last_xingming') || 'null'); } catch(e){}
+  if (!saved) return;
+  if (window.history.replaceState) window.history.replaceState({}, '', '/pages/xingming.html');
+  document.getElementById('unlockSection').style.display = 'none';
+  document.getElementById('qaSection').style.display = 'none';
+  document.getElementById('reportScreen').innerHTML = '<div style="text-align:center;padding:40px 20px;font-size:13px;color:var(--gold-deep);letter-spacing:0.08em">AI 正在为你生成完整姓名报告…</div>';
+  fetch('/api/xingming', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      surname: saved.surname, givenName: saved.givenName,
+      zodiac: saved.zodiac, gender: saved.gender,
+      token: localStorage.getItem('sy_token') || ''
+    })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.reading) {
+      renderReport(d.reading, saved.surname + saved.givenName, saved.zodiac, saved.gender);
+      document.getElementById('qaSection').style.display = 'block';
+    } else if (d.error) {
+      document.getElementById('reportScreen').innerHTML = '<div style="text-align:center;padding:40px 20px;color:#c06060;font-size:12px">获取失败：' + d.error + '</div>';
+    }
+  }).catch(function(){
+    document.getElementById('reportScreen').innerHTML = '<div style="text-align:center;padding:40px 20px;color:#c06060;font-size:12px">网络异常，请刷新重试</div>';
+  });
+}
 </script>
 <script>
 (function(){
@@ -422,7 +486,7 @@ function askQuestion() {
 
 
 <script>
-(function(){var t=localStorage.getItem('sy_theme');if(t==='dark'){document.documentElement.classList.add('dark-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='🌙';}})();
+(function(){var t=localStorage.getItem('sy_theme');if(t==='dark'){document.documentElement.classList.add('dark-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='🌙';}handlePaidReturn();})();
 function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'🌙';localStorage.setItem('sy_theme',l?'dark':'dark');}
 </script>
 </body>

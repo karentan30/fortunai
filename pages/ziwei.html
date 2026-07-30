@@ -212,7 +212,7 @@ body::after {
 
 <div class="submit-wrap">
   <button class="btn-calc" onclick="calcZiwei()">排盘 · 解读命宫</button>
-  <div class="pricing-note">基础命盘免费 · 完整大运流年解读 $19.9</div>
+  <div class="pricing-note">基础命盘免费 · 完整大运流年解读 $19.90</div>
 </div>
 
 <div class="loading-wrap" id="loadingWrap">
@@ -240,7 +240,7 @@ body::after {
   </div>
 
   <div class="cta-section">
-    <button class="btn-deep" onclick="unlockZiwei(this)">深度大运流年 · 完整解读 $19.9</button>
+    <button class="btn-deep" onclick="unlockZiwei(this)">深度大运流年 · 完整解读 $19.90</button>
     <div class="cta-note">含十年大运·每月运势·四大运势趋势图</div>
   </div>
 
@@ -424,20 +424,55 @@ function toggleFortune(head) {
 function unlockZiwei(btn) {
   btn.disabled = true;
   btn.textContent = '跳转支付…';
+  try {
+    var d = {
+      birthYear: document.getElementById('birthYear').value,
+      birthMonth: document.getElementById('birthMonth').value,
+      birthDay: document.getElementById('birthDay').value,
+      birthHour: document.getElementById('birthHour').value,
+      gender: gender
+    };
+    localStorage.setItem('sy_last_ziwei', JSON.stringify(d));
+  } catch(e){}
   fetch('/api/create-checkout', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
       product: 'bazi_full',
       price: 19.9,
-      token: localStorage.getItem('sy_token') || ''
+      token: localStorage.getItem('sy_token') || '',
+      successUrl: location.origin + '/pages/ziwei.html?paid=1'
     })
   }).then(function(r){ return r.json(); }).then(function(data){
     if(data.url) window.location.href = data.url;
-    else { btn.disabled = false; btn.textContent = '深度大运流年 · 完整解读 $19.9'; }
+    else { btn.disabled = false; btn.textContent = '深度大运流年 · 完整解读 $19.90'; }
   }).catch(function(){
     btn.disabled = false;
-    btn.textContent = '深度大运流年 · 完整解读 $19.9';
+    btn.textContent = '深度大运流年 · 完整解读 $19.90';
+  });
+}
+function handlePaidReturn() {
+  if (location.search.indexOf('paid=1') < 0) return;
+  var saved;
+  try { saved = JSON.parse(localStorage.getItem('sy_last_ziwei') || 'null'); } catch(e){}
+  if (!saved) return;
+  if (window.history.replaceState) window.history.replaceState({}, '', '/pages/ziwei.html');
+  document.getElementById('resultWrap').innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--gold-light);font-size:12px;letter-spacing:0.08em">AI 正在为你生成完整紫微斗数深度解读…</div>';
+  fetch('/api/ziwei', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      birthYear: saved.birthYear, birthMonth: saved.birthMonth,
+      birthDay: saved.birthDay, birthHour: saved.birthHour,
+      gender: saved.gender,
+      token: localStorage.getItem('sy_token') || ''
+    })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    var content = d.reading || d.result || d.answer || '暂无回应';
+    document.getElementById('resultWrap').innerHTML = '<div style="padding:20px 16px;font-size:12px;line-height:1.9;color:rgba(232,240,255,0.8);white-space:pre-wrap">'+content.replace(/</g,'&lt;')+'</div>' +
+      '<div style="font-size:10px;color:rgba(201,168,76,0.3);text-align:center;letter-spacing:0.06em;padding:10px 20px">仅供娱乐参考</div>';
+  }).catch(function(){
+    document.getElementById('resultWrap').innerHTML = '<div style="text-align:center;padding:40px 20px;color:#c06060;font-size:12px">网络异常，请刷新重试</div>';
   });
 }
 function injectDisclaimer(containerId) {
@@ -458,7 +493,7 @@ function injectDisclaimer(containerId) {
 
 
 <script>
-(function(){var t=localStorage.getItem('sy_theme');if(t==='light'){document.documentElement.classList.add('light-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='☀️';}})();
+(function(){var t=localStorage.getItem('sy_theme');if(t==='light'){document.documentElement.classList.add('light-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='☀️';}handlePaidReturn();})();
 function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('light-mode');var l=e.classList.contains('light-mode');if(b)b.textContent=l?'☀️':'🌙';localStorage.setItem('sy_theme',l?'light':'dark');}
 </script>
 </body>
