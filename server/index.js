@@ -565,12 +565,12 @@ app.post('/api/stripe-webhook', async (req, res) => {
   let event;
 
   try {
-    if (STRIPE_WEBHOOK_SECRET && stripe) {
-      event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
-    } else {
-      // Fallback: parse raw body
-      event = JSON.parse(req.body.toString());
+    if (!STRIPE_WEBHOOK_SECRET || !stripe) {
+      // 安全: 无 webhook secret 绝不无验签放行, 否则可被伪造 checkout.session.completed 刷单
+      console.error('[WEBHOOK] 缺 STRIPE_WEBHOOK_SECRET, 拒绝未验签事件');
+      return res.status(500).send('Webhook not configured');
     }
+    event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
   } catch (err) {
     console.error('[WEBHOOK SIG ERR]', err.message);
     return res.status(400).send('Webhook signature verification failed');
@@ -1279,6 +1279,11 @@ app.post('/api/geo-fortune', async (req, res) => {
 
 // GET /api/orders — 查看订单（管理员用）
 app.get('/api/orders', (req, res) => {
+  // 安全: 管理员端点, 校验 admin token; 未配置 ADMIN_TOKEN 则一律拒绝(fail closed) — 防全站用户联系方式/愿望泄露
+  const adminToken = process.env.ADMIN_TOKEN;
+  if (!adminToken || req.headers['x-admin-token'] !== adminToken) {
+    return res.status(403).json({ error: 'forbidden' });
+  }
   try {
     const orders = _allOrders();
     res.json({ orders });
@@ -1293,7 +1298,7 @@ app.get('/api/products', (req, res) => {
 });
 
 // POST /api/order — 代供/冥器订单
-app.post('/api/order', (req, res) => {
+app.post('/api/order', rateLimitMiddleware, (req, res) => {
   try {
     const { donorName, contact, wishText, recipientName, temple, timing, total, specialReq } = req.body;
     if (!donorName || !contact) {
@@ -1305,7 +1310,11 @@ app.post('/api/order', (req, res) => {
                      ' 【时间】' + (timing || '未指定') +
                      '\n祝愿词：' + (wishText || '') +
                      (specialReq ? '\n特别要求：' + specialReq : '');
+    // 安全: 金额做合理范围校验, 防前端篡改成 ¥0.01/0 白嫖(真实收款仍须走后端定价的 create-checkout)
     const amount = total ? parseInt(total) : 0;
+    if (!Number.isFinite(amount) || amount < 100 || amount > 10000000) {
+      return res.status(400).json({ error: '订单金额异常' });
+    }
     _insJossOrder(orderNo, 'joss_burning', amount, 'usd', donorName, contact, fullWish, 'pending');
     console.log('[JOSS ORDER]', orderNo, '-', donorName, '- $' + (amount/100).toFixed(2));
     res.json({ success: true, orderNo: orderNo });
