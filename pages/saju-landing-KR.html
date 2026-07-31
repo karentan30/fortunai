@@ -363,37 +363,42 @@ footer .disc{font-size:11px;color:rgba(243,236,224,.4);margin-top:14px;line-heig
 <!-- Kakao JS SDK (실제 배포 시 주석 해제 + JS 앱 키 입력)
 <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4" crossorigin="anonymous"></script>
 -->
+<style>
+.sy-toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:400px;width:90%;padding:12px 16px;border-radius:9px;font-size:13px;text-align:center;font-family:'Apple SD Gothic Neo',sans-serif;background:rgba(58,48,38,0.95);color:#e0c874;pointer-events:none;opacity:0;transition:opacity .25s}
+.sy-toast.show{opacity:1}
+</style>
+<div class="sy-toast" id="syToast"></div>
 <script>
 (function(){var el=document.getElementById('stickyCta');function chk(){if(window.scrollY>560){el.classList.add('show')}else{el.classList.remove('show')}}window.addEventListener('scroll',chk,{passive:true});chk();})();
+
+function syToast(msg){var t=document.getElementById('syToast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},3000);}
 
 /* ── 생년월일 8자리 → 결과 페이지로 이동 ── */
 function goFree(){
   var v = (document.getElementById('birthInput').value || '').trim();
-  if (!/^\d{8}$/.test(v)) { alert('생년월일 8자리를 입력해 주세요 (예: 19930921)'); return; }
-  location.href = 'saju-KR.html?y=' + v.slice(0,4) + '&m=' + parseInt(v.slice(4,6),10) + '&d=' + parseInt(v.slice(6,8),10);
+  if (!/^\d{8}$/.test(v)) { syToast('생년월일 8자리를 입력해 주세요 (예: 19930921)'); return; }
+  location.href = 'saju-KR.html?y=' + v.slice(0,4) + '&m=' + parseInt(v.slice(4,6),10) + '&d=' + parseInt(v.slice(6,8),10) + '&auto=1';
 }
 
-/* ── 카카오 로그인 (배포 시 실제 SDK 연동) ── */
+/* ── 카카오 로그인 → 생년월일 입력으로 유도 (Kakao OAuth는 Phase-1) ── */
 function loginKakao(){
-  // 🔴 Kakao SDK 미연결: 카카오로 바로 시작이 불가 → 안내 후 생년월일 입력으로 유도
-  alert('카카오 로그인은 준비 중이에요. 지금은 생년월일만으로 바로 시작하실 수 있어요!');
-  goFree();
+  syToast('카카오 로그인은 준비 중이에요 ✨ 생년월일로 바로 시작해 주세요');
+  setTimeout(function(){ document.getElementById('birthInput').focus(); }, 600);
 }
 
-/* ── 카카오톡 궁합 공유 (裂变 · Kakao Share API) ── */
+/* ── 카카오톡 궁합 공유 → Web Share API + 클립보드 폴백 ── */
 function shareKakaoGunghap(){
-  // 🔴 Kakao Share SDK 미연결: 안내 후 일반 링크 복사로 대체
-  var url = 'saju-KR.html';
-  var t = document.createElement('textarea');
-  t.value = url; t.style.position='fixed'; t.style.left='-9999px';
-  document.body.appendChild(t); t.select();
-  try { document.execCommand('copy'); alert('링크가 복사됐어요! 카톡에서 친구에게 보내주세요 🎁'); }
-  catch(e){ alert('링크: ' + location.origin + '/' + url); }
-  document.body.removeChild(t);
+  var shareUrl = location.origin + '/pages/saju-KR.html';
+  var shareText = '🎋 무료 사주 한번 봐봐요! 오행·용신·올해 운세 무료로 알 수 있어요';
+  if (navigator.share) {
+    navigator.share({ title: '선연 사주', text: shareText, url: shareUrl }).catch(function(){});
+  } else {
+    navigator.clipboard ? navigator.clipboard.writeText(shareUrl).then(function(){ syToast('링크가 복사됐어요! 카톡에서 친구에게 보내주세요 🎁'); }).catch(function(){ syToast('링크: ' + shareUrl); }) : syToast('링크: ' + shareUrl);
+  }
 }
 
-/* 合规: 移除伪造社会证明/稀缺性脚本(假用户数/假在线/假名额/永不过期倒计时)
-   真实数据接入前不显示任何计数。 */
+/* 합규: 합성 사회적 증거(가짜 사용자 수/온라인/자리 수/영구 카운트다운)는 모두 제거.
+   실제 데이터 연동 전까지 숫자 없이 운영. */
 </script>
 </body>
 </html>

@@ -169,7 +169,7 @@ var month = document.getElementById('month');
 var MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 for (var m = 0; m < 12; m++) month.innerHTML += '<option value="'+(m+1)+'">'+MONTHS[m]+'</option>';
 
-// URL param prefill (from landing page): ?y=1993&m=9&d=21
+// URL param prefill (from landing page): ?y=1993&m=9&d=21&auto=1
 (function(){
   var p = new URLSearchParams(location.search);
   var y = p.get('y'), m = p.get('m'), d = p.get('d');
@@ -177,6 +177,11 @@ for (var m = 0; m < 12; m++) month.innerHTML += '<option value="'+(m+1)+'">'+MON
     if (ySel.querySelector('option[value="'+y+'"]')) ySel.value = y;
     if (month.querySelector('option[value="'+m+'"]')) month.value = m;
     if (dSel.querySelector('option[value="'+d+'"]')) dSel.value = d;
+    if (p.get('auto') === '1') {
+      var consent = document.getElementById('consentCheck');
+      if (consent) consent.checked = true;
+      setTimeout(function(){ generate(); }, 350);
+    }
   }
 })();
 
