@@ -695,23 +695,36 @@ app.post('/api/create-checkout', rateLimitMiddleware, async (req, res) => {
       unitAmount = prod.amount;
     }
 
+    // Stripe Price IDs (Capstone account) — 订阅产品用预建Price ID，Stripe自动管续费
+    const STRIPE_PRICE_IDS = {
+      'member_monthly':  'price_1TzAjGEAXrE2YgcrRzUY78Ko',
+      'member_yearly':   'price_1TzAjQEAXrE2YgcrHYurEL8Z',
+      'member_quarterly':'price_1TzAjQEAXrE2Ygcrr8WBjCXa',
+      'bazi_full_krw':   'price_1TzAjREAXrE2YgcrLqhHWUtf',
+    };
+    const isSubscription = ['daily_sub','member_monthly','member_yearly','member_quarterly','member_3year'].includes(product);
+    const priceId = isKR && product === 'bazi_full'
+      ? STRIPE_PRICE_IDS['bazi_full_krw']
+      : STRIPE_PRICE_IDS[product];
+
+    const lineItem = priceId
+      ? { price: priceId, quantity: 1 }
+      : { price_data: {
+            currency: payCurrency,
+            product_data: { name: prod.name, description: prod.desc },
+            unit_amount: unitAmount,
+            recurring: isSubscription ? (
+              product === 'member_yearly'    ? { interval: 'year' } :
+              product === 'member_quarterly' ? { interval: 'month', interval_count: 3 } :
+              product === 'member_3year'     ? { interval: 'year',  interval_count: 3 } :
+                                               { interval: 'month' }
+            ) : undefined,
+          }, quantity: 1 };
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: payMethods,
-      line_items: [{
-        price_data: {
-          currency: payCurrency,
-          product_data: { name: prod.name, description: prod.desc },
-          unit_amount: unitAmount,
-          recurring: (product === 'daily_sub' || product === 'member_monthly' || product === 'member_yearly' || product === 'member_quarterly' || product === 'member_3year') ? (
-            product === 'member_yearly'    ? { interval: 'year' } :
-            product === 'member_quarterly' ? { interval: 'month', interval_count: 3 } :
-            product === 'member_3year'     ? { interval: 'year',  interval_count: 3 } :
-                                             { interval: 'month' }
-          ) : undefined,
-        },
-        quantity: 1,
-      }],
-      mode: (product === 'daily_sub' || product === 'member_monthly' || product === 'member_yearly' || product === 'member_quarterly' || product === 'member_3year') ? 'subscription' : 'payment',
+      line_items: [lineItem],
+      mode: isSubscription ? 'subscription' : 'payment',
       success_url: successUrl || FRONTEND_URL + '/api/success?session_id={CHECKOUT_SESSION_ID}&product=' + product,
       cancel_url: cancelUrl || FRONTEND_URL + '/pages/' + product.split('_')[0] + '.html',
       customer_email: email || undefined,
