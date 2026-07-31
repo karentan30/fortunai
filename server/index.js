@@ -697,14 +697,18 @@ app.post('/api/create-checkout', rateLimitMiddleware, async (req, res) => {
 
     // Stripe Price IDs (Capstone account) — 订阅产品用预建Price ID，Stripe自动管续费
     const STRIPE_PRICE_IDS = {
-      'member_monthly':  'price_1TzAjGEAXrE2YgcrRzUY78Ko',
-      'member_yearly':   'price_1TzAjQEAXrE2YgcrHYurEL8Z',
-      'member_quarterly':'price_1TzAjQEAXrE2Ygcrr8WBjCXa',
-      'bazi_full_krw':   'price_1TzAjREAXrE2YgcrLqhHWUtf',
+      'member_monthly':      'price_1TzAjGEAXrE2YgcrRzUY78Ko',
+      'member_yearly':       'price_1TzAjQEAXrE2YgcrHYurEL8Z',
+      'member_quarterly':    'price_1TzAjQEAXrE2Ygcrr8WBjCXa',
+      'bazi_full_krw':       'price_1TzAjREAXrE2YgcrLqhHWUtf',
+      'bazi_vip_krw':        'price_1TzArhEAXrE2YgcrIT1fwmGX',
+      'hehun_krw':           'price_1TzAriEAXrE2YgcrWEj4Azdn',
+      'member_monthly_krw':  'price_1TzAriEAXrE2YgcreCmvJKGf',
     };
     const isSubscription = ['daily_sub','member_monthly','member_yearly','member_quarterly','member_3year'].includes(product);
-    const priceId = isKR && product === 'bazi_full'
-      ? STRIPE_PRICE_IDS['bazi_full_krw']
+    const krwKey = isKR ? product + '_krw' : null;
+    const priceId = (krwKey && STRIPE_PRICE_IDS[krwKey])
+      ? STRIPE_PRICE_IDS[krwKey]
       : STRIPE_PRICE_IDS[product];
 
     const lineItem = priceId
