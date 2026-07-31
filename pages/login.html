@@ -151,6 +151,8 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <script>
 var BASE = ''; // same-origin, adjust if needed
 var REDIRECT_URL = new URLSearchParams(window.location.search).get('redirect') || 'account.html';
+// 捕获邀请码并存 localStorage（供注册时发给后端）
+(function(){ var r = new URLSearchParams(window.location.search).get('ref'); if(r) localStorage.setItem('sy_ref_code', r.trim().toUpperCase()); })();
 
 function showToast(msg, type) {
   var t = document.getElementById('toast');
@@ -230,7 +232,7 @@ function handleRegister() {
   fetch(BASE + '/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: email, password: password })
+    body: JSON.stringify({ email: email, password: password, ref: localStorage.getItem('sy_ref_code') || undefined })
   })
   .then(function(r) {
     return r.json().then(function(data) { return { status: r.status, data: data }; });
