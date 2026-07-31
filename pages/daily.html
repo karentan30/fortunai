@@ -615,7 +615,7 @@ function getDailyReading() {
 }
 
 function showStreak(count) {
-  if (!count || count < 2) return;
+  if (!count || count < 1) return;
   var el = document.getElementById('streakBadge');
   if (!el) {
     el = document.createElement('div');
@@ -634,11 +634,19 @@ function loadTomorrowTeaser() {
   fetch('/api/daily-teaser?y=' + y + '&m=' + m + '&d=' + d)
     .then(function(r){ return r.json(); })
     .then(function(data){
+      var el = document.getElementById('tomorrowTeaser');
+      var txt = document.getElementById('tomorrowText');
       if (data && data.teaser) {
-        document.getElementById('tomorrowText').textContent = data.teaser;
-        document.getElementById('tomorrowTeaser').style.display = 'block';
+        txt.textContent = data.teaser;
+      } else {
+        txt.textContent = '明日运势更新中 · 明天再来';
       }
-    }).catch(function(){});
+      el.style.display = 'block';
+    }).catch(function(){
+      var el = document.getElementById('tomorrowTeaser');
+      var txt = document.getElementById('tomorrowText');
+      if (el && txt) { txt.textContent = '明日运势更新中 · 明天再来'; el.style.display = 'block'; }
+    });
 }
 
 function subscribeDaily() {
