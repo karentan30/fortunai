@@ -43,6 +43,40 @@
     }).then(function(r){ return r.json(); });
   }
 
+  // ── 复制文本（现代 API + 降级）──
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      return navigator.clipboard.writeText(text).then(function(){ return true; })
+        .catch(function(){ return legacyCopy(text); });
+    }
+    return Promise.resolve(legacyCopy(text));
+  }
+  function legacyCopy(text) {
+    var t = document.createElement('textarea');
+    t.value = text;
+    t.style.position = 'fixed'; t.style.left = '-9999px'; t.style.top = '0';
+    document.body.appendChild(t); t.select();
+    try { document.execCommand('copy'); document.body.removeChild(t); return true; }
+    catch(e) { document.body.removeChild(t); return false; }
+  }
+
+  // ── 邀请码 ref 拼接 + 捕获（裂变可归因）──
+  function getRefCode() {
+    return localStorage.getItem('sy_ref_code') || '';
+  }
+  function withRef(url) {
+    var ref = getRefCode();
+    if (!ref) return url;
+    return url + (url.indexOf('?') >= 0 ? '&' : '?') + 'ref=' + encodeURIComponent(ref);
+  }
+  function captureRef() {
+    try {
+      var r = new URLSearchParams(location.search).get('ref');
+      if (r) localStorage.setItem('sy_ref_code', r);
+    } catch(e) {}
+  }
+
   window.SY = { showToast: showToast, initTheme: initTheme, toggleTheme: toggleTheme,
-                storePaidInput: storePaidInput, readPaidInput: readPaidInput, api: api };
+                storePaidInput: storePaidInput, readPaidInput: readPaidInput, api: api,
+                copyText: copyText, getRefCode: getRefCode, withRef: withRef, captureRef: captureRef };
 })(window);

@@ -162,7 +162,7 @@ function selG(el, g) {
 }
 // year/day populate
 var ySel = document.getElementById('year');
-for (var y = 2025; y >= 1925; y--) ySel.innerHTML += '<option value="'+y+'">'+y+'</option>';
+for (var y = new Date().getFullYear(); y >= 1925; y--) ySel.innerHTML += '<option value="'+y+'">'+y+'</option>';
 var dSel = document.getElementById('day');
 for (var d = 1; d <= 31; d++) dSel.innerHTML += '<option value="'+d+'">'+d+'</option>';
 var month = document.getElementById('month');
@@ -183,6 +183,9 @@ for (var m = 0; m < 12; m++) month.innerHTML += '<option value="'+(m+1)+'">'+MON
 var lastInput = null;
 function generate(btn) {
   btn = btn || document.getElementById('genBtn');
+  // 🔴 P0-5 合规: 19세 이상 + 동의 필수 (안 하면 생성 불가)
+  var consent = document.getElementById('consentCheck');
+  if (consent && !consent.checked) { toast('서비스 이용 동의가 필요해요. 체크 후 시작해 주세요', 'error'); return; }
   var y = parseInt(document.getElementById('year').value);
   var m = parseInt(document.getElementById('month').value);
   var d = parseInt(document.getElementById('day').value);

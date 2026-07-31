@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#5bbfa0">
+<meta name="description" content="善缘 · AI命理 · AI灵性分析，仅供娱乐参考">
 <title>善缘 · AI命理</title>
 <link rel="icon" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -67,6 +68,7 @@ body{max-width:420px;margin:0 auto;display:flex;flex-direction:column;padding:0}
 var msgs = [];
 var sending = false;
 var freeRemaining = 5;
+var paywallShown = false;
 
 function updateFreeCounter(n) {
   freeRemaining = (n !== undefined) ? n : Math.max(0, freeRemaining - 1);
@@ -78,6 +80,9 @@ function updateFreeCounter(n) {
 }
 
 function addPaywallCard() {
+  if (paywallShown) return; paywallShown = true;  // P0-6 防重复叠加
+  document.getElementById('input').disabled = true;
+  document.getElementById('input').placeholder = '开通会员后继续提问';
   var area = document.getElementById('chatArea');
   var div = document.createElement('div');
   div.style.cssText = 'text-align:center;padding:20px 16px;margin:12px 0;background:var(--card);border:1px solid rgba(91,191,160,0.15);border-radius:12px';

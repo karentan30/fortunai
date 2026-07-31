@@ -168,6 +168,13 @@ const UNLOCK_BY_CATEGORY = {
   'member': ['member_monthly','member_yearly','member_lifetime','member_daily','member_quarterly','member_3year']
 };
 // 付费墙: 判断请求用户是否已付费解锁某类完整报告(精确产品白名单匹配)
+// 🔴 续费修复(0731): 订阅类产品(member_*/daily_sub)加 expires_at 到期判断 —
+//    订阅到期后不再解锁, 用户需续费。一次性产品(bazi_full等)永久解锁。
+const SUBSCRIBE_PRODUCTS = ['member_monthly','member_yearly','member_quarterly','member_3year','member_daily','daily_sub'];
+function _isExpired(o){
+  if (!o.expires_at) return false;               // 无到期日 = 永久(一次性产品/老数据)
+  return Date.parse(o.expires_at) < Date.now();  // 已过期为 true
+}
 function hasFullAccess(req, productKeys){
   try{
     var auth = req.headers['authorization'] || '';
@@ -178,6 +185,7 @@ function hasFullAccess(req, productKeys){
     var orders = getUserOrders.all(t.user_id) || []; // 已过滤 payment_status==='completed'
     return orders.some(function(o){
       var prod = String(o.product||'');
+      if (_isExpired(o)) return false;           // 订阅已到期 → 不解锁
       return productKeys.some(function(k){
         var allowed = UNLOCK_BY_CATEGORY[k];
         return allowed ? allowed.indexOf(prod) >= 0 : false;
@@ -199,6 +207,16 @@ function gateMessages(req, keys, messages, fullMax){
   return { messages: out, maxTokens: full ? fullMax : 3500, full: full };
 }
 function _updOrder(s,oNo){const o=_M.orders.find(x=>x.order_no===oNo);if(o){o.payment_status=s;_persist();}}
+function _updOrderExpiry(oNo, expIso){const o=_M.orders.find(x=>x.order_no===oNo);if(o){o.expires_at=expIso;o.payment_status='completed';_persist();}}
+// 订阅续费: 若已有该 product 的 completed 订单则延后到期日, 否则新建成交订单(微信/支付宝侧订阅)
+function _setOrExtendSub(pid, email, expIso){
+  const existing = _M.orders.find(x=>x.product===pid && x.payment_status==='completed' && x.user_id===null && x.contact===email);
+  if(existing){ existing.expires_at = expIso; _persist(); return; }
+  _M.orders.push({id:_M._id.o++, order_no:'SY-SUB-'+Date.now()+'-'+crypto.randomBytes(3).toString('hex'),
+    product:pid, amount:0, currency:'usd', user_id:null, donor_name:'', contact:email, wish_text:'',
+    stripe_session_id:'', payment_status:'completed', expires_at:expIso, created_at:new Date().toISOString()});
+  _persist();
+}
 // ── 中国支付(微信/支付宝)订单 helpers ── 复用同一套 _M.orders 结构 + _persist() 落盘
 function _findOrder(oNo){ return _M.orders.find(x=>x.order_no===oNo); }
 // 新建 pending 订单(微信/支付宝共用)。amount=分(与 PRODUCTS 一致)。
@@ -277,6 +295,9 @@ const PRODUCTS = {
   daliuren:    { name: '大六壬预测',      amount: 990,  desc: '三传四课' },
   qimen:       { name: '奇门遁甲',        amount: 990,  desc: '八门九星' },
   bazi_trial:  { name: '体验命盘',        amount: 199,  desc: '快速简批' },
+  joss_basic:  { name: '代烧·基础套餐',   amount: 4990, desc: '标准纸钱+元宝+祈福' },
+  joss_premium:{ name: '代烧·尊享套餐',   amount: 24900, desc: '豪邸+纸钱+法器+视频' },
+  joss_supreme:{ name: '代烧·至尊套餐',   amount: 249900, desc: '全套冥器+法事+直播' },
 };
 
 // ── Inspiration quotes library ──
@@ -607,11 +628,11 @@ app.post('/api/create-checkout', rateLimitMiddleware, async (req, res) => {
           currency: payCurrency,
           product_data: { name: prod.name, description: prod.desc },
           unit_amount: unitAmount,
-          recurring: product === 'daily_sub' ? { interval: 'month' } : undefined,
+          recurring: (product === 'daily_sub' || product === 'member_monthly' || product === 'member_yearly' || product === 'member_quarterly' || product === 'member_3year') ? { interval: product === 'member_yearly' ? 'year' : product === 'member_quarterly' ? 'month' : 'month' } : undefined,
         },
         quantity: 1,
       }],
-      mode: product === 'daily_sub' ? 'subscription' : 'payment',
+      mode: (product === 'daily_sub' || product === 'member_monthly' || product === 'member_yearly' || product === 'member_quarterly' || product === 'member_3year') ? 'subscription' : 'payment',
       success_url: successUrl || FRONTEND_URL + '/api/success?session_id={CHECKOUT_SESSION_ID}',
       cancel_url: cancelUrl || FRONTEND_URL + '/pages/' + product.split('_')[0] + '.html',
       customer_email: email || undefined,
@@ -657,6 +678,21 @@ app.post('/api/stripe-webhook', async (req, res) => {
         const orderNo = session.metadata?.order_no;
         if (orderNo) {
           _updOrder('completed', orderNo);
+          // 订阅首期: 从 Stripe 会话取到期时间写入订单, 供 hasFullAccess 判断
+          const subId = session.subscription;
+          const mode = session.mode;
+          if (subId && stripe) {
+            try {
+              stripe.subscriptions.retrieve(subId).then(function(sub){
+                const prod = session.metadata?.product || '';
+                if (SUBSCRIBE_PRODUCTS.indexOf(prod) >= 0 && sub.current_period_end) {
+                  _updOrderExpiry(orderNo, new Date(sub.current_period_end * 1000).toISOString());
+                }
+              }).catch(function(e){ console.error('[WEBHOOK sub retrieve]', e.message); });
+            } catch(e){ console.error('[WEBHOOK sub]', e.message); }
+          } else if (mode === 'subscription') {
+            console.log('[PAYMENT] subscription checkout without sub id, order ' + orderNo);
+          }
           console.log(`[PAYMENT] ${orderNo} — completed`);
         }
         break;
@@ -669,9 +705,47 @@ app.post('/api/stripe-webhook', async (req, res) => {
         }
         break;
       }
-      case 'customer.subscription.created': {
-        const sub = event.data.object;
-        _insSub(sub.customer_email || '', sub.id);
+      case 'customer.subscription.created':
+      case 'invoice.payment_succeeded': {
+        // 订阅创建 / 每期续费成功 → 记录订阅 + 更新到期
+        const obj = event.data.object;
+        const subId = obj.subscription || obj.id || '';
+        const email = obj.customer_email || obj.customer_email || '';
+        const periodEnd = obj.current_period_end ? obj.current_period_end * 1000 : null;
+        if (subId && stripe && periodEnd) {
+          try {
+            _insSub(email, subId);
+            // 找到对应用户的该订阅订单, 更新到期日(续费延期)
+            const pending = _M.orders.filter(function(o){ return o.stripe_subscription_id === subId || (o.metadata && o.metadata.sub_id === subId); });
+            // 若无已有订阅订单, 尝试从 line_items 反查 product 并 upsert
+            if (!pending.length) {
+              stripe.invoices.retrieve(obj.invoice || (obj.id || ''), { expand:['lines.data.price.product'] }).then(function(inv){
+                const line = inv.lines && inv.lines.data && inv.lines.data[0];
+                const prodName = line && line.price && line.price.product && (line.price.product.name || '');
+                if (prodName) {
+                  // 映射产品名到 product id
+                  let pid = null;
+                  Object.keys(PRODUCTS).forEach(function(k){ if (PRODUCTS[k].name === prodName) pid = k; });
+                  if (pid) _setOrExtendSub(pid, email, new Date(periodEnd).toISOString());
+                }
+              }).catch(function(e){ console.error('[WEBHOOK invoice expand]', e.message); });
+            }
+          } catch(e){ console.error('[WEBHOOK sub created]', e.message); }
+        }
+        break;
+      }
+      case 'customer.subscription.deleted':
+      case 'invoice.payment_failed': {
+        // 订阅取消/扣款失败 → 立即过期, 停止解锁
+        const obj = event.data.object;
+        const subId = obj.subscription || obj.id || '';
+        _M.orders.forEach(function(o){
+          if (o.stripe_subscription_id === subId && o.payment_status === 'completed') {
+            o.expires_at = new Date().toISOString();  // 立刻到期
+          }
+        });
+        _persist();
+        console.log('[SUB] cancelled/failed subId=' + subId);
         break;
       }
     }

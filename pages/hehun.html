@@ -9,7 +9,8 @@
 <meta name="description" content="善缘合婚配对 — AI合婚分析，双方八字五行互补度、性格匹配度、最佳结婚年份">
 <meta property="og:title" content="善缘 · 合婚配对">
 <meta property="og:description" content="善缘合婚配对 — AI合婚分析，双方八字五行互补度、性格匹配度、最佳结婚年份">
-<meta property="og:image" content="/favicon.svg">
+<meta property="og:image" content="/og-card.png">
+<meta property="og:url" content="https://shenyuan.mylumee.cn/">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="善缘 · 合婚配对">
@@ -719,9 +720,24 @@ function handlePaidReturn() {
     document.getElementById('fullReportContent').textContent = '网络异常，请刷新重试';
   });
 }
-// ── Share functions ──
+// ── Share functions (拼 ref 邀请码 → 分享可归因) ──
+function getShareUrl(base) {
+  // 分享链接带上自己的邀请码, 让裂变可归因
+  var ref = localStorage.getItem('sy_ref_code') || '';
+  if (!ref) return base;
+  var sep = base.indexOf('?') >= 0 ? '&' : '?';
+  return base + sep + 'ref=' + ref;
+}
+function captureRefParam() {
+  // 被分享来的用户: 捕获 ?ref= 存入 localStorage, 注册时提交(后端已支持)
+  try {
+    var r = new URLSearchParams(location.search).get('ref');
+    if (r) localStorage.setItem('sy_ref_code', r);
+  } catch(e) {}
+}
+captureRefParam();
 function shareWechat(url) {
-  if (!url) url = window.location.href;
+  if (!url) url = getShareUrl(window.location.href);
   var t = document.createElement('textarea');
   t.value = '我们的八字合婚结果出来了，来测测我俩有多合？\n' + url;
   t.style.position = 'fixed'; t.style.left = '-9999px';
@@ -731,12 +747,12 @@ function shareWechat(url) {
   document.body.removeChild(t);
 }
 function shareTwitter(url) {
-  if (!url) url = window.location.href;
+  if (!url) url = getShareUrl(window.location.href);
   var text = encodeURIComponent('我们的八字合婚结果出来了，来测测你俩有多合？');
   window.open('https://twitter.com/intent/tweet?text='+text+'&url='+encodeURIComponent(url), '_blank');
 }
 function shareCopyLink(url) {
-  if (!url) url = window.location.href;
+  if (!url) url = getShareUrl(window.location.href);
   var t = document.createElement('textarea');
   t.value = url;
   t.style.position = 'fixed'; t.style.left = '-9999px';
