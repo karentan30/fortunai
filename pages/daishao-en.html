@@ -461,6 +461,8 @@ function updateSummary() {
 
 document.getElementById('recipientName').addEventListener('input', updateSummary);
 document.getElementById('donorName').addEventListener('input', updateSummary);
+// 默认选中 Premium（最高转化锚点）
+selectTier('premium', 249.00);
 
 function submitOrder() {
   var recipient = document.getElementById('recipientName').value.trim();
@@ -473,6 +475,8 @@ function submitOrder() {
   var btn = document.getElementById('submitBtn');
   btn.disabled = true;
   btn.textContent = 'Redirecting to payment…';
+  var loader = document.getElementById('loader');
+  if (loader) loader.classList.add('show');
   var totalPrice = selectedPrice + selectedCarPrice + selectedElecTotal + selectedServantPrice + selectedThaiTotal;
   var extras = [];
   if (selectedTier !== 'basic') extras.push(selectedArea + 'sqm mansion', selectedCar + (selectedCarPrice>0?'(+$'+selectedCarPrice+')':''));
@@ -492,6 +496,7 @@ function submitOrder() {
       successUrl: location.origin + '/pages/daishao-en.html?paid=1'
     })
   }).then(function(r){ return r.json(); }).then(function(data){
+    if (loader) loader.classList.remove('show');
     if (data.url) {
       fetch('/api/order', { method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({donorName:donor, contact, wishText:wish+' | '+extras.join('; '),
@@ -500,7 +505,7 @@ function submitOrder() {
       }).catch(function(){});
       window.location.href = data.url;
     } else { showToast('Payment redirect failed', 'error'); btn.disabled = false; btn.textContent = 'Place Order'; }
-  }).catch(function(){ showToast('Network error, please retry', 'error'); btn.disabled = false; btn.textContent = 'Place Order'; });
+  }).catch(function(){ if (loader) loader.classList.remove('show'); showToast('Network error, please retry', 'error'); btn.disabled = false; btn.textContent = 'Place Order'; });
 }
 
 function handlePaidReturn() {
