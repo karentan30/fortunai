@@ -324,25 +324,26 @@ function tryApplyReferral(refCode, inviteeId){
 }
 
 // ── Product prices (cents) ──
+// amount=USD分; amountCny=人民币分; amountKrw=韩元整数
 const PRODUCTS = {
-  bazi_basic:   { name: '基础命盘',         amount: 990,  desc: '日主+五行+今年运势' },
-  bazi_full:    { name: '完整命盘',         amount: 1990, desc: '六维+十年大运+流月', amountKrw: 9900 },
-  bazi_vip:     { name: '深度批命',         amount: 3990, desc: '大师级·终身档案', amountKrw: 19900 },
-  daily_sub:    { name: '每日天机订阅',     amount: 690,  desc: '月订阅·五行+Affirmation' },
-  tarot:        { name: '塔罗占卜',         amount: 390,  desc: 'AI塔罗解读' },
-  hehun:        { name: '合婚配对',         amount: 1990, desc: '双方八字合婚分析', amountKrw: 4900 },
-  member_monthly:  { name: '月度会员',      amount: 690,  desc: '全部AI占算无限次·完整报告不锁定' },
-  member_yearly:   { name: '年度会员',      amount: 4900, desc: '全年畅用·大师语音·水晶挂件' },
-  member_lifetime: { name: '终身会员',      amount: 18800, desc: '永久畅享·大师1对1·专属档案' },
-  member_daily:     { name: '日会员',       amount: 299,  desc: '24小时无限使用' },
-  member_quarterly: { name: '季会员',       amount: 1499, desc: '三个月畅享' },
-  member_3year:     { name: '三年会员',     amount: 3999, desc: '超值三年' },
-  daliuren:    { name: '大六壬预测',      amount: 990,  desc: '三传四课' },
-  qimen:       { name: '奇门遁甲',        amount: 990,  desc: '八门九星' },
-  bazi_trial:  { name: '体验命盘',        amount: 199,  desc: '快速简批' },
-  joss_basic:  { name: '代烧·基础套餐',   amount: 4990, desc: '标准纸钱+元宝+祈福' },
-  joss_premium:{ name: '代烧·尊享套餐',   amount: 24900, desc: '豪邸+纸钱+法器+视频' },
-  joss_supreme:{ name: '代烧·至尊套餐',   amount: 249900, desc: '全套冥器+法事+直播' },
+  bazi_basic:   { name: '基础命盘',         amount: 990,   amountCny: 1990,  desc: '日主+五行+今年运势' },
+  bazi_full:    { name: '完整命盘',         amount: 1990,  amountCny: 3990,  desc: '六维+十年大运+流月', amountKrw: 9900 },
+  bazi_vip:     { name: '深度批命',         amount: 3990,  amountCny: 7990,  desc: '大师级·终身档案', amountKrw: 19900 },
+  daily_sub:    { name: '每日天机订阅',     amount: 690,   amountCny: 1990,  desc: '月订阅·五行+Affirmation' },
+  tarot:        { name: '塔罗占卜',         amount: 390,   amountCny: 990,   desc: 'AI塔罗解读' },
+  hehun:        { name: '合婚配对',         amount: 1990,  amountCny: 3990,  desc: '双方八字合婚分析', amountKrw: 4900 },
+  member_monthly:  { name: '月度会员',      amount: 690,   amountCny: 1990,  desc: '全部AI占算无限次·完整报告不锁定' },
+  member_yearly:   { name: '年度会员',      amount: 4900,  amountCny: 9900,  desc: '全年畅用·大师语音·水晶挂件' },
+  member_lifetime: { name: '终身会员',      amount: 18800, amountCny: 68800, desc: '永久畅享·大师1对1·专属档案' },
+  member_daily:     { name: '日会员',       amount: 299,   amountCny: 990,   desc: '24小时无限使用' },
+  member_quarterly: { name: '季会员',       amount: 1499,  amountCny: 6900,  desc: '三个月畅享' },
+  member_3year:     { name: '三年会员',     amount: 3999,  amountCny: 9900,  desc: '超值三年' },
+  daliuren:    { name: '大六壬预测',      amount: 990,   amountCny: 2900,  desc: '三传四课' },
+  qimen:       { name: '奇门遁甲',        amount: 990,   amountCny: 2900,  desc: '八门九星' },
+  bazi_trial:  { name: '体验命盘',        amount: 199,   amountCny: 990,   desc: '快速简批' },
+  joss_basic:  { name: '代烧·基础套餐',   amount: 4990,  amountCny: 19900, desc: '标准纸钱+元宝+祈福' },
+  joss_premium:{ name: '代烧·尊享套餐',   amount: 24900, amountCny: 99900, desc: '豪邸+纸钱+法器+视频' },
+  joss_supreme:{ name: '代烧·至尊套餐',   amount: 249900, amountCny: 999900, desc: '全套冥器+法事+直播' },
 };
 
 // ── Inspiration quotes library ──
@@ -658,6 +659,19 @@ app.post('/api/create-checkout', rateLimitMiddleware, async (req, res) => {
 
     const orderNo = 'SY-' + Date.now() + '-' + crypto.randomBytes(3).toString('hex');
 
+    // 服务端 IP 地理检测: CF-IPCountry 优先（HK 服务器经 Cloudflare/Caddy）
+    var ipCountry = (req.headers['cf-ipcountry'] || req.headers['x-vercel-ip-country'] || '').toUpperCase();
+    var isCN = ipCountry === 'CN';
+    // 国内用户 → 微信/支付宝（WeChat hub），禁止走 Stripe
+    if (isCN) {
+      return res.json({
+        channel: 'cn',
+        product,
+        amountCny: prod.amountCny || prod.amount,
+        message: '国内用户请使用微信支付或支付宝',
+      });
+    }
+
     // 韩国收款: region=kr → KRW + 韩国本地支付方式。
     // 🔴 修复(0731): 当前生产 Stripe 是美国个人号, 传 kakao_pay 直接报 invalid(美国号无资格)。
     //   先用 KRW 卡支付 + Stripe 跨境汇率转美元结算跑通验证; KakaoPay 等香港 Stripe 下来后
@@ -698,7 +712,7 @@ app.post('/api/create-checkout', rateLimitMiddleware, async (req, res) => {
         quantity: 1,
       }],
       mode: (product === 'daily_sub' || product === 'member_monthly' || product === 'member_yearly' || product === 'member_quarterly' || product === 'member_3year') ? 'subscription' : 'payment',
-      success_url: successUrl || FRONTEND_URL + '/api/success?session_id={CHECKOUT_SESSION_ID}',
+      success_url: successUrl || FRONTEND_URL + '/api/success?session_id={CHECKOUT_SESSION_ID}&product=' + product,
       cancel_url: cancelUrl || FRONTEND_URL + '/pages/' + product.split('_')[0] + '.html',
       customer_email: email || undefined,
       metadata: { order_no: orderNo, product, donor_name: donorName || '', contact: contact || '' }
@@ -833,31 +847,73 @@ app.post('/api/stripe-webhook', async (req, res) => {
   }
 });
 
-// GET /api/success — Payment success page (lightweight HTML)
+// GET /api/success — Payment success page (product-specific with auto-redirect)
 app.get('/api/success', (req, res) => {
-  const sessionId = req.query.session_id || '';
   const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>支付成功 · 善缘</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:#0e0a04;font-family:'Noto Serif SC','Georgia',serif;display:flex;justify-content:center;align-items:center;min-height:100vh;color:rgba(255,245,220,0.9)}
-  .card{background:#170e06;border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:40px 32px;max-width:360px;text-align:center;margin:20px}
-  .icon{font-size:48px;margin-bottom:16px}
-  h1{font-size:18px;letter-spacing:0.16em;color:#c9a84c;margin-bottom:8px;font-weight:400}
-  p{font-size:12px;color:rgba(255,245,220,0.5);letter-spacing:0.08em;line-height:1.8;margin-bottom:24px}
-  .btn{display:inline-block;padding:12px 32px;background:linear-gradient(135deg,#8a6420,#c9a84c,#e8d08a);border:none;border-radius:4px;color:#0e0a04;font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:0.16em;cursor:pointer;text-decoration:none}
-  .gold-line{width:50px;height:1px;background:linear-gradient(90deg,transparent,#c9a84c,transparent);margin:16px auto}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0e0a04;font-family:'Noto Serif SC','Georgia',serif;display:flex;justify-content:center;align-items:center;min-height:100vh;color:rgba(255,245,220,0.9);overflow:hidden}
+.particles{position:fixed;inset:0;pointer-events:none;z-index:0}
+.p{position:absolute;width:2px;height:2px;border-radius:50%;background:rgba(201,168,76,0.6);animation:rise var(--d) var(--delay) infinite}
+@keyframes rise{0%{transform:translateY(100vh) scale(0);opacity:0}20%{opacity:1}80%{opacity:0.6}100%{transform:translateY(-20px) scale(1.5);opacity:0}}
+.card{position:relative;z-index:1;background:linear-gradient(135deg,#170e06,#1a1005);border:1px solid rgba(201,168,76,0.25);border-radius:16px;padding:48px 32px;max-width:380px;width:90%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6),0 0 0 1px rgba(201,168,76,0.08)}
+.success-ring{width:80px;height:80px;border-radius:50%;background:radial-gradient(circle at 35% 30%,rgba(201,168,76,0.4),rgba(140,100,32,0.3));border:2px solid rgba(201,168,76,0.4);display:flex;align-items:center;justify-content:center;font-size:36px;margin:0 auto 20px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,0.3)}50%{box-shadow:0 0 0 12px rgba(201,168,76,0)}}
+.gold-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,#c9a84c,transparent);margin:16px auto}
+h1{font-size:20px;letter-spacing:0.2em;color:#c9a84c;margin-bottom:6px;font-weight:400}
+.subtitle{font-size:12px;color:rgba(255,245,220,0.45);letter-spacing:0.12em;margin-bottom:20px}
+.benefit-box{background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:8px;padding:14px 16px;margin-bottom:24px;text-align:left}
+.benefit-item{font-size:12px;color:rgba(255,245,220,0.7);padding:4px 0;letter-spacing:0.06em;display:flex;align-items:center;gap:8px}
+.benefit-item::before{content:'✦';color:#c9a84c;font-size:9px;flex-shrink:0}
+.btn-primary{display:block;width:100%;padding:14px 0;background:linear-gradient(135deg,#8a6420,#c9a84c,#e8d08a);border:none;border-radius:4px;color:#0e0a04;font-family:'Noto Serif SC',serif;font-size:14px;letter-spacing:0.18em;cursor:pointer;text-decoration:none;margin-bottom:10px;font-weight:500}
+.countdown{font-size:11px;color:rgba(255,245,220,0.3);letter-spacing:0.08em;margin-top:12px}
 </style></head><body>
+<div class="particles" id="particles"></div>
 <div class="card">
-  <div class="icon">🙏</div>
-  <h1>功德圆满</h1>
+  <div class="success-ring" id="successIcon">🙏</div>
+  <h1 id="successTitle">功德圆满</h1>
   <div class="gold-line"></div>
-  <p>您的善款已成功支付。<br>天机已启，自有因缘。</p>
-  <a class="btn" href="/">返回首页</a>
+  <p class="subtitle" id="successSub">支付成功 · 天机已启</p>
+  <div class="benefit-box" id="benefitBox"></div>
+  <a class="btn-primary" id="ctaBtn" href="/">前往查看</a>
+  <p class="countdown" id="countdown">3秒后自动跳转…</p>
 </div>
 <script>
-  if (window.opener) { window.opener.postMessage('payment_complete', '*'); }
+const CONFIGS={
+  bazi_full:{icon:'🔮',title:'命盘已解锁',sub:'完整八字命理 · 即刻查阅',benefits:['六维完整命盘报告（5000+字）','十年大运逐年解析','流月财运姻缘事业'],btn:'查看完整命盘',url:'/pages/bazi.html?unlocked=1'},
+  bazi_vip:{icon:'👑',title:'深度档案已开启',sub:'大师级命理 · 终身珍藏',benefits:['8000+字深度批命报告','终身档案永久保存','专属大运流年分析'],btn:'查看深度命盘',url:'/pages/bazi.html?unlocked=1&vip=1'},
+  bazi_basic:{icon:'🔮',title:'命盘已解锁',sub:'基础八字命理 · 即刻查阅',benefits:['日主五行基础分析','今年运势概览','关键命理特征'],btn:'查看命盘',url:'/pages/bazi.html?unlocked=1'},
+  bazi_trial:{icon:'🔮',title:'体验命盘已解锁',sub:'快速简批 · 即刻查阅',benefits:['日主五行速批','今年关键运势','体验完整版报告'],btn:'查看命盘',url:'/pages/bazi.html?unlocked=1'},
+  hehun:{icon:'💕',title:'合婚报告已生成',sub:'双命交汇 · 情缘揭晓',benefits:['双方八字合婚深度分析','情感运势 + 婚期吉日','五行互补与化解方案'],btn:'查看合婚报告',url:'/pages/hehun.html?unlocked=1'},
+  tarot:{icon:'🃏',title:'塔罗已揭示',sub:'牌面已开 · 天意已显',benefits:['AI深度塔罗解读','当下处境与建议','行动指引'],btn:'查看塔罗',url:'/pages/tarot.html?unlocked=1'},
+  member_monthly:{icon:'✨',title:'月度会员已激活',sub:'月度畅享 · 全功能开放',benefits:['全部AI占算无限次','八字/合婚/塔罗/紫微全通','每日天机会员专属版'],btn:'开始使用',url:'/pages/bazi.html?member=1'},
+  member_yearly:{icon:'🌟',title:'年度会员已激活',sub:'全年畅享 · 至尊体验',benefits:['全部AI占算无限次 · 365天','比月费省41%','大师语音 + 水晶挂件权益'],btn:'开始使用',url:'/pages/bazi.html?member=1'},
+  member_quarterly:{icon:'✨',title:'季度会员已激活',sub:'三月畅享 · 全功能开放',benefits:['全部AI占算无限次 · 3个月','八字/合婚/塔罗全通','每日天机专属版'],btn:'开始使用',url:'/pages/bazi.html?member=1'},
+  member_3year:{icon:'🌟',title:'三年会员已激活',sub:'超值三年 · 长久陪伴',benefits:['全部AI占算无限次 · 3年','极致性价比','全产品永久畅享'],btn:'开始使用',url:'/pages/bazi.html?member=1'},
+  member_lifetime:{icon:'♾️',title:'终身会员已激活',sub:'永久畅享 · 与缘同在',benefits:['全部AI占算永久无限次','大师1对1专属档案','终身功能更新'],btn:'开始使用',url:'/pages/bazi.html?member=1'},
+  member_daily:{icon:'☀️',title:'日会员已激活',sub:'今日畅享 · 24小时全开',benefits:['今日全部AI占算无限次','全产品24小时畅用','体验完整会员权益'],btn:'开始使用',url:'/pages/bazi.html?member=1'},
+  daily_sub:{icon:'☀️',title:'每日天机已订阅',sub:'日日开运 · 天机指引',benefits:['每日五行运势推送','专属Affirmation冥想词','明日预告提前知'],btn:'查看今日天机',url:'/pages/daily.html?activated=1'},
+  joss_basic:{icon:'🕯️',title:'代烧订单已确认',sub:'法师接单 · 虔诚履约',benefits:['标准纸钱 + 金元宝 + 祈福','48小时内安排法事','仪式视频发送至邮箱'],btn:'查看订单详情',url:'/pages/daishao-en.html?order=1'},
+  joss_premium:{icon:'🏮',title:'尊享代烧已确认',sub:'豪华法事 · 诚心供奉',benefits:['豪华纸质别墅 + 法器全套','专属法师 1对1 仪式','高清视频 48小时内发送'],btn:'查看订单详情',url:'/pages/daishao-en.html?order=1'},
+  joss_supreme:{icon:'⛩️',title:'至尊法事已受理',sub:'大法事 · 隆重承办',benefits:['全套冥器 + 多位法师联诵','直播仪式 实时观看','专属报告 + 法事证书'],btn:'查看订单详情',url:'/pages/daishao-en.html?order=1'},
+};
+const DEFAULT={icon:'🙏',title:'功德圆满',sub:'支付成功 · 天机已启',benefits:['支付成功确认','善缘已收到您的心意','如有疑问请联系客服'],btn:'返回首页',url:'/'};
+const params=new URLSearchParams(location.search);
+const cfg=CONFIGS[params.get('product')||'']||DEFAULT;
+document.getElementById('successIcon').textContent=cfg.icon;
+document.getElementById('successTitle').textContent=cfg.title;
+document.getElementById('successSub').textContent=cfg.sub;
+document.getElementById('ctaBtn').textContent=cfg.btn;
+document.getElementById('ctaBtn').href=cfg.url;
+document.getElementById('benefitBox').innerHTML=cfg.benefits.map(b=>'<div class="benefit-item">'+b+'</div>').join('');
+const pc=document.getElementById('particles');
+for(let i=0;i<15;i++){const p=document.createElement('div');p.className='p';p.style.cssText='left:'+Math.random()*100+'%;--d:'+(3+Math.random()*4)+'s;--delay:-'+(Math.random()*4)+'s';pc.appendChild(p);}
+if(window.opener){window.opener.postMessage('payment_complete','*');}
+let t=3;const cd=document.getElementById('countdown');
+const timer=setInterval(()=>{t--;cd.textContent=t+'秒后自动跳转…';if(t<=0){clearInterval(timer);location.href=cfg.url;}},1000);
 </script>
 </body></html>`;
   res.send(html);
@@ -897,17 +953,18 @@ app.post('/pay/wechat/create', rateLimitMiddleware, async (req, res) => {
     var method = (req.body && (req.body.method || req.body.channel) || 'wechat').toLowerCase();
     if (!['wechat', 'alipay', 'stripe'].includes(method)) method = 'wechat';
     var oid = pay.genOutTradeNo(method === 'alipay' ? 'ali' : method === 'stripe' ? 'st' : 'wx');
-    _insCnOrder(oid, product, prod.amount, uid, method);
+    var cnyAmt = prod.amountCny || prod.amount;  // 人民币分，无 amountCny 时回退
+    _insCnOrder(oid, product, cnyAmt, uid, method);
 
     var r;
     try {
-      r = await hub.create(method, '善缘 · ' + prod.name, prod.amount / 100, oid);
+      r = await hub.create(method, '善缘 · ' + prod.name, cnyAmt / 100, oid);
     } catch (e) {
       console.error('[pay/wechat/create] hub 下单异常', e.message);
       return res.status(502).json({ error: '发起支付失败，请稍后再试' });
     }
-    console.log('[pay/wechat/create] ' + oid + ' — ' + prod.name + ' ¥' + (prod.amount/100).toFixed(2));
-    var resp = { ok: true, out_trade_no: oid, amount: prod.amount };
+    console.log('[pay/wechat/create] ' + oid + ' — ' + prod.name + ' ¥' + (cnyAmt/100).toFixed(2));
+    var resp = { ok: true, out_trade_no: oid, amount: cnyAmt };
     if (r.method === 'stripe') { resp.url = r.url; resp.session_id = r.session_id; }
     else { resp.code_url = r.code_url; resp.method = r.method; }
     return res.json(resp);
@@ -975,17 +1032,18 @@ app.post('/pay/alipay/qr', rateLimitMiddleware, async (req, res) => {
 
     var uid = _payResolveUser(req.body && (req.body.token || req.headers['authorization']));
     var oid = pay.genOutTradeNo('ali');
-    _insCnOrder(oid, product, prod.amount, uid, 'alipay');
+    var cnyAmtAli = prod.amountCny || prod.amount;
+    _insCnOrder(oid, product, cnyAmtAli, uid, 'alipay');
 
     var r;
     try {
-      r = await hub.create('alipay', '善缘 · ' + prod.name, prod.amount / 100, oid);
+      r = await hub.create('alipay', '善缘 · ' + prod.name, cnyAmtAli / 100, oid);
     } catch (e) {
       console.error('[pay/alipay/qr] hub 下单异常', e.message);
       return res.status(502).json({ error: '发起支付失败，请稍后再试' });
     }
-    console.log('[pay/alipay/qr] ' + oid + ' — ' + prod.name + ' ¥' + (prod.amount/100).toFixed(2));
-    return res.json({ ok: true, out_trade_no: oid, qr_code: r.qr_code, amount: prod.amount });
+    console.log('[pay/alipay/qr] ' + oid + ' — ' + prod.name + ' ¥' + (cnyAmtAli/100).toFixed(2));
+    return res.json({ ok: true, out_trade_no: oid, qr_code: r.qr_code, amount: cnyAmtAli });
   } catch (err) {
     console.error('[pay/alipay/qr ERR]', err);
     return res.status(500).json({ error: '服务暂时不可用，请稍后重试' });
