@@ -12,6 +12,8 @@ const pay = require('./pay.js');   // 中国支付：微信 NATIVE 扫码 + 支�
 const hub = require(process.env.HUB_CLIENT_PATH || require('path').join(__dirname, '../../shared/pay-hub-client.js'));
 
 const app = express();
+// 🔴 P1-3: 生产在 Caddy 反代后, 未设 trust proxy → req.ip 全是代理IP, 全站限流形同虚设
+app.set('trust proxy', 1);
 const PORT = process.env.PORT || 3021;
 const DEEPSEEK_API_KEY = process.env.DS_KEY || process.env.DEEPSEEK_API_KEY;
 const STRIPE_SECRET_KEY = process.env.STRIPE_PAY_SECRET_KEY;
@@ -75,19 +77,36 @@ app.use('/pay/wechat/notify', express.text({ type: '*/*', limit: '1mb' }));
 app.use('/pay/alipay/notify', express.urlencoded({ extended: false, limit: '1mb' }));
 
 // ── Static files ──
-app.use(express.static(path.join(__dirname, '..')));  // Vercel handles static files
+// 🔴 安全红线(P0-1): 曾用项目根为 static root → /server/data.json 全库 PII 可匿名下载。
+// 修复: 显式拒绝敏感路径 + dotfiles 拒 + 仅暴露前端目录。
+app.use(['/server', '/docs', '/.git', '/node_modules'], (req, res) => {
+  res.status(403).json({ error: 'forbidden' });
+});
+app.use(express.static(path.join(__dirname, '..'), {
+  dotfiles: 'deny',
+  index: false,
+  setHeaders: function(res, filePath) {
+    // data.json 在 server/ 下已被 403 拦截; 双保险: 任何 .json 数据文件不缓存
+    if (filePath.indexOf('data.json') >= 0) res.setHeader('Cache-Control', 'no-store');
+  }
+}));
+// 🔴 P0 回归修复: index:false 导致 GET / 404(自然流量首屏挂)。显式送 index.html
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'index.html'));
+});
 
 // ── Data Store (内存运算 + JSON 快照落盘, 扛 PM2 重启 · 防丢单红线) ──
 // 结构不变; 每次写操作后 _persist() 去抖落盘。Vercel 无持久盘时降级为纯内存(读写失败静默)。
-const _M = { users:[], tokens:[], orders:[], readings:[], subs:[], referrals:[], chatUsage:{}, _id:{u:1,t:1,o:1,r:1,s:1,rf:1} };
+const _M = { users:[], tokens:[], orders:[], readings:[], subs:[], referrals:[], chatUsage:{}, feedbacks:[], _id:{u:1,t:1,o:1,r:1,s:1,rf:1} };
 const _DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 // 启动加载: 把磁盘快照合并回 _M(保留结构与自增计数器), 损坏则跳过从空开始
 (function _loadStore(){
   try {
     if(!fs.existsSync(_DATA_FILE)) return;
     const d = JSON.parse(fs.readFileSync(_DATA_FILE,'utf8'));
-    for(const k of ['users','tokens','orders','readings','subs','referrals']){
+    for(const k of ['users','tokens','orders','readings','subs','referrals','feedbacks','chatUsage']){
       if(Array.isArray(d[k])) _M[k] = d[k];
+      else if(d[k] && typeof d[k]==='object' && !Array.isArray(d[k])) _M[k] = d[k];
     }
     if(d._id && typeof d._id==='object') Object.assign(_M._id, d._id);
     console.log(`[store] 已加载快照: users=${_M.users.length} orders=${_M.orders.length} referrals=${_M.referrals.length}`);
@@ -132,7 +151,23 @@ const getUserOrders = { all(uid){return _M.orders.filter(o=>o.user_id===uid&&o.p
 const insertOrder = { run(oNo,p,amt,cur,uid,dN,c,wT,sId){_M.orders.push({id:_M._id.o++,order_no:oNo,product:p,amount:amt,currency:cur,user_id:uid,donor_name:dN,contact:c,wish_text:wT,stripe_session_id:sId,payment_status:'pending',created_at:new Date().toISOString()});_persist();} };
 const insertReading = { run(t,i,r,u){_M.readings.push({id:_M._id.r++,type:t,input:i,result:r,user_id:u||null,created_at:new Date().toISOString()});_persist();} };
 const getReadingsByUser = { all(uId){return _M.readings.filter(r=>r.user_id===uId).sort((a,b)=>b.created_at.localeCompare(a.created_at)).slice(0,5);} };
-// 付费墙: 判断请求用户是否已付费解锁某类完整报告(名下有 completed 订单且 product 匹配)
+// 🔴 P1-1 付费墙修复: 之前用 indexOf 子串匹配 → ¥1.99 的 bazi_trial 命中 'bazi' 解锁全套完整报告。
+// 改为精确白名单: 每类完整报告只认对应完整产品(低价体验/基础品 bazi_basic/bazi_trial 永远不解锁)。
+const UNLOCK_BY_CATEGORY = {
+  'bazi': ['bazi_full','bazi_vip'], '八字': ['bazi_full','bazi_vip'], '사주': ['bazi_full','bazi_vip'],
+  'hehun': ['hehun'], '合婚': ['hehun'],
+  'ziwei': ['ziwei'], '紫微': ['ziwei'],
+  'xingming': ['xingming'], '姓名': ['xingming'],
+  'astrology': ['astrology'], '占星': ['astrology'],
+  'fengshui': ['fengshui'], '风水': ['fengshui'],
+  'liuyao': ['liuyao'], '六爻': ['liuyao'],
+  'qimen': ['qimen'], '奇门': ['qimen'],
+  'daliuren': ['daliuren'], '大六壬': ['daliuren'],
+  'lingqian': ['lingqian'], '灵签': ['lingqian'],
+  'pastlife': ['pastlife'], '前世': ['pastlife'],
+  'member': ['member_monthly','member_yearly','member_lifetime','member_daily','member_quarterly','member_3year']
+};
+// 付费墙: 判断请求用户是否已付费解锁某类完整报告(精确产品白名单匹配)
 function hasFullAccess(req, productKeys){
   try{
     var auth = req.headers['authorization'] || '';
@@ -141,7 +176,13 @@ function hasFullAccess(req, productKeys){
     var t = getToken.get(token);
     if(!t) return false;
     var orders = getUserOrders.all(t.user_id) || []; // 已过滤 payment_status==='completed'
-    return orders.some(function(o){ return productKeys.some(function(k){ return String(o.product||'').indexOf(k) >= 0; }); });
+    return orders.some(function(o){
+      var prod = String(o.product||'');
+      return productKeys.some(function(k){
+        var allowed = UNLOCK_BY_CATEGORY[k];
+        return allowed ? allowed.indexOf(prod) >= 0 : false;
+      });
+    });
   }catch(e){ return false; }
 }
 // 付费门+免责: 报告端点统一处理 — 追加AIGC免责声明; 未付费降级为基础版概览(堵curl白嫖)
@@ -379,7 +420,7 @@ function rateLimitMiddleware(req, res, next) {
 
 // Middleware: extract user from token
 function authMiddleware(req, res, next) {
-  const token = req.headers['authorization'] || req.query.token;
+  const token = req.headers['authorization'] || '';
   if (!token) {
     req.user = null;
     return next();
@@ -674,9 +715,9 @@ app.get('/api/success', (req, res) => {
 // ════════════════════════════════════════════
 
 function _payClientIp(req) {
-  var xff = req.headers['x-forwarded-for'];
-  if (xff) return String(xff).split(',')[0].trim();
-  return (req.ip || (req.connection && req.connection.remoteAddress) || '127.0.0.1').replace('::ffff:', '');
+  // 🔴 P2 修复: 优先用 req.ip(trust proxy 下已是 Caddy 解出的真实客户端IP), 不信任客户端可伪造的 XFF
+  if (req.ip) return String(req.ip).replace('::ffff:', '');
+  return (req.connection && req.connection.remoteAddress || '127.0.0.1').replace('::ffff:', '');
 }
 function _payResolveUser(token) {
   if (!token) return null;
@@ -862,7 +903,7 @@ function saveQaContext(endpoint, input, reading) {
 // ── Optional auth for reading routes (attach userId if token present) ──
 app.use(function(req, res, next) {
   if (req.path.startsWith('/api/') && !req.path.startsWith('/api/auth/') && !req.path.startsWith('/api/stripe-webhook') && !req.path.startsWith('/api/health') && !req.path.startsWith('/api/success') && !req.path.startsWith('/api/orders') && !req.path.startsWith('/api/products') && !req.path.startsWith('/api/create-checkout') && !req.path.startsWith('/api/inspiration')) {
-    const token = req.headers['authorization'] || req.query.token;
+    const token = req.headers['authorization'] || '';
     if (token) {
       const t = token.replace('Bearer ', '');
       const row = getToken.get(t);
@@ -1230,7 +1271,7 @@ app.post('/api/ziwei', rateLimitMiddleware, async (req, res) => {
 });
 
 // POST /api/mianxiang — 面相手相
-app.post('/api/mianxiang', async (req, res) => {
+app.post('/api/mianxiang', rateLimitMiddleware, async (req, res) => {
   try {
     const { question } = req.body;
 
@@ -1384,7 +1425,7 @@ B方：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined ? p2Hour+'时'
 });
 
 // POST /api/daily — 每日运势
-app.post('/api/daily', async (req, res) => {
+app.post('/api/daily', rateLimitMiddleware, async (req, res) => {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender } = req.body;
 

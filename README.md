@@ -129,11 +129,20 @@ bash deploy.sh all        # 全量 + git push
 ### 🟡 P1（尽快）
 4. **首屏加载性能**：部分页面 Google Fonts + 大量动画，海外网络首屏慢
 5. **付费回流 localStorage 依赖**：虽加了后端 `/api/bazi/recent-input` 兜底，但 hehun 页面仍只依赖 localStorage
-6. **`deepseek-v4-flash` 模型硬编码**：`DEEPSEEK_MODEL` 未走 env，若模型名失效所有报告挂掉（应改 `process.env.DS_MODEL || 'deepseek-chat'`）
+
+### ✅ 已修复（0731 上线前审计·三线并行：安全/功能/合规）
+- 🔴 **数据泄露**：`/server/data.json` 曾被 `express.static` 暴露可匿名下载 → 已 deny `/server /docs /node_modules` + dotfiles deny
+- 🔴 **付费墙穿越**：¥1.99 `bazi_trial` 曾命中 `indexOf('bazi')` 解锁全套 → 已改精确白名单 `UNLOCK_BY_CATEGORY`
+- 🔴 **根域名404**：static `index:false` 曾致 `GET /` 404 → 已加 `app.get('/')`
+- 🔴 **伪造社会证明**：KR落地页假用户数/假在线/假倒计时 + 中文站"已服务12,000+" → 全删
+- 🟠 **限流失效**：缺 `trust proxy` → 已设；`/api/mianxiang` `/api/daily` 无限流 → 已加
+- 🟠 **会员按钮失效**：`bazi_member` 产品不存在 → 改 `member_monthly`
+- 🟠 **反馈/聊天计数不持久**：重启即丢 → `_M` 加 `feedbacks` `chatUsage` 快照回读
+- 🟢 **合规**：出生日期单独同意勾选(CN/KR) + 成年门(18+/19+) + chat AIGC标识 + token 不再走 query
 
 ### 🟢 其他
-7. `server/index.js` 2395 行单体，已抽 `lib/llm.js`（DeepSeek封装+prompt构建），**路由级拆分**（routes/ 目录）是后续迭代——依赖图分析已产出方案，见 git 历史 + `docs/` 备注
-8. 65 个页面结构不统一：已建 `assets/css/common.css` + `assets/js/common.js` 作统一基座，**逐页迁移**是真人开发者的常规任务（新页面直接用，老页面渐进引用）
+7. `server/index.js` 2300+ 行单体，已抽 `lib/llm.js`（DeepSeek封装+prompt构建），**路由级拆分**（routes/ 目录）是后续迭代——依赖图分析已产出方案
+8. 65 个页面结构不统一：已建 `assets/css/common.css` + `assets/js/common.js` 作统一基座，**逐页迁移**是真人开发者的常规任务
 
 ---
 

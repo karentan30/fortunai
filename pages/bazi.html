@@ -350,13 +350,18 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
     <div class="gender-opt" onclick="selectGender(this,'female')">女命</div>
   </div>
 
+  <label style="display:flex;align-items:flex-start;gap:8px;padding:0 16px 12px;font-size:10px;color:rgba(80,70,55,0.6);line-height:1.7;letter-spacing:0.04em;cursor:pointer">
+    <input type="checkbox" id="consentCheck" style="margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:#5bbfa0">
+    <span>我已年满 18 周岁，同意将出生日期/性别用于命理分析，并了解信息将传输至境外服务器处理（<a href="/legal-CN.html#privacy" style="color:#3d9e82">隐私政策</a>）。</span>
+  </label>
+
   <div class="submit-section">
     <button class="btn-gen" onclick="generateReport(this)">免费排盘 · 生成命理预览</button>
     <div style="text-align:center;font-size:10px;color:rgba(201,168,76,0.55);margin-top:10px;letter-spacing:0.08em">先看免费命盘预览，满意再解锁完整报告</div>
   </div>
 
   <div style="text-align:center;font-size:9px;color:rgba(80,70,55,0.45);padding:0 24px 20px;letter-spacing:0.06em;position:relative;z-index:1">
-    本平台采用正统子平八字算法·已服务 12,846 位用户·报告结果仅供参考
+    本平台采用正统子平八字算法·报告结果仅供娱乐参考
   </div>
 </div>
 
@@ -466,6 +471,8 @@ function generateReport(btn) {
   var m = parseInt(document.getElementById('month').value);
   var d = parseInt(document.getElementById('day').value);
   if (!y || !m || !d) { showToast('请填写完整的出生年月日', 'error'); return; }
+  var consent = document.getElementById('consentCheck');
+  if (consent && !consent.checked) { showToast('请先勾选同意隐私条款', 'error'); return; }
   // P1-1 防重复点烧token：禁用按钮 + 转圈
   if (btn) { if (btn.disabled) return; btn.disabled = true; btn._label = btn.textContent; btn.textContent = '排盘中…'; }
   var h = parseInt(document.getElementById('hour').value);
@@ -601,7 +608,7 @@ function createCheckout(btn, tier, price) {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
-      product: tier === 'member' ? 'bazi_member' : 'bazi_full',
+      product: tier === 'member' ? 'member_monthly' : 'bazi_full',
       tier: tier,
       price: price,
       token: localStorage.getItem('sy_token') || '',

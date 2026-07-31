@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#9a7529">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>선연 · 사주 심층 리포트</title>
+<meta name="description" content="선연 사주 — 생년월일만 넣으면 AI가 정통 사주명리로 깊게 풀어드려요">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&family=Noto+Sans+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f3ece0; --paper:#faf6ee; --card:#ffffff;
+  --gold:#9a7529; --gold-soft:rgba(154,117,41,0.12); --gold-light:#c9a84c;
+  --ink:rgba(58,48,38,0.92); --ink-dim:rgba(58,48,38,0.6); --ink-faint:rgba(58,48,38,0.4);
+  --line:rgba(154,117,41,0.18);
+  --fire:#c9607a; --jade:#3f9e82;
+  --radius:14px;
+}
+html,body{background:var(--bg);font-family:'Nanum Myeongjo','Apple SD Gothic Neo',serif;color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.75}
+body{max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:140px;overflow-x:hidden}
+.sans{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% -5%,rgba(154,117,41,0.09) 0%,transparent 55%);pointer-events:none;z-index:0}
+
+.back-btn{position:fixed;top:14px;left:14px;z-index:99;background:none;border:none;font-family:'Nanum Myeongjo',serif;font-size:13px;color:rgba(154,117,41,0.6);cursor:pointer;padding:6px 4px}
+
+/* ── Input screen ── */
+.input-screen{position:relative;z-index:1;padding:48px 20px 20px}
+.brand{text-align:center;font-size:11px;letter-spacing:5px;color:var(--gold);margin-bottom:6px}
+.headline{text-align:center;font-size:22px;font-weight:700;color:#3a2f22;line-height:1.5;margin-bottom:6px}
+.headline b{color:var(--gold)}
+.subline{text-align:center;font-size:13px;color:var(--ink-dim);margin-bottom:26px}
+.form-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 20px;box-shadow:0 4px 18px rgba(120,90,30,0.07)}
+.lbl{font-size:11px;color:var(--gold);letter-spacing:1px;margin-bottom:12px;font-weight:600}
+.row{display:flex;gap:8px;margin-bottom:10px}
+.row select,.row input{flex:1;min-width:0;padding:12px 10px;border:1px solid var(--line);border-radius:9px;background:#fdfbf7;font-size:14px;color:var(--ink);font-family:inherit;-webkit-appearance:none;appearance:none}
+.row select{text-align:center}
+.row select:focus,.row input:focus{outline:none;border-color:var(--gold)}
+.gender-row{display:flex;gap:8px;margin-bottom:12px}
+.g-opt{flex:1;padding:11px 0;text-align:center;border:1px solid var(--line);border-radius:9px;background:#fdfbf7;font-size:13px;color:var(--ink-dim);cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.g-opt.sel{border-color:var(--gold);background:var(--gold-soft);color:var(--gold);font-weight:600}
+.hint{font-size:11px;color:var(--ink-faint);text-align:center;margin-bottom:14px;line-height:1.6}
+.cta{display:block;width:100%;padding:14px;border:none;border-radius:11px;cursor:pointer;background:linear-gradient(135deg,#a8823a,#8a6a26);color:#fff;font-size:15px;font-weight:700;letter-spacing:1px;font-family:inherit;box-shadow:0 4px 14px rgba(154,117,41,0.3);-webkit-tap-highlight-color:transparent}
+.cta:active{transform:scale(0.98)}
+.cta:disabled{opacity:.55;cursor:default}
+.free-note{font-size:11px;color:var(--ink-faint);text-align:center;margin-top:12px}
+
+/* ── Loading ── */
+.loading-screen{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;justify-content:center;padding:70px 24px 40px;gap:18px}
+.loading-screen.show{display:flex}
+.spin-ring{width:72px;height:72px;border-radius:50%;border:2px solid rgba(154,117,41,0.15);border-top-color:var(--gold);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-text{font-size:15px;color:var(--gold);letter-spacing:1px}
+.load-steps{display:flex;flex-direction:column;gap:5px;align-items:center}
+.load-step{font-size:11px;color:var(--ink-faint);letter-spacing:.5px;min-height:1.4em}
+.load-step.done{color:var(--gold)}
+
+/* ── Report ── */
+.report-screen{position:relative;z-index:1;display:none;padding:20px 16px 30px}
+.report-screen.show{display:block}
+.r-header{text-align:center;margin-bottom:22px}
+.r-en{font-size:10px;letter-spacing:4px;color:var(--gold);margin-bottom:6px}
+.r-name{font-size:19px;font-weight:700;color:#3a2f22;margin-bottom:4px}
+.r-birth{font-size:11px;color:var(--ink-dim)}
+.r-tag{display:inline-block;font-size:10px;color:var(--gold);border:1px solid rgba(154,117,41,0.3);padding:2px 10px;border-radius:12px;margin-top:8px;letter-spacing:1px}
+.gold-divider{width:44px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:18px auto}
+.sec-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.sec-head{display:flex;align-items:center;gap:10px;padding:13px 16px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.sec-emoji{font-size:18px;flex-shrink:0}
+.sec-title{flex:1;font-size:14px;font-weight:600;color:#3a2f22;letter-spacing:.5px}
+.sec-arrow{font-size:11px;color:var(--gold);transition:transform .25s}
+.sec-body{display:none;padding:0 16px 16px}
+.sec-body.open{display:block}
+.sec-text{font-size:13px;color:rgba(58,48,38,0.82);line-height:1.95;white-space:pre-wrap;word-break:break-word}
+.disclaimer{margin-top:20px;text-align:center;font-size:10.5px;color:var(--ink-faint);line-height:1.7;letter-spacing:.3px}
+
+/* ── Sticky paywall ── */
+.sticky-cta{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;z-index:10;background:rgba(250,246,238,0.96);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:12px 16px 22px}
+.sticky-cta .price-row{display:flex;align-items:baseline;justify-content:center;gap:8px;margin-bottom:10px}
+.sticky-cta .price-old{font-size:12px;color:var(--ink-faint);text-decoration:line-through}
+.sticky-cta .price-now{font-size:24px;color:var(--gold);font-weight:700}
+.sticky-cta .price-cur{font-size:11px;color:var(--ink-dim)}
+.btn-unlock{width:100%;padding:13px 0;background:linear-gradient(135deg,#a8823a,#8a6a26);border:none;border-radius:10px;color:#fff;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;box-shadow:0 4px 14px rgba(154,117,41,0.3)}
+.btn-unlock:active{transform:scale(0.98)}
+.btn-unlock:disabled{opacity:.55}
+.btn-ghost{width:100%;margin-top:8px;padding:10px 0;background:transparent;border:1px solid rgba(63,158,130,0.5);border-radius:10px;color:var(--jade);font-family:inherit;font-size:12px;letter-spacing:.5px;cursor:pointer}
+
+/* toast */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:400px;width:90%;padding:12px 16px;border-radius:9px;font-size:12px;text-align:center;font-family:'Apple SD Gothic Neo',sans-serif;cursor:pointer}
+.toast.error{background:rgba(180,40,40,0.92);color:#fff}
+.toast.info{background:rgba(58,48,38,0.95);color:var(--gold-light)}
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">←</button>
+
+<!-- ── Input ── -->
+<div class="input-screen" id="inputScreen">
+  <div class="brand">SUNYEON · 선연</div>
+  <div class="headline">내 사주, <b>오늘 뭘 해야 할지</b><br>알려드려요</div>
+  <p class="subline">생년월일만 넣으면 AI가 정통 사주명리로 풀어드려요</p>
+
+  <div class="form-card">
+    <div class="lbl">✦ 생년월일 (양력)</div>
+    <div class="row">
+      <select id="year"></select>
+      <select id="month"></select>
+      <select id="day"></select>
+    </div>
+    <div class="lbl" style="margin-top:14px">✦ 성별</div>
+    <div class="gender-row">
+      <div class="g-opt sel" onclick="selG(this,'male')">남성</div>
+      <div class="g-opt" onclick="selG(this,'female')">여성</div>
+    </div>
+    <div class="row">
+      <select id="hour">
+        <option value="">태어난 시간 모름</option>
+        <option value="0">자시 (23-01시)</option><option value="1">축시 (01-03시)</option>
+        <option value="2">인시 (03-05시)</option><option value="3">묘시 (05-07시)</option>
+        <option value="4">진시 (07-09시)</option><option value="5">사시 (09-11시)</option>
+        <option value="6">오시 (11-13시)</option><option value="7">미시 (13-15시)</option>
+        <option value="8">신시 (15-17시)</option><option value="9">유시 (17-19시)</option>
+        <option value="10">술시 (19-21시)</option><option value="11">해시 (21-23시)</option>
+      </select>
+    </div>
+    <div class="hint">시간을 몰라도 생년월일만으로 충분히 깊게 풀어드려요</div>
+    <label style="display:flex;align-items:flex-start;gap:8px;margin:0 0 12px;font-size:11px;color:var(--ink-dim);line-height:1.7;cursor:pointer">
+      <input type="checkbox" id="consentCheck" style="margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:#9a7529">
+      <span>만 19세 이상이며, 생년월일/성별이 명리 분석에 사용되고 해외 서버로 전송되는 것에 동의합니다.</span>
+    </label>
+    <button class="cta" id="genBtn" onclick="generate()">무료로 사주 보기 →</button>
+    <div class="free-note">🔒 입력 정보는 리포트 생성에만 사용해요 · 가입 없이 바로 확인</div>
+  </div>
+</div>
+
+<!-- ── Loading ── -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="spin-ring"></div>
+  <div class="load-text">사주를 살피는 중…</div>
+  <div class="load-steps" id="loadSteps"></div>
+</div>
+
+<!-- ── Report ── -->
+<div class="report-screen" id="reportScreen"></div>
+
+<script>
+function toast(msg, type) {
+  var t = document.createElement('div');
+  t.className = 'toast ' + (type || 'info');
+  t.textContent = msg;
+  t.onclick = function(){ t.remove(); };
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(function(){ t.remove(); }, 300); }, 3000);
+}
+var gender = 'male';
+function selG(el, g) {
+  document.querySelectorAll('.g-opt').forEach(function(o){ o.classList.remove('sel'); });
+  el.classList.add('sel'); gender = g;
+}
+// year/day populate
+var ySel = document.getElementById('year');
+for (var y = 2025; y >= 1925; y--) ySel.innerHTML += '<option value="'+y+'">'+y+'</option>';
+var dSel = document.getElementById('day');
+for (var d = 1; d <= 31; d++) dSel.innerHTML += '<option value="'+d+'">'+d+'</option>';
+var month = document.getElementById('month');
+var MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+for (var m = 0; m < 12; m++) month.innerHTML += '<option value="'+(m+1)+'">'+MONTHS[m]+'</option>';
+
+// URL param prefill (from landing page): ?y=1993&m=9&d=21
+(function(){
+  var p = new URLSearchParams(location.search);
+  var y = p.get('y'), m = p.get('m'), d = p.get('d');
+  if (y && m && d) {
+    if (ySel.querySelector('option[value="'+y+'"]')) ySel.value = y;
+    if (month.querySelector('option[value="'+m+'"]')) month.value = m;
+    if (dSel.querySelector('option[value="'+d+'"]')) dSel.value = d;
+  }
+})();
+
+var lastInput = null;
+function generate(btn) {
+  btn = btn || document.getElementById('genBtn');
+  var y = parseInt(document.getElementById('year').value);
+  var m = parseInt(document.getElementById('month').value);
+  var d = parseInt(document.getElementById('day').value);
+  if (!y || !m || !d) { toast('생년월일을 선택해 주세요', 'error'); return; }
+  if (btn.disabled) return;
+  btn.disabled = true; btn.textContent = '사주 보는 중…';
+  lastInput = { birthYear: y, birthMonth: m, birthDay: d, birthHour: document.getElementById('hour').value, gender: gender };
+
+  document.getElementById('inputScreen').style.display = 'none';
+  document.getElementById('loadingScreen').classList.add('show');
+  runSteps();
+  fetchBazi(lastInput).then(function(d){
+    document.getElementById('loadingScreen').classList.remove('show');
+    btn.disabled = false; btn.textContent = '무료로 사주 보기 →';
+    if (d && d.reading) showReport(d.reading, d.contextId, d.tier, d.locked);
+    else { document.getElementById('inputScreen').style.display = 'block'; toast('생성에 실패했어요. 다시 시도해 주세요', 'error'); }
+  }).catch(function(){
+    document.getElementById('loadingScreen').classList.remove('show');
+    document.getElementById('inputScreen').style.display = 'block';
+    btn.disabled = false; btn.textContent = '무료로 사주 보기 →';
+    toast('네트워크 오류예요. 다시 시도해 주세요', 'error');
+  });
+}
+function fetchBazi(input) {
+  return fetch('/api/bazi', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('sy_token') || '')},
+    body: JSON.stringify({ birthYear: input.birthYear, birthMonth: input.birthMonth, birthDay: input.birthDay,
+      birthHour: input.birthHour, gender: input.gender, lang: 'ko', mode: 'gentle' })
+  }).then(function(r){ return r.json(); });
+}
+function runSteps() {
+  var steps = ['사주판을 세우는 중…','일간과 용신을 살피는 중…','오행 균형을 보는 중…','운세를 풀어내는 중…'];
+  var el = document.getElementById('loadSteps');
+  el.innerHTML = '';
+  steps.forEach(function(s, i) {
+    setTimeout(function(){
+      if (!document.getElementById('loadingScreen').classList.contains('show')) return;
+      var div = document.createElement('div');
+      div.className = 'load-step done';
+      div.textContent = s;
+      el.appendChild(div);
+    }, i * 500);
+  });
+}
+
+function showReport(aiText, contextId, tier, locked) {
+  var screen = document.getElementById('reportScreen');
+  var isLocked = (locked === true) || (tier === 'basic');
+  var html = '';
+  html += '<div class="r-header">';
+  html += '<div class="r-en">SUNYEON · SAJU REPORT</div>';
+  html += '<div class="r-name">' + (lastInput ? lastInput.birthYear + '년 ' + lastInput.birthMonth + '월 ' + lastInput.birthDay + '일' : '') + '</div>';
+  html += '<div class="r-birth">' + (lastInput ? (lastInput.gender === 'male' ? '남성' : '여성') + ' · ' + (lastInput.birthHour ? lastInput.birthHour + '시' : '시간 모름') : '') + '</div>';
+  html += '<div class="r-tag">✦ AI 심층 명리 · 참고용</div>';
+  html += '<div class="gold-divider"></div></div>';
+
+  var sections = parseSections(aiText);
+  sections.forEach(function(sec) {
+    html += '<div class="sec-card"><div class="sec-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.sec-arrow\').textContent=b.classList.contains(\'open\')?\'▲\':\'▼\'">';
+    html += '<span class="sec-emoji">' + (sec.emoji || '✦') + '</span>';
+    html += '<span class="sec-title">' + sec.title + '</span>';
+    html += '<span class="sec-arrow">▼</span></div>';
+    html += '<div class="sec-body open"><div class="sec-text">' + sec.text + '</div></div></div>';
+  });
+  if (sections.length === 0) {
+    html += '<div class="sec-card"><div class="sec-body open"><div class="sec-text">' + aiText.replace(/</g,'&lt;').replace(/\n/g,'<br>') + '</div></div></div>';
+  }
+  html += '<div class="disclaimer">본 리포트는 사주명리 이론에 근거한 AI 생성 참고용 콘텐츠입니다.<br>의학적·법률적·투자 판단을 대신하지 않습니다.</div>';
+  screen.innerHTML = html;
+  screen.classList.add('show');
+
+  // paywall
+  var old = document.getElementById('stickyCta');
+  if (old) old.remove();
+  if (isLocked) {
+    var cta = document.createElement('div');
+    cta.className = 'sticky-cta';
+    cta.id = 'stickyCta';
+    cta.innerHTML =
+      '<div class="price-row"><span class="price-old">19,900원</span><span class="price-now">9,900원</span><span class="price-cur">· 사주 심층 리포트</span></div>' +
+      '<button class="btn-unlock" onclick="checkout(\'full\')">심층 리포트 열기 · 9,900원</button>' +
+      '<button class="btn-ghost" onclick="checkout(\'member\')">무제한 구독 · 월 6.9달러</button>';
+    document.body.appendChild(cta);
+  }
+}
+
+function parseSections(text) {
+  if (!text) return [];
+  var known = ['📜','🔥','🟤','💰','💕','💼','🏥','📅','🔮','✨','🌿','👨','👩','🎯','📖','💌','☯','🌟','🌈','🪷','🧭','💎'];
+  var lines = String(text).split('\n');
+  var sections = [], current = null;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i];
+    var emoji = null;
+    for (var k = 0; k < known.length; k++) {
+      if (line.indexOf(known[k]) === 0) { emoji = known[k]; break; }
+    }
+    if (emoji) {
+      if (current && current.lines.length) sections.push(current);
+      current = { emoji: emoji, title: line.substring(emoji.length).trim(), lines: [] };
+    } else if (current) {
+      current.lines.push(line);
+    } else if (line.trim()) {
+      current = { emoji: '✦', title: '사주 풀이', lines: [line] };
+    }
+  }
+  if (current && current.lines.length) sections.push(current);
+  return sections.map(function(s){
+    return { emoji: s.emoji, title: s.title, text: s.lines.join('\n').replace(/</g,'&lt;').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>') };
+  });
+}
+
+function checkout(tier) {
+  var btn = event.currentTarget;
+  btn.disabled = true; btn.textContent = '결제 페이지로 이동 중…';
+  if (lastInput) {
+    try { localStorage.setItem('sy_last_bazi', JSON.stringify(lastInput)); } catch(e){}
+  }
+  fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      product: tier === 'member' ? 'member_monthly' : 'bazi_full',
+      tier: tier,
+      price: tier === 'member' ? 6.9 : 19.9,
+      token: localStorage.getItem('sy_token') || '',
+      region: 'kr',
+      successUrl: location.origin + '/pages/saju-KR.html?paid=1'
+    })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.url) window.location.href = d.url;
+    else { toast('결제 연결 실패. 다시 시도해 주세요', 'error'); btn.disabled = false; btn.textContent = '심층 리포트 열기 · 9,900원'; }
+  }).catch(function(){
+    toast('네트워크 오류. 다시 시도해 주세요', 'error');
+    btn.disabled = false; btn.textContent = '심층 리포트 열기 · 9,900원';
+  });
+}
+
+// paid return
+function handlePaidReturn() {
+  if (new URLSearchParams(location.search).get('paid') !== '1') return;
+  try { history.replaceState(null, '', location.pathname); } catch(e){}
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('sy_last_bazi') || 'null'); } catch(e){}
+  if (!saved || !saved.birthYear) { toast('결제 완료! 사주를 다시 생성해 보세요'); return; }
+  lastInput = saved;
+  document.getElementById('inputScreen').style.display = 'none';
+  document.getElementById('loadingScreen').classList.add('show');
+  runSteps();
+  fetchBazi(saved).then(function(d){
+    document.getElementById('loadingScreen').classList.remove('show');
+    if (d && d.reading) { showReport(d.reading, d.contextId, d.tier, d.locked); toast('결제 완료 · 심층 리포트가 열렸어요'); }
+    else { document.getElementById('inputScreen').style.display = 'block'; toast('리포트 로드 실패. 다시 시도해 주세요', 'error'); }
+  }).catch(function(){
+    document.getElementById('loadingScreen').classList.remove('show');
+    document.getElementById('inputScreen').style.display = 'block';
+    toast('네트워크 오류. 다시 시도해 주세요', 'error');
+  });
+}
+handlePaidReturn();
+</script>
+</body>
+</html>

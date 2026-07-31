@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>선연 · AI 사주 심층 리포트</title>
+<style>
+:root{
+  --bg:#f3ece0; --paper:#faf6ee; --gold:#9a7529; --gold-soft:rgba(154,117,41,0.12);
+  --ink:rgba(58,48,38,0.92); --ink-dim:rgba(58,48,38,0.6); --line:rgba(154,117,41,0.2);
+  --fire:#d4736b; --jade:#3f9e82;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);
+  font-family:'Nanum Myeongjo','Noto Serif KR','Apple SD Gothic Neo',serif;
+  -webkit-font-smoothing:antialiased;line-height:1.7}
+.wrap{max-width:480px;margin:0 auto;background:var(--paper);min-height:100vh;
+  box-shadow:0 0 40px rgba(120,90,30,0.06);overflow:hidden}
+section{padding:44px 28px}
+.sans{font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif}
+
+/* HERO */
+.hero{text-align:center;padding:64px 28px 48px;position:relative;
+  background:radial-gradient(ellipse at 50% 0%, rgba(154,117,41,0.10) 0%, transparent 60%), var(--paper)}
+.brand{font-size:13px;letter-spacing:6px;color:var(--gold);margin-bottom:22px}
+.taiji{font-size:52px;opacity:.85;margin-bottom:20px}
+.hero h1{font-size:30px;font-weight:600;letter-spacing:-.5px;line-height:1.4;margin-bottom:14px;color:#3a2f22}
+.hero h1 b{color:var(--gold)}
+.hero .sub{font-size:15px;color:var(--ink-dim);line-height:1.7;margin-bottom:34px}
+.hero .sub b{color:var(--fire);font-weight:600}
+
+/* FREE FORM */
+.form-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px 20px;
+  box-shadow:0 4px 18px rgba(120,90,30,0.07);text-align:left}
+.form-card .lbl{font-size:12px;color:var(--gold);letter-spacing:1px;margin-bottom:10px;font-weight:600}
+.row{display:flex;gap:8px;margin-bottom:10px}
+.row input,.row select{flex:1;padding:12px 12px;border:1px solid var(--line);border-radius:9px;
+  background:#fdfbf7;font-size:14px;color:var(--ink);font-family:inherit}
+.cta{display:block;width:100%;padding:15px;border:none;border-radius:11px;cursor:pointer;
+  background:linear-gradient(135deg,#a8823a,#8a6a26);color:#fff;font-size:16px;font-weight:700;
+  letter-spacing:1px;margin-top:6px;font-family:inherit;box-shadow:0 4px 14px rgba(154,117,41,0.3)}
+.cta.ghost{background:transparent;color:var(--gold);border:1.5px solid var(--gold);box-shadow:none}
+.free-note{font-size:12px;color:var(--ink-dim);text-align:center;margin-top:12px}
+
+/* SECTION TITLE */
+.st{text-align:center;margin-bottom:26px}
+.st .k{font-size:11px;letter-spacing:3px;color:var(--gold);margin-bottom:8px}
+.st h2{font-size:22px;font-weight:600;color:#3a2f22;line-height:1.4}
+.st .line{width:40px;height:1px;background:var(--gold);margin:14px auto 0}
+
+/* WHY (diff) */
+.why{background:var(--bg)}
+.feat{display:flex;gap:14px;padding:16px 0;border-bottom:1px solid rgba(154,117,41,0.1)}
+.feat:last-child{border:none}
+.feat .ic{font-size:26px;flex-shrink:0;width:34px;text-align:center}
+.feat h3{font-size:16px;color:#3a2f22;margin-bottom:3px}
+.feat p{font-size:13.5px;color:var(--ink-dim);line-height:1.6}
+
+/* PREVIEW */
+.preview{background:linear-gradient(180deg,var(--bg) 0%,var(--paper) 100%)}
+.preview .shot{background:#fff;border:1px solid var(--line);border-radius:16px;padding:0;
+  box-shadow:0 14px 40px rgba(120,90,30,0.13);overflow:hidden;position:relative}
+.shot-bar{display:flex;align-items:center;gap:6px;padding:11px 16px;background:#f7f1e6;border-bottom:1px solid var(--line)}
+.shot-bar .dot{width:9px;height:9px;border-radius:50%;background:rgba(154,117,41,.28)}
+.shot-bar .tt{margin-left:8px;font-size:11.5px;color:var(--ink-dim);letter-spacing:.5px}
+.shot-body{padding:20px}
+.shot-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.shot-head .nm{font-size:15px;color:#3a2f22;font-weight:600}
+.shot-head .pg{font-size:11px;color:var(--gold);background:var(--gold-soft);padding:3px 9px;border-radius:20px}
+.shot-sub{font-size:11.5px;color:var(--ink-dim);margin-bottom:16px}
+.mini-rings{display:flex;justify-content:space-around;margin:6px 0 18px}
+.mini-ring{text-align:center;position:relative}
+.mini-ring svg{transform:rotate(-90deg)}
+.mini-ring .rn{position:absolute;top:15px;left:0;right:0;font-size:15px;color:#3a2f22;font-weight:700}
+.mini-ring .l{font-size:11px;color:var(--ink-dim);margin-top:5px}
+.shot-grid{display:flex;gap:16px;align-items:center;padding:14px 0;border-top:1px dashed var(--line);border-bottom:1px dashed var(--line)}
+.shot-grid .rd{flex-shrink:0}
+.shot-grid .gtxt h4{font-size:12.5px;color:#3a2f22;margin-bottom:5px}
+.shot-grid .gtxt p{font-size:11.5px;color:var(--ink-dim);line-height:1.55}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px}
+.chip{font-size:12px;padding:6px 11px;border-radius:20px;background:var(--gold-soft);color:var(--gold);white-space:nowrap}
+.shot-blur{position:relative}
+.shot-blur .blurln{height:9px;border-radius:5px;background:linear-gradient(90deg,rgba(154,117,41,.14),rgba(154,117,41,.05));margin-top:9px}
+.shot-blur .blurln:nth-child(2){width:88%}.shot-blur .blurln:nth-child(3){width:72%}
+.shot-blur .fade{position:absolute;left:0;right:0;bottom:-1px;height:56px;background:linear-gradient(180deg,rgba(255,255,255,0),#fff)}
+.preview .cap{text-align:center;font-size:12px;color:var(--ink-dim);margin-top:16px}
+
+/* GUNGHAP */
+.gung{background:linear-gradient(180deg,#f6eeff 0%,var(--paper) 100%)}
+.gung .st h2,.gung .st .k{color:#7a4fb0}
+.gung .badge{display:inline-block;background:#efe3ff;color:#7a4fb0;font-size:12px;
+  padding:6px 14px;border-radius:20px;margin-bottom:14px;font-weight:600}
+.gung p{text-align:center;font-size:14px;color:var(--ink-dim);margin-bottom:22px}
+.gung .cta{background:linear-gradient(135deg,#8b5fc4,#6f45b0);box-shadow:0 4px 14px rgba(111,69,176,.3)}
+
+/* SEASON */
+.season{background:radial-gradient(ellipse at 50% -10%,#3a2c18,#2a2016 60%);color:#f3ece0;text-align:center}
+.season .k{color:#e0c874}
+.season h2{color:#fff;font-size:23px;margin-bottom:10px}
+.season p{color:rgba(243,236,224,.7);font-size:14px;margin-bottom:20px}
+.season .cta.ghost{color:#231a0f;border-color:#e0c874;background:#e0c874;font-weight:700}
+.season .tag{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;color:#e0c874;letter-spacing:1.5px;margin-bottom:18px;border:1px solid rgba(224,200,116,.4);padding:6px 14px;border-radius:20px}
+.season .tag .pulse{width:7px;height:7px;border-radius:50%;background:#e0c874;box-shadow:0 0 0 0 rgba(224,200,116,.7);animation:pls 1.8s infinite}
+@keyframes pls{0%{box-shadow:0 0 0 0 rgba(224,200,116,.6)}70%{box-shadow:0 0 0 7px rgba(224,200,116,0)}100%{box-shadow:0 0 0 0 rgba(224,200,116,0)}}
+.dday{display:flex;justify-content:center;gap:7px;margin:6px 0 22px}
+.dday .unit{flex:1;max-width:66px;background:rgba(224,200,116,.1);border:1px solid rgba(224,200,116,.22);border-radius:10px;padding:9px 0;min-width:0}
+.dday .unit .num{font-size:24px;font-weight:700;color:#fff;font-family:'Apple SD Gothic Neo',sans-serif;line-height:1}
+.dday .unit .cap{font-size:10px;color:rgba(224,200,116,.75);margin-top:5px;letter-spacing:1px}
+.season .quota{font-size:12px;color:rgba(243,236,224,.6);margin-top:14px}
+.season .quota b{color:#e0c874}
+
+/* PRICE */
+.price .plan{border:1px solid var(--line);border-radius:14px;padding:22px;margin-bottom:14px;background:#fff}
+.price .plan.hot{border:2px solid var(--gold);position:relative}
+.price .plan.hot::before{content:'가장 인기';position:absolute;top:-11px;right:18px;
+  background:var(--gold);color:#fff;font-size:11px;padding:3px 12px;border-radius:12px;font-weight:600}
+.price .pname{font-size:16px;color:#3a2f22;font-weight:600;margin-bottom:4px}
+.price .pdesc{font-size:12.5px;color:var(--ink-dim);margin-bottom:12px}
+.price .pcost{font-size:26px;color:var(--gold);font-weight:700}
+.price .pcost small{font-size:13px;color:var(--ink-dim);font-weight:400}
+
+/* REVIEW */
+.rev{background:var(--bg)}
+.rev .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:12px}
+.rev .stars{color:var(--gold);font-size:13px;margin-bottom:6px}
+.rev .txt{font-size:13.5px;color:var(--ink);line-height:1.6;margin-bottom:6px}
+.rev .who{font-size:12px;color:var(--ink-dim)}
+
+/* FOOTER */
+footer{background:#2a2016;color:rgba(243,236,224,.55);padding:34px 28px;text-align:center;font-size:12px;line-height:1.8}
+footer .fb{color:#e0c874;letter-spacing:3px;margin-bottom:12px;font-size:14px}
+footer .disc{font-size:11px;color:rgba(243,236,224,.4);margin-top:14px;line-height:1.6}
+/* added widgets */
+.cta.kakao{background:#FEE500;color:#3a1d1d;box-shadow:none;margin-top:8px}
+.social-proof{text-align:center;font-size:12px;color:var(--ink-dim);margin-top:14px}
+.social-proof b{color:var(--gold)}
+.live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--jade);margin-left:2px;vertical-align:middle;animation:pls-j 1.8s infinite}
+@keyframes pls-j{0%{box-shadow:0 0 0 0 rgba(63,158,130,.55)}70%{box-shadow:0 0 0 6px rgba(63,158,130,0)}100%{box-shadow:0 0 0 0 rgba(63,158,130,0)}}
+.trust-row{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:16px}
+.trust-chip{font-size:11.5px;color:var(--gold);background:var(--gold-soft);border:1px solid var(--line);padding:6px 12px;border-radius:20px;white-space:nowrap}
+.lock-hint{text-align:center;font-size:12.5px;color:var(--gold);background:var(--gold-soft);padding:11px;border-radius:9px;margin-top:14px}
+.pay-icons{display:flex;justify-content:center;gap:8px;margin-top:18px;flex-wrap:wrap}
+.pay{font-size:12px;padding:6px 13px;border-radius:8px;font-weight:600}
+.pay.kko{background:#FEE500;color:#3a1d1d}.pay.npay{background:#03C75A;color:#fff}.pay.toss{background:#0064FF;color:#fff}
+.pay-note{text-align:center;font-size:11.5px;color:var(--ink-dim);margin-top:11px}
+.faq{background:var(--paper)}
+.faq details{border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin-bottom:10px;background:#fff}
+.faq summary{font-size:14px;color:#3a2f22;font-weight:600;cursor:pointer;list-style:none;position:relative;padding-right:20px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:'+';position:absolute;right:0;color:var(--gold);font-size:18px}
+.faq details[open] summary::after{content:'\2212'}
+.faq details p{font-size:13px;color:var(--ink-dim);line-height:1.65;margin-top:10px}
+.flinks{margin-top:14px}
+.flinks a{color:rgba(243,236,224,.7);text-decoration:none;font-size:11.5px}
+.price .pcost s{color:var(--ink-dim);font-size:16px;font-weight:400}
+#stickyCta{position:fixed;bottom:0;left:0;right:0;max-width:480px;margin:0 auto;background:#fff;border-top:1px solid var(--line);box-shadow:0 -4px 18px rgba(120,90,30,0.14);display:flex;align-items:center;gap:12px;padding:12px 16px;transform:translateY(130%);transition:transform .32s ease;z-index:99}
+#stickyCta.show{transform:translateY(0)}
+.mini-note{font-size:11.5px;color:var(--ink-dim);text-align:center;margin-top:8px}
+@media(min-width:860px){#stickyCta{max-width:1060px;justify-content:flex-end;gap:20px}.sc-txt{flex:none}}
+.sc-txt{flex:1;font-size:13px;color:#3a2f22}.sc-txt s{color:var(--ink-dim)}.sc-txt b{color:var(--gold);font-size:15px}
+.sc-btn{background:linear-gradient(135deg,#a8823a,#8a6a26);color:#fff;border:none;border-radius:9px;padding:11px 20px;font-size:14px;font-weight:700;font-family:inherit;white-space:nowrap;cursor:pointer}
+.cols{display:grid;gap:14px}
+@media(min-width:860px){
+  .wrap{max-width:1060px}
+  .hero{padding:84px 40px 64px}
+  .hero h1{font-size:44px}
+  .hero .sub{font-size:17px;margin-bottom:38px}
+  .form-card{max-width:470px;margin-left:auto;margin-right:auto}
+  section{padding:66px 56px}
+  .st{margin-bottom:34px}
+  .st h2{font-size:27px}
+  .cols2{grid-template-columns:1fr 1fr;gap:8px 34px}
+  .cols3{grid-template-columns:repeat(3,1fr);align-items:start}
+  .feat{align-items:flex-start;border-bottom:1px solid rgba(154,117,41,0.1)!important}
+  .preview .shot,.gung>p,.gung .st,.season .st,.season>p{max-width:660px;margin-left:auto;margin-right:auto}
+  .gung .cta,.season .cta,.price>.cta{max-width:440px;margin-left:auto;margin-right:auto}
+  .price .plan{margin-bottom:0}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ═══ HERO ═══ -->
+  <div class="hero">
+    <div class="brand">S U N Y E O N · 善 緣</div>
+    <div class="taiji">☯</div>
+    <h1>내 사주,<br><b>이렇게까지 깊게</b><br>풀어본 적 있나요?</h1>
+    <p class="sub">불안하게 만드는 점은 이제 그만.<br>나를 이해하고, <b>오늘 뭘 해야 할지</b>까지 알려드려요.</p>
+
+    <div class="form-card">
+      <div class="lbl">✦ 무료로 오늘의 사주 보기</div>
+      <div class="row">
+        <input type="text" id="birthInput" placeholder="생년월일 8자리만 (예: 19930921)" inputmode="numeric" maxlength="8" />
+      </div>
+      <div class="mini-note">성별·음양력·태어난 시간은 다음 단계에서 · 지금은 생년월일만</div>
+      <button class="cta" onclick="goFree()">30초 무료 사주 보기 →</button>
+      <button class="cta kakao" onclick="loginKakao()">💬 카카오로 3초 시작하기</button>
+      <div class="free-note">🔒 입력 정보는 리포트 생성에만 써요 · 가입 없이 바로 확인</div>
+      <div class="social-proof">만 19세 이상 이용 가능 · 입력 정보는 리포트 생성에만 사용</div>
+    </div>
+    <div class="trust-row">
+      <span class="trust-chip">🏵 명리학 20년 · 감수 마스터</span>
+      <span class="trust-chip">🔐 개인정보 암호화 보관</span>
+    </div>
+  </div>
+
+  <!-- ═══ WHY (差异化) ═══ -->
+  <section class="why">
+    <div class="st"><div class="k">WHY SUNYEON</div><h2>왜 선연일까요?</h2><div class="line"></div></div>
+    <div class="cols cols2">
+    <div class="feat"><div class="ic">📜</div><div><h3>짧은 한두 줄이 아니라, A4 20장 심층 리포트</h3><p>총평·일간·오행·재물·애정·직업·건강·대운까지, 역술가가 직접 봐준 것처럼 깊게.</p></div></div>
+    <div class="feat"><div class="ic">🧭</div><div><h3>'그럼 뭘 해야 하지?'까지 알려줘요</h3><p>행운의 색·번호, 이사 좋은 날, 몸에 맞는 밥상, 이번 주 할 일까지 — 바로 실천.</p></div></div>
+    <div class="feat"><div class="ic">🌿</div><div><h3>겁주지 않는 다정한 풀이</h3><p>불안하게 만들지 않아요. 나를 이해하고 다독이는, 따뜻하게 곁을 지키는 말이에요.</p></div></div>
+    <div class="feat"><div class="ic">🔒</div><div><h3>사주 명리 연구팀 감수</h3><p>수십 년 명리 이론 + AI. 개인정보는 리포트 생성에만 쓰고 안전하게 보관.</p></div></div>
+    </div>
+  </section>
+
+  <!-- ═══ PREVIEW (报告预览) ═══ -->
+  <section class="preview">
+    <div class="st"><div class="k">PREVIEW</div><h2>이런 리포트를 받아요</h2><div class="line"></div></div>
+    <div class="shot">
+      <div class="shot-bar">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="tt">선연 · 사주 심층 리포트.pdf</span>
+      </div>
+      <div class="shot-body">
+        <div class="shot-head"><span class="nm">종합 운세 스코어</span><span class="pg">1 / 20장</span></div>
+        <div class="shot-sub">1993 · 계유년생 · 음(陰)의 기운이 강한 사주</div>
+
+        <div class="mini-rings">
+          <div class="mini-ring">
+            <svg width="52" height="52" viewBox="0 0 52 52"><circle cx="26" cy="26" r="22" fill="none" stroke="rgba(154,117,41,.13)" stroke-width="5"/><circle cx="26" cy="26" r="22" fill="none" stroke="#a8823a" stroke-width="5" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="16.6"/></svg>
+            <div class="rn">88</div><div class="l">재물운</div>
+          </div>
+          <div class="mini-ring">
+            <svg width="52" height="52" viewBox="0 0 52 52"><circle cx="26" cy="26" r="22" fill="none" stroke="rgba(212,115,107,.14)" stroke-width="5"/><circle cx="26" cy="26" r="22" fill="none" stroke="#d4736b" stroke-width="5" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="52.5"/></svg>
+            <div class="rn">62</div><div class="l">애정운</div>
+          </div>
+          <div class="mini-ring">
+            <svg width="52" height="52" viewBox="0 0 52 52"><circle cx="26" cy="26" r="22" fill="none" stroke="rgba(154,117,41,.13)" stroke-width="5"/><circle cx="26" cy="26" r="22" fill="none" stroke="#a8823a" stroke-width="5" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="29"/></svg>
+            <div class="rn">79</div><div class="l">직업운</div>
+          </div>
+          <div class="mini-ring">
+            <svg width="52" height="52" viewBox="0 0 52 52"><circle cx="26" cy="26" r="22" fill="none" stroke="rgba(63,158,130,.14)" stroke-width="5"/><circle cx="26" cy="26" r="22" fill="none" stroke="#3f9e82" stroke-width="5" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="12.4"/></svg>
+            <div class="rn">91</div><div class="l">인연운</div>
+          </div>
+        </div>
+
+        <div class="shot-grid">
+          <div class="rd">
+            <svg width="112" height="112" viewBox="0 0 112 112">
+              <polygon points="56,10 96,33 96,79 56,102 16,79 16,33" fill="none" stroke="rgba(154,117,41,.18)" stroke-width="1"/>
+              <polygon points="56,33 79,46 79,72 56,86 33,72 33,46" fill="none" stroke="rgba(154,117,41,.14)" stroke-width="1"/>
+              <polygon points="56,18 90,52 82,78 52,94 22,70 26,40" fill="rgba(154,117,41,.16)" stroke="#a8823a" stroke-width="1.6" stroke-linejoin="round"/>
+              <text x="56" y="8" font-size="8" fill="#9a7529" text-anchor="middle">木</text>
+              <text x="104" y="36" font-size="8" fill="#9a7529" text-anchor="middle">火</text>
+              <text x="104" y="86" font-size="8" fill="#9a7529" text-anchor="middle">土</text>
+              <text x="56" y="112" font-size="8" fill="#9a7529" text-anchor="middle">金</text>
+              <text x="8" y="86" font-size="8" fill="#9a7529" text-anchor="middle">水</text>
+            </svg>
+          </div>
+          <div class="gtxt">
+            <h4>오행 균형 · 水 강 / 火 약</h4>
+            <p>물의 기운이 넘치고 불이 부족한 사주. 火를 보완하면 재물과 인연이 함께 트여요. 붉은 계열·남쪽 방위가 개운 포인트.</p>
+          </div>
+        </div>
+
+        <p style="font-size:13px;color:#4a3e30;line-height:1.7;margin-top:14px">"아직 빛을 못 본 <b style="color:var(--gold)">원석 같은 사주</b> — 극단적인 부귀도 고생도 아니에요. 지금은 때를 알아보는 힘에 모든 게 달려 있어요."</p>
+
+        <div class="chips">
+          <span class="chip">행운의 색 · 코랄/골드</span><span class="chip">행운의 숫자 2·5·7</span>
+          <span class="chip">이사 좋은 날</span><span class="chip">체질 맞춤 식단</span><span class="chip">홍옥수 왼손목</span>
+        </div>
+
+        <div class="shot-blur">
+          <div class="blurln"></div><div class="blurln"></div><div class="blurln"></div>
+          <div class="fade"></div>
+        </div>
+      </div>
+    </div>
+    <div class="lock-hint">🔒 대운 곡선 · 12개월 월별 운세 · 개운 방위까지, <b>리포트에서 전부</b> 열려요</div>
+    <p class="cap">오행 레이더 · 운세 곡선 · 개운 방위 · 인포그래픽 13장 — 총 A4 20장 분량</p>
+  </section>
+
+  <!-- ═══ GUNGHAP (裂变) ═══ -->
+  <section class="gung">
+    <div class="st"><div class="badge">함께 보면 무료 🎁</div><div class="k">GUNGHAP</div><h2>둘이 함께 보는 궁합</h2><div class="line" style="background:#7a4fb0"></div></div>
+    <p>마음에 둔 사람이 있나요?<br>두 사람 사주로 <b>30년 대운의 결</b>까지 맞춰 봐요.<br><b>친구·연인을 초대하면 궁합 리포트가 무료</b>.</p>
+    <button class="cta" onclick="shareKakaoGunghap()">카톡으로 궁합 초대하기 →</button>
+    <div class="mini-note" style="margin-top:12px">내 사주 결과를 카톡으로 보내면, 상대가 생년월일만 넣어도 바로 궁합이 나와요.</div>
+  </section>
+
+  <!-- ═══ SEASON (신년운세 季节钩子) ═══ -->
+  <section class="season">
+    <div class="st"><div class="k">NEW YEAR</div><h2>신년운세</h2></div>
+    <p>새해, 나에게 무슨 일이 올까?<br>십이지 운세의 흐름을 미리 만나 보세요.</p>
+    <button class="cta ghost" onclick="location.href='saju-KR.html'">신년운세 보기 →</button>
+  </section>
+
+  <!-- ═══ PRICE ═══ -->
+  <section class="price">
+    <div class="st"><div class="k">PRICE</div><h2>부담 없이 시작하세요</h2><div class="line"></div></div>
+    <div class="cols cols3">
+    <div class="plan">
+      <div class="pname">오늘의 사주 · 기본 풀이</div>
+      <div class="pdesc">생년월일만 넣으면 바로. 가입 없이.</div>
+      <div class="pcost">무료</div>
+    </div>
+    <div class="plan hot">
+      <div class="pname">사주 심층 리포트</div>
+      <div class="pdesc">A4 20장 분량 · 실천 가이드 · 인포그래픽 13장</div>
+      <div class="pcost"><s>19,900</s> 9,900<small>원</small></div>
+    </div>
+    <div class="plan">
+      <div class="pname">궁합 리포트</div>
+      <div class="pdesc">두 사람 · 30년 대운 궁합 (초대 시 무료)</div>
+      <div class="pcost">4,900<small>원부터</small></div>
+    </div>
+    </div>
+    <button class="cta" style="margin-top:6px" onclick="location.href='saju-KR.html'">무료로 먼저 보기 →</button>
+    <div class="pay-icons"><span class="pay kko">카카오페이</span><span class="pay npay">네이버페이</span><span class="pay toss">토스</span></div>
+    <div class="pay-note">안전 결제 · 결제 후 7일 이내 미열람 시 환불 가능</div>
+  </section>
+
+  <!-- ═══ FAQ ═══ -->
+  <section class="faq">
+    <div class="st"><div class="k">FAQ</div><h2>자주 묻는 질문</h2><div class="line"></div></div>
+    <details><summary>태어난 시간을 몰라도 되나요?</summary><p>네, 시간을 몰라도 생년월일만으로 충분히 깊은 풀이를 받을 수 있어요. 시간을 알면 시주까지 더 정밀해집니다.</p></details>
+    <details><summary>결제하면 리포트를 어떻게 받나요?</summary><p>결제 즉시 화면에서 바로 열리고, 카카오톡으로도 링크를 보내드려요. 언제든 다시 볼 수 있어요.</p></details>
+    <details><summary>환불이 되나요?</summary><p>결제 후 7일 이내, 리포트를 아직 열어보지 않았다면 전액 환불해 드려요.</p></details>
+    <details><summary>미신 아닌가요?</summary><p>미래를 고정하는 점이 아니라, 나를 이해하고 삶의 리듬을 찾는 <b>참고용 콘텐츠</b>예요. 불안하게 만들지 않고, 다정하게 안내해 드립니다.</p></details>
+    <details><summary>개인정보는 안전한가요?</summary><p>입력하신 정보는 리포트 생성에만 사용하고 안전하게 보관해요. 자세한 내용은 개인정보처리방침을 확인하세요.</p></details>
+  </section>
+
+  <!-- ═══ REVIEW ═══ -->
+  <section class="rev">
+    <div class="st"><div class="k">REVIEW</div><h2>먼저 본 분들</h2><div class="line"></div></div>
+    <div class="cols cols3">
+    <div class="card"><div class="stars">★★★★★</div><div class="txt">"겁주는 다른 앱이랑 달라요. 읽고 나서 마음이 편해졌어요. 실천 가이드가 진짜 도움돼요."</div><div class="who">— 20대 · 서울</div></div>
+    <div class="card"><div class="stars">★★★★★</div><div class="txt">"만 자 리포트라길래 반신반의했는데, 이사 좋은 날까지 챙겨줘서 놀랐어요."</div><div class="who">— 30대 · 부산</div></div>
+    <div class="card"><div class="stars">★★★★★</div><div class="txt">"친구랑 궁합 봤다가 둘 다 심층 리포트까지 결제했어요 ㅋㅋ 재밌어요."</div><div class="who">— 20대 · 경기</div></div>
+    </div>
+    <button class="cta" style="max-width:440px;margin:24px auto 0" onclick="location.href='saju-KR.html'">나도 무료로 보기 →</button>
+  </section>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer>
+    <div class="fb">善 緣 · 선연</div>
+    나를 알고, 나를 가꾸다<br>
+    사주 명리 연구팀 감수 · AI 심층 명리
+    <div class="flinks"><a href="saju-legal-KR.html">이용약관</a> · <a href="saju-legal-KR.html">개인정보처리방침</a> · <a href="saju-legal-KR.html">환불정책</a></div>
+    <div class="disc">본 서비스는 사주 명리 이론에 근거한 참고용 콘텐츠이며, 의학적·법률적·투자 판단을 대신하지 않습니다. 만 19세 이상 이용 권장.</div>
+  </footer>
+
+</div>
+
+<div id="stickyCta">
+  <div class="sc-txt">사주 심층 리포트 <s>19,900</s> <b>9,900원</b></div>
+  <button class="sc-btn" onclick="location.href='saju-KR.html'">무료로 보기</button>
+</div>
+<!-- Kakao JS SDK (실제 배포 시 주석 해제 + JS 앱 키 입력)
+<script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCUE00h649CAMonG018J2ujOgDKW/kVWlChEuu4jK2vxfAAD0eZxzCKakxg55G4" crossorigin="anonymous"></script>
+-->
+<script>
+(function(){var el=document.getElementById('stickyCta');function chk(){if(window.scrollY>560){el.classList.add('show')}else{el.classList.remove('show')}}window.addEventListener('scroll',chk,{passive:true});chk();})();
+
+/* ── 생년월일 8자리 → 결과 페이지로 이동 ── */
+function goFree(){
+  var v = (document.getElementById('birthInput').value || '').trim();
+  if (!/^\d{8}$/.test(v)) { alert('생년월일 8자리를 입력해 주세요 (예: 19930921)'); return; }
+  location.href = 'saju-KR.html?y=' + v.slice(0,4) + '&m=' + parseInt(v.slice(4,6),10) + '&d=' + parseInt(v.slice(6,8),10);
+}
+
+/* ── 카카오 로그인 (배포 시 실제 SDK 연동) ── */
+function loginKakao(){
+  if(window.Kakao&&Kakao.isInitialized()){
+    Kakao.Auth.authorize({redirectUri:location.origin+'/oauth/kakao'});
+  }else{
+    // TODO: Kakao.init('JS_APP_KEY') 를 배포 환경에서 실행
+    goFree();
+  }
+}
+
+/* ── 카카오톡 궁합 공유 (裂变 · Kakao Share API) ── */
+function shareKakaoGunghap(){
+  if(window.Kakao&&Kakao.isInitialized()&&Kakao.Share){
+    Kakao.Share.sendDefault({
+      objectType:'feed',
+      content:{
+        title:'우리 궁합, 30년 대운까지 맞춰봤어',
+        description:'생년월일만 넣으면 바로 나와 · 초대받은 궁합 리포트 무료 🎁',
+        imageUrl:location.origin+'/og-gunghap.png',
+        link:{mobileWebUrl:location.origin+'/g?ref=INVITE',webUrl:location.origin+'/g?ref=INVITE'}
+      },
+      buttons:[{title:'내 궁합 확인하기',link:{mobileWebUrl:location.origin+'/g?ref=INVITE',webUrl:location.origin+'/g?ref=INVITE'}}]
+    });
+  }else{
+    // TODO: Kakao SDK 초기화 후 위 Share.sendDefault 로 실제 裂变 링크 전송
+    location.href='hehun.html';
+  }
+}
+
+/* 合规: 移除伪造社会证明/稀缺性脚本(假用户数/假在线/假名额/永不过期倒计时)
+   真实数据接入前不显示任何计数。 */
+</script>
+</body>
+</html>
