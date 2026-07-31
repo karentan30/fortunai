@@ -625,7 +625,17 @@ function showStreak(count) {
     if (container) container.prepend(el);
   }
   var flames = count >= 7 ? '🔥🔥🔥' : count >= 3 ? '🔥🔥' : '🔥';
-  el.textContent = flames + ' 连续 ' + count + ' 天查运势';
+  el.innerHTML = flames + ' 连续 ' + count + ' 天查运势 &nbsp;<button onclick="shareDaily()" style="font-size:11px;padding:4px 10px;background:rgba(154,117,41,0.12);border:1px solid rgba(154,117,41,0.3);border-radius:10px;color:#9a7529;cursor:pointer;font-family:inherit;letter-spacing:.05em;vertical-align:middle">分享运势</button>';
+}
+function shareDaily() {
+  var ref = localStorage.getItem('sy_ref_code') || '';
+  var url = window.location.origin + '/pages/daily.html' + (ref ? '?ref=' + ref : '');
+  var text = '善缘每日天机 · 今天的五行运势挺准的！你也来测测 ' + url;
+  if (navigator.share) { navigator.share({ title: '善缘每日天机', text: text, url: url }).catch(function(){}); return; }
+  var ta = document.createElement('textarea'); ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  showToast('已复制今日运势链接，分享给朋友吧 🎁', 'success');
 }
 
 function loadTomorrowTeaser() {
