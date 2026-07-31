@@ -263,11 +263,11 @@ function tryApplyReferral(refCode, inviteeId){
 // ── Product prices (cents) ──
 const PRODUCTS = {
   bazi_basic:   { name: '基础命盘',         amount: 990,  desc: '日主+五行+今年运势' },
-  bazi_full:    { name: '完整命盘',         amount: 1990, desc: '六维+十年大运+流月' },
-  bazi_vip:     { name: '深度批命',         amount: 3990, desc: '大师级·终身档案' },
+  bazi_full:    { name: '完整命盘',         amount: 1990, desc: '六维+十年大运+流月', amountKrw: 9900 },
+  bazi_vip:     { name: '深度批命',         amount: 3990, desc: '大师级·终身档案', amountKrw: 19900 },
   daily_sub:    { name: '每日天机订阅',     amount: 690,  desc: '月订阅·五行+Affirmation' },
   tarot:        { name: '塔罗占卜',         amount: 390,  desc: 'AI塔罗解读' },
-  hehun:        { name: '合婚配对',         amount: 1990, desc: '双方八字合婚分析' },
+  hehun:        { name: '合婚配对',         amount: 1990, desc: '双方八字合婚分析', amountKrw: 4900 },
   member_monthly:  { name: '月度会员',      amount: 690,  desc: '全部AI占算无限次·完整报告不锁定' },
   member_yearly:   { name: '年度会员',      amount: 4900, desc: '全年畅用·大师语音·水晶挂件' },
   member_lifetime: { name: '终身会员',      amount: 18800, desc: '永久畅享·大师1对1·专属档案' },
@@ -587,11 +587,16 @@ app.post('/api/create-checkout', rateLimitMiddleware, async (req, res) => {
 
     const orderNo = 'SY-' + Date.now() + '-' + crypto.randomBytes(3).toString('hex');
 
-    // 韩国收款(香港Stripe账户·需Dashboard启用KakaoPay/NaverPay等): region=kr → KRW + 韩国本地支付方式
+    // 韩国收款: region=kr → KRW + 韩国本地支付方式。
+    // 🔴 修复(0731): 当前生产 Stripe 是美国个人号, 传 kakao_pay 直接报 invalid(美国号无资格)。
+    //   先用 KRW 卡支付 + Stripe 跨境汇率转美元结算跑通验证; KakaoPay 等香港 Stripe 下来后
+    //   设 KR_PAY_METHODS=kakao_pay,naver_pay,card 启用。
     const region = (req.body.region || '').toLowerCase();
     const isKR = region === 'kr';
     const payCurrency = isKR ? 'krw' : 'usd';
-    const payMethods = isKR ? ['card', 'kakao_pay', 'naver_pay', 'samsung_pay', 'payco'] : ['card'];
+    const payMethods = isKR
+      ? (process.env.KR_PAY_METHODS ? process.env.KR_PAY_METHODS.split(',').map(s => s.trim()) : ['card'])
+      : ['card'];
     // KRW 为 zero-decimal 货币(无分); amountKrw 未配时按占位汇率换算 — 上线前须在 PRODUCTS 配精确韩元价
     const unitAmount = isKR ? (prod.amountKrw || Math.round(prod.amount / 100 * 1300)) : prod.amount;
 
