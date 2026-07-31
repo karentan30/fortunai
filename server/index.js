@@ -688,7 +688,12 @@ app.post('/api/create-checkout', rateLimitMiddleware, async (req, res) => {
           currency: payCurrency,
           product_data: { name: prod.name, description: prod.desc },
           unit_amount: unitAmount,
-          recurring: (product === 'daily_sub' || product === 'member_monthly' || product === 'member_yearly' || product === 'member_quarterly' || product === 'member_3year') ? { interval: product === 'member_yearly' ? 'year' : product === 'member_quarterly' ? 'month' : 'month' } : undefined,
+          recurring: (product === 'daily_sub' || product === 'member_monthly' || product === 'member_yearly' || product === 'member_quarterly' || product === 'member_3year') ? (
+            product === 'member_yearly'    ? { interval: 'year' } :
+            product === 'member_quarterly' ? { interval: 'month', interval_count: 3 } :
+            product === 'member_3year'     ? { interval: 'year',  interval_count: 3 } :
+                                             { interval: 'month' }
+          ) : undefined,
         },
         quantity: 1,
       }],
@@ -1111,6 +1116,9 @@ app.post('/api/bazi', rateLimitMiddleware, async (req, res) => {
     if (!birthYear || !birthMonth || !birthDay) {
       return res.status(400).json({ error: '请提供出生年月日' });
     }
+    if (Number(birthYear) > new Date().getFullYear() - 18) {
+      return res.status(400).json({ error: '仅限18岁以上用户使用' });
+    }
     if (lang === 'ko') {
       return baziKoreanHandler(req, res);
     }
@@ -1501,6 +1509,10 @@ app.post('/api/hehun', rateLimitMiddleware, async (req, res) => {
     const { p1Year, p1Month, p1Day, p1Hour, p2Year, p2Month, p2Day, p2Hour, p1Gender, p2Gender } = req.body;
     if (!p1Year || !p2Year) {
       return res.status(400).json({ error: '请提供双方出生信息' });
+    }
+    const _curYear = new Date().getFullYear();
+    if (Number(p1Year) > _curYear - 18 || Number(p2Year) > _curYear - 18) {
+      return res.status(400).json({ error: '仅限18岁以上用户使用' });
     }
 
     const messages = buildReadingPrompt(

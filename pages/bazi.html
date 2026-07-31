@@ -23,6 +23,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&display=swap">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -423,6 +424,22 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   </div>
 </div>
 
+<!-- 裂变邀请栏 -->
+<div id="referralBanner" style="display:none;margin:0 16px 16px;background:linear-gradient(135deg,rgba(91,191,160,0.08),rgba(201,168,76,0.06));border:1px solid rgba(91,191,160,0.25);border-radius:12px;padding:18px 16px;position:relative;z-index:1">
+  <div style="display:flex;align-items:flex-start;gap:12px">
+    <span style="font-size:28px;line-height:1;flex-shrink:0">&#127873;</span>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:500;letter-spacing:0.1em;margin-bottom:5px;color:rgba(40,35,30,0.92)">分享给好友 · 各得1次免费合婚报告</div>
+      <div style="font-size:11px;color:rgba(80,70,55,0.72);line-height:1.7;letter-spacing:0.03em">把你的命盘分享出去，好友注册后你们都能解锁1次免费合婚报告（价值¥19.9）</div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:14px">
+    <button onclick="shareWechat()" style="flex:1;padding:11px 0;background:rgba(91,191,160,0.12);border:1px solid rgba(91,191,160,0.3);border-radius:7px;color:#3d9e82;font-family:'Noto Serif SC',serif;font-size:12px;letter-spacing:0.08em;cursor:pointer">&#128172; 微信分享</button>
+    <button onclick="shareCopyLink()" style="flex:1;padding:11px 0;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:7px;color:#c9a84c;font-family:'Noto Serif SC',serif;font-size:12px;letter-spacing:0.08em;cursor:pointer">&#128279; 复制链接</button>
+    <button onclick="window.location.href='invite.html'" style="flex:1;padding:11px 0;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);border-radius:7px;color:#c9a84c;font-family:'Noto Serif SC',serif;font-size:12px;letter-spacing:0.08em;cursor:pointer">邀好友</button>
+  </div>
+</div>
+
 <script>
 function showToast(msg, type) {
   var t = document.createElement('div');
@@ -553,6 +570,9 @@ function showReport(aiText, contextId, tier, locked) {
   renderAITextReport(aiText, contextId, isLocked);
   document.getElementById('qaSection').style.display = isLocked ? 'none' : 'block';
   document.getElementById('shareBar').classList.add('show');
+  // 显示裂变邀请栏
+  var rb = document.getElementById('referralBanner');
+  if (rb) rb.style.display = 'block';
   // 已存在的付费墙清理，避免付费回流后残留
   var oldCta = document.getElementById('stickyCta');
   if (oldCta) oldCta.remove();
@@ -561,7 +581,7 @@ function showReport(aiText, contextId, tier, locked) {
     cta.className = 'sticky-cta';
     cta.id = 'stickyCta';
     cta.innerHTML =
-      '<div class="cta-row"><div class="cta-desc">解锁完整命盘 · 流月大运 · 人生时间点</div></div>' +
+      '<div class="cta-row"><div class="cta-desc">解锁后得到：5000+字完整命盘 · 8步大运 · 未来10年流年 · 财运姻缘事业逐一细批</div></div>' +
       '<div style="background:rgba(201,168,76,0.05);border-radius:6px;padding:10px;margin-bottom:10px;font-size:9px">' +
       '<div style="display:grid;grid-template-columns:1fr 24px 24px;gap:1px;letter-spacing:0.04em">' +
       '<div style="padding:4px 0;color:var(--sub-text)"></div>' +
@@ -714,6 +734,12 @@ function renderAITextReport(text, contextId, isLocked) {
   }
   var reportEl = document.getElementById('reportScreen');
   var html = '';
+
+  // AIGC banner — always shown at top of report
+  html += '<div style="display:flex;align-items:center;gap:6px;margin:12px 16px 0;padding:7px 12px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:6px;font-size:10px;color:rgba(201,168,76,0.75);letter-spacing:0.06em">' +
+    '<span style="font-size:12px">🤖</span>' +
+    '<span><b>AI 生成内容</b> · 仅供娱乐参考，不构成建议。命运掌握在自己手中。</span>' +
+    '</div>';
 
   // Header
   if (lastBaziInput) {
