@@ -224,13 +224,24 @@ function handleSubmit(e) {
   if (!name || !email || !msg) { showToast('请填写完整信息', true); return false; }
   btn.disabled = true;
   btn.textContent = '发送中…';
-  // Simulate send (placeholder for backend integration)
-  setTimeout(function(){
+  fetch('/api/feedback', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ name: name, email: email, message: msg })
+  }).then(function(r){ return r.json(); }).then(function(d){
     btn.disabled = false;
     btn.textContent = '发送反馈';
-    document.getElementById('feedbackForm').reset();
-    showToast('感谢您的反馈，我们将尽快回复！');
-  }, 1200);
+    if (d.success) {
+      document.getElementById('feedbackForm').reset();
+      showToast('感谢您的反馈，我们将尽快回复！');
+    } else {
+      showToast(d.error || '提交失败，请稍后重试', true);
+    }
+  }).catch(function(){
+    btn.disabled = false;
+    btn.textContent = '发送反馈';
+    showToast('网络异常，请稍后重试', true);
+  });
   return false;
 }
 

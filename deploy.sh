@@ -32,14 +32,18 @@ deploy_frontend() {
     echo "  ✓ $f"
   done
   # 静态资源
-  ssh $HK_SERVER "mkdir -p $HK_PATH/assets/images"
+  ssh $HK_SERVER "mkdir -p $HK_PATH/assets/images $HK_PATH/assets/css $HK_PATH/assets/js"
   scp -r assets/images/* "$HK_SERVER:$HK_PATH/assets/images/" 2>/dev/null || echo "  ℹ no images to sync"
+  scp -r assets/css/*.css "$HK_SERVER:$HK_PATH/assets/css/" 2>/dev/null || echo "  ℹ no css to sync"
+  scp -r assets/js/*.js "$HK_SERVER:$HK_PATH/assets/js/" 2>/dev/null || echo "  ℹ no js to sync"
   echo "✓ 前端部署完成"
 }
 
 deploy_backend() {
   echo "📦 部署后端..."
   scp server/*.js "$HK_SERVER:$HK_PATH/server/"   # 全部依赖(index.js+pay.js+astrology.js+bazi.js), 防漏模块导致 MODULE_NOT_FOUND
+  ssh $HK_SERVER "mkdir -p $HK_PATH/server/lib"
+  scp -r server/lib/*.js "$HK_SERVER:$HK_PATH/server/lib/"  # 子模块(lib/llm.js 等), 漏传会 MODULE_NOT_FOUND
   ssh $HK_SERVER "cd $HK_PATH/server && npm install --silent 2>&1 | tail -2"
   ssh $HK_SERVER "pm2 restart shenyuan 2>&1 | head -3"
   echo "✓ 后端部署完成"

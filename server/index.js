@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const mon = require(process.env.MONITORING_PATH || require('path').join(__dirname, '../../shared/monitoring.js'))({project: 'shenyuan', require: require});
 const express = require('express');
 const cors = require('cors');
+const { deepseekChat, buildReadingPrompt } = require('./lib/llm');
 const astrology = require('./astrology.js');
 const pay = require('./pay.js');   // 中国支付：微信 NATIVE 扫码 + 支付宝当面付
 const hub = require(process.env.HUB_CLIENT_PATH || require('path').join(__dirname, '../../shared/pay-hub-client.js'));
@@ -13,7 +14,6 @@ const hub = require(process.env.HUB_CLIENT_PATH || require('path').join(__dirnam
 const app = express();
 const PORT = process.env.PORT || 3021;
 const DEEPSEEK_API_KEY = process.env.DS_KEY || process.env.DEEPSEEK_API_KEY;
-const DEEPSEEK_MODEL = 'deepseek-v4-flash';
 const STRIPE_SECRET_KEY = process.env.STRIPE_PAY_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:' + PORT;
@@ -217,44 +217,6 @@ function tryApplyReferral(refCode, inviteeId){
   if(wasInvited(inviteeId)) return false;  // 已被邀请过, 不重复
   createReferral(inviter.id, inviteeId);
   return true;
-}
-
-// ── DeepSeek chat ──
-async function deepseekChat(messages, opts = {}) {
-  const url = 'https://api.deepseek.com/v1/chat/completions';
-  const body = JSON.stringify({
-    model: opts.model || DEEPSEEK_MODEL,
-    messages,
-    temperature: opts.temperature ?? 0.7,
-    max_tokens: opts.maxTokens || 2048,
-    stream: false
-  });
-
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Bearer ' + DEEPSEEK_API_KEY
-    },
-    body,
-    signal: AbortSignal.timeout(opts.timeout || 120000)
-  });
-
-  if (!res.ok) {
-    const err = await res.text().catch(() => 'unknown');
-    throw new Error('DeepSeek API ' + res.status + ': ' + err.slice(0, 200));
-  }
-
-  const data = await res.json();
-  const msg = data.choices?.[0]?.message;
-  return msg?.content || msg?.reasoning_content || '';
-}
-
-function buildReadingPrompt(system, user) {
-  return [
-    { role: 'system', content: system },
-    { role: 'user', content: user }
-  ];
 }
 
 // ── Product prices (cents) ──
@@ -914,12 +876,52 @@ app.use(function(req, res, next) {
 // AI READING ENDPOINTS
 // ════════════════════════════════════════════
 
+// ── 한국어 사주 리더 (Phase-0): 韩语八字 — 温柔陪伴语气·韩式术语·食神生财叙事
+async function baziKoreanHandler(req, res) {
+  try {
+    const { birthYear, birthMonth, birthDay, birthHour, gender, question, mode } = req.body;
+    var full = hasFullAccess(req, ['bazi', '사주', '八字']);
+    const modeIns = (mode === 'gentle')
+      ? '\n\n【말투】따뜻하고 부드럽게, 무서운 말을 하지 마세요. 문제가 있어도 먼저 안아주고, 이해시키고, 이끌어 주세요.'
+      : '\n\n【말투】담백하고 따뜻하게, 꾸짖지 않고 솔직하게. 무서운 예언은 하지 마세요.';
+
+    const freePart = full
+      ? ''
+      : ' [무료 기본판] 아래 항목만 간단히(200-300자씩): 사주판, 오행 균형, 올해 운세 한 단락. 마지막에 "더 깊은 풀이(재물·애정·직업·건강·대운·10년 유년)는 심층 리포트에서 확인하세요"라고 안내하세요. 겁주지 말고 4-5문장으로 부드럽게 마무리.';
+
+    const sysPrompt = '당신은 정통 사주명리를 바탕으로 AI로 심층 운세 리포트를 쓰는 명리 연구원입니다. 독자를 무섭게 하지 않고, 따뜻하게 곁을 지키는 말투로 씁니다. 불안을 부추기는 예언은 절대 하지 않습니다.'
+      + '\n\n【전문 용어】십성(정관/편관/정인/편인/비견/겁재/상관/식신/정재/편재), 신살, 용신, 일간 등 한국 명리 용어를 정확히 사용하세요. 한문을 병기하지 말고 순수 한국어로 쓰세요.'
+      + '\n\n【글쓰기 톤】다정하고 잔잔하게. "좋은 사주다/나쁜 사주다"라는 이분법을 쓰지 않고, "강점과 약점, 그리고 잘 살리는 법"으로 풀어냅니다. 구체적인 조언(색·방위·습관)을 반드시 포함하세요.'
+      + '\n\n【구성】만세력 사주판(년월일시柱), 일간과 용신, 오행 균형과 보완법, 그리고 핵심 운세. 장르는 리포트보다 위로와 통찰.'
+      + modeIns + freePart;
+
+    const userPrompt = `내 사주를 봐주세요.
+출생: ${birthYear}년 ${birthMonth}월 ${birthDay}일${birthHour !== undefined && birthHour !== '' ? ' ' + birthHour + '시' : ' (태어난 시간 모름)'}
+성별: ${gender === 'male' ? '남성' : '여성'}
+관심: ${question || '전체 운세'}
+
+사주명리로 심층 분석해 주세요.`;
+
+    const messages = buildReadingPrompt(sysPrompt, userPrompt);
+    const result = await deepseekChat(messages, { maxTokens: full ? 16384 : 3500 });
+    insertReading.run('bazi', JSON.stringify(req.body), result, req.userId);
+    var ctxId = saveQaContext('bazi', req.body, result);
+    res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId });
+  } catch (err) {
+    console.error('[BAZI-KO ERR]', err.message);
+    res.status(500).json({ error: 'AI가 잠시 바빠요. 잠시 후 다시 시도해 주세요.' });
+  }
+}
+
 // POST /api/bazi — 八字命理
 app.post('/api/bazi', rateLimitMiddleware, async (req, res) => {
   try {
-    const { birthYear, birthMonth, birthDay, birthHour, gender, question, mode } = req.body;
+    const { birthYear, birthMonth, birthDay, birthHour, gender, question, mode, lang } = req.body;
     if (!birthYear || !birthMonth || !birthDay) {
       return res.status(400).json({ error: '请提供出生年月日' });
+    }
+    if (lang === 'ko') {
+      return baziKoreanHandler(req, res);
     }
 
     const modeInstruction = (mode === 'gentle')
@@ -1073,12 +1075,14 @@ app.post('/api/bazi', rateLimitMiddleware, async (req, res) => {
     var useMessages = messages;
     if (!full) {
       useMessages = buildReadingPrompt(
-        '你是精通八字命理的命理师。为用户生成一份【基础版】命盘概览,只包含三部分:①四柱八字排盘(年月日时柱天干地支及简释)②五行能量分析(各五行百分比、最旺最弱、需补什么)③今年运势概览(一段)。语言简体中文,温暖白话,约2000字。结尾必须明确告知:更完整的财运格局、感情姻缘、事业升迁、健康预警、8步大运、未来10年流年详批、神煞、开运锦囊等共12个维度,在【完整版报告】中解锁。',
-        '请为以下命主生成【基础版】命盘概览(仅四柱+五行+今年运势,约2000字,结尾引导解锁完整版):\n出生:' + birthYear + '年' + birthMonth + '月' + birthDay + '日' + (birthHour !== undefined ? birthHour + '时' : '(时辰不详)') + '\n性别:' + (gender === 'male' ? '男' : '女')
+        '你是精通八字命理的命理师。为用户生成一份【基础版】命盘概览,包含:①四柱八字排盘(年月日时柱天干地支及简释)②五行能量分析(各五行百分比、最旺最弱、需补什么)③今年运势概览(一段)④财运格局概览(一段)⑤感情姻缘概览(一段)⑥事业格局概览(一段)⑦开运锦囊(3-5条具体建议)。语言简体中文,温暖白话,约4000字。每部分写2-3段,让用户感受到价值。但不要展开太细节(大运流年神煞等留完整版)。结尾必须明确告知:完整的财运格局、感情姻缘、事业升迁、健康预警、8步大运、未来10年流年详批、神煞等,在【完整版报告】中解锁。',
+        '请为以下命主生成【基础版】命盘概览(包含四柱+五行+今年+财运+感情+事业+开运,约4000字,结尾引导解锁完整版):\n出生:' + birthYear + '年' + birthMonth + '月' + birthDay + '日' + (birthHour !== undefined ? birthHour + '时' : '(时辰不详)') + '\n性别:' + (gender === 'male' ? '男' : '女')
       );
     }
+    // 免费版maxTokens同步提升
+    var freeMaxTokens = full ? 16384 : 6000;
     useMessages = useMessages.map(function(m){ return (m&&m.role==='system')?{role:'system',content:(m.content||'')+'\n\n【必须遵守】报告最后必须附一行免责声明:"本报告由AI生成,仅供参考娱乐,不构成医学、法律、投资或人生重大决策建议。"'}:m; });
-    const result = await deepseekChat(useMessages, { maxTokens: full ? 16384 : 3500 });
+    const result = await deepseekChat(useMessages, { maxTokens: freeMaxTokens });
     insertReading.run('bazi', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('bazi', req.body, result);
 
@@ -2273,6 +2277,54 @@ app.post('/api/zhiyuan', rateLimitMiddleware, async (req, res) => {
   } catch (err) {
     console.error('[ZHIYUAN ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
+  }
+});
+
+// POST /api/feedback — 用户反馈（联系表单真实提交）
+app.post('/api/feedback', rateLimitMiddleware, (req, res) => {
+  try {
+    const { name, email, message } = req.body;
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: '请填写完整信息' });
+    }
+    if (!_M.feedbacks) _M.feedbacks = [];
+    _M.feedbacks.push({
+      id: _M._id.o++,
+      name: name,
+      email: email,
+      message: message,
+      created_at: new Date().toISOString()
+    });
+    _persist();
+    console.log('[FEEDBACK]', name, email, message.slice(0, 60));
+    res.json({ success: true, message: '感谢您的反馈，我们将尽快回复！' });
+  } catch (err) {
+    console.error('[FEEDBACK ERR]', err.message);
+    res.status(500).json({ error: '提交失败，请稍后重试' });
+  }
+});
+
+// POST /api/bazi/recent-input — 付费回流兜底：根据token返回最近一次排盘入参
+app.post('/api/bazi/recent-input', (req, res) => {
+  try {
+    var auth = req.headers['authorization'] || '';
+    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : (req.body && req.body.token || '');
+    var t = getToken ? getToken.get(token) : null;
+    var userId = t ? t.user_id : null;
+    if (!userId) return res.json({ input: null });
+    // 从readings里查最近一条bazi
+    var recent = _M.readings.filter(function(r){ return r.user_id === userId && r.type === 'bazi'; });
+    recent.sort(function(a,b){ return (b.id||0) - (a.id||0); });
+    if (recent.length === 0) return res.json({ input: null });
+    var last = recent[0];
+    var inp = typeof last.input === 'string' ? JSON.parse(last.input) : last.input;
+    res.json({ input: {
+      birthYear: inp.birthYear, birthMonth: inp.birthMonth, birthDay: inp.birthDay,
+      birthHour: inp.birthHour, gender: inp.gender, name: inp.name || ''
+    }});
+  } catch (err) {
+    console.error('[RECENT INPUT ERR]', err.message);
+    res.json({ input: null });
   }
 });
 
