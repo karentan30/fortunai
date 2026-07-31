@@ -91,11 +91,17 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:400px;width:90%;padding:12px 16px;border-radius:9px;font-size:12px;text-align:center;font-family:'Apple SD Gothic Neo',sans-serif;cursor:pointer}
 .toast.error{background:rgba(180,40,40,0.92);color:#fff}
 .toast.info{background:rgba(58,48,38,0.95);color:var(--gold-light)}
+/* login badge */
+.login-badge{position:fixed;top:14px;right:14px;z-index:99;font-size:11px;color:var(--jade);background:rgba(63,158,130,0.1);border:1px solid rgba(63,158,130,0.3);border-radius:20px;padding:4px 10px;letter-spacing:.3px;font-family:'Apple SD Gothic Neo',sans-serif}
+/* login hint above paywall */
+.login-hint{text-align:center;font-size:11px;color:var(--ink-dim);padding:6px 16px 2px;font-family:'Apple SD Gothic Neo',sans-serif;letter-spacing:.2px}
+.login-hint a{color:var(--jade);text-decoration:none;font-weight:500}
 </style>
 </head>
 <body>
 
 <button class="back-btn" onclick="history.back()">←</button>
+<div class="login-badge" id="loginBadge" style="display:none">로그인됨 ✓</div>
 
 <!-- ── Input ── -->
 <div class="input-screen" id="inputScreen">
@@ -279,7 +285,9 @@ function showReport(aiText, contextId, tier, locked) {
     var cta = document.createElement('div');
     cta.className = 'sticky-cta';
     cta.id = 'stickyCta';
+    var isLoggedIn = !!localStorage.getItem('sy_token');
     cta.innerHTML =
+      (!isLoggedIn ? '<div class="login-hint">이미 계정이 있으신가요? <a href="/pages/login.html?redirect=pages/saju-KR.html">로그인하면 구매 기록이 저장됩니다</a></div>' : '') +
       '<div class="price-row"><span class="price-now">9,900원</span><span class="price-cur">· 기본 심층 리포트</span></div>' +
       '<button class="btn-unlock" onclick="checkout(\'bazi_full\')">심층 리포트 열기 · 9,900원</button>' +
       '<div style="display:flex;gap:8px;margin-top:8px">' +
@@ -368,6 +376,14 @@ function checkout(tier) {
     btn.disabled = false; btn.textContent = '심층 리포트 열기 · 9,900원';
   });
 }
+
+// login badge
+(function(){
+  if (localStorage.getItem('sy_token')) {
+    var badge = document.getElementById('loginBadge');
+    if (badge) badge.style.display = 'block';
+  }
+})();
 
 // paid return
 function handlePaidReturn() {
