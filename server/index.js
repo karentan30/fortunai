@@ -19,6 +19,24 @@ const DEEPSEEK_API_KEY = process.env.DS_KEY || process.env.DEEPSEEK_API_KEY;
 const STRIPE_SECRET_KEY = process.env.STRIPE_PAY_SECRET_KEY;
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:' + PORT;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+
+// ── 邮件发送（Resend API，有 key 才发，无 key 仅打印）──
+async function sendEmail({ to, subject, html }) {
+  if (!RESEND_API_KEY) {
+    console.log('[EMAIL-SKIPPED] No RESEND_API_KEY. Would send to:', to, '|', subject);
+    return;
+  }
+  try {
+    const r = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + RESEND_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: 'ShenYuan <noreply@shenyuan.app>', to, subject, html })
+    });
+    const d = await r.json();
+    console.log('[EMAIL]', subject, '→', to, d.id || d.error);
+  } catch(e) { console.error('[EMAIL-ERR]', e.message); }
+}
 
 // ── Stripe (only loaded when key exists) ──
 let stripe = null;
@@ -97,7 +115,7 @@ app.get('/', (req, res) => {
 
 // ── Data Store (内存运算 + JSON 快照落盘, 扛 PM2 重启 · 防丢单红线) ──
 // 结构不变; 每次写操作后 _persist() 去抖落盘。Vercel 无持久盘时降级为纯内存(读写失败静默)。
-const _M = { users:[], tokens:[], orders:[], readings:[], subs:[], referrals:[], rewards:[], chatUsage:{}, feedbacks:[], _id:{u:1,t:1,o:1,r:1,s:1,rf:1} };
+const _M = { users:[], tokens:[], orders:[], readings:[], subs:[], referrals:[], rewards:[], chatUsage:{}, feedbacks:[], streaks:{}, _id:{u:1,t:1,o:1,r:1,s:1,rf:1} };
 const _DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 // 启动加载: 把磁盘快照合并回 _M(保留结构与自增计数器), 损坏则跳过从空开始
 (function _loadStore(){
@@ -776,6 +794,17 @@ app.post('/api/stripe-webhook', async (req, res) => {
         });
         _persist();
         console.log('[SUB] cancelled/failed subId=' + subId);
+        // 扣款失败时发挽留邮件
+        if (event.type === 'invoice.payment_failed') {
+          const custEmail = obj.customer_email || '';
+          if (custEmail) {
+            sendEmail({
+              to: custEmail,
+              subject: '善缘会员续费失败 — 请更新支付方式',
+              html: `<div style="font-family:serif;max-width:480px;margin:0 auto;padding:32px;background:#faf6ee;color:#3a2a0e"><h2 style="color:#9a7529">善缘 · 续费提醒</h2><p>您好，您的善缘会员订阅续费未能成功处理。</p><p>为避免会员权益中断，请点击下方按钮更新支付方式：</p><a href="https://shenyuan.mylumee.cn/pages/member.html" style="display:inline-block;margin:16px 0;padding:12px 28px;background:linear-gradient(135deg,#a8823a,#8a6a26);color:#fff;text-decoration:none;border-radius:9px;font-size:14px">更新支付方式 →</a><p style="font-size:11px;color:#9a7529;opacity:0.6">如您已取消订阅，请忽略此邮件。</p></div>`
+            }).catch(function(){});
+          }
+        }
         break;
       }
     }
@@ -1534,6 +1563,20 @@ B方：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined ? p2Hour+'时'
 });
 
 // POST /api/daily — 每日运势
+function updateStreak(userId) {
+  if (!userId) return { streak: 0, isNew: false };
+  if (!_M.streaks) _M.streaks = {};
+  var s = _M.streaks[userId] || { count: 0, lastDate: null };
+  var today = new Date().toISOString().slice(0, 10);
+  if (s.lastDate === today) return { streak: s.count, isNew: false };
+  var yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  s.count = (s.lastDate === yesterday) ? s.count + 1 : 1;
+  s.lastDate = today;
+  _M.streaks[userId] = s;
+  _persist();
+  return { streak: s.count, isNew: true };
+}
+
 app.post('/api/daily', rateLimitMiddleware, async (req, res) => {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender } = req.body;
@@ -1586,7 +1629,8 @@ app.post('/api/daily', rateLimitMiddleware, async (req, res) => {
     const result = await deepseekChat(messages, { maxTokens: 8192 });
     insertReading.run('daily', JSON.stringify(req.body), result, req.userId);
 
-    res.json({ reading: result });
+    const streakData = updateStreak(req.userId || req.ip);
+    res.json({ reading: result, streak: streakData.streak });
   } catch (err) {
     console.error('[DAILY ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用', detail: err.message });

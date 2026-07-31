@@ -396,6 +396,7 @@ body::before {
 .stardust span{position:absolute;width:3px;height:3px;background:rgba(201,168,76,0.6);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
 .bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(14,10,4,1) 0%,rgba(14,10,4,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
 </style>
+<link rel="manifest" href="/manifest.json">
 </head>
 <body>
 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题" style="z-index:999">🌙</button>
@@ -599,6 +600,7 @@ function getDailyReading() {
       document.getElementById('resultArea').style.display = 'block';
       document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
       injectDisclaimer('resultArea');
+      if (data.streak) showStreak(data.streak);
       loadTomorrowTeaser();
     } else {
       showToast('获取天机失败，请稍后重试', 'error');
@@ -610,6 +612,20 @@ function getDailyReading() {
     showToast('网络异常，请稍后重试', 'error');
     document.getElementById('inputWrap').style.display = 'block';
   });
+}
+
+function showStreak(count) {
+  if (!count || count < 2) return;
+  var el = document.getElementById('streakBadge');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'streakBadge';
+    el.style.cssText = 'text-align:center;padding:14px 16px 4px;font-size:13px;color:#9a7529;letter-spacing:.05em';
+    var container = document.getElementById('resultArea');
+    if (container) container.prepend(el);
+  }
+  var flames = count >= 7 ? '🔥🔥🔥' : count >= 3 ? '🔥🔥' : '🔥';
+  el.textContent = flames + ' 连续 ' + count + ' 天查运势';
 }
 
 function loadTomorrowTeaser() {
@@ -669,6 +685,52 @@ function injectDisclaimer(containerId) {
 <script>
 (function(){var t=localStorage.getItem('sy_theme');if(t==='light'){document.documentElement.classList.add('light-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='☀️';}})();
 function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('light-mode');var l=e.classList.contains('light-mode');if(b)b.textContent=l?'☀️':'🌙';localStorage.setItem('sy_theme',l?'light':'dark');}
+</script>
+
+<div id="pwaPrompt" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:440px;z-index:999;background:linear-gradient(135deg,rgba(58,48,38,0.96),rgba(42,32,22,0.98));border:1px solid rgba(201,168,76,0.3);border-radius:16px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.35);">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="font-size:28px;flex-shrink:0">📲</div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:600;color:#e0c874;margin-bottom:4px">添加到主屏幕</div>
+      <div style="font-size:11px;color:rgba(224,200,116,0.7);line-height:1.5">每天一键查运势，不错过任何天机</div>
+    </div>
+    <button onclick="document.getElementById('pwaPrompt').style.display='none'" style="background:none;border:none;color:rgba(224,200,116,0.5);font-size:18px;cursor:pointer;padding:4px;line-height:1">✕</button>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:14px">
+    <button id="pwaInstallBtn" style="flex:1;padding:10px;background:linear-gradient(135deg,#a8823a,#8a6a26);border:none;border-radius:9px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">立即添加</button>
+    <button onclick="localStorage.setItem('pwa_dismissed','1');document.getElementById('pwaPrompt').style.display='none'" style="padding:10px 16px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);border-radius:9px;color:rgba(224,200,116,0.7);font-size:12px;cursor:pointer;font-family:inherit">稍后</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  if (localStorage.getItem('pwa_dismissed') || localStorage.getItem('pwa_installed')) return;
+  var deferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    deferredPrompt = e;
+    setTimeout(function(){ document.getElementById('pwaPrompt').style.display = 'block'; }, 3000);
+  });
+  document.getElementById('pwaInstallBtn').addEventListener('click', function(){
+    if (!deferredPrompt) {
+      document.getElementById('pwaPrompt').innerHTML = '<div style="color:#e0c874;font-size:13px;line-height:1.7;text-align:center;padding:8px 0">iPhone: 点击底部 <b>分享</b> 按钮 → 选择<b>「添加到主屏幕」</b><br><span style="font-size:11px;color:rgba(224,200,116,0.6)">添加后在桌面直接打开</span></div>';
+      return;
+    }
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(function(r){
+      if (r.outcome === 'accepted') localStorage.setItem('pwa_installed', '1');
+      document.getElementById('pwaPrompt').style.display = 'none';
+      deferredPrompt = null;
+    });
+  });
+  window.addEventListener('load', function(){
+    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+    var isInStandalone = window.navigator.standalone;
+    if (isIOS && !isInStandalone && !localStorage.getItem('pwa_dismissed') && !localStorage.getItem('pwa_installed')) {
+      setTimeout(function(){ document.getElementById('pwaPrompt').style.display = 'block'; }, 5000);
+    }
+  });
+})();
 </script>
 </body>
 </html>
