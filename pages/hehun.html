@@ -62,6 +62,10 @@ body::before{content:'';position:fixed;inset:0;
 .person-label{font-size:10px;letter-spacing:0.16em;margin-bottom:8px;text-align:center}
 .person-a .person-label{color:var(--rose)}
 .person-b .person-label{color:var(--jade)}
+.name-input{width:100%;background:var(--mid);border:1px solid rgba(201,168,76,0.12);border-radius:5px;color:var(--text);font-family:'Noto Serif SC',serif;font-size:12px;padding:8px 8px;margin-bottom:8px;outline:none;min-height:36px;text-align:center;letter-spacing:0.08em}
+.name-input:focus{border-color:rgba(201,168,76,0.4)}
+.person-a .name-input:focus{border-color:rgba(201,96,122,0.4)}
+.person-b .name-input:focus{border-color:rgba(91,191,160,0.4)}
 .mini-select{width:100%;background:var(--mid);border:1px solid rgba(201,168,76,0.12);border-radius:5px;color:var(--text);font-family:'Noto Serif SC',serif;font-size:11px;padding:7px 6px;margin-bottom:6px;-webkit-appearance:none;outline:none;min-height:44px}
 .mini-select option{background:var(--card)}
 .gender-row{display:flex;gap:5px;margin-top:4px}
@@ -250,6 +254,7 @@ body::before {
     <!-- Person A -->
     <div class="person-card person-a">
       <div class="person-label">本命 / 您</div>
+      <input class="name-input" id="nameA" type="text" maxlength="8" placeholder="你的名字（选填）">
       <select class="mini-select" id="aYear">
         <option value="">年份</option>
         <script>for(let y=2005;y>=1950;y--) document.write(`<option value="${y}">${y}</option>`)</script>
@@ -279,6 +284,7 @@ body::before {
     <!-- Person B -->
     <div class="person-card person-b">
       <div class="person-label">TA / 对方</div>
+      <input class="name-input" id="nameB" type="text" maxlength="8" placeholder="TA的名字（选填）">
       <select class="mini-select" id="bYear">
         <option value="">年份</option>
         <script>for(let y=2005;y>=1950;y--) document.write(`<option value="${y}">${y}</option>`)</script>
@@ -429,6 +435,10 @@ body::before {
 
   <!-- Share bar -->
   <div class="share-bar" id="shareBar">
+    <div class="share-btn" onclick="generateShareImage()" style="border-color:rgba(201,168,76,0.35);background:rgba(201,168,76,0.06)">
+      <span class="share-icon">🖼</span>
+      <span class="share-label" style="color:var(--gold)">分享图</span>
+    </div>
     <div class="share-btn" onclick="shareWechat()">
       <span class="share-icon">💬</span>
       <span class="share-label">微信分享</span>
@@ -541,6 +551,7 @@ function showResults(ay,by){
   const base = det(ay,by,55,95);
   const relBonus = rel.includes('大吉')?8:rel.includes('克')?-8:0;
   const score = Math.min(97,Math.max(42, base+relBonus));
+  window._syScore = score; window._syNameA = document.getElementById('nameA').value.trim()||'你'; window._syNameB = document.getElementById('nameB').value.trim()||'TA';
 
   // Animate score ring
   document.getElementById('results').classList.add('show');
@@ -563,6 +574,7 @@ function showResults(ay,by){
                           ['需要经营','命格有冲，建议咨询大师化解'];
   document.getElementById('scoreGrade').textContent=grade[0];
   document.getElementById('scoreSub').textContent=grade[1];
+  window._syGrade = grade[0]; window._syGradeSub = grade[1];
 
   // 辅助函数：安全的月份计算（保证范围1-12）
   const safeMonth = (base, offset) => {
@@ -753,6 +765,71 @@ function captureRefParam() {
   } catch(e) {}
 }
 captureRefParam();
+function generateShareImage() {
+  var score = window._syScore || 0;
+  var nameA = window._syNameA || '你';
+  var nameB = window._syNameB || 'TA';
+  var grade = window._syGrade || '';
+  var gradeSub = window._syGradeSub || '';
+  var S = 1080;
+  var c = document.createElement('canvas');
+  c.width = S; c.height = S;
+  var ctx = c.getContext('2d');
+  // Background
+  var bg = ctx.createLinearGradient(0,0,S,S);
+  bg.addColorStop(0,'#1a0810'); bg.addColorStop(0.5,'#250c1a'); bg.addColorStop(1,'#0f0508');
+  ctx.fillStyle = bg; ctx.fillRect(0,0,S,S);
+  // Gold border
+  ctx.strokeStyle='rgba(201,168,76,0.25)'; ctx.lineWidth=2;
+  ctx.strokeRect(40,40,S-80,S-80);
+  ctx.strokeStyle='rgba(201,168,76,0.12)'; ctx.lineWidth=1;
+  ctx.strokeRect(52,52,S-104,S-104);
+  // Corner accents
+  var acc=[[[40,40],[80,40],[40,80]],[[S-40,40],[S-80,40],[S-40,80]],[[40,S-40],[80,S-40],[40,S-80]],[[S-40,S-40],[S-80,S-40],[S-40,S-80]]];
+  ctx.strokeStyle='rgba(201,168,76,0.6)'; ctx.lineWidth=2;
+  acc.forEach(function(pts){ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);ctx.lineTo(pts[1][0],pts[1][1]);ctx.moveTo(pts[0][0],pts[0][1]);ctx.lineTo(pts[2][0],pts[2][1]);ctx.stroke();});
+  // Brand
+  ctx.fillStyle='rgba(201,168,76,0.75)'; ctx.font='500 26px "Apple SD Gothic Neo",sans-serif';
+  ctx.textAlign='center'; ctx.fillText('✦  S H E N Y U A N  ·  善 缘  ✦',S/2,108);
+  // Names
+  var nameStr = nameA + '  ❤  ' + nameB;
+  ctx.fillStyle='rgba(255,255,255,0.92)'; ctx.font='bold 58px "Apple SD Gothic Neo","PingFang SC",sans-serif';
+  ctx.fillText(nameStr,S/2,200);
+  // Score ring
+  var cx=S/2, cy=490, r=168;
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=16; ctx.stroke();
+  var ringColor = score>=76?'#5bbfa0':score>=55?'#c9a84c':'#c9607a';
+  ctx.beginPath(); ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+(score/100)*Math.PI*2);
+  ctx.strokeStyle=ringColor; ctx.lineWidth=16; ctx.lineCap='round'; ctx.stroke();
+  // Score number
+  ctx.fillStyle='#fff'; ctx.font='bold 108px "Cormorant Garamond","Georgia",serif';
+  ctx.textAlign='center'; ctx.fillText(score,cx,cy+22);
+  ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.font='500 22px "Apple SD Gothic Neo",sans-serif';
+  ctx.fillText('%  合婚匹配度',cx+36,cy+22);
+  // Grade
+  ctx.fillStyle=ringColor; ctx.font='bold 52px "Apple SD Gothic Neo","PingFang SC",sans-serif';
+  ctx.fillText(grade,cx,cy+r+64);
+  ctx.fillStyle='rgba(255,255,255,0.5)'; ctx.font='26px "Apple SD Gothic Neo",sans-serif';
+  ctx.fillText(gradeSub,cx,cy+r+106);
+  // Divider line
+  ctx.strokeStyle='rgba(201,168,76,0.2)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(S/2-180,cy+r+128); ctx.lineTo(S/2+180,cy+r+128); ctx.stroke();
+  // CTA
+  ctx.fillStyle='rgba(201,168,76,0.65)'; ctx.font='22px "Apple SD Gothic Neo",sans-serif';
+  ctx.fillText('测你们的合婚 →  shenyuan.mylumee.cn',cx,cy+r+168);
+  ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.font='18px "Apple SD Gothic Neo",sans-serif';
+  ctx.fillText('扫一扫 · 2人才能测合婚',cx,cy+r+200);
+  // Download
+  c.toBlob(function(blob){
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url; a.download='善缘合婚-'+nameA+nameB+'.png'; a.click();
+    URL.revokeObjectURL(url);
+    showToast('分享图已保存，发给TA一起看！');
+  },'image/png');
+}
+
 function shareWechat(url) {
   if (!url) url = getShareUrl(window.location.href);
   var t = document.createElement('textarea');
