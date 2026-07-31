@@ -82,10 +82,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .sticky-cta .price-old{font-size:12px;color:var(--ink-faint);text-decoration:line-through}
 .sticky-cta .price-now{font-size:24px;color:var(--gold);font-weight:700}
 .sticky-cta .price-cur{font-size:11px;color:var(--ink-dim)}
-.btn-unlock{width:100%;padding:13px 0;background:linear-gradient(135deg,#a8823a,#8a6a26);border:none;border-radius:10px;color:#fff;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:1px;cursor:pointer;box-shadow:0 4px 14px rgba(154,117,41,0.3)}
+.btn-unlock{width:100%;padding:15px 0;background:linear-gradient(135deg,#a8823a,#7a5c1e);border:none;border-radius:14px;color:#fff;font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;cursor:pointer;box-shadow:0 4px 18px rgba(154,117,41,0.35)}
 .btn-unlock:active{transform:scale(0.98)}
 .btn-unlock:disabled{opacity:.55}
-.btn-ghost{width:100%;margin-top:8px;padding:10px 0;background:transparent;border:1px solid rgba(63,158,130,0.5);border-radius:10px;color:var(--jade);font-family:inherit;font-size:12px;letter-spacing:.5px;cursor:pointer}
+.btn-vip{width:100%;padding:15px 0;background:linear-gradient(135deg,#6b3fa0,#9b6fd4);border:none;border-radius:14px;color:#fff;font-family:'Noto Sans KR',sans-serif;font-size:15px;font-weight:700;letter-spacing:.5px;cursor:pointer;box-shadow:0 4px 18px rgba(107,63,160,0.35);margin-top:8px}
+.btn-vip:active{transform:scale(0.98)}
+.btn-ghost{width:100%;margin-top:8px;padding:12px 0;background:transparent;border:1.5px solid rgba(63,158,130,0.5);border-radius:14px;color:var(--jade);font-family:'Noto Sans KR',sans-serif;font-size:13px;font-weight:500;cursor:pointer}
+.kakao-share-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px 0;background:#FEE500;border:none;border-radius:14px;color:#3C1E1E;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px}
+.kakao-share-btn:active{transform:scale(0.98)}
 
 /* toast */
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:400px;width:90%;padding:12px 16px;border-radius:9px;font-size:12px;text-align:center;font-family:'Apple SD Gothic Neo',sans-serif;cursor:pointer}
@@ -288,11 +292,11 @@ function showReport(aiText, contextId, tier, locked) {
     var isLoggedIn = !!localStorage.getItem('sy_token');
     cta.innerHTML =
       (!isLoggedIn ? '<div class="login-hint">이미 계정이 있으신가요? <a href="/pages/login.html?redirect=pages/saju-KR.html">로그인하면 구매 기록이 저장됩니다</a></div>' : '') +
-      '<div class="price-row"><span class="price-now">9,900원</span><span class="price-cur">· 기본 심층 리포트</span></div>' +
-      '<button class="btn-unlock" onclick="checkout(\'bazi_full\')">심층 리포트 열기 · 9,900원</button>' +
+      '<div class="price-row"><span class="price-old">19,900원</span><span class="price-now" style="margin-left:8px">14,900원</span><span class="price-cur">· 기본 심층 리포트</span></div>' +
+      '<button class="btn-unlock" onclick="checkout(\'bazi_full\')">사주 리포트 열기 · 14,900원</button>' +
       '<div style="display:flex;gap:8px;margin-top:8px">' +
-      '<button class="btn-unlock" onclick="checkout(\'bazi_vip\')" style="background:linear-gradient(135deg,#7a4fb0,#9b6fd4);flex:1;font-size:13px">👑 심층+대운 · 19,900원</button>' +
-      '<button class="btn-ghost" onclick="checkout(\'member\')" style="flex:1;font-size:13px">월정액 · ₩9,900</button>' +
+      '<button class="btn-vip" onclick="checkout(\'bazi_vip\')">👑 프리미엄 · 심층+대운 · 24,900원</button>' +
+      '<button class="btn-ghost" onclick="checkout(\'member\')">월정액 구독 · ₩12,900/월</button>' +
       '</div>' +
       '<div style="font-size:10px;color:rgba(58,48,38,0.45);text-align:center;margin-top:6px">19,900원 = 8,000자+ · 10년 대운 · 평생 보관</div>';
     document.body.appendChild(cta);
@@ -304,21 +308,37 @@ function showReport(aiText, contextId, tier, locked) {
   var shareDiv = document.createElement('div');
   shareDiv.id = 'krShareBar';
   shareDiv.style.cssText = 'text-align:center;padding:20px 16px 40px;';
-  shareDiv.innerHTML = '<p style="font-size:12px;color:#9a7529;margin-bottom:12px">친구에게 공유하면, 둘 다 무료 궁합 리포트를 받아요 🎁</p>' +
-    '<button onclick="krShare()" style="background:linear-gradient(135deg,#a8823a,#8a6a26);color:#fff;border:none;border-radius:8px;padding:10px 28px;font-size:13px;font-family:inherit;cursor:pointer">친구에게 공유하고 무료 리포트 받기 →</button>';
+  shareDiv.innerHTML = '<p style="font-size:12px;color:#9a7529;margin-bottom:12px;font-family:\'Noto Sans KR\',sans-serif">친구에게 공유하면 둘 다 무료 궁합 리포트 🎁</p>' +
+    '<button onclick="krShareKakao()" class="kakao-share-btn"><span style="font-size:18px">💬</span> 카카오톡으로 공유하기</button>' +
+    '<button onclick="krShareInsta()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px 0;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);border:none;border-radius:14px;color:#fff;font-family:\'Noto Sans KR\',sans-serif;font-size:14px;font-weight:600;cursor:pointer;margin-top:8px"><span style="font-size:18px">📸</span> 인스타 스토리 공유</button>' +
+    '<button onclick="krShare()" style="width:100%;padding:10px 0;background:transparent;border:1px solid rgba(154,117,41,0.3);border-radius:12px;color:var(--gold);font-family:\'Noto Sans KR\',sans-serif;font-size:12px;cursor:pointer;margin-top:8px">🔗 링크 복사</button>';
   screen.appendChild(shareDiv);
 }
 
-function krShare() {
-  // 자신의 초대 코드(sy_my_ref_code) 사용 — sy_ref_code는 내가 초대받을 때 쓴 코드임
+function _getShareUrl() {
   var refCode = localStorage.getItem('sy_my_ref_code') || '';
-  var shareUrl = location.origin + '/pages/saju-KR.html' + (refCode ? '?ref=' + refCode : '');
-  var shareText = '🎋 무료 사주 한번 봐봐요! 오행·용신·올해 운세 AI가 풀어줘요';
+  return location.origin + '/pages/saju-KR.html' + (refCode ? '?ref=' + refCode : '');
+}
+function krShareKakao() {
+  var shareUrl = _getShareUrl();
+  var shareText = '🔮 AI 사주 봤는데 진짜 소름... 나 올해 운세 너무 잘 맞아\n무료로 한번 봐봐: ' + shareUrl;
   if (navigator.share) {
-    navigator.share({ title: '선연 사주', text: shareText, url: shareUrl }).catch(function(){});
+    navigator.share({ title: '선연 · AI 사주', text: shareText, url: shareUrl }).catch(function(){});
   } else {
-    navigator.clipboard ? navigator.clipboard.writeText(shareUrl).then(function(){ toast('링크가 복사됐어요! 카톡에서 친구에게 보내주세요 🎁'); }) : toast(shareUrl);
+    navigator.clipboard.writeText(shareText).then(function(){ toast('복사됐어요! 카카오톡에 붙여넣기 해주세요 💬'); });
   }
+}
+function krShareInsta() {
+  var shareUrl = _getShareUrl();
+  if (navigator.share) {
+    navigator.share({ title: '선연 사주', text: '내 사주 봤는데 진짜 신기해 👀 ' + shareUrl, url: shareUrl }).catch(function(){});
+  } else {
+    navigator.clipboard.writeText(shareUrl).then(function(){ toast('링크 복사! 인스타 스토리에 붙여넣기 하세요 📸'); });
+  }
+}
+function krShare() {
+  var shareUrl = _getShareUrl();
+  navigator.clipboard ? navigator.clipboard.writeText(shareUrl).then(function(){ toast('링크가 복사됐어요! 🔗'); }) : toast(shareUrl);
 }
 
 function parseSections(text) {
