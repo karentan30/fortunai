@@ -320,7 +320,7 @@ footer .disc{font-size:11px;color:rgba(243,236,224,.4);margin-top:14px;line-heig
     </div>
     </div>
     <button class="cta" style="margin-top:6px" onclick="location.href='saju-KR.html'">무료로 먼저 보기 →</button>
-    <div class="pay-icons"><span class="pay kko">카카오페이</span><span class="pay npay">네이버페이</span><span class="pay toss">토스</span></div>
+    <div class="pay-icons"><span class="pay kko">🔒 안전한 카드 결제</span></div>
     <div class="pay-note">안전 결제 · 결제 후 7일 이내 미열람 시 환불 가능</div>
   </section>
 
@@ -375,31 +375,21 @@ function goFree(){
 
 /* ── 카카오 로그인 (배포 시 실제 SDK 연동) ── */
 function loginKakao(){
-  if(window.Kakao&&Kakao.isInitialized()){
-    Kakao.Auth.authorize({redirectUri:location.origin+'/oauth/kakao'});
-  }else{
-    // TODO: Kakao.init('JS_APP_KEY') 를 배포 환경에서 실행
-    goFree();
-  }
+  // 🔴 Kakao SDK 미연결: 카카오로 바로 시작이 불가 → 안내 후 생년월일 입력으로 유도
+  alert('카카오 로그인은 준비 중이에요. 지금은 생년월일만으로 바로 시작하실 수 있어요!');
+  goFree();
 }
 
 /* ── 카카오톡 궁합 공유 (裂变 · Kakao Share API) ── */
 function shareKakaoGunghap(){
-  if(window.Kakao&&Kakao.isInitialized()&&Kakao.Share){
-    Kakao.Share.sendDefault({
-      objectType:'feed',
-      content:{
-        title:'우리 궁합, 30년 대운까지 맞춰봤어',
-        description:'생년월일만 넣으면 바로 나와 · 초대받은 궁합 리포트 무료 🎁',
-        imageUrl:location.origin+'/og-gunghap.png',
-        link:{mobileWebUrl:location.origin+'/g?ref=INVITE',webUrl:location.origin+'/g?ref=INVITE'}
-      },
-      buttons:[{title:'내 궁합 확인하기',link:{mobileWebUrl:location.origin+'/g?ref=INVITE',webUrl:location.origin+'/g?ref=INVITE'}}]
-    });
-  }else{
-    // TODO: Kakao SDK 초기화 후 위 Share.sendDefault 로 실제 裂变 링크 전송
-    location.href='hehun.html';
-  }
+  // 🔴 Kakao Share SDK 미연결: 안내 후 일반 링크 복사로 대체
+  var url = 'saju-KR.html';
+  var t = document.createElement('textarea');
+  t.value = url; t.style.position='fixed'; t.style.left='-9999px';
+  document.body.appendChild(t); t.select();
+  try { document.execCommand('copy'); alert('링크가 복사됐어요! 카톡에서 친구에게 보내주세요 🎁'); }
+  catch(e){ alert('링크: ' + location.origin + '/' + url); }
+  document.body.removeChild(t);
 }
 
 /* 合规: 移除伪造社会证明/稀缺性脚本(假用户数/假在线/假名额/永不过期倒计时)

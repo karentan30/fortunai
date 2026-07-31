@@ -417,7 +417,7 @@ body::before {
     <div class="locked-overlay">
       <div class="lock-icon">🔒</div>
       <div class="lock-title">解锁完整合婚报告</div>
-      <button class="lock-btn" onclick="createCheckout(this, 'full', 19.9)">解锁完整报告 · $19.90</button>
+      <button class="lock-btn">解锁完整报告 · $19.90</button>
     </div>
   </div>
 
@@ -447,7 +447,7 @@ body::before {
 
 <!-- sticky -->
 <div class="sticky-bar" id="stickyBar">
-  <button class="sticky-cta" onclick="createCheckout(this, 'master', 49)">预约大师批婚 · $49 · 专业语音解读</button>
+  <button class="sticky-cta">解锁完整报告 · $19.90</button>
 </div>
 
 <script>
@@ -483,6 +483,22 @@ function selG(p, g){
 function selTier(n){
   curTier=n;
   [1,2,3].forEach(i=>{ document.getElementById('t'+i).classList.toggle('sel', i===n) });
+  syncPaywall();
+}
+// 🔴 修复: 锁卡/吸底 CTA 金额随所选档位同步(之前写死 $19.9/$49, 用户选$9.9却被收$49)
+function syncPaywall(){
+  var TIER_MAP = { 1:['basic',9.9,'基础报告'], 2:['full',19.9,'完整报告'], 3:['master',49,'大师批婚'] };
+  var t = TIER_MAP[curTier] || TIER_MAP[2];
+  var lockBtn = document.querySelector('.lock-btn');
+  if (lockBtn) {
+    lockBtn.onclick = function(){ createCheckout(this, t[0], t[1]); };
+    lockBtn.textContent = '解锁' + t[2] + ' · $' + t[1].toFixed(2);
+  }
+  var sticky = document.querySelector('.sticky-cta');
+  if (sticky) {
+    sticky.onclick = function(){ createCheckout(this, t[0], t[1]); };
+    sticky.textContent = '解锁' + t[2] + ' · $' + t[1].toFixed(2) + (t[0]==='master' ? ' · 专业语音解读' : '');
+  }
 }
 
 function getElem(year){
@@ -529,6 +545,7 @@ function showResults(ay,by){
   // Animate score ring
   document.getElementById('results').classList.add('show');
   document.getElementById('stickyBar').style.display='block';
+  syncPaywall();
   document.getElementById('shareBar').classList.add('show');
   let n=0;
   const tm=setInterval(()=>{
@@ -789,5 +806,7 @@ function injectDisclaimer(containerId) {
 (function(){var t=localStorage.getItem('sy_theme');if(t==='dark'){document.documentElement.classList.add('dark-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='🌙';}handlePaidReturn();})();
 function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'🌙';localStorage.setItem('sy_theme',l?'dark':'dark');}
 </script>
+<script src="/assets/js/common.js"></script>
+<script>if(window.SY&&SY.initMembership)SY.initMembership();</script>
 </body>
 </html>

@@ -76,7 +76,24 @@
     } catch(e) {}
   }
 
+  // ── 会员身份态(全站注入): 已登录会员 → 顶部金色徽章, 提示到期日 ──
+  function initMembership() {
+    if (!localStorage.getItem('sy_token')) return;
+    fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('sy_token') } })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (!d || !d.membership || !d.membership.isMember) return;
+        var exp = d.membership.expiresAt ? new Date(d.membership.expiresAt) : null;
+        var expStr = exp ? (' · 至 ' + exp.getFullYear() + '-' + (exp.getMonth()+1) + '-' + exp.getDate()) : '';
+        var badge = document.createElement('div');
+        badge.textContent = '👑 会员已解锁' + expStr;
+        badge.style.cssText = 'position:fixed;top:14px;right:14px;z-index:999;background:linear-gradient(135deg,#8a6420,#c9a84c);color:#fff;font-size:10px;padding:6px 12px;border-radius:20px;letter-spacing:.06em;box-shadow:0 2px 10px rgba(201,168,76,.4);font-family:inherit';
+        document.body.appendChild(badge);
+      }).catch(function(){});
+  }
+
   window.SY = { showToast: showToast, initTheme: initTheme, toggleTheme: toggleTheme,
                 storePaidInput: storePaidInput, readPaidInput: readPaidInput, api: api,
-                copyText: copyText, getRefCode: getRefCode, withRef: withRef, captureRef: captureRef };
+                copyText: copyText, getRefCode: getRefCode, withRef: withRef, captureRef: captureRef,
+                initMembership: initMembership };
 })(window);

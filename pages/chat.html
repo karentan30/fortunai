@@ -69,6 +69,26 @@ var msgs = [];
 var sending = false;
 var freeRemaining = 5;
 var paywallShown = false;
+var isMember = false;
+
+// 🔴 修复: 进页面拉真实剩余额度(不硬编码5)
+function loadQuota() {
+  fetch('/api/chat/quota', { headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('sy_token') || '') } })
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.isMember) { isMember = true; freeRemaining = -1; updateQuotaUI(); }
+      else { freeRemaining = d.remaining || 0; updateQuotaUI(); }
+    }).catch(function(){});
+}
+function updateQuotaUI() {
+  var el = document.getElementById('freeRemaining');
+  var wrap = document.getElementById('freeCounter');
+  if (!el || !wrap) return;
+  if (isMember) { el.textContent = '∞'; el.parentNode.textContent = '会员无限畅聊'; return; }
+  el.textContent = freeRemaining;
+  el.style.color = freeRemaining <= 1 ? '#e8605a' : 'inherit';
+}
+loadQuota();
 
 function updateFreeCounter(n) {
   freeRemaining = (n !== undefined) ? n : Math.max(0, freeRemaining - 1);
@@ -118,7 +138,8 @@ function send() {
 
 function ask(text) {
   if (!text) return;
-  if (freeRemaining <= 0) { addPaywallCard(); return; }
+  if (isMember) { /* 会员无限畅聊, 直接发 */ }
+  else if (freeRemaining <= 0) { addPaywallCard(); return; }
   sending = true;
   document.getElementById('sendBtn').disabled = true;
 
@@ -162,5 +183,7 @@ function ask(text) {
   });
 }
 </script>
+<script src="/assets/js/common.js"></script>
+<script>if(window.SY&&SY.initMembership)SY.initMembership();</script>
 </body>
 </html>

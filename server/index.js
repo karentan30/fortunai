@@ -518,13 +518,17 @@ app.post('/api/auth/login', rateLimitMiddleware, (req, res) => {
   }
 });
 
-// GET /api/auth/me
+// GET /api/auth/me — 返回用户 + 会员状态(供前端展示"会员已解锁·到期日", 避免重复推销)
 app.get('/api/auth/me', authMiddleware, (req, res) => {
   if (!req.user) {
     return res.status(401).json({ error: '未登录' });
   }
   const u = getUserById.get(req.user.id);
-  res.json({ user: { ...req.user, ref_code: u ? u.ref_code : null } });
+  const orders = getUserOrders.all(req.user.id) || [];
+  const memberOrder = orders.find(function(o){ return UNLOCK_BY_CATEGORY['member'].indexOf(String(o.product||'')) >= 0 && !_isExpired(o); });
+  const isMember = !!memberOrder;
+  res.json({ user: { ...req.user, ref_code: u ? u.ref_code : null },
+    membership: { isMember: isMember, expiresAt: memberOrder && memberOrder.expires_at ? memberOrder.expires_at : null } });
 });
 
 // ── 裂变(邀请/奖励)端点 ──
@@ -2355,6 +2359,21 @@ app.post('/api/chat', rateLimitMiddleware, async (req, res) => {
   } catch (err) {
     console.error('[CHAT ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
+  }
+});
+
+// GET /api/chat/quota — 查询今日免费剩余次数(前端对齐真实额度, 不硬编码5)
+app.get('/api/chat/quota', (req, res) => {
+  try {
+    var isMember = hasFullAccess(req, ['member']);
+    if (isMember) return res.json({ isMember: true, remaining: -1 });
+    var uid = _payResolveUser(req.headers['authorization'] || '');
+    var day = new Date().toISOString().slice(0, 10);
+    var ckey = (uid || _payClientIp(req)) + '_' + day;
+    var used = _M.chatUsage[ckey] || 0;
+    res.json({ isMember: false, remaining: Math.max(0, 5 - used), used: used, limit: 5 });
+  } catch(e) {
+    res.json({ isMember: false, remaining: 5, error: e.message });
   }
 });
 
