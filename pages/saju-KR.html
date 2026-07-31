@@ -172,7 +172,7 @@ for (var m = 0; m < 12; m++) month.innerHTML += '<option value="'+(m+1)+'">'+MON
 // ?ref= 초대 코드 캡처 → localStorage에 저장(등록 시 귀속에 사용)
 (function(){ try { var r = new URLSearchParams(location.search).get('ref'); if (r) localStorage.setItem('sy_ref_code', r.trim().toUpperCase()); } catch(e){} })();
 
-// URL param prefill (from landing page): ?y=1993&m=9&d=21&auto=1
+// URL param prefill (from landing page): ?y=1993&m=9&d=21&g=female&h=11&auto=1
 (function(){
   var p = new URLSearchParams(location.search);
   var y = p.get('y'), m = p.get('m'), d = p.get('d');
@@ -180,6 +180,11 @@ for (var m = 0; m < 12; m++) month.innerHTML += '<option value="'+(m+1)+'">'+MON
     if (ySel.querySelector('option[value="'+y+'"]')) ySel.value = y;
     if (month.querySelector('option[value="'+m+'"]')) month.value = m;
     if (dSel.querySelector('option[value="'+d+'"]')) dSel.value = d;
+    if (p.get('g')) { gender = p.get('g'); }
+    if (p.get('h') !== null && p.get('h') !== '') {
+      var hSel = document.getElementById('hour');
+      if (hSel && hSel.querySelector('option[value="'+p.get('h')+'"]')) hSel.value = p.get('h');
+    }
     if (p.get('auto') === '1') {
       var consent = document.getElementById('consentCheck');
       if (consent) consent.checked = true;
@@ -275,9 +280,13 @@ function showReport(aiText, contextId, tier, locked) {
     cta.className = 'sticky-cta';
     cta.id = 'stickyCta';
     cta.innerHTML =
-      '<div class="price-row"><span class="price-old">19,900원</span><span class="price-now">9,900원</span><span class="price-cur">· 사주 심층 리포트</span></div>' +
-      '<button class="btn-unlock" onclick="checkout(\'full\')">심층 리포트 열기 · 9,900원</button>' +
-      '<button class="btn-ghost" onclick="checkout(\'member\')">무제한 구독 · 월 6.9달러</button>';
+      '<div class="price-row"><span class="price-now">9,900원</span><span class="price-cur">· 기본 심층 리포트</span></div>' +
+      '<button class="btn-unlock" onclick="checkout(\'bazi_full\')">심층 리포트 열기 · 9,900원</button>' +
+      '<div style="display:flex;gap:8px;margin-top:8px">' +
+      '<button class="btn-unlock" onclick="checkout(\'bazi_vip\')" style="background:linear-gradient(135deg,#7a4fb0,#9b6fd4);flex:1;font-size:13px">👑 심층+대운 · 19,900원</button>' +
+      '<button class="btn-ghost" onclick="checkout(\'member\')" style="flex:1;font-size:13px">월정액 · ₩9,900</button>' +
+      '</div>' +
+      '<div style="font-size:10px;color:rgba(58,48,38,0.45);text-align:center;margin-top:6px">19,900원 = 8,000자+ · 10년 대운 · 평생 보관</div>';
     document.body.appendChild(cta);
   }
 
@@ -336,16 +345,20 @@ function checkout(tier) {
   if (lastInput) {
     try { localStorage.setItem('sy_last_bazi', JSON.stringify(lastInput)); } catch(e){}
   }
+  var productMap = { 'bazi_full': 'bazi_full', 'bazi_vip': 'bazi_vip', 'member': 'member_monthly' };
+  var priceMap = { 'bazi_full': 9.9, 'bazi_vip': 19.9, 'member': 6.9 };
+  var product = productMap[tier] || 'bazi_full';
+  var successProduct = tier === 'member' ? 'member_monthly' : tier === 'bazi_vip' ? 'bazi_vip' : 'bazi_full';
   fetch('/api/create-checkout', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
-      product: tier === 'member' ? 'member_monthly' : 'bazi_full',
+      product: product,
       tier: tier,
-      price: tier === 'member' ? 6.9 : 19.9,
+      price: priceMap[tier] || 9.9,
       token: localStorage.getItem('sy_token') || '',
       region: 'kr',
-      successUrl: location.origin + '/pages/saju-KR.html?paid=1'
+      successUrl: location.origin + '/api/success?product=' + successProduct
     })
   }).then(function(r){ return r.json(); }).then(function(d){
     if (d.url) window.location.href = d.url;

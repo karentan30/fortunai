@@ -211,7 +211,25 @@ footer .disc{font-size:11px;color:rgba(243,236,224,.4);margin-top:14px;line-heig
       <div class="row">
         <input type="text" id="birthInput" placeholder="생년월일 8자리만 (예: 19930921)" inputmode="numeric" maxlength="8" />
       </div>
-      <div class="mini-note">성별·음양력·태어난 시간은 다음 단계에서 · 지금은 생년월일만</div>
+      <div class="gender-row" style="display:flex;gap:8px;margin-bottom:10px">
+        <button type="button" id="genderM" onclick="selectGender('male')" style="flex:1;padding:10px 0;border:1px solid var(--line);border-radius:9px;background:#fdfbf7;font-size:14px;cursor:pointer;font-family:inherit;color:var(--ink)">남성 ♂</button>
+        <button type="button" id="genderF" onclick="selectGender('female')" style="flex:1;padding:10px 0;border:1px solid rgba(154,117,41,0.4);border-radius:9px;background:rgba(154,117,41,0.10);font-size:14px;cursor:pointer;font-family:inherit;color:var(--ink);font-weight:600">여성 ♀</button>
+      </div>
+      <select id="birthHour" style="width:100%;padding:12px;border:1px solid var(--line);border-radius:9px;background:#fdfbf7;font-size:14px;color:var(--ink);margin-bottom:10px;font-family:inherit">
+        <option value="">출생 시간 모름</option>
+        <option value="0">子시 (23:00-01:00)</option>
+        <option value="1">丑시 (01:00-03:00)</option>
+        <option value="3">寅시 (03:00-05:00)</option>
+        <option value="5">卯시 (05:00-07:00)</option>
+        <option value="7">辰시 (07:00-09:00)</option>
+        <option value="9">巳시 (09:00-11:00)</option>
+        <option value="11">午시 (11:00-13:00)</option>
+        <option value="13">未시 (13:00-15:00)</option>
+        <option value="15">申시 (15:00-17:00)</option>
+        <option value="17">酉시 (17:00-19:00)</option>
+        <option value="19">戌시 (19:00-21:00)</option>
+        <option value="21">亥시 (21:00-23:00)</option>
+      </select>
       <label style="display:flex;align-items:flex-start;gap:8px;margin:4px 0 10px;font-size:11px;color:rgba(58,48,38,0.65);line-height:1.7;cursor:pointer">
         <input type="checkbox" id="privacyKr" required style="margin-top:3px;width:15px;height:15px;flex-shrink:0;accent-color:#9a7529">
         <span><a href="/pages/saju-legal-KR.html" style="color:#9a7529;text-decoration:underline">개인정보 처리방침</a> 및 <a href="/pages/saju-legal-KR.html" style="color:#9a7529;text-decoration:underline">이용약관</a>에 동의합니다</span>
@@ -394,12 +412,24 @@ footer .disc{font-size:11px;color:rgba(243,236,224,.4);margin-top:14px;line-heig
 
 function syToast(msg){var t=document.getElementById('syToast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},3000);}
 
+var selectedGender = 'female';
+function selectGender(g){
+  selectedGender = g;
+  document.getElementById('genderM').style.background = g==='male' ? 'rgba(154,117,41,0.12)' : '#fdfbf7';
+  document.getElementById('genderM').style.borderColor = g==='male' ? 'rgba(154,117,41,0.4)' : 'var(--line)';
+  document.getElementById('genderM').style.fontWeight = g==='male' ? '600' : 'normal';
+  document.getElementById('genderF').style.background = g==='female' ? 'rgba(154,117,41,0.12)' : '#fdfbf7';
+  document.getElementById('genderF').style.borderColor = g==='female' ? 'rgba(154,117,41,0.4)' : 'var(--line)';
+  document.getElementById('genderF').style.fontWeight = g==='female' ? '600' : 'normal';
+}
+
 /* ── 생년월일 8자리 → 결과 페이지로 이동 ── */
 function goFree(){
   var v = (document.getElementById('birthInput').value || '').trim();
   if (!/^\d{8}$/.test(v)) { syToast('생년월일 8자리를 입력해 주세요 (예: 19930921)'); return; }
   if (!document.getElementById('privacyKr').checked) { syToast('개인정보 처리방침에 동의해주세요'); return; }
-  location.href = 'saju-KR.html?y=' + v.slice(0,4) + '&m=' + parseInt(v.slice(4,6),10) + '&d=' + parseInt(v.slice(6,8),10) + '&auto=1';
+  var hour = document.getElementById('birthHour').value;
+  location.href = 'saju-KR.html?y='+v.slice(0,4)+'&m='+parseInt(v.slice(4,6),10)+'&d='+parseInt(v.slice(6,8),10)+'&g='+selectedGender+(hour!==''?'&h='+hour:'')+'&auto=1';
 }
 
 /* ── 카카오 로그인 → 생년월일 입력으로 유도 (Kakao OAuth는 Phase-1) ── */
