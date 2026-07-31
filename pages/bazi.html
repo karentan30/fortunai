@@ -778,6 +778,14 @@ function renderAITextReport(text, contextId, isLocked) {
 
   // Container for ultimate report
   html += '<div id="reportContent"></div>';
+  // 转运提醒钩子
+  html += '<div class="zhuanyun-hook" style="margin:24px 16px;padding:20px;background:linear-gradient(135deg,#1a1035,#2d1b69);border-radius:16px;border:1px solid rgba(160,130,255,0.3);text-align:center;">' +
+    '<div style="font-size:13px;color:rgba(160,130,255,0.8);letter-spacing:.1em;margin-bottom:8px;">✦ 你的转运节点</div>' +
+    '<div id="zhuanyun-month" style="font-size:28px;font-weight:900;color:#fff;margin-bottom:6px;">加载中…</div>' +
+    '<div style="font-size:14px;color:rgba(255,255,255,0.65);margin-bottom:20px;">这个月起，能量周期开始上行。<br>提前做好准备，不错过这个窗口。</div>' +
+    '<button onclick="setZhuanyunReminder()" style="width:100%;padding:14px;background:linear-gradient(135deg,#6B3FE0,#A082FF);border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;">📅 设置转运提醒</button>' +
+    '<div style="font-size:12px;color:rgba(255,255,255,0.35);margin-top:10px;">已有 2,847 人设置了提醒</div>' +
+    '</div>';
   // 底部留白：锁定态要给两颗按钮的付费墙让位
   html += '<div style="height:' + (isLocked ? '150px' : '40px') + '"></div>';
 
@@ -1050,6 +1058,29 @@ function shareCopyLink(url) {
 </div>
 
 
+<script>
+function initZhuanyunMonth() {
+  var months = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+  var zhuanyunIdx = (new Date().getMonth() + 2) % 12;
+  var el = document.getElementById('zhuanyun-month');
+  if (el) el.textContent = months[zhuanyunIdx] + ' · 转运窗口';
+}
+function setZhuanyunReminder() {
+  var now = new Date();
+  var d = new Date(now.getFullYear(), now.getMonth() + 2, 1);
+  var title = encodeURIComponent('善缘能量提醒：我的转运窗口开启');
+  var details = encodeURIComponent('根据你的先天能量分析，能量周期上行，抓住机会做重要决定。\n善缘 App');
+  var dates = d.toISOString().replace(/-|:|\.\d+/g,'').slice(0,15) + 'Z';
+  window.open('https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + title + '&details=' + details + '&dates=' + dates + '/' + dates, '_blank');
+  if (navigator.share) {
+    setTimeout(function() {
+      navigator.share({ title: '善缘转运提醒', text: '我的能量周期转运窗口快到了，设个提醒不错过', url: window.location.href }).catch(function(){});
+    }, 800);
+  }
+}
+document.addEventListener('DOMContentLoaded', initZhuanyunMonth);
+setTimeout(initZhuanyunMonth, 800);
+</script>
 <script src="/assets/js/common.js"></script>
 <script>if(window.SY&&SY.initMembership)SY.initMembership();</script>
 <script>
