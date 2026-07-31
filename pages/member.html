@@ -412,6 +412,36 @@ document.getElementById('rYearly').innerHTML = '<div style="width:8px;height:8px
 function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'🌙';localStorage.setItem('sy_theme',l?'dark':'dark');}
 </script>
 <script src="/assets/js/common.js"></script>
-<script>if(window.SY&&SY.initMembership)SY.initMembership();</script>
+<script>
+if(window.SY&&SY.initMembership)SY.initMembership();
+function loadMemberStatus(){
+  var token=localStorage.getItem('sy_token');
+  if(!token)return;
+  fetch('/api/auth/me',{headers:{'Authorization':'Bearer '+token}})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(!d||!d.membership||!d.membership.isMember)return;
+      var exp=d.membership.expiresAt?new Date(d.membership.expiresAt):null;
+      if(!exp)return;
+      var daysLeft=Math.ceil((exp-new Date())/86400000);
+      var expStr=exp.getFullYear()+'年'+(exp.getMonth()+1)+'月'+exp.getDate()+'日';
+      var banner=document.createElement('div');
+      banner.style.cssText='margin:12px 16px;padding:12px 16px;border-radius:10px;font-size:13px;text-align:center;';
+      if(daysLeft<=0){
+        banner.style.background='rgba(180,40,40,0.12)';banner.style.color='#c0392b';banner.style.border='1px solid rgba(180,40,40,0.3)';
+        banner.innerHTML='会员已到期 · <b style="cursor:pointer;text-decoration:underline" onclick="document.getElementById(\'planMonthly\').scrollIntoView({behavior:\'smooth\'})">点此续费 →</b>';
+      }else if(daysLeft<=7){
+        banner.style.background='rgba(201,168,76,0.12)';banner.style.color='#8a6420';banner.style.border='1px solid rgba(201,168,76,0.35)';
+        banner.innerHTML='⚡ 会员将于 <b>'+daysLeft+'</b> 天后到期（'+expStr+'）· <b style="cursor:pointer;text-decoration:underline" onclick="document.getElementById(\'planMonthly\').scrollIntoView({behavior:\'smooth\'})">立即续费享8折 →</b>';
+      }else{
+        banner.style.background='rgba(91,191,160,0.08)';banner.style.color='#3f9e82';banner.style.border='1px solid rgba(91,191,160,0.25)';
+        banner.innerHTML='👑 会员有效期至 <b>'+expStr+'</b>（还剩 '+daysLeft+' 天）';
+      }
+      var first=document.querySelector('.member-header,.hero,.pricing,main,.container,body > div');
+      if(first)first.parentNode.insertBefore(banner,first);else document.body.prepend(banner);
+    }).catch(function(){});
+}
+document.addEventListener('DOMContentLoaded',loadMemberStatus);
+</script>
 </body>
 </html>

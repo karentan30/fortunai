@@ -89,6 +89,17 @@
         badge.textContent = '👑 会员已解锁' + expStr;
         badge.style.cssText = 'position:fixed;top:14px;right:14px;z-index:999;background:linear-gradient(135deg,#8a6420,#c9a84c);color:#fff;font-size:10px;padding:6px 12px;border-radius:20px;letter-spacing:.06em;box-shadow:0 2px 10px rgba(201,168,76,.4);font-family:inherit';
         document.body.appendChild(badge);
+        // 到期前7天全站续费 banner
+        var daysLeft = exp ? Math.ceil((exp - new Date()) / 86400000) : null;
+        if (daysLeft !== null && daysLeft <= 7 && daysLeft > 0) {
+          var renewBanner = document.createElement('div');
+          renewBanner.id = 'sy-renew-banner';
+          renewBanner.style.cssText = 'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);z-index:998;background:linear-gradient(135deg,#8a6420,#c9a84c);color:#fff;font-size:12px;padding:8px 18px;border-radius:20px;letter-spacing:.04em;box-shadow:0 2px 12px rgba(201,168,76,.5);cursor:pointer;white-space:nowrap;max-width:90vw';
+          renewBanner.textContent = '⚡ 会员还剩' + daysLeft + '天到期 · 续费享8折';
+          renewBanner.onclick = function(){ window.location.href = '/pages/member.html'; };
+          document.body.appendChild(renewBanner);
+          setTimeout(function(){ renewBanner.style.display='none'; }, 10000);
+        }
       }).catch(function(){});
   }
 

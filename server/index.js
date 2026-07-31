@@ -97,7 +97,7 @@ app.get('/', (req, res) => {
 
 // ── Data Store (内存运算 + JSON 快照落盘, 扛 PM2 重启 · 防丢单红线) ──
 // 结构不变; 每次写操作后 _persist() 去抖落盘。Vercel 无持久盘时降级为纯内存(读写失败静默)。
-const _M = { users:[], tokens:[], orders:[], readings:[], subs:[], referrals:[], chatUsage:{}, feedbacks:[], _id:{u:1,t:1,o:1,r:1,s:1,rf:1} };
+const _M = { users:[], tokens:[], orders:[], readings:[], subs:[], referrals:[], rewards:[], chatUsage:{}, feedbacks:[], _id:{u:1,t:1,o:1,r:1,s:1,rf:1} };
 const _DATA_FILE = process.env.DATA_FILE || path.join(__dirname, 'data.json');
 // 启动加载: 把磁盘快照合并回 _M(保留结构与自增计数器), 损坏则跳过从空开始
 (function _loadStore(){
@@ -183,7 +183,7 @@ function hasFullAccess(req, productKeys){
     var t = getToken.get(token);
     if(!t) return false;
     var orders = getUserOrders.all(t.user_id) || []; // 已过滤 payment_status==='completed'
-    return orders.some(function(o){
+    var paidAccess = orders.some(function(o){
       var prod = String(o.product||'');
       if (_isExpired(o)) return false;           // 订阅已到期 → 不解锁
       return productKeys.some(function(k){
@@ -191,6 +191,12 @@ function hasFullAccess(req, productKeys){
         return allowed ? allowed.indexOf(prod) >= 0 : false;
       });
     });
+    if(paidAccess) return true;
+    // 裂变奖励: 未使用的 referral_basic 奖励也能解锁一次 basic 报告
+    if(!_M.rewards) return false;
+    var reward = _M.rewards.find(function(r){ return r.user_id === t.user_id && r.type === 'referral_basic' && !r.used; });
+    if(reward){ reward.used = true; _persist(); return true; }
+    return false;
   }catch(e){ return false; }
 }
 // 付费门+免责: 报告端点统一处理 — 追加AIGC免责声明; 未付费降级为基础版概览(堵curl白嫖)
@@ -267,6 +273,15 @@ function createReferral(inviterId, inviteeId){
   _persist();
   return ref;
 }
+// 给邀请人发奖励：解锁1次免费 basic 报告（累计不叠加，每人最多1次待用）
+function grantReferralReward(inviterId){
+  if(!_M.rewards) _M.rewards = [];
+  var already = _M.rewards.find(function(r){ return r.user_id === inviterId && r.type === 'referral_basic' && !r.used; });
+  if(!already){
+    _M.rewards.push({ user_id: inviterId, type: 'referral_basic', used: false, created_at: new Date().toISOString() });
+    _persist();
+  }
+}
 // 尝试用 ref code 为新注册/老用户(inviteeId) 绑定邀请人; 静默失败返回 false
 function tryApplyReferral(refCode, inviteeId){
   if(!refCode) return false;
@@ -275,6 +290,7 @@ function tryApplyReferral(refCode, inviteeId){
   if(inviter.id === inviteeId) return false; // 不能邀请自己
   if(wasInvited(inviteeId)) return false;  // 已被邀请过, 不重复
   createReferral(inviter.id, inviteeId);
+  grantReferralReward(inviter.id);        // 邀请成功 → 给邀请人发奖励
   return true;
 }
 
@@ -623,7 +639,17 @@ app.post('/api/create-checkout', rateLimitMiddleware, async (req, res) => {
       ? (process.env.KR_PAY_METHODS ? process.env.KR_PAY_METHODS.split(',').map(s => s.trim()) : ['card'])
       : ['card'];
     // KRW 为 zero-decimal 货币(无分); amountKrw 未配时按占位汇率换算 — 上线前须在 PRODUCTS 配精确韩元价
-    const unitAmount = isKR ? (prod.amountKrw || Math.round(prod.amount / 100 * 1300)) : prod.amount;
+    // joss 产品接受前端加价项总价，含最小值(底价)和最大值(底价+$2000)安全校验
+    const isJoss = product.startsWith('joss_');
+    let unitAmount;
+    if (isKR) {
+      unitAmount = prod.amountKrw || Math.round(prod.amount / 100 * 1300);
+    } else if (isJoss && req.body.price) {
+      const frontendCents = Math.round(parseFloat(req.body.price) * 100);
+      unitAmount = Math.min(Math.max(frontendCents, prod.amount), prod.amount + 200000);
+    } else {
+      unitAmount = prod.amount;
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: payMethods,
@@ -1564,6 +1590,22 @@ app.post('/api/daily', rateLimitMiddleware, async (req, res) => {
   } catch (err) {
     console.error('[DAILY ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用', detail: err.message });
+  }
+});
+
+// GET /api/daily-teaser — 明日运势25字悬念预告（留存钩子）
+app.get('/api/daily-teaser', async (req, res) => {
+  try {
+    const { y, m, d } = req.query;
+    const dateStr = (y || '') + '年' + (m || '') + '月' + (d || '') + '日';
+    const messages = [
+      { role: 'system', content: '你是命理助手，根据日期给出25字以内的运势预告，语气神秘有悬念，结尾留钩子让人明天来看完整版。不要说具体建议，只给一句悬念式预告。' },
+      { role: 'user', content: dateStr + '的运势预告，25字以内，只需一句话。' }
+    ];
+    const teaser = await deepseekChat(messages, { maxTokens: 60 });
+    res.json({ teaser: teaser.trim().slice(0, 50) });
+  } catch(e) {
+    res.json({ teaser: '明日天机已定，来看看你的运势将如何转折…' });
   }
 });
 

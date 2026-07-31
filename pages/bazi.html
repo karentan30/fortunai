@@ -964,9 +964,13 @@ function renderUltimateReport(text, containerId) {
   container.innerHTML = html;
 }
 
-// ── Share functions ──
+// ── Share functions (带 ref_code 裂变追踪) ──
+function _shareUrl() {
+  var refCode = localStorage.getItem('sy_ref_code') || '';
+  return window.location.href.split('?')[0] + (refCode ? '?ref=' + refCode : '');
+}
 function shareWechat(url) {
-  if (!url) url = window.location.href;
+  if (!url) url = _shareUrl();
   var t = document.createElement('textarea');
   t.value = '我在善缘算了八字，太准了！来看看你的命盘\n' + url;
   t.style.position = 'fixed'; t.style.left = '-9999px';
@@ -976,12 +980,12 @@ function shareWechat(url) {
   document.body.removeChild(t);
 }
 function shareTwitter(url) {
-  if (!url) url = window.location.href;
+  if (!url) url = _shareUrl();
   var text = encodeURIComponent('我在善缘算了八字，太准了！来看看你的命盘');
   window.open('https://twitter.com/intent/tweet?text='+text+'&url='+encodeURIComponent(url), '_blank');
 }
 function shareCopyLink(url) {
-  if (!url) url = window.location.href;
+  if (!url) url = _shareUrl();
   var t = document.createElement('textarea');
   t.value = url;
   t.style.position = 'fixed'; t.style.left = '-9999px';

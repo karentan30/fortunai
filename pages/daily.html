@@ -499,6 +499,12 @@ body::before {
     <div class="aff-text" id="affirmationText"></div>
   </div>
 
+  <div id="tomorrowTeaser" style="display:none;margin:24px 0 40px;padding:16px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:12px;text-align:center;">
+    <div style="font-size:12px;color:#9a7529;letter-spacing:.05em;margin-bottom:8px">✦ 明日天机预览 ✦</div>
+    <div id="tomorrowText" style="font-size:14px;color:#3a2a0e;line-height:1.7">加载中…</div>
+    <div style="font-size:11px;color:#b09060;margin-top:10px">明天再来看完整运势 · 每日更新</div>
+  </div>
+
 </div>
 
 <div class="sub-wrap">
@@ -593,6 +599,7 @@ function getDailyReading() {
       document.getElementById('resultArea').style.display = 'block';
       document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
       injectDisclaimer('resultArea');
+      loadTomorrowTeaser();
     } else {
       showToast('获取天机失败，请稍后重试', 'error');
       document.getElementById('inputWrap').style.display = 'block';
@@ -603,6 +610,19 @@ function getDailyReading() {
     showToast('网络异常，请稍后重试', 'error');
     document.getElementById('inputWrap').style.display = 'block';
   });
+}
+
+function loadTomorrowTeaser() {
+  var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  var y = tomorrow.getFullYear(), m = tomorrow.getMonth() + 1, d = tomorrow.getDate();
+  fetch('/api/daily-teaser?y=' + y + '&m=' + m + '&d=' + d)
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      if (data && data.teaser) {
+        document.getElementById('tomorrowText').textContent = data.teaser;
+        document.getElementById('tomorrowTeaser').style.display = 'block';
+      }
+    }).catch(function(){});
 }
 
 function subscribeDaily() {
