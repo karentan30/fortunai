@@ -63,7 +63,7 @@ var ALLOWED_ORIGINS = [
 ];
 app.use(cors({
   origin: function(origin, callback) {
-    if (!origin || ALLOWED_ORIGINS.indexOf(origin) !== -1 || origin.endsWith('.vercel.app') || origin.startsWith('http://localhost')) {
+    if (!origin || ALLOWED_ORIGINS.indexOf(origin) !== -1 || origin.startsWith('http://localhost')) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -105,7 +105,18 @@ app.use(express.static(path.join(__dirname, '..'), {
   index: false,
   setHeaders: function(res, filePath) {
     // data.json 在 server/ 下已被 403 拦截; 双保险: 任何 .json 数据文件不缓存
-    if (filePath.indexOf('data.json') >= 0) res.setHeader('Cache-Control', 'no-store');
+    if (filePath.indexOf('data.json') >= 0) {
+      res.setHeader('Cache-Control', 'no-store');
+    } else if (/\.(webp|jpg|jpeg|png|gif|svg|ico|woff2?|ttf|otf)$/i.test(filePath)) {
+      // 图片/字体: 1年强缓存 (内容变时换文件名即破缓存)
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    } else if (/\.(css|js)$/i.test(filePath)) {
+      // CSS/JS: 1天缓存
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    } else if (/\.html$/i.test(filePath)) {
+      // HTML: 不缓存，保证用户始终拿最新页面
+      res.setHeader('Cache-Control', 'no-cache');
+    }
   }
 }));
 // 🔴 P0 回归修复: index:false 导致 GET / 404(自然流量首屏挂)。显式送 index.html
@@ -545,7 +556,7 @@ app.post('/api/auth/login', rateLimitMiddleware, (req, res) => {
     insertToken.run(user.id, token);
 
     console.log(`[AUTH] Login: ${email}`);
-    res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
+    res.json({ token, user: { id: user.id, email: user.email, name: user.name, ref_code: user.ref_code } });
   } catch (err) {
     console.error('[AUTH ERR]', err);
     res.status(500).json({ error: '登录失败，请稍后重试' });
@@ -600,6 +611,7 @@ app.post('/api/referral/claim', rateLimitMiddleware, authMiddleware, (req, res) 
   if (!inviter) return res.status(400).json({ error: '邀请码无效' });
   if (inviter.id === req.user.id) return res.status(400).json({ error: '不能使用自己的邀请码' });
   createReferral(inviter.id, req.user.id);
+  grantReferralReward(inviter.id);  // 老用户补填邀请码也给邀请人奖励
   res.json({
     ok: true,
     invited_count: invitedCount(req.user.id)
@@ -1638,7 +1650,7 @@ app.post('/api/daily', rateLimitMiddleware, async (req, res) => {
 });
 
 // GET /api/daily-teaser — 明日运势25字悬念预告（留存钩子）
-app.get('/api/daily-teaser', async (req, res) => {
+app.get('/api/daily-teaser', rateLimitMiddleware, async (req, res) => {
   try {
     const { y, m, d } = req.query;
     const dateStr = (y || '') + '年' + (m || '') + '月' + (d || '') + '日';

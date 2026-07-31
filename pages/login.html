@@ -201,6 +201,8 @@ function handleLogin() {
   .then(function(res) {
     if (res.status >= 200 && res.status < 300 && res.data.token) {
       localStorage.setItem('sy_token', res.data.token);
+      // 存自己的邀请码供分享页用（用于裂变归因）
+      if (res.data.user && res.data.user.ref_code) localStorage.setItem('sy_my_ref_code', res.data.user.ref_code);
       showToast('登录成功，正在跳转…', 'success');
       setTimeout(function(){ window.location.href = REDIRECT_URL; }, 600);
     } else {
@@ -240,6 +242,8 @@ function handleRegister() {
   .then(function(res) {
     if (res.status >= 200 && res.status < 300 && res.data.token) {
       localStorage.setItem('sy_token', res.data.token);
+      // 存自己的邀请码供分享页用（register 响应顶层 ref_code）
+      if (res.data.ref_code) localStorage.setItem('sy_my_ref_code', res.data.ref_code);
       showToast('注册成功，正在跳转…', 'success');
       setTimeout(function(){ window.location.href = REDIRECT_URL; }, 600);
     } else {

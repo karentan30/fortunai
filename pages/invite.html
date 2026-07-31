@@ -146,7 +146,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <div class="content">
     <div class="reward-note">
       <span class="r-icon">✨</span>
-      <div class="r-text"><b>邀1位好友注册 → 你解锁1次免费合婚报告</b>（价值¥19.9）。好友也同样解锁1次。缘来是福，共测八字。</div>
+      <div class="r-text"><b>邀1位好友注册 → 你解锁1次免费合婚报告</b>（价值¥19.9）。好友填写邀请码后你立刻获奖。缘来是福，共测八字。</div>
     </div>
   </div>
 
@@ -187,6 +187,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <script>
 var BASE = '';
 var refState = { ref_code: '', share_url: '', share_text: '' };
+
+// B 用 A 的邀请链接落地此页时，先把 ?ref= 存 localStorage，后续注册时带给后端
+(function(){ try { var r = new URLSearchParams(location.search).get('ref'); if (r) localStorage.setItem('sy_ref_code', r.trim().toUpperCase()); } catch(e){} })();
 
 function showToast(msg, type) {
   var t = document.getElementById('toast');
@@ -262,6 +265,8 @@ function loadReferral(token) {
     refState.ref_code = d.ref_code || '';
     refState.share_url = d.share_url || '';
     refState.share_text = d.share_text || '';
+    // 缓存自己的邀请码到 localStorage，供 bazi/saju 分享函数用
+    if (d.ref_code) localStorage.setItem('sy_my_ref_code', d.ref_code);
     document.getElementById('refCode').textContent = d.ref_code || '—';
     document.getElementById('shareUrl').textContent = d.share_url || '—';
     document.getElementById('invitedVal').textContent = (d.invited_count != null ? d.invited_count : '0');

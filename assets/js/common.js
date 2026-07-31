@@ -82,6 +82,8 @@
     fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('sy_token') } })
       .then(function(r){ return r.json(); })
       .then(function(d){
+        // 缓存自己的邀请码(sy_my_ref_code), 供各分享页用于裂变归因
+        if (d && d.user && d.user.ref_code) localStorage.setItem('sy_my_ref_code', d.user.ref_code);
         if (!d || !d.membership || !d.membership.isMember) return;
         var exp = d.membership.expiresAt ? new Date(d.membership.expiresAt) : null;
         var expStr = exp ? (' · 至 ' + exp.getFullYear() + '-' + (exp.getMonth()+1) + '-' + exp.getDate()) : '';

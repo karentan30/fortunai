@@ -169,6 +169,9 @@ var month = document.getElementById('month');
 var MONTHS = ['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 for (var m = 0; m < 12; m++) month.innerHTML += '<option value="'+(m+1)+'">'+MONTHS[m]+'</option>';
 
+// ?ref= 초대 코드 캡처 → localStorage에 저장(등록 시 귀속에 사용)
+(function(){ try { var r = new URLSearchParams(location.search).get('ref'); if (r) localStorage.setItem('sy_ref_code', r.trim().toUpperCase()); } catch(e){} })();
+
 // URL param prefill (from landing page): ?y=1993&m=9&d=21&auto=1
 (function(){
   var p = new URLSearchParams(location.search);
@@ -289,7 +292,8 @@ function showReport(aiText, contextId, tier, locked) {
 }
 
 function krShare() {
-  var refCode = localStorage.getItem('sy_ref_code') || '';
+  // 자신의 초대 코드(sy_my_ref_code) 사용 — sy_ref_code는 내가 초대받을 때 쓴 코드임
+  var refCode = localStorage.getItem('sy_my_ref_code') || '';
   var shareUrl = location.origin + '/pages/saju-KR.html' + (refCode ? '?ref=' + refCode : '');
   var shareText = '🎋 무료 사주 한번 봐봐요! 오행·용신·올해 운세 AI가 풀어줘요';
   if (navigator.share) {
