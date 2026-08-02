@@ -2677,7 +2677,7 @@ function savePushSubs(subs) {
   fs.writeFileSync(PUSH_SUBS_FILE, JSON.stringify(subs));
 }
 
-app.post('/api/push/subscribe', express.json(), (req, res) => {
+app.post('/api/push/subscribe', rateLimitMiddleware, express.json(), (req, res) => {
   var sub = req.body;
   if (!sub || !sub.endpoint) return res.status(400).json({error:'invalid subscription'});
   var subs = loadPushSubs();

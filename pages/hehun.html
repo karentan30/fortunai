@@ -725,6 +725,7 @@ function handlePaidReturn() {
   if (window.history.replaceState) window.history.replaceState({}, '', '/pages/hehun.html');
   document.getElementById('lockedCard').style.display = 'none';
   document.getElementById('stickyBar').style.display = 'none';
+  showToast('🎉 解锁成功！正在生成你们的专属报告…', 'success');
   // 显示加载
   var wrap = document.getElementById('fullReportWrap');
   wrap.style.display = 'block';
@@ -742,6 +743,13 @@ function handlePaidReturn() {
   }).then(function(r){ return r.json(); }).then(function(d){
     if (d.reading) {
       document.getElementById('fullReportContent').innerHTML = d.reading.replace(/\n/g, '<br>').replace(/<br><br>/g, '</p><p>').replace(/(^|<\/p>)/, '<p>');
+      // 报告生成后加「下一步」引导
+      var nextStep = document.createElement('div');
+      nextStep.style.cssText = 'margin:24px 0 8px;padding:16px;background:linear-gradient(135deg,rgba(91,191,160,0.08),rgba(201,168,76,0.06));border:1px solid rgba(91,191,160,0.2);border-radius:14px;text-align:center;';
+      nextStep.innerHTML = '<div style="font-size:12px;color:var(--ink-mid);margin-bottom:10px;letter-spacing:0.06em">✦ 深度了解你自己 ✦</div>' +
+        '<a href="/pages/bazi.html" style="display:inline-block;padding:9px 22px;background:var(--jade);border-radius:20px;color:#fff;font-size:13px;text-decoration:none;letter-spacing:0.08em;margin:0 4px">测我的命盘 →</a>' +
+        '<a href="/pages/member.html" style="display:inline-block;padding:9px 22px;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);border-radius:20px;color:var(--gold);font-size:13px;text-decoration:none;letter-spacing:0.08em;margin:0 4px">开通会员 · 季季免费合婚</a>';
+      document.getElementById('fullReportWrap').appendChild(nextStep);
     } else if (d.error) {
       document.getElementById('fullReportContent').textContent = '获取失败：' + d.error;
     }
@@ -833,7 +841,8 @@ function generateShareImage() {
 function shareWechat(url) {
   if (!url) url = getShareUrl(window.location.href);
   var t = document.createElement('textarea');
-  t.value = '我们的八字合婚结果出来了，来测测我俩有多合？\n' + url;
+  var scoreStr = window._syScore ? '（我俩合婚' + window._syScore + '分）' : '';
+  t.value = '我们的八字合婚结果出来了' + scoreStr + '，来测测你们有多合？\n' + url;
   t.style.position = 'fixed'; t.style.left = '-9999px';
   document.body.appendChild(t); t.select();
   try { document.execCommand('copy'); showToast('链接已复制，发给TA一起看合婚结果吧！'); }
@@ -842,7 +851,8 @@ function shareWechat(url) {
 }
 function shareTwitter(url) {
   if (!url) url = getShareUrl(window.location.href);
-  var text = encodeURIComponent('我们的八字合婚结果出来了，来测测你俩有多合？');
+  var scoreStr = window._syScore ? '（合婚' + window._syScore + '分）' : '';
+  var text = encodeURIComponent('我们的八字合婚结果出来了' + scoreStr + '，来测测你俩有多合？');
   window.open('https://twitter.com/intent/tweet?text='+text+'&url='+encodeURIComponent(url), '_blank');
 }
 function shareCopyLink(url) {

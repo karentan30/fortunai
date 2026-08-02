@@ -1,6 +1,6 @@
 /* 善缘 Service Worker — 离线缓存 + 推送通知 */
 
-const CACHE = 'shenyuan-v1';
+const CACHE = 'shenyuan-v2';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
