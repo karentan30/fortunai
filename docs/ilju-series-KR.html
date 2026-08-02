@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>선연 일주 시리즈 — Instagram 콘텐츠</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;900&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #0d0d12;
+  color: #fff;
+  font-family: 'Noto Sans KR', sans-serif;
+  padding: 40px 20px;
+}
+h1 {
+  text-align: center;
+  font-family: 'Noto Serif KR', serif;
+  font-size: 28px;
+  color: #c9a96e;
+  margin-bottom: 10px;
+}
+.subtitle { text-align: center; color: #888; font-size: 14px; margin-bottom: 40px; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  gap: 40px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.card-section { display: flex; flex-direction: column; gap: 20px; }
+.card-section h2 { font-size: 14px; color: #666; text-align: center; text-transform: uppercase; letter-spacing: 2px; }
+
+/* ── 인스타 카드 400×400 ── */
+.insta-card {
+  width: 400px;
+  height: 400px;
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 24px;
+  margin: 0 auto;
+}
+
+/* 로고 */
+.logo {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-family: 'Noto Serif KR', serif;
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 1px;
+}
+
+/* 오행 뱃지 */
+.badges { display: flex; gap: 6px; flex-wrap: wrap; }
+.badge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.badge-wood  { background: rgba(76,175,80,0.25);  color: #81c784; border: 1px solid #81c784; }
+.badge-fire  { background: rgba(244,67,54,0.25);  color: #ef9a9a; border: 1px solid #ef9a9a; }
+.badge-earth { background: rgba(255,193,7,0.25);  color: #ffd54f; border: 1px solid #ffd54f; }
+.badge-metal { background: rgba(224,224,224,0.2); color: #e0e0e0; border: 1px solid #e0e0e0; }
+.badge-water { background: rgba(33,150,243,0.25); color: #90caf9; border: 1px solid #90caf9; }
+
+/* 일주 한자 */
+.ilju-hanja {
+  font-family: 'Noto Serif KR', serif;
+  font-size: 64px;
+  font-weight: 900;
+  line-height: 1;
+  text-align: center;
+  text-shadow: 0 0 40px currentColor;
+}
+.ilju-hangul {
+  font-size: 16px;
+  text-align: center;
+  opacity: 0.7;
+  margin-top: 4px;
+  letter-spacing: 2px;
+}
+
+/* 키워드 태그 */
+.keywords { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.kw {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* 한줄 설명 */
+.desc {
+  font-size: 15px;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1.5;
+}
+
+/* 하단 CTA */
+.cta {
+  text-align: center;
+  font-size: 11px;
+  opacity: 0.5;
+  letter-spacing: 0.5px;
+}
+
+/* ── 배경 스타일 per element ── */
+/* 木+水 */
+.bg-wood-water {
+  background: linear-gradient(135deg, #0a1628 0%, #0d2214 50%, #081020 100%);
+  border: 1px solid rgba(76,175,80,0.3);
+}
+.bg-wood-water .ilju-hanja { color: #81c784; }
+
+/* 木+土 */
+.bg-wood-earth {
+  background: linear-gradient(135deg, #0a1a0a 0%, #1a1200 50%, #0d1505 100%);
+  border: 1px solid rgba(180,140,60,0.3);
+}
+.bg-wood-earth .ilju-hanja { color: #a5d6a7; }
+
+/* 火+木 */
+.bg-fire-wood {
+  background: linear-gradient(135deg, #1a0500 0%, #1a0a00 50%, #120800 100%);
+  border: 1px solid rgba(244,67,54,0.3);
+}
+.bg-fire-wood .ilju-hanja { color: #ff8a65; }
+
+/* 土+土 */
+.bg-earth-earth {
+  background: linear-gradient(135deg, #1a1200 0%, #120e00 50%, #1a1500 100%);
+  border: 1px solid rgba(255,193,7,0.3);
+}
+.bg-earth-earth .ilju-hanja { color: #ffd54f; }
+
+/* 土+火 */
+.bg-earth-fire {
+  background: linear-gradient(135deg, #1a0800 0%, #1a1200 50%, #1a0600 100%);
+  border: 1px solid rgba(255,152,0,0.3);
+}
+.bg-earth-fire .ilju-hanja { color: #ffb74d; }
+
+/* 金+火 */
+.bg-metal-fire {
+  background: linear-gradient(135deg, #1a1400 0%, #1a0500 50%, #141000 100%);
+  border: 1px solid rgba(218,165,32,0.3);
+}
+.bg-metal-fire .ilju-hanja { color: #daa520; }
+
+/* 金+土 */
+.bg-metal-earth {
+  background: linear-gradient(135deg, #141414 0%, #1a1400 50%, #101010 100%);
+  border: 1px solid rgba(224,224,224,0.3);
+}
+.bg-metal-earth .ilju-hanja { color: #e0e0e0; }
+
+/* 水+金 */
+.bg-water-metal {
+  background: linear-gradient(135deg, #00081a 0%, #001018 50%, #000a1a 100%);
+  border: 1px solid rgba(33,150,243,0.3);
+}
+.bg-water-metal .ilju-hanja { color: #90caf9; }
+
+/* ── caption 박스 ── */
+.caption-box {
+  width: 400px;
+  background: #14141e;
+  border: 1px solid #2a2a3a;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 0 auto;
+}
+.caption-box .hook {
+  font-weight: 700;
+  font-size: 14px;
+  color: #c9a96e;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+.caption-box .body { font-size: 13px; color: #ccc; line-height: 1.8; margin-bottom: 12px; }
+.caption-box .cta-link { font-size: 13px; color: #a0c4ff; margin-bottom: 12px; }
+.caption-box .tags { font-size: 12px; color: #5c7a99; line-height: 1.8; }
+</style>
+</head>
+<body>
+
+<h1>선연 일주 시리즈</h1>
+<p class="subtitle">Instagram 일주 콘텐츠 카드 — 캡처 후 바로 업로드 가능 · 12개 일주</p>
+
+<div class="grid">
+
+<!-- ══ 1. 甲子 ══ -->
+<div class="card-section">
+  <div class="insta-card bg-wood-water">
+    <div class="logo">선연 命理</div>
+    <div class="badges">
+      <span class="badge badge-wood">木</span>
+      <span class="badge badge-water">水</span>
+    </div>
+    <div>
+      <div class="ilju-hanja">甲子</div>
+      <div class="ilju-hangul">갑자일주</div>
+    </div>
+    <div class="keywords">
+      <span class="kw">#리더형</span>
+      <span class="kw">#추진력</span>
+      <span class="kw">#독보적</span>
+    </div>
+    <div class="desc">아무것도 없는 곳에서<br>길을 만드는 사람</div>
+    <div class="cta">link in bio · shen-yuan.com</div>
+  </div>
+  <div class="caption-box">
+    <div class="hook">🌱 갑자일주인 사람, 솔직히 혼자 다 하고 싶잖아요?</div>
+    <div class="body">갑자(甲子)는 60갑자 중 가장 첫 번째 일주. 처음을 여는 에너지, 그게 바로 당신입니다.<br><br>
+    ✦ 타고난 리더십 — 지시 받기보다 직접 판을 짜는 스타일<br>
+    ✦ 커리어: 창업, 기획, 선구자 포지션에서 빛남<br>
+    ✦ 연애: 열정적이지만 자유를 빼앗기면 바로 식어버림<br><br>
+    "내가 왜 항상 앞에 서있지?" — 그건 팔자예요 🫶</div>
+    <div class="cta-link">📲 내 사주 전체 분석 → 프로필 링크</div>
+    <div class="tags">#사주 #사주팔자 #일주 #갑자일주 #명리 #운세 #선연사주 #60갑자 #갑자</div>
+  </div>
+</div>
+
+<!-- ══ 2. 乙丑 ══ -->
+<div class="card-section">
+  <div class="insta-card bg-wood-earth">
+    <div class="logo">선연 命理</div>
+    <div class="badges">
+      <span class="badge badge-wood">木</span>
+      <span class="badge badge-earth">土</span>
+    </div>
+    <div>
+      <div class="ilju-hanja">乙丑</div>
+      <div class="ilju-hangul">을축일주</div>
+    </div>
+    <div class="keywords">
+      <span class="kw">#현실주의자</span>
+      <span class="kw">#꼼꼼함</span>
+      <span class="kw">#묵묵히_성공</span>
+    </div>
+    <div class="desc">화려하지 않아도<br>결국 남는 건 당신이야</div>
+    <div class="cta">link in bio · shen-yuan.com</div>
+  </div>
+  <div class="caption-box">
+    <div class="hook">🪴 을축일주는 조용한데 왜 이렇게 단단해?</div>
+    <div class="body">을목(乙木)이 축토(丑土) 위에 뿌리를 내린 형상. 겉으로 유연하지만 내면은 바위처럼 안정적.<br><br>
+    ✦ 눈에 띄지 않아도 꾸준히 결과 내는 타입<br>
+    ✦ 커리어: 회계, 의료, 연구 — 정밀함이 필요한 분야 최강<br>
+    ✦ 연애: 쉽게 마음 열지 않지만 한번 열면 끝까지 간다<br><br>
+    "왜 나만 혼자 열심히 해?" — 당신이 제일 믿음직스러우니까요.</div>
+    <div class="cta-link">📲 내 사주 전체 분석 → 프로필 링크</div>
+    <div class="tags">#사주 #사주팔자 #일주 #을축일주 #명리 #운세 #선연사주 #60갑자 #을축</div>
+  </div>
+</div>
+
+<!-- ══ 3. 丙寅 ══ -->
+<div class="card-section">
+  <div class="insta-card bg-fire-wood">
+    <div class="logo">선연 命理</div>
+    <div class="badges">
+      <span class="badge badge-fire">火</span>
+      <span class="badge badge-wood">木</span>
+    </div>
+    <div>
+      <div class="ilju-hanja">丙寅</div>
+      <div class="ilju-hangul">병인일주</div>
+    </div>
+    <div class="keywords">
+      <span class="kw">#태양같은_에너지</span>
+      <span class="kw">#카리스마</span>
+      <span class="kw">#의리</span>
+    </div>
+    <div class="desc">방 안에 들어서면<br>분위기가 달라지는 사람</div>
+    <div class="cta">link in bio · shen-yuan.com</div>
+  </div>
+  <div class="caption-box">
+    <div class="hook">🔥 병인일주, 당신이 있으면 왜 주위가 밝아질까요?</div>
+    <div class="body">병화(丙火)는 태양. 인목(寅木)은 불에 기름을 붓는 장작. 함께하면 작열하는 카리스마.<br><br>
+    ✦ 사람을 끌어당기는 자연스러운 매력<br>
+    ✦ 커리어: 영업, 방송, 리더십 포지션 — 사람이 있어야 빛남<br>
+    ✦ 연애: 뜨겁게 사랑하지만 자존심은 절대 포기 못 함<br><br>
+    "왜 나한테 다 모이지?" — 그게 병인의 팔자예요 ☀️</div>
+    <div class="cta-link">📲 내 사주 전체 분석 → 프로필 링크</div>
+    <div class="tags">#사주 #사주팔자 #일주 #병인일주 #명리 #운세 #선연사주 #60갑자 #병인</div>
+  </div>
+</div>
+
+<!-- ══ 4. 丁卯 ══ -->
+<div class="card-section">
+  <div class="insta-card bg-fire-wood">
+    <div class="logo">선연 命理</div>
+    <div class="badges">
+      <span class="badge badge-fire">火</span>
+      <span class="badge badge-wood">木</span>
+    </div>
+    <div>
+      <div class="ilju-hanja">丁卯</div>
+      <div class="ilju-hangul">정묘일주</div>
+    </div>
+    <div class="keywords">
+      <span class="kw">#감수성_폭발</span>
+      <span class="kw">#섬세함</span>
+      <span class="kw">#예술적</span>
+    </div>
+    <div class="desc">남들이 못 보는 걸<br>혼자 다 느끼는 사람</div>
+    <div class="cta">link in bio · shen-yuan.com</div>
+  </div>
+  <div class="caption-box">
+    <div class="hook">🕯️ 정묘일주, 상처받기 쉬운데 왜 매력이 넘칠까?</div>
+    <div class="body">정화(丁火)는 촛불처럼 작지만 깊이 있는 빛. 묘목(卯木)은 봄의 풀숲, 섬세하고 생동감이 넘침.<br><br>
+    ✦ 공감 능력 최상급 — 상대방 기분을 귀신같이 읽음<br>
+    ✦ 커리어: 디자인, 상담, 문화예술 분야에서 독보적<br>
+    ✦ 연애: 감정이입이 강해서 상처도 깊게 받음 — 경계 설정이 키<br><br>
+    "왜 나는 이렇게 예민해?" — 그게 재능이에요 🌙</div>
+    <div class="cta-link">📲 내 사주 전체 분석 → 프로필 링크</div>
+    <div class="tags">#사주 #사주팔자 #일주 #정묘일주 #명리 #운세 #선연사주 #60갑자 #정묘</div>
+  </div>
+</div>
+
+<!-- ══ 5. 戊辰 ══ -->
+<div class="card-section">
+  <div class="insta-card bg-earth-earth">
+    <div class="logo">선연 命理</div>
+    <div class="badges">
+      <span class="badge badge-earth">土</span>
+      <span class="badge badge-earth">土</span>
+    </div>
+    <div>
+      <div class="ilju-hanja">戊辰</div>
+      <div class="ilju-hangul">무진일주</div>
+    </div>
+    <div class="keywords">
+      <span class="kw">#산같은_존재감</span>
+      <span class="kw">#신뢰</span>
+      <span class="kw">#중심잡기</span>
+    </div>
+    <div class="desc">흔들리지 않는 것이<br>이 사람의 가장 큰 힘</div>
+    <div class="cta">link in bio · shen-yuan.com</div>
+  </div>
+  <div class="caption-box">
+    <div class="hook">⛰️ 무진일주, 왜 주변 사람들이 당신한테 기댈까요?</div>
+    <div class="body">무토(戊土)와 진토(辰土)가 겹친 일주. 산이 산 위에 있는 형상, 굳건함의 극치.<br><br>
+    ✦ 위기에 강하고 중심을 잃지 않음 — 팀의 기둥<br>
+    ✦ 커리어: 관리직, 건설, 부동산, 장기 프로젝트에 특화<br>
+    ✦ 연애: 천천히 깊어지는 스타일, 헤어지면 오래 힘들어함<br><br>
+    "나한테 왜 다 의지해?" — 당신이 안심되는 사람이니까요 🏔️</div>
+    <div class="cta-link">📲 내 사주 전체 분석 → 프로필 링크</div>
+    <div class="tags">#사주 #사주팔자 #일주 #무진일주 #명리 #운세 #선연사주 #60갑자 #무진</div>
+  </div>
+</div>
+
+<!-- ══ 6. 己巳 ══ -->
+<div class="card-section">
+  <div class="insta-card bg-earth-fire">
+    <div class="logo">선연 命理</div>
+    <div class="badges">
+      <span class="badge badge-earth">土</span>
+      <span class="badge badge-fire">火</span>
+    </div>
+    <div>
+      <div class="ilju-hanja">己巳</div>
+      <div class="ilju-hangul">기사일주</div>
+    </div>
+    <div class="keywords">
+      <span class="kw">#전략가</span>
+      <span class="kw">#통찰력</span>
+      <span class="kw">#판단력</span>
+    </div>
+    <div class="desc">말 안 해도<br>다 알고 있는 사람</div>
+    <div class="cta">link in bio · shen-yuan.com</div>
+  </div>
+  <div class="caption-box">
+    <div class="hook">🐍 기사일주, 눈치가 왜 이렇게 빨라요?</div>
+    <div class="body">기토(己土)는 부드러운 흙, 사화(巳火)는 뱀의 지혜. 겉으론 순하지만 속으론 날카로운 통찰을 품음.<br><br>
+    ✦ 상황 파악 능력이 탁월 — 아무도 모를 때 혼자 이미 알고 있음<br>
+    ✦ 커리어: 컨설팅, 분석, 심리·상담 계통에서 무서운 존재<br>
+    ✦ 연애: 속을 쉽게 드러내지 않아 미스터리한 매력<br><br>
+    "왜 나만 눈치 보고 있어?" — 그게 재능이에요, 낭비하지 마세요.</div>
+    <div class="cta-link">📲 내 사주 전체 분석 → 프로필 링크</div>
+    <div class="tags">#사주 #사주팔자 #일주 #기사일주 #명리 #운세 #선연사주 #60갑자 #기사</div>
+  </div>
+</div>
+
+<!-- ══ 7. 庚午 ══ -->
+<div class="card-section">
+  <div class="insta-card bg-metal-fire">
+    <div class="logo">선연 命理</div>
+    <div class="badges">
+      <span class="badge badge-metal">金</span>
+      <span class="badge badge-fire">火</span>
+    </div>
+    <div>
+      <div class="ilju-hanja">庚午</div>
+      <div class="ilju-hangul">경오일주</div>
+    </div>
+    <div class="keywords">
+      <span class="kw">#결단력</span>
+      <span class="kw">#직진형</span>
+      <span class="kw">#돌파구_전문</span>
+    </div>
+    <div class="desc">망설임 없이 가는 사람<br>그게 당신의 무기</div>
+    <div class="cta">link in bio · shen-yuan.com</div>
+  </div>
+  <div class="caption-box">
+    <div class="hook">⚔️ 경오일주, 왜 일을 해도 드라마틱하게 해요?</div>
+    <div class="body">경금(庚金)이 오화(午火)에 제련되는 형상. 불 속에서 단련된 칼 — 날카롭고 강하며 빠름.<br><br>
+    ✦ 결정 빠르고 실행력 강함 — 고민하다 기회 놓치는 타입 아님<br>
+    ✦ 커리어: 창업, 영업, 군인·경찰, 스타트업 — 경쟁 환경에서 빛남<br>
+    ✦ 연애: 직선적으로 고백하고 직선적으로 싸움 — 뒤끝 없음<br><br>
+    "왜 나는 이렇게 다이렉트야?" — 그게 경오의 진짜 매력 🔥</div>
+    <div class="cta-link">📲 내 사주 전체 분석 → 프로필 링크</div>
+    <div class="tags">#사주 #사주팔자 #일주 #경오일주 #명리 #운세 #선연사주 #60갑자 #경오</div>
+  </div>
+</div>
+
+<!-- ══ 8. 辛未 ══ -->
+<div class="card-section">
+  <div class="insta-card bg-metal-earth">
+    <div class="logo">선연 命理</div>
+    <div class="badges">
+      <span class="badge badge-metal">金</span>
+      <span class="badge badge-earth">土</span>
+    </div>
+    <div>
+      <div class="ilju-hanja">辛未</div>
+      <div class="ilju-hangul">신미일주</div>
+    </div>
+    <div class="keywords">
+      <span class="kw">#완벽주의</span>
+      <span class="kw">#미적감각</span>
+      <span class="kw">#자존감_최상</span>
+    </div>
+    <div class="desc">기준이 높아서 힘든 게 아니라<br>당신 수준이 그래서 그래요</div>
+    <div class="cta">link in bio · shen-yuan.com</div>
+  </div>
+  <div class="caption-box">
+    <div class="hook">💎 신미일주, 왜 아무거나 못 쓰고 아무나 못 만나요?</div>
+    <div class="body">신금(辛金)은 보석, 미토(未土)는 보석함. 세상에서 가장 귀한 것들이 모여있는 일주.<br><br>
+    ✦ 미적 감각이 탁월하고 퀄리티 기준이 남다름<br>
+    ✦ 커리어: 뷰티, 패션, 큐레이션, 브랜딩 — 섬세함이 무기<br>
+    ✦ 연애: 조건보다 감각이 맞아야 함 — 그래서 만남이 신중<br><br>
+    "왜 나는 까다로운 걸까?" — 보석은 원래 아무 데나 안 놓이거든요 ✨</div>
+    <div class="cta-link">📲 내 사주 전체 분석 → 프로필 링크</div>
+    <div class="tags">#사주 #사주팔자 #일주 #신미일주 #명리 #운세 #선연사주 #60갑자 #신미</div>
+  </div>
+</div>
+
+<!-- ══ 9. 壬申 ══ -->
+<div class="card-section">
+  <div class="insta-card bg-water-metal">
+    <div class="logo">선연 命理</div>
+    <div class="badges">
+      <span class="badge badge-water">水</span>
+      <span class="badge badge-metal">金</span>
+    </div>
+    <div>
+      <div class="ilju-hanja">壬申</div>
+      <div class="ilju-hangul">임신일주</div>
+    </div>
+    <div class="keywords">
+      <span class="kw">#분석형_천재</span>
+      <span class="kw">#대세파악</span>
+      <span class="kw">#전략적</span>
+    </div>
+    <div class="desc">생각 두 수 앞서가는 사람<br>당신 머릿속이 궁금하다</div>
+    <div class="cta">link in bio · shen-yuan.com</div>
+  </div>
+  <div class="caption-box">
+    <div class="hook">🌊 임신일주, 왜 이미 다 생각해놨어요?</div>
+    <div class="body">임수(壬水)는 큰 강, 신금(申金)은 그 강의 원천. 흐름을 읽고 방향을 잡는 전략적 두뇌.<br><br>
+    ✦ 복잡한 상황에서 핵심을 꿰뚫는 능력<br>
+    ✦ 커리어: IT, 금융, 데이터, 기획 — 두뇌 쓰는 분야에서 독보적<br>
+    ✦ 연애: 감정보다 논리로 접근하다 오해를 삼 — 표현 연습 필요<br><br>
+    "왜 나만 이렇게 생각이 많아?" — 그게 임신일주의 선물이에요 🧠</div>
+    <div class="cta-link">📲 내 사주 전체 분석 → 프로필 링크</div>
+    <div class="tags">#사주 #사주팔자 #일주 #임신일주 #명리 #운세 #선연사주 #60갑자 #임신</div>
+  </div>
+</div>
+
+<!-- ══ 10. 癸酉 ══ -->
+<div class="card-section">
+  <div class="insta-card bg-water-metal">
+    <div class="logo">선연 命理</div>
+    <div class="badges">
+      <span class="badge badge-water">水</span>
+      <span class="badge badge-metal">金</span>
+    </div>
+    <div>
+      <div class="ilju-hanja">癸酉</div>
+      <div class="ilju-hangul">계유일주</div>
+    </div>
+    <div class="keywords">
+      <span class="kw">#직관의_달인</span>
+      <span class="kw">#독립심</span>
+      <span class="kw">#고독한_천재</span>
+    </div>
+    <div class="desc">말하지 않아도 느끼는 사람<br>당신의 육감은 알람이야</div>
+    <div class="cta">link in bio · shen-yuan.com</div>
+  </div>
+  <div class="caption-box">
+    <div class="hook">🌙 계유일주, 첫인상으로 다 파악하는 거 맞죠?</div>
+    <div class="body">계수(癸水)는 이슬비, 유금(酉金)은 달. 조용하지만 날카로운 감각, 달빛처럼 모든 걸 비추는 일주.<br><br>
+    ✦ 직관력이 뛰어나 첫인상만으로 사람을 꿰뚫음<br>
+    ✦ 커리어: 심리, 예술, 연구, 치유 계통 — 혼자 하는 일에 강함<br>
+    ✦ 연애: 혼자 있는 시간이 필요함, 집착하는 파트너와는 힘듦<br><br>
+    "왜 나는 이게 느껴질까?" — 그게 계유만의 특별한 능력이에요 ✨</div>
+    <div class="cta-link">📲 내 사주 전체 분석 → 프로필 링크</div>
+    <div class="tags">#사주 #사주팔자 #일주 #계유일주 #명리 #운세 #선연사주 #60갑자 #계유</div>
+  </div>
+</div>
+
+<!-- ══ 11. 甲戌 ══ -->
+<div class="card-section">
+  <div class="insta-card bg-wood-earth">
+    <div class="logo">선연 命理</div>
+    <div class="badges">
+      <span class="badge badge-wood">木</span>
+      <span class="badge badge-earth">土</span>
+    </div>
+    <div>
+      <div class="ilju-hanja">甲戌</div>
+      <div class="ilju-hangul">갑술일주</div>
+    </div>
+    <div class="keywords">
+      <span class="kw">#정의감</span>
+      <span class="kw">#원칙주의</span>
+      <span class="kw">#믿음직한_사람</span>
+    </div>
+    <div class="desc">불합리한 거 그냥<br>못 넘어가는 사람</div>
+    <div class="cta">link in bio · shen-yuan.com</div>
+  </div>
+  <div class="caption-box">
+    <div class="hook">🌳 갑술일주, 왜 이렇게 억울한 게 싫어요?</div>
+    <div class="body">갑목(甲木)이 술토(戌土)에 뿌리를 내린 형상. 큰 나무처럼 곧고, 정의감이 넘치는 일주.<br><br>
+    ✦ 원칙을 지키는 것이 몸에 배어있음<br>
+    ✦ 커리어: 법, 경찰, 교육, 사회복지 — 정의와 관련된 분야에서 최강<br>
+    ✦ 연애: 진심 다해 헌신하지만 속이면 돌아섬 — 한번 돌아선 뒤 없음<br><br>
+    "왜 나는 이렇게 원칙이 중요해?" — 그게 갑술이 가진 진정한 힘이에요 ⚖️</div>
+    <div class="cta-link">📲 내 사주 전체 분석 → 프로필 링크</div>
+    <div class="tags">#사주 #사주팔자 #일주 #갑술일주 #명리 #운세 #선연사주 #60갑자 #갑술</div>
+  </div>
+</div>
+
+<!-- ══ 12. 乙亥 ══ -->
+<div class="card-section">
+  <div class="insta-card bg-wood-water">
+    <div class="logo">선연 命理</div>
+    <div class="badges">
+      <span class="badge badge-wood">木</span>
+      <span class="badge badge-water">水</span>
+    </div>
+    <div>
+      <div class="ilju-hanja">乙亥</div>
+      <div class="ilju-hangul">을해일주</div>
+    </div>
+    <div class="keywords">
+      <span class="kw">#이상주의자</span>
+      <span class="kw">#따뜻한_감성</span>
+      <span class="kw">#꿈꾸는_사람</span>
+    </div>
+    <div class="desc">현실이 꿈을 이기지 못하는<br>사람이 있다면 그게 당신</div>
+    <div class="cta">link in bio · shen-yuan.com</div>
+  </div>
+  <div class="caption-box">
+    <div class="hook">🌿 을해일주, 왜 이상이 너무 높아서 힘들어요?</div>
+    <div class="body">을목(乙木)이 해수(亥水)에 뿌리를 내린 형상. 물 위에서 자라는 수초처럼, 유연하고 아름다운 이상주의자.<br><br>
+    ✦ 감수성이 풍부하고 예술적 재능이 타고남<br>
+    ✦ 커리어: 문학, 예술, 힐링, 영적 분야 — 자신만의 세계관이 무기<br>
+    ✦ 연애: 로맨틱하지만 현실적 파트너가 필요함 — 밸런스가 키<br><br>
+    "왜 나는 꿈만 꿔?" — 꿈을 꾸는 사람만이 세상을 바꾸거든요 🌙</div>
+    <div class="cta-link">📲 내 사주 전체 분석 → 프로필 링크</div>
+    <div class="tags">#사주 #사주팔자 #일주 #을해일주 #명리 #운세 #선연사주 #60갑자 #을해</div>
+  </div>
+</div>
+
+</div><!-- /grid -->
+
+<div style="text-align:center;margin:60px auto;max-width:600px;padding:30px;background:#14141e;border-radius:16px;border:1px solid #2a2a3a;">
+  <p style="color:#c9a96e;font-family:'Noto Serif KR',serif;font-size:18px;margin-bottom:12px;">사용 가이드</p>
+  <p style="color:#aaa;font-size:13px;line-height:2;">
+    1. 카드를 캡처 or Print → Save as PDF<br>
+    2. Caption 박스 텍스트 복사 → Instagram 본문에 붙여넣기<br>
+    3. #선연사주 태그 필수 · CTA: 프로필 링크 클릭 유도<br>
+    4. 매주 2개씩 업로드 시 12주 콘텐츠 완성<br>
+    5. 나머지 48개 일주는 시리즈 반응 보고 확장 제작
+  </p>
+</div>
+
+</body>
+</html>
