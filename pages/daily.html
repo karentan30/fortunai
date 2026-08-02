@@ -112,7 +112,7 @@ body::before {
 .field-group {
   background: rgba(201,168,76,0.04);
   border: 1px solid rgba(201,168,76,0.12);
-  border-radius: 8px; overflow: hidden; margin-bottom: 10px;
+  border-radius: 12px; overflow: hidden; margin-bottom: 10px;
 }
 .field-row {
   display: flex; align-items: center;
@@ -137,7 +137,7 @@ body::before {
 .gender-opt {
   flex: 1; background: rgba(201,168,76,0.04);
   border: 1px solid rgba(201,168,76,0.12);
-  border-radius: 6px; padding: 10px 0;
+  border-radius: 10px; padding: 10px 0;
   text-align: center; font-size: 13px;
   color: var(--ink-mid); letter-spacing: 0.12em;
   cursor: pointer; transition: all 0.2s;
@@ -325,7 +325,7 @@ body::before {
 .btn-gold {
   width: 100%; padding: 14px 0;
   background: linear-gradient(135deg, var(--gold-deep), var(--gold), var(--gold-light), var(--gold));
-  border: none; border-radius: 4px;
+  border: none; border-radius: 14px;
   color: rgba(26,26,24,0.95);
   font-family: 'Noto Serif SC', serif;
   font-size: 14px; font-weight: 500; letter-spacing: 0.2em;
@@ -333,6 +333,7 @@ body::before {
   box-shadow: 0 4px 16px rgba(201,168,76,0.3);
   transition: all 0.25s;
 }
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(201,168,76,0.48); }
 .btn-gold:active { transform: scale(0.97); }
 
 .preview-note {
@@ -501,6 +502,17 @@ body::before {
     <div class="aff-text" id="affirmationText"></div>
   </div>
 
+  <!-- 一键分享卡 — Co-Star 抄法：让 AI 输出本身成为可截图内容 -->
+  <div id="shareCardWrap" style="display:none;margin:20px 0 8px;text-align:center">
+    <canvas id="dailyShareCanvas" width="1080" height="1080" style="display:none"></canvas>
+    <img id="dailyShareImg" style="width:100%;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.4)" alt="今日天机分享图">
+    <div style="display:flex;gap:8px;margin-top:10px;justify-content:center">
+      <button onclick="downloadDailyCard()" style="flex:1;max-width:160px;padding:11px 0;background:linear-gradient(135deg,#c9a84c,#a8823a);border:none;border-radius:12px;color:#fff;font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:.06em">⬇ 保存图片</button>
+      <button onclick="shareDailyCard()" style="flex:1;max-width:160px;padding:11px 0;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:12px;color:#c9a84c;font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:.06em">↗ 分享</button>
+    </div>
+    <div style="font-size:10px;color:rgba(201,168,76,0.4);margin-top:6px;letter-spacing:.05em">长按图片可保存 · 发朋友圈/小红书</div>
+  </div>
+
   <div id="tomorrowTeaser" style="display:none;margin:24px 0 40px;padding:16px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:12px;text-align:center;">
     <div style="font-size:12px;color:#9a7529;letter-spacing:.05em;margin-bottom:8px">✦ 明日天机预览 ✦</div>
     <div id="tomorrowText" style="font-size:14px;color:#3a2a0e;line-height:1.7">加载中…</div>
@@ -602,6 +614,7 @@ function getDailyReading() {
       document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
       injectDisclaimer('resultArea');
       if (data.streak) showStreak(data.streak);
+      setTimeout(generateDailyShareCard, 400);
       if (data.broke && data.prevStreak >= 3) {
         setTimeout(function(){
           showToast('😔 ' + data.prevStreak + '天连击中断了 · 开通会员可获1次补签机会', 'error');
@@ -640,6 +653,107 @@ function showStreak(count) {
   var flames = count >= 7 ? '🔥🔥🔥' : count >= 3 ? '🔥🔥' : '🔥';
   el.innerHTML = flames + ' 连续 ' + count + ' 天查运势 &nbsp;<button onclick="shareDaily()" style="font-size:11px;padding:4px 10px;background:rgba(154,117,41,0.12);border:1px solid rgba(154,117,41,0.3);border-radius:10px;color:#9a7529;cursor:pointer;font-family:inherit;letter-spacing:.05em;vertical-align:middle">分享运势</button>';
 }
+// ── 每日天机截图卡（Co-Star 抄法：让 AI 输出本身成为朋友圈内容）──
+function generateDailyShareCard() {
+  var canvas = document.getElementById('dailyShareCanvas');
+  var ctx = canvas.getContext('2d');
+  var W = 1080, H = 1080;
+  canvas.width = W; canvas.height = H;
+
+  // 背景：深色玫瑰金渐变
+  var bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, '#0d0805'); bg.addColorStop(0.5, '#1a1005'); bg.addColorStop(1, '#0a0608');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+  // 金色光晕
+  var glow = ctx.createRadialGradient(W*0.5, H*0.25, 0, W*0.5, H*0.25, W*0.55);
+  glow.addColorStop(0, 'rgba(201,168,76,0.12)'); glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+
+  // 边框
+  ctx.strokeStyle = 'rgba(201,168,76,0.25)'; ctx.lineWidth = 2;
+  ctx.strokeRect(24, 24, W-48, H-48);
+  ctx.strokeStyle = 'rgba(201,168,76,0.08)'; ctx.lineWidth = 1;
+  ctx.strokeRect(32, 32, W-64, H-64);
+
+  // 日期
+  var now = new Date();
+  var months = ['一','二','三','四','五','六','七','八','九','十','十一','十二'];
+  var dateStr = now.getFullYear() + '年' + months[now.getMonth()] + '月' + now.getDate() + '日';
+  ctx.fillStyle = 'rgba(201,168,76,0.55)'; ctx.font = '32px serif';
+  ctx.textAlign = 'center'; ctx.fillText(dateStr, W/2, 100);
+
+  // 分割线
+  ctx.fillStyle = 'rgba(201,168,76,0.3)'; ctx.fillRect(W/2-60, 118, 120, 1);
+
+  // LOGO
+  ctx.fillStyle = 'rgba(201,168,76,0.9)'; ctx.font = 'bold 48px serif';
+  ctx.fillText('善 缘', W/2, 185);
+  ctx.fillStyle = 'rgba(201,168,76,0.4)'; ctx.font = '22px serif';
+  ctx.fillText('S H E N Y U A N', W/2, 218);
+
+  // 幸运色块
+  var swatch = document.getElementById('luckyColorSwatch');
+  var colorName = (document.getElementById('luckyColorName') || {}).textContent || '';
+  if (swatch && swatch.style.background) {
+    ctx.fillStyle = swatch.style.background || '#5bbfa0';
+    ctx.beginPath(); ctx.roundRect(W/2-28, 248, 56, 56, 28); ctx.fill();
+    ctx.fillStyle = 'rgba(255,245,220,0.5)'; ctx.font = '24px serif';
+    ctx.fillText('今日幸运色 · ' + colorName, W/2, 338);
+  }
+
+  // AI 金句（取 affirmationText 前两句）
+  var aff = (document.getElementById('affirmationText') || {}).textContent || '';
+  var sentences = aff.replace(/[。！？]/g, '$&\n').split('\n').filter(function(s){ return s.trim().length > 4; });
+  var quote = sentences.slice(0, 2).join('').substring(0, 60);
+  if (!quote) quote = '今日五行运势，顺势而为';
+
+  // 金句大字（自动换行）
+  ctx.fillStyle = 'rgba(255,245,220,0.95)'; ctx.font = 'bold 52px serif';
+  ctx.textAlign = 'center';
+  var words = quote.split('');
+  var line = '', lines = [], maxW = W - 160;
+  for (var i = 0; i < words.length; i++) {
+    var test = line + words[i];
+    if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = words[i]; }
+    else { line = test; }
+  }
+  if (line) lines.push(line);
+  var startY = H/2 - (lines.length * 72)/2 + 40;
+  lines.forEach(function(l, idx) { ctx.fillText(l, W/2, startY + idx * 72); });
+
+  // 分割线
+  ctx.fillStyle = 'rgba(201,168,76,0.25)'; ctx.fillRect(W/2-80, startY + lines.length*72 + 20, 160, 1);
+
+  // 底部子标题
+  ctx.fillStyle = 'rgba(201,168,76,0.5)'; ctx.font = '28px serif';
+  ctx.fillText('今日命盘 · 专属指引', W/2, startY + lines.length*72 + 68);
+
+  // 域名水印
+  ctx.fillStyle = 'rgba(201,168,76,0.2)'; ctx.font = '22px sans-serif';
+  ctx.fillText('shenyuan.mylumee.cn', W/2, H - 60);
+
+  // 显示预览图
+  var img = document.getElementById('dailyShareImg');
+  img.src = canvas.toDataURL('image/png');
+  document.getElementById('shareCardWrap').style.display = 'block';
+}
+function downloadDailyCard() {
+  var canvas = document.getElementById('dailyShareCanvas');
+  var a = document.createElement('a');
+  a.download = '善缘今日天机-' + new Date().toISOString().slice(0,10) + '.png';
+  a.href = canvas.toDataURL('image/png'); a.click();
+  showToast('图片已保存，发给朋友圈/小红书吧 ✨', 'success');
+}
+function shareDailyCard() {
+  var canvas = document.getElementById('dailyShareCanvas');
+  canvas.toBlob(function(blob) {
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob],'天机.png',{type:'image/png'})] })) {
+      navigator.share({ files: [new File([blob],'天机.png',{type:'image/png'})], title: '善缘今日天机', text: '今天的五行运势，发给你看看 🔮' }).catch(function(){});
+    } else { downloadDailyCard(); }
+  });
+}
+
 function shareDaily() {
   var ref = localStorage.getItem('sy_ref_code') || '';
   var url = window.location.origin + '/pages/daily.html' + (ref ? '?ref=' + ref : '');
