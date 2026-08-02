@@ -602,6 +602,18 @@ function getDailyReading() {
       document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
       injectDisclaimer('resultArea');
       if (data.streak) showStreak(data.streak);
+      if (data.broke && data.prevStreak >= 3) {
+        setTimeout(function(){
+          showToast('😔 ' + data.prevStreak + '天连击中断了 · 开通会员可获1次补签机会', 'error');
+          setTimeout(function(){
+            var b = document.createElement('div');
+            b.style.cssText = 'text-align:center;margin:12px 0 4px';
+            b.innerHTML = '<a href="/pages/member.html" style="display:inline-block;padding:9px 24px;background:linear-gradient(135deg,#c9a84c,#a8823a);border-radius:20px;color:#fff;font-size:13px;text-decoration:none;letter-spacing:0.08em">开通会员 · 保护你的连击 →</a>';
+            var ra = document.getElementById('streakBadge');
+            if (ra) ra.after(b);
+          }, 800);
+        }, 1200);
+      }
       loadTomorrowTeaser();
     } else {
       showToast('获取天机失败，请稍后重试', 'error');

@@ -1368,6 +1368,7 @@ app.post('/api/bazi', rateLimitMiddleware, async (req, res) => {
     res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId });
   } catch (err) {
     console.error('[BAZI ERR]', err.message);
+    if (mon && mon.captureException) mon.captureException(err, { tags: { api: 'bazi' } });
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试', detail: err.message });
   }
 });
@@ -1662,6 +1663,7 @@ B方：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined ? p2Hour+'时'
     res.json({ reading: result, contextId: ctxId });
   } catch (err) {
     console.error('[HEHUN ERR]', err.message);
+    if (mon && mon.captureException) mon.captureException(err, { tags: { api: 'hehun' } });
     res.status(500).json({ error: 'AI暂时不可用', detail: err.message });
   }
 });
@@ -1672,13 +1674,15 @@ function updateStreak(userId) {
   if (!_M.streaks) _M.streaks = {};
   var s = _M.streaks[userId] || { count: 0, lastDate: null };
   var today = new Date().toISOString().slice(0, 10);
-  if (s.lastDate === today) return { streak: s.count, isNew: false };
+  if (s.lastDate === today) return { streak: s.count, isNew: false, broke: false };
   var yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+  var prevCount = s.count;
+  var broke = !!(s.lastDate && s.lastDate !== yesterday && prevCount > 1);
   s.count = (s.lastDate === yesterday) ? s.count + 1 : 1;
   s.lastDate = today;
   _M.streaks[userId] = s;
   _persist();
-  return { streak: s.count, isNew: true };
+  return { streak: s.count, isNew: true, broke: broke, prevStreak: prevCount };
 }
 
 app.post('/api/daily', rateLimitMiddleware, async (req, res) => {
@@ -1737,6 +1741,7 @@ app.post('/api/daily', rateLimitMiddleware, async (req, res) => {
     res.json({ reading: result, streak: streakData.streak });
   } catch (err) {
     console.error('[DAILY ERR]', err.message);
+    if (mon && mon.captureException) mon.captureException(err, { tags: { api: 'daily' } });
     res.status(500).json({ error: 'AI暂时不可用', detail: err.message });
   }
 });
