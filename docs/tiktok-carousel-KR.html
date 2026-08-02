@@ -1,0 +1,1356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>선연 × ShenYuan — TikTok 轮播卡片库</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700;900&family=Noto+Sans+KR:wght@300;400;500;700&family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#080810;color:#fff;font-family:'Noto Sans KR',sans-serif;padding:32px 16px}
+h1{text-align:center;font-size:22px;color:#c9a84c;letter-spacing:.15em;margin-bottom:6px}
+.sub{text-align:center;font-size:12px;color:rgba(201,168,76,.45);letter-spacing:.1em;margin-bottom:40px}
+.tabs{display:flex;justify-content:center;gap:0;margin-bottom:40px}
+.tab{padding:11px 36px;cursor:pointer;font-size:13px;letter-spacing:.08em;border:1px solid rgba(201,168,76,.2);transition:all .2s;font-family:inherit}
+.tab:first-child{border-radius:8px 0 0 8px}
+.tab:last-child{border-radius:0 8px 8px 0}
+.tab.active{background:rgba(201,168,76,.15);color:#c9a84c;border-color:rgba(201,168,76,.4)}
+.tab:not(.active){color:rgba(201,168,76,.35)}
+.section{display:none}.section.active{display:block}
+.set-title{font-size:11px;color:rgba(201,168,76,.45);letter-spacing:.2em;text-align:center;margin:36px 0 16px;text-transform:uppercase}
+.set-caption{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:16px 18px;max-width:900px;margin:0 auto 32px;font-size:12px;color:rgba(255,255,255,.65);line-height:1.9}
+.set-caption b{color:#c9a84c}
+.cards-row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:8px}
+
+/* ── TikTok 竖版卡片 9:16 → 360×640 ── */
+.tk{width:360px;height:640px;border-radius:18px;position:relative;overflow:hidden;display:flex;flex-direction:column;justify-content:space-between;padding:28px 24px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.tk-logo{font-size:10px;letter-spacing:.3em;opacity:.6}
+.tk-logo-kr{font-family:'Noto Serif KR',serif;color:#c9a84c}
+.tk-logo-en{font-family:'Inter',sans-serif;color:#c9a84c}
+.tk-body{flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;padding:16px 0}
+.tk-foot{display:flex;justify-content:space-between;align-items:flex-end}
+.tk-page{font-size:10px;opacity:.4;letter-spacing:.05em}
+.tk-handle{font-size:10px;opacity:.5;letter-spacing:.05em}
+
+/* Korean gradients */
+.kr1a{background:linear-gradient(160deg,#0d0a1a 0%,#1a1030 50%,#0a0810 100%)}
+.kr1b{background:linear-gradient(160deg,#100a1e 0%,#2a1845 60%,#0e0a18 100%)}
+.kr1c{background:linear-gradient(160deg,#0a0812 0%,#1e1535 100%)}
+.kr2a{background:linear-gradient(160deg,#0a1208 0%,#142810 60%,#080e06 100%)}
+.kr2b{background:linear-gradient(160deg,#091006 0%,#1a3010 50%,#0a1208 100%)}
+.kr3a{background:linear-gradient(160deg,#12080a 0%,#2a1015 60%,#0e060a 100%)}
+.kr3b{background:linear-gradient(160deg,#180a10 0%,#3a1520 50%,#120608 100%)}
+.kr4a{background:linear-gradient(160deg,#0a0c14 0%,#101828 60%,#080a10 100%)}
+.kr5a{background:linear-gradient(160deg,#150808 0%,#2e1010 60%,#0e0606 100%)}
+.kr6a{background:linear-gradient(160deg,#080c14 0%,#0f1a2e 60%,#060a10 100%)}
+.kr7a{background:linear-gradient(160deg,#0e1008 0%,#1e2410 60%,#0a0e06 100%)}
+.kr8a{background:linear-gradient(160deg,#100c14 0%,#201828 60%,#0c0a10 100%)}
+.kr9a{background:linear-gradient(160deg,#0a1010 0%,#102020 60%,#080c0c 100%)}
+.kr10a{background:linear-gradient(160deg,#100a08 0%,#241410 60%,#0c0806 100%)}
+
+/* EN gradients */
+.en1a{background:linear-gradient(160deg,#0a0a0a 0%,#1a1a1a 100%)}
+.en2a{background:linear-gradient(160deg,#080808 0%,#141414 60%,#0a0a0a 100%)}
+.en3a{background:linear-gradient(160deg,#0c0c08 0%,#181808 60%,#0a0a06 100%)}
+.en4a{background:linear-gradient(160deg,#080c10 0%,#10181e 60%,#060a0c 100%)}
+.en5a{background:linear-gradient(160deg,#0c0808 0%,#181010 60%,#0a0606 100%)}
+.en6a{background:linear-gradient(160deg,#0a0810 0%,#140e20 60%,#080610 100%)}
+.en7a{background:linear-gradient(160deg,#080808 0%,#181418 60%,#0c0a0c 100%)}
+
+/* 공통 컴포넌트 */
+.hook-text{font-family:'Noto Serif KR',serif;font-size:36px;font-weight:900;line-height:1.25;color:#fff;letter-spacing:-.01em}
+.hook-text-en{font-family:'Inter',sans-serif;font-size:34px;font-weight:900;line-height:1.2;color:#fff}
+.sub-text{font-size:15px;color:rgba(255,255,255,.65);margin-top:14px;line-height:1.6}
+.sub-text-en{font-family:'Inter',sans-serif;font-size:14px;color:rgba(255,255,255,.6);margin-top:12px;line-height:1.65}
+.gold-line{width:40px;height:2px;background:#c9a84c;margin:18px auto}
+.tag{display:inline-block;padding:5px 14px;border-radius:20px;font-size:11px;letter-spacing:.08em;margin-bottom:14px}
+.tag-kr{background:rgba(201,168,76,.15);color:#c9a84c;border:1px solid rgba(201,168,76,.3)}
+.tag-en{font-family:'Inter',sans-serif;background:rgba(201,168,76,.12);color:#c9a84c;border:1px solid rgba(201,168,76,.25);letter-spacing:.05em}
+
+/* 리포트 박스 */
+.report-box{background:rgba(255,255,255,.06);border:1px solid rgba(201,168,76,.2);border-radius:14px;padding:18px 16px;text-align:left;font-size:13px}
+.report-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+.report-row:last-child{border-bottom:none}
+.r-label{color:rgba(255,255,255,.5);font-size:12px}
+.r-value{color:#c9a84c;font-weight:700;font-size:13px}
+.stars{color:#c9a84c;letter-spacing:2px}
+
+/* 비교 테이블 */
+.compare{width:100%;border-collapse:collapse;font-size:13px;margin-top:10px}
+.compare th{padding:8px;font-size:11px;color:rgba(255,255,255,.5);font-weight:400;text-align:center;border-bottom:1px solid rgba(255,255,255,.08)}
+.compare td{padding:10px 8px;text-align:center;border-bottom:1px solid rgba(255,255,255,.05)}
+.compare .col-bad{color:rgba(255,255,255,.4)}
+.compare .col-good{color:#c9a84c;font-weight:700}
+.compare .col-icon{font-size:16px}
+
+/* 특징 카드 */
+.feat-list{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+.feat-item{display:flex;align-items:flex-start;gap:12px;background:rgba(255,255,255,.04);border-radius:10px;padding:12px 14px}
+.feat-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.feat-text{font-size:13px;color:rgba(255,255,255,.8);line-height:1.5}
+.feat-text b{color:#c9a84c;display:block;margin-bottom:3px;font-size:14px}
+
+/* 별점 */
+.star-row{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.star-item{display:flex;justify-content:space-between;align-items:center}
+.star-label{font-size:14px;color:rgba(255,255,255,.75)}
+.star-val{color:#c9a84c;font-size:15px;letter-spacing:1px}
+
+/* CTA 카드 */
+.cta-box{background:linear-gradient(135deg,rgba(201,168,76,.15),rgba(201,168,76,.06));border:1px solid rgba(201,168,76,.35);border-radius:16px;padding:22px 20px;text-align:center}
+.cta-title{font-size:22px;font-weight:700;color:#fff;margin-bottom:10px;font-family:'Noto Serif KR',serif}
+.cta-title-en{font-family:'Inter',sans-serif;font-size:20px;font-weight:700;color:#fff;margin-bottom:10px}
+.cta-price{font-size:28px;font-weight:900;color:#c9a84c;margin:8px 0}
+.cta-url{font-size:11px;color:rgba(201,168,76,.6);letter-spacing:.08em;margin-top:8px;word-break:break-all}
+.cta-btn{display:inline-block;margin-top:14px;padding:12px 28px;background:linear-gradient(135deg,#c9a84c,#a8823a);border-radius:24px;color:#000;font-weight:700;font-size:13px;letter-spacing:.05em}
+
+/* 가격 배틀 */
+.price-battle{display:flex;gap:10px;align-items:stretch;margin-top:10px}
+.price-card{flex:1;border-radius:12px;padding:16px 12px;text-align:center}
+.price-bad{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)}
+.price-good{background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.3)}
+.pc-label{font-size:11px;opacity:.5;margin-bottom:8px;letter-spacing:.05em}
+.pc-price{font-size:24px;font-weight:900}
+.pc-price.bad{color:rgba(255,255,255,.5)}
+.pc-price.good{color:#c9a84c}
+.pc-desc{font-size:11px;opacity:.5;margin-top:6px;line-height:1.4}
+.vs{font-size:13px;color:rgba(255,255,255,.3);align-self:center;flex-shrink:0}
+
+/* EN chart */
+.chart-row{display:flex;flex-direction:column;gap:8px}
+.chart-item{display:flex;align-items:center;gap:10px}
+.chart-label{font-family:'Inter',sans-serif;font-size:13px;color:rgba(255,255,255,.7);width:80px;flex-shrink:0}
+.chart-bar-wrap{flex:1;background:rgba(255,255,255,.06);border-radius:4px;height:8px;overflow:hidden}
+.chart-bar{height:100%;border-radius:4px}
+.bar-gold{background:linear-gradient(90deg,#c9a84c,#e8c96c)}
+.bar-dim{background:rgba(255,255,255,.15)}
+.chart-pct{font-family:'Inter',sans-serif;font-size:11px;color:rgba(255,255,255,.4);width:30px;text-align:right}
+
+/*궁합 */
+.compat-names{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:18px}
+.compat-name{font-family:'Noto Serif KR',serif;font-size:18px;font-weight:700;color:#fff}
+.compat-heart{font-size:22px}
+.score-circle{width:110px;height:110px;border-radius:50%;background:conic-gradient(#c9a84c 0% 87%,rgba(255,255,255,.08) 87%);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;position:relative}
+.score-inner{width:86px;height:86px;border-radius:50%;background:#0a0810;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num{font-size:28px;font-weight:900;color:#c9a84c;line-height:1}
+.score-unit{font-size:11px;color:rgba(201,168,76,.6)}
+
+/* before/after */
+.ba-wrap{display:flex;flex-direction:column;gap:12px;margin-top:4px}
+.ba-item{border-radius:10px;padding:14px 16px}
+.ba-before{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.ba-after{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2)}
+.ba-label{font-size:10px;letter-spacing:.1em;margin-bottom:6px;opacity:.5}
+.ba-text{font-size:14px;line-height:1.5}
+
+/* 天机 카드 */
+.tianji-box{background:rgba(255,255,255,.05);border:1px solid rgba(201,168,76,.15);border-radius:14px;padding:16px}
+.tj-date{font-size:11px;color:rgba(201,168,76,.5);letter-spacing:.1em;margin-bottom:10px}
+.tj-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13px}
+.tj-row:last-child{border-bottom:none}
+.tj-key{color:rgba(255,255,255,.5)}
+.tj-val{color:#c9a84c;font-weight:600}
+
+/* EN element guide */
+.elem-grid{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.elem-item{display:flex;align-items:center;gap:12px;border-radius:10px;padding:10px 14px}
+.elem-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.elem-name{font-family:'Inter',sans-serif;font-size:13px;font-weight:700;width:55px}
+.elem-desc{font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,.6);line-height:1.4}
+
+/* EN career */
+.career-list{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.career-item{display:flex;align-items:flex-start;gap:10px;background:rgba(255,255,255,.04);border-radius:8px;padding:10px 12px}
+.career-elem{font-family:'Inter',sans-serif;font-size:11px;font-weight:700;color:#c9a84c;width:42px;flex-shrink:0;line-height:1.6}
+.career-text{font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,.7);line-height:1.5}
+
+/* 색 가이드 */
+.color-guide{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.cg-item{display:flex;align-items:center;gap:12px}
+.cg-swatch{width:36px;height:36px;border-radius:8px;flex-shrink:0}
+.cg-text{font-family:'Inter',sans-serif}
+.cg-name{font-size:13px;font-weight:700;color:#fff}
+.cg-use{font-size:11px;color:rgba(255,255,255,.5)}
+
+/* 가격 비교 EN */
+.price-table{width:100%;font-family:'Inter',sans-serif}
+.price-table td{padding:9px 6px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.06)}
+.price-table .p-label{color:rgba(255,255,255,.55)}
+.price-table .p-bad{color:rgba(255,255,255,.3);text-decoration:line-through}
+.price-table .p-good{color:#c9a84c;font-weight:700}
+
+@media print{.tk{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+
+<h1>선연 × ShenYuan · TikTok 轮播卡片库</h1>
+<div class="sub">9:16竖版 · 360×640px · 截图后直接发布 · 韩국10套 + 英文10套</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="show('kr')">🇰🇷 한국 TikTok (10套)</div>
+  <div class="tab" onclick="show('en')">🌍 English TikTok (10套)</div>
+</div>
+
+<!-- ═══════════════════ 한국 섹션 ═══════════════════ -->
+<div id="kr" class="section active">
+
+<!-- 套1 -->
+<div class="set-title">套1 — 나는 왜 이렇게 살았을까 (3장)</div>
+<div class="cards-row">
+
+  <div class="tk kr1a">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">사주 스토리</span>
+      <div class="hook-text">나는 왜<br>이렇게<br>살았을까</div>
+      <div class="gold-line"></div>
+      <div class="sub-text">내 사주에서 발견한<br>충격적인 사실</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr1b">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">AI 리포트 미리보기</span>
+      <div class="report-box">
+        <div class="report-row"><span class="r-label">일주</span><span class="r-value">甲子 (갑자)</span></div>
+        <div class="report-row"><span class="r-label">격국</span><span class="r-value">식신생재격</span></div>
+        <div class="report-row"><span class="r-label">용신</span><span class="r-value">水 · 金</span></div>
+        <div class="report-row"><span class="r-label">2026 운</span><span class="r-value stars">★★★★☆</span></div>
+        <div class="report-row"><span class="r-label">재운</span><span class="r-value">상승 구간</span></div>
+        <div class="report-row"><span class="r-label">귀인</span><span class="r-value">천을귀인 有</span></div>
+      </div>
+      <div class="sub-text" style="margin-top:12px;font-size:13px">"이게 진짜 나 얘기인데요?" 😳</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr1c">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title">지금 내 사주<br>확인하기</div>
+        <div class="cta-price">14,900원</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:10px">8,000자+ 심층 리포트 · 즉시 발송</div>
+        <div class="cta-btn">→ 링크 in bio</div>
+        <div class="cta-url">shenyuan.mylumee.cn/pages/saju-KR.html</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>캡션:</b> 사주 공부하다가 내 리포트 보고 진짜 멘붕 왔어요 😳 격국·용신·2026 대운까지 8,000자로 풀어줌 → 바이오 링크<br>
+  <b>해시태그:</b> #사주 #사주팔자 #AI사주 #선연 #명리 #운세 #사주리포트 #2026운세 #일주 #팔자
+</div>
+
+<!-- 套2 -->
+<div class="set-title">套2 — 甲子 일주 특징 시리즈 (4장)</div>
+<div class="cards-row">
+
+  <div class="tk kr2a">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">60갑자 시리즈 01/60</span>
+      <div class="hook-text" style="font-size:42px">甲子<br>일주</div>
+      <div class="gold-line"></div>
+      <div class="sub-text">리더인 척 아닌데<br>왜 다들 나한테 물어봄? 🌿</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 4</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr2b">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">갑자 특징</span>
+      <div class="feat-list">
+        <div class="feat-item">
+          <span class="feat-icon">🌲</span>
+          <div class="feat-text"><b>타고난 리더십</b>말 안 해도 존재 자체가 기준이 되는 타입</div>
+        </div>
+        <div class="feat-item">
+          <span class="feat-icon">💧</span>
+          <div class="feat-text"><b>깊은 지혜</b>갑목+자수 = 물이 나무를 키우는 구조, 학습력 최상</div>
+        </div>
+        <div class="feat-item">
+          <span class="feat-icon">⚡</span>
+          <div class="feat-text"><b>결단력</b>한번 결정하면 흔들리지 않음. 단 고집도 셈</div>
+        </div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 4</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr2a" style="background:linear-gradient(160deg,#080e06 0%,#0e1e0a 100%)">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">연애 · 직장 팁</span>
+      <div class="feat-list">
+        <div class="feat-item">
+          <span class="feat-icon">💼</span>
+          <div class="feat-text"><b>직장 팁</b>리더 포지션이 맞음. 보조 역할은 스트레스만 쌓임</div>
+        </div>
+        <div class="feat-item">
+          <span class="feat-icon">💕</span>
+          <div class="feat-text"><b>연애 팁</b>내 페이스 맞춰주는 상대가 최고. 통제하려는 상대와는 충돌</div>
+        </div>
+        <div class="feat-item">
+          <span class="feat-icon">🎯</span>
+          <div class="feat-text"><b>2026 포인트</b>재성 대운 진입, 돈 쓸 일보다 들어올 일이 많음</div>
+        </div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 4</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr1c">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title">내 일주 확인하기</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.6);margin:8px 0 14px">생년월일시 입력 → AI가 분석<br>격국·용신·대운까지 10분</div>
+        <div class="cta-price" style="font-size:22px">14,900원</div>
+        <div class="cta-btn">→ 링크 in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">4 / 4</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>캡션:</b> 갑자일주 특징 모아봤어요 🌲 리더인 척 아닌데 왜 다들 물어보는지 이제 이해됨ㅋㅋ 내 일주 뭔지 확인 → 링크<br>
+  <b>해시태그:</b> #갑자일주 #일주 #60갑자 #사주 #명리 #AI사주 #선연 #사주언니 #운세 #팔자
+</div>
+
+<!-- 套3 -->
+<div class="set-title">套3 — 2026 내 운세 (3장)</div>
+<div class="cards-row">
+
+  <div class="tk kr3a">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">2026 운세</span>
+      <div class="hook-text">2026년<br>당신에게<br>일어날 일</div>
+      <div class="gold-line"></div>
+      <div class="sub-text">사주로 미리 보는<br>올해의 운기</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr3b">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">올해 운기 체크</span>
+      <div class="star-row">
+        <div class="star-item"><span class="star-label">💰 재운</span><span class="star-val">★★★★☆</span></div>
+        <div class="star-item"><span class="star-label">💕 연애운</span><span class="star-val">★★★☆☆</span></div>
+        <div class="star-item"><span class="star-label">💼 직장운</span><span class="star-val">★★★★★</span></div>
+        <div class="star-item"><span class="star-label">🏃 건강운</span><span class="star-val">★★★☆☆</span></div>
+        <div class="star-item"><span class="star-label">🤝 귀인운</span><span class="star-val">★★★★☆</span></div>
+      </div>
+      <div class="sub-text" style="margin-top:14px;font-size:12px">*샘플 리포트 · 실제 결과는 생년월일시 기준</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr1c">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title">내 2026 운세<br>지금 확인</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin:8px 0">재운·연애·직장·건강·귀인 5가지 분석</div>
+        <div class="cta-price">14,900원</div>
+        <div class="cta-btn">→ 링크 in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>캡션:</b> 2026 내 운세 AI로 뽑아봤어요 🔮 재운 직장운 연애운 다 나오는데 생각보다 디테일해서 깜짝 놀람 → 링크<br>
+  <b>해시태그:</b> #2026운세 #사주 #AI사주 #운세 #선연 #재운 #연애운 #직장운 #팔자 #명리
+</div>
+
+<!-- 套4 -->
+<div class="set-title">套4 — 철학관 vs AI 사주 (3장)</div>
+<div class="cards-row">
+
+  <div class="tk kr4a">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">가격 비교</span>
+      <div class="hook-text" style="font-size:32px">철학관 vs<br>AI 사주</div>
+      <div class="gold-line"></div>
+      <div class="price-battle">
+        <div class="price-card price-bad">
+          <div class="pc-label">철학관</div>
+          <div class="pc-price bad">5만원+</div>
+          <div class="pc-desc">1회 상담<br>예약 필요</div>
+        </div>
+        <div class="vs">VS</div>
+        <div class="price-card price-good">
+          <div class="pc-label">선연 AI</div>
+          <div class="pc-price good">14,900원</div>
+          <div class="pc-desc">즉시 발송<br>8,000자+</div>
+        </div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr4a" style="background:linear-gradient(160deg,#0c0e18 0%,#141e30 100%)">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">상세 비교</span>
+      <table class="compare">
+        <tr><th></th><th>철학관</th><th>선연 AI</th></tr>
+        <tr><td>가격</td><td class="col-bad">5만원+</td><td class="col-good">14,900원</td></tr>
+        <tr><td>속도</td><td class="col-bad">예약 후 대기</td><td class="col-good col-icon">⚡ 즉시</td></tr>
+        <tr><td>분량</td><td class="col-bad">30분 상담</td><td class="col-good">8,000자+</td></tr>
+        <tr><td>저장</td><td class="col-bad">메모 직접</td><td class="col-good col-icon">✅ 평생 보관</td></tr>
+        <tr><td>정확도</td><td class="col-bad">사람마다 달라</td><td class="col-good">정통 명리</td></tr>
+      </table>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr1c">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:8px">철학관 가기 전에 한 번만</div>
+        <div class="cta-title">AI 사주 먼저<br>확인하세요</div>
+        <div class="cta-price">14,900원</div>
+        <div class="cta-btn">→ 링크 in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>캡션:</b> 철학관 5만원 vs AI 사주 14,900원 솔직 비교 🔮 분량도 AI가 더 많고 저장도 됨... 어디가 나은지 댓글로 알려줘요<br>
+  <b>해시태그:</b> #철학관 #AI사주 #사주 #선연 #운세 #명리 #사주비교 #팔자 #2026 #사주언니
+</div>
+
+<!-- 套5 -->
+<div class="set-title">套5 — 연애 제일 힘든 사주 (4장)</div>
+<div class="cards-row">
+
+  <div class="tk kr5a">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">논쟁 · 훅</span>
+      <div class="hook-text">이 사주 유형<br>연애가<br>제일 힘들어요</div>
+      <div class="gold-line"></div>
+      <div class="sub-text">해당되면 저장 👇</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 4</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr5a" style="background:linear-gradient(160deg,#1a0808 0%,#2e1010 100%)">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">해당 유형</span>
+      <div class="feat-list">
+        <div class="feat-item">
+          <span class="feat-icon">🔥</span>
+          <div class="feat-text"><b>상관(傷官) 강한 사주</b>독립심이 너무 강해서 상대가 부담 느낌</div>
+        </div>
+        <div class="feat-item">
+          <span class="feat-icon">💨</span>
+          <div class="feat-text"><b>관성(官星) 없는 사주</b>남자복 약함. 인연이 왔다가 이유 없이 나감</div>
+        </div>
+        <div class="feat-item">
+          <span class="feat-icon">⚡</span>
+          <div class="feat-text"><b>비겁(比劫) 왕한 사주</b>자존심이 세서 먼저 다가가기 어려움</div>
+        </div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 4</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr5a" style="background:linear-gradient(160deg,#100808 0%,#1e0e0e 100%)">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">해결책</span>
+      <div class="feat-list">
+        <div class="feat-item">
+          <span class="feat-icon">🌊</span>
+          <div class="feat-text"><b>용신(用神) 보완</b>내 사주 용신이 뭔지 알면 어떤 상대가 맞는지 나옴</div>
+        </div>
+        <div class="feat-item">
+          <span class="feat-icon">📅</span>
+          <div class="feat-text"><b>대운 타이밍</b>연애운이 터지는 해가 따로 있음. 지금이 그 해인지 확인</div>
+        </div>
+        <div class="feat-item">
+          <span class="feat-icon">💡</span>
+          <div class="feat-text"><b>합(合) 관계</b>내 일주와 잘 맞는 상대 일주가 있음 (합충 분석)</div>
+        </div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 4</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr1c">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title">내 연애운<br>지금 확인</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin:8px 0">용신·합충·桃花·대운 타이밍 포함</div>
+        <div class="cta-price">14,900원</div>
+        <div class="cta-btn">→ 링크 in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">4 / 4</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>캡션:</b> 연애가 유독 힘든 사주 유형 있어요 😭 상관왕/관성없음/비겁왕 해당되면 저장 필수 내 연애운 언제 터지는지 확인 → 링크<br>
+  <b>해시태그:</b> #연애운 #사주 #연애사주 #상관 #AI사주 #선연 #운세 #팔자 #명리 #솔로
+</div>
+
+<!-- 套6 -->
+<div class="set-title">套6 — MBTI vs 사주 (3장)</div>
+<div class="cards-row">
+
+  <div class="tk kr6a">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">논쟁</span>
+      <div class="hook-text">MBTI보다<br>사주가<br>더 정확한 이유</div>
+      <div class="gold-line"></div>
+      <div class="sub-text">반박 시 논리로 와주세요 🙏</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr6a" style="background:linear-gradient(160deg,#08100c 0%,#101e18 100%)">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">비교</span>
+      <table class="compare">
+        <tr><th></th><th>MBTI</th><th>사주</th></tr>
+        <tr><td>분류</td><td class="col-bad">16가지</td><td class="col-good">∞ (개인마다)</td></tr>
+        <tr><td>기반</td><td class="col-bad">설문</td><td class="col-good">생년월일시</td></tr>
+        <tr><td>변함</td><td class="col-bad">기분에 따라 바뀜</td><td class="col-good">평생 불변</td></tr>
+        <tr><td>운세</td><td class="col-bad col-icon">❌ 없음</td><td class="col-good col-icon">✅ 대운/유년</td></tr>
+        <tr><td>연애궁합</td><td class="col-bad">근거 없음</td><td class="col-good">합충 분석</td></tr>
+      </table>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr1c">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:10px">MBTI 말고 이번엔</div>
+        <div class="cta-title">사주로 나를<br>알아보세요</div>
+        <div class="cta-price">무료 미리보기</div>
+        <div class="cta-btn">→ 링크 in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>캡션:</b> MBTI vs 사주 뭐가 더 정확해요? 🤔 저는 사주 쪽이 훨씬 디테일하다고 생각하는데 댓글로 의견 남겨주세요<br>
+  <b>해시태그:</b> #MBTI #사주 #MBTI사주비교 #AI사주 #선연 #운세 #팔자 #명리 #성격분석
+</div>
+
+<!-- 套7 -->
+<div class="set-title">套7 — 내 재운이 터지는 해 (3장)</div>
+<div class="cards-row">
+
+  <div class="tk kr7a">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">재운 분석</span>
+      <div class="hook-text">내 재운이<br>터지는 해가<br>정해져 있다</div>
+      <div class="gold-line"></div>
+      <div class="sub-text">대운 주기로 보는 나만의 황금기</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr7a" style="background:linear-gradient(160deg,#0c1008 0%,#1a1e0c 100%)">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">대운 사이클</span>
+      <div class="feat-list">
+        <div class="feat-item"><span class="feat-icon">💰</span><div class="feat-text"><b>재성 대운 진입 시기</b>이 시기에 투자·사업·이직하면 결과가 다름</div></div>
+        <div class="feat-item"><span class="feat-icon">🔮</span><div class="feat-text"><b>편재(偏財) 강화 유년</b>예상치 못한 수입이 생기는 특정 해</div></div>
+        <div class="feat-item"><span class="feat-icon">📈</span><div class="feat-text"><b>용신 유년 겹칠 때</b>두 가지 길운이 겹치는 해 = 인생 전환점</div></div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr1c">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title">내 재운 황금기<br>언제인지 확인</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin:8px 0">10년 대운 + 연도별 유년 분석 포함</div>
+        <div class="cta-price">14,900원</div>
+        <div class="cta-btn">→ 링크 in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>캡션:</b> 재운이 터지는 해가 사주에 다 나와있대요 😱 내 대운 주기 확인해봤더니 2027-2028이 황금기... 미리 알고 준비할 수 있겠다 → 링크<br>
+  <b>해시태그:</b> #재운 #사주 #AI사주 #선연 #운세 #대운 #2026재운 #돈운 #팔자 #명리
+</div>
+
+<!-- 套8 -->
+<div class="set-title">套8 — 궁합 테스트 결과 (4장)</div>
+<div class="cards-row">
+
+  <div class="tk kr8a">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">궁합 테스트</span>
+      <div class="hook-text">우리 궁합<br>몇 점일까?</div>
+      <div class="gold-line"></div>
+      <div class="compat-names">
+        <span class="compat-name">지민</span>
+        <span class="compat-heart">💕</span>
+        <span class="compat-name">수아</span>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 4</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr8a" style="background:linear-gradient(160deg,#120c18 0%,#1e1228 100%)">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">궁합 점수</span>
+      <div class="score-circle">
+        <div class="score-inner"><div class="score-num">87</div><div class="score-unit">점</div></div>
+      </div>
+      <div class="star-row" style="margin-top:0">
+        <div class="star-item"><span class="star-label" style="font-size:13px">💕 감정적 궁합</span><span class="star-val" style="font-size:13px">★★★★★</span></div>
+        <div class="star-item"><span class="star-label" style="font-size:13px">💼 가치관 궁합</span><span class="star-val" style="font-size:13px">★★★★☆</span></div>
+        <div class="star-item"><span class="star-label" style="font-size:13px">🔥 충돌 가능성</span><span class="star-val" style="font-size:13px">★★☆☆☆</span></div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 4</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr8a" style="background:linear-gradient(160deg,#0e0c14 0%,#181424 100%)">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">궁합 분석</span>
+      <div class="feat-list">
+        <div class="feat-item"><span class="feat-icon">✨</span><div class="feat-text"><b>강점</b>갑자×정묘 = 木이 서로 돕는 구조. 정서적 이해도 높음</div></div>
+        <div class="feat-item"><span class="feat-icon">⚠️</span><div class="feat-text"><b>주의</b>재성이 겹쳐서 돈 문제로 갈등 생길 수 있음. 재정 분리 추천</div></div>
+        <div class="feat-item"><span class="feat-icon">💡</span><div class="feat-text"><b>개선</b>상대 용신 색상의 아이템 선물하면 관계 안정됨</div></div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 4</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr1c">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title">우리 궁합<br>지금 테스트</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin:8px 0">두 사람 생년월일시 → AI 궁합 분석</div>
+        <div class="cta-price" style="font-size:20px">커플 리포트</div>
+        <div class="cta-btn">→ 링크 in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">4 / 4</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>캡션:</b> 커플 사주 궁합 테스트 해봤어요 💕 87점 나왔는데 분석이 진짜 디테일함... 돈 문제 조심하라는 거 소름 남친이랑 같이 해보세요 → 링크<br>
+  <b>해시태그:</b> #궁합 #사주궁합 #커플사주 #AI사주 #선연 #연애 #운세 #합궁 #팔자 #명리
+</div>
+
+<!-- 套9 -->
+<div class="set-title">套9 — 사주 보기 전 vs 후 (3장)</div>
+<div class="cards-row">
+
+  <div class="tk kr9a">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">인식 변화</span>
+      <div class="hook-text">사주 보기 전<br>vs<br>보고 난 후</div>
+      <div class="gold-line"></div>
+      <div class="sub-text">달라진 것들 정리함 👇</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr9a" style="background:linear-gradient(160deg,#0c1010 0%,#141e1e 100%)">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">before / after</span>
+      <div class="ba-wrap">
+        <div class="ba-item ba-before"><div class="ba-label">BEFORE</div><div class="ba-text">"왜 나만 이렇게 힘들지?" 남들과 비교하면서 자책</div></div>
+        <div class="ba-item ba-after"><div class="ba-label">AFTER</div><div class="ba-text">"내 사주가 이 시기라서 그렇구나" 불안 대신 이해</div></div>
+        <div class="ba-item ba-before"><div class="ba-label">BEFORE</div><div class="ba-text">연애가 왜 안 되는지 이유를 모름</div></div>
+        <div class="ba-item ba-after"><div class="ba-label">AFTER</div><div class="ba-text">관성이 약해서 그런 거 + 대운 오면 해결됨</div></div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr1c">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title">나도 한 번<br>확인해보기</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin:8px 0">"이해"로 바꾸는 8,000자 리포트</div>
+        <div class="cta-price">14,900원</div>
+        <div class="cta-btn">→ 링크 in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>캡션:</b> 사주 보기 전이랑 후가 진짜 달라요 😌 자책에서 이해로 바뀌는 느낌... 불안했던 게 "아 이런 시기구나"로 전환됨 → 링크<br>
+  <b>해시태그:</b> #사주 #자기이해 #AI사주 #선연 #운세 #명리 #팔자 #성장 #위로 #사주후기
+</div>
+
+<!-- 套10 -->
+<div class="set-title">套10 — 오늘의 천기 (선연 기능 소개) (3장)</div>
+<div class="cards-row">
+
+  <div class="tk kr10a">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">선연 기능</span>
+      <div class="hook-text">매일 아침<br>오늘의 천기<br>받는 법 🔮</div>
+      <div class="gold-line"></div>
+      <div class="sub-text">회원이면 매일 무료</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr10a" style="background:linear-gradient(160deg,#120a06 0%,#201408 100%)">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-kr">오늘의 천기 미리보기</span>
+      <div class="tianji-box">
+        <div class="tj-date">2026年 8月 2日 · 甲辰日</div>
+        <div class="tj-row"><span class="tj-key">오늘 기운</span><span class="tj-val">木 · 창의 에너지</span></div>
+        <div class="tj-row"><span class="tj-key">재운</span><span class="tj-val stars">★★★★☆</span></div>
+        <div class="tj-row"><span class="tj-key">오늘 宜 (하면 좋은 것)</span><span class="tj-val">협상 · 새 아이디어</span></div>
+        <div class="tj-row"><span class="tj-key">오늘 忌 (피할 것)</span><span class="tj-val">큰 지출 · 다툼</span></div>
+        <div class="tj-row"><span class="tj-key">행운색</span><span class="tj-val" style="display:flex;align-items:center;gap:6px"><span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:#4CAF50"></span>녹색</span></div>
+        <div class="tj-row"><span class="tj-key">AI 한마디</span><span class="tj-val" style="font-size:11px;max-width:150px;text-align:right">오늘은 말보다 행동이 결과를 만듭니다</span></div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+  <div class="tk kr1c">
+    <div class="tk-logo tk-logo-kr">선연 · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title">매일 천기 받기<br>회원 가입</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin:8px 0">월 구독 · 언제든 취소 가능</div>
+        <div class="cta-price" style="font-size:20px">월 ₩12,900</div>
+        <div class="cta-btn">→ 링크 in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 3</span><span class="tk-handle">@선연사주언니</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>캡션:</b> 선연 회원이면 매일 아침 오늘의 천기 받아요 🌅 재운/연운/행운색/AI 한마디 다 있음 아침에 보면 하루 기분이 달라짐 → 링크<br>
+  <b>해시태그:</b> #선연 #오늘의운세 #일운 #AI사주 #운세 #천기 #사주 #팔자 #2026 #아침루틴
+</div>
+
+</div><!-- end KR section -->
+
+<!-- ═══════════════════ ENGLISH SECTION ═══════════════════ -->
+<div id="en" class="section">
+
+<!-- EN 套1 -->
+<div class="set-title">EN 套1 — What I found in my Chinese birth chart (3 cards)</div>
+<div class="cards-row">
+
+  <div class="tk en1a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">MY BIRTH CHART STORY</span>
+      <div class="hook-text-en">What I found<br>in my Chinese<br>birth chart 🔮</div>
+      <div class="gold-line"></div>
+      <div class="sub-text-en">I wasn't ready for this</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en1a" style="background:linear-gradient(160deg,#101010 0%,#1c1c1c 100%)">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">AI REPORT PREVIEW</span>
+      <div class="report-box" style="font-family:'Inter',sans-serif">
+        <div class="report-row"><span class="r-label">Day Master</span><span class="r-value">Jiǎ Wood (甲)</span></div>
+        <div class="report-row"><span class="r-label">Chart Pattern</span><span class="r-value">Food God Wealth</span></div>
+        <div class="report-row"><span class="r-label">Lucky Element</span><span class="r-value">Water · Metal</span></div>
+        <div class="report-row"><span class="r-label">2026 Luck</span><span class="r-value stars">★★★★☆</span></div>
+        <div class="report-row"><span class="r-label">Wealth Cycle</span><span class="r-value">Rising Phase</span></div>
+        <div class="report-row"><span class="r-label">Noble Person</span><span class="r-value">Tiānyǐ ✓</span></div>
+      </div>
+      <div class="sub-text-en" style="margin-top:12px;font-size:13px">"This is literally me" 😳</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en1a" style="background:#0c0c0c">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title-en">Get Your BaZi<br>Report Now</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,.5);margin:8px 0">8,000+ word AI analysis · Instant delivery</div>
+        <div class="cta-price">$9.90</div>
+        <div class="cta-btn" style="font-family:'Inter',sans-serif">→ Link in bio</div>
+        <div class="cta-url">shenyuan.mylumee.cn</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>Caption:</b> Got my Chinese BaZi birth chart done by AI and honestly wasn't ready 😳 It described my personality and 2026 outlook scarily accurately. Link in bio if curious<br>
+  <b>Hashtags:</b> #bazi #chineseastrology #birthchart #fortunetelling #AIsaju #shenyuan #spiritualtiktok #astrology #2026forecast #chinesehoroscope
+</div>
+
+<!-- EN 套2 -->
+<div class="set-title">EN 套2 — BaZi vs Western Astrology (4 cards)</div>
+<div class="cards-row">
+
+  <div class="tk en2a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">CONTROVERSIAL TAKE</span>
+      <div class="hook-text-en">BaZi is more<br>accurate than<br>Western astrology</div>
+      <div class="gold-line"></div>
+      <div class="sub-text-en">Fight me in the comments 👇</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 4</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en2a" style="background:linear-gradient(160deg,#0e0e0e 0%,#1a1a1a 100%)">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">THE COMPARISON</span>
+      <table class="compare" style="font-family:'Inter',sans-serif">
+        <tr><th></th><th>Western</th><th>BaZi</th></tr>
+        <tr><td>Types</td><td class="col-bad">12 signs</td><td class="col-good">∞ unique</td></tr>
+        <tr><td>Based on</td><td class="col-bad">Sun only</td><td class="col-good">Year+Month+Day+Hour</td></tr>
+        <tr><td>Forecast</td><td class="col-bad">Vague</td><td class="col-good">Year/month specific</td></tr>
+        <tr><td>Career</td><td class="col-bad col-icon">❌</td><td class="col-good col-icon">✅</td></tr>
+        <tr><td>Wealth timing</td><td class="col-bad col-icon">❌</td><td class="col-good col-icon">✅</td></div></tr>
+      </table>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 4</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en2a" style="background:linear-gradient(160deg,#0c0c0c 0%,#161616 100%)">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">THE PROOF</span>
+      <div class="feat-list">
+        <div class="feat-item"><span class="feat-icon">🎯</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>Hyper-personal</b>80 billion people × 4 data points = virtually unique chart for each person</div></div>
+        <div class="feat-item"><span class="feat-icon">📅</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>Timed forecasts</b>BaZi tells you WHICH year wealth arrives — not just "it'll come eventually"</div></div>
+        <div class="feat-item"><span class="feat-icon">💼</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>Career mapping</b>Your Day Master element tells you which industries you're built for</div></div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 4</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en1a" style="background:#0a0a0a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title-en">Try BaZi for $9.90</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,.5);margin:8px 0">See what your chart reveals<br>vs your zodiac sign</div>
+        <div class="cta-price">$9.90</div>
+        <div class="cta-btn" style="font-family:'Inter',sans-serif">→ Link in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">4 / 4</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>Caption:</b> Unpopular opinion: BaZi (Chinese birth chart) is way more accurate than Western astrology. Hear me out... 🧵 Drop your zodiac sign below and I'll tell you the BaZi equivalent<br>
+  <b>Hashtags:</b> #bazi #westernastrology #chineseastrology #astrology #spiritualtiktok #birthchart #shenyuan #zodiac #astrologytiktok #chinesehoroscope
+</div>
+
+<!-- EN 套3 -->
+<div class="set-title">EN 套3 — Your Lucky Element by BaZi (4 cards)</div>
+<div class="cards-row">
+
+  <div class="tk en3a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">5 ELEMENTS GUIDE</span>
+      <div class="hook-text-en">What's your<br>lucky element?<br>🌿🔥🌍⚔️💧</div>
+      <div class="gold-line"></div>
+      <div class="sub-text-en">BaZi determines yours at birth</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 4</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en3a" style="background:linear-gradient(160deg,#0a0e08 0%,#121808 100%)">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">5 ELEMENTS</span>
+      <div class="elem-grid">
+        <div class="elem-item" style="background:rgba(76,175,80,.08);border:1px solid rgba(76,175,80,.2)">
+          <div class="elem-dot" style="background:#4CAF50"></div>
+          <div class="elem-name" style="color:#81c784">Wood 木</div>
+          <div class="elem-desc">Growth · Creativity · Career advancement</div>
+        </div>
+        <div class="elem-item" style="background:rgba(244,67,54,.08);border:1px solid rgba(244,67,54,.2)">
+          <div class="elem-dot" style="background:#f44336"></div>
+          <div class="elem-name" style="color:#ef9a9a">Fire 火</div>
+          <div class="elem-desc">Passion · Charisma · Romance luck</div>
+        </div>
+        <div class="elem-item" style="background:rgba(255,193,7,.08);border:1px solid rgba(255,193,7,.2)">
+          <div class="elem-dot" style="background:#FFC107"></div>
+          <div class="elem-name" style="color:#ffd54f">Earth 土</div>
+          <div class="elem-desc">Stability · Health · Family harmony</div>
+        </div>
+        <div class="elem-item" style="background:rgba(224,224,224,.06);border:1px solid rgba(224,224,224,.15)">
+          <div class="elem-dot" style="background:#e0e0e0"></div>
+          <div class="elem-name" style="color:#e0e0e0">Metal 金</div>
+          <div class="elem-desc">Decisiveness · Wealth · Noble mentors</div>
+        </div>
+        <div class="elem-item" style="background:rgba(33,150,243,.08);border:1px solid rgba(33,150,243,.2)">
+          <div class="elem-dot" style="background:#2196F3"></div>
+          <div class="elem-name" style="color:#90caf9">Water 水</div>
+          <div class="elem-desc">Wisdom · Intuition · Adaptability</div>
+        </div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 4</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en3a" style="background:linear-gradient(160deg,#080e0a 0%,#0e1a10 100%)">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">HOW TO USE IT</span>
+      <div class="feat-list">
+        <div class="feat-item"><span class="feat-icon">👗</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>Wear your element's color</b>Amplifies your luck energy on important days</div></div>
+        <div class="feat-item"><span class="feat-icon">🏠</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>Decorate with it</b>Home + workspace in your element = sustained boost</div></div>
+        <div class="feat-item"><span class="feat-icon">📅</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>Schedule on element days</b>Big meetings, dates, launches on your lucky element day</div></div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 4</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en1a" style="background:#0a0a0a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title-en">Find Your Lucky<br>Element</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,.5);margin:8px 0">BaZi report includes your lucky element, color, direction + daily forecast</div>
+        <div class="cta-price">$9.90</div>
+        <div class="cta-btn" style="font-family:'Inter',sans-serif">→ Link in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">4 / 4</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>Caption:</b> Your BaZi lucky element is determined at birth 🌿🔥 Mine is Water and once I started incorporating navy + black into my life things genuinely shifted. Comment your element if you know it!<br>
+  <b>Hashtags:</b> #bazi #5elements #luckyelement #chineseastrology #feng shui #spiritualtiktok #shenyuan #manifestation #astrology #chinesehoroscope
+</div>
+
+<!-- EN 套4 -->
+<div class="set-title">EN 套4 — 2026 Year Forecast (3 cards)</div>
+<div class="cards-row">
+
+  <div class="tk en4a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">2026 FORECAST</span>
+      <div class="hook-text-en">What BaZi<br>says about<br>your 2026 🔮</div>
+      <div class="gold-line"></div>
+      <div class="sub-text-en">Year of the Fire Horse energy</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en4a" style="background:linear-gradient(160deg,#0c0e10 0%,#141820 100%)">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">2026 ENERGY</span>
+      <div class="feat-list">
+        <div class="feat-item"><span class="feat-icon">🔥</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>Fire element surges</b>Those with Water or Wood day masters benefit most — Fire feeds Wood, Water controls Fire energy</div></div>
+        <div class="feat-item"><span class="feat-icon">💼</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>Career acceleration</b>Metal day masters face transformation — old structures break to make room</div></div>
+        <div class="feat-item"><span class="feat-icon">💕</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>Romance spikes</b>Fire year = heightened attraction energy. Peach Blossom luck activated for many</div></div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en1a" style="background:#0a0a0a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title-en">Get Your Personal<br>2026 Forecast</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,.5);margin:8px 0">Year-by-year BaZi forecast tailored to your exact birth chart</div>
+        <div class="cta-price">$9.90</div>
+        <div class="cta-btn" style="font-family:'Inter',sans-serif">→ Link in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>Caption:</b> 2026 BaZi forecast breakdown 🔮 Fire Horse energy = big changes for everyone, but WHO benefits depends on your Day Master. What's yours? Comment below and I'll tell you what to expect<br>
+  <b>Hashtags:</b> #2026forecast #bazi #chineseastrology #yearofthehorse #spiritualtiktok #shenyuan #astrology #manifestation #2026 #chinesehoroscope
+</div>
+
+<!-- EN 套5 -->
+<div class="set-title">EN 套5 — Signs You're in a Bad Luck Cycle (4 cards)</div>
+<div class="cards-row">
+
+  <div class="tk en5a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">SAVE THIS</span>
+      <div class="hook-text-en">Signs you're<br>in a bad<br>luck cycle 😔</div>
+      <div class="gold-line"></div>
+      <div class="sub-text-en">BaZi can tell you exactly when it ends</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 4</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en5a" style="background:linear-gradient(160deg,#100808 0%,#180e0e 100%)">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">THE SIGNS</span>
+      <div class="feat-list">
+        <div class="feat-item"><span class="feat-icon">😩</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>Nothing sticks</b>You try hard but results don't match effort. Everything takes 3x longer than it should</div></div>
+        <div class="feat-item"><span class="feat-icon">💔</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>Relationships drain you</b>People you trust disappoint. New connections feel forced or don't last</div></div>
+        <div class="feat-item"><span class="feat-icon">💸</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>Money slips away</b>Unexpected expenses, failed investments, income feels capped no matter what you do</div></div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 4</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en5a" style="background:linear-gradient(160deg,#0e0808 0%,#181010 100%)">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">WHY + WHEN IT ENDS</span>
+      <div class="feat-list">
+        <div class="feat-item"><span class="feat-icon">🔮</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>It's your 10-year luck pillar</b>BaZi has 10-year luck cycles. A "clash" pillar = obstacles across all areas simultaneously</div></div>
+        <div class="feat-item"><span class="feat-icon">📅</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>It ends on a specific year</b>Not "when things improve" — BaZi gives you the exact year your next favorable cycle begins</div></div>
+        <div class="feat-item"><span class="feat-icon">💡</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>You can prepare</b>Knowing the timeline = you stop fighting and start positioning for the upturn</div></div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 4</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en1a" style="background:#0a0a0a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title-en">Find Out When<br>Your Luck Turns</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,.5);margin:8px 0">10-year luck pillars + annual forecast in your BaZi report</div>
+        <div class="cta-price">$9.90</div>
+        <div class="cta-btn" style="font-family:'Inter',sans-serif">→ Link in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">4 / 4</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>Caption:</b> If everything feels harder than it should right now — it might be your luck cycle 😔 BaZi actually tells you WHEN it ends. My bad cycle ended in 2024 and 2025 genuinely felt different. Link in bio to check yours<br>
+  <b>Hashtags:</b> #badluck #luckycycle #bazi #chineseastrology #spiritualtiktok #shenyuan #manifestation #astrology #luckchange #chinesehoroscope
+</div>
+
+<!-- EN 套6 -->
+<div class="set-title">EN 套6 — Why You Keep Attracting the Wrong Partners (3 cards)</div>
+<div class="cards-row">
+
+  <div class="tk en6a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">RELATIONSHIP TRUTH</span>
+      <div class="hook-text-en">Why you keep<br>attracting the<br>wrong ones 💔</div>
+      <div class="gold-line"></div>
+      <div class="sub-text-en">It's written in your BaZi — but it can change</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en6a" style="background:linear-gradient(160deg,#0c0810 0%,#14102a 100%)">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">THE BAZI REASON</span>
+      <div class="feat-list">
+        <div class="feat-item"><span class="feat-icon">💫</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>Weak Officer Star (官星)</b>The BaZi element governing relationships is weak or clashed = partners who can't commit or stay</div></div>
+        <div class="feat-item"><span class="feat-icon">⚡</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>Peach Blossom clashed</b>You attract many but relationships don't stabilize. Timing feels off even when feelings are right</div></div>
+        <div class="feat-item"><span class="feat-icon">🌊</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>But here's the shift</b>Knowing your Officer Star cycle = knowing WHEN stable love arrives. It's not random</div></div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en1a" style="background:#0a0a0a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title-en">Check Your Love<br>Luck in BaZi</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,.5);margin:8px 0">Peach Blossom · Officer Star · Relationship timing in your report</div>
+        <div class="cta-price">$9.90</div>
+        <div class="cta-btn" style="font-family:'Inter',sans-serif">→ Link in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>Caption:</b> Kept attracting emotionally unavailable people until I checked my BaZi 💔 Turns out my Officer Star is weak + clashed. It's not bad luck — it's a cycle. Mine shifts in 2027. What about yours? Link in bio<br>
+  <b>Hashtags:</b> #relationships #wrongpartner #bazi #chineseastrology #spiritualtiktok #shenyuan #loveadvice #astrology #romanticuck #manifestation
+</div>
+
+<!-- EN 套7 -->
+<div class="set-title">EN 套7 — Your Chinese Birth Chart Revealed (3 cards)</div>
+<div class="cards-row">
+
+  <div class="tk en7a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">REPORT REVEAL</span>
+      <div class="hook-text-en">What an AI<br>BaZi report<br>actually shows</div>
+      <div class="gold-line"></div>
+      <div class="sub-text-en">More than you'd expect for $9.90</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en7a" style="background:linear-gradient(160deg,#101010 0%,#181818 100%)">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">WHAT'S INSIDE</span>
+      <div class="feat-list">
+        <div class="feat-item"><span class="feat-icon">📊</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>8-Pillar Chart</b>Your complete BaZi grid: Year, Month, Day, Hour pillars with Heavenly Stems + Earthly Branches</div></div>
+        <div class="feat-item"><span class="feat-icon">🎯</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>Personality Deep Dive</b>Day Master analysis: your core nature, strengths, blind spots, relationship style</div></div>
+        <div class="feat-item"><span class="feat-icon">📅</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>10-Year Luck Pillars</b>When your golden periods are, what to do in each phase — mapped to your actual age</div></div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en1a" style="background:#0a0a0a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title-en">Get the Full<br>8,000-Word Report</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,.5);margin:8px 0">Personality · Career · Love · Wealth · 10-year luck · 2026 forecast</div>
+        <div class="cta-price">$9.90</div>
+        <div class="cta-btn" style="font-family:'Inter',sans-serif">→ Link in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>Caption:</b> Here's what an AI BaZi report actually includes 📊 8,000 words covering personality, wealth timing, love luck, career fit + 10-year forecasts. For $9.90 I expected basic — it was not basic. Link in bio<br>
+  <b>Hashtags:</b> #bazi #chineseastrology #birthchart #spiritualtiktok #shenyuan #astrology #2026 #fortunetelling #chinesehoroscope #selfdiscovery
+</div>
+
+<!-- EN 套8 -->
+<div class="set-title">EN 套8 — BaZi Career Advice (4 cards)</div>
+<div class="cards-row">
+
+  <div class="tk en4a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">CAREER MAP</span>
+      <div class="hook-text-en">What career<br>you're born<br>for (BaZi) 💼</div>
+      <div class="gold-line"></div>
+      <div class="sub-text-en">Your Day Master element says it all</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 4</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en4a" style="background:linear-gradient(160deg,#0c0c0e 0%,#14141e 100%)">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">BY ELEMENT</span>
+      <div class="career-list">
+        <div class="career-item"><div class="career-elem">Wood 木</div><div class="career-text">Education · Healthcare · Sustainability · Growth-stage startups</div></div>
+        <div class="career-item"><div class="career-elem">Fire 火</div><div class="career-text">Media · Marketing · Entertainment · Sales · Public speaking</div></div>
+        <div class="career-item"><div class="career-elem">Earth 土</div><div class="career-text">Real estate · Finance · Construction · Food · Stability roles</div></div>
+        <div class="career-item"><div class="career-elem">Metal 金</div><div class="career-text">Law · Military · Surgery · Precision engineering · Finance</div></div>
+        <div class="career-item"><div class="career-elem">Water 水</div><div class="career-text">Research · Philosophy · Art · Travel · Strategy consulting</div></div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 4</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en4a" style="background:linear-gradient(160deg,#0a0c10 0%,#101620 100%)">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">THE NUANCE</span>
+      <div class="feat-list">
+        <div class="feat-item"><span class="feat-icon">⚖️</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>It's not just Day Master</b>Your Useful God (用神) and the strength of your chart determine whether you're better suited to employment or entrepreneurship</div></div>
+        <div class="feat-item"><span class="feat-icon">📈</span><div class="feat-text" style="font-family:'Inter',sans-serif"><b>Timing matters</b>Same career, different luck cycle = different results. Launch a business in your wealth pillar, not against it</div></div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 4</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en1a" style="background:#0a0a0a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title-en">Find Your Career<br>BaZi Profile</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,.5);margin:8px 0">Day Master + Useful God + wealth timing = career roadmap</div>
+        <div class="cta-price">$9.90</div>
+        <div class="cta-btn" style="font-family:'Inter',sans-serif">→ Link in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">4 / 4</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>Caption:</b> BaZi tells you what career you're literally built for 💼 I'm a Yang Wood day master — education and growth-sector work is in my chart. Switched industries last year, things clicked immediately. Comment your Day Master if you know it!<br>
+  <b>Hashtags:</b> #career #bazi #chineseastrology #careeradvice #spiritualtiktok #shenyuan #daymaster #5elements #astrology #careeertiktok
+</div>
+
+<!-- EN 套9 -->
+<div class="set-title">EN 套9 — POV: Finding Your Lucky Color (3 cards)</div>
+<div class="cards-row">
+
+  <div class="tk en5a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">POV</span>
+      <div class="hook-text-en">POV: You just<br>found your<br>lucky color 🎨</div>
+      <div class="gold-line"></div>
+      <div class="sub-text-en">BaZi calculates it from your birth data</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en5a" style="background:linear-gradient(160deg,#0c0c0c 0%,#161616 100%)">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">COLOR GUIDE</span>
+      <div class="color-guide">
+        <div class="cg-item"><div class="cg-swatch" style="background:linear-gradient(135deg,#4CAF50,#2E7D32)"></div><div class="cg-text"><div class="cg-name">Green (Wood)</div><div class="cg-use">Career growth · New beginnings</div></div></div>
+        <div class="cg-item"><div class="cg-swatch" style="background:linear-gradient(135deg,#E53935,#c62828)"></div><div class="cg-text"><div class="cg-name">Red / Pink (Fire)</div><div class="cg-use">Romance · Visibility · Energy</div></div></div>
+        <div class="cg-item"><div class="cg-swatch" style="background:linear-gradient(135deg,#F9A825,#F57F17)"></div><div class="cg-text"><div class="cg-name">Yellow / Tan (Earth)</div><div class="cg-use">Stability · Wealth preservation</div></div></div>
+        <div class="cg-item"><div class="cg-swatch" style="background:linear-gradient(135deg,#e0e0e0,#9e9e9e)"></div><div class="cg-text"><div class="cg-name">White / Gold (Metal)</div><div class="cg-use">Clarity · Authority · Luck</div></div></div>
+        <div class="cg-item"><div class="cg-swatch" style="background:linear-gradient(135deg,#1565C0,#0d47a1)"></div><div class="cg-text"><div class="cg-name">Black / Navy (Water)</div><div class="cg-use">Wisdom · Depth · Flow</div></div></div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en1a" style="background:#0a0a0a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title-en">Find YOUR<br>Lucky Color</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,.5);margin:8px 0">BaZi report tells you your specific lucky color, direction + element</div>
+        <div class="cta-price">$9.90</div>
+        <div class="cta-btn" style="font-family:'Inter',sans-serif">→ Link in bio</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>Caption:</b> POV: You find out your BaZi lucky color is navy blue and suddenly your entire wardrobe makes sense 🌊 My lucky element is Water — been accidentally wearing dark colors my whole life. Yours in bio link<br>
+  <b>Hashtags:</b> #luckycolor #bazi #chineseastrology #spiritualtiktok #shenyuan #feng shui #luckyelement #astrology #manifestation #colorpsychology
+</div>
+
+<!-- EN 套10 -->
+<div class="set-title">EN 套10 — Cheapest Way to Get a Real Fortune Reading (3 cards)</div>
+<div class="cards-row">
+
+  <div class="tk en6a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">BUDGET SPIRITUAL</span>
+      <div class="hook-text-en">Cheapest way<br>to get a real<br>fortune reading 💸</div>
+      <div class="gold-line"></div>
+      <div class="sub-text-en">Traditional fortune tellers charge $80-300+</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">1 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en6a" style="background:linear-gradient(160deg,#0c0c10 0%,#14141a 100%)">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <span class="tag tag-en">PRICE REALITY CHECK</span>
+      <table class="price-table">
+        <tr><td class="p-label">Chinese Fortune Teller (in-person)</td><td class="p-bad">$80–300</td></tr>
+        <tr><td class="p-label">Western Astrologer (session)</td><td class="p-bad">$120–400</td></tr>
+        <tr><td class="p-label">Tarot Reader (30 min)</td><td class="p-bad">$60–150</td></tr>
+        <tr><td class="p-label">Korean Cheolhakgwan (철학관)</td><td class="p-bad">$35–80</td></tr>
+        <tr><td class="p-label" style="color:#c9a84c;font-weight:700">ShenYuan AI BaZi Report</td><td class="p-good">$9.90</td></tr>
+      </table>
+      <div class="sub-text-en" style="margin-top:12px;font-size:12px;text-align:center">8,000+ words · Instant · Lifetime access</div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">2 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+  <div class="tk en1a" style="background:#0a0a0a">
+    <div class="tk-logo tk-logo-en">ShenYuan · 善缘</div>
+    <div class="tk-body">
+      <div class="cta-box">
+        <div class="cta-title-en">$9.90 BaZi<br>Report — Right Now</div>
+        <div style="font-family:'Inter',sans-serif;font-size:12px;color:rgba(255,255,255,.5);margin:8px 0">Traditional fortune teller quality · AI speed · Fraction of the price</div>
+        <div class="cta-price">$9.90</div>
+        <div class="cta-btn" style="font-family:'Inter',sans-serif">→ Link in bio</div>
+        <div class="cta-url">shenyuan.mylumee.cn</div>
+      </div>
+    </div>
+    <div class="tk-foot"><span class="tk-page">3 / 3</span><span class="tk-handle">@shenyuan.ai</span></div>
+  </div>
+
+</div>
+<div class="set-caption">
+  <b>Caption:</b> If you've been wanting a real fortune reading but can't justify $150+ — I found the move 💸 AI BaZi report for $9.90. 8,000+ words, instant delivery. Same methodology as traditional Chinese fortune tellers. Link in bio<br>
+  <b>Hashtags:</b> #fortunetelling #budget #bazi #chineseastrology #spiritualtiktok #shenyuan #affordablespiritual #astrology #fortunereader #chinesehoroscope
+</div>
+
+</div><!-- end EN section -->
+
+<script>
+function show(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
