@@ -331,12 +331,12 @@ function tryApplyReferral(refCode, inviteeId){
 // amount=USD分; amountCny=人民币分; amountKrw=韩元整数
 const PRODUCTS = {
   bazi_basic:   { name: '基础命盘',         amount: 990,   amountCny: 1990,  desc: '日主+五行+今年运势' },
-  bazi_full:    { name: '完整命盘',         amount: 1990,  amountCny: 3990,  desc: '六维+十年大运+流月', amountKrw: 9900 },
-  bazi_vip:     { name: '深度批命',         amount: 3990,  amountCny: 7990,  desc: '大师级·终身档案', amountKrw: 19900 },
+  bazi_full:    { name: '完整命盘',         amount: 1990,  amountCny: 3990,  desc: '六维+十年大运+流月', amountKrw: 14900 },
+  bazi_vip:     { name: '深度批命',         amount: 3990,  amountCny: 7990,  desc: '大师级·终身档案', amountKrw: 24900 },
   daily_sub:    { name: '每日天机订阅',     amount: 490,   amountCny: 1990,  desc: '每日天机·单功能订阅' },
   tarot:        { name: '塔罗占卜',         amount: 390,   amountCny: 990,   desc: 'AI塔罗解读' },
   hehun:        { name: '合婚配对',         amount: 1990,  amountCny: 3990,  desc: '双方八字合婚分析', amountKrw: 4900 },
-  member_monthly:  { name: '月度会员',      amount: 690,   amountCny: 1990,  desc: '全部AI占算无限次·完整报告不锁定' },
+  member_monthly:  { name: '月度会员',      amount: 690,   amountCny: 1990,  desc: '全部AI占算无限次·完整报告不锁定', amountKrw: 12900 },
   member_yearly:   { name: '年度会员',      amount: 4900,  amountCny: 9900,  desc: '全年畅用·合婚报告·水晶挂件' },
   member_lifetime: { name: '终身会员',      amount: 18800, amountCny: 68800, desc: '永久畅享·全部报告·专属档案' },
   member_daily:     { name: '日会员',       amount: 299,   amountCny: 990,   desc: '24小时无限使用' },
@@ -705,10 +705,10 @@ app.post('/api/create-checkout', rateLimitMiddleware, async (req, res) => {
       'member_monthly':      'price_1TzAjGEAXrE2YgcrRzUY78Ko',
       'member_yearly':       'price_1TzAjQEAXrE2YgcrHYurEL8Z',
       'member_quarterly':    'price_1TzAjQEAXrE2Ygcrr8WBjCXa',
-      'bazi_full_krw':       'price_1TzAjREAXrE2YgcrLqhHWUtf',
-      'bazi_vip_krw':        'price_1TzArhEAXrE2YgcrIT1fwmGX',
-      'hehun_krw':           'price_1TzAriEAXrE2YgcrWEj4Azdn',
-      'member_monthly_krw':  'price_1TzAriEAXrE2YgcreCmvJKGf',
+      'bazi_full_krw':       'price_1TzrGREAXrE2Ygcr1dOkiv2O', // ₩14,900
+      'bazi_vip_krw':        'price_1TzrGUEAXrE2YgcrtAXjFt9M', // ₩24,900
+      'hehun_krw':           'price_1TzAriEAXrE2YgcrWEj4Azdn', // ₩4,900 (unchanged)
+      'member_monthly_krw':  'price_1TzrGWEAXrE2YgcrhrIIeMXC', // ₩12,900/月
     };
     const isSubscription = ['daily_sub','member_monthly','member_yearly','member_quarterly','member_3year'].includes(product);
     const krwKey = isKR ? product + '_krw' : null;
