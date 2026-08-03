@@ -22,7 +22,7 @@ async function deepseekChat(messages, opts = {}) {
       'Authorization': 'Bearer ' + DEEPSEEK_API_KEY
     },
     body,
-    signal: AbortSignal.timeout(opts.timeout || 120000)
+    signal: AbortSignal.timeout(opts.timeout || 300000)
   });
 
   if (!res.ok) {
@@ -43,4 +43,27 @@ function buildReadingPrompt(system, user) {
   ];
 }
 
-module.exports = { deepseekChat, buildReadingPrompt, DEEPSEEK_MODEL };
+// 流式调用 DeepSeek，返回 Response.body（ReadableStream）
+async function deepseekStream(messages, opts = {}) {
+  const url = 'https://api.deepseek.com/v1/chat/completions';
+  const body = JSON.stringify({
+    model: opts.model || DEEPSEEK_MODEL,
+    messages,
+    temperature: opts.temperature ?? 0.7,
+    max_tokens: opts.maxTokens || 2048,
+    stream: true
+  });
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + DEEPSEEK_API_KEY },
+    body,
+    signal: AbortSignal.timeout(opts.timeout || 300000)
+  });
+  if (!res.ok) {
+    const err = await res.text().catch(() => 'unknown');
+    throw new Error('DeepSeek API ' + res.status + ': ' + err.slice(0, 200));
+  }
+  return res.body;
+}
+
+module.exports = { deepseekChat, deepseekStream, buildReadingPrompt, DEEPSEEK_MODEL };

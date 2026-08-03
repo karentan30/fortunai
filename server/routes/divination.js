@@ -25,11 +25,20 @@
  */
 
 const router = require('express').Router();
-const { deepseekChat, buildReadingPrompt } = require('../lib/llm');
+const path = require('path');
+const fs = require('fs');
+const { deepseekChat, deepseekStream, buildReadingPrompt } = require('../lib/llm');
 const astrology = require('../astrology.js');
 const { insertReading, hasFullAccess, gateMessages, saveQaContext, qaContext } = require('../lib/store');
 const { getToken } = require('../lib/store');
 const { rateLimitMiddleware } = require('../middleware');
+const { PRODUCTS, matchProduct } = require('../data/products');
+
+// ── 免费报告内存缓存（24h TTL）──
+const reportCache = new Map();
+function cacheKey(params) {
+  return [params.name, params.dob, params.gender, params.lang, 'free'].join('|');
+}
 
 // 从 store 取 mon（Sentry 监控）—— 在入口传入
 let mon = null;
@@ -234,18 +243,30 @@ router.post('/bazi', rateLimitMiddleware, async (req, res) => {
     var useMessages = messages;
     if (!full) {
       useMessages = buildReadingPrompt(
-        '你是精通八字命理的命理师。为用户生成一份【基础版】命盘概览。请严格按照以下章节结构输出,每个章节标题必须以对应的emoji开头(方便客户端解析):\n🔮 四柱八字排盘\n🌊 五行能量分析\n🌟 今年运势概览\n💰 财运格局概览\n❤️ 感情姻缘概览\n🏆 事业格局概览\n🔑 开运锦囊\n每个章节写2-3段实质内容,语言简体中文、温暖白话,合计约4000字。让用户感受到真实价值。不要展开大运流年神煞等细节(留完整版)。结尾必须明确告知:完整的财运格局、感情姻缘、事业升迁、健康预警、8步大运、未来10年流年详批、神煞等,在【完整版报告】中解锁。',
-        '请为以下命主生成【基础版】命盘概览(包含四柱+五行+今年+财运+感情+事业+开运,约4000字,结尾引导解锁完整版):\n出生:' + birthYear + '年' + birthMonth + '月' + birthDay + '日' + (birthHour !== undefined ? birthHour + '时' : '(时辰不详)') + '\n性别:' + (gender === 'male' ? '男' : '女')
+        '你是精通八字命理的命理师。为用户生成一份【基础版】命盘概览。请严格按照以下3个章节结构输出，每个章节标题必须以对应的emoji开头（方便客户端解析）:\n📜 四柱八字排盘\n🌊 五行能量分析\n🌟 今年运势概览\n每个章节写2-3段实质内容，语言简体中文、温暖白话，合计约1500字。让用户感受到真实价值。三个章节完成后，输出一行"---LOCKED---"，然后输出以下锁定内容提示（原样输出，不展开）:\n💰 财运格局 · 完整解读见付费版\n❤️ 感情姻缘 · 完整解读见付费版\n🏆 事业格局 · 完整解读见付费版\n🔑 开运锦囊 · 完整解读见付费版',
+        '请为以下命主生成【基础版】命盘概览(仅含四柱排盘+五行+今年运势3节，约1500字，然后输出---LOCKED---及锁定章节提示):\n出生:' + birthYear + '年' + birthMonth + '月' + birthDay + '日' + (birthHour !== undefined ? birthHour + '时' : '(时辰不详)') + '\n性别:' + (gender === 'male' ? '男' : '女')
       );
     }
-    var freeMaxTokens = full ? 16384 : 6000;
+    var freeMaxTokens = full ? 16384 : 3000;
     useMessages = useMessages.map(function(m) {
       return (m && m.role === 'system') ? { role: 'system', content: (m.content || '') + '\n\n【必须遵守】报告最后必须附一行免责声明:"本报告由AI生成,仅供参考娱乐,不构成医学、法律、投资或人生重大决策建议。"' } : m;
     });
+    // 免费版缓存检查
+    if (!full) {
+      const ck = cacheKey({ name: req.body.name || '', dob: (birthYear||'') + '-' + (birthMonth||'') + '-' + (birthDay||''), gender: gender||'', lang: lang||'zh' });
+      const cached = reportCache.get(ck);
+      if (cached) { return res.json({ reading: cached, tier: 'basic', locked: true, cached: true }); }
+    }
     const result = await deepseekChat(useMessages, { maxTokens: freeMaxTokens });
+    // 免费版结果缓存24h
+    if (!full) {
+      const ck = cacheKey({ name: req.body.name || '', dob: (birthYear||'') + '-' + (birthMonth||'') + '-' + (birthDay||''), gender: gender||'', lang: lang||'zh' });
+      reportCache.set(ck, result);
+      setTimeout(() => reportCache.delete(ck), 24 * 60 * 60 * 1000);
+    }
     insertReading.run('bazi', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('bazi', req.body, result);
-    res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId });
+    res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId, product: full ? matchProduct(result, 'bazi') : undefined });
   } catch (err) {
     console.error('[BAZI ERR]', err.message);
     if (mon && mon.captureException) mon.captureException(err, { tags: { api: 'bazi' } });
@@ -953,45 +974,70 @@ Year-by-year energy: what each year brings for career, love, finances, and perso
 ## 💎 Remedies & Mantras
 Specific gemstone recommendation with carat and finger, daily mantra with pronunciation, charity suggestions, and auspicious days. 400 words.
 
-Language: ${outputLang}. Write warmly, like a wise elder who truly cares for this person.`
+语言：${outputLang}。写作风格：命运诗篇——每一章是旅途的一步，每个章节结尾有一句金句（如梵语意境的一行诗）。场景感代替抽象描述。严禁bullet points。直接进入命运叙述，温暖而有文学质感。`
 
-      : `You are a master Jyotish astrologer. Write a detailed, impressive FREE preview Vedic astrology report for ${name} born on ${dob} in ${city}. Their Moon Sign is ${rashiName} (Rashi) and Lunar Mansion is ${nakshatraName} (Nakshatra). Focus: ${concern || 'overall destiny'}.
+      : `你是一位精通吠陀占星（Jyotish）的大师，同时拥有诗人的灵魂。为${name}（生于${dob}，${city}）写一份命运诗篇式的免费吠陀占星解读。月亮星座（Rashi）：${rashiName}；月宿（Nakshatra）：${nakshatraName}。关注重点：${concern || '整体命运'}。
 
-This free preview must be SUBSTANTIAL and genuinely impressive — at least 2500 words. Users should feel they received real value. Write specific, personal insights, not generic descriptions.
+═══ 写作风格要求（最重要） ═══
 
-## 🌙 Your Moon Sign: ${rashiName}
-Write 500+ words about their emotional nature, inner world, what makes them feel safe, how they love, their shadow traits, and their greatest strengths. Be specific and psychologically insightful. Reference the Sanskrit meaning of ${rashiName}.
+这份报告是一部命运诗篇，不是星座简介，不是自我帮助文章。它是有人牵着${name}的手，走过星辰映照下的命运山水。
 
-## ✨ Your Nakshatra: ${nakshatraName}
-Write 400+ words. Explain the mythology behind ${nakshatraName}, its ruling deity and planet, the shakti (superpower) it grants, and how this nakshatra shapes their life purpose, relationships, and karma. Be vivid and specific.
+具体要求：
+- 以"你的……"开头，沉浸式第二人称，每一句话都在对她说，不是在介绍她
+- 场景感代替抽象：不说"你有领导力"，说"当会议室里沉默像水一样漫上来时，你总是那个先说话的人——不是因为你需要被看见，而是因为你受不了混沌的状态"
+- 文字质感：像余秋雨或林清玄写人生感悟，文言意境与现代口语交融，有温度，有节奏
+- 每个章节结尾，必须有一句令人心头一震的金句或梵语诗意（一行，如月光打在水面上）
+- 合理融入梵文（加中文解释）、吠陀神话场景、印度哲学意象，一两处即可，不堆砌
+- 严禁使用bullet points（·或•），禁止大段列举；用连贯的叙述段落
+- 直接进入${name}的命运叙述，无需解释吠陀占星是什么
 
-## 🌟 Your Soul's Core Gifts & Challenges
-Based on ${rashiName} + ${nakshatraName} combined: write 400 words about their 3 greatest natural talents and 2 karmic challenges they came to overcome in this lifetime. Be honest and compassionate.
+═══ 内容章节 ═══
 
-## 📅 This Year's Energy (${new Date().getFullYear()})
-Write 400 words on what cosmic themes are dominant for ${rashiName} this year — what to focus on, what to release, what opportunities are available. Make it feel timely and relevant.
+### 🌙 你的月亮星座：${rashiName}
+${rashiName}不是一个标签，它是${name}情感世界的底色。她如何爱，如何害怕，什么让她感到安全，什么让她感到窒息——用具体的场景和意象来描绘，不是心理学测试题。引用${rashiName}的梵文含义。以金句结尾。500字。
 
-## 💎 Your Vedic Blueprint (Lucky Elements)
-Gemstone recommendation for ${rashiName}, lucky colors, favorable directions, best days of week, and one specific mantra they can use daily. 200 words.
+### ✨ 你的月宿：${nakshatraName}
+${nakshatraName}的神话原型是谁？那位神灵经历了什么，又如何在${name}的生命里显现？Shakti（神力）在她身上如何活着？写成神话传承，写成灵魂的血脉。以金句结尾。400字。
+
+### 🌟 灵魂的天赋与业力
+${rashiName} + ${nakshatraName}的组合，赋予了${name}三种深刻的天赋——不是抽象词汇，而是具体的、她自己也会认出的能力。以及两个此生要面对的业力功课——不是批判，而是通往自由的门。以金句结尾。400字。
+
+### 📅 ${new Date().getFullYear()}年的宇宙能量
+今年的星辰为${rashiName}带来了什么主题？什么在打开，什么在收合？有什么机遇在向她招手，有什么旧模式需要放下？写得有时间质感，像预言，也像提醒。400字。
+
+### 💎 你的吠陀蓝图（幸运指引）
+为${name}量身的宝石推荐、幸运色彩、吉祥方位、最好的日子，以及一句每日可持诵的曼陀罗（附发音）。200字。
 
 ---
 
-End with a warm, specific paragraph: "Your Jyotish reading reveals so much more..." — list 5 specific things they'll discover in the full reading (Dasha period analysis with exact dates, all 12 houses, 5-year forecast, relationship compatibility, specific remedies). Make them genuinely curious.
+结尾：写一段温暖而具体的话——"你的吠陀命盘还藏着……"，列出5件完整版才揭晓的事（Dasha大运周期精确日期、全部12宫位分析、5年运势预测、关系业力兼容、具体补救措施），让人真心好奇。
 
-Language: ${outputLang}. Tone: warm, wise, specific. No disclaimers at the start — dive straight into their reading.`;
+语言：${outputLang}。直接从${name}的命运开始叙述，不要免责声明。`;
 
+    // 免费版缓存检查（jyotish）
+    if (!full) {
+      const ck = cacheKey({ name: name||'', dob: dob||'', gender: '', lang: lang||'en' });
+      const cached = reportCache.get(ck + '|jyotish');
+      if (cached) { return res.json({ reading: cached, tier: 'basic', data: jyotishData, unlockUrl: '/pages/jyotish.html#unlock', cached: true }); }
+    }
     const reading = await deepseekChat([
       { role: 'system', content: systemPrompt },
       { role: 'user', content: `Please generate the Vedic Jyotish report for ${name}.` }
     ], { maxTokens: full ? 16384 : 4000 });
 
+    if (!full) {
+      const ck = cacheKey({ name: name||'', dob: dob||'', gender: '', lang: lang||'en' }) + '|jyotish';
+      reportCache.set(ck, reading);
+      setTimeout(() => reportCache.delete(ck), 24 * 60 * 60 * 1000);
+    }
     insertReading.run('jyotish', JSON.stringify({ name, dob, city, country, concern }), reading, req.userId);
 
     res.json({
       reading,
       tier: full ? 'full' : 'basic',
       data: jyotishData,
-      unlockUrl: full ? null : '/pages/jyotish.html#unlock'
+      unlockUrl: full ? null : '/pages/jyotish.html#unlock',
+      product: full ? matchProduct(reading, 'jyotish') : undefined
     });
   } catch (err) {
     console.error('[JYOTISH ERR]', err.message);
@@ -1048,48 +1094,73 @@ What gift Kin ${tzolkinData.kin} brings to the world — your contribution to th
 ## 🌺 Maya Ceremony & Practices
 Specific ceremonial practices, sacred days to observe, offerings, and ways to align with your Kin's energy daily. 500 words.
 
-Language: ${mayaLang}. Tone: mystical yet grounded, wise, and genuinely insightful. Weave in Maya cosmology, Quetzalcoatl mythology, and the sacred mathematics of the Tzolkin.`
+语言：${mayaLang}。写作风格：命运诗篇——每一章是旅途的一步，每个章节结尾有一句令人心头一震的金句。场景感代替抽象，严禁bullet points，直接进入命运叙述，神秘而有文学质感。`
 
-      : `You are a Maya calendar keeper and Tzolkin expert. Write a detailed, genuinely impressive FREE Maya destiny reading for ${name}. Their sacred Kin is ${tzolkinData.kin}: ${tzolkinData.tone} ${tzolkinData.daySign}. Focus: ${intention || 'life mission'}.
+      : `你是一位在玛雅高地传承中受训的卓金历法守护者，同时拥有诗人与说书人的灵魂。为${name}写一份命运诗篇式的免费玛雅历解读。她的神圣印记是Kin ${tzolkinData.kin}：${tzolkinData.tone} ${tzolkinData.daySign}。关注重点：${intention || '生命使命'}。
 
-This free preview must be at least 2500 words and feel genuinely valuable. Dive deep — no generic descriptions.
+═══ 写作风格要求（最重要） ═══
 
-## 🌞 Your Sacred Kin: ${tzolkinData.tone} ${tzolkinData.daySign} (Kin ${tzolkinData.kin})
-Explain what a Kin is, the sacred mathematics of 260, and the specific meaning of Kin ${tzolkinData.kin} in the Tzolkin calendar. Include the glyph's meaning and visual symbolism. 400 words.
+这份报告是一部命运诗篇。玛雅人相信，每个Kin都是宇宙编织进这个灵魂的密码——你的任务是把这个密码还给${name}，用她能读懂、能感受到的语言。
 
-## 🦅 Your Day Sign: ${tzolkinData.daySign} — Who You Really Are
-Write a rich, specific personality portrait for ${tzolkinData.daySign}: their core essence, emotional nature, intellectual style, how they love, what they fear, their shadow, and their superpower. Reference Maya mythology associated with this day sign. 600 words.
+具体要求：
+- 以"你的……"开头，沉浸式第二人称叙述——像一位玛雅长老在朝圣路上与${name}同行，低声讲述她的灵魂故事
+- 场景感代替抽象：不说"你有智慧"，说"当别人还在争论方向时，你已经看见了那条路——你说不清楚你怎么知道，你只是知道"
+- 文字质感：如果是中文，像余秋雨或纪伯伦（中译本）的风格——美丽、有重量、在东方与西方之间流动；每一段都有节奏感
+- 每个章节结尾，必须有一句令人心头一颤的金句（一行，如玛雅仪式结束时的铜鼓余音）
+- 合理融入玛雅神话（《波波尔·乌》、羽蛇神、玉米神）、Tzolkin数学之美，一两处即可
+- 严禁bullet points（·或•），禁止大段列举；用连贯的叙述段落
+- 直接进入${name}的命运叙述，无需解释玛雅历是什么
 
-## 🎵 Your Galactic Tone ${tzolkinData.tone}: The Rhythm of Your Soul
-The 13 galactic tones are the heartbeat of the Tzolkin. Write 400 words on what Tone ${tzolkinData.tone} means: its keyword, its challenge, its gift, and how it amplifies the ${tzolkinData.daySign} energy specifically.
+═══ 内容章节 ═══
 
-## 🌟 Your Gifts & Life Challenges
-Based on ${tzolkinData.tone} ${tzolkinData.daySign}: write 400 words on 3 distinct natural gifts this Kin carries into the world, and 2 recurring life challenges they must face and integrate. Be honest, specific, and compassionate.
+### 🌞 你的神圣印记：${tzolkinData.tone} ${tzolkinData.daySign}（Kin ${tzolkinData.kin}）
+260这个数字是如何诞生的（13音调×20图腾的神圣数学），以及Kin ${tzolkinData.kin}在这个宇宙织锦中的位置——这是她的灵魂在宇宙中的坐标。写成神话诗，不是数学课。以金句结尾。400字。
 
-## 🌀 This Year's Galactic Energy (${new Date().getFullYear()})
-Where ${tzolkinData.daySign} energy is amplified in the current Tzolkin cycle — what themes are asking for attention, what to create, and what to release. 300 words.
+### 🦅 你的太阳图腾：${tzolkinData.daySign} — 真实的你
+${tzolkinData.daySign}在玛雅神话中是什么原型？她的核心本质、情感世界、思维风格、爱的方式、内心的恐惧、阴影面、以及她最耀眼的超能力——用神话场景和具体意象来呈现，让${name}在其中认出自己。以金句结尾。600字。
 
-## 🌺 Your Daily Activation Practice
-One specific ceremony or practice for ${tzolkinData.daySign} energy — a morning ritual, a meditation, colors to wear, intentions to set. Make it practical and beautiful. 200 words.
+### 🎵 你的银河音调${tzolkinData.tone}：灵魂的节奏
+音调${tzolkinData.tone}是13个宇宙心跳之一，它的关键词是什么，它如何放大${tzolkinData.daySign}的能量，它为${name}的生命带来什么独特的节奏？写成音乐，不是说明书。以金句结尾。400字。
+
+### 🌟 天赋与生命功课
+Kin ${tzolkinData.kin}带给${name}的三种天赋——具体的、她自己也会认出的能力；以及两个此生要整合的挑战——不是弱点，而是通往更深智慧的门。以金句结尾。400字。
+
+### 🌀 ${new Date().getFullYear()}年的宇宙能量
+在当前的Tzolkin循环中，${tzolkinData.daySign}的能量在哪些领域被放大？什么在邀请她创造，什么在等待她放下？300字。
+
+### 🌺 你的每日激活仪式
+为${tzolkinData.daySign}能量设计的一个具体仪式或冥想——晨起的姿势，颜色，意图，或一个手势。美丽而实用。200字。
 
 ---
 
-End with: "Your full Maya Destiny Reading reveals..." — list 5 specific things they'll discover in the complete reading (full Oracle reading, Trecena wavespell, relationship compatibility, 260-day cycle position, ceremonial calendar for the year). Create genuine curiosity.
+结尾：写一段温暖而具体的话——"你的完整玛雅命运解读还藏着……"，列出5件完整版才揭晓的事（完整神谕Oracle解读、Trecena波浪周期、关系业力兼容、260天循环当前位置、年度仪式日历），让人产生真实的好奇。
 
-Language: ${mayaLang}. Tone: mystical, warm, deeply knowledgeable. Start immediately with their reading — no disclaimers.`;
+语言：${mayaLang}。直接从${name}的命运开始，不要免责声明。`;
 
+    // 免费版缓存检查（maya）
+    if (!full) {
+      const ck = cacheKey({ name: name||'', dob: dob||'', gender: '', lang: lang||'en' }) + '|maya';
+      const cached = reportCache.get(ck);
+      if (cached) { return res.json({ reading: cached, tier: 'basic', data: tzolkinData, unlockUrl: '/pages/maya.html#unlock', cached: true }); }
+    }
     const reading = await deepseekChat([
       { role: 'system', content: systemPrompt },
       { role: 'user', content: `Please generate the Maya Tzolkin destiny reading for ${name}.` }
     ], { maxTokens: full ? 16384 : 4000 });
 
+    if (!full) {
+      const ck = cacheKey({ name: name||'', dob: dob||'', gender: '', lang: lang||'en' }) + '|maya';
+      reportCache.set(ck, reading);
+      setTimeout(() => reportCache.delete(ck), 24 * 60 * 60 * 1000);
+    }
     insertReading.run('maya', JSON.stringify({ name, dob, intention }), reading, req.userId);
 
     res.json({
       reading,
       tier: full ? 'full' : 'basic',
       data: tzolkinData,
-      unlockUrl: full ? null : '/pages/maya.html#unlock'
+      unlockUrl: full ? null : '/pages/maya.html#unlock',
+      product: full ? matchProduct(reading, 'maya') : undefined
     });
   } catch (err) {
     console.error('[MAYA ERR]', err.message);
@@ -1144,7 +1215,7 @@ Constitutional tendencies per Tibetan medicine, years of life force fluctuation,
 ## 🙏 Spiritual Practices & Protections
 Specific practices for their Mewa and animal sign: mantras, deity practices, offerings, auspicious and inauspicious days, and how to navigate challenging periods through Buddhist wisdom. 600 words.
 
-Language: ${tibetLang}. Tone: wise, compassionate, deeply grounded in Tibetan Buddhist and Bön tradition. Weave in relevant teachings and mythology.`
+语言：${tibetLang}。写作风格：命运诗篇——每一章是旅途的一步，每个章节结尾有一句金句或禅语。场景感代替抽象描述。文言+现代融合，流动有温度。严禁bullet points。直接进入命运叙述。`
 
       : `你是一位精通藏传命理（藏历算术，Kartsi）的算师，兼具文学家的笔触。为${name}（${genderStr}，生于${birthYear}年）写一份命运诗篇式的藏传命理解读。
 
@@ -1192,23 +1263,322 @@ ${tibetData.element}${tibetData.zodiac}带来的三个深刻天赋，以及两�
 
 语言：${tibetLang}。直接开始${name}的命运叙述，不要任何免责声明。`;
 
+    // 免费版缓存检查（tibet）
+    if (!full) {
+      const ck = cacheKey({ name: name||'', dob: dob||'', gender: gender||'', lang: lang||'en' }) + '|tibet';
+      const cached = reportCache.get(ck);
+      if (cached) { return res.json({ reading: cached, tier: 'basic', data: tibetData, unlockUrl: '/pages/tibet.html#unlock', cached: true }); }
+    }
     const reading = await deepseekChat([
       { role: 'system', content: systemPrompt },
       { role: 'user', content: `Please generate the Tibetan destiny reading for ${name}.` }
     ], { maxTokens: full ? 16384 : 4000 });
 
+    if (!full) {
+      const ck = cacheKey({ name: name||'', dob: dob||'', gender: gender||'', lang: lang||'en' }) + '|tibet';
+      reportCache.set(ck, reading);
+      setTimeout(() => reportCache.delete(ck), 24 * 60 * 60 * 1000);
+    }
     insertReading.run('tibet', JSON.stringify({ name, dob, gender, concern }), reading, req.userId);
 
     res.json({
       reading,
       tier: full ? 'full' : 'basic',
       data: tibetData,
-      unlockUrl: full ? null : '/pages/tibet.html#unlock'
+      unlockUrl: full ? null : '/pages/tibet.html#unlock',
+      product: full ? matchProduct(reading, 'tibet') : undefined
     });
   } catch (err) {
     console.error('[TIBET ERR]', err.message);
     res.status(500).json({ error: '生成藏传报告失败，请重试' });
   }
+});
+
+// ══════════════════════════════════════════
+// POST /api/bazi/stream — 八字流式输出（SSE）
+// ══════════════════════════════════════════
+router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { birthYear, birthMonth, birthDay, birthHour, gender, question, mode } = req.body;
+    if (!birthYear || !birthMonth || !birthDay) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: '请提供出生年月日' });
+    }
+    const full = hasFullAccess(req, ['bazi', '八字', '사주']);
+    const modeInstruction = (mode === 'gentle')
+      ? '\n\n【说话模式】你温暖治愈，以鼓励为主，让人感到被理解。'
+      : '\n\n【说话模式】你说话直率，但句句为对方好，直接指出问题。';
+
+    const sysPay = full
+      ? `你是一位精通八字命理的实力派命理师，既有正统传承，又懂现代人语言。\n\n你必须严格按照15个维度展开，总字数10000-15000字。维度用emoji开头：\n1.📜四柱八字排盘 2.🔥十神分析 3.🟤五行分析 4.💰财运格局 5.💕感情姻缘 6.💼事业格局 7.🏥健康预警 8.📅全部8步大运 9.🔮未来10年逐年流年（每年评分） 10.✨神煞分析 11.🌿藏干 12.👨‍👩‍👧‍👦父母/子女/夫妻宫 13.🎯开运锦囊 14.📖古法断语 15.💌命理师叮嘱\n每个维度必须基于真实八字展开，给出具体年份/数字/颜色/物品。${modeInstruction}`
+      : `你是一位八字命理师。【免费预览版】只写3个部分：📜四柱排盘简介、🟤五行能量分析、🌟今年运势概览（各200-300字）。最后说明完整报告含15个维度，可付费解锁。${modeInstruction}`;
+
+    const userPrompt = `请为我批算八字。出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour !== undefined ? birthHour + '时' : ''}，性别：${gender === 'male' ? '男' : '女'}，关注：${question || '请全面分析命盘'}`;
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.flushHeaders();
+
+    // 发送元数据
+    res.write(`data: ${JSON.stringify({ type: 'meta', tier: full ? 'full' : 'basic', locked: !full })}\n\n`);
+
+    const streamBody = await deepseekStream(
+      buildReadingPrompt(sysPay, userPrompt),
+      { maxTokens: full ? 16384 : 3000, timeout: 300000 }
+    );
+
+    const reader = streamBody.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '';
+    let buf = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop(); // 保留不完整行
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try {
+          const json = JSON.parse(raw);
+          const content = json.choices?.[0]?.delta?.content || '';
+          if (content) {
+            fullText += content;
+            res.write(`data: ${JSON.stringify({ type: 'chunk', content })}\n\n`);
+          }
+        } catch (e) {}
+      }
+    }
+
+    // 存储 & 发送结束信号
+    insertReading.run('bazi', JSON.stringify(req.body), fullText, req.userId);
+    const ctxId = saveQaContext('bazi', req.body, fullText);
+    const product = full ? matchProduct(fullText, 'bazi') : undefined;
+    res.write(`data: ${JSON.stringify({ type: 'done', contextId: ctxId })}\n\n`);
+    if (product) res.write(`data: ${JSON.stringify({ type: 'product', product })}\n\n`);
+    res.end();
+  } catch (err) {
+    console.error('[BAZI-STREAM ERR]', err.message);
+    try { res.write(`data: ${JSON.stringify({ type: 'error', message: '生成失败，请重试' })}\n\n`); res.end(); } catch(e) {}
+  }
+});
+
+// ══════════════════════════════════════════
+// POST /api/jyotish/stream — 吠陀占星流式输出（SSE）
+// ══════════════════════════════════════════
+router.post('/jyotish/stream', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { name, dob, tob, city, country, concern, lang } = req.body;
+    if (!dob) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: '出生日期必填' });
+    }
+    const tobStr = tob || '12:00';
+    const jyotishData = calculateJyotish(dob, tobStr);
+    const full = hasFullAccess(req, ['jyotish_full', 'jyotish']);
+    const RASHI_EN = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+    const NAKSHATRA_EN = ['Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha','Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishtha','Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati'];
+    const rashiName = RASHI_EN[jyotishData.rashi] || 'Sagittarius';
+    const nakshatraName = NAKSHATRA_EN[jyotishData.nakshatra] || 'Jyeshtha';
+    const outputLang = lang === 'zh' ? 'Chinese (Simplified)' : lang === 'kr' ? 'Korean' : 'English';
+
+    const systemPrompt = full
+      ? `You are a master Jyotish astrologer with 30 years of practice. Write a comprehensive, deeply personal Vedic astrology report for ${name} born on ${dob} at ${tobStr} in ${city}, ${country}. Their Moon Sign (Rashi) is ${rashiName} and their Lunar Mansion (Nakshatra) is ${nakshatraName}. Focus area: ${concern || 'overall destiny'}.\n\nWrite 6000-8000 words. Use Sanskrit terms with explanations. Sections: 🌙 Moon Sign, ✨ Nakshatra, 🪐 Current Dasha Period, 🏠 12-House Analysis, 💰 Wealth & Career, 💕 Love & Relationships, 🏥 Health & Vitality, 📅 5-Year Forecast, 💎 Remedies & Mantras.\n\nLanguage: ${outputLang}. Writing style: destiny poetry — each chapter is a step on the journey, each section ends with a golden insight line. Scene over abstraction. No bullet points. Warm literary quality.`
+      : `你是一位精通吠陀占星（Jyotish）的大师，同时拥有诗人的灵魂。为${name}写一份命运诗篇式的免费吠陀占星解读。月亮星座（Rashi）：${rashiName}；月宿（Nakshatra）：${nakshatraName}。关注重点：${concern || '整体命运'}。\n\n写作风格：命运诗篇，沉浸式第二人称叙述，场景感代替抽象，严禁bullet points。每章结尾一句金句。内容章节：🌙 你的月亮星座：${rashiName}（500字）、✨ 你的月宿：${nakshatraName}（400字）、🌟 灵魂天赋与业力（400字）、📅 ${new Date().getFullYear()}年宇宙能量（400字）、💎 吠陀蓝图幸运指引（200字）。结尾列出完整版5个亮点激发好奇。语言：${outputLang}。直接进入叙述。`;
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.flushHeaders();
+
+    res.write(`data: ${JSON.stringify({ type: 'meta', tier: full ? 'full' : 'basic', locked: !full, data: jyotishData })}\n\n`);
+
+    const streamBody = await deepseekStream(
+      [{ role: 'system', content: systemPrompt }, { role: 'user', content: `Please generate the Vedic Jyotish report for ${name}.` }],
+      { maxTokens: full ? 16384 : 4000, timeout: 300000 }
+    );
+
+    const reader = streamBody.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '', buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try {
+          const json = JSON.parse(raw);
+          const content = json.choices?.[0]?.delta?.content || '';
+          if (content) { fullText += content; res.write(`data: ${JSON.stringify({ type: 'chunk', content })}\n\n`); }
+        } catch (e) {}
+      }
+    }
+
+    insertReading.run('jyotish', JSON.stringify({ name, dob, city, country, concern }), fullText, req.userId);
+    const ctxId = saveQaContext('jyotish', req.body, fullText);
+    const product = full ? matchProduct(fullText, 'jyotish') : undefined;
+    res.write(`data: ${JSON.stringify({ type: 'done', contextId: ctxId })}\n\n`);
+    if (product) res.write(`data: ${JSON.stringify({ type: 'product', product })}\n\n`);
+    res.end();
+  } catch (err) {
+    console.error('[JYOTISH-STREAM ERR]', err.message);
+    try { res.write(`data: ${JSON.stringify({ type: 'error', message: 'Generation failed, please retry' })}\n\n`); res.end(); } catch(e) {}
+  }
+});
+
+// ══════════════════════════════════════════
+// POST /api/tibet/stream — 藏传命理流式输出（SSE）
+// ══════════════════════════════════════════
+router.post('/tibet/stream', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { name, dob, gender, concern, lang } = req.body;
+    if (!dob) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: '出生年份必填' });
+    }
+    const birthYear = new Date(dob).getFullYear();
+    const tibetData = calculateTibetan(birthYear);
+    const full = hasFullAccess(req, ['tibet_full', 'tibet']);
+    const tibetLang = lang === 'zh' ? 'Chinese (Simplified)' : lang === 'kr' ? 'Korean' : 'English';
+    const genderStr = gender === 'M' ? 'male' : 'female';
+
+    const systemPrompt = full
+      ? `You are a Tibetan astrologer (Tsipa) trained in the Bön and Buddhist traditions. Write a comprehensive Tibetan destiny reading for ${name} (${genderStr}), born in ${birthYear}. ACCURACY: ${birthYear} = ${tibetData.element} ${tibetData.zodiac}. Mewa: ${tibetData.mewaNum}, Parkha: ${tibetData.parkha}, Lungta: ${tibetData.lungta}. Focus: ${concern || 'overall destiny'}.\n\nWrite 10,000 words. Sections: 🐉 Animal Sign, 🔥 Element, 🔢 Mewa ${tibetData.mewaNum}, ☯️ Parkha ${tibetData.parkhaIdx}, 🐴 Lungta Analysis, 💕 Relationships, 💼 Career & Wealth, 📅 3-Year Forecast, 🏔️ Health, 🙏 Spiritual Practices.\n\nLanguage: ${tibetLang}. Writing style: destiny poetry — each chapter ends with a golden sentence or Zen wisdom. Scene over abstraction. No bullet points. Warm Tibetan literary quality.`
+      : `你是精通藏传命理（Kartsi）的算师，兼具文学家笔触。为${name}（${genderStr}，生于${birthYear}年）写命运诗篇式藏传命理解读。精度：${birthYear}年=${tibetData.element}${tibetData.zodiac}（${tibetData.elementCN}${tibetData.zodiacCN}）。密瓦：${tibetData.mewaNum}，帕卡：${tibetData.parkha}，风马：${tibetData.lungta}。\n\n写作要求：沉浸式第二人称，场景感代替抽象，严禁bullet points，每章结尾一句诗意金句。章节：🐑 生肖${tibetData.zodiac}（500字）、⚙️ ${tibetData.element}${tibetData.zodiac}元素灵魂（400字）、🛡️ 守护元素（300字）、🐴 风马${tibetData.lungta}（400字）、🌟 天赋与业力（400字）、📅 ${new Date().getFullYear()}年运势（300字）、🙏 日常修行（200字）。结尾列出完整版5亮点。语言：${tibetLang}。直接进入叙述。`;
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.flushHeaders();
+
+    res.write(`data: ${JSON.stringify({ type: 'meta', tier: full ? 'full' : 'basic', locked: !full, data: tibetData })}\n\n`);
+
+    const streamBody = await deepseekStream(
+      [{ role: 'system', content: systemPrompt }, { role: 'user', content: `Please generate the Tibetan destiny reading for ${name}.` }],
+      { maxTokens: full ? 16384 : 4000, timeout: 300000 }
+    );
+
+    const reader = streamBody.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '', buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try {
+          const json = JSON.parse(raw);
+          const content = json.choices?.[0]?.delta?.content || '';
+          if (content) { fullText += content; res.write(`data: ${JSON.stringify({ type: 'chunk', content })}\n\n`); }
+        } catch (e) {}
+      }
+    }
+
+    insertReading.run('tibet', JSON.stringify({ name, dob, gender, concern }), fullText, req.userId);
+    const ctxId = saveQaContext('tibet', req.body, fullText);
+    const product = full ? matchProduct(fullText, 'tibet') : undefined;
+    res.write(`data: ${JSON.stringify({ type: 'done', contextId: ctxId })}\n\n`);
+    if (product) res.write(`data: ${JSON.stringify({ type: 'product', product })}\n\n`);
+    res.end();
+  } catch (err) {
+    console.error('[TIBET-STREAM ERR]', err.message);
+    try { res.write(`data: ${JSON.stringify({ type: 'error', message: 'Generation failed, please retry' })}\n\n`); res.end(); } catch(e) {}
+  }
+});
+
+// ══════════════════════════════════════════
+// POST /api/maya/stream — 玛雅历流式输出（SSE）
+// ══════════════════════════════════════════
+router.post('/maya/stream', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { name, dob, intention, lang } = req.body;
+    if (!dob) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: '出生日期必填' });
+    }
+    const [year, month, day] = dob.split('-').map(Number);
+    const tzolkinData = getTzolkin(year, month, day);
+    const full = hasFullAccess(req, ['maya_full', 'maya']);
+    const mayaLang = lang === 'zh' ? 'Chinese (Simplified)' : lang === 'kr' ? 'Korean' : 'English';
+
+    const systemPrompt = full
+      ? `You are a master Maya calendar keeper and Tzolkin expert. Write a profound, comprehensive Maya destiny reading for ${name}, born on ${dob}. Their sacred Kin is ${tzolkinData.kin}: ${tzolkinData.tone} ${tzolkinData.daySign}. Focus: ${intention || 'life mission'}.\n\nWrite 10,000 words. Sections: 🌞 Sacred Kin, 🦅 Day Sign ${tzolkinData.daySign}, 🎵 Galactic Tone ${tzolkinData.tone}, 🌑 Shadow & Light, 🌀 Trecena, 🐍 Full Oracle, 💫 Year ${new Date().getFullYear()} in Tzolkin, 🌿 Life Mission, 🔮 Love & Relationships, 🌏 Role in Collective, 🌺 Maya Ceremony.\n\nLanguage: ${mayaLang}. Writing style: destiny poetry — each section ends with a soul-stirring insight. Scene over abstraction. No bullet points. Mystical literary quality.`
+      : `你是玛雅高地传承中受训的卓金历法守护者，兼具诗人灵魂。为${name}写命运诗篇式免费玛雅历解读。神圣印记：Kin ${tzolkinData.kin}，${tzolkinData.tone} ${tzolkinData.daySign}。关注：${intention || '生命使命'}。\n\n写作要求：沉浸式第二人称，场景感代替抽象，严禁bullet points，每章结尾一句令人心头一颤的金句。章节：🌞 神圣印记Kin${tzolkinData.kin}（400字）、🦅 太阳图腾${tzolkinData.daySign}（600字）、🎵 银河音调${tzolkinData.tone}（400字）、🌟 天赋与功课（400字）、🌀 ${new Date().getFullYear()}年宇宙能量（300字）、🌺 每日激活仪式（200字）。结尾列出完整版5亮点。语言：${mayaLang}。直接进入叙述。`;
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.flushHeaders();
+
+    res.write(`data: ${JSON.stringify({ type: 'meta', tier: full ? 'full' : 'basic', locked: !full, data: tzolkinData })}\n\n`);
+
+    const streamBody = await deepseekStream(
+      [{ role: 'system', content: systemPrompt }, { role: 'user', content: `Please generate the Maya Tzolkin destiny reading for ${name}.` }],
+      { maxTokens: full ? 16384 : 4000, timeout: 300000 }
+    );
+
+    const reader = streamBody.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '', buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try {
+          const json = JSON.parse(raw);
+          const content = json.choices?.[0]?.delta?.content || '';
+          if (content) { fullText += content; res.write(`data: ${JSON.stringify({ type: 'chunk', content })}\n\n`); }
+        } catch (e) {}
+      }
+    }
+
+    insertReading.run('maya', JSON.stringify({ name, dob, intention }), fullText, req.userId);
+    const ctxId = saveQaContext('maya', req.body, fullText);
+    const product = full ? matchProduct(fullText, 'maya') : undefined;
+    res.write(`data: ${JSON.stringify({ type: 'done', contextId: ctxId })}\n\n`);
+    if (product) res.write(`data: ${JSON.stringify({ type: 'product', product })}\n\n`);
+    res.end();
+  } catch (err) {
+    console.error('[MAYA-STREAM ERR]', err.message);
+    try { res.write(`data: ${JSON.stringify({ type: 'error', message: 'Generation failed, please retry' })}\n\n`); res.end(); } catch(e) {}
+  }
+});
+
+// ══════════════════════════════════════════
+// POST /api/leads — 收集用户留资
+// ══════════════════════════════════════════
+router.post('/leads', async (req, res) => {
+  try {
+    const { email, context } = req.body;
+    if (!email || !email.includes('@')) return res.status(400).json({ error: 'invalid email' });
+    const leadsFile = path.join(__dirname, '../../data/leads.json');
+    let leads = [];
+    try { leads = JSON.parse(fs.readFileSync(leadsFile, 'utf8')); } catch(e) {}
+    leads.push({ email, context, ts: Date.now() });
+    fs.writeFileSync(leadsFile, JSON.stringify(leads, null, 2));
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
 module.exports = router;

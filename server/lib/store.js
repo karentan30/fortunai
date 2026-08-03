@@ -176,6 +176,8 @@ function hasFullAccess(req, productKeys) {
     var auth = req.headers['authorization'] || '';
     var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
     if (!token) return false;
+    // 管理员绕过：CEOtoken直接全访问（开发/审核用）
+    if (process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN) return true;
     var t = getToken.get(token);
     if (!t) return false;
     var orders = getUserOrders.all(t.user_id) || [];

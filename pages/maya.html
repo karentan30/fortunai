@@ -80,7 +80,7 @@ textarea.field-input { resize:none; height:64px; padding-top:14px; }
 @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
 .load-text { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:14px; color:rgba(196,98,45,0.6); letter-spacing:0.14em; }
 .load-steps { display:flex; flex-direction:column; gap:4px; align-items:center; }
-.load-step { font-size:10px; color:rgba(70,55,38,0.45); letter-spacing:0.06em; min-height:1.4em; text-align:center; }
+.load-step { font-size:14px; font-weight:500; color:rgba(80,180,110,0.75); letter-spacing:0.06em; min-height:1.4em; text-align:center; }
 .load-step.done { color:rgba(196,98,45,0.5); }
 .load-shimmer { width:160px; height:3px; background:rgba(196,98,45,0.08); border-radius:2px; overflow:hidden; position:relative; }
 .load-shimmer-inner { position:absolute; top:0; left:0; height:100%; width:40%; background:linear-gradient(90deg,transparent,var(--terra),transparent); animation:shimmer 1.3s ease-in-out infinite; }
@@ -352,6 +352,7 @@ function generateReport() {
 
   var btn = document.getElementById('genBtn');
   btn.disabled = true;
+  btn._label = btn.textContent;
   btn.textContent = 'Consulting the Calendar…';
 
   var tzolkin = getTzolkin(year, month, day);
@@ -365,32 +366,69 @@ function generateReport() {
   runLoadingSteps();
 
   var token = localStorage.getItem('sy_token') || '';
-  fetch('/api/maya', {
+  var dob = year + '-' + String(month).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+  var accumulated = '';
+  var reportStarted = false;
+  var streamEl = null;
+  var metaTier = 'basic'; var metaLocked = true;
+
+  fetch('/api/maya/stream', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer '+token },
-    body: JSON.stringify({
-      dob: year + '-' + String(month).padStart(2,'0') + '-' + String(day).padStart(2,'0'),
-      year: year, month: month, day: day,
-      kin: tzolkin.kin, daySign: sign.name, daySignIndex: tzolkin.daySignIndex,
-      tone: tone, toneName: TONES[tone], toneQuality: TONE_QUALITY[tone],
-      name: name, intention: intention, lang: 'en', token: token
-    })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data){
-    document.getElementById('loadingScreen').classList.remove('show');
-    if (data && data.reading) {
-      showReport(data, tzolkin, sign, tone, name, year, month, day);
-    } else {
-      document.getElementById('inputScreen').style.display = 'block';
-      btn.disabled = false; btn.textContent = '🌀 Free Preview · Reveal My Kin';
-      showToast('Failed to generate reading, please try again', 'error');
+    body: JSON.stringify({ dob: dob, name: name, intention: intention, lang: 'en', token: token })
+  }).then(function(res) {
+    if (!res.ok || !res.body) throw new Error('stream failed');
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder();
+    var buf = '';
+
+    function read() {
+      reader.read().then(function(r) {
+        if (r.done) return;
+        buf += decoder.decode(r.value, { stream: true });
+        var lines = buf.split('\n'); buf = lines.pop();
+        lines.forEach(function(line) {
+          if (!line.startsWith('data: ')) return;
+          var raw = line.slice(6);
+          try {
+            var ev = JSON.parse(raw);
+            if (ev.type === 'meta') {
+              metaTier = ev.tier; metaLocked = ev.locked;
+            } else if (ev.type === 'chunk') {
+              accumulated += ev.content;
+              if (!reportStarted) {
+                reportStarted = true;
+                document.getElementById('loadingScreen').classList.remove('show');
+                var rs = document.getElementById('reportScreen');
+                rs.innerHTML = '<div id="streamText" style="white-space:pre-wrap;font-family:\'Georgia\',serif;font-size:14px;line-height:1.9;color:rgba(220,255,230,0.88);padding:16px;"></div>';
+                rs.style.display = 'block';
+                streamEl = document.getElementById('streamText');
+              }
+              if (streamEl) streamEl.textContent = accumulated;
+            } else if (ev.type === 'done') {
+              btn.disabled = false; btn.textContent = btn._label || '🌀 Free Preview · Reveal My Kin';
+              var fakeData = { reading: accumulated, tier: metaTier, locked: metaLocked, contextId: ev.contextId };
+              showReport(fakeData, tzolkin, sign, tone, name, year, month, day);
+            } else if (ev.type === 'product') {
+              if (ev.product) renderProductCard(ev.product);
+            } else if (ev.type === 'error') {
+              throw new Error(ev.message);
+            }
+          } catch(e) {}
+        });
+        read();
+      }).catch(function() {
+        document.getElementById('loadingScreen').classList.remove('show');
+        document.getElementById('inputScreen').style.display = 'block';
+        btn.disabled = false; btn.textContent = btn._label || '🌀 Free Preview · Reveal My Kin';
+        showToast('Failed to generate reading, please try again', 'error');
+      });
     }
-  })
-  .catch(function(){
+    read();
+  }).catch(function() {
     document.getElementById('loadingScreen').classList.remove('show');
     document.getElementById('inputScreen').style.display = 'block';
-    btn.disabled = false; btn.textContent = '🌀 Free Preview · Reveal My Kin';
+    btn.disabled = false; btn.textContent = btn._label || '🌀 Free Preview · Reveal My Kin';
     showToast('Network error, please try again', 'error');
   });
 }
@@ -407,6 +445,28 @@ function runLoadingSteps() {
       el.appendChild(div);
     }, i * 500);
   });
+}
+
+function renderProductCard(product) {
+  var existing = document.getElementById('productCardWrap');
+  if (existing) existing.remove();
+  var wrap = document.createElement('div');
+  wrap.id = 'productCardWrap';
+  wrap.style.cssText = 'margin:24px 0 8px;padding:20px 18px;background:linear-gradient(135deg,rgba(8,30,12,0.9),rgba(12,45,18,0.95));border:1px solid rgba(60,160,90,0.3);border-radius:16px;';
+  wrap.innerHTML = '<div style="font-size:11px;letter-spacing:0.15em;color:rgba(100,200,130,0.6);margin-bottom:10px;">🏮 ShenYuan Temple Blessing · Matched to Your Maya Kin</div>'
+    + '<div style="display:flex;align-items:flex-start;gap:14px;">'
+    + '<div style="font-size:36px;line-height:1;">' + (product.emoji || '🔴') + '</div>'
+    + '<div style="flex:1;">'
+    + '<div style="font-size:15px;font-weight:600;color:rgba(180,240,200,0.95);margin-bottom:3px;">' + product.name + ' · ' + (product.name_en || '') + '</div>'
+    + '<div style="font-size:12px;color:rgba(100,200,130,0.75);margin-bottom:6px;">' + product.tagline + '</div>'
+    + '<div style="font-size:12px;color:rgba(150,220,170,0.7);line-height:1.6;margin-bottom:10px;">' + product.description + '</div>'
+    + '<div style="display:flex;align-items:center;gap:10px;">'
+    + '<span style="font-size:16px;font-weight:700;color:rgba(100,200,130,0.95);">$' + product.price_usd + '</span>'
+    + '<a href="/pages/shop.html?id=' + product.id + '" style="padding:7px 16px;background:linear-gradient(135deg,rgba(60,160,90,0.15),rgba(60,160,90,0.25));border:1px solid rgba(60,160,90,0.4);border-radius:20px;color:rgba(180,240,200,0.95);font-size:12px;text-decoration:none;letter-spacing:0.05em;">Temple Blessed · Get Yours →</a>'
+    + '</div>'
+    + '</div></div>';
+  var rs = document.getElementById('reportScreen');
+  if (rs) rs.appendChild(wrap);
 }
 
 function showReport(data, tzolkin, sign, tone, name, year, month, day) {
@@ -521,8 +581,25 @@ function showStickyPurchase(contextId) {
   var cta = document.createElement('div');
   cta.className = 'sticky-cta';
   cta.innerHTML = '<div class="cta-row"><span class="cta-desc">解锁完整260天玛雅历解读</span><span class="cta-price">$9.90</span></div>' +
-    '<button class="btn-unlock" onclick="purchase(\'maya_full\',\''+contextId+'\')">🌀 解锁完整玛雅历 · $9.90</button>' +
-    '<button class="btn-member" onclick="purchase(\'member_monthly\',\''+contextId+'\')">✨ 会员 $14.99/月 · 全部命理无限解读</button>';
+    '<button class="btn-unlock" onclick="purchase(\'maya_full\',\''+contextId+'\')">🌀 解锁完整玛雅命盘 · $9.90 →</button>' +
+    '<button class="btn-member" onclick="purchase(\'member_monthly\',\''+contextId+'\')">✨ 会员 $14.99/月 · 全部命理无限解读</button>' +
+    '<div style="text-align:center;font-size:10px;color:rgba(40,120,80,0.5);margin-top:8px">🛡️ 不满意72小时内全额退款</div>' +
+    '<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(61,175,160,0.15)">' +
+    '<div style="font-size:9px;letter-spacing:0.14em;color:rgba(61,175,160,0.4);text-transform:uppercase;margin-bottom:10px;text-align:center">探索更多命理体系</div>' +
+    '<div style="display:flex;gap:8px;justify-content:center">' +
+    '<a href="/pages/bazi.html" style="flex:1;text-align:center;padding:10px 6px;background:rgba(45,122,74,0.15);border:1px solid rgba(61,175,160,0.2);border-radius:10px;text-decoration:none">' +
+    '<div style="font-size:18px;margin-bottom:4px">☯️</div>' +
+    '<div style="font-size:9px;color:rgba(61,175,160,0.85);letter-spacing:0.06em">八字命盘</div>' +
+    '</a>' +
+    '<a href="/pages/tibet.html" style="flex:1;text-align:center;padding:10px 6px;background:rgba(45,122,74,0.15);border:1px solid rgba(61,175,160,0.2);border-radius:10px;text-decoration:none">' +
+    '<div style="font-size:18px;margin-bottom:4px">🏔️</div>' +
+    '<div style="font-size:9px;color:rgba(61,175,160,0.85);letter-spacing:0.06em">藏历命盘</div>' +
+    '</a>' +
+    '<a href="/pages/jyotish.html" style="flex:1;text-align:center;padding:10px 6px;background:rgba(45,122,74,0.15);border:1px solid rgba(61,175,160,0.2);border-radius:10px;text-decoration:none">' +
+    '<div style="font-size:18px;margin-bottom:4px">🪐</div>' +
+    '<div style="font-size:9px;color:rgba(61,175,160,0.85);letter-spacing:0.06em">吠陀星象</div>' +
+    '</a>' +
+    '</div></div>';
   var rb = document.getElementById('reportBody'); if (rb) rb.appendChild(cta); else document.body.appendChild(cta);
 }
 

@@ -319,6 +319,33 @@ body {
 <script>
 var AMZ_TAG='fabulousslim-20';
 function amazonGo(q){window.open('https://www.amazon.com/s?k='+encodeURIComponent(q)+'&tag='+AMZ_TAG,'_blank','noopener');}
+
+// Highlight product matched to chart (from report page ?id= param)
+(function(){
+  var id = new URLSearchParams(location.search).get('id');
+  if (!id) return;
+  var QUERY_MAP = {
+    'black_obsidian': 'black obsidian bracelet feng shui',
+    'red_agate': 'red agate bracelet gemstone',
+    'yellow_crystal': 'yellow citrine bracelet crystal healing',
+    'green_phantom': 'green phantom quartz bracelet crystal',
+    'white_crystal': 'clear quartz crystal bracelet healing',
+    'tibetan_bracelet': 'tibetan prayer bracelet blessing'
+  };
+  var cards = document.querySelectorAll('.product-card');
+  if (cards.length > 0) {
+    setTimeout(function(){
+      cards[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+  }
+  var q = QUERY_MAP[id];
+  if (q) {
+    var banner = document.createElement('div');
+    banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:999;background:rgba(91,191,160,0.12);border-bottom:1px solid rgba(91,191,160,0.3);padding:10px 16px;text-align:center;font-size:11px;color:rgba(91,191,160,0.9);letter-spacing:0.05em;';
+    banner.innerHTML = '✦ Your chart matched: <strong>' + id.replace(/_/g,' ') + '</strong> · <a href="#" onclick="amazonGo(\''+q+'\');return false;" style="color:#5bbfa0;text-decoration:underline;">Find it on Amazon →</a>';
+    document.body.prepend(banner);
+  }
+})();
 </script>
 
 <script>

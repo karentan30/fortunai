@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#e8821a">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<title>ShenYuan · Tibetan Astrology Reading</title>
-<meta name="description" content="Discover your Tibetan zodiac, life energy (Lungta), and destiny through ancient Himalayan wisdom. Free preview of your Mewa and Parkha.">
+<title>藏传命理Kartsi·生肖风马松瓦解读｜善缘</title>
+<meta name="description" content="藏历Kartsi命理解读，生肖属相、元素五行、风马(Lungta)能量、松瓦守护元素，源自西藏传承的古老智慧，AI深度解析你的藏传命盘。">
 <meta property="og:title" content="ShenYuan · Tibetan Astrology Reading">
 <meta property="og:description" content="Tibetan astrology decoded by AI — your zodiac, wind horse energy, and Mewa destiny analysis.">
 <meta property="og:image" content="/og-card.png">
@@ -87,7 +87,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 @keyframes spin { to { transform:rotate(360deg); } }
 .load-title { font-family:'Cormorant Garamond',serif; font-size:17px; letter-spacing:0.08em; margin-bottom:24px; color:var(--ink-text); }
 .load-steps { width:100%; max-width:260px; }
-.load-step { font-size:12px; color:rgba(232,130,26,0.55); padding:4px 0; letter-spacing:0.04em; min-height:22px; }
+.load-step { font-size:14px; font-weight:500; color:rgba(201,168,76,0.75); padding:4px 0; letter-spacing:0.04em; min-height:22px; }
 .load-step.done { color:var(--jade); }
 
 /* ── Report screen ── */
@@ -443,7 +443,8 @@ function generateReport(btn) {
   if (!document.getElementById('jConsent').checked) { showToast('Please agree to the privacy terms first', 'error'); return; }
   if (btn.disabled) return;
   btn.disabled = true;
-  btn.textContent = 'Calculating…';
+  btn._label = btn.textContent;
+  btn.textContent = 'Consulting the Mountain…';
 
   lastInput = { name:name, dob:dob, tob:tob, city:city, country:country, concern:selectedConcern };
 
@@ -451,26 +452,77 @@ function generateReport(btn) {
   document.getElementById('loadingScreen').classList.add('show');
   runLoadingSteps();
 
-  fetchJyotishReport(lastInput).then(function(data){
-    document.getElementById('loadingScreen').classList.remove('show');
-    btn.disabled = false;
-    btn.textContent = '🪐 Free Preview · Reveal My Vedic Chart';
-    if (data && data.reading) {
-      showReport(data.reading, data.contextId, data.tier, data.locked);
-    } else {
-      document.getElementById('inputScreen').style.display = 'block';
-      showToast('Failed to generate report, please try again', 'error');
+  streamTibetReport(lastInput, btn);
+}
+
+function streamTibetReport(input, btn) {
+  var token = localStorage.getItem('sy_token') || '';
+  var accumulated = '';
+  var reportStarted = false;
+  var streamEl = null;
+  var metaTier = 'basic'; var metaLocked = true;
+
+  fetch('/api/tibet/stream', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ name: input.name, dob: input.dob, tob: input.tob, city: input.city, country: input.country, concern: input.concern, token: token, lang: 'en' })
+  }).then(function(res) {
+    if (!res.ok || !res.body) throw new Error('stream failed');
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder();
+    var buf = '';
+
+    function read() {
+      reader.read().then(function(r) {
+        if (r.done) return;
+        buf += decoder.decode(r.value, { stream: true });
+        var lines = buf.split('\n'); buf = lines.pop();
+        lines.forEach(function(line) {
+          if (!line.startsWith('data: ')) return;
+          var raw = line.slice(6);
+          try {
+            var ev = JSON.parse(raw);
+            if (ev.type === 'meta') {
+              metaTier = ev.tier; metaLocked = ev.locked;
+            } else if (ev.type === 'chunk') {
+              accumulated += ev.content;
+              if (!reportStarted) {
+                reportStarted = true;
+                document.getElementById('loadingScreen').classList.remove('show');
+                var rs = document.getElementById('reportScreen');
+                rs.innerHTML = '<div id="streamText" style="white-space:pre-wrap;font-family:\'Cormorant Garamond\',serif;font-size:14px;line-height:1.9;color:rgba(240,224,200,0.88);padding:16px;"></div>';
+                rs.classList.add('show');
+                streamEl = document.getElementById('streamText');
+              }
+              if (streamEl) streamEl.textContent = accumulated;
+            } else if (ev.type === 'done') {
+              if (btn) { btn.disabled = false; btn.textContent = btn._label || '🏔️ Free Preview · Reveal My Tibetan Chart'; }
+              showReport(accumulated, ev.contextId, metaTier, metaLocked);
+            } else if (ev.type === 'product') {
+              if (ev.product) renderProductCard(ev.product);
+            } else if (ev.type === 'error') {
+              throw new Error(ev.message);
+            }
+          } catch(e) {}
+        });
+        read();
+      }).catch(function() {
+        document.getElementById('loadingScreen').classList.remove('show');
+        document.getElementById('inputScreen').style.display = 'block';
+        if (btn) { btn.disabled = false; btn.textContent = btn._label || '🏔️ Free Preview · Reveal My Tibetan Chart'; }
+        showToast('Failed to generate report, please try again', 'error');
+      });
     }
-  }).catch(function(){
+    read();
+  }).catch(function() {
     document.getElementById('loadingScreen').classList.remove('show');
     document.getElementById('inputScreen').style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = '🪐 Free Preview · Reveal My Vedic Chart';
+    if (btn) { btn.disabled = false; btn.textContent = btn._label || '🏔️ Free Preview · Reveal My Tibetan Chart'; }
     showToast('Network error, please check your connection', 'error');
   });
 }
 
-function fetchJyotishReport(input) {
+function fetchTibetReport(input) {
   var token = localStorage.getItem('sy_token') || '';
   return fetch('/api/tibet', {
     method: 'POST',
@@ -503,6 +555,28 @@ function runLoadingSteps() {
       })();
     }, i * 400);
   });
+}
+
+function renderProductCard(product) {
+  var existing = document.getElementById('productCardWrap');
+  if (existing) existing.remove();
+  var wrap = document.createElement('div');
+  wrap.id = 'productCardWrap';
+  wrap.style.cssText = 'margin:24px 0 8px;padding:20px 18px;background:linear-gradient(135deg,rgba(40,8,8,0.9),rgba(60,12,12,0.95));border:1px solid rgba(180,80,60,0.3);border-radius:16px;';
+  wrap.innerHTML = '<div style="font-size:11px;letter-spacing:0.15em;color:rgba(220,140,100,0.6);margin-bottom:10px;">🏮 善缘开光 · 根据您的藏历命格专属匹配</div>'
+    + '<div style="display:flex;align-items:flex-start;gap:14px;">'
+    + '<div style="font-size:36px;line-height:1;">' + (product.emoji || '🔵') + '</div>'
+    + '<div style="flex:1;">'
+    + '<div style="font-size:15px;font-weight:600;color:rgba(235,195,165,0.95);margin-bottom:3px;">' + product.name + '</div>'
+    + '<div style="font-size:12px;color:rgba(220,140,100,0.75);margin-bottom:6px;">' + product.tagline + '</div>'
+    + '<div style="font-size:12px;color:rgba(210,180,160,0.7);line-height:1.6;margin-bottom:10px;">' + product.description + '</div>'
+    + '<div style="display:flex;align-items:center;gap:10px;">'
+    + '<span style="font-size:16px;font-weight:700;color:rgba(220,140,100,0.95);">$' + product.price_usd + '</span>'
+    + '<a href="/pages/shop.html?id=' + product.id + '" style="padding:7px 16px;background:linear-gradient(135deg,rgba(180,80,60,0.15),rgba(180,80,60,0.25));border:1px solid rgba(180,80,60,0.4);border-radius:20px;color:rgba(235,195,165,0.95);font-size:12px;text-decoration:none;letter-spacing:0.05em;">寺院加持 · 立即获取 →</a>'
+    + '</div>'
+    + '</div></div>';
+  var rs = document.getElementById('reportScreen');
+  if (rs) rs.appendChild(wrap);
 }
 
 function showReport(aiText, contextId, tier, locked) {
@@ -594,8 +668,25 @@ function buildPaywallCta() {
   cta.className = 'sticky-cta'; cta.id = 'stickyCta';
   cta.innerHTML =
     '<div style="font-size:10px;color:var(--sub-text);letter-spacing:0.04em;margin-bottom:8px;text-align:center">Unlock: 12-House Analysis · 5-Year Forecast · Remedies &amp; Mantras</div>' +
-    '<button class="btn-unlock" onclick="createCheckout(this,\'full\',14.9)">🔓 Unlock Full Tibet Reading · $14.90</button>' +
-    '<button class="btn-member" onclick="createCheckout(this,\'member\',14.99)">👑 Unlimited Membership · <b style="color:#5bbfa0">$14.99</b>/mo <span style="text-decoration:line-through;font-size:10px;opacity:0.55">$14.90/reading</span></button>';
+    '<button class="btn-unlock" onclick="createCheckout(this,\'full\',14.9)">🔓 解锁完整藏历命盘 · $14.90 →</button>' +
+    '<button class="btn-member" onclick="createCheckout(this,\'member\',14.99)">👑 Unlimited Membership · <b style="color:#5bbfa0">$14.99</b>/mo <span style="text-decoration:line-through;font-size:10px;opacity:0.55">$14.90/reading</span></button>' +
+    '<div style="text-align:center;font-size:10px;color:rgba(140,80,60,0.5);margin-top:8px">🛡️ 不满意72小时内全额退款</div>' +
+    '<div style="margin-top:16px;padding-top:14px;border-top:1px solid rgba(201,168,76,0.12)">' +
+    '<div style="font-size:9px;letter-spacing:0.14em;color:rgba(201,168,76,0.4);text-transform:uppercase;margin-bottom:10px;text-align:center">探索更多命理体系</div>' +
+    '<div style="display:flex;gap:8px;justify-content:center">' +
+    '<a href="/pages/bazi.html" style="flex:1;text-align:center;padding:10px 6px;background:rgba(139,26,42,0.15);border:1px solid rgba(201,168,76,0.2);border-radius:10px;text-decoration:none">' +
+    '<div style="font-size:18px;margin-bottom:4px">☯️</div>' +
+    '<div style="font-size:9px;color:rgba(201,168,76,0.8);letter-spacing:0.06em">八字命盘</div>' +
+    '</a>' +
+    '<a href="/pages/jyotish.html" style="flex:1;text-align:center;padding:10px 6px;background:rgba(139,26,42,0.15);border:1px solid rgba(201,168,76,0.2);border-radius:10px;text-decoration:none">' +
+    '<div style="font-size:18px;margin-bottom:4px">🪐</div>' +
+    '<div style="font-size:9px;color:rgba(201,168,76,0.8);letter-spacing:0.06em">吠陀星象</div>' +
+    '</a>' +
+    '<a href="/pages/maya.html" style="flex:1;text-align:center;padding:10px 6px;background:rgba(139,26,42,0.15);border:1px solid rgba(201,168,76,0.2);border-radius:10px;text-decoration:none">' +
+    '<div style="font-size:18px;margin-bottom:4px">🌞</div>' +
+    '<div style="font-size:9px;color:rgba(201,168,76,0.8);letter-spacing:0.06em">玛雅历</div>' +
+    '</a>' +
+    '</div></div>';
   var rb = document.getElementById('reportBody'); if (rb) rb.appendChild(cta); else document.body.appendChild(cta);
 }
 
@@ -630,7 +721,7 @@ function handlePaidReturn() {
     runLoadingSteps();
     fetchJyotishReport(lastInput).then(function(d){
       document.getElementById('loadingScreen').classList.remove('show');
-      if (d && d.reading) { showReport(d.reading, d.contextId, d.tier, d.locked); showToast('Payment successful — your full reading is unlocked!'); }
+      if (d && d.reading) { showReport(d.reading, d.contextId, d.tier, d.locked); if (d.product) renderProductCard(d.product); showToast('Payment successful — your full reading is unlocked!'); }
       else { document.getElementById('inputScreen').style.display='block'; showToast('Please generate your report again.'); }
     }).catch(function(){ document.getElementById('loadingScreen').classList.remove('show'); document.getElementById('inputScreen').style.display='block'; showToast('Please generate your report again.'); });
     return;

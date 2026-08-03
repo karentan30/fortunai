@@ -87,7 +87,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 @keyframes spin { to { transform:rotate(360deg); } }
 .load-title { font-family:'Cormorant Garamond',serif; font-size:17px; letter-spacing:0.08em; margin-bottom:24px; color:var(--ink-text); }
 .load-steps { width:100%; max-width:260px; }
-.load-step { font-size:12px; color:rgba(232,130,26,0.55); padding:4px 0; letter-spacing:0.04em; min-height:22px; }
+.load-step { font-size:14px; font-weight:500; color:rgba(232,130,26,0.75); padding:4px 0; letter-spacing:0.04em; min-height:22px; }
 .load-step.done { color:var(--jade); }
 
 /* ── Report screen ── */
@@ -244,6 +244,7 @@ body::before { background: radial-gradient(ellipse at 50% 0%, rgba(100,60,200,0.
         <span class="field-label">Date of Birth</span>
         <input class="field-input" id="jDob" type="date" style="color-scheme:light">
       </div>
+      <div class="field-row"><label class="field-label">出生时间（可选）</label><input type="time" id="birthTime" class="field-input" placeholder="不知道可留空，默认正午" style="background:transparent;border:none;outline:none;width:100%;font-family:inherit;font-size:14px;color:inherit" /></div>
       <div class="field-row">
         <span class="field-label">Time of Birth</span>
         <select class="field-select" id="jTobHour">
@@ -443,6 +444,7 @@ function generateReport(btn) {
   if (!document.getElementById('jConsent').checked) { showToast('Please agree to the privacy terms first', 'error'); return; }
   if (btn.disabled) return;
   btn.disabled = true;
+  btn._label = btn.textContent;
   btn.textContent = 'Calculating…';
 
   lastInput = { name:name, dob:dob, tob:tob, city:city, country:country, concern:selectedConcern };
@@ -451,21 +453,72 @@ function generateReport(btn) {
   document.getElementById('loadingScreen').classList.add('show');
   runLoadingSteps();
 
-  fetchJyotishReport(lastInput).then(function(data){
-    document.getElementById('loadingScreen').classList.remove('show');
-    btn.disabled = false;
-    btn.textContent = '🪐 Free Preview · Reveal My Vedic Chart';
-    if (data && data.reading) {
-      showReport(data.reading, data.contextId, data.tier, data.locked, data.data);
-    } else {
-      document.getElementById('inputScreen').style.display = 'block';
-      showToast('Failed to generate report, please try again', 'error');
+  streamJyotishReport(lastInput, btn);
+}
+
+function streamJyotishReport(input, btn) {
+  var token = localStorage.getItem('sy_token') || '';
+  var accumulated = '';
+  var reportStarted = false;
+  var streamEl = null;
+  var metaTier = 'basic'; var metaLocked = true; var metaData = null;
+
+  fetch('/api/jyotish/stream', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ name: input.name, dob: input.dob, tob: input.tob || '12:00', city: input.city, country: input.country, concern: input.concern, token: token, lang: 'en' })
+  }).then(function(res) {
+    if (!res.ok || !res.body) throw new Error('stream failed');
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder();
+    var buf = '';
+
+    function read() {
+      reader.read().then(function(r) {
+        if (r.done) return;
+        buf += decoder.decode(r.value, { stream: true });
+        var lines = buf.split('\n'); buf = lines.pop();
+        lines.forEach(function(line) {
+          if (!line.startsWith('data: ')) return;
+          var raw = line.slice(6);
+          try {
+            var ev = JSON.parse(raw);
+            if (ev.type === 'meta') {
+              metaTier = ev.tier; metaLocked = ev.locked; metaData = ev.data;
+            } else if (ev.type === 'chunk') {
+              accumulated += ev.content;
+              if (!reportStarted) {
+                reportStarted = true;
+                document.getElementById('loadingScreen').classList.remove('show');
+                var rs = document.getElementById('reportScreen');
+                rs.innerHTML = '<div id="streamText" style="white-space:pre-wrap;font-family:\'Cormorant Garamond\',serif;font-size:14px;line-height:1.9;color:rgba(230,225,250,0.88);padding:16px;"></div>';
+                rs.classList.add('show');
+                streamEl = document.getElementById('streamText');
+              }
+              if (streamEl) streamEl.textContent = accumulated;
+            } else if (ev.type === 'done') {
+              if (btn) { btn.disabled = false; btn.textContent = btn._label || '🪐 Free Preview · Reveal My Vedic Chart'; }
+              showReport(accumulated, ev.contextId, metaTier, metaLocked, metaData);
+            } else if (ev.type === 'product') {
+              if (ev.product) renderProductCard(ev.product);
+            } else if (ev.type === 'error') {
+              throw new Error(ev.message);
+            }
+          } catch(e) {}
+        });
+        read();
+      }).catch(function() {
+        document.getElementById('loadingScreen').classList.remove('show');
+        document.getElementById('inputScreen').style.display = 'block';
+        if (btn) { btn.disabled = false; btn.textContent = btn._label || '🪐 Free Preview · Reveal My Vedic Chart'; }
+        showToast('Failed to generate report, please try again', 'error');
+      });
     }
-  }).catch(function(){
+    read();
+  }).catch(function() {
     document.getElementById('loadingScreen').classList.remove('show');
     document.getElementById('inputScreen').style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = '🪐 Free Preview · Reveal My Vedic Chart';
+    if (btn) { btn.disabled = false; btn.textContent = btn._label || '🪐 Free Preview · Reveal My Vedic Chart'; }
     showToast('Network error, please check your connection', 'error');
   });
 }
@@ -475,7 +528,7 @@ function fetchJyotishReport(input) {
   return fetch('/api/jyotish', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer '+token },
-    body: JSON.stringify({ name:input.name, dob:input.dob, tob:input.tob, city:input.city, country:input.country, concern:input.concern, token:token, lang:'en' })
+    body: JSON.stringify({ name:input.name, dob:input.dob, tob: document.getElementById('birthTime')?.value || '12:00', city:input.city, country:input.country, concern:input.concern, token:token, lang:'en' })
   }).then(function(r){ return r.json(); });
 }
 
@@ -507,6 +560,28 @@ function runLoadingSteps() {
 
 var RASHI_NAMES = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
 var NAKSHATRA_NAMES = ['Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha','Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishtha','Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati'];
+
+function renderProductCard(product) {
+  var existing = document.getElementById('productCardWrap');
+  if (existing) existing.remove();
+  var wrap = document.createElement('div');
+  wrap.id = 'productCardWrap';
+  wrap.style.cssText = 'margin:24px 0 8px;padding:20px 18px;background:linear-gradient(135deg,rgba(20,10,40,0.9),rgba(30,15,60,0.95));border:1px solid rgba(147,112,219,0.3);border-radius:16px;';
+  wrap.innerHTML = '<div style="font-size:11px;letter-spacing:0.15em;color:rgba(180,150,220,0.6);margin-bottom:10px;">🏮 ShenYuan Temple Blessing · Matched to Your Chart</div>'
+    + '<div style="display:flex;align-items:flex-start;gap:14px;">'
+    + '<div style="font-size:36px;line-height:1;">' + (product.emoji || '🟡') + '</div>'
+    + '<div style="flex:1;">'
+    + '<div style="font-size:15px;font-weight:600;color:rgba(210,185,240,0.95);margin-bottom:3px;">' + product.name + ' · ' + (product.name_en || '') + '</div>'
+    + '<div style="font-size:12px;color:rgba(180,150,220,0.75);margin-bottom:6px;">' + product.tagline + '</div>'
+    + '<div style="font-size:12px;color:rgba(190,170,220,0.7);line-height:1.6;margin-bottom:10px;">' + product.description + '</div>'
+    + '<div style="display:flex;align-items:center;gap:10px;">'
+    + '<span style="font-size:16px;font-weight:700;color:rgba(180,150,220,0.95);">$' + product.price_usd + '</span>'
+    + '<a href="/pages/shop.html?id=' + product.id + '" style="padding:7px 16px;background:linear-gradient(135deg,rgba(147,112,219,0.15),rgba(147,112,219,0.25));border:1px solid rgba(147,112,219,0.4);border-radius:20px;color:rgba(210,185,240,0.95);font-size:12px;text-decoration:none;letter-spacing:0.05em;">Temple Blessed · Get Yours →</a>'
+    + '</div>'
+    + '</div></div>';
+  var rs = document.getElementById('reportScreen');
+  if (rs) rs.appendChild(wrap);
+}
 
 function showReport(aiText, contextId, tier, locked, chartData) {
   document.getElementById('loadingScreen').classList.remove('show');
@@ -595,8 +670,10 @@ function buildPaywallCta() {
   cta.className = 'sticky-cta'; cta.id = 'stickyCta';
   cta.innerHTML =
     '<div style="font-size:10px;color:var(--sub-text);letter-spacing:0.04em;margin-bottom:8px;text-align:center">Unlock: 12-House Analysis · 5-Year Forecast · Remedies &amp; Mantras</div>' +
-    '<button class="btn-unlock" onclick="createCheckout(this,\'full\',12.9)">🔓 Unlock Full Jyotish Reading · $12.90</button>' +
-    '<button class="btn-member" onclick="createCheckout(this,\'member\',14.99)">👑 Unlimited Membership · <b style="color:#5bbfa0">$14.99</b>/mo <span style="text-decoration:line-through;font-size:10px;opacity:0.55">$12.90/reading</span></button>';
+    '<button class="btn-unlock" onclick="createCheckout(this,\'full\',12.9)">解锁完整吠陀星盘 · $12.90 →</button>' +
+    '<button class="btn-member" onclick="createCheckout(this,\'member\',14.99)">👑 Unlimited Membership · <b style="color:#5bbfa0">$14.99</b>/mo <span style="text-decoration:line-through;font-size:10px;opacity:0.55">$12.90/reading</span></button>' +
+    '<div style="text-align:center;font-size:10px;color:rgba(100,120,200,0.45);margin-top:8px;letter-spacing:0.05em">🛡️ 不满意72小时内全额退款</div>' +
+    '<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(100,120,200,0.08)"><div style="font-size:10px;color:rgba(160,170,220,0.45);text-align:center;margin-bottom:8px">也试试</div><div style="display:flex;gap:6px"><a href="/pages/bazi.html" style="flex:1;background:rgba(100,120,200,0.05);border:1px solid rgba(100,120,200,0.12);border-radius:8px;padding:7px 4px;text-align:center;font-size:11px;color:rgba(160,170,220,0.65);text-decoration:none">🏮<br>八字命盘</a><a href="/pages/tibet.html" style="flex:1;background:rgba(100,120,200,0.05);border:1px solid rgba(100,120,200,0.12);border-radius:8px;padding:7px 4px;text-align:center;font-size:11px;color:rgba(160,170,220,0.65);text-decoration:none">🏔️<br>西藏命理</a><a href="/pages/maya.html" style="flex:1;background:rgba(100,120,200,0.05);border:1px solid rgba(100,120,200,0.12);border-radius:8px;padding:7px 4px;text-align:center;font-size:11px;color:rgba(160,170,220,0.65);text-decoration:none">🌞<br>玛雅历</a></div></div>';
   var rb = document.getElementById('reportBody'); if (rb) rb.appendChild(cta); else document.body.appendChild(cta);
 }
 
@@ -631,7 +708,7 @@ function handlePaidReturn() {
     runLoadingSteps();
     fetchJyotishReport(lastInput).then(function(d){
       document.getElementById('loadingScreen').classList.remove('show');
-      if (d && d.reading) { showReport(d.reading, d.contextId, d.tier, d.locked); showToast('Payment successful — your full reading is unlocked!'); }
+      if (d && d.reading) { showReport(d.reading, d.contextId, d.tier, d.locked); if (d.product) renderProductCard(d.product); showToast('Payment successful — your full reading is unlocked!'); }
       else { document.getElementById('inputScreen').style.display='block'; showToast('Please generate your report again.'); }
     }).catch(function(){ document.getElementById('loadingScreen').classList.remove('show'); document.getElementById('inputScreen').style.display='block'; showToast('Please generate your report again.'); });
     return;
