@@ -234,7 +234,7 @@ router.post('/bazi', rateLimitMiddleware, async (req, res) => {
     var useMessages = messages;
     if (!full) {
       useMessages = buildReadingPrompt(
-        '你是精通八字命理的命理师。为用户生成一份【基础版】命盘概览,包含:①四柱八字排盘(年月日时柱天干地支及简释)②五行能量分析(各五行百分比、最旺最弱、需补什么)③今年运势概览(一段)④财运格局概览(一段)⑤感情姻缘概览(一段)⑥事业格局概览(一段)⑦开运锦囊(3-5条具体建议)。语言简体中文,温暖白话,约4000字。每部分写2-3段,让用户感受到价值。但不要展开太细节(大运流年神煞等留完整版)。结尾必须明确告知:完整的财运格局、感情姻缘、事业升迁、健康预警、8步大运、未来10年流年详批、神煞等,在【完整版报告】中解锁。',
+        '你是精通八字命理的命理师。为用户生成一份【基础版】命盘概览。请严格按照以下章节结构输出,每个章节标题必须以对应的emoji开头(方便客户端解析):\n🔮 四柱八字排盘\n🌊 五行能量分析\n🌟 今年运势概览\n💰 财运格局概览\n❤️ 感情姻缘概览\n🏆 事业格局概览\n🔑 开运锦囊\n每个章节写2-3段实质内容,语言简体中文、温暖白话,合计约4000字。让用户感受到真实价值。不要展开大运流年神煞等细节(留完整版)。结尾必须明确告知:完整的财运格局、感情姻缘、事业升迁、健康预警、8步大运、未来10年流年详批、神煞等,在【完整版报告】中解锁。',
         '请为以下命主生成【基础版】命盘概览(包含四柱+五行+今年+财运+感情+事业+开运,约4000字,结尾引导解锁完整版):\n出生:' + birthYear + '年' + birthMonth + '月' + birthDay + '日' + (birthHour !== undefined ? birthHour + '时' : '(时辰不详)') + '\n性别:' + (gender === 'male' ? '男' : '女')
       );
     }
@@ -862,19 +862,29 @@ function calculateJyotish(dob, tob) {
 
 // 辅助：Tibetan 计算
 function calculateTibetan(birthYear) {
-  const zodiacNames = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪'];
-  const elementNames = ['木', '火', '土', '金', '水'];
-  const chineseZodiacIdx = (birthYear - 1900) % 12;
-  const elementIdx = (birthYear - 1900) % 5;
-  const mewaNum = ((birthYear - 1) % 9) + 1;
-  const parkhaIdx = (birthYear - 1) % 8;
+  const zodiacNames = ['Rat', 'Ox', 'Tiger', 'Rabbit', 'Dragon', 'Snake', 'Horse', 'Sheep', 'Monkey', 'Rooster', 'Dog', 'Pig'];
+  const zodiacNamesCN = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪'];
+  const elementNames = ['Wood', 'Fire', 'Earth', 'Metal', 'Water'];
+  const elementNamesCN = ['木', '火', '土', '金', '水'];
+  const parkhaNames = ['Kham', 'Zin', 'Gin', 'Zon', 'Kön', 'Da', 'Khen', 'Li'];
+  // Fix: use Heavenly Stem cycle (甲=0..癸=9), each element spans 2 stems
+  const chineseZodiacIdx = ((birthYear - 4) % 12 + 12) % 12;
+  const stemIdx = ((birthYear - 4) % 10 + 10) % 10;
+  const elementIdx = Math.floor(stemIdx / 2);
+  // Mewa: descend from 9 starting 1901=9, counting down and wrapping
+  const mewaNum = ((9 - (birthYear - 1901) % 9) % 9) || 9;
+  const parkhaIdx = ((birthYear - 1) % 8 + 8) % 8;
+  const parkhaName = parkhaNames[parkhaIdx];
   const lungta = ((birthYear % 60) % 15) > 7 ? 'High' : 'Low';
 
   return {
     zodiac: zodiacNames[chineseZodiacIdx],
+    zodiacCN: zodiacNamesCN[chineseZodiacIdx],
     element: elementNames[elementIdx],
+    elementCN: elementNamesCN[elementIdx],
     mewaNum,
     parkhaIdx,
+    parkha: parkhaName,
     lungta,
     year: birthYear
   };
@@ -905,28 +915,77 @@ router.post('/jyotish', rateLimitMiddleware, async (req, res) => {
     const jyotishData = calculateJyotish(dob, tob);
     const full = hasFullAccess(req, ['jyotish_full', 'jyotish']);
 
-    const systemPrompt = `你是一位权威的印度占星师（Jyotish）。用户信息：
-姓名：${name}
-出生地：${city}, ${country}
-关注：${concern || '整体运势'}
-返回一份权威的吠陀占星报告。包含：
-1. 月亮星座（Rashi）${jyotishData.rashi}的性格特质
-2. 月宫（Nakshatra）${jyotishData.nakshatra}的命运主线
-${full ? '3. 大运周期（Dasha）分析\n4. 12宫命盘深度解读\n5. 宝石与咒语建议\n' : ''}
-语言：${lang === 'zh' ? '中文' : lang === 'kr' ? '韩文' : '英文'}
-${full ? '' : '(免费版：仅提供基础星座信息)'}`;
+    const RASHI_EN = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
+    const NAKSHATRA_EN = ['Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha','Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishtha','Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati'];
+    const rashiName = RASHI_EN[jyotishData.rashi] || 'Sagittarius';
+    const nakshatraName = NAKSHATRA_EN[jyotishData.nakshatra] || 'Jyeshtha';
+    const outputLang = lang === 'zh' ? 'Chinese (Simplified)' : lang === 'kr' ? 'Korean' : 'English';
+
+    const systemPrompt = full
+      ? `You are a master Jyotish astrologer with 30 years of practice. Write a comprehensive, deeply personal Vedic astrology report for ${name} born on ${dob} at ${tob} in ${city}, ${country}. Their Moon Sign (Rashi) is ${rashiName} and their Lunar Mansion (Nakshatra) is ${nakshatraName}. Focus area: ${concern || 'overall destiny'}.
+
+Write 6000-8000 words across these sections. Each section must be deeply specific, not generic. Use Sanskrit terms with explanations.
+
+## 🌙 Moon Sign: ${rashiName} (Rashi)
+Deep personality analysis — inner emotional world, how they love, what they fear, what drives them. 600 words minimum.
+
+## ✨ Nakshatra: ${nakshatraName}
+The lunar mansion's mythology, ruling deity, shakti (power), and how it shapes this person's soul path. 500 words minimum.
+
+## 🪐 Current Dasha Period
+Their current planetary period (Mahadasha and Antardasha) — what themes dominate their life right now, and when the next major shift happens. Be specific about dates. 500 words.
+
+## 🏠 12-House Analysis
+Their Lagna (Ascendant) is ${RASHI_EN[jyotishData.lagna] || 'unknown'}. Analyze the key houses — 1st (self), 4th (home/mother), 7th (relationships), 10th (career), with planetary influences. 800 words.
+
+## 💰 Wealth & Career Destiny
+Specific career paths, financial patterns, best years for wealth accumulation, business vs service orientation. 500 words.
+
+## 💕 Love & Relationships
+Romantic patterns, ideal partner qualities, marriage timing if applicable, relationship karma from past lives. 500 words.
+
+## 🏥 Health & Vitality
+Constitutional strengths and weaknesses per Ayurveda, organs to watch, lifestyle recommendations. 400 words.
+
+## 📅 5-Year Forecast (${new Date().getFullYear()}-${new Date().getFullYear()+4})
+Year-by-year energy: what each year brings for career, love, finances, and personal growth. 600 words.
+
+## 💎 Remedies & Mantras
+Specific gemstone recommendation with carat and finger, daily mantra with pronunciation, charity suggestions, and auspicious days. 400 words.
+
+Language: ${outputLang}. Write warmly, like a wise elder who truly cares for this person.`
+
+      : `You are a master Jyotish astrologer. Write a detailed, impressive FREE preview Vedic astrology report for ${name} born on ${dob} in ${city}. Their Moon Sign is ${rashiName} (Rashi) and Lunar Mansion is ${nakshatraName} (Nakshatra). Focus: ${concern || 'overall destiny'}.
+
+This free preview must be SUBSTANTIAL and genuinely impressive — at least 2500 words. Users should feel they received real value. Write specific, personal insights, not generic descriptions.
+
+## 🌙 Your Moon Sign: ${rashiName}
+Write 500+ words about their emotional nature, inner world, what makes them feel safe, how they love, their shadow traits, and their greatest strengths. Be specific and psychologically insightful. Reference the Sanskrit meaning of ${rashiName}.
+
+## ✨ Your Nakshatra: ${nakshatraName}
+Write 400+ words. Explain the mythology behind ${nakshatraName}, its ruling deity and planet, the shakti (superpower) it grants, and how this nakshatra shapes their life purpose, relationships, and karma. Be vivid and specific.
+
+## 🌟 Your Soul's Core Gifts & Challenges
+Based on ${rashiName} + ${nakshatraName} combined: write 400 words about their 3 greatest natural talents and 2 karmic challenges they came to overcome in this lifetime. Be honest and compassionate.
+
+## 📅 This Year's Energy (${new Date().getFullYear()})
+Write 400 words on what cosmic themes are dominant for ${rashiName} this year — what to focus on, what to release, what opportunities are available. Make it feel timely and relevant.
+
+## 💎 Your Vedic Blueprint (Lucky Elements)
+Gemstone recommendation for ${rashiName}, lucky colors, favorable directions, best days of week, and one specific mantra they can use daily. 200 words.
+
+---
+
+End with a warm, specific paragraph: "Your Jyotish reading reveals so much more..." — list 5 specific things they'll discover in the full reading (Dasha period analysis with exact dates, all 12 houses, 5-year forecast, relationship compatibility, specific remedies). Make them genuinely curious.
+
+Language: ${outputLang}. Tone: warm, wise, specific. No disclaimers at the start — dive straight into their reading.`;
 
     const reading = await deepseekChat([
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: `请为${name}生成他们的吠陀占星报告` }
-    ], { maxTokens: full ? 2500 : 800 });
+      { role: 'user', content: `Please generate the Vedic Jyotish report for ${name}.` }
+    ], { maxTokens: full ? 16384 : 4000 });
 
-    insertReading(req, {
-      type: 'jyotish',
-      input: { name, dob, city, country, concern },
-      output: reading,
-      tier: full ? 'full' : 'basic'
-    });
+    insertReading.run('jyotish', JSON.stringify({ name, dob, city, country, concern }), reading, req.userId);
 
     res.json({
       reading,
@@ -950,26 +1009,81 @@ router.post('/maya', rateLimitMiddleware, async (req, res) => {
     const tzolkinData = getTzolkin(year, month, day);
     const full = hasFullAccess(req, ['maya_full', 'maya']);
 
-    const systemPrompt = `你是玛雅历专家。用户${name}的神圣生日Kin为：${tzolkinData.kin}（${tzolkinData.tone} ${tzolkinData.daySign})。
-关注：${intention || '人生使命'}
-返回玛雅历解读，包含：
-1. Kin编号与日印的本质含义
-2. 阴影与天赋特质
-${full ? '3. 个人13天周期（Trecena）分析\n4. 260天轮回中的位置\n5. 人生使命模式\n' : ''}
-融入玛雅宇宙观与羽蛇神（Quetzalcoatl）的智慧。
-语言：${lang === 'zh' ? '中文' : lang === 'kr' ? '韩文' : '英文'}`;
+    const mayaLang = lang === 'zh' ? 'Chinese (Simplified)' : lang === 'kr' ? 'Korean' : 'English';
+    const systemPrompt = full
+      ? `You are a master Maya calendar keeper and Tzolkin expert trained in the lineage of the Highland Maya. Write a profound, comprehensive Maya destiny reading for ${name}, born on ${dob}. Their sacred Kin is ${tzolkinData.kin}: ${tzolkinData.tone} ${tzolkinData.daySign}. Focus: ${intention || 'life mission'}.
+
+Write 10,000 words across these sections. Every section must be deeply personal and specific to Kin ${tzolkinData.kin}.
+
+## 🌞 Your Sacred Kin: ${tzolkinData.tone} ${tzolkinData.daySign} (Kin ${tzolkinData.kin})
+The complete meaning of this Kin — its glyph, the galactic tone's power and purpose, and the day sign's essence. 800 words.
+
+## 🦅 Your Day Sign: ${tzolkinData.daySign} — Deep Soul Profile
+Full personality portrait: core nature, how they think, what they're here to master, relationships style, professional gifts. 1000 words.
+
+## 🎵 Your Galactic Tone: ${tzolkinData.tone}
+The rhythm of your soul — what drives you, your challenge, your hidden gift. How this tone interacts with your day sign. 600 words.
+
+## 🌑 Shadow & Light — Your Antipode and Analog
+Your antipode (the challenge you must face) and your analog (your support energy). How to work with these forces in daily life. 700 words.
+
+## 🌀 Your Trecena (13-Day Cycle)
+The wavespell you were born into, its ruling day sign, and what this means for your life themes and recurring lessons. 600 words.
+
+## 🐍 Your Oracle — The Full 5-Kin Reading
+Guide, Antipode, Analog, Occult: the complete Maya oracle that surrounds your Kin and reveals your multi-dimensional nature. 800 words.
+
+## 💫 Year ${new Date().getFullYear()} in Your Tzolkin Cycle
+Where you are in the current 260-day Tzolkin round, what themes are amplified, and the most powerful galactic activation dates for you this year. 600 words.
+
+## 🌿 Life Mission & Karmic Pattern
+Your galactic signature's deepest teaching — what karmic thread runs through your relationships, work, and spiritual path. 700 words.
+
+## 🔮 Love & Relationships Through the Maya Lens
+Who you're cosmically compatible with (by Kin), your relationship patterns, and what your ideal partnership looks like from a galactic perspective. 600 words.
+
+## 🌏 Your Role in the Collective
+What gift Kin ${tzolkinData.kin} brings to the world — your contribution to the evolution of consciousness, your archetypal role. 500 words.
+
+## 🌺 Maya Ceremony & Practices
+Specific ceremonial practices, sacred days to observe, offerings, and ways to align with your Kin's energy daily. 500 words.
+
+Language: ${mayaLang}. Tone: mystical yet grounded, wise, and genuinely insightful. Weave in Maya cosmology, Quetzalcoatl mythology, and the sacred mathematics of the Tzolkin.`
+
+      : `You are a Maya calendar keeper and Tzolkin expert. Write a detailed, genuinely impressive FREE Maya destiny reading for ${name}. Their sacred Kin is ${tzolkinData.kin}: ${tzolkinData.tone} ${tzolkinData.daySign}. Focus: ${intention || 'life mission'}.
+
+This free preview must be at least 2500 words and feel genuinely valuable. Dive deep — no generic descriptions.
+
+## 🌞 Your Sacred Kin: ${tzolkinData.tone} ${tzolkinData.daySign} (Kin ${tzolkinData.kin})
+Explain what a Kin is, the sacred mathematics of 260, and the specific meaning of Kin ${tzolkinData.kin} in the Tzolkin calendar. Include the glyph's meaning and visual symbolism. 400 words.
+
+## 🦅 Your Day Sign: ${tzolkinData.daySign} — Who You Really Are
+Write a rich, specific personality portrait for ${tzolkinData.daySign}: their core essence, emotional nature, intellectual style, how they love, what they fear, their shadow, and their superpower. Reference Maya mythology associated with this day sign. 600 words.
+
+## 🎵 Your Galactic Tone ${tzolkinData.tone}: The Rhythm of Your Soul
+The 13 galactic tones are the heartbeat of the Tzolkin. Write 400 words on what Tone ${tzolkinData.tone} means: its keyword, its challenge, its gift, and how it amplifies the ${tzolkinData.daySign} energy specifically.
+
+## 🌟 Your Gifts & Life Challenges
+Based on ${tzolkinData.tone} ${tzolkinData.daySign}: write 400 words on 3 distinct natural gifts this Kin carries into the world, and 2 recurring life challenges they must face and integrate. Be honest, specific, and compassionate.
+
+## 🌀 This Year's Galactic Energy (${new Date().getFullYear()})
+Where ${tzolkinData.daySign} energy is amplified in the current Tzolkin cycle — what themes are asking for attention, what to create, and what to release. 300 words.
+
+## 🌺 Your Daily Activation Practice
+One specific ceremony or practice for ${tzolkinData.daySign} energy — a morning ritual, a meditation, colors to wear, intentions to set. Make it practical and beautiful. 200 words.
+
+---
+
+End with: "Your full Maya Destiny Reading reveals..." — list 5 specific things they'll discover in the complete reading (full Oracle reading, Trecena wavespell, relationship compatibility, 260-day cycle position, ceremonial calendar for the year). Create genuine curiosity.
+
+Language: ${mayaLang}. Tone: mystical, warm, deeply knowledgeable. Start immediately with their reading — no disclaimers.`;
 
     const reading = await deepseekChat([
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: `请为我生成玛雅Tzolkin生日解读` }
-    ], { maxTokens: full ? 2500 : 800 });
+      { role: 'user', content: `Please generate the Maya Tzolkin destiny reading for ${name}.` }
+    ], { maxTokens: full ? 16384 : 4000 });
 
-    insertReading(req, {
-      type: 'maya',
-      input: { name, dob, intention },
-      output: reading,
-      tier: full ? 'full' : 'basic'
-    });
+    insertReading.run('maya', JSON.stringify({ name, dob, intention }), reading, req.userId);
 
     res.json({
       reading,
@@ -993,30 +1107,97 @@ router.post('/tibet', rateLimitMiddleware, async (req, res) => {
     const tibetData = calculateTibetan(birthYear);
     const full = hasFullAccess(req, ['tibet_full', 'tibet']);
 
-    const systemPrompt = `你是藏传命理师。用户${name}（${gender === 'M' ? '男' : '女'}）生于${birthYear}年，属${tibetData.zodiac}${tibetData.element}。
-生肖星宫（Mewa）：${tibetData.mewaNum}
-八卦（Parkha）：${tibetData.parkhaIdx}
-风马运势（Lungta）：${tibetData.lungta}
-关注：${concern || '整体运势'}
+    const tibetLang = lang === 'zh' ? 'Chinese (Simplified)' : lang === 'kr' ? 'Korean' : 'English';
+    const genderStr = gender === 'M' ? 'male' : 'female';
+    const systemPrompt = full
+      ? `You are a Tibetan astrologer (Tsipa) trained in the Bön and Buddhist traditions of Tibetan natal astrology (Kartsi). Write a comprehensive Tibetan destiny reading for ${name} (${genderStr}), born in ${birthYear}. IMPORTANT ACCURACY: ${birthYear} = ${tibetData.element} ${tibetData.zodiac} (${tibetData.elementCN}${tibetData.zodiacCN}). Element is ${tibetData.element} — do NOT use any other element. Mewa number is ${tibetData.mewaNum}, Parkha trigram is ${tibetData.parkha}, Lungta is ${tibetData.lungta}. Focus: ${concern || 'overall destiny'}.
 
-返回藏传命理报告，包含：
-1. 生肖与五行的性格解读
-2. 风马能量分析
-${full ? '3. Mewa数字宫深层意义\n4. Parkha八卦与人生阶段\n5. 3年运势预测与修行建议\n' : ''}
-融入藏传佛教智慧与轮回观。
-语言：${lang === 'zh' ? '中文' : lang === 'kr' ? '韩文' : '英文'}`;
+Write 10,000 words. Be deeply specific — this is a rare and precious system that very few people know.
+
+## 🐉 Your Animal Sign: ${tibetData.zodiac}
+Complete personality portrait of the ${tibetData.zodiac}: their nature in the three worlds (body, speech, mind), their relationship patterns, career strengths, shadow tendencies, and spiritual gifts. Reference the Buddhist teachings associated with this animal. 800 words.
+
+## 🔥 Your Element: ${tibetData.element} ${tibetData.zodiac}
+How the ${tibetData.element} element colors their ${tibetData.zodiac} nature — the specific expression of this element combination, life themes it creates, and how it manifests in personality, relationships, and fortune. 600 words.
+
+## 🔢 Mewa ${tibetData.mewaNum}: Your Sacred Number
+The nine Mewa numbers represent the nine palaces of destiny. Mewa ${tibetData.mewaNum}'s complete meaning — its color, element, direction, deity, and what it reveals about their fate, hidden strengths, and karmic lessons. 700 words.
+
+## ☯️ Parkha ${tibetData.parkhaIdx}: Your Trigram Palace
+The eight Parkha trigrams map life phases and relationships. Their specific Parkha — its symbols, its ruling element, favorable and unfavorable directions for home/work, and relationship compatibility patterns. 600 words.
+
+## 🐴 Lungta Analysis: Wind Horse Power — ${tibetData.lungta}
+The Lungta is the life force energy that carries fortune. Deep analysis of their Lungta level (${tibetData.lungta}): what this means for their overall luck this life, how to strengthen it, and which practices amplify their wind horse energy. 500 words.
+
+## 💕 Relationships & Marriage Compatibility
+Which animal signs are most compatible and most challenging — with specific reasons based on Tibetan elemental theory. Marriage timing, karmic partnerships, and relationship karma from past lives. 600 words.
+
+## 💼 Career, Wealth & Life Path
+Career directions that align with their Mewa and animal sign, wealth patterns, the age at which their fortune changes, and the specific professions Tibetan astrology recommends. 600 words.
+
+## 📅 3-Year Destiny Forecast (${birthYear > 2000 ? new Date().getFullYear() : new Date().getFullYear()}-${new Date().getFullYear()+2})
+Year-by-year analysis for each year: which years are auspicious (Lok), neutral, or challenging (Dü) for this animal sign, and specific guidance for each year. 700 words.
+
+## 🏔️ Health & Longevity
+Constitutional tendencies per Tibetan medicine, years of life force fluctuation, specific health areas to support, and Tibetan herbal/dietary wisdom for their element-animal combination. 500 words.
+
+## 🙏 Spiritual Practices & Protections
+Specific practices for their Mewa and animal sign: mantras, deity practices, offerings, auspicious and inauspicious days, and how to navigate challenging periods through Buddhist wisdom. 600 words.
+
+Language: ${tibetLang}. Tone: wise, compassionate, deeply grounded in Tibetan Buddhist and Bön tradition. Weave in relevant teachings and mythology.`
+
+      : `你是一位精通藏传命理（藏历算术，Kartsi）的算师，兼具文学家的笔触。为${name}（${genderStr}，生于${birthYear}年）写一份命运诗篇式的藏传命理解读。
+
+精度要求（绝对不允许更改）：${birthYear}年 = ${tibetData.element} ${tibetData.zodiac}（${tibetData.elementCN}${tibetData.zodiacCN}）。元素必须是${tibetData.element}。密瓦数：${tibetData.mewaNum}，帕卡卦：${tibetData.parkha}，风马（Lungta）：${tibetData.lungta}。
+
+═══ 写作风格要求（最重要，优先于一切） ═══
+
+这份报告必须像一部命运诗篇，而非百科全书词条。每一章都是旅途中的一步，每一段都带着${name}走得更深。
+
+具体要求：
+- 以"你的……"开头，沉浸式第二人称叙述，让读者感觉有人牵着手，穿越命运的山水
+- 场景感代替抽象：不说"你善于领导"，说"当所有人都沉默时，你总是那个先开口的人——不是因为你想掌控，而是因为你天生就看得见别人看不见的路"
+- 文言+现代融合：文字如三毛、余秋雨写人生感悟，流动而有温度，不是白话散文，也不是古文堆砌
+- 每个章节结尾，必须有一句画龙点睛的金句或禅语（一行，如诗），让人久久回味
+- 适当点缀藏传佛教意象（唐卡、曼荼罗、莲花生大士、白度母）和中文典故，不堆砌
+- 严禁使用bullet points（·或•）或大段列举
+- 不要从解释定义开始，直接进入${name}的命运叙述
+
+═══ 内容章节（每章都是旅途的一步） ═══
+
+### 🐑 你的生肖：${tibetData.zodiac}（${tibetData.zodiacCN}）
+不是介绍这个属相，而是描绘${name}内心世界的底色——她如何感知世界、如何爱、如何在受伤时退回内心的山谷。引用藏传佛教对这种动物的看法。以诗意金句结尾。500字。
+
+### ⚙️ ${tibetData.element}${tibetData.zodiac}：你的元素灵魂
+${tibetData.element}元素（${tibetData.element === 'Metal' ? '金——精准、收获与铁骨柔肠' : tibetData.element === 'Water' ? '水——流动、智慧与深不见底' : tibetData.element === 'Wood' ? '木——生长、创造与向阳而生' : tibetData.element === 'Fire' ? '火——激情、转化与照亮他人' : '土——稳重、滋养与大地根基'}）如何锻造了这头${tibetData.zodiac}。写出这个组合的独特炼金术，写出它的悖论之美。以诗意金句结尾。400字。
+
+### 🛡️ 你的松瓦（守护元素）
+松瓦是藏传命理独有的概念——汉地八字和西方占星都没有。为${name}解读她的守护元素：哪些颜色、方向、环境会激活她的好运，哪些会消耗她的生命能量。写成守护神话，不是列表。以诗意金句结尾。300字。
+
+### 🐴 你的风马（Lungta）：${tibetData.lungta}
+风马是藏人心中载着命运的神马，它的力量决定一个人一生的气运高低。${name}的风马强度是"${tibetData.lungta}"——这意味着什么？她的风马如何在人生际遇中显现？给她三个提升风马的具体修行。以诗意金句结尾。400字。
+
+### 🌟 天赋与业力
+${tibetData.element}${tibetData.zodiac}带来的三个深刻天赋，以及两个此生要转化的业力模式——不是抽象说教，而是像一面镜子，让${name}在其中认出自己。以诗意金句结尾。400字。
+
+### 📅 ${new Date().getFullYear()}年运势
+今年对${tibetData.zodiac}来说，哪些门是开的，哪些门要小心。写得具体，有时间感，有质感。300字。
+
+### 🙏 你的日常修行
+为${tibetData.element}${tibetData.zodiac}量身定制的一个具体修行——咒语、观想、供品，或一个有方向感的生活姿势。200字。
+
+---
+
+结尾：写一段温暖而具体的话——"你的完整藏传命盘还藏着……"，列出5件完整版才能揭晓的事（密瓦九宫分析、帕卡卦关系图谱、三年详运吉凶、婚姻兼容性、健康长寿分析），让人产生真实的好奇。
+
+语言：${tibetLang}。直接开始${name}的命运叙述，不要任何免责声明。`;
 
     const reading = await deepseekChat([
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: `请为我生成藏传命理报告` }
-    ], { maxTokens: full ? 2500 : 800 });
+      { role: 'user', content: `Please generate the Tibetan destiny reading for ${name}.` }
+    ], { maxTokens: full ? 16384 : 4000 });
 
-    insertReading(req, {
-      type: 'tibet',
-      input: { name, dob, gender, concern },
-      output: reading,
-      tier: full ? 'full' : 'basic'
-    });
+    insertReading.run('tibet', JSON.stringify({ name, dob, gender, concern }), reading, req.userId);
 
     res.json({
       reading,
