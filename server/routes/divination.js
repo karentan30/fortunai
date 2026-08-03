@@ -829,4 +829,205 @@ router.get('/daily-teaser', rateLimitMiddleware, async (req, res) => {
   }
 });
 
+// ══════════════════════════════════════════
+// 多轨命理扩展（Phase 1）
+// ══════════════════════════════════════════
+
+// 辅助：Jyotish 计算
+function calculateJyotish(dob, tob) {
+  try {
+    const d = new Date(dob);
+    const y = d.getFullYear(), m = d.getMonth() + 1, day = d.getDate();
+    const [h, min] = tob.split(':').map(Number);
+
+    // 简化Julian Day计算
+    const a = Math.floor((14 - m) / 12);
+    const yy = y + 4800 - a;
+    const mm = m + 12 * a - 3;
+    const jd = day + Math.floor((153*mm + 2) / 5) + 365*yy + Math.floor(yy/4) - Math.floor(yy/100) + Math.floor(yy/400) - 32045 + (h + min/60) / 24;
+
+    // Rashi（月亮星座）、Nakshatra（27月宿）近似计算
+    const moonLon = ((jd - 2451545) * 13.2 % 360 + 360) % 360;  // 月亮黄经近似
+    const rashi = Math.floor((moonLon + 23.85) / 30);  // Lahiri ayanamsa修正
+    const nakshatra = Math.floor((moonLon % 360) / 13.33);
+
+    // Lagna（上升点）需要精确时间和地点，这里返回近似值
+    const lagna = Math.floor((jd * 360 % 360) / 30);
+
+    return { jd: jd.toFixed(2), rashi: Math.min(rashi, 11), nakshatra: Math.min(nakshatra, 26), lagna };
+  } catch (e) {
+    return { jd: 0, rashi: 0, nakshatra: 0, lagna: 0 };
+  }
+}
+
+// 辅助：Tibetan 计算
+function calculateTibetan(birthYear) {
+  const zodiacNames = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪'];
+  const elementNames = ['木', '火', '土', '金', '水'];
+  const chineseZodiacIdx = (birthYear - 1900) % 12;
+  const elementIdx = (birthYear - 1900) % 5;
+  const mewaNum = ((birthYear - 1) % 9) + 1;
+  const parkhaIdx = (birthYear - 1) % 8;
+  const lungta = ((birthYear % 60) % 15) > 7 ? 'High' : 'Low';
+
+  return {
+    zodiac: zodiacNames[chineseZodiacIdx],
+    element: elementNames[elementIdx],
+    mewaNum,
+    parkhaIdx,
+    lungta,
+    year: birthYear
+  };
+}
+
+// 辅助：Maya Tzolkin 计算
+function getTzolkin(year, month, day) {
+  const a = Math.floor((14 - month) / 12);
+  const y = year + 4800 - a;
+  const m = month + 12 * a - 3;
+  const jd = day + Math.floor((153*m + 2) / 5) + 365*y + Math.floor(y/4) - Math.floor(y/100) + Math.floor(y/400) - 32045;
+  const kin = ((jd - 584283) % 260 + 260) % 260;
+  const daySignIdx = kin % 20;
+  const tone = (kin % 13) + 1;
+
+  const dayNames = ['Imix', 'Ik', 'Akbal', 'Kan', 'Chicchan', 'Cimi', 'Manik', 'Lamat', 'Muluc', 'Oc',
+                    'Chuen', 'Eb', 'Ben', 'Ix', 'Men', 'Cib', 'Caban', 'Etznab', 'Cauac', 'Ahau'];
+
+  return { kin, daySign: dayNames[daySignIdx], tone };
+}
+
+// POST /api/jyotish — 印度占星
+router.post('/jyotish', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { name, dob, tob, city, country, concern, lang } = req.body;
+    if (!dob || !tob) return res.status(400).json({ error: '出生日期和时间必填' });
+
+    const jyotishData = calculateJyotish(dob, tob);
+    const full = hasFullAccess(req, ['jyotish_full', 'jyotish']);
+
+    const systemPrompt = `你是一位权威的印度占星师（Jyotish）。用户信息：
+姓名：${name}
+出生地：${city}, ${country}
+关注：${concern || '整体运势'}
+返回一份权威的吠陀占星报告。包含：
+1. 月亮星座（Rashi）${jyotishData.rashi}的性格特质
+2. 月宫（Nakshatra）${jyotishData.nakshatra}的命运主线
+${full ? '3. 大运周期（Dasha）分析\n4. 12宫命盘深度解读\n5. 宝石与咒语建议\n' : ''}
+语言：${lang === 'zh' ? '中文' : lang === 'kr' ? '韩文' : '英文'}
+${full ? '' : '(免费版：仅提供基础星座信息)'}`;
+
+    const reading = await deepseekChat([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: `请为${name}生成他们的吠陀占星报告` }
+    ], { maxTokens: full ? 2500 : 800 });
+
+    insertReading(req, {
+      type: 'jyotish',
+      input: { name, dob, city, country, concern },
+      output: reading,
+      tier: full ? 'full' : 'basic'
+    });
+
+    res.json({
+      reading,
+      tier: full ? 'full' : 'basic',
+      data: jyotishData,
+      unlockUrl: full ? null : '/pages/jyotish.html#unlock'
+    });
+  } catch (err) {
+    console.error('[JYOTISH ERR]', err.message);
+    res.status(500).json({ error: '生成占星报告失败，请重试' });
+  }
+});
+
+// POST /api/maya — 玛雅历
+router.post('/maya', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { name, dob, intention, lang } = req.body;
+    if (!dob) return res.status(400).json({ error: '出生日期必填' });
+
+    const [year, month, day] = dob.split('-').map(Number);
+    const tzolkinData = getTzolkin(year, month, day);
+    const full = hasFullAccess(req, ['maya_full', 'maya']);
+
+    const systemPrompt = `你是玛雅历专家。用户${name}的神圣生日Kin为：${tzolkinData.kin}（${tzolkinData.tone} ${tzolkinData.daySign})。
+关注：${intention || '人生使命'}
+返回玛雅历解读，包含：
+1. Kin编号与日印的本质含义
+2. 阴影与天赋特质
+${full ? '3. 个人13天周期（Trecena）分析\n4. 260天轮回中的位置\n5. 人生使命模式\n' : ''}
+融入玛雅宇宙观与羽蛇神（Quetzalcoatl）的智慧。
+语言：${lang === 'zh' ? '中文' : lang === 'kr' ? '韩文' : '英文'}`;
+
+    const reading = await deepseekChat([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: `请为我生成玛雅Tzolkin生日解读` }
+    ], { maxTokens: full ? 2500 : 800 });
+
+    insertReading(req, {
+      type: 'maya',
+      input: { name, dob, intention },
+      output: reading,
+      tier: full ? 'full' : 'basic'
+    });
+
+    res.json({
+      reading,
+      tier: full ? 'full' : 'basic',
+      data: tzolkinData,
+      unlockUrl: full ? null : '/pages/maya.html#unlock'
+    });
+  } catch (err) {
+    console.error('[MAYA ERR]', err.message);
+    res.status(500).json({ error: '生成玛雅报告失败，请重试' });
+  }
+});
+
+// POST /api/tibet — 藏传命理
+router.post('/tibet', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { name, dob, gender, concern, lang } = req.body;
+    if (!dob) return res.status(400).json({ error: '出生年份必填' });
+
+    const birthYear = new Date(dob).getFullYear();
+    const tibetData = calculateTibetan(birthYear);
+    const full = hasFullAccess(req, ['tibet_full', 'tibet']);
+
+    const systemPrompt = `你是藏传命理师。用户${name}（${gender === 'M' ? '男' : '女'}）生于${birthYear}年，属${tibetData.zodiac}${tibetData.element}。
+生肖星宫（Mewa）：${tibetData.mewaNum}
+八卦（Parkha）：${tibetData.parkhaIdx}
+风马运势（Lungta）：${tibetData.lungta}
+关注：${concern || '整体运势'}
+
+返回藏传命理报告，包含：
+1. 生肖与五行的性格解读
+2. 风马能量分析
+${full ? '3. Mewa数字宫深层意义\n4. Parkha八卦与人生阶段\n5. 3年运势预测与修行建议\n' : ''}
+融入藏传佛教智慧与轮回观。
+语言：${lang === 'zh' ? '中文' : lang === 'kr' ? '韩文' : '英文'}`;
+
+    const reading = await deepseekChat([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: `请为我生成藏传命理报告` }
+    ], { maxTokens: full ? 2500 : 800 });
+
+    insertReading(req, {
+      type: 'tibet',
+      input: { name, dob, gender, concern },
+      output: reading,
+      tier: full ? 'full' : 'basic'
+    });
+
+    res.json({
+      reading,
+      tier: full ? 'full' : 'basic',
+      data: tibetData,
+      unlockUrl: full ? null : '/pages/tibet.html#unlock'
+    });
+  } catch (err) {
+    console.error('[TIBET ERR]', err.message);
+    res.status(500).json({ error: '生成藏传报告失败，请重试' });
+  }
+});
+
 module.exports = router;
