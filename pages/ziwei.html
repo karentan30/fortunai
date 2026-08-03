@@ -459,22 +459,40 @@ function handlePaidReturn() {
   try { saved = JSON.parse(localStorage.getItem('sy_last_ziwei') || 'null'); } catch(e){}
   if (!saved) return;
   if (window.history.replaceState) window.history.replaceState({}, '', '/pages/ziwei.html');
-  document.getElementById('resultWrap').innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--gold-light);font-size:12px;letter-spacing:0.08em">AI 正在为你生成完整紫微斗数深度解读…</div>';
-  fetch('/api/ziwei', {
+  var resultEl = document.getElementById('resultWrap');
+  resultEl.classList.add('show');
+  resultEl.innerHTML = '<div id="zwStreamBox" style="padding:20px 16px;font-size:12px;line-height:1.9;color:rgba(232,240,255,0.8);white-space:pre-wrap;letter-spacing:0.04em">紫微星正在为你生成完整深度解读，请稍候…</div>';
+  var token = localStorage.getItem('sy_token') || '';
+  fetch('/api/ziwei/stream', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      birthYear: saved.birthYear, birthMonth: saved.birthMonth,
-      birthDay: saved.birthDay, birthHour: saved.birthHour,
-      gender: saved.gender,
-      token: localStorage.getItem('sy_token') || ''
-    })
-  }).then(function(r){ return r.json(); }).then(function(d){
-    var content = d.reading || d.result || d.answer || '暂无回应';
-    document.getElementById('resultWrap').innerHTML = '<div style="padding:20px 16px;font-size:12px;line-height:1.9;color:rgba(232,240,255,0.8);white-space:pre-wrap">'+content.replace(/</g,'&lt;')+'</div>' +
-      '<div style="font-size:10px;color:rgba(201,168,76,0.3);text-align:center;letter-spacing:0.06em;padding:10px 20px">仅供娱乐参考</div>';
-  }).catch(function(){
-    document.getElementById('resultWrap').innerHTML = '<div style="text-align:center;padding:40px 20px;color:#c06060;font-size:12px">网络异常，请刷新重试</div>';
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token},
+    body: JSON.stringify({ birthYear: saved.birthYear, birthMonth: saved.birthMonth, birthDay: saved.birthDay, birthHour: saved.birthHour, gender: saved.gender })
+  }).then(function(res) {
+    if (!res.ok) throw new Error('stream error');
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder();
+    var buf = '', accumulated = '';
+    var box = document.getElementById('zwStreamBox');
+    function read() {
+      reader.read().then(function(r) {
+        if (r.done) { if (box) box.innerHTML = '<div style="white-space:pre-wrap">'+accumulated.replace(/</g,'&lt;')+'</div><div style="font-size:10px;color:rgba(201,168,76,0.3);text-align:center;padding:10px 20px">仅供娱乐参考</div>'; return; }
+        buf += decoder.decode(r.value, {stream: true});
+        var lines = buf.split('\n'); buf = lines.pop();
+        lines.forEach(function(line) {
+          if (!line.startsWith('data: ')) return;
+          try {
+            var ev = JSON.parse(line.slice(6));
+            if (ev.type === 'chunk') { accumulated += ev.content; if (box) box.textContent = accumulated; }
+            else if (ev.type === 'done') { if (box) box.innerHTML = '<div style="white-space:pre-wrap">'+accumulated.replace(/</g,'&lt;')+'</div><div style="font-size:10px;color:rgba(201,168,76,0.3);text-align:center;padding:10px 20px">仅供娱乐参考</div>'; }
+          } catch(e) {}
+        });
+        read();
+      }).catch(function() { if (box) box.textContent = '网络异常，请刷新重试'; });
+    }
+    read();
+  }).catch(function() {
+    var box = document.getElementById('zwStreamBox');
+    if (box) box.textContent = '网络异常，请刷新重试';
   });
 }
 function injectDisclaimer(containerId) {

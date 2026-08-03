@@ -525,6 +525,147 @@ ${nameB}：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined && p2Hour 
 });
 
 // ══════════════════════════════════════════
+// POST /api/tarot/stream — 塔罗流式（SSE）
+// ══════════════════════════════════════════
+router.post('/tarot/stream', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { cards, question, topic } = req.body;
+    if (!question) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: '请提供你的问题' });
+    }
+    const cardDesc = cards && cards.length
+      ? cards.map((c, i) => `第${i+1}张（${c.position||'位置'+(i+1)}）：${c.name}${c.reversed?'（逆位）':'（正位）'}`).join('\n')
+      : '使用随机三张塔罗牌（过去-现在-未来）';
+    const topicMap = { love: '感情姻缘', wealth: '财运事业', health: '健康运势', decision: '抉择指引', year: '年度运势' };
+    const systemPrompt = `你是一位融合东西方智慧的塔罗占卜师，从业二十年，解读过上万个案。你像一位知心姐姐，温暖有力量，说话柔和但直抵人心。你能让求助者在迷茫中看到光，在困惑中找到方向。记住：逆位牌不是坏牌，是提醒；困难不是终点，是转折。每次回答至少2000字。语言：简体中文。`;
+    const userMsg = `问题：${question}\n主题：${topicMap[topic] || topic || '综合'}\n${cardDesc ? '牌面信息：\n' + cardDesc : '使用随机三张塔罗牌（过去-现在-未来）'}\n\n请按以下结构出具完整塔罗解读：\n## 一、整体格局概览（200-300字）\n## 二、逐牌详细解读（每张牌300-400字）\n## 三、综合解读与能量走向（300-400字）\n## 四、3条可执行的行动建议\n## 五、占卜师的悄悄话（100-150字）`;
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.flushHeaders();
+    res.write(`data: ${JSON.stringify({ type: 'meta' })}\n\n`);
+
+    const streamBody = await deepseekStream([{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }], { maxTokens: 8192, timeout: 300000 });
+    const reader = streamBody.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '', buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try { const json = JSON.parse(raw); const c = json.choices?.[0]?.delta?.content || ''; if (c) { fullText += c; res.write(`data: ${JSON.stringify({ type: 'chunk', content: c })}\n\n`); } } catch(e) {}
+      }
+    }
+    insertReading.run('tarot', JSON.stringify(req.body), fullText, req.userId);
+    const ctxId = saveQaContext('tarot', req.body, fullText);
+    res.write(`data: ${JSON.stringify({ type: 'done', contextId: ctxId })}\n\n`);
+    res.end();
+  } catch(err) {
+    console.error('[TAROT-STREAM ERR]', err.message);
+    try { res.write(`data: ${JSON.stringify({ type: 'error', message: '生成失败' })}\n\n`); res.end(); } catch(e) {}
+  }
+});
+
+// ══════════════════════════════════════════
+// POST /api/ziwei/stream — 紫微斗数流式（SSE）
+// ══════════════════════════════════════════
+router.post('/ziwei/stream', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { birthYear, birthMonth, birthDay, birthHour, gender } = req.body;
+    if (!birthYear || !birthMonth || !birthDay || birthHour === undefined) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: '紫微斗数需要出生年月日时' });
+    }
+    const systemPrompt = '你是一位精通紫微斗数的命理师，师承中州派，从业30年，批过上万张命盘。你深谙紫微斗数精髓，能从命盘中看透一个人的一生轨迹。你的语言通俗易懂，不用晦涩术语唬人——要用大白话让从没学过紫微的人也能听懂。你的分析必须专业、深刻、具体。每次回答至少4000字。用Markdown格式输出，使用标题、加粗让报告结构清晰。语言：简体中文。';
+    const userMsg = `出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour}时\n性别：${gender === 'male' ? '男' : '女'}\n\n请按以下结构出具完整紫微斗数命理报告（总字数不少于4000字）：\n## 一、命盘基本格局（200-300字）\n## 二、命宫主星深度解读（400-500字）\n## 三、主要宫位逐个分析（每个宫位200-300字，至少8个宫位）\n## 四、四化飞星分析（200-300字）\n## 五、当前大运详批（400-500字）\n## 六、流年关键点（300-400字）\n## 七、开运建议（200-300字）\n## 八、一句话点睛（50-100字）`;
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.flushHeaders();
+    res.write(`data: ${JSON.stringify({ type: 'meta' })}\n\n`);
+
+    const streamBody = await deepseekStream([{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }], { maxTokens: 8192, timeout: 300000 });
+    const reader = streamBody.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '', buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try { const json = JSON.parse(raw); const c = json.choices?.[0]?.delta?.content || ''; if (c) { fullText += c; res.write(`data: ${JSON.stringify({ type: 'chunk', content: c })}\n\n`); } } catch(e) {}
+      }
+    }
+    insertReading.run('ziwei', JSON.stringify(req.body), fullText, req.userId);
+    const ctxId = saveQaContext('ziwei', req.body, fullText);
+    res.write(`data: ${JSON.stringify({ type: 'done', contextId: ctxId })}\n\n`);
+    res.end();
+  } catch(err) {
+    console.error('[ZIWEI-STREAM ERR]', err.message);
+    try { res.write(`data: ${JSON.stringify({ type: 'error', message: '生成失败' })}\n\n`); res.end(); } catch(e) {}
+  }
+});
+
+// ══════════════════════════════════════════
+// POST /api/fengshui/stream — 风水流式（SSE）
+// ══════════════════════════════════════════
+router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { houseDirection, floor, rooms, occupants, address, question } = req.body;
+    if (!houseDirection) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: '请提供房屋朝向' });
+    }
+    const systemPrompt = '你是一位精通八宅风水与玄空飞星的风水大师，从业30年。语气亲切专业，给出具体可操作的建议。风格：命运诗篇——每一章是生活的一步，不用bullet points，用连贯段落，语言温暖有文学质感。至少3000字。简体中文。';
+    const userMsg = `房屋朝向：${houseDirection}\n楼层：${floor || '未提供'}\n房间布局：${rooms || '未提供'}\n居住成员：${occupants || '未提供'}\n地址：${address || '未提供'}\n问题：${question || '请综合分析房屋风水'}\n\n请按以下结构详细分析（3000+字）：\n## 🏠 房屋格局总评\n## 🧭 八宅吉凶位分析（每个方位逐一）\n## 🛏️ 各房间风水建议\n## 💰 财位分析及催财布局\n## ❤️ 桃花位/人缘位布局\n## 🏃 健康位分析\n## 🪴 化解与开运建议\n## 🎯 一句话总结`;
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.flushHeaders();
+    res.write(`data: ${JSON.stringify({ type: 'meta' })}\n\n`);
+
+    const streamBody = await deepseekStream([{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }], { maxTokens: 8192, timeout: 300000 });
+    const reader = streamBody.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '', buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try { const json = JSON.parse(raw); const c = json.choices?.[0]?.delta?.content || ''; if (c) { fullText += c; res.write(`data: ${JSON.stringify({ type: 'chunk', content: c })}\n\n`); } } catch(e) {}
+      }
+    }
+    insertReading.run('fengshui', JSON.stringify({ houseDirection, floor, rooms, occupants, address, question }), fullText, req.userId);
+    res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+    res.end();
+  } catch(err) {
+    console.error('[FENGSHUI-STREAM ERR]', err.message);
+    try { res.write(`data: ${JSON.stringify({ type: 'error', message: '生成失败' })}\n\n`); res.end(); } catch(e) {}
+  }
+});
+
+// ══════════════════════════════════════════
 // POST /api/fengshui — AI风水评测
 // ══════════════════════════════════════════
 router.post('/fengshui', rateLimitMiddleware, async (req, res) => {

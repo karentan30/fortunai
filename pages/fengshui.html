@@ -265,24 +265,44 @@ function generateReport() {
   var loadingDuration = steps.length * 350 + 400;
   var apiCalled = false;
 
-  fetch('/api/fengshui', {
+  var token = localStorage.getItem('sy_token') || '';
+  fetch('/api/fengshui/stream', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(payload)
-  }).then(function(r) {
-    if (!r.ok) throw new Error('API error: ' + r.status);
-    return r.json();
-  }).then(function(data) {
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ houseDirection: payload.facing, floor: payload.floor, rooms: payload.layout, occupants: payload.residents, address: payload.address, question: payload.question })
+  }).then(function(res) {
+    if (!res.ok) throw new Error('API error: ' + res.status);
     apiCalled = true;
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder();
+    var buf = '', accumulated = '';
     document.getElementById('loadingScreen').classList.remove('show');
-    btn.disabled = false;
-    btn.textContent = '评测风水';
-    if (data && (data.report || data.text || data.content)) {
-      showReport(data.report || data.text || data.content);
-    } else {
-      showToast('返回数据异常，请重试', 'error');
-      document.getElementById('inputScreen').style.display = 'block';
+    var reportEl = document.getElementById('reportScreen');
+    reportEl.classList.add('show');
+    reportEl.innerHTML = '<div style="padding:16px;font-size:12px;color:rgba(255,245,220,0.5);letter-spacing:0.06em;line-height:2;white-space:pre-wrap;font-family:Noto Serif SC,serif" id="streamPreview"></div>';
+    var preview = document.getElementById('streamPreview');
+    function read() {
+      reader.read().then(function(r) {
+        if (r.done) {
+          btn.disabled = false; btn.textContent = '评测风水';
+          showReport(accumulated);
+          return;
+        }
+        buf += decoder.decode(r.value, { stream: true });
+        var lines = buf.split('\n'); buf = lines.pop();
+        lines.forEach(function(line) {
+          if (!line.startsWith('data: ')) return;
+          try {
+            var ev = JSON.parse(line.slice(6));
+            if (ev.type === 'chunk') { accumulated += ev.content; if (preview) preview.textContent = accumulated; }
+            else if (ev.type === 'done') { btn.disabled = false; btn.textContent = '评测风水'; showReport(accumulated); return; }
+            else if (ev.type === 'error') { showError(ev.message || '生成失败'); }
+          } catch(e) {}
+        });
+        read();
+      }).catch(function(e) { showError('读取流失败，请重试'); });
     }
+    read();
   }).catch(function(err) {
     apiCalled = true;
     document.getElementById('loadingScreen').classList.remove('show');
@@ -290,16 +310,6 @@ function generateReport() {
     btn.textContent = '评测风水';
     showError(err.message || '网络异常，请稍后重试');
   });
-
-  // Fallback: if API takes too long but steps finished, show error
-  setTimeout(function(){
-    if (!apiCalled) {
-      document.getElementById('loadingScreen').classList.remove('show');
-      btn.disabled = false;
-      btn.textContent = '评测风水';
-      showError('请求超时，请稍后重试');
-    }
-  }, 15000);
 }
 
 function showError(msg) {
