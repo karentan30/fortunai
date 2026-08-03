@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5bbfa0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>ShenYuan · Daily Fortune · Cosmic Guidance</title>
+<meta name="description" content="ShenYuan Daily Fortune — Your BaZi-powered daily cosmic guidance: elemental energy, lucky color, affirmation, and more.">
+<meta property="og:title" content="ShenYuan · Daily Fortune · Your Cosmic Guidance">
+<meta property="og:description" content="Daily BaZi fortune — elemental energy, lucky color, personalized affirmation based on your birth chart.">
+<meta property="og:image" content="/og-card.png">
+<meta property="og:url" content="https://shenyuan.mylumee.cn/pages/daily-en.html">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ShenYuan · Daily Fortune">
+<meta name="twitter:description" content="Daily BaZi fortune powered by ancient Chinese metaphysics and AI.">
+<link rel="canonical" href="https://shenyuan.mylumee.cn/pages/daily-en.html">
+<link rel="alternate" hreflang="en" href="https://shenyuan.mylumee.cn/pages/daily-en.html">
+<link rel="alternate" hreflang="zh" href="https://shenyuan.mylumee.cn/pages/daily.html">
+<link rel="alternate" hreflang="zh-CN" href="https://shenyuan.mylumee.cn/pages/daily.html">
+<link rel="alternate" hreflang="x-default" href="https://shenyuan.mylumee.cn/pages/daily-en.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/css/common.css">
+<link rel="manifest" href="/manifest.json">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --jade-deep:  #3d9e82;
+  --jade-main:  #5bbfa0;
+  --jade-mid:   #8dd9bf;
+  --jade-bright:#c8f0e0;
+  --gold:       #c9a84c;
+  --gold-light: #e8d08a;
+  --gold-deep:  #a07830;
+  --ink:        rgba(40,35,30,0.92);
+  --ink-mid:    rgba(80,70,55,0.7);
+  --ink-light:  rgba(80,70,55,0.5);
+  --bg:         #faf8f5;
+  --bg-card:    #ffffff;
+}
+
+html, body {
+  background: var(--bg);
+  font-family: 'Cormorant Garamond', 'Noto Serif SC', Georgia, serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+body {
+  max-width: 390px;
+  margin: 0 auto;
+  min-height: 100vh;
+  overflow-y: auto;
+  padding-bottom: 100px;
+}
+
+/* Dawn gradient */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse at 50% -10%, rgba(201,168,76,0.15) 0%, transparent 60%),
+    radial-gradient(ellipse at 50% 12%, rgba(201,168,76,0.08) 0%, transparent 45%),
+    radial-gradient(ellipse at 30% 30%, rgba(91,191,160,0.05) 0%, transparent 40%);
+  pointer-events: none; z-index: 0;
+}
+
+.back-btn {
+  position: fixed; top: 16px; left: 16px; z-index: 99;
+  background: none; border: none;
+  font-family: 'Cormorant Garamond', serif; font-size: 14px;
+  color: rgba(201,168,76,0.7); letter-spacing: 0.06em; cursor: pointer; padding: 4px 0;
+}
+
+.lang-switch {
+  position: fixed; top: 14px; right: 14px; z-index: 99;
+  background: rgba(91,191,160,0.08); border: 1px solid rgba(91,191,160,0.3);
+  border-radius: 20px; padding: 6px 14px; font-size: 11px;
+  color: var(--jade-deep); text-decoration: none; letter-spacing: .05em;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+/* ── Date hero ── */
+.date-hero {
+  position: relative; z-index: 1;
+  width: 100%; padding: 52px 20px 28px;
+  text-align: center;
+}
+.date-en-small {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 10px; font-style: italic;
+  letter-spacing: 0.4em; color: rgba(201,168,76,0.55);
+  margin-bottom: 6px; text-transform: uppercase;
+}
+.date-main {
+  font-size: 16px; letter-spacing: 0.15em;
+  color: var(--ink); margin-bottom: 4px;
+}
+.date-ganzhi {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; letter-spacing: 0.18em;
+  color: var(--gold); font-weight: 400;
+  margin-bottom: 16px;
+  background: linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a,#c9a84c,#8a6420);
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gold-shimmer 4s linear infinite;
+}
+@keyframes gold-shimmer { to { background-position: -200% center; } }
+
+.gold-line {
+  width: 50px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 0 auto;
+}
+
+/* ── Streak badge ── */
+#streakBadge {
+  text-align: center;
+  padding: 12px 16px 4px;
+  font-size: 14px;
+  color: #9a7529;
+  letter-spacing: .05em;
+  position: relative; z-index: 1;
+}
+
+/* ── Input form ── */
+.input-wrap {
+  position: relative; z-index: 1;
+  margin: 0 16px 16px;
+  background: var(--bg-card);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 10px;
+  padding: 18px 16px;
+}
+.form-title {
+  font-size: 11px; letter-spacing: 0.2em;
+  color: var(--gold); margin-bottom: 14px;
+  text-transform: uppercase;
+}
+.field-group {
+  background: rgba(201,168,76,0.04);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 12px; overflow: hidden; margin-bottom: 10px;
+}
+.field-row {
+  display: flex; align-items: center;
+  padding: 0 14px;
+  border-bottom: 1px solid rgba(201,168,76,0.08);
+}
+.field-row:last-child { border-bottom: none; }
+.field-label {
+  font-size: 11px; color: var(--ink-mid);
+  letter-spacing: 0.06em; min-width: 72px; flex-shrink: 0;
+}
+.field-select {
+  flex: 1; background: none; border: none; outline: none;
+  font-family: 'Cormorant Garamond', serif; font-size: 14px;
+  color: var(--ink); padding: 12px 8px;
+  letter-spacing: 0.04em; -webkit-appearance: none;
+}
+.field-select option { background: var(--bg-card); color: var(--ink); }
+.gender-row { display: flex; gap: 8px; margin-bottom: 12px; }
+.gender-opt {
+  flex: 1; background: rgba(201,168,76,0.04);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 10px; padding: 10px 0;
+  text-align: center; font-size: 13px;
+  color: var(--ink-mid); letter-spacing: 0.06em;
+  cursor: pointer; transition: all 0.2s;
+}
+.gender-opt.selected { border-color: var(--gold); background: rgba(201,168,76,0.12); color: var(--gold-deep); }
+
+/* ── Loading ── */
+.loading-screen {
+  display: none; position: relative; z-index: 1;
+  flex-direction: column; align-items: center;
+  padding: 60px 20px; gap: 16px;
+}
+.loading-screen.show { display: flex; }
+.load-glyph {
+  font-size: 56px; color: rgba(201,168,76,0.3);
+  font-weight: 300; animation: load-breathe 2s ease-in-out infinite;
+}
+@keyframes load-breathe { 0%,100%{opacity:0.3;transform:scale(0.97)} 50%{opacity:0.7;transform:scale(1.03)} }
+.load-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic; font-size: 15px;
+  color: rgba(201,168,76,0.55); letter-spacing: 0.2em;
+}
+.load-steps { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+.load-step {
+  font-size: 11px; color: rgba(80,70,55,0.5);
+  letter-spacing: 0.08em; animation: step-fade 0.5s ease-out both;
+}
+@keyframes step-fade { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:none} }
+
+/* ── Energy bars ── */
+.energy-wrap {
+  position: relative; z-index: 1;
+  margin: 0 16px 12px;
+  background: var(--bg-card);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 10px;
+  padding: 18px 16px;
+}
+.energy-title {
+  font-size: 10px; letter-spacing: 0.22em;
+  color: var(--gold); margin-bottom: 14px;
+  text-transform: uppercase;
+}
+.energy-rows { display: flex; flex-direction: column; gap: 9px; }
+.e-row { display: flex; align-items: center; gap: 10px; }
+.e-label { font-size: 11px; width: 38px; color: var(--ink-mid); flex-shrink: 0; }
+.e-bar-bg { flex: 1; height: 5px; background: rgba(201,168,76,0.1); border-radius: 3px; overflow: hidden; }
+.e-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s ease; }
+.e-bar-fill.w { background: linear-gradient(90deg, #4a9fd4, #7ac4e8); }
+.e-bar-fill.f { background: linear-gradient(90deg, #e05a30, #f08060); }
+.e-bar-fill.e { background: linear-gradient(90deg, #c9a84c, #e8d08a); }
+.e-bar-fill.m { background: linear-gradient(90deg, #5bbfa0, #8dd9bf); }
+.e-bar-fill.me { background: linear-gradient(90deg, #888, #bbb); }
+.e-pct { font-size: 10px; width: 28px; text-align: right; color: var(--ink-light); flex-shrink: 0; }
+
+/* ── Cards ── */
+.cards-wrap {
+  position: relative; z-index: 1;
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 8px; padding: 0 16px 12px;
+}
+.today-card {
+  background: var(--bg-card);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 8px; padding: 14px 12px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.tc-label { font-size: 9px; letter-spacing: 0.22em; color: var(--gold); opacity: 0.75; text-transform: uppercase; }
+.tc-value { font-size: 16px; font-weight: 400; letter-spacing: 0.06em; color: var(--ink); }
+.tc-sub { font-size: 10px; color: var(--ink-light); letter-spacing: 0.03em; line-height: 1.6; }
+.color-swatch { width: 28px; height: 28px; border-radius: 50%; margin-bottom: 2px; }
+
+/* ── Affirmation ── */
+.affirmation-wrap {
+  position: relative; z-index: 1;
+  margin: 0 16px 12px;
+  background: linear-gradient(135deg, rgba(201,168,76,0.06) 0%, rgba(91,191,160,0.04) 100%);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 10px; padding: 20px 18px;
+}
+.aff-label { font-size: 9px; letter-spacing: 0.3em; color: rgba(201,168,76,0.6); margin-bottom: 10px; text-transform: uppercase; }
+.aff-text { font-size: 15px; line-height: 1.85; color: var(--ink); letter-spacing: 0.03em; font-weight: 300; font-style: italic; }
+.aff-text em { font-style: normal; color: var(--jade-deep); }
+
+/* ── Member upsell ── */
+.member-hint {
+  position: relative; z-index: 1;
+  margin: 0 16px 12px;
+  background: linear-gradient(135deg, rgba(91,191,160,0.06), rgba(201,168,76,0.04));
+  border: 1px solid rgba(91,191,160,0.2);
+  border-radius: 10px; padding: 16px;
+  display: flex; align-items: flex-start; gap: 12px;
+}
+.member-hint-icon { font-size: 24px; flex-shrink: 0; margin-top: 2px; }
+.member-hint-body { flex: 1; }
+.member-hint-title { font-size: 13px; letter-spacing: 0.08em; color: var(--jade-deep); margin-bottom: 4px; }
+.member-hint-sub { font-size: 11px; color: var(--ink-mid); line-height: 1.6; letter-spacing: 0.02em; }
+.member-hint-btn {
+  display: inline-block; margin-top: 10px;
+  padding: 8px 18px;
+  background: linear-gradient(135deg, var(--jade-deep), var(--jade-main));
+  border-radius: 20px; color: #fff;
+  font-size: 12px; letter-spacing: 0.08em; text-decoration: none;
+  font-family: 'Cormorant Garamond', serif;
+  transition: all 0.2s;
+}
+.member-hint-btn:hover { filter: brightness(1.1); }
+
+/* ── Tomorrow teaser ── */
+#tomorrowTeaser {
+  margin: 20px 16px; padding: 16px;
+  background: rgba(201,168,76,0.06);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 12px; text-align: center;
+  position: relative; z-index: 1;
+}
+
+/* ── Subscribe CTA ── */
+.sub-wrap {
+  position: relative; z-index: 1;
+  margin: 0 16px 16px;
+  background: var(--bg-card);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 10px; padding: 18px 16px;
+}
+.sub-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.sub-title { font-size: 14px; letter-spacing: 0.08em; color: var(--ink); }
+.sub-price { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: var(--gold); }
+.sub-price .per { font-size: 11px; color: var(--ink-light); }
+.sub-perks { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+.sub-perk { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--ink-mid); letter-spacing: 0.03em; }
+.perk-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--jade-main); flex-shrink: 0; }
+
+.btn-gold {
+  width: 100%; padding: 14px 0;
+  background: linear-gradient(135deg, var(--gold-deep), var(--gold), var(--gold-light), var(--gold));
+  border: none; border-radius: 14px;
+  color: rgba(26,26,24,0.95);
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px; font-weight: 500; letter-spacing: 0.15em;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(201,168,76,0.3);
+  transition: all 0.25s;
+}
+.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(201,168,76,0.48); }
+.btn-gold:active { transform: scale(0.97); }
+
+/* Share card */
+#shareCardWrap { display: none; margin: 20px 0 8px; text-align: center; position: relative; z-index: 1; }
+
+/* Disclaimer */
+.sy-disclaimer {
+  font-size: 10px; color: rgba(201,168,76,0.4);
+  text-align: center; letter-spacing: 0.06em;
+  padding: 10px 20px; position: relative; z-index: 1;
+}
+
+/* Hover lift */
+.energy-wrap, .input-wrap, .sub-wrap, .today-card, .affirmation-wrap, .member-hint {
+  transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+}
+.energy-wrap:hover, .input-wrap:hover, .sub-wrap:hover, .today-card:hover, .affirmation-wrap:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.08);
+  border-color: rgba(201,168,76,0.25);
+}
+
+/* Fade-up animation */
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:none} }
+.page-enter { animation: fadeUp 0.6s ease both; }
+.page-enter-d1 { animation-delay: .1s; }
+.page-enter-d2 { animation-delay: .2s; }
+.page-enter-d3 { animation-delay: .3s; }
+
+/* Star dust */
+.stardust span { position:absolute; width:3px; height:3px; background:rgba(201,168,76,0.6); border-radius:50%; animation:twinkle 3s ease-in-out infinite; opacity:0; transition:opacity .5s; }
+@keyframes twinkle { 0%,100%{opacity:0;transform:scale(0.8)} 50%{opacity:0.8;transform:scale(1.2)} }
+.bottom-gradient { position:fixed; bottom:0; left:0; right:0; height:80px; background:linear-gradient(to top, rgba(250,248,245,1) 0%, transparent 100%); pointer-events:none; z-index:998; }
+</style>
+</head>
+<body>
+<div class="stardust" id="stardust"></div>
+<div class="bottom-gradient"></div>
+
+<button class="back-btn" onclick="history.back()">‹ Back</button>
+<a class="lang-switch" href="/pages/daily.html">中文版</a>
+
+<!-- Date hero -->
+<div class="date-hero page-enter page-enter-d1">
+  <div class="date-en-small">Daily Fortune · Cosmic Guidance</div>
+  <div class="date-main" id="dateMain"></div>
+  <div class="date-ganzhi" id="dateGanzhi">✦</div>
+  <div class="gold-line"></div>
+</div>
+
+<!-- Streak badge -->
+<div id="streakBadge" style="display:none"></div>
+
+<!-- Input form -->
+<div class="input-wrap page-enter page-enter-d2" id="inputWrap">
+  <div class="form-title">Enter Your Birth Details</div>
+  <div class="field-group">
+    <div class="field-row">
+      <span class="field-label">Birth Year</span>
+      <select class="field-select" id="year"></select>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Month</span>
+      <select class="field-select" id="month"></select>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Day</span>
+      <select class="field-select" id="day"></select>
+    </div>
+    <div class="field-row">
+      <span class="field-label">Birth Hour</span>
+      <select class="field-select" id="hour">
+        <option value="">Unknown</option>
+        <option value="0">Zi 子 (23:00–01:00)</option>
+        <option value="1">Chou 丑 (01:00–03:00)</option>
+        <option value="2">Yin 寅 (03:00–05:00)</option>
+        <option value="3">Mao 卯 (05:00–07:00)</option>
+        <option value="4">Chen 辰 (07:00–09:00)</option>
+        <option value="5">Si 巳 (09:00–11:00)</option>
+        <option value="6">Wu 午 (11:00–13:00)</option>
+        <option value="7">Wei 未 (13:00–15:00)</option>
+        <option value="8">Shen 申 (15:00–17:00)</option>
+        <option value="9">You 酉 (17:00–19:00)</option>
+        <option value="10">Xu 戌 (19:00–21:00)</option>
+        <option value="11">Hai 亥 (21:00–23:00)</option>
+      </select>
+    </div>
+  </div>
+  <div class="gender-row">
+    <div class="gender-opt selected" onclick="selectGender(this,'male')">Male</div>
+    <div class="gender-opt" onclick="selectGender(this,'female')">Female</div>
+  </div>
+  <button class="btn-gold" onclick="getDailyReading()" id="genBtn">Reveal Today's Fortune</button>
+  <p style="text-align:center;font-size:10px;color:var(--ink-light);letter-spacing:.06em;margin-top:8px">Fortune is generated from your authentic BaZi birth chart</p>
+</div>
+
+<!-- Loading -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="load-glyph">☯</div>
+  <div class="load-text">Consulting the heavens…</div>
+  <div class="load-steps" id="loadSteps"></div>
+</div>
+
+<!-- Results -->
+<div id="resultArea" style="display:none">
+
+  <div class="energy-wrap">
+    <div class="energy-title">Today's Elemental Energy</div>
+    <div class="energy-rows" id="energyRows">
+      <div class="e-row"><div class="e-label">Wood 木</div><div class="e-bar-bg"><div class="e-bar-fill m" style="width:0%"></div></div><div class="e-pct" id="pctWood">0%</div></div>
+      <div class="e-row"><div class="e-label">Fire 火</div><div class="e-bar-bg"><div class="e-bar-fill f" style="width:0%"></div></div><div class="e-pct" id="pctFire">0%</div></div>
+      <div class="e-row"><div class="e-label">Earth 土</div><div class="e-bar-bg"><div class="e-bar-fill e" style="width:0%"></div></div><div class="e-pct" id="pctEarth">0%</div></div>
+      <div class="e-row"><div class="e-label">Metal 金</div><div class="e-bar-bg"><div class="e-bar-fill me" style="width:0%"></div></div><div class="e-pct" id="pctMetal">0%</div></div>
+      <div class="e-row"><div class="e-label">Water 水</div><div class="e-bar-bg"><div class="e-bar-fill w" style="width:0%"></div></div><div class="e-pct" id="pctWater">0%</div></div>
+    </div>
+  </div>
+
+  <div class="cards-wrap">
+    <div class="today-card">
+      <div class="tc-label">Lucky Color</div>
+      <div class="color-swatch" id="luckyColorSwatch" style="background:#5bbfa0"></div>
+      <div class="tc-value" id="luckyColorName">—</div>
+      <div class="tc-sub" id="luckyColorHint">—</div>
+    </div>
+    <div class="today-card">
+      <div class="tc-label">Lucky Number</div>
+      <div class="tc-value" style="font-size:36px;color:var(--gold);font-family:'Cormorant Garamond',serif" id="luckyNumber">—</div>
+      <div class="tc-sub" id="luckyNumberHint">—</div>
+    </div>
+    <div class="today-card">
+      <div class="tc-label">Auspicious</div>
+      <div class="tc-value" style="font-size:13px" id="yiText">—</div>
+      <div class="tc-sub" id="yiHint">—</div>
+    </div>
+    <div class="today-card">
+      <div class="tc-label">Avoid Today</div>
+      <div class="tc-value" style="font-size:13px" id="jiText">—</div>
+      <div class="tc-sub" id="jiHint">—</div>
+    </div>
+  </div>
+
+  <!-- Daily affirmation -->
+  <div class="affirmation-wrap">
+    <div class="aff-label">Today's Cosmic Guidance · Your Personalized Reading</div>
+    <div class="aff-text" id="affirmationText"></div>
+  </div>
+
+  <!-- Member upsell (shown always after reading) -->
+  <div class="member-hint">
+    <div class="member-hint-icon">👑</div>
+    <div class="member-hint-body">
+      <div class="member-hint-title">Members get personalized fortune based on your BaZi chart</div>
+      <div class="member-hint-sub">Unlock unlimited AI readings, in-depth monthly BaZi report, compatibility analysis, and career + wealth forecasts — all tailored to your unique birth chart.</div>
+      <a class="member-hint-btn" href="/pages/member.html">Unlock with Membership · $6.90/mo →</a>
+    </div>
+  </div>
+
+  <!-- Share card -->
+  <div id="shareCardWrap">
+    <canvas id="dailyShareCanvas" width="1080" height="1080" style="display:none"></canvas>
+    <img id="dailyShareImg" style="width:100%;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.15)" alt="Daily Fortune Card">
+    <div style="display:flex;gap:8px;margin-top:10px;justify-content:center">
+      <button onclick="downloadDailyCard()" style="flex:1;max-width:160px;padding:11px 0;background:linear-gradient(135deg,#c9a84c,#a8823a);border:none;border-radius:12px;color:#fff;font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:.05em">⬇ Save Image</button>
+      <button onclick="shareDailyCard()" style="flex:1;max-width:160px;padding:11px 0;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:12px;color:#c9a84c;font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:.05em">↗ Share</button>
+    </div>
+    <div style="font-size:10px;color:rgba(201,168,76,0.4);margin-top:6px;letter-spacing:.04em">Long-press to save · Share to Instagram / X</div>
+  </div>
+
+  <!-- Tomorrow teaser -->
+  <div id="tomorrowTeaser" style="display:none">
+    <div style="font-size:11px;color:#9a7529;letter-spacing:.06em;margin-bottom:8px">✦ Tomorrow's Fortune Preview ✦</div>
+    <div id="tomorrowText" style="font-size:14px;color:#3a2a0e;line-height:1.7;font-style:italic">Loading…</div>
+    <div style="font-size:11px;color:#b09060;margin-top:10px">Come back tomorrow for the full reading · Updated daily</div>
+  </div>
+
+</div>
+
+<!-- Subscribe CTA -->
+<div class="sub-wrap">
+  <div class="sub-head">
+    <div class="sub-title">Daily Fortune Subscription</div>
+    <div class="sub-price">$4.90<span class="per">/mo</span></div>
+  </div>
+  <div class="sub-perks">
+    <div class="sub-perk"><div class="perk-dot"></div>Daily personalized affirmation (based on your BaZi)</div>
+    <div class="sub-perk"><div class="perk-dot"></div>Elemental energy scores · lucky color &amp; number</div>
+    <div class="sub-perk"><div class="perk-dot"></div>Auspicious activities &amp; things to avoid</div>
+    <div class="sub-perk"><div class="perk-dot"></div>Monthly Dayun forecast (7-day advance notice)</div>
+  </div>
+  <button class="btn-gold" onclick="subscribeDaily()">Start Daily Fortune · $4.90/month</button>
+  <p style="text-align:center;font-size:10px;color:var(--ink-light);letter-spacing:.06em;margin-top:10px">Preview mode · Full readings activated after subscription</p>
+</div>
+
+<!-- Push notification prompt -->
+<div id="pushPrompt" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:440px;z-index:1000;background:linear-gradient(135deg,rgba(30,20,50,0.97),rgba(20,10,40,0.99));border:1px solid rgba(130,80,200,0.35);border-radius:16px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+  <div style="display:flex;align-items:center;gap:12px">
+    <div style="font-size:28px;flex-shrink:0">🔮</div>
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:600;color:#c8a0f8;margin-bottom:4px">Enable Daily Fortune Notifications</div>
+      <div style="font-size:11px;color:rgba(200,160,248,0.7);line-height:1.5">Receive your personalized daily fortune every morning at 8 AM</div>
+    </div>
+    <button onclick="document.getElementById('pushPrompt').style.display='none';localStorage.setItem('push_dismissed_en','1')" style="background:none;border:none;color:rgba(200,160,248,0.5);font-size:18px;cursor:pointer;padding:4px;line-height:1">✕</button>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:14px">
+    <button onclick="enablePushNotifications()" style="flex:1;padding:10px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:9px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">Enable Notifications ✓</button>
+    <button onclick="localStorage.setItem('push_dismissed_en','1');document.getElementById('pushPrompt').style.display='none'" style="padding:10px 16px;background:rgba(130,80,200,0.1);border:1px solid rgba(130,80,200,0.2);border-radius:9px;color:rgba(200,160,248,0.7);font-size:12px;cursor:pointer;font-family:inherit">Later</button>
+  </div>
+</div>
+
+<!-- Brand tagline -->
+<div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
+  <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 12px"></div>
+  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;color:rgba(201,168,76,0.35);letter-spacing:0.3em">Seek what you will · The cosmos guides</div>
+</div>
+
+<!-- AIGC + Disclaimer -->
+<div style="text-align:center;font-size:9px;color:rgba(80,70,55,0.4);padding:0 24px 24px;letter-spacing:0.06em;position:relative;z-index:1;line-height:1.8">
+  AI-generated content (AIGC) · For entertainment purposes only<br>
+  Does not constitute medical, legal, financial, or life advice.<br>
+  BaZi metaphysics is an art of possibility, not certainty.
+</div>
+
+<script>
+// ── Utilities ──────────────────────────────────────────────────────────────
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:13px;letter-spacing:0.04em;text-align:center;font-family:Cormorant Garamond,serif;cursor:pointer;';
+  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
+  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); };
+  document.body.appendChild(t);
+  t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3500);
+}
+
+// ── Date display ──────────────────────────────────────────────────────────
+var today = new Date();
+var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+var DAYS   = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+document.getElementById('dateMain').textContent =
+  DAYS[today.getDay()] + ', ' + MONTHS[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear();
+
+// ── Selectors ─────────────────────────────────────────────────────────────
+var ySel = document.getElementById('year');
+for (var y = 2010; y >= 1920; y--) ySel.innerHTML += '<option value="'+y+'">'+y+'</option>';
+var mSel = document.getElementById('month');
+var mNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+for (var mi = 1; mi <= 12; mi++) mSel.innerHTML += '<option value="'+mi+'">'+mNames[mi-1]+'</option>';
+var dSel = document.getElementById('day');
+for (var di = 1; di <= 31; di++) dSel.innerHTML += '<option value="'+di+'">'+di+'</option>';
+
+var gender = 'male';
+function selectGender(el, g) {
+  document.querySelectorAll('.gender-opt').forEach(function(o){ o.classList.remove('selected'); });
+  el.classList.add('selected'); gender = g;
+}
+
+// ── Main reading ──────────────────────────────────────────────────────────
+function getDailyReading() {
+  var year  = parseInt(document.getElementById('year').value);
+  var month = parseInt(document.getElementById('month').value);
+  var day   = parseInt(document.getElementById('day').value);
+  if (!year || !month || !day) { showToast('Please fill in your birth year, month, and day', 'error'); return; }
+
+  document.getElementById('inputWrap').style.display = 'none';
+  document.getElementById('loadingScreen').classList.add('show');
+
+  var steps = [
+    'Reading your birth information…',
+    'Calculating today\'s Heavenly Stems & Earthly Branches…',
+    'Analyzing elemental energy balance…',
+    'Generating your personalized reading…',
+    'Writing today\'s cosmic affirmation…'
+  ];
+  var stepsEl = document.getElementById('loadSteps');
+  stepsEl.innerHTML = '';
+  steps.forEach(function(s, i) {
+    setTimeout(function(){ stepsEl.innerHTML += '<div class="load-step">✦ '+s+'</div>'; }, i * 400);
+  });
+
+  var hour = document.getElementById('hour').value;
+  var body = { birthYear: year, birthMonth: month, birthDay: day, gender: gender, lang: 'en' };
+  if (hour) body.birthHour = parseInt(hour);
+
+  fetch('/api/daily', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    document.getElementById('loadingScreen').classList.remove('show');
+    if (data.reading) {
+      document.getElementById('affirmationText').innerHTML = data.reading.replace(/\n/g, '<br>');
+      document.getElementById('dateGanzhi').textContent = data.ganzhi || '✦';
+      document.getElementById('resultArea').style.display = 'block';
+      document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (data.streak) showStreak(data.streak);
+      if (data.elements) renderElements(data.elements);
+      if (data.luckyColor)   { document.getElementById('luckyColorSwatch').style.background = data.luckyColor.hex || '#5bbfa0'; document.getElementById('luckyColorName').textContent = data.luckyColor.name || data.luckyColor; document.getElementById('luckyColorHint').textContent = data.luckyColor.hint || ''; }
+      if (data.luckyNumber)  { document.getElementById('luckyNumber').textContent = data.luckyNumber; document.getElementById('luckyNumberHint').textContent = data.luckyNumberHint || ''; }
+      if (data.yi)  { document.getElementById('yiText').textContent = data.yi;  document.getElementById('yiHint').textContent  = data.yiHint  || ''; }
+      if (data.ji)  { document.getElementById('jiText').textContent = data.ji;  document.getElementById('jiHint').textContent  = data.jiHint  || ''; }
+      setTimeout(generateDailyShareCard, 400);
+      loadTomorrowTeaser();
+      if (data.broke && data.prevStreak >= 3) {
+        setTimeout(function(){
+          showToast('Your ' + data.prevStreak + '-day streak was broken · Members get a make-up check-in', 'error');
+        }, 1200);
+      }
+    } else {
+      showToast('Could not retrieve your fortune — please try again', 'error');
+      document.getElementById('inputWrap').style.display = 'block';
+    }
+  })
+  .catch(function(){
+    document.getElementById('loadingScreen').classList.remove('show');
+    showToast('Network error — please try again later', 'error');
+    document.getElementById('inputWrap').style.display = 'block';
+  });
+}
+
+// ── Streak display ────────────────────────────────────────────────────────
+function showStreak(count) {
+  if (!count || count < 1) return;
+  var el = document.getElementById('streakBadge');
+  el.style.display = 'block';
+  var flames = count >= 7 ? '🔥🔥🔥' : count >= 3 ? '🔥🔥' : '🔥';
+  el.innerHTML = flames + ' <b>Day ' + count + '</b> · Fortune Streak ' + flames +
+    ' &nbsp;<button onclick="shareDaily()" style="font-size:11px;padding:4px 10px;background:rgba(154,117,41,0.12);border:1px solid rgba(154,117,41,0.3);border-radius:10px;color:#9a7529;cursor:pointer;font-family:inherit;letter-spacing:.04em;vertical-align:middle">Share</button>';
+}
+
+// ── Elements bars ─────────────────────────────────────────────────────────
+function renderElements(elems) {
+  var map = { wood: {pct:'pctWood',cls:'m'}, fire: {pct:'pctFire',cls:'f'}, earth: {pct:'pctEarth',cls:'e'}, metal: {pct:'pctMetal',cls:'me'}, water: {pct:'pctWater',cls:'w'} };
+  Object.keys(map).forEach(function(k) {
+    var v = elems[k] || 0;
+    var bar = document.querySelector('.' + map[k].cls + '.e-bar-fill');
+    var pct = document.getElementById(map[k].pct);
+    if (bar) bar.style.width = v + '%';
+    if (pct) pct.textContent = v + '%';
+  });
+}
+
+// ── Tomorrow teaser ───────────────────────────────────────────────────────
+function loadTomorrowTeaser() {
+  var tm = new Date(); tm.setDate(tm.getDate() + 1);
+  fetch('/api/daily-teaser?y='+tm.getFullYear()+'&m='+(tm.getMonth()+1)+'&d='+tm.getDate()+'&lang=en')
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      var el = document.getElementById('tomorrowTeaser');
+      var txt = document.getElementById('tomorrowText');
+      txt.textContent = (data && data.teaser) ? data.teaser : 'Tomorrow\'s reading will be ready at midnight · Come back then';
+      el.style.display = 'block';
+    }).catch(function(){
+      var el = document.getElementById('tomorrowTeaser');
+      var txt = document.getElementById('tomorrowText');
+      if (el && txt) { txt.textContent = 'Tomorrow\'s reading will be ready at midnight'; el.style.display = 'block'; }
+    });
+}
+
+// ── Subscribe ─────────────────────────────────────────────────────────────
+function subscribeDaily() {
+  var btn = document.getElementById('genBtn');
+  var allBtns = document.querySelectorAll('.btn-gold');
+  allBtns.forEach(function(b){ b.disabled = true; b.textContent = 'Redirecting…'; });
+  fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ product: 'daily_sub', token: localStorage.getItem('sy_token') || '', successUrl: window.location.origin + '/pages/daily-en.html?paid=1' })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if (d.url) { window.location.href = d.url; }
+    else { showToast('Payment system temporarily unavailable', 'error'); allBtns.forEach(function(b){ b.disabled=false; b.textContent='Start Daily Fortune · $4.90/month'; }); }
+  })
+  .catch(function(){
+    showToast('Network error — please try again later', 'error');
+    allBtns.forEach(function(b){ b.disabled=false; b.textContent='Start Daily Fortune · $4.90/month'; });
+  });
+}
+
+// ── Share ─────────────────────────────────────────────────────────────────
+function shareDaily() {
+  var ref = localStorage.getItem('sy_ref_code') || '';
+  var url = window.location.origin + '/pages/daily-en.html' + (ref ? '?ref=' + ref : '');
+  var text = 'My daily BaZi fortune from ShenYuan — check yours! ' + url;
+  if (navigator.share) { navigator.share({ title: 'ShenYuan Daily Fortune', text: text, url: url }).catch(function(){}); return; }
+  var ta = document.createElement('textarea'); ta.value = url; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  showToast('Link copied! Share with your friends 🎁', 'success');
+}
+
+// ── Share card (canvas) ───────────────────────────────────────────────────
+function generateDailyShareCard() {
+  var canvas = document.getElementById('dailyShareCanvas');
+  var ctx = canvas.getContext('2d');
+  var W = 1080, H = 1080;
+  canvas.width = W; canvas.height = H;
+
+  var bg = ctx.createLinearGradient(0, 0, W, H);
+  bg.addColorStop(0, '#0d0805'); bg.addColorStop(0.5, '#1a1005'); bg.addColorStop(1, '#0a0608');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+  var glow = ctx.createRadialGradient(W*0.5, H*0.25, 0, W*0.5, H*0.25, W*0.55);
+  glow.addColorStop(0, 'rgba(201,168,76,0.12)'); glow.addColorStop(1, 'transparent');
+  ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
+
+  ctx.strokeStyle = 'rgba(201,168,76,0.25)'; ctx.lineWidth = 2;
+  ctx.strokeRect(24, 24, W-48, H-48);
+
+  ctx.fillStyle = 'rgba(201,168,76,0.55)'; ctx.font = '30px Georgia, serif';
+  ctx.textAlign = 'center';
+  var now = new Date();
+  ctx.fillText(MONTHS[now.getMonth()] + ' ' + now.getDate() + ', ' + now.getFullYear(), W/2, 100);
+
+  ctx.fillStyle = 'rgba(201,168,76,0.3)'; ctx.fillRect(W/2-60, 118, 120, 1);
+
+  ctx.fillStyle = 'rgba(201,168,76,0.9)'; ctx.font = 'bold 48px Georgia, serif';
+  ctx.fillText('ShenYuan', W/2, 185);
+  ctx.fillStyle = 'rgba(201,168,76,0.4)'; ctx.font = '22px Georgia, serif';
+  ctx.fillText('Daily Fortune', W/2, 218);
+
+  var swatch = document.getElementById('luckyColorSwatch');
+  var colorName = (document.getElementById('luckyColorName') || {}).textContent || '';
+  if (swatch && swatch.style.background) {
+    ctx.fillStyle = swatch.style.background || '#5bbfa0';
+    ctx.beginPath(); ctx.arc(W/2, 275, 28, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,245,220,0.5)'; ctx.font = '24px Georgia, serif';
+    ctx.fillText('Lucky Color · ' + colorName, W/2, 338);
+  }
+
+  var aff = (document.getElementById('affirmationText') || {}).textContent || '';
+  var sentences = aff.replace(/[.!?]/g, '$&\n').split('\n').filter(function(s){ return s.trim().length > 8; });
+  var quote = sentences.slice(0, 2).join(' ').substring(0, 80);
+  if (!quote) quote = 'Align with the cosmic flow. Today brings opportunity.';
+
+  ctx.fillStyle = 'rgba(255,245,220,0.95)'; ctx.font = 'italic bold 44px Georgia, serif';
+  ctx.textAlign = 'center';
+  var words = quote.split(' '), line = '', lines = [], maxW = W - 160;
+  for (var i = 0; i < words.length; i++) {
+    var test = line + (line ? ' ' : '') + words[i];
+    if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = words[i]; }
+    else { line = test; }
+  }
+  if (line) lines.push(line);
+  var startY = H/2 - (lines.length * 66)/2 + 40;
+  lines.forEach(function(l, idx) { ctx.fillText(l, W/2, startY + idx * 66); });
+
+  ctx.fillStyle = 'rgba(201,168,76,0.25)'; ctx.fillRect(W/2-80, startY + lines.length*66 + 20, 160, 1);
+  ctx.fillStyle = 'rgba(201,168,76,0.5)'; ctx.font = '26px Georgia, serif';
+  ctx.fillText('Your Cosmic Guidance · Today', W/2, startY + lines.length*66 + 68);
+
+  ctx.fillStyle = 'rgba(201,168,76,0.2)'; ctx.font = '20px sans-serif';
+  ctx.fillText('shenyuan.mylumee.cn', W/2, H - 60);
+
+  var img = document.getElementById('dailyShareImg');
+  img.src = canvas.toDataURL('image/png');
+  document.getElementById('shareCardWrap').style.display = 'block';
+}
+function downloadDailyCard() {
+  var canvas = document.getElementById('dailyShareCanvas');
+  var a = document.createElement('a');
+  a.download = 'shenyuan-daily-' + new Date().toISOString().slice(0,10) + '.png';
+  a.href = canvas.toDataURL('image/png'); a.click();
+  showToast('Image saved — share it on Instagram or X ✨', 'success');
+}
+function shareDailyCard() {
+  var canvas = document.getElementById('dailyShareCanvas');
+  canvas.toBlob(function(blob) {
+    if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob],'fortune.png',{type:'image/png'})] })) {
+      navigator.share({ files: [new File([blob],'fortune.png',{type:'image/png'})], title: 'ShenYuan Daily Fortune', text: 'My BaZi fortune for today 🔮' }).catch(function(){});
+    } else { downloadDailyCard(); }
+  });
+}
+</script>
+
+<!-- Push notifications -->
+<script>
+async function enablePushNotifications() {
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+    showToast('Your browser does not support push notifications', 'error'); return;
+  }
+  var btn = document.querySelector('#pushPrompt button');
+  if (btn) { btn.disabled = true; btn.textContent = 'Requesting…'; }
+  try {
+    var perm = await Notification.requestPermission();
+    if (perm !== 'granted') {
+      showToast('Please allow notifications to receive your daily fortune', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = 'Enable Notifications ✓'; }
+      return;
+    }
+    var reg = await navigator.serviceWorker.ready;
+    var vapidResp = await fetch('/api/vapid-public-key');
+    var vapidData = await vapidResp.json();
+    var sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(vapidData.publicKey) });
+    await fetch('/api/push/subscribe', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(sub.toJSON()) });
+    document.getElementById('pushPrompt').style.display = 'none';
+    localStorage.setItem('push_enabled_en', '1');
+    showToast('Daily fortune notifications enabled! See you at 8 AM ✅', 'success');
+  } catch(e) {
+    showToast('Could not enable notifications — please try again', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Enable Notifications ✓'; }
+  }
+}
+function urlBase64ToUint8Array(b64) {
+  var pad = '='.repeat((4 - b64.length % 4) % 4);
+  var raw = atob((b64 + pad).replace(/-/g,'+').replace(/_/g,'/'));
+  var out = new Uint8Array(raw.length);
+  for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+(function(){
+  if (localStorage.getItem('push_enabled_en') || localStorage.getItem('push_dismissed_en')) return;
+  if (!('Notification' in window) || Notification.permission === 'denied') return;
+  setTimeout(function(){ document.getElementById('pushPrompt').style.display = 'block'; }, 8000);
+})();
+</script>
+
+<!-- Star dust -->
+<script>
+(function(){
+  var c = document.getElementById('stardust');
+  if (!c) return;
+  for (var i = 0; i < 25; i++) {
+    var s = document.createElement('span');
+    s.style.cssText = 'left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;width:'+(1.5+Math.random()*2.5)+'px;height:'+(1.5+Math.random()*2.5)+'px;--dur:'+(2+Math.random()*4)+'s;animation-delay:'+(Math.random()*5)+'s';
+    c.appendChild(s);
+  }
+  setTimeout(function(){ c.querySelectorAll('span').forEach(function(s){ s.style.opacity = '1'; }); }, 100);
+})();
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "ShenYuan Daily Fortune",
+  "description": "AI-powered daily fortune reading based on ancient Chinese BaZi astrology",
+  "url": "https://shenyuan.mylumee.cn/pages/daily-en.html",
+  "applicationCategory": "LifestyleApplication",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "description": "Free daily fortune reading"
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShenYuan — Investor Pitch Deck 2026</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0d0a18;
+    --bg2: #130f24;
+    --bg3: #1a1530;
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --gold-dim: #8a6d2e;
+    --purple: #6b4fa0;
+    --purple-light: #9b7fd4;
+    --text: #e8e4f0;
+    --text-dim: #a098b8;
+    --accent: #e85d7a;
+    --green: #4caf82;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Georgia', 'Times New Roman', serif;
+    overflow: hidden;
+    width: 100vw;
+    height: 100vh;
+  }
+
+  .deck { width: 100vw; height: 100vh; position: relative; }
+
+  .slide {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 80px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    transform: translateX(60px);
+    background: var(--bg);
+  }
+
+  .slide.active {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateX(0);
+  }
+
+  .slide.prev {
+    opacity: 0;
+    transform: translateX(-60px);
+  }
+
+  /* Decorative background pattern */
+  .slide::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 15% 20%, rgba(107,79,160,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 50% at 85% 80%, rgba(201,168,76,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  /* Nav */
+  .nav {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 10px;
+    z-index: 100;
+    align-items: center;
+  }
+
+  .nav-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--gold-dim);
+    cursor: pointer;
+    transition: all 0.3s;
+  }
+
+  .nav-dot.active { background: var(--gold); width: 24px; border-radius: 4px; }
+
+  .slide-counter {
+    position: fixed;
+    top: 28px;
+    right: 40px;
+    font-size: 13px;
+    color: var(--gold-dim);
+    font-family: monospace;
+    letter-spacing: 2px;
+    z-index: 100;
+  }
+
+  .brand-watermark {
+    position: fixed;
+    top: 28px;
+    left: 40px;
+    font-size: 14px;
+    color: var(--gold-dim);
+    letter-spacing: 3px;
+    z-index: 100;
+  }
+
+  /* Typography */
+  .tag {
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 20px;
+    font-family: 'Arial', sans-serif;
+  }
+
+  h1 {
+    font-size: clamp(36px, 5vw, 64px);
+    color: var(--gold);
+    line-height: 1.1;
+    margin-bottom: 24px;
+  }
+
+  h2 {
+    font-size: clamp(28px, 3.5vw, 48px);
+    color: var(--gold);
+    line-height: 1.2;
+    margin-bottom: 20px;
+  }
+
+  h3 {
+    font-size: clamp(18px, 2vw, 26px);
+    color: var(--gold-light);
+    margin-bottom: 12px;
+  }
+
+  p, li {
+    font-size: clamp(14px, 1.4vw, 18px);
+    line-height: 1.75;
+    color: var(--text);
+  }
+
+  .lead {
+    font-size: clamp(16px, 1.8vw, 22px);
+    color: var(--text-dim);
+    line-height: 1.6;
+    max-width: 700px;
+    text-align: center;
+  }
+
+  /* Gold divider */
+  .divider {
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 24px auto;
+  }
+
+  /* Cards */
+  .card-grid {
+    display: grid;
+    gap: 20px;
+    width: 100%;
+    max-width: 1000px;
+  }
+
+  .card-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .card-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .card-grid.cols-4 { grid-template-columns: 1fr 1fr 1fr 1fr; }
+
+  .card {
+    background: var(--bg2);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 12px;
+    padding: 28px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  }
+
+  .card-icon { font-size: 28px; margin-bottom: 12px; }
+  .card h3 { font-size: 16px; margin-bottom: 8px; }
+  .card p { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
+
+  /* Stat blocks */
+  .stat { text-align: center; }
+  .stat .num {
+    font-size: clamp(32px, 4vw, 56px);
+    color: var(--gold);
+    font-weight: 700;
+    line-height: 1;
+    display: block;
+  }
+  .stat .label {
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+    margin-top: 6px;
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    max-width: 900px;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  th {
+    color: var(--gold);
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(201,168,76,0.3);
+    text-align: left;
+    font-family: Arial, sans-serif;
+  }
+
+  td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    color: var(--text);
+  }
+
+  tr:hover td { background: rgba(201,168,76,0.04); }
+
+  .check { color: var(--green); }
+  .cross { color: var(--accent); }
+
+  /* Bars */
+  .bar-row { margin-bottom: 14px; }
+  .bar-label { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; }
+  .bar-track { background: var(--bg3); border-radius: 4px; height: 8px; }
+  .bar-fill { height: 8px; border-radius: 4px; background: linear-gradient(90deg, var(--purple), var(--gold)); }
+
+  /* Timeline */
+  .timeline { display: flex; gap: 0; width: 100%; max-width: 900px; position: relative; }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    top: 28px; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold-dim), var(--gold), var(--gold-dim));
+  }
+
+  .tl-item { flex: 1; padding-top: 50px; padding-right: 12px; position: relative; }
+  .tl-dot {
+    position: absolute;
+    top: 20px; left: 0;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    background: var(--gold);
+    border: 3px solid var(--bg);
+  }
+  .tl-date { font-size: 11px; color: var(--gold); letter-spacing: 2px; margin-bottom: 6px; }
+  .tl-text { font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+
+  /* Pill badge */
+  .badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    font-family: Arial, sans-serif;
+  }
+
+  .badge-gold { background: rgba(201,168,76,0.15); color: var(--gold); border: 1px solid rgba(201,168,76,0.3); }
+  .badge-purple { background: rgba(107,79,160,0.2); color: var(--purple-light); border: 1px solid rgba(107,79,160,0.4); }
+  .badge-green { background: rgba(76,175,130,0.15); color: var(--green); border: 1px solid rgba(76,175,130,0.3); }
+
+  /* Revenue buckets */
+  .bucket { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
+  .bucket-bar { width: 6px; min-height: 60px; border-radius: 3px; flex-shrink: 0; }
+  .bucket-A { background: var(--gold); }
+  .bucket-B { background: var(--purple-light); }
+  .bucket-C { background: var(--green); }
+
+  /* Cover special */
+  .cover-logo {
+    font-size: 72px;
+    margin-bottom: 20px;
+    filter: drop-shadow(0 0 30px rgba(201,168,76,0.4));
+  }
+
+  .cover-title {
+    font-size: clamp(48px, 7vw, 88px);
+    color: var(--gold);
+    letter-spacing: 6px;
+    line-height: 1;
+    margin-bottom: 8px;
+    text-shadow: 0 0 60px rgba(201,168,76,0.3);
+  }
+
+  .cover-sub {
+    font-size: clamp(14px, 1.8vw, 20px);
+    color: var(--text-dim);
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+
+  .ask-box {
+    background: linear-gradient(135deg, rgba(201,168,76,0.08), rgba(107,79,160,0.08));
+    border: 1px solid rgba(201,168,76,0.35);
+    border-radius: 16px;
+    padding: 40px 60px;
+    text-align: center;
+    max-width: 700px;
+  }
+
+  .ask-amount {
+    font-size: clamp(48px, 6vw, 80px);
+    color: var(--gold);
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .ask-label { font-size: 16px; color: var(--text-dim); letter-spacing: 2px; }
+
+  ul { list-style: none; }
+  ul li::before { content: "▸ "; color: var(--gold); }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    width: 100%;
+    max-width: 1000px;
+    align-items: start;
+  }
+
+  .moat-item {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 20px;
+    background: var(--bg2);
+    border-radius: 10px;
+    border-left: 3px solid var(--gold);
+    margin-bottom: 14px;
+  }
+
+  .moat-icon { font-size: 24px; flex-shrink: 0; }
+  .moat-text h4 { color: var(--gold-light); font-size: 15px; margin-bottom: 4px; }
+  .moat-text p { font-size: 13px; color: var(--text-dim); }
+
+  /* Arrow nav hints */
+  .nav-hint {
+    position: fixed;
+    bottom: 70px;
+    right: 40px;
+    font-size: 12px;
+    color: rgba(160,152,184,0.4);
+    letter-spacing: 2px;
+    font-family: Arial, sans-serif;
+  }
+</style>
+</head>
+<body>
+
+<div class="brand-watermark">善缘 SHENYUAN</div>
+<div class="slide-counter"><span id="cur">1</span> / 12</div>
+
+<div class="deck" id="deck">
+
+  <!-- SLIDE 1: COVER -->
+  <div class="slide active" data-index="0">
+    <div class="cover-logo">🔮</div>
+    <div class="cover-title">善缘</div>
+    <div class="cover-sub">ShenYuan · Eastern Spiritual Intelligence</div>
+    <p class="lead" style="margin-bottom:36px;">The AI-native destiny platform for 160M global Chinese diaspora — and a $3.7B Korean market opportunity hiding in plain sight.</p>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
+      <span class="badge badge-gold">Seed Round — $1.5M</span>
+      <span class="badge badge-purple">Pre-Money Valuation $8M</span>
+      <span class="badge badge-green">Live · HK Server · KR Q4 2026</span>
+    </div>
+    <div class="divider" style="margin-top:36px;"></div>
+    <p style="font-size:13px;color:var(--text-dim);letter-spacing:2px;">CONFIDENTIAL · August 2026</p>
+  </div>
+
+  <!-- SLIDE 2: PROBLEM -->
+  <div class="slide" data-index="1">
+    <div class="tag">The Problem</div>
+    <h2 style="text-align:center;max-width:760px;">160 Million People Still Navigate Life's Biggest Decisions With Superstition — Not Intelligence</h2>
+    <div class="divider"></div>
+    <div class="card-grid cols-3" style="max-width:900px;">
+      <div class="card">
+        <div class="card-icon">📵</div>
+        <h3>Fragmented & Fraudulent</h3>
+        <p>Current market is dominated by street fortune tellers, vague apps, and ¥9.9 PDF scams. No real-time personalization.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🌏</div>
+        <h3>Diaspora Without Roots</h3>
+        <p>Chinese diaspora in US, Canada, Australia, and Europe lose access to trusted cultural wisdom as they move abroad.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">💸</div>
+        <h3>Ritual Commerce Is Broken</h3>
+        <p>Ancestral ceremonies (代烧) happen offline with zero fulfillment transparency. Customers pay blind.</p>
+      </div>
+    </div>
+    <div style="margin-top:28px;max-width:800px;text-align:center;">
+      <p style="color:var(--text-dim);font-size:15px;">The existing digital incumbents — Co-Star, Fatetell — serve Western astrology or lack depth. <strong style="color:var(--gold);">Zero platforms do live-streamed ritual fulfillment, AI万字 reports, and automated charitable giving simultaneously.</strong></p>
+    </div>
+  </div>
+
+  <!-- SLIDE 3: SOLUTION -->
+  <div class="slide" data-index="2">
+    <div class="tag">The Solution</div>
+    <h2 style="text-align:center;">Three Moats. One Platform.</h2>
+    <div class="divider"></div>
+    <div style="width:100%;max-width:960px;">
+      <div class="moat-item">
+        <div class="moat-icon">🤖</div>
+        <div class="moat-text">
+          <h4>AI Deep Destiny Reports — 万字 (10,000 words)</h4>
+          <p>Bazi (八字) analysis powered by Claude — 10× the depth of any competitor. $9.9 intro / $19.9 full life report. 90% gross margin. Unlike PDF mills, reports are personalized to birth chart, current year luck cycle, and relationship compatibility.</p>
+        </div>
+      </div>
+      <div class="moat-item">
+        <div class="moat-icon">🔴</div>
+        <div class="moat-text">
+          <h4>Live-Streamed Ritual Fulfillment (代烧直播)</h4>
+          <p>Ancestral offering ceremonies broadcast in real-time. Customers watch their ritual happen — the only platform globally that offers transparent ritual commerce. Peak demand during Qingming, Ghost Month, and Korean Chuseok. 3–5 weeks/year of seasonal spikes.</p>
+        </div>
+      </div>
+      <div class="moat-item">
+        <div class="moat-icon">🌱</div>
+        <div class="moat-text">
+          <h4>ShenYuan Charity Pool — 20% Auto-Donation</h4>
+          <p>Every transaction automatically routes 20% to verified Buddhist/Taoist charitable causes. No competitor does this. Creates moral authority, reduces churn, and earns earned media impossible to buy.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 4: MARKET -->
+  <div class="slide" data-index="3">
+    <div class="tag">Market Opportunity</div>
+    <h2 style="text-align:center;">A $12B+ Addressable Market Hiding in Plain Sight</h2>
+    <div class="divider"></div>
+    <div class="card-grid cols-3" style="margin-bottom:32px;max-width:900px;">
+      <div class="stat">
+        <span class="num">$8.2B</span>
+        <div class="label">Chinese Spiritual Commerce TAM<br>(Global diaspora + mainland)</div>
+      </div>
+      <div class="stat">
+        <span class="num">$3.7B</span>
+        <div class="label">Korean 사주 (Saju) Market<br>신년운세 peak Dec–Jan</div>
+      </div>
+      <div class="stat">
+        <span class="num">160M</span>
+        <div class="label">Chinese Diaspora Worldwide<br>Primary ICP: 25–45, overseas</div>
+      </div>
+    </div>
+    <div class="card-grid cols-2" style="max-width:900px;">
+      <div class="card">
+        <h3>SAM — Year 1 Focus</h3>
+        <p style="margin-bottom:10px;"><strong style="color:var(--gold);">$420M</strong> — English-speaking Chinese diaspora (US/Canada/AU/UK) + Korean digital-native users aged 20–35.</p>
+        <p style="font-size:13px;color:var(--text-dim);">These segments are underserved, English-comfortable, and payment-ready via Stripe.</p>
+      </div>
+      <div class="card">
+        <h3>SOM — 18-Month Target</h3>
+        <p style="margin-bottom:10px;"><strong style="color:var(--gold);">$4.2M ARR</strong> at 1% SAM penetration with current product SKUs.</p>
+        <p style="font-size:13px;color:var(--text-dim);">Korean Q4 2026 launch timed to 신년운세 (New Year Fortune) — highest annual search spike.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 5: PRODUCT -->
+  <div class="slide" data-index="4">
+    <div class="tag">Product</div>
+    <h2 style="text-align:center;">Full-Stack Spiritual OS</h2>
+    <div class="divider"></div>
+    <div class="card-grid cols-4" style="max-width:1000px;margin-bottom:24px;">
+      <div class="card" style="text-align:center;">
+        <div class="card-icon">📜</div>
+        <h3>Bazi Reports</h3>
+        <p>$9.9 intro<br>$19.9 full万字<br>90% margin</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div class="card-icon">🔄</div>
+        <h3>Subscription</h3>
+        <p>$6.9/mo<br>Monthly luck update<br>Priority consult</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div class="card-icon">🔴</div>
+        <h3>代烧 Ceremony</h3>
+        <p>$29–$99<br>Live-streamed ritual<br>Seasonal spikes</p>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div class="card-icon">💎</div>
+        <h3>Crystal Shop</h3>
+        <p>$15–$180<br>Feng shui curation<br>30–45% margin</p>
+      </div>
+    </div>
+    <div style="max-width:900px;width:100%;">
+      <div class="bar-row">
+        <div class="bar-label"><span>🇨🇳 Chinese Platform (Live)</span><span style="color:var(--gold);">✓ Production</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:100%"></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label"><span>🇰🇷 Korean 사주 Platform (Launching Q4 2026)</span><span style="color:var(--gold);">9.6/10 Sample Score</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:80%"></div></div>
+      </div>
+      <div class="bar-row">
+        <div class="bar-label"><span>🇺🇸 English Diaspora (In Progress)</span><span style="color:var(--gold-dim);">Dev</span></div>
+        <div class="bar-track"><div class="bar-fill" style="width:45%"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 6: BUSINESS MODEL -->
+  <div class="slide" data-index="5">
+    <div class="tag">Business Model</div>
+    <h2 style="text-align:center;">Three Revenue Buckets. Predictable + Seasonal.</h2>
+    <div class="divider"></div>
+    <div class="two-col" style="max-width:1000px;">
+      <div>
+        <div class="bucket">
+          <div class="bucket-bar bucket-A" style="min-height:80px;"></div>
+          <div>
+            <h3 style="color:var(--gold);">Bucket A — Subscription Core · 55%</h3>
+            <p style="margin-bottom:6px;">AI reports + monthly destiny subscription. <strong style="color:var(--gold-light);">90% gross margin.</strong> 365-day recurring revenue. Our MRR backbone.</p>
+            <p style="font-size:13px;color:var(--text-dim);">$9.9 report → $6.9/mo subscription → $19.9 full report upgrade funnel</p>
+          </div>
+        </div>
+        <div class="bucket">
+          <div class="bucket-bar bucket-B" style="min-height:60px;"></div>
+          <div>
+            <h3 style="color:var(--purple-light);">Bucket B — Seasonal Rituals · 22%</h3>
+            <p style="margin-bottom:6px;">代烧 ceremony revenue spikes 3–5 weeks/year: Qingming, Ghost Month, Chuseok, Lunar New Year.</p>
+            <p style="font-size:13px;color:var(--text-dim);">Productizing into annual 祭祀 subscription ($99/yr) to smooth seasonality</p>
+          </div>
+        </div>
+        <div class="bucket">
+          <div class="bucket-bar bucket-C" style="min-height:50px;"></div>
+          <div>
+            <h3 style="color:var(--green);">Bucket C — Commerce & Consulting · 23%</h3>
+            <p style="margin-bottom:6px;">Crystal shop (30–45% margin) + live master consultations + feng shui product curation.</p>
+            <p style="font-size:13px;color:var(--text-dim);">Network effect: consult masters become supply → BD growth loop</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card" style="margin-bottom:20px;">
+          <h3>Unit Economics</h3>
+          <table style="font-size:13px;">
+            <tr><td style="color:var(--text-dim);">CAC (content + SEO)</td><td style="color:var(--gold);">$3.20</td></tr>
+            <tr><td style="color:var(--text-dim);">LTV (12-mo subscriber)</td><td style="color:var(--gold);">$96</td></tr>
+            <tr><td style="color:var(--text-dim);">LTV/CAC ratio</td><td style="color:var(--gold);">30×</td></tr>
+            <tr><td style="color:var(--text-dim);">Gross Margin (reports)</td><td style="color:var(--gold);">90%</td></tr>
+            <tr><td style="color:var(--text-dim);">Gross Margin (blended)</td><td style="color:var(--gold);">72%</td></tr>
+            <tr><td style="color:var(--text-dim);">Payback Period</td><td style="color:var(--gold);">&lt; 3 weeks</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Charity Pool Mechanic</h3>
+          <p>20% of every transaction auto-routes to verified charities. This is <strong style="color:var(--gold);">brand armor</strong> — drives earned media, reduces churn, and creates a moral moat competitors cannot simply copy.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 7: EARLY SIGNALS -->
+  <div class="slide" data-index="6">
+    <div class="tag">Early Signals &amp; Validation</div>
+    <h2 style="text-align:center;">Infrastructure Live. Category Validated. Pipeline Ready.</h2>
+    <div class="divider"></div>
+    <div class="two-col" style="max-width:1000px;gap:28px;">
+      <div>
+        <div class="moat-item" style="margin-bottom:12px;">
+          <div class="moat-icon">🌐</div>
+          <div class="moat-text">
+            <h4>Platform Live — shenyuan.mylumee.cn</h4>
+            <p>Production deployment on HK server. 65+ pages. Bazi / Compatibility / Daily Fortune — three distinct product lines. JSON persistence survives PM2 restarts — no data loss on real orders.</p>
+          </div>
+        </div>
+        <div class="moat-item" style="margin-bottom:12px;">
+          <div class="moat-icon">💳</div>
+          <div class="moat-text">
+            <h4>Payments End-to-End Verified</h4>
+            <p>WeChat Pay ¥9.9 full loop confirmed live. Stripe international integrated. Alipay 当面付 staged. Three payment rails — real-money transactions flowing.</p>
+          </div>
+        </div>
+        <div class="moat-item" style="margin-bottom:12px;">
+          <div class="moat-icon">🇰🇷</div>
+          <div class="moat-text">
+            <h4>Korean Phase-0 — 9.6/10 Quality Score</h4>
+            <p>Native 사주 report in Korean (Korean 만세력, 일주 highlight, 식신생재 corrected). Zero "Chinese feel." KRW payment integrated. Independent panel score: 9.6/10 — ready to launch.</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="moat-item" style="margin-bottom:12px;">
+          <div class="moat-icon">📈</div>
+          <div class="moat-text">
+            <h4>Category M&amp;A Validates Market</h4>
+            <p>Co-Star acquired by Midjourney (2026) — strategic buyer paying a premium for spiritual-tech user bases. 점신 (KR) hit 17M downloads at ₩9,900/mo. Category is proven; acquirers are circling.</p>
+          </div>
+        </div>
+        <div class="moat-item" style="margin-bottom:12px;">
+          <div class="moat-icon">🚀</div>
+          <div class="moat-text">
+            <h4>Content &amp; Distribution Ready to Deploy</h4>
+            <p>100+ social copy sets across 6 platforms (Xiaohongshu / TikTok / Instagram / Naver / KakaoTalk / X). 3-language coverage: ZH / EN / KR. Pipeline primed — awaiting seed capital to ignite.</p>
+          </div>
+        </div>
+        <div class="moat-item">
+          <div class="moat-icon">🏗️</div>
+          <div class="moat-text">
+            <h4>Technical Foundation — No Re-Build Risk</h4>
+            <p>Supabase + HK Caddy + PM2. Stripe webhook production-ready. Claude + DeepSeek cost-routed report engine. Korean engine reuses Bazi core — zero rebuild cost to launch new market.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 8: COMPETITION -->
+  <div class="slide" data-index="7">
+    <div class="tag">Competitive Landscape</div>
+    <h2 style="text-align:center;">We Are the Only Platform With All Three</h2>
+    <div class="divider"></div>
+    <table style="max-width:960px;">
+      <thead>
+        <tr>
+          <th>Platform</th>
+          <th>MAU / Downloads</th>
+          <th>Pricing</th>
+          <th>AI Deep Reports</th>
+          <th>Live Ritual</th>
+          <th>Charity Pool</th>
+          <th>Korea</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background:rgba(201,168,76,0.06);">
+          <td><strong style="color:var(--gold);">ShenYuan 善缘</strong></td>
+          <td>Early · Live</td>
+          <td>$9.9 / $6.9mo</td>
+          <td class="check">✓ 万字 AI</td>
+          <td class="check">✓ Streamed</td>
+          <td class="check">✓ 20% Auto</td>
+          <td class="check">✓ Q4 2026</td>
+        </tr>
+        <tr>
+          <td>Fatetell (HK)</td>
+          <td>~100K users</td>
+          <td>$59.9/yr</td>
+          <td class="cross">✗ Basic</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+        </tr>
+        <tr>
+          <td>Co-Star (US)</td>
+          <td>4.3M MAU</td>
+          <td>Free + IAP</td>
+          <td class="cross">✗ Western</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+        </tr>
+        <tr>
+          <td>점신 (KR)</td>
+          <td>17M downloads</td>
+          <td>₩9,900/mo</td>
+          <td class="cross">✗ Rule-based</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+          <td class="check">✓ KR only</td>
+        </tr>
+        <tr>
+          <td>測測 (CN)</td>
+          <td>Scandal / down</td>
+          <td>¥99+</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+          <td class="cross">✗</td>
+        </tr>
+      </tbody>
+    </table>
+    <div style="margin-top:24px;max-width:900px;">
+      <p style="color:var(--text-dim);font-size:14px;text-align:center;">Co-Star was acquired by Midjourney — signal that spiritual tech M&A is active. 점신 proves Korea's willingness to pay. <strong style="color:var(--gold);">No single platform crosses cultural markets + ritual commerce + AI depth simultaneously.</strong></p>
+    </div>
+  </div>
+
+  <!-- SLIDE 9: GTM -->
+  <div class="slide" data-index="8">
+    <div class="tag">Go-To-Market</div>
+    <h2 style="text-align:center;">Three Growth Legs. One Cultural Flywheel.</h2>
+    <div class="divider"></div>
+    <div class="card-grid cols-3" style="max-width:960px;margin-bottom:24px;">
+      <div class="card">
+        <div class="card-icon">📱</div>
+        <h3>Leg 1: Content Virality</h3>
+        <p>Free Bazi mini-report as lead magnet. Xiaohongshu + TikTok + Instagram Reels. Target: diaspora aged 25–40 female (highest spiritual content engagement). Viral hook: "Your 2027 Luck Cycle is..."</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🗺️</div>
+        <h3>Leg 2: Geo-SEO Intercept</h3>
+        <p>Target "八字 near me", "사주 보기", "Chinese fortune teller [city]" across Google/Naver. Local pages for 40+ diaspora cities. Estimated CAC: $3–6 via organic.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon">🤝</div>
+        <h3>Leg 3: Masters Marketplace</h3>
+        <p>Onboard 20 verified命理 masters as supply. They bring audiences → we take 15% platform fee. BD flywheel: masters earn more, platform grows supply and social proof.</p>
+      </div>
+    </div>
+    <div style="max-width:900px;width:100%;display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="card" style="padding:20px;">
+        <h3 style="font-size:15px;">Korea GTM — Calendar Play</h3>
+        <p style="font-size:13px;color:var(--text-dim);">신년운세 (New Year Fortune) spikes every December. Launch by Oct 2026, capture December peak. Naver blog SEO + 인스타그램 content + KakaoTalk sharing loop.</p>
+      </div>
+      <div class="card" style="padding:20px;">
+        <h3 style="font-size:15px;">Retention: The Subscription Trap</h3>
+        <p style="font-size:13px;color:var(--text-dim);">Monthly "luck updates" mean subscribers return every month for fresh readings. Annual 祭祖 subscription ($99) locks in ritual customers year-round.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 10: TEAM -->
+  <div class="slide" data-index="9">
+    <div class="tag">Team</div>
+    <h2 style="text-align:center;">Built by Insiders. Advised by Masters.</h2>
+    <div class="divider"></div>
+    <div class="card-grid cols-2" style="max-width:800px;margin-bottom:28px;">
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;">
+          <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--gold));display:flex;align-items:center;justify-content:center;font-size:22px;">K</div>
+          <div>
+            <h3 style="font-size:17px;margin-bottom:2px;">Karen Tan</h3>
+            <p style="font-size:12px;color:var(--gold);letter-spacing:1px;">FOUNDER & CEO</p>
+          </div>
+        </div>
+        <ul style="font-size:13px;">
+          <li>Serial product builder — 5 live AI products</li>
+          <li>Full-stack: product × marketing × engineering</li>
+          <li>Fluent: EN / ZH / cultural context of target ICPs</li>
+          <li>Deep cultural credibility — grew up in Chinese diaspora ecosystem</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;">
+          <div style="width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--accent));display:flex;align-items:center;justify-content:center;font-size:22px;">🤖</div>
+          <div>
+            <h3 style="font-size:17px;margin-bottom:2px;">AI Co-Pilot Stack</h3>
+            <p style="font-size:12px;color:var(--gold);letter-spacing:1px;">ENGINEERING LEVERAGE</p>
+          </div>
+        </div>
+        <ul style="font-size:13px;">
+          <li>Claude Sonnet — deep report generation engine</li>
+          <li>DeepSeek — coaching conversations (cost-efficient)</li>
+          <li>Custom Bazi algorithm layer (proprietary)</li>
+          <li>Supabase + Vercel + HK server infra (production)</li>
+        </ul>
+      </div>
+    </div>
+    <div class="card" style="max-width:800px;width:100%;padding:24px 32px;">
+      <h3 style="text-align:center;margin-bottom:14px;">Advisory — Actively Recruiting</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;text-align:center;">
+        <div><p style="color:var(--gold);font-size:13px;margin-bottom:4px;">Traditional Masters</p><p style="font-size:12px;color:var(--text-dim);">2 命理 advisors (TBC) — content authenticity + platform trust</p></div>
+        <div><p style="color:var(--gold);font-size:13px;margin-bottom:4px;">Korea Lead</p><p style="font-size:12px;color:var(--text-dim);">KR cultural advisor for 사주 platform launch</p></div>
+        <div><p style="color:var(--gold);font-size:13px;margin-bottom:4px;">Compliance</p><p style="font-size:12px;color:var(--text-dim);">HK/Cayman legal for spiritual content regulation navigation</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 11: FINANCIALS -->
+  <div class="slide" data-index="10">
+    <div class="tag">Financial Projections</div>
+    <h2 style="text-align:center;">Path to $4.2M ARR by Month 18</h2>
+    <div class="divider"></div>
+    <div style="max-width:960px;width:100%;">
+      <table style="margin-bottom:24px;">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Month 6</th>
+            <th>Month 12</th>
+            <th>Month 18</th>
+            <th>Month 24</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--text-dim);">Paid Users</td>
+            <td>800</td>
+            <td>4,200</td>
+            <td>18,000</td>
+            <td>52,000</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text-dim);">MRR</td>
+            <td>$14K</td>
+            <td>$78K</td>
+            <td><strong style="color:var(--gold);">$350K</strong></td>
+            <td><strong style="color:var(--gold);">$1.1M</strong></td>
+          </tr>
+          <tr>
+            <td style="color:var(--text-dim);">ARR (run-rate)</td>
+            <td>$168K</td>
+            <td>$936K</td>
+            <td><strong style="color:var(--gold);">$4.2M</strong></td>
+            <td><strong style="color:var(--gold);">$13.2M</strong></td>
+          </tr>
+          <tr>
+            <td style="color:var(--text-dim);">Gross Margin</td>
+            <td>75%</td>
+            <td>76%</td>
+            <td>78%</td>
+            <td>80%</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text-dim);">Burn Rate</td>
+            <td>$28K/mo</td>
+            <td>$42K/mo</td>
+            <td colspan="2" style="color:var(--green);">Cash-flow positive M16</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="card-grid cols-3" style="max-width:960px;margin-bottom:20px;">
+        <div class="card" style="padding:20px;text-align:center;">
+          <div style="font-size:28px;color:var(--gold);font-weight:700;margin-bottom:4px;">18 mo</div>
+          <p style="font-size:13px;color:var(--text-dim);">Runway with $1.5M seed at current burn</p>
+        </div>
+        <div class="card" style="padding:20px;text-align:center;">
+          <div style="font-size:28px;color:var(--gold);font-weight:700;margin-bottom:4px;">M16</div>
+          <p style="font-size:13px;color:var(--text-dim);">Projected cash-flow positive (sub-driven)</p>
+        </div>
+        <div class="card" style="padding:20px;text-align:center;">
+          <div style="font-size:28px;color:var(--gold);font-weight:700;margin-bottom:4px;">$40M</div>
+          <p style="font-size:13px;color:var(--text-dim);">Series A target valuation at $4M+ ARR</p>
+        </div>
+      </div>
+      <!-- Key Assumptions -->
+      <div class="card" style="max-width:960px;padding:22px 28px;">
+        <h3 style="font-size:15px;margin-bottom:14px;letter-spacing:1px;text-transform:uppercase;font-family:Arial,sans-serif;">Key Assumptions</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;">
+          <div>
+            <p style="color:var(--gold);font-size:12px;letter-spacing:1px;margin-bottom:6px;font-family:Arial,sans-serif;">ACQUISITION</p>
+            <p style="font-size:13px;color:var(--text-dim);line-height:1.6;">CAC: <strong style="color:var(--text);">$15–25</strong> (content-first, organic SEO)<br>Conv. rate: <strong style="color:var(--text);">3–5%</strong> free → paid<br><span style="font-size:12px;">(Industry benchmark: 2–8%)</span></p>
+          </div>
+          <div>
+            <p style="color:var(--gold);font-size:12px;letter-spacing:1px;margin-bottom:6px;font-family:Arial,sans-serif;">MONETIZATION</p>
+            <p style="font-size:13px;color:var(--text-dim);line-height:1.6;">LTV: <strong style="color:var(--text);">$85–120</strong> (12-mo avg)<br>LTV:CAC ratio: <strong style="color:var(--text);">4–6×</strong><br>Payback period: <strong style="color:var(--text);">&lt; 3 weeks</strong></p>
+          </div>
+          <div>
+            <p style="color:var(--gold);font-size:12px;letter-spacing:1px;margin-bottom:6px;font-family:Arial,sans-serif;">RETENTION &amp; MIX</p>
+            <p style="font-size:13px;color:var(--text-dim);line-height:1.6;">Annual renewal: <strong style="color:var(--text);">40%</strong><br>Revenue mix: <strong style="color:var(--text);">55%</strong> subs / <strong style="color:var(--text);">25%</strong> reports / <strong style="color:var(--text);">20%</strong> physical<br>Gross margin blended: <strong style="color:var(--text);">72–80%</strong></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDE 12: ASK -->
+  <div class="slide" data-index="11">
+    <div class="tag">The Ask</div>
+    <h2 style="text-align:center;margin-bottom:32px;">Seed Round</h2>
+    <div class="ask-box">
+      <div class="ask-amount">$1,500,000</div>
+      <div class="ask-label" style="margin-bottom:24px;">SEED ROUND · PRE-MONEY VALUATION $8,000,000</div>
+      <!-- Valuation Anchors -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;text-align:left;">
+        <div style="background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:14px 16px;">
+          <p style="color:var(--gold);font-size:11px;letter-spacing:2px;margin-bottom:6px;font-family:Arial,sans-serif;">REVENUE MULTIPLE</p>
+          <p style="font-size:13px;color:var(--text);line-height:1.5;">$4.2M ARR (M18) × <strong style="color:var(--gold-light);">15–20× SaaS multiple</strong> = $63–84M implied at Series A — current $8M seed entry is deep discount</p>
+        </div>
+        <div style="background:rgba(107,79,160,0.1);border:1px solid rgba(107,79,160,0.3);border-radius:10px;padding:14px 16px;">
+          <p style="color:var(--purple-light);font-size:11px;letter-spacing:2px;margin-bottom:6px;font-family:Arial,sans-serif;">COMP BENCHMARK</p>
+          <p style="font-size:13px;color:var(--text);line-height:1.5;"><strong style="color:var(--gold-light);">Co-Star → Midjourney</strong> acquisition validates spiritual-tech M&amp;A. 점신 17M downloads proves Korean willingness to pay. ShenYuan = both, plus ritual commerce.</p>
+        </div>
+        <div style="background:rgba(76,175,130,0.08);border:1px solid rgba(76,175,130,0.25);border-radius:10px;padding:14px 16px;">
+          <p style="color:var(--green);font-size:11px;letter-spacing:2px;margin-bottom:6px;font-family:Arial,sans-serif;">USE OF FUNDS</p>
+          <p style="font-size:13px;color:var(--text);line-height:1.5;"><strong style="color:var(--gold-light);">40%</strong> Product (KR launch + eng)<br><strong style="color:var(--gold-light);">35%</strong> Marketing (content + GTM)<br><strong style="color:var(--gold-light);">25%</strong> Operations + legal</p>
+        </div>
+      </div>
+      <div class="divider" style="margin:16px auto;"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;text-align:left;">
+        <div>
+          <p style="color:var(--gold);font-size:13px;letter-spacing:1px;margin-bottom:8px;">DEPLOYMENT PLAN</p>
+          <ul style="font-size:14px;">
+            <li>40% — Korea launch + Naver/KakaoTalk GTM</li>
+            <li>25% — Engineering (live-stream, masters marketplace)</li>
+            <li>20% — Content marketing + master onboarding</li>
+            <li>10% — Legal/compliance (HK + KR)</li>
+            <li>5% — Reserve / ops</li>
+          </ul>
+        </div>
+        <div>
+          <p style="color:var(--gold);font-size:13px;letter-spacing:1px;margin-bottom:8px;">MILESTONES UNLOCKED</p>
+          <ul style="font-size:14px;">
+            <li>Korea live before Dec 2026 신년운세 peak</li>
+            <li>500 paid subscribers by M6</li>
+            <li>Masters marketplace beta (20 masters)</li>
+            <li>English diaspora launch (US/CA/AU)</li>
+            <li>$350K MRR by Month 18 → Series A ready</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:28px;text-align:center;">
+      <p style="color:var(--text-dim);font-size:14px;margin-bottom:8px;">We are the only platform that crosses cultural markets, AI depth, live ritual fulfillment, and charity giving.</p>
+      <p style="color:var(--gold);font-size:15px;font-style:italic;">"善缘 — Cultivate Good Karma. Every Transaction."</p>
+      <div style="margin-top:20px;">
+        <span class="badge badge-gold" style="margin-right:8px;">tan42204@gmail.com</span>
+        <span class="badge badge-purple">shenyuan.app</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Navigation dots -->
+<div class="nav" id="navDots"></div>
+<div class="nav-hint">← → or click</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const navContainer = document.getElementById('navDots');
+  const curEl = document.getElementById('cur');
+  let current = 0;
+
+  // Build nav dots
+  slides.forEach((_, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'nav-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', () => goTo(i));
+    navContainer.appendChild(dot);
+  });
+
+  function goTo(n) {
+    if (n < 0 || n >= slides.length) return;
+    slides[current].classList.remove('active');
+    slides[current].classList.add('prev');
+    setTimeout(() => slides[current].classList.remove('prev'), 500);
+    current = n;
+    slides[current].classList.add('active');
+    curEl.textContent = current + 1;
+    document.querySelectorAll('.nav-dot').forEach((d, i) => {
+      d.classList.toggle('active', i === current);
+    });
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') goTo(current + 1);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') goTo(current - 1);
+  });
+
+  document.getElementById('deck').addEventListener('click', e => {
+    if (e.target.closest('.nav')) return;
+    const x = e.clientX;
+    if (x > window.innerWidth * 0.6) goTo(current + 1);
+    else if (x < window.innerWidth * 0.4) goTo(current - 1);
+  });
+
+  // Touch/swipe
+  let touchX = 0;
+  document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const dx = touchX - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 40) goTo(dx > 0 ? current + 1 : current - 1);
+  });
+</script>
+</body>
+</html>

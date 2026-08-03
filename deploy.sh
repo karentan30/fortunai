@@ -42,8 +42,10 @@ deploy_frontend() {
 deploy_backend() {
   echo "📦 部署后端..."
   scp server/*.js "$HK_SERVER:$HK_PATH/server/"   # 全部依赖(index.js+pay.js+astrology.js+bazi.js), 防漏模块导致 MODULE_NOT_FOUND
-  ssh $HK_SERVER "mkdir -p $HK_PATH/server/lib"
+  ssh $HK_SERVER "mkdir -p $HK_PATH/server/lib $HK_PATH/server/routes $HK_PATH/server/middleware"
   scp -r server/lib/*.js "$HK_SERVER:$HK_PATH/server/lib/"  # 子模块(lib/llm.js 等), 漏传会 MODULE_NOT_FOUND
+  scp -r server/routes/ "$HK_SERVER:$HK_PATH/server/"       # 路由文件(payment/auth/divination等), 漏传即崩溃
+  scp -r server/middleware/ "$HK_SERVER:$HK_PATH/server/"   # 中间件(rateLimitMiddleware/authMiddleware等), 漏传即崩溃
   ssh $HK_SERVER "cd $HK_PATH/server && npm install --silent 2>&1 | tail -2"
   ssh $HK_SERVER "pm2 restart shenyuan 2>&1 | head -3"
   echo "✓ 后端部署完成"
