@@ -278,6 +278,16 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
   <div class="rose-line"></div>
 </div>
 
+<!-- 模式选择 -->
+<div style="display:flex;gap:10px;padding:0 16px 16px;position:relative;z-index:1">
+  <button id="modeDating" onclick="setMode('dating')" style="flex:1;padding:12px 8px;border-radius:10px;border:1.5px solid rgba(201,96,122,0.5);background:rgba(201,96,122,0.12);color:var(--rose-light);font-family:'Noto Serif SC',serif;font-size:13px;cursor:pointer;letter-spacing:0.06em;transition:all 0.2s">
+    💕 恋爱配对
+  </button>
+  <button id="modeMarriage" onclick="setMode('marriage')" style="flex:1;padding:12px 8px;border-radius:10px;border:1.5px solid rgba(180,20,40,0.7);background:rgba(180,20,40,0.15);color:rgba(220,80,80,0.9);font-family:'Noto Serif SC',serif;font-size:13px;cursor:pointer;letter-spacing:0.06em;transition:all 0.2s">
+    囍 婚姻合婚
+  </button>
+</div>
+
 <!-- input -->
 <div class="input-screen page-enter page-enter-d2" id="inputScreen">
   <div class="persons-row">
@@ -491,6 +501,45 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
 </div>
 
 <script>
+window._hehunMode = 'marriage';
+function setMode(m) {
+  window._hehunMode = m;
+  var btnD = document.getElementById('modeDating');
+  var btnM = document.getElementById('modeMarriage');
+  var header = document.querySelector('.header-title');
+  var headerSub = document.querySelector('.header-sub');
+  var headerIcon = document.querySelector('.header > div:first-child');
+  if (m === 'dating') {
+    btnD.style.borderColor = 'rgba(201,96,122,0.9)';
+    btnD.style.background = 'rgba(201,96,122,0.25)';
+    btnM.style.borderColor = 'rgba(180,20,40,0.3)';
+    btnM.style.background = 'rgba(180,20,40,0.08)';
+    if (header) header.textContent = '你们的缘分';
+    if (headerSub) headerSub.textContent = '感情配对 · 恋爱合盘';
+    if (headerIcon) headerIcon.textContent = '💕';
+    document.querySelectorAll('.locked-inner-row').forEach(function(el, i) {
+      var items = ['💑 深度感情兼容性分析', '💬 你们吵架时谁更难哄', '🌙 感情生命周期预测', '💌 让爱情更好的3个建议'];
+      if (items[i]) el.textContent = items[i];
+    });
+    var lockTitle = document.querySelector('.lock-title');
+    if (lockTitle) lockTitle.textContent = '解锁完整恋爱配对报告';
+  } else {
+    btnM.style.borderColor = 'rgba(180,20,40,0.9)';
+    btnM.style.background = 'rgba(180,20,40,0.25)';
+    btnD.style.borderColor = 'rgba(201,96,122,0.3)';
+    btnD.style.background = 'rgba(201,96,122,0.08)';
+    if (header) header.textContent = '你们的合婚';
+    if (headerSub) headerSub.textContent = '八字合缘 · 共识同心';
+    if (headerIcon) headerIcon.textContent = '囍';
+    document.querySelectorAll('.locked-inner-row').forEach(function(el, i) {
+      var items = ['📅 大凶日期回避（婚宴/领证）', '🌟 最佳婚期推荐（3个吉日）', '🔮 五行冲克化解方案', '💍 婚戒宝石旺婚推荐'];
+      if (items[i]) el.textContent = items[i];
+    });
+    var lockTitle2 = document.querySelector('.lock-title');
+    if (lockTitle2) lockTitle2.textContent = '解锁完整合婚报告';
+  }
+}
+
 function showToast(msg, type) {
   var t = document.createElement('div');
   t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
@@ -726,7 +775,10 @@ function createCheckout(btn, tier, price) {
       p2Hour: document.getElementById('bHour').value,
       p2Gender: gB
     };
-    localStorage.setItem('sy_last_hehun', JSON.stringify(d));
+    d.p1Name = document.getElementById('nameA').value.trim() || '';
+  d.p2Name = document.getElementById('nameB').value.trim() || '';
+  d.mode = window._hehunMode || 'marriage';
+  localStorage.setItem('sy_last_hehun', JSON.stringify(d));
   } catch(e){}
   fetch('/api/create-checkout', {
     method: 'POST',
@@ -755,37 +807,63 @@ function handlePaidReturn() {
   if (window.history.replaceState) window.history.replaceState({}, '', '/pages/hehun.html');
   document.getElementById('lockedCard').style.display = 'none';
   document.getElementById('stickyBar').style.display = 'none';
-  showToast('🎉 解锁成功！正在生成你们的专属报告…', 'success');
-  // 显示加载
+  showToast('🎉 解锁成功！报告正在生成…', 'success');
   var wrap = document.getElementById('fullReportWrap');
   wrap.style.display = 'block';
-  document.getElementById('fullReportContent').textContent = 'AI 正在为你生成完整合婚报告（约30秒）…';
-  fetch('/api/hehun', {
+  var contentEl = document.getElementById('fullReportContent');
+  contentEl.style.whiteSpace = 'pre-wrap';
+  contentEl.textContent = '';
+  var mode = window._hehunMode || 'marriage';
+  var accumulated = '';
+  var streamStarted = false;
+  fetch('/api/hehun/stream', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('sy_token') || '')},
     body: JSON.stringify({
       p1Year: saved.p1Year, p1Month: saved.p1Month, p1Day: saved.p1Day,
       p1Hour: saved.p1Hour || '', p1Gender: saved.p1Gender,
+      p1Name: saved.p1Name || '', p2Name: saved.p2Name || '',
       p2Year: saved.p2Year, p2Month: saved.p2Month, p2Day: saved.p2Day,
       p2Hour: saved.p2Hour || '', p2Gender: saved.p2Gender,
-      token: localStorage.getItem('sy_token') || ''
+      mode: mode, token: localStorage.getItem('sy_token') || ''
     })
-  }).then(function(r){ return r.json(); }).then(function(d){
-    if (d.reading) {
-      document.getElementById('fullReportContent').innerHTML = d.reading.replace(/\n/g, '<br>').replace(/<br><br>/g, '</p><p>').replace(/(^|<\/p>)/, '<p>');
-      // 报告生成后加「下一步」引导
-      var nextStep = document.createElement('div');
-      nextStep.style.cssText = 'margin:24px 0 8px;padding:16px;background:linear-gradient(135deg,rgba(91,191,160,0.08),rgba(201,168,76,0.06));border:1px solid rgba(91,191,160,0.2);border-radius:14px;text-align:center;';
-      nextStep.innerHTML = '<div style="font-size:12px;color:var(--ink-mid);margin-bottom:10px;letter-spacing:0.06em">✦ 深度了解你自己 ✦</div>' +
-        '<a href="/pages/bazi.html" style="display:inline-block;padding:9px 22px;background:var(--jade);border-radius:20px;color:#fff;font-size:13px;text-decoration:none;letter-spacing:0.08em;margin:0 4px">测我的命盘 →</a>' +
-        '<a href="/pages/member.html" style="display:inline-block;padding:9px 22px;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);border-radius:20px;color:var(--gold);font-size:13px;text-decoration:none;letter-spacing:0.08em;margin:0 4px">开通会员 · 季季免费合婚</a>';
-      document.getElementById('fullReportWrap').appendChild(nextStep);
-    } else if (d.error) {
-      document.getElementById('fullReportContent').textContent = '获取失败：' + d.error;
+  }).then(function(res) {
+    if (!res.ok || !res.body) { contentEl.textContent = '生成失败，请重试'; return; }
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder();
+    var buf = '';
+    function read() {
+      reader.read().then(function(r) {
+        if (r.done) {
+          // Show next steps after completion
+          var nextStep = document.createElement('div');
+          nextStep.style.cssText = 'margin:24px 0 8px;padding:16px;background:linear-gradient(135deg,rgba(91,191,160,0.08),rgba(201,168,76,0.06));border:1px solid rgba(91,191,160,0.2);border-radius:14px;text-align:center;';
+          nextStep.innerHTML = '<div style="font-size:12px;color:var(--ink-mid);margin-bottom:10px;letter-spacing:0.06em">✦ 深度了解你自己 ✦</div>' +
+            '<a href="/pages/bazi.html" style="display:inline-block;padding:9px 22px;background:var(--jade);border-radius:20px;color:#fff;font-size:13px;text-decoration:none;letter-spacing:0.08em;margin:0 4px">测我的命盘 →</a>' +
+            '<a href="/pages/member.html" style="display:inline-block;padding:9px 22px;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.3);border-radius:20px;color:var(--gold);font-size:13px;text-decoration:none;letter-spacing:0.08em;margin:0 4px">开通会员</a>';
+          document.getElementById('fullReportWrap').appendChild(nextStep);
+          return;
+        }
+        buf += decoder.decode(r.value, {stream:true});
+        var lines = buf.split('\n'); buf = lines.pop();
+        lines.forEach(function(line) {
+          if (!line.startsWith('data: ')) return;
+          var raw = line.slice(6).trim();
+          if (raw === '[DONE]') return;
+          try {
+            var ev = JSON.parse(raw);
+            if (ev.type === 'chunk') {
+              accumulated += ev.content;
+              if (!streamStarted) { streamStarted = true; }
+              contentEl.textContent = accumulated;
+            }
+          } catch(e) {}
+        });
+        read();
+      }).catch(function() { contentEl.textContent = '网络异常，请刷新重试'; });
     }
-  }).catch(function(){
-    document.getElementById('fullReportContent').textContent = '网络异常，请刷新重试';
-  });
+    read();
+  }).catch(function() { contentEl.textContent = '网络异常，请刷新重试'; });
 }
 // ── Share functions (拼 ref 邀请码 → 分享可归因) ──
 function getShareUrl(base) {

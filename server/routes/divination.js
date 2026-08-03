@@ -429,6 +429,102 @@ B方：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined ? p2Hour+'时'
 });
 
 // ══════════════════════════════════════════
+// POST /api/hehun/stream — 合婚流式（SSE）
+// ══════════════════════════════════════════
+router.post('/hehun/stream', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { p1Year, p1Month, p1Day, p1Hour, p2Year, p2Month, p2Day, p2Hour, p1Gender, p2Gender, p1Name, p2Name, mode } = req.body;
+    if (!p1Year || !p2Year) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: '请提供双方出生信息' });
+    }
+    const _curYear = new Date().getFullYear();
+    if (Number(p1Year) > _curYear - 18 || Number(p2Year) > _curYear - 18) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: '仅限18岁以上用户使用' });
+    }
+    const isDating = mode === 'dating';
+    const nameA = p1Name || 'A方';
+    const nameB = p2Name || 'B方';
+
+    const systemPrompt = isDating
+      ? `你是一位洞悉人心的感情命理师，从业三十年，见过无数恋爱中的人。你说话温柔又直率——你不会粉饰，但也不会只说坏事。你深知恋爱的美丽和它的复杂。请用命运诗篇的笔触，为${nameA}和${nameB}写一份深度恋爱配对分析报告（6000-8000字）。用Markdown格式，简体中文。
+
+分析维度：
+## 💕 缘分分数（百分制）与总体感情走向
+## 🌊 两人的情感模式——你们是怎么爱的
+## 💬 沟通与冲突模式（你们会在哪里起争执，如何化解）
+## 🌟 这段感情最美好的地方（天然的心灵契合点）
+## ⚡ 感情中的考验（主要挑战和弱点）
+## 🏠 同居/深度相处的化学反应
+## 💫 你们的感情生命周期（未来1-3年走势）
+## 🎯 让这段感情更好的3个具体建议
+## 💌 一句话：这段感情值得吗
+
+写作风格：命运诗篇。不用给打分列表，用连贯的叙述段落。每节结尾用一句令人心头一震的话。直接进入两人的感情画像。`
+
+      : `你是一位德高望重的合婚师，从业四十余年，阅人无数，撮合过上千对姻缘。你说话诚恳、直率、不留情面，但句句为对方好。你深知婚姻不是儿戏，合婚分析必须全面深刻、落到实地。用Markdown格式，简体中文，8000-12000字。
+
+详细分析：
+## 一、合婚总评与缘分分数（百分制）
+## 二、五行互补度与元素相生相克
+## 三、性格匹配度——两人的心理底色
+## 四、价值观与人生方向兼容性
+## 五、吵架模式与冲突化解之道
+## 六、气场合度（谁带动谁，谁让谁稳定）
+## 七、生育子女缘分与家庭运
+## 八、双方原生家庭兼容性
+## 九、最佳结婚年份与时机
+## 十、婚后最需要注意的3件事
+## 十一、合婚古诀引用与命理依据
+## 十二、一句话结论——这段婚姻值得进入吗`;
+
+    const userMsg = `${nameA}：${p1Year}年${p1Month}月${p1Day}日${p1Hour !== undefined && p1Hour !== '' ? p1Hour+'时' : ''} · ${p1Gender === 'male' ? '男' : '女'}
+${nameB}：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined && p2Hour !== '' ? p2Hour+'时' : ''} · ${p2Gender === 'male' ? '男' : '女'}`;
+
+    const fullAccess = hasFullAccess(req, ['bazi', 'hehun', 'ziwei', 'xingming', 'astrology', '八字', '合婚', '紫微', '姓名', '占星']);
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.flushHeaders();
+    res.write(`data: ${JSON.stringify({ type: 'meta', mode: isDating ? 'dating' : 'marriage' })}\n\n`);
+
+    const streamBody = await deepseekStream(
+      [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }],
+      { maxTokens: fullAccess ? 12288 : 4000, timeout: 300000 }
+    );
+    const reader = streamBody.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '', buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try {
+          const json = JSON.parse(raw);
+          const content = json.choices?.[0]?.delta?.content || '';
+          if (content) { fullText += content; res.write(`data: ${JSON.stringify({ type: 'chunk', content })}\n\n`); }
+        } catch(e) {}
+      }
+    }
+    insertReading.run('hehun', JSON.stringify(req.body), fullText, req.userId);
+    const ctxId = saveQaContext('hehun', req.body, fullText);
+    res.write(`data: ${JSON.stringify({ type: 'done', contextId: ctxId })}\n\n`);
+    res.end();
+  } catch(err) {
+    console.error('[HEHUN-STREAM ERR]', err.message);
+    try { res.write(`data: ${JSON.stringify({ type: 'error', message: '生成失败，请重试' })}\n\n`); res.end(); } catch(e) {}
+  }
+});
+
+// ══════════════════════════════════════════
 // POST /api/fengshui — AI风水评测
 // ══════════════════════════════════════════
 router.post('/fengshui', rateLimitMiddleware, async (req, res) => {
