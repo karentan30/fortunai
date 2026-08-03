@@ -1,0 +1,693 @@
+<!--
+  产品推荐Widget
+  集成位置: 在每个报告页面（jyotish.html/maya.html/tibet.html）的报告展示区下方
+
+  使用方法:
+  1. 在HTML中引入此文件或复制代码
+  2. 在报告生成后调用: window.showProductRecommendations(userDiagnostics)
+  3. Widget会自动获取推荐产品并展示
+-->
+
+<style>
+.product-recommender-widget {
+  background: linear-gradient(135deg, #f8f5f1 0%, #faf7f3 100%);
+  border-top: 2px solid #d4a574;
+  padding: 40px 20px;
+  margin-top: 40px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.recommender-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.recommender-header h2 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #2c2c2c;
+  margin: 0 0 8px 0;
+}
+
+.recommender-header p {
+  font-size: 14px;
+  color: #888;
+  margin: 0;
+}
+
+.products-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.product-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.product-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.product-image {
+  width: 100%;
+  height: 180px;
+  background: #f0ede8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, #e8dcd0 25%, transparent 25%, transparent 50%, #e8dcd0 50%, #e8dcd0 75%, transparent 75%, transparent);
+  background-size: 20px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 12px;
+}
+
+.product-card-body {
+  padding: 16px;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #2c2c2c;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
+  max-height: 48px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.product-reason {
+  font-size: 12px;
+  color: #d4a574;
+  font-weight: 500;
+  margin: 0 0 12px 0;
+}
+
+.product-description {
+  font-size: 13px;
+  color: #666;
+  margin: 0 0 12px 0;
+  flex-grow: 1;
+}
+
+.product-price-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.product-price-usd {
+  font-size: 18px;
+  font-weight: 700;
+  color: #d4a574;
+}
+
+.product-price-cny {
+  font-size: 12px;
+  color: #999;
+}
+
+.product-add-btn {
+  width: 100%;
+  padding: 10px 12px;
+  background: #d4a574;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.product-add-btn:hover {
+  background: #c49565;
+  transform: translateY(-2px);
+}
+
+.product-add-btn:active {
+  transform: translateY(0);
+}
+
+/* Bundle建议区 */
+.bundle-section {
+  max-width: 1200px;
+  margin: 40px auto 0;
+  padding: 30px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.bundle-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.bundle-header h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #2c2c2c;
+  margin: 0 0 8px 0;
+}
+
+.bundles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.bundle-card {
+  border: 2px solid #e8dcd0;
+  border-radius: 8px;
+  padding: 24px;
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.bundle-card:hover {
+  border-color: #d4a574;
+  box-shadow: 0 4px 12px rgba(212, 165, 116, 0.15);
+}
+
+.bundle-card.premium {
+  border-color: #d4a574;
+  background: linear-gradient(135deg, rgba(212, 165, 116, 0.05) 0%, transparent 100%);
+}
+
+.bundle-card.premium::before {
+  content: '推荐';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #d4a574;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.bundle-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c2c2c;
+  margin: 0 0 16px 0;
+}
+
+.bundle-items {
+  text-align: left;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #666;
+}
+
+.bundle-items li {
+  margin-bottom: 8px;
+}
+
+.bundle-price {
+  font-size: 24px;
+  font-weight: 700;
+  color: #d4a574;
+  margin-bottom: 4px;
+}
+
+.bundle-savings {
+  font-size: 12px;
+  color: #27ae60;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+
+.bundle-btn {
+  width: 100%;
+  padding: 12px;
+  background: #d4a574;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.bundle-btn:hover {
+  background: #c49565;
+}
+
+/* 购物车浮窗 */
+.shopping-cart-drawer {
+  position: fixed;
+  right: 0;
+  top: 0;
+  width: 380px;
+  height: 100vh;
+  background: white;
+  box-shadow: -4px 0 16px rgba(0,0,0,0.15);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+}
+
+.shopping-cart-drawer.open {
+  transform: translateX(0);
+}
+
+.cart-header {
+  padding: 20px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.cart-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c2c2c;
+  margin: 0;
+}
+
+.cart-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #999;
+}
+
+.cart-items {
+  flex-grow: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.cart-item {
+  display: flex;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cart-item-image {
+  width: 80px;
+  height: 80px;
+  background: #f0ede8;
+  border-radius: 6px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.cart-item-details {
+  flex-grow: 1;
+}
+
+.cart-item-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2c2c2c;
+  margin: 0 0 4px 0;
+}
+
+.cart-item-price {
+  font-size: 14px;
+  color: #d4a574;
+  font-weight: 600;
+}
+
+.cart-item-remove {
+  color: #999;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.cart-footer {
+  padding: 20px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.cart-total {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.cart-total-label {
+  color: #666;
+}
+
+.cart-total-value {
+  color: #d4a574;
+}
+
+.cart-checkout-btn {
+  width: 100%;
+  padding: 14px;
+  background: #d4a574;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cart-checkout-btn:hover {
+  background: #c49565;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .products-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .shopping-cart-drawer {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .products-container {
+    grid-template-columns: 1fr;
+  }
+
+  .product-recommender-widget {
+    padding: 20px 16px;
+  }
+}
+
+/* Loading状态 */
+.recommender-loading {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f0ede8;
+  border-top: 4px solid #d4a574;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: #999;
+  font-size: 14px;
+}
+
+/* 成功提示 */
+.toast-notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: white;
+  border-left: 4px solid #27ae60;
+  padding: 16px 20px;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  animation: slideIn 0.3s ease;
+  z-index: 1001;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+</style>
+
+<div id="product-recommender-root"></div>
+
+<script>
+class ProductRecommenderWidget {
+  constructor() {
+    this.cart = [];
+    this.recommendations = null;
+  }
+
+  async initialize(diagnostics) {
+    // diagnostics 示例：
+    // {
+    //   bazi_element: 'fire',
+    //   jyotish_category: 'fire_signs',
+    //   maya_kin_color: 'red_kin',
+    //   tibet_zodiac: 'dragon'
+    // }
+
+    const root = document.getElementById('product-recommender-root');
+
+    // 显示loading状态
+    root.innerHTML = `
+      <div class="recommender-loading">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">为您精选产品中...</p>
+      </div>
+    `;
+
+    try {
+      // 调用推荐API
+      const response = await fetch(
+        `/api/recommend-products/temp?bazi_element=${diagnostics.bazi_element}&jyotish_category=${diagnostics.jyotish_category}&maya_kin_color=${diagnostics.maya_kin_color}&tibet_zodiac=${diagnostics.tibet_zodiac}`
+      );
+
+      const data = await response.json();
+      this.recommendations = data.recommendations;
+
+      this.render();
+    } catch (error) {
+      console.error('推荐API错误:', error);
+      root.innerHTML = '<p style="text-align:center;color:#999;padding:40px;">推荐系统暂不可用，请稍后再试</p>';
+    }
+  }
+
+  render() {
+    const root = document.getElementById('product-recommender-root');
+
+    const html = `
+      <div class="product-recommender-widget">
+        <div class="recommender-header">
+          <h2>为您精选的灵性产品</h2>
+          <p>根据您的命理诊断，这些产品将帮助您稳定能量、增进修行</p>
+        </div>
+
+        <div class="products-container">
+          ${this.recommendations.products.map((product, idx) => `
+            <div class="product-card" data-product-id="${product.id}">
+              <div class="product-image">
+                ${product.image ?
+                  `<img src="${product.image}" alt="${product.name}" />` :
+                  `<div class="product-image-placeholder">产品图片</div>`
+                }
+              </div>
+              <div class="product-card-body">
+                <h4 class="product-name">${product.name}</h4>
+                <p class="product-reason">✨ ${product.recommended_reason}</p>
+                <p class="product-description">${product.description}</p>
+                <div class="product-price-group">
+                  <span class="product-price-usd">$${product.price_usd}</span>
+                  <span class="product-price-cny">¥${product.price_cny}</span>
+                </div>
+                <button class="product-add-btn" onclick="window.productRecommender.addToCart('${product.id}', ${product.price_usd})">
+                  加入购物车
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="bundle-section">
+          <div class="bundle-header">
+            <h3>或购买套装节省更多</h3>
+          </div>
+          <div class="bundles-grid">
+            <div class="bundle-card" onclick="window.productRecommender.addBundleToCart('basic')">
+              <h4 class="bundle-name">基础套装</h4>
+              <ul class="bundle-items">
+                ${this.recommendations.products.slice(0, 2).map(p => `<li>${p.name}</li>`).join('')}
+              </ul>
+              <div class="bundle-price">$${(this.recommendations.products.slice(0, 2).reduce((sum, p) => sum + p.price_usd, 0) * 0.9).toFixed(2)}</div>
+              <div class="bundle-savings">节省 $${(this.recommendations.products.slice(0, 2).reduce((sum, p) => sum + p.price_usd, 0) * 0.1).toFixed(2)}</div>
+              <button class="bundle-btn">购买套装</button>
+            </div>
+
+            <div class="bundle-card premium" onclick="window.productRecommender.addBundleToCart('premium')">
+              <h4 class="bundle-name">完整套装</h4>
+              <ul class="bundle-items">
+                ${this.recommendations.products.map(p => `<li>${p.name}</li>`).join('')}
+              </ul>
+              <div class="bundle-price">$${(this.recommendations.products.reduce((sum, p) => sum + p.price_usd, 0) * 0.85).toFixed(2)}</div>
+              <div class="bundle-savings">节省 $${(this.recommendations.products.reduce((sum, p) => sum + p.price_usd, 0) * 0.15).toFixed(2)}</div>
+              <button class="bundle-btn">购买套装</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="shopping-cart-drawer" id="cart-drawer">
+        <div class="cart-header">
+          <h2 class="cart-title">购物车</h2>
+          <button class="cart-close" onclick="window.productRecommender.closeCart()">×</button>
+        </div>
+        <div class="cart-items" id="cart-items"></div>
+        <div class="cart-footer">
+          <div class="cart-total">
+            <span class="cart-total-label">小计</span>
+            <span class="cart-total-value" id="cart-total">$0.00</span>
+          </div>
+          <button class="cart-checkout-btn" onclick="window.productRecommender.checkout()">
+            立即结账
+          </button>
+        </div>
+      </div>
+    `;
+
+    root.innerHTML = html;
+  }
+
+  addToCart(productId, price) {
+    const product = this.recommendations.products.find(p => p.id === productId);
+    if (product) {
+      this.cart.push({
+        ...product,
+        cartItemId: Math.random().toString(36)
+      });
+      this.updateCart();
+      this.showToast(`已加入购物车: ${product.name}`);
+      document.getElementById('cart-drawer').classList.add('open');
+    }
+  }
+
+  addBundleToCart(bundleType) {
+    const bundleProducts = bundleType === 'basic'
+      ? this.recommendations.products.slice(0, 2)
+      : this.recommendations.products;
+
+    bundleProducts.forEach(product => {
+      this.cart.push({
+        ...product,
+        cartItemId: Math.random().toString(36)
+      });
+    });
+
+    this.updateCart();
+    this.showToast(`${bundleType === 'basic' ? '基础' : '完整'}套装已加入购物车`);
+    document.getElementById('cart-drawer').classList.add('open');
+  }
+
+  updateCart() {
+    const cartItemsDiv = document.getElementById('cart-items');
+    const cartTotalDiv = document.getElementById('cart-total');
+
+    const total = this.cart.reduce((sum, item) => sum + item.price_usd, 0);
+
+    cartItemsDiv.innerHTML = this.cart.length === 0
+      ? '<p style="text-align:center;color:#999;padding:40px;">购物车为空</p>'
+      : this.cart.map(item => `
+          <div class="cart-item">
+            <div class="cart-item-image"></div>
+            <div class="cart-item-details">
+              <p class="cart-item-name">${item.name}</p>
+              <p class="cart-item-price">$${item.price_usd}</p>
+              <span class="cart-item-remove" onclick="window.productRecommender.removeFromCart('${item.cartItemId}')">移除</span>
+            </div>
+          </div>
+        `).join('');
+
+    cartTotalDiv.textContent = `$${total.toFixed(2)}`;
+  }
+
+  removeFromCart(cartItemId) {
+    this.cart = this.cart.filter(item => item.cartItemId !== cartItemId);
+    this.updateCart();
+  }
+
+  closeCart() {
+    document.getElementById('cart-drawer').classList.remove('open');
+  }
+
+  checkout() {
+    if (this.cart.length === 0) {
+      this.showToast('购物车为空');
+      return;
+    }
+
+    // 跳转到支付页面
+    const productIds = this.cart.map(item => item.id);
+    window.location.href = `/checkout?products=${productIds.join(',')}`;
+  }
+
+  showToast(message) {
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.textContent = message;
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+      toast.remove();
+    }, 3000);
+  }
+}
+
+// 全局初始化函数
+window.productRecommender = new ProductRecommenderWidget();
+
+window.showProductRecommendations = function(diagnostics) {
+  window.productRecommender.initialize(diagnostics);
+};
+</script>
