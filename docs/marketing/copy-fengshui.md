@@ -74,19 +74,25 @@ Has anyone else experienced this shift?
 ### 【图片Prompt x3】
 
 **Prompt 1**:
-Clutter-free Japanese-minimalist home entrance vestibule, polished dark walnut console table bearing a single warm brass table lamp casting antique gold #c9a84c glow, frosted glass rectangular mirror reflecting soft dawn rays into warm white #faf8f5 marble floor, fresh white orchid in jade green #5bbfa0 ceramic pot, overhead shot emphasizing spatial openness, morning directional light at 15-degree low angle creating long soft shadows, mood: grounded prosperity, photorealistic architectural interior photography, 8K, 24mm wide-angle, f/8 tilt-shift, shallow field on orchid
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, clutter-free Japanese-minimalist home entrance vestibule, polished dark walnut console table bearing a single warm brass table lamp casting antique gold (#c9a84c) glow, frosted glass rectangular mirror reflecting soft dawn rays into warm white (#faf8f5) marble floor, fresh white orchid in jade green (#5bbfa0) ceramic pot, overhead shot emphasizing spatial openness, warm golden candlelight, single light source, volumetric fog, morning directional light at 15-degree low angle creating long soft shadows, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 50mm, f/8, tack sharp, overhead shot, mood: grounded prosperity
 
-Negative: text, watermark, cartoon, anime, CGI, Western neoclassical decor, plastic objects, harsh fluorescent overhead, low quality, blurry, distorted perspective, clutter, emoji, stock photo aesthetic, IKEA generic
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, anime, CGI, Western neoclassical decor, plastic objects, harsh fluorescent overhead, distorted perspective, clutter, emoji, stock photo aesthetic, IKEA generic
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 **Prompt 2**:
-Elegant East Asian entryway at golden hour, mid-shot framing carved dark walnut shoe cabinet with antique brass handles, single slender bonsai pine on polished surface, hand-painted porcelain incense holder with thin smoke curl, warm gold #c9a84c light washing the back wall in deep violet #0d0a18 wallpaper with subtle cloud motif, floor of pale warm stone, Rembrandt side-lighting from concealed cove, mood: understated wealth and dignity, photorealistic 8K interior photography, 50mm f/2.8 portrait lens, medium shot
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, elegant East Asian entryway at golden hour, carved dark walnut shoe cabinet with antique brass handles, single slender bonsai pine on polished surface, hand-painted porcelain incense holder with thin smoke curl, warm antique gold (#c9a84c) light washing the back wall in deep violet (#0d0a18) wallpaper with subtle cloud motif, floor of pale warm stone, volumetric light rays, god rays, cinematic lighting, Rembrandt side-lighting from concealed cove, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 50mm portrait lens, f/2.8, bokeh background, shallow depth of field, mood: understated wealth and dignity
 
-Negative: text, watermark, cartoon, anime, CGI, cheap plastic decor, neon, harsh shadows, Western suburban entry, clutter, low quality, blurry, emoji, distorted
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, anime, CGI, cheap plastic decor, neon, harsh shadows, Western suburban entry, clutter, emoji, distorted
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 **Prompt 3**:
-Macro still-life flat lay of feng shui entry essentials arranged on aged walnut plank: cut cross-section of mountain crystal sphere catching prismatic light, round jade green #5bbfa0 coin with antique patina, raw-edge linen square in warm white #faf8f5, miniature brass oil lamp lit with amber flame, warm morning window light raking from left at 30 degrees, deep violet #0d0a18 background cloth, mood: ritual abundance, photorealistic product macro photography, 8K, 100mm f/2.8 macro lens, razor detail on crystal facets
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, macro still-life flat lay of feng shui entry essentials arranged on aged walnut plank, cut cross-section of mountain crystal sphere catching prismatic light, round jade green (#5bbfa0) coin with antique patina, raw-edge linen square in warm white (#faf8f5), miniature brass oil lamp lit with amber flame, warm morning window light raking from left at 30 degrees, deep violet (#0d0a18) background cloth, volumetric light rays, god rays, cinematic lighting, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 100mm macro, f/2.8, extreme close-up, ultra sharp details, mood: ritual abundance
 
-Negative: text, watermark, cartoon, CGI, plastic, painted fake crystals, harsh artificial light, neon, emoji, busy background, low quality, blurry
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, CGI, plastic, painted fake crystals, harsh artificial light, neon, emoji, busy background
+
+<!-- cfg:7, steps:28, sampler:Euler a, size:1024x1024 -->
 
 ---
 
@@ -169,19 +175,25 @@ If anyone has read legitimate sleep research on this, or experienced real change
 ### 【图片Prompt x3】
 
 **Prompt 1**:
-Serene East Asian minimalist bedroom at dawn, queen bed with headboard against north wall, sage-jade green #5bbfa0 linen accent panel on feature wall, hand-turned walnut nightstand with single warm brass reading lamp diffusing antique gold #c9a84c glow, cream raw-silk bedding with subtle weave texture, sheer rice paper curtain stirring in morning breath, wide shot from doorway, morning blue-hour ambient light transitioning to warm gold, mood: healing stillness, photorealistic 8K interior photography, 24mm wide-angle architectural lens
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, serene East Asian minimalist bedroom at dawn, queen bed with headboard against north wall, sage jade green (#5bbfa0) linen accent panel on feature wall, hand-turned walnut nightstand with single warm brass reading lamp diffusing antique gold (#c9a84c) glow, cream raw-silk bedding with subtle weave texture, sheer rice paper curtain stirring in morning breath, wide shot from doorway, morning blue-hour ambient light transitioning to warm gold, warm golden candlelight, single light source, volumetric fog, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 24mm wide-angle architectural lens, f/8, tack sharp, mood: healing stillness
 
-Negative: text, watermark, cartoon, anime, CGI, bright overhead light, clutter, harsh shadows, busy patterns, cheap synthetics, emoji, stock photo, distorted perspective
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, anime, CGI, bright overhead light, clutter, harsh shadows, busy patterns, cheap synthetics, emoji, stock photo, distorted perspective
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 **Prompt 2**:
-Twilight bedroom interior from low 45-degree angle, Japanese futon-height bed platform in pale ash wood, deep violet #0d0a18 wall behind headboard with single backlit brass ring sconce casting warm arc, jade plant on window ledge catching last blue-hour light, translucent linen drape catching faint breeze suggesting airflow, shallow depth of field on plant leaf, ultra-warm color grade 3200K, mood: magnetic calm before sleep, photorealistic 8K, 35mm f/1.4 cinematic lens
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, twilight bedroom interior from low 45-degree angle, Japanese futon-height bed platform in pale ash wood, deep violet (#0d0a18) wall behind headboard with single backlit brass ring sconce casting warm arc, jade plant on window ledge catching last blue-hour light, translucent linen drape catching faint breeze suggesting airflow, shallow depth of field on plant leaf, ultra-warm color grade 3200K, volumetric light rays, god rays, cinematic lighting, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 35mm portrait lens, f/1.4, bokeh background, shallow depth of field, mood: magnetic calm before sleep
 
-Negative: text, watermark, cartoon, anime, CGI, cold fluorescent, clutter, harsh artificial, cheap plastic, emoji, busy decor, low quality
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, anime, CGI, cold fluorescent, clutter, harsh artificial, cheap plastic, emoji, busy decor
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 **Prompt 3**:
-Extreme close-up of bedroom nightstand vignette: antique gold #c9a84c brass lamp base with warm white #faf8f5 linen shade, jade green #5bbfa0 celadon pillow edge in foreground with visible weave texture, frosted pebble glass water cup on dark walnut tray, open window corner revealing indigo night sky with single star, rim lighting from lamp warming all textures, mood: intimate sanctuary, photorealistic 8K macro, 85mm f/1.8 portrait lens, razor-sharp on brass texture, warm bokeh background
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, extreme close-up of bedroom nightstand vignette, antique gold (#c9a84c) brass lamp base with warm white (#faf8f5) linen shade, jade green (#5bbfa0) celadon pillow edge in foreground with visible weave texture, frosted pebble glass water cup on dark walnut tray, open window corner revealing indigo night sky with single star, rim lighting from lamp warming all textures, muted color palette, film grain, Fujifilm XT3 color science, 85mm portrait lens, f/1.8, bokeh background, shallow depth of field, razor-sharp on brass texture, warm bokeh background, mood: intimate sanctuary
 
-Negative: text, watermark, cartoon, CGI, cheap plastic, harsh lighting, clutter, cold tones, emoji, distorted, low quality
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, CGI, cheap plastic, harsh lighting, clutter, cold tones, emoji, distorted
+
+<!-- cfg:6, steps:35, sampler:DPM++ 2M SDE Karras, size:832x1216 -->
 
 ---
 
@@ -271,19 +283,25 @@ There's legitimate neuroscience here: your prefrontal cortex demands psychologic
 ### 【图片Prompt x3】
 
 **Prompt 1**:
-Executive home office, wide architectural shot, solid walnut desk positioned with stone-textured wall as backing, desk angled 30 degrees offset from visible doorway letting natural morning light stream across from left window, warm white #faf8f5 walls, single jade green #5bbfa0 ceramic cup and polished river stone as only desk objects, warm brass articulating task lamp, dark wood parquet floor, mood: deep focused authority, photorealistic 8K architectural interior, 24mm tilt-shift lens, f/8, perfectly straight verticals
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, executive home office wide architectural shot, solid walnut desk positioned with stone-textured wall as backing, desk angled 30 degrees offset from visible doorway letting natural morning light stream across from left window, warm white (#faf8f5) walls, single jade green (#5bbfa0) ceramic cup and polished river stone as only desk objects, warm brass articulating task lamp, dark wood parquet floor, volumetric light rays, god rays, cinematic lighting, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 24mm tilt-shift lens, f/8, tack sharp, perfectly straight verticals, mood: deep focused authority
 
-Negative: text, watermark, cartoon, anime, CGI, clutter, harsh overhead fluorescent, multiple distracting objects, cheap materials, emoji, distorted perspective, stock photo, busy background
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, anime, CGI, clutter, harsh overhead fluorescent, multiple distracting objects, cheap materials, emoji, distorted perspective, stock photo, busy background
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 **Prompt 2**:
-Minimalist study nook, medium shot, solid oak writing desk back against clay-plaster textured wall, single healthy monstera in jade green #5bbfa0 ceramic planter on corner, warm antique gold #c9a84c brass pen holder, open leather notebook suggesting active thought, warm task lamp pooling antique gold light on surface, afternoon sun from side creating long soft shadow stripe across grain, mood: flow-state potential, photorealistic 8K, 50mm f/2.4
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, minimalist study nook medium shot, solid oak writing desk back against clay-plaster textured wall, single healthy monstera in jade green (#5bbfa0) ceramic planter on corner, warm antique gold (#c9a84c) brass pen holder, open leather notebook suggesting active thought, warm task lamp pooling antique gold light on surface, afternoon sun from side creating long soft shadow stripe across grain, volumetric light rays, cinematic lighting, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 50mm, f/2.4, bokeh background, shallow depth of field, mood: flow-state potential
 
-Negative: text, watermark, cartoon, CGI, clutter, harsh artificial, multiple monitors visible, cheap plastic, emoji, distorted, low quality
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, CGI, clutter, harsh artificial, multiple monitors visible, cheap plastic, emoji, distorted
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 **Prompt 3**:
-Bird's-eye-view overhead of desk landscape: walnut wood grain surface texture, single wireless keyboard and trackpad aligned precisely, small rounded green plant in white ceramic pot at upper left corner, hand-written ink notes on cream paper, tiny brass paperweight, soft diffused natural light from offscreen left creating almost shadowless flat lay aesthetic, warm white #faf8f5 dominant, antique gold #c9a84c accents, mood: clarity and intentionality, photorealistic 8K overhead product photography, 85mm f/5.6
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, bird's-eye-view overhead of desk landscape, walnut wood grain surface texture, single wireless keyboard and trackpad aligned precisely, small rounded green plant in white ceramic pot at upper left corner, hand-written ink notes on cream paper, tiny brass paperweight, soft diffused natural light from offscreen left creating almost shadowless flat lay aesthetic, warm white (#faf8f5) dominant, antique gold (#c9a84c) accents, muted color palette, film grain, Fujifilm XT3 color science, 50mm, f/8, tack sharp, overhead shot, mood: clarity and intentionality
 
-Negative: text, watermark, cartoon, CGI, harsh direct flash, clutter, cheap plastic, emoji, busy background, low quality
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, CGI, harsh direct flash, clutter, cheap plastic, emoji, busy background
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 ---
 
@@ -378,19 +396,25 @@ Has anyone done a deliberate year-opening ritual and noticed behavioral shifts? 
 ### 【图片Prompt x3】
 
 **Prompt 1**:
-New Year lunar ritual altar in East Asian home, medium close-up, hand-carved dark walnut altar tray holding: white celadon bowl of fresh spring water with three white gardenia blossoms floating, hand-rolled sandalwood incense in bronze holder with thin smoke curling upward catching dawn light, single unscented cream pillar candle flame, jade green #5bbfa0 silk cloth underneath, sunlight from east window striking smoke at golden angle, deep violet #0d0a18 background wall, mood: sacred renewal, photorealistic 8K, 85mm f/1.8 shallow DOF on smoke detail
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, New Year lunar ritual altar in East Asian home, medium close-up, hand-carved dark walnut altar tray holding: white celadon bowl of fresh spring water with three white gardenia blossoms floating, hand-rolled sandalwood incense in bronze holder with thin smoke curling upward catching dawn light, single unscented cream pillar candle flame, jade green (#5bbfa0) silk cloth underneath, sunlight from east window striking smoke at golden angle, deep violet (#0d0a18) background wall, warm golden candlelight, single light source, volumetric fog, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 85mm portrait lens, f/1.8, bokeh background, shallow depth of field, mood: sacred renewal
 
-Negative: text, watermark, cartoon, anime, CGI, cheap plastic, harsh artificial, clutter, Western holiday decor, emoji, low quality, blurry
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, anime, CGI, cheap plastic, harsh artificial, clutter, Western holiday decor, emoji
+
+<!-- cfg:7, steps:28, sampler:Euler a, size:1024x1024 -->
 
 **Prompt 2**:
-Bright East Asian living room mid-clearing, wide shot, Asian woman in her 30s with straight black hair tied back, wearing warm cream linen top, arms carrying folded fabric toward doorway in natural flowing motion, room behind her shows freshly emptied space with warm morning light flooding through open balcony door, jade plant on corner, warm white walls, antique gold #c9a84c accent lamp, mood: hopeful liberation, photorealistic 8K, 35mm f/2.8
+RAW photo, photorealistic, 1girl, beautiful realistic face, perfect skin, masterpiece, best quality, ultra realistic, 8k uhd, DSLR, soft lighting, bright East Asian living room mid-clearing wide shot, Chinese Asian woman in her 30s with straight black hair tied back, wearing warm cream linen top, arms carrying folded fabric toward doorway in natural flowing motion, room behind her shows freshly emptied space with warm morning light flooding through open balcony door, jade plant on corner, warm white (#faf8f5) walls, antique gold (#c9a84c) accent lamp, volumetric light rays, god rays, cinematic lighting, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 35mm portrait lens, f/2.8, bokeh background, shallow depth of field, mood: hopeful liberation
 
-Negative: text, watermark, cartoon, anime, CGI, clutter remaining, harsh light, cheap materials, emoji, stock photo stilted pose, Western interior
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, anime, CGI, clutter remaining, harsh light, cheap materials, emoji, stock photo stilted pose, Western interior
+
+<!-- cfg:6, steps:35, sampler:DPM++ 2M SDE Karras, size:832x1216 -->
 
 **Prompt 3**:
-Intention-setting corner close-up vignette: aged walnut shelf with single antique gold #c9a84c brass oil lamp casting warm pool, smooth jade green #5bbfa0 river stone beside it, hand-folded warm white #faf8f5 linen square, morning window light creating geometric shadow pattern on shelf surface, deep violet #0d0a18 wall in background, bokeh circles from brass lamp reflection, mood: contemplative resolve, photorealistic 8K macro, 100mm f/2.8, sharp on jade stone texture
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, intention-setting corner close-up vignette, aged walnut shelf with single antique gold (#c9a84c) brass oil lamp casting warm pool, smooth jade green (#5bbfa0) river stone beside it, hand-folded warm white (#faf8f5) linen square, morning window light creating geometric shadow pattern on shelf surface, deep violet (#0d0a18) wall in background, bokeh circles from brass lamp reflection, muted color palette, film grain, Fujifilm XT3 color science, 100mm macro, f/2.8, extreme close-up, ultra sharp details, sharp on jade stone texture, mood: contemplative resolve
 
-Negative: text, watermark, cartoon, CGI, cheap plastic, cold fluorescent, emoji, busy background, clutter, low quality
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, CGI, cheap plastic, cold fluorescent, emoji, busy background, clutter
+
+<!-- cfg:7, steps:28, sampler:Euler a, size:1024x1024 -->
 
 ---
 
@@ -484,19 +508,25 @@ I've noticed in my own dating patterns that I'm more emotionally available durin
 ### 【图片Prompt x3】
 
 **Prompt 1**:
-East Asian minimalist bedroom at golden hour, medium shot, rose-blush clay plaster feature wall behind bed, fresh pale pink peonies in hand-blown glass vase on walnut nightstand, antique gold #c9a84c brass table lamp spreading warm amber glow, hand-woven cream silk bedding with subtle diamond texture, gauze linen curtain filtering honey light into room, single dried lavender stem on pillow, mood: tender romantic warmth, photorealistic 8K, 50mm f/1.8 portrait, warm 3500K color grade
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, East Asian minimalist bedroom at golden hour medium shot, rose-blush clay plaster feature wall behind bed, fresh pale pink peonies in hand-blown glass vase on walnut nightstand, antique gold (#c9a84c) brass table lamp spreading warm amber glow, hand-woven cream silk bedding with subtle diamond texture, gauze linen curtain filtering honey light into room, single dried lavender stem on pillow, warm golden candlelight, single light source, volumetric fog, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 50mm portrait lens, f/1.8, bokeh background, shallow depth of field, warm 3500K color grade, mood: tender romantic warmth
 
-Negative: text, watermark, cartoon, anime, CGI, cold blue tones, harsh overhead, artificial flowers, clutter, cheap synthetic fabrics, emoji, stock photo stilted look
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, anime, CGI, cold blue tones, harsh overhead, artificial flowers, clutter, cheap synthetic fabrics, emoji, stock photo stilted look
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 **Prompt 2**:
-Cozy East Asian living room at late afternoon, medium shot, warm caramel wall with single botanical watercolor painting, seasonal fresh chrysanthemums in jade green #5bbfa0 ceramic vase on low wooden coffee table, brass incense holder with extinguished stick, cream linen sofa with rust-orange accent cushion, open window letting diffused golden hour fill space, mood: inviting relational warmth, photorealistic 8K, 35mm f/2.8, soft warm grade
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, cozy East Asian living room at late afternoon medium shot, warm caramel wall with single botanical watercolor painting, seasonal fresh chrysanthemums in jade green (#5bbfa0) ceramic vase on low wooden coffee table, brass incense holder with extinguished stick, cream linen sofa with rust-orange accent cushion, open window letting diffused golden hour fill space, volumetric light rays, god rays, cinematic lighting, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 35mm, f/2.8, bokeh background, soft warm grade, mood: inviting relational warmth
 
-Negative: text, watermark, cartoon, CGI, artificial plants, cold colors, harsh light, clutter, cheap materials, emoji, busy decor
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, CGI, artificial plants, cold colors, harsh light, clutter, cheap materials, emoji, busy decor
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 **Prompt 3**:
-Intimate macro vignette: five pale pink peonies in clear hand-blown glass vase, petals showing delicate vein detail in raking warm window light, single antique gold #c9a84c ring placed casually beside vase on dark walnut, sheer organza fabric with light-scatter bokeh in background, warm 3200K candlelight from offscreen right, shallow DOF with rose petals filling frame, mood: feminine luxe romance, photorealistic 8K, 100mm f/2.8 macro
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, intimate macro vignette, five pale pink peonies in clear hand-blown glass vase, petals showing delicate vein detail in raking warm window light, single antique gold (#c9a84c) ring placed casually beside vase on dark walnut, sheer organza fabric with light-scatter bokeh in background, warm 3200K candlelight from offscreen right, shallow DOF with rose petals filling frame, muted color palette, film grain, Fujifilm XT3 color science, 100mm macro, f/2.8, extreme close-up, ultra sharp details, mood: feminine luxe romance
 
-Negative: text, watermark, cartoon, CGI, artificial flowers, harsh light, cold tones, emoji, stock photo, cheap materials, clutter
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, CGI, artificial flowers, harsh light, cold tones, emoji, stock photo, cheap materials, clutter
+
+<!-- cfg:7, steps:28, sampler:Euler a, size:1024x1024 -->
 
 ---
 
@@ -597,19 +627,25 @@ Has anyone tested this systematically? Changed their primary work position with 
 ### 【图片Prompt x3】
 
 **Prompt 1**:
-Prosperity workspace bathed in morning light, wide shot, solid teak desk positioned under east-facing window with broad morning sun streaming across grain, mature snake plant in jade green #5bbfa0 glazed ceramic pot at desk corner, crystalline drinking glass half-full catching prism rainbow on desk, ergonomic wood chair, only a leather notebook and brass pen on otherwise clear surface, mood: creative abundance, photorealistic 8K architectural photography, 35mm f/2.8
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, prosperity workspace bathed in morning light wide shot, solid teak desk positioned under east-facing window with broad morning sun streaming across grain, mature snake plant in jade green (#5bbfa0) glazed ceramic pot at desk corner, crystalline drinking glass half-full catching prism rainbow on desk, ergonomic wood chair, only a leather notebook and brass pen on otherwise clear surface, volumetric light rays, god rays, cinematic lighting, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 35mm, f/2.8, bokeh background, mood: creative abundance
 
-Negative: text, watermark, cartoon, anime, CGI, clutter, harsh overhead, artificial plastic, dead plants, empty water glass, emoji, distorted
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, anime, CGI, clutter, harsh overhead, artificial plastic, dead plants, empty water glass, emoji, distorted
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 **Prompt 2**:
-Wealth-position detail at golden hour, medium shot, ceramic desktop fountain with flowing water catching amber light and creating rippling reflections on teak surface, lush monstera plant visible behind with new unfurling leaf showing vitality, antique gold #c9a84c brass compass paperweight, warm 4000K directional sunlight at low angle, mood: flowing prosperity in motion, photorealistic 8K, 50mm f/2.4
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, wealth-position detail at golden hour medium shot, ceramic desktop fountain with flowing water catching amber light and creating rippling reflections on teak surface, lush monstera plant visible behind with new unfurling leaf showing vitality, antique gold (#c9a84c) brass compass paperweight, warm 4000K directional sunlight at low angle, warm golden candlelight, single light source, volumetric fog, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 50mm, f/2.4, bokeh background, shallow depth of field, mood: flowing prosperity in motion
 
-Negative: text, watermark, cartoon, CGI, artificial plastic fountain, fake plants, harsh overhead, cold tones, clutter, emoji, low quality
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, CGI, artificial plastic fountain, fake plants, harsh overhead, cold tones, clutter, emoji
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 **Prompt 3**:
-Extreme close-up wealth triptych: upper-left — crystal water glass holding rainbow prism on walnut grain, center — vibrant jade plant leaf segment with water drop on surface catching golden backlight, lower-right — antique gold #c9a84c brass coin with patina on dark wood, all three elements in one frame with warm soft window light, mood: abundance through three senses, photorealistic 8K macro, 100mm f/4, all three sharp with connecting wood grain texture
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, extreme close-up wealth triptych, upper-left crystal water glass holding rainbow prism on walnut grain, center vibrant jade plant leaf segment with water drop on surface catching golden backlight, lower-right antique gold (#c9a84c) brass coin with patina on dark wood, all three elements in one frame with warm soft window light, muted color palette, film grain, Fujifilm XT3 color science, 100mm macro, f/4, extreme close-up, ultra sharp details, all three sharp with connecting wood grain texture, mood: abundance through three senses
 
-Negative: text, watermark, cartoon, CGI, plastic, artificial plants, cold light, emoji, clutter, low quality, blurry
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, CGI, plastic, artificial plants, cold light, emoji, clutter
+
+<!-- cfg:7, steps:28, sampler:Euler a, size:1024x1024 -->
 
 ---
 
@@ -710,19 +746,25 @@ I suspect there's real neuroscience here: your brain can only sustain focus if i
 ### 【图片Prompt x3】
 
 **Prompt 1**:
-Feng shui study room optimized for focus, wide architectural shot, solid ash-wood writing desk positioned back against clay-textured wall with open doorway visible but to the side, three deliberate objects only on surface: open cream-paper notebook, single ink brush pen, small jade green #5bbfa0 celadon plant pot with growing green shoots, warm natural light flooding from large east window at morning angle, mood: deep learning sanctuary, photorealistic 8K, 24mm f/8 tilt-shift, perfectly aligned verticals
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, feng shui study room optimized for focus wide architectural shot, solid ash-wood writing desk positioned back against clay-textured wall with open doorway visible but to the side, three deliberate objects only on surface: open cream-paper notebook, single ink brush pen, small jade green (#5bbfa0) celadon plant pot with growing green shoots, warm natural light flooding from large east window at morning angle, volumetric light rays, god rays, cinematic lighting, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 24mm tilt-shift, f/8, tack sharp, perfectly aligned verticals, mood: deep learning sanctuary
 
-Negative: text, watermark, cartoon, anime, CGI, cluttered surface, harsh overhead, distracting posters, cheap materials, emoji, busy background
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, anime, CGI, cluttered surface, harsh overhead, distracting posters, cheap materials, emoji, busy background
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 **Prompt 2**:
-Asian student woman, late 20s, long straight black hair, in warm cream linen sweater, seated at walnut desk with back comfortably resting against stone wall, bathed in soft left-side window morning light, focused expression over open notebook, single warm brass lamp creating focused pool on desk, three items maximum visible, background softly blurred in natural tones, mood: absorbed concentration, photorealistic 8K, 85mm f/1.8 portrait lens
+RAW photo, photorealistic, 1girl, beautiful realistic face, perfect skin, masterpiece, best quality, ultra realistic, 8k uhd, DSLR, soft lighting, Chinese Asian student woman late 20s, long straight black hair, warm cream linen sweater, seated at walnut desk with back comfortably resting against stone wall, bathed in soft left-side window morning light, focused expression over open notebook, single warm brass lamp creating focused pool on desk, three items maximum visible, background softly blurred in natural tones, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 85mm portrait lens, f/1.8, bokeh background, shallow depth of field, mood: absorbed concentration
 
-Negative: text, watermark, cartoon, anime, CGI, clutter, harsh overhead, distracted expression, cheap plastic desk, emoji, stock photo stiff pose
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, anime, CGI, clutter, harsh overhead, distracted expression, cheap plastic desk, emoji, stock photo stiff pose
+
+<!-- cfg:6, steps:35, sampler:DPM++ 2M SDE Karras, size:832x1216 -->
 
 **Prompt 3**:
-Close-up detail flat lay of study essentials: aged walnut desk surface with visible grain, Japanese-style open notebook with hand-written ink characters (abstract, unreadable), single matte black fountain pen resting diagonally, small jade green #5bbfa0 ceramic pot with sprouting succulent, morning window light raking from left at 20-degree angle creating long soft shadows, mood: scholarly intention, photorealistic 8K macro, 100mm f/4
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, close-up detail flat lay of study essentials, aged walnut desk surface with visible grain, Japanese-style open notebook with hand-written ink characters (abstract, unreadable), single matte black fountain pen resting diagonally, small jade green (#5bbfa0) ceramic pot with sprouting succulent, morning window light raking from left at 20-degree angle creating long soft shadows, muted color palette, film grain, Fujifilm XT3 color science, 100mm macro, f/4, extreme close-up, ultra sharp details, mood: scholarly intention
 
-Negative: text, watermark, cartoon, CGI, plastic materials, harsh light, cold tones, emoji, clutter, readable characters, low quality
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, CGI, plastic materials, harsh light, cold tones, emoji, clutter, readable characters
+
+<!-- cfg:7, steps:28, sampler:Euler a, size:1024x1024 -->
 
 ---
 
@@ -822,19 +864,25 @@ Anecdotally, I've noticed this: people who live in "alive" spaces—light, some 
 ### 【图片Prompt x3】
 
 **Prompt 1**:
-Warm lived-in East Asian living room, wide shot, open wood-framed window with afternoon sun streaming across pale rose accent wall, low-slung walnut sofa with cream linen throw and terracotta cushion, single glass vase with fresh white chrysanthemums on coffee table, small jade green #5bbfa0 ceramic teapot visible on shelf, open art book face-down on sofa arm suggesting recent reading, delicate ambient music source hinted by small speaker, mood: open-hearted domestic warmth, photorealistic 8K, 24mm f/5.6
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, warm lived-in East Asian living room wide shot, open wood-framed window with afternoon sun streaming across pale rose accent wall, low-slung walnut sofa with cream linen throw and terracotta cushion, single glass vase with fresh white chrysanthemums on coffee table, small jade green (#5bbfa0) ceramic teapot visible on shelf, open art book face-down on sofa arm suggesting recent reading, delicate ambient music source hinted by small speaker, volumetric light rays, god rays, cinematic lighting, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 24mm, f/5.6, mood: open-hearted domestic warmth
 
-Negative: text, watermark, cartoon, anime, CGI, sealed shut windows, cold tones, harsh overhead, sterile clinical look, clutter, emoji, empty plastic decor
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, anime, CGI, sealed shut windows, cold tones, harsh overhead, sterile clinical look, clutter, emoji, empty plastic decor
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 **Prompt 2**:
-Cozy East Asian living corner at late golden afternoon, medium shot, warm caramel clay wall with single framed brush painting, low rattan chair with plump rust-orange linen cushion and cream knit throw, low wooden side table with steaming ceramic tea cup and small wooden speaker playing ambient audio, mature trailing pothos plant in macramé hanger suggesting living breath, soft 3200K lamp glow mixing with outdoor golden hour, mood: magnetic social openness, photorealistic 8K, 50mm f/2.4
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, cozy East Asian living corner at late golden afternoon medium shot, warm caramel clay wall with single framed brush painting, low rattan chair with plump rust-orange linen cushion and cream knit throw, low wooden side table with steaming ceramic tea cup and small wooden speaker playing ambient audio, mature trailing pothos plant in macramé hanger suggesting living breath, soft 3200K lamp glow mixing with outdoor golden hour, warm golden candlelight, single light source, volumetric fog, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 50mm, f/2.4, bokeh background, mood: magnetic social openness
 
-Negative: text, watermark, cartoon, CGI, cold colors, harsh light, sterile look, artificial plants, clutter, emoji, cheap plastic
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, CGI, cold colors, harsh light, sterile look, artificial plants, clutter, emoji, cheap plastic
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 **Prompt 3**:
-Intimate vignette close-up of lived-in corner: vintage ink-dyed linen pillow with subtle warp texture catching warm lamp glow, open poetry book with folded page corner, single white peony stem in narrow celadon vase, worn walnut coffee table surface showing natural character marks, warm antique gold #c9a84c lamp light pooling softly, mood: welcoming authenticity, photorealistic 8K macro, 85mm f/1.8
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, intimate vignette close-up of lived-in corner, vintage ink-dyed linen pillow with subtle warp texture catching warm lamp glow, open poetry book with folded page corner, single white peony stem in narrow celadon vase, worn walnut coffee table surface showing natural character marks, warm antique gold (#c9a84c) lamp light pooling softly, muted color palette, film grain, Fujifilm XT3 color science, 85mm portrait lens, f/1.8, bokeh background, shallow depth of field, mood: welcoming authenticity
 
-Negative: text, watermark, cartoon, CGI, artificial, plastic, cold lighting, emoji, clutter, overly staged, low quality
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, CGI, artificial, plastic, cold lighting, emoji, clutter, overly staged
+
+<!-- cfg:7, steps:28, sampler:Euler a, size:1024x1024 -->
 
 ---
 
@@ -933,19 +981,25 @@ But I'm skeptical of overstating this. It's not magic—it's just: you're removi
 ### 【图片Prompt x3】
 
 **Prompt 1**:
-Midlife bedroom transformation, split-frame editorial wide shot: left half shows cool gray dated room with accumulated objects and flat light suggesting stagnation, right half shows same space freshly painted in deep jade green #5bbfa0 with new antique gold #c9a84c brass lamp creating focused warm pool, single sculptural ceramic piece on clean shelf, open window flooding morning light, mood: before/after identity renewal, photorealistic 8K, 35mm f/4, precise vertical alignment both halves
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, midlife bedroom transformation split-frame editorial wide shot, left half shows cool gray dated room with accumulated objects and flat light suggesting stagnation, right half shows same space freshly painted in deep jade green (#5bbfa0) with new antique gold (#c9a84c) brass lamp creating focused warm pool, single sculptural ceramic piece on clean shelf, open window flooding morning light, volumetric light rays, cinematic lighting, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 35mm, f/4, precise vertical alignment both halves, mood: before/after identity renewal
 
-Negative: text overlay labels, watermark, cartoon, CGI, anime, harsh contrast between halves, cheap right-side objects, emoji, distorted
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text overlay labels, watermark, cartoon, CGI, anime, harsh contrast between halves, cheap right-side objects, emoji, distorted
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 **Prompt 2**:
-Newly reinvented study room, medium shot, deep jewel-tone teal wall freshly painted, open south-facing window with warm afternoon sun backlighting abstract ceramic sculpture on shelf, minimal walnut desk with single lamp, no objects from previous life visible, one unfurled art print rolled near wall suggesting intention, warm 4500K natural light meeting warm lamp, mood: optimistic recommencement, photorealistic 8K, 50mm f/2.4
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, newly reinvented study room medium shot, deep jewel-tone teal wall freshly painted, open south-facing window with warm afternoon sun backlighting abstract ceramic sculpture on shelf, minimal walnut desk with single lamp, no objects from previous life visible, one unfurled art print rolled near wall suggesting intention, warm 4500K natural light meeting warm lamp, volumetric light rays, god rays, cinematic lighting, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 50mm, f/2.4, bokeh background, mood: optimistic recommencement
 
-Negative: text, watermark, cartoon, CGI, gloomy dark space, clutter, cheap materials, emoji, harsh shadows, old furniture visible
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, CGI, gloomy dark space, clutter, cheap materials, emoji, harsh shadows, old furniture visible
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 **Prompt 3**:
-Close-up of identity reinvention object: abstract hand-thrown ceramic vessel in warm jade green #5bbfa0 and antique gold #c9a84c glaze on dark walnut shelf, warm side light revealing the texture of clay and glaze dimples, deep violet #0d0a18 painted wall visible in background as rich backdrop, mood: personal sovereignty, photorealistic 8K macro, 100mm f/2.8, sharp glaze texture with background bokeh
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, close-up of identity reinvention object, abstract hand-thrown ceramic vessel in warm jade green (#5bbfa0) and antique gold (#c9a84c) glaze on dark walnut shelf, warm side light revealing the texture of clay and glaze dimples, deep violet (#0d0a18) painted wall visible in background as rich backdrop, muted color palette, film grain, Fujifilm XT3 color science, 100mm macro, f/2.8, extreme close-up, ultra sharp details, sharp glaze texture with background bokeh, mood: personal sovereignty
 
-Negative: text, watermark, cartoon, CGI, plastic, cheap materials, cold light, emoji, clutter, low quality, blurry
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, CGI, plastic, cheap materials, cold light, emoji, clutter
+
+<!-- cfg:7, steps:28, sampler:Euler a, size:1024x1024 -->
 
 ---
 
@@ -1045,19 +1099,25 @@ I'm not claiming magic. I'm proposing that seasonal ritual is basically *applied
 ### 【图片Prompt x3】
 
 **Prompt 1**:
-Winter solstice meditation sanctuary, medium shot, East Asian woman mid-30s with loose black hair, seated cross-legged on cream meditation cushion on dark walnut floor, eyes gently closed, hands in mudra, facing altar table with three hand-blown glass candle holders with warm flames creating nested amber glow, steaming jade green #5bbfa0 celadon tea cup beside, deep violet #0d0a18 wall behind, winter darkness visible through frosted window pane, mood: deep healing stillness, photorealistic 8K, 50mm f/1.8 portrait
+RAW photo, photorealistic, 1girl, beautiful realistic face, perfect skin, masterpiece, best quality, ultra realistic, 8k uhd, DSLR, soft lighting, winter solstice meditation sanctuary medium shot, Chinese East Asian woman mid-30s with loose black hair, serene expression, seated cross-legged on cream meditation cushion on dark walnut floor, eyes gently closed, hands in mudra, facing altar table with three hand-blown glass candle holders with warm flames creating nested amber glow, steaming jade green (#5bbfa0) celadon tea cup beside, deep violet (#0d0a18) wall behind, winter darkness visible through frosted window pane, warm golden candlelight, single light source, volumetric fog, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 50mm portrait lens, f/1.8, bokeh background, shallow depth of field, mood: deep healing stillness
 
-Negative: text, watermark, cartoon, anime, CGI, harsh bright overhead, cold tones, clutter, cheap candles, emoji, stiff stock photo pose, distorted
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, anime, CGI, harsh bright overhead, cold tones, clutter, cheap candles, emoji, stiff stock photo pose, distorted
+
+<!-- cfg:6, steps:35, sampler:DPM++ 2M SDE Karras, size:832x1216 -->
 
 **Prompt 2**:
-Winter corner sanctuary, wide shot, small antique brass oil lamp with amber flame burning on low walnut side table in room corner, deep indigo-violet night visible through uncurtained window showing city lights distant, warm white #faf8f5 minimal interior with single wool throw on floor cushion, jade plant silhouette catching lamp warmth, antique gold #c9a84c glow against deep violet #0d0a18 walls, mood: solitary luminous hope in darkness, photorealistic 8K, 24mm f/2.8 low-light
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, winter corner sanctuary wide shot, small antique brass oil lamp with amber flame burning on low walnut side table in room corner, deep indigo-violet night visible through uncurtained window showing city lights distant, warm white (#faf8f5) minimal interior with single wool throw on floor cushion, jade plant silhouette catching lamp warmth, antique gold (#c9a84c) glow against deep violet (#0d0a18) walls, warm golden candlelight, single light source, volumetric fog, soft shadows, natural gradients, muted color palette, film grain, Fujifilm XT3 color science, 24mm, f/2.8, low-light cinematic, mood: solitary luminous hope in darkness
 
-Negative: text, watermark, cartoon, CGI, harsh artificial overhead, cold blue tones, clutter, cheap plastic, emoji, distorted
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, CGI, harsh artificial overhead, cold blue tones, clutter, cheap plastic, emoji, distorted
+
+<!-- cfg:7, steps:30, sampler:DPM++ 2M Karras, size:1024x1024 -->
 
 **Prompt 3**:
-Solstice ritual close-up: East Asian woman's hands, 30s, graceful fingers curling around cream ceramic tea cup with steam rising, single beeswax taper candle in bronze holder flames at frame edge, dark walnut surface, wooden prayer beads resting against cup base, antique gold #c9a84c warm candlelight casting soft side shadow, mood: sacred intimate moment, photorealistic 8K macro, 85mm f/1.4 shallow DOF on steam detail
+RAW photo, photorealistic, masterpiece, best quality, ultra realistic, 8k uhd, high resolution, sharp focus, professional photography, solstice ritual close-up, East Asian woman's hands 30s, graceful fingers curling around cream ceramic tea cup with steam rising, single beeswax taper candle in bronze holder flames at frame edge, dark walnut surface, wooden prayer beads resting against cup base, antique gold (#c9a84c) warm candlelight, single light source, volumetric fog, casting soft side shadow, muted color palette, film grain, Fujifilm XT3 color science, 85mm portrait lens, f/1.4, bokeh background, shallow DOF on steam detail, mood: sacred intimate moment
 
-Negative: text, watermark, cartoon, CGI, harsh artificial, cheap plastic candle, cold tones, emoji, clutter, distorted hands, low quality
+Negative: (worst quality:2), (low quality:2), (normal quality:2), lowres, bad anatomy, bad hands, error, missing fingers, extra digit, fewer digits, cropped, jpeg artifacts, signature, username, blurry, artist name, nsfw, deformed, mutated, ugly, disfigured, bad proportions, text, watermark, cartoon, CGI, harsh artificial, cheap plastic candle, cold tones, emoji, clutter, distorted hands
+
+<!-- cfg:6, steps:35, sampler:DPM++ 2M SDE Karras, size:832x1216 -->
 
 ---
 
