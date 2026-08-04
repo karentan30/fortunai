@@ -795,6 +795,87 @@ router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
 });
 
 // ══════════════════════════════════════════
+// POST /api/yinzhai/stream — 阴宅风水流式
+// ══════════════════════════════════════════
+router.post('/yinzhai/stream', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { city, relation, masterBirthYear, masterGender, masterMingua, concerns, question, candidates } = req.body;
+    if (!candidates || candidates.length < 2) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: '请至少提供2个候选地点' });
+    }
+
+    // Build candidates description
+    const candidatesText = candidates.map((c, i) =>
+      `【候选${i+1}】${c.name}\n地址：${c.address || '未提供'}\n朝向：${c.facing || '未知'}\n地势：${c.terrain || '未知'}\n靠山：${c.backing || '未知'}\n前方：${c.front || '未知'}\n${c.notes ? '备注：' + c.notes : ''}`
+    ).join('\n\n');
+
+    const mingua = masterMingua || calcMinguaServer(masterBirthYear, masterGender === 'M');
+    const minguaGroupStr = [1,3,4,9].includes(mingua) ? '东四命' : '西四命';
+
+    const systemPrompt = `你是精通阴宅风水的堪舆大师，专研墓地选址35年。你对山水龙脉、朝向格局、子孙运势推演造诣极深。给出权威、具体、有说服力的分析。用温和语气，理解家属心情，不吓唬人。简体中文。`;
+
+    const userMsg = `城市/地区：${city || '未提供'}\n逝者关系：${relation || '长辈'}\n户主生年：${masterBirthYear || '未提供'}年·${masterGender === 'M' ? '男' : '女'}·命卦${mingua}(${minguaGroupStr})\n最关心：${(concerns || []).join('、') || '综合运势'}\n其他顾虑：${question || '无'}\n\n${candidatesText}\n\n请按以下结构给出完整阴宅风水分析（4000+字）：\n⛰️ 阴宅风水总论（为什么选址重要）\n🔍 各候选地逐一分析（每个地点500+字）\n📊 综合对比评分（各维度打分表）\n🏆 最终推荐（哪个最适合，为什么）\n👨‍👩‍👧 子孙运势预测（选对了会有什么影响）\n🙏 安葬注意事项与仪式建议\n💡 大师叮嘱`;
+
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.flushHeaders();
+    res.write(`data: ${JSON.stringify({ type: 'meta' })}\n\n`);
+
+    // If any candidate has an image, include it in the first candidate's message
+    const hasImages = candidates.some(c => c.imageBase64);
+    let messages;
+    if (hasImages) {
+      const imageContent = candidates
+        .filter(c => c.imageBase64)
+        .slice(0, 3) // limit to 3 images
+        .map(c => ({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${c.imageBase64}` } }));
+      messages = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: [...imageContent, { type: 'text', text: userMsg }] }
+      ];
+    } else {
+      messages = [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }];
+    }
+
+    const streamBody = await deepseekStream(messages, { maxTokens: 8192, timeout: 300000 });
+    const reader = streamBody.getReader();
+    const decoder = new TextDecoder();
+    let fullText = '', buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try { const json = JSON.parse(raw); const c = json.choices?.[0]?.delta?.content || ''; if (c) { fullText += c; res.write(`data: ${JSON.stringify({ type: 'chunk', content: c })}\n\n`); } } catch(e) {}
+      }
+    }
+    insertReading.run('yinzhai', JSON.stringify({ city, candidates: candidates.map(c=>c.name) }), fullText, req.userId);
+    res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+    res.end();
+  } catch(err) {
+    console.error('[YINZHAI-STREAM ERR]', err.message);
+    try { res.write(`data: ${JSON.stringify({ type: 'error', message: '生成失败' })}\n\n`); res.end(); } catch(e) {}
+  }
+});
+
+function calcMinguaServer(year, isMale) {
+  if (!year) return 2;
+  var n = parseInt(year);
+  while (n >= 10) { var s = 0, tmp = n; while (tmp > 0) { s += tmp % 10; tmp = Math.floor(tmp/10); } n = s; }
+  var q = isMale ? (10 - n) : (n + 5);
+  if (q === 5) q = isMale ? 2 : 8;
+  if (q > 9) q -= 9;
+  return q;
+}
+
+// ══════════════════════════════════════════
 // POST /api/fengshui — AI风水评测
 // ══════════════════════════════════════════
 router.post('/fengshui', rateLimitMiddleware, async (req, res) => {

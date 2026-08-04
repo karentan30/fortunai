@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#c9a84c">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>善缘 · 阴宅风水</title>
+<meta name="description" content="善缘阴宅风水 — AI墓地选址评测，子孙运势分析">
+<meta property="og:title" content="善缘 · 阴宅风水">
+<meta property="og:description" content="善缘阴宅风水 — AI墓地选址评测，子孙运势分析">
+<meta property="og:image" content="/og-card.png">
+<meta property="og:url" content="https://shenyuan.mylumee.cn/">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="善缘 · 阴宅风水">
+<meta name="twitter:description" content="善缘阴宅风水 — AI墓地选址评测，子孙运势分析">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #faf8f5; --card: #ffffff; --mid: #f5f0e8;
+  --gold: #c9a84c; --gold-light: #e8d08a; --gold-deep: #8a6420;
+  --jade: #5bbfa0; --jade-mid: #8dd9bf;
+  --amber: #c9820a; --amber-light: #e8b86a;
+  --ink-text: rgba(40,35,30,0.92);
+  --sub-text: rgba(255,245,220,0.58);
+}
+html, body { background: var(--bg); font-family: 'Noto Serif SC', serif; color: var(--ink-text); -webkit-font-smoothing: antialiased; }
+body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 120px; }
+body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.1) 0%, transparent 50%); pointer-events:none; z-index:0; }
+
+.back-btn { position:fixed; top:16px; left:16px; z-index:99; background:none; border:none; font-family:'Noto Serif SC',serif; font-size:13px; color:rgba(201,168,76,0.6); cursor:pointer; padding:4px 0; }
+
+/* ── Input screen ── */
+.input-screen { position:relative; z-index:1; }
+
+.header { text-align:center; padding:44px 20px 20px; }
+.header-title { font-size:20px; font-weight:400; letter-spacing:0.22em; margin-bottom:5px; }
+.header-sub { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:11px; letter-spacing:0.26em; color:rgba(201,168,76,0.45); margin-bottom:14px; }
+.gold-line { width:60px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:0 auto; }
+
+.form-section { padding:14px 16px; }
+.form-label { font-size:10px; letter-spacing:0.18em; color:rgba(201,168,76,0.5); margin-bottom:10px; }
+.form-hint { font-size:9px; color:rgba(255,245,220,0.3); margin-bottom:10px; letter-spacing:0.06em; }
+.field-group { background:var(--card); border:1px solid rgba(201,168,76,0.12); border-radius:8px; overflow:hidden; }
+.field-row { display:flex; align-items:center; padding:0 14px; border-bottom:1px solid rgba(201,168,76,0.08); }
+.field-row:last-child { border-bottom:none; }
+.field-label { font-size:11px; color:var(--sub-text); letter-spacing:0.06em; min-width:68px; flex-shrink:0; }
+.field-input, .field-select, .field-textarea { flex:1; background:none; border:none; outline:none; font-family:'Noto Serif SC',serif; font-size:13px; color:var(--ink-text); padding:12px 8px; letter-spacing:0.04em; -webkit-appearance:none; }
+.field-select option { background:var(--card); color:var(--ink-text); }
+.field-input::placeholder, .field-textarea::placeholder { color:rgba(255,245,220,0.18); }
+.field-textarea { resize:none; min-height:60px; line-height:1.7; }
+
+.required-star { color:rgba(220,100,80,0.7); margin-left:2px; font-size:12px; }
+
+/* ── Candidate cards ── */
+.candidate-card { background:var(--card); border:1px solid rgba(201,168,76,0.16); border-radius:8px; overflow:hidden; margin-bottom:10px; position:relative; }
+.candidate-card-head { display:flex; align-items:center; padding:9px 14px; border-bottom:1px solid rgba(201,168,76,0.08); background:rgba(201,168,76,0.04); }
+.candidate-card-label { font-size:11px; color:rgba(201,168,76,0.7); letter-spacing:0.1em; flex:1; }
+.candidate-remove-btn { background:none; border:none; color:rgba(201,168,76,0.4); font-size:16px; cursor:pointer; padding:0 0 0 8px; line-height:1; }
+.candidate-remove-btn:active { transform:scale(0.9); }
+
+.btn-add-candidate { background:none; border:1px dashed rgba(201,168,76,0.3); border-radius:6px; font-family:'Noto Serif SC',serif; font-size:11px; color:rgba(201,168,76,0.55); cursor:pointer; padding:10px 0; letter-spacing:0.1em; display:flex; align-items:center; justify-content:center; gap:5px; width:100%; margin-top:4px; }
+.btn-add-candidate:active { transform:scale(0.97); }
+.btn-add-candidate:disabled { opacity:0.3; cursor:default; }
+
+/* ── Concern checkboxes ── */
+.concern-list { display:flex; flex-direction:column; gap:6px; }
+.concern-item { display:flex; align-items:center; gap:10px; padding:10px 14px; background:var(--card); border:1px solid rgba(201,168,76,0.12); border-radius:6px; cursor:pointer; }
+.concern-item input[type="checkbox"] { display:none; }
+.concern-check { width:16px; height:16px; border:1px solid rgba(201,168,76,0.3); border-radius:3px; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:background 0.2s, border-color 0.2s; }
+.concern-item.checked .concern-check { background:var(--gold); border-color:var(--gold); }
+.concern-check-mark { font-size:10px; color:#1a1200; display:none; }
+.concern-item.checked .concern-check-mark { display:block; }
+.concern-text { font-size:12px; letter-spacing:0.06em; color:var(--ink-text); }
+
+/* ── Image upload section ── */
+.upload-toggle-row { display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:4px 0; }
+.upload-toggle-label { font-size:10px; letter-spacing:0.14em; color:rgba(201,168,76,0.5); }
+.upload-toggle-arrow { font-size:9px; color:rgba(201,168,76,0.35); transition:transform 0.25s; }
+.upload-toggle-arrow.open { transform:rotate(180deg); }
+.upload-section-body { display:none; padding-top:8px; }
+.upload-section-body.open { display:block; }
+.upload-area { border:1.5px dashed rgba(201,168,76,0.3); border-radius:8px; background:rgba(201,168,76,0.03); padding:14px 12px; text-align:center; cursor:pointer; transition:border-color 0.2s; }
+.upload-area:active { border-color:rgba(201,168,76,0.6); }
+.upload-area-icon { font-size:22px; margin-bottom:5px; }
+.upload-area-text { font-size:10px; color:rgba(201,168,76,0.45); letter-spacing:0.08em; line-height:1.7; }
+.upload-hint { font-size:9px; color:rgba(255,245,220,0.25); margin-top:3px; letter-spacing:0.04em; }
+.upload-previews { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+.preview-thumb { width:64px; height:64px; object-fit:cover; border-radius:6px; border:1px solid rgba(201,168,76,0.2); }
+.preview-wrap { position:relative; }
+.preview-del { position:absolute; top:-5px; right:-5px; background:rgba(40,35,30,0.85); border:1px solid rgba(201,168,76,0.25); border-radius:50%; width:18px; height:18px; font-size:10px; line-height:18px; text-align:center; cursor:pointer; color:rgba(201,168,76,0.7); }
+
+.submit-section { padding:16px 16px 20px; }
+.btn-gen { width:100%; padding:15px 0; background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light),var(--gold)); border:none; border-radius:4px; color:rgba(14,10,4,0.95); font-family:'Noto Serif SC',serif; font-size:14px; font-weight:500; letter-spacing:0.22em; cursor:pointer; box-shadow:0 4px 20px rgba(201,168,76,0.3); }
+.btn-gen:disabled { opacity:0.4; cursor:default; }
+
+/* ── Report screen ── */
+.chart-header { padding:20px 16px 0; }
+.name-row { display:flex; align-items:baseline; gap:12px; margin-bottom:4px; }
+.report-name { font-size:22px; letter-spacing:0.14em; }
+.report-tag { font-size:10px; color:var(--gold); border:1px solid rgba(201,168,76,0.3); padding:3px 8px; border-radius:2px; letter-spacing:0.1em; }
+.birth-info { font-size:10px; color:var(--sub-text); letter-spacing:0.06em; margin-bottom:14px; }
+.divider { height:1px; background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent); margin:0 16px 14px; }
+
+.fortune-wrap { padding:0 16px; }
+.ai-section { background:var(--card); border:1px solid rgba(201,168,76,0.1); border-radius:10px; margin-bottom:10px; overflow:hidden; }
+.ai-section-head { display:flex; align-items:center; padding:12px 14px; gap:10px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+.ai-section-icon { font-size:20px; flex-shrink:0; }
+.ai-section-title { font-size:13px; letter-spacing:0.08em; flex:1; }
+.ai-section-arrow { font-size:10px; color:rgba(255,245,220,0.25); transition:transform 0.25s; }
+.ai-section-body { padding:0 14px 14px; display:none; }
+.ai-section-body.open { display:block; }
+.ai-section-text { font-size:11px; color:var(--sub-text); letter-spacing:0.04em; line-height:1.9; white-space:pre-wrap; }
+.ai-plain-text { padding:0 16px 14px; font-size:11px; color:var(--sub-text); letter-spacing:0.04em; line-height:1.9; white-space:pre-wrap; }
+
+/* Loading */
+.loading-screen { position:relative; z-index:1; display:none; flex-direction:column; align-items:center; padding:80px 20px; gap:20px; }
+.loading-screen.show { display:flex; }
+.load-glyph { font-size:60px; color:rgba(201,168,76,0.3); font-weight:300; animation:load-breathe 2s ease-in-out infinite; }
+.load-text { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:14px; color:rgba(201,168,76,0.5); letter-spacing:0.18em; }
+.load-steps { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
+.load-step { font-size:10px; color:rgba(255,245,220,0.3); letter-spacing:0.08em; }
+
+/* Error screen */
+.error-screen { position:relative; z-index:1; display:none; text-align:center; padding:60px 20px; }
+.error-screen.show { display:block; }
+.error-icon { font-size:48px; margin-bottom:16px; }
+.error-text { font-size:13px; color:var(--sub-text); letter-spacing:0.04em; margin-bottom:20px; line-height:1.8; }
+.btn-retry { padding:12px 32px; background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light),var(--gold)); border:none; border-radius:4px; color:rgba(14,10,4,0.95); font-family:'Noto Serif SC',serif; font-size:13px; font-weight:500; letter-spacing:0.16em; cursor:pointer; box-shadow:0 4px 16px rgba(201,168,76,0.25); }
+
+/* Button active states */
+.back-btn:active{transform:scale(0.97)}
+.btn-gen:active:not(:disabled){transform:scale(0.97)}
+.btn-retry:active{transform:scale(0.97)}
+
+/* Animations */
+.btn-gen,.btn-retry{
+  background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a,#c9a84c,#8a6420) !important;
+  background-size:300% auto !important;
+  animation:gold-shimmer 3s linear infinite !important;
+}
+@keyframes gold-shimmer{0%{background-position:0%}100%{background-position:200%}}
+@keyframes load-breathe{0%,100%{opacity:0.3}50%{opacity:0.7}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+.page-enter{animation:fadeUp 0.5s ease-out both}
+.page-enter-d1{animation-delay:.1s}.page-enter-d2{animation-delay:.2s}
+.page-enter-d3{animation-delay:.3s}.page-enter-d4{animation-delay:.4s}
+.page-enter-d5{animation-delay:.5s}.page-enter-d6{animation-delay:.6s}
+
+/* Stardust */
+.stardust span{position:absolute;width:3px;height:3px;background:rgba(201,168,76,0.6);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(0.5)}50%{opacity:1;transform:scale(1)}}
+.bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(14,10,4,1) 0%,rgba(14,10,4,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
+
+/* Mingua badge */
+.mingua-badge { display:inline-block; font-size:9px; color:rgba(201,168,76,0.7); border:1px solid rgba(201,168,76,0.25); border-radius:10px; padding:1px 7px; margin-left:8px; letter-spacing:0.04em; }
+
+/* Date row group */
+.date-row { display:flex; align-items:center; padding:0 14px; border-bottom:1px solid rgba(201,168,76,0.08); gap:4px; }
+.date-row:last-child { border-bottom:none; }
+.date-label { font-size:11px; color:var(--sub-text); letter-spacing:0.06em; min-width:68px; flex-shrink:0; }
+.date-select { flex:1; background:none; border:none; outline:none; font-family:'Noto Serif SC',serif; font-size:12px; color:var(--ink-text); padding:12px 4px; letter-spacing:0.02em; -webkit-appearance:none; }
+</style>
+<link rel="stylesheet" href="/assets/css/common.css">
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题" style="z-index:999">🌙</button>
+
+<div class="stardust" id="stardust"></div>
+<div class="bottom-gradient"></div>
+
+<button class="back-btn" onclick="history.back()">← 返回</button>
+
+<!-- Input screen -->
+<div class="input-screen" id="inputScreen">
+  <div class="header page-enter page-enter-d1">
+    <div class="header-title">善缘 · 阴宅风水</div>
+    <div class="header-sub">YIN ZHAI · ANCESTRAL RESTING PLACE SELECTION</div>
+    <div class="gold-line"></div>
+  </div>
+
+  <!-- Section 1: 基本信息 -->
+  <div class="form-section page-enter page-enter-d2">
+    <div class="form-label">基本信息</div>
+    <div class="field-group">
+      <div class="field-row">
+        <span class="field-label">城市/地区<span class="required-star">*</span></span>
+        <input class="field-input" type="text" id="city" placeholder="如 成都市/广州市荔湾区">
+      </div>
+      <div class="field-row">
+        <span class="field-label">逝者关系<span class="required-star">*</span></span>
+        <select class="field-select" id="relation">
+          <option value="">请选择</option>
+          <option value="父亲">父亲</option>
+          <option value="母亲">母亲</option>
+          <option value="祖父">祖父</option>
+          <option value="祖母">祖母</option>
+          <option value="配偶">配偶</option>
+          <option value="其他长辈">其他长辈</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 户主信息 -->
+  <div class="form-section page-enter page-enter-d3">
+    <div class="form-label">户主/当家人信息</div>
+    <div style="font-size:9px;color:rgba(255,245,220,0.3);margin-bottom:10px;letter-spacing:0.06em">用于推算命卦，判断阴宅方位与后代运势的配合</div>
+    <div class="field-group">
+      <div class="date-row">
+        <span class="date-label">出生年月日<span class="required-star">*</span></span>
+        <select class="date-select" id="masterYear">
+          <option value="">年</option>
+        </select>
+        <select class="date-select" id="masterMonth">
+          <option value="">月</option>
+        </select>
+        <select class="date-select" id="masterDay">
+          <option value="">日</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">户主性别<span class="required-star">*</span></span>
+        <select class="field-select" id="masterGender" onchange="updateMinguaBadge()">
+          <option value="">请选择</option>
+          <option value="M">男</option>
+          <option value="F">女</option>
+        </select>
+        <span class="mingua-badge" id="minguaBadge" style="display:none;margin-right:4px"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: 候选地点 -->
+  <div class="form-section page-enter page-enter-d4">
+    <div class="form-label">墓地/安葬选项对比</div>
+    <div class="form-hint">请添加2-4个候选地点（最少2个）</div>
+
+    <div id="candidatesContainer"></div>
+
+    <button class="btn-add-candidate" id="addCandidateBtn" onclick="addCandidate()">＋ 添加候选地</button>
+  </div>
+
+  <!-- Section 3: 关注点 -->
+  <div class="form-section page-enter page-enter-d5">
+    <div class="form-label">你最关心什么</div>
+    <div class="concern-list" id="concernList">
+      <label class="concern-item" onclick="toggleConcern(this)">
+        <input type="checkbox" value="子孙财运">
+        <div class="concern-check"><span class="concern-check-mark">✓</span></div>
+        <span class="concern-text">子孙财运</span>
+      </label>
+      <label class="concern-item" onclick="toggleConcern(this)">
+        <input type="checkbox" value="子孙健康长寿">
+        <div class="concern-check"><span class="concern-check-mark">✓</span></div>
+        <span class="concern-text">子孙健康长寿</span>
+      </label>
+      <label class="concern-item" onclick="toggleConcern(this)">
+        <input type="checkbox" value="家族人丁兴旺">
+        <div class="concern-check"><span class="concern-check-mark">✓</span></div>
+        <span class="concern-text">家族人丁兴旺</span>
+      </label>
+      <label class="concern-item" onclick="toggleConcern(this)">
+        <input type="checkbox" value="事业仕途">
+        <div class="concern-check"><span class="concern-check-mark">✓</span></div>
+        <span class="concern-text">事业仕途</span>
+      </label>
+      <label class="concern-item" onclick="toggleConcern(this)">
+        <input type="checkbox" value="家庭和睦">
+        <div class="concern-check"><span class="concern-check-mark">✓</span></div>
+        <span class="concern-text">家庭和睦</span>
+      </label>
+    </div>
+    <div style="height:10px"></div>
+    <div class="field-group">
+      <div class="field-row">
+        <textarea class="field-textarea" id="extraQuestion" placeholder="其他特别顾虑（可选）…"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="submit-section page-enter page-enter-d6">
+    <button class="btn-gen" id="submitBtn" onclick="generateReport()">开始阴宅分析</button>
+  </div>
+
+  <div style="text-align:center;font-size:9px;color:rgba(255,245,220,0.2);padding:0 24px 20px;letter-spacing:0.06em;position:relative;z-index:1">
+    本平台采用正统堪舆风水理论·已服务千余户家庭·评测结果仅供参考
+  </div>
+</div>
+
+<!-- Loading screen -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="load-glyph">陵</div>
+  <div class="load-text">勘察阴宅风水中，请稍候…</div>
+  <div class="load-steps" id="loadSteps"></div>
+</div>
+
+<!-- Error screen -->
+<div class="error-screen" id="errorScreen">
+  <div class="error-icon">🏮</div>
+  <div class="error-text" id="errorText">网络异常，请稍后重试</div>
+  <button class="btn-retry" onclick="retry()">重新分析</button>
+</div>
+
+<!-- Report screen -->
+<div class="report-screen" id="reportScreen" style="position:relative;z-index:1">
+  <!-- Populated by JS -->
+</div>
+
+<script>
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
+  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
+  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
+  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); };
+  document.body.appendChild(t);
+  t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
+}
+
+var lastPayload = null;
+
+/* ── 命卦 helpers ── */
+function calcMingua(birthYear, gender) {
+  var n = birthYear;
+  while (n >= 10) {
+    var s = 0; var tmp = n;
+    while (tmp > 0) { s += tmp % 10; tmp = Math.floor(tmp/10); }
+    n = s;
+  }
+  var q;
+  if (gender === 'M') { q = 10 - n; if (q === 5) q = 2; if (q >= 10) q -= 9; }
+  else { q = n + 5; if (q === 5) q = 8; if (q > 9) q -= 9; }
+  return q;
+}
+function minguaName(q) {
+  var names = {1:'坎(水)',2:'坤(土)',3:'震(木)',4:'巽(木)',6:'乾(金)',7:'兑(金)',8:'艮(土)',9:'离(火)'};
+  return names[q] || '坤(土)';
+}
+function minguaGroup(q) {
+  return [1,3,4,9].indexOf(q) >= 0 ? '东四命' : '西四命';
+}
+function updateMinguaBadge() {
+  var y = parseInt(document.getElementById('masterYear').value);
+  var g = document.getElementById('masterGender').value;
+  var badge = document.getElementById('minguaBadge');
+  if (y && g) {
+    var q = calcMingua(y, g);
+    badge.textContent = minguaName(q) + ' · ' + minguaGroup(q);
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+/* ── Populate year/month/day selects ── */
+(function(){
+  var yearSel = document.getElementById('masterYear');
+  for (var y = 2026; y >= 1920; y--) {
+    var o = document.createElement('option'); o.value = y; o.textContent = y + ' 年'; yearSel.appendChild(o);
+  }
+  yearSel.onchange = updateMinguaBadge;
+
+  var monthSel = document.getElementById('masterMonth');
+  for (var m = 1; m <= 12; m++) {
+    var o = document.createElement('option'); o.value = m; o.textContent = m + ' 月'; monthSel.appendChild(o);
+  }
+
+  var daySel = document.getElementById('masterDay');
+  for (var d = 1; d <= 31; d++) {
+    var o = document.createElement('option'); o.value = d; o.textContent = d + ' 日'; daySel.appendChild(o);
+  }
+})();
+
+/* ── Concern checkboxes ── */
+function toggleConcern(label) {
+  label.classList.toggle('checked');
+  var cb = label.querySelector('input[type="checkbox"]');
+  if (cb) cb.checked = label.classList.contains('checked');
+}
+function getSelectedConcerns() {
+  var items = document.querySelectorAll('.concern-item.checked input[type="checkbox"]');
+  return Array.from(items).map(function(i){ return i.value; });
+}
+
+/* ── Candidate cards ── */
+var candidateCount = 0;
+var candidateImages = {}; // { idx: base64string }
+
+function buildFacingOptions(selected) {
+  var dirs = ['东','南','西','北','东南','西南','东北','西北'];
+  return '<option value="">请选择</option>' + dirs.map(function(d){
+    return '<option value="'+d+'"'+(d===selected?' selected':'')+'>'+d+'</option>';
+  }).join('');
+}
+function buildTerrainOptions(selected) {
+  var opts = ['山坡','平地','临水','高地','洼地'];
+  return '<option value="">请选择</option>' + opts.map(function(o){
+    return '<option value="'+o+'"'+(o===selected?' selected':'')+'>'+o+'</option>';
+  }).join('');
+}
+function buildBackingOptions(selected) {
+  var opts = ['有靠山','无靠山','靠楼','靠平地'];
+  return '<option value="">请选择</option>' + opts.map(function(o){
+    return '<option value="'+o+'"'+(o===selected?' selected':'')+'>'+o+'</option>';
+  }).join('');
+}
+function buildFrontOptions(selected) {
+  var opts = ['面水开阔','道路','建筑物','其他'];
+  return '<option value="">请选择</option>' + opts.map(function(o){
+    return '<option value="'+o+'"'+(o===selected?' selected':'')+'>'+o+'</option>';
+  }).join('');
+}
+
+function addCandidate() {
+  var container = document.getElementById('candidatesContainer');
+  var total = container.querySelectorAll('.candidate-card').length;
+  if (total >= 4) return;
+
+  var idx = candidateCount++;
+  var num = total + 1;
+  var card = document.createElement('div');
+  card.className = 'candidate-card';
+  card.id = 'candidate-card-' + idx;
+  card.dataset.idx = idx;
+
+  var showRemove = (num > 1) || (total > 0);
+  var removeBtn = '<button class="candidate-remove-btn" onclick="removeCandidate('+idx+')" type="button" title="删除此候选地">×</button>';
+
+  card.innerHTML = '<div class="candidate-card-head">'
+    + '<span class="candidate-card-label">候选地 ' + num + '</span>'
+    + (showRemove ? removeBtn : '<span id="remove-placeholder-'+idx+'"></span>')
+    + '</div>'
+    + '<div class="field-row"><span class="field-label">地点名称<span class="required-star">*</span></span><input class="field-input candidate-name" data-idx="'+idx+'" type="text" placeholder="如 龙泉山公墓"></div>'
+    + '<div class="field-row"><span class="field-label">地址/描述</span><input class="field-input candidate-address" data-idx="'+idx+'" type="text" placeholder="如 东南方向山坡"></div>'
+    + '<div class="field-row"><span class="field-label">朝向</span><select class="field-select candidate-facing" data-idx="'+idx+'">'+buildFacingOptions('')+'</select></div>'
+    + '<div class="field-row"><span class="field-label">地势</span><select class="field-select candidate-terrain" data-idx="'+idx+'">'+buildTerrainOptions('')+'</select></div>'
+    + '<div class="field-row"><span class="field-label">背山情况</span><select class="field-select candidate-backing" data-idx="'+idx+'">'+buildBackingOptions('')+'</select></div>'
+    + '<div class="field-row"><span class="field-label">前方情况</span><select class="field-select candidate-front" data-idx="'+idx+'">'+buildFrontOptions('')+'</select></div>'
+    + '<div class="field-row" style="flex-direction:column;align-items:flex-start;padding:10px 14px">'
+    +   '<div class="upload-toggle-row" onclick="toggleCandidateUpload('+idx+')" style="width:100%">'
+    +     '<span class="upload-toggle-label">上传照片（可选）</span>'
+    +     '<span class="upload-toggle-arrow" id="cupload-arrow-'+idx+'">▼</span>'
+    +   '</div>'
+    +   '<div class="upload-section-body" id="cupload-body-'+idx+'" style="width:100%">'
+    +     '<div class="upload-area" onclick="document.getElementById(\'cphoto-input-'+idx+'\').click()" style="margin-top:8px">'
+    +       '<div class="upload-area-icon">📷</div>'
+    +       '<div class="upload-area-text">点击上传现场照片</div>'
+    +       '<div class="upload-hint">JPG / PNG · 最大 10MB</div>'
+    +     '</div>'
+    +     '<input type="file" id="cphoto-input-'+idx+'" accept="image/*" style="display:none" onchange="handleCandidatePhoto(this,'+idx+')">'
+    +     '<div class="upload-previews" id="cphoto-preview-'+idx+'"></div>'
+    +   '</div>'
+    + '</div>'
+    + '<div class="field-row" style="border-bottom:none"><textarea class="field-textarea candidate-notes" data-idx="'+idx+'" placeholder="其他你想说的…" style="min-height:48px"></textarea></div>';
+
+  container.appendChild(card);
+
+  // Update numbering and add remove buttons to all cards
+  refreshCandidateNumbers();
+
+  var total2 = container.querySelectorAll('.candidate-card').length;
+  document.getElementById('addCandidateBtn').disabled = total2 >= 4;
+}
+
+function removeCandidate(idx) {
+  var card = document.getElementById('candidate-card-' + idx);
+  if (card) card.remove();
+  delete candidateImages[idx];
+  refreshCandidateNumbers();
+  var total = document.getElementById('candidatesContainer').querySelectorAll('.candidate-card').length;
+  document.getElementById('addCandidateBtn').disabled = total >= 4;
+}
+
+function refreshCandidateNumbers() {
+  var cards = document.getElementById('candidatesContainer').querySelectorAll('.candidate-card');
+  cards.forEach(function(card, i) {
+    var label = card.querySelector('.candidate-card-label');
+    if (label) label.textContent = '候选地 ' + (i+1);
+    var idx = card.dataset.idx;
+    var removeBtn = card.querySelector('.candidate-remove-btn');
+    // All cards can be removed if there are more than 2
+    if (cards.length > 1) {
+      if (!removeBtn) {
+        var ph = card.querySelector('#remove-placeholder-'+idx);
+        if (ph) {
+          ph.outerHTML = '<button class="candidate-remove-btn" onclick="removeCandidate('+idx+')" type="button" title="删除此候选地">×</button>';
+        }
+      }
+    } else {
+      // Only 1 card — hide remove button
+      if (removeBtn) removeBtn.style.display = 'none';
+    }
+  });
+}
+
+function toggleCandidateUpload(idx) {
+  var body = document.getElementById('cupload-body-' + idx);
+  var arrow = document.getElementById('cupload-arrow-' + idx);
+  if (!body || !arrow) return;
+  body.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
+function handleCandidatePhoto(input, idx) {
+  var file = input.files[0];
+  if (!file) return;
+  var preview = document.getElementById('cphoto-preview-' + idx);
+  if (!preview) return;
+  var url = URL.createObjectURL(file);
+  preview.innerHTML = '<div class="preview-wrap"><img class="preview-thumb" src="'+url+'"><span class="preview-del" onclick="clearCandidatePhoto('+idx+')">×</span></div>';
+  var reader = new FileReader();
+  reader.onload = function(e) { candidateImages[idx] = e.target.result.split(',')[1]; };
+  reader.readAsDataURL(file);
+}
+
+function clearCandidatePhoto(idx) {
+  delete candidateImages[idx];
+  var preview = document.getElementById('cphoto-preview-' + idx);
+  if (preview) preview.innerHTML = '';
+  var input = document.getElementById('cphoto-input-' + idx);
+  if (input) input.value = '';
+}
+
+function collectCandidates() {
+  var cards = document.getElementById('candidatesContainer').querySelectorAll('.candidate-card');
+  var results = [];
+  cards.forEach(function(card) {
+    var idx = card.dataset.idx;
+    var name = card.querySelector('.candidate-name') ? card.querySelector('.candidate-name').value.trim() : '';
+    var address = card.querySelector('.candidate-address') ? card.querySelector('.candidate-address').value.trim() : '';
+    var facing = card.querySelector('.candidate-facing') ? card.querySelector('.candidate-facing').value : '';
+    var terrain = card.querySelector('.candidate-terrain') ? card.querySelector('.candidate-terrain').value : '';
+    var backing = card.querySelector('.candidate-backing') ? card.querySelector('.candidate-backing').value : '';
+    var front = card.querySelector('.candidate-front') ? card.querySelector('.candidate-front').value : '';
+    var notes = card.querySelector('.candidate-notes') ? card.querySelector('.candidate-notes').value.trim() : '';
+    var imageBase64 = candidateImages[idx] || null;
+    results.push({ name: name, address: address, facing: facing, terrain: terrain, backing: backing, front: front, notes: notes, imageBase64: imageBase64 });
+  });
+  return results;
+}
+
+/* ── Main submit ── */
+function generateReport() {
+  var city = document.getElementById('city').value.trim();
+  var relation = document.getElementById('relation').value;
+  var masterYear = parseInt(document.getElementById('masterYear').value);
+  var masterGender = document.getElementById('masterGender').value;
+
+  if (!city) { showToast('请填写城市/地区', 'error'); return; }
+  if (!relation) { showToast('请选择逝者与家族关系', 'error'); return; }
+  if (!masterYear) { showToast('请选择户主出生年份', 'error'); return; }
+  if (!masterGender) { showToast('请选择户主性别', 'error'); return; }
+
+  var candidates = collectCandidates();
+  if (candidates.length < 2) { showToast('请至少添加2个候选地点', 'error'); return; }
+
+  var unnamedIdx = -1;
+  candidates.forEach(function(c, i){ if (!c.name) unnamedIdx = i; });
+  if (unnamedIdx >= 0) { showToast('请填写候选地 ' + (unnamedIdx+1) + ' 的地点名称', 'error'); return; }
+
+  var concerns = getSelectedConcerns();
+  var extraQuestion = document.getElementById('extraQuestion').value.trim();
+  var minguaVal = calcMingua(masterYear, masterGender);
+
+  var payload = {
+    city: city,
+    relation: relation,
+    masterBirthYear: masterYear,
+    masterGender: masterGender,
+    masterMingua: minguaVal,
+    concerns: concerns,
+    question: extraQuestion,
+    candidates: candidates
+  };
+  lastPayload = payload;
+
+  document.getElementById('inputScreen').style.display = 'none';
+  document.getElementById('loadingScreen').classList.add('show');
+  document.getElementById('errorScreen').classList.remove('show');
+  document.getElementById('reportScreen').innerHTML = '';
+  document.getElementById('reportScreen').classList.remove('show');
+
+  var steps = ['读取地理信息…','分析山水格局…','推演子孙运势…','生成对比报告…'];
+  var stepsEl = document.getElementById('loadSteps');
+  stepsEl.innerHTML = '';
+  steps.forEach(function(s, i) {
+    setTimeout(function(){
+      stepsEl.innerHTML += '<div class="load-step">✓ ' + s + '</div>';
+    }, i * 400);
+  });
+
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '分析中…';
+
+  var token = localStorage.getItem('sy_token') || '';
+  fetch('/api/yinzhai/stream', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify(payload)
+  }).then(function(res) {
+    if (!res.ok) throw new Error('API error: ' + res.status);
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder();
+    var buf = '', accumulated = '';
+
+    document.getElementById('loadingScreen').classList.remove('show');
+    var reportEl = document.getElementById('reportScreen');
+    reportEl.style.display = 'block';
+    reportEl.innerHTML = '<div style="padding:16px;font-size:12px;color:rgba(255,245,220,0.5);letter-spacing:0.06em;line-height:2;white-space:pre-wrap;font-family:Noto Serif SC,serif" id="streamPreview"></div>';
+    var preview = document.getElementById('streamPreview');
+
+    function read() {
+      reader.read().then(function(r) {
+        if (r.done) {
+          btn.disabled = false; btn.textContent = '开始阴宅分析';
+          showReport(accumulated);
+          return;
+        }
+        buf += decoder.decode(r.value, { stream: true });
+        var lines = buf.split('\n'); buf = lines.pop();
+        lines.forEach(function(line) {
+          if (!line.startsWith('data: ')) return;
+          try {
+            var ev = JSON.parse(line.slice(6));
+            if (ev.type === 'chunk') { accumulated += ev.content; if (preview) preview.textContent = accumulated; }
+            else if (ev.type === 'done') { btn.disabled = false; btn.textContent = '开始阴宅分析'; showReport(accumulated); }
+            else if (ev.type === 'error') { showError(ev.message || '生成失败'); }
+          } catch(e) {}
+        });
+        read();
+      }).catch(function(e) { showError('读取流失败，请重试'); });
+    }
+    read();
+  }).catch(function(err) {
+    document.getElementById('loadingScreen').classList.remove('show');
+    btn.disabled = false;
+    btn.textContent = '开始阴宅分析';
+    showError(err.message || '网络异常，请稍后重试');
+  });
+}
+
+function showError(msg) {
+  document.getElementById('errorText').textContent = msg;
+  document.getElementById('errorScreen').classList.add('show');
+  document.getElementById('loadingScreen').classList.remove('show');
+}
+
+function retry() {
+  document.getElementById('errorScreen').classList.remove('show');
+  if (lastPayload) {
+    generateReport();
+  } else {
+    document.getElementById('inputScreen').style.display = 'block';
+  }
+}
+
+function showReport(text) {
+  var reportEl = document.getElementById('reportScreen');
+  var sections = parseAISections(text);
+  var html = '';
+
+  // Header
+  var city = lastPayload ? lastPayload.city : '';
+  var rel = lastPayload ? lastPayload.relation : '';
+  html += '<div class="chart-header page-enter">';
+  html += '<div class="name-row"><div class="report-name">阴宅风水报告</div><div class="report-tag">AI 堪舆分析</div></div>';
+  html += '<div class="birth-info">城市：' + city + (rel ? ' · ' + rel : '') + '</div>';
+  html += '<div class="divider"></div></div>';
+
+  if (sections.length > 0) {
+    html += '<div class="fortune-wrap">';
+    for (var i = 0; i < sections.length; i++) {
+      var sec = sections[i];
+      var open = i === 0 ? ' open' : '';
+      html += '<div class="ai-section page-enter" style="animation-delay:'+(i*0.08)+'s">';
+      html += '<div class="ai-section-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');var a=this.querySelector(\'.ai-section-arrow\');a.classList.toggle(\'open\')">';
+      html += '<div class="ai-section-icon">' + sec.emoji + '</div>';
+      html += '<div class="ai-section-title">' + (sec.title || '阴宅分析') + '</div>';
+      html += '<div class="ai-section-arrow' + (i===0?' open':'') + '">⬇</div>';
+      html += '</div>';
+      html += '<div class="ai-section-body' + open + '"><div class="ai-section-text">' + escapeHtml(sec.lines.join('\n')) + '</div></div>';
+      html += '</div>';
+    }
+    html += '</div>';
+  } else {
+    html += '<div class="ai-plain-text page-enter">' + escapeHtml(text) + '</div>';
+  }
+
+  html += '<div style="height:40px"></div>';
+  reportEl.innerHTML = html;
+  reportEl.style.display = 'block';
+  injectDisclaimer('reportScreen');
+  window.scrollTo(0, 0);
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function parseAISections(text) {
+  var known = ['⛰️','⛰','🔍','📊','🏆','👨‍👩‍👧','🙏','💡','🌿','💧','🔥','💰','❤️','🌊','☀️','🌙','⭐','💫','✨','🎯','📜','🔮','📈','🤝','🎓','🕯','🪷','🏠','🧭','👨‍👩‍👧‍👦','🛋️','🌿','🪴','📐','🛒','🎯','🏅','🔔','📍','⚰️','🪦','🏔️','💎','🗺️'];
+  var lines = text.split('\n');
+  var sections = [];
+  var current = null;
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].trimRight();
+    var matched = null;
+    // Check for emoji at start of line (accounting for multi-codepoint emojis)
+    for (var k = 0; k < known.length; k++) {
+      if (line.indexOf(known[k]) === 0) { matched = known[k]; break; }
+    }
+    // Also check for ## + emoji patterns
+    if (!matched && /^#{1,3}\s/.test(line)) {
+      var stripped = line.replace(/^#{1,3}\s+/, '');
+      for (var k = 0; k < known.length; k++) {
+        if (stripped.indexOf(known[k]) === 0) { matched = known[k]; line = stripped; break; }
+      }
+    }
+    if (matched) {
+      if (current && current.lines.length) sections.push(current);
+      current = { emoji: matched, title: line.substring(matched.length).trim(), lines: [] };
+    } else if (current) {
+      // Strip leading ## from subsection headers
+      var cleanLine = line.replace(/^#{1,4}\s+/, '');
+      current.lines.push(cleanLine);
+    } else if (line.trim()) {
+      current = { emoji: '⛰️', title: '阴宅风水分析', lines: [line] };
+    }
+  }
+  if (current && current.lines.length) sections.push(current);
+  return sections;
+}
+</script>
+
+<script>
+// Init: add 2 default candidate cards
+(function(){
+  addCandidate();
+  addCandidate();
+})();
+</script>
+
+<script>
+(function(){
+  var c = document.getElementById('stardust');
+  if (!c) return;
+  for (var i = 0; i < 30; i++) {
+    var s = document.createElement('span');
+    s.style.cssText = 'left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;width:'+(1.5+Math.random()*2.5)+'px;height:'+(1.5+Math.random()*2.5)+'px;--dur:'+(2+Math.random()*4)+'s;animation-delay:'+(Math.random()*5)+'s';
+    c.appendChild(s);
+  }
+  setTimeout(function(){ c.querySelectorAll('span').forEach(function(s){ s.style.opacity = '1'; }); }, 100);
+})();
+
+function injectDisclaimer(containerId) {
+  var c = document.getElementById(containerId);
+  if (!c || c.querySelector('.sy-disclaimer')) return;
+  var d = document.createElement('div');
+  d.className = 'sy-disclaimer';
+  d.innerHTML = '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto;width:80%"></div><div style="font-size:10px;color:rgba(201,168,76,0.4);text-align:center;letter-spacing:0.06em;padding:10px 20px">仅供娱乐参考，切勿沉迷。命理是可能性的艺术，不是定数。</div>';
+  c.appendChild(d);
+}
+</script>
+
+<div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
+  <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 12px"></div>
+  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(201,168,76,0.35);letter-spacing:0.3em">龙脉护佑 · 荫庇后代</div>
+</div>
+
+<script>
+(function(){var t=localStorage.getItem('sy_theme');if(t==='light'){document.documentElement.classList.add('light-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='☀️';}})();
+function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('light-mode');var l=e.classList.contains('light-mode');if(b)b.textContent=l?'☀️':'🌙';localStorage.setItem('sy_theme',l?'light':'dark');}
+</script>
+<script src="/assets/js/common.js"></script>
+</body>
+</html>
