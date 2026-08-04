@@ -54,6 +54,34 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 .required-star { color:rgba(220,100,80,0.7); margin-left:2px; font-size:12px; }
 
+/* ── Family members section ── */
+.member-card { background:var(--card); border:1px solid rgba(201,168,76,0.12); border-radius:8px; overflow:hidden; margin-bottom:8px; position:relative; }
+.member-card-head { display:flex; align-items:center; padding:9px 14px; border-bottom:1px solid rgba(201,168,76,0.08); }
+.member-card-label { font-size:11px; color:rgba(201,168,76,0.6); letter-spacing:0.08em; flex:1; }
+.member-remove-btn { background:none; border:none; color:rgba(201,168,76,0.35); font-size:16px; cursor:pointer; padding:0 0 0 8px; line-height:1; }
+.member-remove-btn:active { transform:scale(0.9); }
+.mingua-badge { display:inline-block; font-size:9px; color:rgba(201,168,76,0.7); border:1px solid rgba(201,168,76,0.25); border-radius:10px; padding:1px 7px; margin-left:8px; letter-spacing:0.04em; }
+.btn-add-member { background:none; border:none; font-family:'Noto Serif SC',serif; font-size:11px; color:rgba(201,168,76,0.55); cursor:pointer; padding:8px 0; letter-spacing:0.1em; display:flex; align-items:center; gap:5px; }
+.btn-add-member:active { transform:scale(0.97); }
+.btn-add-member:disabled { opacity:0.3; cursor:default; }
+
+/* ── Image upload section ── */
+.upload-toggle-row { display:flex; align-items:center; justify-content:space-between; cursor:pointer; padding:4px 0; }
+.upload-toggle-label { font-size:10px; letter-spacing:0.18em; color:rgba(201,168,76,0.5); }
+.upload-toggle-arrow { font-size:9px; color:rgba(201,168,76,0.35); transition:transform 0.25s; }
+.upload-toggle-arrow.open { transform:rotate(180deg); }
+.upload-section-body { display:none; padding-top:8px; }
+.upload-section-body.open { display:block; }
+.upload-area { border:1.5px dashed rgba(201,168,76,0.3); border-radius:8px; background:rgba(201,168,76,0.03); padding:16px 12px; text-align:center; cursor:pointer; transition:border-color 0.2s; }
+.upload-area:active { border-color:rgba(201,168,76,0.6); }
+.upload-area-icon { font-size:24px; margin-bottom:6px; }
+.upload-area-text { font-size:10px; color:rgba(201,168,76,0.45); letter-spacing:0.08em; line-height:1.7; }
+.upload-hint { font-size:9px; color:rgba(255,245,220,0.25); margin-top:3px; letter-spacing:0.04em; }
+.upload-previews { display:flex; flex-wrap:wrap; gap:8px; margin-top:10px; }
+.preview-thumb { width:72px; height:72px; object-fit:cover; border-radius:6px; border:1px solid rgba(201,168,76,0.2); }
+.preview-wrap { position:relative; }
+.preview-del { position:absolute; top:-5px; right:-5px; background:rgba(40,35,30,0.85); border:1px solid rgba(201,168,76,0.25); border-radius:50%; width:18px; height:18px; font-size:10px; line-height:18px; text-align:center; cursor:pointer; color:rgba(201,168,76,0.7); }
+
 .submit-section { padding:16px 16px 20px; }
 .btn-gen { width:100%; padding:15px 0; background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light),var(--gold)); border:none; border-radius:4px; color:rgba(14,10,4,0.95); font-family:'Noto Serif SC',serif; font-size:14px; font-weight:500; letter-spacing:0.22em; cursor:pointer; box-shadow:0 4px 20px rgba(201,168,76,0.3); }
 .btn-gen:disabled { opacity:0.4; cursor:default; }
@@ -186,6 +214,96 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
     </div>
   </div>
 
+  <!-- Family members section -->
+  <div class="form-section">
+    <div class="form-label">家庭成员（用于命卦分析）</div>
+    <div style="font-size:9px;color:rgba(255,245,220,0.3);margin-bottom:10px;letter-spacing:0.06em">填写主要居住成员生日，精准计算每人吉位</div>
+
+    <!-- Master / 户主 (always shown) -->
+    <div class="member-card" id="member-0">
+      <div class="member-card-head">
+        <span class="member-card-label">户主 <span class="mingua-badge" id="mingua-badge-0" style="display:none"></span></span>
+      </div>
+      <div class="field-row">
+        <span class="field-label">称呼</span>
+        <select class="field-select member-role" data-idx="0">
+          <option value="户主" selected>户主</option>
+          <option value="配偶">配偶</option>
+          <option value="子女">子女</option>
+          <option value="父母">父母</option>
+          <option value="长辈">长辈</option>
+          <option value="其他">其他</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">性别</span>
+        <select class="field-select member-gender" data-idx="0" onchange="updateMingua(0)">
+          <option value="">请选择</option>
+          <option value="M">男</option>
+          <option value="F">女</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">出生年</span>
+        <select class="field-select member-year" data-idx="0" onchange="updateMingua(0)">
+          <option value="">请选择</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <span class="field-label">出生月</span>
+        <select class="field-select member-month" data-idx="0">
+          <option value="">请选择</option>
+        </select>
+      </div>
+      <div class="field-row" style="border-bottom:none">
+        <span class="field-label">出生日</span>
+        <select class="field-select member-day" data-idx="0">
+          <option value="">请选择</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Additional members container -->
+    <div id="extraMembers"></div>
+
+    <button class="btn-add-member" id="addMemberBtn" onclick="addMember()">＋ 添加家庭成员</button>
+  </div>
+
+  <!-- Image upload section (collapsible) -->
+  <div class="form-section">
+    <div class="upload-toggle-row" onclick="toggleUploadSection()">
+      <span class="upload-toggle-label">上传图片（可选，让AI更精准）</span>
+      <span class="upload-toggle-arrow" id="uploadArrow">▼</span>
+    </div>
+    <div class="upload-section-body" id="uploadBody">
+      <div style="font-size:9px;color:rgba(255,245,220,0.3);margin-bottom:10px;letter-spacing:0.06em">上传户型平面图，AI可识别格局问题；上传各房间照片，AI分析实际布局</div>
+
+      <!-- Floor plan upload -->
+      <div style="margin-bottom:10px">
+        <div style="font-size:9px;color:rgba(201,168,76,0.45);letter-spacing:0.08em;margin-bottom:6px">户型图</div>
+        <div class="upload-area" onclick="document.getElementById('floorPlanInput').click()">
+          <div class="upload-area-icon">📐</div>
+          <div class="upload-area-text">点击上传户型平面图</div>
+          <div class="upload-hint">JPG / PNG / HEIC · 最大 10MB</div>
+        </div>
+        <input type="file" id="floorPlanInput" accept="image/*" style="display:none" onchange="handleFloorPlan(this)">
+        <div class="upload-previews" id="floorPlanPreview"></div>
+      </div>
+
+      <!-- Room photos upload -->
+      <div>
+        <div style="font-size:9px;color:rgba(201,168,76,0.45);letter-spacing:0.08em;margin-bottom:6px">房间照片（最多3张）</div>
+        <div class="upload-area" onclick="document.getElementById('roomPhotosInput').click()">
+          <div class="upload-area-icon">📷</div>
+          <div class="upload-area-text">点击上传房间照片</div>
+          <div class="upload-hint">可多选 · 最多3张</div>
+        </div>
+        <input type="file" id="roomPhotosInput" accept="image/*" multiple style="display:none" onchange="handleRoomPhotos(this)">
+        <div class="upload-previews" id="roomPhotosPreview"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="submit-section">
     <button class="btn-gen" id="submitBtn" onclick="generateReport()">评测风水</button>
   </div>
@@ -230,6 +348,218 @@ function showToast(msg, type) {
 
 var lastPayload = null;
 
+/* ── 命卦 helpers ── */
+function calcMingua(birthYear, gender) {
+  var sum = birthYear;
+  while (sum >= 10) {
+    var s = 0;
+    var n = sum;
+    while (n > 0) { s += n % 10; n = Math.floor(n / 10); }
+    sum = s;
+  }
+  var q;
+  if (gender === 'M') {
+    q = 10 - sum;
+    if (q === 5) q = 2;
+    if (q >= 10) q = q - 9;
+  } else {
+    q = sum + 5;
+    if (q === 5) q = 8;
+    if (q > 9) q = q - 9;
+  }
+  return q;
+}
+function minguaName(q) {
+  var names = {1:'坎(水)',2:'坤(土)',3:'震(木)',4:'巽(木)',6:'乾(金)',7:'兑(金)',8:'艮(土)',9:'离(火)'};
+  return names[q] || '坤(土)';
+}
+function minguaGroup(q) {
+  return [1,3,4,9].indexOf(q) >= 0 ? '东四命' : '西四命';
+}
+function updateMingua(idx) {
+  var yearEl = document.querySelector('.member-year[data-idx="'+idx+'"]');
+  var genderEl = document.querySelector('.member-gender[data-idx="'+idx+'"]');
+  var badge = document.getElementById('mingua-badge-'+idx);
+  if (!yearEl || !genderEl || !badge) return;
+  var y = parseInt(yearEl.value);
+  var g = genderEl.value;
+  if (y && g) {
+    var q = calcMingua(y, g);
+    badge.textContent = minguaName(q) + ' · ' + minguaGroup(q);
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+/* ── Populate year/month/day selects ── */
+function populateYearSelect(sel) {
+  for (var y = 2026; y >= 1920; y--) {
+    var o = document.createElement('option');
+    o.value = y; o.textContent = y + ' 年';
+    sel.appendChild(o);
+  }
+}
+function populateMonthSelect(sel) {
+  for (var m = 1; m <= 12; m++) {
+    var o = document.createElement('option');
+    o.value = m; o.textContent = m + ' 月';
+    sel.appendChild(o);
+  }
+}
+function populateDaySelect(sel) {
+  for (var d = 1; d <= 31; d++) {
+    var o = document.createElement('option');
+    o.value = d; o.textContent = d + ' 日';
+    sel.appendChild(o);
+  }
+}
+// Init master member selects
+(function(){
+  populateYearSelect(document.querySelector('.member-year[data-idx="0"]'));
+  populateMonthSelect(document.querySelector('.member-month[data-idx="0"]'));
+  populateDaySelect(document.querySelector('.member-day[data-idx="0"]'));
+})();
+
+/* ── Additional members ── */
+var memberCount = 1; // 0 = master
+var maxMembers = 6;
+
+function addMember() {
+  if (memberCount >= maxMembers) return;
+  var idx = memberCount;
+  var roles = ['户主','配偶','子女','父母','长辈','其他'];
+  var roleOptions = roles.map(function(r){ return '<option value="'+r+'">'+r+'</option>'; }).join('');
+  var div = document.createElement('div');
+  div.className = 'member-card';
+  div.id = 'member-'+idx;
+  div.innerHTML = '<div class="member-card-head">'
+    + '<span class="member-card-label">成员 '+idx+' <span class="mingua-badge" id="mingua-badge-'+idx+'" style="display:none"></span></span>'
+    + '<button class="member-remove-btn" onclick="removeMember('+idx+')" type="button">×</button>'
+    + '</div>'
+    + '<div class="field-row"><span class="field-label">称呼</span><select class="field-select member-role" data-idx="'+idx+'">'+roleOptions+'</select></div>'
+    + '<div class="field-row"><span class="field-label">性别</span><select class="field-select member-gender" data-idx="'+idx+'" onchange="updateMingua('+idx+')"><option value="">请选择</option><option value="M">男</option><option value="F">女</option></select></div>'
+    + '<div class="field-row"><span class="field-label">出生年</span><select class="field-select member-year" data-idx="'+idx+'" onchange="updateMingua('+idx+')"><option value="">请选择</option></select></div>'
+    + '<div class="field-row"><span class="field-label">出生月</span><select class="field-select member-month" data-idx="'+idx+'"><option value="">请选择</option></select></div>'
+    + '<div class="field-row" style="border-bottom:none"><span class="field-label">出生日</span><select class="field-select member-day" data-idx="'+idx+'"><option value="">请选择</option></select></div>';
+  document.getElementById('extraMembers').appendChild(div);
+  populateYearSelect(div.querySelector('.member-year'));
+  populateMonthSelect(div.querySelector('.member-month'));
+  populateDaySelect(div.querySelector('.member-day'));
+  memberCount++;
+  if (memberCount >= maxMembers) {
+    document.getElementById('addMemberBtn').disabled = true;
+  }
+}
+
+function removeMember(idx) {
+  var el = document.getElementById('member-'+idx);
+  if (el) el.remove();
+  memberCount--;
+  document.getElementById('addMemberBtn').disabled = false;
+}
+
+function collectMembers() {
+  var members = [];
+  // Master (idx 0)
+  var collectOne = function(idx) {
+    var yearEl = document.querySelector('.member-year[data-idx="'+idx+'"]');
+    var monthEl = document.querySelector('.member-month[data-idx="'+idx+'"]');
+    var dayEl = document.querySelector('.member-day[data-idx="'+idx+'"]');
+    var genderEl = document.querySelector('.member-gender[data-idx="'+idx+'"]');
+    var roleEl = document.querySelector('.member-role[data-idx="'+idx+'"]');
+    if (!yearEl) return null;
+    var y = yearEl.value, m = monthEl ? monthEl.value : '', d = dayEl ? dayEl.value : '';
+    var g = genderEl ? genderEl.value : '';
+    var role = roleEl ? roleEl.value : '';
+    var obj = { role: role, gender: g === 'M' ? '男' : (g === 'F' ? '女' : ''), dob: y ? (y + (m ? '-'+m : '') + (d ? '-'+d : '')) : '' };
+    if (y && g) {
+      var q = calcMingua(parseInt(y), g);
+      obj.mingua = minguaName(q);
+      obj.group = minguaGroup(q);
+    }
+    return obj;
+  };
+  var m0 = collectOne(0);
+  if (m0) members.push(m0);
+  // Extra members
+  for (var i = 1; i < maxMembers; i++) {
+    var card = document.getElementById('member-'+i);
+    if (card) {
+      var m = collectOne(i);
+      if (m) members.push(m);
+    }
+  }
+  return members;
+}
+
+/* ── Upload toggle ── */
+function toggleUploadSection() {
+  var body = document.getElementById('uploadBody');
+  var arrow = document.getElementById('uploadArrow');
+  body.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
+/* ── Image upload ── */
+var floorPlanBase64 = null;
+var roomImages = []; // array of base64 strings
+
+function fileToBase64(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function(e) { resolve(e.target.result); };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function handleFloorPlan(input) {
+  var file = input.files[0];
+  if (!file) return;
+  var preview = document.getElementById('floorPlanPreview');
+  preview.innerHTML = '';
+  var url = URL.createObjectURL(file);
+  preview.innerHTML = '<div class="preview-wrap"><img class="preview-thumb" src="'+url+'"><span class="preview-del" onclick="clearFloorPlan()">×</span></div>';
+  fileToBase64(file).then(function(b64) { floorPlanBase64 = b64; });
+}
+function clearFloorPlan() {
+  floorPlanBase64 = null;
+  document.getElementById('floorPlanPreview').innerHTML = '';
+  document.getElementById('floorPlanInput').value = '';
+}
+
+function handleRoomPhotos(input) {
+  var files = Array.from(input.files);
+  var preview = document.getElementById('roomPhotosPreview');
+  var remaining = 3 - roomImages.length;
+  if (remaining <= 0) { showToast('最多上传3张房间照片', 'error'); return; }
+  files = files.slice(0, remaining);
+  files.forEach(function(file) {
+    var url = URL.createObjectURL(file);
+    var idx = roomImages.length;
+    roomImages.push(null); // placeholder
+    var wrap = document.createElement('div');
+    wrap.className = 'preview-wrap';
+    wrap.id = 'room-wrap-'+idx;
+    wrap.innerHTML = '<img class="preview-thumb" src="'+url+'"><span class="preview-del" onclick="removeRoomPhoto('+idx+')">×</span>';
+    preview.appendChild(wrap);
+    fileToBase64(file).then(function(b64) { roomImages[idx] = b64; });
+  });
+  if (roomImages.length >= 3) input.disabled = true;
+}
+function removeRoomPhoto(idx) {
+  roomImages.splice(idx, 1);
+  var wrap = document.getElementById('room-wrap-'+idx);
+  if (wrap) wrap.remove();
+  // Re-enable input if under limit
+  document.getElementById('roomPhotosInput').disabled = false;
+  // Re-index remaining wraps (simple approach: re-render)
+  var preview = document.getElementById('roomPhotosPreview');
+  var wraps = preview.querySelectorAll('.preview-wrap');
+  wraps.forEach(function(w, i) { w.id = 'room-wrap-'+i; var del = w.querySelector('.preview-del'); if(del) del.setAttribute('onclick','removeRoomPhoto('+i+')'); });
+}
+
 function generateReport() {
   var facing = document.getElementById('facing').value;
   if (!facing) { showToast('请选择房屋朝向', 'error'); return; }
@@ -265,11 +595,24 @@ function generateReport() {
   var loadingDuration = steps.length * 350 + 400;
   var apiCalled = false;
 
+  var members = collectMembers();
+  var validRoomImages = roomImages.filter(Boolean);
+
   var token = localStorage.getItem('sy_token') || '';
   fetch('/api/fengshui/stream', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-    body: JSON.stringify({ houseDirection: payload.facing, floor: payload.floor, rooms: payload.layout, occupants: payload.residents, address: payload.address, question: payload.question })
+    body: JSON.stringify({
+      houseDirection: payload.facing,
+      floor: payload.floor,
+      rooms: payload.layout,
+      occupants: payload.residents,
+      address: payload.address,
+      question: payload.question,
+      members: members,
+      floorPlanBase64: floorPlanBase64 || null,
+      roomImages: validRoomImages
+    })
   }).then(function(res) {
     if (!res.ok) throw new Error('API error: ' + res.status);
     apiCalled = true;

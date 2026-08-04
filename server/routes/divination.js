@@ -621,17 +621,129 @@ router.post('/ziwei/stream', rateLimitMiddleware, async (req, res) => {
 });
 
 // ══════════════════════════════════════════
-// POST /api/fengshui/stream — 风水流式（SSE）
+// POST /api/fengshui/stream — 风水流式（SSE）增强版
 // ══════════════════════════════════════════
 router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
   try {
-    const { houseDirection, floor, rooms, occupants, address, question } = req.body;
+    const { houseDirection, floor, rooms, address, question, members, floorPlanBase64 } = req.body;
     if (!houseDirection) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: '请提供房屋朝向' });
     }
-    const systemPrompt = '你是一位精通八宅风水与玄空飞星的风水大师，从业30年。语气亲切专业，给出具体可操作的建议。风格：命运诗篇——每一章是生活的一步，不用bullet points，用连贯段落，语言温暖有文学质感。至少3000字。简体中文。';
-    const userMsg = `房屋朝向：${houseDirection}\n楼层：${floor || '未提供'}\n房间布局：${rooms || '未提供'}\n居住成员：${occupants || '未提供'}\n地址：${address || '未提供'}\n问题：${question || '请综合分析房屋风水'}\n\n请按以下结构详细分析（3000+字）：\n## 🏠 房屋格局总评\n## 🧭 八宅吉凶位分析（每个方位逐一）\n## 🛏️ 各房间风水建议\n## 💰 财位分析及催财布局\n## ❤️ 桃花位/人缘位布局\n## 🏃 健康位分析\n## 🪴 化解与开运建议\n## 🎯 一句话总结`;
+
+    const systemPrompt = '你是精通八宅风水、玄空飞星、八字命卦的风水大师，从业35年。你的风水报告以专业准确著称，会给出极其具体可操作的建议，包括具体摆件、植物、家具颜色材质，以及购买渠道推荐。语气亲切温暖，像朋友在指导，不吓唬人。简体中文。';
+
+    // 家庭成员命卦段落
+    let membersSection = '';
+    if (members && Array.isArray(members) && members.length > 0) {
+      membersSection = '\n\n家庭成员命卦信息：\n' + members.map(m => {
+        const role = m.role || '成员';
+        const name = m.name || '未知';
+        const dob = m.dob || '未提供';
+        const gender = m.gender || '未知';
+        const mingua = m.mingua || '未提供';
+        const group = m.group || '未知';
+        return `- ${role}（${name}，${gender}，${dob}生）：命卦${mingua}·${group}`;
+      }).join('\n');
+    }
+
+    // 户型图分析段落
+    let floorPlanNote = '';
+    if (floorPlanBase64) {
+      floorPlanNote = '\n\n【已上传户型图】请在分析中结合户型图布局，识别可能存在的风水问题，例如：穿堂风（前后门对齐）、卫生间居中泄气、厨厕相邻等，并给出针对性建议。';
+    }
+
+    const userMsg = `房屋朝向：${houseDirection}
+楼层：${floor || '未提供'}
+房间布局：${rooms || '未提供'}
+地址/区域：${address || '未提供'}
+用户问题：${question || '请综合分析房屋风水，给出全面的开运布局方案'}${membersSection}${floorPlanNote}
+
+请严格按照以下结构输出完整风水报告（要求5000字以上，每个章节须详尽展开）：
+
+## 🏠 房屋总格局
+（根据朝向、楼层、户型分析整体气场特征，说明此朝向的五行属性、优势与注意点）
+
+## 🧭 八宅吉凶位详解（逐一方位）
+（逐一分析东、东南、南、西南、西、西北、北、东北八个方位的吉凶属性，说明每个方位对应：伏位/生气/天医/延年/绝命/五鬼/六煞/祸害，并给出每个方位的具体使用建议）
+
+## 👨‍👩‍👧‍👦 家庭成员命卦与专属布局
+（根据每位家庭成员的命卦和东四命/西四命属性，分别说明：
+- 最适合的睡头朝向
+- 书桌/工作区朝向
+- 沙发坐向建议
+- 最适合居住的房间
+- 与房屋朝向的配合度分析）
+
+## 🛋️ 各房间风水调整方案
+（逐一分析客厅、主卧、次卧、书房、厨房、卫生间、玄关的风水现状与调整方案，给出具体的家具摆放、朝向、禁忌建议）
+
+## 💰 财位激活 — 具体摆件与摆放位置
+（明确指出本户型财位在哪个方位，推荐以下具体摆件并说明摆放细节：
+- 貔貅一对：头朝门外方向，不可对厕所
+- 聚宝盆：放在财位角落，内放五色水晶碎石
+- 黄晶球：直径8cm以上，置于财位柜台上
+- 招财树：玛瑙叶/金属叶款，高度60cm以上
+购买渠道：淘宝搜"天然黄晶球摆件"或"正宗黄铜貔貅开光"）
+
+## ❤️ 桃花位与人缘位
+（指出桃花位方位，推荐：
+- 粉晶球（天然玫瑰石英，直径6cm以上）
+- 牡丹图/牡丹画（宜挂卧室或客厅桃花位）
+- 玫瑰石英水晶簇
+注意：已婚者谨慎催桃花，可改催人缘位布局）
+
+## 🌿 开运植物推荐（哪个方位放什么）
+（根据方位五行属性推荐具体植物：
+- 东/东南方位（木）：富贵竹、绿萝、常春藤
+- 南方位（火）：红色系多肉植物、凤仙花
+- 西北/西/东北方位（金/土）：金钱树、发财树
+- 北方位（水）：水培植物、铜钱草
+特别说明哪些植物应避免：仙人掌（刺煞）、枯死植物、藤蔓过长压顶等）
+
+## 🪑 家具材质·颜色·品牌推荐
+（根据房屋朝向五行及家庭成员命卦推荐：
+材质选择：
+- 南向房：宜深色木质/大理石，增加稳重感
+- 北向房：宜浅色木质/白色系，引光纳气
+命卦对应材质：
+- 木命：实木家具（橡木/白蜡木/白橡），避免冷感金属
+- 金命：白色/米白/金属框架，简约现代风
+- 土命：黄棕色/米色/厚重实木，稳固大气
+- 水命：深色/深蓝/玻璃材质，流线型设计
+- 火命：胡桃木/红色点缀/深紫，有温度感
+
+品牌推荐：
+- 实木首选：源氏木语（yuanshimuyu.com）——性价比高，实木认证体系完善；永艺——进口白橡原木
+- 全屋定制：欧派/索菲亚/尚品宅配（可上门测量按风水方位定制）
+- 北欧简约：IKEA/造作（zaozuo.com）
+- 轻奢现代：芝华仕/左右家具
+- 水晶摆件：淘宝搜"天然粉晶摆件""天然黄晶球"选有实物图店铺
+- 风水摆件：搜"正宗黄铜貔貅""开光五帝钱"，认准有开光证书）
+
+## 🔮 镇宅化煞方案（具体物品清单）
+（根据户型分析可能存在的煞气，推荐针对性化解物：
+- 尖角煞/刀煞：泰山石敢当（置于对煞方位）或葫芦化解
+- 病符星位：铜葫芦（黄铜铸造，口朝下吸纳病气）
+- 门口/走廊穿堂风：五帝钱挂串（五枚铜钱串，挂于门框内侧）
+- 面对楼梯/电梯：凸面八卦镜（挂于门上方外侧）
+- 卫生间居中：长期点檀香/摆放粗盐碗+换气扇保持通风
+- 厨房化解：五帝钱挂串置于橱柜上方，红色系摆件增旺火气
+- 卧室镜对床：必须遮盖或移位，或用布帘遮挡）
+
+## 🛒 开运购物清单（你需要买什么）
+（汇总本户型需要购买的所有开运物品，按优先级排列：
+【急需 — 化煞优先】
+1. ×× （具体物品，具体摆放位置，预算参考价格）
+2. ……
+【建议添置 — 催旺运势】
+1. ……
+【可选锦上添花】
+1. ……
+附：推荐购买渠道与注意事项）
+
+## 🎯 大师叮嘱
+（总结最重要的3-5条风水原则，强调日常保养：保持整洁通风、定期更换枯萎植物、不堆放杂物在财位等，语气温暖收尾）`;
 
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
@@ -640,7 +752,24 @@ router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
     res.flushHeaders();
     res.write(`data: ${JSON.stringify({ type: 'meta' })}\n\n`);
 
-    const streamBody = await deepseekStream([{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }], { maxTokens: 8192, timeout: 300000 });
+    // 构建消息数组，如有户型图则加入图片
+    let messages;
+    if (floorPlanBase64) {
+      messages = [
+        { role: 'system', content: systemPrompt },
+        {
+          role: 'user',
+          content: [
+            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${floorPlanBase64}` } },
+            { type: 'text', text: userMsg }
+          ]
+        }
+      ];
+    } else {
+      messages = [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }];
+    }
+
+    const streamBody = await deepseekStream(messages, { maxTokens: 8192, timeout: 300000 });
     const reader = streamBody.getReader();
     const decoder = new TextDecoder();
     let fullText = '', buf = '';
@@ -656,7 +785,7 @@ router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
         try { const json = JSON.parse(raw); const c = json.choices?.[0]?.delta?.content || ''; if (c) { fullText += c; res.write(`data: ${JSON.stringify({ type: 'chunk', content: c })}\n\n`); } } catch(e) {}
       }
     }
-    insertReading.run('fengshui', JSON.stringify({ houseDirection, floor, rooms, occupants, address, question }), fullText, req.userId);
+    insertReading.run('fengshui', JSON.stringify({ houseDirection, floor, rooms, address, question, members: members || [] }), fullText, req.userId);
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
     res.end();
   } catch(err) {
