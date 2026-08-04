@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>善缘 · 家宅风水评测报告</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: #16120c;
+  color: #f0e8d8;
+  font-family: -apple-system, 'PingFang SC', 'Noto Sans SC', 'Helvetica Neue', sans-serif;
+  max-width: 860px;
+  margin: 0 auto;
+  font-size: 16px;
+  line-height: 1.85;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ══ COVER ══ */
+.cover {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 80px 32px 64px;
+  position: relative; overflow: hidden;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 20%, rgba(201,168,76,0.14) 0%, transparent 70%),
+    linear-gradient(180deg, #100e08 0%, #1a1508 55%, #100e08 100%);
+  border-bottom: 1px solid rgba(201,168,76,0.18);
+}
+.cover::before, .cover::after {
+  content:''; position:absolute;
+  width:48px; height:48px;
+  border-color: rgba(201,168,76,0.3); border-style:solid;
+}
+.cover::before { top:28px; left:28px; border-width:1px 0 0 1px; }
+.cover::after  { bottom:28px; right:28px; border-width:0 1px 1px 0; }
+
+.cover-brand { font-size:10px; letter-spacing:10px; color:rgba(201,168,76,0.5); margin-bottom:36px; font-family: 'Helvetica Neue', sans-serif; }
+.cover-icon  { font-size:72px; margin-bottom:20px; filter: drop-shadow(0 0 20px rgba(201,168,76,0.35)); }
+.cover-title { font-size:32px; color:#c9a84c; font-weight:300; letter-spacing:10px; margin-bottom:8px; }
+.cover-en    { font-size:11px; letter-spacing:7px; color:rgba(201,168,76,0.5); margin-bottom:40px; font-style:italic; font-family:'Georgia',serif; }
+.gold-line   { width:120px; height:1px; background:linear-gradient(90deg,transparent,#c9a84c,transparent); margin:0 auto 36px; }
+
+.info-card {
+  background: rgba(201,168,76,0.06);
+  border: 1px solid rgba(201,168,76,0.22);
+  border-radius: 12px;
+  padding: 22px 32px;
+  margin-bottom: 28px;
+  text-align: left;
+  min-width: 320px;
+  max-width: 480px;
+  width: 100%;
+}
+.info-row { display:flex; gap:12px; margin-bottom:8px; font-size:14px; }
+.info-label { color:rgba(201,168,76,0.75); min-width:80px; letter-spacing:1px; }
+.info-val   { color:#f0e8d8; flex:1; }
+
+.cover-price {
+  font-size:32px; color:#c9a84c; font-weight:300; letter-spacing:2px;
+  margin: 8px 0 4px;
+}
+.cover-badge { font-size:13px; color:rgba(240,232,216,0.75); letter-spacing:2px; margin-bottom:24px; }
+
+.algo-pills { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:20px; }
+.algo-pill {
+  font-size:11px; color:rgba(201,168,76,0.85);
+  border:1px solid rgba(201,168,76,0.28);
+  border-radius:14px; padding:4px 14px; letter-spacing:0.1em;
+}
+.cover-disclaimer { font-size:11px; color:rgba(240,232,216,0.4); letter-spacing:1px; margin-top:16px; }
+
+/* ══ QUICK SUMMARY CARD ══ */
+.quick-summary {
+  background: linear-gradient(135deg, rgba(201,168,76,0.10) 0%, rgba(201,168,76,0.04) 100%);
+  border: 1px solid rgba(201,168,76,0.30);
+  border-radius: 14px;
+  padding: 28px 32px;
+  margin: 32px 0 40px;
+}
+.qs-title {
+  font-size: 11px; letter-spacing: 6px; color: rgba(201,168,76,0.7);
+  text-transform: uppercase; margin-bottom: 20px; font-family: 'Helvetica Neue', sans-serif;
+}
+.qs-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px;
+}
+.qs-item { text-align: center; padding: 14px 8px; background: rgba(255,255,255,0.03); border-radius: 8px; }
+.qs-score { font-size: 28px; font-weight: 600; color: #c9a84c; line-height: 1; }
+.qs-label { font-size: 12px; color: rgba(240,232,216,0.6); margin-top: 4px; letter-spacing: 0.5px; }
+.qs-verdict {
+  font-size: 15px; color: rgba(240,232,216,0.9); line-height: 1.7; padding-top: 16px;
+  border-top: 1px solid rgba(201,168,76,0.12);
+}
+.qs-verdict strong { color: #c9a84c; }
+
+/* ══ 九宫飞星 GRID ══ */
+.flying-star-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px;
+  margin: 24px 0; border: 1px solid rgba(201,168,76,0.2); border-radius: 8px; overflow: hidden;
+}
+.fsg-cell {
+  background: rgba(201,168,76,0.04); padding: 14px 8px; text-align: center; position: relative;
+  border: 1px solid rgba(201,168,76,0.08);
+}
+.fsg-cell.auspicious  { background: rgba(91,191,130,0.07); border-color: rgba(91,191,130,0.15); }
+.fsg-cell.inauspicious { background: rgba(180,60,50,0.07); border-color: rgba(180,60,50,0.15); }
+.fsg-cell.neutral     { background: rgba(201,168,76,0.04); }
+.fsg-cell.center      { background: rgba(201,168,76,0.09); border-color: rgba(201,168,76,0.2); }
+.fsg-dir  { font-size: 10px; color: rgba(201,168,76,0.55); letter-spacing: 1px; display: block; margin-bottom: 4px; font-family: 'Helvetica Neue', sans-serif; }
+.fsg-star { font-size: 22px; font-weight: 600; color: #c9a84c; line-height: 1; }
+.fsg-name { font-size: 11px; color: rgba(240,232,216,0.7); margin-top: 3px; display: block; }
+.fsg-tag  { font-size: 10px; margin-top: 5px; display: block; padding: 2px 6px; border-radius: 4px; }
+.fsg-tag.good  { background: rgba(91,191,130,0.18); color: #6de0a0; }
+.fsg-tag.bad   { background: rgba(200,70,60,0.18); color: #e07070; }
+.fsg-tag.ok    { background: rgba(201,168,76,0.14); color: #c9a84c; }
+
+/* ══ COMPASS VISUAL ══ */
+.compass-wrap { text-align: center; margin: 24px 0; }
+.compass {
+  width: 180px; height: 180px; border-radius: 50%;
+  border: 2px solid rgba(201,168,76,0.3);
+  margin: 0 auto 12px;
+  position: relative;
+  background: radial-gradient(ellipse at center, rgba(201,168,76,0.06) 0%, transparent 70%);
+}
+.compass-inner {
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 60px; height: 60px; border-radius: 50%;
+  border: 1px solid rgba(201,168,76,0.25);
+  background: rgba(201,168,76,0.08);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; color: rgba(201,168,76,0.9); letter-spacing: 1px;
+}
+.compass-dir {
+  position: absolute; font-size: 12px; font-weight: 600;
+  font-family: 'Helvetica Neue', sans-serif;
+}
+.compass-dir.north { top: 8px;  left: 50%; transform: translateX(-50%); color: #6de0a0; }
+.compass-dir.south { bottom:8px; left:50%; transform: translateX(-50%); color: #e07070; }
+.compass-dir.east  { right: 8px; top: 50%; transform: translateY(-50%); color: #c9a84c; }
+.compass-dir.west  { left: 8px;  top: 50%; transform: translateY(-50%); color: #c9a84c; }
+.compass-dir.ne { top: 22px;  right: 22px; color: #e07070; font-size: 10px; }
+.compass-dir.nw { top: 22px;  left: 22px;  color: #c9a84c; font-size: 10px; }
+.compass-dir.se { bottom:22px; right:22px;  color: #6de0a0; font-size: 10px; }
+.compass-dir.sw { bottom:22px; left:22px;   color: #c9a84c; font-size: 10px; }
+.compass-line { width: 2px; height: 70px; background: linear-gradient(180deg, #c9a84c, transparent); position: absolute; top: 8px; left: 50%; transform: translateX(-50%); }
+.compass-caption { font-size: 12px; color: rgba(240,232,216,0.55); letter-spacing: 1px; }
+
+/* ══ SECTION ICON HEADERS ══ */
+.section-icon-header {
+  display: flex; align-items: center; gap: 16px;
+  margin: 44px 0 20px;
+  padding: 18px 22px;
+  border-left: 4px solid #c9a84c;
+  background: linear-gradient(90deg, rgba(201,168,76,0.10) 0%, rgba(201,168,76,0.02) 100%);
+  border-radius: 0 8px 8px 0;
+}
+.section-icon-header .s-icon { font-size: 28px; flex-shrink: 0; }
+.section-icon-header .s-text {}
+.section-icon-header .s-title {
+  font-size: 18px; color: #c9a84c; font-weight: 500; letter-spacing: 3px; line-height: 1.2;
+}
+.section-icon-header .s-en {
+  font-size: 11px; color: rgba(201,168,76,0.5); letter-spacing: 3px; margin-top: 2px;
+  font-family: 'Helvetica Neue', sans-serif; font-style: italic;
+}
+
+/* ══ WHY THIS WORKS BOX ══ */
+.why-box {
+  background: rgba(91,191,130,0.06);
+  border: 1px solid rgba(91,191,130,0.18);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 14px 0 22px;
+}
+.why-box-title {
+  font-size: 12px; letter-spacing: 2px; color: #6de0a0;
+  margin-bottom: 8px; font-family: 'Helvetica Neue', sans-serif;
+  font-weight: 600; text-transform: uppercase;
+}
+.why-box p { text-indent: 0 !important; font-size: 14px; color: rgba(240,232,216,0.85); line-height: 1.75; margin: 0; }
+
+/* ══ WARNING BOX ══ */
+.warn-box {
+  background: rgba(180,60,50,0.07);
+  border: 1px solid rgba(180,60,50,0.22);
+  border-radius: 8px;
+  padding: 16px 20px; margin: 16px 0;
+}
+.warn-title { color: rgba(220,100,80,0.95); font-size: 13px; font-weight: 600; letter-spacing: 1px; margin-bottom: 8px; font-family:'Helvetica Neue',sans-serif; }
+
+/* ══ WEALTH / CAREER / ROMANCE SECTION COLORS ══ */
+.wealth-header  .s-icon { filter: drop-shadow(0 0 8px rgba(201,168,76,0.5)); }
+.career-header  .s-icon { filter: drop-shadow(0 0 8px rgba(91,140,191,0.5)); }
+.romance-header .s-icon { filter: drop-shadow(0 0 8px rgba(210,115,107,0.5)); }
+.health-header  .s-icon { filter: drop-shadow(0 0 8px rgba(91,191,130,0.5)); }
+
+/* ══ SCORE BOX ══ */
+.score-box {
+  background: rgba(201,168,76,0.05);
+  border: 1px solid rgba(201,168,76,0.18);
+  border-radius: 10px; padding: 22px 26px; margin: 20px 0;
+}
+.score-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; }
+.score-label { font-size:14px; color:rgba(240,232,216,0.75); min-width:120px; }
+.score-track { flex:1; height:8px; background:rgba(255,255,255,0.08); border-radius:4px; overflow:hidden; }
+.score-fill  { height:100%; border-radius:4px; background:linear-gradient(90deg,#c9a84c,rgba(201,168,76,0.55)); }
+.score-val   { font-size:14px; color:#c9a84c; min-width:40px; text-align:right; font-weight:500; }
+
+/* ══ AMAZON PRODUCT CARDS ══ */
+.product-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+.product-card {
+  background: rgba(201,168,76,0.05); border: 1px solid rgba(201,168,76,0.15);
+  border-radius: 10px; padding: 16px;
+}
+.product-card .pc-num   { font-size: 11px; color: rgba(201,168,76,0.55); margin-bottom: 6px; font-family:'Helvetica Neue',sans-serif; }
+.product-card .pc-name  { font-size: 14px; color: #c9a84c; font-weight: 500; margin-bottom: 4px; }
+.product-card .pc-spec  { font-size: 12px; color: rgba(240,232,216,0.65); margin-bottom: 6px; }
+.product-card .pc-place { font-size: 12px; color: rgba(240,232,216,0.75); margin-bottom: 6px; }
+.product-card .pc-price { font-size: 13px; color: #c9a84c; font-weight: 500; margin-bottom: 8px; }
+.product-card .pc-link  { font-size: 11px; color: rgba(91,191,130,0.8); word-break: break-all; }
+
+/* ══ CONTENT ══ */
+.content { padding: 48px 48px 0; }
+
+h3 {
+  font-size:16px; color:rgba(201,168,76,0.9); font-weight:500;
+  margin:24px 0 10px; letter-spacing:1px;
+  padding-left:12px;
+  border-left:2px solid rgba(201,168,76,0.35);
+}
+p  { margin-bottom:16px; text-indent:2em; color:#f0e8d8; line-height: 1.9; }
+ul { padding-left:22px; margin-bottom:16px; }
+li { margin-bottom:9px; color:#f0e8d8; line-height: 1.8; }
+li::marker { color:rgba(201,168,76,0.55); }
+strong { color:#c9a84c; font-weight:600; }
+em     { color:rgba(220,140,110,0.95); font-style:normal; }
+
+blockquote {
+  border-left:3px solid rgba(201,168,76,0.4);
+  padding:14px 20px; margin:20px 0;
+  background:rgba(201,168,76,0.05);
+  color:rgba(240,232,216,0.9); line-height:1.85; font-size:15px;
+  border-radius: 0 6px 6px 0;
+}
+table { width:100%; border-collapse:collapse; margin:16px 0; border-radius: 8px; overflow: hidden; }
+thead th { background:rgba(201,168,76,0.14); color:#c9a84c; padding:11px 14px; text-align:left; font-weight:500; font-size:13px; border-bottom:1.5px solid rgba(201,168,76,0.28); letter-spacing: 0.5px; }
+tbody td { padding:10px 14px; border-bottom:1px solid rgba(201,168,76,0.08); font-size:14px; color:#f0e8d8; }
+tbody tr:last-child td { border-bottom: none; }
+hr { border:none; border-top:1px solid rgba(201,168,76,0.1); margin:36px 0; }
+
+.footer {
+  text-align:center; color:rgba(240,232,216,0.25); font-size:12px;
+  margin-top:60px; padding:24px 48px 40px;
+  border-top:1px solid rgba(201,168,76,0.1);
+}
+
+@media (max-width: 600px) {
+  .content { padding: 28px 20px 0; }
+  .qs-grid { grid-template-columns: repeat(3,1fr); gap:10px; }
+  .product-grid { grid-template-columns: 1fr; }
+  .flying-star-grid { font-size: 90%; }
+  body { font-size: 15px; }
+}
+</style>
+</head>
+<body>
+<div class="cover">
+  <div class="cover-brand">S H E N Y U A N  ·  善 缘</div>
+  <div class="cover-icon">🏠</div>
+  <div class="cover-title">家宅风水评测报告</div>
+  <div class="cover-en">FENG SHUI HOME READING · 2026</div>
+  <div class="gold-line"></div>
+
+  <div class="info-card">
+    <div class="info-row"><span class="info-label">住宅坐向</span><span class="info-val">坐北朝南 · 南向大门 · 9楼</span></div>
+    <div class="info-row"><span class="info-label">地址</span><span class="info-val">美国加州洛杉矶</span></div>
+    <div class="info-row"><span class="info-label">男主人</span><span class="info-val">1971年4月15日 · 坤命（西四命）</span></div>
+    <div class="info-row"><span class="info-label">女主人</span><span class="info-val">1975年8月22日 · 艮命（西四命）</span></div>
+    <div class="info-row"><span class="info-label">主要困扰</span><span class="info-val">财运不顺 · 升职受阻 · 感情冷淡</span></div>
+    <div class="info-row"><span class="info-label">分析基准</span><span class="info-val">2026年丙午年 · 二黑入中宫</span></div>
+  </div>
+  <div class="cover-price">$19.90</div>
+  <div class="cover-badge">完整报告 · 十一章节 · 双体系分析</div>
+  <div class="algo-pills">
+    <span class="algo-pill">玄空飞星</span>
+    <span class="algo-pill">八宅明镜</span>
+    <span class="algo-pill">五行生克</span>
+    <span class="algo-pill">AI深度分析</span>
+  </div>
+  <div class="cover-disclaimer">* 本报告由AI命理系统生成，仅供参考，不构成任何承诺</div>
+</div>
+
+<div class="content">
+
+<!-- QUICK SUMMARY -->
+<div class="quick-summary">
+  <div class="qs-title">⚡ Quick Summary — 一分钟读懂报告</div>
+  <div class="qs-grid">
+    <div class="qs-item"><div class="qs-score">70</div><div class="qs-label">人宅匹配</div></div>
+    <div class="qs-item"><div class="qs-score" style="color:#6de0a0">大吉</div><div class="qs-label">南方大门</div></div>
+    <div class="qs-item"><div class="qs-score" style="color:#e07070">⚠</div><div class="qs-label">东北五黄</div></div>
+  </div>
+  <div class="qs-verdict">
+    <strong>本年度核心任务：</strong>正西催财 · 东南旺事业 · 正南旺感情 · 东北化五黄煞<br>
+    全家西四命住东四宅，人宅不合，但可通过<strong>室内布局调整</strong>完全化解。<strong>大门朝南，今年双九紫会，全年气场向上</strong>，是整屋风水中最大的亮点。
+  </div>
+</div>
+
+<div class="section-icon-header">
+  <span class="s-icon">🗺️</span>
+  <div class="s-text">
+    <div class="s-title">一、命卦与宅卦诊断</div>
+    <div class="s-en">Kua Number & House Compatibility</div>
+  </div>
+</div>
+
+<h3>1.1 男主人命卦 — 坤卦（西四命）</h3>
+<p>根据八宅明镜，男主人1971年出生，命卦为<strong>坤卦（土命，西四命）</strong>。坤土性格厚重包容，做事踏实，但土多埋金，事业上"有德无威"，付出多回报少，这是他升职受阻的命理根源。</p>
+
+<h3>1.2 女主人命卦 — 艮卦（西四命）</h3>
+<p>女主人1975年出生，命卦为<strong>艮卦（土命，西四命）</strong>。艮为山，象征稳健守信，但也象征"静止"。夫妻二人均为土命，容易形成"各守一方"的格局，这正是感情冷淡的命理根源。</p>
+
+<h3>1.3 孩子命卦 — 坤卦（西四命）</h3>
+<p>孩子2008年出生，命卦与父亲相同，均为<strong>坤卦</strong>。坤土之人思虑多行动少，学业上容易"想得多做得少"。</p>
+
+<h3>1.4 人宅匹配分析</h3>
+<table>
+  <thead><tr><th>成员</th><th>命卦</th><th>命局属性</th><th>与本宅（坎宅）匹配</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>男主人</td><td>坤卦</td><td>西四命·土</td><td><strong style="color:#e07070">不匹配</strong></td><td>西四命住东四宅，属"入宅不合"</td></tr>
+    <tr><td>女主人</td><td>艮卦</td><td>西四命·土</td><td><strong style="color:#e07070">不匹配</strong></td><td>同上</td></tr>
+    <tr><td>孩子</td><td>坤卦</td><td>西四命·土</td><td><strong style="color:#e07070">不匹配</strong></td><td>同上</td></tr>
+  </tbody>
+</table>
+
+<div class="why-box">
+  <div class="why-box-title">💡 重要提示：人宅不合不等于倒霉</div>
+  <p>风水讲"宅不胜人"——房子影响不了人生的根本走向。通过将主要活动区域（卧室、书房）调整到西四吉位，即可化解此局。西四吉位包括：西南（坤）、东北（艮）、正西（兑）、西北（乾）。</p>
+</div>
+
+<p><strong>卧室分配建议：</strong></p>
+<ul>
+  <li>男主人宜住<strong>西南卧房</strong>（坤位，与命卦同气，同频共振）</li>
+  <li>女主人宜住<strong>东北卧房</strong>（艮位，与命卦同气）</li>
+  <li>孩子宜住<strong>正西卧房</strong>（兑位，金生土，助学业）</li>
+  <li>若无法换房间，至少将床头朝向调整为<strong>西南或西北方向</strong></li>
+</ul>
+
+<div class="section-icon-header wealth-header">
+  <span class="s-icon">🌟</span>
+  <div class="s-text">
+    <div class="s-title">二、2026年九宫飞星图</div>
+    <div class="s-en">2026 Flying Stars Chart — Year of Bing Wu</div>
+  </div>
+</div>
+
+<h3>2.1 今年飞星入中：二黑巨门星（2026丙午年）</h3>
+<p>2026年，二黑病符星入中宫。二黑属土，主疾病与衰败，但影响力通过"飞布八方"来体现，关键看它落到哪个方位。</p>
+
+<div style="max-width:480px; margin: 0 auto;">
+  <div class="flying-star-grid">
+    <!-- 东南 巽 -->
+    <div class="fsg-cell auspicious">
+      <span class="fsg-dir">东南·巽</span>
+      <span class="fsg-star">4+6</span>
+      <span class="fsg-name">文曲＋武曲</span>
+      <span class="fsg-tag good">大吉·名利</span>
+    </div>
+    <!-- 正南 离 -->
+    <div class="fsg-cell auspicious">
+      <span class="fsg-dir">正南·离</span>
+      <span class="fsg-star">9+9</span>
+      <span class="fsg-name">双九紫会</span>
+      <span class="fsg-tag good">大吉·喜庆</span>
+    </div>
+    <!-- 西南 坤 -->
+    <div class="fsg-cell neutral">
+      <span class="fsg-dir">西南·坤</span>
+      <span class="fsg-star">2+4</span>
+      <span class="fsg-name">病符＋文曲</span>
+      <span class="fsg-tag ok">平转吉</span>
+    </div>
+    <!-- 正东 震 -->
+    <div class="fsg-cell auspicious">
+      <span class="fsg-dir">正东·震</span>
+      <span class="fsg-star">3+1</span>
+      <span class="fsg-name">禄存＋贪狼</span>
+      <span class="fsg-tag good">吉·官星</span>
+    </div>
+    <!-- 中宫 -->
+    <div class="fsg-cell center">
+      <span class="fsg-dir">中宫</span>
+      <span class="fsg-star">2</span>
+      <span class="fsg-name">二黑入中</span>
+      <span class="fsg-tag ok">病符居中</span>
+    </div>
+    <!-- 正西 兑 -->
+    <div class="fsg-cell auspicious">
+      <span class="fsg-dir">正西·兑</span>
+      <span class="fsg-star">7+8</span>
+      <span class="fsg-name">破军＋左辅</span>
+      <span class="fsg-tag good">吉·财星</span>
+    </div>
+    <!-- 东北 艮 -->
+    <div class="fsg-cell inauspicious">
+      <span class="fsg-dir">东北·艮</span>
+      <span class="fsg-star">8+5</span>
+      <span class="fsg-name">左辅＋五黄</span>
+      <span class="fsg-tag bad">大凶·必化解</span>
+    </div>
+    <!-- 正北 坎 -->
+    <div class="fsg-cell neutral">
+      <span class="fsg-dir">正北·坎</span>
+      <span class="fsg-star">1+3</span>
+      <span class="fsg-name">贪狼＋禄存</span>
+      <span class="fsg-tag ok">吉带煞</span>
+    </div>
+    <!-- 西北 乾 -->
+    <div class="fsg-cell neutral">
+      <span class="fsg-dir">西北·乾</span>
+      <span class="fsg-star">6+7</span>
+      <span class="fsg-name">武曲＋破军</span>
+      <span class="fsg-tag ok">先吉后凶</span>
+    </div>
+  </div>
+  <p style="text-align:center; font-size:12px; color:rgba(240,232,216,0.4); margin-top:8px; text-indent:0;">↑ 九宫飞星盘 · 2026丙午年 · 以朝向方向为上</p>
+</div>
+
+<h3>2.2 重点方位解读</h3>
+
+<h3>① 正南离宫 — 双九紫会（大吉）🎉</h3>
+<p>2026年正南方出现双九紫右弼星汇聚。九紫为喜庆星，主婚姻、晋升、贵人。双九紫相会，喜气倍增。您家大门朝南，正是纳气最旺的位置。</p>
+
+<h3>② 东北艮宫 — 五黄煞临（大凶）⚠️</h3>
+<p>五黄廉贞星为九星中凶性最强一颗，主重病、血光、破财。2026年飞临东北，如果您家的大门、厨房或卧室在东北方，必须重点化解。</p>
+
+<h3>③ 东南巽宫 — 四绿配六白（大吉）📚</h3>
+<p>文曲与武曲同宫，名利双收之局，利学业、考试、事业晋升，尤其适合文职工作者。</p>
+
+<h3>④ 正西兑宫 — 财星照临（吉）💰</h3>
+<p>八白左辅星（当运第一财星）飞临正西，2026年主财位在正西。</p>
+
+<div class="section-icon-header wealth-header">
+  <span class="s-icon">💰</span>
+  <div class="s-text">
+    <div class="s-title">三、财位精准布局</div>
+    <div class="s-en">Wealth Corner Activation</div>
+  </div>
+</div>
+
+<div class="compass-wrap">
+  <div class="compass">
+    <div class="compass-line"></div>
+    <div class="compass-dir north">N 正北</div>
+    <div class="compass-dir south">S 正南 🚪</div>
+    <div class="compass-dir east">E 正东 📚</div>
+    <div class="compass-dir west">W 正西 💰</div>
+    <div class="compass-dir ne">NE ⚠️</div>
+    <div class="compass-dir nw">NW 乾</div>
+    <div class="compass-dir se">SE ✨</div>
+    <div class="compass-dir sw">SW 主卧</div>
+    <div class="compass-inner">坐北<br>朝南</div>
+  </div>
+  <div class="compass-caption">🏠 本宅方位示意图 · 大门正南 · 财位正西</div>
+</div>
+
+<h3>3.1 主财位 — 正西兑宫</h3>
+<p>2026年八白左辅星（当运第一财星）飞临正西兑宫，这是全年最重要的财位。</p>
+
+<p><strong>具体操作：</strong></p>
+<ul>
+  <li><strong>放置位置：</strong>客厅正西墙面靠地处（用罗盘确认，非凭感觉）</li>
+  <li><strong>核心摆件：</strong>铜制聚宝盆（直径20-25cm），内放五帝钱一套＋黄水晶500g＋九枚金色硬币</li>
+  <li><strong>配色：</strong>正西属金，用白色、金色、银色装饰；<strong>忌放红色物品</strong>（火克金）</li>
+  <li><strong>灯光：</strong>在正西位加一盏暖黄射灯（2700K），每天傍晚6-9点亮灯2小时</li>
+</ul>
+
+<div class="why-box">
+  <div class="why-box-title">🔬 Why This Works — 五行逻辑</div>
+  <p>八白财星属土，兑宫属金，土生金。铜制盆以金引金，黄水晶以土生金，暖黄灯光属火（火→土→金），形成连续相生链条，财气源源不断。这是五行相生的连锁效应，不是摆件的"魔力"。</p>
+</div>
+
+<h3>3.2 副财位 — 东南巽宫（偏财·投资收益）</h3>
+<ul>
+  <li><strong>放置：</strong>东南角放白水晶柱（高15-18cm），下垫红色绒布（20×20cm）</li>
+  <li><strong>适合在此：</strong>办公或学习，既旺财又旺事业</li>
+  <li><strong>忌放：</strong>金属尖锐物品（金克木）</li>
+</ul>
+
+<div class="why-box">
+  <div class="why-box-title">🔬 Why This Works — 五行逻辑</div>
+  <p>六白武曲属金，东南巽宫属木，克出为财。白水晶增强武曲力量；红布属火，形成"木→火→金"回路，将克泄转为相生，把偏财潜能激活。</p>
+</div>
+
+<h3>3.3 全年财位禁忌</h3>
+<table>
+  <thead><tr><th>禁忌事项</th><th>原因</th><th>解决方法</th></tr></thead>
+  <tbody>
+    <tr><td>财位堆杂物</td><td>杂物阻塞气场</td><td>每周清理一次，保持整洁</td></tr>
+    <tr><td>财位放垃圾桶</td><td>污秽冲财星</td><td>移至厕所或门口角落</td></tr>
+    <tr><td>财位（正西）放绿植</td><td>木泄金气</td><td>换为金属或陶瓷摆件</td></tr>
+    <tr><td>财位上方有横梁</td><td>横梁压制气场</td><td>用吊顶包平或挂铜葫芦</td></tr>
+  </tbody>
+</table>
+
+<div class="section-icon-header career-header">
+  <span class="s-icon">💼</span>
+  <div class="s-text">
+    <div class="s-title">四、事业运势与贵人位</div>
+    <div class="s-en">Career & Mentor Energy</div>
+  </div>
+</div>
+
+<h3>4.1 2026年事业总运</h3>
+<p>男主人2026年丙午年，天干丙火为"正官"，地支午火为"正财"。<strong>官星透出，财星坐实</strong>，事业有重大转机。结合飞星：正东一白官星照临，东南六白武曲助力，<strong>全年节奏是先难后易，年中见转机</strong>。</p>
+
+<h3>4.2 事业贵人位 — 正东震宫</h3>
+<p>一白贪狼星（官星）飞临正东，主贵人提携、上级赏识。</p>
+<ul>
+  <li><strong>办公桌方向：</strong>面朝正东（面向官星），或背靠正西（坐于财星之上）</li>
+  <li><strong>桌面左上角：</strong>铜制文昌塔（高约20cm，九层）</li>
+  <li><strong>桌面正前方：</strong>黑色笔筒（属水，水生木，助一白官星）</li>
+</ul>
+
+<div class="why-box">
+  <div class="why-box-title">🔬 Why This Works — 五行逻辑</div>
+  <p>一白贪狼属水，正东震宫属木，水生木，官星得生。铜质文昌塔以金生水，水再生木，层层递进；黑色笔筒直接补水元素。这种"金→水→木"的相生链让官星持续得力，贵人自然来。</p>
+</div>
+
+<h3>4.3 升职关键时间窗口</h3>
+<table>
+  <thead><tr><th>时间段</th><th>月份</th><th>运势特点</th><th>建议行动</th></tr></thead>
+  <tbody>
+    <tr><td>农历二月</td><td>3月18日后</td><td>官星得力</td><td><strong>主动争取升职、提出竞聘</strong></td></tr>
+    <tr><td>农历六月</td><td>7月12日后</td><td>九紫发力</td><td><strong>适合面试、竞聘、汇报工作</strong></td></tr>
+    <tr><td>农历九月</td><td>10月8日后</td><td>六白武曲</td><td><strong>适合年度考核、绩效评审</strong></td></tr>
+  </tbody>
+</table>
+
+<div class="section-icon-header romance-header">
+  <span class="s-icon">💕</span>
+  <div class="s-text">
+    <div class="s-title">五、感情桃花位布局</div>
+    <div class="s-en">Relationship & Romance Activation</div>
+  </div>
+</div>
+
+<h3>5.1 2026年桃花位 — 正南离宫</h3>
+<p>九紫右弼星飞临正南，九紫主婚姻、感情、人缘。双九紫会于大门方向，<strong>今年夫妻感情提升的最佳时机</strong>。</p>
+
+<h3>5.2 夫妻感情提升布局（重点）</h3>
+<p><strong>核心思路：</strong>夫妻二人均为土命，九紫属火，火生土本为吉，但火过旺则土焦（感情焦躁冷淡的根源）。需以水润局、以木通关。</p>
+
+<ul>
+  <li><strong>主卧正南位置：</strong>透明玻璃花瓶（属水）内插九枝红色鲜花，每周更换保持新鲜</li>
+  <li><strong>花瓶下方：</strong>铺一块蓝色或黑色方布（约30×30cm），以水润火</li>
+  <li><strong>床头柜：</strong>一对铜质鸳鸯（高约10cm）+ 中间放粉晶球（直径5cm）</li>
+</ul>
+
+<div class="why-box">
+  <div class="why-box-title">🔬 Why This Works — 五行逻辑</div>
+  <p>玻璃瓶装水，以水济火，防火炎土燥；九枝红花应九紫之数，催旺喜庆气场；铜质鸳鸯（金生水）加粉晶球（主和合），整体形成"水→木→火"相生链，既旺感情又不致过燥。</p>
+</div>
+
+<h3>5.3 夫妻卧室禁忌</h3>
+<table>
+  <thead><tr><th>禁忌</th><th>原因</th><th>解决方法</th></tr></thead>
+  <tbody>
+    <tr><td>床头挂婚纱照正对床尾</td><td>容易引发口角</td><td>移至侧墙或书房</td></tr>
+    <tr><td>床下堆放杂物</td><td>阻滞气场流通</td><td>定期清理，保持通风</td></tr>
+    <tr><td>镜子正对床</td><td>夜间反光扰眠</td><td>移至侧面或加窗帘遮挡</td></tr>
+    <tr><td>卧室放电视</td><td>电子设备影响睡眠质量</td><td>移出卧室或使用遮盖</td></tr>
+  </tbody>
+</table>
+
+<div class="section-icon-header health-header">
+  <span class="s-icon">🌿</span>
+  <div class="s-text">
+    <div class="s-title">六、健康方位与化煞</div>
+    <div class="s-en">Health & Sha Chi Remedies</div>
+  </div>
+</div>
+
+<h3>6.1 中宫 — 二黑病符星</h3>
+<p>二黑入中宫，病符居中，影响全宅，主脾胃、消化系统、情绪问题。</p>
+<ul>
+  <li><strong>客厅中央：</strong>挂铜葫芦（高15cm），口朝下，以金泄土气</li>
+  <li><strong>中宫地面：</strong>铺圆形灰色或白色地毯（直径约1.2米）</li>
+  <li><strong>忌放：</strong>红色物品（火生土，加重病符）；不放鱼缸（水被土克）</li>
+</ul>
+
+<h3>6.2 东北艮宫 — 五黄煞（必须化解）⚠️</h3>
+
+<div class="warn-box">
+  <div class="warn-title">⚠ 五黄煞：今年最需处理的风水问题</div>
+  <ul style="margin:0; padding-left:20px;">
+    <li>若<strong>东北为大门</strong>：门口内放铜制八卦凸镜（直径15cm），面朝门外</li>
+    <li>若<strong>东北为厨房</strong>：东北角放铜制葫芦一对，口朝上</li>
+    <li>若<strong>东北为卧室</strong>：东北角挂铜制五帝钱（红绳串起，高度1.5米）</li>
+    <li>若<strong>东北为卫生间</strong>：东北角放粗盐500g（白陶瓷碗），每月更换</li>
+    <li><strong>通用化解：</strong>在东北方位放铜制重物（铜钟、铜鼎、铜麒麟），重量越重效果越好</li>
+  </ul>
+</div>
+
+<div class="why-box">
+  <div class="why-box-title">🔬 Why This Works — 五行逻辑</div>
+  <p>五黄属土，铜器属金，金能泄土之气（土生金），所以用铜器来"消耗"五黄的能量。就像治理洪水，不是去堵它，而是开渠引流。</p>
+</div>
+
+<h3>6.3 家庭成员健康重点</h3>
+<table>
+  <thead><tr><th>成员</th><th>2026年健康重点</th><th>预防建议</th></tr></thead>
+  <tbody>
+    <tr><td>男主人</td><td>脾胃、消化系统、腰椎</td><td>少吃冷食，加强核心肌群锻炼</td></tr>
+    <tr><td>女主人</td><td>内分泌、情绪管理</td><td>规律作息，每周有氧运动3次</td></tr>
+    <tr><td>孩子</td><td>呼吸道、皮肤</td><td>注意保暖，避免过度劳累</td></tr>
+  </tbody>
+</table>
+
+<div class="section-icon-header">
+  <span class="s-icon">🏡</span>
+  <div class="s-text">
+    <div class="s-title">七、各成员吉凶方位</div>
+    <div class="s-en">Personal Lucky Directions</div>
+  </div>
+</div>
+
+<h3>7.1 男主人（坤命）</h3>
+<p><strong>吉方：</strong>西南、东北、正西、西北 ｜ <strong>凶方：</strong>正东、正南、东南、正北</p>
+<ul>
+  <li>最佳卧室：西南卧房；床头朝向：朝西南或正西</li>
+  <li>办公方向：坐西朝东（背靠财星，面向官星）</li>
+</ul>
+
+<h3>7.2 女主人（艮命）</h3>
+<p><strong>吉方：</strong>东北、西南、正西、西北 ｜ <strong>凶方：</strong>正南、正北、东南、正东</p>
+<ul>
+  <li>最佳卧室：东北卧房；床头朝向：朝东北或西南</li>
+  <li>梳妆台：放于卧室西北角（乾位，金生水）</li>
+</ul>
+
+<h3>7.3 孩子（坤命）</h3>
+<p><strong>吉方：</strong>西南、东北、正西、西北 ｜ <strong>凶方：</strong>正东、正南、东南、正北</p>
+<ul>
+  <li>最佳卧室：正西卧房；书桌方向：坐西朝东（背靠吉方，面朝文昌方）</li>
+</ul>
+
+<h3>7.4 房间分配方案（三室两厅）</h3>
+<table>
+  <thead><tr><th>房间</th><th>建议方位</th><th>建议居住</th><th>理由</th></tr></thead>
+  <tbody>
+    <tr><td>主卧</td><td>西南</td><td>男主人</td><td>坤命配坤位，同气相求，财运双旺</td></tr>
+    <tr><td>次卧A</td><td>东北</td><td>女主人</td><td>艮命配艮位，静心稳健，情绪安定</td></tr>
+    <tr><td>次卧B</td><td>正西</td><td>孩子</td><td>兑位金生土，有助思维敏锐，学业进步</td></tr>
+  </tbody>
+</table>
+
+<div class="section-icon-header">
+  <span class="s-icon">🚪</span>
+  <div class="s-text">
+    <div class="s-title">八、厨卫大门风水禁忌</div>
+    <div class="s-en">Kitchen, Bathroom & Entrance Rules</div>
+  </div>
+</div>
+
+<h3>8.1 大门（正南）</h3>
+<p>2026年大门方位最旺，双九紫会照，纳气极佳。需注意：</p>
+<table>
+  <thead><tr><th>禁忌</th><th>影响</th><th>解决方法</th></tr></thead>
+  <tbody>
+    <tr><td>大门正对电梯</td><td>财气被吸走</td><td>门口内放屏风或玄关柜</td></tr>
+    <tr><td>大门正对楼梯（向下）</td><td>财气下泄</td><td>门槛下放五帝钱</td></tr>
+    <tr><td>大门正对卫生间门</td><td>秽气直冲</td><td>挂门帘（长至膝盖）</td></tr>
+    <tr><td>鞋柜超过腰部高度</td><td>挡气</td><td>控制鞋柜高度在腰部以下</td></tr>
+  </tbody>
+</table>
+<p><strong>今年开运贴士：</strong>门内侧挂五帝钱（红绳），用红色或紫色门垫（应正南火气）。</p>
+
+<h3>8.2 厨房禁忌（重点：若在东北须化解五黄）</h3>
+<table>
+  <thead><tr><th>禁忌</th><th>原因</th><th>处理方法</th></tr></thead>
+  <tbody>
+    <tr><td>炉灶正对冰箱或水槽</td><td>火水相冲</td><td>中间加隔板或放绿植遮挡</td></tr>
+    <tr><td>炉灶背对门</td><td>无靠不稳</td><td>调整炉灶背靠墙</td></tr>
+    <tr><td>刀具外露摆放</td><td>煞气暴露</td><td>收入刀架或抽屉</td></tr>
+    <tr><td>厨房挂镜子</td><td>火反射加剧</td><td>取下镜子</td></tr>
+  </tbody>
+</table>
+
+<div class="section-icon-header">
+  <span class="s-icon">📅</span>
+  <div class="s-text">
+    <div class="s-title">九、2026年重点开运时间</div>
+    <div class="s-en">Key Dates & Monthly Outlook</div>
+  </div>
+</div>
+
+<h3>9.1 全年运势概览</h3>
+<p>2026年丙午年，火旺之年。火旺生土，对夫妻二人（均为土命）属"得令之年"，总体运势稳中有升。但火过旺则燥，需注意情绪管理。</p>
+
+<table>
+  <thead><tr><th>月份</th><th>干支</th><th>运势特点</th><th>建议行动</th></tr></thead>
+  <tbody>
+    <tr><td>2月（正月）</td><td>庚寅</td><td>财运启动</td><td>做年度财务规划</td></tr>
+    <tr><td>3月（二月）</td><td>辛卯</td><td><strong>官星得力</strong></td><td><strong>争取升职、竞聘</strong></td></tr>
+    <tr><td>4月（三月）</td><td>壬辰</td><td>财运稳定</td><td>适合投资、签约</td></tr>
+    <tr><td>5月（四月）</td><td>癸巳</td><td>贵人显现</td><td>扩展人脉、社交</td></tr>
+    <tr><td>6月（五月）</td><td>甲午</td><td>火旺最盛</td><td>注意健康，防口舌</td></tr>
+    <tr><td>7月（六月）</td><td>乙未</td><td><strong>喜庆星发力</strong></td><td><strong>搬家、装修、布置风水最佳月</strong></td></tr>
+    <tr><td>10月（九月）</td><td>戊戌</td><td><strong>六白武曲</strong></td><td><strong>年度考核、申请晋升</strong></td></tr>
+    <tr><td>11月（十月）</td><td>己亥</td><td>财星入库</td><td>储蓄、置业</td></tr>
+  </tbody>
+</table>
+
+<h3>9.2 最佳搬家/布置风水时间</h3>
+<p><strong>首选月份：</strong>农历六月（7月12日—8月9日），九紫喜庆星发力。</p>
+<p><strong>推荐吉日：</strong></p>
+<ul>
+  <li>2026年7月18日（农历六月初五）</li>
+  <li>2026年7月26日（农历六月十三）</li>
+  <li>2026年8月2日（农历六月二十）</li>
+</ul>
+
+<div class="section-icon-header">
+  <span class="s-icon">🛒</span>
+  <div class="s-text">
+    <div class="s-title">十、推荐开运物品清单</div>
+    <div class="s-en">Recommended Items & Where to Buy</div>
+  </div>
+</div>
+
+<p>以下物品均可在Amazon购得，搜索关键词已注明：</p>
+
+<div class="product-grid">
+  <div class="product-card">
+    <div class="pc-num">01</div>
+    <div class="pc-name">铜制聚宝盆</div>
+    <div class="pc-spec">直径20-25cm，纯铜材质</div>
+    <div class="pc-place">📍 正西客厅墙角</div>
+    <div class="pc-price">$80–150</div>
+    <div class="pc-link">搜索：Chinese brass wealth bowl</div>
+  </div>
+  <div class="product-card">
+    <div class="pc-num">02</div>
+    <div class="pc-name">五帝钱套装</div>
+    <div class="pc-spec">真品铜钱，红绳串起</div>
+    <div class="pc-place">📍 聚宝盆内＋大门内侧</div>
+    <div class="pc-price">$40–80</div>
+    <div class="pc-link">搜索：Chinese five emperor coins</div>
+  </div>
+  <div class="product-card">
+    <div class="pc-num">03</div>
+    <div class="pc-name">天然黄水晶碎石</div>
+    <div class="pc-spec">约500g，天然非合成</div>
+    <div class="pc-place">📍 聚宝盆内</div>
+    <div class="pc-price">$20–40</div>
+    <div class="pc-link">搜索：yellow citrine tumbled stones</div>
+  </div>
+  <div class="product-card">
+    <div class="pc-num">04</div>
+    <div class="pc-name">白水晶柱</div>
+    <div class="pc-spec">高15-18cm，天然白水晶</div>
+    <div class="pc-place">📍 东南角副财位</div>
+    <div class="pc-price">$30–60</div>
+    <div class="pc-link">搜索：white quartz crystal point</div>
+  </div>
+  <div class="product-card">
+    <div class="pc-num">05</div>
+    <div class="pc-name">铜制貔貅一对</div>
+    <div class="pc-spec">高15cm，一公一母</div>
+    <div class="pc-place">📍 正南玄关柜，头朝门外</div>
+    <div class="pc-price">$60–120</div>
+    <div class="pc-link">搜索：Chinese Pi Yao statue pair</div>
+  </div>
+  <div class="product-card">
+    <div class="pc-num">06</div>
+    <div class="pc-name">铜制葫芦</div>
+    <div class="pc-spec">高15cm，口径3cm，纯铜</div>
+    <div class="pc-place">📍 客厅中央天花板</div>
+    <div class="pc-price">$30–60</div>
+    <div class="pc-link">搜索：Chinese brass gourd</div>
+  </div>
+  <div class="product-card">
+    <div class="pc-num">07</div>
+    <div class="pc-name">铜制麒麟一对</div>
+    <div class="pc-spec">高25cm，重型纯铜</div>
+    <div class="pc-place">📍 东北方位（化解五黄）</div>
+    <div class="pc-price">$80–150</div>
+    <div class="pc-link">搜索：Chinese bronze Qilin statue</div>
+  </div>
+  <div class="product-card">
+    <div class="pc-num">08</div>
+    <div class="pc-name">玻璃花瓶＋红花</div>
+    <div class="pc-spec">透明玻璃，插九枝红玫瑰</div>
+    <div class="pc-place">📍 主卧正南，每周换花</div>
+    <div class="pc-price">$20–40</div>
+    <div class="pc-link">搜索：glass vase + 本地花店买红玫瑰</div>
+  </div>
+  <div class="product-card">
+    <div class="pc-num">09</div>
+    <div class="pc-name">粉晶球</div>
+    <div class="pc-spec">直径5cm，天然粉水晶</div>
+    <div class="pc-place">📍 床头柜鸳鸯中间</div>
+    <div class="pc-price">$15–30</div>
+    <div class="pc-link">搜索：rose quartz sphere</div>
+  </div>
+  <div class="product-card">
+    <div class="pc-num">10</div>
+    <div class="pc-name">喜马拉雅盐灯</div>
+    <div class="pc-spec">中型，3-5kg</div>
+    <div class="pc-place">📍 东北卫生间（五黄化解）</div>
+    <div class="pc-price">$25–50</div>
+    <div class="pc-link">搜索：himalayan salt lamp</div>
+  </div>
+</div>
+
+<div class="warn-box" style="margin-top: 24px;">
+  <div class="warn-title">🔔 购买注意事项</div>
+  <ul style="margin:0; padding-left:20px; color:rgba(240,232,216,0.85);">
+    <li>铜器以真铜为佳，不要买镀铜或塑料仿品</li>
+    <li>五帝钱选真品古铜钱（古玩店或信誉好的网店），非当代仿制品</li>
+    <li>水晶选天然，非人工合成（产品描述会注明 natural/genuine）</li>
+    <li>新购物品先用淡盐水浸泡一夜（铜器除外），清水冲净晾干后使用</li>
+    <li>最佳启用时间：农历六月初一（2026年7月14日）统一启用</li>
+  </ul>
+</div>
+
+<div class="section-icon-header">
+  <span class="s-icon">💬</span>
+  <div class="s-text">
+    <div class="s-title">十一、给您的真心话</div>
+    <div class="s-en">A Practical Note from Your Consultant</div>
+  </div>
+</div>
+
+<p>看完这份报告，我想用几句实在话来结尾。</p>
+
+<p><strong>给男主人：</strong>您今年55岁，是人生中自然的一个节点。您的命局土重，踏实可靠，但也容易陷入"惯性"。2026年官星透出，是主动争取的好时机——<strong>机会是争取来的，不是等来的</strong>。在正东方位布置文昌塔，然后去找您想要的那个机会。</p>
+
+<p><strong>给女主人：</strong>感情冷淡，往往不是不爱，而是都累了。您和先生都是土命，厚重有余而灵动不足。<strong>每周至少一次，在双九紫方向（正南）一起吃顿饭</strong>，点暖黄灯，说说这周的事。风水布局是环境辅助，真正的感情升温靠真实的陪伴。</p>
+
+<p><strong>关于洛杉矶的地气：</strong>洛杉矶属"燥金"地气，比中国大多数地区更干燥。在此做风水布局，要特别注意"润"字——多用水元素（流水摆件、玻璃花瓶）来润局，避免火燥土焦。</p>
+
+<p><strong>记住：风水是助缘，不是主宰。</strong> 这份报告能做的，是帮您把环境能量调到最顺畅的状态。路，还是要靠您自己走。</p>
+
+<p>祝您家2026年顺风顺水，家和万事兴。</p>
+
+</div>
+<div class="footer">善缘 ShenYuan · AI 风水命理系统 · shenyuan.app · 本报告仅供参考，命运终由自己主宰</div>
+</body>
+</html>

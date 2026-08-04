@@ -28,6 +28,7 @@ const router = require('express').Router();
 const path = require('path');
 const fs = require('fs');
 const { deepseekChat, deepseekStream, buildReadingPrompt } = require('../lib/llm');
+const { calcBazi } = require('../bazi');
 const astrology = require('../astrology.js');
 const { insertReading, hasFullAccess, gateMessages, saveQaContext, qaContext } = require('../lib/store');
 const { getToken } = require('../lib/store');
@@ -501,8 +502,25 @@ router.post('/hehun/stream', rateLimitMiddleware, async (req, res) => {
 ## 十一、合婚古诀引用与命理依据
 ## 十二、一句话结论——这段婚姻值得进入吗`;
 
-    const userMsg = `${nameA}：${p1Year}年${p1Month}月${p1Day}日${p1Hour !== undefined && p1Hour !== '' ? p1Hour+'时' : ''} · ${p1Gender === 'male' ? '男' : '女'}
-${nameB}：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined && p2Hour !== '' ? p2Hour+'时' : ''} · ${p2Gender === 'male' ? '男' : '女'}`;
+    // ── 双方精确排盘（算法排，不让AI猜）──
+    const bazi1 = calcBazi(Number(p1Year), Number(p1Month), Number(p1Day), Number(p1Hour)||0, p1Gender||'female');
+    const bazi2 = calcBazi(Number(p2Year), Number(p2Month), Number(p2Day), Number(p2Hour)||0, p2Gender||'male');
+    const hehunChart = `【精确排盘数据（由万年历算法计算，请严格使用，不得自行推算或修改）】
+${nameA}（${p1Gender==='male'?'男':'女'}）：
+  四柱：${bazi1.fourPillars}　日主：${bazi1.dayMaster}（${bazi1.dayMasterElement}）　身${bazi1.isStrong?'强':'弱'}
+  五行：金${bazi1.wuxing['金'].toFixed(1)} 木${bazi1.wuxing['木'].toFixed(1)} 水${bazi1.wuxing['水'].toFixed(1)} 火${bazi1.wuxing['火'].toFixed(1)} 土${bazi1.wuxing['土'].toFixed(1)}
+  大运：${bazi1.daYun.slice(0,6).map(d=>d.name+'('+d.startAge+'岁)').join(' ')}
+${nameB}（${p2Gender==='male'?'男':'女'}）：
+  四柱：${bazi2.fourPillars}　日主：${bazi2.dayMaster}（${bazi2.dayMasterElement}）　身${bazi2.isStrong?'强':'弱'}
+  五行：金${bazi2.wuxing['金'].toFixed(1)} 木${bazi2.wuxing['木'].toFixed(1)} 水${bazi2.wuxing['水'].toFixed(1)} 火${bazi2.wuxing['火'].toFixed(1)} 土${bazi2.wuxing['土'].toFixed(1)}
+  大运：${bazi2.daYun.slice(0,6).map(d=>d.name+'('+d.startAge+'岁)').join(' ')}
+当前年份：${new Date().getFullYear()}年`;
+
+    const userMsg = `${hehunChart}
+
+${nameA}：${p1Year}年${p1Month}月${p1Day}日${p1Hour !== undefined && p1Hour !== '' ? p1Hour+'时' : ''} · ${p1Gender === 'male' ? '男' : '女'}
+${nameB}：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined && p2Hour !== '' ? p2Hour+'时' : ''} · ${p2Gender === 'male' ? '男' : '女'}
+请依据以上精确排盘数据进行合婚分析，所有八字相关结论必须与上方数据一致。`;
 
     const fullAccess = hasFullAccess(req, ['bazi', 'hehun', 'ziwei', 'xingming', 'astrology', '八字', '合婚', '紫微', '姓名', '占星']);
 
@@ -2053,9 +2071,20 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
       ? '\n\n【说话模式】你温暖治愈，以鼓励为主，让人感到被理解。'
       : '\n\n【说话模式】你说话直率，但句句为对方好，直接指出问题。';
 
+    // ── 精确排盘（真实算法，不依赖AI猜算）──
+    const bazi = calcBazi(Number(birthYear), Number(birthMonth), Number(birthDay), Number(birthHour) || 0, gender);
+    const baziChart = `【精确排盘结果（由万年历算法计算，请严格使用以下数据，不得自行推算或修改）】
+年柱：${bazi.year.gan}${bazi.year.zhi}　月柱：${bazi.month.gan}${bazi.month.zhi}　日柱：${bazi.day.gan}${bazi.day.zhi}　时柱：${bazi.hour.gan}${bazi.hour.zhi}
+四柱：${bazi.fourPillars}
+日主：${bazi.dayMaster}（${bazi.dayMasterElement}）　身${bazi.isStrong ? '强' : '弱'}
+五行：金${bazi.wuxing['金'].toFixed(1)} 木${bazi.wuxing['木'].toFixed(1)} 水${bazi.wuxing['水'].toFixed(1)} 火${bazi.wuxing['火'].toFixed(1)} 土${bazi.wuxing['土'].toFixed(1)}
+生肖：${bazi.zodiac}　时辰：${bazi.shiChen}
+大运（依次）：${bazi.daYun.map(d => d.name+'('+d.startAge+'-'+d.endAge+'岁)').join('　')}
+当前年份：${new Date().getFullYear()}年`;
+
     const sysPay = full
-      ? `你是一位精通八字命理的实力派命理师，既有正统传承，又懂现代人语言。\n\n你必须严格按照15个维度展开，总字数10000-15000字。维度用emoji开头：\n1.📜四柱八字排盘 2.🔥十神分析 3.🟤五行分析 4.💰财运格局 5.💕感情姻缘 6.💼事业格局 7.🏥健康预警 8.📅全部8步大运 9.🔮未来10年逐年流年（每年评分） 10.✨神煞分析 11.🌿藏干 12.👨‍👩‍👧‍👦父母/子女/夫妻宫 13.🎯开运锦囊 14.📖古法断语 15.💌命理师叮嘱\n每个维度必须基于真实八字展开，给出具体年份/数字/颜色/物品。${modeInstruction}`
-      : `你是一位八字命理师。【免费预览版】只写3个部分：📜四柱排盘简介、🟤五行能量分析、🌟今年运势概览（各200-300字）。最后说明完整报告含15个维度，可付费解锁。${modeInstruction}`;
+      ? `你是一位精通八字命理的实力派命理师，既有正统传承，又懂现代人语言。\n\n${baziChart}\n\n你必须严格按照15个维度展开，总字数10000-15000字。维度用emoji开头：\n1.📜四柱八字排盘 2.🔥十神分析 3.🟤五行分析 4.💰财运格局 5.💕感情姻缘 6.💼事业格局 7.🏥健康预警 8.📅全部8步大运（使用上方精确大运数据） 9.🔮未来10年逐年流年（每年评分，从当前年份算起） 10.✨神煞分析 11.🌿藏干 12.👨‍👩‍👧‍👦父母/子女/夫妻宫 13.🎯开运锦囊 14.📖古法断语 15.💌命理师叮嘱\n每个维度必须基于上方排盘数据展开，给出具体年份/数字/颜色/物品。所有涉及年份的内容必须以当前年份为基准向未来推算。${modeInstruction}`
+      : `你是一位八字命理师。\n\n${baziChart}\n\n【免费预览版】只写3个部分：📜四柱排盘简介、🟤五行能量分析、🌟今年（${new Date().getFullYear()}年）运势概览（各200-300字）。最后说明完整报告含15个维度，可付费解锁。${modeInstruction}`;
 
     const userPrompt = `请为我批算八字。出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour !== undefined ? birthHour + '时' : ''}，性别：${gender === 'male' ? '男' : '女'}，关注：${question || '请全面分析命盘'}`;
 

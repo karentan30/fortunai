@@ -30,8 +30,8 @@ function getDayGanZhi(year, month, day) {
   var B = 2 - A + Math.floor(A / 4);
   var JD = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d + B - 1524.5;
 
-  // 日干支（已知甲子日为JD=0对应干支0）
-  var dayIndex = Math.floor((JD + 49) % 60);
+  // 日干支（校准：1900-01-01 甲辰日 index=10，常数=50）
+  var dayIndex = Math.floor((JD + 50) % 60);
   if (dayIndex < 0) dayIndex += 60;
 
   return {
@@ -73,10 +73,8 @@ function getMonthGanZhi(yearGanIndex, month, day) {
   else if (month === 11 && day >= 7) monthZhi = 11; // 亥
   else if (month === 12 && day >= 7) monthZhi = 0; // 子
   else {
-    // 在节气前，用上月
-    if (month === 1) monthZhi = 11; // 子（去年十二月）
-    else if (month === 2) monthZhi = 0; // 小寒到立春为丑月
-    else monthZhi = (month - 2 + 12) % 12;
+    // 节气前，仍属上一个月支（子1=丑1…亥11，月支比公历月+1偏移）
+    monthZhi = (month - 1 + 12) % 12;
   }
 
   // 月干：年干 * 2 + 月地支序数 = 月干序数
@@ -104,23 +102,29 @@ function getHourGanZhi(dayGanIndex, hour) {
   };
 }
 
-// ── 大运计算 ──
+// ── 大运计算（60甲子顺序推，保证天干地支连贯） ──
 function calcDaYun(yearGanZhi, monthGanZhi, gender) {
-  // 阳年男、阴年女顺排；阴年男、阳年女逆排
   var yearGan = TIAN_GAN.indexOf(yearGanZhi.gan);
   var isYang = yearGan % 2 === 0; // 甲丙戊庚壬为阳
   var forward = (isYang && gender === 'male') || (!isYang && gender === 'female');
 
-  var monthZhi = DI_ZHI.indexOf(monthGanZhi.zhi);
+  // 找月柱在60甲子中的序号
+  var mGan = TIAN_GAN.indexOf(monthGanZhi.gan);
+  var mZhi = DI_ZHI.indexOf(monthGanZhi.zhi);
+  var monthPillarIdx = -1;
+  for (var k = 0; k < 60; k++) {
+    if (k % 10 === mGan && k % 12 === mZhi) { monthPillarIdx = k; break; }
+  }
+
   var dayun = [];
   for (var i = 0; i < 8; i++) {
-    var idx = forward ? (monthZhi + 1 + i) % 12 : (monthZhi - 1 - i + 12) % 12;
-    var ganStart = (yearGan % 5) * 2;
-    var ganIdx = forward ? (ganStart + idx) % 10 : (ganStart - 1 - i + 20) % 10;
+    var di = forward
+      ? (monthPillarIdx + 1 + i) % 60
+      : (monthPillarIdx - 1 - i + 60) % 60;
     dayun.push({
-      gan: TIAN_GAN[ganIdx],
-      zhi: DI_ZHI[idx],
-      name: TIAN_GAN[ganIdx] + DI_ZHI[idx],
+      gan: TIAN_GAN[di % 10],
+      zhi: DI_ZHI[di % 12],
+      name: TIAN_GAN[di % 10] + DI_ZHI[di % 12],
       startAge: 1 + i * 10,
       endAge: 10 + i * 10
     });

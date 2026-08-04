@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 全屋风水配置方案 — 善缘</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --gold: #c9a84c;
+    --gold-light: #e8c96a;
+    --gold-dim: rgba(201,168,76,0.15);
+    --gold-border: rgba(201,168,76,0.25);
+    --bg: #1c1710;
+    --bg2: #231e12;
+    --bg3: #2a2416;
+    --text: #e8ddc8;
+    --text-dim: #a89878;
+    --red: #c0392b;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    line-height: 1.6;
+  }
+
+  /* ── HEADER / COVER ── */
+  .cover {
+    background: linear-gradient(160deg, #2a1f0a 0%, #1c1710 50%, #0f0c06 100%);
+    border-bottom: 1px solid var(--gold-border);
+    padding: 60px 40px 50px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -80px; left: 50%; transform: translateX(-50%);
+    width: 500px; height: 500px;
+    background: radial-gradient(ellipse, rgba(201,168,76,0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .cover-badge {
+    display: inline-block;
+    border: 1px solid var(--gold-border);
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 3px;
+    padding: 6px 18px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+    text-transform: uppercase;
+  }
+  .cover h1 {
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 700;
+    background: linear-gradient(135deg, #e8c96a 0%, #c9a84c 50%, #a07830 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 4px;
+    margin-bottom: 10px;
+  }
+  .cover-sub {
+    font-size: 13px;
+    letter-spacing: 5px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    margin-bottom: 40px;
+  }
+  .cover-cards {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .cover-card {
+    background: rgba(201,168,76,0.06);
+    border: 1px solid var(--gold-border);
+    border-radius: 12px;
+    padding: 20px 28px;
+    min-width: 220px;
+    text-align: left;
+  }
+  .cover-card-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .cover-card-value {
+    font-size: 15px;
+    color: var(--text);
+    line-height: 1.8;
+  }
+  .cover-card-value span {
+    color: var(--gold-light);
+    font-weight: 600;
+  }
+
+  /* ── SECTIONS ── */
+  .section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 50px 30px;
+  }
+  .section-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 32px;
+  }
+  .section-title h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gold-light);
+    letter-spacing: 2px;
+  }
+  .section-title .num {
+    width: 32px; height: 32px;
+    border: 1px solid var(--gold);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+    color: var(--gold);
+    flex-shrink: 0;
+  }
+  .divider {
+    border: none;
+    border-top: 1px solid var(--gold-border);
+    margin: 0;
+  }
+
+  /* ── FLOORPLAN SVG WRAPPER ── */
+  .floorplan-wrapper {
+    background: var(--bg2);
+    border: 1px solid var(--gold-border);
+    border-radius: 14px;
+    padding: 30px;
+    overflow-x: auto;
+  }
+  .floorplan-wrapper svg {
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+  }
+
+  /* ── PRODUCT GRID ── */
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 16px;
+  }
+  .product-card {
+    background: rgba(201,168,76,0.06);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 10px;
+    padding: 20px;
+  }
+  .product-card:hover {
+    border-color: rgba(201,168,76,0.4);
+    background: rgba(201,168,76,0.09);
+    transition: all 0.2s;
+  }
+  .product-num {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+  }
+  .product-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gold-light);
+    margin-bottom: 4px;
+  }
+  .product-purpose {
+    font-size: 12px;
+    color: var(--gold);
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+  .product-model {
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .product-model strong { color: var(--text); }
+  .product-color {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+  }
+  .product-price {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gold-light);
+    margin-bottom: 12px;
+  }
+  .product-fengshui {
+    font-size: 12px;
+    color: var(--text-dim);
+    border-left: 2px solid var(--gold-border);
+    padding-left: 10px;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+  .btn-ikea {
+    background: #0058A3;
+    color: white;
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 12px;
+    display: inline-block;
+    margin: 4px;
+    font-weight: 600;
+  }
+  .btn-ikea:hover { background: #004a8c; }
+  .btn-amazon {
+    background: #FF9900;
+    color: #1a1508;
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 12px;
+    display: inline-block;
+    margin: 4px;
+    font-weight: 700;
+  }
+  .btn-amazon:hover { background: #e68900; }
+
+  /* ── CATEGORY HEADERS ── */
+  .category-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 36px 0 18px;
+  }
+  .category-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 2px;
+  }
+  .category-tag {
+    font-size: 11px;
+    color: var(--text-dim);
+    border: 1px solid var(--gold-border);
+    border-radius: 10px;
+    padding: 3px 10px;
+    letter-spacing: 1px;
+  }
+
+  /* ── COST SUMMARY ── */
+  .cost-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .cost-card {
+    background: var(--bg2);
+    border: 1px solid var(--gold-border);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  .cost-label {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+  }
+  .cost-amount {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--gold-light);
+  }
+  .cost-card.total {
+    background: linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(201,168,76,0.05) 100%);
+    border-color: var(--gold);
+  }
+  .cost-card.total .cost-amount { font-size: 34px; }
+  .over-budget {
+    background: rgba(192,57,43,0.1);
+    border: 1px solid rgba(192,57,43,0.3);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-top: 16px;
+  }
+  .over-budget h4 {
+    color: #e74c3c;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+  .over-budget ul {
+    list-style: none;
+    padding: 0;
+  }
+  .over-budget ul li {
+    font-size: 13px;
+    color: var(--text-dim);
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(192,57,43,0.15);
+  }
+  .over-budget ul li:last-child { border-bottom: none; }
+  .save-tag {
+    color: #27ae60;
+    font-weight: 700;
+    font-size: 12px;
+    margin-left: 8px;
+  }
+
+  /* ── PHASE PLAN ── */
+  .phase-plan {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+  }
+  .phase-card {
+    background: var(--bg2);
+    border: 1px solid var(--gold-border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .phase-card.phase-1 { border-top: 3px solid #c0392b; }
+  .phase-card.phase-2 { border-top: 3px solid var(--gold); }
+  .phase-card.phase-3 { border-top: 3px solid #27ae60; }
+  .phase-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .phase-1 .phase-label { color: #e74c3c; }
+  .phase-2 .phase-label { color: var(--gold); }
+  .phase-3 .phase-label { color: #27ae60; }
+  .phase-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 14px;
+  }
+  .phase-item {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--text-dim);
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(201,168,76,0.08);
+  }
+  .phase-item:last-of-type { border-bottom: none; }
+  .phase-item-price { color: var(--gold-light); font-weight: 600; }
+  .phase-total {
+    display: flex;
+    justify-content: space-between;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--gold-light);
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid var(--gold-border);
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    text-align: center;
+    padding: 40px 20px;
+    border-top: 1px solid var(--gold-border);
+    color: var(--text-dim);
+    font-size: 12px;
+    letter-spacing: 1px;
+  }
+  .footer .brand { color: var(--gold); font-size: 16px; font-weight: 700; letter-spacing: 4px; margin-bottom: 8px; }
+
+  /* ── COMPASS LEGEND ── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+  }
+
+  /* ── TIER SELECTOR ── */
+  .tier-selector { display:flex; gap:12px; margin:24px 0; justify-content:center; flex-wrap:wrap; }
+  .tier-btn { padding:12px 28px; border-radius:8px; border:1px solid rgba(201,168,76,0.3); background:rgba(201,168,76,0.05); color:#f0e8d8; font-family:'PingFang SC','Hiragino Sans GB','Microsoft YaHei',sans-serif; font-size:14px; cursor:pointer; transition:all 0.2s; }
+  .tier-btn.active { background:#c9a84c; color:#1a1508; font-weight:600; }
+  .tier-btn:hover:not(.active) { background:rgba(201,168,76,0.12); border-color:rgba(201,168,76,0.5); }
+  .tier-content { display:none; }
+  .tier-content[data-tier="basic"] { display:block; }
+
+  /* ── TIER PRODUCT ROWS ── */
+  .tier-product-row { border-bottom:1px solid rgba(201,168,76,0.1); padding:10px 0; }
+  .tier-product-row:last-child { border-bottom:none; }
+  .tier-product-name-row { font-size:13px; color:var(--text); margin-bottom:4px; font-weight:600; }
+  .price-dual { font-size:13px; color:#f0e8d8; margin:4px 0; }
+  .price-usd { color:#c9a84c; font-weight:600; }
+  .price-rmb { color:rgba(240,232,216,0.6); }
+
+  /* ── LINK BUTTONS ── */
+  .btn-rh { background:#1a1a1a; color:#c9a84c; padding:8px 14px; border-radius:6px; text-decoration:none; font-size:12px; display:inline-block; margin:4px; border:1px solid #c9a84c; }
+  .btn-rh:hover { background:#2a2a2a; }
+  .btn-master { background:linear-gradient(135deg,#8a6420,#c9a84c,#f0d080); color:#1a1508; padding:8px 14px; border-radius:6px; text-decoration:none; font-size:12px; font-weight:700; display:inline-block; margin:4px; }
+  .btn-master:hover { opacity:0.9; }
+
+  /* ── MASTER INFO BLOCK ── */
+  .master-info-block { background:rgba(201,168,76,0.08); border:1px solid rgba(201,168,76,0.35); border-radius:12px; padding:24px; margin:24px 0; }
+  .master-title { font-size:18px; color:#c9a84c; margin-bottom:16px; letter-spacing:2px; }
+  .master-features { margin-bottom:12px; }
+  .feature { padding:8px 0; border-bottom:1px solid rgba(201,168,76,0.1); font-size:14px; color:#f0e8d8; }
+  .feature:last-child { border-bottom:none; }
+  .master-note { margin-top:16px; font-style:italic; color:rgba(201,168,76,0.7); font-size:13px; }
+
+  /* ── TOTAL SECTION ── */
+  .total-section { background:linear-gradient(135deg,rgba(201,168,76,0.12) 0%,rgba(201,168,76,0.05) 100%); border:1px solid var(--gold); border-radius:12px; padding:28px; text-align:center; margin:24px 0; }
+  .total-label { font-size:13px; color:var(--text-dim); letter-spacing:2px; margin-bottom:10px; text-transform:uppercase; }
+  .total-amount { font-size:32px; font-weight:700; color:var(--gold-light); margin-bottom:8px; }
+  .total-note { font-size:13px; color:var(--text-dim); }
+</style>
+</head>
+<body>
+
+<!-- ══ SECTION 1: COVER ══ -->
+<div class="cover">
+  <div class="cover-badge">善缘 ShenYuan · AI 全屋配置方案</div>
+  <h1>AI 全屋风水配置方案</h1>
+  <p class="cover-sub">AI Complete Room Feng Shui Setup</p>
+  <div class="cover-cards">
+    <div class="cover-card">
+      <div class="cover-card-label">房间信息</div>
+      <div class="cover-card-value">
+        <span>主卧室</span><br>
+        面积：约 4m × 5m<br>
+        大门朝向：<span>南</span><br>
+        采光：东南向窗
+      </div>
+    </div>
+    <div class="cover-card">
+      <div class="cover-card-label">主人命格</div>
+      <div class="cover-card-value">
+        性别：<span>女</span><br>
+        生日：1991年10月5日<br>
+        日主：<span>戊土</span><br>
+        用神：<span>火 · 木</span>（喜暖、生气）
+      </div>
+    </div>
+    <div class="cover-card">
+      <div class="cover-card-label">预算方案</div>
+      <div class="cover-card-value">
+        预算上限：<span>$1,500</span><br>
+        方案类型：经济型<br>
+        总物件数：<span>15 件</span><br>
+        分三阶段采购
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ══ SECTION 2: FLOOR PLAN ══ -->
+<div class="section">
+  <div class="section-title">
+    <div class="num">一</div>
+    <h2>主卧平面风水布局图</h2>
+  </div>
+  <div class="floorplan-wrapper">
+    <svg width="600" height="500" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg">
+      <!-- Background -->
+      <rect width="600" height="500" fill="#1a1508"/>
+
+      <!-- Room walls -->
+      <rect x="40" y="30" width="520" height="430" fill="#221d0f" stroke="#c9a84c" stroke-width="3" rx="2"/>
+      <!-- Room interior -->
+      <rect x="46" y="36" width="508" height="418" fill="#1e190c"/>
+
+      <!-- South wall door opening -->
+      <rect x="260" y="454" width="80" height="6" fill="#1a1508"/>
+      <line x1="260" y1="457" x2="340" y2="457" stroke="#c9a84c" stroke-width="2" stroke-dasharray="4,3"/>
+      <!-- Door arc -->
+      <path d="M260 454 Q260 420 300 420" fill="none" stroke="#c9a84c" stroke-width="1.5" stroke-dasharray="5,3" opacity="0.6"/>
+
+      <!-- ── COMPASS rose (top-right) ── -->
+      <g transform="translate(535, 65)">
+        <circle cx="0" cy="0" r="22" fill="none" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>
+        <text x="0" y="-8" text-anchor="middle" font-size="10" fill="#c9a84c" font-weight="700">北</text>
+        <text x="0" y="16" text-anchor="middle" font-size="10" fill="#c9a84c" font-weight="700">南</text>
+        <text x="-16" y="5" text-anchor="middle" font-size="10" fill="#c9a84c" font-weight="700">西</text>
+        <text x="16" y="5" text-anchor="middle" font-size="10" fill="#c9a84c" font-weight="700">东</text>
+        <polygon points="0,-18 3,0 -3,0" fill="#c9a84c"/>
+        <polygon points="0,18 3,0 -3,0" fill="rgba(201,168,76,0.4)"/>
+      </g>
+
+      <!-- ── ZONES (highlight auspicious areas) ── -->
+      <!-- 东南财位 -->
+      <rect x="456" y="36" width="98" height="100" fill="rgba(201,168,76,0.07)" stroke="rgba(201,168,76,0.3)" stroke-width="1" stroke-dasharray="5,3"/>
+      <text x="505" y="68" text-anchor="middle" font-size="9" fill="rgba(201,168,76,0.7)" font-weight="600">东南</text>
+      <text x="505" y="81" text-anchor="middle" font-size="9" fill="rgba(201,168,76,0.7)">财位</text>
+
+      <!-- 东方生气位 -->
+      <rect x="456" y="136" width="98" height="100" fill="rgba(39,174,96,0.07)" stroke="rgba(39,174,96,0.3)" stroke-width="1" stroke-dasharray="5,3"/>
+      <text x="505" y="178" text-anchor="middle" font-size="9" fill="rgba(39,174,96,0.7)" font-weight="600">东方</text>
+      <text x="505" y="191" text-anchor="middle" font-size="9" fill="rgba(39,174,96,0.7)">生气位</text>
+
+      <!-- 西南桃花位 -->
+      <rect x="46" y="354" width="98" height="100" fill="rgba(231,76,60,0.07)" stroke="rgba(231,76,60,0.3)" stroke-width="1" stroke-dasharray="5,3"/>
+      <text x="95" y="396" text-anchor="middle" font-size="9" fill="rgba(231,76,60,0.7)" font-weight="600">西南</text>
+      <text x="95" y="409" text-anchor="middle" font-size="9" fill="rgba(231,76,60,0.7)">桃花位</text>
+
+      <!-- ── BED (北墙，头朝北) ── -->
+      <!-- Bed frame -->
+      <rect x="140" y="50" width="280" height="160" fill="#2e2410" stroke="#c9a84c" stroke-width="2" rx="4"/>
+      <!-- Headboard (north) -->
+      <rect x="140" y="50" width="280" height="22" fill="#3a2e18" stroke="#c9a84c" stroke-width="1" rx="2"/>
+      <!-- Mattress -->
+      <rect x="148" y="72" width="264" height="130" fill="#2a2010" rx="2"/>
+      <!-- Pillow x2 -->
+      <rect x="165" y="80" width="90" height="45" fill="#3d3118" rx="4" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>
+      <rect x="305" y="80" width="90" height="45" fill="#3d3118" rx="4" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>
+      <!-- Blanket lines -->
+      <line x1="148" y1="140" x2="412" y2="140" stroke="rgba(201,168,76,0.15)" stroke-width="1"/>
+      <line x1="148" y1="155" x2="412" y2="155" stroke="rgba(201,168,76,0.1)" stroke-width="1"/>
+      <!-- Label -->
+      <text x="280" y="180" text-anchor="middle" font-size="11" fill="#c9a84c" font-weight="700">床</text>
+      <text x="280" y="195" text-anchor="middle" font-size="9" fill="rgba(201,168,76,0.6)">HEMNES · 头朝北</text>
+
+      <!-- ── NIGHTSTANDS × 2 ── -->
+      <!-- Left nightstand -->
+      <rect x="75" y="65" width="62" height="55" fill="#2e2410" stroke="#c9a84c" stroke-width="1.5" rx="3"/>
+      <rect x="85" y="80" width="42" height="22" fill="#231c0b" rx="2" stroke="rgba(201,168,76,0.2)" stroke-width="1"/>
+      <text x="106" y="133" text-anchor="middle" font-size="9" fill="rgba(201,168,76,0.7)">床头柜①</text>
+
+      <!-- Right nightstand -->
+      <rect x="423" y="65" width="62" height="55" fill="#2e2410" stroke="#c9a84c" stroke-width="1.5" rx="3"/>
+      <rect x="433" y="80" width="42" height="22" fill="#231c0b" rx="2" stroke="rgba(201,168,76,0.2)" stroke-width="1"/>
+      <text x="454" y="133" text-anchor="middle" font-size="9" fill="rgba(201,168,76,0.7)">床头柜②</text>
+
+      <!-- ── WARDROBE (西墙) ── -->
+      <rect x="46" y="60" width="24" height="260" fill="#2e2410" stroke="#c9a84c" stroke-width="1.5" rx="2"/>
+      <!-- Sliding door lines -->
+      <line x1="46" y1="190" x2="70" y2="190" stroke="rgba(201,168,76,0.4)" stroke-width="1.5"/>
+      <line x1="58" y1="60" x2="58" y2="320" stroke="rgba(201,168,76,0.2)" stroke-width="1"/>
+      <!-- Handle dots -->
+      <circle cx="62" cy="185" r="2" fill="#c9a84c" opacity="0.6"/>
+      <circle cx="62" cy="195" r="2" fill="#c9a84c" opacity="0.6"/>
+      <text x="24" y="195" text-anchor="middle" font-size="9" fill="rgba(201,168,76,0.7)" transform="rotate(-90,24,195)">衣 柜 PAX</text>
+
+      <!-- ── DESK (东方文昌位) ── -->
+      <rect x="456" y="250" width="100" height="55" fill="#2e2410" stroke="#c9a84c" stroke-width="1.5" rx="3"/>
+      <!-- Desk surface detail -->
+      <rect x="462" y="256" width="88" height="43" fill="#251e0d" rx="2"/>
+      <!-- Laptop/book suggestion -->
+      <rect x="475" y="262" width="50" height="30" fill="#1a1508" rx="2" stroke="rgba(201,168,76,0.2)" stroke-width="1"/>
+      <text x="506" y="322" text-anchor="middle" font-size="9" fill="rgba(201,168,76,0.7)">书桌·文昌位</text>
+      <!-- Chair (below desk) -->
+      <rect x="471" y="312" width="50" height="42" fill="#2a2210" stroke="#c9a84c" stroke-width="1" rx="4"/>
+      <rect x="471" y="312" width="50" height="12" fill="#332a16" rx="2"/>
+      <text x="496" y="366" text-anchor="middle" font-size="9" fill="rgba(201,168,76,0.7)">椅子</text>
+
+      <!-- ── DRESSER / VANITY (南墙，避正对床) ── -->
+      <rect x="100" y="390" width="100" height="60" fill="#2e2410" stroke="#c9a84c" stroke-width="1.5" rx="3"/>
+      <!-- Mirror -->
+      <rect x="110" y="350" width="80" height="38" fill="#1a2235" stroke="#c9a84c" stroke-width="1" rx="2"/>
+      <line x1="150" y1="352" x2="150" y2="386" stroke="rgba(201,168,76,0.15)" stroke-width="1" stroke-dasharray="3,3"/>
+      <text x="150" y="420" text-anchor="middle" font-size="9" fill="rgba(201,168,76,0.7)">梳妆台</text>
+
+      <!-- ── FLOOR LAMP (东南财位) ── -->
+      <circle cx="500" cy="86" r="10" fill="#3a2e18" stroke="#c9a84c" stroke-width="1.5"/>
+      <circle cx="500" cy="86" r="5" fill="rgba(201,168,76,0.4)"/>
+      <line x1="500" y1="96" x2="500" y2="120" stroke="#c9a84c" stroke-width="1.5"/>
+      <ellipse cx="500" cy="122" rx="8" ry="3" fill="#2e2410" stroke="#c9a84c" stroke-width="1"/>
+      <text x="500" y="140" text-anchor="middle" font-size="9" fill="rgba(201,168,76,0.8)">落地灯</text>
+      <text x="500" y="150" text-anchor="middle" font-size="8" fill="rgba(201,168,76,0.5)">财位</text>
+
+      <!-- ── PLANT (东方生气位) ── -->
+      <ellipse cx="505" cy="185" rx="14" ry="14" fill="rgba(39,174,96,0.3)" stroke="rgba(39,174,96,0.7)" stroke-width="1.5"/>
+      <!-- Leaves -->
+      <ellipse cx="499" cy="176" rx="6" ry="9" fill="rgba(39,174,96,0.5)" transform="rotate(-20,499,176)"/>
+      <ellipse cx="511" cy="176" rx="6" ry="9" fill="rgba(39,174,96,0.6)" transform="rotate(20,511,176)"/>
+      <ellipse cx="505" cy="173" rx="5" ry="8" fill="rgba(39,174,96,0.7)"/>
+      <rect x="501" y="195" width="8" height="10" fill="#3d2a10" rx="1"/>
+      <text x="505" y="218" text-anchor="middle" font-size="9" fill="rgba(39,174,96,0.8)">富贵竹</text>
+      <text x="505" y="228" text-anchor="middle" font-size="8" fill="rgba(39,174,96,0.5)">生气位</text>
+
+      <!-- ── FENG SHUI ITEMS ── -->
+      <!-- 粉水晶 (西南桃花位) -->
+      <polygon points="95,390 87,410 103,410" fill="rgba(231,76,60,0.4)" stroke="rgba(231,76,60,0.7)" stroke-width="1.5"/>
+      <text x="95" y="425" text-anchor="middle" font-size="8" fill="rgba(231,76,60,0.7)">粉水晶</text>
+
+      <!-- 铜葫芦 (中央) -->
+      <ellipse cx="300" cy="340" rx="8" ry="10" fill="rgba(201,168,76,0.3)" stroke="rgba(201,168,76,0.5)" stroke-width="1"/>
+      <ellipse cx="300" cy="333" rx="5" ry="5" fill="rgba(201,168,76,0.4)" stroke="rgba(201,168,76,0.5)" stroke-width="1"/>
+      <line x1="300" y1="328" x2="300" y2="322" stroke="rgba(201,168,76,0.5)" stroke-width="1"/>
+      <text x="300" y="360" text-anchor="middle" font-size="8" fill="rgba(201,168,76,0.6)">铜葫芦</text>
+
+      <!-- 招财猫 (门内侧) -->
+      <rect x="258" y="432" width="20" height="18" fill="rgba(255,255,255,0.1)" stroke="rgba(201,168,76,0.4)" stroke-width="1" rx="3"/>
+      <text x="268" y="456" text-anchor="middle" font-size="8" fill="rgba(201,168,76,0.6)">招财猫</text>
+
+      <!-- ── CARPET (中央) ── -->
+      <rect x="120" y="225" width="260" height="120" fill="none" stroke="rgba(201,168,76,0.2)" stroke-width="2" stroke-dasharray="8,4" rx="4"/>
+      <text x="250" y="294" text-anchor="middle" font-size="9" fill="rgba(201,168,76,0.35)">米色地毯</text>
+
+      <!-- ── DOOR LABEL ── -->
+      <text x="300" y="480" text-anchor="middle" font-size="10" fill="rgba(201,168,76,0.5)">▲ 大门（朝南）</text>
+
+      <!-- ── ROOM DIMENSIONS ── -->
+      <!-- Width arrow -->
+      <line x1="46" y1="22" x2="554" y2="22" stroke="rgba(201,168,76,0.4)" stroke-width="1" marker-start="url(#arrow)" marker-end="url(#arrow)"/>
+      <text x="300" y="18" text-anchor="middle" font-size="10" fill="rgba(201,168,76,0.6)">5 m</text>
+      <!-- Height arrow -->
+      <line x1="22" y1="36" x2="22" y2="454" stroke="rgba(201,168,76,0.4)" stroke-width="1"/>
+      <text x="12" y="248" text-anchor="middle" font-size="10" fill="rgba(201,168,76,0.6)" transform="rotate(-90,12,248)">4 m</text>
+
+      <defs>
+        <marker id="arrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="rgba(201,168,76,0.4)"/>
+        </marker>
+      </defs>
+    </svg>
+
+    <!-- Legend -->
+    <div class="legend" style="justify-content:center; margin-top:18px;">
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(201,168,76,0.5)"></div> 家具</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(201,168,76,0.2); border:1px solid rgba(201,168,76,0.5)"></div> 东南财位</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(39,174,96,0.3); border:1px solid rgba(39,174,96,0.5)"></div> 东方生气位</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(231,76,60,0.2); border:1px solid rgba(231,76,60,0.4)"></div> 西南桃花位</div>
+      <div class="legend-item"><div class="legend-dot" style="background:rgba(201,168,76,0.07); border:1px dashed rgba(201,168,76,0.3)"></div> 地毯范围</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ══ SECTION 3: SHOPPING LIST ══ -->
+<div class="section">
+  <div class="section-title">
+    <div class="num">二</div>
+    <h2>完整风水购物清单</h2>
+  </div>
+
+  <!-- TIER SELECTOR -->
+  <div class="tier-selector">
+    <button class="tier-btn active" onclick="setTier('basic', event)">💚 普通版</button>
+    <button class="tier-btn" onclick="setTier('luxury', event)">💛 豪华版</button>
+    <button class="tier-btn" onclick="setTier('master', event)">💎 大师开光版</button>
+  </div>
+
+  <!-- TOTAL PRICE DISPLAY -->
+  <div class="total-section">
+    <div class="total-label">本方案预估总价</div>
+    <div class="total-amount" id="total-display">$1,730 USD / ¥12,456 RMB</div>
+    <div class="total-note" id="total-note">普通版 · 经济实用</div>
+  </div>
+
+  <!-- BIG FURNITURE -->
+  <div class="category-header">
+    <h3>大件家具</h3>
+    <span class="category-tag">三档可选</span>
+    <span class="category-tag">7 件</span>
+  </div>
+  <div class="product-grid">
+
+    <!-- 床架 -->
+    <div class="product-card">
+      <div class="product-num">物件 01</div>
+      <div class="product-name">床架</div>
+      <div class="product-purpose">主卧核心 · 靠山稳气</div>
+      <div class="product-fengshui">实木属木，与戊土主人用神「木」相生；白色不压气场；靠北墙摆放头朝北，吸纳生气。</div>
+
+      <div class="tier-content" data-tier="basic">
+        <div class="tier-product-name-row">IKEA HEMNES 白色实木 Queen Size</div>
+        <div class="price-dual"><span class="price-usd">$299</span> <span class="price-rmb">/ ¥2,153</span></div>
+        <a href="https://www.ikea.com/us/en/search/?q=HEMNES+bed+frame" target="_blank" class="btn-ikea">🛒 IKEA 查看</a>
+        <a href="https://www.amazon.com/s?k=HEMNES+bed+frame+white+wood+queen&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 备选</a>
+      </div>
+
+      <div class="tier-content" data-tier="luxury">
+        <div class="tier-product-name-row">Restoration Hardware Cloud Bed 亚麻面料 Queen</div>
+        <div class="price-dual"><span class="price-usd">$3,800</span> <span class="price-rmb">/ ¥27,360</span></div>
+        <a href="https://rh.com/catalog/search.jsp?query=cloud+bed" target="_blank" class="btn-rh">🛒 RH 查看</a>
+      </div>
+
+      <div class="tier-content" data-tier="master">
+        <div class="tier-product-name-row">定制缅甸花梨木床架 含开光证书</div>
+        <div class="price-dual"><span class="price-usd">$12,000</span> <span class="price-rmb">/ ¥86,400</span></div>
+        <a href="https://www.amazon.com/s?k=hongmu+bed+frame+rosewood+queen+chinese&tag=shenyuan-20" target="_blank" class="btn-master">💎 Amazon 定制款</a>
+      </div>
+    </div>
+
+    <!-- 床垫 -->
+    <div class="product-card">
+      <div class="product-num">物件 02</div>
+      <div class="product-name">床垫</div>
+      <div class="product-purpose">舒适睡眠 · 离地35-45cm</div>
+      <div class="product-fengshui">床高离地35-45cm，避免阴气积聚；中等硬度支撑脊椎，睡眠稳则磁场稳。</div>
+
+      <div class="tier-content" data-tier="basic">
+        <div class="tier-product-name-row">Amazon Basics Queen Mattress 8英寸 中软偏硬</div>
+        <div class="price-dual"><span class="price-usd">$180</span> <span class="price-rmb">/ ¥1,296</span></div>
+        <a href="https://www.amazon.com/s?k=queen+mattress+8+inch+medium+firm&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 购买</a>
+      </div>
+
+      <div class="tier-content" data-tier="luxury">
+        <div class="tier-product-name-row">Tempur-Pedic ProAdapt Queen 记忆棉 12英寸</div>
+        <div class="price-dual"><span class="price-usd">$2,499</span> <span class="price-rmb">/ ¥17,993</span></div>
+        <a href="https://www.amazon.com/s?k=tempurpedic+proadapt+queen+mattress&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 购买</a>
+      </div>
+
+      <div class="tier-content" data-tier="master">
+        <div class="tier-product-name-row">Saatva Solaire 天然乳胶 智能调节 Queen</div>
+        <div class="price-dual"><span class="price-usd">$3,200</span> <span class="price-rmb">/ ¥23,040</span></div>
+        <a href="https://www.amazon.com/s?k=saatva+luxury+mattress+queen+latex&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 查看</a>
+      </div>
+    </div>
+
+    <!-- 床头柜 -->
+    <div class="product-card">
+      <div class="product-num">物件 03 · 04</div>
+      <div class="product-name">床头柜 × 2</div>
+      <div class="product-purpose">左右对称 · 稳定气场</div>
+      <div class="product-fengshui">对称摆放代表阴阳平衡；左（青龙位）可稍高；右（白虎位）不宜高过左侧。</div>
+
+      <div class="tier-content" data-tier="basic">
+        <div class="tier-product-name-row">IKEA HEMNES 床头柜 白色实木 带抽屉 ×2</div>
+        <div class="price-dual"><span class="price-usd">$89 × 2 = $178</span> <span class="price-rmb">/ ¥641 × 2</span></div>
+        <a href="https://www.ikea.com/us/en/search/?q=HEMNES+nightstand+white" target="_blank" class="btn-ikea">🛒 IKEA 查看</a>
+        <a href="https://www.amazon.com/s?k=white+wood+nightstand+drawer+bedside&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 备选</a>
+      </div>
+
+      <div class="tier-content" data-tier="luxury">
+        <div class="tier-product-name-row">RH Modena Nightstand 亚麻灰 ×2</div>
+        <div class="price-dual"><span class="price-usd">$890 × 2 = $1,780</span> <span class="price-rmb">/ ¥6,408 × 2</span></div>
+        <a href="https://rh.com/catalog/search.jsp?query=modena+nightstand" target="_blank" class="btn-rh">🛒 RH 查看</a>
+      </div>
+
+      <div class="tier-content" data-tier="master">
+        <div class="tier-product-name-row">鸡翅木床头柜 手工雕花 ×2</div>
+        <div class="price-dual"><span class="price-usd">$3,200 × 2 = $6,400</span> <span class="price-rmb">/ ¥23,040 × 2</span></div>
+        <a href="https://www.amazon.com/s?k=chinese+rosewood+nightstand+carved+wenge&tag=shenyuan-20" target="_blank" class="btn-master">💎 Amazon 定制款</a>
+      </div>
+    </div>
+
+    <!-- 衣柜 -->
+    <div class="product-card">
+      <div class="product-num">物件 05</div>
+      <div class="product-name">衣柜</div>
+      <div class="product-purpose">西方金位 · 增旺金气</div>
+      <div class="product-fengshui">西方属金，白色衣柜强化金气；用神为火木，金位藏衣不直冲，收纳有序即顺气。</div>
+
+      <div class="tier-content" data-tier="basic">
+        <div class="tier-product-name-row">IKEA PAX 白色推拉门 100×58×201cm</div>
+        <div class="price-dual"><span class="price-usd">$450</span> <span class="price-rmb">/ ¥3,240</span></div>
+        <a href="https://www.ikea.com/us/en/search/?q=PAX+wardrobe+white+sliding+door" target="_blank" class="btn-ikea">🛒 IKEA 查看</a>
+        <a href="https://www.amazon.com/s?k=white+wardrobe+closet+sliding+door&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 备选</a>
+      </div>
+
+      <div class="tier-content" data-tier="luxury">
+        <div class="tier-product-name-row">California Closets 定制衣帽间 嵌入式</div>
+        <div class="price-dual"><span class="price-usd">$8,000</span> <span class="price-rmb">/ ¥57,600</span></div>
+        <a href="https://www.californiaclosets.com" target="_blank" class="btn-rh">🛒 California Closets</a>
+      </div>
+
+      <div class="tier-content" data-tier="master">
+        <div class="tier-product-name-row">红木定制嵌入式大衣柜 阴阳门开合设计</div>
+        <div class="price-dual"><span class="price-usd">$25,000</span> <span class="price-rmb">/ ¥180,000</span></div>
+        <a href="https://www.amazon.com/s?k=chinese+hongmu+rosewood+wardrobe+custom&tag=shenyuan-20" target="_blank" class="btn-master">💎 Amazon 定制款</a>
+      </div>
+    </div>
+
+    <!-- 书桌 -->
+    <div class="product-card">
+      <div class="product-num">物件 06</div>
+      <div class="product-name">书桌</div>
+      <div class="product-purpose">东方文昌位 · 催旺智慧运</div>
+      <div class="product-fengshui">东方属木，文昌位置书桌，木质相生用神，坐东朝西工作财运双旺。</div>
+
+      <div class="tier-content" data-tier="basic">
+        <div class="tier-product-name-row">IKEA ALEX + LINNMON 白色 100×60cm</div>
+        <div class="price-dual"><span class="price-usd">$189</span> <span class="price-rmb">/ ¥1,361</span></div>
+        <a href="https://www.ikea.com/us/en/search/?q=LINNMON+ADILS+desk+white" target="_blank" class="btn-ikea">🛒 IKEA 查看</a>
+        <a href="https://www.amazon.com/s?k=white+desk+100cm+simple+home+office&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 备选</a>
+      </div>
+
+      <div class="tier-content" data-tier="luxury">
+        <div class="tier-product-name-row">Pottery Barn Benchwright Desk 实木复古款</div>
+        <div class="price-dual"><span class="price-usd">$1,200</span> <span class="price-rmb">/ ¥8,640</span></div>
+        <a href="https://www.potterybarn.com/search/results.html?words=benchwright+desk" target="_blank" class="btn-rh">🛒 Pottery Barn 查看</a>
+      </div>
+
+      <div class="tier-content" data-tier="master">
+        <div class="tier-product-name-row">黄花梨文人书桌（仿明式）手工榫卯</div>
+        <div class="price-dual"><span class="price-usd">$8,000</span> <span class="price-rmb">/ ¥57,600</span></div>
+        <a href="https://www.amazon.com/s?k=huanghuali+rosewood+desk+ming+style+chinese&tag=shenyuan-20" target="_blank" class="btn-master">💎 Amazon 定制款</a>
+      </div>
+    </div>
+
+    <!-- 书桌椅子 -->
+    <div class="product-card">
+      <div class="product-num">物件 07</div>
+      <div class="product-name">书桌椅子</div>
+      <div class="product-purpose">靠背靠山 · 工作稳健</div>
+      <div class="product-fengshui">有高靠背象征靠山，坐有依托则事业稳；灰色属金，稳重不扰书桌木气。</div>
+
+      <div class="tier-content" data-tier="basic">
+        <div class="tier-product-name-row">IKEA JÄRVFJÄLLET 灰色人体工学椅</div>
+        <div class="price-dual"><span class="price-usd">$229</span> <span class="price-rmb">/ ¥1,649</span></div>
+        <a href="https://www.ikea.com/us/en/search/?q=JARVFJALLET+office+chair+grey" target="_blank" class="btn-ikea">🛒 IKEA 查看</a>
+        <a href="https://www.amazon.com/s?k=ergonomic+office+chair+high+back+grey&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 备选</a>
+      </div>
+
+      <div class="tier-content" data-tier="luxury">
+        <div class="tier-product-name-row">Herman Miller Aeron 人体工学 中号 碳黑</div>
+        <div class="price-dual"><span class="price-usd">$1,495</span> <span class="price-rmb">/ ¥10,764</span></div>
+        <a href="https://www.amazon.com/s?k=herman+miller+aeron+chair+size+b+carbon&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 购买</a>
+      </div>
+
+      <div class="tier-content" data-tier="master">
+        <div class="tier-product-name-row">定制红木官帽椅 明式榫卯工艺</div>
+        <div class="price-dual"><span class="price-usd">$3,500</span> <span class="price-rmb">/ ¥25,200</span></div>
+        <a href="https://www.amazon.com/s?k=chinese+rosewood+official+hat+chair+ming+style&tag=shenyuan-20" target="_blank" class="btn-master">💎 Amazon 定制款</a>
+      </div>
+    </div>
+
+    <!-- 梳妆台 -->
+    <div class="product-card">
+      <div class="product-num">物件 08</div>
+      <div class="product-name">梳妆台</div>
+      <div class="product-purpose">女主气场中心 · 避正对床</div>
+      <div class="product-fengshui">镜面不可正对床，否则反射睡眠气场；原木色属木与用神相合，放南墙东侧最佳。</div>
+
+      <div class="tier-content" data-tier="basic">
+        <div class="tier-product-name-row">Amazon 小型梳妆台 原木色带镜 约80×40cm</div>
+        <div class="price-dual"><span class="price-usd">$159</span> <span class="price-rmb">/ ¥1,145</span></div>
+        <a href="https://www.amazon.com/s?k=vanity+table+with+mirror+natural+wood+small&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 购买</a>
+      </div>
+
+      <div class="tier-content" data-tier="luxury">
+        <div class="tier-product-name-row">Pottery Barn Toulouse Vanity 实木白漆带好莱坞灯泡镜</div>
+        <div class="price-dual"><span class="price-usd">$899</span> <span class="price-rmb">/ ¥6,473</span></div>
+        <a href="https://www.potterybarn.com/search/results.html?words=toulouse+vanity" target="_blank" class="btn-rh">🛒 Pottery Barn 查看</a>
+      </div>
+
+      <div class="tier-content" data-tier="master">
+        <div class="tier-product-name-row">定制花梨木梳妆台 带铜镜框 嵌贝母装饰</div>
+        <div class="price-dual"><span class="price-usd">$5,500</span> <span class="price-rmb">/ ¥39,600</span></div>
+        <a href="https://www.amazon.com/s?k=chinese+rosewood+vanity+table+carved+luxury&tag=shenyuan-20" target="_blank" class="btn-master">💎 Amazon 定制款</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SOFT FURNISHINGS -->
+  <div class="category-header">
+    <h3>软装配件</h3>
+    <span class="category-tag">三档可选</span>
+    <span class="category-tag">3 件</span>
+  </div>
+  <div class="product-grid">
+
+    <!-- 地毯 -->
+    <div class="product-card">
+      <div class="product-num">物件 09</div>
+      <div class="product-name">地毯</div>
+      <div class="product-purpose">稳气场 · 聚中央土气</div>
+      <div class="product-fengshui">米色属土，与戊土日主同气相求，铺于中央聚稳气场；短绒易打理，不藏湿气。</div>
+
+      <div class="tier-content" data-tier="basic">
+        <div class="tier-product-name-row">Amazon 米色短绒地毯 8×10ft</div>
+        <div class="price-dual"><span class="price-usd">$89</span> <span class="price-rmb">/ ¥641</span></div>
+        <a href="https://www.amazon.com/s?k=beige+area+rug+8x10+bedroom&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 购买</a>
+      </div>
+
+      <div class="tier-content" data-tier="luxury">
+        <div class="tier-product-name-row">Pottery Barn Chenille Jute 米色纯天然 8×10ft</div>
+        <div class="price-dual"><span class="price-usd">$699</span> <span class="price-rmb">/ ¥5,033</span></div>
+        <a href="https://www.potterybarn.com/search/results.html?words=chenille+jute+rug+8x10" target="_blank" class="btn-rh">🛒 Pottery Barn 查看</a>
+      </div>
+
+      <div class="tier-content" data-tier="master">
+        <div class="tier-product-name-row">手工波斯羊毛地毯 金沙米色 9×12ft 传世级</div>
+        <div class="price-dual"><span class="price-usd">$3,800</span> <span class="price-rmb">/ ¥27,360</span></div>
+        <a href="https://www.amazon.com/s?k=persian+wool+rug+handmade+beige+gold+9x12&tag=shenyuan-20" target="_blank" class="btn-master">💎 Amazon 定制款</a>
+      </div>
+    </div>
+
+    <!-- 窗帘 -->
+    <div class="product-card">
+      <div class="product-num">物件 10</div>
+      <div class="product-name">窗帘 × 2 幅</div>
+      <div class="product-purpose">柔和光线 · 不遮生气</div>
+      <div class="product-fengshui">用神为火，东南采光宜通透；白米色柔和光线不压气；深色遮光窗帘会堵生气入室。</div>
+
+      <div class="tier-content" data-tier="basic">
+        <div class="tier-product-name-row">IKEA HILLEBORG 米白色半透明 145×300cm ×2</div>
+        <div class="price-dual"><span class="price-usd">$49 × 2 = $98</span> <span class="price-rmb">/ ¥353 × 2</span></div>
+        <a href="https://www.ikea.com/us/en/search/?q=HILLEBORG+curtains+white" target="_blank" class="btn-ikea">🛒 IKEA 查看</a>
+        <a href="https://www.amazon.com/s?k=sheer+curtains+white+bedroom+145+300&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 备选</a>
+      </div>
+
+      <div class="tier-content" data-tier="luxury">
+        <div class="tier-product-name-row">RH Belgian Linen 亚麻米白 遮光款 ×2</div>
+        <div class="price-dual"><span class="price-usd">$580 × 2 = $1,160</span> <span class="price-rmb">/ ¥4,176 × 2</span></div>
+        <a href="https://rh.com/catalog/search.jsp?query=belgian+linen+curtains" target="_blank" class="btn-rh">🛒 RH 查看</a>
+      </div>
+
+      <div class="tier-content" data-tier="master">
+        <div class="tier-product-name-row">定制真丝窗帘 象牙白 隔热防噪 含硬件轨道 ×2</div>
+        <div class="price-dual"><span class="price-usd">$1,800 × 2 = $3,600</span> <span class="price-rmb">/ ¥12,960 × 2</span></div>
+        <a href="https://www.amazon.com/s?k=custom+silk+curtains+ivory+white+blackout&tag=shenyuan-20" target="_blank" class="btn-master">💎 Amazon 定制款</a>
+      </div>
+    </div>
+
+    <!-- 床品 -->
+    <div class="product-card">
+      <div class="product-num">物件 11</div>
+      <div class="product-name">床品四件套</div>
+      <div class="product-purpose">卧室气场底色</div>
+      <div class="product-fengshui">卧室主色不宜大红大紫，米白色清净气场；棉质吸汗透气，睡眠质量高则运势稳。</div>
+
+      <div class="tier-content" data-tier="basic">
+        <div class="tier-product-name-row">Amazon Queen 四件套 米白色纯棉</div>
+        <div class="price-dual"><span class="price-usd">$59</span> <span class="price-rmb">/ ¥425</span></div>
+        <a href="https://www.amazon.com/s?k=white+bedding+set+queen+cotton+4+piece&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 购买</a>
+      </div>
+
+      <div class="tier-content" data-tier="luxury">
+        <div class="tier-product-name-row">Parachute 有机棉 Queen 床品套装 米白</div>
+        <div class="price-dual"><span class="price-usd">$349</span> <span class="price-rmb">/ ¥2,513</span></div>
+        <a href="https://www.amazon.com/s?k=parachute+organic+cotton+queen+bedding+white&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 购买</a>
+      </div>
+
+      <div class="tier-content" data-tier="master">
+        <div class="tier-product-name-row">Sferra Festival 埃及长绒棉 600支 Queen 套装</div>
+        <div class="price-dual"><span class="price-usd">$980</span> <span class="price-rmb">/ ¥7,056</span></div>
+        <a href="https://www.amazon.com/s?k=sferra+egyptian+cotton+600+thread+queen+bedding&tag=shenyuan-20" target="_blank" class="btn-master">💎 Amazon 查看</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FENG SHUI ITEMS -->
+  <div class="category-header">
+    <h3>风水开运摆件</h3>
+    <span class="category-tag">三档可选</span>
+    <span class="category-tag">5 件</span>
+  </div>
+  <div class="product-grid">
+
+    <!-- 黄水晶 / 貔貅 -->
+    <div class="product-card">
+      <div class="product-num">物件 12</div>
+      <div class="product-name">貔貅 + 黄水晶</div>
+      <div class="product-purpose">东南财位 · 旺偏财</div>
+      <div class="product-fengshui">东南为财位，貔貅镇守招财，黄水晶属土生金；配落地灯照射，光能激活能量场，旺偏财运。</div>
+
+      <div class="tier-content" data-tier="basic">
+        <div class="tier-product-name-row">黄铜貔貅一对 + 人工黄水晶球 60mm 木质底座</div>
+        <div class="price-dual"><span class="price-usd">$35 + $25 = $60</span> <span class="price-rmb">/ ¥252 + ¥180</span></div>
+        <a href="https://www.amazon.com/s?k=brass+pixiu+feng+shui+pair&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 貔貅</a>
+        <a href="https://www.amazon.com/s?k=yellow+citrine+crystal+ball+60mm+feng+shui&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 水晶</a>
+      </div>
+
+      <div class="tier-content" data-tier="luxury">
+        <div class="tier-product-name-row">天然白玉貔貅 + 天然巴西黄水晶晶洞 2-3kg</div>
+        <div class="price-dual"><span class="price-usd">$580 + $380 = $960</span> <span class="price-rmb">/ ¥4,176 + ¥2,736</span></div>
+        <a href="https://www.amazon.com/s?k=jade+pixiu+white+nephrite+feng+shui&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 白玉貔貅</a>
+        <a href="https://www.amazon.com/s?k=natural+citrine+crystal+cluster+geode+2kg+brazil&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 晶洞</a>
+      </div>
+
+      <div class="tier-content" data-tier="master">
+        <div class="tier-product-name-row">缅甸翡翠A货貔貅+光孝寺开光证书 + 32kg天然巴西黄水晶晶洞+三天开光法事 ⚠️限量</div>
+        <div class="price-dual"><span class="price-usd">$3,800 + $8,800 = $12,600</span> <span class="price-rmb">/ ¥27,360 + ¥63,360</span></div>
+        <a href="https://www.amazon.com/s?k=jadeite+pixiu+green+grade+A+certificate&tag=shenyuan-20" target="_blank" class="btn-master">💎 翡翠貔貅（每月限5件）</a>
+        <a href="https://www.amazon.com/s?k=large+natural+citrine+geode+cathedral+32kg&tag=shenyuan-20" target="_blank" class="btn-master">💎 巨型晶洞（预约制）</a>
+      </div>
+    </div>
+
+    <!-- 富贵竹 -->
+    <div class="product-card">
+      <div class="product-num">物件 13</div>
+      <div class="product-name">富贵竹水培</div>
+      <div class="product-purpose">东方生气位 · 旺健康木气</div>
+      <div class="product-fengshui">东方属木，与用神木相合；3茎代表三才（天地人）旺三运；水培清洁不招虫。</div>
+
+      <div class="tier-content" data-tier="basic">
+        <div class="tier-product-name-row">Lucky Bamboo 3 茎 水培 透明玻璃瓶</div>
+        <div class="price-dual"><span class="price-usd">$15</span> <span class="price-rmb">/ ¥108</span></div>
+        <a href="https://www.amazon.com/s?k=lucky+bamboo+3+stalks+water+vase+feng+shui&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 购买</a>
+      </div>
+
+      <div class="tier-content" data-tier="luxury">
+        <div class="tier-product-name-row">Lucky Bamboo 9 茎 金色陶瓷盆 + 白石子</div>
+        <div class="price-dual"><span class="price-usd">$89</span> <span class="price-rmb">/ ¥641</span></div>
+        <a href="https://www.amazon.com/s?k=lucky+bamboo+9+stalks+ceramic+pot+gold+feng+shui&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 购买</a>
+      </div>
+
+      <div class="tier-content" data-tier="master">
+        <div class="tier-product-name-row">手绘青花瓷富贵竹盆 景德镇定制 21茎大型</div>
+        <div class="price-dual"><span class="price-usd">$580</span> <span class="price-rmb">/ ¥4,176</span></div>
+        <a href="https://www.amazon.com/s?k=chinese+blue+white+porcelain+planter+jingdezhen+bamboo&tag=shenyuan-20" target="_blank" class="btn-master">💎 Amazon 定制款</a>
+      </div>
+    </div>
+
+    <!-- 粉水晶 -->
+    <div class="product-card">
+      <div class="product-num">物件 14</div>
+      <div class="product-name">粉水晶</div>
+      <div class="product-purpose">西南桃花位 · 旺感情运</div>
+      <div class="product-fengshui">西南为桃花位，粉水晶代表爱情能量；单身可催桃花，已恋可稳固感情，忌正方形切割。</div>
+
+      <div class="tier-content" data-tier="basic">
+        <div class="tier-product-name-row">Rose Quartz 原石 / 球 天然纹路 约50mm</div>
+        <div class="price-dual"><span class="price-usd">$18</span> <span class="price-rmb">/ ¥130</span></div>
+        <a href="https://www.amazon.com/s?k=rose+quartz+crystal+sphere+feng+shui+love&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 购买</a>
+      </div>
+
+      <div class="tier-content" data-tier="luxury">
+        <div class="tier-product-name-row">天然巴西粉水晶晶柱 约500g 配金色底座</div>
+        <div class="price-dual"><span class="price-usd">$168</span> <span class="price-rmb">/ ¥1,210</span></div>
+        <a href="https://www.amazon.com/s?k=natural+rose+quartz+tower+point+500g+gold+base&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 购买</a>
+      </div>
+
+      <div class="tier-content" data-tier="master">
+        <div class="tier-product-name-row">大型粉水晶洞 约8kg + 桃花符文开光仪式</div>
+        <div class="price-dual"><span class="price-usd">$1,800</span> <span class="price-rmb">/ ¥12,960</span></div>
+        <a href="https://www.amazon.com/s?k=large+rose+quartz+geode+cluster+8kg+love&tag=shenyuan-20" target="_blank" class="btn-master">💎 Amazon 查看</a>
+      </div>
+    </div>
+
+    <!-- 铜葫芦 -->
+    <div class="product-card">
+      <div class="product-num">物件 15</div>
+      <div class="product-name">铜葫芦挂件</div>
+      <div class="product-purpose">化五黄煞 · 保健康</div>
+      <div class="product-fengshui">葫芦形收纳煞气，铜质属金克木煞；挂于卧室中央或梁下，2026年五黄飞临中宫需加强。</div>
+
+      <div class="tier-content" data-tier="basic">
+        <div class="tier-product-name-row">纯铜葫芦 带红绳 铸铜工艺 铜金色</div>
+        <div class="price-dual"><span class="price-usd">$20</span> <span class="price-rmb">/ ¥144</span></div>
+        <a href="https://www.amazon.com/s?k=brass+gourd+wu+lou+feng+shui+cure+hanging&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 购买</a>
+      </div>
+
+      <div class="tier-content" data-tier="luxury">
+        <div class="tier-product-name-row">鎏金铜葫芦 六铜钱版 手工打磨 含木质托架</div>
+        <div class="price-dual"><span class="price-usd">$180</span> <span class="price-rmb">/ ¥1,296</span></div>
+        <a href="https://www.amazon.com/s?k=feng+shui+wu+lou+gourd+gold+plated+six+coins&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 购买</a>
+      </div>
+
+      <div class="tier-content" data-tier="master">
+        <div class="tier-product-name-row">纯银葫芦 含金线缠绕 法师加持 附开光证书</div>
+        <div class="price-dual"><span class="price-usd">$980</span> <span class="price-rmb">/ ¥7,056</span></div>
+        <a href="https://www.amazon.com/s?k=silver+wu+lou+gourd+feng+shui+blessed+certificate&tag=shenyuan-20" target="_blank" class="btn-master">💎 Amazon 查看</a>
+      </div>
+    </div>
+
+    <!-- 招财猫 -->
+    <div class="product-card">
+      <div class="product-num">物件 16</div>
+      <div class="product-name">招财猫</div>
+      <div class="product-purpose">大门内侧 · 聚财气</div>
+      <div class="product-fengshui">放大门进门右侧，招财猫右手举起招偏财；白色属金旺财；面朝门外迎财而非驱人。</div>
+
+      <div class="tier-content" data-tier="basic">
+        <div class="tier-product-name-row">陶瓷白色招财猫 右手高举 中号</div>
+        <div class="price-dual"><span class="price-usd">$22</span> <span class="price-rmb">/ ¥158</span></div>
+        <a href="https://www.amazon.com/s?k=maneki+neko+white+lucky+cat+feng+shui+ceramic&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 购买</a>
+      </div>
+
+      <div class="tier-content" data-tier="luxury">
+        <div class="tier-product-name-row">景德镇手绘招财猫 青花金彩 大号 含底座</div>
+        <div class="price-dual"><span class="price-usd">$280</span> <span class="price-rmb">/ ¥2,016</span></div>
+        <a href="https://www.amazon.com/s?k=maneki+neko+jingdezhen+porcelain+large+gold+blue&tag=shenyuan-20" target="_blank" class="btn-amazon">📦 Amazon 购买</a>
+      </div>
+
+      <div class="tier-content" data-tier="master">
+        <div class="tier-product-name-row">纯铜鎏金招财猫 法师开光 含风水局摆件</div>
+        <div class="price-dual"><span class="price-usd">$1,200</span> <span class="price-rmb">/ ¥8,640</span></div>
+        <a href="https://www.amazon.com/s?k=brass+gold+lucky+cat+feng+shui+blessed+large&tag=shenyuan-20" target="_blank" class="btn-master">💎 Amazon 查看</a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MASTER INFO BLOCK -->
+  <div class="master-info-block tier-content" data-tier="master">
+    <div class="master-title">💎 大师开光版 · 专属服务</div>
+    <div class="master-features">
+      <div class="feature">📜 附开光证书（法师签名+寺庙印章）</div>
+      <div class="feature">📸 开光仪式照片/视频记录</div>
+      <div class="feature">🚚 全程保险运输，到府签收</div>
+      <div class="feature">📞 专属风水师跟进服务（1年）</div>
+      <div class="feature">⚠️ 每月限量供应，需提前2-4周预约</div>
+    </div>
+    <div class="master-note">"此级别物品由善缘合作法师亲自开光，每件均有独立编号，可溯源查验"</div>
+  </div>
+
+</div>
+
+<hr class="divider">
+
+<!-- ══ SECTION 4: COST SUMMARY ══ -->
+<div class="section">
+  <div class="section-title">
+    <div class="num">三</div>
+    <h2>总费用汇总</h2>
+  </div>
+
+  <!-- BASIC TIER SUMMARY -->
+  <div class="tier-content" data-tier="basic">
+    <div class="cost-summary">
+      <div class="cost-card">
+        <div class="cost-label">大件家具</div>
+        <div class="cost-amount">$1,184</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:6px;">床架+床垫+床头柜×2<br>衣柜+书桌+椅子+梳妆台</div>
+      </div>
+      <div class="cost-card">
+        <div class="cost-label">软装配件</div>
+        <div class="cost-amount">$246</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:6px;">地毯+窗帘×2+床品四件套</div>
+      </div>
+      <div class="cost-card">
+        <div class="cost-label">风水摆件</div>
+        <div class="cost-amount">$300</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:6px;">貔貅+水晶+竹+铜葫芦+招财猫</div>
+      </div>
+      <div class="cost-card total">
+        <div class="cost-label">普通版总计</div>
+        <div class="cost-amount">$1,730</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:6px;">约 ¥12,456 RMB · 经济实用</div>
+      </div>
+    </div>
+    <div class="over-budget">
+      <h4>⚠ 超出预算 $230 — 删减建议（三选一，控制在 $1,500 内）</h4>
+      <ul>
+        <li>方案 A：将椅子从 IKEA JÄRVFJÄLLET ($229) 换为 Amazon 基础款椅 ($49) <span class="save-tag">省 $180 → 总计 $1,550</span></li>
+        <li>方案 B：暂缓购买床垫，使用现有床垫，待第二月补购 <span class="save-tag">省 $180 → 总计 $1,550</span></li>
+        <li>方案 C：衣柜缩减为 IKEA PAX 单模块 ($250) 代替双模块 ($450) <span class="save-tag">省 $200 → 总计 $1,530</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- LUXURY TIER SUMMARY -->
+  <div class="tier-content" data-tier="luxury">
+    <div class="cost-summary">
+      <div class="cost-card">
+        <div class="cost-label">大件家具</div>
+        <div class="cost-amount">$20,131</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:6px;">RH床+Tempur床垫+RH床头柜×2<br>CA Closets+PB书桌+Herman Miller+PB梳妆台</div>
+      </div>
+      <div class="cost-card">
+        <div class="cost-label">软装配件</div>
+        <div class="cost-amount">$2,207</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:6px;">PB地毯+RH窗帘×2+Parachute床品</div>
+      </div>
+      <div class="cost-card">
+        <div class="cost-label">风水摆件</div>
+        <div class="cost-amount">$2,165</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:6px;">白玉貔貅+晶洞+粉水晶+铜葫芦+招财猫</div>
+      </div>
+      <div class="cost-card total">
+        <div class="cost-label">豪华版总计</div>
+        <div class="cost-amount">$28,500</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:6px;">约 ¥205,200 RMB · 品质生活</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MASTER TIER SUMMARY -->
+  <div class="tier-content" data-tier="master">
+    <div class="cost-summary">
+      <div class="cost-card">
+        <div class="cost-label">大件家具</div>
+        <div class="cost-amount">$57,700</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:6px;">花梨木床+顶级床垫+鸡翅木床头柜×2<br>红木衣柜+黄花梨书桌+官帽椅+花梨木梳妆台</div>
+      </div>
+      <div class="cost-card">
+        <div class="cost-label">软装配件</div>
+        <div class="cost-amount">$8,560</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:6px;">波斯地毯+真丝窗帘×2+埃及长绒棉床品</div>
+      </div>
+      <div class="cost-card">
+        <div class="cost-label">开光摆件</div>
+        <div class="cost-amount">$16,680+</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:6px;">翡翠貔貅+巨型晶洞+大师开光+全套法事</div>
+      </div>
+      <div class="cost-card total">
+        <div class="cost-label">大师版总计</div>
+        <div class="cost-amount">$85,000+</div>
+        <div style="font-size:11px; color:var(--text-dim); margin-top:6px;">约 ¥612,000+ RMB · 传世珍藏</div>
+      </div>
+    </div>
+    <div style="margin-top:16px; background:rgba(201,168,76,0.06); border:1px solid rgba(201,168,76,0.3); border-radius:10px; padding:16px;">
+      <div style="color:#c9a84c; font-size:13px; font-weight:600; margin-bottom:8px;">💎 大师版含善缘专属礼遇</div>
+      <div style="font-size:12px; color:var(--text-dim); line-height:1.8;">· 专属风水师上门勘察布局（含差旅）<br>· 所有开光摆件统一择吉日摆放仪式<br>· 一年内任意调整，保运势持续上升<br>· 善缘金钻会员资格（价值 $999/年）</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ══ SECTION 5: PHASE PLAN ══ -->
+<div class="section">
+  <div class="section-title">
+    <div class="num">四</div>
+    <h2>分阶段采购建议</h2>
+  </div>
+  <div class="phase-plan">
+
+    <div class="phase-card phase-1">
+      <div class="phase-label">第一阶段 · 入住前必备</div>
+      <div class="phase-title">基础居住功能</div>
+      <div class="phase-item"><span>床架 HEMNES</span><span class="phase-item-price">$299</span></div>
+      <div class="phase-item"><span>床垫</span><span class="phase-item-price">$180</span></div>
+      <div class="phase-item"><span>衣柜 PAX</span><span class="phase-item-price">$450</span></div>
+      <div class="phase-item"><span>窗帘 × 2</span><span class="phase-item-price">$98</span></div>
+      <div class="phase-item"><span>床品四件套</span><span class="phase-item-price">$59</span></div>
+      <div class="phase-total"><span>合计</span><span>$1,086</span></div>
+      <div style="font-size:11px; color:var(--text-dim); margin-top:10px;">优先完成：1-2周内到位。无床无窗帘不能入住，这是基础线。</div>
+    </div>
+
+    <div class="phase-card phase-2">
+      <div class="phase-label">第二阶段 · 入住一个月内</div>
+      <div class="phase-title">完善功能舒适度</div>
+      <div class="phase-item"><span>书桌 LINNMON</span><span class="phase-item-price">$89</span></div>
+      <div class="phase-item"><span>椅子 JÄRVFJÄLLET</span><span class="phase-item-price">$229</span></div>
+      <div class="phase-item"><span>梳妆台</span><span class="phase-item-price">$159</span></div>
+      <div class="phase-item"><span>床头柜 × 2</span><span class="phase-item-price">$178</span></div>
+      <div class="phase-item"><span>地毯</span><span class="phase-item-price">$89</span></div>
+      <div class="phase-total"><span>合计</span><span>$744</span></div>
+      <div style="font-size:11px; color:var(--text-dim); margin-top:10px;">功能完整：工作区 + 梳妆区 + 对称床头柜。气场趋于稳定。</div>
+    </div>
+
+    <div class="phase-card phase-3">
+      <div class="phase-label">第三阶段 · 稳定后开运</div>
+      <div class="phase-title">风水加持摆件</div>
+      <div class="phase-item"><span>黄水晶球（财位）</span><span class="phase-item-price">$25</span></div>
+      <div class="phase-item"><span>富贵竹（生气位）</span><span class="phase-item-price">$15</span></div>
+      <div class="phase-item"><span>粉水晶（桃花位）</span><span class="phase-item-price">$18</span></div>
+      <div class="phase-item"><span>铜葫芦（化煞）</span><span class="phase-item-price">$20</span></div>
+      <div class="phase-item"><span>招财猫（门口）</span><span class="phase-item-price">$22</span></div>
+      <div class="phase-total"><span>合计</span><span>$100</span></div>
+      <div style="font-size:11px; color:var(--text-dim); margin-top:10px;">锦上添花：房间布局稳定后再加风水摆件，效果最佳。</div>
+    </div>
+
+  </div>
+
+  <!-- AI notice -->
+  <div style="margin-top:32px; background:rgba(201,168,76,0.05); border:1px solid var(--gold-border); border-radius:10px; padding:20px; display:flex; gap:14px; align-items:flex-start;">
+    <div style="font-size:22px; line-height:1; flex-shrink:0;">✦</div>
+    <div>
+      <div style="font-size:13px; font-weight:700; color:var(--gold); margin-bottom:6px;">善缘 AI 命理师提示</div>
+      <div style="font-size:13px; color:var(--text-dim); line-height:1.7;">
+        本方案基于「戊土日主、用神火木」定制。购置家具时请注意：<br>
+        1. 床头朝北为实木白色床的最佳摆放方向，不可对准卫生间或储物间门。<br>
+        2. 衣柜门不宜正对床，推拉门优于铰链门（减少煞角）。<br>
+        3. 镜面（梳妆台）避免在睡眠中能照到人的角度。<br>
+        <strong style="color:var(--gold);">如需个性化调整，欢迎预约善缘 AI 风水专项咨询。</strong>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function setTier(tier, evt) {
+  // Update buttons
+  document.querySelectorAll('.tier-btn').forEach(function(b) { b.classList.remove('active'); });
+  if (evt && evt.target) evt.target.classList.add('active');
+
+  // Show/hide tier content
+  document.querySelectorAll('.tier-content').forEach(function(el) {
+    el.style.display = el.dataset.tier === tier ? 'block' : 'none';
+  });
+
+  // Update total display
+  var totals = {
+    basic:  { price: '$1,730 USD / ¥12,456 RMB',  note: '普通版 · 经济实用' },
+    luxury: { price: '$28,500 USD / ¥205,200 RMB', note: '豪华版 · 品质生活' },
+    master: { price: '$85,000+ USD / ¥612,000+ RMB', note: '大师开光版 · 传世珍藏' }
+  };
+  var t = totals[tier];
+  if (t) {
+    var el = document.getElementById('total-display');
+    var note = document.getElementById('total-note');
+    if (el) el.textContent = t.price;
+    if (note) note.textContent = t.note;
+  }
+}
+
+// Initialize: ensure basic tier shows, others hidden
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.tier-content').forEach(function(el) {
+    el.style.display = el.dataset.tier === 'basic' ? 'block' : 'none';
+  });
+});
+</script>
+
+<!-- ══ SECTION 6: 床品颜色方案 ══ -->
+<hr class="divider">
+<div class="section">
+  <div class="section-title">
+    <div class="num">五</div>
+    <h2>床品颜色 · 按日主定制</h2>
+  </div>
+  <div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:14px 16px;margin-bottom:20px;">
+    <div style="font-size:12px;color:var(--gold);margin-bottom:4px;">为什么这样选</div>
+    <div style="font-size:12px;color:var(--text-dim);line-height:1.7;">床品颜色直接影响睡眠时的五行气场吸收。卧室是养精蓄锐的地方，颜色选对了，八小时都在补气——选错了，八小时都在耗气。按日主选色，补所缺五行，旺所用神。</div>
+  </div>
+
+  <!-- 日主 tabs -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;" id="bazi-tabs">
+    <button onclick="showBazi('mu')" class="bazi-tab active" data-bazi="mu">🌿 甲乙木</button>
+    <button onclick="showBazi('huo')" class="bazi-tab" data-bazi="huo">🔥 丙丁火</button>
+    <button onclick="showBazi('tu')" class="bazi-tab" data-bazi="tu">🌍 戊己土</button>
+    <button onclick="showBazi('jin')" class="bazi-tab" data-bazi="jin">⚡ 庚辛金</button>
+    <button onclick="showBazi('shui')" class="bazi-tab" data-bazi="shui">💧 壬癸水</button>
+  </div>
+
+  <!-- 甲乙木 -->
+  <div class="bazi-panel" id="bazi-mu">
+    <div class="bazi-header">
+      <div>
+        <div style="font-size:16px;font-weight:600;color:var(--gold);">甲乙木 · 木之日主</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">旺色：绿/青/森绿 &nbsp;|&nbsp; 次旺：黑/深蓝 &nbsp;|&nbsp; 忌：白/金/米白</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-dim);text-align:right;">推荐款式：森系亚麻 / 竹棉</div>
+    </div>
+    <div class="color-swatches">
+      <div class="swatch-item"><div class="swatch" style="background:#4a7c59;"></div><div class="swatch-name">森绿</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#6aaa7e;"></div><div class="swatch-name">草绿</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#2d5a3d;"></div><div class="swatch-name">深绿</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#1b3a4b;"></div><div class="swatch-name">深蓝（次）</div></div>
+      <div class="swatch-item swatch-avoid"><div class="swatch" style="background:#f5f0e8;border:1px solid #ccc;"></div><div class="swatch-name">⚠ 避米白</div></div>
+      <div class="swatch-item swatch-avoid"><div class="swatch" style="background:#d4af37;"></div><div class="swatch-name">⚠ 避金色</div></div>
+    </div>
+    <a href="https://www.amazon.com/s?k=green+linen+duvet+cover+set&tag=shenyuan-20" target="_blank" class="btn-amazon">🛒 Amazon 选购 · 绿色系床品四件套</a>
+  </div>
+
+  <!-- 丙丁火 -->
+  <div class="bazi-panel" id="bazi-huo" style="display:none;">
+    <div class="bazi-header">
+      <div>
+        <div style="font-size:16px;font-weight:600;color:var(--gold);">丙丁火 · 火之日主</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">旺色：红/紫/橙 &nbsp;|&nbsp; 次旺：绿 &nbsp;|&nbsp; 忌：蓝/黑/深灰</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-dim);text-align:right;">推荐款式：深酒红真丝 / 暖色棉麻</div>
+    </div>
+    <div class="color-swatches">
+      <div class="swatch-item"><div class="swatch" style="background:#8b1a2a;"></div><div class="swatch-name">深酒红</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#c0392b;"></div><div class="swatch-name">中国红</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#9b59b6;"></div><div class="swatch-name">紫</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#d35400;"></div><div class="swatch-name">橙棕</div></div>
+      <div class="swatch-item swatch-avoid"><div class="swatch" style="background:#1a2980;"></div><div class="swatch-name">⚠ 避深蓝</div></div>
+      <div class="swatch-item swatch-avoid"><div class="swatch" style="background:#2c3e50;"></div><div class="swatch-name">⚠ 避深灰</div></div>
+    </div>
+    <a href="https://www.amazon.com/s?k=burgundy+red+duvet+cover+set+queen&tag=shenyuan-20" target="_blank" class="btn-amazon">🛒 Amazon 选购 · 酒红色系床品四件套</a>
+  </div>
+
+  <!-- 戊己土 -->
+  <div class="bazi-panel" id="bazi-tu" style="display:none;">
+    <div class="bazi-header">
+      <div>
+        <div style="font-size:16px;font-weight:600;color:var(--gold);">戊己土 · 土之日主</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">旺色：黄/米/棕/驼 &nbsp;|&nbsp; 次旺：红/橙 &nbsp;|&nbsp; 忌：蓝/绿</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-dim);text-align:right;">推荐款式：米色埃及棉 / 驼色法兰绒</div>
+    </div>
+    <div class="color-swatches">
+      <div class="swatch-item"><div class="swatch" style="background:#c8a96e;"></div><div class="swatch-name">金黄</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#e8dcc8;border:1px solid #c8b898;"></div><div class="swatch-name">米色</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#8b6914;"></div><div class="swatch-name">深棕</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#c19a6b;"></div><div class="swatch-name">驼色</div></div>
+      <div class="swatch-item swatch-avoid"><div class="swatch" style="background:#1a6b3c;"></div><div class="swatch-name">⚠ 避绿</div></div>
+      <div class="swatch-item swatch-avoid"><div class="swatch" style="background:#1a3a6b;"></div><div class="swatch-name">⚠ 避蓝</div></div>
+    </div>
+    <a href="https://www.amazon.com/s?k=beige+egyptian+cotton+duvet+cover+queen&tag=shenyuan-20" target="_blank" class="btn-amazon">🛒 Amazon 选购 · 米色/驼色床品四件套</a>
+  </div>
+
+  <!-- 庚辛金 -->
+  <div class="bazi-panel" id="bazi-jin" style="display:none;">
+    <div class="bazi-header">
+      <div>
+        <div style="font-size:16px;font-weight:600;color:var(--gold);">庚辛金 · 金之日主</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">旺色：白/金/银/灰 &nbsp;|&nbsp; 次旺：黄/米 &nbsp;|&nbsp; 忌：红/橙/粉</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-dim);text-align:right;">推荐款式：白色精梳棉 / 银灰缎面</div>
+    </div>
+    <div class="color-swatches">
+      <div class="swatch-item"><div class="swatch" style="background:#f8f8f8;border:1px solid #ddd;"></div><div class="swatch-name">纯白</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#c0c0c0;"></div><div class="swatch-name">银灰</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#d4af37;"></div><div class="swatch-name">金色</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#808080;"></div><div class="swatch-name">中灰</div></div>
+      <div class="swatch-item swatch-avoid"><div class="swatch" style="background:#e74c3c;"></div><div class="swatch-name">⚠ 避红</div></div>
+      <div class="swatch-item swatch-avoid"><div class="swatch" style="background:#e67e22;"></div><div class="swatch-name">⚠ 避橙</div></div>
+    </div>
+    <a href="https://www.amazon.com/s?k=white+grey+sateen+duvet+cover+set+queen&tag=shenyuan-20" target="_blank" class="btn-amazon">🛒 Amazon 选购 · 白/银灰床品四件套</a>
+  </div>
+
+  <!-- 壬癸水 -->
+  <div class="bazi-panel" id="bazi-shui" style="display:none;">
+    <div class="bazi-header">
+      <div>
+        <div style="font-size:16px;font-weight:600;color:var(--gold);">壬癸水 · 水之日主</div>
+        <div style="font-size:12px;color:var(--text-dim);margin-top:4px;">旺色：黑/深蓝/藏蓝 &nbsp;|&nbsp; 次旺：白/银 &nbsp;|&nbsp; 忌：黄/棕/土色</div>
+      </div>
+      <div style="font-size:11px;color:var(--text-dim);text-align:right;">推荐款式：深蓝贡缎 / 碳灰棉</div>
+    </div>
+    <div class="color-swatches">
+      <div class="swatch-item"><div class="swatch" style="background:#1a1a2e;"></div><div class="swatch-name">深蓝黑</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#1b3a6b;"></div><div class="swatch-name">藏蓝</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#2c3e50;"></div><div class="swatch-name">碳灰</div></div>
+      <div class="swatch-item"><div class="swatch" style="background:#1a1a1a;"></div><div class="swatch-name">哑光黑</div></div>
+      <div class="swatch-item swatch-avoid"><div class="swatch" style="background:#c8a96e;"></div><div class="swatch-name">⚠ 避黄</div></div>
+      <div class="swatch-item swatch-avoid"><div class="swatch" style="background:#8b6914;"></div><div class="swatch-name">⚠ 避棕</div></div>
+    </div>
+    <a href="https://www.amazon.com/s?k=navy+blue+black+duvet+cover+set+queen&tag=shenyuan-20" target="_blank" class="btn-amazon">🛒 Amazon 选购 · 深蓝/碳灰床品四件套</a>
+  </div>
+</div>
+
+<!-- ══ SECTION 7: 花草树木 ══ -->
+<hr class="divider">
+<div class="section">
+  <div class="section-title">
+    <div class="num">六</div>
+    <h2>花草树木 · 风水布局指南</h2>
+  </div>
+  <div style="background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:14px 16px;margin-bottom:20px;">
+    <div style="font-size:12px;color:var(--gold);margin-bottom:4px;">为什么这样选</div>
+    <div style="font-size:12px;color:var(--text-dim);line-height:1.7;">植物是最有生命力的风水道具——它能吸收煞气、催动气场、强化五行能量。但放错位置适得其反：尖刺植物生煞气，枯木凝死气，爬藤缠绕漏财。按风水位定植物，气场事半功倍。</div>
+  </div>
+
+  <!-- 按位置排列的植物卡片 -->
+  <div style="margin-bottom:18px;">
+    <div style="font-size:11px;letter-spacing:2px;color:var(--gold);opacity:0.7;margin-bottom:12px;">· 按风水位置配植 ·</div>
+
+    <!-- 财位 -->
+    <div class="zone-header">💰 财位 · 东南方 (SE)</div>
+    <div class="plant-grid">
+      <div class="plant-card">
+        <div class="plant-emoji">🌳</div>
+        <div class="plant-name">发财树</div>
+        <div class="plant-latin">Pachira aquatica</div>
+        <div class="plant-zone">财位首选</div>
+        <div class="plant-why">圆叶聚气，树形向上，象征财运节节高升</div>
+        <a href="https://www.amazon.com/s?k=money+tree+pachira+aquatica&tag=shenyuan-20" target="_blank" class="plant-btn">Amazon 购买</a>
+      </div>
+      <div class="plant-card">
+        <div class="plant-emoji">🪙</div>
+        <div class="plant-name">铜钱草</div>
+        <div class="plant-latin">Pilea peperomioides</div>
+        <div class="plant-zone">旺财气</div>
+        <div class="plant-why">圆形叶片似铜钱，繁衍旺盛，寓意财源滚滚</div>
+        <a href="https://www.amazon.com/s?k=pilea+peperomioides+chinese+money+plant&tag=shenyuan-20" target="_blank" class="plant-btn">Amazon 购买</a>
+      </div>
+      <div class="plant-card">
+        <div class="plant-emoji">💎</div>
+        <div class="plant-name">金钱树</div>
+        <div class="plant-latin">Zamioculcas zamiifolia</div>
+        <div class="plant-zone">财位催旺</div>
+        <div class="plant-why">耐阴好养，叶片厚实富贵，聚财守财兼顾</div>
+        <a href="https://www.amazon.com/s?k=zz+plant+zamioculcas&tag=shenyuan-20" target="_blank" class="plant-btn">Amazon 购买</a>
+      </div>
+    </div>
+
+    <!-- 文昌位 -->
+    <div class="zone-header">📚 文昌位 · 东方 (E)</div>
+    <div class="plant-grid">
+      <div class="plant-card">
+        <div class="plant-emoji">🎋</div>
+        <div class="plant-name">富贵竹</div>
+        <div class="plant-latin">Dracaena sanderiana</div>
+        <div class="plant-zone">催文昌</div>
+        <div class="plant-why">竹节向上象征步步高升，绿色旺木气助学业</div>
+        <a href="https://www.amazon.com/s?k=lucky+bamboo+dracaena&tag=shenyuan-20" target="_blank" class="plant-btn">Amazon 购买</a>
+      </div>
+      <div class="plant-card">
+        <div class="plant-emoji">🌿</div>
+        <div class="plant-name">绿萝</div>
+        <div class="plant-latin">Epipremnum aureum</div>
+        <div class="plant-zone">净化空气</div>
+        <div class="plant-why">吸附甲醛，净化气场，帮助思维清晰专注</div>
+        <a href="https://www.amazon.com/s?k=pothos+golden+plant&tag=shenyuan-20" target="_blank" class="plant-btn">Amazon 购买</a>
+      </div>
+      <div class="plant-card">
+        <div class="plant-emoji">🌱</div>
+        <div class="plant-name">文竹</div>
+        <div class="plant-latin">Asparagus setaceus</div>
+        <div class="plant-zone">增文气</div>
+        <div class="plant-why">清雅娟秀，文人最爱，书房中摆放增文昌运</div>
+        <a href="https://www.amazon.com/s?k=asparagus+fern+plant&tag=shenyuan-20" target="_blank" class="plant-btn">Amazon 购买</a>
+      </div>
+    </div>
+
+    <!-- 桃花位 -->
+    <div class="zone-header">🌸 桃花位 · 因命而异</div>
+    <div class="plant-grid">
+      <div class="plant-card">
+        <div class="plant-emoji">🌹</div>
+        <div class="plant-name">玫瑰</div>
+        <div class="plant-latin">Rosa</div>
+        <div class="plant-zone">旺桃花</div>
+        <div class="plant-why">红色火气催动桃花，但需选无刺品种以防感情生刺</div>
+        <a href="https://www.amazon.com/s?k=rose+plant+indoor+pink&tag=shenyuan-20" target="_blank" class="plant-btn">Amazon 购买</a>
+      </div>
+      <div class="plant-card">
+        <div class="plant-emoji">🌸</div>
+        <div class="plant-name">兰花</div>
+        <div class="plant-latin">Orchid</div>
+        <div class="plant-zone">高贵桃花</div>
+        <div class="plant-why">象征高雅气质，催旺有品位的贵人缘和感情运</div>
+        <a href="https://www.amazon.com/s?k=orchid+plant+live&tag=shenyuan-20" target="_blank" class="plant-btn">Amazon 购买</a>
+      </div>
+      <div class="plant-card">
+        <div class="plant-emoji">🌼</div>
+        <div class="plant-name">茉莉</div>
+        <div class="plant-latin">Jasminum</div>
+        <div class="plant-zone">清香桃花</div>
+        <div class="plant-why">香气化煞，白色花朵纯洁爱情，南方可室外种植</div>
+        <a href="https://www.amazon.com/s?k=jasmine+plant+live&tag=shenyuan-20" target="_blank" class="plant-btn">Amazon 购买</a>
+      </div>
+    </div>
+
+    <!-- 健康位 -->
+    <div class="zone-header">💚 健康位 · 东方 (E)</div>
+    <div class="plant-grid">
+      <div class="plant-card">
+        <div class="plant-emoji">🌵</div>
+        <div class="plant-name">芦荟</div>
+        <div class="plant-latin">Aloe vera</div>
+        <div class="plant-zone">客厅健康位</div>
+        <div class="plant-why">净化空气，辟邪化煞，⚠ 注意：不宜放卧室（刺气太强）</div>
+        <a href="https://www.amazon.com/s?k=aloe+vera+plant+live&tag=shenyuan-20" target="_blank" class="plant-btn">Amazon 购买</a>
+      </div>
+      <div class="plant-card">
+        <div class="plant-emoji">💜</div>
+        <div class="plant-name">薰衣草</div>
+        <div class="plant-latin">Lavender</div>
+        <div class="plant-zone">助眠健康</div>
+        <div class="plant-why">安神助眠，放在卧室窗台，改善睡眠质量和健康运</div>
+        <a href="https://www.amazon.com/s?k=lavender+plant+live+indoor&tag=shenyuan-20" target="_blank" class="plant-btn">Amazon 购买</a>
+      </div>
+      <div class="plant-card">
+        <div class="plant-emoji">🌿</div>
+        <div class="plant-name">薄荷</div>
+        <div class="plant-latin">Mint</div>
+        <div class="plant-zone">厨房健康</div>
+        <div class="plant-why">清新气场，放厨房/阳台，提振精神，可食用</div>
+        <a href="https://www.amazon.com/s?k=mint+herb+plant+live&tag=shenyuan-20" target="_blank" class="plant-btn">Amazon 购买</a>
+      </div>
+    </div>
+
+    <!-- 大门两侧 -->
+    <div class="zone-header">🚪 大门两侧 · 迎门纳气</div>
+    <div class="plant-grid">
+      <div class="plant-card">
+        <div class="plant-emoji">🎋</div>
+        <div class="plant-name">幸运竹</div>
+        <div class="plant-latin">Lucky bamboo</div>
+        <div class="plant-zone">门口首选</div>
+        <div class="plant-why">高挑有气势，放门口两侧迎贵人，节节向上</div>
+        <a href="https://www.amazon.com/s?k=lucky+bamboo+tall+indoor&tag=shenyuan-20" target="_blank" class="plant-btn">Amazon 购买</a>
+      </div>
+      <div class="plant-card">
+        <div class="plant-emoji">🌴</div>
+        <div class="plant-name">铁树</div>
+        <div class="plant-latin">Dracaena</div>
+        <div class="plant-zone">镇宅辟邪</div>
+        <div class="plant-why">粗壮有力，镇守门口，适合大户型和别墅入口</div>
+        <a href="https://www.amazon.com/s?k=dracaena+plant+tall+indoor&tag=shenyuan-20" target="_blank" class="plant-btn">Amazon 购买</a>
+      </div>
+      <div class="plant-card">
+        <div class="plant-emoji">🌳</div>
+        <div class="plant-name">橡皮树</div>
+        <div class="plant-latin">Ficus elastica</div>
+        <div class="plant-zone">大气纳财</div>
+        <div class="plant-why">叶片宽厚圆润，深绿色旺财，适合宽敞玄关</div>
+        <a href="https://www.amazon.com/s?k=rubber+plant+ficus+elastica&tag=shenyuan-20" target="_blank" class="plant-btn">Amazon 购买</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- 忌讳植物 -->
+  <div style="background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.3);border-radius:10px;padding:16px;margin-top:8px;">
+    <div style="color:#e74c3c;font-size:13px;font-weight:600;margin-bottom:10px;">⚠ 忌讳植物 — 这些不能放</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+      <div style="text-align:center;padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;">
+        <div style="font-size:11px;color:rgba(201,168,76,0.7);margin-bottom:4px;">🛏 卧室禁放</div>
+        <div style="font-size:12px;color:var(--text-dim);">仙人掌<br>（刺气伤感情）</div>
+      </div>
+      <div style="text-align:center;padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;">
+        <div style="font-size:11px;color:rgba(201,168,76,0.7);margin-bottom:4px;">🏠 客厅禁放</div>
+        <div style="font-size:12px;color:var(--text-dim);">爬藤类植物<br>（缠绕漏财）</div>
+      </div>
+      <div style="text-align:center;padding:10px;background:rgba(0,0,0,0.2);border-radius:8px;">
+        <div style="font-size:11px;color:rgba(201,168,76,0.7);margin-bottom:4px;">💰 财位禁放</div>
+        <div style="font-size:12px;color:var(--text-dim);">枯木/干花<br>（凝聚死气）</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+/* 床品颜色 tabs */
+.bazi-tab {
+  padding: 8px 14px; background: var(--bg2); border: 1px solid var(--gold-border);
+  border-radius: 20px; color: var(--text-dim); font-size: 12px; cursor: pointer;
+  font-family: inherit; transition: all 0.2s;
+}
+.bazi-tab.active, .bazi-tab:hover {
+  background: rgba(201,168,76,0.15); border-color: var(--gold); color: var(--gold);
+}
+.bazi-panel { animation: fadeIn 0.2s ease; }
+.bazi-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  background: rgba(201,168,76,0.06); border: 1px solid var(--gold-border);
+  border-radius: 10px; padding: 14px 16px; margin-bottom: 16px;
+}
+.color-swatches {
+  display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; padding: 0 4px;
+}
+.swatch-item { text-align: center; }
+.swatch {
+  width: 44px; height: 44px; border-radius: 50%; margin: 0 auto 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+.swatch-name { font-size: 10px; color: var(--text-dim); }
+.swatch-avoid .swatch-name { color: #e74c3c; }
+.btn-amazon {
+  display: block; background: linear-gradient(135deg, #ff9900, #e88800);
+  color: #1a1200; text-decoration: none; border-radius: 8px;
+  padding: 10px 20px; font-size: 13px; font-weight: 600;
+  text-align: center; letter-spacing: 0.5px;
+  transition: opacity 0.2s;
+}
+.btn-amazon:hover { opacity: 0.9; }
+
+/* 植物卡片 */
+.zone-header {
+  font-size: 13px; color: var(--gold); letter-spacing: 0.1em;
+  margin: 20px 0 12px; padding-bottom: 8px;
+  border-bottom: 1px solid rgba(201,168,76,0.2);
+}
+.plant-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 8px; }
+@media (max-width: 600px) { .plant-grid { grid-template-columns: 1fr 1fr; } }
+.plant-card {
+  background: var(--bg2); border: 1px solid var(--gold-border);
+  border-radius: 10px; padding: 12px; text-align: center;
+  transition: border-color 0.2s;
+}
+.plant-card:hover { border-color: var(--gold); }
+.plant-emoji { font-size: 28px; margin-bottom: 6px; }
+.plant-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+.plant-latin { font-size: 10px; color: var(--text-dim); font-style: italic; margin-bottom: 4px; }
+.plant-zone {
+  font-size: 10px; color: var(--gold); background: rgba(201,168,76,0.1);
+  border-radius: 4px; padding: 2px 6px; display: inline-block; margin-bottom: 6px;
+}
+.plant-why { font-size: 11px; color: var(--text-dim); line-height: 1.5; margin-bottom: 8px; }
+.plant-btn {
+  display: block; background: rgba(201,168,76,0.12); border: 1px solid var(--gold-border);
+  color: var(--gold); text-decoration: none; border-radius: 6px;
+  padding: 6px 8px; font-size: 11px; text-align: center;
+  transition: background 0.2s;
+}
+.plant-btn:hover { background: rgba(201,168,76,0.25); }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+
+<script>
+function showBazi(key) {
+  document.querySelectorAll('.bazi-panel').forEach(function(p) { p.style.display = 'none'; });
+  document.querySelectorAll('.bazi-tab').forEach(function(b) { b.classList.remove('active'); });
+  var panel = document.getElementById('bazi-' + key);
+  if (panel) panel.style.display = 'block';
+  var tabs = document.querySelectorAll('.bazi-tab[data-bazi="' + key + '"]');
+  tabs.forEach(function(t) { t.classList.add('active'); });
+}
+</script>
+
+<!-- ══ FOOTER ══ -->
+<div class="footer">
+  <div class="brand">善 缘 SHENYUAN</div>
+  <div>AI 全屋风水配置方案 · 八字定制 · 仅供参考</div>
+  <div style="margin-top:6px; opacity:0.5;">商品价格随市场波动，购买前请核对官网实时价格。联署链接含推广标识。</div>
+</div>
+
+</body>
+</html>

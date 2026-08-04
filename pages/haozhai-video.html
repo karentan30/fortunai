@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#c9a84c">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>善缘 · 豪宅风水视频诊断</title>
+<meta name="description" content="上传豪宅视频，AI结合八字出具顶级风水师级别的完整诊断报告">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #faf8f5; --card: #ffffff; --mid: #f5f0e8;
+  --gold: #c9a84c; --gold-light: #e8d08a; --gold-deep: #8a6420;
+  --ink-text: rgba(40,35,30,0.92);
+  --sub-text: rgba(100,85,60,0.65);
+  --red: #c0392b;
+}
+html, body { background: var(--bg); font-family: 'Noto Serif SC', serif; color: var(--ink-text); -webkit-font-smoothing: antialiased; }
+body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 120px; }
+body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.1) 0%, transparent 50%); pointer-events:none; z-index:0; }
+
+.back-btn { position:fixed; top:16px; left:16px; z-index:99; background:none; border:none; font-family:'Noto Serif SC',serif; font-size:13px; color:rgba(201,168,76,0.6); cursor:pointer; padding:4px 0; }
+
+/* ── HERO ── */
+.hero {
+  position: relative; z-index: 1;
+  background: linear-gradient(180deg, #1c1710 0%, #2a1f0a 60%, #faf8f5 100%);
+  padding: 56px 24px 40px; text-align: center; overflow: hidden;
+}
+.hero::before {
+  content: ''; position: absolute; top: -60px; left: 50%; transform: translateX(-50%);
+  width: 320px; height: 320px;
+  background: radial-gradient(ellipse, rgba(201,168,76,0.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+.hero-badge {
+  display: inline-block; border: 1px solid rgba(201,168,76,0.4);
+  color: rgba(201,168,76,0.8); font-size: 10px; letter-spacing: 3px;
+  padding: 4px 14px; border-radius: 20px; margin-bottom: 18px;
+}
+.hero-title {
+  font-size: 22px; font-weight: 400; letter-spacing: 0.15em;
+  color: #f5edd8; line-height: 1.4; margin-bottom: 6px;
+}
+.hero-title span { color: var(--gold); }
+.hero-sub {
+  font-family: 'Cormorant Garamond', serif; font-style: italic;
+  font-size: 12px; letter-spacing: 0.12em; color: rgba(201,168,76,0.5);
+  margin-bottom: 20px;
+}
+.hero-desc {
+  font-size: 13px; line-height: 1.8; color: rgba(245,237,216,0.75);
+  margin-bottom: 24px;
+}
+
+/* Luxury house SVG illustration */
+.house-svg { margin: 0 auto 24px; display: block; }
+
+.hero-price-tag {
+  display: inline-block; background: rgba(201,168,76,0.15);
+  border: 1px solid rgba(201,168,76,0.4); border-radius: 8px;
+  padding: 10px 20px; color: var(--gold); font-size: 14px;
+  letter-spacing: 0.1em;
+}
+.hero-price-tag strong { font-size: 20px; }
+
+/* ── WHAT WE ANALYZE ── */
+.section { padding: 24px 16px; position: relative; z-index: 1; }
+.section-title {
+  text-align: center; margin-bottom: 20px;
+}
+.section-title h2 { font-size: 16px; font-weight: 400; letter-spacing: 0.15em; color: var(--ink-text); }
+.section-title .sub { font-size: 11px; color: var(--sub-text); letter-spacing: 0.1em; margin-top: 4px; }
+.gold-line-sm { width: 40px; height: 1px; background: linear-gradient(90deg,transparent,var(--gold),transparent); margin: 10px auto; }
+
+.analyze-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.analyze-item {
+  background: var(--card); border: 1px solid rgba(201,168,76,0.15);
+  border-radius: 10px; padding: 14px 12px;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.analyze-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.analyze-name { font-size: 12px; font-weight: 500; color: var(--ink-text); margin-bottom: 3px; }
+.analyze-en { font-size: 10px; color: var(--sub-text); }
+
+/* ── PRICING ── */
+.pricing-section { padding: 24px 16px; background: linear-gradient(180deg, #faf8f5, #f5f0e8); position: relative; z-index: 1; }
+.tier-cards { display: flex; flex-direction: column; gap: 14px; }
+.tier-card {
+  background: var(--card); border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 14px; overflow: hidden; position: relative;
+}
+.tier-card.recommended {
+  border-color: var(--gold); box-shadow: 0 4px 24px rgba(201,168,76,0.15);
+}
+.recommended-badge {
+  position: absolute; top: 14px; right: 14px;
+  background: var(--gold); color: #1a1200; font-size: 10px;
+  font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: 0.05em;
+}
+.tier-header {
+  padding: 18px 18px 12px;
+  border-bottom: 1px solid rgba(201,168,76,0.1);
+}
+.tier-name { font-size: 14px; font-weight: 500; letter-spacing: 0.12em; color: var(--ink-text); margin-bottom: 4px; }
+.tier-price { font-size: 28px; font-weight: 600; color: var(--gold-deep); line-height: 1; }
+.tier-price-rmb { font-size: 12px; color: var(--sub-text); margin-top: 3px; }
+.tier-body { padding: 14px 18px; }
+.tier-feature {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 12px; color: var(--ink-text); line-height: 1.5;
+  margin-bottom: 8px;
+}
+.tier-feature:last-child { margin-bottom: 0; }
+.tier-feature-icon { color: var(--gold); flex-shrink: 0; font-size: 13px; margin-top: 1px; }
+.tier-btn {
+  display: block; margin: 0 18px 18px; padding: 13px;
+  background: linear-gradient(135deg, var(--gold), #a87930);
+  color: #1a1200; font-family: 'Noto Serif SC', serif;
+  font-size: 14px; font-weight: 500; letter-spacing: 0.15em;
+  border: none; border-radius: 8px; cursor: pointer; text-align: center;
+  text-decoration: none;
+}
+.tier-btn:hover { opacity: 0.92; }
+.tier-btn.outline {
+  background: none; border: 1px solid rgba(201,168,76,0.4);
+  color: var(--gold-deep);
+}
+
+/* ── HOW IT WORKS ── */
+.steps { display: flex; flex-direction: column; gap: 0; }
+.step {
+  display: flex; gap: 16px; align-items: flex-start;
+  padding: 16px 0; border-bottom: 1px solid rgba(201,168,76,0.1);
+}
+.step:last-child { border-bottom: none; }
+.step-num {
+  width: 36px; height: 36px; flex-shrink: 0;
+  background: linear-gradient(135deg, rgba(201,168,76,0.2), rgba(201,168,76,0.05));
+  border: 1px solid rgba(201,168,76,0.3); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; color: var(--gold); font-weight: 500;
+}
+.step-title { font-size: 13px; font-weight: 500; color: var(--ink-text); margin-bottom: 3px; }
+.step-desc { font-size: 12px; color: var(--sub-text); line-height: 1.6; }
+
+/* ── FORM ── */
+.form-section { padding: 24px 16px; position: relative; z-index: 1; }
+.form-card { background: var(--card); border: 1px solid rgba(201,168,76,0.15); border-radius: 14px; overflow: hidden; }
+.form-card-header { padding: 14px 16px; border-bottom: 1px solid rgba(201,168,76,0.1); background: rgba(201,168,76,0.04); }
+.form-card-header-title { font-size: 13px; letter-spacing: 0.12em; color: var(--ink-text); }
+.form-body { padding: 16px; }
+.form-group { margin-bottom: 14px; }
+.form-label { font-size: 10px; letter-spacing: 0.15em; color: rgba(201,168,76,0.6); margin-bottom: 6px; display: block; }
+.form-input, .form-select {
+  width: 100%; padding: 11px 14px;
+  background: var(--mid); border: 1px solid rgba(201,168,76,0.15);
+  border-radius: 8px; font-family: 'Noto Serif SC', serif;
+  font-size: 13px; color: var(--ink-text); outline: none;
+  -webkit-appearance: none;
+}
+.form-input:focus, .form-select:focus { border-color: rgba(201,168,76,0.5); }
+.form-input::placeholder { color: rgba(100,85,60,0.35); }
+.upload-area {
+  border: 2px dashed rgba(201,168,76,0.3); border-radius: 10px;
+  padding: 24px; text-align: center; cursor: pointer; background: var(--mid);
+  transition: border-color 0.2s;
+}
+.upload-area:hover { border-color: rgba(201,168,76,0.6); }
+.upload-icon { font-size: 36px; margin-bottom: 8px; }
+.upload-title { font-size: 13px; color: var(--ink-text); margin-bottom: 4px; }
+.upload-note { font-size: 10px; color: var(--sub-text); }
+.upload-input { display: none; }
+
+/* Tier radio selector */
+.tier-selector { display: flex; flex-direction: column; gap: 8px; }
+.tier-radio {
+  display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+  background: var(--mid); border: 1px solid rgba(201,168,76,0.15);
+  border-radius: 8px; cursor: pointer; transition: all 0.2s;
+}
+.tier-radio.selected { border-color: var(--gold); background: rgba(201,168,76,0.06); }
+.tier-radio input[type="radio"] { display: none; }
+.radio-circle {
+  width: 18px; height: 18px; border-radius: 50%;
+  border: 1.5px solid rgba(201,168,76,0.4); flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.tier-radio.selected .radio-circle { border-color: var(--gold); background: var(--gold); }
+.radio-dot { width: 8px; height: 8px; background: #1a1200; border-radius: 50%; display: none; }
+.tier-radio.selected .radio-dot { display: block; }
+.radio-label-name { font-size: 13px; color: var(--ink-text); }
+.radio-label-price { font-size: 12px; color: var(--gold-deep); font-weight: 600; margin-left: auto; }
+
+.submit-btn {
+  display: block; width: 100%; padding: 15px;
+  background: linear-gradient(135deg, var(--gold), #a87930);
+  color: #1a1200; font-family: 'Noto Serif SC', serif;
+  font-size: 15px; font-weight: 500; letter-spacing: 0.2em;
+  border: none; border-radius: 10px; cursor: pointer; margin-top: 16px;
+}
+.submit-btn:active { opacity: 0.9; transform: scale(0.99); }
+
+/* ── TRUST SIGNALS ── */
+.trust-section { padding: 20px 16px; position: relative; z-index: 1; }
+.trust-items { display: flex; flex-direction: column; gap: 10px; }
+.trust-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 14px; background: var(--card);
+  border: 1px solid rgba(201,168,76,0.12); border-radius: 10px;
+}
+.trust-icon { font-size: 20px; flex-shrink: 0; }
+.trust-text { font-size: 12px; color: var(--ink-text); line-height: 1.6; }
+
+/* ── FAQ ── */
+.faq-section { padding: 24px 16px 16px; position: relative; z-index: 1; }
+.faq-item {
+  background: var(--card); border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 10px; margin-bottom: 10px; overflow: hidden;
+}
+.faq-q {
+  padding: 14px 16px; font-size: 13px; color: var(--ink-text);
+  cursor: pointer; display: flex; justify-content: space-between; align-items: center;
+  line-height: 1.5;
+}
+.faq-arrow { color: var(--gold); font-size: 16px; flex-shrink: 0; margin-left: 8px; transition: transform 0.25s; }
+.faq-item.open .faq-arrow { transform: rotate(180deg); }
+.faq-a {
+  padding: 0 16px; max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s;
+  font-size: 12px; color: var(--sub-text); line-height: 1.8;
+}
+.faq-item.open .faq-a { max-height: 200px; padding-bottom: 14px; }
+
+/* ── FOOTER ── */
+.footer {
+  text-align: center; padding: 24px 20px 40px;
+  border-top: 1px solid rgba(201,168,76,0.12);
+  position: relative; z-index: 1;
+}
+.footer-brand { font-size: 14px; letter-spacing: 0.3em; color: var(--gold); margin-bottom: 6px; }
+.footer-note { font-size: 10px; color: var(--sub-text); line-height: 1.7; }
+
+.divider { border: none; border-top: 1px solid rgba(201,168,76,0.12); margin: 0 16px; }
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">← 返回</button>
+
+<!-- ══ HERO ══ -->
+<div class="hero">
+  <div class="hero-badge">PREMIUM SERVICE · 尊享风水服务</div>
+  <h1 class="hero-title">豪宅风水诊断<br><span>视频深度分析</span></h1>
+  <div class="hero-sub">Luxury Home Feng Shui · Video Analysis</div>
+
+  <!-- Luxury house SVG -->
+  <svg class="house-svg" width="220" height="140" viewBox="0 0 220 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Sky gradient bg -->
+    <defs>
+      <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#1c1710" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#2a1f0a" stop-opacity="0.3"/>
+      </linearGradient>
+      <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#e8c96a"/>
+        <stop offset="100%" stop-color="#c9a84c"/>
+      </linearGradient>
+    </defs>
+    <!-- Ground -->
+    <rect x="0" y="120" width="220" height="20" rx="0" fill="rgba(201,168,76,0.08)"/>
+    <!-- Main house body -->
+    <rect x="40" y="65" width="140" height="60" rx="4" fill="rgba(255,248,235,0.08)" stroke="rgba(201,168,76,0.35)" stroke-width="1"/>
+    <!-- Roof -->
+    <polygon points="30,65 110,20 190,65" fill="rgba(201,168,76,0.12)" stroke="rgba(201,168,76,0.5)" stroke-width="1.5" stroke-linejoin="round"/>
+    <!-- Chimney -->
+    <rect x="145" y="30" width="14" height="28" rx="2" fill="rgba(201,168,76,0.15)" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>
+    <!-- Door (centered) -->
+    <rect x="92" y="88" width="36" height="37" rx="3" fill="rgba(201,168,76,0.1)" stroke="rgba(201,168,76,0.4)" stroke-width="1"/>
+    <circle cx="124" cy="107" r="2.5" fill="rgba(201,168,76,0.7)"/>
+    <!-- Windows left -->
+    <rect x="52" y="78" width="26" height="22" rx="2" fill="rgba(201,168,76,0.08)" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>
+    <line x1="65" y1="78" x2="65" y2="100" stroke="rgba(201,168,76,0.25)" stroke-width="0.8"/>
+    <line x1="52" y1="89" x2="78" y2="89" stroke="rgba(201,168,76,0.25)" stroke-width="0.8"/>
+    <!-- Windows right -->
+    <rect x="142" y="78" width="26" height="22" rx="2" fill="rgba(201,168,76,0.08)" stroke="rgba(201,168,76,0.3)" stroke-width="1"/>
+    <line x1="155" y1="78" x2="155" y2="100" stroke="rgba(201,168,76,0.25)" stroke-width="0.8"/>
+    <line x1="142" y1="89" x2="168" y2="89" stroke="rgba(201,168,76,0.25)" stroke-width="0.8"/>
+    <!-- Stars / sparkles -->
+    <circle cx="20" cy="25" r="1.5" fill="rgba(201,168,76,0.5)"/>
+    <circle cx="35" cy="10" r="1" fill="rgba(201,168,76,0.4)"/>
+    <circle cx="190" cy="15" r="1.5" fill="rgba(201,168,76,0.5)"/>
+    <circle cx="205" cy="30" r="1" fill="rgba(201,168,76,0.35)"/>
+    <!-- Feng shui compass hint -->
+    <circle cx="110" cy="42" r="8" fill="none" stroke="rgba(201,168,76,0.3)" stroke-width="0.8" stroke-dasharray="2,2"/>
+    <text x="110" y="46" text-anchor="middle" fill="rgba(201,168,76,0.6)" font-size="9" font-family="serif">宅</text>
+  </svg>
+
+  <p class="hero-desc">上传您豪宅的3-5分钟游览视频<br>AI结合您的八字，出具一份<br>媲美顶级风水师的完整诊断报告</p>
+  <div class="hero-price-tag">起价 <strong>$149</strong> &nbsp;|&nbsp; 大师版 <strong>$999</strong></div>
+</div>
+
+<!-- ══ WHAT WE ANALYZE ══ -->
+<div class="section">
+  <div class="section-title">
+    <h2>AI 逐帧分析 8 大风水维度</h2>
+    <div class="sub">Video Frame-by-Frame Analysis</div>
+    <div class="gold-line-sm"></div>
+  </div>
+  <div class="analyze-grid">
+    <div class="analyze-item">
+      <div class="analyze-icon">🚪</div>
+      <div><div class="analyze-name">入口与玄关</div><div class="analyze-en">Entrance Energy</div></div>
+    </div>
+    <div class="analyze-item">
+      <div class="analyze-icon">💰</div>
+      <div><div class="analyze-name">客厅财位格局</div><div class="analyze-en">Wealth Zone</div></div>
+    </div>
+    <div class="analyze-item">
+      <div class="analyze-icon">🛏</div>
+      <div><div class="analyze-name">主卧风水</div><div class="analyze-en">Master Bedroom</div></div>
+    </div>
+    <div class="analyze-item">
+      <div class="analyze-icon">🍳</div>
+      <div><div class="analyze-name">厨卫相克</div><div class="analyze-en">Kitchen / Bath</div></div>
+    </div>
+    <div class="analyze-item">
+      <div class="analyze-icon">🌊</div>
+      <div><div class="analyze-name">游泳池方位</div><div class="analyze-en">Pool Direction</div></div>
+    </div>
+    <div class="analyze-item">
+      <div class="analyze-icon">🌿</div>
+      <div><div class="analyze-name">庭院花园</div><div class="analyze-en">Garden & Outdoor</div></div>
+    </div>
+    <div class="analyze-item">
+      <div class="analyze-icon">🪜</div>
+      <div><div class="analyze-name">楼梯与走廊</div><div class="analyze-en">Staircase & Hall</div></div>
+    </div>
+    <div class="analyze-item">
+      <div class="analyze-icon">🚗</div>
+      <div><div class="analyze-name">车库门向</div><div class="analyze-en">Garage Orientation</div></div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ══ PRICING ══ -->
+<div class="pricing-section">
+  <div class="section-title">
+    <h2>选择您的服务方案</h2>
+    <div class="sub">Three Service Tiers</div>
+    <div class="gold-line-sm"></div>
+  </div>
+  <div class="tier-cards">
+
+    <!-- 普通版 -->
+    <div class="tier-card">
+      <div class="tier-header">
+        <div class="tier-name">普通版 · 照片分析</div>
+        <div class="tier-price">$149</div>
+        <div class="tier-price-rmb">约 ¥1,072 RMB</div>
+      </div>
+      <div class="tier-body">
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>上传照片最多 5 张</span></div>
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>AI 文字诊断报告</span></div>
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>3 大风水问题识别与分析</span></div>
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>改善建议清单（可操作）</span></div>
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>48小时内交付</span></div>
+      </div>
+      <a href="#upload-form" class="tier-btn outline">选择普通版</a>
+    </div>
+
+    <!-- 豪华版 -->
+    <div class="tier-card recommended">
+      <div class="recommended-badge">⭐ 推荐</div>
+      <div class="tier-header">
+        <div class="tier-name">豪华版 · 视频深度分析</div>
+        <div class="tier-price">$499</div>
+        <div class="tier-price-rmb">约 ¥3,593 RMB</div>
+      </div>
+      <div class="tier-body">
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>上传视频 5 分钟以内</span></div>
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>AI 逐帧空间能量分析</span></div>
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>8 个风水维度完整评分</span></div>
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>个性化八字融合分析</span></div>
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>高端摆件购买清单（含 RH / Pottery Barn）</span></div>
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>精装 PDF 报告，可打印</span></div>
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>24 小时内交付</span></div>
+      </div>
+      <a href="#upload-form" class="tier-btn" onclick="selectTier('luxury')">选择豪华版</a>
+    </div>
+
+    <!-- 大师开光版 -->
+    <div class="tier-card">
+      <div class="tier-header">
+        <div class="tier-name">大师开光版 · 顶级定制</div>
+        <div class="tier-price">$999</div>
+        <div class="tier-price-rmb">约 ¥7,193 RMB</div>
+      </div>
+      <div class="tier-body">
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>含豪华版全部内容</span></div>
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>真人风水师复核（48小时内批复）</span></div>
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>一对一视频通话 30 分钟</span></div>
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>开光摆件推荐（含出处证书）</span></div>
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>1 年内免费复诊一次</span></div>
+        <div class="tier-feature"><span class="tier-feature-icon">✦</span><span>善缘金钻会员资格（价值 $99/年）</span></div>
+      </div>
+      <a href="#upload-form" class="tier-btn" onclick="selectTier('master')">选择大师版</a>
+    </div>
+
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ══ HOW IT WORKS ══ -->
+<div class="section">
+  <div class="section-title">
+    <h2>三步完成诊断</h2>
+    <div class="sub">Simple · Fast · Accurate</div>
+    <div class="gold-line-sm"></div>
+  </div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">一</div>
+      <div>
+        <div class="step-title">填写生辰八字 + 上传视频/照片</div>
+        <div class="step-desc">提供出生年月日时，填写房产地址（可选），上传您的视频或照片。</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">二</div>
+      <div>
+        <div class="step-title">AI + 师傅协同分析</div>
+        <div class="step-desc">AI 逐帧分析空间，结合您的命格出具专属诊断。大师版另有真人师傅人工审阅，确保精准。</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">三</div>
+      <div>
+        <div class="step-title">收到精装报告 + 专属建议</div>
+        <div class="step-desc">收到 PDF 精装报告、摆件购买清单和逐步改善指南。24-48 小时内到达您的邮箱。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ══ UPLOAD FORM ══ -->
+<div class="form-section" id="upload-form">
+  <div class="section-title">
+    <h2>立即预约诊断</h2>
+    <div class="sub">Book Your Consultation</div>
+    <div class="gold-line-sm"></div>
+  </div>
+  <div class="form-card">
+    <div class="form-card-header">
+      <div class="form-card-header-title">· 请填写以下信息 ·</div>
+    </div>
+    <div class="form-body">
+      <div class="form-group">
+        <label class="form-label">您的姓名</label>
+        <input type="text" class="form-input" placeholder="姓名">
+      </div>
+      <div class="form-group">
+        <label class="form-label">出生年月日时</label>
+        <input type="text" class="form-input" placeholder="例：1985年3月18日 子时（0:00）">
+      </div>
+      <div class="form-group">
+        <label class="form-label">房产地址（选填）</label>
+        <input type="text" class="form-input" placeholder="城市 / 州 即可，无需门牌号">
+      </div>
+      <div class="form-group">
+        <label class="form-label">邮件地址（接收报告）</label>
+        <input type="email" class="form-input" placeholder="example@email.com">
+      </div>
+
+      <!-- Upload area -->
+      <div class="form-group">
+        <label class="form-label">上传视频或照片</label>
+        <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+          <div class="upload-icon">📹</div>
+          <div class="upload-title">点击选择文件</div>
+          <div class="upload-note">视频格式：MP4 / MOV，最大 500MB<br>照片格式：JPG / PNG，最多 5 张</div>
+        </div>
+        <input type="file" id="fileInput" class="upload-input" accept="video/*,image/*" multiple>
+      </div>
+
+      <!-- Tier selector -->
+      <div class="form-group">
+        <label class="form-label">选择服务方案</label>
+        <div class="tier-selector">
+          <label class="tier-radio" id="radio-basic" onclick="setRadio('basic')">
+            <input type="radio" name="tier" value="basic">
+            <div class="radio-circle"><div class="radio-dot"></div></div>
+            <div class="radio-label-name">普通版 · 照片分析</div>
+            <div class="radio-label-price">$149</div>
+          </label>
+          <label class="tier-radio selected" id="radio-luxury" onclick="setRadio('luxury')">
+            <input type="radio" name="tier" value="luxury" checked>
+            <div class="radio-circle"><div class="radio-dot"></div></div>
+            <div class="radio-label-name">⭐ 豪华版 · 视频分析</div>
+            <div class="radio-label-price">$499</div>
+          </label>
+          <label class="tier-radio" id="radio-master" onclick="setRadio('master')">
+            <input type="radio" name="tier" value="master">
+            <div class="radio-circle"><div class="radio-dot"></div></div>
+            <div class="radio-label-name">💎 大师开光版</div>
+            <div class="radio-label-price">$999</div>
+          </label>
+        </div>
+      </div>
+
+      <button class="submit-btn" onclick="handleSubmit()">提 交 预 约</button>
+      <div style="font-size:10px;color:var(--sub-text);text-align:center;margin-top:10px;line-height:1.6;">提交后我们将发送付款链接至您的邮箱<br>付款完成后正式开始分析</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ══ TRUST SIGNALS ══ -->
+<div class="trust-section">
+  <div class="trust-items">
+    <div class="trust-item">
+      <div class="trust-icon">🏛</div>
+      <div class="trust-text">每份报告均基于<strong>玄空飞星 + 八宅明镜</strong>双重体系，融合现代空间功能分析，不是玄学——是有依据的专业判断</div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">💎</div>
+      <div class="trust-text"><strong>豪宅客户首选</strong>，善缘团队服务过市值 $500 万以上物业，了解豪宅特有风水格局与需求</div>
+    </div>
+    <div class="trust-item">
+      <div class="trust-icon">🔒</div>
+      <div class="trust-text"><strong>隐私保护承诺：</strong>您的视频和照片仅用于本次分析，<strong>72 小时后自动从服务器删除</strong>，我们不保存、不转发、不用于训练</div>
+    </div>
+  </div>
+</div>
+
+<hr class="divider">
+
+<!-- ══ FAQ ══ -->
+<div class="faq-section">
+  <div class="section-title">
+    <h2>常见问题</h2>
+    <div class="sub">FAQ</div>
+    <div class="gold-line-sm"></div>
+  </div>
+
+  <div class="faq-item" onclick="toggleFaq(this)">
+    <div class="faq-q">我需要提前整理房间吗？<span class="faq-arrow">▾</span></div>
+    <div class="faq-a">不需要刻意整理。我们要看的是真实的居住状态，有时候"乱"本身就是风水问题的一部分。正常生活状态下拍摄即可，不必刻意摆布。</div>
+  </div>
+
+  <div class="faq-item" onclick="toggleFaq(this)">
+    <div class="faq-q">视频需要专业设备拍摄吗？<span class="faq-arrow">▾</span></div>
+    <div class="faq-a">完全不需要。手机拍摄即可，清晰度 720p 以上，每个房间边走边拍，确保四个角和主要家具都有拍到。详细拍摄指引会在付款后发送至您的邮箱。</div>
+  </div>
+
+  <div class="faq-item" onclick="toggleFaq(this)">
+    <div class="faq-q">我在装修阶段，可以分析平面图吗？<span class="faq-arrow">▾</span></div>
+    <div class="faq-a">当然可以，这是最佳时机。在装修前做风水规划，可以从源头避免问题，避免家具到位后难以改动。请上传 CAD 平面图或手绘图纸，并注明朝向（正北方向）。</div>
+  </div>
+
+  <div class="faq-item" onclick="toggleFaq(this)">
+    <div class="faq-q">报告多久交付？<span class="faq-arrow">▾</span></div>
+    <div class="faq-a">普通版：48 小时内；豪华版：24 小时内；大师开光版：48 小时内（真人师傅复核需额外时间）。紧急需求可加急处理，请在备注中注明。</div>
+  </div>
+
+  <div class="faq-item" onclick="toggleFaq(this)">
+    <div class="faq-q">大师开光版的真人师傅是谁？<span class="faq-arrow">▾</span></div>
+    <div class="faq-a">善缘合作的资深风水师均有超过 15 年实践经验，擅长海外华人豪宅风水与中西方空间融合布局。出于隐私保护，师傅不公开姓名，报告中会附上师傅手签审阅意见。</div>
+  </div>
+</div>
+
+<!-- ══ FOOTER ══ -->
+<div class="footer">
+  <div class="footer-brand">善 缘 · SHENYUAN</div>
+  <div class="footer-note">
+    AI 豪宅风水视频诊断 · 专为海外华人设计<br>
+    本服务为咨询建议，不构成任何法律或财务承诺<br>
+    shenyuan.app · karen@shenyuan.app
+  </div>
+</div>
+
+<script>
+function toggleFaq(el) {
+  el.classList.toggle('open');
+}
+function setRadio(tier) {
+  ['basic','luxury','master'].forEach(function(t) {
+    document.getElementById('radio-' + t).classList.remove('selected');
+  });
+  document.getElementById('radio-' + tier).classList.add('selected');
+}
+function selectTier(tier) {
+  setTimeout(function() { setRadio(tier); }, 100);
+}
+function handleSubmit() {
+  var email = document.querySelector('input[type="email"]').value;
+  if (!email) { alert('请填写邮件地址，我们将发送付款链接至该邮箱'); return; }
+  alert('收到您的预约！我们将在 2 小时内发送付款链接至 ' + email + '\n\n如有紧急需求，请微信联系善缘客服。');
+}
+</script>
+</body>
+</html>
