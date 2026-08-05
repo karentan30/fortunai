@@ -555,6 +555,24 @@ function onHouseStatusChange() {
   document.getElementById('decoratedPhotoBlock').style.display = status === 'decorated' ? 'block' : 'none';
   document.getElementById('emptyPhotoBlock').style.display = status === 'empty' ? 'block' : 'none';
   document.getElementById('designPhotoBlock').style.display = status === 'design' ? 'block' : 'none';
+  // 清空非当前状态的 photoStore，避免多传
+  var types = ['decorated', 'empty', 'design'];
+  types.forEach(function(t) {
+    if (t !== status) {
+      photoStore[t] = [];
+      var preview = document.getElementById(t + 'PhotosPreview');
+      if (preview) preview.innerHTML = '';
+      var inp = document.getElementById(t + 'PhotosInput');
+      if (inp) { inp.value = ''; inp.disabled = false; }
+    }
+  });
+  // 自动展开上传区
+  var body = document.getElementById('uploadBody');
+  var arrow = document.getElementById('uploadArrow');
+  if (body && !body.classList.contains('open')) {
+    body.classList.add('open');
+    if (arrow) arrow.classList.add('open');
+  }
 }
 
 /* ── Image upload ── */
@@ -563,15 +581,25 @@ var photoStore = { decorated: [], empty: [], design: [] };
 
 function fileToBase64(file) {
   return new Promise(function(resolve, reject) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      // strip data URL prefix, keep only base64
-      var result = e.target.result;
-      var comma = result.indexOf(',');
-      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    var img = new Image();
+    var url = URL.createObjectURL(file);
+    img.onload = function() {
+      var MAX = 1200;
+      var w = img.width, h = img.height;
+      if (w > MAX || h > MAX) {
+        if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+        else { w = Math.round(w * MAX / h); h = MAX; }
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      URL.revokeObjectURL(url);
+      var dataUrl = canvas.toDataURL('image/jpeg', 0.75);
+      var comma = dataUrl.indexOf(',');
+      resolve(comma >= 0 ? dataUrl.slice(comma + 1) : dataUrl);
     };
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+    img.onerror = function() { URL.revokeObjectURL(url); reject(new Error('图片读取失败')); };
+    img.src = url;
   });
 }
 

@@ -67,7 +67,9 @@ app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }));
 app.use('/pay/wechat/notify', express.text({ type: '*/*', limit: '1mb' }));
 // 支付宝回调是 application/x-www-form-urlencoded
 app.use('/pay/alipay/notify', express.urlencoded({ extended: false, limit: '1mb' }));
-// 通用 JSON
+// 通用 JSON（风水/阴宅路由含多图 base64，需要更大 limit）
+app.use('/api/fengshui', express.json({ limit: '50mb' }));
+app.use('/api/yinzhai', express.json({ limit: '50mb' }));
 app.use(express.json({ limit: '10mb' }));
 
 // ── AI路由速率限制（在路由注册前挂载）──

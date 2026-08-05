@@ -147,6 +147,7 @@ body::before {
     <div class="topic-btn" onclick="selectTopic(this,'health')"><span class="topic-icon">康</span><span class="topic-name">健康运势</span></div>
     <div class="topic-btn" onclick="selectTopic(this,'decision')"><span class="topic-icon">择</span><span class="topic-name">抉择指引</span></div>
     <div class="topic-btn" onclick="selectTopic(this,'year')"><span class="topic-icon">运</span><span class="topic-name">年度整体</span></div>
+    <div class="topic-btn" onclick="selectTopic(this,'recent')" style="border-color:rgba(201,168,76,0.35);background:rgba(201,168,76,0.05)"><span class="topic-icon" style="color:#c9a84c">预</span><span class="topic-name" style="color:rgba(201,168,76,0.85)">近期预测</span></div>
     <div class="topic-btn" onclick="selectTopic(this,'custom')"><span class="topic-icon">问</span><span class="topic-name">自由提问</span></div>
   </div>
 </div>
@@ -253,10 +254,22 @@ var POSITIONS_5 = ['自我·当下', '挑战·阻碍', '潜意识·隐情', '建
 var currentSpread = 1;
 var currentTopic = 'love';
 
+var recentPresets = [
+  '接下来30天，我的生活会有什么重要变化？',
+  '最近一个月，感情/财运/事业各有什么动向？',
+  '未来这段时间，我需要特别注意什么？有什么机会不能错过？'
+];
 function selectTopic(el, t) {
   document.querySelectorAll('.topic-btn').forEach(function(b){ b.classList.remove('selected'); });
   el.classList.add('selected');
   currentTopic = t;
+  if (t === 'recent') {
+    var q = document.getElementById('question');
+    if (!q.value.trim()) {
+      q.value = recentPresets[Math.floor(Math.random() * recentPresets.length)];
+    }
+    q.focus();
+  }
 }
 function selectSpread(el, n, type) {
   document.querySelectorAll('.spread-opt').forEach(function(o){ o.classList.remove('selected'); });
