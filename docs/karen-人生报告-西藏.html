@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>人生报告 · 藏历命理</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #e8c96e;
+      --gold-dim: #8a6a28;
+      --bg: #1c1710;
+      --bg2: #221e12;
+      --bg3: #2a2414;
+      --text: #e8d9b8;
+      --text-dim: #b8a888;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Noto Serif SC', 'Songti SC', serif;
+      line-height: 1.9;
+      font-size: 16px;
+    }
+
+    /* ── Cover ── */
+    .cover {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 40px;
+      text-align: center;
+      background: radial-gradient(ellipse at 50% 30%, #2e2412 0%, var(--bg) 70%);
+      border-bottom: 1px solid #c9a84c33;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cover::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c9a84c' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+      opacity: 0.4;
+    }
+
+    .cover-icon {
+      font-size: 72px;
+      margin-bottom: 24px;
+      filter: drop-shadow(0 0 30px #c9a84c66);
+      position: relative;
+    }
+
+    .cover-label {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 13px;
+      letter-spacing: 6px;
+      color: var(--gold);
+      opacity: 0.7;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .cover-title {
+      font-size: 42px;
+      font-weight: 600;
+      color: var(--gold-light);
+      letter-spacing: 8px;
+      margin-bottom: 12px;
+      position: relative;
+      text-shadow: 0 0 60px #c9a84c44;
+    }
+
+    .cover-subtitle {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px;
+      font-style: italic;
+      color: var(--gold);
+      opacity: 0.6;
+      letter-spacing: 3px;
+      margin-bottom: 40px;
+      position: relative;
+    }
+
+    .divider {
+      width: 200px;
+      height: 1px;
+      background: linear-gradient(to right, transparent, var(--gold), transparent);
+      margin: 0 auto 40px;
+      position: relative;
+    }
+
+    .divider::before {
+      content: '✦';
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: var(--gold);
+      font-size: 12px;
+    }
+
+    .cover-meta {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      max-width: 680px;
+      width: 100%;
+      position: relative;
+    }
+
+    .meta-item {
+      background: #ffffff08;
+      border: 1px solid #c9a84c22;
+      border-radius: 8px;
+      padding: 20px 16px;
+    }
+
+    .meta-label {
+      font-size: 11px;
+      letter-spacing: 3px;
+      color: var(--gold);
+      opacity: 0.6;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .meta-value {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--gold-light);
+      letter-spacing: 1px;
+    }
+
+    /* ── Content ── */
+    .content {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 80px 40px 100px;
+    }
+
+    h2 {
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--gold-light);
+      letter-spacing: 3px;
+      margin: 64px 0 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid #c9a84c33;
+      position: relative;
+    }
+
+    h2::before {
+      content: '◆';
+      color: var(--gold);
+      margin-right: 12px;
+      font-size: 14px;
+      opacity: 0.7;
+    }
+
+    h3 {
+      font-size: 19px;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 1px;
+      margin: 36px 0 14px;
+    }
+
+    h4 {
+      font-size: 16px;
+      color: var(--gold-dim);
+      letter-spacing: 1px;
+      margin: 24px 0 10px;
+      font-weight: 600;
+    }
+
+    p {
+      margin-bottom: 18px;
+      color: var(--text);
+      line-height: 2;
+    }
+
+    strong {
+      color: var(--gold-light);
+      font-weight: 600;
+    }
+
+    em {
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    ul, ol {
+      margin: 16px 0 20px 24px;
+    }
+
+    li {
+      margin-bottom: 10px;
+      color: var(--text);
+      line-height: 1.9;
+    }
+
+    li::marker {
+      color: var(--gold);
+    }
+
+    hr {
+      border: none;
+      border-top: 1px solid #c9a84c22;
+      margin: 40px 0;
+    }
+
+    blockquote {
+      border-left: 3px solid var(--gold);
+      margin: 24px 0;
+      padding: 16px 24px;
+      background: #c9a84c0a;
+      border-radius: 0 8px 8px 0;
+      color: var(--text-dim);
+      font-style: italic;
+    }
+
+    /* Highlight box */
+    .highlight-box {
+      background: #c9a84c0d;
+      border: 1px solid #c9a84c33;
+      border-radius: 10px;
+      padding: 24px 28px;
+      margin: 28px 0;
+    }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 24px 0 32px;
+      font-size: 14px;
+    }
+
+    th {
+      background: #2a2010;
+      color: var(--gold);
+      padding: 12px 16px;
+      text-align: left;
+      border: 1px solid #c9a84c44;
+      font-weight: 600;
+      letter-spacing: 1px;
+    }
+
+    td {
+      padding: 10px 16px;
+      border: 1px solid #c9a84c22;
+      color: var(--text);
+      vertical-align: top;
+      line-height: 1.8;
+    }
+
+    tr:nth-child(even) td {
+      background: #201c12;
+    }
+
+    tr:hover td {
+      background: #2a2414;
+    }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      padding: 40px;
+      border-top: 1px solid #c9a84c22;
+      font-size: 12px;
+      color: var(--gold);
+      opacity: 0.4;
+      letter-spacing: 3px;
+    }
+
+    @media (max-width: 640px) {
+      .cover-title { font-size: 28px; }
+      .cover-meta { grid-template-columns: 1fr 1fr; }
+      .content { padding: 40px 20px 60px; }
+      h2 { font-size: 20px; }
+    }
+
+    @media print {
+      body { background: #fff; color: #1a1a1a; }
+      h2 { color: #8B6914; border-bottom-color: #c9a84c55; }
+      strong { color: #7a5c1e; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="cover">
+    <div class="cover-icon">🏔️</div>
+    <div class="cover-label">Personal Destiny Report · 个人定制</div>
+    <div class="cover-title">人生报告 · 藏历命理</div>
+    <div class="cover-subtitle">TIBETAN ASTROLOGY READING</div>
+    <div class="divider"></div>
+    <div class="cover-meta">
+      <div class="meta-item">
+        <div class="meta-label">出生日期</div>
+        <div class="meta-value">1991年10月5日</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">藏历年份</div>
+        <div class="meta-value">铁羊年 · 辛未</div>
+      </div>
+      <div class="meta-item">
+        <div class="meta-label">出生时辰</div>
+        <div class="meta-value">卯时 · 清晨</div>
+      </div>
+    </div>
+    <div class="divider" style="margin-top: 40px; margin-bottom: 0;"></div>
+    <p style="margin-top: 28px; font-size: 12px; opacity: 0.4; letter-spacing: 3px; position: relative;">2026 · 善缘 ShenYuan · 藏历命理研究</p>
+  </div>
+
+  <div class="content">
+    <p># 藏历铁羊年命理全息报告</p>
+
+<p>> 命主：1991年10月5日，女性，清晨6时（卯时）</p>
+<p>> 藏历：铁羊年（第十七饶迥·木亥年？——需依藏历推算，此处按铁羊年为准）</p>
+<p>> 历谱：西藏·甘丹新历（时轮历）</p>
+
+
+<h2>一、藏历命盘总览</h2>
+
+<h3>（一）生肖与年命</h3>
+
+<p>命主出生于藏历铁羊年（1991年，第十七饶迥）。在藏地传统的十二生肖纪年中，羊位居第八，配地支“未”。铁羊年之“铁”为五行中金之异名，故本命为<strong>金羊</strong>——此非五行之金生水之金，乃天干庚辛之金气，刚健肃杀，与柔顺之羊性形成奇妙对冲。</p>
+
+<ul><li><strong>生肖</strong>：羊（藏语称“鲁”Lug）</li>
+<li><strong>地支</strong>：未</li>
+<li><strong>年命纳音</strong>：路旁土（按汉历）／铁金（按藏历五行）</li>
+<li><strong>五行构成</strong>：年柱辛未（金土）、月柱丁酉（火金）、日柱庚午（金火）、时柱己卯（土木）</li>
+<li><strong>本命元素</strong>：<strong>金（铁）</strong>为主，土为辅，火为客</li></ul>
+
+<h3>（二）九宫数</h3>
+
+<p>依藏历九宫飞星推算法（以年支起一白，月支起九紫，日时加临），命主本命九宫数为 <strong>三碧木星</strong>（藏语称“崩钦”）。</p>
+
+<ul><li><strong>九宫位置</strong>：震宫（东方）</li>
+<li><strong>五行属性</strong>：木</li>
+<li><strong>星性</strong>：三碧为蚩尤星，属木，主仁、主怒、主决断</li></ul>
+
+<h3>（三）帕巴（Phakpa）</h3>
+
+<p>藏历中“帕巴”为九曜之一种，主祸福兴衰。命主生于铁羊年，当年帕巴为 <strong>罗睺罗（Rahula）</strong> 当值，属火性，位于 <strong>南方</strong>。</p>
+
+<ul><li>帕巴星曜：罗睺罗（又称“劫火头”）</li>
+<li>方位：南</li>
+<li>吉凶性质：凶中藏吉，主变革、颠覆、灵性觉醒</li></ul>
+
+<h3>（四）拉（La）</h3>
+
+<p>“拉”为生命精气之所在，藏历推算命主之“拉”寄于 <strong>西方</strong>，属 <strong>兑宫</strong>，对应白色光。</p>
+
+<ul><li>拉之方位：西方</li>
+<li>拉之色：白</li>
+<li>拉之属性：金精之气，主肺、主魄</li></ul>
+
+<h3>（五）综合命盘表</h3>
+
+<p>| 要素 | 内容 | 五行 | 方位 | 象征 |</p>
+<p>|------|------|------|------|------|</p>
+<p>| 生肖 | 羊（未） | 土 | 西南 | 温顺、慈悲、艺术 |</p>
+<p>| 年命五行 | 铁（金） | 金 | 西 | 刚毅、决断、肃杀 |</p>
+<p>| 九宫数 | 三碧 | 木 | 东 | 生长、怒发、革新 |</p>
+<p>| 帕巴 | 罗睺罗 | 火 | 南 | 颠覆、灵性、劫难 |</p>
+<p>| 拉 | 兑宫白 | 金 | 西 | 精气、肺魄、收敛 |</p>
+
+
+<h2>二、本命生肖深解 — 铁羊</h2>
+
+<h3>（一）羊之本性：温顺中的坚韧</h3>
+
+<p>藏地谚语有云：“羊虽柔，能踏雪山之巅。”羊在藏传文化中象征 <strong>温和、善良、艺术天赋与灵性感知</strong>。羊群在高原上逐水草而居，随牧人迁徙，看似柔顺，却能适应最严酷���高寒环境。这正暗示了命主外柔内刚的性格底色——看似温婉随和，实则内心坚韧不拔，有着超强的适应力与生命力。</p>
+
+<h3>（二）铁元素加持：刚柔并济的独特命格</h3>
+
+<p>“铁羊”非寻常之羊。铁者，金之精也，主 <strong>决断、刚毅、肃杀之气</strong>。铁与羊的结合，在藏历命理中极为特殊：</p>
+
+<ul><li>羊属土性（未为土），铁属金性，土生金，金泄土气——命主天生有一种 <strong>将内在的温和转化为外在力量的禀赋</strong>。如同铁器虽由土石冶炼而成，却远比土石坚硬锋利。</li>
+<li>铁羊之命，<strong>外示柔和，内含锋芒</strong>。表面上是温顺的羊，骨子里却有“铁”的坚韧与执着。一旦认定目标，便有“虽千万人吾往矣”的气魄。</li>
+<li>铁有“冷”的特性，故命主在情感表达上可能偏于克制、理性，不轻易流露内心波澜，但内心世界极为丰富深邃。</li></ul>
+
+<h3>（三）性格天赋</h3>
+
+<li><strong>慈悲心</strong>：羊为藏传佛教中“善”的象征，命主天性悲悯，见不得他人受苦，有强烈的共情能力。这在修行上是极大的善根。</li>
+
+<li><strong>艺术天赋</strong>：羊对应西方艺术之神，命主在音乐、绘画、文学、手工艺等艺术领域有天然敏感度。铁金的加持更赋予她精密、专注的特质，适合精细艺术创作。</li>
+
+<li><strong>坚韧毅力</strong>：铁羊的“铁”给了她超越常人的毅力与耐力。一旦设定了目标，她能像铁钉钉入木板一样，稳固而不可动摇。</li>
+
+<li><strong>直觉敏锐</strong>：羊在藏历中对应“未”时（下午1-3点），此时阳气渐衰而阴气渐长，命主对无形世界、情绪氛围有着异常敏锐的感知力。这既是天赋，也可能成为负担——过于敏感，容易受外界能量干扰。</li>
+
+<li><strong>领导潜质</strong>：看似柔顺的羊，在铁元素的催化下，能展现出惊人的决断力与领导力。她不是那种张扬的领袖，而是“静水深流”式的引导者，以柔克刚，以德服人。</li>
+
+<h3>（四）性格弱点</h3>
+
+<li><strong>过度内敛</strong>：铁金的肃杀之气容易让命主把情绪压抑在心底，不善于表达需求和不满，久而久之，可能导致内心郁结。</li>
+
+<li><strong>固执己见</strong>：铁是坚硬之物，命主一旦认定某事，极难被说服改变，可能因过度坚持而错失转机。</li>
+
+<li><strong>思虑过重</strong>：羊性的敏感加上铁性的执着，容易陷入反复思虑、钻牛角尖的困境，消耗自身能量。</li>
+
+<li><strong>孤立倾向</strong>：铁性偏冷，命主在人群中可能时常感到“不合群”或“疏离”，需要警惕过度的孤独感带来的消极情绪。</li>
+
+
+<h2>三、九宫数解读 — 三碧木星</h2>
+
+<h3>（一）九宫数的推算</h3>
+
+<p>藏历九宫飞星以“上元甲子起一白”为法则，依年、月、日、时轮转。命主生于1991年（铁羊年），依藏历推算，年九宫为 <strong>三碧木星</strong> 入中。三碧在九宫中属震卦，位居东方，五行属木，为“蚩尤星”。</p>
+
+<h3>（二）三碧木星的能量特质</h3>
+
+<li><strong>震为雷，主动</strong>：三碧对应《易经》震卦，象征雷霆万钧之力。命主内心有一股“不鸣则已，一鸣惊人”的爆发力。平时看似安静平和，在关键时刻却能展现出惊人的行动力与决断力。</li>
+
+<li><strong>木主生发，主仁</strong>：木有生长、向上、蔓延之性。命主天生有开拓精神，不满足于现状，总是在寻求成长与突破。木主仁，故命主心地善良，有恻隐之心。</li>
+
+<li><strong>三碧为蚩尤星，主竞争</strong>：蚩尤为上古战神，三碧星带有竞争、争斗、变革的能量。命主在事业上容易遇到竞争激烈的环境，但也正是这种竞争激发了她内在的斗志与潜能。</li>
+
+<li><strong>木克土，破旧立新</strong>：木能克土，而羊的本性属土。这意味着命主一生中需要不断“打破”自己固有的模式与思维，在破旧立新中获得成长。这种“自我革命”的力量是她最重要的生命课题。</li>
+
+<h3>（三）三碧与铁羊的互动</h3>
+
+<ul><li>铁（金）克木：金克木，意味着命主的“铁性”会压制“木性”——即她的决断力、刚毅性可能抑制她的生长力、开拓力。她需要学会在“坚持”与“灵活”之间找到平衡。</li>
+<li>木生火（帕巴为火）：木生火，三碧木星的能量会助燃罗睺罗之火，这意味着命主的行动力与创造力如果被正确引导，可以产生巨大的影响力；但如果失控，则可能带来“焚身”之祸。</li></ul>
+
+<h3>（四）九宫数对人生的指引</h3>
+
+<ul><li><strong>幸运方位</strong>：东方（三碧本位）、北方（水生木）</li>
+<li><strong>幸运颜色</strong>：绿色（木之色）、蓝色（水之色）</li>
+<li><strong>幸运数字</strong>：3、4（木数）、1、6（水数）</li>
+<li><strong>关键年份</strong>：每逢木、水旺之年（如虎年、兔年、鼠年、猪年），命主运势有明显起伏</li></ul>
+
+
+<h2>四、藏传佛教命理 — 今生业力与使命</h2>
+
+<h3>（一）灵魂课题</h3>
+
+<p>依藏传佛教“业力”法则，铁羊年出生的灵魂，带着特殊的业力印记：</p>
+
+<li><strong>“柔顺与刚强”的平衡课题</strong>：前世可能曾因过于软弱而错失机缘，或过于强硬而伤害他人。此生灵魂需要学习如何在慈悲中不失决断，在坚定中不失柔软。</li>
+
+<li><strong>“依赖与独立”的转化课题</strong>：羊在畜生道中属“依赖型”动物，依牧人而活。命主前世可能过度依赖外在权威或他人而失去了自主性，此生需要完成“从依赖到独立”的灵魂蜕变。</li>
+
+<li><strong>“牺牲与自爱”的平衡课题</strong>：羊是祭坛上的牺牲，命主前世可能有过度牺牲自我、忽略自身需求的倾向。此生需要学会在付出的同时，也照顾好自己的身心。</li>
+
+<h3>（二）前世痕迹</h3>
+
+<ul><li><strong>修行痕迹</strong>：命主对藏传佛教、密法、灵修有莫名的亲近感，这往往是前世修行留下的习气。可能曾是寺庙中的供养者、抄经人，或是修行者的侍者。</li>
+<li><strong>艺术痕迹</strong>：命主在艺术领域有天然的才华，暗示前世曾从事与艺术、手工艺相关的职业，可能是绘制唐卡的画师、制作法器的工匠，或是吟唱歌赞的艺人。</li>
+<li><strong>孤独痕迹</strong>：命主内心深处有一种挥之不去的孤独感，这可能是前世曾经历离群索居的修行生活，或曾经历与至亲分离的创伤。</li></ul>
+
+<h3>（三）今生修行方向</h3>
+
+<li><strong>修“文殊菩萨”智慧法门</strong>：铁羊之命需要以智慧之剑斩断固执与烦恼。文殊菩萨是智慧之化身，手持金刚剑，斩断一切无明。命主应常诵文殊心咒“嗡 阿 喇 巴 札 那 谛”，以智慧之火熔炼铁性之刚。</li>
+
+<li><strong>修“绿度母”慈悲法门</strong>：绿度母是慈悲与勇气的化身，能救度一切苦难。命主天生的慈悲心是她的最大财富，修绿度母法可以助她将慈悲转化为行动的力量，同时保护她不被外界负能量侵扰。</li>
+
+<li><strong>修“金刚萨埵”净障法门</strong>：铁羊之命带有前世的业力印记，金刚萨埵是净除罪障的主尊，修金刚萨埵百字明咒可以净化业力，消除障碍，让灵魂更加清明。</li>
+
+<li><strong>日常功课</strong>：</li>
+<p>   - 每日晨起，面向东方，念诵三遍“嗡”字，观想绿光充满全身</p>
+<p>   - 每月藏历初十、二十五，修持荟供或诵经回向</p>
+<p>   - 每年藏历萨嘎达瓦节（四月），精进修行，持咒、转经、供灯</p>
+
+
+<h2>五、事业与财富运势</h2>
+
+<h3>（一）职业天赋</h3>
+
+<p>藏历命理揭示，铁羊之命主天生具备以下职业天赋：</p>
+
+<li><strong>艺术创作</strong>：羊性主艺术，铁性主精细。命主在视觉艺术（唐卡、绘画、设计）、音乐、文学、手工艺等领域有极高天赋。特别是需要耐心与精密的工作，如唐卡绘制、珠宝设计、乐器制作等，最为契合。</li>
+
+<li><strong>疗愈与咨询</strong>：羊性慈悲，铁性坚定。命主适合从事心理疗愈、藏医、占卜命理、人生咨询等帮助他人的职业。她天生的共情力与直觉力，能精准感知他人需求，给予恰如其分的帮助。</li>
+
+<li><strong>教育与传承</strong>：铁羊有“传承者”的使命。命���适合从事教育、文化传播、宗教艺术保护等工作。她能将古老智慧与现代方式结合，成为桥梁型的人物。</li>
+
+<li><strong>管理与策划</strong>：三碧木星的“开拓”能量赋予命主管理才能。她适合从事策划、组织、项目管理工作，特别是在文化、艺术、教育领域的管理岗位。</li>
+
+<h3>（二）财富积累方式</h3>
+
+<li><strong>以艺生财</strong>：命主的财富主要来源于她的才华与技艺。不是靠投机取巧，而是靠日积月累的专业积累。铁性的“精密”让她在专业领域能做到极致，从而获得丰厚的回报。</li>
+
+<li><strong>稳中求进</strong>：铁羊之命不宜冒险投机。财富积累适合“慢功夫”——长期投资、不动产、古董收藏、艺术品投资等都是有利方向。</li>
+
+<li><strong>贵人助力</strong>：命主的财富运势中，“贵人”因素极为重要。她的慈悲心广结善缘，在关键时刻总有贵人相助。但需注意辨别“真贵人”与“伪贵人”，铁性让她有明辨之力，需善加运用。</li>
+
+<li><strong>财富方位</strong>：</li>
+<p>   - 正财方位：西方（金）、西南（土）</p>
+<p>   - 偏财方位：北方（水，金生水）</p>
+<p>   - 忌：南方（火克金）</p>
+
+<h3>（三）适合行业</h3>
+
+<p>| 行业类别 | 适合岗位 | 五行匹配 |</p>
+<p>|----------|----------|----------|</p>
+<p>| 文化艺术 | 唐卡画师、设计师、作家 | 木（三碧） |</p>
+<p>| 疗愈健康 | 心理咨询师、藏医、芳疗师 | 木、水 |</p>
+<p>| 教育培训 | 教师、培训师、文化传播者 | 土（羊） |</p>
+<p>| 金融管理 | 财务顾问、资产管理 | 金（铁） |</p>
+<p>| 宗教文化 | 寺院管理、法物流通、文化保护 | 土、金 |</p>
+
+
+<h2>六、���情与姻缘</h2>
+
+<h3>（一）藏历配对法则</h3>
+
+<p>藏历婚配以十二生肖相合相冲为基础，结合五行生克来判断：</p>
+
+<ul><li><strong>最佳相合</strong>：兔（卯）、猪（亥）、马（午）</li>
+<li><strong>相冲</strong>：牛（丑）</li>
+<li><strong>相害</strong>：鼠（子）</li>
+<li><strong>相破</strong>：狗（戌）</li></ul>
+
+<h3>（二）最佳匹配生肖</h3>
+
+<li><strong>兔（卯）</strong>：兔与羊为“三合”之局（亥卯未三合木局），二者相处如鱼得水。兔的温柔体贴能化解铁羊的刚硬，羊的慈悲善良能安抚兔的敏感。木局之合，能促进双方共同成长。</li>
+
+<li><strong>马（午）</strong>：马与羊为“六合”之局，是藏历婚配中最高级别的相合。马的奔放热情能点燃铁羊内在的火花，羊的温顺包容能给马一个安稳的港湾。但需注意马的火性会“熔铁”，双方需在激情与克制间找到平衡。</li>
+
+<li><strong>猪（亥）</strong>：猪与羊亦为“三合”之局。猪的豁达大度能包容铁羊的内敛敏感，羊的慈悲善良能感化猪的慵懒。两者在一起，能营造出温暖和谐的家庭氛围。</li>
+
+<h3>（三）感情模式</h3>
+
+<li><strong>外冷内热</strong>：铁羊命主在感情中往往表现出“外冷内热”的模式。表面上不轻易表露情感，但内心极为深情专一。一旦认定对方，便会忠贞不渝。</li>
+
+<li><strong>慢热长情</strong>：她的感情发展往往是“慢热型”的，需要较长时间来建立信任。但一旦建立，便极为稳固持久。她不是那种“一见钟情”的人，而是“日久生情”的典型。</li>
+
+<li><strong>需要安全感</strong>：羊性天然需要安全感，铁性又让她不愿轻易表露这种需求。她需要一个能看穿她“坚强外表下脆弱内心”的伴侣，一个能给予她稳定情感依靠的港湾。</li>
+
+<li><strong>修行伴侣</strong>：铁羊命主的灵魂深处渴望的不仅是世俗的伴侣，更是一个能与之共同修行、共同成长的“道友”。她需要一个能在精神层面与她共鸣的人，而不仅仅是物质生活的搭档。</li>
+
+<h3>（四）感情忠告</h3>
+
+<ul><li>警惕过度理性压抑感性，爱需要表达，需要“说出口”</li>
+<li>学会在付出与接受之间保持平衡，不要一味牺牲自我</li>
+<li>选择伴侣时，不仅看生肖匹配，更要看心灵的契合度</li></ul>
+
+
+<h2>七、健康与长寿分析</h2>
+
+<h3>（一）藏医体质分析</h3>
+
+<p>依藏医“隆、赤巴、培根”三因学说，铁羊命主属于 <strong>“隆”偏盛</strong> 体质：</p>
+
+<ul><li><strong>隆（风）</strong>：主呼吸、循环、神经。偏盛则易焦虑、失眠、情绪波动、关节疼痛</li>
+<li><strong>赤巴（火）</strong>：主消化、体温、视力。铁金克木，木不生火，故赤巴偏弱，易有消化系统问题</li>
+<li><strong>培根（水土）</strong>：主体液、结构、免疫。羊属土，培根尚可，但需防过盛导致怠惰、肥胖</li></ul>
+
+<h3>（二）需要注意的身体部位</h3>
+
+<li><strong>肺与大肠（金）</strong>：铁金过旺，易伤肺金。需注意呼吸系统疾病，如哮喘、支气管炎、皮肤干燥等。</li>
+
+<li><strong>肝胆（木）</strong>：三碧木星受金克，肝胆系统是命主的薄弱环节。注意情绪郁结导致的肝胆气滞，表现为易怒、眼干、偏头痛等。</li>
+
+<li><strong>脾胃（土）</strong>：羊属土，土主脾胃。但金泄土气，需注意消化系统问题，如胃胀、食欲不振、便秘或腹泻交替。</li>
+
+<li><strong>关节与骨骼</strong>：隆（风）偏盛，易有关节疼痛、骨质疏松等问题。铁羊之命需特别注意腰膝酸软、颈椎不适。</li>
+
+<h3>（三）藏医养生建议</h3>
+
+<li><strong>饮食调养</strong>：</li>
+<p>   - 多食：温性食物（羊肉汤、姜茶）、根茎类蔬菜（萝卜、山药）、坚果（核桃、杏仁）</p>
+<p>   - 少食：寒凉生冷、过度辛辣、油炸食品</p>
+<p>   - 季节调养：春季养肝（食酸），夏季养心（食苦），秋季养肺（食辛），冬季养肾（食咸）</p>
+
+<li><strong>起居规律</strong>：</li>
+<p>   - 早睡早起，顺应自然节律</p>
+<p>   - 清晨面向东方，做深呼吸练习（藏式九节风）</p>
+<p>   - 避免熬夜，子时（23:00-1:00）前入睡</p>
+
+<li><strong>运动建议</strong>：</li>
+<p>   - 适合温和运动：瑜伽、太极、散步、藏密气功</p>
+<p>   - 避免过度剧烈运动，以防耗气</p>
+<p>   - 每日晨起，叩齿36次，吞津咽下</p>
+
+<li><strong>心灵养生</strong>：</li>
+<p>   - 每日静坐冥想15-30分钟</p>
+<p>   - 常听舒缓的藏传佛教音乐</p>
+<p>   - 培养一项艺术爱好（绘画、书法等），以艺养心</p>
+
+<h3>（四）长寿密码</h3>
+
+<p>铁羊之命，只要善加调养，可得长寿。关键在于：</p>
+
+<ul><li><strong>以“柔”克“刚”</strong>：学会放下固执，以柔克刚，减少内心的冲突与消耗</li>
+<li><strong>以“木”疏“金”</strong>：多接触自然，多养绿色植物，以木气疏通金气的肃杀</li>
+<li><strong>以“水”济“火”</strong>：多饮水，多近水（如泡温泉、海边度假），以水平衡体内之火</li></ul>
+
+
+<h2>八、2026年藏历运势 — 火马年</h2>
+
+<h3>（一）火马年整体能量</h3>
+
+<p>2026年为藏历 <strong>火马年</strong>（丙午），五行属火，生肖为马。火马年对铁羊命主而言，是一个 <strong>“火炼真金”</strong> 之年。</p>
+
+<ul><li><strong>火克金</strong>：火马之火，猛烈而炽热，对铁羊之“铁”构成直接考验。这一年命主将面临前所未有的压力与挑战，但这也是“真金不怕火炼”的验证之年。</li>
+<li><strong>马冲羊</strong>：生肖上，马与羊虽为六合（最佳相合），但马年之“午”与羊年之“未”存在一定的紧张关系——午未合土，火土相生，既是助力也是消耗。</li></ul>
+
+<h3>（二）整体运势分析</h3>
+
+<li><strong>事业运势</strong>：火马年事业上有大变动之象。三碧木星遇火马之火，木生火，火势更旺——这意味着命主的事业将迎来爆发式的增长或转折。可能面临：</li>
+<p>   - 岗位变动或跳槽机会</p>
+<p>   - 新项目、新领域的开拓</p>
+<p>   - 与上级或同事的冲突（火性主争）</p>
+<p>   - <strong>关键提示</strong>：此年不宜冲动决策，需冷静分析，以“铁”的沉稳应对“火”的躁动</p>
+
+<li><strong>财运</strong>：火马年财运波动较大，有得有失。火主“散”，需防破财、漏财。但火也主“旺”，正当收入有增长之势。</li>
+<p>   - <strong>正财</strong>：稳定增长，但需防因冲动消费或投资失误而流失</p>
+<p>   - <strong>偏财</strong>：不宜投机，火马年投机风险极高</p>
+<p>   - <strong>建议</strong>：上半年保守理财，下半年可适度进取</p>
+
+<li><strong>感情运</strong>：火马年感情多波澜。单身者有机会遇到心仪对象，但发展迅速，需防“闪恋闪分”。有伴者需注意沟通，火性易引发争吵，切忌因小事伤了和气。</li>
+
+<li><strong>健康运</strong>：火克金，需特别注意肺部、呼吸道健康。火马年也易引发心脑血管问题，需定期体检，控制情绪。</li>
+
+<h3>（三）吉凶月份</h3>
+
+<p>| 月份（藏历） | 吉凶 | 说明 |</p>
+<p>|--------------|------|------|</p>
+<p>| 正月（2-3月） | 平 | 开年平稳，宜定计划，忌冒进 |</p>
+<p>| 二月（3-4月） | 凶 | 火气渐旺，防口舌是非、财务损失 |</p>
+<p>| 三月（4-5月） | 吉 | 贵人显现，事业有突破之机 |</p>
+<p>| 四月（5-6月） | 大吉 | 萨嘎达瓦节，修行良机，事业顺遂 |</p>
+<p>| 五月（6-7月） | 凶 | 火旺至极，防健康问题、情绪波动 |</p>
+<p>| 六月（7-8月） | 平 | 运势回稳，宜休养生息 |</p>
+<p>| 七月（8-9月） | 吉 | 财运回升，有意外之喜 |</p>
+<p>| 八月（9-10月） | 吉 | 感情运佳，宜修复关系 |</p>
+<p>| 九月（10-11月） | 平 | 平顺之月，宜积累 |</p>
+<p>| 十月（11-12月） | 凶 | 岁末多事，防破财、防小人 |</p>
+<p>| 十一月（12-1月） | 吉 | 否极泰来，有贵人相助 |</p>
+<p>| 十二月（1-2月） | 吉 | 收尾圆满，宜总结回向 |</p>
+
+<h3>（四）火马年开运要诀</h3>
+
+<ul><li><strong>供灯</strong>：每日供一盏酥油灯，以火供火，化解火克金之弊</li>
+<li><strong>持咒</strong>：常诵“绿度母心咒”，以慈悲之水灭嗔恨之火</li>
+<li><strong>佩饰</strong>：佩戴银饰或白水晶（金性），增强自身金气</li>
+<li><strong>方位</strong>：多向西方、北方活动，避开正南（火位）</li></ul>
+
+
+<h2>九、护法神与守护修行</h2>
+
+<h3>（一）对应的藏传佛教守护神</h3>
+
+<li><strong>本命护法：绿度母（Tara）</strong></li>
+
+<p>   绿度母是藏传佛教中慈悲与勇气的化身，被誉为“诸佛事业的化现”。铁羊命主天生的慈悲心与绿度母的加持极为相应。绿度母能救度八难（狮难、象难、火难、蛇难、水难、牢狱难、贼难、非人难），护佑命主在人生旅途中逢凶化吉。</p>
+
+<p>   - <strong>心咒</strong>：嗡 达咧 嘟达咧 嘟咧 梭哈</p>
+<p>   - <strong>观想</strong>：观想自身为绿度母，身绿色，一面二臂，右手施愿印，左手持乌巴拉花</p>
+
+<li><strong>财神护法：黄财神（Jambhala）</strong></li>
+
+<p>   黄财神是藏传佛教中的财宝本尊，能赐予众生财富与丰饶。铁羊命主财运以“稳”为主，黄财神的加持能助她财富积累、资财丰足。</p>
+
+<p>   - <strong>心咒</strong>：嗡 藏巴拉 杂勒扎耶 梭哈</p>
+<p>   - <strong>供奉</strong>：可在家中佛堂供奉黄财神像，每日供水、供花</p>
+
+<li><strong>智慧护法：文殊菩萨（Manjushri）</strong></li>
+
+<p>   文殊菩萨是智慧的化身，手持金刚剑斩断无明。铁羊命主需要以智慧之剑斩断固执与烦恼，文殊菩萨的加持至关重要。</p>
+
+<p>   - <strong>心咒</strong>：嗡 阿 喇 巴 札 那 谛</p>
+<p>   - <strong>祈请</strong>：在面临重大抉择时，虔诚祈请文殊菩萨赐予智慧</p>
+
+<li><strong>除障护法：金刚手菩萨（Vajrapani）</strong></li>
+
+<p>   金刚手菩萨是“力量”的化身，能降伏一切魔障。铁羊命主在遇到重大障碍时，可祈请金刚手菩萨的加持。</p>
+
+<p>   - <strong>心咒</strong>：嗡 班匝 巴那 吽</p>
+
+<h3>（二）推荐法器与开光物品</h3>
+
+<li><strong>金刚结</strong>：由寺院僧人加持的金刚结，佩戴在颈上或手腕上，能护身辟邪、增长福慧。</li>
+
+<li><strong>转经筒</strong>：手持转经筒，每日转动，相当于念诵六字大明咒“嗡嘛呢呗美吽”无数遍，能积累无量功德。</li>
+
+<li><strong>念珠</strong>：推荐使用 <strong>菩提子念珠</strong>（108颗），每日持咒计数。菩提子象征觉悟，能助命主在修行路上精进不退。</li>
+
+<li><strong>九宫八卦镜</strong>：藏历中九宫八卦镜能辟邪化煞、镇宅安居。可挂于家中正门上方，或随身携带（小型）。</li>
+
+<li><strong>开光佛像</strong>：推荐供奉 <strong>绿度母唐卡</strong> 或 <strong>铜像</strong>，经寺院开光后供奉于家中佛堂，每日供养、礼拜。</li>
+
+<li><strong>护身符（嘎乌）</strong>：嘎乌是藏地传统的护身盒，内可装藏开光圣物（如舍利、甘露丸、经咒），佩戴于胸前，能获得强大的护佑。</li>
+
+<h3>（三）每月修行功课</h3>
+
+<ul><li><strong>藏历初八</strong>：药师佛日，诵《药师琉璃光如来本愿功德经》或药师佛心咒，祈求健康</li>
+<li><strong>藏历初十</strong>：莲花生大士日，诵莲师心咒“嗡 阿 吽 班匝 咕噜 贝玛 悉地 吽”，祈求加持</li>
+<li><strong>藏历十五</strong>：阿弥陀佛日，诵阿弥陀佛圣号，回向众生</li>
+<li><strong>藏历二十五</strong>：空行母日，诵度母心咒，祈求事业顺利</li>
+<li><strong>藏历三十</strong>：释迦牟尼佛日，诵《心经》，回向一切有情</li></ul>
+
+
+<h2>十、藏密开运指引</h2>
+
+<h3>（一）唐卡推荐</h3>
+
+<li><strong>绿度母唐卡</strong>：主事业、贵人、慈悲。挂于家中或办公室的 <strong>东方或东南方</strong>，能增长贵人运与人际和谐。</li>
+
+<li><strong>四臂观音唐卡</strong>：主平安、健康、消灾。挂于家中 <strong>北方</strong>，能护佑全家平安吉祥。</li>
+
+<li><strong>黄财神唐卡</strong>：主财富、丰饶。挂于家中 <strong>财位</strong>（进门对角位置）或办公室，能增长财运。</li>
+
+<li><strong>时轮金刚坛城唐卡</strong>：主和谐、世界和平。挂于家中客厅或佛堂，能调节家庭气场，促进和谐。</li>
+
+<h3>（二）水晶与宝石</h3>
+
+<p>| 水晶/宝石 | 颜色 | 五行 | 功效 | 佩戴方式 |</p>
+<p>|-----------|------|------|------|----------|</p>
+<p>| 白水晶 | 白 | 金 | 增强金气，辟邪化煞 | 佩戴于颈部或手腕 |</p>
+<p>| 绿幽灵 | 绿 | 木 | 增强木气，招正财 | 佩戴于左手 |</p>
+<p>| 蓝宝石 | 蓝 | 水 | 增强水气，增智慧 | 佩戴于颈部 |</p>
+<p>| 黄水晶 | 黄 | 土 | 增强土气，旺脾胃 | 佩戴于腹部位置 |</p>
+<p>| 月光石 | 白/蓝 | 水 | 平衡情绪，助睡眠 | 佩戴于颈部或枕边 |</p>
+
+<strong>禁忌</strong>：避免佩戴红水晶、红玛瑙等强火性宝石（火克金），以免削弱本命金气。
+
+<h3>（三）香薰与藏香</h3>
+
+<li><strong>藏香（甘丹香草）</strong>：每日早晚点燃，净化空间，安神定志。推荐使用含有檀香、藏红花、甘松等成分的藏香。</li>
+
+<li><strong>檀香</strong>：助冥想、安神。适合在打坐、诵经时使用。</li>
+
+<li><strong>沉香</strong>：深层净化，平衡隆（风）能量。适合在睡前使用，助眠安神。</li>
+
+<li><strong>精油</strong>：</li>
+<p>   - 薰衣草：平衡情绪，助睡眠</p>
+<p>   - 佛手柑：提振心情，缓解焦虑</p>
+<p>   - 雪松：增强定力，稳定心神</p>
+
+<h3>（四）幸运颜色</h3>
+
+<p>| 颜色 | 五行 | 用途 |</p>
+<p>|------|------|------|</p>
+<p>| 白色 | 金 | 主色，增强本命金气 |</p>
+<p>| 金色 | 金 | 主色，招财增运 |</p>
+<p>| 绿色 | 木 | 次色，增强三碧木星能量 |</p>
+<p>| 蓝色 | 水 | 辅助色，金生水，泄金气之刚 |</p>
+<p>| 黄色 | 土 | 辅助色，土生金，增强金气 |</p>
+
+<strong>忌</strong>：大面积使用红色、紫色（火克金）
+
+<h3>（五）幸运方位</h3>
+
+<ul><li><strong>本命位</strong>：西方（拉之方位，增强精气）</li>
+<li><strong>贵人位</strong>：东北（土生金，招贵人）</li>
+<li><strong>财位</strong>：西北（金之方位）</li>
+<li><strong>忌</strong>：正南（火位，克金）</li></ul>
+
+<h3>（六）藏传佛教式日常修行</h3>
+
+<strong>晨起修行（6:00-7:00）</strong> ：
+<li>起床后，面向东方，双手合十，念诵三遍“嗡”</li>
+<li>观想绿度母在面前虚空中，放射绿光加持自身</li>
+<li>念诵绿度母心咒21遍</li>
+<li>发愿：“愿今日一切言行，皆能利益众生”</li>
+
+<strong>日间修持</strong>：
+<li>工作中保持正念，不论做什么，都观想是在为众生服务</li>
+<li>遇到困难时，默念“嗡 班匝 巴那 吽”（金刚手心咒）三遍</li>
+<li>用餐前，念诵供养偈：“无上本师即佛宝，无上救护即法宝，无上引导即僧宝，供养皈处三宝尊”</li>
+
+<strong>晚间修行（睡前）</strong> ：
+<li>静坐15分钟，观想绿度母放光，净化一日之疲惫</li>
+<li>念诵《心经》一遍</li>
+<li>回向：“愿以此功德，庄严佛净土，上报四重恩，下济三途苦。若有见闻者，悉发菩提心，尽此一报身，同生极乐国。”</li>
+
+<strong>每周修行</strong>：
+<ul><li>每周至少一次，到附近的藏传佛教寺院或道场参加共修</li>
+<li>每月至少一次，供灯、供水、供花</li>
+<li>每年至少一次，参加法会或闭关修行</li></ul>
+
+<strong>六字大明咒修持</strong>：
+<ul><li>每日行走、坐车、做家务时，默念“嗡嘛呢呗美吽”</li>
+<li>观想咒音化为白光，净化自身及周围一切众生之业障</li>
+<li>此咒为观世音菩萨心咒，能消除一��灾难，增长一切善业</li></ul>
+
+
+<h2>结语</h2>
+
+<p>铁羊之命，柔中带刚，温中藏锋。命主如高原之羊，看似柔弱，却能踏雪而行；如精炼之铁，看似冷硬，却能铸成利器。此生灵魂以“刚柔并济”为课题，以“慈悲与智慧”为双翼，在世间修行中完成自我的超越。</p>
+
+<p>藏历命理揭示的，不是宿命的枷锁，而是觉醒的指引。愿命主以此报告为镜，照见自身的珍宝与潜能，在佛菩萨的加持下，开启吉祥圆满的人生旅程。</p>
+
+<strong>愿一切吉祥！吉祥圆满！</strong>
+
+<hr>
+
+<em>本报告依据藏历时轮历法及传统命理推算，供参考与修行之用。命理非定命，一切福田不离方寸。</em>
+  </div>
+
+  <div class="footer">
+    善缘 ShenYuan · 藏历命理报告 · 2026年8月
+  </div>
+
+</body>
+</html>
