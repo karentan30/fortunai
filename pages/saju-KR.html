@@ -151,6 +151,15 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .btn-stripe{width:100%;padding:14px 0;background:#635bff;border:none;border-radius:14px;color:#fff;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;letter-spacing:.5px;transition:all .2s}
 .btn-stripe:active{transform:scale(0.98)}
 .btn-stripe:disabled{opacity:.6;cursor:default}
+/* ── 콘텐츠 잠금 게이트 ── */
+.report-blur{filter:blur(5px);user-select:none;pointer-events:none;opacity:.4}
+.unlock-gate{position:relative;margin:0 -16px;padding:32px 16px 28px;text-align:center;background:linear-gradient(to bottom,rgba(250,246,238,0) 0%,rgba(250,246,238,0.97) 35%,rgba(250,246,238,1) 100%);margin-top:-60px}
+.unlock-gate-icon{font-size:36px;margin-bottom:10px}
+.unlock-gate-title{font-size:16px;font-weight:700;color:#3a2a0e;font-family:'Noto Sans KR',sans-serif;margin-bottom:6px;letter-spacing:.2px}
+.unlock-gate-sub{font-size:12px;color:rgba(58,48,38,0.55);font-family:'Noto Sans KR',sans-serif;margin-bottom:18px;line-height:1.6}
+.unlock-gate-chapters{display:flex;flex-direction:column;gap:6px;margin-bottom:18px;text-align:left}
+.ugc-item{font-size:12px;color:rgba(58,48,38,0.65);font-family:'Noto Sans KR',sans-serif;display:flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(154,117,41,0.06);border:1px solid rgba(154,117,41,0.15);border-radius:8px}
+.ugc-lock{font-size:14px}
 </style>
 <link rel="stylesheet" href="/assets/css/common.css">
 </head>
@@ -372,8 +381,10 @@ function showReport(aiText, contextId, tier, locked) {
   html += '<div class="gold-divider"></div></div>';
 
   var sections = parseSections(aiText);
-  sections.forEach(function(sec) {
-    html += '<div class="sec-card"><div class="sec-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.sec-arrow\').textContent=b.classList.contains(\'open\')?\'▲\':\'▼\'">';
+  var FREE_LIMIT = 3;
+  sections.forEach(function(sec, idx) {
+    var blurClass = (isLocked && idx >= FREE_LIMIT) ? ' report-blur' : '';
+    html += '<div class="sec-card' + blurClass + '"><div class="sec-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.sec-arrow\').textContent=b.classList.contains(\'open\')?\'▲\':\'▼\'">';
     html += '<span class="sec-emoji">' + (sec.emoji || '✦') + '</span>';
     html += '<span class="sec-title">' + sec.title + '</span>';
     html += '<span class="sec-arrow">▼</span></div>';
@@ -381,6 +392,21 @@ function showReport(aiText, contextId, tier, locked) {
   });
   if (sections.length === 0) {
     html += '<div class="sec-card"><div class="sec-body open"><div class="sec-text">' + aiText.replace(/</g,'&lt;').replace(/\n/g,'<br>') + '</div></div></div>';
+  }
+  if (isLocked) {
+    html += '<div class="unlock-gate">' +
+      '<div class="unlock-gate-icon">🔒</div>' +
+      '<div class="unlock-gate-title">심층 리포트가 잠겨 있어요</div>' +
+      '<div class="unlock-gate-sub">아래 항목을 모두 포함한 완전한 사주 분석<br>₩9,900으로 평생 보관</div>' +
+      '<div class="unlock-gate-chapters">' +
+      '<div class="ugc-item"><span class="ugc-lock">💰</span> 재물운 · 직업 팔자 · 사업 운세</div>' +
+      '<div class="ugc-item"><span class="ugc-lock">💕</span> 애정운 · 결혼 시기 · 인연 분석</div>' +
+      '<div class="ugc-item"><span class="ugc-lock">📅</span> 10년 대운 · 연도별 유년 상세</div>' +
+      '<div class="ugc-item"><span class="ugc-lock">🏥</span> 건강 유의 사항 · 개운 가이드</div>' +
+      '<div class="ugc-item"><span class="ugc-lock">🔮</span> 용신 · 기신 · 평생 운명 흐름</div>' +
+      '</div>' +
+      '<button class="btn-unlock" onclick="startKrPayment()">🔓 전체 리포트 열기 · ₩9,900 →</button>' +
+      '</div>';
   }
   html += '<div class="disclaimer">본 리포트는 사주명리 이론에 근거한 AI 생성 참고용 콘텐츠입니다.<br>의학적·법률적·투자 판단을 대신하지 않습니다.</div>';
   screen.innerHTML = html;
@@ -396,14 +422,9 @@ function showReport(aiText, contextId, tier, locked) {
     var isLoggedIn = !!localStorage.getItem('sy_token');
     cta.innerHTML =
       (!isLoggedIn ? '<div class="login-hint">이미 계정이 있으신가요? <a href="/pages/login.html?redirect=pages/saju-KR.html">로그인하면 구매 기록이 저장됩니다</a></div>' : '') +
-      '<div class="price-row"><span class="price-old">19,900원</span><span class="price-now" style="margin-left:8px">9,900원</span><span class="price-cur">· 기본 심층 리포트</span></div>' +
-      '<button class="btn-unlock" onclick="checkout(\'bazi_full\')">📖 내 사주 리포트 지금 받기 · 9,900원 →</button>' +
-      '<button class="btn-stripe" id="kr-stripe-btn" onclick="syPayStripeKR()">💳 카드로 결제 ($2.99)</button>' +
-      '<div style="display:flex;gap:8px;margin-top:8px">' +
-      '<button class="btn-vip" onclick="checkout(\'bazi_vip\')">👑 프리미엄 · 심층+대운 · 19,900원</button>' +
-      '<button class="btn-ghost" onclick="checkout(\'member\')">월정액 구독 · ₩12,900/월</button>' +
-      '</div>' +
-      '<div style="font-size:10px;color:rgba(58,48,38,0.45);text-align:center;margin-top:6px">19,900원 → 9,900원 · 8,000자+ · 10년 대운 · 평생 보관</div>';
+      '<div class="price-row"><span class="price-old">19,900원</span><span class="price-now" style="margin-left:8px">9,900원</span><span class="price-cur">· 완전 심층 리포트</span></div>' +
+      '<button class="btn-unlock" onclick="startKrPayment()">🔓 전체 리포트 열기 · ₩9,900 →</button>' +
+      '<div style="font-size:10px;color:rgba(58,48,38,0.45);text-align:center;margin-top:8px">💳 카드 결제 · 10년 대운 + 재물 + 애정 + 건강 · 평생 보관</div>';
     document.body.appendChild(cta);
   }
 
@@ -657,11 +678,11 @@ function checkout(tier) {
 // startKrPayment: Stripe checkout for saju_kr_full (₩9,900)
 function startKrPayment() {
   if (localStorage.getItem('sy_paid_saju_kr_full') === '1') {
-    unlockFullReport();
+    _refetchFullReport();
     return;
   }
-  var btn = document.querySelector('.btn-unlock');
-  if (btn) { btn.disabled = true; btn.textContent = '결제 페이지로 이동 중…'; }
+  document.querySelectorAll('.btn-unlock').forEach(function(b){ b.disabled = true; b.textContent = '결제 페이지로 이동 중…'; });
+  if (lastInput) { try { localStorage.setItem('sy_last_bazi', JSON.stringify(lastInput)); } catch(e){} }
   fetch('/api/create-checkout', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -669,14 +690,19 @@ function startKrPayment() {
       product: 'saju_kr_full',
       token: localStorage.getItem('sy_token') || '',
       region: 'kr',
-      successUrl: location.origin + '/api/success?product=saju_kr_full'
+      successUrl: location.origin + '/pages/saju-KR.html?activated=1'
     })
   }).then(function(r){ return r.json(); }).then(function(d){
-    if (d.url) { window.location.href = d.url; }
-    else { toast('결제 오류, 다시 시도해 주세요', 'error'); if (btn) { btn.disabled = false; btn.textContent = '₩9,900으로 잠금 해제'; } }
+    if (d.url) {
+      localStorage.setItem('sy_kr_order', d.orderNo || '');
+      window.location.href = d.url;
+    } else {
+      toast('결제 오류, 다시 시도해 주세요', 'error');
+      document.querySelectorAll('.btn-unlock').forEach(function(b){ b.disabled = false; b.textContent = '🔓 전체 리포트 열기 · ₩9,900 →'; });
+    }
   }).catch(function(){
     toast('결제 오류, 다시 시도해 주세요', 'error');
-    if (btn) { btn.disabled = false; btn.textContent = '₩9,900으로 잠금 해제'; }
+    document.querySelectorAll('.btn-unlock').forEach(function(b){ b.disabled = false; b.textContent = '🔓 전체 리포트 열기 · ₩9,900 →'; });
   });
 }
 
@@ -688,15 +714,33 @@ function unlockFullReport() {
   if (cta) cta.remove();
 }
 
+function _refetchFullReport() {
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('sy_last_bazi') || 'null'); } catch(e) {}
+  if (!saved || !saved.birthYear) { toast('사주 정보를 다시 입력해 주세요'); return; }
+  lastInput = saved;
+  document.getElementById('inputScreen').style.display = 'none';
+  document.getElementById('reportScreen').classList.remove('show');
+  document.getElementById('loadingScreen').classList.add('show');
+  runSteps();
+  fetchBazi(saved).then(function(d){
+    document.getElementById('loadingScreen').classList.remove('show');
+    if (d && d.reading) { showReport(d.reading, d.contextId, d.tier, d.locked); toast('🔓 전체 리포트가 열렸어요!', 'info'); }
+    else { document.getElementById('inputScreen').style.display = 'block'; toast('다시 시도해 주세요', 'error'); }
+  }).catch(function(){
+    document.getElementById('loadingScreen').classList.remove('show');
+    document.getElementById('inputScreen').style.display = 'block';
+    toast('네트워크 오류. 다시 시도해 주세요', 'error');
+  });
+}
+
 // Handle ?activated=1 return from Stripe success page
 (function(){
   var params = new URLSearchParams(location.search);
   if (params.get('activated') === '1') {
     localStorage.setItem('sy_paid_saju_kr_full', '1');
     try { history.replaceState(null, '', location.pathname); } catch(e){}
-  }
-  if (localStorage.getItem('sy_paid_saju_kr_full') === '1') {
-    document.addEventListener('DOMContentLoaded', unlockFullReport);
+    document.addEventListener('DOMContentLoaded', function(){ _refetchFullReport(); });
   }
 })();
 
