@@ -817,24 +817,24 @@ router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
 （本户型的三大财位：流年财位、八宅财位、玄空财位各在何处；逐一给出激活方案：
 
 **流年财位激活**（${new Date().getFullYear()}年八白左辅星方位）：
-- 推荐摆件：天然黄水晶球（直径3英寸以上）——Amazon搜索关键词："natural citrine crystal ball sphere"，选有矿石证书的店铺，参考价格：$25-80
+- 推荐摆件：天然黄水晶球（直径3英寸以上）—— [Amazon一键购买](https://www.amazon.com/s?k=natural+citrine+crystal+ball+sphere&tag=shenyuan-20)，选有矿石证书的店铺，参考价格：$25-80
 - 摆放高度：与心脏平齐的柜台或桌面，不可摆在地上，不可放在卫生间附近
 
 **八宅生气位财局**：
-- 推荐：貔貅一对（黄铜铸造款）——Amazon搜"brass Pi Xiu Pixiu feng shui statue pair"，参考价格：$20-60/对；Etsy有手工开光款，价格$30-120
+- 推荐：貔貅一对（黄铜铸造款）—— [Amazon一键购买](https://www.amazon.com/s?k=brass+Pi+Xiu+Pixiu+feng+shui+statue+pair&tag=shenyuan-20)，参考价格：$20-60/对；[Etsy手工开光款](https://www.etsy.com/search?q=pixiu+feng+shui+brass)，价格$30-120
 - 摆放要点：头朝大门方向，不可对卫生间，底座稳固
 
 **玄空旺财位**：
-- 推荐：聚宝盆（铜质）内放五色天然水晶碎石——Amazon搜"feng shui wealth bowl with crystals"，参考价格：$15-50
-- 附招财树：Amazon搜"feng shui money tree crystal"，高度60cm以上款，参考价格：$25-80
+- 推荐：聚宝盆（铜质）内放五色天然水晶碎石—— [Amazon一键购买](https://www.amazon.com/s?k=feng+shui+wealth+bowl+with+crystals&tag=shenyuan-20)，参考价格：$15-50
+- 附招财树：[Amazon一键购买](https://www.amazon.com/s?k=feng+shui+money+tree+crystal&tag=shenyuan-20)，高度60cm以上款，参考价格：$25-80
 
 **财位购物总预算参考**：基础配置约$60-180，进阶配置约$180-400，以上均可在Amazon Prime免费两日达或Etsy购得，选评价4.5星以上的店铺）
 
 ## ❤️ 桃花位与人缘位激活
 （本户型桃花位确认（八宅体系）与催桃花/人缘方案：
-- 粉晶球：天然玫瑰石英，直径2.5英寸以上——Amazon搜"rose quartz crystal ball sphere"，参考价格：$15-50
-- 牡丹挂画：宜选粉红/浅红色系，悬挂于桃花位墙面——Etsy搜"Chinese peony painting pink"，参考价格：$20-100
-- 玫瑰石英水晶簇：原矿款——Amazon搜"rose quartz cluster raw"，参考价格：$20-80
+- 粉晶球：天然玫瑰石英，直径2.5英寸以上—— [Amazon一键购买](https://www.amazon.com/s?k=rose+quartz+crystal+ball+sphere&tag=shenyuan-20)，参考价格：$15-50
+- 牡丹挂画：宜选粉红/浅红色系，悬挂于桃花位墙面—— [Etsy搜索](https://www.etsy.com/search?q=Chinese+peony+painting+pink)，参考价格：$20-100
+- 玫瑰石英水晶簇：原矿款—— [Amazon一键购买](https://www.amazon.com/s?k=rose+quartz+cluster+raw&tag=shenyuan-20)，参考价格：$20-80
 - ⚠️ 重要：已婚者慎催桃花位（容易引发感情问题），建议改催人缘位（西北乾位）放黄色/金色饰品促贵人缘）
 
 ## 🌿 开运植物方案（方位+品种+养护禁忌）
@@ -873,14 +873,14 @@ router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
 
 ## 🔮 镇宅化煞完整方案（逐项分析，具体物品清单）
 （根据户型常见问题，逐项给出化解方案：
-- **尖角煞/刀煞**（邻屋屋角正对窗/门）：泰山石敢当石碑（置于煞气来向窗台），Amazon搜"feng shui stone tablet"，参考价$8-25；或大叶圆形植物（如巴西木/幸福树）阻挡视线
-- **病符星位（二黑）**：铜葫芦（黄铜铸造，口朝下），Amazon搜"brass feng shui gourd wu lu"，参考价$12-45，挂于该方位墙上；长期点檀香/藏香（每日1支，早晨点）
-- **五黄廉贞（最凶煞）**：${new Date().getFullYear()}年五黄落位的方位禁止动土/维修，放六铜钱串（6枚铜钱串），Amazon搜"feng shui six emperor coins"，参考价$8-20
-- **穿堂风（前后门正对）**：玄关处立1.2米以上屏风（任何材质均可），参考价$60-400；或在正对位置悬挂流苏/珠帘分气
-- **面对楼梯/电梯**：门上方外侧挂凸面八卦镜（直径15cm以上），Amazon搜"bagua mirror convex"，参考价$12-35
+- **尖角煞/刀煞**（邻屋屋角正对窗/门）：泰山石敢当石碑，[Amazon购买](https://www.amazon.com/s?k=feng+shui+stone+tablet+taishan&tag=shenyuan-20)，参考价$8-25；或大叶圆形植物（如巴西木/幸福树）阻挡视线
+- **病符星位（二黑）**：铜葫芦（黄铜铸造，口朝下），[Amazon购买](https://www.amazon.com/s?k=brass+feng+shui+gourd+wu+lu&tag=shenyuan-20)，参考价$12-45，挂于该方位墙上；长期点檀香/藏香（每日1支，早晨点）
+- **五黄廉贞（最凶煞）**：${new Date().getFullYear()}年五黄落位的方位禁止动土/维修，放六铜钱串，[Amazon购买](https://www.amazon.com/s?k=feng+shui+six+emperor+coins&tag=shenyuan-20)，参考价$8-20
+- **穿堂风（前后门正对）**：玄关处立1.2米以上屏风，[Amazon搜索](https://www.amazon.com/s?k=room+divider+screen+feng+shui&tag=shenyuan-20)，参考价$60-400；或在正对位置悬挂流苏/珠帘分气
+- **面对楼梯/电梯**：门上方外侧挂凸面八卦镜（直径15cm以上），[Amazon购买](https://www.amazon.com/s?k=bagua+mirror+convex+feng+shui&tag=shenyuan-20)，参考价$12-35
 - **镜子对床**：必须遮盖（可用布帘）或移位，是卧室最大禁忌之一
 - **卫生间在吉位中央**：长明灯（红灯泡，24小时亮）+铜葫芦+抽风机常开，三件套缺一不可
-- **厨厕相邻**：中间隔断处挂五帝钱串，Amazon搜"5 emperor coins feng shui"，参考价$6-15；橱柜上方放粗盐碗（每月换一次粗盐））
+- **厨厕相邻**：中间隔断处挂五帝钱串，[Amazon购买](https://www.amazon.com/s?k=5+emperor+coins+feng+shui&tag=shenyuan-20)，参考价$6-15；橱柜上方放粗盐碗（每月换一次粗盐））
 
 ## 📅 择吉激活方案 — ${new Date().getFullYear()}年最佳行动时间表
 （为本户型提供${new Date().getFullYear()}年的行动时间窗口：
