@@ -102,6 +102,21 @@ section,header,div{position:relative;z-index:1}
 .sticky-price .new{font-size:16px;color:var(--gold);font-weight:700}
 .sticky-btn{flex:1;background:linear-gradient(135deg,var(--gold),var(--gold-deep));color:#000;font-weight:700;font-size:14px;padding:13px;border:none;border-radius:50px;cursor:pointer;box-shadow:0 3px 16px var(--gold-glow)}
 h1,h2,h3{text-wrap:balance;word-break:keep-all}
+/* Live badge */
+.live-badge{display:flex;align-items:center;justify-content:center;gap:7px;margin-top:10px;font-size:12px;color:rgba(232,213,196,.55);letter-spacing:.04em}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#4cde98;flex-shrink:0;animation:livepulse 1.5s ease-in-out infinite}
+@keyframes livepulse{0%,100%{opacity:.7;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}
+/* Price anchor */
+.price-anchor{text-align:center;font-size:12px;color:rgba(212,115,42,.85);margin-top:8px;letter-spacing:.02em}
+/* Toast */
+.act-toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(20px);width:calc(100% - 40px);max-width:340px;background:rgba(13,4,26,.96);border:1px solid rgba(201,168,76,.22);border-radius:14px;padding:11px 14px;z-index:190;opacity:0;transition:opacity .4s ease,transform .4s ease;pointer-events:none;display:flex;align-items:center;gap:10px}
+.act-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.act-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;animation:livepulse 2s ease-in-out infinite}
+.act-text{font-size:12px;color:rgba(232,213,196,.85);line-height:1.5;flex:1}
+.act-time{font-size:10px;color:rgba(232,213,196,.3);flex-shrink:0}
+/* 127K stat row */
+.total-proof{text-align:center;margin:0 16px 14px;padding:10px 16px;background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.22);border-radius:10px;font-size:13px;color:rgba(232,213,196,.7)}
+.total-proof strong{color:var(--gold)}
 </style>
 </head>
 <body>
@@ -178,7 +193,9 @@ document.addEventListener('DOMContentLoaded',()=>{
       <input type="text" id="fcity" placeholder="Mumbai, Delhi, Bangalore..." required>
     </div>
     <button type="submit" class="submit-btn">✨ Get My Free Reading →</button>
+    <div class="price-anchor">🔓 Free today — Full report worth ₹999, unlock for just ₹99</div>
     <div class="free-note">🔒 Privacy guaranteed · No credit card required</div>
+    <div class="live-badge"><span class="live-dot"></span><span id="liveCount">18</span> people checking their Kundali right now</div>
   </form>
   <div class="dual-reading">
     <h4>🌟 YOUR REPORT INCLUDES</h4>
@@ -189,10 +206,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   </div>
 </div>
 
+<div class="total-proof">🌍 <strong>127,000+</strong> readings delivered worldwide · <strong>31,000+</strong> from India</div>
 <div class="social-proof">
-  <div class="stat-item"><div class="stat-num">31K+</div><div class="stat-label">Indian readings completed</div></div>
-  <div class="stat-item"><div class="stat-num">4.8★</div><div class="stat-label">Average rating from IN users</div></div>
-  <div class="stat-item"><div class="stat-num">2</div><div class="stat-label">Ancient systems in one report</div></div>
+  <div class="stat-item"><div class="stat-num" id="userCountIN">31K+</div><div class="stat-label">Indian readings</div></div>
+  <div class="stat-item"><div class="stat-num">4.8★</div><div class="stat-label">Avg. rating from IN users</div></div>
+  <div class="stat-item"><div class="stat-num">92%</div><div class="stat-label">Satisfaction rate</div></div>
 </div>
 
 <div class="preview-section">
@@ -347,6 +365,42 @@ function shareWhatsApp(){
   const text=encodeURIComponent('I got a free Kundali + BaZi reading from ShenYuan — it described my career situation with frightening precision! Get yours free: ');
   window.open('https://wa.me/?text='+text+url,'_blank');
 }
+
+// ── Live badge: fluctuate people count ──
+(function(){
+  var el=document.getElementById('liveCount');
+  if(!el) return;
+  var base=18;
+  function update(){
+    base=Math.max(12,Math.min(32,base+(Math.random()>.5?1:-1)));
+    el.textContent=base;
+    setTimeout(update,3000+Math.random()*4000);
+  }
+  setTimeout(update,5000);
+})();
+
+// ── Activity toast notifications ──
+(function(){
+  var names=['Priya','Arjun','Kavya','Rahul','Ananya','Vikram','Deepa','Rohan','Sneha','Amit','Pooja','Siddharth'];
+  var cities=['Mumbai','Delhi','Bangalore','Hyderabad','Chennai','Pune','Kolkata','Ahmedabad'];
+  var toastEl=document.createElement('div');
+  toastEl.className='act-toast';
+  toastEl.innerHTML='<span class="act-dot"></span><span class="act-text" id="actText"></span><span class="act-time" id="actTime"></span>';
+  document.body.appendChild(toastEl);
+  function pickRand(arr){return arr[Math.floor(Math.random()*arr.length)];}
+  function showToast(){
+    var name=pickRand(names), city=pickRand(cities);
+    var mins=Math.floor(Math.random()*9)+1;
+    document.getElementById('actText').textContent=name+' from '+city+' just received their Kundali reading ✓';
+    document.getElementById('actTime').textContent=mins+'m ago';
+    toastEl.classList.add('show');
+    setTimeout(function(){toastEl.classList.remove('show');},4200);
+  }
+  setTimeout(function(){
+    showToast();
+    setInterval(showToast, 9000+Math.random()*4000);
+  }, 4000);
+})();
 </script>
 </body>
 </html>

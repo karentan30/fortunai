@@ -414,14 +414,23 @@ router.post('/pay/wechat/create', rateLimitMiddleware, async (req, res) => {
 
     var r;
     try {
-      r = await hub.create(method, '善缘 · ' + prod.name, cnyAmt / 100, oid);
+      var hubOpts = {};
+      if (method === 'stripe') {
+        var rawSucc = (req.body && req.body.success_url || '').trim();
+        var rawCancel = (req.body && req.body.cancel_url || '').trim();
+        var cur = (req.body && req.body.currency || 'usd').toLowerCase();
+        if (rawSucc.startsWith('https://')) hubOpts.success_url = rawSucc;
+        if (rawCancel.startsWith('https://')) hubOpts.cancel_url = rawCancel;
+        hubOpts.currency = cur;
+      }
+      r = await hub.create(method, '善缘 · ' + prod.name, cnyAmt / 100, oid, hubOpts);
     } catch (e) {
       console.error('[pay/wechat/create] hub 下单异常', e.message);
       return res.status(502).json({ error: '发起支付失败，请稍后再试' });
     }
     console.log('[pay/wechat/create] ' + oid + ' — ' + prod.name + ' ¥' + (cnyAmt/100).toFixed(2));
     var resp = { ok: true, out_trade_no: oid, amount: cnyAmt };
-    if (r.method === 'stripe') { resp.url = r.url; resp.session_id = r.session_id; }
+    if (r.method === 'stripe') { resp.url = r.url; resp.session_id = r.session_id; resp.hub_order_no = r.order_no; }
     else { resp.code_url = r.code_url; resp.method = r.method; }
     return res.json(resp);
   } catch (err) {
@@ -542,6 +551,79 @@ router.post('/pay/alipay/notify', (req, res) => {
   if (r === 'amount_mismatch') { console.error('[alipay/notify] 金额不符 ' + oid + ' paid=' + paidCents); return res.send('fail'); }
   if (r === 'paid') console.log('[alipay/notify] PAID ' + oid);
   return res.send('success');
+});
+
+// ══════════════════════════════════════════
+// 海外 Stripe（通过 Lumee Hub 中台）
+// POST /pay/stripe/create  — 创建 Checkout Session，返回 {url, hub_order_no, out_trade_no}
+// GET  /pay/stripe/query   — 轮询状态（支持 hub_order_no 或 out_trade_no）
+// ══════════════════════════════════════════
+
+router.post('/pay/stripe/create', rateLimitMiddleware, async (req, res) => {
+  try {
+    var product = (req.body && req.body.product || '').trim();
+    var prod = PRODUCTS[product];
+    if (!prod) return res.status(400).json({ error: '无效的产品 ID' });
+    if (!hub.HUB_SECRET) return res.status(400).json({ error: '海外支付暂未开通' });
+
+    var oid = pay.genOutTradeNo('st');
+    var usdAmt = prod.amount;  // amount 字段单位分
+    _insCnOrder(oid, product, usdAmt, null, 'stripe');
+
+    var rawSucc = (req.body && req.body.success_url || '').trim();
+    var rawCancel = (req.body && req.body.cancel_url || '').trim();
+    var cur = (req.body && req.body.currency || 'usd').toLowerCase();
+    var hubOpts = { currency: cur };
+    if (rawSucc.startsWith('https://')) hubOpts.success_url = rawSucc;
+    if (rawCancel.startsWith('https://')) hubOpts.cancel_url = rawCancel;
+
+    var r;
+    try {
+      r = await hub.create('stripe', '善缘 · ' + prod.name, usdAmt / 100, oid, hubOpts);
+    } catch (e) {
+      console.error('[pay/stripe/create] hub 下单异常', e.message);
+      return res.status(502).json({ error: '发起支付失败，请稍后再试' });
+    }
+    console.log('[pay/stripe/create] ' + oid + ' hub=' + r.order_no + ' $' + (usdAmt/100).toFixed(2));
+    return res.json({ ok: true, out_trade_no: oid, hub_order_no: r.order_no, url: r.url, session_id: r.session_id });
+  } catch (err) {
+    console.error('[pay/stripe/create ERR]', err);
+    return res.status(500).json({ error: '服务暂时不可用' });
+  }
+});
+
+// GET /pay/stripe/query?hub_order_no=SY... 或 ?out_trade_no=sy_st_...
+router.get('/pay/stripe/query', async (req, res) => {
+  try {
+    var hubOid = (req.query.hub_order_no || '').trim();
+    var localOid = (req.query.out_trade_no || '').trim();
+    var queryKey = hubOid || localOid;
+    if (!queryKey) return res.status(400).json({ error: '缺少订单号' });
+
+    // 先查本地 DB（用 localOid 或 hub_order_no 对应的本地订单）
+    var localOrder = localOid ? _findOrder(localOid) : null;
+    if (localOrder && localOrder.payment_status === 'completed') {
+      return res.json({ status: 'paid', product: localOrder.product });
+    }
+
+    // 通过 hub 查单（hub_order_no 优先，否则用 localOid 让 hub 按 out_ref 兜底）
+    if (hub.HUB_SECRET) {
+      try {
+        var s = await hub.status(queryKey);
+        if (s.status === 'paid') {
+          if (localOid) {
+            var ccr = _completeCnOrder(localOid, null, hubOid || localOid);
+            if (ccr === 'paid') console.log('[pay/stripe/query] PAID ' + localOid);
+          }
+          return res.json({ status: 'paid', product: localOrder ? localOrder.product : product });
+        }
+      } catch (e) { console.error('[pay/stripe/query] hub 查单异常', e.message); }
+    }
+    return res.json({ status: 'pending' });
+  } catch (err) {
+    console.error('[pay/stripe/query ERR]', err);
+    return res.status(500).json({ error: '服务暂时不可用' });
+  }
 });
 
 module.exports = router;

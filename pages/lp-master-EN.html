@@ -8,7 +8,7 @@
 <meta property="og:description" content="3,000 years of Chinese wisdom × AI precision. 92% satisfaction rate. Discover your BaZi free.">
 <meta property="og:image" content="https://shenyuan.mylumee.cn/og-card.png">
 <meta property="og:type" content="website">
-<title>ShenYuan · Your destiny was written the moment you were born</title>
+<title>ShenYuan · Why do you keep attracting the wrong person? Your birth date has the answer.</title>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="canonical" href="https://shenyuan.mylumee.cn/pages/lp-master-EN.html">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -441,6 +441,22 @@ footer{
   min-height:44px;
 }
 
+/* Live badge */
+.live-badge{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:16px;font-size:.8em;color:rgba(232,213,196,.6);letter-spacing:.04em}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#5cde98;box-shadow:0 0 6px #5cde98;flex-shrink:0;animation:live-pulse 1.5s ease-in-out infinite}
+@keyframes live-pulse{0%,100%{opacity:.6}50%{opacity:1}}
+
+/* Price anchor */
+.price-anchor{text-align:center;font-size:.72em;color:rgba(232,213,196,.45);margin-top:10px;letter-spacing:.04em;line-height:1.6}
+.price-anchor strong{color:var(--gold);font-weight:600}
+
+/* Activity toast */
+.act-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);width:calc(100% - 40px);max-width:320px;background:rgba(18,10,34,.96);border:1px solid rgba(201,168,76,.25);border-radius:14px;padding:12px 14px;z-index:190;opacity:0;transition:opacity .4s ease,transform .4s ease;pointer-events:none;display:flex;align-items:center;gap:10px}
+.act-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.act-dot{width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0;animation:live-pulse 2s ease-in-out infinite}
+.act-text{font-size:.78em;color:rgba(220,205,175,.85);letter-spacing:.03em;line-height:1.5;flex:1}
+.act-time{font-size:.68em;color:rgba(200,185,155,.35);flex-shrink:0;letter-spacing:.03em}
+
 /* Gender toggle */
 .gender-row{display:flex;gap:10px}
 .gender-btn{
@@ -504,11 +520,12 @@ footer{
   <section class="hero">
     <div class="hero-eyebrow">3,000 Years of Chinese Wisdom × AI Precision</div>
     <h1 class="serif">
-      Your destiny was written<br>
-      <em>the moment</em><br>
-      you were born.
+      Why do you keep attracting<br>
+      the <em>wrong person</em>,<br>
+      hitting career walls,<br>
+      and watching money disappear?
     </h1>
-    <p class="hero-quote serif">"I was skeptical. Then I read my BaZi chart."</p>
+    <p class="hero-quote serif">"Your birth date holds the answer — and most people never find out."</p>
     <p class="hero-sub">
       Enter your birth details and our AI decodes your elemental DNA, career timing, relationship patterns — and what's coming next.
     </p>
@@ -529,7 +546,8 @@ footer{
 
     <!-- FORM -->
     <div class="form-card" id="formCard">
-      <div class="form-title serif">Get Your Free BaZi Preview</div>
+      <div class="live-badge"><span class="live-dot"></span><span><strong id="liveCount" style="color:rgba(232,213,196,.8)">18</strong> people checking their destiny right now</span></div>
+      <div class="form-title serif">Get Your Free BaZi Reading</div>
       <div class="form-subtitle">2 chapters free · No credit card needed</div>
       <form id="birthForm">
 
@@ -593,6 +611,7 @@ footer{
         </div>
 
         <button type="submit" class="btn-submit serif">Reveal My Destiny — Free →</button>
+        <p class="price-anchor">Free today · <strong>Valued at $19</strong> · Limited daily slots remaining</p>
         <p class="form-note">For entertainment &amp; reference only · AI-generated content · Not a substitute for professional advice</p>
       </form>
     </div>
@@ -885,6 +904,44 @@ obs.observe(formCard);
     if(diff > 0) setTimeout(tick, 1000);
   }
   tick();
+})();
+</script>
+
+<script>
+// ── Activity toast (social proof) ──
+(function(){
+  var cities=['New York','London','Toronto','Sydney','Singapore','Los Angeles','Vancouver','Auckland','Dubai','Melbourne'];
+  var names=['Emma','Liam','Sofia','Chen Wei','Priya','Marco','Aisha','Yuki','Carlos','Sarah'];
+  var actions=['just generated their BaZi chart','unlocked their love reading','is reading their 2026 forecast','just completed their analysis','unlocked their career timing','is reading their wealth report'];
+  var toastEl=document.createElement('div');
+  toastEl.className='act-toast';
+  toastEl.innerHTML='<span class="act-dot"></span><span class="act-text" id="actText"></span><span class="act-time" id="actTime"></span>';
+  document.body.appendChild(toastEl);
+  function pickRand(arr){return arr[Math.floor(Math.random()*arr.length)];}
+  function showToast(){
+    var city=pickRand(cities);
+    var name=pickRand(names);
+    var action=pickRand(actions);
+    var mins=Math.floor(Math.random()*9)+1;
+    document.getElementById('actText').textContent=city+' · '+name+' '+action;
+    document.getElementById('actTime').textContent=mins+'m ago';
+    toastEl.classList.add('show');
+    setTimeout(function(){toastEl.classList.remove('show');},4000);
+  }
+  setTimeout(function(){showToast();setInterval(showToast,8000+Math.random()*4000);},3500);
+})();
+
+// ── Live count fluctuation ──
+(function(){
+  var el=document.getElementById('liveCount');
+  if(!el) return;
+  var base=18;
+  function update(){
+    base=Math.max(12,Math.min(34,base+(Math.random()>.5?1:-1)));
+    el.textContent=base;
+    setTimeout(update,3000+Math.random()*4000);
+  }
+  setTimeout(update,5000);
 })();
 </script>
 </body>

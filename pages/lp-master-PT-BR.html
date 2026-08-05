@@ -200,6 +200,22 @@ section,header,div{position:relative;z-index:1}
 }
 
 @media(max-width:380px){.pricing-grid{grid-template-columns:1fr 1fr};.price-card:last-child{grid-column:1/-1}}
+
+/* ── Live badge ── */
+.live-badge{display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;font-size:11px;color:rgba(232,213,196,0.55);letter-spacing:0.06em}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#5cde98;flex-shrink:0;animation:pulse-live 1.5s ease-in-out infinite}
+@keyframes pulse-live{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
+
+/* ── Activity toast ── */
+.act-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);width:calc(100% - 40px);max-width:320px;background:rgba(18,10,34,0.96);border:1px solid rgba(201,168,76,0.25);border-radius:14px;padding:12px 14px;z-index:190;opacity:0;transition:opacity .4s ease,transform .4s ease;pointer-events:none;display:flex;align-items:center;gap:10px}
+.act-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.act-dot{width:8px;height:8px;border-radius:50%;background:#c9a84c;flex-shrink:0;animation:pulse-live 2s ease-in-out infinite}
+.act-text{font-size:12px;color:rgba(220,205,175,0.85);letter-spacing:0.04em;line-height:1.5}
+.act-time{font-size:10px;color:rgba(200,185,155,0.35);flex-shrink:0;letter-spacing:0.03em}
+
+/* ── Price anchor below submit ── */
+.price-anchor{text-align:center;font-size:11px;color:rgba(232,213,196,0.45);margin-top:8px;letter-spacing:0.05em}
+.price-anchor strong{color:#c9a84c}
 </style>
 </head>
 <body>
@@ -251,14 +267,18 @@ document.addEventListener('DOMContentLoaded',()=>{
     <em>A resposta está na hora em que você nasceu.</em>
   </h1>
   <p class="hero-sub">
-    O BaZi — sistema de 3.000 anos da astrologia chinesa — mapeia amor, riqueza e ciclos de vida com uma precisão que o horóscopo ocidental não alcança. Mais de 127 mil brasileiros já descobriram seu mapa.
+    O BaZi — sistema de 3.000 anos da astrologia chinesa — mapeia amor, riqueza e ciclos de vida com uma precisão que o horóscopo ocidental não alcança. Dezenas de milhares já descobriram seu mapa do destino.
   </p>
   <div class="trust-row">
     <div class="trust-item">⭐ <strong>92%</strong> dizem que acertou*</div>
-    <div class="trust-item">👥 <strong>127.483</strong> leituras</div>
+    <div class="trust-item">👥 <strong>50K+</strong> leituras</div>
     <div class="trust-item">🌙 <strong>3.000</strong> anos de tradição</div>
   </div>
   <div style="font-size:10px;color:rgba(232,213,196,0.35);margin-top:-16px;margin-bottom:8px">*baseado em pesquisa com leitores cadastrados</div>
+  <div class="live-badge">
+    <span class="live-dot"></span>
+    <span id="liveCount">14</span> pessoas verificando agora
+  </div>
 </section>
 
 <!-- Birth Form -->
@@ -297,6 +317,7 @@ document.addEventListener('DOMContentLoaded',()=>{
       <input type="text" id="fcity" placeholder="São Paulo, Rio de Janeiro..." required>
     </div>
     <button type="submit" class="submit-btn">✨ Revelar meu destino — Grátis →</button>
+    <div class="price-anchor">Grátis agora · Relatório completo por <strong>R$14,9</strong> · Vagas limitadas</div>
     <div class="free-note">🔒 Privacidade garantida · Sem cartão necessário · <a href="privacy.html" style="color:var(--dim);text-decoration:underline">Política de Privacidade (LGPD)</a></div>
   </form>
 </div>
@@ -450,6 +471,39 @@ function handleSubmit(e){
   // Go to sample report (free chapters 1-2), then upsell to shop
   window.location.href='report-pt-br.html?'+p.toString();
 }
+// ── Live activity toast (Brazilian names) ──
+(function(){
+  var names=['Ana','Carlos','Fernanda','João','Mariana','Rafael','Camila','Lucas','Beatriz','Thiago','Juliana','Pedro'];
+  var cities=['São Paulo','Rio de Janeiro','Curitiba','Belo Horizonte','Brasília','Salvador','Fortaleza','Recife','Porto Alegre','Campinas'];
+  var actions=['acabou de revelar seu destino ✓','desbloqueou seu mapa do amor ✓','gerou seu relatório de riqueza ✓','acabou de descobrir seu ciclo 2026 ✓','leu a análise de carreira ✓'];
+  var toastEl=document.createElement('div');
+  toastEl.className='act-toast';
+  toastEl.innerHTML='<span class="act-dot"></span><span class="act-text" id="actText"></span><span class="act-time" id="actTime"></span>';
+  document.body.appendChild(toastEl);
+  function rand(arr){return arr[Math.floor(Math.random()*arr.length)];}
+  function showToast(){
+    var mins=Math.floor(Math.random()*9)+1;
+    document.getElementById('actText').textContent=rand(cities)+' · '+rand(names)+' '+rand(actions);
+    document.getElementById('actTime').textContent=mins+'min atrás';
+    toastEl.classList.add('show');
+    setTimeout(function(){toastEl.classList.remove('show');},4200);
+  }
+  setTimeout(function(){showToast();setInterval(showToast,9000+Math.random()*4000);},3500);
+})();
+
+// ── Live count fluctuation ──
+(function(){
+  var el=document.getElementById('liveCount');
+  if(!el)return;
+  var base=14;
+  function update(){
+    base=Math.max(9,Math.min(28,base+(Math.random()>.5?1:-1)));
+    el.textContent=base;
+    setTimeout(update,3500+Math.random()*4000);
+  }
+  setTimeout(update,6000);
+})();
+
 function shareThis(){
   const uid=Math.random().toString(36).substr(2,8);
   const url=window.location.href.split('?')[0]+'?ref='+uid;

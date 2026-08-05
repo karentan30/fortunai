@@ -53,6 +53,8 @@ a{color:var(--gold);text-decoration:none}
 .gate-orig{color:rgba(255,255,255,.3);font-size:13px;text-decoration:line-through;margin-left:6px}
 .gate-btn{background:linear-gradient(135deg,#b8922f,#c9a84c,#e0c875);color:#0a0814;border:none;padding:14px 0;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;display:block;width:100%;max-width:260px;margin:0 auto 12px}
 .gate-alt{color:rgba(201,168,76,.6);font-size:12px;cursor:pointer;text-decoration:underline;display:block}
+.gate-stripe{background:#635bff;color:#fff;border:none;padding:11px 0;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;display:block;width:100%;max-width:260px;margin:8px auto 0}
+.stripe-loading{opacity:.7;pointer-events:none}
 
 #pay-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center}
 #pay-modal.open{display:flex}
@@ -114,6 +116,7 @@ a{color:var(--gold);text-decoration:none}
     <p class="gate-desc">Love & Marriage · Wealth & Finance · Career Path · Ten-Year Luck Cycles · Year-by-Year Forecast</p>
     <div class="gate-price">₹99 <span class="gate-orig">₹799</span></div>
     <button class="gate-btn" onclick="syPay('a','wechat')">🟢 Pay via WeChat</button>
+    <button class="gate-stripe" id="stripe-btn-a" onclick="syPayStripe('a')">💳 Pay with Card (₹99)</button>
     <span class="gate-alt" onclick="syPay('a','alipay')">Pay via Alipay</span>
   </div>
 
@@ -142,7 +145,7 @@ a{color:var(--gold);text-decoration:none}
 </div>
 
 <script>
-var SY_API = (location.hostname==='localhost'||location.hostname==='127.0.0.1') ? 'http://localhost:3021' : '';
+var SY_API = (location.hostname==='localhost'||location.hostname==='127.0.0.1') ? 'http://localhost:3021/api' : '/api';
 var TIME_MAP = {子时:0,丑时:1,寅时:3,卯时:5,辰时:7,巳时:9,午时:11,未时:13,申时:15,酉时:17,戌时:19,亥时:21};
 var LOAD_TIPS = ['Mapping year & month pillars...','Analysing your Day Master...','Calculating Five Elements balance...','Reading your luck cycles...','Finalising your destiny report...'];
 var _tipIdx = 0, _loadPct = 0, _syPoll = null, _syMethod = 'wechat';
@@ -208,7 +211,59 @@ function syInitUnlock(){
   if(orderA){
     document.getElementById('gate-a').style.display='none';
     document.getElementById('locked-content').classList.remove('locked-section');
+    return;
   }
+  var urlParams = new URLSearchParams(location.search);
+  if(urlParams.get('stripe')==='success'){
+    var hubOid = urlParams.get('oid') || localStorage.getItem('sy_stripe_hub_a');
+    var localOid = localStorage.getItem('sy_stripe_local_a');
+    if(hubOid){
+      document.getElementById('gate-a').innerHTML='<div style="padding:20px;color:#c9a84c">⏳ Verifying payment...</div>';
+      syStripeWait('a', hubOid, localOid, 0);
+    }
+  }
+}
+
+function syPayStripe(tier){
+  var btn = document.getElementById('stripe-btn-'+tier);
+  if(btn){ btn.classList.add('stripe-loading'); btn.textContent='Redirecting to checkout...'; }
+  var product = tier==='a' ? 'report_unlock_a' : 'report_unlock_b';
+  fetch(SY_API+'/pay/stripe/create', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({product: product, success_url: location.href.split('?')[0] + (location.search || ''), currency:'inr'})
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if(!d.ok || !d.url){
+      if(btn){ btn.classList.remove('stripe-loading'); btn.textContent='💳 Pay with Card (₹99)'; }
+      alert('Payment error. Please try again.');
+      return;
+    }
+    localStorage.setItem('sy_stripe_hub_a', d.hub_order_no || '');
+    localStorage.setItem('sy_stripe_local_a', d.out_trade_no || '');
+    location.href = d.url;
+  }).catch(function(){
+    if(btn){ btn.classList.remove('stripe-loading'); btn.textContent='💳 Pay with Card (₹99)'; }
+    alert('Network error. Please try again.');
+  });
+}
+
+function syStripeWait(tier, hubOid, localOid, tries){
+  if(tries > 20){ document.getElementById('gate-a').innerHTML='<div style="padding:20px;color:#999">Payment pending. Please refresh in a moment.</div>'; return; }
+  var qUrl = SY_API+'/pay/stripe/query?hub_order_no='+encodeURIComponent(hubOid);
+  if(localOid) qUrl += '&out_trade_no='+encodeURIComponent(localOid);
+  fetch(qUrl).then(function(r){ return r.json(); }).then(function(s){
+    if(s.status==='paid'){
+      localStorage.setItem('sy_unlock_'+tier, hubOid);
+      localStorage.removeItem('sy_stripe_hub_'+tier);
+      localStorage.removeItem('sy_stripe_local_'+tier);
+      document.getElementById('gate-'+tier).style.display='none';
+      document.getElementById('locked-content').classList.remove('locked-section');
+    } else {
+      setTimeout(function(){ syStripeWait(tier, hubOid, localOid, tries+1); }, 2000);
+    }
+  }).catch(function(){
+    setTimeout(function(){ syStripeWait(tier, hubOid, localOid, tries+1); }, 3000);
+  });
 }
 
 function syPay(tier, method){

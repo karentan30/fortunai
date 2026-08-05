@@ -64,9 +64,9 @@ app.use(function(req, res, next) {
 // Stripe webhook 需要 raw body（必须在 express.json 之前）
 app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }));
 // 微信支付回调是 XML(text)
-app.use('/pay/wechat/notify', express.text({ type: '*/*', limit: '1mb' }));
+app.use('/api/pay/wechat/notify', express.text({ type: '*/*', limit: '1mb' }));
 // 支付宝回调是 application/x-www-form-urlencoded
-app.use('/pay/alipay/notify', express.urlencoded({ extended: false, limit: '1mb' }));
+app.use('/api/pay/alipay/notify', express.urlencoded({ extended: false, limit: '1mb' }));
 // 通用 JSON（风水/阴宅路由含多图 base64，需要更大 limit）
 app.use('/api/fengshui', express.json({ limit: '50mb' }));
 app.use('/api/yinzhai', express.json({ limit: '50mb' }));
@@ -132,8 +132,9 @@ app.use('/api/referral', referralRouter);
 app.use('/api/invite', require('./routes/invite'));
 
 // 支付（含 Stripe / 微信 / 支付宝 + 订单查询）
-// payment router 内部包含 /api/* 和 /pay/* 两类路径，挂在根路径
-app.use('/', paymentRouter);
+// payment router 内部包含 /create-checkout /products /orders /pay/* 路径，挂在 /api 下
+// → 生产路径: /api/create-checkout, /api/products, /api/pay/wechat/create, /api/stripe-webhook 等
+app.use('/api', paymentRouter);
 
 // 占算引擎（AI reading）
 app.use('/api', divinationRouter);

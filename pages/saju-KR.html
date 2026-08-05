@@ -143,6 +143,9 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* login hint above paywall */
 .login-hint{text-align:center;font-size:11px;color:var(--ink-dim);padding:6px 16px 2px;font-family:'Apple SD Gothic Neo',sans-serif;letter-spacing:.2px}
 .login-hint a{color:var(--jade);text-decoration:none;font-weight:500}
+.btn-stripe{width:100%;padding:14px 0;background:#635bff;border:none;border-radius:14px;color:#fff;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px;letter-spacing:.5px;transition:all .2s}
+.btn-stripe:active{transform:scale(0.98)}
+.btn-stripe:disabled{opacity:.6;cursor:default}
 </style>
 <link rel="stylesheet" href="/assets/css/common.css">
 </head>
@@ -384,6 +387,7 @@ function showReport(aiText, contextId, tier, locked) {
       (!isLoggedIn ? '<div class="login-hint">이미 계정이 있으신가요? <a href="/pages/login.html?redirect=pages/saju-KR.html">로그인하면 구매 기록이 저장됩니다</a></div>' : '') +
       '<div class="price-row"><span class="price-old">19,900원</span><span class="price-now" style="margin-left:8px">9,900원</span><span class="price-cur">· 기본 심층 리포트</span></div>' +
       '<button class="btn-unlock" onclick="checkout(\'bazi_full\')">📖 내 사주 리포트 지금 받기 · 9,900원 →</button>' +
+      '<button class="btn-stripe" id="kr-stripe-btn" onclick="syPayStripeKR()">💳 카드로 결제 ($2.99)</button>' +
       '<div style="display:flex;gap:8px;margin-top:8px">' +
       '<button class="btn-vip" onclick="checkout(\'bazi_vip\')">👑 프리미엄 · 심층+대운 · 19,900원</button>' +
       '<button class="btn-ghost" onclick="checkout(\'member\')">월정액 구독 · ₩12,900/월</button>' +
@@ -569,7 +573,7 @@ function krPayStart() {
   document.getElementById('krPayQr').src = '';
   document.getElementById('krPayStatus').textContent = '결제 준비 중…';
   var product = (_krPayTier === 'vip') ? 'bazi_vip' : 'bazi_full';
-  fetch('/pay/wechat/create', {
+  fetch('/api/pay/wechat/create', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({ product: product, method: _krPayMethod })
@@ -584,7 +588,7 @@ function krPayStart() {
       return;
     }
     _krPayTimer = setInterval(function(){
-      fetch('/pay/wechat/query?out_trade_no=' + encodeURIComponent(_krPayOid))
+      fetch('/api/pay/wechat/query?out_trade_no=' + encodeURIComponent(_krPayOid))
         .then(function(r){ return r.json(); }).then(function(s){
           if (s.status === 'paid') {
             clearInterval(_krPayTimer); _krPayTimer = null;
@@ -686,6 +690,92 @@ function unlockFullReport() {
 
 // Check if Stripe is available
 fetch('/api/products').then(function(r){ return r.json(); }).then(function(){ window._stripeAvail = false; }).catch(function(){});
+
+// Stripe card payment for KR
+function syPayStripeKR() {
+  var btn = document.getElementById('kr-stripe-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '결제 페이지로 이동 중…'; }
+  if (lastInput) { try { localStorage.setItem('sy_last_bazi', JSON.stringify(lastInput)); } catch(e){} }
+  fetch('/api/pay/stripe/create', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({ product: 'bazi_full', success_url: location.href.split('?')[0], currency: 'krw' })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (!d.ok || !d.url) {
+      if (btn) { btn.disabled = false; btn.textContent = '💳 카드로 결제 ($2.99)'; }
+      toast('결제 연결 실패. 다시 시도해 주세요', 'error');
+      return;
+    }
+    localStorage.setItem('sy_kr_stripe_hub', d.hub_order_no || '');
+    localStorage.setItem('sy_kr_stripe_local', d.out_trade_no || '');
+    location.href = d.url;
+  }).catch(function(){
+    if (btn) { btn.disabled = false; btn.textContent = '💳 카드로 결제 ($2.99)'; }
+    toast('네트워크 오류. 다시 시도해 주세요', 'error');
+  });
+}
+
+function syStripeWaitKR(hubOid, localOid, tries) {
+  if (tries > 20) { toast('결제 확인 중입니다. 잠시 후 새로고침 해주세요', 'info'); return; }
+  var qUrl = '/api/pay/stripe/query?hub_order_no=' + encodeURIComponent(hubOid);
+  if (localOid) qUrl += '&out_trade_no=' + encodeURIComponent(localOid);
+  fetch(qUrl).then(function(r){ return r.json(); }).then(function(s){
+    if (s.status === 'paid') {
+      localStorage.setItem('sy_kr_order', hubOid);
+      localStorage.removeItem('sy_kr_stripe_hub');
+      localStorage.removeItem('sy_kr_stripe_local');
+      toast('결제 완료! 심층 리포트를 불러오는 중…');
+      var saved = null;
+      try { saved = JSON.parse(localStorage.getItem('sy_last_bazi') || 'null'); } catch(e){}
+      if (saved && saved.birthYear) {
+        var inp = Object.assign({}, saved, { order_no: hubOid });
+        document.getElementById('reportScreen').innerHTML = '';
+        document.getElementById('loadingScreen').classList.add('show');
+        fetchBazi(inp).then(function(d){
+          document.getElementById('loadingScreen').classList.remove('show');
+          if (d && d.reading) showReport(d.reading, d.contextId, d.tier, d.locked);
+        }).catch(function(){ document.getElementById('loadingScreen').classList.remove('show'); });
+      } else {
+        unlockFullReport();
+      }
+    } else {
+      setTimeout(function(){ syStripeWaitKR(hubOid, localOid, tries + 1); }, 2000);
+    }
+  }).catch(function(){
+    setTimeout(function(){ syStripeWaitKR(hubOid, localOid, tries + 1); }, 3000);
+  });
+}
+
+// Handle Stripe payment return (?stripe=success)
+(function(){
+  var params = new URLSearchParams(location.search);
+  if (params.get('stripe') !== 'success') return;
+  var hubOid = params.get('oid') || localStorage.getItem('sy_kr_stripe_hub');
+  var localOid = localStorage.getItem('sy_kr_stripe_local');
+  if (!hubOid) return;
+  try { history.replaceState(null, '', location.pathname); } catch(e){}
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('sy_last_bazi') || 'null'); } catch(e){}
+  if (saved && saved.birthYear) {
+    lastInput = saved;
+    document.getElementById('inputScreen').style.display = 'none';
+    document.getElementById('loadingScreen').classList.add('show');
+    runSteps();
+    fetchBazi(saved).then(function(d){
+      document.getElementById('loadingScreen').classList.remove('show');
+      if (d && d.reading) {
+        showReport(d.reading, d.contextId, d.tier, d.locked);
+        syStripeWaitKR(hubOid, localOid, 0);
+      }
+    }).catch(function(){
+      document.getElementById('loadingScreen').classList.remove('show');
+      document.getElementById('inputScreen').style.display = 'block';
+    });
+  } else {
+    toast('결제 확인 중… 사주를 다시 생성해 주세요');
+    syStripeWaitKR(hubOid, localOid, 0);
+  }
+})();
 
 // Restore unlock from previous order
 (function(){
