@@ -430,13 +430,13 @@ input::placeholder,textarea::placeholder { color: rgba(200,196,180,0.25) !import
 
   <div style="display:flex;justify-content:center;gap:16px;padding:12px 20px;margin:0 16px 12px;background:rgba(200,184,122,0.04);border:1px solid rgba(200,184,122,0.08);border-radius:10px">
   <div style="text-align:center">
-    <div id="statCount" style="font-size:16px;font-weight:500;color:rgba(200,184,122,0.9);font-family:'Noto Serif SC',serif">…</div>
-    <div style="font-size:10px;color:rgba(200,196,180,0.5);letter-spacing:0.08em">已生成命盘</div>
+    <div style="font-size:16px;font-weight:500;color:rgba(200,184,122,0.9);font-family:'Noto Serif SC',serif">5000+</div>
+    <div style="font-size:10px;color:rgba(200,196,180,0.5);letter-spacing:0.08em">字深度报告</div>
   </div>
   <div style="width:1px;background:rgba(200,184,122,0.1)"></div>
   <div style="text-align:center">
-    <div style="font-size:16px;font-weight:500;color:rgba(200,184,122,0.9);font-family:'Noto Serif SC',serif">5000+</div>
-    <div style="font-size:10px;color:rgba(200,196,180,0.5);letter-spacing:0.08em">字深度报告</div>
+    <div style="font-size:16px;font-weight:500;color:rgba(200,184,122,0.9);font-family:'Noto Serif SC',serif">AI</div>
+    <div style="font-size:10px;color:rgba(200,196,180,0.5);letter-spacing:0.08em">即时生成</div>
   </div>
   <div style="width:1px;background:rgba(200,184,122,0.1)"></div>
   <div style="text-align:center">
@@ -444,26 +444,6 @@ input::placeholder,textarea::placeholder { color: rgba(200,196,180,0.25) !import
     <div style="font-size:10px;color:rgba(200,196,180,0.5);letter-spacing:0.08em">仅供参考</div>
   </div>
 </div>
-<script>
-(function(){
-  // 从后端拉取真实数据；若接口不存在则用本地递增显示替代静态假数字
-  fetch('/api/stats').then(function(r){ return r.json(); }).then(function(d){
-    var el = document.getElementById('statCount');
-    if (el && d && d.baziCount) el.textContent = d.baziCount.toLocaleString();
-  }).catch(function(){
-    // 接口不存在时：用 localStorage 做本地累加近似（每次加载随机增加10-60），避免固定假数
-    var el = document.getElementById('statCount');
-    if (!el) return;
-    var base = 12847;
-    var stored = parseInt(localStorage.getItem('sy_stat_count') || base, 10);
-    if (isNaN(stored) || stored < base) stored = base;
-    var increment = Math.floor(Math.random() * 51) + 10;
-    stored += increment;
-    try { localStorage.setItem('sy_stat_count', stored); } catch(e){}
-    el.textContent = stored.toLocaleString('zh-CN');
-  });
-})();
-</script>
 
   <div class="form-section">
     <div class="form-label">出生信息（阳历）</div>
@@ -1302,8 +1282,27 @@ function submitLead() {
 }
 
 function _rrect(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.quadraticCurveTo(x+w,y,x+w,y+r);ctx.lineTo(x+w,y+h-r);ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);ctx.lineTo(x+r,y+h);ctx.quadraticCurveTo(x,y+h,x,y+h-r);ctx.lineTo(x,y+r);ctx.quadraticCurveTo(x,y,x+r,y);ctx.closePath();}
+function parsePillarsFromText(text){
+  var TIAN='甲乙丙丁戊己庚辛壬癸',DI='子丑寅卯辰巳午未申酉戌亥';
+  var pat=function(label){
+    var re=new RegExp(label+'[：:「【\\s]*(['+TIAN+'])(['+DI+'])');
+    var m=text.match(re);return m?{tian:m[1],di:m[2]}:null;
+  };
+  var y=pat('年柱'),mo=pat('月柱'),d=pat('日柱'),h=pat('时柱');
+  if(y&&mo&&d){
+    return [
+      {label:'年柱',tian:y.tian,di:y.di},
+      {label:'月柱',tian:mo.tian,di:mo.di},
+      {label:'日柱',tian:d.tian,di:d.di,isDay:true},
+      {label:'时柱',tian:(h?h.tian:'？'),di:(h?h.di:'？')}
+    ];
+  }
+  return null;
+}
 function generateBaziCard(){
-  if(!lastBaziInput){showToast('请先生成命盘报告','error');return;}
+  if(!lastBaziInput||!lastAiText){showToast('请先生成命盘报告','error');return;}
+  showToast('生成中...');
+  document.fonts.ready.then(function(){
   var W=1080,H=1920,cv=document.createElement('canvas');
   cv.width=W;cv.height=H;var ctx=cv.getContext('2d');
   var bg=ctx.createLinearGradient(0,0,W*0.4,H);bg.addColorStop(0,'#0d1b3e');bg.addColorStop(1,'#1a1145');
@@ -1331,8 +1330,7 @@ function generateBaziCard(){
   ctx.fillStyle='rgba(200,196,180,0.65)';ctx.font='30px "Noto Serif SC",serif';ctx.fillText(gLabel+' · '+bStr,W/2,infoY);infoY+=52;
   hline(infoY);infoY+=50;
   ctx.fillStyle='rgba(201,168,76,0.45)';ctx.font='28px "Noto Serif SC",serif';ctx.fillText('四  柱  八  字',W/2,infoY);infoY+=52;
-  // 注意：分享卡片使用客户端近似算法，仅用于视觉展示，实际命盘以后端报告为准
-  var pillars=getBazi(lastBaziInput.year,lastBaziInput.month,lastBaziInput.day,lastBaziInput.hour);
+  var pillars=parsePillarsFromText(lastAiText)||getBazi(lastBaziInput.year,lastBaziInput.month,lastBaziInput.day,lastBaziInput.hour);
   var cW=210,cH=300,gap=20,pSX=(W-4*cW-3*gap)/2;
   pillars.forEach(function(p,i){
     var px=pSX+i*(cW+gap),py=infoY;
@@ -1350,7 +1348,7 @@ function generateBaziCard(){
   infoY+=52;hline(infoY);infoY+=62;
   if(lastAiText){
     var sents=lastAiText.split(/[。！？]/).map(function(s){return s.replace(/[#\*\[\]]/g,'').trim();}).filter(function(s){return s.length>=18&&s.length<=70;});
-    var insight=sents[0]||'';
+    var insight=sents[3]||sents[2]||sents[1]||sents[0]||'';
     if(insight){
       ctx.fillStyle='rgba(201,168,76,0.22)';ctx.font='italic 72px Georgia,serif';ctx.textAlign='left';ctx.fillText('"',W*0.1-8,infoY+14);
       ctx.fillStyle='rgba(240,238,230,0.82)';ctx.font='34px "Noto Serif SC",serif';ctx.textAlign='center';
@@ -1369,10 +1367,12 @@ function generateBaziCard(){
   ctx.fillStyle='rgba(200,196,180,0.3)';ctx.font='22px "Noto Serif SC",serif';ctx.fillText('你求什么 · 自有天机',W/2,H-58);
   cv.toBlob(function(blob){
     var url=URL.createObjectURL(blob),a=document.createElement('a');
-    a.href=url;a.download='善缘命盘_'+(lastBaziInput.name||'八字')+'.png';a.click();
+    a.href=url;a.download='善缘命盘_'+(lastBaziInput.name||'八字')+'.png';
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(function(){URL.revokeObjectURL(url);},1000);
     showToast('命盘卡已保存 ✨ 可发小红书 / 朋友圈！');
   },'image/png');
+  }); // fonts.ready
 }
 </script>
 
