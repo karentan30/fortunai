@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<title>善缘 · 断事问卦</title>
+<meta name="description" content="有事拿不定主意？六爻起卦·AI断事·宜/不宜/等待·买房/跳槽/感情/投资一卦知吉凶">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#0d0b08;font-family:'Noto Serif SC',serif;color:rgba(255,245,220,0.85);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:80px}
+
+.nav-back{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(201,168,76,0.4);letter-spacing:0.1em;padding:16px 20px 0;text-decoration:none}
+
+.hero{padding:28px 20px 20px;text-align:center;position:relative}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,0.07),transparent 65%);pointer-events:none}
+.hero-badge{font-size:9px;letter-spacing:0.22em;color:rgba(201,168,76,0.45);margin-bottom:10px}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:rgba(255,245,220,0.95);letter-spacing:0.1em;line-height:1.2;margin-bottom:8px}
+.hero-sub{font-size:11px;color:rgba(255,245,220,0.38);letter-spacing:0.08em;line-height:1.9}
+.gold-line{width:36px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.5),transparent);margin:14px auto}
+
+/* topic pills */
+.topics{display:flex;flex-wrap:wrap;gap:8px;padding:0 20px;margin-bottom:20px;justify-content:center}
+.topic-pill{font-size:11px;padding:7px 14px;border-radius:20px;border:1px solid rgba(255,245,220,0.1);color:rgba(255,245,220,0.4);cursor:pointer;transition:all 0.2s;background:transparent;font-family:'Noto Serif SC',serif}
+.topic-pill.active,.topic-pill:active{background:rgba(201,168,76,0.1);border-color:rgba(201,168,76,0.35);color:rgba(201,168,76,0.85)}
+
+/* question area */
+.question-wrap{margin:0 20px 20px}
+.q-label{font-size:10px;letter-spacing:0.14em;color:rgba(255,245,220,0.35);margin-bottom:8px}
+.q-textarea{width:100%;background:rgba(255,245,220,0.03);border:1px solid rgba(255,245,220,0.1);border-radius:10px;padding:14px;font-size:13px;color:rgba(255,245,220,0.8);font-family:'Noto Serif SC',serif;resize:none;outline:none;line-height:1.8;min-height:100px}
+.q-textarea:focus{border-color:rgba(201,168,76,0.3)}
+.q-textarea::placeholder{color:rgba(255,245,220,0.2);font-size:12px}
+.q-hint{font-size:10px;color:rgba(255,245,220,0.2);margin-top:6px;line-height:1.7;letter-spacing:0.03em}
+
+/* method selector */
+.method-wrap{margin:0 20px 20px}
+.method-label{font-size:10px;letter-spacing:0.14em;color:rgba(255,245,220,0.35);margin-bottom:10px}
+.methods{display:flex;gap:8px}
+.method-btn{flex:1;padding:11px 0;text-align:center;border-radius:8px;border:1px solid rgba(255,245,220,0.1);cursor:pointer;transition:all 0.2s;background:transparent}
+.method-btn.active{background:rgba(201,168,76,0.08);border-color:rgba(201,168,76,0.3)}
+.method-name{font-size:11px;letter-spacing:0.06em;color:rgba(255,245,220,0.6);display:block;margin-bottom:2px}
+.method-btn.active .method-name{color:rgba(201,168,76,0.85)}
+.method-desc{font-size:9px;color:rgba(255,245,220,0.25);letter-spacing:0.04em}
+
+/* shake gua animation */
+.gua-wrap{margin:0 20px 16px;text-align:center;display:none}
+.gua-coins{display:flex;justify-content:center;gap:16px;margin-bottom:12px}
+.coin{width:44px;height:44px;border-radius:50%;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);display:flex;align-items:center;justify-content:center;font-size:18px;transition:transform 0.15s}
+.coin.shake{animation:coinShake 0.4s ease}
+@keyframes coinShake{0%{transform:rotate(0deg) scale(1)}25%{transform:rotate(-15deg) scale(1.1)}75%{transform:rotate(15deg) scale(1.1)}100%{transform:rotate(0deg) scale(1)}}
+.gua-prompt{font-size:11px;color:rgba(255,245,220,0.35);letter-spacing:0.1em}
+
+/* CTA button */
+.btn-ask{width:calc(100% - 40px);margin:0 20px 24px;display:block;padding:16px 0;background:linear-gradient(135deg,rgba(201,168,76,0.2),rgba(201,168,76,0.1));border:1px solid rgba(201,168,76,0.35);border-radius:10px;color:rgba(201,168,76,0.9);font-size:14px;letter-spacing:0.15em;font-family:'Noto Serif SC',serif;cursor:pointer;text-align:center;transition:all 0.2s}
+.btn-ask:active{background:rgba(201,168,76,0.25)}
+.btn-ask:disabled{opacity:0.4;cursor:not-allowed}
+
+/* result */
+.result-wrap{margin:0 20px;display:none}
+
+.verdict-card{border-radius:12px;padding:20px;margin-bottom:14px;text-align:center;position:relative;overflow:hidden}
+.verdict-yi{background:linear-gradient(135deg,rgba(91,191,160,0.12),rgba(91,191,160,0.05));border:1px solid rgba(91,191,160,0.25)}
+.verdict-buyi{background:linear-gradient(135deg,rgba(200,80,80,0.1),rgba(200,80,80,0.04));border:1px solid rgba(200,80,80,0.2)}
+.verdict-deng{background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.04));border:1px solid rgba(201,168,76,0.2)}
+.verdict-gua{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:300;letter-spacing:0.1em;margin-bottom:6px}
+.verdict-yi .verdict-gua{color:rgba(91,191,160,0.9)}
+.verdict-buyi .verdict-gua{color:rgba(220,100,100,0.85)}
+.verdict-deng .verdict-gua{color:rgba(201,168,76,0.85)}
+.verdict-label{font-size:11px;letter-spacing:0.2em;margin-bottom:10px}
+.verdict-yi .verdict-label{color:rgba(91,191,160,0.6)}
+.verdict-buyi .verdict-label{color:rgba(220,100,100,0.55)}
+.verdict-deng .verdict-label{color:rgba(201,168,76,0.55)}
+.verdict-summary{font-size:13px;color:rgba(255,245,220,0.75);line-height:1.8;letter-spacing:0.04em}
+
+.result-section{background:rgba(255,245,220,0.03);border:1px solid rgba(255,245,220,0.07);border-radius:10px;padding:16px;margin-bottom:10px}
+.rs-title{font-size:10px;letter-spacing:0.18em;color:rgba(201,168,76,0.45);margin-bottom:10px}
+.rs-body{font-size:12px;color:rgba(255,245,220,0.6);line-height:2;letter-spacing:0.04em}
+.rs-body p{margin-bottom:6px}
+.rs-body p:last-child{margin-bottom:0}
+
+/* timing bar */
+.timing-bar{display:flex;align-items:center;gap:8px;margin-top:8px}
+.timing-label{font-size:10px;color:rgba(255,245,220,0.3);white-space:nowrap}
+.timing-track{flex:1;height:4px;background:rgba(255,245,220,0.06);border-radius:2px;overflow:hidden}
+.timing-fill{height:100%;border-radius:2px;transition:width 0.8s ease}
+.timing-fill-good{background:linear-gradient(90deg,rgba(91,191,160,0.4),rgba(91,191,160,0.8))}
+.timing-fill-mid{background:linear-gradient(90deg,rgba(201,168,76,0.4),rgba(201,168,76,0.8))}
+.timing-fill-bad{background:linear-gradient(90deg,rgba(200,80,80,0.3),rgba(200,80,80,0.6))}
+.timing-val{font-size:10px;color:rgba(255,245,220,0.35);white-space:nowrap}
+
+/* action items */
+.action-item{display:flex;gap:10px;align-items:flex-start;margin-bottom:10px}
+.action-item:last-child{margin-bottom:0}
+.action-dot{width:6px;height:6px;border-radius:50%;background:rgba(201,168,76,0.5);flex-shrink:0;margin-top:6px}
+.action-text{font-size:12px;color:rgba(255,245,220,0.55);line-height:1.8;letter-spacing:0.03em}
+
+/* upsell */
+.upsell{background:linear-gradient(135deg,rgba(201,168,76,0.07),rgba(201,168,76,0.03));border:1px solid rgba(201,168,76,0.18);border-radius:10px;padding:16px;margin-bottom:14px;text-align:center}
+.upsell-title{font-size:12px;letter-spacing:0.1em;color:rgba(201,168,76,0.75);margin-bottom:5px}
+.upsell-sub{font-size:10px;color:rgba(255,245,220,0.35);line-height:1.7;margin-bottom:12px}
+.btn-upsell{display:block;width:100%;padding:12px 0;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.25);border-radius:6px;color:rgba(201,168,76,0.85);font-size:12px;letter-spacing:0.12em;font-family:'Noto Serif SC',serif;cursor:pointer;text-decoration:none}
+
+.btn-retry{width:100%;padding:13px 0;background:transparent;border:1px solid rgba(255,245,220,0.1);border-radius:8px;color:rgba(255,245,220,0.35);font-size:12px;letter-spacing:0.1em;font-family:'Noto Serif SC',serif;cursor:pointer;margin-bottom:14px}
+
+/* loading */
+.loading-wrap{margin:40px 20px;text-align:center;display:none}
+.loading-gua{font-size:32px;animation:spin 2s linear infinite;display:inline-block;margin-bottom:12px}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.loading-text{font-size:12px;color:rgba(255,245,220,0.3);letter-spacing:0.12em;line-height:2}
+
+/* paywall */
+.paywall{margin:0 20px;display:none;text-align:center}
+.pw-title{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:rgba(255,245,220,0.9);letter-spacing:0.1em;margin-bottom:8px}
+.pw-sub{font-size:11px;color:rgba(255,245,220,0.35);line-height:1.9;margin-bottom:20px}
+.pw-preview{background:rgba(255,245,220,0.03);border:1px solid rgba(255,245,220,0.07);border-radius:10px;padding:14px;margin-bottom:16px;position:relative;overflow:hidden}
+.pw-preview::after{content:'';position:absolute;bottom:0;left:0;right:0;height:60px;background:linear-gradient(transparent,#0d0b08)}
+.pw-preview-text{font-size:12px;color:rgba(255,245,220,0.5);line-height:1.9;letter-spacing:0.03em}
+.btn-pay{display:block;width:100%;padding:15px 0;background:linear-gradient(135deg,rgba(201,168,76,0.2),rgba(201,168,76,0.1));border:1px solid rgba(201,168,76,0.35);border-radius:10px;color:rgba(201,168,76,0.9);font-size:14px;letter-spacing:0.15em;font-family:'Noto Serif SC',serif;cursor:pointer;text-decoration:none;margin-bottom:8px}
+</style>
+</head>
+<body>
+
+<a class="nav-back" href="/index.html">← 返回首页</a>
+
+<div class="hero">
+  <div class="hero-badge">断事问卦 · AI六爻</div>
+  <div class="hero-title">有事拿不定<br>起一卦问问</div>
+  <div class="gold-line"></div>
+  <div class="hero-sub">描述你的处境·AI以六爻断吉凶<br>宜做 · 不宜 · 等待时机</div>
+</div>
+
+<!-- topic pills -->
+<div class="topics" id="topicPills">
+  <div class="topic-pill active" onclick="selectTopic(this,'买房置业','我在考虑买一套房子，不知道现在是否是合适的时机，这个决定对不对？')">🏠 买房置业</div>
+  <div class="topic-pill" onclick="selectTopic(this,'跳槽换工作','我在考虑换工作/接受新的offer，不知道这个机会是否值得抓住，时机对不对？')">💼 跳槽换工作</div>
+  <div class="topic-pill" onclick="selectTopic(this,'感情抉择','感情上有一件事让我很纠结，不确定该怎么选择，需要一个方向。')">💑 感情抉择</div>
+  <div class="topic-pill" onclick="selectTopic(this,'投资理财','我在考虑一项投资/理财决策，不确定风险和时机，该不该做？')">📈 投资理财</div>
+  <div class="topic-pill" onclick="selectTopic(this,'创业合伙','我在考虑创业或者与人合伙，不确定这个机会和这个人是否可靠。')">🤝 创业合伙</div>
+  <div class="topic-pill" onclick="selectTopic(this,'出行搬迁','我在考虑搬家/移民/出行，不确定这个方向和时机是否合适。')">✈️ 出行搬迁</div>
+  <div class="topic-pill" onclick="selectTopic(this,'其他事项','')">✏️ 其他</div>
+</div>
+
+<!-- question -->
+<div class="question-wrap">
+  <div class="q-label">说说你的处境</div>
+  <textarea class="q-textarea" id="questionInput" rows="4" placeholder="例如：我相中了一套房子，价格合适，但不确定现在的市场时机，我的经济情况能否承担，这个决定对我家里的运势会不会有影响……"></textarea>
+  <div class="q-hint">越具体越准·无需提供姓名·AI自动起卦断事</div>
+</div>
+
+<!-- method -->
+<div class="method-wrap">
+  <div class="method-label">起卦方式</div>
+  <div class="methods">
+    <div class="method-btn active" onclick="selectMethod(this,'liuyao')">
+      <span class="method-name">六爻卦</span>
+      <span class="method-desc">断事最准</span>
+    </div>
+    <div class="method-btn" onclick="selectMethod(this,'meihua')">
+      <span class="method-name">梅花易数</span>
+      <span class="method-desc">时间起卦</span>
+    </div>
+    <div class="method-btn" onclick="selectMethod(this,'tarot')">
+      <span class="method-name">塔罗引导</span>
+      <span class="method-desc">直觉感应</span>
+    </div>
+  </div>
+</div>
+
+<button class="btn-ask" id="btnAsk" onclick="startReading()">摇卦起问 →</button>
+
+<!-- loading -->
+<div class="loading-wrap" id="loadingWrap">
+  <div class="loading-gua">☯</div>
+  <div class="loading-text">正在起卦推演<br>卦象成形，断事中…</div>
+</div>
+
+<!-- result -->
+<div class="result-wrap" id="resultWrap"></div>
+
+<!-- paywall -->
+<div class="paywall" id="paywallWrap">
+  <div class="pw-title">卦象已成</div>
+  <div class="pw-sub">六爻已排·吉凶已现<br>解锁完整断事报告，查看详细分析与行动建议</div>
+  <div class="pw-preview">
+    <div class="pw-preview-text" id="pwPreviewText"></div>
+  </div>
+  <a class="btn-pay" href="/pages/payment.html?product=duanshi&price=9.9" id="btnPay">解锁完整卦象 $9.9</a>
+  <div style="font-size:10px;color:rgba(255,245,220,0.2);letter-spacing:0.04em">一次付费·即时解锁·支持微信/支付宝/信用卡</div>
+</div>
+
+<script>
+var selectedMethod = 'liuyao';
+var selectedTopic = '买房置业';
+
+function selectTopic(el, topic, preset) {
+  document.querySelectorAll('.topic-pill').forEach(function(p){ p.classList.remove('active'); });
+  el.classList.add('active');
+  selectedTopic = topic;
+  if (preset) {
+    document.getElementById('questionInput').value = preset;
+  }
+}
+
+function selectMethod(el, method) {
+  document.querySelectorAll('.method-btn').forEach(function(b){ b.classList.remove('active'); });
+  el.classList.add('active');
+  selectedMethod = method;
+}
+
+function startReading() {
+  var q = document.getElementById('questionInput').value.trim();
+  if (!q || q.length < 10) {
+    alert('请描述你的处境，至少说清楚是什么事');
+    return;
+  }
+
+  document.getElementById('btnAsk').disabled = true;
+  document.getElementById('loadingWrap').style.display = 'block';
+  document.getElementById('resultWrap').style.display = 'none';
+  document.getElementById('paywallWrap').style.display = 'none';
+
+  // scroll to loading
+  document.getElementById('loadingWrap').scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+  var token = localStorage.getItem('sy_token') || '';
+  var hasPaid = localStorage.getItem('sy_duanshi_paid') === '1';
+
+  fetch('/api/duanshi/stream', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ question: q, topic: selectedTopic, method: selectedMethod })
+  }).then(function(res) {
+    if (!res.ok) throw new Error(res.status);
+    return res.json();
+  }).then(function(data) {
+    document.getElementById('loadingWrap').style.display = 'none';
+    document.getElementById('btnAsk').disabled = false;
+
+    if (data.paywall) {
+      showPaywall(data);
+    } else {
+      showResult(data);
+    }
+  }).catch(function(err) {
+    // fallback: show demo result for dev/preview
+    document.getElementById('loadingWrap').style.display = 'none';
+    document.getElementById('btnAsk').disabled = false;
+    showDemoResult(q);
+  });
+}
+
+function showResult(data) {
+  var wrap = document.getElementById('resultWrap');
+  var verdict = data.verdict; // 'yi' | 'buyi' | 'deng'
+  var verdictMap = {
+    yi:   { cls:'verdict-yi',   gua:'宜', label:'此事可为' },
+    buyi: { cls:'verdict-buyi', gua:'不宜', label:'此时不宜' },
+    deng: { cls:'verdict-deng', gua:'等', label:'静待时机' }
+  };
+  var v = verdictMap[verdict] || verdictMap['deng'];
+
+  var timingFillClass = verdict==='yi' ? 'timing-fill-good' : verdict==='buyi' ? 'timing-fill-bad' : 'timing-fill-mid';
+  var timingWidth = verdict==='yi' ? '80%' : verdict==='buyi' ? '25%' : '55%';
+
+  var actionsHtml = (data.actions||[]).map(function(a){
+    return '<div class="action-item"><div class="action-dot"></div><div class="action-text">'+a+'</div></div>';
+  }).join('');
+
+  wrap.innerHTML =
+    '<div class="verdict-card '+v.cls+'">' +
+      '<div class="verdict-gua">'+v.gua+'</div>' +
+      '<div class="verdict-label">'+v.label+'</div>' +
+      '<div class="verdict-summary">'+(data.summary||'')+'</div>' +
+    '</div>' +
+    '<div class="result-section">' +
+      '<div class="rs-title">卦象解析</div>' +
+      '<div class="rs-body">'+(data.analysis||'').split('\n').map(function(l){return '<p>'+l+'</p>';}).join('')+'</div>' +
+    '</div>' +
+    '<div class="result-section">' +
+      '<div class="rs-title">时机研判</div>' +
+      '<div class="rs-body"><p>'+(data.timing_desc||'')+'</p></div>' +
+      '<div class="timing-bar"><span class="timing-label">当下时机</span><div class="timing-track"><div class="timing-fill '+timingFillClass+'" style="width:0" id="timingFill"></div></div><span class="timing-val">'+(data.timing_val||'')+'</span></div>' +
+    '</div>' +
+    '<div class="result-section">' +
+      '<div class="rs-title">行动建议</div>' +
+      actionsHtml +
+    '</div>' +
+    '<div class="upsell">' +
+      '<div class="upsell-title">想看更深？</div>' +
+      '<div class="upsell-sub">结合你的八字命盘做专项分析<br>精准到你的流年运势与此事的关联</div>' +
+      '<a class="btn-upsell" href="/index.html">生成八字全年运势报告</a>' +
+    '</div>' +
+    '<button class="btn-retry" onclick="resetForm()">换一个问题重新起卦</button>';
+
+  wrap.style.display = 'block';
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // animate timing bar
+  setTimeout(function(){
+    var fill = document.getElementById('timingFill');
+    if(fill) fill.style.width = timingWidth;
+  }, 400);
+}
+
+function showPaywall(data) {
+  document.getElementById('pwPreviewText').textContent = data.preview || '卦象显示此事吉凶已现，需进一步解锁查看……';
+  document.getElementById('paywallWrap').style.display = 'block';
+  document.getElementById('paywallWrap').scrollIntoView({ behavior: 'smooth' });
+}
+
+function showDemoResult(q) {
+  // demo for preview when API not available
+  var demoData = {
+    verdict: 'deng',
+    summary: '卦象显示此事时机未到，宜静待、不宜急进。当下先做准备，一个月后再看。',
+    analysis: '六爻排列，世爻持子水，官鬼发动，财爻被克。\n主事者（世爻）意愿坚定，然外部阻力（应爻）明显，时机尚不成熟。\n财爻受克，短期内经济压力不小，需谨慎评估承担能力。',
+    timing_desc: '建议观望一到两个月，待卦气转旺再行动。农历下月中旬前后为小吉，可再次评估。',
+    timing_val: '55分',
+    actions: [
+      '近期不要仓促做最终决定，给自己留出观察期',
+      '利用这段时间做更充分的调查和准备',
+      '重点关注资金链是否稳健，不要高估自己的承受能力',
+      '一个月后如整体情况无变化，可考虑行动'
+    ]
+  };
+  showResult(demoData);
+}
+
+function resetForm() {
+  document.getElementById('resultWrap').style.display = 'none';
+  document.getElementById('paywallWrap').style.display = 'none';
+  document.getElementById('questionInput').value = '';
+  document.getElementById('btnAsk').disabled = false;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

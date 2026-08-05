@@ -2519,6 +2519,75 @@ Language: ${mayaLangFull}. Writing style: destiny poetry — each chapter ends w
 });
 
 // ══════════════════════════════════════════
+// POST /api/duanshi/stream — 断事问卦（六爻AI判断）
+// ══════════════════════════════════════════
+router.post('/duanshi/stream', async (req, res) => {
+  try {
+    const { question, topic, method } = req.body;
+    if (!question || question.length < 5) return res.status(400).json({ error: 'question required' });
+
+    // 随机生成六爻卦象（模拟摇钱起卦）
+    const hexLines = Array.from({length:6}, () => Math.floor(Math.random()*4)+6); // 6老阴 7少阳 8少阴 9老阳
+    const guaNames = ['乾','兑','离','震','巽','坎','艮','坤'];
+    function linesToGua(lines){ let b=lines.map(l=>l%2===0?0:1); let n=b[0]*4+b[1]*2+b[2]; return guaNames[n]||'坤'; }
+    const lowerGua = linesToGua(hexLines.slice(0,3));
+    const upperGua = linesToGua(hexLines.slice(3,6));
+    const guaStr = upperGua+'卦上'+ lowerGua +'卦下';
+
+    const now = new Date();
+    const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
+
+    const systemPrompt = `你是精通六爻预测的命理大师，精通《增删卜易》《断易天机》，以六爻卦象断事准确著称。
+你的风格：直接、有力、不绕弯子。给出明确的"宜/不宜/等待"判断，配上卦象解释和具体行动建议。
+你必须返回严格的JSON格式，不要有任何markdown或额外文字。`;
+
+    const userMsg = `今日${dateStr}，来问一件事：${question}
+
+起卦方法：${method==='liuyao'?'六爻摇钱卦':'梅花易数'}
+卦象：${guaStr}（六爻爻辞：${hexLines.join('-')}）
+事项类别：${topic||'综合'}
+
+请以六爻断事，返回如下JSON（不要任何markdown代码块，直接返回JSON对象）：
+{
+  "verdict": "yi|buyi|deng",
+  "summary": "一句话总结判断（20字以内，有力直接）",
+  "analysis": "卦象解析（3-4句，引用卦名和爻象，解释吉凶原因）",
+  "timing_desc": "时机研判（具体说几月/几周后，给出动作节点）",
+  "timing_val": "时机评分如'75分'或'30分'",
+  "actions": ["行动建议1", "行动建议2", "行动建议3"]
+}`;
+
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMsg }
+    ];
+
+    const raw = await deepseekChat(messages, { maxTokens: 800 });
+
+    // 解析JSON
+    let parsed;
+    try {
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
+    } catch(e) {
+      // 解析失败给默认结果
+      parsed = {
+        verdict: 'deng',
+        summary: '卦象复杂，宜静待，勿仓促行事。',
+        analysis: `${guaStr}，世爻持守，应爻动而不发。此卦主静不主动，当下时机尚未成熟，急进则失，缓图则得。`,
+        timing_desc: '建议观望一个月，待局势明朗再做决定。',
+        timing_val: '50分',
+        actions: ['暂缓最终决定，给自己留出观察期', '做充分调查和准备工作', '一个月后重新评估']
+      };
+    }
+
+    res.json(parsed);
+  } catch(e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+// ══════════════════════════════════════════
 // POST /api/leads — 收集用户留资
 // ══════════════════════════════════════════
 router.post('/leads', async (req, res) => {
