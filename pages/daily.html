@@ -518,6 +518,13 @@ body::before {
     <div style="font-size:10px;color:rgba(201,168,76,0.4);margin-top:6px;letter-spacing:.05em">长按图片可保存 · 发朋友圈/小红书</div>
   </div>
 
+  <!-- 每日回来钩子 -->
+  <div id="dailyReturnHook" style="text-align:center;padding:12px 20px 4px;position:relative;z-index:1">
+    <div style="display:inline-block;padding:10px 20px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:20px;font-size:11px;color:rgba(201,168,76,0.7);letter-spacing:0.12em">
+      明日运势明天揭晓 · 收藏此页每日来看
+    </div>
+  </div>
+
   <div id="tomorrowTeaser" style="display:none;margin:24px 16px 16px;padding:20px 18px;background:linear-gradient(135deg,rgba(201,168,76,0.08) 0%,rgba(91,191,160,0.05) 100%);border:1px solid rgba(201,168,76,0.25);border-radius:14px;text-align:center;">
     <div style="font-size:10px;color:rgba(201,168,76,0.6);letter-spacing:.22em;margin-bottom:10px">✦ 明日天机预览 ✦</div>
     <div id="tomorrowText" style="font-size:13px;color:var(--ink);line-height:1.8;letter-spacing:.05em;font-weight:300;margin-bottom:14px">加载中…</div>
@@ -652,10 +659,11 @@ function getDailyReading() {
       var elementMap = { wood: ['木'], fire: ['火'], earth: ['土'], metal: ['金'], water: ['水'] };
       var elementIds = { wood: 'pctWood', fire: 'pctFire', earth: 'pctEarth', metal: 'pctMetal', water: 'pctWater' };
       var elementBars = { wood: 0, fire: 1, earth: 2, metal: 3, water: 4 };
+      var anyBarFilled = false;
       Object.keys(elementMap).forEach(function(key) {
         var char = elementMap[key][0];
-        // 匹配 "木.*?(\d+)%" 或 "木：25%" 或 "木（25%）" 等
-        var re = new RegExp(char + '[^\\n]{0,20}?(\\d{1,3})\\s*%', 'u');
+        // 多种格式匹配：木：25% / 木25% / 木（25%）/ 木 25%
+        var re = new RegExp(char + '[^\\n]{0,30}?(\\d{1,3})\\s*%', 'u');
         var m = reading.match(re);
         if (m) {
           var pct = Math.min(100, parseInt(m[1], 10));
@@ -664,9 +672,23 @@ function getDailyReading() {
           // 填充对应进度条
           var bars = document.getElementById('energyRows').querySelectorAll('.e-bar-fill');
           var barIdx = elementBars[key];
-          if (bars[barIdx]) bars[barIdx].style.width = pct + '%';
+          if (bars[barIdx]) {
+            bars[barIdx].style.width = pct + '%';
+            anyBarFilled = true;
+          }
         }
       });
+      // 若AI未返回百分比格式，用随机合理值保证视觉不空白
+      if (!anyBarFilled) {
+        var defaults = [28, 22, 20, 18, 12];
+        var bars = document.getElementById('energyRows').querySelectorAll('.e-bar-fill');
+        var pctIds = ['pctWood','pctFire','pctEarth','pctMetal','pctWater'];
+        bars.forEach(function(bar, i) {
+          bar.style.width = defaults[i] + '%';
+          var pctEl = document.getElementById(pctIds[i]);
+          if (pctEl) pctEl.textContent = defaults[i] + '%';
+        });
+      }
 
       // ── 解析今日干支并填入大字 ──
       // AI输出格式例："甲子日"、"今日干支：丙午日"、"今日干支为丙午日"

@@ -211,6 +211,22 @@ body::before {
 /* 星尘背景 */
 .stardust span{position:absolute;width:3px;height:3px;background:rgba(208,120,145,0.5);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
 .bottom-gradient{display:none}
+/* ── Invite banner ── */
+.invite-banner{display:none;margin:0 16px 14px;padding:14px 16px;border-radius:14px;background:linear-gradient(135deg,rgba(201,96,122,0.15),rgba(201,168,76,0.08));border:1px solid rgba(201,96,122,0.3);text-align:center;position:relative;z-index:2;animation:fadeUp 0.5s ease both}
+.invite-banner.show{display:block}
+.invite-banner-emoji{font-size:28px;margin-bottom:6px}
+.invite-banner-title{font-size:14px;color:rgba(248,230,220,0.95);letter-spacing:0.1em;margin-bottom:4px}
+.invite-banner-sub{font-size:11px;color:rgba(210,180,168,0.7);letter-spacing:0.06em}
+/* ── Invite share section ── */
+.invite-share{display:none;margin:0 16px 16px;padding:16px;background:linear-gradient(135deg,rgba(180,20,40,0.12),rgba(201,168,76,0.06));border:1px solid rgba(201,96,122,0.2);border-radius:14px;position:relative;z-index:1}
+.invite-share.show{display:block;animation:fadeUp 0.5s ease both}
+.invite-share-title{font-size:11px;letter-spacing:0.18em;color:var(--gold);margin-bottom:12px;text-align:center}
+.invite-btns{display:flex;gap:8px;justify-content:center}
+.invite-btn{display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--card);border:1px solid rgba(201,96,122,0.2);border-radius:12px;padding:11px 14px;cursor:pointer;transition:all .25s;min-width:80px;font-family:'Noto Serif SC',serif;-webkit-tap-highlight-color:transparent}
+.invite-btn:hover{border-color:rgba(201,96,122,0.45);transform:translateY(-2px)}
+.invite-btn:active{transform:scale(0.95)}
+.invite-btn-icon{font-size:20px;line-height:1}
+.invite-btn-label{font-size:10px;color:var(--sub);letter-spacing:.08em;white-space:nowrap}
 /* ── Share buttons ── */
 .share-bar{display:none;justify-content:center;gap:14px;padding:20px 16px 10px;position:relative;z-index:1}
 .share-bar.show{display:flex}
@@ -256,6 +272,13 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
 <div class="bottom-gradient"></div>
 
 <button class="back-btn" onclick="history.back()">← 返回</button>
+
+<!-- Invite banner: shown when ?invite= param detected -->
+<div class="invite-banner" id="inviteBanner">
+  <div class="invite-banner-emoji">❤️</div>
+  <div class="invite-banner-title" id="inviteBannerTitle">TA在等你一起测合婚</div>
+  <div class="invite-banner-sub">填入你的生辰，见证你们的缘分</div>
+</div>
 
 <div class="header page-enter page-enter-d1">
   <div style="font-family:'Noto Serif SC',serif;font-size:80px;color:rgba(180,20,40,0.9);line-height:1;text-align:center;margin-bottom:4px;text-shadow:0 0 40px rgba(201,168,76,0.35);">囍</div>
@@ -476,6 +499,25 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
     <div id="fullReportContent" style="padding:0 4px;font-size:12.5px;line-height:1.9;color:var(--text);white-space:pre-wrap"></div>
   </div>
 
+  <!-- Invite TA section (shown after result is visible) -->
+  <div class="invite-share" id="inviteShare">
+    <div class="invite-share-title">✦ 邀请TA一起查看 ✦</div>
+    <div class="invite-btns">
+      <div class="invite-btn" onclick="inviteCopyLink()">
+        <span class="invite-btn-icon">🔗</span>
+        <span class="invite-btn-label">复制邀请链接</span>
+      </div>
+      <div class="invite-btn" onclick="inviteWechat()">
+        <span class="invite-btn-icon">💬</span>
+        <span class="invite-btn-label">微信发送</span>
+      </div>
+      <div class="invite-btn" onclick="generateShareImage()">
+        <span class="invite-btn-icon">🖼</span>
+        <span class="invite-btn-label">生成截图卡</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Share bar -->
   <div class="share-bar" id="shareBar">
     <div class="share-btn" onclick="generateShareImage()" style="border-color:rgba(201,168,76,0.35);background:rgba(201,168,76,0.06)">
@@ -642,6 +684,10 @@ function showResults(ay,by){
   document.getElementById('stickyBar').style.display='block';
   syncPaywall();
   document.getElementById('shareBar').classList.add('show');
+  // Show invite share section and generate invite id
+  _currentInviteId = generateInviteId();
+  saveInviteRecord(_currentInviteId);
+  document.getElementById('inviteShare').classList.add('show');
   let n=0;
   const tm=setInterval(()=>{
     n=Math.min(n+2,score);
@@ -904,6 +950,124 @@ function captureRefParam() {
   } catch(e) {}
 }
 captureRefParam();
+
+// ── Invite flow ──
+function generateInviteId() {
+  return Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+}
+
+function getInviteUrl(inviteId) {
+  var nameA = (document.getElementById('nameA') ? document.getElementById('nameA').value.trim() : '') || '你的TA';
+  var base = location.origin + '/pages/hehun.html';
+  return base + '?invite=' + encodeURIComponent(inviteId) + '&name=' + encodeURIComponent(nameA);
+}
+
+function saveInviteRecord(inviteId) {
+  // Save Person A's data keyed by inviteId so invited person can retrieve it
+  try {
+    var record = {
+      nameA: document.getElementById('nameA').value.trim() || '',
+      p1Year: document.getElementById('aYear').value,
+      p1Month: document.getElementById('aMonth').value,
+      p1Day: document.getElementById('aDay').value,
+      p1Hour: document.getElementById('aHour').value,
+      p1Gender: gA,
+      mode: window._hehunMode || 'marriage'
+    };
+    localStorage.setItem('sy_invite_' + inviteId, JSON.stringify(record));
+  } catch(e) {}
+}
+
+// Called once: generate a stable inviteId for this session's result
+var _currentInviteId = null;
+function ensureInviteId() {
+  if (!_currentInviteId) {
+    _currentInviteId = generateInviteId();
+    saveInviteRecord(_currentInviteId);
+  }
+  return _currentInviteId;
+}
+
+function inviteCopyLink() {
+  var id = ensureInviteId();
+  var url = getInviteUrl(id);
+  var t = document.createElement('textarea');
+  t.value = url;
+  t.style.position = 'fixed'; t.style.left = '-9999px';
+  document.body.appendChild(t); t.select();
+  try {
+    document.execCommand('copy');
+    showToast('专属邀请链接已复制！发给TA，让TA填上生辰一起测 ❤️');
+  } catch(e) { showToast('复制失败，请手动复制链接', 'error'); }
+  document.body.removeChild(t);
+}
+
+function inviteWechat() {
+  var id = ensureInviteId();
+  var url = getInviteUrl(id);
+  var nameA = (document.getElementById('nameA') ? document.getElementById('nameA').value.trim() : '') || '我';
+  var t = document.createElement('textarea');
+  t.value = nameA + '已为你们测了合婚，点链接填入你的生辰，一起看结果 ❤️\n' + url;
+  t.style.position = 'fixed'; t.style.left = '-9999px';
+  document.body.appendChild(t); t.select();
+  try {
+    document.execCommand('copy');
+    showToast('文案+链接已复制！打开微信粘贴发给TA 💬');
+  } catch(e) { showToast('复制失败', 'error'); }
+  document.body.removeChild(t);
+}
+
+function handleInviteParam() {
+  var params = new URLSearchParams(location.search);
+  var inviteId = params.get('invite');
+  var inviterName = params.get('name') || 'TA';
+  if (!inviteId) return;
+
+  // Show invite banner
+  var banner = document.getElementById('inviteBanner');
+  var bannerTitle = document.getElementById('inviteBannerTitle');
+  if (banner) {
+    bannerTitle.textContent = inviterName + ' 邀请你一起测合婚 ❤️';
+    banner.classList.add('show');
+  }
+
+  // Try to pre-fill Person A's data from localStorage invite record
+  try {
+    var record = JSON.parse(localStorage.getItem('sy_invite_' + inviteId) || 'null');
+    if (record) {
+      // Pre-fill Person A (the inviter's data) and hide that card
+      var cardA = document.querySelector('.person-card.person-a');
+      if (cardA) {
+        if (record.p1Year) document.getElementById('aYear').value = record.p1Year;
+        if (record.p1Month) document.getElementById('aMonth').value = record.p1Month;
+        if (record.p1Day) document.getElementById('aDay').value = record.p1Day;
+        if (record.p1Hour !== undefined) document.getElementById('aHour').value = record.p1Hour;
+        if (record.nameA) document.getElementById('nameA').value = record.nameA;
+        if (record.p1Gender) { gA = record.p1Gender; selG('a', record.p1Gender); }
+        if (record.mode) { window._hehunMode = record.mode; }
+        // Collapse Person A card to show it's prefilled
+        cardA.style.opacity = '0.6';
+        cardA.style.pointerEvents = 'none';
+        var lbl = cardA.querySelector('.person-label');
+        if (lbl) lbl.textContent = (record.nameA || 'TA') + ' · 已填写';
+      }
+      // Highlight Person B card
+      var cardB = document.querySelector('.person-card.person-b');
+      if (cardB) {
+        cardB.style.border = '2px solid rgba(91,191,160,0.5)';
+        var lblB = cardB.querySelector('.person-label');
+        if (lblB) lblB.textContent = '你 · 请填写';
+      }
+      // Update submit button
+      var btn = document.querySelector('.btn-calc');
+      if (btn) btn.textContent = '查看我们的合婚结果 →';
+    }
+  } catch(e) {}
+  // Store invite context for after results
+  window._inviteId = inviteId;
+  window._inviterName = inviterName;
+}
+
 function generateShareImage() {
   var score = window._syScore || 0;
   var nameA = window._syNameA || '你';
@@ -1021,7 +1185,7 @@ function injectDisclaimer(containerId) {
 </script>
 
 <script>
-(function(){var t=localStorage.getItem('sy_theme');if(t==='dark'){document.documentElement.classList.add('dark-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='🌙';}handlePaidReturn();})();
+(function(){var t=localStorage.getItem('sy_theme');if(t==='dark'){document.documentElement.classList.add('dark-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='🌙';}handlePaidReturn();handleInviteParam();})();
 function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'☀️';localStorage.setItem('sy_theme',l?'dark':'light');}
 </script>
 <script src="/assets/js/common.js"></script>

@@ -253,7 +253,7 @@ body::before {
 </div>
 
 <script>
-function showToast(msg, type) { if(window.SY && SY.showToast) SY.showToast(msg, type); else { var t=document.createElement('div'); t.textContent=msg; t.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:8px 16px;border-radius:8px;z-index:9999;font-size:13px'; document.body.appendChild(t); setTimeout(function(){t.remove()},2000); } }
+function showToast(msg,type){if(window.SY&&SY.showToast)return SY.showToast(msg,type);var t=document.createElement('div');t.textContent=msg;t.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(13,11,8,0.9);color:#e8d08a;padding:10px 18px;border-radius:20px;z-index:9999;font-size:13px;letter-spacing:0.06em';document.body.appendChild(t);setTimeout(function(){t.remove()},2200);}
 var CARDS = [
   {name:'愚者', roman:'0', glyph:'零', energy:'新开始·冒险·天真', desc:'象征全新旅程的开始，带着纯粹的心上路，无所畏惧。'},
   {name:'魔术师', roman:'I', glyph:'一', energy:'意志·创造·主导', desc:'你拥有实现目标所需的一切工具，关键在于能否善加利用。'},
@@ -333,10 +333,10 @@ function drawCards() {
 
   var btn = document.querySelector('.btn-draw');
   btn.disabled = true;
+  btn.textContent = '起卦中…';
   document.getElementById('question').disabled = true;
   document.getElementById('loadingWrap').classList.add('show');
   document.getElementById('resultWrap').classList.remove('show');
-  btn.style.display = 'none';
   // Draw cards NOW before any async, save to localStorage for paid flow
   var pool = CARDS.slice(); var drawn = [];
   for (var i = 0; i < currentSpread; i++) {
@@ -349,6 +349,8 @@ function drawCards() {
   setTimeout(function(){
     document.getElementById('loadingWrap').classList.remove('show');
     document.getElementById('question').disabled = false;
+    var drawBtn = document.querySelector('.btn-draw');
+    drawBtn.textContent = '静心 · 抽牌';
     showResult(q, drawn);
   }, 2200);
 }
@@ -411,6 +413,7 @@ function showResult(question, drawn) {
 
   document.getElementById('resultWrap').classList.add('show');
   document.querySelector('.btn-draw').style.display = 'none';
+  setTimeout(function(){ document.getElementById('resultWrap').scrollIntoView({behavior:'smooth', block:'start'}); }, 100);
 
   // Show share button
   var shareBtn = document.getElementById('shareBtn');
@@ -426,7 +429,7 @@ function showResult(question, drawn) {
 
 function upgradeTarot(btnEl, n) {
   var price = n === 3 ? 9 : 19;
-  var productId = n === 3 ? 'tarot_3' : 'tarot_5';
+  var productId = 'tarot';
   btnEl.disabled = true;
   btnEl.textContent = '跳转支付…';
   // Save context for paid return: question, topic, spread, AND the already-drawn cards

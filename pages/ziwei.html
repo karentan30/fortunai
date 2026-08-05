@@ -173,6 +173,7 @@ body::after {
   <div class="header-title">紫微斗数 · 星盘解读</div>
   <div class="header-sub">ZI WEI DOU SHU · PURPLE STAR ASTROLOGY</div>
   <div class="azure-line"></div>
+  <div style="margin-top:8px;font-size:9px;color:rgba(201,168,76,0.5);letter-spacing:0.1em">AI演示盘 · 仅供娱乐参考</div>
 </div>
 
 <div class="intro-card">
@@ -509,6 +510,7 @@ function handlePaidReturn() {
   if (introCard) introCard.style.display = 'none';
   var resultEl = document.getElementById('resultWrap');
   resultEl.classList.add('show');
+  resultEl.style.display = 'block';
   resultEl.innerHTML = '<div id="zwStreamBox" style="padding:20px 16px;font-size:12px;line-height:1.9;color:rgba(232,240,255,0.8);white-space:pre-wrap;letter-spacing:0.04em">紫微星正在为你生成完整深度解读，请稍候…</div>';
   setTimeout(function(){ resultEl.scrollIntoView({behavior:'smooth', block:'start'}); }, 100);
   var token = localStorage.getItem('sy_token') || '';
@@ -541,7 +543,23 @@ function handlePaidReturn() {
     read();
   }).catch(function() {
     var box = document.getElementById('zwStreamBox');
-    if (box) box.textContent = '网络异常，请刷新重试';
+    if (box) {
+      box.textContent = '';
+      // 流式加载失败，退回基础命盘
+      try {
+        var s2 = JSON.parse(localStorage.getItem('sy_last_ziwei') || 'null');
+        if (s2) {
+          var resultEl2 = document.getElementById('resultWrap');
+          resultEl2.innerHTML = '';
+          var seed2 = parseInt(s2.birthYear)*10000 + parseInt(s2.birthMonth)*100 + parseInt(s2.birthDay) + parseInt(s2.birthHour)*0.1;
+          gender = s2.gender || 'male';
+          renderResult(seed2, parseInt(s2.birthYear), parseInt(s2.birthMonth), parseInt(s2.birthDay), parseInt(s2.birthHour));
+          resultEl2.style.display = 'block';
+          return;
+        }
+      } catch(e2) {}
+      box.textContent = '网络异常，请刷新重试';
+    }
   });
 }
 function injectDisclaimer(containerId) {

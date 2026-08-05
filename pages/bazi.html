@@ -318,7 +318,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .overview-section{padding:0 16px;margin-bottom:4px}
 
 /* ── Share buttons ── */
-.share-bar{display:none;justify-content:center;gap:14px;padding:20px 16px 10px;position:relative;z-index:1}
+.share-bar{display:none;flex-wrap:wrap;justify-content:center;gap:14px;padding:20px 0 10px;position:relative;z-index:1}
 .share-bar.show{display:flex}
 .share-btn{display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--card);border:1px solid rgba(201,168,76,0.15);border-radius:14px;padding:12px 16px;cursor:pointer;transition:all .25s;min-width:76px;font-family:'Noto Serif SC',serif;-webkit-tap-highlight-color:transparent;box-shadow:0 2px 10px rgba(0,0,0,0.04)}
 .share-btn:hover{border-color:rgba(201,168,76,0.35);transform:translateY(-2px)}
@@ -563,9 +563,25 @@ input::placeholder,textarea::placeholder { color: rgba(200,196,180,0.25) !import
 
 <!-- Share bar -->
 <div class="share-bar" id="shareBar">
+  <!-- 主裂变按钮：合婚引导 -->
+  <div id="shareMainBtn" style="display:none;width:100%;padding:0 16px;margin-bottom:4px">
+    <button onclick="shareForHehun()" style="width:100%;padding:14px 0;background:linear-gradient(135deg,#8a6420,#c9a84c,#e8d08a,#c9a84c);border:none;border-radius:14px;color:rgba(14,10,4,0.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:0.15em;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,0.35)">
+      把我的命盘发给朋友 → 看TA和我合不合
+    </button>
+    <!-- 朋友圈专属提示 -->
+    <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 12px;background:rgba(7,193,96,0.06);border:1px solid rgba(7,193,96,0.18);border-radius:10px">
+      <span style="font-size:18px;flex-shrink:0">📸</span>
+      <div>
+        <div style="font-size:11px;color:rgba(7,193,96,0.85);font-weight:500;letter-spacing:0.05em;margin-bottom:2px">朋友圈专属</div>
+        <div style="font-size:10px;color:rgba(200,196,180,0.65);letter-spacing:0.03em;line-height:1.6">截图命盘卡保存后可发朋友圈，好友点开后可扫我的命盘 →</div>
+      </div>
+      <button onclick="generateBaziCard()" style="flex-shrink:0;padding:7px 12px;background:rgba(7,193,96,0.12);border:1px solid rgba(7,193,96,0.25);border-radius:8px;color:rgba(7,193,96,0.85);font-family:'Noto Serif SC',serif;font-size:11px;cursor:pointer;white-space:nowrap">截图保存</button>
+    </div>
+  </div>
+  <!-- 次要分享按钮组 -->
   <div class="share-btn" onclick="shareWechat()">
     <span class="share-icon">💬</span>
-    <span class="share-label">微信分享</span>
+    <span class="share-label">发给朋友</span>
   </div>
   <div class="share-btn" onclick="shareTwitter()">
     <span class="share-icon">𝕏</span>
@@ -582,6 +598,22 @@ input::placeholder,textarea::placeholder { color: rgba(200,196,180,0.25) !import
   <div class="share-btn" onclick="generateBaziCard()">
     <span class="share-icon">🖼️</span>
     <span class="share-label">命盘卡</span>
+  </div>
+</div>
+
+<!-- 分享成功弹窗：合婚引导 -->
+<div id="hehunModal" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);align-items:flex-end;justify-content:center">
+  <div style="background:#181818;border:1px solid rgba(200,184,122,0.25);border-radius:20px 20px 0 0;padding:28px 20px 40px;width:100%;max-width:420px;animation:fadeUp 0.35s ease both">
+    <div style="width:36px;height:3px;background:rgba(200,184,122,0.2);border-radius:2px;margin:0 auto 20px"></div>
+    <div style="font-size:22px;text-align:center;margin-bottom:10px">🎉</div>
+    <div style="font-size:16px;font-weight:500;letter-spacing:0.1em;text-align:center;color:rgba(240,238,230,0.95);margin-bottom:8px">已分享！</div>
+    <div style="font-size:13px;color:rgba(200,196,180,0.75);text-align:center;line-height:1.75;letter-spacing:0.04em;margin-bottom:20px">如果朋友点开，你们可以免费合婚配对 →<br><span style="color:rgba(200,184,122,0.6);font-size:11px">（朋友注册后双方各得1次免费合婚报告）</span></div>
+    <div style="background:rgba(200,184,122,0.06);border:1px solid rgba(200,184,122,0.18);border-radius:12px;padding:14px 16px;margin-bottom:16px">
+      <div style="font-size:10px;color:rgba(200,184,122,0.5);letter-spacing:0.12em;margin-bottom:6px">合婚配对链接</div>
+      <div id="hehunLinkDisplay" style="font-size:12px;color:rgba(200,184,122,0.85);word-break:break-all;line-height:1.6"></div>
+    </div>
+    <button onclick="copyHehunLink()" style="width:100%;padding:14px 0;background:linear-gradient(135deg,#8a6420,#c9a84c,#e8d08a);border:none;border-radius:12px;color:rgba(14,10,4,0.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:0.15em;cursor:pointer;margin-bottom:10px">复制合婚链接 →</button>
+    <button onclick="document.getElementById('hehunModal').style.display='none'" style="width:100%;padding:12px 0;background:transparent;border:1px solid rgba(200,184,122,0.15);border-radius:12px;color:rgba(200,196,180,0.55);font-family:'Noto Serif SC',serif;font-size:13px;cursor:pointer">稍后再说</button>
   </div>
 </div>
 
@@ -802,6 +834,9 @@ function showReport(aiText, contextId, tier, locked) {
   renderAITextReport(aiText, contextId, isLocked);
   document.getElementById('qaSection').style.display = isLocked ? 'none' : 'block';
   document.getElementById('shareBar').classList.add('show');
+  // 显示主裂变分享按钮
+  var smb = document.getElementById('shareMainBtn');
+  if (smb) smb.style.display = 'block';
   // 显示裂变邀请栏
   var rb = document.getElementById('referralBanner');
   if (rb) rb.style.display = 'block';
@@ -1268,13 +1303,63 @@ function _shareUrl() {
 }
 function shareWechat(url) {
   if (!url) url = _shareUrl();
+  var name = (lastBaziInput && lastBaziInput.name) ? lastBaziInput.name : '';
+  var dmText = '';
+  if (lastAiText) {
+    var dmMatch = lastAiText.match(/日主[：:]\s*([甲乙丙丁戊己庚辛壬癸][木火土金水])/);
+    if (dmMatch) dmText = '（日主' + dmMatch[1] + '）';
+  }
+  var copyText = (name ? name + dmText : '我') + '的八字命盘出来了，你我合不合？快来看！\n' + url;
   var t = document.createElement('textarea');
-  t.value = '我在善缘算了八字，太准了！来看看你的命盘\n' + url;
+  t.value = copyText;
   t.style.position = 'fixed'; t.style.left = '-9999px';
   document.body.appendChild(t); t.select();
-  try { document.execCommand('copy'); showToast('已复制！分享给好友，TA 注册后你们都能解锁1次免费报告 🎁'); }
+  try { document.execCommand('copy'); showToast('已复制！发给好友，TA 注册后你们免费合婚 🎁'); }
   catch(e) { showToast('复制失败，请手动复制链接', 'error'); }
   document.body.removeChild(t);
+}
+
+function _hehunUrl() {
+  var refCode = localStorage.getItem('sy_my_ref_code') || '';
+  var base = window.location.origin + '/pages/hehun.html';
+  return base + (refCode ? '?ref=' + refCode : '');
+}
+
+function shareForHehun() {
+  var shareUrl = _shareUrl();
+  var name = (lastBaziInput && lastBaziInput.name) ? lastBaziInput.name : '';
+  var dmText = '';
+  if (lastAiText) {
+    var dmMatch = lastAiText.match(/日主[：:]\s*([甲乙丙丁戊己庚辛壬癸][木火土金水])/);
+    if (dmMatch) dmText = '（日主' + dmMatch[1] + '）';
+  }
+  var copyText = (name ? name + dmText : '我') + '的八字命盘出来了！快来看看你我合不合 →\n' + shareUrl;
+  var t = document.createElement('textarea');
+  t.value = copyText;
+  t.style.position = 'fixed'; t.style.left = '-9999px';
+  document.body.appendChild(t); t.select();
+  var copied = false;
+  try { document.execCommand('copy'); copied = true; } catch(e) {}
+  document.body.removeChild(t);
+  // 显示合婚引导弹窗
+  var modal = document.getElementById('hehunModal');
+  var linkDisplay = document.getElementById('hehunLinkDisplay');
+  if (linkDisplay) linkDisplay.textContent = _hehunUrl();
+  if (modal) { modal.style.display = 'flex'; }
+  // 点背景关闭
+  modal.onclick = function(e) { if (e.target === modal) modal.style.display = 'none'; };
+}
+
+function copyHehunLink() {
+  var url = _hehunUrl();
+  var t = document.createElement('textarea');
+  t.value = url;
+  t.style.position = 'fixed'; t.style.left = '-9999px';
+  document.body.appendChild(t); t.select();
+  try { document.execCommand('copy'); showToast('合婚链接已复制！发给朋友即可 🎉'); }
+  catch(e) { showToast('复制失败，请手动复制', 'error'); }
+  document.body.removeChild(t);
+  document.getElementById('hehunModal').style.display = 'none';
 }
 function shareTwitter(url) {
   if (!url) url = _shareUrl();
@@ -1385,14 +1470,15 @@ function generateBaziCard(){
   [280,220,160].forEach(function(r){ctx.strokeStyle='rgba(201,168,76,0.06)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(W/2,yyY,r,0,Math.PI*2);ctx.stroke();});
   ctx.fillStyle='rgba(201,168,76,0.5)';ctx.font='100px serif';ctx.textAlign='center';ctx.fillText('☯',W/2,yyY+36);
   hline(H-150);
-  ctx.fillStyle='rgba(201,168,76,0.55)';ctx.font='28px "Noto Serif SC",serif';ctx.textAlign='center';ctx.fillText('善缘命理  ·  shenyuan.app',W/2,H-100);
-  ctx.fillStyle='rgba(200,196,180,0.3)';ctx.font='22px "Noto Serif SC",serif';ctx.fillText('你求什么 · 自有天机',W/2,H-58);
+  ctx.fillStyle='rgba(201,168,76,0.55)';ctx.font='28px "Noto Serif SC",serif';ctx.textAlign='center';ctx.fillText('善缘命理  ·  shenyuan.app',W/2,H-110);
+  ctx.fillStyle='rgba(200,196,180,0.3)';ctx.font='22px "Noto Serif SC",serif';ctx.fillText('你求什么 · 自有天机',W/2,H-68);
+  ctx.fillStyle='rgba(201,168,76,0.38)';ctx.font='22px "Noto Serif SC",serif';ctx.fillText('扫码算你的命盘 · 看我们合不合 →',W/2,H-32);
   cv.toBlob(function(blob){
     var url=URL.createObjectURL(blob),a=document.createElement('a');
     a.href=url;a.download='善缘命盘_'+(lastBaziInput.name||'八字')+'.png';
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(function(){URL.revokeObjectURL(url);},1000);
-    showToast('命盘卡已保存 ✨ 可发小红书 / 朋友圈！');
+    showToast('命盘卡已保存！截图发朋友圈，好友点开可合婚 ✨');
   },'image/png');
   }); // fonts.ready
 }

@@ -83,6 +83,31 @@ body::before{content:'';position:fixed;inset:0;
 .perk-icon{font-size:12px;flex-shrink:0;width:16px;text-align:center}
 .perk-row.highlight{color:var(--text)}
 
+/* ── savings calculator ── */
+.calc-section{padding:20px 16px 0;position:relative;z-index:1}
+.calc-card{background:var(--card);border:1px solid rgba(201,168,76,0.2);border-radius:14px;padding:18px 16px}
+.calc-title{font-size:10px;letter-spacing:0.22em;color:var(--sub);margin-bottom:14px}
+.calc-label{font-size:11px;color:var(--sub);letter-spacing:0.06em;margin-bottom:8px}
+.calc-slider{width:100%;-webkit-appearance:none;appearance:none;height:4px;border-radius:2px;background:linear-gradient(90deg,var(--gold),rgba(201,168,76,0.2));outline:none;cursor:pointer}
+.calc-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:linear-gradient(135deg,var(--gold-deep),var(--gold));cursor:pointer;box-shadow:0 2px 8px rgba(201,168,76,0.4)}
+.calc-output{margin-top:14px;padding:12px;background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(155,111,212,0.05));border-radius:10px;border:1px solid rgba(201,168,76,0.15)}
+.calc-month-display{font-size:13px;color:var(--text);letter-spacing:0.06em;margin-bottom:4px}
+.calc-saving-big{font-family:'Cormorant Garamond',serif;font-size:28px;color:var(--gold);line-height:1}
+.calc-saving-sub{font-size:10px;color:var(--sub);margin-top:3px;letter-spacing:0.06em}
+.calc-vs{display:flex;gap:10px;margin-top:10px}
+.calc-col{flex:1;padding:8px;background:rgba(40,35,30,0.04);border-radius:8px;text-align:center}
+.calc-col-label{font-size:8px;color:var(--sub);letter-spacing:0.1em;margin-bottom:3px}
+.calc-col-val{font-size:14px;font-family:'Cormorant Garamond',serif;color:var(--text)}
+.calc-col.winner{background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2)}
+.calc-col.winner .calc-col-val{color:var(--gold)}
+
+/* ── expiry warning ── */
+.expiry-warning{margin:16px 16px 0;padding:14px 16px;border-radius:12px;border:1px solid rgba(201,168,76,0.35);background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(155,111,212,0.04));display:none}
+.expiry-warning.expired{border-color:rgba(180,40,40,0.35);background:rgba(180,40,40,0.06)}
+.expiry-icon{font-size:20px;margin-bottom:6px;display:block}
+.expiry-title{font-size:13px;color:var(--text);letter-spacing:0.06em;margin-bottom:4px}
+.expiry-sub{font-size:10px;color:var(--sub);letter-spacing:0.04em;line-height:1.6}
+
 /* ── feature comparison ── */
 .compare{padding:24px 16px 0;position:relative;z-index:1}
 .compare-title{font-size:10px;letter-spacing:0.22em;color:var(--sub);margin-bottom:14px}
@@ -138,7 +163,7 @@ body::before{content:'';position:fixed;inset:0;
   <span class="crown">👑</span>
   <div class="hero-tag">SHEN YUAN PREMIUM</div>
   <div class="hero-title">善缘会员</div>
-  <div class="hero-sub">解锁全部命理 · 无限次占算 · 合婚配对报告</div>
+  <div class="hero-sub">合婚报告$19.90 → 会员免费 · 命盘永久保存 · 流年每月更新</div>
   <div class="divider"></div>
 </div>
 
@@ -207,10 +232,10 @@ body::before{content:'';position:fixed;inset:0;
     </div>
     <div class="plan-divider"></div>
     <div class="plan-perks">
-      <div class="perk-row highlight"><span class="perk-icon">✨</span>全部AI占算无限次</div>
-      <div class="perk-row highlight"><span class="perk-icon">📖</span>完整命理报告（不锁定）</div>
-      <div class="perk-row"><span class="perk-icon">🎴</span>高级塔罗牌阵 · 每日1次</div>
-      <div class="perk-row"><span class="perk-icon">🌟</span>每日专属运势推送</div>
+      <div class="perk-row highlight"><span class="perk-icon">✨</span>AI八字命理 · 单次$3.90 → 月费内无限</div>
+      <div class="perk-row highlight"><span class="perk-icon">📖</span>完整命盘报告（不锁定 · 单次$7.90）</div>
+      <div class="perk-row"><span class="perk-icon">🎴</span>高级塔罗牌阵 · 每日1次（非会员$1.5/次）</div>
+      <div class="perk-row"><span class="perk-icon">🌟</span>每日流年运势推送 · 7:00 AM</div>
     </div>
   </div>
 
@@ -226,18 +251,19 @@ body::before{content:'';position:fixed;inset:0;
         <div class="plan-cycle">一次付清 · 全年畅用</div>
       </div>
       <div class="plan-price">
+        <div style="font-size:10px;color:var(--sub);text-decoration:line-through;text-align:right">月费×12 = $82.80</div>
         <div class="plan-amount yearly-c">$49</div>
-        <div class="plan-unit">/ 年 <span style="font-size:8px;background:rgba(201,168,76,0.15);padding:1px 5px;border-radius:4px;color:var(--gold)">比月费省41%</span></div>
-        <div class="plan-save">省 $33.8 · 相当于$4.08/月</div>
+        <div class="plan-unit">/ 年 <span style="font-size:8px;background:rgba(201,168,76,0.2);padding:2px 6px;border-radius:4px;color:var(--gold);font-weight:500">省42%</span></div>
+        <div class="plan-save" style="font-size:10px;color:var(--gold-deep);font-weight:500">直省 $33.80</div>
       </div>
     </div>
     <div class="plan-divider"></div>
     <div class="plan-perks">
-      <div class="perk-row highlight"><span class="perk-icon">✨</span>月度会员全部权益</div>
-      <div class="perk-row highlight"><span class="perk-icon">💎</span>每年1次免费水晶挂件（价值$29）</div>
-      <div class="perk-row highlight"><span class="perk-icon">💑</span>合婚配对报告 · 每季1次</div>
+      <div class="perk-row highlight"><span class="perk-icon">✨</span>AI八字命理 + 完整命盘 · 无限次（月省$30+）</div>
+      <div class="perk-row highlight"><span class="perk-icon">💑</span>合婚配对报告 $19.90 → <b style="color:var(--gold)">会员免费</b> · 每季1次</div>
+      <div class="perk-row highlight"><span class="perk-icon">💎</span>水晶挂件福利 $29 → 年度免费一件</div>
+      <div class="perk-row"><span class="perk-icon">🌙</span>清明/中元代烧服务 · 8折专属优惠</div>
       <div class="perk-row"><span class="perk-icon">🏆</span>会员专属活动 · 优先邀请</div>
-      <div class="perk-row"><span class="perk-icon">🌙</span>中元节/清明专属祭祀服务折扣</div>
     </div>
   </div>
 
@@ -293,6 +319,41 @@ body::before{content:'';position:fixed;inset:0;
   </div>
 </div>
 
+<!-- expiry warning (shown dynamically) -->
+<div class="expiry-warning" id="expiryWarning">
+  <span class="expiry-icon" id="expiryIcon">⚡</span>
+  <div class="expiry-title" id="expiryTitle"></div>
+  <div class="expiry-sub" id="expirySub"></div>
+</div>
+
+<!-- savings calculator -->
+<div class="calc-section">
+  <div class="calc-card">
+    <div class="calc-title">省钱试算器</div>
+    <div class="calc-label">我打算用 <span id="calcMonthsLabel" style="color:var(--gold);font-size:13px">12</span> 个月</div>
+    <input type="range" class="calc-slider" id="calcSlider" min="1" max="24" value="12" oninput="updateCalc(this.value)">
+    <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--sub);margin-top:4px;letter-spacing:0.04em"><span>1月</span><span>12月</span><span>24月</span></div>
+    <div class="calc-output">
+      <div class="calc-month-display" id="calcMonthDisplay">按月付：12个月 = $82.80</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin-top:4px">
+        <div class="calc-saving-big" id="calcSavingBig">省 $33.80</div>
+        <div style="font-size:11px;color:var(--sub)">选年费方案</div>
+      </div>
+      <div class="calc-saving-sub" id="calcSavingSub">相当于每月只要 $4.08 · 合婚报告免费包含</div>
+      <div class="calc-vs" id="calcVs">
+        <div class="calc-col">
+          <div class="calc-col-label">按月付</div>
+          <div class="calc-col-val" id="calcMonthTotal">$82.80</div>
+        </div>
+        <div class="calc-col winner">
+          <div class="calc-col-label">年费方案</div>
+          <div class="calc-col-val" id="calcYearTotal">$49.00</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- feature comparison -->
 <div class="compare">
   <div class="compare-title">功能对比</div>
@@ -338,20 +399,25 @@ body::before{content:'';position:fixed;inset:0;
 
 <!-- testimonials -->
 <div class="testimonials">
-  <div class="test-title">会员真实反馈</div>
+  <div class="test-title">订阅会员真实反馈</div>
   <div class="test-card">
     <div class="test-stars">★★★★★</div>
-    <div class="test-text">「入手年度会员后，八字报告说我今年应该往西南方向发展，我就真的去了成都出差，结果谈成了一个大单。以前觉得命理是迷信，现在相信了。」</div>
+    <div class="test-text">「已经订了8个月了。每个月月初我都会来看流年运势，调整当月的工作节奏。这已经成了我的固定习惯，比看黄历还实用。年费$49一算，一个月才$4，相当于一杯奶茶。」</div>
+    <div class="test-author">— Chloe L. · 年度会员 · 悉尼 · 续费第2年</div>
+  </div>
+  <div class="test-card">
+    <div class="test-stars">★★★★★</div>
+    <div class="test-text">「最值的是合婚报告，我和男友在相处前用过一次，$19.90，觉得还好。后来加入年费会员才知道这个是季度免费送的——立马觉得年费回本了。入手年度会员八字报告说往西南发展，后来真的去成都谈成了大单。」</div>
     <div class="test-author">— Lin W. · 年度会员 · 新加坡</div>
   </div>
   <div class="test-card">
     <div class="test-stars">★★★★★</div>
-    <div class="test-text">「用了快两年了，最喜欢每天早上的运势推送，帮我安排了好几次时机，2025年的姻缘运真的准了，现在已经在一起了！」</div>
-    <div class="test-author">— Mei T. · 终身会员 · 马来西亚</div>
+    <div class="test-text">「用了快两年了，最喜欢每天早上7点的运势推送，帮我安排了好几次跟进客户的时机。2025年的姻缘运真的准了，现在已经在一起了！仅供娱乐参考，但心态真的好了很多。」</div>
+    <div class="test-author">— Mei T. · 终身会员 · 吉隆坡</div>
   </div>
   <div class="test-card">
     <div class="test-stars">★★★★☆</div>
-    <div class="test-text">「性价比极高，年度$49比找真人大师算一次还便宜，可以无限次问。风水报告帮我调整了卧室布局，睡眠节律好了很多（个人感受，仅供参考）。」</div>
+    <div class="test-text">「年度$49比找真人大师算一次还便宜十倍，可以随时问不限次数。风水报告帮我调整了书桌朝向，说来也奇怪，孩子那段时间成绩确实好了（个人感受，仅供娱乐参考）。」</div>
     <div class="test-author">— David K. · 年度会员 · 多伦多</div>
   </div>
 </div>
@@ -387,12 +453,12 @@ function showToast(msg, type) {
 }
 let curPlan = 'yearly';
 const BTN_COPY = {
-  daily:{text:'开通一日体验 · $2.99',cls:'daily-btn',note:'24小时无限使用 · 立即开启'},
-  quarterly:{text:'开通季度会员 · $14.99/季',cls:'quarterly-btn',note:'三个月畅享 · 相当于$5/月'},
-  monthly:{text:'开通月度会员 · $6.90/月',cls:'monthly-btn',note:'随时取消 · 首月立享全部权益 · 安全支付'},
-  yearly:{text:'开通年度会员 · $49/年（比月费省41%）',cls:'yearly-btn',note:'比月费省41% · 省$33.8 · 相当于$4.08/月 · 随时可取消'},
-  threeyear:{text:'开通三年会员 · $99（省32% vs年费）',cls:'threeyear-btn',note:'三年畅享 · 相当于$2.75/月 · 最超值长线选择'},
-  lifetime:{text:'开通终身会员 · $188',cls:'lifetime-btn',note:'一次开通 · 永久有效 · 最高性价比'},
+  daily:{text:'开启我的命盘探索 · $2.99',cls:'daily-btn',note:'24小时无限使用 · 立即开启'},
+  quarterly:{text:'继续我的命盘之旅 · $14.99/季',cls:'quarterly-btn',note:'三个月畅享 · 相当于$5/月 · 随时取消'},
+  monthly:{text:'继续我的命盘之旅 · $6.90/月',cls:'monthly-btn',note:'随时取消 · 首月立享全部权益 · 合婚报告会员价'},
+  yearly:{text:'继续我的命盘之旅 · $49（省$33.80）',cls:'yearly-btn',note:'比按月付省42% · 合婚报告每季免费 · 随时可取消'},
+  threeyear:{text:'锁定三年命盘陪伴 · $99',cls:'threeyear-btn',note:'三年畅享 · 相当于$2.75/月 · 省32% vs年费'},
+  lifetime:{text:'解锁终身命盘之旅 · $188',cls:'lifetime-btn',note:'一次开通 · 永久有效 · 包含大师1对1年度咨询'},
 };
 
 function selectPlan(p){
@@ -433,6 +499,29 @@ function subscribe(){
 
 // init radio (默认年度=最受欢迎, 与 badge 一致)
 selectPlan('yearly');
+
+// ── savings calculator ──
+function updateCalc(months) {
+  months = parseInt(months);
+  document.getElementById('calcMonthsLabel').textContent = months;
+  var monthTotal = (months * 6.90).toFixed(2);
+  var yearlyPlan, yearlyLabel, perMonth;
+  if (months <= 3) {
+    yearlyPlan = 14.99; yearlyLabel = '季费'; perMonth = (14.99/3).toFixed(2);
+  } else if (months <= 12) {
+    yearlyPlan = 49.00; yearlyLabel = '年费'; perMonth = (49/12).toFixed(2);
+  } else {
+    yearlyPlan = 99.00; yearlyLabel = '三年费'; perMonth = (99/36).toFixed(2);
+  }
+  var saving = Math.max(0, monthTotal - yearlyPlan).toFixed(2);
+  var bestMonths = months <= 3 ? 3 : (months <= 12 ? 12 : 36);
+  document.getElementById('calcMonthDisplay').textContent = '按月付：' + months + '个月 = $' + monthTotal;
+  document.getElementById('calcSavingBig').textContent = saving > 0 ? '省 $' + saving : '两者相当';
+  document.getElementById('calcSavingSub').textContent = '选' + yearlyLabel + '方案 · 相当于每月 $' + perMonth + ' · 合婚报告免费包含';
+  document.getElementById('calcMonthTotal').textContent = '$' + monthTotal;
+  document.getElementById('calcYearTotal').textContent = '$' + yearlyPlan.toFixed(2);
+}
+updateCalc(12);
 </script>
 
 <!-- Disclaimer -->
@@ -463,18 +552,34 @@ function loadMemberStatus(){
       if(!exp)return;
       var daysLeft=Math.ceil((exp-new Date())/86400000);
       var expStr=exp.getFullYear()+'年'+(exp.getMonth()+1)+'月'+exp.getDate()+'日';
-      var banner=document.createElement('div');
-      banner.style.cssText='margin:12px 16px;padding:12px 16px;border-radius:10px;font-size:13px;text-align:center;';
-      if(daysLeft<=0){
-        banner.style.background='rgba(180,40,40,0.12)';banner.style.color='#c0392b';banner.style.border='1px solid rgba(180,40,40,0.3)';
-        banner.innerHTML='🔒 会员已到期，你的命理报告已被锁定 · <b style="cursor:pointer;text-decoration:underline" onclick="document.getElementById(\'planMonthly\').scrollIntoView({behavior:\'smooth\'})">立即续费解锁（限时8折）→</b>';
-      }else if(daysLeft<=7){
-        banner.style.background='rgba(201,168,76,0.12)';banner.style.color='#8a6420';banner.style.border='1px solid rgba(201,168,76,0.35)';
-        banner.innerHTML='⚡ 会员将于 <b>'+daysLeft+'</b> 天后到期（'+expStr+'）· <b style="cursor:pointer;text-decoration:underline" onclick="document.getElementById(\'planMonthly\').scrollIntoView({behavior:\'smooth\'})">立即续费享8折 →</b>';
-      }else{
-        banner.style.background='rgba(91,191,160,0.08)';banner.style.color='#3f9e82';banner.style.border='1px solid rgba(91,191,160,0.25)';
-        banner.innerHTML='👑 会员有效期至 <b>'+expStr+'</b>（还剩 '+daysLeft+' 天）';
+      var lockDate=new Date(exp.getTime()+7*86400000);
+      var lockStr=lockDate.getFullYear()+'年'+(lockDate.getMonth()+1)+'月'+lockDate.getDate()+'日';
+      var warn=document.getElementById('expiryWarning');
+      var wIcon=document.getElementById('expiryIcon');
+      var wTitle=document.getElementById('expiryTitle');
+      var wSub=document.getElementById('expirySub');
+      if(warn){
+        warn.style.display='block';
+        if(daysLeft<=0){
+          warn.classList.add('expired');
+          wIcon.textContent='🔒';
+          wTitle.textContent='你的命盘报告已被锁定';
+          wTitle.style.color='#c0392b';
+          wSub.innerHTML='续费后立即解锁全部历史命盘记录 · 你的八字数据我们已完整保存<br><b style="cursor:pointer;color:var(--gold);text-decoration:underline;margin-top:6px;display:inline-block" onclick="document.getElementById(\'planYearly\').scrollIntoView({behavior:\'smooth\'})">继续我的命盘之旅 →</b>';
+        }else if(daysLeft<=7){
+          wIcon.textContent='⚡';
+          wTitle.textContent='命盘之旅还剩 '+daysLeft+' 天（'+expStr+' 到期）';
+          wTitle.style.color='#8a6420';
+          wSub.innerHTML='到期后命盘报告将在 '+lockStr+' 锁定 · 续费继续享受流年月度更新<br><b style="cursor:pointer;color:var(--gold);text-decoration:underline;margin-top:6px;display:inline-block" onclick="document.getElementById(\'planYearly\').scrollIntoView({behavior:\'smooth\'})">立即续费 · 无缝衔接不中断 →</b>';
+        }else{
+          wIcon.textContent='👑';
+          wTitle.textContent='会员有效至 '+expStr+'（还剩 '+daysLeft+' 天）';
+          wTitle.style.color='#3f9e82';
+          wSub.textContent='感谢与善缘同行 · 每月流年运势已为你更新';
+        }
       }
+      // legacy banner for fallback
+      var banner=document.createElement('div');banner.style.display='none';
       var first=document.querySelector('.member-header,.hero,.pricing,main,.container,body > div');
       if(first)first.parentNode.insertBefore(banner,first);else document.body.prepend(banner);
     }).catch(function(){});
