@@ -162,6 +162,9 @@ body::before{content:'';position:fixed;inset:0;
 .lock-icon{font-size:26px;margin-bottom:8px}
 .lock-title{font-size:11px;color:var(--sub);margin-bottom:12px;letter-spacing:0.1em}
 .lock-btn{padding:10px 24px;background:linear-gradient(135deg,var(--rose-dark),var(--rose),var(--rose-light));border:none;border-radius:12px;color:#fff;font-family:'Noto Serif SC',serif;font-size:12px;font-weight:500;letter-spacing:0.14em;cursor:pointer}
+.lock-divider{font-size:10px;color:rgba(210,180,168,0.4);margin:10px 0 8px;letter-spacing:0.1em}
+.lock-share-btn{background:none;border:1px solid rgba(201,168,76,0.35);border-radius:10px;color:var(--gold);font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:0.12em;padding:8px 18px;cursor:pointer;transition:all .2s}
+.lock-share-btn:hover{background:rgba(201,168,76,0.1);border-color:rgba(201,168,76,0.6)}
 
 /* sticky */
 .sticky-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:390px;padding:14px 16px 20px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid rgba(201,96,122,0.12);box-shadow:0 -4px 20px rgba(0,0,0,0.05);z-index:90;display:none}
@@ -490,6 +493,8 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
       <div class="lock-icon">🔒</div>
       <div class="lock-title">解锁完整合婚报告</div>
       <button class="lock-btn">解锁完整报告 · $19.90</button>
+      <div class="lock-divider">— 或 —</div>
+      <button class="lock-share-btn" onclick="unlockByShare(this)">🔗 分享给朋友，免费解锁</button>
     </div>
   </div>
 
@@ -935,6 +940,82 @@ function handlePaidReturn() {
   }).catch(function() { contentEl.textContent = '网络异常，请刷新重试'; });
 }
 // ── Share functions (拼 ref 邀请码 → 分享可归因) ──
+function unlockByShare(btn) {
+  var shareUrl = getShareUrl(location.origin + '/pages/hehun.html');
+  var nameA = document.getElementById('nameA').value.trim() || '你';
+  var nameB = document.getElementById('nameB').value.trim() || 'TA';
+  var score = window._syScore || '?';
+  var text = '【善缘合婚】' + nameA + ' × ' + nameB + ' 缘分值 ' + score + '%\n快来看看你们的合婚报告：' + shareUrl;
+  if (navigator.share) {
+    navigator.share({ title: '善缘合婚报告', text: text, url: shareUrl })
+      .then(function() { _doShareUnlock(); })
+      .catch(function() { _copyAndUnlock(shareUrl, btn); });
+  } else {
+    _copyAndUnlock(shareUrl, btn);
+  }
+}
+function _copyAndUnlock(url, btn) {
+  navigator.clipboard.writeText(url).then(function() {
+    showToast('链接已复制！正在解锁完整报告…', 'success');
+    _doShareUnlock();
+  }).catch(function() {
+    // fallback
+    var ta = document.createElement('textarea');
+    ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('链接已复制！正在解锁完整报告…', 'success');
+    _doShareUnlock();
+  });
+}
+function _doShareUnlock() {
+  localStorage.setItem('sy_hehun_shared', '1');
+  document.getElementById('lockedCard').style.display = 'none';
+  document.getElementById('stickyBar').style.display = 'none';
+  var wrap = document.getElementById('fullReportWrap');
+  wrap.style.display = 'block';
+  var contentEl = document.getElementById('fullReportContent');
+  contentEl.style.whiteSpace = 'pre-wrap';
+  contentEl.textContent = '';
+  var saved; try { saved = JSON.parse(localStorage.getItem('sy_last_hehun') || 'null'); } catch(e) {}
+  if (!saved) { contentEl.textContent = '请重新输入信息后计算'; return; }
+  var mode = window._hehunMode || saved.mode || 'marriage';
+  var accumulated = '';
+  fetch('/api/hehun/stream', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('sy_token') || '')},
+    body: JSON.stringify({
+      p1Year: saved.p1Year, p1Month: saved.p1Month, p1Day: saved.p1Day,
+      p1Hour: saved.p1Hour || '', p1Gender: saved.p1Gender,
+      p1Name: saved.p1Name || '', p2Name: saved.p2Name || '',
+      p2Year: saved.p2Year, p2Month: saved.p2Month, p2Day: saved.p2Day,
+      p2Hour: saved.p2Hour || '', p2Gender: saved.p2Gender,
+      mode: mode, token: localStorage.getItem('sy_token') || ''
+    })
+  }).then(function(res) {
+    if (!res.ok || !res.body) { contentEl.textContent = '生成失败，请重试'; return; }
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder('utf-8');
+    var buf = '';
+    function read() {
+      reader.read().then(function(r) {
+        if (r.done) return;
+        buf += decoder.decode(r.value, {stream:true});
+        var lines = buf.split('\n'); buf = lines.pop();
+        lines.forEach(function(line) {
+          if (!line.startsWith('data: ')) return;
+          var raw = line.slice(6).trim();
+          if (raw === '[DONE]') return;
+          try { var ev = JSON.parse(raw); if (ev.type === 'chunk') { accumulated += ev.content; contentEl.textContent = accumulated; } } catch(e) {}
+        });
+        read();
+      }).catch(function() { contentEl.textContent = '网络异常，请刷新重试'; });
+    }
+    read();
+  }).catch(function() { contentEl.textContent = '网络异常，请刷新重试'; });
+}
+
 function getShareUrl(base) {
   // 分享链接带上自己的邀请码, 让裂变可归因
   var ref = localStorage.getItem('sy_ref_code') || '';
