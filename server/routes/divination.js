@@ -682,7 +682,7 @@ ${nameB}：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined && p2Hour 
 
     const fullAccess = hasFullAccess(req, ['bazi', 'hehun', 'ziwei', 'xingming', 'astrology', '八字', '合婚', '紫微', '姓名', '占星']);
 
-    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -694,11 +694,11 @@ ${nameB}：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined && p2Hour 
       { maxTokens: fullAccess ? 12288 : 4000, timeout: 300000 }
     );
     const reader = streamBody.getReader();
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder('utf-8');
     let fullText = '', buf = '';
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) { buf += decoder.decode(); break; }
       buf += decoder.decode(value, { stream: true });
       const lines = buf.split('\n'); buf = lines.pop();
       for (const line of lines) {
@@ -742,7 +742,7 @@ router.post('/tarot/stream', rateLimitMiddleware, async (req, res) => {
       ? `问题：${question}\n主题：近期预测（未来30天内将发生什么）\n${cardDesc ? '牌面信息：\n' + cardDesc : '使用随机三张塔罗牌（过去能量-当下现状-即将到来）'}\n\n你是一位精准的近期事件预言师。请用塔罗牌告诉我接下来约30天内可能发生的具体事情。\n\n请按以下结构输出（至少2500字）：\n\n## ✨ 近期能量总览（未来30天的整体气场）\n（描述接下来这段时间整体的能量走向，是动荡期还是稳定期，是机会期还是蛰伏期；说明这段时间的底色情绪是什么）\n\n## 📅 三张牌代表的三个时间节点\n（把三张牌分别对应"本周至10天内""10-20天""20-30天"，每个节点：\n- 这张牌揭示这段时间的主要能量是什么\n- 在感情/财运/工作/健康/人际关系这几个维度，最可能发生什么具体的事（要具体，不能只说"会有变化"，要说"可能收到一个意外消息""身边可能有人提出合作""一段旧情感可能重新浮现"）\n- 需要特别注意什么）\n\n## 🌟 最值得期待的机会窗口\n（在这30天内，哪些日子/哪段时间能量最旺？适合做什么重要的事：签合同、告白、开始新项目、谈判、求职……）\n\n## ⚠️ 需要提防的风险信号\n（这30天内最需要警惕什么？是某类人、某类决定、还是自己的某种情绪状态？给出具体的"如果你看到这个信号，一定要小心"的提示）\n\n## 💌 占卜师给你的近期锦囊\n（2-3条针对这段时间的专属行动建议，具体到"这段时间可以主动联系某人""这段时间适合储蓄而非消费""这段时间每天早晨做这一件小事会让能量更稳"）\n\n## 🔮 一句话预言\n（用一句话精准描述这30天的总体走向，让人能记住、能对照、能在结束时回来验证）`
       : `问题：${question}\n主题：${topicMap[topic] || topic || '综合'}\n${cardDesc ? '牌面信息：\n' + cardDesc : '使用随机三张塔罗牌（过去-现在-未来）'}\n\n请按以下结构出具完整塔罗解读：\n## 一、整体格局概览（200-300字）\n## 二、逐牌详细解读（每张牌300-400字）\n## 三、综合解读与能量走向（300-400字）\n## 四、3条可执行的行动建议\n## 五、占卜师的悄悄话（100-150字）`;
 
-    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -751,11 +751,11 @@ router.post('/tarot/stream', rateLimitMiddleware, async (req, res) => {
 
     const streamBody = await deepseekStream([{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }], { maxTokens: 8192, timeout: 300000 });
     const reader = streamBody.getReader();
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder('utf-8');
     let fullText = '', buf = '';
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) { buf += decoder.decode(); break; }
       buf += decoder.decode(value, { stream: true });
       const lines = buf.split('\n'); buf = lines.pop();
       for (const line of lines) {
@@ -793,7 +793,7 @@ router.post('/ziwei/stream', rateLimitMiddleware, async (req, res) => {
     const systemPrompt = '你是一位精通紫微斗数的命理师，师承中州派，从业30年，批过上万张命盘。你深谙紫微斗数精髓，能从命盘中看透一个人的一生轨迹。你的语言通俗易懂，不用晦涩术语唬人——要用大白话让从没学过紫微的人也能听懂。你的分析必须专业、深刻、具体。每次回答至少4000字。用Markdown格式输出，使用标题、加粗让报告结构清晰。语言：简体中文。';
     const userMsg = `出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour}时\n性别：${gender === 'male' ? '男' : '女'}\n\n请按以下结构出具完整紫微斗数命理报告（总字数不少于4000字）：\n## 一、命盘基本格局（200-300字）\n## 二、命宫主星深度解读（400-500字）\n## 三、主要宫位逐个分析（每个宫位200-300字，至少8个宫位）\n## 四、四化飞星分析（200-300字）\n## 五、当前大运详批（400-500字）\n## 六、流年关键点（300-400字）\n## 七、开运建议（200-300字）\n## 八、一句话点睛（50-100字）`;
 
-    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -802,11 +802,11 @@ router.post('/ziwei/stream', rateLimitMiddleware, async (req, res) => {
 
     const streamBody = await deepseekStream([{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }], { maxTokens: 8192, timeout: 300000 });
     const reader = streamBody.getReader();
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder('utf-8');
     let fullText = '', buf = '';
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) { buf += decoder.decode(); break; }
       buf += decoder.decode(value, { stream: true });
       const lines = buf.split('\n'); buf = lines.pop();
       for (const line of lines) {
@@ -1082,7 +1082,7 @@ router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
 - 风水是基础，心态和行动才是让气场真正转动的钥匙——一句温暖的话送给您
 - 祝福语收尾（具体的、针对这套房子和业主情况的祝福，不用通用套话）)`;
 
-    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -1109,11 +1109,11 @@ router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
 
     const streamBody = await deepseekStream(messages, { maxTokens: fullAccess ? 16000 : 3000, timeout: 300000 });
     const reader = streamBody.getReader();
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder('utf-8');
     let fullText = '', buf = '';
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) { buf += decoder.decode(); break; }
       buf += decoder.decode(value, { stream: true });
       const lines = buf.split('\n'); buf = lines.pop();
       for (const line of lines) {
@@ -1250,7 +1250,7 @@ ${candidates.map((c, i) => `
 - 您已经做到了最好——为逝者认真寻找安息之所，这份心意本身就是最大的福报
 - 一句真诚的祝福，针对这个家庭的具体情况）`;
 
-    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -1275,11 +1275,11 @@ ${candidates.map((c, i) => `
 
     const streamBody = await deepseekStream(messages, { maxTokens: 16000, timeout: 300000 });
     const reader = streamBody.getReader();
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder('utf-8');
     let fullText = '', buf = '';
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) { buf += decoder.decode(); break; }
       buf += decoder.decode(value, { stream: true });
       const lines = buf.split('\n'); buf = lines.pop();
       for (const line of lines) {
@@ -2275,7 +2275,7 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
 
     const userPrompt = `请为我批算八字。出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour !== undefined ? birthHour + '时' : ''}，性别：${gender === 'male' ? '男' : '女'}，关注：${question || '请全面分析命盘'}`;
 
-    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -2290,13 +2290,13 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
     );
 
     const reader = streamBody.getReader();
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder('utf-8');
     let fullText = '';
     let buf = '';
 
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) { buf += decoder.decode(); break; }
       buf += decoder.decode(value, { stream: true });
       const lines = buf.split('\n');
       buf = lines.pop(); // 保留不完整行
@@ -2399,7 +2399,7 @@ Language: ${outputLangFull}. Writing style: destiny poetry. Scene over abstracti
 结尾：温暖地列出5件完整版才揭晓的事（包含专属英文名能量分析+微信头像颜色方案），让人真心好奇。
 语言：${outputLangFull}。直接进入叙述，不要免责声明。`;
 
-    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -2413,11 +2413,11 @@ Language: ${outputLangFull}. Writing style: destiny poetry. Scene over abstracti
     );
 
     const reader = streamBody.getReader();
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder('utf-8');
     let fullText = '', buf = '';
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) { buf += decoder.decode(); break; }
       buf += decoder.decode(value, { stream: true });
       const lines = buf.split('\n'); buf = lines.pop();
       for (const line of lines) {
@@ -2517,7 +2517,7 @@ Language: ${tibetLangFull}. Writing style: destiny poetry — each chapter is a 
 结尾：温暖列出5件完整版才揭晓的事（含英文名风马能量+微信头像颜色方案），让人心生好奇。
 语言：${tibetLangFull}。直接进入${name}的命运叙述，不要免责声明。`;
 
-    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -2531,11 +2531,11 @@ Language: ${tibetLangFull}. Writing style: destiny poetry — each chapter is a 
     );
 
     const reader = streamBody.getReader();
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder('utf-8');
     let fullText = '', buf = '';
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) { buf += decoder.decode(); break; }
       buf += decoder.decode(value, { stream: true });
       const lines = buf.split('\n'); buf = lines.pop();
       for (const line of lines) {
@@ -2636,7 +2636,7 @@ Language: ${mayaLangFull}. Writing style: destiny poetry — each chapter ends w
 结尾：温暖列出5件完整版才揭晓的事（含专属英文名银河能量+微信头像色彩方案），让人真心好奇。
 语言：${mayaLangFull}。直接进入${name}的命运叙述，不要免责声明。`;
 
-    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -2650,11 +2650,11 @@ Language: ${mayaLangFull}. Writing style: destiny poetry — each chapter ends w
     );
 
     const reader = streamBody.getReader();
-    const decoder = new TextDecoder();
+    const decoder = new TextDecoder('utf-8');
     let fullText = '', buf = '';
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) { buf += decoder.decode(); break; }
       buf += decoder.decode(value, { stream: true });
       const lines = buf.split('\n'); buf = lines.pop();
       for (const line of lines) {
