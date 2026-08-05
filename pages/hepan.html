@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0e0408">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>善缘 · 合婚邀请</title>
+<meta name="description" content="邀请TA一起测合婚 — 双方八字合算，看你们是天作之合还是互补互长">
+<meta property="og:title" content="TA邀请你一起测合婚">
+<meta property="og:description" content="免费查看你们的八字相合度，看缘分深浅">
+<meta property="og:image" content="/og-card.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0408;--card:#1c080e;--mid:#280c14;
+  --rose:#cc2244;--rose-light:#e84466;--rose-dark:#8a1030;
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
+  --ink:rgba(248,230,220,0.92);--sub:rgba(210,180,168,0.7);
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:100px;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 50% -5%,rgba(180,20,40,0.45) 0%,rgba(201,168,76,0.05) 52%,transparent 70%);
+  pointer-events:none;z-index:0}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(201,96,122,0.55);cursor:pointer;transition:color .2s}
+.back-btn:hover{color:var(--rose)}
+
+/* ── header ── */
+.header{position:relative;z-index:1;text-align:center;padding:56px 20px 20px}
+.header-xi{font-size:72px;color:rgba(180,20,40,0.9);line-height:1;margin-bottom:6px;text-shadow:0 0 40px rgba(201,168,76,0.35);display:block}
+.header-title{font-size:22px;font-weight:300;letter-spacing:0.16em;margin-bottom:5px}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;letter-spacing:0.18em;color:rgba(204,34,68,0.7)}
+.gold-line{width:70px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:12px auto 0}
+
+/* ── invite banner ── */
+.invite-banner{display:none;margin:0 16px 16px;padding:16px;border-radius:14px;
+  background:linear-gradient(135deg,rgba(201,96,122,0.18),rgba(201,168,76,0.08));
+  border:1px solid rgba(201,96,122,0.35);text-align:center;position:relative;z-index:2;animation:fadeUp .5s ease both}
+.invite-banner.show{display:block}
+.invite-banner-heart{font-size:28px;margin-bottom:6px}
+.invite-banner-name{font-size:16px;color:var(--gold-light);letter-spacing:0.08em;margin-bottom:4px}
+.invite-banner-sub{font-size:11px;color:var(--sub);letter-spacing:.06em}
+
+/* ── section label ── */
+.section-label{font-size:10px;letter-spacing:.22em;color:var(--sub);padding:0 16px;margin-bottom:8px;position:relative;z-index:1}
+
+/* ── person card ── */
+.person-card{background:var(--card);border-radius:12px;padding:14px;margin:0 16px 12px;position:relative;z-index:1;border:1px solid}
+.person-a-card{border-color:rgba(201,96,122,0.22)}
+.person-b-card{border-color:rgba(91,191,160,0.18)}
+.person-card-label{font-size:10px;letter-spacing:.2em;margin-bottom:10px}
+.person-a-card .person-card-label{color:var(--rose-light)}
+.person-b-card .person-card-label{color:#5bbfa0}
+
+.name-input{width:100%;background:var(--mid);border:1px solid rgba(201,168,76,0.12);border-radius:8px;color:var(--ink);font-family:'Noto Serif SC',serif;font-size:13px;padding:9px 12px;margin-bottom:8px;outline:none;letter-spacing:.08em}
+.name-input:focus{border-color:rgba(201,168,76,0.4)}
+.name-input::placeholder{color:rgba(210,180,168,0.3)}
+
+.date-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px}
+.mini-sel{width:100%;background:var(--mid);border:1px solid rgba(201,168,76,0.12);border-radius:8px;color:var(--ink);font-family:'Noto Serif SC',serif;font-size:11px;padding:8px 4px;-webkit-appearance:none;outline:none;text-align:center}
+.mini-sel option{background:var(--card)}
+
+.gender-row{display:flex;gap:6px}
+.g-opt{flex:1;text-align:center;padding:7px 0;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid rgba(201,168,76,0.15);color:var(--sub);transition:all .2s;-webkit-tap-highlight-color:transparent}
+.person-a-card .g-opt.sel{border-color:var(--rose);background:rgba(201,96,122,0.14);color:var(--rose-light)}
+.person-b-card .g-opt.sel{border-color:#5bbfa0;background:rgba(91,191,160,0.1);color:#8dd9bf}
+
+/* locked A info display */
+.locked-info{background:var(--mid);border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.locked-info-text{font-size:12px;color:var(--ink);letter-spacing:.06em}
+.locked-info-badge{font-size:10px;padding:2px 8px;background:rgba(201,96,122,0.2);border-radius:8px;color:var(--rose-light);white-space:nowrap}
+
+/* ── buttons ── */
+.btn-primary{width:100%;padding:14px 0;background:linear-gradient(135deg,var(--rose-dark),var(--rose),var(--rose-light));border:none;border-radius:14px;color:#fff;font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:.18em;cursor:pointer;box-shadow:0 4px 20px rgba(180,20,40,0.4);transition:all .2s;transform:translateY(0)}
+.btn-primary:hover{box-shadow:0 6px 28px rgba(180,20,40,0.55);transform:translateY(-1px)}
+.btn-primary:active{transform:translateY(0)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+.btn-wrap{padding:0 16px;position:relative;z-index:1}
+
+/* ── loading ── */
+.loading-wrap{display:none;text-align:center;padding:44px 20px;position:relative;z-index:1}
+.loading-wrap.show{display:block}
+.sy-spinner{display:inline-block;width:40px;height:40px;border:3px solid rgba(201,168,76,0.18);border-top-color:var(--gold);border-radius:50%;animation:spin .9s linear infinite;margin-bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-txt{font-size:11px;color:var(--rose-light);letter-spacing:.18em;opacity:.8}
+
+/* ── results ── */
+.results-wrap{display:none;position:relative;z-index:1}
+.results-wrap.show{display:block;animation:fadeUp .5s ease both}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* score ring */
+.score-block{text-align:center;padding:20px 16px 8px}
+.score-ring{width:110px;height:110px;margin:0 auto 10px;position:relative}
+.score-ring svg{transform:rotate(-90deg)}
+.ring-bg{stroke:rgba(255,255,255,0.06);fill:none;stroke-width:7}
+.ring-fill{fill:none;stroke:var(--rose);stroke-width:7;stroke-linecap:round;stroke-dasharray:0 345;transition:stroke-dasharray 1.4s ease}
+.score-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num{font-family:'Cormorant Garamond',serif;font-size:34px;line-height:1;color:var(--gold-light)}
+.score-pct{font-size:12px;opacity:.7}
+.score-grade{font-size:16px;letter-spacing:.14em;color:var(--rose-light);margin-top:4px}
+.score-names{font-size:11px;color:var(--sub);margin-top:3px;letter-spacing:.06em}
+
+/* preview cards */
+.previews{padding:0 16px;margin-bottom:10px}
+.preview-card{background:var(--card);border:1px solid rgba(201,96,122,0.12);border-radius:12px;padding:14px;margin-bottom:8px;animation:fadeUp .5s ease both}
+.preview-card:nth-child(2){animation-delay:.1s}
+.preview-card:nth-child(3){animation-delay:.2s}
+.preview-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.preview-icon{font-size:18px}
+.preview-title{font-size:12px;letter-spacing:.08em;color:var(--gold)}
+.preview-text{font-size:12px;color:var(--sub);line-height:1.8}
+
+/* locked paywall */
+.locked-section{margin:0 16px 14px;position:relative;border-radius:12px;overflow:hidden}
+.locked-blur{padding:14px;filter:blur(5px);pointer-events:none;user-select:none;background:var(--card);border:1px solid rgba(201,96,122,0.1);border-radius:12px}
+.locked-blur-line{font-size:11px;color:var(--sub);margin-bottom:8px;line-height:1.7}
+.locked-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(14,4,8,0.82);border-radius:12px}
+.lock-icon{font-size:24px;margin-bottom:6px}
+.lock-title{font-size:11px;color:var(--sub);margin-bottom:12px;letter-spacing:.1em;text-align:center;padding:0 20px}
+.btn-unlock{padding:11px 28px;background:linear-gradient(135deg,var(--rose-dark),var(--rose),var(--rose-light));border:none;border-radius:12px;color:#fff;font-family:'Noto Serif SC',serif;font-size:13px;font-weight:500;letter-spacing:.14em;cursor:pointer;transition:all .2s}
+.btn-unlock:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(180,20,40,0.5)}
+.lock-price{font-size:10px;color:rgba(210,180,168,0.5);margin-top:8px}
+
+/* share section */
+.share-section{margin:0 16px 16px;padding:16px;background:linear-gradient(135deg,rgba(180,20,40,0.1),rgba(201,168,76,0.05));border:1px solid rgba(201,96,122,0.18);border-radius:14px;position:relative;z-index:1}
+.share-title{font-size:10px;letter-spacing:.2em;color:var(--gold);margin-bottom:12px;text-align:center}
+.share-link-box{background:var(--mid);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--sub);word-break:break-all;margin-bottom:10px;line-height:1.6}
+.share-btns{display:flex;gap:8px}
+.share-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--card);border:1px solid rgba(201,96,122,0.18);border-radius:12px;padding:10px 8px;cursor:pointer;font-family:'Noto Serif SC',serif;transition:all .25s;-webkit-tap-highlight-color:transparent}
+.share-btn:hover{border-color:rgba(201,96,122,0.4);transform:translateY(-1px)}
+.share-btn-icon{font-size:18px;line-height:1}
+.share-btn-label{font-size:10px;color:var(--sub);letter-spacing:.06em;white-space:nowrap}
+
+/* ── invite link shown after create ── */
+.invite-created{display:none;margin:0 16px 14px;padding:16px;background:linear-gradient(135deg,rgba(180,20,40,0.14),rgba(201,168,76,0.06));border:1px solid rgba(201,168,76,0.25);border-radius:14px;position:relative;z-index:1}
+.invite-created.show{display:block;animation:fadeUp .45s ease both}
+.invite-created-title{font-size:11px;letter-spacing:.16em;color:var(--gold);margin-bottom:10px;text-align:center}
+.invite-link-box{background:var(--mid);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--sub);word-break:break-all;margin-bottom:10px;line-height:1.6;border:1px solid rgba(201,168,76,0.12)}
+.btn-copy{width:100%;padding:11px 0;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light));border:none;border-radius:12px;color:rgba(15,8,10,0.95);font-family:'Noto Serif SC',serif;font-size:13px;font-weight:500;letter-spacing:.16em;cursor:pointer;transition:all .2s;margin-bottom:8px}
+.btn-copy:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(201,168,76,0.4)}
+.copy-hint{font-size:10px;color:var(--sub);text-align:center;letter-spacing:.08em}
+
+/* invite-again button */
+.btn-invite-again{display:block;width:calc(100% - 32px);margin:0 16px 10px;padding:12px 0;background:none;border:1px solid rgba(201,96,122,0.3);border-radius:12px;color:var(--rose-light);font-family:'Noto Serif SC',serif;font-size:12px;letter-spacing:.14em;cursor:pointer;transition:all .2s;position:relative;z-index:1}
+.btn-invite-again:hover{background:rgba(201,96,122,0.08)}
+
+/* toast */
+.sy-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(28,8,14,0.96);color:var(--gold-light);font-size:12px;padding:9px 20px;border-radius:20px;letter-spacing:.1em;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.sy-toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">← 返回</button>
+<div class="sy-toast" id="syToast"></div>
+
+<!-- 头部 -->
+<div class="header">
+  <span class="header-xi">囍</span>
+  <div class="header-title" id="headerTitle">合婚邀请</div>
+  <div class="header-sub" id="headerSub">双方八字·合缘测算</div>
+  <div class="gold-line"></div>
+</div>
+
+<!-- 被邀请 banner（有 invite= 参数时显示） -->
+<div class="invite-banner" id="inviteBanner">
+  <div class="invite-banner-heart">❤️</div>
+  <div class="invite-banner-name" id="inviterNameDisplay">TA在等你一起测合婚</div>
+  <div class="invite-banner-sub">填入你的生辰，见证你们的缘分</div>
+</div>
+
+<!-- ── 表单区域 ── -->
+<div id="formSection">
+
+  <!-- Person A -->
+  <div class="section-label" id="labelA">你的信息</div>
+  <div class="person-card person-a-card" id="personACard">
+    <div class="person-card-label">本命 · 你</div>
+    <!-- 被邀请态：显示A的锁定信息 -->
+    <div class="locked-info" id="aLockedInfo" style="display:none">
+      <span class="locked-info-text" id="aLockedText">—</span>
+      <span class="locked-info-badge">已填</span>
+    </div>
+    <!-- 发起态：A 填自己 -->
+    <div id="aInputs">
+      <input class="name-input" id="nameA" type="text" maxlength="8" placeholder="你的名字（选填）">
+      <div class="date-row">
+        <select class="mini-sel" id="aYear"><option value="">年</option></select>
+        <select class="mini-sel" id="aMonth"><option value="">月</option></select>
+        <select class="mini-sel" id="aDay"><option value="">日</option></select>
+      </div>
+      <div class="gender-row">
+        <div class="g-opt sel" id="aMale" onclick="selGender('a','male')">男</div>
+        <div class="g-opt" id="aFemale" onclick="selGender('a','female')">女</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Person B（被邀请态才显示，发起态隐藏） -->
+  <div class="section-label" id="labelB" style="display:none">TA的信息</div>
+  <div class="person-card person-b-card" id="personBCard" style="display:none">
+    <div class="person-card-label">TA · 对方</div>
+    <div id="bInputs">
+      <input class="name-input" id="nameB" type="text" maxlength="8" placeholder="你的名字（选填）">
+      <div class="date-row">
+        <select class="mini-sel" id="bYear"><option value="">年</option></select>
+        <select class="mini-sel" id="bMonth"><option value="">月</option></select>
+        <select class="mini-sel" id="bDay"><option value="">日</option></select>
+      </div>
+      <div class="gender-row">
+        <div class="g-opt" id="bMale" onclick="selGender('b','male')">男</div>
+        <div class="g-opt sel" id="bFemale" onclick="selGender('b','female')">女</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CTA button -->
+  <div class="btn-wrap" style="margin-top:4px">
+    <button class="btn-primary" id="mainBtn" onclick="handleMainBtn()">生成邀请链接</button>
+  </div>
+
+  <!-- 生成后：邀请链接展示 -->
+  <div class="invite-created" id="inviteCreated">
+    <div class="invite-created-title">邀请链接已生成</div>
+    <div class="invite-link-box" id="inviteLinkBox">—</div>
+    <button class="btn-copy" onclick="copyInviteLink()">📋 复制邀请链接</button>
+    <div class="copy-hint">发给TA，TA填完后你们就能看结果了</div>
+  </div>
+
+</div>
+
+<!-- ── 加载中 ── -->
+<div class="loading-wrap" id="loadingWrap">
+  <div class="sy-spinner"></div>
+  <div class="load-txt">正在推算你们的八字缘分…</div>
+</div>
+
+<!-- ── 结果 ── -->
+<div class="results-wrap" id="resultsWrap">
+
+  <!-- 分数环 -->
+  <div class="score-block">
+    <div class="score-ring">
+      <svg width="110" height="110" viewBox="0 0 110 110">
+        <circle class="ring-bg" cx="55" cy="55" r="45"/>
+        <circle class="ring-fill" id="ringFill" cx="55" cy="55" r="45"/>
+      </svg>
+      <div class="score-inner">
+        <span class="score-num" id="scoreNum">—</span><span class="score-pct">分</span>
+        <div class="score-grade" id="scoreGrade">—</div>
+      </div>
+    </div>
+    <div class="score-names" id="scoreNames"></div>
+  </div>
+
+  <!-- 3条免费预览 -->
+  <div class="previews" id="previewCards"></div>
+
+  <!-- 锁定内容（付费解锁） -->
+  <div class="locked-section">
+    <div class="locked-blur">
+      <div class="locked-blur-line">✦ 双方大运流年交叉影响分析，预测未来3年关键节点…</div>
+      <div class="locked-blur-line">✦ 宜婚年份与最佳婚期推算，化解冲克择吉日…</div>
+      <div class="locked-blur-line">✦ 感情化解建议，五行互补调和之法…</div>
+    </div>
+    <div class="locked-overlay">
+      <div class="lock-icon">🔮</div>
+      <div class="lock-title">解锁完整合婚报告<br>包含化解建议·宜婚年份·大运分析</div>
+      <button class="btn-unlock" onclick="unlockFull()">解锁完整报告 $9.90</button>
+      <div class="lock-price">原价 $19.90 · 今日特价</div>
+    </div>
+  </div>
+
+  <!-- 分享按钮：让B也邀请别人 -->
+  <button class="btn-invite-again" onclick="inviteAgain()">💌 邀请我的另一半也来测</button>
+
+  <div class="share-section" id="shareSection" style="display:none">
+    <div class="share-title">分享给TA</div>
+    <div class="share-link-box" id="shareLinkBox">—</div>
+    <div class="share-btns">
+      <button class="share-btn" onclick="copyShareLink()">
+        <span class="share-btn-icon">📋</span>
+        <span class="share-btn-label">复制链接</span>
+      </button>
+      <button class="share-btn" onclick="shareViaSystem()">
+        <span class="share-btn-icon">↗️</span>
+        <span class="share-btn-label">更多分享</span>
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── State ──
+var gMode = 'create'; // 'create' | 'invited'
+var gInviteId = null;
+var gInviteData = null; // A's data from server
+var gGenderA = 'male';
+var gGenderB = 'female';
+var gInviteLink = '';
+var gShareLink = '';
+
+// ── Init select options ──
+(function() {
+  var curYear = new Date().getFullYear();
+  ['aYear','bYear'].forEach(function(id) {
+    var sel = document.getElementById(id);
+    for (var y = curYear; y >= 1950; y--) {
+      sel.innerHTML += '<option value="'+y+'">'+y+'年</option>';
+    }
+  });
+  ['aMonth','bMonth'].forEach(function(id) {
+    var sel = document.getElementById(id);
+    for (var m = 1; m <= 12; m++) {
+      sel.innerHTML += '<option value="'+m+'">'+m+'月</option>';
+    }
+  });
+  ['aDay','bDay'].forEach(function(id) {
+    var sel = document.getElementById(id);
+    for (var d = 1; d <= 31; d++) {
+      sel.innerHTML += '<option value="'+d+'">'+d+'日</option>';
+    }
+  });
+})();
+
+// ── Check URL for invite param ──
+(function() {
+  var params = new URLSearchParams(location.search);
+  var inv = params.get('invite');
+  if (inv) {
+    gMode = 'invited';
+    gInviteId = inv;
+    loadInviteData(inv);
+  }
+})();
+
+function loadInviteData(inviteId) {
+  fetch('/api/invite/' + inviteId)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.error) {
+        showToast('邀请链接已过期，请让TA重新发一个');
+        gMode = 'create';
+        renderCreateMode();
+        return;
+      }
+      gInviteData = data;
+      renderInvitedMode(data);
+    })
+    .catch(function() {
+      showToast('网络错误，请刷新重试');
+    });
+}
+
+function renderCreateMode() {
+  document.getElementById('headerTitle').textContent = '合婚邀请';
+  document.getElementById('headerSub').textContent = '双方八字 · 合缘测算';
+  document.getElementById('mainBtn').textContent = '生成邀请链接';
+  document.getElementById('labelA').textContent = '你的信息';
+  document.getElementById('labelB').style.display = 'none';
+  document.getElementById('personBCard').style.display = 'none';
+}
+
+function renderInvitedMode(data) {
+  var inviterName = data.inviterName || data.nameA || 'TA';
+  document.getElementById('headerTitle').textContent = inviterName + ' 邀请你测合婚';
+  document.getElementById('headerSub').textContent = '填入你的生辰 · 见证你们的缘分';
+
+  var banner = document.getElementById('inviteBanner');
+  banner.classList.add('show');
+  document.getElementById('inviterNameDisplay').textContent = inviterName + ' 在等你一起测合婚';
+
+  // A's card: show locked info
+  document.getElementById('aInputs').style.display = 'none';
+  document.getElementById('aLockedInfo').style.display = 'flex';
+  document.getElementById('aLockedText').textContent = inviterName + ' · ' + data.p1Year + '/' + data.p1Month + '/' + data.p1Day + ' · ' + (data.p1Gender === 'female' ? '女' : '男');
+  document.getElementById('labelA').textContent = inviterName + ' 的信息';
+
+  // B's card: show for B to fill
+  document.getElementById('labelB').style.display = 'block';
+  document.getElementById('labelB').textContent = '你的信息';
+  document.getElementById('personBCard').style.display = 'block';
+
+  document.getElementById('mainBtn').textContent = '查看我们的合婚结果';
+}
+
+function selGender(person, gender) {
+  if (person === 'a') {
+    gGenderA = gender;
+    document.getElementById('aMale').classList.toggle('sel', gender === 'male');
+    document.getElementById('aFemale').classList.toggle('sel', gender === 'female');
+  } else {
+    gGenderB = gender;
+    document.getElementById('bMale').classList.toggle('sel', gender === 'male');
+    document.getElementById('bFemale').classList.toggle('sel', gender === 'female');
+  }
+}
+
+function handleMainBtn() {
+  if (gMode === 'create') {
+    doCreateInvite();
+  } else {
+    doMatchCalc();
+  }
+}
+
+function doCreateInvite() {
+  var nameA = document.getElementById('nameA').value.trim() || '你';
+  var aYear = document.getElementById('aYear').value;
+  var aMonth = document.getElementById('aMonth').value;
+  var aDay = document.getElementById('aDay').value;
+
+  if (!aYear || !aMonth || !aDay) {
+    showToast('请填写你的出生年月日');
+    return;
+  }
+
+  var btn = document.getElementById('mainBtn');
+  btn.disabled = true;
+  btn.textContent = '生成中…';
+
+  fetch('/api/invite/save', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      inviterName: nameA,
+      nameA: nameA,
+      p1Year: aYear,
+      p1Month: aMonth,
+      p1Day: aDay,
+      p1Gender: gGenderA,
+      mode: 'dating'
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    btn.disabled = false;
+    btn.textContent = '重新生成';
+    if (!data.inviteId) { showToast('生成失败，请重试'); return; }
+    var link = location.origin + '/pages/hepan.html?invite=' + data.inviteId;
+    gInviteLink = link;
+    document.getElementById('inviteLinkBox').textContent = link;
+    document.getElementById('inviteCreated').classList.add('show');
+    showToast('邀请链接已生成，复制发给TA吧');
+  })
+  .catch(function() {
+    btn.disabled = false;
+    btn.textContent = '生成邀请链接';
+    showToast('网络错误，请重试');
+  });
+}
+
+function copyInviteLink() {
+  copyText(gInviteLink, '邀请链接已复制，发给TA吧！');
+}
+
+function doMatchCalc() {
+  // Validate B's input
+  var nameB = document.getElementById('nameB').value.trim() || '你';
+  var bYear = document.getElementById('bYear').value;
+  var bMonth = document.getElementById('bMonth').value;
+  var bDay = document.getElementById('bDay').value;
+
+  if (!bYear || !bMonth || !bDay) {
+    showToast('请填写你的出生年月日');
+    return;
+  }
+
+  var d = gInviteData;
+  var payload = {
+    nameA: d.inviterName || d.nameA || 'TA',
+    aYear: d.p1Year,
+    aMonth: d.p1Month,
+    aDay: d.p1Day,
+    aGender: d.p1Gender || 'male',
+    nameB: nameB,
+    bYear: bYear,
+    bMonth: bMonth,
+    bDay: bDay,
+    bGender: gGenderB
+  };
+
+  document.getElementById('formSection').style.display = 'none';
+  document.getElementById('inviteBanner').style.display = 'none';
+  var lw = document.getElementById('loadingWrap');
+  lw.classList.add('show');
+
+  fetch('/api/hepan/match', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(resp) {
+    lw.classList.remove('show');
+    if (!resp.ok || !resp.data) {
+      showToast(resp.error || '测算失败，请重试');
+      document.getElementById('formSection').style.display = 'block';
+      return;
+    }
+    renderResults(payload, resp.data);
+  })
+  .catch(function() {
+    lw.classList.remove('show');
+    showToast('网络错误，请重试');
+    document.getElementById('formSection').style.display = 'block';
+  });
+}
+
+function renderResults(payload, data) {
+  // Score ring
+  var score = Math.max(10, Math.min(99, parseInt(data.score) || 75));
+  document.getElementById('scoreNum').textContent = score;
+  document.getElementById('scoreGrade').textContent = data.grade || '天作之合';
+  document.getElementById('scoreNames').textContent = (payload.nameA || 'A') + ' × ' + (payload.nameB || 'B');
+
+  setTimeout(function() {
+    var circ = 2 * Math.PI * 45;
+    document.getElementById('ringFill').style.strokeDasharray = (score / 100 * circ) + ' ' + circ;
+  }, 200);
+
+  // Preview cards
+  var container = document.getElementById('previewCards');
+  container.innerHTML = '';
+  var previews = data.previews || [];
+  previews.forEach(function(p) {
+    var card = document.createElement('div');
+    card.className = 'preview-card';
+    card.innerHTML = '<div class="preview-head"><span class="preview-icon">' + (p.icon||'✦') + '</span><span class="preview-title">' + esc(p.title||'') + '</span></div><div class="preview-text">' + esc(p.text||'') + '</div>';
+    container.appendChild(card);
+  });
+
+  // Prepare share link for "invite again" (B becomes new inviter)
+  // Store B's info for share
+  gSharePayloadB = payload;
+
+  document.getElementById('resultsWrap').classList.add('show');
+}
+
+var gSharePayloadB = null;
+
+function inviteAgain() {
+  // B wants to invite their own partner — create new invite with B's data
+  if (!gSharePayloadB) { showToast('请先完成测算'); return; }
+  var p = gSharePayloadB;
+  fetch('/api/invite/save', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      inviterName: p.nameB || '你',
+      nameA: p.nameB || '你',
+      p1Year: p.bYear,
+      p1Month: p.bMonth,
+      p1Day: p.bDay,
+      p1Gender: p.bGender || 'female',
+      mode: 'dating'
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.inviteId) { showToast('生成失败，请重试'); return; }
+    var link = location.origin + '/pages/hepan.html?invite=' + data.inviteId;
+    gShareLink = link;
+    document.getElementById('shareLinkBox').textContent = link;
+    var ss = document.getElementById('shareSection');
+    ss.style.display = 'block';
+    ss.scrollIntoView({behavior:'smooth', block:'start'});
+    showToast('邀请链接生成，发给TA吧');
+  })
+  .catch(function() { showToast('网络错误，请重试'); });
+}
+
+function copyShareLink() {
+  copyText(gShareLink, '链接已复制！');
+}
+
+function shareViaSystem() {
+  var link = gShareLink || gInviteLink;
+  if (navigator.share && link) {
+    navigator.share({ title: '一起来测合婚', text: '我在善缘测了我们的合婚，你也来看看？', url: link });
+  } else {
+    copyText(link, '链接已复制');
+  }
+}
+
+function unlockFull() {
+  // Go to hehun.html full report purchase
+  // Pre-fill with known data if available
+  var url = '/pages/hehun.html';
+  if (gSharePayloadB) {
+    var p = gSharePayloadB;
+    url += '?ref=hepan&nameA=' + encodeURIComponent(p.nameA||'') + '&aYear=' + p.aYear + '&aMonth=' + p.aMonth + '&aDay=' + p.aDay + '&aGender=' + p.aGender + '&nameB=' + encodeURIComponent(p.nameB||'') + '&bYear=' + p.bYear + '&bMonth=' + p.bMonth + '&bDay=' + p.bDay + '&bGender=' + p.bGender;
+  }
+  location.href = url;
+}
+
+function copyText(text, msg) {
+  if (!text) return;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() { showToast(msg || '已复制'); }).catch(function() { fallbackCopy(text, msg); });
+  } else {
+    fallbackCopy(text, msg);
+  }
+}
+
+function fallbackCopy(text, msg) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;opacity:0;left:-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand('copy'); showToast(msg || '已复制'); } catch(e) { showToast('请手动复制链接'); }
+  document.body.removeChild(ta);
+}
+
+var toastTimer = null;
+function showToast(msg) {
+  var t = document.getElementById('syToast');
+  t.textContent = msg;
+  t.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(function() { t.classList.remove('show'); }, 2200);
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>
