@@ -269,38 +269,80 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
     <button class="btn-add-member" id="addMemberBtn" onclick="addMember()">＋ 添加家庭成员</button>
   </div>
 
-  <!-- Image upload section (collapsible) -->
+  <!-- House status + photo upload -->
+  <div class="form-section">
+    <div class="form-label">房屋现状</div>
+    <div class="field-group">
+      <div class="field-row" style="border-bottom:none">
+        <span class="field-label">当前状态<span class="required-star">*</span></span>
+        <select class="field-select" id="houseStatus" onchange="onHouseStatusChange()">
+          <option value="decorated">已装修入住</option>
+          <option value="empty">毛坯空房（未装修）</option>
+          <option value="design">有设计图/效果图</option>
+        </select>
+      </div>
+    </div>
+    <div style="font-size:9px;color:rgba(255,245,220,0.25);margin-top:8px;padding:0 2px;letter-spacing:0.05em;line-height:1.7" id="statusHint">AI将针对现有布局进行诊断，分析哪里有风水问题并给出调整建议</div>
+  </div>
+
   <div class="form-section">
     <div class="upload-toggle-row" onclick="toggleUploadSection()">
       <span class="upload-toggle-label">上传图片（可选，让AI更精准）</span>
       <span class="upload-toggle-arrow" id="uploadArrow">▼</span>
     </div>
     <div class="upload-section-body" id="uploadBody">
-      <div style="font-size:9px;color:rgba(255,245,220,0.3);margin-bottom:10px;letter-spacing:0.06em">上传户型平面图，AI可识别格局问题；上传各房间照片，AI分析实际布局</div>
 
-      <!-- Floor plan upload -->
-      <div style="margin-bottom:10px">
-        <div style="font-size:9px;color:rgba(201,168,76,0.45);letter-spacing:0.08em;margin-bottom:6px">户型图</div>
+      <!-- Floor plan (always available) -->
+      <div style="margin-bottom:14px">
+        <div style="font-size:9px;color:rgba(201,168,76,0.45);letter-spacing:0.08em;margin-bottom:6px">户型平面图（推荐上传）</div>
         <div class="upload-area" onclick="document.getElementById('floorPlanInput').click()">
           <div class="upload-area-icon">📐</div>
-          <div class="upload-area-text">点击上传户型平面图</div>
-          <div class="upload-hint">JPG / PNG / HEIC · 最大 10MB</div>
+          <div class="upload-area-text">户型图 / 平面图</div>
+          <div class="upload-hint">JPG · PNG · PDF截图 · 最大 10MB</div>
         </div>
         <input type="file" id="floorPlanInput" accept="image/*" style="display:none" onchange="handleFloorPlan(this)">
         <div class="upload-previews" id="floorPlanPreview"></div>
       </div>
 
-      <!-- Room photos upload -->
-      <div>
-        <div style="font-size:9px;color:rgba(201,168,76,0.45);letter-spacing:0.08em;margin-bottom:6px">房间照片（最多3张）</div>
-        <div class="upload-area" onclick="document.getElementById('roomPhotosInput').click()">
-          <div class="upload-area-icon">📷</div>
-          <div class="upload-area-text">点击上传房间照片</div>
-          <div class="upload-hint">可多选 · 最多3张</div>
+      <!-- Decorated room photos (visible when status = decorated) -->
+      <div id="decoratedPhotoBlock" style="margin-bottom:14px">
+        <div style="font-size:9px;color:rgba(201,168,76,0.45);letter-spacing:0.08em;margin-bottom:4px">室内实拍照片（最多5张）</div>
+        <div style="font-size:9px;color:rgba(255,245,220,0.2);margin-bottom:6px;letter-spacing:0.04em">客厅、卧室、玄关等现有布局，AI逐张诊断风水问题并解释为什么</div>
+        <div class="upload-area" onclick="document.getElementById('decoratedPhotosInput').click()">
+          <div class="upload-area-icon">🏠</div>
+          <div class="upload-area-text">点击上传室内照片</div>
+          <div class="upload-hint">可多选 · 最多5张 · 装修后实拍</div>
         </div>
-        <input type="file" id="roomPhotosInput" accept="image/*" multiple style="display:none" onchange="handleRoomPhotos(this)">
-        <div class="upload-previews" id="roomPhotosPreview"></div>
+        <input type="file" id="decoratedPhotosInput" accept="image/*" multiple style="display:none" onchange="handleRoomPhotos(this,'decorated')">
+        <div class="upload-previews" id="decoratedPhotosPreview"></div>
       </div>
+
+      <!-- Empty room photos (visible when status = empty) -->
+      <div id="emptyPhotoBlock" style="display:none;margin-bottom:14px">
+        <div style="font-size:9px;color:rgba(201,168,76,0.45);letter-spacing:0.08em;margin-bottom:4px">空房照片（最多5张）</div>
+        <div style="font-size:9px;color:rgba(255,245,220,0.2);margin-bottom:6px;letter-spacing:0.04em">毛坯空间实拍，AI从零规划家具摆放位置并解释每条建议的风水原理</div>
+        <div class="upload-area" onclick="document.getElementById('emptyPhotosInput').click()">
+          <div class="upload-area-icon">🪟</div>
+          <div class="upload-area-text">点击上传空房照片</div>
+          <div class="upload-hint">可多选 · 最多5张 · 毛坯/未布置状态</div>
+        </div>
+        <input type="file" id="emptyPhotosInput" accept="image/*" multiple style="display:none" onchange="handleRoomPhotos(this,'empty')">
+        <div class="upload-previews" id="emptyPhotosPreview"></div>
+      </div>
+
+      <!-- Design plan photos (visible when status = design) -->
+      <div id="designPhotoBlock" style="display:none;margin-bottom:14px">
+        <div style="font-size:9px;color:rgba(201,168,76,0.45);letter-spacing:0.08em;margin-bottom:4px">设计图 / 效果图（最多5张）</div>
+        <div style="font-size:9px;color:rgba(255,245,220,0.2);margin-bottom:6px;letter-spacing:0.04em">室内设计方案截图/效果图，AI逐区域做风水审阅，指出哪里好、哪里需要调整及原因</div>
+        <div class="upload-area" onclick="document.getElementById('designPhotosInput').click()">
+          <div class="upload-area-icon">📋</div>
+          <div class="upload-area-text">点击上传设计图/效果图</div>
+          <div class="upload-hint">可多选 · 最多5张 · 平面图或3D效果图均可</div>
+        </div>
+        <input type="file" id="designPhotosInput" accept="image/*" multiple style="display:none" onchange="handleRoomPhotos(this,'design')">
+        <div class="upload-previews" id="designPhotosPreview"></div>
+      </div>
+
     </div>
   </div>
 
@@ -501,14 +543,33 @@ function toggleUploadSection() {
   arrow.classList.toggle('open');
 }
 
+/* ── House status toggle ── */
+function onHouseStatusChange() {
+  var status = document.getElementById('houseStatus').value;
+  var hints = {
+    decorated: 'AI将针对现有布局进行诊断，分析哪里有风水问题并给出调整建议（每条都解释为什么）',
+    empty: 'AI从零规划家具摆放位置，详细解释每条建议的风水原理',
+    design: 'AI逐区域审阅设计方案，指出哪里好、哪里需要改，并说明原因'
+  };
+  document.getElementById('statusHint').textContent = hints[status] || '';
+  document.getElementById('decoratedPhotoBlock').style.display = status === 'decorated' ? 'block' : 'none';
+  document.getElementById('emptyPhotoBlock').style.display = status === 'empty' ? 'block' : 'none';
+  document.getElementById('designPhotoBlock').style.display = status === 'design' ? 'block' : 'none';
+}
+
 /* ── Image upload ── */
 var floorPlanBase64 = null;
-var roomImages = []; // array of base64 strings
+var photoStore = { decorated: [], empty: [], design: [] };
 
 function fileToBase64(file) {
   return new Promise(function(resolve, reject) {
     var reader = new FileReader();
-    reader.onload = function(e) { resolve(e.target.result); };
+    reader.onload = function(e) {
+      // strip data URL prefix, keep only base64
+      var result = e.target.result;
+      var comma = result.indexOf(',');
+      resolve(comma >= 0 ? result.slice(comma + 1) : result);
+    };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
@@ -521,7 +582,9 @@ function handleFloorPlan(input) {
   preview.innerHTML = '';
   var url = URL.createObjectURL(file);
   preview.innerHTML = '<div class="preview-wrap"><img class="preview-thumb" src="'+url+'"><span class="preview-del" onclick="clearFloorPlan()">×</span></div>';
-  fileToBase64(file).then(function(b64) { floorPlanBase64 = b64; });
+  fileToBase64(file).then(function(b64) {
+    floorPlanBase64 = b64;
+  });
 }
 function clearFloorPlan() {
   floorPlanBase64 = null;
@@ -529,35 +592,42 @@ function clearFloorPlan() {
   document.getElementById('floorPlanInput').value = '';
 }
 
-function handleRoomPhotos(input) {
+function handleRoomPhotos(input, type) {
+  var store = photoStore[type];
+  var previewId = type + 'PhotosPreview';
+  var preview = document.getElementById(previewId);
   var files = Array.from(input.files);
-  var preview = document.getElementById('roomPhotosPreview');
-  var remaining = 3 - roomImages.length;
-  if (remaining <= 0) { showToast('最多上传3张房间照片', 'error'); return; }
+  var remaining = 5 - store.length;
+  if (remaining <= 0) { showToast('最多上传5张照片', 'error'); return; }
   files = files.slice(0, remaining);
   files.forEach(function(file) {
     var url = URL.createObjectURL(file);
-    var idx = roomImages.length;
-    roomImages.push(null); // placeholder
+    var idx = store.length;
+    store.push(null);
     var wrap = document.createElement('div');
     wrap.className = 'preview-wrap';
-    wrap.id = 'room-wrap-'+idx;
-    wrap.innerHTML = '<img class="preview-thumb" src="'+url+'"><span class="preview-del" onclick="removeRoomPhoto('+idx+')">×</span>';
+    wrap.id = type + '-wrap-' + idx;
+    wrap.innerHTML = '<img class="preview-thumb" src="'+url+'"><span class="preview-del" onclick="removePhoto(\''+type+'\','+idx+')">×</span>';
     preview.appendChild(wrap);
-    fileToBase64(file).then(function(b64) { roomImages[idx] = b64; });
+    fileToBase64(file).then(function(b64) { store[idx] = b64; });
   });
-  if (roomImages.length >= 3) input.disabled = true;
+  if (store.length >= 5) input.disabled = true;
 }
-function removeRoomPhoto(idx) {
-  roomImages.splice(idx, 1);
-  var wrap = document.getElementById('room-wrap-'+idx);
+function removePhoto(type, idx) {
+  var store = photoStore[type];
+  store.splice(idx, 1);
+  var wrap = document.getElementById(type + '-wrap-' + idx);
   if (wrap) wrap.remove();
-  // Re-enable input if under limit
-  document.getElementById('roomPhotosInput').disabled = false;
-  // Re-index remaining wraps (simple approach: re-render)
-  var preview = document.getElementById('roomPhotosPreview');
+  var inputId = type + 'PhotosInput';
+  var inputEl = document.getElementById(inputId);
+  if (inputEl) inputEl.disabled = false;
+  var preview = document.getElementById(type + 'PhotosPreview');
   var wraps = preview.querySelectorAll('.preview-wrap');
-  wraps.forEach(function(w, i) { w.id = 'room-wrap-'+i; var del = w.querySelector('.preview-del'); if(del) del.setAttribute('onclick','removeRoomPhoto('+i+')'); });
+  wraps.forEach(function(w, i) {
+    w.id = type + '-wrap-' + i;
+    var del = w.querySelector('.preview-del');
+    if (del) del.setAttribute('onclick', 'removePhoto(\'' + type + '\',' + i + ')');
+  });
 }
 
 function generateReport() {
@@ -596,7 +666,7 @@ function generateReport() {
   var apiCalled = false;
 
   var members = collectMembers();
-  var validRoomImages = roomImages.filter(Boolean);
+  var houseStatus = document.getElementById('houseStatus').value;
 
   var token = localStorage.getItem('sy_token') || '';
   fetch('/api/fengshui/stream', {
@@ -610,8 +680,11 @@ function generateReport() {
       address: payload.address,
       question: payload.question,
       members: members,
+      houseStatus: houseStatus,
       floorPlanBase64: floorPlanBase64 || null,
-      roomImages: validRoomImages
+      decoratedPhotos: photoStore.decorated.filter(Boolean),
+      emptyRoomPhotos: photoStore.empty.filter(Boolean),
+      designPlanPhotos: photoStore.design.filter(Boolean)
     })
   }).then(function(res) {
     if (!res.ok) throw new Error('API error: ' + res.status);

@@ -665,7 +665,7 @@ router.post('/ziwei/stream', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
   try {
-    const { houseDirection, floor, rooms, address, question, members, floorPlanBase64 } = req.body;
+    const { houseDirection, floor, rooms, address, question, members, floorPlanBase64, houseStatus, decoratedPhotos, emptyRoomPhotos, designPlanPhotos } = req.body;
     if (!houseDirection) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: '请提供房屋朝向' });
@@ -700,21 +700,37 @@ router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
       }).join('\n');
     }
 
-    // 户型图分析段落
-    let floorPlanNote = '';
+    // 房屋状态与图片分析段落
+    const status = houseStatus || 'decorated';
+    let photoNote = '';
     if (floorPlanBase64) {
-      floorPlanNote = '\n\n【已上传户型图】请在分析中结合户型图布局，识别可能存在的风水问题，例如：穿堂风（前后门对齐）、卫生间居中泄气、厨厕相邻等，并给出针对性建议。';
+      photoNote += '\n\n【已上传户型平面图】请仔细识别户型格局，分析穿堂风（前后门对齐）、卫生间居中泄气、厨厕相邻、入户直冲等问题，并给出针对性建议。';
     }
+    if (status === 'decorated' && decoratedPhotos && decoratedPhotos.length > 0) {
+      photoNote += `\n\n【已上传${decoratedPhotos.length}张装修后室内照片】请逐张分析现有布局存在的风水问题：家具摆放位置是否压了煞气方位、颜色搭配与五行是否匹配、哪些物品需要移位或更换，并说明每条建议的风水原理（为什么这样做）。`;
+    }
+    if (status === 'empty' && emptyRoomPhotos && emptyRoomPhotos.length > 0) {
+      photoNote += `\n\n【已上传${emptyRoomPhotos.length}张空房照片】这是未装修的毛坯空间。请根据空间实际情况，从零开始规划：床应放在哪个位置（头朝哪个方向）、沙发如何摆、书桌朝向、各房间功能分区——每条建议必须详细说明为什么这样放（风水原理、气场流动、命卦匹配原因）。`;
+    }
+    if (status === 'design' && designPlanPhotos && designPlanPhotos.length > 0) {
+      photoNote += `\n\n【已上传${designPlanPhotos.length}张设计图/效果图】请仔细审阅设计方案，从风水角度逐一点评：哪些设计符合风水原则（说明为什么好）、哪些需要调整（说明为什么有问题以及如何改），并给出具体修改建议（如"将床从北墙移到东南角，因为东南为木旺之位，配合户主坎命东四命吉向"）。`
+    }
+    const floorPlanNote = photoNote; // backward compat alias
 
     const freeGuidance = fullAccess ? '' : `\n\n【重要】本次为免费预览版，只输出以下两节：「房屋总格局与气场特征」和「玄空飞星年盘叠加分析」，每节300-400字，内容真实有用，结尾自然提示完整版包含更多章节。不要道歉，不要说"这是免费版"，自然写完这两节就停止。`;
 
+    const statusLabel = { decorated: '已装修入住', empty: '毛坯空房（未装修）', design: '设计图阶段' }[status] || '已装修入住';
     const userMsg = `房屋朝向：${houseDirection}
 楼层：${floor || '未提供'}
 房间布局：${rooms || '未提供'}
 地址/区域：${address || '未提供'}
+房屋现状：${statusLabel}
 用户问题：${question || '请综合分析房屋风水，给出全面的开运布局方案'}${membersSection}${floorPlanNote}${freeGuidance}
 
 请严格按照以下结构输出完整风水报告（要求8000-12000字，每个章节须详尽展开，禁止以"略"或省略号代替任何内容）：
+
+## 📸 现状诊断${status === 'empty' ? '（空房规划）' : status === 'design' ? '（设计图审阅）' : '（现有布局诊断）'}
+（${status === 'decorated' ? '根据上传的室内照片，逐一诊断现有布局的风水问题；若无照片则根据户型描述推断。每条问题必须说明：[现象] → [风水原理解释：为什么这样会有影响] → [具体改法]。格式示例："沙发背对窗户无靠山 → 风水讲究\'背有靠、面有望\'，气流从窗户涌入无实墙承托，主人运势起伏不稳、缺乏贵人扶持 → 建议在沙发背后挂一幅山景画（实木框，尺寸60cm以上），或将沙发移至有实墙的一侧"' : status === 'empty' ? '这是毛坯空房，从零开始规划。逐一说明每个功能区的最佳位置，必须详细解释为什么这样规划（风水原理 + 命卦配合 + 气场流动 + 生活实用性）。格式示例："主卧床位建议放在房间东南角，头朝东南 → 原因：[1]东南为巽卦，属木，主文昌与财运；[2]户主命卦为坎卦（东四命），东南为\'延年\' 吉位，头朝吉向让睡眠中也在吸纳吉气；[3]气场从东南方的窗户流入，过床后向西流出，形成\'纳气\'格局而非\'冲射\'格局"' : '逐一审阅设计图中的每个区域，给出风水评分（10分制）和修改建议，必须解释为什么这样设计好或不好（风水原理 + 具体影响 + 改法）。'})
 
 ## 🏠 房屋总格局与气场特征
 （运用三元玄空与八宅双体系，分析此房屋的整体气场：
@@ -903,18 +919,19 @@ router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
     res.flushHeaders();
     res.write(`data: ${JSON.stringify({ type: 'meta' })}\n\n`);
 
-    // 构建消息数组，如有户型图则加入图片
+    // 构建消息数组，收集所有上传图片
+    const imageContents = [];
+    if (floorPlanBase64) imageContents.push({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${floorPlanBase64}` } });
+    const roomImgs = (status === 'decorated' ? decoratedPhotos : status === 'empty' ? emptyRoomPhotos : designPlanPhotos) || [];
+    for (const b64 of roomImgs.slice(0, 5)) {
+      if (b64) imageContents.push({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${b64}` } });
+    }
+
     let messages;
-    if (floorPlanBase64) {
+    if (imageContents.length > 0) {
       messages = [
         { role: 'system', content: systemPrompt },
-        {
-          role: 'user',
-          content: [
-            { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${floorPlanBase64}` } },
-            { type: 'text', text: userMsg }
-          ]
-        }
+        { role: 'user', content: [...imageContents, { type: 'text', text: userMsg }] }
       ];
     } else {
       messages = [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }];
@@ -936,7 +953,7 @@ router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
         try { const json = JSON.parse(raw); const c = json.choices?.[0]?.delta?.content || ''; if (c) { fullText += c; res.write(`data: ${JSON.stringify({ type: 'chunk', content: c })}\n\n`); } } catch(e) {}
       }
     }
-    insertReading.run('fengshui', JSON.stringify({ houseDirection, floor, rooms, address, question, members: members || [] }), fullText, req.userId);
+    insertReading.run('fengshui', JSON.stringify({ houseDirection, floor, rooms, address, question, houseStatus: status, members: members || [], photoCount: imageContents.length }), fullText, req.userId);
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
     res.end();
   } catch(err) {
