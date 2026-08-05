@@ -78,6 +78,16 @@ app.use(rateLimitMiddleware);
 // ── Optional auth（AI reading 路由可选登录，登录后关联用户历史）──
 app.use(optionalAuthMiddleware);
 
+// ── SEO: sitemap & robots ──
+app.get('/sitemap.xml', (req, res) => {
+  res.setHeader('Content-Type', 'application/xml');
+  res.sendFile(path.join(__dirname, '../sitemap.xml'));
+});
+app.get('/robots.txt', (req, res) => {
+  res.setHeader('Content-Type', 'text/plain');
+  res.sendFile(path.join(__dirname, '../robots.txt'));
+});
+
 // ── Static files ──
 // 🔴 安全红线(P0-1): 显式拒绝敏感路径 + dotfiles 拒 + 仅暴露前端目录。
 app.use(['/server', '/docs', '/.git', '/node_modules'], (req, res) => {
