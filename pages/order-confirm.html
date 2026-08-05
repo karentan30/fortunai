@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#c9a84c">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>善缘 · 订单确认</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf8f5;--card:#fff;--ink:#1a1a18;--ink-mid:#4a4a46;--ink-light:#8a8a84;
+  --jade:#5bbfa0;--jade-deep:#3d9e82;--gold:#c9a84c;--gold-deep:#9a7529;--gold-light:#f5e8b0;
+  --radius:14px;--shadow:0 2px 16px rgba(0,0,0,0.06);
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+body{max-width:420px;margin:0 auto;min-height:100vh;padding:0 16px 60px}
+
+/* success animation */
+.success-banner{text-align:center;padding:36px 0 20px;position:relative;overflow:hidden}
+.success-banner::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(201,168,76,0.1) 0%,transparent 70%);pointer-events:none}
+.check-ring{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,var(--jade-deep),var(--jade));display:flex;align-items:center;justify-content:center;margin:0 auto 14px;box-shadow:0 4px 20px rgba(91,191,160,0.3);animation:popIn 0.4s cubic-bezier(0.34,1.56,0.64,1)}
+@keyframes popIn{from{transform:scale(0.5);opacity:0}to{transform:scale(1);opacity:1}}
+.check-icon{color:#fff;font-size:28px;animation:checkIn 0.3s 0.3s ease forwards;opacity:0}
+@keyframes checkIn{to{opacity:1}}
+.success-title{font-size:20px;font-weight:400;letter-spacing:0.12em;margin-bottom:6px}
+.success-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:var(--ink-light);letter-spacing:0.1em}
+
+.gold-line{width:48px;height:1.5px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:16px auto 20px}
+
+/* order card */
+.order-card{background:var(--card);border:1px solid rgba(201,168,76,0.2);border-radius:var(--radius);padding:18px 16px;box-shadow:var(--shadow);margin-bottom:14px}
+.order-section-label{font-size:9px;letter-spacing:0.22em;color:var(--ink-light);margin-bottom:12px}
+.order-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(201,168,76,0.07)}
+.order-row:last-child{border-bottom:none;padding-top:12px;margin-top:4px}
+.order-label{font-size:11px;color:var(--ink-mid);letter-spacing:0.04em}
+.order-value{font-size:11px;color:var(--ink);text-align:right;max-width:180px;word-break:break-all}
+.order-total-label{font-size:13px;color:var(--ink)}
+.order-total-value{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold)}
+.order-id{font-size:9px;color:var(--ink-light);font-family:monospace;letter-spacing:0.05em}
+
+/* what's included */
+.perks-card{background:linear-gradient(135deg,rgba(201,168,76,0.04),rgba(91,191,160,0.04));border:1px solid rgba(201,168,76,0.15);border-radius:var(--radius);padding:18px 16px;margin-bottom:14px}
+.perks-title{font-size:9px;letter-spacing:0.22em;color:var(--ink-light);margin-bottom:12px}
+.perk-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.perk-row:last-child{margin-bottom:0}
+.perk-icon{font-size:16px;width:20px;flex-shrink:0}
+.perk-text{font-size:11px;color:var(--ink-mid);letter-spacing:0.04em;line-height:1.5}
+.perk-text b{color:var(--ink)}
+
+/* next steps */
+.next-card{background:var(--card);border:1px solid rgba(201,168,76,0.15);border-radius:var(--radius);padding:18px 16px;margin-bottom:20px;box-shadow:var(--shadow)}
+.next-title{font-size:9px;letter-spacing:0.22em;color:var(--ink-light);margin-bottom:14px}
+.step-row{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.step-num{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--gold-deep),var(--gold));color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-text{font-size:11px;color:var(--ink-mid);letter-spacing:0.04em;line-height:1.5}
+.step-text b{color:var(--ink)}
+
+/* CTA buttons */
+.cta-primary{display:block;width:100%;padding:15px 0;border:none;border-radius:12px;font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:0.18em;cursor:pointer;text-align:center;text-decoration:none;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light));color:#fff;box-shadow:0 4px 18px rgba(201,168,76,0.3);margin-bottom:10px;transition:all 0.2s}
+.cta-primary:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.cta-secondary{display:block;width:100%;padding:13px 0;border:1.5px solid rgba(201,168,76,0.3);border-radius:12px;font-family:'Noto Serif SC',serif;font-size:12px;letter-spacing:0.12em;cursor:pointer;text-align:center;text-decoration:none;background:transparent;color:var(--gold-deep);margin-bottom:10px}
+
+/* receipt link */
+.receipt-link{text-align:center;font-size:10px;color:var(--ink-light);margin-bottom:24px}
+.receipt-link a{color:var(--jade-deep);text-decoration:none}
+
+/* disclaimer */
+.disclaimer{text-align:center;font-size:9px;color:var(--ink-light);line-height:1.6;padding:0 8px}
+</style>
+</head>
+<body>
+
+<!-- success banner -->
+<div class="success-banner">
+  <div class="check-ring"><span class="check-icon">✓</span></div>
+  <div class="success-title" id="successTitle">付款成功</div>
+  <div class="success-sub" id="successSub">您的命理之旅正式开始</div>
+</div>
+<div class="gold-line"></div>
+
+<!-- order details -->
+<div class="order-card">
+  <div class="order-section-label">— 订单详情 —</div>
+  <div class="order-row">
+    <span class="order-label">购买项目</span>
+    <span class="order-value" id="orderItem">善缘会员（月付）</span>
+  </div>
+  <div class="order-row">
+    <span class="order-label">付款时间</span>
+    <span class="order-value" id="orderTime">—</span>
+  </div>
+  <div class="order-row">
+    <span class="order-label">付款方式</span>
+    <span class="order-value" id="orderMethod">微信支付</span>
+  </div>
+  <div class="order-row">
+    <span class="order-label">订单号</span>
+    <span class="order-value order-id" id="orderId">—</span>
+  </div>
+  <div class="order-row">
+    <span class="order-total-label">实付</span>
+    <span class="order-total-value" id="orderTotal">$6.90</span>
+  </div>
+</div>
+
+<!-- what's included -->
+<div class="perks-card" id="perksCard">
+  <div class="perks-title">— 已解锁权益 —</div>
+  <div id="perksContent">
+    <!-- filled by JS -->
+  </div>
+</div>
+
+<!-- next steps -->
+<div class="next-card">
+  <div class="next-title">— 接下来做什么？ —</div>
+  <div class="step-row">
+    <div class="step-num">1</div>
+    <div class="step-text"><b>开始您的第一份命理报告</b><br>点击下方按钮，输入出生信息，AI将为您生成完整命盘</div>
+  </div>
+  <div class="step-row">
+    <div class="step-num">2</div>
+    <div class="step-text"><b>探索其他命理系统</b><br>会员可无限次使用八字、紫微、合婚、断事等全系功能</div>
+  </div>
+  <div class="step-row">
+    <div class="step-num">3</div>
+    <div class="step-text"><b>分享给好友获7天免费</b><br>每邀请一位好友注册，您和好友各获7天会员体验</div>
+  </div>
+</div>
+
+<!-- CTAs -->
+<a class="cta-primary" id="primaryCTA" href="/">开始命理解读 →</a>
+<a class="cta-secondary" href="/">返回首页</a>
+
+<div class="receipt-link">收据已发送至您的邮箱 · <a href="refund.html">退款政策</a> · <a href="member.html">查看会员权益</a></div>
+
+<div class="disclaimer">内容仅供娱乐参考 · 不构成医疗 / 法律 / 投资建议<br>© 2025 善缘 ShenYuan · Lumen Studio 出品</div>
+
+<script>
+var PERKS = {
+  member: [
+    {icon:'♾️', text:'<b>全功能无限使用</b><br>八字 / 紫微 / 合婚 / 断事全系解锁'},
+    {icon:'📅', text:'<b>每月流年运势更新</b><br>月初自动推送新一期流年分析'},
+    {icon:'🗂️', text:'<b>命盘永久档案</b><br>历史报告随时查看，换手机不丢失'},
+    {icon:'💬', text:'<b>AI命理对话无限次</b><br>随时向善缘AI提问，深度解读命理'}
+  ],
+  bazi: [
+    {icon:'📜', text:'<b>八字完整命盘</b><br>十神格局 + 大运流年全析'},
+    {icon:'🗂️', text:'<b>永久保存</b><br>报告随时可回看，无时效限制'}
+  ],
+  hehun: [
+    {icon:'💑', text:'<b>合婚深度报告</b><br>双方八字配对 + 缘分指数 + 关系预测'},
+    {icon:'🗂️', text:'<b>永久保存</b><br>报告随时可回看，无时效限制'}
+  ],
+  ziwei: [
+    {icon:'⭐', text:'<b>紫微斗数深度批命</b><br>十二宫位 + 大运 + 流年完整解读'},
+    {icon:'🗂️', text:'<b>永久保存</b><br>报告随时可回看，无时效限制'}
+  ],
+  tarot: [
+    {icon:'🃏', text:'<b>塔罗深度解读</b><br>AI结合东方命理解析牌意'},
+    {icon:'🗂️', text:'<b>永久保存</b><br>解读结果随时可回看'}
+  ],
+  daily: [
+    {icon:'☀️', text:'<b>每日天机订阅</b><br>每日推送个性化运势，不错过关键节点'},
+    {icon:'📅', text:'<b>月度运势日历</b><br>提前规划吉日，把握时机'}
+  ],
+  duanshi: [
+    {icon:'🎴', text:'<b>断事问卦解读</b><br>六爻起卦 · 吉凶断事 · 行动建议'},
+    {icon:'🗂️', text:'<b>永久保存</b><br>解读结果随时可回看'}
+  ]
+};
+var CTAS = {
+  member: {href:'/pages/bazi.html', label:'测算八字命盘 →'},
+  bazi: {href:'/pages/bazi.html', label:'查看八字报告 →'},
+  hehun: {href:'/pages/hehun.html', label:'查看合婚报告 →'},
+  ziwei: {href:'/pages/ziwei.html', label:'查看紫微命盘 →'},
+  tarot: {href:'/pages/tarot.html', label:'查看塔罗解读 →'},
+  daily: {href:'/pages/daily.html', label:'查看今日天机 →'},
+  duanshi: {href:'/pages/duanshi.html', label:'查看断事结果 →'}
+};
+
+function init() {
+  var params = new URLSearchParams(location.search);
+  var type = params.get('type') || 'member';
+  var amount = params.get('amount');
+  var orderId = params.get('order_id') || params.get('orderId');
+  var method = params.get('method') || '微信支付';
+
+  // fill order details
+  var itemNames = {
+    member:'善缘会员（月付）', member_yearly:'善缘会员（年付）',
+    member_quarterly:'善缘会员（季付）', member_monthly:'善缘会员（月付）',
+    bazi:'八字完整命盘', hehun:'合婚配对报告',
+    ziwei:'紫微斗数深度批命', tarot:'塔罗深度解读',
+    daily:'每日天机订阅', duanshi:'断事问卦解读'
+  };
+  var key = type.replace('member_','member');
+  document.getElementById('orderItem').textContent = itemNames[type] || itemNames[key] || '命理解读报告';
+  document.getElementById('orderTime').textContent = new Date().toLocaleString('zh-CN',{hour12:false,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('orderMethod').textContent = method;
+  if (orderId) document.getElementById('orderId').textContent = orderId;
+  if (amount) document.getElementById('orderTotal').textContent = amount;
+
+  // fill perks
+  var perkKey = type.startsWith('member') ? 'member' : (PERKS[type] ? type : 'member');
+  var perks = PERKS[perkKey] || PERKS['member'];
+  var html = perks.map(function(p){
+    return '<div class="perk-row"><span class="perk-icon">'+p.icon+'</span><div class="perk-text">'+p.text+'</div></div>';
+  }).join('');
+  document.getElementById('perksContent').innerHTML = html;
+
+  // CTA
+  var cta = CTAS[perkKey] || CTAS['member'];
+  var ctaEl = document.getElementById('primaryCTA');
+  ctaEl.href = cta.href;
+  ctaEl.textContent = cta.label;
+
+  // member: save to localStorage
+  if (type.startsWith('member')) {
+    try {
+      localStorage.setItem('sy_member','1');
+      localStorage.setItem('sy_member_ts', Date.now().toString());
+      localStorage.setItem('sy_member_type', type);
+    } catch(e){}
+  }
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>善缘 · 财务仪表盘（内部）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f0e0c;--surface:#1a1814;--surface2:#221e19;--border:rgba(201,168,76,0.12);
+  --ink:#f0ece4;--ink-mid:#a09888;--ink-dim:#5a5248;
+  --gold:#c9a84c;--gold-dim:rgba(201,168,76,0.2);--jade:#5bbfa0;--rose:#e87a7a;
+  --radius:10px;
+}
+body{background:var(--bg);color:var(--ink);font-family:'Noto Serif SC',serif;padding:0;min-height:100vh;font-size:13px}
+.header{display:flex;align-items:center;justify-content:space-between;padding:20px 28px;border-bottom:1px solid var(--border)}
+.logo{display:flex;align-items:center;gap:10px;font-size:15px;letter-spacing:0.18em;color:var(--gold)}
+.logo-sym{font-size:22px}
+.header-right{font-size:10px;color:var(--ink-dim);font-family:'JetBrains Mono',monospace;letter-spacing:0.1em}
+.main{padding:24px 28px;max-width:1200px}
+
+/* KPI row */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.kpi-label{font-size:9px;letter-spacing:0.2em;color:var(--ink-dim);margin-bottom:8px}
+.kpi-val{font-family:'JetBrains Mono',monospace;font-size:24px;color:var(--gold);margin-bottom:4px}
+.kpi-sub{font-size:9px;color:var(--ink-mid)}
+.kpi-delta{font-size:9px;padding:2px 8px;border-radius:6px;display:inline-block;margin-top:4px}
+.kpi-delta.pos{background:rgba(91,191,160,0.12);color:var(--jade)}
+.kpi-delta.neg{background:rgba(232,122,122,0.12);color:var(--rose)}
+
+/* two-col */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:24px}
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.panel-title{font-size:9px;letter-spacing:0.22em;color:var(--ink-dim);margin-bottom:14px;display:flex;justify-content:space-between;align-items:center}
+.panel-badge{background:var(--gold-dim);color:var(--gold);font-size:8px;padding:2px 8px;border-radius:4px;letter-spacing:0.1em}
+
+/* table */
+.data-table{width:100%;border-collapse:collapse}
+.data-table th{font-size:9px;letter-spacing:0.18em;color:var(--ink-dim);text-align:left;padding:0 0 8px;border-bottom:1px solid var(--border)}
+.data-table td{padding:9px 0;border-bottom:1px solid rgba(201,168,76,0.05);font-size:11px;color:var(--ink-mid)}
+.data-table td:last-child{text-align:right;font-family:'JetBrains Mono',monospace;font-size:11px}
+.data-table tr:last-child td{border-bottom:none}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:6px;vertical-align:middle}
+.dot-gold{background:var(--gold)}
+.dot-jade{background:var(--jade)}
+.dot-rose{background:var(--rose)}
+.dot-blue{background:#7aa2e8}
+
+/* bar chart */
+.bar-chart{display:flex;flex-direction:column;gap:8px}
+.bar-row{display:flex;align-items:center;gap:8px}
+.bar-label{font-size:10px;color:var(--ink-mid);width:80px;flex-shrink:0;letter-spacing:0.04em}
+.bar-track{flex:1;height:6px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width 0.8s ease}
+.bar-val{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--ink-mid);width:48px;text-align:right}
+
+/* progress ring (SVG) */
+.ring-wrap{display:flex;align-items:center;gap:16px}
+.ring-labels{flex:1}
+.ring-label-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:10px}
+.ring-label-name{color:var(--ink-mid);display:flex;align-items:center;gap:6px}
+.ring-label-val{font-family:'JetBrains Mono',monospace;color:var(--ink)}
+
+/* milestones */
+.milestones{margin-bottom:24px}
+.milestone-title{font-size:9px;letter-spacing:0.22em;color:var(--ink-dim);margin-bottom:14px}
+.milestone-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.milestone-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;text-align:center}
+.milestone-card.done{border-color:rgba(91,191,160,0.3);background:rgba(91,191,160,0.04)}
+.milestone-card.active{border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.04)}
+.milestone-icon{font-size:20px;margin-bottom:8px}
+.milestone-amount{font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--gold);margin-bottom:3px}
+.milestone-label{font-size:9px;color:var(--ink-dim);letter-spacing:0.1em}
+.milestone-status{font-size:8px;margin-top:6px;padding:2px 6px;border-radius:4px;display:inline-block}
+.status-done{background:rgba(91,191,160,0.12);color:var(--jade)}
+.status-active{background:rgba(201,168,76,0.12);color:var(--gold)}
+.status-future{background:rgba(255,255,255,0.04);color:var(--ink-dim)}
+
+/* three-col */
+.three-col{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-bottom:24px}
+
+/* channel table */
+.channel-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(201,168,76,0.05)}
+.channel-row:last-child{border-bottom:none}
+.channel-icon{font-size:14px;width:24px;text-align:center}
+.channel-info{flex:1}
+.channel-name{font-size:11px;color:var(--ink-mid)}
+.channel-count{font-size:9px;color:var(--ink-dim)}
+.channel-bar-wrap{width:80px;height:4px;background:rgba(255,255,255,0.05);border-radius:2px;overflow:hidden;margin-top:4px}
+.channel-bar-fill{height:100%;border-radius:2px;background:var(--gold)}
+.channel-rev{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--jade);width:52px;text-align:right}
+
+/* footnote */
+.footnote{font-size:9px;color:var(--ink-dim);text-align:right;padding:12px 0 0;border-top:1px solid var(--border);letter-spacing:0.06em}
+.tag{background:rgba(232,122,122,0.1);color:var(--rose);font-size:8px;padding:2px 8px;border-radius:4px;margin-left:6px;letter-spacing:0.08em}
+.green-tag{background:rgba(91,191,160,0.1);color:var(--jade);font-size:8px;padding:2px 8px;border-radius:4px;margin-left:6px;letter-spacing:0.08em}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo"><span class="logo-sym">缘</span>善缘 ShenYuan · 财务仪表盘</div>
+  <div class="header-right" id="headerDate"></div>
+</div>
+
+<div class="main">
+
+  <!-- KPI row -->
+  <div class="kpi-grid">
+    <div class="kpi">
+      <div class="kpi-label">本月 MRR</div>
+      <div class="kpi-val" id="kpiMRR">$0</div>
+      <div class="kpi-sub">目标 $2,000 / 月</div>
+      <div class="kpi-delta pos" id="kpiMRRDelta">+ $0 vs 上月</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">本月收入</div>
+      <div class="kpi-val" id="kpiRevenue">$0</div>
+      <div class="kpi-sub">订阅 + 单次 + 电商</div>
+      <div class="kpi-delta pos" id="kpiRevDelta">— 暂无数据</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">活跃会员数</div>
+      <div class="kpi-val" id="kpiMembers">0</div>
+      <div class="kpi-sub">月付 + 年付 + 季付</div>
+      <div class="kpi-delta pos" id="kpiMemberDelta">目标 200 人</div>
+    </div>
+    <div class="kpi">
+      <div class="kpi-label">毛利率</div>
+      <div class="kpi-val">82%</div>
+      <div class="kpi-sub">AI成本已压至DeepSeek</div>
+      <div class="kpi-delta pos">超行业均值 40pp</div>
+    </div>
+  </div>
+
+  <!-- revenue mix + channel -->
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-title">收入结构 · 三桶策略 <span class="panel-badge">目标比例</span></div>
+      <div class="bar-chart">
+        <div class="bar-row">
+          <div class="bar-label"><span class="dot dot-gold"></span>A 订阅基本盘</div>
+          <div class="bar-track"><div class="bar-fill" style="width:52%;background:var(--gold)"></div></div>
+          <div class="bar-val">52%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span class="dot dot-jade"></span>B 季节代烧</div>
+          <div class="bar-track"><div class="bar-fill" style="width:22%;background:var(--jade)"></div></div>
+          <div class="bar-val">22%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span class="dot dot-blue"></span>C 电商咨询</div>
+          <div class="bar-track"><div class="bar-fill" style="width:23%;background:#7aa2e8"></div></div>
+          <div class="bar-val">23%</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label"><span class="dot dot-rose"></span>其他</div>
+          <div class="bar-track"><div class="bar-fill" style="width:3%;background:var(--rose)"></div></div>
+          <div class="bar-val">3%</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px">
+        <div class="ring-labels">
+          <div class="ring-label-row">
+            <span class="ring-label-name"><span class="dot dot-gold"></span>月付 $6.90</span>
+            <span class="ring-label-val">×M 人</span>
+          </div>
+          <div class="ring-label-row">
+            <span class="ring-label-name"><span class="dot dot-jade"></span>年付 $49（$4.08/月）</span>
+            <span class="ring-label-val">×Y 人</span>
+          </div>
+          <div class="ring-label-row">
+            <span class="ring-label-name"><span class="dot dot-blue"></span>单次报告均价 $12.40</span>
+            <span class="ring-label-val">×N 单</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">获客渠道 · 目标分布</div>
+      <div>
+        <div class="channel-row">
+          <span class="channel-icon">📱</span>
+          <div class="channel-info">
+            <div class="channel-name">内容种草（TikTok/红书）</div>
+            <div class="channel-bar-wrap"><div class="channel-bar-fill" style="width:65%"></div></div>
+          </div>
+          <div class="channel-rev">40%</div>
+        </div>
+        <div class="channel-row">
+          <span class="channel-icon">📍</span>
+          <div class="channel-info">
+            <div class="channel-name">Yelp / Near-me SEO</div>
+            <div class="channel-bar-wrap"><div class="channel-bar-fill" style="width:45%"></div></div>
+          </div>
+          <div class="channel-rev">25%</div>
+        </div>
+        <div class="channel-row">
+          <span class="channel-icon">🔗</span>
+          <div class="channel-info">
+            <div class="channel-name">裂变邀请（合婚分享）</div>
+            <div class="channel-bar-wrap"><div class="channel-bar-fill" style="width:35%"></div></div>
+          </div>
+          <div class="channel-rev">20%</div>
+        </div>
+        <div class="channel-row">
+          <span class="channel-icon">🌐</span>
+          <div class="channel-info">
+            <div class="channel-name">口碑 / 自然流量</div>
+            <div class="channel-bar-wrap"><div class="channel-bar-fill" style="width:25%"></div></div>
+          </div>
+          <div class="channel-rev">15%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- milestones -->
+  <div class="milestones">
+    <div class="milestone-title">— 收入里程碑 —</div>
+    <div class="milestone-grid">
+      <div class="milestone-card done">
+        <div class="milestone-icon">🌱</div>
+        <div class="milestone-amount">$500</div>
+        <div class="milestone-label">验证期（PMF）</div>
+        <div class="milestone-status status-done">✓ 已达成</div>
+      </div>
+      <div class="milestone-card active">
+        <div class="milestone-icon">🔥</div>
+        <div class="milestone-amount">$2,000</div>
+        <div class="milestone-label">盈亏平衡点</div>
+        <div class="milestone-status status-active">▶ 当前目标</div>
+      </div>
+      <div class="milestone-card">
+        <div class="milestone-icon">⭐</div>
+        <div class="milestone-amount">$5,000</div>
+        <div class="milestone-label">MRR 规模化</div>
+        <div class="milestone-status status-future">200 会员</div>
+      </div>
+      <div class="milestone-card">
+        <div class="milestone-icon">🏆</div>
+        <div class="milestone-amount">$20,000</div>
+        <div class="milestone-label">年度目标</div>
+        <div class="milestone-status status-future">三桶满负荷</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- pricing matrix + unit economics -->
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-title">定价矩阵 · 单次产品</div>
+      <table class="data-table">
+        <tr><th>产品</th><th>国际价</th><th>国内价</th><th>毛利</th></tr>
+        <tr><td>八字命盘</td><td>$9.90</td><td>¥49</td><td class="bar-val" style="color:var(--jade)">85%</td></tr>
+        <tr><td>合婚配对</td><td>$19.90</td><td>¥99</td><td class="bar-val" style="color:var(--jade)">85%</td></tr>
+        <tr><td>紫微斗数</td><td>$19.90</td><td>¥99</td><td class="bar-val" style="color:var(--jade)">83%</td></tr>
+        <tr><td>塔罗三张</td><td>$9.90</td><td>¥49</td><td class="bar-val" style="color:var(--jade)">88%</td></tr>
+        <tr><td>塔罗五芒星</td><td>$19.90</td><td>¥99</td><td class="bar-val" style="color:var(--jade)">87%</td></tr>
+        <tr><td>断事问卦</td><td>$9.90</td><td>¥49</td><td class="bar-val" style="color:var(--jade)">88%</td></tr>
+        <tr><td>每日天机（月订）</td><td>$4.90</td><td>¥24</td><td class="bar-val" style="color:var(--jade)">90%</td></tr>
+      </table>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">会员单元经济</div>
+      <table class="data-table">
+        <tr><th>指标</th><th>数值</th></tr>
+        <tr><td>月付 ARPU</td><td>$6.90</td></tr>
+        <tr><td>年付 ARPU</td><td>$49/年 = $4.08/月</td></tr>
+        <tr><td>AI 成本 / 用户</td><td>~$0.80/月</td></tr>
+        <tr><td>净毛利 / 月付</td><td style="color:var(--jade)">$6.10 (88%)</td></tr>
+        <tr><td>净毛利 / 年付</td><td style="color:var(--jade)">$3.28/月 (80%)</td></tr>
+        <tr><td>CAC 目标</td><td>≤ $8 (1.2个月回收)</td></tr>
+        <tr><td>LTV 目标</td><td>$6.90 × 8月 = $55</td></tr>
+        <tr><td>LTV/CAC</td><td style="color:var(--gold)">6.9× 目标</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- action items -->
+  <div class="panel" style="margin-bottom:20px">
+    <div class="panel-title">— 财务行动清单 · Karen 待办 —</div>
+    <table class="data-table">
+      <tr><th>优先级</th><th>任务</th><th>影响</th><th>状态</th></tr>
+      <tr>
+        <td style="color:var(--rose)">P0</td>
+        <td>Stripe webhook 注册 + 测试 → 生产切换</td>
+        <td style="color:var(--jade)">解锁国际收款</td>
+        <td><span class="tag">待做</span></td>
+      </tr>
+      <tr>
+        <td style="color:var(--rose)">P0</td>
+        <td>HUB_SECRET_SHENYUAN 加入两台服务器 env</td>
+        <td style="color:var(--jade)">微信/支付宝上线</td>
+        <td><span class="tag">待做</span></td>
+      </tr>
+      <tr>
+        <td style="color:var(--gold)">P1</td>
+        <td>TikTok / FB Pixel ID 填入 7 个落地页</td>
+        <td style="color:var(--jade)">广告追踪优化</td>
+        <td><span class="tag">待做</span></td>
+      </tr>
+      <tr>
+        <td style="color:var(--gold)">P1</td>
+        <td>会员年付 $49 Stripe 链接建立</td>
+        <td style="color:var(--jade)">提升 LTV</td>
+        <td><span class="tag">待做</span></td>
+      </tr>
+      <tr>
+        <td style="color:var(--ink-dim)">P2</td>
+        <td>代烧产品化 → 年度祭祀订阅 $99</td>
+        <td style="color:var(--jade)">季节放大器</td>
+        <td><span class="tag">设计中</span></td>
+      </tr>
+      <tr>
+        <td style="color:var(--ink-dim)">P2</td>
+        <td>裂变邀请链接 + 分享卡片代码</td>
+        <td style="color:var(--jade)">零成本获客</td>
+        <td><span class="tag">设计中</span></td>
+      </tr>
+      <tr>
+        <td style="color:var(--ink-dim)">P3</td>
+        <td>韩国사주 Stripe 付费墙接入</td>
+        <td style="color:var(--jade)">新市场收入</td>
+        <td><span class="tag">排期中</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- cash flow projection -->
+  <div class="panel" style="margin-bottom:20px">
+    <div class="panel-title">月度现金流预测（情景模型）<span class="panel-badge">仅供规划参考</span></div>
+    <table class="data-table">
+      <tr>
+        <th>情景</th><th>会员数</th><th>单次单量</th>
+        <th>MRR</th><th>单次收入</th><th>月总收入</th><th>月净利（82%）</th>
+      </tr>
+      <tr>
+        <td style="color:var(--rose)">保守</td>
+        <td>30</td><td>20单</td>
+        <td>$207</td><td>$248</td><td>$455</td><td style="color:var(--jade)">$373</td>
+      </tr>
+      <tr>
+        <td style="color:var(--gold)">目标</td>
+        <td>200</td><td>80单</td>
+        <td>$1,380</td><td>$992</td><td>$2,372</td><td style="color:var(--jade)">$1,945</td>
+      </tr>
+      <tr>
+        <td style="color:var(--jade)">乐观</td>
+        <td>500</td><td>200单</td>
+        <td>$3,450</td><td>$2,480</td><td>$5,930</td><td style="color:var(--jade)">$4,863</td>
+      </tr>
+    </table>
+    <div style="margin-top:10px;font-size:9px;color:var(--ink-dim);line-height:1.6">
+      假设：月付均价$6.90·单次均价$12.40·AI成本$0.80/用户/月·年付按月均价折算<br>
+      不含：代烧季节收入 / 韩国市场 / 电商产品 / 咨询收入
+    </div>
+  </div>
+
+  <div class="footnote">
+    内部用途 · 非公开文件 · 数字仅供规划参考 · 实际以后台订单数据为准
+    <span id="footDate"></span>
+  </div>
+
+</div><!-- /main -->
+
+<script>
+var now = new Date();
+var dateStr = now.toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
+document.getElementById('headerDate').textContent = dateStr + ' · 内部仪表盘';
+document.getElementById('footDate').textContent = ' · 生成于 ' + dateStr;
+
+// Try to read any local order data for actual KPIs
+try {
+  var orders = JSON.parse(localStorage.getItem('sy_admin_orders') || '[]');
+  // placeholder — real data comes from backend /admin/stats endpoint
+  if (orders.length > 0) {
+    var mrr = orders.reduce(function(s,o){return s+(parseFloat(o.amount)||0)},0);
+    document.getElementById('kpiMRR').textContent = '$'+mrr.toFixed(2);
+  }
+} catch(e){}
+</script>
+</body>
+</html>
