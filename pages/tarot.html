@@ -26,6 +26,39 @@
   --rose: #d4607a;
   --star: #f8f4ff;
 }
+/* Light mode overrides for all CSS variables used in this page */
+html.light-mode {
+  --deep: #f5f0f8; --deep-mid: #ede5f5; --deep-card: #f0eaf8;
+  --violet: #7a4fb0; --violet-mid: #9b6fc4; --violet-light: #6a3a90;
+  --gold: #9a7030; --gold-light: #7a5820;
+  --rose: #b04060;
+  --star: #2a1850;
+}
+html.light-mode body { background: var(--deep); color: #1a0e30; }
+html.light-mode body::before { display: none; }
+html.light-mode .header-title { color: #1a0e30; }
+html.light-mode .header-sub { color: rgba(107,63,160,0.6); }
+html.light-mode .topic-btn { background: var(--deep-card); border-color: rgba(107,63,160,0.25); }
+html.light-mode .topic-btn.selected { background: rgba(107,63,160,0.15); }
+html.light-mode .topic-name { color: rgba(26,14,48,0.75); }
+html.light-mode .q-box { background: var(--deep-card); border-color: rgba(107,63,160,0.2); }
+html.light-mode .q-input { color: rgba(26,14,48,0.85); }
+html.light-mode .q-input::placeholder { color: rgba(26,14,48,0.3); }
+html.light-mode .spread-opt { background: var(--deep-card); border-color: rgba(107,63,160,0.2); }
+html.light-mode .spread-opt.selected { background: rgba(107,63,160,0.15); }
+html.light-mode .spread-num { color: rgba(107,63,160,0.7); }
+html.light-mode .spread-name { color: rgba(26,14,48,0.55); }
+html.light-mode .tarot-card { background: var(--deep-card); border-color: rgba(107,63,160,0.3); }
+html.light-mode .card-glyph { color: rgba(107,63,160,0.7); }
+html.light-mode .card-name-sm { color: rgba(26,14,48,0.7); }
+html.light-mode .interp-section { background: var(--deep-card); border-color: rgba(107,63,160,0.18); }
+html.light-mode .interp-title { color: rgba(107,63,160,0.9); }
+html.light-mode .interp-text { color: rgba(26,14,48,0.7); }
+html.light-mode .advice-box { background: rgba(155,112,48,0.06); border-color: rgba(155,112,48,0.2); }
+html.light-mode .advice-text { color: rgba(26,14,48,0.7); }
+html.light-mode .btn-redo { color: rgba(107,63,160,0.7); border-color: rgba(107,63,160,0.3); }
+html.light-mode .daily-limit-hint { color: rgba(107,63,160,0.5); }
+html.light-mode .back-btn { color: rgba(107,63,160,0.7); }
 html, body { background: var(--deep); font-family: 'Noto Serif SC', serif; color: #f0eaff; -webkit-font-smoothing: antialiased; }
 body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 100px; }
 
@@ -307,9 +340,29 @@ function selectSpread(el, n, type) {
   currentSpread = n;
 }
 
+function isPaidTarot(n) {
+  // Check all valid paid unlock keys
+  if (localStorage.getItem('sy_unlock_a') === '1') return true;
+  if (n === 3 && localStorage.getItem('sy_paid_tarot_3') === '1') return true;
+  if (n === 5 && localStorage.getItem('sy_paid_tarot_5') === '1') return true;
+  return false;
+}
+
 function drawCards() {
   var q = document.getElementById('question').value.trim();
   if (!q) { showToast('请先写下你的问题'); return; }
+
+  // Paid spread gate: 3-card and 5-card require payment
+  if (currentSpread > 1 && !isPaidTarot(currentSpread)) {
+    document.getElementById('upgradeCta').style.display = 'block';
+    document.getElementById('resultWrap').classList.add('show');
+    document.getElementById('interpTitle').textContent = '解锁深度解读';
+    document.getElementById('interpText').textContent = '三张牌阵和五芒星牌阵为付费功能，请解锁后体验AI深度解读。';
+    document.getElementById('adviceText').textContent = '';
+    document.querySelector('.btn-draw').style.display = 'none';
+    showToast('请先解锁付费牌阵');
+    return;
+  }
 
   // Daily limit check: free users get 1 draw per day (single-card only)
   if (currentSpread === 1) {
@@ -467,7 +520,13 @@ function handlePaidReturn() {
   try { saved = JSON.parse(localStorage.getItem('sy_last_tarot') || 'null'); } catch(e){}
   if (!saved) return;
   if (window.history.replaceState) window.history.replaceState({}, '', '/pages/tarot.html');
+  // Mark paid unlock in localStorage so paywall gate recognizes it
   var params = new URLSearchParams(location.search);
+  var spreadParam = parseInt(params.get('spread') || saved.spread || '3');
+  try {
+    if (spreadParam === 3) localStorage.setItem('sy_paid_tarot_3', '1');
+    if (spreadParam === 5) localStorage.setItem('sy_paid_tarot_5', '1');
+  } catch(e){}
   var spread = parseInt(params.get('spread') || saved.spread || '3');
   var positions = spread === 3 ? POSITIONS_3 : POSITIONS_5;
 

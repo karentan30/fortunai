@@ -265,6 +265,20 @@ body::after {
 </div>
 
 <script>
+function showToast(msg, type) {
+  try {
+    if (window.SY && SY.showToast) return SY.showToast(msg, type);
+    var t = document.createElement('div');
+    t.textContent = msg;
+    var bg = (type === 'error') ? 'rgba(180,40,40,0.92)' : 'rgba(8,16,26,0.92)';
+    t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:'+bg+';color:#e8f0ff;padding:10px 18px;border-radius:20px;z-index:9999;font-size:13px;letter-spacing:0.06em;pointer-events:none';
+    if (document.body) {
+      document.body.appendChild(t);
+      setTimeout(function(){ try { t.remove(); } catch(e){} }, 2200);
+    }
+  } catch(e) {}
+}
+
 // Year selector
 var ySel = document.getElementById('birthYear');
 for (var y = 2026; y >= 1940; y--) {
@@ -328,61 +342,60 @@ function renderResult(seed, y, m, d, h) {
 
   // Render 4×3 grid (12 palaces around, center = 命主 info)
   // Standard ZiWei layout: outer ring clockwise from bottom-left
+  // Standard ZiWei 4×3 layout: outer 10 cells + center 2×1 info panel + 2 palace cells at center
+  // layoutOrder: clockwise from bottom-left outer ring (10 palaces), then 2 center palaces
   var layoutOrder = [8,9,10,11,0,1,2,3,4,5,6,7]; // palace indices mapped to grid cells
-  // 4×3 grid, center 2 cells merge = 4 corners + 8 outer
   var grid = document.getElementById('palaceGrid');
   grid.innerHTML = '';
-  var cellPos = [
-    {row:0,col:0},{row:0,col:1},{row:0,col:2},{row:0,col:3},
-    {row:1,col:3},{row:2,col:3},{row:2,col:2},{row:2,col:1},
-    {row:2,col:0},{row:1,col:0},
-    // center 2×2
-    {row:1,col:1},{row:1,col:2}
-  ];
 
   grid.style.display = 'grid';
   grid.style.gridTemplateColumns = 'repeat(4,1fr)';
   grid.style.gridTemplateRows = 'repeat(3,1fr)';
+  // Remove fixed aspect-ratio to let content breathe
+  grid.style.aspectRatio = 'auto';
 
-  for (var i = 0; i < 12; i++) {
-    var palIdx = layoutOrder[i];
-    var isCenter = (i === 10 || i === 11);
-    var isMing = palIdx === mingPalace;
-    var stars = assignment[palIdx] || [];
+  // Render all 12 palaces: 10 outer cells in standard positions + 2 inner cells
+  // Grid cell positions for outer ring (row,col zero-indexed):
+  // Top row: (0,0)(0,1)(0,2)(0,3)
+  // Mid sides: (1,3) and (1,0)
+  // Bottom row: (2,0)(2,1)(2,2)(2,3)
+  // Center inner: (1,1) and (1,2) — palaces 10 and 11 from layoutOrder
+  var outerOrder = [0,1,2,3,4,5,6,7,8,9]; // first 10 in layoutOrder
+  var innerOrder = [10,11]; // last 2 in layoutOrder
 
+  // Place outer ring cells explicitly in reading order
+  var outerPositions = [
+    // Top row L→R
+    null, // placeholder, will iterate
+  ];
+
+  function makeCell(palIdx, isMing, stars, isInner) {
     var cell = document.createElement('div');
-    if (i === 10) {
-      // 中央格：跨 col 2-4 row 2，显示命主信息；同时在下方附带 layoutOrder[10] 和 [11] 的宫位名
-      var palIdx10 = layoutOrder[10]; // 迁移宫(6)
-      var palIdx11 = layoutOrder[11]; // 交友宫(7)
-      var stars10 = assignment[palIdx10] || [];
-      var stars11 = assignment[palIdx11] || [];
-      var isMing10 = palIdx10 === mingPalace;
-      var isMing11 = palIdx11 === mingPalace;
-      cell.className = 'palace center-empty';
-      cell.style.gridColumn = '2/4';
-      cell.style.gridRow = '2/3';
-      cell.innerHTML =
-        '<div class="center-title">' +
-          '<div class="center-main">'+EB[h]+'时命</div>' +
-          '<div class="center-sub">'+(gender==='male'?'男':'女')+'命</div>' +
-          '<div style="display:flex;gap:4px;margin-top:4px;font-size:7.5px;justify-content:center">' +
-            '<span style="color:rgba(74,159,212,0.5)">'+PALACES[palIdx10]+(isMing10?' ★':'')+(stars10.length?'·'+stars10[0]:'')+'</span>' +
-            '<span style="color:rgba(232,240,255,0.15)">|</span>' +
-            '<span style="color:rgba(74,159,212,0.5)">'+PALACES[palIdx11]+(isMing11?' ★':'')+(stars11.length?'·'+stars11[0]:'')+'</span>' +
-          '</div>' +
-        '</div>';
-      grid.appendChild(cell);
-      continue;
-    }
-    if (i === 11) continue; // 已在 i===10 中合并处理
-
     cell.className = 'palace' + (isMing ? ' main-star' : (stars.length > 0 ? ' highlight' : ''));
     cell.innerHTML = '<div class="palace-name">'+PALACES[palIdx]+(isMing?' ★':'')+'</div>' +
       '<div class="palace-stars">' +
         stars.map(function(s, si){ return '<div class="'+(si===0?'main':'sub')+'">'+s+'</div>'; }).join('') +
       '</div>' +
-      '<div class="palace-earthly">'+EB[palIdx]+'</div>';
+      '<div class="palace-earthly">'+EB[palIdx % 12]+'</div>';
+    return cell;
+  }
+
+  // Build all 12 palace cells in grid order
+  // Grid visual order (row-major): positions are
+  //   [0,0][0,1][0,2][0,3]  — layoutOrder indices 0,1,2,3
+  //   [1,0][1,1][1,2][1,3]  — layoutOrder indices 9, 10(inner), 11(inner), 4
+  //   [2,0][2,1][2,2][2,3]  — layoutOrder indices 8,7,6,5
+  var gridOrder = [
+    layoutOrder[0], layoutOrder[1], layoutOrder[2], layoutOrder[3],  // top row
+    layoutOrder[9], layoutOrder[10], layoutOrder[11], layoutOrder[4], // mid row
+    layoutOrder[8], layoutOrder[7], layoutOrder[6], layoutOrder[5]   // bottom row
+  ];
+
+  for (var i = 0; i < 12; i++) {
+    var palIdx = gridOrder[i];
+    var isMing = palIdx === mingPalace;
+    var stars = assignment[palIdx] || [];
+    var cell = makeCell(palIdx, isMing, stars, (i === 5 || i === 6));
     grid.appendChild(cell);
   }
 
@@ -514,6 +527,19 @@ function handlePaidReturn() {
   resultEl.innerHTML = '<div id="zwStreamBox" style="padding:20px 16px;font-size:12px;line-height:1.9;color:rgba(232,240,255,0.8);white-space:pre-wrap;letter-spacing:0.04em">紫微星正在为你生成完整深度解读，请稍候…</div>';
   setTimeout(function(){ resultEl.scrollIntoView({behavior:'smooth', block:'start'}); }, 100);
   var token = localStorage.getItem('sy_token') || '';
+  // 60-second stream timeout
+  var streamDone = false;
+  var streamTimeout = setTimeout(function() {
+    if (!streamDone) {
+      streamDone = true;
+      var box = document.getElementById('zwStreamBox');
+      if (box) box.textContent = '生成超时，请重试';
+      var btnCalc = document.getElementById('btnCalc');
+      if (btnCalc) { btnCalc.disabled = false; btnCalc.textContent = '重新排盘'; }
+      showToast('生成超时，请重试', 'error');
+      injectDisclaimer('resultWrap');
+    }
+  }, 60000);
   fetch('/api/ziwei/stream', {
     method: 'POST',
     headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token},
@@ -526,7 +552,12 @@ function handlePaidReturn() {
     var box = document.getElementById('zwStreamBox');
     function read() {
       reader.read().then(function(r) {
-        if (r.done) { if (box) box.innerHTML = '<div style="white-space:pre-wrap">'+accumulated.replace(/</g,'&lt;')+'</div><div style="font-size:10px;color:rgba(201,168,76,0.3);text-align:center;padding:10px 20px">仅供娱乐参考</div>'; return; }
+        if (r.done) {
+          clearTimeout(streamTimeout); streamDone = true;
+          if (box) box.innerHTML = '<div style="white-space:pre-wrap">'+accumulated.replace(/</g,'&lt;')+'</div>';
+          injectDisclaimer('resultWrap');
+          return;
+        }
         buf += decoder.decode(r.value, {stream: true});
         var lines = buf.split('\n'); buf = lines.pop();
         lines.forEach(function(line) {
@@ -534,14 +565,23 @@ function handlePaidReturn() {
           try {
             var ev = JSON.parse(line.slice(6));
             if (ev.type === 'chunk') { accumulated += ev.content; if (box) box.textContent = accumulated; }
-            else if (ev.type === 'done') { if (box) box.innerHTML = '<div style="white-space:pre-wrap">'+accumulated.replace(/</g,'&lt;')+'</div><div style="font-size:10px;color:rgba(201,168,76,0.3);text-align:center;padding:10px 20px">仅供娱乐参考</div>'; }
+            else if (ev.type === 'done') {
+              clearTimeout(streamTimeout); streamDone = true;
+              if (box) box.innerHTML = '<div style="white-space:pre-wrap">'+accumulated.replace(/</g,'&lt;')+'</div>';
+              injectDisclaimer('resultWrap');
+            }
           } catch(e) {}
         });
         read();
-      }).catch(function() { if (box) box.textContent = '网络异常，请刷新重试'; });
+      }).catch(function() {
+        clearTimeout(streamTimeout); streamDone = true;
+        if (box) box.textContent = '网络异常，请刷新重试';
+        injectDisclaimer('resultWrap');
+      });
     }
     read();
   }).catch(function() {
+    clearTimeout(streamTimeout); streamDone = true;
     var box = document.getElementById('zwStreamBox');
     if (box) {
       box.textContent = '';
@@ -559,6 +599,7 @@ function handlePaidReturn() {
         }
       } catch(e2) {}
       box.textContent = '网络异常，请刷新重试';
+      injectDisclaimer('resultWrap');
     }
   });
 }
