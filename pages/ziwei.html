@@ -158,6 +158,8 @@ body::after {
 .btn-deep { width: 100%; padding: 14px 0; background: linear-gradient(135deg, rgba(107,63,160,0.4), rgba(74,159,212,0.5)); border: 1px solid rgba(74,159,212,0.3); border-radius: 4px; color: rgba(232,240,255,0.9); font-family: 'Noto Serif SC', serif; font-size: 13px; letter-spacing: 0.18em; cursor: pointer; }
 .btn-deep:active { opacity: 0.8; }
 .cta-note { text-align: center; font-size: 9px; color: rgba(232,240,255,0.2); margin-top: 8px; letter-spacing: 0.06em; }
+.paywall-blurred { filter: blur(5px); pointer-events: none; user-select: none; position: relative; }
+.paywall-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(transparent 0%, rgba(13,8,32,0.97) 40%); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 40px; z-index: 10; }
 </style>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/css/style.css">
@@ -440,16 +442,30 @@ function renderResult(seed, y, m, d, h) {
      text:'疾厄宫今年相对平稳，无重大凶星入驻。注意'+(rng(seed+7,2)?'脾胃':'肝胆')+'养护，切勿过度劳累。春季和秋季各做一次体检为宜。'}
   ];
   var fsHtml = '';
-  FORTUNES.forEach(function(f) {
+  var isPaidZiwei = localStorage.getItem('sy_unlock_a') === '1' || new URLSearchParams(location.search).get('paid') === '1';
+  FORTUNES.forEach(function(f, fi) {
     var score = f.score;
-    fsHtml += '<div class="fortune-section">' +
-      '<div class="fortune-head" onclick="toggleFortune(this)">' +
-        '<div class="fortune-icon" style="background:'+f.color+'">'+f.icon+'</div>' +
-        '<div class="fortune-title">'+f.title+'</div>' +
-        '<div class="fortune-score" style="color:'+(score>75?'#8dd9bf':score>60?'#e8d08a':'#d4607a')+'">'+score+'</div>' +
-      '</div>' +
-      '<div class="fortune-body hidden">'+f.text+'</div>' +
-    '</div>';
+    var shouldBlurZw = !isPaidZiwei && fi >= 2;
+    if (shouldBlurZw) {
+      fsHtml += '<div class="fortune-section paywall-blurred" style="position:relative">' +
+        '<div class="fortune-head">' +
+          '<div class="fortune-icon" style="background:'+f.color+'">'+f.icon+'</div>' +
+          '<div class="fortune-title">'+f.title+'</div>' +
+          '<div class="fortune-score" style="color:'+(score>75?'#8dd9bf':score>60?'#e8d08a':'#d4607a')+'">'+score+'</div>' +
+        '</div>' +
+        '<div class="fortune-body hidden">'+f.text+'</div>' +
+        '<div class="paywall-overlay"><button onclick="unlockZiwei(this)" style="background:linear-gradient(135deg,rgba(107,63,160,0.6),rgba(74,159,212,0.7));border:1px solid rgba(74,159,212,0.4);border-radius:8px;color:rgba(232,240,255,0.9);font-family:\'Noto Serif SC\',serif;font-size:12px;padding:10px 20px;cursor:pointer">解锁'+f.title+' $19.90 →</button></div>' +
+      '</div>';
+    } else {
+      fsHtml += '<div class="fortune-section">' +
+        '<div class="fortune-head" onclick="toggleFortune(this)">' +
+          '<div class="fortune-icon" style="background:'+f.color+'">'+f.icon+'</div>' +
+          '<div class="fortune-title">'+f.title+'</div>' +
+          '<div class="fortune-score" style="color:'+(score>75?'#8dd9bf':score>60?'#e8d08a':'#d4607a')+'">'+score+'</div>' +
+        '</div>' +
+        '<div class="fortune-body hidden">'+f.text+'</div>' +
+      '</div>';
+    }
   });
   document.getElementById('fortuneSections').innerHTML = fsHtml;
 

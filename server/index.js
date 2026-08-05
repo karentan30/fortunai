@@ -134,6 +134,9 @@ app.use('/api', dailyRouter);
 // A/B 测试追踪
 app.use('/api', abRouter);
 
+// 邮件订阅
+app.use('/api', require('./routes/subscribe'));
+
 // ── 全局错误处理 ──
 app.use(function(err, req, res, next) {
   console.error('[FATAL]', err.message);

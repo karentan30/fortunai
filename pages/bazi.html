@@ -37,6 +37,8 @@
   --sub-text: rgba(80,70,55,0.72);
 }
 html, body { background: var(--bg); font-family: 'Noto Serif SC', serif; color: var(--ink-text); -webkit-font-smoothing: antialiased; }
+.paywall-blurred { filter: blur(5px); pointer-events: none; user-select: none; position: relative; }
+.paywall-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(transparent 0%, rgba(250,248,245,0.97) 40%); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 40px; z-index: 10; }
 body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 24px; }
 body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.1) 0%, transparent 50%); pointer-events:none; z-index:0; }
 
@@ -1053,8 +1055,22 @@ function renderAITextReport(text, contextId, isLocked) {
   reportEl.classList.add('show');
 
   // Render ultimate report with collapsible section cards
-  renderUltimateReport(text, 'reportContent');
+  renderUltimateReport(text, 'reportContent', isLocked);
   injectDisclaimer('reportScreen');
+  // 快赢2: 命盘分享卡按钮 (仅付费用户)
+  if (!isLocked) {
+    var shareCardBtn = document.createElement('div');
+    shareCardBtn.style.cssText = 'text-align:center;padding:16px 16px 0';
+    shareCardBtn.innerHTML = '<button onclick="generateShareCard()" style="background:linear-gradient(135deg,var(--gold-deep),var(--gold));border:none;border-radius:12px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;font-weight:500;letter-spacing:0.18em;padding:12px 24px;cursor:pointer;box-shadow:0 4px 16px rgba(201,168,76,0.3)">生成命盘卡 · 分享</button>';
+    document.getElementById('reportContent').appendChild(shareCardBtn);
+  }
+  // 快赢3: 订阅入口 (所有用户)
+  var subHook = document.createElement('div');
+  subHook.className = 'subscribe-hook';
+  subHook.style.cssText = 'text-align:center;padding:24px;background:#f5f0e8;border-radius:12px;margin:24px 16px 0';
+  subHook.innerHTML = '<div style="font-size:15px;font-weight:500;margin-bottom:4px">每日天机 · 专属运势推送</div><div style="font-size:13px;color:#888;margin-bottom:16px">每天早8点，收到今日五行能量与宜忌</div><div style="display:flex;gap:8px;max-width:320px;margin:0 auto"><input type="email" id="subscribeEmail" placeholder="输入邮箱" style="flex:1;padding:10px 14px;border:1px solid #d4c9a8;border-radius:8px;font-size:14px"><button onclick="submitSubscribe()" style="background:#5bbfa0;color:white;border:none;padding:10px 16px;border-radius:8px;font-size:14px;cursor:pointer;white-space:nowrap">订阅</button></div><div id="subscribeMsg" style="font-size:12px;color:#5bbfa0;margin-top:8px;display:none">✓ 已订阅，明天早8点见</div>';
+  var rc = document.getElementById('reportContent');
+  if (rc) rc.appendChild(subHook);
 }
 
 function getModeToggleHTML() {
@@ -1255,7 +1271,7 @@ function renderProductCard(product) {
 }
 
 // ── 通用AI报告渲染器 v2.0 — 极致版 ──
-function renderUltimateReport(text, containerId) {
+function renderUltimateReport(text, containerId, isLocked) {
   var container = document.getElementById(containerId);
   if (!container) return;
   var sections = [];
@@ -1296,15 +1312,97 @@ function renderUltimateReport(text, containerId) {
            .replace(/(\d{4})年/g,'<span class="hl-year">$1年</span>')
            .replace(/(\d+)分/g,'<span class="hl-score">$1分</span>')
            .replace(/\$(\d+\.?\d*)/g,'<span class="hl-money">$$$1</span>');
-    html += '<div class="ur-card" style="animation-delay:'+(i*0.08)+'s">';
+    var shouldBlur = isLocked && i >= 2;
+    if (shouldBlur) {
+      html += '<div class="ur-card paywall-blurred" style="animation-delay:'+(i*0.08)+'s;position:relative">';
+    } else {
+      html += '<div class="ur-card" style="animation-delay:'+(i*0.08)+'s">';
+    }
     html += '<div class="ur-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ur-arrow\').classList.toggle(\'open\')">';
     html += '<span class="ur-emoji">'+(sec.emoji||'📜')+'</span>';
     html += '<span class="ur-title">'+sec.title+'</span>';
     html += '<span class="ur-arrow open">▾</span></div>';
-    html += '<div class="ur-body open"><div class="ur-text">'+ct+'</div></div></div>';
+    html += '<div class="ur-body open"><div class="ur-text">'+ct+'</div></div>';
+    if (shouldBlur) {
+      html += '<div class="paywall-overlay"><div style="font-size:13px;font-weight:500;letter-spacing:0.1em;color:var(--gold);margin-bottom:10px">解锁完整命盘</div><button onclick="createCheckout(this,\'full\',9.9)" style="background:linear-gradient(135deg,var(--gold-deep),var(--gold));border:none;border-radius:10px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;padding:10px 24px;cursor:pointer">立即解锁 · USD $9.90 →</button></div>';
+    }
+    html += '</div>';
   });
   html += '</div>';
   container.innerHTML = html;
+}
+
+// ── 快赢2: 命盘分享卡 ──
+function generateShareCard() {
+  var canvas = document.createElement('canvas');
+  canvas.width = 1080; canvas.height = 1080;
+  var ctx = canvas.getContext('2d');
+  // Background
+  ctx.fillStyle = '#faf8f5';
+  ctx.fillRect(0, 0, 1080, 1080);
+  // Gold border
+  ctx.strokeStyle = 'rgba(201,168,76,0.35)';
+  ctx.lineWidth = 3;
+  ctx.strokeRect(32, 32, 1016, 1016);
+  // Top logo
+  ctx.fillStyle = 'rgba(201,168,76,0.9)';
+  ctx.font = '400 52px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('善缘 · AI命理', 540, 160);
+  // Gold line
+  ctx.strokeStyle = 'rgba(201,168,76,0.4)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(240, 200); ctx.lineTo(840, 200); ctx.stroke();
+  // Extract key phrase from report DOM
+  var keyword = '命运自在掌握';
+  var dmMatch = lastAiText && lastAiText.match(/日主[：:]\s*([甲乙丙丁戊己庚辛壬癸][^\s，。]{0,5})/);
+  if (dmMatch) keyword = dmMatch[1];
+  var fmMatch = lastAiText && lastAiText.match(/([偏正食伤财官印枭]{1,2}格[^，。\n]{0,8})/);
+  if (fmMatch) keyword = (dmMatch ? dmMatch[1] + '·' : '') + fmMatch[1];
+  // Main text
+  ctx.fillStyle = 'rgba(40,35,30,0.92)';
+  ctx.font = '500 80px serif';
+  ctx.fillText(keyword, 540, 540);
+  // User name
+  var uname = (lastBaziInput && lastBaziInput.name) ? lastBaziInput.name + '的命盘' : '我的八字命盘';
+  ctx.fillStyle = 'rgba(80,70,55,0.6)';
+  ctx.font = '300 38px serif';
+  ctx.fillText(uname, 540, 640);
+  // Decorative yin-yang
+  ctx.fillStyle = 'rgba(201,168,76,0.25)';
+  ctx.font = '140px serif';
+  ctx.textAlign = 'right';
+  ctx.fillText('☯', 1020, 980);
+  // Bottom domain
+  ctx.fillStyle = 'rgba(80,70,55,0.45)';
+  ctx.font = '300 30px serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('shenyuan.mylumee.cn', 540, 1010);
+  // Download
+  canvas.toBlob(function(blob) {
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'mingpan-card.png';
+    a.click();
+  }, 'image/png');
+}
+
+// ── 快赢3: 邮件订阅 ──
+async function submitSubscribe() {
+  var emailEl = document.getElementById('subscribeEmail');
+  if (!emailEl) return;
+  var email = emailEl.value.trim();
+  if (!email || !email.includes('@')) return;
+  try {
+    await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email: email, source: 'bazi-report' })
+    });
+  } catch(e) {}
+  var msg = document.getElementById('subscribeMsg');
+  if (msg) msg.style.display = 'block';
+  localStorage.setItem('sy_subscribed_email', email);
 }
 
 // ── Share functions (带 ref_code 裂变追踪) ──
