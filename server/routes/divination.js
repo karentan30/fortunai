@@ -244,7 +244,7 @@ router.post('/bazi', rateLimitMiddleware, async (req, res) => {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, question, mode, lang } = req.body;
     if (!birthYear || !birthMonth || !birthDay) return res.status(400).json({ error: '请提供出生年月日' });
-    if (Number(birthYear) > new Date().getFullYear() - 18) return res.status(400).json({ error: '仅限18岁以上用户使用' });
+    if (Number(birthYear) > new Date().getFullYear() - 14) return res.status(400).json({ error: "仅限14岁以上用户使用" });
     if (lang === 'ko') return baziKoreanHandler(req, res);
     if (lang === 'en') return baziEnglishHandler(req, res);
     if (lang === 'pt-br') return baziPtBrHandler(req, res);

@@ -617,7 +617,8 @@ a{color:inherit;text-decoration:none}
   const mEl=document.getElementById('f-month');
   const dEl=document.getElementById('f-day');
   const yOpt=document.createElement('option');yOpt.value='';yOpt.textContent='出生年份';yEl.appendChild(yOpt);
-  for(let y=2010;y>=1940;y--){const o=document.createElement('option');o.value=y;o.textContent=y+'年';yEl.appendChild(o);}
+  const curY=new Date().getFullYear();
+  for(let y=curY;y>=1940;y--){const o=document.createElement('option');o.value=y;o.textContent=y+'年';yEl.appendChild(o);}
   const mOpt=document.createElement('option');mOpt.value='';mOpt.textContent='月';mEl.appendChild(mOpt);
   for(let m=1;m<=12;m++){const o=document.createElement('option');o.value=String(m).padStart(2,'0');o.textContent=m+'月';mEl.appendChild(o);}
   function updateDays(){
@@ -688,22 +689,27 @@ function toggleFaq(btn) {
   if(!isOpen){ans.classList.add('open');arr.classList.add('open');}
 }
 
-// ── 倒计时（localStorage持久化，刷新不重置）──
+// ── 倒计时（首次访问起24小时，到期隐藏，不循环）──
 (function(){
   const el = document.getElementById('countdown');
-  const KEY = 'sy_cd_end';
-  const DURATION = 24*3600*1000; // 24小时
-  let endTs = parseInt(localStorage.getItem(KEY)||'0',10);
-  if(!endTs || endTs < Date.now()){
-    endTs = Date.now() + DURATION;
-    localStorage.setItem(KEY, endTs);
+  const banner = el ? el.closest('.countdown-bar') : null;
+  const firstVisit = parseInt(localStorage.getItem('sy_lp_first_visit') || Date.now());
+  localStorage.setItem('sy_lp_first_visit', firstVisit);
+  const deadline = firstVisit + 24*60*60*1000;
+
+  function updateCountdown(){
+    const remaining = deadline - Date.now();
+    if(remaining <= 0){
+      if(banner) banner.style.display = 'none';
+      return;
+    }
+    const h = Math.floor(remaining/3600000);
+    const m = Math.floor((remaining%3600000)/60000);
+    const s = Math.floor((remaining%60000)/1000);
+    if(el) el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    setTimeout(updateCountdown, 1000);
   }
-  setInterval(()=>{
-    let remaining = Math.max(0, Math.floor((endTs - Date.now())/1000));
-    if(remaining===0){endTs=Date.now()+DURATION;localStorage.setItem(KEY,endTs);}
-    const h=Math.floor(remaining/3600),m=Math.floor((remaining%3600)/60),s=remaining%60;
-    el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  },1000);
+  updateCountdown();
 })();
 
 // ── 用户数字动画 ──
