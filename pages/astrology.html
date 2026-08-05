@@ -487,7 +487,12 @@ async function doReading() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
-    var data = await res.json();
+    var _rawText = await res.text();
+    if (!_rawText || _rawText.trim() === '') {
+      throw new Error('服务器返回空响应，请重试');
+    }
+    var data;
+    try { data = JSON.parse(_rawText); } catch(e) { throw new Error('响应解析失败，请重试'); }
 
     if (!res.ok) {
       throw new Error(data.error || '占星解读失败');
@@ -605,7 +610,10 @@ document.getElementById('followupBtn').addEventListener('click', async function(
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ contextId: ctxId, question: question })
     });
-    var data = await res.json();
+    var _rawFa = await res.text();
+    if (!_rawFa || _rawFa.trim() === '') throw new Error('服务器返回空响应，请重试');
+    var data;
+    try { data = JSON.parse(_rawFa); } catch(e) { throw new Error('响应解析失败，请重试'); }
     if (!res.ok) throw new Error(data.error);
 
     textEl.textContent = data.answer;

@@ -498,7 +498,10 @@ function unlockZiwei(btn) {
       token: localStorage.getItem('sy_token') || '',
       successUrl: location.origin + '/pages/ziwei.html?paid=1'
     })
-  }).then(function(r){ return r.json(); }).then(function(data){
+  }).then(function(r){ return r.text(); }).then(function(txt){
+    if (!txt || txt.trim() === '') throw new Error('空响应');
+    var data;
+    try { data = JSON.parse(txt); } catch(e) { throw new Error('解析失败'); }
     if(data.url) window.location.href = data.url;
     else { btn.disabled = false; btn.textContent = '深度大运流年 · 完整解读 $19.90'; }
   }).catch(function(){

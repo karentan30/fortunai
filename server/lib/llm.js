@@ -30,7 +30,16 @@ async function deepseekChat(messages, opts = {}) {
     throw new Error('DeepSeek API ' + res.status + ': ' + err.slice(0, 200));
   }
 
-  const data = await res.json();
+  const raw = await res.text().catch(() => '');
+  if (!raw || raw.trim() === '') {
+    throw new Error('DeepSeek API 返回空响应，请重试');
+  }
+  let data;
+  try {
+    data = JSON.parse(raw);
+  } catch (e) {
+    throw new Error('DeepSeek API 响应解析失败: ' + raw.slice(0, 100));
+  }
   const msg = data.choices?.[0]?.message;
   return msg?.content || msg?.reasoning_content || '';
 }

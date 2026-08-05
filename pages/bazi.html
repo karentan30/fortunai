@@ -798,7 +798,10 @@ function fetchBaziReport(input, mode) {
       birthYear: input.year, birthMonth: input.month, birthDay: input.day, birthHour: input.hour,
       gender: input.gender, mode: mode || 'truth', question: '请全面分析我的命盘', token: token
     })
-  }).then(function(r){ return r.json(); });
+  }).then(function(r){ return r.text(); }).then(function(txt){
+    if (!txt || txt.trim() === '') throw new Error('空响应');
+    try { return JSON.parse(txt); } catch(e) { throw new Error('响应解析失败'); }
+  });
 }
 
 // 加载步骤动画（纯氛围，随真实 fetch resolve 收尾，不做假承诺）
@@ -916,7 +919,10 @@ function createCheckout(btn, tier, price) {
       // P0-2③ 支付成功后带 ?paid=1 回本页触发付费回流
       successUrl: location.origin + '/pages/bazi.html?paid=1'
     })
-  }).then(function(r){ return r.json(); }).then(function(data){
+  }).then(function(r){ return r.text(); }).then(function(txt){
+    if (!txt || txt.trim() === '') throw new Error('空响应');
+    var data;
+    try { data = JSON.parse(txt); } catch(e) { throw new Error('解析失败'); }
     if(data.url) window.location.href = data.url;
     else { showToast('跳转失败，请重试', 'error'); btn.disabled = false; btn.textContent = label; }
   }).catch(function(){
@@ -962,7 +968,10 @@ function handlePaidReturn() {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({token: token})
-  }).then(function(r){ return r.json(); }).then(function(d){
+  }).then(function(r){ return r.text(); }).then(function(txt){
+    if (!txt || txt.trim() === '') throw new Error('空响应');
+    var d;
+    try { d = JSON.parse(txt); } catch(e) { throw new Error('解析失败'); }
     if (d && d.input && d.input.birthYear) {
       proceedWithPaidReport(d.input);
     } else {
@@ -1101,8 +1110,11 @@ function askQuestion() {
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({contextId: ctxId, question: question})
   })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
+  .then(function(r){ return r.text(); })
+  .then(function(txt){
+    if (!txt || txt.trim() === '') throw new Error('空响应');
+    var d;
+    try { d = JSON.parse(txt); } catch(e) { throw new Error('解析失败'); }
     document.getElementById('qaLoading').remove();
     if (d.answer) {
       var answer = d.answer.replace(/</g,'&lt;').replace(/\\n/g,'<br>');
