@@ -76,6 +76,13 @@ var freeRemaining = 5;
 var paywallShown = false;
 var isMember = false;
 
+// 持久sessionId，追踪免费次数，防止纯IP被VPN绕过
+var _sessionId = localStorage.getItem('sy_session_id');
+if (!_sessionId) {
+  _sessionId = (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2));
+  localStorage.setItem('sy_session_id', _sessionId);
+}
+
 // 🔴 修复: 进页面拉真实剩余额度(不硬编码5)
 function loadQuota() {
   fetch('/api/chat/quota', { headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('sy_token') || '') } })
@@ -89,7 +96,12 @@ function updateQuotaUI() {
   var el = document.getElementById('freeRemaining');
   var wrap = document.getElementById('freeCounter');
   if (!el || !wrap) return;
-  if (isMember) { el.textContent = '∞'; el.parentNode.textContent = '会员无限畅聊'; return; }
+  if (isMember) {
+    // 只更新span内容，不覆写整个父节点（否则span#freeRemaining会被销毁）
+    el.textContent = '∞';
+    wrap.style.color = 'var(--jade)';
+    return;
+  }
   el.textContent = freeRemaining;
   el.style.color = freeRemaining <= 1 ? '#e8605a' : 'inherit';
 }
@@ -165,7 +177,7 @@ function ask(text) {
 
   fetch('/api/chat', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    headers: {'Content-Type': 'application/json', 'X-Session-Id': _sessionId},
     body: JSON.stringify({messages: msgsToSend})
   }).then(function(r){return r.json()}).then(function(d){
     document.getElementById('typing').remove();

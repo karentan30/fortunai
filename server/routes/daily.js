@@ -123,7 +123,9 @@ router.post('/chat', rateLimitMiddleware, async (req, res) => {
     if (!isMember) {
       var uid = resolveUserFromToken(req.headers['authorization'] || (req.body && req.body.token), { get: (t) => { const row = _M.tokens.find(x => x.token === t); return row || null; } });
       var day = new Date().toISOString().slice(0, 10);
-      var ckey = (uid || getClientIp(req)) + '_' + day;
+      // 优先用sessionId（持久存在localStorage，比IP更准确），回落到IP
+      var sessionId = req.headers['x-session-id'];
+      var ckey = (uid || sessionId || getClientIp(req)) + '_' + day;
       var used = _M.chatUsage[ckey] || 0;
       if (used >= 5) {
         return res.json({ answer: '今天的免费畅聊次数用完啦～开通会员($6.9/月)就能和命理师无限畅聊，还解锁全部完整报告哦。', limited: true, needMember: true });
@@ -154,7 +156,8 @@ router.get('/chat/quota', (req, res) => {
       if (row) uid = row.user_id;
     }
     var day = new Date().toISOString().slice(0, 10);
-    var ckey = (uid || getClientIp(req)) + '_' + day;
+    var sessionId = req.headers['x-session-id'];
+    var ckey = (uid || sessionId || getClientIp(req)) + '_' + day;
     var used = _M.chatUsage[ckey] || 0;
     res.json({ isMember: false, remaining: Math.max(0, 5 - used), used: used, limit: 5 });
   } catch (e) {

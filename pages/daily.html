@@ -540,23 +540,24 @@ body::before {
     <button onclick="handleShareFriend(this)" style="width:100%;padding:13px 0;background:linear-gradient(135deg,rgba(91,191,160,0.15),rgba(91,191,160,0.08));border:1px solid rgba(91,191,160,0.35);border-radius:12px;color:var(--jade-deep);font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:.16em;cursor:pointer;transition:all .25s" ontouchstart="this.style.opacity='.7'" ontouchend="this.style.opacity='1'">分享今日运势给朋友</button>
   </div>
 
-</div>
-
-<div class="sub-wrap">
-  <div class="sub-head">
-    <div class="sub-title">每日天机订阅</div>
-    <div class="sub-price">
-      <span class="unit">$</span>4.90<span class="per">/月</span>
+  <!-- 订阅升级 CTA（在结果之后展示，转化逻辑正确）-->
+  <div class="sub-wrap" style="margin:0 16px 16px">
+    <div class="sub-head">
+      <div class="sub-title">每日天机订阅</div>
+      <div class="sub-price">
+        <span class="unit">$</span>4.90<span class="per">/月</span>
+      </div>
     </div>
+    <div class="sub-perks">
+      <div class="sub-perk"><div class="perk-dot"></div>每日专属Affirmation（基于你的八字）</div>
+      <div class="sub-perk"><div class="perk-dot"></div>五行能量值 · 幸运色/数字</div>
+      <div class="sub-perk"><div class="perk-dot"></div>每日宜忌 · 流年提醒</div>
+      <div class="sub-perk"><div class="perk-dot"></div>月度大运预警（提前7天）</div>
+    </div>
+    <button class="btn-gold" onclick="subscribeDaily()">开启每日天机 · 立即开通 · $4.90/月</button>
+    <p class="preview-note">此为预览版 · 开通后内容基于你的真实八字生成</p>
   </div>
-  <div class="sub-perks">
-    <div class="sub-perk"><div class="perk-dot"></div>每日专属Affirmation（基于你的八字）</div>
-    <div class="sub-perk"><div class="perk-dot"></div>五行能量值 · 幸运色/数字</div>
-    <div class="sub-perk"><div class="perk-dot"></div>每日宜忌 · 流年提醒</div>
-    <div class="sub-perk"><div class="perk-dot"></div>月度大运预警（提前7天）</div>
-  </div>
-  <button class="btn-gold" onclick="subscribeDaily()">开启每日天机 · 立即开通 · $4.90/月</button>
-  <p class="preview-note">此为预览版 · 开通后内容基于你的真实八字生成</p>
+
 </div>
 
 <!-- 温馨提示：设置提醒 -->
@@ -678,15 +679,12 @@ function getDailyReading() {
           }
         }
       });
-      // 若AI未返回百分比格式，用随机合理值保证视觉不空白
+      // 若AI未返回百分比格式，显示"--"而非硬编码假数据
       if (!anyBarFilled) {
-        var defaults = [28, 22, 20, 18, 12];
-        var bars = document.getElementById('energyRows').querySelectorAll('.e-bar-fill');
         var pctIds = ['pctWood','pctFire','pctEarth','pctMetal','pctWater'];
-        bars.forEach(function(bar, i) {
-          bar.style.width = defaults[i] + '%';
-          var pctEl = document.getElementById(pctIds[i]);
-          if (pctEl) pctEl.textContent = defaults[i] + '%';
+        pctIds.forEach(function(id) {
+          var pctEl = document.getElementById(id);
+          if (pctEl) pctEl.textContent = '--';
         });
       }
 
@@ -746,6 +744,20 @@ function showStreak(count) {
   var flames = count >= 7 ? '🔥🔥🔥' : count >= 3 ? '🔥🔥' : '🔥';
   el.innerHTML = flames + ' 连续 ' + count + ' 天查运势 &nbsp;<button onclick="shareDaily()" style="font-size:11px;padding:4px 10px;background:rgba(154,117,41,0.12);border:1px solid rgba(154,117,41,0.3);border-radius:10px;color:#9a7529;cursor:pointer;font-family:inherit;letter-spacing:.05em;vertical-align:middle">分享运势</button>';
 }
+// Safari <15.4 兼容的圆角矩形绘制（替代 ctx.roundRect）
+function drawRoundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
 // ── 每日天机截图卡（Co-Star 抄法：让 AI 输出本身成为朋友圈内容）──
 function generateDailyShareCard() {
   var canvas = document.getElementById('dailyShareCanvas');
@@ -790,7 +802,7 @@ function generateDailyShareCard() {
   var colorName = (document.getElementById('luckyColorName') || {}).textContent || '';
   if (swatch && swatch.style.background) {
     ctx.fillStyle = swatch.style.background || '#5bbfa0';
-    ctx.beginPath(); ctx.roundRect(W/2-28, 248, 56, 56, 28); ctx.fill();
+    drawRoundRect(ctx, W/2-28, 248, 56, 56, 28); ctx.fill();
     ctx.fillStyle = 'rgba(255,245,220,0.5)'; ctx.font = '24px serif';
     ctx.fillText('今日幸运色 · ' + colorName, W/2, 338);
   }
@@ -861,7 +873,19 @@ function shareDaily() {
 function loadTomorrowTeaser() {
   var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
   var y = tomorrow.getFullYear(), m = tomorrow.getMonth() + 1, d = tomorrow.getDate();
-  fetch('/api/daily-teaser?y=' + y + '&m=' + m + '&d=' + d)
+  // 传入用户生辰参数，确保明日运势个性化
+  var birthYear = document.getElementById('year').value || '';
+  var birthMonth = document.getElementById('month').value || '';
+  var birthDay = document.getElementById('day').value || '';
+  var birthHour = document.getElementById('hour').value || '';
+  var birthGender = gender || 'male';
+  var params = '?y=' + y + '&m=' + m + '&d=' + d;
+  if (birthYear) params += '&birthYear=' + birthYear;
+  if (birthMonth) params += '&birthMonth=' + birthMonth;
+  if (birthDay) params += '&birthDay=' + birthDay;
+  if (birthHour !== '') params += '&birthHour=' + birthHour;
+  params += '&gender=' + birthGender;
+  fetch('/api/daily-teaser' + params)
     .then(function(r){ return r.json(); })
     .then(function(data){
       var el = document.getElementById('tomorrowTeaser');
