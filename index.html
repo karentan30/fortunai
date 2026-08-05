@@ -117,6 +117,7 @@ body{max-width:420px;margin:0 auto;min-height:100vh;padding:0 16px calc(40px + e
   <div class="trust-item">覆盖 <b>10+</b> 国家地区</div>
   <div class="trust-item">成人<b>18+</b> 专享</div>
   <div class="trust-item">隐私<b>保护</b></div>
+  <div class="trust-item" id="inviteCount" style="display:none">已邀请 <b id="inviteNum">0</b> 位好友</div>
 </div>
 
 <!-- 社会证明：地理覆盖 -->
@@ -127,8 +128,6 @@ body{max-width:420px;margin:0 auto;min-height:100vh;padding:0 16px calc(40px + e
     <div style="font-size:10px;color:var(--ink-light);letter-spacing:0.04em;margin-top:2px">北美 · 澳洲 · 东南亚 · 韩国</div>
   </div>
 </div>
-
-<div class="disclaimer">内容仅供娱乐参考，不代替医学 / 法律 / 投资建议</div>
 
 <!-- 会员Banner：高LTV优先曝光 -->
 <a class="mbanner" href="pages/member.html" style="margin-bottom:16px">
@@ -146,6 +145,15 @@ body{max-width:420px;margin:0 auto;min-height:100vh;padding:0 16px calc(40px + e
     <span class="mbperk">专属AI命盘报告</span>
   </div>
   <div class="mbbtn">立即开通 →</div>
+</a>
+
+<!-- 裂变入口：会员Banner下方 -->
+<a href="pages/hehun.html?invite=ref" id="referralHint" style="display:flex;align-items:center;justify-content:space-between;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.22);border-radius:10px;padding:10px 14px;margin:0 0 16px;text-decoration:none">
+  <div style="display:flex;align-items:center;gap:8px">
+    <span style="font-size:16px">💑</span>
+    <span style="font-size:12px;color:#8a7a40;letter-spacing:0.06em">邀请朋友 · <b style="color:var(--gold)">双方各得一次免费合婚</b></span>
+  </div>
+  <span style="font-size:11px;color:var(--jade);letter-spacing:0.04em;white-space:nowrap">测缘分 →</span>
 </a>
 
 <div class="features">
@@ -320,8 +328,14 @@ body{max-width:420px;margin:0 auto;min-height:100vh;padding:0 16px calc(40px + e
   <a href="pages/member.html">会员</a>
 </div>
 
+<!-- 页脚分享入口 -->
+<div style="text-align:center;padding:16px 0 6px">
+  <button id="shareBtn" onclick="shareShenyuan()" style="background:none;border:1px solid rgba(91,191,160,0.35);border-radius:20px;padding:8px 20px;font-size:12px;color:var(--jade-deep);letter-spacing:0.1em;cursor:pointer;font-family:'Noto Serif SC',serif">分享善缘给朋友 →</button>
+</div>
+
 <div class="bfooter">每一次相遇，皆有因缘</div>
 <div style="text-align:center;font-size:9px;color:var(--ink-light);opacity:0.5;letter-spacing:0.12em;padding:2px 0 4px;font-family:'Cormorant Garamond',serif">Lumen Studio 出品</div>
+<div style="text-align:center;font-size:9px;color:var(--ink-light);opacity:0.35;letter-spacing:0.04em;padding:2px 0 8px">内容仅供娱乐参考，不代替医学 / 法律 / 投资建议</div>
 
 <script src="/assets/js/common.js"></script>
 <script>if(window.SY&&SY.initMembership)SY.initMembership();</script>
@@ -348,7 +362,61 @@ body{max-width:420px;margin:0 auto;min-height:100vh;padding:0 16px calc(40px + e
       this.style.pointerEvents='none';
     });
   }
+
+  // 裂变归因：读 ?ref=xxx 参数存入 localStorage
+  var params=new URLSearchParams(window.location.search);
+  var ref=params.get('ref');
+  if(ref){
+    localStorage.setItem('sy_referrer',ref);
+    // 被邀请人首次到访，给邀请人计数+1（本地记录，服务端异步上报）
+    try{
+      var key='sy_invite_from_'+ref;
+      if(!localStorage.getItem(key)){
+        localStorage.setItem(key,'1');
+        // 异步上报（fire-and-forget，不影响页面）
+        fetch('/api/referral?ref='+encodeURIComponent(ref)+'&event=visit',{method:'POST',keepalive:true}).catch(function(){});
+      }
+    }catch(e){}
+  }
+
+  // 显示"已邀请 X 位好友"
+  try{
+    var inviteCount=parseInt(localStorage.getItem('sy_invite_count')||'0',10);
+    if(inviteCount>0){
+      var el=document.getElementById('inviteCount');
+      var num=document.getElementById('inviteNum');
+      if(el&&num){num.textContent=inviteCount;el.style.display='inline-flex';}
+    }
+  }catch(e){}
+
+  // 更新裂变入口链接，带上当前用户ID
+  try{
+    var uid=localStorage.getItem('sy_uid')||localStorage.getItem('sy_user_id')||'';
+    if(uid){
+      var rlink=document.getElementById('referralHint');
+      if(rlink) rlink.href='pages/hehun.html?invite='+encodeURIComponent(uid);
+    }
+  }catch(e){}
 })();
+
+// 分享功能
+function shareShenyuan(){
+  try{
+    var uid=localStorage.getItem('sy_uid')||localStorage.getItem('sy_user_id')||'ref';
+    var shareUrl='https://shenyuan.mylumee.cn/?ref='+encodeURIComponent(uid);
+    var shareText='我在善缘测了八字命理，你也来测测 → '+shareUrl;
+    if(navigator.share){
+      navigator.share({title:'善缘 · AI命理解读',text:shareText,url:shareUrl}).catch(function(){});
+    } else {
+      navigator.clipboard.writeText(shareUrl).then(function(){
+        var btn=document.getElementById('shareBtn');
+        if(btn){btn.textContent='链接已复制 ✓';setTimeout(function(){btn.textContent='分享善缘给朋友 →';},2000);}
+      }).catch(function(){
+        prompt('复制链接分享给朋友：',shareUrl);
+      });
+    }
+  }catch(e){alert('分享链接：https://shenyuan.mylumee.cn/');}
+}
 </script>
 </body>
 </html>
