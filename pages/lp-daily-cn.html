@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#faf8f5">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>每日运势占卜 · AI个人天机 | 善缘</title>
+<meta name="description" content="基于你的八字生辰，AI每天为你推算专属运势。财运·感情·事业·健康全覆盖，比通用星座运势准确100倍。">
+<meta name="keywords" content="每日运势,今日运势星座,今天财运好不好,每日星座运势,今日黄历运势,八字运势,今日天机,每日八字">
+<meta property="og:title" content="每日运势占卜 · AI个人天机 | 善缘">
+<meta property="og:description" content="基于你的八字生辰，AI每天为你推算专属运势。比通用星座准确100倍。">
+<meta property="og:image" content="/og-card.png">
+<meta property="og:url" content="https://shenyuan.mylumee.cn/pages/lp-daily-cn.html">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://shenyuan.mylumee.cn/pages/lp-daily-cn.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#faf8f5;
+  --card:#fff;
+  --card2:#f5f2ec;
+  --gold:#c9a84c;
+  --gold-light:#a07828;
+  --gold-deep:#8a6420;
+  --gold-dim:rgba(201,168,76,0.25);
+  --text:#2a1f0e;
+  --sub:rgba(80,60,30,0.58);
+  --jade:#5bbfa0;
+  --jade-dim:rgba(91,191,160,0.15);
+}
+
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:antialiased}
+body{max-width:430px;margin:0 auto;min-height:100vh;overflow-x:hidden;position:relative}
+section{position:relative;z-index:1}
+a{color:inherit;text-decoration:none}
+
+/* ── 共用 ── */
+.gold-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto}
+.section-tag{display:inline-block;font-size:10px;letter-spacing:.22em;color:var(--gold);border:1px solid var(--gold-dim);border-radius:20px;padding:3px 12px;margin-bottom:14px}
+.section-title{font-size:20px;font-weight:300;letter-spacing:.15em;line-height:1.5;margin-bottom:10px;text-wrap:balance;word-break:keep-all;color:var(--text)}
+.section-desc{font-size:11px;color:var(--sub);letter-spacing:.08em;line-height:1.9}
+.fade-in{opacity:0;transform:translateY(22px);transition:opacity .65s ease,transform .65s ease}
+.fade-in.visible{opacity:1;transform:translateY(0)}
+
+/* ── 英雄区 ── */
+.hero{
+  min-height:100svh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  padding:60px 24px 60px;
+  position:relative;
+  background:linear-gradient(180deg,#faf8f5 0%,#f3ede0 100%);
+}
+
+.hero::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:radial-gradient(ellipse at 50% 20%,rgba(201,168,76,.1) 0%,transparent 65%);
+  pointer-events:none;
+}
+
+/* ── 日历装饰 ── */
+.hero-calendar{
+  width:72px;height:72px;
+  background:var(--card);
+  border:1px solid var(--gold-dim);
+  border-radius:14px;
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  margin:0 auto 28px;
+  box-shadow:0 4px 20px rgba(201,168,76,.12);
+}
+.cal-month{font-size:9px;letter-spacing:.2em;color:var(--gold);padding:4px 0 2px;border-bottom:1px solid var(--gold-dim);width:100%;text-align:center}
+.cal-day{font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--text);line-height:1;padding:4px 0}
+
+.hero-hook{
+  font-size:28px;font-weight:300;
+  letter-spacing:.14em;line-height:1.45;
+  margin-bottom:16px;
+  color:var(--text);
+}
+.hero-hook span{color:var(--gold)}
+
+.hero-sub{
+  font-size:14px;color:var(--sub);
+  letter-spacing:.1em;line-height:1.8;
+  margin-bottom:10px;
+}
+.hero-emphasis{
+  display:inline-block;
+  font-size:11px;letter-spacing:.15em;
+  color:var(--jade);
+  border:1px solid rgba(91,191,160,.3);
+  border-radius:20px;
+  padding:4px 14px;
+  margin-bottom:36px;
+}
+
+.btn-hero{
+  display:block;width:100%;max-width:300px;
+  margin:0 auto 14px;
+  padding:16px 0;
+  background:linear-gradient(135deg,var(--gold-deep),var(--gold),#e8d08a,var(--gold));
+  background-size:200% auto;
+  animation:gold-shimmer 3s linear infinite;
+  border:none;border-radius:14px;
+  color:rgba(14,10,4,.95);
+  font-family:'Noto Serif SC',serif;
+  font-size:15px;font-weight:500;
+  letter-spacing:.22em;
+  cursor:pointer;
+  box-shadow:0 6px 32px rgba(201,168,76,.3);
+  transition:transform .18s,box-shadow .18s;
+  -webkit-tap-highlight-color:transparent;
+  text-decoration:none;
+}
+.btn-hero:hover{transform:translateY(-2px);box-shadow:0 10px 40px rgba(201,168,76,.45)}
+.btn-hero:active{transform:scale(.97)}
+
+@keyframes gold-shimmer{
+  0%{background-position:0% 50%}
+  100%{background-position:200% 50%}
+}
+
+.hero-hint{font-size:11px;color:var(--sub);letter-spacing:.1em}
+
+.scroll-indicator{
+  position:absolute;bottom:28px;left:50%;
+  transform:translateX(-50%);
+  display:flex;flex-direction:column;
+  align-items:center;gap:6px;
+  animation:float-y 2s ease-in-out infinite;
+}
+.scroll-indicator span{font-size:9px;letter-spacing:.2em;color:rgba(201,168,76,.5)}
+.scroll-arrow{
+  width:14px;height:14px;
+  border-right:1px solid rgba(201,168,76,.4);
+  border-bottom:1px solid rgba(201,168,76,.4);
+  transform:rotate(45deg);margin-top:-4px;
+}
+@keyframes float-y{
+  0%,100%{transform:translateX(-50%) translateY(0)}
+  50%{transform:translateX(-50%) translateY(6px)}
+}
+
+/* ── Screen 2: 差异化 ── */
+.diff-section{
+  padding:52px 24px;
+  background:#fff;
+  border-top:1px solid rgba(201,168,76,.1);
+}
+.diff-section .section-header{text-align:center;margin-bottom:32px}
+
+.diff-compare{
+  display:flex;flex-direction:column;gap:12px;
+  margin-bottom:28px;
+}
+.diff-row{
+  display:grid;grid-template-columns:1fr 40px 1fr;
+  gap:8px;align-items:center;
+}
+.diff-cell{
+  padding:14px 12px;border-radius:10px;
+  font-size:12px;letter-spacing:.05em;line-height:1.6;text-align:center;
+}
+.diff-cell.bad{
+  background:rgba(150,120,80,.06);
+  border:1px solid rgba(150,120,80,.12);
+  color:rgba(80,60,30,.6);
+}
+.diff-cell.good{
+  background:var(--jade-dim);
+  border:1px solid rgba(91,191,160,.25);
+  color:#2a4a40;
+}
+.diff-label{
+  font-size:9px;letter-spacing:.12em;
+  color:var(--sub);text-align:center;
+  margin-bottom:6px;
+}
+.diff-vs{
+  text-align:center;font-size:11px;
+  color:var(--sub);font-style:italic;
+  font-family:'Cormorant Garamond',serif;
+}
+
+.diff-features{
+  display:flex;flex-direction:column;gap:10px;
+}
+.diff-feat{
+  display:flex;align-items:flex-start;gap:10px;
+  font-size:12px;letter-spacing:.06em;
+  line-height:1.7;color:var(--text);
+}
+.diff-feat-icon{
+  width:22px;height:22px;min-width:22px;
+  background:var(--jade-dim);
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;margin-top:1px;
+}
+
+/* ── Screen 3: 功能预览 ── */
+.features-section{
+  padding:52px 24px;
+  background:var(--bg);
+  border-top:1px solid rgba(201,168,76,.1);
+}
+.features-section .section-header{text-align:center;margin-bottom:28px}
+
+.feature-cards{display:flex;flex-direction:column;gap:12px}
+.feature-card{
+  background:var(--card);
+  border:1px solid rgba(201,168,76,.12);
+  border-radius:14px;
+  padding:16px 18px;
+  display:flex;align-items:flex-start;gap:14px;
+}
+.feature-card-icon{
+  width:38px;height:38px;min-width:38px;
+  border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;
+}
+.feature-card-icon.gold-bg{background:linear-gradient(135deg,rgba(201,168,76,.15),rgba(201,168,76,.05))}
+.feature-card-icon.jade-bg{background:linear-gradient(135deg,rgba(91,191,160,.15),rgba(91,191,160,.05))}
+.feature-card-icon.rose-bg{background:linear-gradient(135deg,rgba(200,120,150,.15),rgba(200,120,150,.05))}
+.feature-card-body{flex:1}
+.feature-card-name{
+  font-size:13px;font-weight:500;
+  letter-spacing:.1em;margin-bottom:4px;color:var(--text);
+}
+.feature-card-desc{font-size:11px;color:var(--sub);letter-spacing:.06em;line-height:1.7}
+.feature-card-stars{font-size:11px;color:var(--gold);letter-spacing:2px;margin-top:4px}
+.feature-card-preview{
+  font-size:10px;color:var(--jade);
+  letter-spacing:.1em;margin-top:4px;
+}
+
+/* ── Screen 4: 定价 ── */
+.pricing-section{
+  padding:52px 24px;
+  background:#fff;
+  border-top:1px solid rgba(201,168,76,.1);
+}
+.pricing-section .section-header{text-align:center;margin-bottom:28px}
+
+.plan-cards{display:flex;flex-direction:column;gap:14px;margin-bottom:24px}
+.plan-card{
+  border-radius:14px;
+  border:1px solid rgba(201,168,76,.15);
+  padding:20px 18px;
+  position:relative;
+  background:var(--bg);
+}
+.plan-card.featured{
+  border-color:rgba(201,168,76,.4);
+  background:linear-gradient(135deg,rgba(201,168,76,.04),rgba(91,191,160,.04));
+}
+.plan-badge-recommend{
+  position:absolute;top:-10px;left:50%;transform:translateX(-50%);
+  background:var(--gold);
+  color:rgba(14,10,4,.9);
+  font-size:9px;letter-spacing:.12em;
+  padding:3px 14px;border-radius:10px;
+  white-space:nowrap;
+}
+.plan-name{font-size:13px;font-weight:500;letter-spacing:.12em;margin-bottom:6px;color:var(--text)}
+.plan-price{
+  font-family:'Cormorant Garamond',serif;
+  font-size:32px;color:var(--gold);
+  line-height:1;margin-bottom:8px;
+}
+.plan-price small{font-size:14px}
+.plan-price sub{font-size:12px;vertical-align:baseline}
+.plan-price.free-tag{font-size:24px;color:var(--jade)}
+.plan-items{display:flex;flex-direction:column;gap:5px;margin-top:10px}
+.plan-item{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;letter-spacing:.06em;color:var(--sub);
+}
+.plan-item::before{content:'✓';color:var(--jade);font-size:11px}
+
+.btn-pricing{
+  display:block;width:100%;
+  padding:15px 0;
+  background:linear-gradient(135deg,var(--gold-deep),var(--gold),#e8d08a,var(--gold));
+  background-size:200% auto;
+  animation:gold-shimmer 3s linear infinite;
+  border:none;border-radius:12px;
+  color:rgba(14,10,4,.95);
+  font-family:'Noto Serif SC',serif;
+  font-size:15px;font-weight:500;
+  letter-spacing:.18em;cursor:pointer;
+  box-shadow:0 4px 20px rgba(201,168,76,.25);
+  transition:transform .18s;
+  text-decoration:none;text-align:center;
+}
+.btn-pricing:hover{transform:translateY(-1px)}
+.btn-pricing:active{transform:scale(.98)}
+
+/* ── Screen 5: 社会证明 ── */
+.proof-section{
+  padding:52px 24px;
+  background:var(--bg);
+  border-top:1px solid rgba(201,168,76,.1);
+}
+.proof-section .section-header{text-align:center;margin-bottom:28px}
+
+.review-cards{display:flex;flex-direction:column;gap:12px;margin-bottom:36px}
+.review-card{
+  background:var(--card);
+  border:1px solid rgba(201,168,76,.1);
+  border-radius:14px;
+  padding:16px 18px;
+}
+.review-header{
+  display:flex;align-items:center;gap:10px;
+  margin-bottom:10px;
+}
+.review-avatar{
+  width:34px;height:34px;min-width:34px;
+  border-radius:50%;
+  background:linear-gradient(135deg,rgba(201,168,76,.2),rgba(91,191,160,.15));
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;
+}
+.review-meta{flex:1}
+.review-name{font-size:12px;letter-spacing:.1em;color:var(--text);margin-bottom:2px}
+.review-location{font-size:9px;letter-spacing:.12em;color:var(--sub)}
+.review-stars{font-size:10px;color:var(--gold);letter-spacing:2px}
+.review-text{
+  font-size:12px;color:var(--sub);
+  letter-spacing:.06em;line-height:1.85;
+  font-style:italic;
+}
+.review-text::before{content:'「';color:var(--gold);font-size:16px;line-height:0;vertical-align:-4px;margin-right:2px}
+.review-text::after{content:'」';color:var(--gold);font-size:16px;line-height:0;vertical-align:-4px;margin-left:2px}
+
+/* ── 最终CTA ── */
+.final-cta{
+  text-align:center;
+  padding:0 0 16px;
+}
+.final-cta-title{
+  font-size:22px;font-weight:300;letter-spacing:.15em;
+  margin-bottom:8px;color:var(--text);
+}
+.final-cta-sub{font-size:11px;color:var(--sub);letter-spacing:.1em;margin-bottom:24px}
+.final-hint{font-size:10px;color:var(--sub);letter-spacing:.08em;margin-top:10px}
+
+/* ── 底部 ── */
+footer{
+  text-align:center;padding:28px 20px 40px;
+  border-top:1px solid rgba(201,168,76,.08);
+  background:#fff;
+}
+footer p{font-size:9px;letter-spacing:.12em;color:rgba(80,60,30,.35);line-height:2}
+</style>
+</head>
+<body>
+
+<!-- ══════════════ Screen 1: 英雄 ══════════════ -->
+<section class="hero">
+  <div class="hero-calendar" id="heroCal">
+    <div class="cal-month" id="calMonth">八月</div>
+    <div class="cal-day" id="calDay">5</div>
+  </div>
+
+  <div class="section-tag">每日天机</div>
+  <h1 class="hero-hook">今日，<span>属于你的天机</span></h1>
+  <p class="hero-sub">不是通用星座运势<br>是专属你的今日天机</p>
+  <span class="hero-emphasis">基于你的八字，精准到时辰</span>
+
+  <a href="/pages/daily.html" class="btn-hero">查看今日天机</a>
+  <p class="hero-hint">免费开始 · 30秒生成</p>
+
+  <div class="scroll-indicator">
+    <span>向下了解</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ══════════════ Screen 2: 差异化 ══════════════ -->
+<section class="diff-section fade-in">
+  <div class="section-header">
+    <div class="section-tag">为什么更准</div>
+    <h2 class="section-title">为什么比星座运势准确？</h2>
+    <div class="gold-line"></div>
+  </div>
+
+  <div class="diff-compare">
+    <div class="diff-row">
+      <div>
+        <div class="diff-label">通用星座运势</div>
+        <div class="diff-cell bad">仅12个星座分组<br>全球数亿人共用同一套</div>
+      </div>
+      <div class="diff-vs">vs</div>
+      <div>
+        <div class="diff-label">善缘每日天机</div>
+        <div class="diff-cell good">你的八字<br>八千万分之一的精准组合</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="diff-features">
+    <div class="diff-feat">
+      <div class="diff-feat-icon">🗓</div>
+      <div>每天根据当日干支流转，个性化推算今日吉凶节点</div>
+    </div>
+    <div class="diff-feat">
+      <div class="diff-feat-icon">💰</div>
+      <div><strong>财运</strong>独立分析 — 今日偏财、正财走向，最佳行动时机</div>
+    </div>
+    <div class="diff-feat">
+      <div class="diff-feat-icon">💕</div>
+      <div><strong>爱情</strong>独立分析 — 感情宫位今日能量，相处建议</div>
+    </div>
+    <div class="diff-feat">
+      <div class="diff-feat-icon">🌿</div>
+      <div><strong>事业 · 健康</strong> 双维度 — 今日适合进攻还是守势</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ Screen 3: 功能预览 ══════════════ -->
+<section class="features-section fade-in">
+  <div class="section-header">
+    <div class="section-tag">内容预览</div>
+    <h2 class="section-title">今日天机包含什么</h2>
+    <div class="gold-line"></div>
+  </div>
+
+  <div class="feature-cards">
+    <div class="feature-card">
+      <div class="feature-card-icon gold-bg">☀️</div>
+      <div class="feature-card-body">
+        <div class="feature-card-name">今日总运</div>
+        <div class="feature-card-stars">★★★★☆</div>
+        <div class="feature-card-desc">综合五行能量与流日干支，给出今日整体运势评分与一句核心提示</div>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-icon gold-bg">💰</div>
+      <div class="feature-card-body">
+        <div class="feature-card-name">财运走势 + 最佳行动时机</div>
+        <div class="feature-card-desc">今日偏财/正财走向分析，标出最有利的2-4小时窗口</div>
+        <div class="feature-card-preview">「今日午时前为财运高点，适合谈判/报价」</div>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-icon rose-bg">💕</div>
+      <div class="feature-card-body">
+        <div class="feature-card-name">感情运势 + 相处建议</div>
+        <div class="feature-card-desc">感情宫位今日能量，告诉你今天说什么、避什么</div>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-icon jade-bg">🌿</div>
+      <div class="feature-card-body">
+        <div class="feature-card-name">五行能量分布</div>
+        <div class="feature-card-desc">今日你的五行盈缺，补能量的颜色、食物、方位建议</div>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-card-icon gold-bg">🌙</div>
+      <div class="feature-card-body">
+        <div class="feature-card-name">明日预览</div>
+        <div class="feature-card-desc">提前看明天的关键节点，让你今晚做好准备</div>
+        <div class="feature-card-preview" style="color:var(--sub)">订阅解锁</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ Screen 4: 定价 ══════════════ -->
+<section class="pricing-section fade-in">
+  <div class="section-header">
+    <div class="section-tag">选择方案</div>
+    <h2 class="section-title">免费开始，随时升级</h2>
+    <div class="gold-line"></div>
+  </div>
+
+  <div class="plan-cards">
+    <div class="plan-card">
+      <div class="plan-name">免费体验</div>
+      <div class="plan-price free-tag">免费</div>
+      <div class="plan-items">
+        <div class="plan-item">今日基础运势（每天可查）</div>
+        <div class="plan-item">今日总运评分</div>
+        <div class="plan-item">财运简要提示</div>
+      </div>
+    </div>
+
+    <div class="plan-card featured">
+      <div class="plan-badge-recommend">最受欢迎</div>
+      <div class="plan-name">每日完整天机</div>
+      <div class="plan-price"><small>¥</small>9.90<sub>/月</sub></div>
+      <div class="plan-items">
+        <div class="plan-item">每日完整天机报告</div>
+        <div class="plan-item">财运 · 感情 · 事业 · 健康四维度</div>
+        <div class="plan-item">最佳行动时机（具体时辰）</div>
+        <div class="plan-item">五行能量分布 + 补能建议</div>
+        <div class="plan-item">明日预览提前看</div>
+        <div class="plan-item">历史运势记录（30天）</div>
+      </div>
+    </div>
+  </div>
+
+  <a href="/pages/daily.html" class="btn-pricing">免费开始</a>
+</section>
+
+<!-- ══════════════ Screen 5: 社会证明 + 最终CTA ══════════════ -->
+<section class="proof-section fade-in">
+  <div class="section-header">
+    <div class="section-tag">真实用户</div>
+    <h2 class="section-title">他们每天都在用</h2>
+    <div class="gold-line"></div>
+  </div>
+
+  <div class="review-cards">
+    <div class="review-card">
+      <div class="review-header">
+        <div class="review-avatar">🌸</div>
+        <div class="review-meta">
+          <div class="review-name">晨曦妈</div>
+          <div class="review-location">🇨🇦 多伦多</div>
+        </div>
+        <div class="review-stars">★★★★★</div>
+      </div>
+      <div class="review-text">我每天早上起来第一件事就是看今日天机，比看朋友圈还重要</div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-header">
+        <div class="review-avatar">☁️</div>
+        <div class="review-meta">
+          <div class="review-name">云淡风轻</div>
+          <div class="review-location">🇨🇦 温哥华</div>
+        </div>
+        <div class="review-stars">★★★★★</div>
+      </div>
+      <div class="review-text">财运那栏真的很准，上周说有小财，果然客户提前付款了</div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-header">
+        <div class="review-avatar">🍑</div>
+        <div class="review-meta">
+          <div class="review-name">小桃</div>
+          <div class="review-location">🇺🇸 纽约</div>
+        </div>
+        <div class="review-stars">★★★★★</div>
+      </div>
+      <div class="review-text">感情运势帮我避开了一次争吵，那天它说今天说话要注意</div>
+    </div>
+
+    <div class="review-card">
+      <div class="review-header">
+        <div class="review-avatar">🌊</div>
+        <div class="review-meta">
+          <div class="review-name">阿辉</div>
+          <div class="review-location">🇸🇬 新加坡</div>
+        </div>
+        <div class="review-stars">★★★★★</div>
+      </div>
+      <div class="review-text">每天早上8点前看，已经坚持3个月了</div>
+    </div>
+  </div>
+
+  <div class="final-cta">
+    <h2 class="final-cta-title">今天的天机，<span style="color:var(--gold)">等你来看</span></h2>
+    <p class="final-cta-sub">基于你的八字，每天专属推算</p>
+    <a href="/pages/daily.html" class="btn-pricing">立即查看今日天机</a>
+    <p class="final-hint">免费 · 无需注册即可体验</p>
+  </div>
+</section>
+
+<!-- ══════════════ Footer ══════════════ -->
+<footer>
+  <p>善缘 · 东方AI命理</p>
+  <p style="margin-top:6px">
+    <a href="/pages/privacy.html" style="color:rgba(80,60,30,.4);text-decoration:underline">隐私政策</a>
+    &nbsp;·&nbsp;
+    <a href="/pages/tos.html" style="color:rgba(80,60,30,.4);text-decoration:underline">服务条款</a>
+    &nbsp;·&nbsp;
+    <a href="/pages/refund.html" style="color:rgba(80,60,30,.4);text-decoration:underline">退款政策</a>
+  </p>
+  <p style="margin-top:8px;font-size:8px;color:rgba(80,60,30,.25)">本服务提供文化娱乐与参考信息，不构成任何决策建议</p>
+</footer>
+
+<script>
+// ── 日历显示今日 ──
+(function(){
+  const now = new Date();
+  const months = ['一月','二月','三月','四月','五月','六月','七月','八月','九月','十月','十一月','十二月'];
+  document.getElementById('calMonth').textContent = months[now.getMonth()];
+  document.getElementById('calDay').textContent = now.getDate();
+})();
+
+// ── 滚动淡入 ──
+(function(){
+  const els = document.querySelectorAll('.fade-in');
+  const io = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting) e.target.classList.add('visible');
+    });
+  },{threshold:0.12});
+  els.forEach(el=>io.observe(el));
+})();
+</script>
+</body>
+</html>
