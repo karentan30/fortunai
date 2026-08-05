@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ShenYuan · Seu Relatório BaZi do Destino</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--gold:#c9a84c;--gold-l:#e0c875;--gold-d:#8a6420;--bg:#0d0618;--text:rgba(232,220,200,.92);--sub:rgba(200,185,155,.5);--r:14px}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;line-height:1.9}
+a{color:var(--gold);text-decoration:none}
+
+#loading{position:fixed;inset:0;background:var(--bg);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px}
+#loading.hidden{display:none}
+.load-stars{font-size:40px;margin-bottom:20px;animation:spin 4s linear infinite}
+@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.load-title{color:var(--gold);font-size:20px;letter-spacing:3px;margin-bottom:12px;font-family:'Cormorant Garamond',serif;font-weight:300}
+.load-sub{color:rgba(255,255,255,.4);font-size:13px;margin-bottom:32px}
+.load-bar-wrap{width:240px;height:4px;background:rgba(201,168,76,.15);border-radius:2px;overflow:hidden;margin:0 auto}
+.load-bar{height:100%;background:linear-gradient(90deg,#b8922f,#e0c875);border-radius:2px;width:0;transition:width .4s ease}
+.load-tip{color:rgba(255,255,255,.3);font-size:11px;margin-top:16px;min-height:18px;letter-spacing:.05em}
+
+#error-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:8999;align-items:center;justify-content:center;text-align:center;padding:32px;flex-direction:column;gap:16px}
+#error-screen.show{display:flex}
+.err-title{color:#e87060;font-size:18px}
+.err-sub{color:rgba(255,255,255,.5);font-size:14px;max-width:280px}
+.err-btn{background:var(--gold);color:#0a0814;border:none;padding:12px 32px;border-radius:50px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px}
+
+#report{display:none;max-width:760px;margin:0 auto;padding:48px 28px 80px}
+#report.show{display:block}
+
+.rp-cover{text-align:center;padding:64px 0 48px;border-bottom:1px solid rgba(201,168,76,.2);margin-bottom:48px}
+.rp-brand{font-size:10px;letter-spacing:6px;color:rgba(201,168,76,.5);margin-bottom:24px}
+.rp-name{font-size:38px;color:#fff;font-weight:300;letter-spacing:6px;margin-bottom:12px;font-family:'Cormorant Garamond',serif}
+.rp-date{color:rgba(255,255,255,.4);font-size:13px;letter-spacing:2px;margin-bottom:24px}
+
+.rp-section{margin-top:52px}
+.rp-section h2,.rp-section h3{color:var(--gold);font-family:'Cormorant Garamond',serif;letter-spacing:2px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(201,168,76,.12);font-weight:400}
+.rp-section h2{font-size:22px}
+.rp-section h3{font-size:17px;border-bottom:none;padding-bottom:0;margin-top:20px}
+.rp-section p{margin-bottom:14px;font-size:15px;line-height:1.95}
+.rp-section strong,.rp-section b{color:var(--gold-l)}
+.rp-section ul,.rp-section ol{padding-left:20px;margin-bottom:14px}
+.rp-section li{margin-bottom:6px;font-size:15px}
+
+.locked-section{filter:blur(5px);pointer-events:none;user-select:none;max-height:200px;overflow:hidden}
+.paywall-gate{background:linear-gradient(135deg,#1a1030,#0d0618);border:1px solid rgba(201,168,76,.3);border-radius:16px;padding:36px 24px;text-align:center;margin:48px 0}
+.gate-icon{font-size:36px;margin-bottom:10px}
+.gate-title{color:var(--gold);font-size:18px;font-weight:400;letter-spacing:2px;margin-bottom:8px;font-family:'Cormorant Garamond',serif}
+.gate-desc{color:rgba(255,255,255,.55);font-size:13px;margin-bottom:20px}
+.gate-price{color:#fff;font-size:28px;font-weight:300;margin-bottom:6px;font-family:'Cormorant Garamond',serif}
+.gate-orig{color:rgba(255,255,255,.3);font-size:13px;text-decoration:line-through;margin-left:6px}
+.gate-btn{background:linear-gradient(135deg,#b8922f,#c9a84c,#e0c875);color:#0a0814;border:none;padding:14px 0;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;display:block;width:100%;max-width:260px;margin:0 auto 12px}
+.gate-alt{color:rgba(201,168,76,.6);font-size:12px;cursor:pointer;text-decoration:underline;display:block}
+
+#pay-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center}
+#pay-modal.open{display:flex}
+.pay-box{background:#1a1030;border:1px solid rgba(201,168,76,.35);border-radius:20px;padding:32px 24px;text-align:center;max-width:320px;width:90%}
+.pay-title{color:var(--gold);font-size:15px;font-weight:500;letter-spacing:1px;margin-bottom:4px}
+.pay-amount{color:#fff;font-size:32px;font-weight:300;margin-bottom:16px;font-family:'Cormorant Garamond',serif}
+#pay-qr-wrap{width:190px;height:190px;background:#fff;border-radius:12px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#pay-qr-img{width:100%;height:100%;object-fit:contain}
+.pay-status{color:rgba(255,255,255,.5);font-size:12px;margin-bottom:14px;min-height:18px}
+.pay-close{color:rgba(255,255,255,.35);font-size:12px;cursor:pointer;text-decoration:underline}
+
+.share-bar{text-align:center;margin:48px 0 24px;padding:24px;border:1px solid rgba(201,168,76,.1);border-radius:12px}
+.share-bar p{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:14px}
+.share-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.share-btn{padding:10px 22px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:none}
+.share-copy{background:rgba(201,168,76,.15);color:var(--gold);border:1px solid rgba(201,168,76,.3)}
+
+.back-bar{text-align:center;padding:12px;color:rgba(255,255,255,.3);font-size:12px}
+.back-bar a{color:rgba(201,168,76,.5)}
+
+.aigc-bar{text-align:center;padding:16px;font-size:10px;color:rgba(200,185,155,.35);letter-spacing:.06em;line-height:1.8;border-top:1px solid rgba(201,168,76,.06);margin-top:32px}
+
+@media(max-width:600px){
+  #report{padding:32px 16px 80px}
+  .rp-name{font-size:28px}
+  .rp-section h2{font-size:18px}
+}
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="load-stars">✦</div>
+  <div class="load-title">Lendo Seu Destino</div>
+  <div class="load-sub" id="load-name-hint">Calculando seus Quatro Pilares...</div>
+  <div class="load-bar-wrap"><div class="load-bar" id="load-bar"></div></div>
+  <div class="load-tip" id="load-tip">Mapeando o pilar do ano...</div>
+</div>
+
+<div id="error-screen">
+  <div class="err-title">⚠️ Algo deu errado</div>
+  <div class="err-sub" id="err-msg">Nosso leitor de IA está temporariamente ocupado. Por favor, tente novamente.</div>
+  <button class="err-btn" onclick="history.back()">← Voltar</button>
+</div>
+
+<div id="report">
+  <div class="rp-cover">
+    <div class="rp-brand">S H E N Y U A N · B A Z I · D E S T I N O</div>
+    <div class="rp-name" id="rp-name">—</div>
+    <div class="rp-date" id="rp-date">—</div>
+    <div style="font-size:10px;letter-spacing:.15em;color:rgba(201,168,76,.35);margin-top:8px">🤖 GERADO POR IA · PARA REFERÊNCIA E ENTRETENIMENTO · NÃO CONSTITUI CONSELHO PROFISSIONAL</div>
+  </div>
+
+  <div id="free-content"></div>
+
+  <div id="gate-a" class="paywall-gate">
+    <div class="gate-icon">🔮</div>
+    <h3 class="gate-title">Desbloqueie Seu Relatório Completo</h3>
+    <p class="gate-desc">Amor & Casamento · Riqueza & Finanças · Carreira · Ciclos de 10 Anos · Previsão Anual</p>
+    <div class="gate-price">R$14,90 <span class="gate-orig">R$99</span></div>
+    <button class="gate-btn" onclick="syPay('a','wechat')">🟢 Pagar via WeChat</button>
+    <span class="gate-alt" onclick="syPay('a','alipay')">Pagar via Alipay</span>
+  </div>
+
+  <div id="locked-content" class="locked-section"></div>
+
+  <div class="share-bar" id="share-bar" style="display:none">
+    <p>Seu relatório BaZi está pronto · Compartilhe com um amigo</p>
+    <div class="share-btns">
+      <button class="share-btn share-copy" onclick="copyLink()">Copiar Link</button>
+    </div>
+  </div>
+
+  <div class="back-bar"><a href="lp-master-PT-BR.html">← Reinserir dados de nascimento</a> · <a href="life-events.html">Consultar um Mestre</a></div>
+
+  <div class="aigc-bar">Conteúdo gerado por IA · Apenas para fins de entretenimento e referência · Não constitui aconselhamento médico, jurídico ou financeiro<br>ShenYuan · Metafísica com IA · Todos os direitos reservados</div>
+</div>
+
+<div id="pay-modal">
+  <div class="pay-box">
+    <div class="pay-title" id="pay-title">Escaneie para Pagar</div>
+    <div class="pay-amount" id="pay-amount">R$14,90</div>
+    <div id="pay-qr-wrap"><img id="pay-qr-img" src="" alt="QR Code"></div>
+    <p class="pay-status" id="pay-status">Gerando QR code...</p>
+    <span class="pay-close" onclick="syPayClose()">✕ Cancelar</span>
+  </div>
+</div>
+
+<script>
+var SY_API = (location.hostname==='localhost'||location.hostname==='127.0.0.1') ? 'http://localhost:3021' : '';
+var TIME_MAP = {子时:0,丑时:1,寅时:3,卯时:5,辰时:7,巳时:9,午时:11,未时:13,申时:15,酉时:17,戌时:19,亥时:21};
+var LOAD_TIPS = ['Mapeando pilares do ano e mês...','Analisando seu Mestre do Dia...','Calculando balanço dos Cinco Elementos...','Lendo seus ciclos de sorte...','Finalizando seu relatório...'];
+var _tipIdx = 0, _loadPct = 0, _syPoll = null, _syMethod = 'wechat';
+
+function qs(name){ return (new URLSearchParams(location.search).get(name)||'').trim(); }
+
+function startLoadAnim(){
+  var bar = document.getElementById('load-bar');
+  var tip = document.getElementById('load-tip');
+  var targets = [15,35,55,75,90];
+  var idx = 0;
+  var iv = setInterval(function(){
+    if(idx < targets.length){ bar.style.width = targets[idx]+'%'; tip.textContent = LOAD_TIPS[idx]||''; idx++; }
+  }, 5000);
+  return function(){ clearInterval(iv); bar.style.width='100%'; };
+}
+
+function md2html(text){
+  if(!text) return '';
+  return text
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/^#{1,3}\s+(.+)$/gm,'<h3>$1</h3>')
+    .replace(/^[-*]\s+(.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>[\s\S]+?<\/li>)/g,'<ul>$1</ul>')
+    .replace(/\n{2,}/g,'</p><p>')
+    .replace(/^(?!<[hul])(.+)$/gm,'<p>$1</p>')
+    .replace(/<p><\/p>/g,'')
+    .replace(/(<\/ul>)\s*<ul>/g,'');
+}
+
+function parseSections(text){
+  if(!text) return '';
+  var chunks = text.split(/\n(?=(?:\d+\.|[📜🔥🌊🟤💰💕💼🏥📅🔮✨🌿🎯📖🔑💌🌟⭐]))/);
+  return chunks.map(function(chunk){
+    chunk = chunk.trim();
+    if(!chunk) return '';
+    var firstLine = chunk.split('\n')[0];
+    var rest = chunk.slice(firstLine.length).trim();
+    return '<div class="rp-section"><h2>'+firstLine+'</h2>'+md2html(rest)+'</div>';
+  }).join('');
+}
+
+function renderReport(reading, name, dateStr, timeStr){
+  document.getElementById('rp-name').textContent = name || 'Seu Mapa';
+  document.getElementById('rp-date').textContent = dateStr + (timeStr ? ' · ' + timeStr : '');
+  var parts = reading.split(/---LOCKED---/i);
+  var freeText = parts[0] || '';
+  var lockedText = parts[1] || '';
+  document.getElementById('free-content').innerHTML = parseSections(freeText);
+  if(lockedText.trim()){
+    document.getElementById('locked-content').innerHTML = parseSections(lockedText);
+    syInitUnlock();
+  } else {
+    document.getElementById('gate-a').style.display='none';
+    document.getElementById('locked-content').style.display='none';
+  }
+  document.getElementById('share-bar').style.display='block';
+}
+
+function syInitUnlock(){
+  var orderA = localStorage.getItem('sy_unlock_a');
+  if(orderA){
+    document.getElementById('gate-a').style.display='none';
+    document.getElementById('locked-content').classList.remove('locked-section');
+  }
+}
+
+function syPay(tier, method){
+  _syMethod = method;
+  var product = tier==='a' ? 'report_unlock_a' : 'report_unlock_b';
+  var amount = tier==='a' ? 'R$14,90' : 'R$29,90';
+  document.getElementById('pay-title').textContent = method==='wechat' ? 'Escaneie com WeChat' : 'Escaneie com Alipay';
+  document.getElementById('pay-amount').textContent = amount;
+  document.getElementById('pay-status').textContent = 'Gerando QR code...';
+  document.getElementById('pay-qr-img').src = '';
+  document.getElementById('pay-modal').classList.add('open');
+  var endpoint = method==='alipay' ? (SY_API+'/pay/alipay/qr') : (SY_API+'/pay/wechat/create');
+  fetch(endpoint, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({product: product, method: method})
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if(!d.ok){ document.getElementById('pay-status').textContent='Pagamento falhou. Tente novamente.'; return; }
+    var codeUrl = d.code_url || d.qr_code;
+    var oid = d.out_trade_no || d.order_no;
+    if(codeUrl){
+      document.getElementById('pay-qr-img').src='https://api.qrserver.com/v1/create-qr-code/?size=190x190&data='+encodeURIComponent(codeUrl);
+      document.getElementById('pay-status').textContent = method==='wechat' ? 'Escaneie o QR com WeChat' : 'Escaneie o QR com Alipay';
+    }
+    if(_syPoll) clearInterval(_syPoll);
+    var queryUrl = method==='alipay'
+      ? SY_API+'/pay/alipay/query?out_trade_no='+encodeURIComponent(oid)
+      : SY_API+'/pay/wechat/query?out_trade_no='+encodeURIComponent(oid);
+    _syPoll = setInterval(function(){
+      fetch(queryUrl).then(function(r){ return r.json(); }).then(function(s){
+        if(s.status==='paid'){ clearInterval(_syPoll); _syPoll=null; syUnlockPaid(tier, oid); }
+      }).catch(function(){});
+    }, 3000);
+  }).catch(function(){
+    document.getElementById('pay-status').textContent='Erro de rede. Tente novamente.';
+  });
+}
+
+function syUnlockPaid(tier, orderNo){
+  document.getElementById('pay-status').textContent='✅ Pagamento confirmado!';
+  setTimeout(function(){
+    document.getElementById('pay-modal').classList.remove('open');
+    localStorage.setItem('sy_unlock_'+tier, orderNo);
+    if(tier==='a'){
+      document.getElementById('gate-a').style.display='none';
+      document.getElementById('locked-content').classList.remove('locked-section');
+    }
+  }, 1500);
+}
+
+function syPayClose(){
+  if(_syPoll){ clearInterval(_syPoll); _syPoll=null; }
+  document.getElementById('pay-modal').classList.remove('open');
+}
+
+function copyLink(){
+  navigator.clipboard.writeText(location.href).then(function(){ alert('Link copiado!'); }).catch(function(){ alert(location.href); });
+}
+
+(function(){
+  var name = qs('name') || 'Seu Mapa';
+  var dateStr = qs('date');
+  var timeStr = qs('time');
+  var city = qs('city');
+  var gender = qs('gender') || 'female';
+  var ref = qs('ref');
+  if(ref) try{ localStorage.setItem('sy_ref_code', ref.toUpperCase()); }catch(e){}
+  if(!dateStr){ document.getElementById('err-msg').textContent='Data de nascimento ausente. Por favor, volte e preencha o formulário.'; document.getElementById('error-screen').classList.add('show'); document.getElementById('loading').classList.add('hidden'); return; }
+  document.getElementById('load-name-hint').textContent = 'Preparando o mapa de '+name+'…';
+  var stopAnim = startLoadAnim();
+  var parts = dateStr.split('-');
+  var birthYear = parseInt(parts[0])||0;
+  var birthMonth = parseInt(parts[1])||0;
+  var birthDay = parseInt(parts[2])||0;
+  var birthHour = timeStr ? (TIME_MAP[timeStr] !== undefined ? TIME_MAP[timeStr] : parseInt(timeStr)||undefined) : undefined;
+  if(!birthYear || !birthMonth || !birthDay){ document.getElementById('err-msg').textContent='Formato de data inválido. Por favor, volte.'; document.getElementById('error-screen').classList.add('show'); document.getElementById('loading').classList.add('hidden'); return; }
+  fetch(SY_API+'/api/bazi', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ birthYear: birthYear, birthMonth: birthMonth, birthDay: birthDay,
+      birthHour: birthHour, gender: gender, lang: 'pt-br', name: name, city: city })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    stopAnim();
+    document.getElementById('loading').classList.add('hidden');
+    if(d.error){ document.getElementById('err-msg').textContent = d.error; document.getElementById('error-screen').classList.add('show'); return; }
+    document.getElementById('report').classList.add('show');
+    renderReport(d.reading || '', name, dateStr, timeStr);
+  }).catch(function(e){
+    stopAnim();
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('err-msg').textContent = 'Erro de rede. Verifique sua conexão e tente novamente.';
+    document.getElementById('error-screen').classList.add('show');
+  });
+})();
+</script>
+</body>
+</html>
