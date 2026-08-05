@@ -1898,7 +1898,7 @@
 <script>
   // ── 善缘支付 Hub 接入 ──
   var SY_API = (location.hostname==='localhost'||location.hostname==='127.0.0.1')
-    ? 'http://localhost:3021/api' : '/api';
+    ? 'http://localhost:3021' : '';
   var _syPoll = null, _syMethod = 'wechat';
 
   function syInitUnlock() {
@@ -1941,7 +1941,7 @@
 
   function syStartPoll(orderNo, tier) {
     if (_syPoll) clearInterval(_syPoll);
-    var qep = _syMethod==='alipay' ? SY_API+'/pay/alipay/query' : SY_API+'/pay/wechat/query';
+    var qep = _syMethod==='alipay' ? SY_API+'/pay/alipay/query' : SY_API+'/pay/wechat/query';  // 无 /api 前缀
     _syPoll = setInterval(function(){
       fetch(qep+'?out_trade_no='+encodeURIComponent(orderNo))
       .then(function(r){return r.json();}).then(function(d){
