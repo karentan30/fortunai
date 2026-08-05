@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>内容Loop系统 · 善缘五项目</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',sans-serif;background:#f5f3ef;color:#1a1a18;line-height:1.6;font-size:14px}
+
+/* today banner */
+.today-banner{background:linear-gradient(135deg,#3d9e82,#2d7a62);color:#fff;padding:12px 24px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.today-banner strong{font-size:13px;letter-spacing:.05em;white-space:nowrap}
+.today-tasks{display:flex;gap:10px;flex-wrap:wrap}
+.today-task{background:rgba(255,255,255,.18);border-radius:20px;padding:4px 14px;font-size:12px;display:flex;align-items:center;gap:6px}
+.today-task::before{content:'○';font-size:10px}
+
+/* nav */
+.nav{background:#1a1a18;color:#fff;padding:14px 24px;position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 2px 16px rgba(0,0,0,.3)}
+.nav h1{font-size:16px;font-weight:800;letter-spacing:.05em;color:#3d9e82}
+.nav-links{display:flex;gap:8px;flex-wrap:wrap}
+.nav-links a{color:rgba(255,255,255,.7);text-decoration:none;font-size:11px;padding:4px 10px;border-radius:10px;background:rgba(255,255,255,.08)}
+.nav-links a:hover{background:rgba(61,158,130,.4);color:#fff}
+
+.container{max-width:1200px;margin:0 auto;padding:32px 20px}
+.section{margin-bottom:64px}
+.section-title{font-size:20px;font-weight:800;margin-bottom:4px;padding-bottom:12px;border-bottom:3px solid #3d9e82;display:flex;align-items:center;gap:10px}
+.section-subtitle{font-size:12px;color:#6a6a64;margin-bottom:24px;line-height:1.6}
+
+/* Loop diagram */
+.loop-diagram{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0;margin:24px 0;padding:32px;background:#1a1a18;border-radius:20px;position:relative;overflow:hidden}
+.loop-diagram::before{content:'∞';position:absolute;font-size:300px;color:rgba(61,158,130,.04);right:-40px;top:50%;transform:translateY(-50%);line-height:1}
+.loop-node{display:flex;flex-direction:column;align-items:center;position:relative;z-index:1}
+.loop-circle{width:90px;height:90px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:800;text-align:center;line-height:1.3;border:2px solid}
+.loop-circle .icon{font-size:22px;margin-bottom:4px}
+.loop-label{font-size:10px;color:rgba(255,255,255,.5);margin-top:8px;text-align:center;max-width:90px;line-height:1.4}
+.loop-arrow{color:#3d9e82;font-size:20px;margin:0 8px;align-self:center;position:relative;z-index:1}
+.lc-1{background:rgba(61,158,130,.15);border-color:#3d9e82;color:#3d9e82}
+.lc-2{background:rgba(201,168,76,.15);border-color:#c9a84c;color:#c9a84c}
+.lc-3{background:rgba(100,160,255,.15);border-color:#64a0ff;color:#64a0ff}
+.lc-4{background:rgba(255,100,100,.15);border-color:#ff6464;color:#ff6464}
+.lc-5{background:rgba(200,100,255,.15);border-color:#c864ff;color:#c864ff}
+.lc-6{background:rgba(61,158,130,.15);border-color:#3d9e82;color:#3d9e82}
+.loop-back{text-align:center;margin-top:16px;color:rgba(61,158,130,.6);font-size:11px;position:relative;z-index:1;width:100%}
+
+/* cards */
+.card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:16px}
+.card h3{font-size:14px;font-weight:800;margin-bottom:12px;color:#1a1a18}
+.card h4{font-size:13px;font-weight:700;margin-bottom:8px;color:#3d9e82}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+
+/* SOP day blocks */
+.sop-day{border-radius:14px;overflow:hidden;margin-bottom:16px}
+.sop-day-header{padding:14px 18px;display:flex;align-items:center;gap:10px}
+.sop-day-header .day-badge{font-size:13px;font-weight:800;padding:4px 14px;border-radius:20px;white-space:nowrap}
+.sop-day-header .day-time{font-size:12px;opacity:.8}
+.sop-day-body{background:#fff;padding:16px 18px}
+.sop-step{display:flex;gap:12px;margin-bottom:12px;align-items:flex-start}
+.sop-step:last-child{margin-bottom:0}
+.sop-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;margin-top:2px}
+.sop-text{flex:1;font-size:12px;line-height:1.6}
+.sop-text strong{display:block;color:#1a1a18;margin-bottom:2px}
+
+.mon .sop-day-header{background:#e8f5f0}
+.mon .day-badge{background:#3d9e82;color:#fff}
+.mon .sop-num{background:#3d9e82;color:#fff}
+.wed .sop-day-header{background:#fff8e1}
+.wed .day-badge{background:#c9a84c;color:#fff}
+.wed .sop-num{background:#c9a84c;color:#fff}
+.daily .sop-day-header{background:#f0eafa}
+.daily .day-badge{background:#8b5cf6;color:#fff}
+.daily .sop-num{background:#8b5cf6;color:#fff}
+
+/* formula cards */
+.formula-card{border-radius:14px;overflow:hidden}
+.formula-header{padding:14px 18px;font-size:14px;font-weight:800}
+.formula-body{background:#fff;padding:16px 18px}
+.formula-row{display:flex;gap:10px;margin-bottom:10px;align-items:flex-start;font-size:12px}
+.formula-row:last-child{margin-bottom:0}
+.formula-label{font-weight:700;white-space:nowrap;min-width:60px}
+.formula-val{flex:1;line-height:1.6;color:#3a3a36}
+.rednote .formula-header{background:#fff0f2;color:#ff2442}
+.tiktok .formula-header{background:#f0f0f0;color:#010101}
+.ig .formula-header{background:#f5f0fa;color:#7c3aed}
+
+/* project table */
+.proj-tbl{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.proj-tbl th{background:#1a1a18;color:#fff;padding:12px 14px;text-align:left;font-size:12px;font-weight:700}
+.proj-tbl td{padding:11px 14px;border-bottom:1px solid #f0ede8;font-size:12px;vertical-align:top}
+.proj-tbl tr:last-child td{border-bottom:none}
+.proj-tbl tr:hover td{background:#faf8f5}
+.proj-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
+
+/* data review table */
+.review-section{margin-bottom:24px}
+.review-title{font-size:13px;font-weight:800;color:#1a1a18;margin-bottom:10px;padding:8px 12px;background:#f5f3ef;border-radius:8px;display:flex;align-items:center;gap:6px}
+.review-tbl{width:100%;border-collapse:collapse;font-size:12px}
+.review-tbl th{background:#3d9e82;color:#fff;padding:9px 12px;text-align:left;font-weight:700}
+.review-tbl td{padding:9px 12px;border-bottom:1px solid #f0ede8;vertical-align:top}
+.review-tbl .input-cell{background:#fffef5;border:1px dashed #c9a84c;border-radius:4px;min-height:28px;min-width:80px}
+.review-tbl tr:last-child td{border-bottom:none}
+
+/* topic bank */
+.topic-source{display:flex;gap:14px;margin-bottom:14px;align-items:flex-start}
+.topic-icon{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.topic-content{flex:1}
+.topic-content h4{font-size:13px;font-weight:700;margin-bottom:4px}
+.topic-content p{font-size:12px;color:#4a4a46;line-height:1.6}
+
+/* checklist */
+.checklist{list-style:none}
+.checklist li{display:flex;gap:10px;padding:9px 12px;border-bottom:1px solid #f0ede8;font-size:12px;align-items:flex-start}
+.checklist li:last-child{border-bottom:none}
+.checklist li::before{content:'☐';font-size:16px;color:#3d9e82;flex-shrink:0;line-height:1.2}
+.checklist li.warn::before{color:#c9a84c}
+.checklist li.danger::before{color:#dc3545}
+.check-cat{font-size:10px;font-weight:700;letter-spacing:.05em;color:#8a8a84;padding:8px 12px 4px;text-transform:uppercase}
+
+/* monthly targets */
+.target-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.target-card{background:#fff;border-radius:12px;padding:16px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.target-num{font-size:32px;font-weight:800;line-height:1}
+.target-label{font-size:11px;color:#6a6a64;margin-top:4px}
+.target-time{font-size:10px;color:#3d9e82;margin-top:6px;font-weight:700}
+
+/* alerts */
+.tip{background:#e8f5f0;border-radius:10px;padding:13px 16px;font-size:12px;color:#1d6b50;margin-top:12px;border-left:4px solid #3d9e82;line-height:1.6}
+.warn-box{background:#fff8e1;border-radius:10px;padding:13px 16px;font-size:12px;color:#7a5c00;margin-top:12px;border-left:4px solid #c9a84c;line-height:1.6}
+
+/* decision tree */
+.dtree{font-size:12px;line-height:1.8}
+.dtree-q{font-weight:700;color:#1a1a18;margin-top:12px}
+.dtree-y{color:#3d9e82;padding-left:16px}
+.dtree-n{color:#dc3545;padding-left:16px}
+.dtree-action{background:#f5f3ef;border-radius:6px;padding:4px 10px;display:inline-block;margin-left:4px;font-size:11px}
+
+@media(max-width:768px){
+  .grid-2,.grid-3,.target-grid{grid-template-columns:1fr}
+  .loop-diagram{padding:20px 12px}
+  .loop-circle{width:70px;height:70px;font-size:10px}
+  .loop-circle .icon{font-size:18px}
+  .loop-arrow{font-size:14px;margin:0 4px}
+}
+@media print{
+  .nav,.today-banner{display:none}
+  .section{page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<!-- Today Banner -->
+<div class="today-banner">
+  <strong>📌 今日三件事</strong>
+  <div class="today-tasks">
+    <span class="today-task">发今日3条定时内容</span>
+    <span class="today-task">回复昨日评论区（30分钟内）</span>
+    <span class="today-task">记录今日数据到复盘表</span>
+  </div>
+</div>
+
+<!-- Nav -->
+<div class="nav">
+  <h1>内容Loop系统</h1>
+  <div class="nav-links">
+    <a href="#loop">Loop总览</a>
+    <a href="#sop">每周SOP</a>
+    <a href="#formula">爆款公式</a>
+    <a href="#projects">项目分配</a>
+    <a href="#review">数据复盘</a>
+    <a href="#topicbank">话题库</a>
+    <a href="#checklist">质检清单</a>
+    <a href="#reddit" style="background:rgba(255,69,0,.35)">🔴 Reddit引流</a>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ===== SECTION 1: LOOP总览 ===== -->
+<div class="section" id="loop">
+  <div class="section-title">♾️ 内容Loop总览</div>
+  <div class="section-subtitle">持续运转的内容引擎 · 每个环节形成闭环 · 数据驱动下一批内容</div>
+
+  <div class="loop-diagram">
+    <div class="loop-node">
+      <div class="loop-circle lc-1"><span class="icon">🔍</span>SEO研究</div>
+      <div class="loop-label">AI辅助<br>周一 10分钟</div>
+    </div>
+    <div class="loop-arrow">→</div>
+    <div class="loop-node">
+      <div class="loop-circle lc-2"><span class="icon">✍️</span>内容生产</div>
+      <div class="loop-label">AI写文案<br>周三 30分钟</div>
+    </div>
+    <div class="loop-arrow">→</div>
+    <div class="loop-node">
+      <div class="loop-circle lc-3"><span class="icon">📅</span>发布排期</div>
+      <div class="loop-label">平台定时<br>一次排7天</div>
+    </div>
+    <div class="loop-arrow">→</div>
+    <div class="loop-node">
+      <div class="loop-circle lc-4"><span class="icon">📊</span>数据复盘</div>
+      <div class="loop-label">Karen看数据<br>周一 20分钟</div>
+    </div>
+    <div class="loop-arrow">→</div>
+    <div class="loop-node">
+      <div class="loop-circle lc-5"><span class="icon">🚀</span>爆款分析</div>
+      <div class="loop-label">AI辅助分析<br>周一 10分钟</div>
+    </div>
+    <div class="loop-arrow">→</div>
+    <div class="loop-node">
+      <div class="loop-circle lc-6"><span class="icon">🔁</span>下一批</div>
+      <div class="loop-label">复制爆款<br>翻倍产出</div>
+    </div>
+    <div class="loop-back">↩ 循环 · 每周一次完整迭代 · 每月至少1个爆款</div>
+  </div>
+
+  <div class="grid-3" style="margin-top:16px">
+    <div class="card">
+      <h4>⏱ 每周总投入</h4>
+      <div style="font-size:13px;line-height:2">
+        周一复盘：<strong>30分钟</strong><br>
+        周三产内容：<strong>60分钟</strong><br>
+        每天互动：<strong>5分钟 × 7</strong><br>
+        <hr style="border:none;border-top:1px solid #f0ede8;margin:8px 0">
+        <strong style="color:#3d9e82">合计 ≈ 2.5小时/周</strong>
+      </div>
+    </div>
+    <div class="card">
+      <h4>🎯 每月最低目标</h4>
+      <div style="font-size:12px;line-height:2">
+        发布内容：<strong>90条</strong>（3/天）<br>
+        自然涨粉：<strong>500+</strong><br>
+        爆款（1万+播放）：<strong>≥1条</strong><br>
+        网站引流点击：<strong>200+</strong><br>
+        付费转化：<strong>≥5单</strong>
+      </div>
+    </div>
+    <div class="card">
+      <h4>📈 评判爆款标准</h4>
+      <div style="font-size:12px;line-height:2">
+        小红书：点赞 <strong>&gt;500</strong> 或收藏 <strong>&gt;300</strong><br>
+        TikTok：播放 <strong>&gt;1万</strong> 或完播率 <strong>&gt;30%</strong><br>
+        Instagram：保存 <strong>&gt;100</strong> 或触达 <strong>&gt;5000</strong><br>
+        <span style="color:#3d9e82;font-weight:700">爆款 = 立刻复制3条同款</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 2: 每周SOP ===== -->
+<div class="section" id="sop">
+  <div class="section-title">📋 每周内容SOP</div>
+  <div class="section-subtitle">固定节奏 · 降低决策负担 · 周一看数 · 周三产内容 · 每天5分钟互动</div>
+
+  <div class="sop-day mon">
+    <div class="sop-day-header">
+      <span class="day-badge">周一</span>
+      <span class="day-time">⏱ 30分钟 · 数据复盘日</span>
+    </div>
+    <div class="sop-day-body">
+      <div class="sop-step">
+        <div class="sop-num">1</div>
+        <div class="sop-text"><strong>打开各平台后台，记录本周数据</strong>小红书：点赞/收藏/评论/涨粉；TikTok：播放/完播率/涨粉；IG：触达/保存/涨粉。填入底部复盘表格。</div>
+      </div>
+      <div class="sop-step">
+        <div class="sop-num">2</div>
+        <div class="sop-text"><strong>找出最好的1-2条内容</strong>数字最高的是哪条？截图保存。问自己：标题？钩子？话题？发布时间？格式？</div>
+      </div>
+      <div class="sop-step">
+        <div class="sop-num">3</div>
+        <div class="sop-text"><strong>找出最差的1条</strong>哪条没有推流？分析原因（封面不吸引？话题太小众？发布时间错？），下周避开。</div>
+      </div>
+      <div class="sop-step">
+        <div class="sop-num">4</div>
+        <div class="sop-text"><strong>从评论区挖5个话题</strong>用户在评论什么问题？直接回答那个问题做成下周一条内容——用户提问=免费选题。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sop-day wed">
+    <div class="sop-day-header">
+      <span class="day-badge">周三</span>
+      <span class="day-time">⏱ 60分钟 · 内容生产日</span>
+    </div>
+    <div class="sop-day-body">
+      <div class="sop-step">
+        <div class="sop-num">1</div>
+        <div class="sop-text"><strong>基于周一爆款，产出3-5条同类内容</strong>爆款话题换角度、换数字、换人群，同一个公式出3条变体。</div>
+      </div>
+      <div class="sop-step">
+        <div class="sop-num">2</div>
+        <div class="sop-text"><strong>用AI生成文案（Prompt模板）</strong>
+发给Claude：「你是善缘的内容运营，上周这条爆了：[粘贴爆款标题+正文]。用同样的钩子逻辑，换[八字/塔罗/合婚]话题，写3条小红书图文，每条9张图的文案内容。」</div>
+      </div>
+      <div class="sop-step">
+        <div class="sop-num">3</div>
+        <div class="sop-text"><strong>检查并过质检清单（见Section 7）</strong>20条清单快速过一遍，不合格的改完再排期。</div>
+      </div>
+      <div class="sop-step">
+        <div class="sop-num">4</div>
+        <div class="sop-text"><strong>安排下周定时发布</strong>小红书/IG/TikTok全部设置定时，按爆款时段排（见爆款公式）。排完就不用管，自动发。</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sop-day daily">
+    <div class="sop-day-header">
+      <span class="day-badge">每天</span>
+      <span class="day-time">⏱ 5分钟 · 互动维护</span>
+    </div>
+    <div class="sop-day-body">
+      <div class="sop-step">
+        <div class="sop-num">1</div>
+        <div class="sop-text"><strong>发布后30分钟内：自己写第一条评论</strong>引导话题方向，例如：「你们是哪个五行？评论告诉我🌿」——第一条评论决定评论区走向。</div>
+      </div>
+      <div class="sop-step">
+        <div class="sop-num">2</div>
+        <div class="sop-text"><strong>回复所有新评论（限时30分钟）</strong>每条评论都要回，哪怕只有一个字。算法识别互动率，早期密集互动=推流信号。</div>
+      </div>
+      <div class="sop-step">
+        <div class="sop-num">3</div>
+        <div class="sop-text"><strong>主动去同赛道3个账号点赞评论</strong>每天去竞品账号评论区留言，带来自然粉丝回流。评论要真实有价值，不要广告感。</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 3: 爆款公式 ===== -->
+<div class="section" id="formula">
+  <div class="section-title">🚀 各平台爆款公式</div>
+  <div class="section-subtitle">每个平台算法逻辑不同 · 套公式出内容 · 不靠灵感靠系统</div>
+
+  <div class="grid-3">
+    <div class="formula-card rednote">
+      <div class="formula-header">📕 小红书爆款公式</div>
+      <div class="formula-body">
+        <div class="formula-row">
+          <span class="formula-label">封面公式</span>
+          <span class="formula-val">[情绪词]+[具体数字]+[悬念]<br><em style="color:#8a8a84">例：这5个八字特征，说明你财运要来了</em></span>
+        </div>
+        <div class="formula-row">
+          <span class="formula-label">图文结构</span>
+          <span class="formula-val">封面钩子(1张) → 痛点共鸣(1-2张) → 干货(3-4张) → CTA(1张)</span>
+        </div>
+        <div class="formula-row">
+          <span class="formula-label">标题规则</span>
+          <span class="formula-val">20字内 · 含关键词 · 有数字 · 有悬念<br>首行必须含搜索词（八字/塔罗/命理）</span>
+        </div>
+        <div class="formula-row">
+          <span class="formula-label">最佳时间</span>
+          <span class="formula-val">周二/四/日 20:00-22:00<br>节假日前一天 19:00</span>
+        </div>
+        <div class="formula-row">
+          <span class="formula-label">Hashtag</span>
+          <span class="formula-val">大词1个+中词3个+小词5个<br>合计≤10个，不超过20个</span>
+        </div>
+        <div class="formula-row">
+          <span class="formula-label">评论区</span>
+          <span class="formula-val">第1条自己写，引导提问<br>前10条评论全部回复</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="formula-card tiktok">
+      <div class="formula-header">⬛ TikTok/抖音爆款公式</div>
+      <div class="formula-body">
+        <div class="formula-row">
+          <span class="formula-label">前3秒</span>
+          <span class="formula-val">争议性开场 or 数字冲击 or「你不知道的…」<br><em style="color:#8a8a84">例：「99%的人不知道自己八字里有这个」</em></span>
+        </div>
+        <div class="formula-row">
+          <span class="formula-label">完播钩子</span>
+          <span class="formula-val">15秒处埋悬念「下面才是重点」<br>结尾引导：「关注我看续集」</span>
+        </div>
+        <div class="formula-row">
+          <span class="formula-label">视频时长</span>
+          <span class="formula-val">口播：30-45秒最佳<br>教程/展示：60-90秒</span>
+        </div>
+        <div class="formula-row">
+          <span class="formula-label">字幕</span>
+          <span class="formula-val">必须有字幕（70%用户关音量看）<br>关键词加大加色</span>
+        </div>
+        <div class="formula-row">
+          <span class="formula-label">最佳时间</span>
+          <span class="formula-val">早7-9点 or 晚19-23点<br>周末全天均可</span>
+        </div>
+        <div class="formula-row">
+          <span class="formula-label">评论运营</span>
+          <span class="formula-val">置顶1条自己的争议性评论<br>引导用户「你是哪种？」</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="formula-card ig">
+      <div class="formula-header">📷 Instagram爆款公式</div>
+      <div class="formula-body">
+        <div class="formula-row">
+          <span class="formula-label">轮播封面</span>
+          <span class="formula-val">大字+高对比度+悬念箭头<br>Feed缩略图必须脱颖而出</span>
+        </div>
+        <div class="formula-row">
+          <span class="formula-label">滑动引导</span>
+          <span class="formula-val">每张最后一行：「→ 下一张更重要」<br>提高轮播滑动率=触达率信号</span>
+        </div>
+        <div class="formula-row">
+          <span class="formula-label">Caption</span>
+          <span class="formula-val">前2行必须是钩子（展开前显示）<br>结尾问问题引发评论</span>
+        </div>
+        <div class="formula-row">
+          <span class="formula-label">Hashtag分层</span>
+          <span class="formula-val">大词(1-2个·百万+) + 中词(5-7个·10-50万) + 小词(3-5个·1-10万)</span>
+        </div>
+        <div class="formula-row">
+          <span class="formula-label">Story配合</span>
+          <span class="formula-val">帖子发后立刻发Story「新内容来了」<br>Story互动率影响帖子推流</span>
+        </div>
+        <div class="formula-row">
+          <span class="formula-label">最佳时间</span>
+          <span class="formula-val">目标地区晚7-9pm（本地时间）<br>周三/五效果最好</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 4: 5项目分配 ===== -->
+<div class="section" id="projects">
+  <div class="section-title">📦 5个项目内容分配</div>
+  <div class="section-subtitle">每个项目每周固定投入 · 不同产品不同侧重 · 先跑善缘和Slim</div>
+
+  <table class="proj-tbl">
+    <thead>
+      <tr>
+        <th>项目</th>
+        <th>日发布量</th>
+        <th>平台分配</th>
+        <th>主要内容类型</th>
+        <th>制作难度</th>
+        <th>优先级</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="proj-dot" style="background:#3d9e82"></span><strong>善缘</strong></td>
+        <td>3条/天<br><small style="color:#8a8a84">90条/月</small></td>
+        <td>小红书 × 2<br>TikTok × 1</td>
+        <td>知识卡（干货）<br>情感故事<br>每日运势截图</td>
+        <td>🟢 低<br><small>图文为主，模板化</small></td>
+        <td style="color:#3d9e82;font-weight:800">🥈 先做</td>
+      </tr>
+      <tr>
+        <td><span class="proj-dot" style="background:#ff7043"></span><strong>Slim</strong></td>
+        <td>3条/天<br><small style="color:#8a8a84">90条/月</small></td>
+        <td>小红书 × 2<br>TikTok × 1</td>
+        <td>食物实拍+克数<br>减脂干货卡<br>before/after</td>
+        <td>🟡 中<br><small>需要拍食物照片</small></td>
+        <td style="color:#ff7043;font-weight:800">🥇 最先做</td>
+      </tr>
+      <tr>
+        <td><span class="proj-dot" style="background:#1a237e"></span><strong>舞镜</strong></td>
+        <td>2条/天<br><small style="color:#8a8a84">60条/月</small></td>
+        <td>TikTok × 2<br>小红书辅助</td>
+        <td>动作拆解视频<br>慢放教程<br>学舞挑战</td>
+        <td>🔴 高<br><small>必须录制视频</small></td>
+        <td style="font-weight:800">🥉 第三</td>
+      </tr>
+      <tr>
+        <td><span class="proj-dot" style="background:#7c5cbf"></span><strong>Lumee</strong></td>
+        <td>2条/天<br><small style="color:#8a8a84">60条/月</small></td>
+        <td>TikTok × 1<br>IG × 1</td>
+        <td>情感故事视频<br>声音克隆演示<br>思念系列</td>
+        <td>🔴 高<br><small>情感视频需真实素材</small></td>
+        <td style="font-weight:800">第四</td>
+      </tr>
+      <tr>
+        <td><span class="proj-dot" style="background:#1976d2"></span><strong>YiYi英语</strong></td>
+        <td>1条/天<br><small style="color:#8a8a84">30条/月</small></td>
+        <td>小红书 × 1</td>
+        <td>外教课截图<br>英语干货<br>家长证言</td>
+        <td>🟢 低<br><small>截图+干货图文</small></td>
+        <td style="font-weight:800">第五</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="tip">💡 <strong>启动策略：</strong>先把善缘和Slim的内容排期排满（各50条已准备），跑4周看数据。爆款出来后复制规律给舞镜和Lumee，不要同时5个项目全力投入，精力会分散。</div>
+</div>
+
+<!-- ===== SECTION 5: 数据复盘表 ===== -->
+<div class="section" id="review">
+  <div class="section-title">📊 周数据复盘模板</div>
+  <div class="section-subtitle">每周一填写 · 可直接打印 · 数字说话·不靠感觉</div>
+
+  <div class="card">
+    <div class="review-section">
+      <div class="review-title">📕 小红书 · 本周数据</div>
+      <table class="review-tbl">
+        <tr><th>内容标题</th><th>发布时间</th><th>点赞</th><th>收藏</th><th>评论</th><th>涨粉</th><th>总结</th></tr>
+        <tr><td>第1条</td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td></tr>
+        <tr><td>第2条</td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td></tr>
+        <tr><td>第3条</td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td></tr>
+        <tr><td><strong>本周合计</strong></td><td>—</td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td></tr>
+      </table>
+    </div>
+
+    <div class="review-section">
+      <div class="review-title">⬛ TikTok · 本周数据</div>
+      <table class="review-tbl">
+        <tr><th>视频标题</th><th>发布时间</th><th>播放量</th><th>完播率%</th><th>点赞</th><th>分享</th><th>涨粉</th></tr>
+        <tr><td>第1条</td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td></tr>
+        <tr><td>第2条</td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td></tr>
+        <tr><td><strong>本周合计</strong></td><td>—</td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td></tr>
+      </table>
+    </div>
+
+    <div class="review-section">
+      <div class="review-title">📷 Instagram · 本周数据</div>
+      <table class="review-tbl">
+        <tr><th>内容</th><th>发布时间</th><th>触达</th><th>保存</th><th>评论</th><th>涨粉</th><th>Story点击</th></tr>
+        <tr><td>第1条</td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td></tr>
+        <tr><td><strong>合计</strong></td><td>—</td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td><td class="input-cell"></td></tr>
+      </table>
+    </div>
+
+    <div class="review-section">
+      <div class="review-title">🚀 爆款分析（填本周最佳1条）</div>
+      <table class="review-tbl">
+        <tr><th>分析维度</th><th>内容</th><th>为什么有效</th></tr>
+        <tr><td>标题/钩子</td><td class="input-cell" style="min-width:200px"></td><td class="input-cell" style="min-width:200px"></td></tr>
+        <tr><td>封面设计</td><td class="input-cell"></td><td class="input-cell"></td></tr>
+        <tr><td>发布时间</td><td class="input-cell"></td><td class="input-cell"></td></tr>
+        <tr><td>内容格式</td><td class="input-cell"></td><td class="input-cell"></td></tr>
+        <tr><td>下周复制方向</td><td class="input-cell" colspan="2"></td></tr>
+      </table>
+    </div>
+
+    <div class="review-section">
+      <div class="review-title">🌲 下周内容决策树</div>
+      <div class="dtree">
+        <div class="dtree-q">Q1：本周有爆款（点赞&gt;500/播放&gt;1万）吗？</div>
+        <div class="dtree-y">→ 是：<span class="dtree-action">立刻复制3条同款，换话题/换角度，占下周60%内容</span></div>
+        <div class="dtree-n">→ 否：<span class="dtree-action">分析数据最好的1条，微调封面+标题再发一次（二次投放）</span></div>
+        <div class="dtree-q">Q2：哪个话题评论互动最多？</div>
+        <div class="dtree-y">→ 找到了：<span class="dtree-action">把评论里的问题做成下周干货回答系列</span></div>
+        <div class="dtree-n">→ 没有：<span class="dtree-action">去竞品账号爆款评论区找话题</span></div>
+        <div class="dtree-q">Q3：下周有节气/节日/热点吗？</div>
+        <div class="dtree-y">→ 有：<span class="dtree-action">提前1-2天发节气+命理结合内容（流量高峰）</span></div>
+        <div class="dtree-n">→ 没有：<span class="dtree-action">按常规话题库选题</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 6: 话题库 ===== -->
+<div class="section" id="topicbank">
+  <div class="section-title">🗂 内容不断粮系统</div>
+  <div class="section-subtitle">50条用完后继续产出的5个永久来源 · Topic Bank永远不会空</div>
+
+  <div class="card">
+    <div class="topic-source">
+      <div class="topic-icon" style="background:#e8f5f0">💬</div>
+      <div class="topic-content">
+        <h4>来源1：用户评论区提问（每周5个话题）</h4>
+        <p>每周一打开所有帖子评论区，找出用户问的问题。直接回答那个问题就是一条内容。这是最准确的选题——用户主动提问=他们想要的内容。<br>
+        <strong>操作：</strong>截图存到备忘录"待做话题"，周三产内容时直接用。</p>
+      </div>
+    </div>
+    <div class="topic-source">
+      <div class="topic-icon" style="background:#fff8e1">🔍</div>
+      <div class="topic-content">
+        <h4>来源2：竞品爆款分析（每周1个账号）</h4>
+        <p>每周一分析1个竞品账号本周发了什么、哪条爆了。不是抄，是学规律。<br>
+        <strong>竞品清单：</strong>测测星座、星盘研究所、Co-Star（IG）、每日运势大叔（抖音）<br>
+        <strong>操作：</strong>看他们的爆款封面+标题，用自己的角度做同话题内容。</p>
+      </div>
+    </div>
+    <div class="topic-source">
+      <div class="topic-icon" style="background:#fde8ea">📅</div>
+      <div class="topic-content">
+        <h4>来源3：节气/节日日历（提前2周准备）</h4>
+        <p>每个节气/传统节日+命理结合=天然爆款。算法会在节日前后推对应内容。<br>
+        <strong>近期节气：</strong>立秋（8月7日）、白露（9月7日）、中秋（10月6日）、重阳（10月29日）<br>
+        <strong>操作：</strong>每月月底排好下月所有节气内容，提前2天定时发。</p>
+      </div>
+    </div>
+    <div class="topic-source">
+      <div class="topic-icon" style="background:#f5f0fa">🔥</div>
+      <div class="topic-content">
+        <h4>来源4：热点蹭流量（即时响应）</h4>
+        <p>娱乐热点+命理结合 = 巨大流量。名人八字、星座配对、热播剧角色命盘都可以做。<br>
+        <strong>例子：</strong>「XXX的八字是什么命格」「这部剧里谁的命最硬」<br>
+        <strong>合规：</strong>不能评价具体命运好坏，说"命盘特征"不说"命好命差"。</p>
+      </div>
+    </div>
+    <div class="topic-source">
+      <div class="topic-icon" style="background:#e8f0fe">🤖</div>
+      <div class="topic-content">
+        <h4>来源5：AI续写爆款（第二集策略）</h4>
+        <p>爆款出来后，立刻做「续集」。「上次说了X，这次聊Y」——已有热度基础，续集完播率更高。<br>
+        <strong>Prompt模板：</strong>「这条内容爆了[粘贴原文]，帮我写3条续集，话题延伸，用同样的钩子结构」</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="section-subtitle" style="margin-top:24px;margin-bottom:16px;font-size:13px;font-weight:700;color:#1a1a18">每月产出目标</div>
+  <div class="target-grid">
+    <div class="target-card">
+      <div class="target-num" style="color:#3d9e82">20</div>
+      <div class="target-label">纯文字帖</div>
+      <div class="target-time">AI写·10分/条</div>
+    </div>
+    <div class="target-card">
+      <div class="target-num" style="color:#c9a84c">15</div>
+      <div class="target-label">图文帖</div>
+      <div class="target-time">模板换字·20分/条</div>
+    </div>
+    <div class="target-card">
+      <div class="target-num" style="color:#8b5cf6">10</div>
+      <div class="target-label">视频脚本</div>
+      <div class="target-time">AI写·15分/条</div>
+    </div>
+    <div class="target-card">
+      <div class="target-num" style="color:#ff7043">5</div>
+      <div class="target-label">AI封面图</div>
+      <div class="target-time">ComfyUI·3分/张</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SECTION 7: 质检清单 ===== -->
+<div class="section" id="checklist">
+  <div class="section-title">✅ 发布前20条质检清单</div>
+  <div class="section-subtitle">每条内容发布前过一遍 · 全部打勾才能发 · 打印出来贴墙上</div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="margin-bottom:0">🎣 钩子与封面（1-5）</h3>
+      <ul class="checklist">
+        <li><strong>封面前3秒能抓住注意力</strong>：闭眼想如果只看封面缩略图，会点进来吗？</li>
+        <li><strong>标题含核心关键词</strong>：八字/塔罗/命理/五行等搜索词在标题里吗？</li>
+        <li><strong>封面大字5-8字</strong>：太长看不清，太短没力度</li>
+        <li><strong>有悬念或数字</strong>：「这3个」「90%人不知道」「测出来了」比平铺直叙好3倍</li>
+        <li><strong>视觉对比度够</strong>：文字和背景对比度高，小屏幕也清晰可读</li>
+      </ul>
+
+      <h3 style="margin-bottom:0;margin-top:16px">📝 文案质量（6-10）</h3>
+      <ul class="checklist">
+        <li><strong>开头第一句是钩子</strong>：不是「大家好我是XXX」，而是直接切入价值</li>
+        <li><strong>段落短·空行多</strong>：每段不超过3行，视觉上轻松，不压迫</li>
+        <li><strong>有具体细节</strong>：「有人」改「我有个朋友」，「很有用」改「省了3个小时」</li>
+        <li><strong>结尾有CTA</strong>：「主页链接免费试」「评论告诉我」「点收藏备用」选一个</li>
+        <li><strong>没有错别字</strong>：大声念一遍，有没有读起来卡的地方</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom:0">#️⃣ Hashtag与发布（11-15）</h3>
+      <ul class="checklist">
+        <li><strong>小红书：大中小词搭配</strong>：大词1个（百万+）+ 中词3个 + 小词5个，共9个左右</li>
+        <li><strong>TikTok：不超过5个标签</strong>：TikTok算法依赖内容本身，标签堆砌反而降权</li>
+        <li><strong>IG：30个标签分三层</strong>：大词(2)+中词(8)+小词(10)+品牌词(1)+地域词(1)</li>
+        <li class="warn"><strong>发布时间正确</strong>：不是随手发，是按排期的最佳时段（周几几点）</li>
+        <li class="warn"><strong>配图/视频质量达标</strong>：模糊的宁可不发，等有好图再发</li>
+      </ul>
+
+      <h3 style="margin-bottom:0;margin-top:16px">⚖️ 合规与品牌（16-20）</h3>
+      <ul class="checklist">
+        <li class="danger"><strong>没有禁词</strong>：算命/改运/保准/100%准/神准/大师/必定 — 全部不能有</li>
+        <li class="danger"><strong>没有承诺结果</strong>：「一定会」「保证」「绝对」→ 改成「参考」「可能」「一般来说」</li>
+        <li class="warn"><strong>品牌一致</strong>：账号昵称、头像、简介与这条内容风格一致吗</li>
+        <li><strong>链接可用</strong>：如果有提到「主页链接」，确认shenyuan.mylumee.cn可以正常访问</li>
+        <li><strong>发布后提醒自己</strong>：设一个30分钟提醒，回来看评论+自己写第一条评论</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="warn-box" style="margin-top:16px">
+    ⚠️ <strong>小红书特别红线：</strong>不能在正文写「扫码/加微信/私信我算/点击链接」——会被判定为广告直接限流。只说「主页有」让用户自己找。
+  </div>
+
+  <div class="tip" style="margin-top:8px">
+    🤖 <strong>AI质检提示词：</strong>把内容发给Claude，说「帮我检查这条小红书内容：1）钩子强度1-10分；2）有没有违规词；3）标题改3个版本；4）这个时间点发合适吗？」——10秒完成人工质检要5分钟的工作。
+  </div>
+</div>
+
+<!-- Reddit Section -->
+<div class="section" id="reddit">
+  <div class="section-title">🔴 Reddit · 海外华人+灵性社区引流</div>
+  <div class="section-subtitle">不打广告，靠真实内容建立信任 → 每周30分钟 → 长期稳定SEO流量</div>
+
+  <!-- 铁律 -->
+  <div class="card" style="margin-bottom:16px;border-left:4px solid #ff4500">
+    <h3 style="color:#ff4500">⚡ 5条Reddit铁律（违反即被ban）</h3>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:10px">
+      <div style="background:#fff8f5;border-radius:8px;padding:12px;font-size:12px"><strong>① 绝不直接打广告</strong><br>不能发"来用我的网站"，会被秒删</div>
+      <div style="background:#fff8f5;border-radius:8px;padding:12px;font-size:12px"><strong>② 先施后取</strong><br>账号karma &lt;50前只回复不发帖，先建立信誉</div>
+      <div style="background:#fff8f5;border-radius:8px;padding:12px;font-size:12px"><strong>③ 链接藏在个人资料</strong><br>回复里不放链接，用户会自己点进你的profile看</div>
+      <div style="background:#fff8f5;border-radius:8px;padding:12px;font-size:12px"><strong>④ 每个subreddit先读规则</strong><br>发帖前看sidebar rules，每个社区规矩不同</div>
+      <div style="background:#fff8f5;border-radius:8px;padding:12px;font-size:12px"><strong>⑤ 账号设置要真实</strong><br>头像用真实感图片，bio写"exploring Chinese astrology"，不写品牌名</div>
+    </div>
+  </div>
+
+  <!-- 目标社区 -->
+  <div class="card" style="margin-bottom:16px">
+    <h3>🎯 目标社区列表</h3>
+    <table class="tbl" style="margin-top:10px">
+      <thead><tr><th>Subreddit</th><th>规模/活跃</th><th>适合内容</th><th>禁止</th><th>频率</th></tr></thead>
+      <tbody>
+        <tr><td><strong>r/chinesediaspora</strong></td><td>~50k · 活跃</td><td>思乡/文化认同/传统节日+命理结合</td><td>广告/繁体政治</td><td>每周2次回复</td></tr>
+        <tr><td><strong>r/tarot</strong></td><td>~300k · 极活跃</td><td>分享塔罗解读/东西方占卜对比</td><td>卖课/直接推广</td><td>每周3次回复</td></tr>
+        <tr><td><strong>r/astrology</strong></td><td>~800k · 极活跃</td><td>BaZi vs Western astrology科普</td><td>广告帖/无价值水帖</td><td>每周2次回复</td></tr>
+        <tr><td><strong>r/spirituality</strong></td><td>~400k · 活跃</td><td>东方智慧/冥想/命理哲学</td><td>宗教争议/硬广</td><td>每周1次</td></tr>
+        <tr><td><strong>r/occult</strong></td><td>~200k · 活跃</td><td>古代命理系统介绍/神秘学</td><td>迷信/无来源声明</td><td>每周1次</td></tr>
+        <tr><td><strong>r/Zodiac</strong></td><td>~100k · 中等</td><td>中西星座对比/十二生肖</td><td>低质量水帖</td><td>每周1次</td></tr>
+        <tr><td><strong>r/AskReddit</strong></td><td>~4000万 · 极活跃</td><td>蹭"What's your cultural tradition"类热帖</td><td>发帖（只能回复）</td><td>每周1次蹭热帖</td></tr>
+        <tr><td><strong>r/immigration</strong></td><td>~150k · 活跃</td><td>海外华人生活/文化适应+命理慰藉</td><td>政治/签证广告</td><td>每两周1次</td></tr>
+        <tr><td><strong>r/china</strong></td><td>~500k · 活跃</td><td>中国传统文化科普（谨慎，政治敏感）</td><td>政治话题/广告</td><td>极少，选择性</td></tr>
+        <tr><td><strong>r/toronto / r/sydney / r/vancouver</strong></td><td>各50-200k</td><td>GEO定向：本地华人活动/中秋/春节</td><td>广告/非本地话题</td><td>节假日前后</td></tr>
+        <tr><td><strong>r/pagan / r/witchcraft</strong></td><td>各100k+</td><td>东方灵性/命理作为另一种古老系统</td><td>传教感/文化挪用</td><td>每月1-2次</td></tr>
+        <tr><td><strong>r/selfimprovement</strong></td><td>~700k · 活跃</td><td>用命理做自我认知/性格分析角度</td><td>广告/无实质内容</td><td>每周1次</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 每周SOP -->
+  <div class="card" style="margin-bottom:16px">
+    <h3>📅 每周30分钟操作SOP</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:10px">
+      <div style="background:#e8f5f0;border-radius:10px;padding:14px">
+        <div style="font-size:12px;font-weight:800;color:#3d9e82;margin-bottom:8px">周一（10分钟）· 搜索+选帖</div>
+        <div style="font-size:11px;line-height:1.7">
+          搜索关键词：<br>
+          · "Chinese astrology"<br>
+          · "BaZi chart"<br>
+          · "overseas Chinese tradition"<br>
+          · "tarot reading this week"<br><br>
+          筛选：24小时内、100+upvote、有问题待回答的帖<br>
+          存5个帖子链接备用
+        </div>
+      </div>
+      <div style="background:#fff8e1;border-radius:10px;padding:14px">
+        <div style="font-size:12px;font-weight:800;color:#c9a84c;margin-bottom:8px">周三（15分钟）· 回复5帖</div>
+        <div style="font-size:11px;line-height:1.7">
+          用下方模板A或B<br>
+          每条回复200-400字<br>
+          给真实有价值的内容<br>
+          <strong>不放链接</strong>（链接在profile里）<br><br>
+          回复后：<br>
+          · 点赞其他好回复<br>
+          · 回复他人评论<br>
+          （增加账号活跃度）
+        </div>
+      </div>
+      <div style="background:#f0eafa;border-radius:10px;padding:14px">
+        <div style="font-size:12px;font-weight:800;color:#6040a0;margin-bottom:8px">周五（5分钟）· 发原创帖</div>
+        <div style="font-size:11px;line-height:1.7">
+          仅限karma≥50后<br>
+          用下方模板C格式<br>
+          分享型&gt;广告型<br><br>
+          最安全的帖型：<br>
+          · 分析自己的命盘<br>
+          · 对比东西方系统<br>
+          · 节气/节日话题<br>
+          · 回应当周热点
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 回复模板 -->
+  <div class="card" style="margin-bottom:16px">
+    <h3>📋 高转化回复模板（直接复制修改）</h3>
+
+    <div style="margin-top:14px">
+      <div style="font-size:12px;font-weight:700;color:#3d9e82;margin-bottom:4px">模板A · 英文（r/tarot / r/astrology）· 回答BaZi/命理问题</div>
+      <div style="font-size:11px;color:#8a8a84;margin-bottom:6px">场景：有人问"what is BaZi" 或 "how does Chinese astrology work"</div>
+      <div class="copy-hint">点击复制</div>
+      <div class="copy-box gold">BaZi (Eight Characters) is the Chinese equivalent of a natal chart — but instead of planetary positions, it maps the Five Elements (Wood, Fire, Earth, Metal, Water) across four pillars: Year, Month, Day, and Hour of birth.
+
+Each pillar has a Heavenly Stem and Earthly Branch, creating 8 characters total. The balance (or imbalance) of these elements reveals personality patterns, timing of major life phases, and areas of natural strength.
+
+What makes it different from Western astrology: BaZi is heavily focused on *timing* — specifically 10-year cycles called Da Yun (Major Luck Pillars) that shift the elemental balance of your chart throughout your life. It's less about "who you are" and more about "when things move."
+
+I've been exploring this at [your profile link — let them click your profile] if you want to see a free chart comparison. Happy to answer more questions!</div>
+    </div>
+
+    <div style="margin-top:16px">
+      <div style="font-size:12px;font-weight:700;color:#3d9e82;margin-bottom:4px">模板B · 中英混合（r/chinesediaspora）· 情感共鸣帖</div>
+      <div style="font-size:11px;color:#8a8a84;margin-bottom:6px">场景：有人发帖讨论思乡/传统文化/中秋春节习俗</div>
+      <div class="copy-hint">点击复制</div>
+      <div class="copy-box">This hits differently when you're abroad. 在海外过传统节日，那种"我们以前是这样做的"的感觉特别复杂——想念，又觉得和身边人解释不清楚。
+
+I started looking into BaZi (八字命理) a few years ago partly out of curiosity, partly because it felt like a thread back to something my grandparents understood intuitively. There's something grounding about a system that's been reading the same cycles for 3,000 years.
+
+If you're into exploring that kind of thing — Chinese astrology can be a surprisingly practical lens for timing decisions, not just personality. My profile has more if you're curious.
+
+中秋快乐 / Happy Mid-Autumn to everyone here 🌕</div>
+    </div>
+
+    <div style="margin-top:16px">
+      <div style="font-size:12px;font-weight:700;color:#3d9e82;margin-bottom:4px">模板C · 原创发帖（r/astrology / r/tarot）· 分享型</div>
+      <div style="font-size:11px;color:#8a8a84;margin-bottom:6px">标题公式（选一个）</div>
+      <div class="copy-hint">复制标题</div>
+      <div class="copy-box dark">I compared my BaZi chart with my Western natal chart — here's what matched (and what didn't)
+
+After years of Western astrology, I tried Chinese BaZi — my honest comparison
+
+I asked an AI to analyze my Chinese birth chart. Here's what it said about my 2026 luck cycle.
+
+My grandmother read BaZi her whole life. I finally learned why she was usually right.</div>
+      <div style="font-size:11px;color:#8a8a84;margin:6px 0">帖子正文结构：</div>
+      <div class="copy-box">**Background:** [1-2句自我介绍，真实感]
+
+**What I found:** [实际内容，3-5段，有干货]
+
+**The surprising part:** [一个真实的洞察或"哇"时刻]
+
+**If you want to try it yourself:** [不放直接链接——说"I used a free tool, DM me if you want the name" 或 profile里放]
+
+[附图：善缘报告截图，去掉个人信息]</div>
+    </div>
+  </div>
+
+  <!-- GEO -->
+  <div class="card" style="margin-bottom:16px">
+    <h3>🌍 GEO引流加成</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:10px">
+      <div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px">免费GEO方法（每月操作）</div>
+        <div style="font-size:12px;line-height:1.8">
+          <div>📍 <strong>r/toronto / r/vancouver / r/sydney</strong><br>搜"Chinese" OR "lunar new year" OR "Mid-Autumn"，回复华人相关帖</div>
+          <div style="margin-top:8px">📍 <strong>节假日前2周集中出击</strong><br>春节（1月末）、中秋（9月）、清明（4月）是华人社区最活跃的3个节点</div>
+          <div style="margin-top:8px">📍 <strong>本地Reddit搜索技巧</strong><br>site:reddit.com/r/toronto "Chinese" astrology</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:8px">Reddit Ads GEO定向（预算≥$500/月时考虑）</div>
+        <div style="font-size:12px;line-height:1.8">
+          <div>🎯 <strong>定向设置：</strong><br>地区：Greater Toronto / Greater Vancouver / Greater Sydney / LA County / Bay Area</div>
+          <div style="margin-top:8px">🎯 <strong>兴趣标签：</strong><br>Astrology · Spirituality · Chinese Culture · Tarot</div>
+          <div style="margin-top:8px">🎯 <strong>广告格式：</strong><br>promoted post（看起来像普通帖子，转化率最高）</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 成效追踪 -->
+  <div class="card">
+    <h3>📊 每月成效追踪</h3>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:10px">
+      <div style="background:#faf8f5;border-radius:8px;padding:12px;font-size:12px">
+        <div style="font-weight:700;color:#3d9e82;margin-bottom:6px">Reddit账号指标</div>
+        <div>· 总karma（目标：月+200）</div>
+        <div>· 回复upvote率（目标&gt;70%）</div>
+        <div>· Profile访问量</div>
+        <div style="margin-top:6px;color:#8a8a84">karma &lt;50→只能回复<br>karma ≥50→可发帖<br>karma ≥200→算建立信誉</div>
+      </div>
+      <div style="background:#faf8f5;border-radius:8px;padding:12px;font-size:12px">
+        <div style="font-weight:700;color:#3d9e82;margin-bottom:6px">网站流量（Google Analytics）</div>
+        <div>· 来源：reddit.com的sessions</div>
+        <div>· UTM参数设置：</div>
+        <div style="background:#f0ede8;border-radius:4px;padding:4px 6px;margin:4px 0;font-family:monospace;font-size:10px">?utm_source=reddit&utm_medium=organic&utm_campaign=community</div>
+        <div>· 目标：月≥200 sessions</div>
+      </div>
+      <div style="background:#faf8f5;border-radius:8px;padding:12px;font-size:12px">
+        <div style="font-weight:700;color:#3d9e82;margin-bottom:6px">判断是否值得继续</div>
+        <div>3个月后评估：</div>
+        <div>✅ 继续：月流量≥200 OR karma增长稳定</div>
+        <div>⚠️ 调整：换subreddit或话题方向</div>
+        <div>❌ 暂停：被ban 2次以上，重新注册账号重来</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div style="text-align:center;padding:40px 0 20px;color:#8a8a84;font-size:12px">
+  内容Loop系统 · 善缘五项目 · 2026-08-05 · 每周迭代·数据驱动·永不断粮
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>五项目社媒发布周历</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'PingFang SC', sans-serif; background: #f5f5f7; color: #1d1d1f; font-size: 14px; }
+
+  header { background: #1d1d1f; color: #fff; padding: 20px 24px; }
+  header h1 { font-size: 22px; font-weight: 700; }
+  header p { color: #999; margin-top: 4px; font-size: 13px; }
+
+  /* ── 筛选按钮 ── */
+  .filters { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 24px; background: #fff; border-bottom: 1px solid #e5e5e7; }
+  .filter-group { display: flex; gap: 6px; flex-wrap: wrap; }
+  .filter-label { font-size: 11px; color: #888; align-self: center; margin-right: 4px; }
+  button.f { border: none; border-radius: 20px; padding: 5px 14px; font-size: 12px; cursor: pointer; font-weight: 600; transition: opacity .15s; }
+  button.f.active { opacity: 1; } button.f { opacity: .45; }
+  button.f:hover { opacity: .85; }
+
+  /* 项目色 */
+  .f.sy, .tag.sy { background: #6b21a8; color: #fff; }
+  .f.lm, .tag.lm { background: #be185d; color: #fff; }
+  .f.sl, .tag.sl { background: #166534; color: #fff; }
+  .f.wj, .tag.wj { background: #b91c1c; color: #fff; }
+  .f.yy, .tag.yy { background: #1e40af; color: #fff; }
+  .f.all-p { background: #374151; color: #fff; }
+
+  /* 平台色 */
+  .f.xhs { background: #ff2442; color: #fff; }
+  .f.ttk { background: #010101; color: #fff; }
+  .f.ig  { background: #e1306c; color: #fff; }
+  .f.all-pl { background: #374151; color: #fff; }
+
+  /* 内容类型色 */
+  .type-干货 { background: #fef9c3; color: #854d0e; border-left: 3px solid #eab308; }
+  .type-故事 { background: #dbeafe; color: #1e3a8a; border-left: 3px solid #3b82f6; }
+  .type-互动 { background: #ffedd5; color: #9a3412; border-left: 3px solid #f97316; }
+  .type-产品 { background: #dcfce7; color: #14532d; border-left: 3px solid #22c55e; }
+
+  /* ── 最佳时间说明 ── */
+  .best-times { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; padding: 16px 24px; }
+  .time-card { background: #fff; border-radius: 10px; padding: 14px 16px; border: 1px solid #e5e5e7; }
+  .time-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+  .time-card ul { list-style: none; }
+  .time-card li { font-size: 12px; color: #555; padding: 3px 0; border-bottom: 1px solid #f0f0f0; }
+  .time-card li:last-child { border: none; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; }
+  .badge.xhs { background: #ff2442; color: #fff; }
+  .badge.ttk { background: #010101; color: #fff; }
+  .badge.ig  { background: #e1306c; color: #fff; }
+
+  /* ── 周历表格 ── */
+  .schedule-wrap { padding: 0 24px 24px; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  th { background: #1d1d1f; color: #fff; padding: 10px 12px; font-size: 12px; text-align: left; white-space: nowrap; }
+  th.time-col { width: 80px; }
+  td { padding: 8px 10px; vertical-align: top; border-bottom: 1px solid #f0f0f0; border-right: 1px solid #f0f0f0; }
+  tr:last-child td { border-bottom: none; }
+  td.day-label { background: #f9fafb; font-weight: 700; font-size: 12px; color: #374151; white-space: nowrap; }
+
+  .post-card { border-radius: 6px; padding: 7px 9px; margin-bottom: 5px; font-size: 11.5px; line-height: 1.5; }
+  .post-card:last-child { margin-bottom: 0; }
+  .post-card .meta { display: flex; gap: 5px; align-items: center; margin-bottom: 3px; flex-wrap: wrap; }
+  .tag { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+  .plat { display: inline-block; padding: 1px 7px; border-radius: 10px; font-size: 10px; background: #e5e5e7; color: #555; font-weight: 600; }
+  .post-card .title { font-weight: 600; color: #1d1d1f; }
+  .post-card .time-hint { font-size: 10px; color: #888; margin-top: 2px; }
+
+  /* ── 内容轮换规则 ── */
+  .rules-section, .checklist-section, .review-section { padding: 0 24px 24px; }
+  .section-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 2px solid #e5e5e7; }
+  .rules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+  .rule-card { background: #fff; border-radius: 10px; padding: 14px; text-align: center; border: 1px solid #e5e5e7; }
+  .rule-card .pct { font-size: 28px; font-weight: 800; }
+  .rule-card .name { font-size: 13px; font-weight: 600; margin: 4px 0; }
+  .rule-card .desc { font-size: 11px; color: #666; }
+  .pct.g { color: #eab308; } .pct.b { color: #3b82f6; } .pct.o { color: #f97316; } .pct.gr { color: #22c55e; }
+
+  .checklist-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .check-card { background: #fff; border-radius: 10px; padding: 14px 16px; border: 1px solid #e5e5e7; }
+  .check-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .check-card ol { padding-left: 16px; }
+  .check-card li { font-size: 12px; color: #444; padding: 3px 0; }
+
+  .review-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+  .review-card { background: #fff; border-radius: 10px; padding: 14px 16px; border: 1px solid #e5e5e7; }
+  .review-card h4 { font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+  .review-card ul { list-style: none; }
+  .review-card li { font-size: 12px; color: #444; padding: 3px 0; display: flex; align-items: flex-start; gap: 6px; }
+  .review-card li::before { content: "▸"; color: #6b7280; flex-shrink: 0; }
+
+  /* ── 隐藏逻辑 ── */
+  .post-card.hidden { display: none; }
+
+  @media print {
+    .filters { display: none; }
+    body { background: #fff; }
+    .schedule-wrap { padding: 0; }
+  }
+  @media (max-width: 600px) {
+    .filters { padding: 12px 16px; }
+    .best-times, .rules-section, .checklist-section, .review-section, .schedule-wrap { padding-left: 16px; padding-right: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📅 五项目社媒发布周历</h1>
+  <p>每天发3条 · 小红书 / TikTok / Instagram · 干货35% + 故事25% + 互动20% + 产品20%</p>
+</header>
+
+<!-- ── 筛选 ── -->
+<div class="filters">
+  <span class="filter-label">项目：</span>
+  <div class="filter-group">
+    <button class="f all-p active" onclick="filter('proj','all')">全部</button>
+    <button class="f sy" onclick="filter('proj','sy')">善缘</button>
+    <button class="f lm" onclick="filter('proj','lm')">Lumee</button>
+    <button class="f sl" onclick="filter('proj','sl')">Slim</button>
+    <button class="f wj" onclick="filter('proj','wj')">舞镜</button>
+    <button class="f yy" onclick="filter('proj','yy')">YiYi</button>
+  </div>
+  <span class="filter-label" style="margin-left:12px">平台：</span>
+  <div class="filter-group">
+    <button class="f all-pl active" onclick="filter('plat','all')">全部</button>
+    <button class="f xhs" onclick="filter('plat','xhs')">小红书</button>
+    <button class="f ttk" onclick="filter('plat','ttk')">TikTok</button>
+    <button class="f ig"  onclick="filter('plat','ig')">Instagram</button>
+  </div>
+</div>
+
+<!-- ── 最佳发布时间 ── -->
+<div class="best-times">
+  <div class="time-card">
+    <h3><span class="badge xhs">小红书</span> 最佳时间</h3>
+    <ul>
+      <li>🏆 周二/四/六 18:00-20:00（流量最高峰）</li>
+      <li>✅ 周一-周五 12:00-13:00（午休刷手机）</li>
+      <li>✅ 周末 09:00-11:00（早晨悠闲时段）</li>
+      <li>⚠️ 避开 08:00前、23:00后</li>
+    </ul>
+  </div>
+  <div class="time-card">
+    <h3><span class="badge ttk">TikTok</span> 最佳时间</h3>
+    <ul>
+      <li>🏆 周五/六 19:00-22:00（娱乐高峰）</li>
+      <li>✅ 每天 12:00-14:00（午间流量）</li>
+      <li>✅ 周二/四 18:00-20:00（工作日晚高峰）</li>
+      <li>⚠️ 避开周一早晨、工作日深夜</li>
+    </ul>
+  </div>
+  <div class="time-card">
+    <h3><span class="badge ig">Instagram</span> 海外华人时区</h3>
+    <ul>
+      <li>🏆 澳洲：19:00-21:00 AEST（≈北京时间 17:00-19:00）</li>
+      <li>✅ 北美：20:00-22:00 EST（≈北京时间 09:00-11:00次日）</li>
+      <li>✅ 东南亚：20:00-22:00 SGT（≈北京时间 20:00-22:00）</li>
+      <li>⚠️ 建议发帖时间：北京时间 20:00（覆盖澳洲+东南亚）</li>
+    </ul>
+  </div>
+</div>
+
+<!-- ── 周历表格 ── -->
+<div class="schedule-wrap">
+  <h2 style="font-size:16px;font-weight:700;margin:8px 0 12px">发布周历（每天3条）</h2>
+  <table>
+    <thead>
+      <tr>
+        <th class="time-col">时间</th>
+        <th>周一</th><th>周二</th><th>周三</th><th>周四</th><th>周五</th><th>周六</th><th>周日</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- 12:00 -->
+      <tr>
+        <td class="day-label">12:00<br><small style="color:#999;font-weight:400">午间</small></td>
+        <!-- 周一 -->
+        <td>
+          <div class="post-card type-干货" data-proj="sy" data-plat="xhs">
+            <div class="meta"><span class="tag sy">善缘</span><span class="plat">小红书</span><span style="font-size:10px;color:#854d0e">干货</span></div>
+            <div class="title">八字日主速查表 · 你属哪种命格？</div>
+            <div class="time-hint">配图：干货卡+CTA卡（2张）</div>
+          </div>
+        </td>
+        <!-- 周二 -->
+        <td>
+          <div class="post-card type-故事" data-proj="lm" data-plat="xhs">
+            <div class="meta"><span class="tag lm">Lumee</span><span class="plat">小红书</span><span style="font-size:10px;color:#1e3a8a">故事</span></div>
+            <div class="title">失眠凌晨三点，我跟AI说了什么</div>
+            <div class="time-hint">配图：情感场景+对话截图（2张）</div>
+          </div>
+        </td>
+        <!-- 周三 -->
+        <td>
+          <div class="post-card type-干货" data-proj="sl" data-plat="xhs">
+            <div class="meta"><span class="tag sl">Slim</span><span class="plat">小红书</span><span style="font-size:10px;color:#854d0e">干货</span></div>
+            <div class="title">外卖点什么不长胖？10道菜单全给你</div>
+            <div class="time-hint">配图：食物真实照片+数据卡（2张）</div>
+          </div>
+        </td>
+        <!-- 周四 -->
+        <td>
+          <div class="post-card type-干货" data-proj="sy" data-plat="xhs">
+            <div class="meta"><span class="tag sy">善缘</span><span class="plat">小红书</span><span style="font-size:10px;color:#854d0e">干货</span></div>
+            <div class="title">塔罗牌30张一句话解读速查</div>
+            <div class="time-hint">配图：干货卡×3张</div>
+          </div>
+        </td>
+        <!-- 周五 -->
+        <td>
+          <div class="post-card type-互动" data-proj="lm" data-plat="xhs">
+            <div class="meta"><span class="tag lm">Lumee</span><span class="plat">小红书</span><span style="font-size:10px;color:#9a3412">互动</span></div>
+            <div class="title">你最想对谁说一句什么话？评论区见</div>
+            <div class="time-hint">配图：情感场景图（1张）</div>
+          </div>
+        </td>
+        <!-- 周六 -->
+        <td>
+          <div class="post-card type-干货" data-proj="wj" data-plat="xhs">
+            <div class="meta"><span class="tag wj">舞镜</span><span class="plat">小红书</span><span style="font-size:10px;color:#854d0e">干货</span></div>
+            <div class="title">Kpop手位5个最常犯错误（附纠正动图）</div>
+            <div class="time-hint">配图：动作拆解图+步骤卡（2张）</div>
+          </div>
+        </td>
+        <!-- 周日 -->
+        <td>
+          <div class="post-card type-干货" data-proj="yy" data-plat="xhs">
+            <div class="meta"><span class="tag yy">YiYi</span><span class="plat">小红书</span><span style="font-size:10px;color:#854d0e">干货</span></div>
+            <div class="title">外教课听不懂？记住这5句救命英语</div>
+            <div class="time-hint">配图：外教场景+课程亮点卡（2张）</div>
+          </div>
+        </td>
+      </tr>
+
+      <!-- 18:00 -->
+      <tr>
+        <td class="day-label">18:00<br><small style="color:#999;font-weight:400">晚高峰</small></td>
+        <!-- 周一 -->
+        <td>
+          <div class="post-card type-故事" data-proj="lm" data-plat="ttk">
+            <div class="meta"><span class="tag lm">Lumee</span><span class="plat">TikTok</span><span style="font-size:10px;color:#1e3a8a">故事</span></div>
+            <div class="title">分手后我哭着跟AI说了什么 #心声姐</div>
+            <div class="time-hint">⚡ 封面用高冲击真人截帧</div>
+          </div>
+        </td>
+        <!-- 周二 -->
+        <td>
+          <div class="post-card type-干货" data-proj="sy" data-plat="ttk">
+            <div class="meta"><span class="tag sy">善缘</span><span class="plat">TikTok</span><span style="font-size:10px;color:#854d0e">干货</span></div>
+            <div class="title">五行缺什么？15秒速测 #命理 #八字</div>
+            <div class="time-hint">⚡ 快节奏剪辑 · 15秒内给完结论</div>
+          </div>
+        </td>
+        <!-- 周三 -->
+        <td>
+          <div class="post-card type-互动" data-proj="wj" data-plat="ttk">
+            <div class="meta"><span class="tag wj">舞镜</span><span class="plat">TikTok</span><span style="font-size:10px;color:#9a3412">互动</span></div>
+            <div class="title">body roll对了吗？AI帮你判断 #舞蹈挑战</div>
+            <div class="time-hint">⚡ 挑战格式 · 邀请duet</div>
+          </div>
+        </td>
+        <!-- 周四 -->
+        <td>
+          <div class="post-card type-产品" data-proj="sl" data-plat="ttk">
+            <div class="meta"><span class="tag sl">Slim</span><span class="plat">TikTok</span><span style="font-size:10px;color:#14532d">产品</span></div>
+            <div class="title">拍一下餐盘秒出卡路里，真的吗？ #减脂</div>
+            <div class="time-hint">⚡ 产品演示 · 前3秒必须见功能</div>
+          </div>
+        </td>
+        <!-- 周五 -->
+        <td>
+          <div class="post-card type-干货" data-proj="yy" data-plat="ttk">
+            <div class="meta"><span class="tag yy">YiYi</span><span class="plat">TikTok</span><span style="font-size:10px;color:#854d0e">干货</span></div>
+            <div class="title">3-6岁英语启蒙4个错误千万别犯 #外教</div>
+            <div class="time-hint">⚡ 妈妈视角 · 共情开头</div>
+          </div>
+        </td>
+        <!-- 周六 -->
+        <td>
+          <div class="post-card type-故事" data-proj="sy" data-plat="ttk">
+            <div class="meta"><span class="tag sy">善缘</span><span class="plat">TikTok</span><span style="font-size:10px;color:#1e3a8a">故事</span></div>
+            <div class="title">我用八字给自己算了一次，结果震惊了</div>
+            <div class="time-hint">⚡ 真实反应 · 情绪钩子</div>
+          </div>
+        </td>
+        <!-- 周日 -->
+        <td>
+          <div class="post-card type-互动" data-proj="lm" data-plat="ttk">
+            <div class="meta"><span class="tag lm">Lumee</span><span class="plat">TikTok</span><span style="font-size:10px;color:#9a3412">互动</span></div>
+            <div class="title">你最想留住谁的声音？评论区说说 #留声</div>
+            <div class="time-hint">⚡ 评论引爆型 · 情感共鸣</div>
+          </div>
+        </td>
+      </tr>
+
+      <!-- 20:00 -->
+      <tr>
+        <td class="day-label">20:00<br><small style="color:#999;font-weight:400">IG黄金</small></td>
+        <!-- 周一 -->
+        <td>
+          <div class="post-card type-产品" data-proj="sy" data-plat="ig">
+            <div class="meta"><span class="tag sy">善缘</span><span class="plat">Instagram</span><span style="font-size:10px;color:#14532d">产品</span></div>
+            <div class="title">Your BaZi birth chart, decoded in minutes ✨</div>
+            <div class="time-hint">配图：AI意境图+英文干货卡（共4张）</div>
+          </div>
+        </td>
+        <!-- 周二 -->
+        <td>
+          <div class="post-card type-干货" data-proj="sl" data-plat="ig">
+            <div class="meta"><span class="tag sl">Slim</span><span class="plat">Instagram</span><span style="font-size:10px;color:#854d0e">干货</span></div>
+            <div class="title">Grocery list for fat loss: what we actually buy</div>
+            <div class="time-hint">配图：超市食物真实照片×2+清单卡（共4张）</div>
+          </div>
+        </td>
+        <!-- 周三 -->
+        <td>
+          <div class="post-card type-故事" data-proj="lm" data-plat="ig">
+            <div class="meta"><span class="tag lm">Lumee</span><span class="plat">Instagram</span><span style="font-size:10px;color:#1e3a8a">故事</span></div>
+            <div class="title">Record their voice. Before it's too late. 🎙️</div>
+            <div class="time-hint">配图：情感场景图+对话截图（共3张）</div>
+          </div>
+        </td>
+        <!-- 周四 -->
+        <td>
+          <div class="post-card type-互动" data-proj="wj" data-plat="ig">
+            <div class="meta"><span class="tag wj">舞镜</span><span class="plat">Instagram</span><span style="font-size:10px;color:#9a3412">互动</span></div>
+            <div class="title">Which dance style are you? Take the quiz 🕺</div>
+            <div class="time-hint">配图：舞蹈动作图×2+投票卡（共3张）</div>
+          </div>
+        </td>
+        <!-- 周五 -->
+        <td>
+          <div class="post-card type-产品" data-proj="sy" data-plat="ig">
+            <div class="meta"><span class="tag sy">善缘</span><span class="plat">Instagram</span><span style="font-size:10px;color:#14532d">产品</span></div>
+            <div class="title">2026 luck forecast by zodiac — is yours good? 🔮</div>
+            <div class="time-hint">配图：意境图+12生肖干货卡（共4张）</div>
+          </div>
+        </td>
+        <!-- 周六 -->
+        <td>
+          <div class="post-card type-干货" data-proj="yy" data-plat="ig">
+            <div class="meta"><span class="tag yy">YiYi</span><span class="plat">Instagram</span><span style="font-size:10px;color:#854d0e">干货</span></div>
+            <div class="title">5 sentences every kid needs before their first English class</div>
+            <div class="time-hint">配图：亲子场景+课程亮点卡（共3张）</div>
+          </div>
+        </td>
+        <!-- 周日 -->
+        <td>
+          <div class="post-card type-故事" data-proj="sl" data-plat="ig">
+            <div class="meta"><span class="tag sl">Slim</span><span class="plat">Instagram</span><span style="font-size:10px;color:#1e3a8a">故事</span></div>
+            <div class="title">3 months postpartum. Here's what I actually ate.</div>
+            <div class="time-hint">配图：食物真实照片×2+时间线卡（共4张）</div>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="margin-top:10px;font-size:11px;color:#999">⚡ TikTok封面必须用真人截帧或高冲击画面，不能用纯AI意境图（播放率低）</p>
+</div>
+
+<!-- ── 内容轮换规则 ── -->
+<div class="rules-section">
+  <h2 class="section-title">内容类型轮换规则（黄金比例）</h2>
+  <div class="rules-grid">
+    <div class="rule-card">
+      <div class="pct g">35%</div>
+      <div class="name">干货</div>
+      <div class="desc">一周21条里约7条<br>周二/四/六优先排干货<br>小红书涨粉最快路径</div>
+    </div>
+    <div class="rule-card">
+      <div class="pct b">25%</div>
+      <div class="name">故事</div>
+      <div class="desc">一周约5条<br>周一/三排情感故事<br>收藏率最高</div>
+    </div>
+    <div class="rule-card">
+      <div class="pct o">20%</div>
+      <div class="name">互动</div>
+      <div class="desc">一周约4条<br>周五/日排互动帖<br>拉评论数增权重</div>
+    </div>
+    <div class="rule-card">
+      <div class="pct gr">20%</div>
+      <div class="name">产品</div>
+      <div class="desc">一周约4条<br>穿插在干货后<br>自然带出功能不硬推</div>
+    </div>
+  </div>
+  <div style="background:#fff;border-radius:10px;padding:14px 16px;margin-top:12px;border:1px solid #e5e5e7;font-size:12px;color:#555;line-height:1.7">
+    <strong>铁律：</strong>连续两条不能都是产品帖 · 干货帖末尾加一句自然引流（"用善缘帮你算更准"）· 每周五做数据复盘，爆款选题下周翻新再发一次
+  </div>
+</div>
+
+<!-- ── 发布前检查清单 ── -->
+<div class="checklist-section">
+  <h2 class="section-title">发布前检查清单（每平台5条）</h2>
+  <div class="checklist-grid">
+    <div class="check-card">
+      <h4>📕 小红书发布前</h4>
+      <ol>
+        <li>封面大字是否在手机竖屏能完整看到？</li>
+        <li>正文有没有"算命/保准/改命"等禁词？</li>
+        <li>标签是否3层：精准词+中量词+大量词？</li>
+        <li>结尾是否有明确CTA（评论/收藏/点击）？</li>
+        <li>配图第1张是封面，其余按干货→产品→CTA顺序？</li>
+      </ol>
+    </div>
+    <div class="check-card">
+      <h4>⬛ TikTok发布前</h4>
+      <ol>
+        <li>封面是否用真人截帧或高冲击画面（非纯AI图）？</li>
+        <li>前3秒有没有强钩子（问题/冲突/反常识）？</li>
+        <li>字幕完整且无错别字？</li>
+        <li>BGM是否选平台内流行音乐（提升推流）？</li>
+        <li>正文有没有3-5个当周热门话题标签？</li>
+      </ol>
+    </div>
+    <div class="check-card">
+      <h4>🌸 Instagram发布前</h4>
+      <ol>
+        <li>英文内容是否请母语检查过（无翻译腔）？</li>
+        <li>图片是否1:1或4:5比例（Feed最优）？</li>
+        <li>Caption前两行是否钩子够强（展开前显示）？</li>
+        <li>海外华人时区是否正确（20:00北京时间）？</li>
+        <li>Story是否24小时内跟发（扩大触达）？</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<!-- ── 数据复盘 ── -->
+<div class="review-section">
+  <h2 class="section-title">数据复盘节点</h2>
+  <div class="review-grid">
+    <div class="review-card">
+      <h4>📊 每周五 19:00 复盘（30分钟）</h4>
+      <ul>
+        <li>本周哪3条互动最高？分析原因</li>
+        <li>哪个项目涨粉最多？复制其内容格式</li>
+        <li>有没有帖子数据特别差？找出问题</li>
+        <li>爆款帖评论区出现哪些新选题？记录下来</li>
+        <li>下周排期里干货:故事:互动:产品比例对不对？</li>
+      </ul>
+    </div>
+    <div class="review-card">
+      <h4>📈 核心指标（每条帖子看这5个）</h4>
+      <ul>
+        <li><strong>小红书：</strong>收藏率 &gt; 点赞率（收藏=真价值）</li>
+        <li><strong>TikTok：</strong>完播率 &gt; 50% = 推流信号</li>
+        <li><strong>Instagram：</strong>保存数 + 分享数（&gt;点赞更重要）</li>
+        <li>评论区有没有"怎么用/在哪里/多少钱"= 购买意向</li>
+        <li>每项目每周新增粉丝数（目标: +100/周冷启动期）</li>
+      </ul>
+    </div>
+    <div class="review-card">
+      <h4>🔄 爆款复制机制</h4>
+      <ul>
+        <li>单篇点赞 &gt;500：下周换角度再发一条</li>
+        <li>单篇收藏 &gt;200：做成系列（第2集/第3集）</li>
+        <li>评论区高频词：下周做一条专门回答</li>
+        <li>竞品近期爆款：分析结构，换成自己内容套用</li>
+        <li>每月底：爆款TOP3整理进内容库供新人复用</li>
+      </ul>
+    </div>
+  </div>
+  <p style="margin-top:16px;font-size:12px;color:#888;padding:10px 14px;background:#fff;border-radius:8px;border:1px solid #e5e5e7">
+    ⏰ <strong>每月大复盘（月底周五）：</strong>各项目TOP3帖子→提炼爆款公式→更新内容库→下月内容按公式批量生产
+  </p>
+</div>
+
+<script>
+let activeProj = 'all', activePlat = 'all';
+
+function filter(type, val) {
+  if (type === 'proj') activeProj = val;
+  if (type === 'plat') activePlat = val;
+
+  document.querySelectorAll('.post-card').forEach(card => {
+    const proj = card.dataset.proj, plat = card.dataset.plat;
+    const projMatch = activeProj === 'all' || proj === activeProj;
+    const platMatch = activePlat === 'all' || plat === activePlat;
+    card.classList.toggle('hidden', !(projMatch && platMatch));
+  });
+
+  // 更新按钮状态
+  document.querySelectorAll('button.f').forEach(btn => {
+    const fn = btn.getAttribute('onclick');
+    const isAll = fn.includes("'all'");
+    const matchProj = type === 'proj' && fn.includes(`'${val}'`);
+    const matchPlat = type === 'plat' && fn.includes(`'${val}'`);
+    if (type === 'proj') {
+      if (fn.includes("'proj'")) btn.classList.toggle('active', matchProj || (isAll && val === 'all'));
+    } else {
+      if (fn.includes("'plat'")) btn.classList.toggle('active', matchPlat || (isAll && val === 'all'));
+    }
+  });
+}
+</script>
+</body>
+</html>

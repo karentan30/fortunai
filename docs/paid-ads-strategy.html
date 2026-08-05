@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>付费广告投放策略 · 5项目总控</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif; background: #f5f5f7; color: #1d1d1f; font-size: 15px; }
+  .header { background: linear-gradient(135deg, #1a0a2e, #2d1b69); color: white; padding: 32px 24px; }
+  .header h1 { font-size: 24px; font-weight: 700; margin-bottom: 8px; }
+  .header p { opacity: 0.8; font-size: 14px; }
+  .container { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+  .section { background: white; border-radius: 16px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .section h2 { font-size: 18px; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; display: flex; align-items: center; gap: 8px; }
+  .section h3 { font-size: 15px; font-weight: 600; margin: 16px 0 10px; color: #444; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { background: #f5f5f7; padding: 10px 12px; text-align: left; font-weight: 600; }
+  td { padding: 10px 12px; border-bottom: 1px solid #f0f0f0; vertical-align: top; }
+  tr:last-child td { border-bottom: none; }
+  .tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; margin: 2px; }
+  .tag-sy { background: #e8d5f7; color: #6b21a8; }
+  .tag-lm { background: #fce7f3; color: #be185d; }
+  .tag-sl { background: #dcfce7; color: #166534; }
+  .tag-wj { background: #fee2e2; color: #991b1b; }
+  .tag-yy { background: #dbeafe; color: #1e40af; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+  .badge-a { background: #dcfce7; color: #166534; }
+  .badge-b { background: #fef3c7; color: #92400e; }
+  .badge-c { background: #fee2e2; color: #991b1b; }
+  .warn { background: #fff7ed; border-left: 4px solid #f97316; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 10px 0; font-size: 13px; }
+  .warn strong { color: #c2410c; }
+  .stop { background: #fef2f2; border-left: 4px solid #ef4444; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 10px 0; font-size: 13px; }
+  .stop strong { color: #b91c1c; }
+  .ok { background: #f0fdf4; border-left: 4px solid #22c55e; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 10px 0; font-size: 13px; }
+  .checklist { list-style: none; }
+  .checklist li { padding: 6px 0; border-bottom: 1px solid #f5f5f5; display: flex; align-items: flex-start; gap: 8px; font-size: 13px; }
+  .checklist li::before { content: '☐'; color: #999; flex-shrink: 0; }
+  .checklist li:last-child { border-bottom: none; }
+  .budget-calc { background: #f8f4ff; border-radius: 12px; padding: 20px; }
+  .slider-wrap { margin: 12px 0; }
+  .slider-wrap label { font-size: 13px; color: #666; display: block; margin-bottom: 6px; }
+  input[type=range] { width: 100%; accent-color: #7c3aed; }
+  .budget-display { font-size: 28px; font-weight: 700; color: #7c3aed; margin: 8px 0; }
+  .budget-table { margin-top: 16px; }
+  .budget-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #ede9fe; font-size: 13px; }
+  .budget-row:last-child { border-bottom: none; }
+  .budget-amount { font-weight: 700; color: #7c3aed; }
+  .timeline { position: relative; }
+  .timeline-item { display: flex; gap: 16px; margin-bottom: 20px; }
+  .timeline-dot { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: white; flex-shrink: 0; margin-top: 4px; }
+  .timeline-content { flex: 1; }
+  .timeline-content h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .timeline-content ul { font-size: 13px; color: #555; padding-left: 16px; }
+  .timeline-content li { margin-bottom: 4px; }
+  .metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+  .metric-card { background: #f8f8f8; border-radius: 10px; padding: 14px; }
+  .metric-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .metric-value { font-size: 20px; font-weight: 700; margin-bottom: 2px; }
+  .metric-sub { font-size: 12px; color: #666; }
+  .platform-block { border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+  .platform-header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .platform-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .steps { counter-reset: step; }
+  .step { counter-increment: step; display: flex; gap: 12px; margin-bottom: 14px; align-items: flex-start; }
+  .step::before { content: counter(step); width: 24px; height: 24px; background: #7c3aed; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+  .step-content { font-size: 13px; flex: 1; }
+  .step-content strong { display: block; margin-bottom: 2px; }
+  code { background: #f3f0ff; color: #6d28d9; padding: 2px 6px; border-radius: 4px; font-size: 12px; font-family: monospace; }
+  .spec-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .spec-card { background: #f9fafb; border-radius: 8px; padding: 12px; font-size: 12px; }
+  .spec-card .spec-platform { font-weight: 700; font-size: 13px; margin-bottom: 8px; }
+  .spec-card .spec-row { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid #e5e7eb; }
+  .spec-card .spec-row:last-child { border-bottom: none; }
+  @media (max-width: 600px) {
+    .header { padding: 20px 16px; }
+    .section { padding: 16px; }
+    table { font-size: 12px; }
+    th, td { padding: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>💰 付费广告投放策略</h1>
+  <p>5个项目 · Meta + TikTok + 小红书薯条 · 从冷启动到规模化</p>
+  <p style="margin-top:8px;opacity:0.6;font-size:13px;">Karen · Meta Business Portfolio: karentan · 更新于2026-08-06</p>
+</div>
+
+<div class="container">
+
+<!-- 1. 投放前提条件 -->
+<div class="section">
+  <h2>✅ 投放前提条件检查</h2>
+  <p style="font-size:13px;color:#666;margin-bottom:16px;">每个平台的准入门槛，先检查完再投钱</p>
+
+  <div class="platform-block">
+    <div class="platform-header">
+      <div class="platform-icon" style="background:#1877f2;color:white;">f</div>
+      <div><strong>Meta Ads</strong>（Facebook + Instagram）<span class="badge badge-a" style="margin-left:8px;">Karen已有Business Portfolio ✅</span></div>
+    </div>
+    <ul class="checklist">
+      <li>在 Business Portfolio → 创建广告账户（每个项目建独立账户，方便分开记账）</li>
+      <li>在各项目落地页安装 Meta Pixel（善缘/Slim/舞镜落地页各装一个）</li>
+      <li>设置转化事件：善缘=付款/报告生成，Slim=注册/付款，YiYi=表单提交</li>
+      <li>上传自定义受众：现有用户邮箱/手机号 → 建 Lookalike Audience</li>
+      <li>准备广告素材：视频16:9 或 9:16，图片1:1，文字不超过画面20%</li>
+    </ul>
+    <div class="warn" style="margin-top:12px;"><strong>⚠️ 注意：</strong>命理/灵性类内容Meta有审核，善缘避免用"算命/预测未来/100%准"等词，改为"了解自己/个性分析"</div>
+  </div>
+
+  <div class="platform-block">
+    <div class="platform-header">
+      <div class="platform-icon" style="background:#000;color:white;">T</div>
+      <div><strong>TikTok Ads</strong></div>
+    </div>
+    <ul class="checklist">
+      <li>注册 TikTok Business账户（ads.tiktok.com）</li>
+      <li>安装 TikTok Pixel 到各项目落地页</li>
+      <li>开户充值（最低$20起）</li>
+      <li>先发30天自然内容再投付费（算法更友好）</li>
+    </ul>
+  </div>
+
+  <div class="platform-block">
+    <div class="platform-header">
+      <div class="platform-icon" style="background:#ff2442;color:white;">红</div>
+      <div><strong>小红书薯条</strong>（最快见效，今天就能投）</div>
+    </div>
+    <ul class="checklist">
+      <li>发布笔记后等待审核通过（通常2-4小时）</li>
+      <li>点击笔记右下角"薯条"按钮</li>
+      <li>最低¥50起投，建议先投¥100测试</li>
+      <li>目标选"涨粉"或"主页访问"（别选"落地页"，转化率低）</li>
+    </ul>
+  </div>
+</div>
+
+<!-- 2. 各项目投放优先级 -->
+<div class="section">
+  <h2>🎯 各项目投放优先级</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>项目</th>
+        <th>ROI排名</th>
+        <th>首选平台</th>
+        <th>广告形式</th>
+        <th>核心受众</th>
+        <th>预期CPL</th>
+        <th>原因</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="tag tag-sl">Slim</span></td>
+        <td>🥇 第1</td>
+        <td>Meta + 小红书薯条</td>
+        <td>图文+短视频</td>
+        <td>华人女性25-40岁，减肥兴趣</td>
+        <td>¥8-20</td>
+        <td>减脂是刚需，付费意愿强，竞品多但差异化清晰</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-sy">善缘</span></td>
+        <td>🥈 第2</td>
+        <td>Meta + 小红书薯条</td>
+        <td>视频钩子+图文</td>
+        <td>华人女性25-45岁，星座命理兴趣</td>
+        <td>¥15-30</td>
+        <td>受众精准可定向，命理内容视频钩子强</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-yy">YiYi英语</span></td>
+        <td>🥉 第3</td>
+        <td>Meta + 小红书薯条</td>
+        <td>图文+视频</td>
+        <td>有3-12岁孩子的华人家长</td>
+        <td>¥20-40</td>
+        <td>家长付费能力强，Facebook华人家长社群活跃</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-wj">舞镜</span></td>
+        <td>4️⃣ 第4</td>
+        <td>TikTok + 小红书薯条</td>
+        <td>视频（必须）</td>
+        <td>18-30岁舞蹈爱好者</td>
+        <td>¥5-15</td>
+        <td>舞蹈内容TikTok原生，年轻用户但付费转化需培育</td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-lm">Lumee</span></td>
+        <td>5️⃣ 第5</td>
+        <td>Meta + TikTok</td>
+        <td>情感视频</td>
+        <td>18-35岁情感需求用户</td>
+        <td>¥20-50</td>
+        <td>情感类受众广但转化路径长，先积累内容再投</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- 3. 预算计算器 -->
+<div class="section">
+  <h2>💵 分阶段预算方案</h2>
+  <div class="budget-calc">
+    <div class="slider-wrap">
+      <label>设置月预算（人民币）</label>
+      <input type="range" id="budgetSlider" min="3000" max="50000" step="1000" value="5000" oninput="updateBudget(this.value)">
+    </div>
+    <div class="budget-display" id="budgetDisplay">¥5,000 / 月</div>
+    <div id="budgetStage" class="badge badge-a" style="margin-bottom:12px;">测试期</div>
+    <div class="budget-table" id="budgetTable"></div>
+  </div>
+
+  <h3 style="margin-top:20px;">A档：测试期（¥3,000-5,000/月）</h3>
+  <p style="font-size:13px;color:#555;margin-bottom:10px;">目标：验证哪个受众/素材有效，不追求ROI</p>
+  <table>
+    <tr><th>项目</th><th>分配</th><th>平台</th><th>测试目标</th></tr>
+    <tr><td><span class="tag tag-sl">Slim</span></td><td>¥1,500</td><td>小红书薯条</td><td>测试哪条笔记点击率最高</td></tr>
+    <tr><td><span class="tag tag-sy">善缘</span></td><td>¥1,500</td><td>Meta</td><td>测试受众定向（命理 vs 星座 vs 自我认知）</td></tr>
+    <tr><td><span class="tag tag-yy">YiYi</span></td><td>¥1,000</td><td>小红书薯条</td><td>测试家长受众响应</td></tr>
+    <tr><td><span class="tag tag-wj">舞镜</span></td><td>¥0</td><td>—</td><td>暂不投，先积累自然视频内容</td></tr>
+    <tr><td><span class="tag tag-lm">Lumee</span></td><td>¥0</td><td>—</td><td>暂不投，先积累内容</td></tr>
+  </table>
+
+  <h3 style="margin-top:20px;">B档：放量期（¥10,000-30,000/月）</h3>
+  <p style="font-size:13px;color:#555;margin-bottom:10px;">前提：A档跑出CTR>2%的素材，开始放量</p>
+  <table>
+    <tr><th>项目</th><th>分配</th><th>平台</th><th>ROI目标</th></tr>
+    <tr><td><span class="tag tag-sl">Slim</span></td><td>40%</td><td>Meta + 小红书</td><td>ROAS 3x（¥1投入→¥3收入）</td></tr>
+    <tr><td><span class="tag tag-sy">善缘</span></td><td>30%</td><td>Meta</td><td>CPL < ¥25</td></tr>
+    <tr><td><span class="tag tag-yy">YiYi</span></td><td>20%</td><td>Meta + 小红书</td><td>CPL < ¥35</td></tr>
+    <tr><td><span class="tag tag-wj">舞镜</span></td><td>10%</td><td>TikTok</td><td>涨粉成本 < ¥2/人</td></tr>
+  </table>
+
+  <h3 style="margin-top:20px;">C档：规模化（¥50,000+/月）</h3>
+  <div class="ok"><strong>✅ 达到以下条件才进C档：</strong><br>ROAS稳定在3x以上连续4周 + 有稳定素材库（>10条可用视频） + 落地页转化率>3%</div>
+  <p style="font-size:13px;color:#555;">C档开启自动化：Meta Advantage+ 智能投放 + 每周自动更新素材库</p>
+</div>
+
+<!-- 4. Meta Ads操作指引 -->
+<div class="section">
+  <h2>📱 Meta Ads 操作步骤</h2>
+  <p style="font-size:13px;color:#666;margin-bottom:16px;">Karen已有 Business Portfolio → karentan，从这里继续</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-content">
+        <strong>创建广告账户（每个项目一个）</strong>
+        Business Portfolio → 广告账户 → 添加 → 新建广告账户 → 命名：善缘Ads / SlimAds / YiYiAds
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>安装 Meta Pixel</strong>
+        事件管理工具 → 创建数据源 → 网站 → 复制Pixel代码 → 粘贴到落地页<code>&lt;head&gt;</code>标签<br>
+        <span style="color:#666;font-size:12px;">善缘: shenyuan.mylumee.cn · Slim: eatbygram.com · 舞镜: wujing.mylumee.app</span>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>设置转化事件</strong>
+        Pixel → 测试事件 → 确认"Purchase"事件触发正常（付款页面触发）
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>创建第一个广告系列（以善缘为例）</strong>
+        广告管理工具 → 创建 → 目标选"转化量" → 转化事件选"Purchase"<br>
+        广告组：预算¥50/天 → 受众设置见下方
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>受众定向设置（华人精准打法）</strong>
+        地区：澳大利亚/加拿大/美国/新加坡/马来西亚<br>
+        语言：中文（简体+繁体）<br>
+        兴趣：Chinese astrology / Tarot / Chinese culture / Feng shui<br>
+        年龄：25-45岁（善缘） / 18-35岁（舞镜）
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-content">
+        <strong>竞价设置</strong>
+        新账户选"最低费用"（自动竞价）→ 跑7天后再切换"目标费用"<br>
+        单日预算¥50起，不要一开始就大预算
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 5. 小红书薯条 -->
+<div class="section">
+  <h2>🍠 小红书薯条（最快见效）</h2>
+
+  <h3>哪些笔记值得投薯条</h3>
+  <ul class="checklist" style="margin-bottom:16px;">
+    <li>自然流量下点赞率>3%（说明内容本身有吸引力）</li>
+    <li>评论里有"在哪里/怎么用/有没有"等转化意图的问题</li>
+    <li>干货类笔记（收藏率高）优先于故事类</li>
+    <li>发布后自然互动超过50条才投（让算法先验证内容）</li>
+  </ul>
+
+  <div class="stop"><strong>🚫 不要投的：</strong>发布不满24小时的笔记 / 互动不足30的笔记 / 纯品牌广告感的内容</div>
+
+  <h3 style="margin-top:16px;">薯条投放步骤</h3>
+  <div class="steps">
+    <div class="step"><div class="step-content"><strong>找到好笔记</strong>：点击率>5%，评论区有问哪买的</div></div>
+    <div class="step"><div class="step-content"><strong>点击"薯条"</strong>→ 目标选"主页访问量"（性价比最高）</div></div>
+    <div class="step"><div class="step-content"><strong>预算¥100</strong>，时长3天，观察数据</div></div>
+    <div class="step"><div class="step-content"><strong>如果CPM < ¥20且互动率>3%</strong>：加预算到¥300继续跑</div></div>
+  </div>
+</div>
+
+<!-- 6. 广告素材规格 -->
+<div class="section">
+  <h2>🖼️ 广告素材规格</h2>
+  <div class="spec-grid">
+    <div class="spec-card">
+      <div class="spec-platform" style="color:#1877f2;">📘 Meta Feed</div>
+      <div class="spec-row"><span>图片比例</span><span>1:1 或 4:5</span></div>
+      <div class="spec-row"><span>图片尺寸</span><span>1080×1080px</span></div>
+      <div class="spec-row"><span>视频时长</span><span>15-60秒（15秒最佳）</span></div>
+      <div class="spec-row"><span>文字占比</span><span>画面<20%</span></div>
+      <div class="spec-row"><span>文件大小</span><span>图片<30MB</span></div>
+    </div>
+    <div class="spec-card">
+      <div class="spec-platform" style="color:#e1306c;">📸 IG Stories/Reels</div>
+      <div class="spec-row"><span>比例</span><span>9:16</span></div>
+      <div class="spec-row"><span>尺寸</span><span>1080×1920px</span></div>
+      <div class="spec-row"><span>视频时长</span><span>Reels≤90秒，Stories≤60秒</span></div>
+      <div class="spec-row"><span>安全区</span><span>上下各留250px给UI</span></div>
+    </div>
+    <div class="spec-card">
+      <div class="spec-platform" style="color:#000;">⏰ TikTok Ads</div>
+      <div class="spec-row"><span>比例</span><span>9:16（必须）</span></div>
+      <div class="spec-row"><span>尺寸</span><span>1080×1920px</span></div>
+      <div class="spec-row"><span>视频时长</span><span>9-15秒（最佳）</span></div>
+      <div class="spec-row"><span>文件格式</span><span>MP4 / MOV</span></div>
+      <div class="spec-row"><span>文件大小</span><span>< 500MB</span></div>
+    </div>
+    <div class="spec-card">
+      <div class="spec-platform" style="color:#ff2442;">🌸 小红书薯条</div>
+      <div class="spec-row"><span>图片比例</span><span>3:4 或 1:1</span></div>
+      <div class="spec-row"><span>图片张数</span><span>1-9张</span></div>
+      <div class="spec-row"><span>视频时长</span><span>≤10分钟</span></div>
+      <div class="spec-row"><span>封面</span><span>文字清晰，避免大面积纯色</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- 7. 第一个月投放日历 -->
+<div class="section">
+  <h2>📅 第一个月投放日历</h2>
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-dot" style="background:#7c3aed;">W1</div>
+      <div class="timeline-content">
+        <h4>第1周：装像素+测试第一支广告</h4>
+        <ul>
+          <li>Day1-2：在善缘/Slim/舞镜落地页安装Meta Pixel，验证触发正常</li>
+          <li>Day3：发布第一批小红书笔记（善缘+Slim各3条）</li>
+          <li>Day4：善缘笔记薯条¥100测试，目标"主页访问"</li>
+          <li>Day5-7：Meta创建测试广告系列，¥50/天，跑Slim受众测试</li>
+        </ul>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot" style="background:#2563eb;">W2</div>
+      <div class="timeline-content">
+        <h4>第2周：数据分析+优化受众</h4>
+        <ul>
+          <li>分析薯条数据：哪条笔记CTR最高，停掉CTR<1%的广告组</li>
+          <li>Meta：查看哪个受众包CPL最低，关停超过CPL告警线的组</li>
+          <li>把跑赢的受众包复制，测试新素材（换不同钩子）</li>
+          <li>YiYi发布小红书首批内容并投薯条¥100</li>
+        </ul>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot" style="background:#059669;">W3</div>
+      <div class="timeline-content">
+        <h4>第3周：放量跑赢的组合</h4>
+        <ul>
+          <li>把第2周跑赢的广告组预算提升50%（每次不超过50%避免算法重置）</li>
+          <li>把跑赢素材做A/B测试：换标题/换前3秒/换CTA</li>
+          <li>舞镜开始投TikTok（如有可用视频素材）</li>
+          <li>小红书：对互动率>5%的笔记加薯条¥300</li>
+        </ul>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot" style="background:#d97706;">W4</div>
+      <div class="timeline-content">
+        <h4>第4周：总结+下月预算调整</h4>
+        <ul>
+          <li>汇总每个项目CPL、ROAS、总花费、总转化</li>
+          <li>决定下月哪个项目加预算（ROAS>2x的加，<1x的停）</li>
+          <li>更新素材库：淘汰疲软素材，补充新素材</li>
+          <li>准备下月投放计划</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 8. 关键指标 -->
+<div class="section">
+  <h2>📊 关键指标追踪</h2>
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="metric-label">CTR 点击率</div>
+      <div class="metric-value" style="color:#059669;">2-5%</div>
+      <div class="metric-sub">正常范围</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">CTR 告警线</div>
+      <div class="metric-value" style="color:#ef4444;">&lt; 1%</div>
+      <div class="metric-sub">立即暂停换素材</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">CPL 目标</div>
+      <div class="metric-value" style="color:#7c3aed;">¥15-35</div>
+      <div class="metric-sub">按项目不同</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">ROAS 目标</div>
+      <div class="metric-value" style="color:#2563eb;">3x</div>
+      <div class="metric-sub">放量期最低线</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">落地页转化率</div>
+      <div class="metric-value" style="color:#059669;">&gt; 3%</div>
+      <div class="metric-sub">未达到先优化页面</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">薯条CPM正常</div>
+      <div class="metric-value" style="color:#7c3aed;">&lt; ¥20</div>
+      <div class="metric-sub">超过说明受众太窄</div>
+    </div>
+  </div>
+
+  <div class="stop" style="margin-top:16px;">
+    <strong>🚫 立即停投的条件：</strong><br>
+    CTR连续3天 &lt; 1% / CPL超过客单价50% / ROAS &lt; 1x连续1周 / 落地页转化率 &lt; 1%
+  </div>
+  <div class="ok" style="margin-top:10px;">
+    <strong>✅ 可以加预算的条件：</strong><br>
+    ROAS连续7天 > 3x / CPL低于目标值20% / 落地页转化率 > 5%
+  </div>
+</div>
+
+</div>
+
+<script>
+function updateBudget(val) {
+  val = parseInt(val);
+  document.getElementById('budgetDisplay').textContent = '¥' + val.toLocaleString() + ' / 月';
+
+  let stage, badge;
+  if (val <= 5000) { stage = 'A档·测试期'; badge = 'badge-a'; }
+  else if (val <= 30000) { stage = 'B档·放量期'; badge = 'badge-b'; }
+  else { stage = 'C档·规模化'; badge = 'badge-c'; }
+
+  const stageEl = document.getElementById('budgetStage');
+  stageEl.textContent = stage;
+  stageEl.className = 'badge ' + badge;
+
+  let alloc;
+  if (val <= 5000) {
+    alloc = [
+      { name: '🥬 Slim', color: '#166534', pct: 0.30 },
+      { name: '🌙 善缘', color: '#6b21a8', pct: 0.30 },
+      { name: '🇬🇧 YiYi', color: '#1e40af', pct: 0.20 },
+      { name: '💃 舞镜', color: '#991b1b', pct: 0.00 },
+      { name: '💜 Lumee', color: '#be185d', pct: 0.00 },
+      { name: '🔧 测试备用', color: '#888', pct: 0.20 },
+    ];
+  } else if (val <= 30000) {
+    alloc = [
+      { name: '🥬 Slim', color: '#166534', pct: 0.40 },
+      { name: '🌙 善缘', color: '#6b21a8', pct: 0.30 },
+      { name: '🇬🇧 YiYi', color: '#1e40af', pct: 0.20 },
+      { name: '💃 舞镜', color: '#991b1b', pct: 0.10 },
+      { name: '💜 Lumee', color: '#be185d', pct: 0.00 },
+    ];
+  } else {
+    alloc = [
+      { name: '🥬 Slim', color: '#166534', pct: 0.35 },
+      { name: '🌙 善缘', color: '#6b21a8', pct: 0.25 },
+      { name: '🇬🇧 YiYi', color: '#1e40af', pct: 0.20 },
+      { name: '💃 舞镜', color: '#991b1b', pct: 0.12 },
+      { name: '💜 Lumee', color: '#be185d', pct: 0.08 },
+    ];
+  }
+
+  const table = document.getElementById('budgetTable');
+  table.innerHTML = alloc.map(a => `
+    <div class="budget-row">
+      <span style="color:${a.color};font-weight:600;">${a.name}</span>
+      <span>${Math.round(a.pct * 100)}%</span>
+      <span class="budget-amount">¥${Math.round(val * a.pct).toLocaleString()}</span>
+    </div>
+  `).join('');
+}
+updateBudget(5000);
+</script>
+</body>
+</html>

@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>善缘 · 市场专员执行手册</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+@media print{.no-print{display:none}.page-break{page-break-before:always}}
+body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC',sans-serif;background:#f5f3ef;color:#1a1a18;line-height:1.7;font-size:14px}
+.topbar{background:#1a1a18;color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.topbar h1{font-size:16px;font-weight:800;letter-spacing:.05em}
+.topbar-today{background:#3d9e82;border-radius:8px;padding:8px 16px;font-size:12px;line-height:1.5}
+.topbar-today strong{display:block;font-size:11px;opacity:.7;margin-bottom:2px}
+.nav{background:#3d9e82;padding:10px 24px;display:flex;gap:8px;flex-wrap:wrap;position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(61,158,130,.3)}
+.nav a{color:#fff;text-decoration:none;font-size:12px;padding:4px 10px;border-radius:10px;background:rgba(255,255,255,.18);white-space:nowrap}
+.nav a:hover{background:rgba(255,255,255,.32)}
+.container{max-width:960px;margin:0 auto;padding:28px 20px}
+.section{margin-bottom:52px}
+.mod-header{display:flex;align-items:center;gap:12px;margin-bottom:6px;padding-bottom:10px;border-bottom:3px solid currentColor}
+.mod-header h2{font-size:20px;font-weight:800}
+.mod-subtitle{font-size:12px;color:#6a6a64;margin-bottom:20px}
+
+/* module colors */
+.m1{--c:#2563eb;--bg:#eff6ff;--border:#bfdbfe}
+.m2{--c:#059669;--bg:#ecfdf5;--border:#a7f3d0}
+.m3{--c:#d97706;--bg:#fffbeb;--border:#fde68a}
+.m4{--c:#7c3aed;--bg:#f5f3ff;--border:#ddd6fe}
+.m5{--c:#dc2626;--bg:#fef2f2;--border:#fecaca}
+.m6{--c:#0891b2;--bg:#ecfeff;--border:#a5f3fc}
+.m7{--c:#374151;--bg:#f9fafb;--border:#e5e7eb}
+.mod-header{color:var(--c);border-color:var(--c)}
+
+/* day card */
+.day-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.day-card{background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.day-card-head{padding:12px 16px;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;gap:8px}
+.day-card-body{padding:14px 16px;font-size:12px}
+.task-row{display:flex;gap:10px;margin-bottom:8px;align-items:flex-start}
+.task-time{font-size:10px;color:#6a6a64;white-space:nowrap;padding-top:2px;min-width:48px}
+.task-text{flex:1;line-height:1.5}
+.task-text strong{display:block;color:#1a1a18;margin-bottom:1px}
+.task-text span{color:#6a6a64;font-size:11px}
+.check-row{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px;font-size:12px}
+.check-row::before{content:'☐';font-size:14px;flex-shrink:0;margin-top:-1px}
+
+/* adapt card */
+.adapt-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 10px rgba(0,0,0,.06);margin-bottom:14px}
+.adapt-card h3{font-size:14px;font-weight:800;margin-bottom:12px;color:var(--c,#1a1a18)}
+.adapt-step{display:flex;gap:12px;margin-bottom:10px;align-items:flex-start}
+.adapt-num{background:var(--c,#3d9e82);color:#fff;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
+.adapt-content{flex:1;font-size:12px;line-height:1.6}
+.adapt-content strong{color:#1a1a18}
+.example-box{background:var(--bg,#f8f7f4);border:1px solid var(--border,#e0dbd2);border-radius:10px;padding:12px;margin-top:10px}
+.example-box .label{font-size:10px;font-weight:700;color:var(--c,#3d9e82);margin-bottom:6px;letter-spacing:.06em}
+.example-box .text{font-size:12px;line-height:1.6;color:#2a2a26}
+.arrow{color:var(--c,#3d9e82);font-size:12px;font-weight:700;margin:4px 0;padding-left:4px}
+
+/* source cards */
+.source-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.source-card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06);border-top:3px solid var(--c,#3d9e82)}
+.source-card h4{font-size:13px;font-weight:800;margin-bottom:8px;color:var(--c,#1a1a18)}
+.source-meta{font-size:11px;color:#6a6a64;margin-bottom:8px}
+.source-template{background:#f8f7f4;border-radius:8px;padding:8px 10px;font-size:11px;color:#2a2a26;line-height:1.6;border-left:3px solid var(--c,#3d9e82)}
+.time-badge{display:inline-block;background:var(--c,#3d9e82);color:#fff;font-size:10px;padding:2px 8px;border-radius:8px;font-weight:700;margin-top:8px}
+
+/* SOP timeline */
+.sop-block{background:#fff;border-radius:12px;padding:16px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.sop-time{font-size:12px;font-weight:800;color:var(--c,#3d9e82);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sop-time::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--c,#3d9e82);display:inline-block}
+
+/* checklist */
+.checklist{background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.check-item{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid #f0ede8;font-size:12px;align-items:flex-start}
+.check-item:last-child{border-bottom:none}
+.check-box{width:18px;height:18px;border:2px solid #d0ccc6;border-radius:4px;flex-shrink:0;margin-top:1px}
+.check-item.critical .check-box{border-color:var(--c,#dc2626)}
+.check-item.critical .check-text{color:#1a1a18;font-weight:600}
+.check-num{font-size:10px;color:#8a8a84;width:18px;flex-shrink:0;padding-top:2px}
+.check-text{flex:1;line-height:1.5}
+.check-cat{font-size:10px;font-weight:700;color:var(--c,#6a6a64);padding:10px 0 4px;border-bottom:1px solid #e8e4de;margin-bottom:4px}
+
+/* emergency */
+.emergency-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.emergency-card{border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.emergency-head{padding:10px 14px;color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;gap:6px}
+.emergency-body{background:#fff;padding:14px;font-size:12px}
+.emergency-step{display:flex;gap:8px;margin-bottom:7px;align-items:flex-start;line-height:1.5}
+.emergency-step::before{content:'→';color:var(--c,#3d9e82);font-weight:700;flex-shrink:0}
+
+/* materials */
+.material-block{background:#fff;border-radius:12px;padding:16px;margin-bottom:10px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.material-block h4{font-size:13px;font-weight:800;color:var(--c,#3d9e82);margin-bottom:10px}
+.path-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px;font-size:12px}
+.path-label{font-size:10px;font-weight:700;color:#8a8a84;min-width:60px;padding-top:2px}
+.path-value{font-family:'SF Mono',Consolas,monospace;font-size:11px;background:#f8f7f4;padding:3px 8px;border-radius:6px;color:#2a2a26;flex:1;word-break:break-all}
+.status-badge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:6px;font-weight:700;margin-left:6px}
+.s-ok{background:#d4edda;color:#155724}
+.s-pending{background:#fff3cd;color:#856404}
+.s-fix{background:#fde8ea;color:#721c24}
+
+/* tip/warn */
+.tip{background:#ecfdf5;border-radius:10px;padding:12px 14px;font-size:12px;color:#065f46;margin-top:10px;border-left:4px solid #059669;line-height:1.6}
+.warn{background:#fffbeb;border-radius:10px;padding:12px 14px;font-size:12px;color:#92400e;margin-top:10px;border-left:4px solid #d97706;line-height:1.6}
+
+@media(max-width:600px){
+  .day-grid,.source-grid,.emergency-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- 顶部今日提醒 -->
+<div class="topbar no-print">
+  <h1>善缘 · 市场专员执行手册</h1>
+  <div class="topbar-today">
+    <strong>每日三件事</strong>
+    ① 早8点 检查定时帖+回3条评论 &nbsp;·&nbsp; ② 发帖后 自己写第一条评论 &nbsp;·&nbsp; ③ 晚9点 记录数据
+  </div>
+</div>
+
+<!-- 导航 -->
+<div class="nav no-print">
+  <a href="#m1">📅 第一周日历</a>
+  <a href="#m2">✂️ 改编操作卡</a>
+  <a href="#m3">📦 现有内容库</a>
+  <a href="#m4">⏰ 每日SOP</a>
+  <a href="#m5">✅ 质检清单</a>
+  <a href="#m6">🚨 紧急情况</a>
+  <a href="#m7">📁 素材地址</a>
+</div>
+
+<div class="container">
+
+<!-- ===== 模块1：第一周日历 ===== -->
+<div class="section m1" id="m1">
+  <div class="mod-header"><h2>📅 模块1：新人第一周日历</h2></div>
+  <div class="mod-subtitle">精确到每天的操作步骤，按顺序执行，不需要问任何人</div>
+
+  <div class="day-grid">
+
+    <div class="day-card">
+      <div class="day-card-head" style="background:#2563eb">Day 1 · 注册+熟悉素材（3小时）</div>
+      <div class="day-card-body">
+        <div class="task-row"><div class="task-time">10:00</div><div class="task-text"><strong>注册小红书账号</strong><span>昵称：善缘·八字命理 / 头像：联系Karen拿Logo</span></div></div>
+        <div class="task-row"><div class="task-time">10:30</div><div class="task-text"><strong>注册Instagram</strong><span>用户名：@shenyuan.oracle / 同头像</span></div></div>
+        <div class="task-row"><div class="task-time">11:00</div><div class="task-text"><strong>注册TikTok</strong><span>@shenyuan.bazi / 需海外手机号</span></div></div>
+        <div class="task-row"><div class="task-time">11:30</div><div class="task-text"><strong>打开素材库</strong><span>读完社媒手册+Loop系统两个HTML文件</span></div></div>
+        <div class="task-row"><div class="task-time">14:00</div><div class="task-text"><strong>打开善缘网站</strong><span>熟悉5个功能页面，截图备用</span></div></div>
+        <div class="task-row"><div class="task-time">15:00</div><div class="task-text"><strong>找到封面图文件夹</strong><span>cover2-tarot-v2.png + cover3-restore-v2c.png 可直接用</span></div></div>
+      </div>
+    </div>
+
+    <div class="day-card">
+      <div class="day-card-head" style="background:#1d4ed8">Day 2 · 发第一条内容</div>
+      <div class="day-card-body">
+        <div class="task-row"><div class="task-time">09:00</div><div class="task-text"><strong>发小红书第1条</strong><span>主题：「你最爱说的一句话，暴露了你缺什么五行」文案在content-50-shenyuan.html</span></div></div>
+        <div class="task-row"><div class="task-time">09:10</div><div class="task-text"><strong>自己写第一条评论</strong><span>「你们最爱说哪句话？评论告诉我，我帮你看✨」</span></div></div>
+        <div class="task-row"><div class="task-time">09:30</div><div class="task-text"><strong>同步发IG</strong><span>用英文版文案+cover2图</span></div></div>
+        <div class="task-row"><div class="task-time">20:00</div><div class="task-text"><strong>发小红书第2条</strong><span>主题：每日运势截图（打开daily.html截图+配文模板）</span></div></div>
+        <div class="task-row"><div class="task-time">20:30</div><div class="task-text"><strong>回复所有评论</strong><span>每条评论都要回，第一天最重要</span></div></div>
+      </div>
+    </div>
+
+    <div class="day-card">
+      <div class="day-card-head" style="background:#1e40af">Day 3-5 · 进入日常节奏</div>
+      <div class="day-card-body">
+        <div class="task-row"><div class="task-time">每天</div><div class="task-text"><strong>早上8点截图每日运势</strong><span>打开 shenyuan.mylumee.cn/pages/daily.html → 截图 → 配模板文案发小红书</span></div></div>
+        <div class="task-row"><div class="task-time">每天</div><div class="task-text"><strong>从content-50文件取1条</strong><span>按序号顺序发，每天消耗2-3条</span></div></div>
+        <div class="task-row"><div class="task-time">每天</div><div class="task-text"><strong>回复评论（30分钟内）</strong><span>发完帖子30分钟内必须回前3条</span></div></div>
+        <div class="task-row"><div class="task-time">晚9点</div><div class="task-text"><strong>记录数据</strong><span>点赞数 / 评论数 / 涨粉数 → 填入周复盘表</span></div></div>
+      </div>
+    </div>
+
+    <div class="day-card">
+      <div class="day-card-head" style="background:#1e3a8a">Day 6-7 · 第一次复盘</div>
+      <div class="day-card-body">
+        <div class="task-row"><div class="task-time">Day 6</div><div class="task-text"><strong>找出本周最好的1条帖子</strong><span>点赞+评论最多的那条，分析：标题/封面/话题/时间哪里好</span></div></div>
+        <div class="task-row"><div class="task-time">Day 6</div><div class="task-text"><strong>同主题再写1条</strong><span>换一个角度写同主题，「第二集」效果通常更好</span></div></div>
+        <div class="task-row"><div class="task-time">Day 7</div><div class="task-text"><strong>排下周内容</strong><span>在小红书/Meta Business Suite定时排好下周7天的帖子</span></div></div>
+        <div class="task-row"><div class="task-time">Day 7</div><div class="task-text"><strong>发周报给Karen</strong><span>格式：本周发了X条 / 最高赞X / 涨粉X / 下周计划</span></div></div>
+      </div>
+    </div>
+
+  </div>
+  <div class="tip">💡 <strong>第一周目标：</strong>不求爆，求稳定发出去。每天3条，发出去就是胜利。数据差不要慌，第2-3周会涨。</div>
+</div>
+
+<!-- ===== 模块2：改编操作卡 ===== -->
+<div class="section m2" id="m2">
+  <div class="mod-header"><h2>✂️ 模块2：改编操作卡（最核心）</h2></div>
+  <div class="mod-subtitle">拿到任何一段原始内容 → 按4步改编 → 输出3个平台的帖子</div>
+
+  <div class="adapt-card">
+    <h3>4步改编法则</h3>
+    <div class="adapt-step">
+      <div class="adapt-num">1</div>
+      <div class="adapt-content"><strong>提炼核心金句（&lt;20字）</strong><br>把原始内容最有价值的一句话提炼出来。要有冲击感，让人想点进来。<br><em style="color:#6a6a64">例：「甲木日主，适合创业」→ 金句：「天生领导命的8字特征，你中了几个」</em></div>
+    </div>
+    <div class="adapt-step">
+      <div class="adapt-num">2</div>
+      <div class="adapt-content"><strong>小红书版 = 封面大字（金句）+ 6-8张内容卡</strong><br>封面：金句做大字，背景深紫#1a0f2e或奶白#faf8f5，字占60%画面<br>内容卡：每张讲一个知识点，最后1张CTA：「免费测你的八字→主页链接」</div>
+    </div>
+    <div class="adapt-step">
+      <div class="adapt-num">3</div>
+      <div class="adapt-content"><strong>TikTok版 = 前3秒钩子 + 30秒展开 + 5秒CTA</strong><br>前3秒：金句改成「这X个人，天生有XXX命」争议感开场<br>展开：每5秒一个知识点，字幕要大要醒目<br>CTA：「主页链接免费查你自己的命盘」</div>
+    </div>
+    <div class="adapt-step">
+      <div class="adapt-num">4</div>
+      <div class="adapt-content"><strong>Instagram版 = 英文金句 + 3-5张轮播</strong><br>金句翻译成英文（Google翻译后润色）<br>每张图结尾写「Swipe →」引导滑动<br>hashtag 3层：大词2个 + 中词5个 + 小词3个</div>
+    </div>
+  </div>
+
+  <div class="adapt-card">
+    <h3>完整改编案例示范</h3>
+    <div class="example-box">
+      <div class="label">原始内容（网站报告片段）</div>
+      <div class="text">「甲木日主，性格直率，重情义，执行力强，适合创业或担任领导职位。缺点是容易固执，听不进意见。五行缺火的甲木日主，财运需要靠努力积累。」</div>
+    </div>
+    <div class="arrow">↓ Step 1：提炼金句</div>
+    <div class="example-box">
+      <div class="label">金句</div>
+      <div class="text">「这4个特征，说明你是天生创业命」</div>
+    </div>
+    <div class="arrow">↓ Step 2：小红书版</div>
+    <div class="example-box">
+      <div class="label">小红书标题</div>
+      <div class="text">你是甲木日主吗？这4个特征你中了几个</div>
+    </div>
+    <div class="example-box" style="margin-top:6px">
+      <div class="label">正文（可直接复制）</div>
+      <div class="text">🌿 甲木日主是八字里的「大树」，有这4个特征你中了几个👇
+
+① 说话直接，有时被误解为不留情面
+② 对朋友义气，绝不背刺
+③ 执行力超强，一旦决定立刻行动
+④ 容易固执，听不进去的话就是听不进去
+
+五行缺火的甲木：财运需要靠努力，但只要努力必有收获💰
+
+想知道你是什么日主、缺什么五行？
+主页链接 → 免费八字排盘🌿
+
+#八字 #甲木日主 #五行 #性格分析 #命理文化 #东方哲学 #自我认知 #海外华人</div>
+    </div>
+    <div class="arrow">↓ Step 3：TikTok版</div>
+    <div class="example-box">
+      <div class="label">前3秒脚本</div>
+      <div class="text">「出生在这几个月的人，八字里藏着创业命！」（配字幕，声音说）</div>
+    </div>
+    <div class="example-box" style="margin-top:6px">
+      <div class="label">完整口播（30秒）</div>
+      <div class="text">甲木日主就是八字里的大树型人格
+他们有4个天生特征——
+第一：说话直，不绕弯子
+第二：重情义，朋友有难必出现
+第三：执行力超强，说做就做
+第四：固执，认定的事很难改变
+这类人特别适合创业或当领导
+但如果八字缺火，财运要靠自己努力才来
+想测你自己是什么命？主页链接免费查👆</div>
+    </div>
+    <div class="arrow">↓ Step 4：Instagram版</div>
+    <div class="example-box">
+      <div class="label">Instagram Caption（英文）</div>
+      <div class="text">Are you a Jiǎ Wood (甲木) day master? 🌳
+
+4 signs you might be a natural-born leader:
+① You're direct — sometimes brutally honest
+② Fiercely loyal to your people
+③ Action-oriented: decide, then move fast
+④ Stubborn when your mind is made up
+
+The oak tree of BaZi — strong, rooted, driven.
+
+Curious about your own BaZi chart? Free reading at shenyuan.mylumee.cn 🌿
+
+#BaZi #ChineseAstrology #Astrology #Jiamu #WoodElement #ChineseDiaspora #SpiritualTikTok #SelfDiscovery</div>
+    </div>
+  </div>
+
+  <div class="warn">⏱ <strong>改编时间参考：</strong>熟练后每段原始内容改编成3条帖子约需 <strong>25-35分钟</strong>。每天改编2段 = 6条帖子，超过每天3条目标。</div>
+</div>
+
+<!-- ===== 模块3：现有内容改编库 ===== -->
+<div class="section m3" id="m3">
+  <div class="mod-header"><h2>📦 模块3：善缘现有内容改编库</h2></div>
+  <div class="mod-subtitle">这些都是免费素材，截图/改编直接发，不需要创作</div>
+
+  <div class="source-grid">
+
+    <div class="source-card" style="--c:#dc2626">
+      <h4>① 每日运势页面</h4>
+      <div class="source-meta">网址：shenyuan.mylumee.cn/pages/daily.html<br>更新频率：每天自动更新</div>
+      <div class="source-template">配文模板：<br>「今日天机 · [日期]<br>[摘取运势一句话]<br>完整版看主页链接👇<br>#每日运势 #八字 #今日天机」</div>
+      <span class="time-badge">⏱ 2分钟/天</span>
+    </div>
+
+    <div class="source-card" style="--c:#d97706">
+      <h4>② 八字报告知识点</h4>
+      <div class="source-meta">网址：shenyuan.mylumee.cn（填生辰生成）<br>可截取：日主介绍/五行分析/大运解读</div>
+      <div class="source-template">配文模板：<br>「[知识点标题]<br>你的[五行/日主]代表……<br>想测自己的？主页免费查🌿<br>#八字命理 #五行 #命理文化」</div>
+      <span class="time-badge">⏱ 10分钟/条</span>
+    </div>
+
+    <div class="source-card" style="--c:#059669">
+      <h4>③ 塔罗占卜结果</h4>
+      <div class="source-meta">网址：shenyuan.mylumee.cn/pages/tarot.html<br>可截取：牌面图+解读文字</div>
+      <div class="source-template">配文模板：<br>「今日牌意 · [牌名]🃏<br>[复制解读1-2句]<br>你今天抽到什么牌？<br>#塔罗 #每日塔罗 #占卜」</div>
+      <span class="time-badge">⏱ 5分钟/条</span>
+    </div>
+
+    <div class="source-card" style="--c:#7c3aed">
+      <h4>④ 合婚配对结果</h4>
+      <div class="source-meta">网址：shenyuan.mylumee.cn/pages/hehun.html<br>截取：配对分数/建议文字（脱敏）</div>
+      <div class="source-template">配文模板：<br>「[属相/星座]配[属相/星座]<br>八字合婚结果：[分数]分<br>[摘取建议1句]<br>发给你想测的TA💑<br>#合婚 #八字配对 #爱情」</div>
+      <span class="time-badge">⏱ 10分钟/条</span>
+    </div>
+
+    <div class="source-card" style="--c:#0891b2">
+      <h4>⑤ 韩语사주报告</h4>
+      <div class="source-meta">网址：shenyuan.mylumee.cn/pages/saju-landing-KR.html<br>适合：发IG/TikTok触达韩国华人</div>
+      <div class="source-template">配文模板：<br>「한국 사주 풀이 🔮<br>AI로 나의 사주를 분석해보세요<br>Free reading↓<br>#사주 #사주팔자 #운세」</div>
+      <span class="time-badge">⏱ 5分钟/条</span>
+    </div>
+
+    <div class="source-card" style="--c:#374151">
+      <h4>⑥ 老照片修复</h4>
+      <div class="source-meta">文件：cover3-restore-v2c.png（8.5/10）<br>已有文案：见social-media-kit.html第3条</div>
+      <div class="source-template">配文模板（已写好直接发）：<br>「奶奶只留下一张模糊的照片，<br>我把她修回来了……<br>主页链接免费试试🌿<br>#老照片修复 #思念 #AI修复」</div>
+      <span class="time-badge">⏱ 3分钟/条（文案现成）</span>
+    </div>
+
+  </div>
+  <div class="tip">💡 <strong>每天改编比例建议：</strong>3条帖子中 → 1条改编自每日运势（1分钟）+ 1条改编自现有内容（10分钟）+ 1条用content-50文案（复制粘贴）= 全天约20分钟产内容</div>
+</div>
+
+<!-- ===== 模块4：每日SOP ===== -->
+<div class="section m4" id="m4">
+  <div class="mod-header"><h2>⏰ 模块4：每日5分钟操作SOP</h2></div>
+  <div class="mod-subtitle">每天固定3个时间点操作，总计不超过15分钟</div>
+
+  <div class="sop-block">
+    <div class="sop-time">🌅 早上 08:00（2分钟）</div>
+    <div class="check-row">检查昨晚定时帖是否成功发出（没发出的手动补发）</div>
+    <div class="check-row">打开每日运势页面截图，准备今日运势帖</div>
+    <div class="check-row">回复昨天帖子的前3条未回评论</div>
+  </div>
+
+  <div class="sop-block">
+    <div class="sop-time">☀️ 发帖时（1分钟/次，每天3次）</div>
+    <div class="check-row">发帖前过质检清单（模块5）5条核心项</div>
+    <div class="check-row">发帖后 <strong>立刻</strong> 自己写第一条评论（引导话题，不能是广告）</div>
+    <div class="check-row">@ 1个相关话题账号（如：@八字命理圈 @海外华人生活）</div>
+    <div class="check-row">发完30分钟内回复所有评论</div>
+  </div>
+
+  <div class="sop-block">
+    <div class="sop-time">🌙 晚上 21:00（2分钟）</div>
+    <div class="check-row">记录今日数据到周复盘表：点赞 / 评论 / 涨粉 / 主页访问</div>
+    <div class="check-row">预览明天的3条定时帖，确认内容和时间设置正确</div>
+    <div class="check-row">如果今天有帖子超过500赞 → 立刻写同主题「第二集」排入明天</div>
+  </div>
+
+  <div class="sop-block">
+    <div class="sop-time">📅 每周一（30分钟）— 复盘+规划</div>
+    <div class="check-row">汇总上周各帖数据，找出TOP2表现最好的</div>
+    <div class="check-row">分析：这2条好在哪？（封面/话题/时间/格式）</div>
+    <div class="check-row">基于爆款主题，从content-50或改编库取3-5条同类内容排本周</div>
+    <div class="check-row">发周报给Karen：发X条 / 涨粉X / TOP帖X赞 / 下周方向</div>
+  </div>
+
+  <div class="sop-block">
+    <div class="sop-time">🔄 每周三（60分钟）— 内容补充</div>
+    <div class="check-row">检查content-50剩余内容量，如果不足2周用量 → 提醒Karen补充</div>
+    <div class="check-row">从评论区找5个用户提问，改编成5条新帖（用改编操作卡）</div>
+    <div class="check-row">查本周节气/热点，写1-2条时效内容</div>
+  </div>
+</div>
+
+<!-- ===== 模块5：质检清单 ===== -->
+<div class="section m5" id="m5">
+  <div class="mod-header"><h2>✅ 模块5：发布前20条质检清单</h2></div>
+  <div class="mod-subtitle">每条帖子发布前必须过这20项，全部打✓才能发</div>
+
+  <div class="checklist">
+    <div class="check-cat" style="--c:#dc2626;color:#dc2626">🔴 合规红线（这5条不过直接改，不能妥协）</div>
+    <div class="check-item critical"><div class="check-box"></div><div class="check-num">01</div><div class="check-text">正文中没有「算命/改运/保准/100%准/必定/神准/大师」等禁词</div></div>
+    <div class="check-item critical"><div class="check-box"></div><div class="check-num">02</div><div class="check-text">没有在评论区或正文留微信号/WhatsApp（会被封号）</div></div>
+    <div class="check-item critical"><div class="check-box"></div><div class="check-num">03</div><div class="check-text">没有承诺具体结果（「保你今年发财」类的绝对不能有）</div></div>
+    <div class="check-item critical"><div class="check-box"></div><div class="check-num">04</div><div class="check-text">图片没有版权问题（只用自有素材或ComfyUI生成图）</div></div>
+    <div class="check-item critical"><div class="check-box"></div><div class="check-num">05</div><div class="check-text">如果涉及具体人物，已获得授权或已完全脱敏</div></div>
+
+    <div class="check-cat" style="--c:#d97706;color:#d97706">🟡 内容质量（核心吸引力）</div>
+    <div class="check-item"><div class="check-box"></div><div class="check-num">06</div><div class="check-text">封面文字有钩子感，5-8个字，让人想点进来</div></div>
+    <div class="check-item"><div class="check-box"></div><div class="check-num">07</div><div class="check-text">标题包含用户会搜索的关键词（八字/塔罗/运势/合婚等）</div></div>
+    <div class="check-item"><div class="check-box"></div><div class="check-num">08</div><div class="check-text">正文第一句话有冲击力（问题/数字/反常识/共鸣）</div></div>
+    <div class="check-item"><div class="check-box"></div><div class="check-num">09</div><div class="check-text">内容有实际价值（干货/故事/互动），不是纯广告</div></div>
+    <div class="check-item"><div class="check-box"></div><div class="check-num">10</div><div class="check-text">结尾有明确CTA（去主页/评论互动/转发给TA）</div></div>
+
+    <div class="check-cat" style="--c:#059669;color:#059669">🟢 视觉检查</div>
+    <div class="check-item"><div class="check-box"></div><div class="check-num">11</div><div class="check-text">封面图清晰，不模糊，不压缩过度</div></div>
+    <div class="check-item"><div class="check-box"></div><div class="check-num">12</div><div class="check-text">文字可读，背景和文字有足够对比度</div></div>
+    <div class="check-item"><div class="check-box"></div><div class="check-num">13</div><div class="check-text">多图帖子风格统一（颜色/字体/排版一致）</div></div>
+    <div class="check-item"><div class="check-box"></div><div class="check-num">14</div><div class="check-text">图片比例正确（小红书3:4，IG 1:1或4:5，TikTok 9:16）</div></div>
+
+    <div class="check-cat" style="--c:#2563eb;color:#2563eb">🔵 发布设置</div>
+    <div class="check-item"><div class="check-box"></div><div class="check-num">15</div><div class="check-text">Hashtag已添加，数量：小红书5-8个，IG 10-15个，TikTok 5-8个</div></div>
+    <div class="check-item"><div class="check-box"></div><div class="check-num">16</div><div class="check-text">发布时间正确：小红书晚8-10点，TikTok对应时区7-9pm</div></div>
+    <div class="check-item"><div class="check-box"></div><div class="check-num">17</div><div class="check-text">定时发布时间已设置（不是立刻发布）</div></div>
+    <div class="check-item"><div class="check-box"></div><div class="check-num">18</div><div class="check-text">账号资料完整（头像/简介/主页链接都在）</div></div>
+
+    <div class="check-cat" style="--c:#374151;color:#374151">⚫ 发后检查</div>
+    <div class="check-item"><div class="check-box"></div><div class="check-num">19</div><div class="check-text">发出后预览效果正常，封面显示正确</div></div>
+    <div class="check-item"><div class="check-box"></div><div class="check-num">20</div><div class="check-text">已写好第一条自评，准备发帖后立刻回复</div></div>
+  </div>
+</div>
+
+<!-- ===== 模块6：紧急情况 ===== -->
+<div class="section m6" id="m6">
+  <div class="mod-header"><h2>🚨 模块6：紧急情况处理手册</h2></div>
+  <div class="mod-subtitle">遇到任何突发情况，先看这里，不要自己乱操作</div>
+
+  <div class="emergency-grid">
+
+    <div class="emergency-card">
+      <div class="emergency-head" style="background:#6b7280">📉 情况1：数据极差（&lt;100播放）</div>
+      <div class="emergency-body" style="--c:#6b7280">
+        <div class="emergency-step">绝对不要删帖，等满48小时再看</div>
+        <div class="emergency-step">回复所有评论（哪怕只有1条），互动能拉升推送</div>
+        <div class="emergency-step">分析：封面是否够吸引？标题是否有钩子？</div>
+        <div class="emergency-step">下次同类内容换封面文字，其他不变</div>
+        <div class="emergency-step">记录到「低效内容库」，学习教训</div>
+      </div>
+    </div>
+
+    <div class="emergency-card">
+      <div class="emergency-head" style="background:#dc2626">🚫 情况2：内容被删/收到警告</div>
+      <div class="emergency-body" style="--c:#dc2626">
+        <div class="emergency-step">立刻截图存档（删除前）</div>
+        <div class="emergency-step">对照禁词列表检查，找出触发词</div>
+        <div class="emergency-step">修改后重发，间隔至少3天（同内容太快重发会触发再次审核）</div>
+        <div class="emergency-step">严重情况立刻通知Karen</div>
+        <div class="emergency-step">不要申诉（容易触发人工审核，更麻烦）</div>
+      </div>
+    </div>
+
+    <div class="emergency-card">
+      <div class="emergency-head" style="background:#d97706">💬 情况3：私信要微信/算命</div>
+      <div class="emergency-body" style="--c:#d97706">
+        <div class="emergency-step">不要留微信（违规+可能是钓鱼）</div>
+        <div class="emergency-step">固定回复：「感谢关注！完整命盘分析可以在主页链接免费体验，有问题可以在评论区问我哦～」</div>
+        <div class="emergency-step">如果对方执意要私信服务，回复：「暂时只提供线上AI分析，链接在主页👆」</div>
+        <div class="emergency-step">记录这类私信数量，反馈给Karen（说明需求）</div>
+      </div>
+    </div>
+
+    <div class="emergency-card">
+      <div class="emergency-head" style="background:#059669">🚀 情况4：爆款！突然涨粉</div>
+      <div class="emergency-body" style="--c:#059669">
+        <div class="emergency-step">立刻回复所有评论（前3小时最关键）</div>
+        <div class="emergency-step">立刻发「第二集」同主题内容（趁热度不要等）</div>
+        <div class="emergency-step">把这条帖子的格式（标题结构/封面风格/话题角度）复制给其他项目用</div>
+        <div class="emergency-step">截图数据通知Karen</div>
+        <div class="emergency-step">可考虑投DOU+/Promote加速（问Karen预算）</div>
+      </div>
+    </div>
+
+    <div class="emergency-card">
+      <div class="emergency-head" style="background:#7c3aed">😡 情况5：遇到负面评论/骂人</div>
+      <div class="emergency-body" style="--c:#7c3aed">
+        <div class="emergency-step">不要删评论（会激化矛盾）</div>
+        <div class="emergency-step">如果是质疑内容：友好回应+补充说明「仅供参考，每人情况不同」</div>
+        <div class="emergency-step">如果是恶意谩骂：举报+忽略，不要回击</div>
+        <div class="emergency-step">如果是大量负面（疑似竞争对手黑）：立刻通知Karen</div>
+      </div>
+    </div>
+
+    <div class="emergency-card">
+      <div class="emergency-head" style="background:#0891b2">📱 情况6：账号被封/限流</div>
+      <div class="emergency-body" style="--c:#0891b2">
+        <div class="emergency-step">停止发布24小时，不要挣扎</div>
+        <div class="emergency-step">检查最近发的内容有没有违规</div>
+        <div class="emergency-step">24小时后发一条无争议的轻量内容测试</div>
+        <div class="emergency-step">如果封号超过72小时，立刻通知Karen处理</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== 模块7：素材库 ===== -->
+<div class="section m7" id="m7">
+  <div class="mod-header"><h2>📁 模块7：素材库完整地址</h2></div>
+  <div class="mod-subtitle">所有素材的存放位置，找不到直接来这里查</div>
+
+  <div class="material-block" style="--c:#dc2626">
+    <h4>🖼️ 封面图（电脑本地）</h4>
+    <div class="path-row"><div class="path-label">文件夹</div><div class="path-value">~/projects/shenyuan/docs/ad-images/covers/</div></div>
+    <div class="path-row"><div class="path-label">塔罗封面</div><div class="path-value">cover2-tarot-v2.png <span class="status-badge s-ok">9/10 ✅直接用</span></div></div>
+    <div class="path-row"><div class="path-label">修复封面</div><div class="path-value">cover3-restore-v2c.png <span class="status-badge s-ok">8.5/10 ✅直接用</span></div></div>
+    <div class="path-row"><div class="path-label">八字封面</div><div class="path-value">cover1-bazi-v2.png <span class="status-badge s-fix">需CapCut加文字层</span></div></div>
+  </div>
+
+  <div class="material-block" style="--c:#059669">
+    <h4>📝 文案内容（电脑本地HTML文件）</h4>
+    <div class="path-row"><div class="path-label">50条内容</div><div class="path-value">~/projects/shenyuan/docs/content-50-shenyuan.html <span class="status-badge s-ok">善缘主库</span></div></div>
+    <div class="path-row"><div class="path-label">社媒手册</div><div class="path-value">~/projects/shenyuan/docs/social-media-kit.html <span class="status-badge s-ok">v2 10分版</span></div></div>
+    <div class="path-row"><div class="path-label">Loop系统</div><div class="path-value">~/projects/shenyuan/docs/content-loop-system.html</div></div>
+    <div class="path-row"><div class="path-label">本文件</div><div class="path-value">~/projects/shenyuan/docs/market-executor-guide.html</div></div>
+  </div>
+
+  <div class="material-block" style="--c:#2563eb">
+    <h4>🌐 网站截图素材（手机/电脑打开截图）</h4>
+    <div class="path-row"><div class="path-label">首页</div><div class="path-value">https://shenyuan.mylumee.cn</div></div>
+    <div class="path-row"><div class="path-label">每日运势</div><div class="path-value">https://shenyuan.mylumee.cn/pages/daily.html <span class="status-badge s-ok">每天截图</span></div></div>
+    <div class="path-row"><div class="path-label">塔罗</div><div class="path-value">https://shenyuan.mylumee.cn/pages/tarot.html</div></div>
+    <div class="path-row"><div class="path-label">合婚</div><div class="path-value">https://shenyuan.mylumee.cn/pages/hehun.html</div></div>
+    <div class="path-row"><div class="path-label">韩语사주</div><div class="path-value">https://shenyuan.mylumee.cn/pages/saju-landing-KR.html</div></div>
+  </div>
+
+  <div class="material-block" style="--c:#7c3aed">
+    <h4>📱 社媒账号信息（向Karen确认密码）</h4>
+    <div class="path-row"><div class="path-label">小红书</div><div class="path-value">善缘·八字命理 — 向Karen获取账号密码</div></div>
+    <div class="path-row"><div class="path-label">Instagram</div><div class="path-value">@shenyuan.oracle — 向Karen获取账号密码</div></div>
+    <div class="path-row"><div class="path-label">TikTok</div><div class="path-value">@shenyuan.bazi — 向Karen获取账号密码</div></div>
+    <div class="path-row"><div class="path-label">定时工具</div><div class="path-value">小红书：App内定时 / Meta：business.facebook.com / TikTok：创作者中心</div></div>
+  </div>
+
+  <div class="tip">📌 <strong>每周五更新这张表：</strong>把新生成的内容文件路径加进来，确保素材库地址始终是最新的。</div>
+</div>
+
+<!-- 模块8：Pixel安装 -->
+<div class="module">
+  <div class="module-header">📡 模块8：Meta & TikTok Pixel 安装指引</div>
+  <p style="color:#555;margin-bottom:16px">Pixel是投广告的前提，必须先装好才能让平台积累转化数据。</p>
+
+  <h3 style="color:#1a7a5e;margin:20px 0 10px">第一步：获取Pixel ID</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+    <div style="background:#f0f9ff;border-radius:8px;padding:16px;border-left:4px solid #0066cc">
+      <strong>Meta Pixel</strong><br>
+      Meta Business Suite → 数据源 → Pixel → 创建Pixel<br>
+      拿到Pixel ID（16位数字）
+    </div>
+    <div style="background:#fff0f5;border-radius:8px;padding:16px;border-left:4px solid #ff2d55">
+      <strong>TikTok Pixel</strong><br>
+      TikTok Ads Manager → 资产 → 事件 → 网页端事件 → 创建Pixel<br>
+      拿到Pixel ID
+    </div>
+  </div>
+
+  <h3 style="color:#1a7a5e;margin:20px 0 10px">第二步：把Pixel ID告诉开发（或Karen）</h3>
+  <p>拿到ID后，让开发在以下落地页的 <code>&lt;head&gt;</code> 里装对应代码：</p>
+  <table style="width:100%;border-collapse:collapse;margin:12px 0">
+    <tr style="background:#3d9e82;color:#fff">
+      <th style="padding:10px;text-align:left">项目</th>
+      <th style="padding:10px;text-align:left">落地页网址</th>
+      <th style="padding:10px;text-align:left">Meta Pixel</th>
+      <th style="padding:10px;text-align:left">TikTok Pixel</th>
+    </tr>
+    <tr style="border-bottom:1px solid #eee">
+      <td style="padding:10px">善缘</td>
+      <td style="padding:10px">shenyuan.mylumee.cn</td>
+      <td style="padding:10px;color:#aaa">待填入ID</td>
+      <td style="padding:10px;color:#aaa">待填入ID</td>
+    </tr>
+    <tr style="border-bottom:1px solid #eee;background:#f9f9f9">
+      <td style="padding:10px">Slim</td>
+      <td style="padding:10px">eatbygram.com</td>
+      <td style="padding:10px;color:#aaa">待填入ID</td>
+      <td style="padding:10px;color:#aaa">待填入ID</td>
+    </tr>
+    <tr style="border-bottom:1px solid #eee">
+      <td style="padding:10px">舞镜</td>
+      <td style="padding:10px">wujing.mylumee.app</td>
+      <td style="padding:10px;color:#aaa">待填入ID</td>
+      <td style="padding:10px;color:#aaa">待填入ID</td>
+    </tr>
+    <tr style="border-bottom:1px solid #eee;background:#f9f9f9">
+      <td style="padding:10px">Lumee</td>
+      <td style="padding:10px">mylumee.app</td>
+      <td style="padding:10px;color:#aaa">待填入ID</td>
+      <td style="padding:10px;color:#aaa">待填入ID</td>
+    </tr>
+    <tr>
+      <td style="padding:10px">YiYi</td>
+      <td style="padding:10px">yiyienglish.com</td>
+      <td style="padding:10px;color:#aaa">待填入ID</td>
+      <td style="padding:10px;color:#aaa">待填入ID</td>
+    </tr>
+  </table>
+
+  <h3 style="color:#1a7a5e;margin:20px 0 10px">第三步：验证Pixel是否生效</h3>
+  <div style="background:#fffbf0;border-radius:8px;padding:16px;border-left:4px solid #f5a623">
+    <strong>Meta：</strong>安装 <a href="https://chrome.google.com/webstore/detail/meta-pixel-helper" target="_blank">Meta Pixel Helper</a> Chrome插件 → 打开落地页 → 看到绿色✅表示成功<br><br>
+    <strong>TikTok：</strong>TikTok Ads Manager → 事件 → Pixel → 测试事件 → 打开落地页看是否有数据进来
+  </div>
+
+  <h3 style="color:#1a7a5e;margin:20px 0 10px">第四步：Pixel装好后才能开投广告</h3>
+  <div class="tip">⚠️ Pixel至少跑满7天积累数据，再开转化目标广告效果最好。刚装好的Pixel先用「流量」目标广告热身。</div>
+</div>
+
+<!-- 底部 -->
+<div style="text-align:center;padding:40px 0 20px;color:#8a8a84;font-size:12px;border-top:1px solid #e8e4de;margin-top:20px">
+  善缘 · 市场专员执行手册 · 2026-08-05 · <a href="https://shenyuan.mylumee.cn" style="color:#3d9e82">shenyuan.mylumee.cn</a>
+  <div style="margin-top:8px;font-size:11px">遇到文件没有的问题 → 联系Karen / 遇到账号问题 → 联系Karen / 遇到内容不够 → 用改编操作卡（模块2）</div>
+</div>
+
+</div>
+</body>
+</html>
