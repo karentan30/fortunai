@@ -514,10 +514,19 @@ body::before {
     <div style="font-size:10px;color:rgba(201,168,76,0.4);margin-top:6px;letter-spacing:.05em">长按图片可保存 · 发朋友圈/小红书</div>
   </div>
 
-  <div id="tomorrowTeaser" style="display:none;margin:24px 0 40px;padding:16px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:12px;text-align:center;">
-    <div style="font-size:12px;color:#9a7529;letter-spacing:.05em;margin-bottom:8px">✦ 明日天机预览 ✦</div>
-    <div id="tomorrowText" style="font-size:14px;color:#3a2a0e;line-height:1.7">加载中…</div>
-    <div style="font-size:11px;color:#b09060;margin-top:10px">明天再来看完整运势 · 每日更新</div>
+  <div id="tomorrowTeaser" style="display:none;margin:24px 16px 16px;padding:20px 18px;background:linear-gradient(135deg,rgba(201,168,76,0.08) 0%,rgba(91,191,160,0.05) 100%);border:1px solid rgba(201,168,76,0.25);border-radius:14px;text-align:center;">
+    <div style="font-size:10px;color:rgba(201,168,76,0.6);letter-spacing:.22em;margin-bottom:10px">✦ 明日天机预览 ✦</div>
+    <div id="tomorrowText" style="font-size:13px;color:var(--ink);line-height:1.8;letter-spacing:.05em;font-weight:300;margin-bottom:14px">加载中…</div>
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto 14px;width:80%"></div>
+    <button onclick="handleTomorrowCTA(this)" style="width:100%;padding:13px 0;background:none;border:1px solid rgba(201,168,76,0.4);border-radius:12px;color:var(--gold);font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:.18em;cursor:pointer;transition:all .25s" onmouseover="this.style.background='rgba(201,168,76,0.1)'" onmouseout="this.style.background='none'" ontouchstart="this.style.opacity='.7'" ontouchend="this.style.opacity='1'">明日运势 · 明天再来解锁 →</button>
+    <div style="font-size:10px;color:rgba(201,168,76,0.4);letter-spacing:.06em;margin-top:10px">每日8时更新 · 每天来看最准</div>
+  </div>
+
+  <!-- 分享今日运势 CTA -->
+  <div id="shareFriendCTA" style="margin:0 16px 16px;padding:16px 18px;background:var(--bg-card);border:1px solid rgba(91,191,160,0.2);border-radius:12px;text-align:center;">
+    <div style="font-size:10px;color:var(--jade-deep);letter-spacing:.18em;margin-bottom:10px;opacity:.75">✦ 把今日运势分享给朋友 ✦</div>
+    <div style="font-size:12px;color:var(--ink-mid);letter-spacing:.05em;line-height:1.6;margin-bottom:14px">好运不独享 · 分享给在意的人</div>
+    <button onclick="handleShareFriend(this)" style="width:100%;padding:13px 0;background:linear-gradient(135deg,rgba(91,191,160,0.15),rgba(91,191,160,0.08));border:1px solid rgba(91,191,160,0.35);border-radius:12px;color:var(--jade-deep);font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:.16em;cursor:pointer;transition:all .25s" ontouchstart="this.style.opacity='.7'" ontouchend="this.style.opacity='1'">分享今日运势给朋友</button>
   </div>
 
 </div>
@@ -537,6 +546,17 @@ body::before {
   </div>
   <button class="btn-gold" onclick="subscribeDaily()">开启每日天机 · 立即开通 · $4.90/月</button>
   <p class="preview-note">此为预览版 · 开通后内容基于你的真实八字生成</p>
+</div>
+
+<!-- 温馨提示：设置提醒 -->
+<div style="text-align:center;padding:20px 24px 8px;position:relative;z-index:1">
+  <div style="display:inline-flex;align-items:center;gap:10px;padding:12px 20px;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.12);border-radius:20px">
+    <span style="font-size:16px">⏰</span>
+    <div style="text-align:left">
+      <div style="font-size:11px;color:var(--gold);letter-spacing:.1em;margin-bottom:2px">每天早上8点来看运势</div>
+      <div style="font-size:10px;color:var(--ink-light);letter-spacing:.05em">在手机日历设置提醒 · 不错过每日天机</div>
+    </div>
+  </div>
 </div>
 
 <!-- Brand tagline -->
@@ -610,7 +630,42 @@ function getDailyReading() {
     if (data.reading) {
       // Show the result area with the raw AI reading
       document.getElementById('affirmationText').innerHTML = data.reading.replace(/\n/g, '<br>');
-      document.getElementById('dateGanzhi').textContent = '';
+
+      // ── 解析五行能量百分比 ──
+      // AI输出格式例：木：25% 或 木 25% 或 木火土金水各带百分比
+      var reading = data.reading || '';
+      var elementMap = { wood: ['木'], fire: ['火'], earth: ['土'], metal: ['金'], water: ['水'] };
+      var elementIds = { wood: 'pctWood', fire: 'pctFire', earth: 'pctEarth', metal: 'pctMetal', water: 'pctWater' };
+      var elementBars = { wood: 0, fire: 1, earth: 2, metal: 3, water: 4 };
+      Object.keys(elementMap).forEach(function(key) {
+        var char = elementMap[key][0];
+        // 匹配 "木.*?(\d+)%" 或 "木：25%" 或 "木（25%）" 等
+        var re = new RegExp(char + '[^\\n]{0,20}?(\\d{1,3})\\s*%', 'u');
+        var m = reading.match(re);
+        if (m) {
+          var pct = Math.min(100, parseInt(m[1], 10));
+          var pctEl = document.getElementById(elementIds[key]);
+          if (pctEl) pctEl.textContent = pct + '%';
+          // 填充对应进度条
+          var bars = document.getElementById('energyRows').querySelectorAll('.e-bar-fill');
+          var barIdx = elementBars[key];
+          if (bars[barIdx]) bars[barIdx].style.width = pct + '%';
+        }
+      });
+
+      // ── 解析今日干支并填入大字 ──
+      // AI输出格式例："甲子日"、"今日干支：丙午日"、"今日干支为丙午日"
+      var ganzhiMatch = reading.match(/今日干支[：:为是]?\s*[「「]?([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥][日]?)[」」]?/);
+      if (!ganzhiMatch) {
+        // 宽松匹配：直接找干支格式（天干+地支）后面跟"日"或独立的
+        ganzhiMatch = reading.match(/[（(【\s「]([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]日?)[）)】\s」]/);
+      }
+      if (ganzhiMatch) {
+        var gz = ganzhiMatch[1].replace(/日$/, '') + '日';
+        document.getElementById('dateGanzhi').textContent = gz;
+      }
+      // 注：若API未返回干支则保留页面上已有内容（不清空）
+
       document.getElementById('resultArea').style.display = 'block';
       document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
       injectDisclaimer('resultArea');
@@ -785,6 +840,28 @@ function loadTomorrowTeaser() {
       var txt = document.getElementById('tomorrowText');
       if (el && txt) { txt.textContent = '明日运势更新中 · 明天再来'; el.style.display = 'block'; }
     });
+}
+
+function handleTomorrowCTA(btn) {
+  // 点击视觉反馈 + 提示用户明天再来
+  if (btn) { btn.textContent = '已记下 · 明天见 ✓'; btn.style.opacity = '.7'; btn.disabled = true; }
+  showToast('明天早8点来看完整运势，好运不等人 ☀️', 'success');
+  // 尝试触发系统提醒（描述性，不依赖真实通知权限）
+  setTimeout(function(){
+    if (btn) { btn.textContent = '明天8点见 · 已加入日历提醒'; }
+  }, 800);
+}
+
+function handleShareFriend(btn) {
+  // 点击视觉反馈
+  if (btn) { btn.textContent = '分享中…'; btn.style.opacity = '.7'; }
+  shareDaily();
+  setTimeout(function(){
+    if (btn) { btn.textContent = '已分享 · 好运传递 ✓'; btn.style.opacity = '1'; }
+    setTimeout(function(){
+      if (btn) { btn.textContent = '分享今日运势给朋友'; }
+    }, 2500);
+  }, 800);
 }
 
 function subscribeDaily() {

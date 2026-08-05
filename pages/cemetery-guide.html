@@ -71,6 +71,7 @@ body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:80px}
 /* reviews */
 .reviews-section{border-top:1px solid rgba(255,245,220,0.06);padding:12px 0 4px}
 .reviews-title{font-size:9px;letter-spacing:0.18em;color:rgba(201,168,76,0.45);margin-bottom:10px}
+.reviews-verified{font-size:8px;color:rgba(91,191,160,0.45);letter-spacing:0.08em;margin-bottom:10px;margin-top:-6px}
 .review-item{margin-bottom:10px}
 .review-item:last-child{margin-bottom:0}
 .review-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px}
@@ -125,7 +126,8 @@ body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:80px}
 .modal-sub{font-size:10px;color:rgba(255,245,220,0.35);margin-bottom:20px;line-height:1.8}
 .modal-input{width:100%;background:rgba(255,245,220,0.04);border:1px solid rgba(255,245,220,0.1);border-radius:6px;padding:12px 14px;font-size:13px;color:rgba(255,245,220,0.8);font-family:'Noto Serif SC',serif;margin-bottom:10px;outline:none}
 .modal-input:focus{border-color:rgba(91,191,160,0.3)}
-.btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,rgba(91,191,160,0.2),rgba(91,191,160,0.12));border:1px solid rgba(91,191,160,0.35);border-radius:6px;color:rgba(91,191,160,0.9);font-size:13px;letter-spacing:0.12em;font-family:'Noto Serif SC',serif;cursor:pointer;margin-top:4px}
+.btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,rgba(91,191,160,0.2),rgba(91,191,160,0.12));border:1px solid rgba(91,191,160,0.35);border-radius:6px;color:rgba(91,191,160,0.9);font-size:13px;letter-spacing:0.12em;font-family:'Noto Serif SC',serif;cursor:pointer;margin-top:4px;transition:opacity 0.2s}
+.btn-submit:disabled{opacity:0.5;cursor:not-allowed}
 .btn-cancel{width:100%;padding:12px;background:transparent;border:none;color:rgba(255,245,220,0.25);font-size:11px;font-family:'Noto Serif SC',serif;cursor:pointer;margin-top:6px;letter-spacing:0.06em}
 .error-msg{font-size:11px;color:rgba(255,100,100,0.8);text-align:center;margin-top:8px;display:none}
 .btn-wechat-fallback{width:100%;padding:12px;background:rgba(91,191,160,0.08);border:1px solid rgba(91,191,160,0.25);border-radius:6px;color:rgba(91,191,160,0.8);font-size:12px;font-family:'Noto Serif SC',serif;cursor:pointer;margin-top:8px;letter-spacing:0.06em;text-decoration:none;display:none;text-align:center}
@@ -147,6 +149,7 @@ body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:80px}
 
 <div class="hero">
   <div class="hero-badge">FENG SHUI CEMETERY GUIDE · 善缘风水择地</div>
+  <div style="font-size:11px;letter-spacing:0.06em;color:rgba(201,168,76,0.75);margin-bottom:6px;font-weight:500">华人墓地风水评分平台 · 覆盖美国+中国25家墓地</div>
   <div class="hero-title">华人墓地<br>风水指南</div>
   <div class="gold-line"></div>
   <div class="hero-sub">善缘专家团队三元玄空+形势派双体系评测<br>坐山朝向 · 龙脉水法 · 真实定价 · 华人口碑</div>
@@ -1168,6 +1171,13 @@ function submitConsult(){
 var _modalFormHTML='';
 document.addEventListener('DOMContentLoaded',function(){
   _modalFormHTML=document.querySelector('.modal-box').innerHTML;
+  // inject "来自真实用户反馈" label after every reviews-title
+  document.querySelectorAll('.reviews-title').forEach(function(el){
+    var verified=document.createElement('div');
+    verified.className='reviews-verified';
+    verified.textContent='来自真实用户反馈';
+    el.insertAdjacentElement('afterend',verified);
+  });
 });
 // keyboard Enter submits form — listen on document so it survives innerHTML replacement
 document.addEventListener('keydown',function(e){

@@ -95,6 +95,9 @@ body::before{content:'';position:fixed;inset:0;
 .yin-yang{font-size:48px;margin-bottom:16px;display:block;animation:spin 2.5s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .load-txt{font-size:11px;color:var(--rose);letter-spacing:0.18em;opacity:0.8}
+/* spinner */
+.sy-spinner{display:inline-block;width:42px;height:42px;border:3px solid rgba(201,168,76,0.18);border-top-color:var(--gold);border-radius:50%;animation:spin 0.9s linear infinite;margin-bottom:16px}
+.btn-calc:disabled{opacity:0.55;cursor:not-allowed;transform:none!important}
 
 /* results */
 .results{display:none;position:relative;z-index:1}
@@ -297,7 +300,7 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
       <input class="name-input" id="nameA" type="text" maxlength="8" placeholder="你的名字（选填）">
       <select class="mini-select" id="aYear">
         <option value="">年份</option>
-        <script>for(let y=2005;y>=1950;y--) document.write(`<option value="${y}">${y}</option>`)</script>
+        <script>for(let y=2008;y>=1950;y--) document.write(`<option value="${y}">${y}</option>`)</script>
       </select>
       <select class="mini-select" id="aMonth">
         <option value="">月份</option>
@@ -327,7 +330,7 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
       <input class="name-input" id="nameB" type="text" maxlength="8" placeholder="TA的名字（选填）">
       <select class="mini-select" id="bYear">
         <option value="">年份</option>
-        <script>for(let y=2005;y>=1950;y--) document.write(`<option value="${y}">${y}</option>`)</script>
+        <script>for(let y=2008;y>=1950;y--) document.write(`<option value="${y}">${y}</option>`)</script>
       </select>
       <select class="mini-select" id="bMonth">
         <option value="">月份</option>
@@ -382,8 +385,8 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
 
 <!-- loading -->
 <div class="loading-wrap" id="loadingWrap">
-  <span class="yin-yang">☯</span>
-  <div class="load-txt">正在推算两人命盘合婚…</div>
+  <div class="sy-spinner"></div>
+  <div class="load-txt">正在推演缘分…</div>
 </div>
 
 <!-- results -->
@@ -604,9 +607,11 @@ function startCalc(){
   const bm=document.getElementById('bMonth').value;
   const ad=document.getElementById('aDay').value;
   const bd=document.getElementById('bDay').value;
-  if(!ay||!by){ showToast('请选择两人的出生年份'); return; }
-  if(!am||!bm){ showToast('请选择两人的出生月份'); return; }
-  if(!ad||!bd){ showToast('请选择两人的出生日期'); return; }
+  if(!ay||!by){ showToast('请选择两人的出生年份 ✦'); return; }
+  if(!am||!bm){ showToast('请选择两人的出生月份 ✦'); return; }
+  if(!ad||!bd){ showToast('请选择两人的出生日期 ✦'); return; }
+  const btn = document.querySelector('.btn-calc');
+  if(btn){ btn.disabled=true; btn.textContent='正在推演缘分…'; }
   document.getElementById('inputScreen').style.display='none';
   document.getElementById('loadingWrap').classList.add('show');
   setTimeout(()=>showResults(ay,by), 3200);
@@ -999,7 +1004,7 @@ function injectDisclaimer(containerId) {
 
 <script>
 (function(){var t=localStorage.getItem('sy_theme');if(t==='dark'){document.documentElement.classList.add('dark-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='🌙';}handlePaidReturn();})();
-function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'🌙';localStorage.setItem('sy_theme',l?'dark':'dark');}
+function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'☀️';localStorage.setItem('sy_theme',l?'dark':'light');}
 </script>
 <script src="/assets/js/common.js"></script>
 <script>if(window.SY&&SY.initMembership)SY.initMembership();</script>

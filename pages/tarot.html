@@ -79,7 +79,7 @@ body::before {
 
 /* ── Draw button ── */
 .draw-wrap { position: relative; z-index: 1; padding: 0 16px 0; }
-.btn-draw { width: 100%; padding: 15px 0; background: linear-gradient(135deg, #3a1870, var(--violet), var(--violet-light), var(--violet)); border: none; border-radius: 4px; color: rgba(240,234,255,0.95); font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 500; letter-spacing: 0.22em; cursor: pointer; box-shadow: 0 4px 20px rgba(107,63,160,0.4); transition: all 0.25s; }
+.btn-draw { width: 100%; padding: 15px 0; background: linear-gradient(135deg, #3a1870, var(--violet), var(--violet-light), var(--violet)); border: none; border-radius: 14px; color: rgba(240,234,255,0.95); font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 500; letter-spacing: 0.22em; cursor: pointer; box-shadow: 0 4px 20px rgba(107,63,160,0.4); transition: all 0.25s; }
 .btn-draw:active { transform: scale(0.97); }
 
 /* ── Loading state ── */
@@ -124,7 +124,7 @@ body::before {
 .advice-label { font-size: 9px; letter-spacing: 0.2em; color: rgba(201,168,76,0.5); margin-bottom: 7px; }
 .advice-text { font-size: 11px; color: rgba(240,234,255,0.65); letter-spacing: 0.04em; line-height: 1.8; }
 
-.btn-redo { width: 100%; padding: 12px 0; background: transparent; border: 1px solid rgba(107,63,160,0.3); border-radius: 4px; color: rgba(196,160,224,0.6); font-family: 'Noto Serif SC', serif; font-size: 13px; letter-spacing: 0.16em; cursor: pointer; margin-top: 4px; transition: all 0.2s; }
+.btn-redo { width: 100%; padding: 12px 0; background: transparent; border: 1px solid rgba(107,63,160,0.3); border-radius: 14px; color: rgba(196,160,224,0.6); font-family: 'Noto Serif SC', serif; font-size: 13px; letter-spacing: 0.16em; cursor: pointer; margin-top: 4px; transition: all 0.2s; }
 .btn-redo:active { background: rgba(107,63,160,0.15); }
 
 /* ── Five-card layout: 3+2 rows to prevent overflow on 390px ── */
@@ -153,6 +153,13 @@ body::before {
 /* ── Upgrade CTA buttons vertical stack ── */
 .upgrade-cta-btns { display: flex; flex-direction: column; gap: 8px; }
 .upgrade-cta-btns .btn-redo { width: 100%; flex: none; }
+
+/* ── Share button ── */
+.btn-share { width: 100%; padding: 12px 0; background: transparent; border: 1px solid rgba(201,168,76,0.35); border-radius: 14px; color: rgba(201,168,76,0.75); font-family: 'Noto Serif SC', serif; font-size: 13px; letter-spacing: 0.16em; cursor: pointer; margin-top: 8px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.btn-share:active { background: rgba(201,168,76,0.1); opacity: 0.8; }
+
+/* ── Daily limit hint ── */
+.daily-limit-hint { font-size: 10px; color: rgba(155,111,196,0.45); text-align: center; letter-spacing: 0.08em; padding: 8px 16px 0; position: relative; z-index: 1; }
 </style>
 <link rel="stylesheet" href="/assets/css/common.css">
 <script src="/assets/js/common.js"></script>
@@ -214,6 +221,7 @@ body::before {
 <div class="draw-wrap">
   <button class="btn-draw" onclick="drawCards()">静心 · 抽牌</button>
 </div>
+<div class="daily-limit-hint" id="dailyLimitHint">免费单张牌每日可抽一次 · 付费解锁三张/五芒星深度解读</div>
 
 <div class="loading-wrap" id="loadingWrap">
   <div class="orb"></div>
@@ -240,6 +248,7 @@ body::before {
     </div>
   </div>
 
+  <button class="btn-share" id="shareBtn" onclick="shareResult()" style="display:none">✦ 分享这张牌的启示</button>
   <button class="btn-redo" onclick="resetDraw()">换个问题 · 重新抽牌</button>
 </div>
 
@@ -300,6 +309,27 @@ function selectSpread(el, n, type) {
 function drawCards() {
   var q = document.getElementById('question').value.trim();
   if (!q) { showToast('请先写下你的问题'); return; }
+
+  // Daily limit check: free users get 1 draw per day (single-card only)
+  if (currentSpread === 1) {
+    var today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    var limitKey = 'sy_tarot_daily_' + today;
+    var usedToday = 0;
+    try { usedToday = parseInt(localStorage.getItem(limitKey) || '0', 10); } catch(e){}
+    if (usedToday >= 1) {
+      // Show paid upgrade modal instead of drawing
+      document.getElementById('upgradeCta').style.display = 'block';
+      document.getElementById('resultWrap').classList.add('show');
+      document.getElementById('interpTitle').textContent = '今日免费次数已用完';
+      document.getElementById('interpText').textContent = '每日免费单张牌已使用，解锁付费牌阵获得更深度的AI解读。';
+      document.getElementById('adviceText').textContent = '';
+      document.querySelector('.btn-draw').style.display = 'none';
+      showToast('今日免费抽牌已用完，可解锁付费牌阵');
+      return;
+    }
+    try { localStorage.setItem(limitKey, String(usedToday + 1)); } catch(e){}
+  }
+
   var btn = document.querySelector('.btn-draw');
   btn.disabled = true;
   document.getElementById('question').disabled = true;
@@ -380,6 +410,10 @@ function showResult(question, drawn) {
 
   document.getElementById('resultWrap').classList.add('show');
   document.querySelector('.btn-draw').style.display = 'none';
+
+  // Show share button
+  var shareBtn = document.getElementById('shareBtn');
+  if (shareBtn) shareBtn.style.display = 'flex';
 
   // Show upgrade CTA for free single-card reading
   var upgradeEl = document.getElementById('upgradeCta');
@@ -475,17 +509,45 @@ function handlePaidReturn() {
     var decoder = new TextDecoder();
     var buf = '', accumulated = '';
     var interpEl = document.getElementById('interpText');
+    var adviceEl = document.getElementById('adviceText');
+    // Delimiter the AI backend uses to separate interp from advice
+    var ADVICE_SEP = '【建议行动】';
+    function splitAdvice(text) {
+      var idx = text.indexOf(ADVICE_SEP);
+      if (idx >= 0) return { interp: text.slice(0, idx).trim(), advice: text.slice(idx + ADVICE_SEP.length).trim() };
+      // Fallback: try newline-separated last paragraph as advice if ≥2 paragraphs
+      var parts = text.split(/\n{2,}/);
+      if (parts.length >= 2) return { interp: parts.slice(0, -1).join('\n\n').trim(), advice: parts[parts.length - 1].trim() };
+      return { interp: text.trim(), advice: '' };
+    }
     function read() {
       reader.read().then(function(r) {
-        if (r.done) return;
+        if (r.done) {
+          // Final split on stream end
+          var split = splitAdvice(accumulated);
+          interpEl.textContent = split.interp;
+          if (split.advice) { adviceEl.textContent = split.advice; }
+          return;
+        }
         buf += decoder.decode(r.value, {stream:true});
         var lines = buf.split('\n'); buf = lines.pop();
         lines.forEach(function(line) {
           if (!line.startsWith('data: ')) return;
           try {
             var ev = JSON.parse(line.slice(6));
-            if (ev.type === 'chunk') { accumulated += ev.content; interpEl.textContent = accumulated; }
-            else if (ev.type === 'done') { interpEl.textContent = accumulated; }
+            if (ev.type === 'chunk') {
+              accumulated += ev.content;
+              // Stream interp portion live; advice shown on done
+              var split = splitAdvice(accumulated);
+              interpEl.textContent = split.interp || accumulated;
+            } else if (ev.type === 'advice') {
+              // Backend sends advice as a dedicated event
+              adviceEl.textContent += ev.content;
+            } else if (ev.type === 'done') {
+              var split = splitAdvice(accumulated);
+              interpEl.textContent = split.interp;
+              if (split.advice) { adviceEl.textContent = split.advice; }
+            }
           } catch(e) {}
         });
         read();
@@ -514,6 +576,8 @@ function handlePaidReturn() {
 function resetDraw() {
   document.getElementById('resultWrap').classList.remove('show');
   document.querySelector('.advice-box').style.display = '';  // restore advice-box visibility
+  var shareBtn = document.getElementById('shareBtn');
+  if (shareBtn) shareBtn.style.display = 'none';
   var btn = document.querySelector('.btn-draw');
   btn.style.display = 'block';
   btn.disabled = false;
@@ -538,12 +602,34 @@ function updateQCounter(textarea) {
   counter.style.color = len > 90 ? 'rgba(201,168,76,0.7)' : 'rgba(155,111,196,0.4)';
 }
 
+function shareResult() {
+  var btn = document.getElementById('shareBtn');
+  var question = document.getElementById('question').value.trim();
+  var cardEls = document.querySelectorAll('.card-name-sm');
+  var cardNames = Array.prototype.slice.call(cardEls).map(function(el){ return el.textContent; }).join('、');
+  var shareText = '【善缘塔罗】我抽到了' + cardNames + '。' + (question ? '问：' + question.slice(0,20) + ' ' : '') + '来善缘看你的牌阵 → https://shenyuan.mylumee.cn/pages/tarot.html';
+  if (navigator.share) {
+    navigator.share({ title: '善缘塔罗占卜', text: shareText, url: 'https://shenyuan.mylumee.cn/pages/tarot.html' })
+      .then(function(){ if(btn){ btn.textContent = '✦ 已分享'; setTimeout(function(){ btn.textContent = '✦ 分享这张牌的启示'; }, 2000); } })
+      .catch(function(){});
+  } else {
+    // Fallback: copy to clipboard
+    try {
+      navigator.clipboard.writeText(shareText).then(function(){
+        if(btn){ var orig = btn.innerHTML; btn.innerHTML = '✦ 已复制，去粘贴分享吧'; setTimeout(function(){ btn.innerHTML = orig; }, 2500); }
+      });
+    } catch(e) {
+      showToast('请手动截图分享');
+    }
+  }
+}
+
 function injectDisclaimer(containerId) {
   var c = document.getElementById(containerId);
   if (!c || c.querySelector('.sy-disclaimer')) return;
   var d = document.createElement('div');
   d.className = 'sy-disclaimer';
-  d.innerHTML = '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto;width:80%"></div><div style="font-size:10px;color:rgba(201,168,76,0.4);text-align:center;letter-spacing:0.06em;padding:10px 20px">仅供娱乐参考，切勿沉迷。命理是可能性的艺术，不是定数。</div>';
+  d.innerHTML = '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto;width:80%"></div><div style="font-size:10px;color:rgba(201,168,76,0.4);text-align:center;letter-spacing:0.06em;padding:10px 20px">仅供娱乐参考，不代替医学、法律或投资建议。命理是可能性的艺术，不是定数。</div>';
   c.appendChild(d);
 }
 </script>

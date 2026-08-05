@@ -187,6 +187,30 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .btn-gen:active{transform:scale(0.97)}
 .btn-unlock:active{transform:scale(0.97)}
 
+/* Inline spinner for btn-gen loading state */
+@keyframes btn-spin { to { transform: rotate(360deg); } }
+.btn-gen-spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(14,10,4,0.25);
+  border-top-color: rgba(14,10,4,0.85);
+  border-radius: 50%;
+  animation: btn-spin 0.7s linear infinite;
+  vertical-align: middle;
+  margin-right: 8px;
+}
+
+/* Report screen show state */
+#reportScreen.show { display: block !important; }
+
+/* Report empty state placeholder */
+.report-empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  padding: 60px 20px 40px; gap: 14px; position: relative; z-index: 1;
+}
+.report-empty-icon { font-size: 52px; opacity: 0.25; }
+.report-empty-text { font-size: 12px; color: rgba(200,184,122,0.3); letter-spacing: 0.12em; text-align: center; line-height: 1.9; }
+
 /* AI Report section cards */
 .ai-section { background:var(--card); border:1px solid rgba(201,168,76,0.1); border-radius:10px; margin:0 16px 10px; overflow:hidden; }
 .ai-section-head { display:flex; align-items:center; padding:12px 14px; gap:10px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
@@ -470,7 +494,7 @@ input::placeholder,textarea::placeholder { color: rgba(200,196,180,0.25) !import
           <option value="3">卯时 (05-07时)</option><option value="4">辰时 (07-09时)</option><option value="5">巳时 (09-11时)</option>
           <option value="6">午时 (11-13时)</option><option value="7">未时 (13-15时)</option><option value="8">申时 (15-17时)</option>
           <option value="9">酉时 (17-19时)</option><option value="10">戌时 (19-21时)</option><option value="11">亥时 (21-23时)</option>
-          <option value="">不清楚时辰</option>
+          <option value="">不知道 / 不清楚时辰</option>
         </select>
       </div>
       <div style="font-size:10px;color:rgba(200,196,180,0.4);padding:6px 14px 8px;letter-spacing:0.02em">不记得出生时辰？选「不清楚」仍可推算约 80% 精准度</div>
@@ -524,10 +548,8 @@ input::placeholder,textarea::placeholder { color: rgba(200,196,180,0.25) !import
   <div class="load-shimmer-bar"><div class="load-shimmer-bar-inner"></div></div>
 </div>
 
-<!-- Report screen -->
-<div class="report-screen" id="reportScreen">
-  <!-- Populated by JS -->
-</div>
+<!-- Report screen — hidden until report is generated -->
+<div class="report-screen" id="reportScreen" style="display:none"></div>
 
 <!-- QA section -->
 <div id="qaSection">
@@ -640,7 +662,7 @@ function generateReport(btn) {
   var consent = document.getElementById('consentCheck');
   if (consent && !consent.checked) { showToast('请先勾选同意隐私条款', 'error'); return; }
   // P1-1 防重复点烧token：禁用按钮 + 转圈
-  if (btn) { if (btn.disabled) return; btn.disabled = true; btn._label = btn.textContent; btn.textContent = '排盘中…'; }
+  if (btn) { if (btn.disabled) return; btn.disabled = true; btn._label = btn.textContent; btn.innerHTML = '<span class="btn-gen-spinner"></span>排盘中…'; }
   var hRaw = document.getElementById('hour').value;
   var h = hRaw === '' ? null : parseInt(hRaw, 10);
   lastBaziInput = { year: y, month: m, day: d, hour: h, name: document.getElementById('name').value || '', gender: gender };
@@ -703,7 +725,7 @@ function streamBaziReport(input, mode, btn, onDone) {
             } else if (ev.type === 'done') {
               // 生成完毕 — 渲染精美版
               isStreaming = false;
-              if (btn) { btn.disabled = false; btn.textContent = btn._label || '免费排盘 · 生成命理预览'; }
+              if (btn) { btn.disabled = false; btn.innerHTML = btn._label || '免费排盘 · 生成命理预览'; }
               if (typeof onDone === 'function') onDone();
               showReport(accumulated, ev.contextId, metaTier, metaLocked);
             } else if (ev.type === 'product') {
@@ -718,7 +740,7 @@ function streamBaziReport(input, mode, btn, onDone) {
         isStreaming = false;
         document.getElementById('loadingScreen').classList.remove('show');
         document.getElementById('inputScreen').style.display = 'block';
-        if (btn) { btn.disabled = false; btn.textContent = btn._label || '免费排盘 · 生成命理预览'; }
+        if (btn) { btn.disabled = false; btn.innerHTML = btn._label || '免费排盘 · 生成命理预览'; }
         if (typeof onDone === 'function') onDone();
         showToast('生成失败，请重试', 'error');
       });
@@ -728,7 +750,7 @@ function streamBaziReport(input, mode, btn, onDone) {
     isStreaming = false;
     document.getElementById('loadingScreen').classList.remove('show');
     document.getElementById('inputScreen').style.display = 'block';
-    if (btn) { btn.disabled = false; btn.textContent = btn._label || '免费排盘 · 生成命理预览'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = btn._label || '免费排盘 · 生成命理预览'; }
     if (typeof onDone === 'function') onDone();
     showToast('网络异常，请重试', 'error');
   });
