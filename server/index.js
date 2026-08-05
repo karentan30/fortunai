@@ -145,8 +145,15 @@ app.use('/api', dailyRouter);
 // A/B 测试追踪
 app.use('/api', abRouter);
 
-// 邮件订阅
+// 邮件订阅（旧路由保留兼容）
 app.use('/api', require('./routes/subscribe'));
+
+// 每日邮件推送系统
+const { router: emailRouter, sendDailyBatch } = require('./routes/email');
+app.use('/api', emailRouter);
+
+// 合婚裂变（hepan 双人邀请）
+app.use('/api/hepan', require('./routes/hepan'));
 
 // ── 全局错误处理 ──
 app.use(function(err, req, res, next) {
@@ -171,12 +178,25 @@ if (!process.env.VERCEL) {
     if (!res.headersSent) res.status(500).json({ error: '服务暂时不可用，请稍后重试' });
   });
 
+  // 每日运势邮件 cron：每天 08:00 HKT (UTC 00:00)
+  const cron = require('node-cron');
+  cron.schedule('0 0 * * *', function() {
+    console.log('[cron] 每日邮件推送开始...');
+    sendDailyBatch().then(function(r) {
+      console.log('[cron] 每日邮件完成:', r);
+    }).catch(function(e) {
+      console.error('[cron] 每日邮件失败:', e.message);
+    });
+  }, { timezone: 'UTC' });
+  console.log('[cron] 每日邮件推送已注册 (08:00 HKT)');
+
   app.listen(PORT, () => {
     console.log(`\n╔═══════════════════════════════════╗`);
     console.log(`║   善缘 ShenYuan v2.0              ║`);
     console.log(`║   Port: ${PORT}                      ║`);
     console.log(`║   LLM: ${(process.env.DS_KEY || process.env.DEEPSEEK_API_KEY) ? 'DeepSeek ✓' : 'No LLM ✗'}          ║`);
     console.log(`║   Stripe: ${process.env.STRIPE_PAY_SECRET_KEY ? '✓' : '✗ (no key)'}             ║`);
+    console.log(`║   Email Cron: 08:00 HKT ✓          ║`);
     console.log(`╚═══════════════════════════════════╝\n`);
   });
 }
