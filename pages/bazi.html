@@ -38,8 +38,8 @@
 }
 html, body { background: var(--bg); font-family: 'Noto Serif SC', serif; color: var(--ink-text); -webkit-font-smoothing: antialiased; }
 .paywall-blurred { filter: blur(5px); pointer-events: none; user-select: none; position: relative; }
-.paywall-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(transparent 0%, rgba(250,248,245,0.97) 40%); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 40px; z-index: 10; }
-body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 24px; }
+.paywall-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(transparent 0%, rgba(250,248,245,0.97) 40%); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: max(40px, env(safe-area-inset-bottom)); z-index: 10; }
+body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: max(24px, env(safe-area-inset-bottom)); }
 body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.1) 0%, transparent 50%); pointer-events:none; z-index:0; }
 
 .back-btn { position:fixed; top:16px; left:16px; z-index:99; background:none; border:none; font-family:'Noto Serif SC',serif; font-size:13px; color:rgba(201,168,76,0.6); cursor:pointer; padding:4px 0; }
@@ -923,11 +923,55 @@ function createCheckout(btn, tier, price) {
     if (!txt || txt.trim() === '') throw new Error('空响应');
     var data;
     try { data = JSON.parse(txt); } catch(e) { throw new Error('解析失败'); }
-    if(data.url) window.location.href = data.url;
+    if(data.url) { window.location.href = data.url; }
+    else if(data.channel === 'cn') {
+      // CN用户：调微信/支付宝下单接口显示扫码弹窗
+      var product = tier === 'member' ? 'member_monthly' : 'bazi_full';
+      fetch('/api/pay/wechat/create', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({product: product, method:'wechat', token: localStorage.getItem('sy_token')||''})
+      }).then(function(r){return r.json();}).then(function(pd){
+        btn.disabled = false; btn.textContent = label;
+        if(pd.code_url) { showCnPayModal(pd.code_url, pd.out_trade_no, pd.amount); }
+        else { showToast('支付服务暂不可用，请稍后重试', 'error'); }
+      }).catch(function(){ btn.disabled=false; btn.textContent=label; showToast('网络异常，请重试','error'); });
+    }
     else { showToast('跳转失败，请重试', 'error'); btn.disabled = false; btn.textContent = label; }
   }).catch(function(){
     showToast('网络异常，请重试', 'error'); btn.disabled = false; btn.textContent = label;
   });
+}
+
+function showCnPayModal(codeUrl, outTradeNo, amountFen) {
+  var amt = amountFen ? '¥'+(amountFen/100).toFixed(2) : '';
+  var modal = document.getElementById('cnPayModal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'cnPayModal';
+    modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
+    modal.innerHTML='<div style="background:#faf8f5;border-radius:16px;padding:28px 24px;max-width:320px;width:90%;text-align:center">'
+      +'<div style="font-size:16px;font-weight:600;margin-bottom:6px;color:#2c2418">微信/支付宝扫码支付</div>'
+      +'<div id="cnPayAmt" style="font-size:22px;font-weight:700;color:#c8a45c;margin-bottom:12px"></div>'
+      +'<img id="cnPayQr" src="" alt="支付二维码" style="width:200px;height:200px;border-radius:8px;border:1px solid #e8e0d0">'
+      +'<div style="font-size:12px;color:#9a8a72;margin-top:10px">支付完成后页面自动刷新</div>'
+      +'<button onclick="document.getElementById(\'cnPayModal\').remove()" style="margin-top:16px;background:none;border:1px solid #c8a45c;color:#c8a45c;padding:8px 24px;border-radius:8px;cursor:pointer;font-size:13px">取消</button>'
+      +'</div>';
+    document.body.appendChild(modal);
+  }
+  document.getElementById('cnPayAmt').textContent = amt;
+  document.getElementById('cnPayQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(codeUrl);
+  modal.style.display='flex';
+  // 轮询支付结果
+  var pollTimer = setInterval(function(){
+    fetch('/api/pay/wechat/query?out_trade_no='+encodeURIComponent(outTradeNo))
+      .then(function(r){return r.json();}).then(function(d){
+        if(d.paid || d.status==='paid'){
+          clearInterval(pollTimer);
+          modal.remove();
+          location.href = location.pathname+'?paid=1';
+        }
+      }).catch(function(){});
+  }, 3000);
 }
 
 // P0-2② 付费回流：?paid=1 → 优先从后端拉最近输入 → localStorage兜底 → 带 token 重新拉取完整报告
@@ -1268,6 +1312,8 @@ function renderProductCard(product) {
   }
 }
 
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
 // ── 通用AI报告渲染器 v2.0 — 极致版 ──
 function renderUltimateReport(text, containerId, isLocked) {
   var container = document.getElementById(containerId);
@@ -1305,24 +1351,27 @@ function renderUltimateReport(text, containerId, isLocked) {
   if (sections.length===0) sections.push({emoji:'📜', title:'命理分析', content:lines});
   var html = '<div class="ultimate-report">';
   sections.forEach(function(sec, i) {
-    var ct = sec.content.join('<br>');
+    var ct = sec.content.map(escHtml).join('<br>');
     ct = ct.replace(/\*\*(.+?)\*\*/g,'<strong style="color:var(--gold-deep)">$1</strong>')
            .replace(/(\d{4})年/g,'<span class="hl-year">$1年</span>')
            .replace(/(\d+)分/g,'<span class="hl-score">$1分</span>')
            .replace(/\$(\d+\.?\d*)/g,'<span class="hl-money">$$$1</span>');
     var shouldBlur = isLocked && i >= 2;
     if (shouldBlur) {
-      html += '<div class="ur-card paywall-blurred" style="animation-delay:'+(i*0.08)+'s;position:relative">';
+      // 付费内容不放入DOM，只显示锁定占位卡
+      html += '<div class="ur-card" style="animation-delay:'+(i*0.08)+'s;position:relative;min-height:80px">';
+      html += '<div class="ur-head"><span class="ur-emoji">🔒</span>';
+      html += '<span class="ur-title">'+escHtml(sec.title)+'</span></div>';
+      html += '<div style="padding:16px;text-align:center">';
+      html += '<div class="paywall-overlay" style="position:relative;background:none;padding:0"><div style="font-size:13px;font-weight:500;letter-spacing:0.1em;color:var(--gold);margin-bottom:10px">解锁完整命盘</div><button onclick="createCheckout(this,\'full\',9.9)" style="background:linear-gradient(135deg,var(--gold-deep),var(--gold));border:none;border-radius:10px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;padding:10px 24px;cursor:pointer">立即解锁 · USD $9.90 →</button></div>';
+      html += '</div>';
     } else {
       html += '<div class="ur-card" style="animation-delay:'+(i*0.08)+'s">';
-    }
-    html += '<div class="ur-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ur-arrow\').classList.toggle(\'open\')">';
-    html += '<span class="ur-emoji">'+(sec.emoji||'📜')+'</span>';
-    html += '<span class="ur-title">'+sec.title+'</span>';
-    html += '<span class="ur-arrow open">▾</span></div>';
-    html += '<div class="ur-body open"><div class="ur-text">'+ct+'</div></div>';
-    if (shouldBlur) {
-      html += '<div class="paywall-overlay"><div style="font-size:13px;font-weight:500;letter-spacing:0.1em;color:var(--gold);margin-bottom:10px">解锁完整命盘</div><button onclick="createCheckout(this,\'full\',9.9)" style="background:linear-gradient(135deg,var(--gold-deep),var(--gold));border:none;border-radius:10px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;padding:10px 24px;cursor:pointer">立即解锁 · USD $9.90 →</button></div>';
+      html += '<div class="ur-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ur-arrow\').classList.toggle(\'open\')">';
+      html += '<span class="ur-emoji">'+(sec.emoji||'📜')+'</span>';
+      html += '<span class="ur-title">'+escHtml(sec.title)+'</span>';
+      html += '<span class="ur-arrow open">▾</span></div>';
+      html += '<div class="ur-body open"><div class="ur-text">'+ct+'</div></div>';
     }
     html += '</div>';
   });

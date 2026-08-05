@@ -90,7 +90,7 @@ app.get('/robots.txt', (req, res) => {
 
 // ── Static files ──
 // 🔴 安全红线(P0-1): 显式拒绝敏感路径 + dotfiles 拒 + 仅暴露前端目录。
-app.use(['/server', '/docs', '/.git', '/node_modules'], (req, res) => {
+app.use(['/server', '/docs', '/.git', '/node_modules', '/data'], (req, res) => {
   res.status(403).json({ error: 'forbidden' });
 });
 // P0-1 补丁: data.json 含所有用户数据，必须在 static 之前显式 403 拦截
