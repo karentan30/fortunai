@@ -104,6 +104,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .kakao-share-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px 0;background:#FEE500;border:none;border-radius:14px;color:#3C1E1E;font-family:'Noto Sans KR',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:10px}
 .kakao-share-btn:active{transform:scale(0.98)}
 
+/* ── 결제 모달 (WeChat/Alipay) ── */
+.kr-pay-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;align-items:flex-end;justify-content:center}
+.kr-pay-overlay.open{display:flex}
+.kr-pay-modal{background:#fffef8;border-radius:20px 20px 0 0;padding:28px 20px 40px;width:100%;max-width:480px;font-family:'Noto Sans KR',sans-serif}
+.kr-pay-title{font-size:16px;font-weight:700;color:#3a2a0e;text-align:center;margin-bottom:4px}
+.kr-pay-price{font-size:26px;font-weight:700;color:#9a7529;text-align:center;margin-bottom:16px}
+.kr-pay-qr{width:190px;height:190px;display:block;margin:0 auto 12px;border-radius:10px;border:1px solid rgba(154,117,41,.2)}
+.kr-pay-status{text-align:center;font-size:13px;color:rgba(58,48,38,.6);margin-bottom:16px;min-height:20px}
+.kr-pay-tabs{display:flex;gap:8px;margin-bottom:16px}
+.kr-tab{flex:1;padding:11px 0;border-radius:10px;border:1.5px solid rgba(154,117,41,.25);background:transparent;font-size:13px;color:rgba(58,48,38,.6);cursor:pointer;font-family:'Noto Sans KR',sans-serif;transition:.2s}
+.kr-tab.active{background:rgba(154,117,41,.1);border-color:rgba(154,117,41,.5);color:#9a7529;font-weight:700}
+.kr-pay-close{display:block;width:100%;padding:12px 0;background:transparent;border:1px solid rgba(58,48,38,.15);border-radius:10px;color:rgba(58,48,38,.45);font-size:12px;cursor:pointer;font-family:'Noto Sans KR',sans-serif;margin-top:10px}
+
 /* ── Conversion additions ── */
 .price-anchor{background:rgba(154,117,41,0.08);border:1px solid rgba(154,117,41,0.18);border-radius:10px;padding:9px 14px;display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:18px;font-family:'Noto Sans KR',sans-serif}
 .pa-old{font-size:11px;color:var(--ink-faint);text-decoration:line-through}
@@ -307,11 +320,14 @@ function generate(btn) {
   });
 }
 function fetchBazi(input) {
+  var savedOrder = (input && input.order_no) || localStorage.getItem('sy_kr_order') || '';
+  var body = { birthYear: input.birthYear, birthMonth: input.birthMonth, birthDay: input.birthDay,
+      birthHour: input.birthHour, gender: input.gender, lang: 'ko', mode: 'gentle' };
+  if (savedOrder) body.order_no = savedOrder;
   return fetch('/api/bazi', {
     method: 'POST',
     headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('sy_token') || '')},
-    body: JSON.stringify({ birthYear: input.birthYear, birthMonth: input.birthMonth, birthDay: input.birthDay,
-      birthHour: input.birthHour, gender: input.gender, lang: 'ko', mode: 'gentle' })
+    body: JSON.stringify(body)
   }).then(function(r){ return r.json(); });
 }
 function runSteps() {
@@ -527,7 +543,128 @@ function handlePaidReturn() {
   });
 }
 handlePaidReturn();
+
+// ── WeChat/Alipay 결제 (hub 중계) ──
+var _krPayTimer = null;
+var _krPayOid = null;
+var _krPayTier = null;
+var _krPayMethod = 'wechat';
+
+function krPay(tier) {
+  _krPayTier = tier;
+  _krPayMethod = 'wechat';
+  document.getElementById('krPayOverlay').classList.add('open');
+  krPayStart();
+}
+
+function krPaySetMethod(method) {
+  _krPayMethod = method;
+  document.querySelectorAll('.kr-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('krTab_'+method).classList.add('active');
+  krPayStart();
+}
+
+function krPayStart() {
+  if (_krPayTimer) { clearInterval(_krPayTimer); _krPayTimer = null; }
+  document.getElementById('krPayQr').src = '';
+  document.getElementById('krPayStatus').textContent = '결제 준비 중…';
+  var product = (_krPayTier === 'vip') ? 'bazi_vip' : 'bazi_full';
+  fetch('/pay/wechat/create', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ product: product, method: _krPayMethod })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (!d.ok) { document.getElementById('krPayStatus').textContent = '결제 연결 실패. 다시 시도해 주세요.'; return; }
+    _krPayOid = d.out_trade_no;
+    if (d.code_url) {
+      document.getElementById('krPayQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=190x190&data=' + encodeURIComponent(d.code_url);
+      document.getElementById('krPayStatus').textContent = (_krPayMethod === 'wechat') ? '위챗으로 QR코드를 스캔하세요' : '알리페이로 QR코드를 스캔하세요';
+    } else if (d.url) {
+      window.location.href = d.url;
+      return;
+    }
+    _krPayTimer = setInterval(function(){
+      fetch('/pay/wechat/query?out_trade_no=' + encodeURIComponent(_krPayOid))
+        .then(function(r){ return r.json(); }).then(function(s){
+          if (s.status === 'paid') {
+            clearInterval(_krPayTimer); _krPayTimer = null;
+            document.getElementById('krPayStatus').textContent = '✅ 결제 완료!';
+            localStorage.setItem('sy_kr_order', _krPayOid);
+            setTimeout(function(){
+              document.getElementById('krPayOverlay').classList.remove('open');
+              // Re-fetch with order_no for full report
+              if (lastInput) {
+                document.getElementById('resultScreen').innerHTML = '';
+                document.getElementById('loadingScreen').classList.add('show');
+                var saved = Object.assign({}, lastInput, { order_no: _krPayOid });
+                fetchBazi(saved).then(function(d2){
+                  document.getElementById('loadingScreen').classList.remove('show');
+                  if (d2 && d2.reading) { showReport(d2.reading, d2.contextId, d2.tier, d2.locked); toast('결제 완료 · 심층 리포트가 열렸어요'); }
+                });
+              }
+            }, 1500);
+          }
+        }).catch(function(){});
+    }, 3000);
+  }).catch(function(){
+    document.getElementById('krPayStatus').textContent = '네트워크 오류. 다시 시도해 주세요.';
+  });
+}
+
+function krPayClose() {
+  if (_krPayTimer) { clearInterval(_krPayTimer); _krPayTimer = null; }
+  document.getElementById('krPayOverlay').classList.remove('open');
+}
+
+// Override checkout() to use hub payment
+function checkout(tier) {
+  if (tier === 'member') {
+    // member flow: keep Stripe if available, else show WeChat
+    if (window._stripeAvail) {
+      var btn = event.currentTarget;
+      btn.disabled = true; btn.textContent = '결제 페이지로 이동 중…';
+      fetch('/api/create-checkout', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ product:'member_monthly', tier:'member', price:6.9, token: localStorage.getItem('sy_token')||'', region:'kr', successUrl: location.origin+'/api/success?product=member_monthly' })
+      }).then(function(r){ return r.json(); }).then(function(d){
+        if (d.url) window.location.href = d.url;
+        else { toast('결제 연결 실패','error'); btn.disabled=false; btn.textContent='월정액 구독 · ₩12,900/월'; }
+      });
+    } else {
+      krPay('full');
+    }
+  } else {
+    krPay(tier === 'bazi_vip' ? 'vip' : 'full');
+  }
+}
+
+// Check if Stripe is available
+fetch('/api/products').then(function(r){ return r.json(); }).then(function(){ window._stripeAvail = false; }).catch(function(){});
+
+// Restore unlock from previous order
+(function(){
+  var oid = localStorage.getItem('sy_kr_order');
+  if (oid && lastInput) {
+    lastInput.order_no = oid;
+  }
+})();
 </script>
+
+<!-- WeChat/Alipay 결제 모달 -->
+<div class="kr-pay-overlay" id="krPayOverlay" onclick="if(event.target===this)krPayClose()">
+  <div class="kr-pay-modal">
+    <div class="kr-pay-title">심층 사주 리포트 해제</div>
+    <div class="kr-pay-price" id="krPayPriceLabel">¥39.9 (≈ ₩7,500)</div>
+    <div class="kr-pay-tabs">
+      <button class="kr-tab active" id="krTab_wechat" onclick="krPaySetMethod('wechat')">💚 위챗페이</button>
+      <button class="kr-tab" id="krTab_alipay" onclick="krPaySetMethod('alipay')">🔵 알리페이</button>
+    </div>
+    <img class="kr-pay-qr" id="krPayQr" src="" alt="QR">
+    <div class="kr-pay-status" id="krPayStatus">결제 준비 중…</div>
+    <button class="kr-pay-close" onclick="krPayClose()">닫기</button>
+  </div>
+</div>
+
 <script src="/assets/js/common.js"></script>
 </body>
 </html>

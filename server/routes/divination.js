@@ -30,7 +30,7 @@ const fs = require('fs');
 const { deepseekChat, deepseekStream, buildReadingPrompt } = require('../lib/llm');
 const { calcBazi } = require('../bazi');
 const astrology = require('../astrology.js');
-const { insertReading, hasFullAccess, gateMessages, saveQaContext, qaContext } = require('../lib/store');
+const { insertReading, hasFullAccess, gateMessages, saveQaContext, qaContext, _findOrder } = require('../lib/store');
 const { getToken } = require('../lib/store');
 const { rateLimitMiddleware } = require('../middleware');
 const { PRODUCTS, matchProduct } = require('../data/products');
@@ -52,6 +52,14 @@ async function baziKoreanHandler(req, res) {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, question, mode } = req.body;
     var full = hasFullAccess(req, ['bazi', '사주', '八字']);
+    // 订单号解锁：hub WeChat/Alipay 付款后无登录账号时使用
+    if (!full) {
+      var _orderNo = (req.body && req.body.order_no) || '';
+      if (_orderNo) {
+        var _ord = _findOrder(_orderNo);
+        if (_ord && _ord.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_ord.product)) full = true;
+      }
+    }
     const modeIns = (mode === 'gentle')
       ? '\n\n【말투】따뜻하고 부드럽게, 무서운 말을 하지 마세요. 문제가 있어도 먼저 안아주고, 이해시키고, 이끌어 주세요.'
       : '\n\n【말투】담백하고 따뜻하게, 꾸짖지 않고 솔직하게. 무서운 예언은 하지 마세요.';
@@ -85,6 +93,51 @@ async function baziKoreanHandler(req, res) {
 }
 
 // ══════════════════════════════════════════
+// 英语八字处理器
+// ══════════════════════════════════════════
+async function baziEnglishHandler(req, res) {
+  try {
+    const { birthYear, birthMonth, birthDay, birthHour, gender, order_no } = req.body;
+    var full = hasFullAccess(req, ['bazi', '사주', '八字']);
+    if (!full && order_no) {
+      var _o = _findOrder(order_no);
+      if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
+    }
+
+    const freeSuffix = full ? '' : `\n\nIMPORTANT: This is the free preview. Output ONLY these 3 chapters:\n📜 Four Pillars Chart\n🌊 Five Elements Analysis\n🌟 This Year's Fortune\n\nAfter completing these 3 chapters (around 1000-1500 words total), output exactly:\n---LOCKED---\n\nThen output a brief teaser listing the locked chapters:\n💰 Wealth & Career Destiny — unlocked in full report\n💕 Love & Marriage Timing — unlocked in full report\n💼 Career Path & Peak Years — unlocked in full report\n📅 Ten-Year Luck Cycles (大运) — unlocked in full report\n🔮 Year-by-Year Forecast — unlocked in full report`;
+
+    const sysPrompt = `You are a master BaZi (Four Pillars of Destiny) reader with 30+ years of experience, trained in classical Chinese metaphysics. You write warm, insightful, and practical reports in fluent English. You explain Chinese metaphysical concepts clearly without jargon, and always give specific, actionable advice. Never be scary or fatalistic — you help people understand their strengths and navigate challenges.${freeSuffix}`;
+
+    const userPrompt = `Please analyze my BaZi chart and generate a deep destiny report.
+
+Birth details:
+- Date: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', Hour: ' + birthHour + ':00' : ' (birth hour unknown)'}
+- Gender: ${gender === 'male' ? 'Male' : 'Female'}
+
+${full ? `Generate a comprehensive report with these sections (emoji heading required for each):
+📜 Four Pillars Chart (year/month/day/hour pillars, Day Master analysis, chart pattern — min 600 words)
+🌊 Five Elements Analysis (balance, strengths, what to cultivate — min 500 words)
+🌟 This Year's Fortune (2025-2026 overview — min 400 words)
+💰 Wealth & Finance Destiny (wealth stars, peak income years, best industries — min 600 words)
+💕 Love & Relationships (marriage timing, ideal partner traits, relationship patterns — min 600 words)
+💼 Career & Life Purpose (best career paths, peak career years, mentor directions — min 600 words)
+📅 Ten-Year Luck Cycles (all major 大运 cycles with years and analysis — min 800 words)
+🔮 Year-by-Year Forecast (next 10 years, rating each year — min 600 words)
+🎯 Personalized Recommendations (lucky colors, numbers, directions, crystals, lifestyle — min 400 words)
+💌 A Personal Message (warm, personalized closing note — min 300 words)` : `Generate a free preview with ONLY these 3 sections then the LOCKED separator.`}`;
+
+    const messages = buildReadingPrompt(sysPrompt, userPrompt);
+    const result = await deepseekChat(messages, { maxTokens: full ? 16384 : 3500 });
+    insertReading.run('bazi', JSON.stringify(req.body), result, req.userId);
+    var ctxId = saveQaContext('bazi', req.body, result);
+    res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId });
+  } catch (err) {
+    console.error('[BAZI-EN ERR]', err.message);
+    res.status(500).json({ error: 'The AI reader is temporarily busy. Please try again in a moment.' });
+  }
+}
+
+// ══════════════════════════════════════════
 // POST /api/bazi — 八字命理
 // ══════════════════════════════════════════
 router.post('/bazi', rateLimitMiddleware, async (req, res) => {
@@ -93,6 +146,7 @@ router.post('/bazi', rateLimitMiddleware, async (req, res) => {
     if (!birthYear || !birthMonth || !birthDay) return res.status(400).json({ error: '请提供出生年月日' });
     if (Number(birthYear) > new Date().getFullYear() - 18) return res.status(400).json({ error: '仅限18岁以上用户使用' });
     if (lang === 'ko') return baziKoreanHandler(req, res);
+    if (lang === 'en') return baziEnglishHandler(req, res);
 
     const modeInstruction = (mode === 'gentle')
       ? '\n\n【说话模式】\n你温暖治愈、以鼓励为主，让人感到被理解。即使指出问题，也要先肯定再引导，用温柔的方式表达。'
