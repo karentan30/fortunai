@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d0a18">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>免费塔罗占卜 · AI在线塔罗牌解读 | 善缘</title>
+<meta name="description" content="免费AI塔罗占卜，获取专属运势解读。爱情·事业·财运全覆盖，三张牌阵立即开始，超过10万次占卜服务。">
+<meta name="keywords" content="免费塔罗占卜,免费在线塔罗牌,每日塔罗运势,塔罗牌爱情占卜免费,AI塔罗">
+<meta property="og:title" content="免费塔罗占卜 | 善缘AI命理">
+<meta property="og:description" content="从78张塔罗牌中抽出属于你的牌，AI即时解读爱情·事业·财运，三张牌阵立即开始。">
+<meta property="og:image" content="/og-card.png">
+<meta property="og:url" content="https://shenyuan.mylumee.cn/pages/lp-tarot-cn.html">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://shenyuan.mylumee.cn/pages/lp-tarot-cn.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "善缘 AI 命理",
+  "url": "https://shenyuan.mylumee.cn",
+  "description": "AI驱动的塔罗占卜与八字命理平台，提供免费在线塔罗牌解读",
+  "potentialAction": {
+    "@type": "SearchAction",
+    "target": "https://shenyuan.mylumee.cn/pages/tarot.html",
+    "query-input": "required name=search_term_string"
+  }
+}
+</script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0d0a18;
+  --card: #16122a;
+  --card2: #1c1830;
+  --gold: #c9a84c;
+  --gold-light: #e8d08a;
+  --gold-deep: #8a6420;
+  --gold-dim: rgba(201,168,76,0.35);
+  --text: rgba(240,230,210,0.92);
+  --sub: rgba(200,185,155,0.58);
+  --jade: #5bbfa0;
+  --indigo: #2d1b69;
+  --purple: #3d1a5c;
+}
+
+html, body {
+  background: var(--bg);
+  font-family: 'Noto Serif SC', serif;
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  max-width: 430px;
+  margin: 0 auto;
+  min-height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ── 通用 ── */
+section { position: relative; z-index: 1; }
+
+.gold-line {
+  width: 60px; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  margin: 0 auto;
+}
+
+.section-tag {
+  display: inline-block;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--gold);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 20px;
+  padding: 3px 12px;
+  margin-bottom: 14px;
+}
+
+/* ── 导航 ── */
+.nav {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+}
+
+.nav-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px;
+  letter-spacing: 0.25em;
+  color: rgba(240,230,210,0.9);
+  font-style: italic;
+  text-decoration: none;
+}
+
+.nav-home {
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: rgba(200,185,155,0.6);
+  text-decoration: none;
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 20px;
+  padding: 5px 12px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.nav-home:hover { color: var(--gold); border-color: rgba(201,168,76,0.4); }
+
+/* ── 英雄区 ── */
+.hero {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 24px 60px;
+  position: relative;
+  background: linear-gradient(160deg, #0d0a18 0%, #1a0d35 30%, #2d1b69 60%, #1a0830 85%, #0d0a18 100%);
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 35%, rgba(100,40,200,0.25) 0%, rgba(60,10,120,0.1) 45%, transparent 70%);
+  pointer-events: none;
+}
+
+/* ── 塔罗牌 CSS ── */
+.tarot-cards {
+  display: flex;
+  gap: 14px;
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: 36px;
+  position: relative;
+}
+
+.tarot-card {
+  width: 62px;
+  height: 100px;
+  border-radius: 8px;
+  border: 1px solid rgba(201,168,76,0.4);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  position: relative;
+  transition: transform 0.3s ease;
+}
+
+.tarot-card::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  border-radius: 5px;
+  border: 1px solid rgba(201,168,76,0.15);
+}
+
+.tarot-card:nth-child(1) {
+  background: linear-gradient(160deg, #1a0d35 0%, #2d1b69 100%);
+  transform: rotate(-8deg) translateY(4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 20px rgba(100,40,200,0.2);
+}
+
+.tarot-card:nth-child(2) {
+  background: linear-gradient(160deg, #220e40 0%, #3d1a5c 100%);
+  transform: rotate(0deg);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.6), 0 0 30px rgba(120,50,220,0.3);
+  z-index: 2;
+  width: 72px;
+  height: 116px;
+}
+
+.tarot-card:nth-child(3) {
+  background: linear-gradient(160deg, #1a0d35 0%, #2d1b69 100%);
+  transform: rotate(8deg) translateY(4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 20px rgba(100,40,200,0.2);
+}
+
+.tarot-symbol {
+  font-size: 22px;
+  opacity: 0.8;
+  line-height: 1;
+}
+
+.tarot-card:nth-child(2) .tarot-symbol {
+  font-size: 28px;
+}
+
+.tarot-glyph {
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  color: rgba(201,168,76,0.6);
+  font-family: 'Cormorant Garamond', serif;
+}
+
+.hero-eyebrow {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 11px;
+  letter-spacing: 0.38em;
+  color: rgba(201,168,76,0.7);
+  font-style: italic;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.hero-title {
+  font-size: 30px;
+  font-weight: 300;
+  letter-spacing: 0.12em;
+  line-height: 1.45;
+  margin-bottom: 18px;
+  text-shadow: 0 0 40px rgba(100,40,200,0.4), 0 0 80px rgba(201,168,76,0.1);
+}
+
+.hero-title span { color: var(--gold-light); }
+
+.hero-sub {
+  font-size: 13px;
+  color: rgba(200,185,155,0.65);
+  letter-spacing: 0.1em;
+  line-height: 1.9;
+  margin-bottom: 36px;
+  max-width: 300px;
+}
+
+.btn-hero {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  margin: 0 auto 14px;
+  padding: 16px 0;
+  background: linear-gradient(135deg, var(--gold-deep), var(--gold), var(--gold-light), var(--gold));
+  background-size: 200% auto;
+  animation: gold-shimmer 3s linear infinite;
+  border: none;
+  border-radius: 14px;
+  color: rgba(14,10,4,0.95);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  cursor: pointer;
+  box-shadow: 0 6px 32px rgba(201,168,76,0.35), 0 0 60px rgba(100,40,200,0.15);
+  transition: transform 0.18s, box-shadow 0.18s;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
+}
+
+.btn-hero:hover { transform: translateY(-2px); box-shadow: 0 10px 40px rgba(201,168,76,0.5); }
+.btn-hero:active { transform: scale(0.97); }
+
+@keyframes gold-shimmer {
+  0% { background-position: 0% 50% }
+  100% { background-position: 200% 50% }
+}
+
+.hero-hint {
+  font-size: 10px;
+  color: rgba(200,185,155,0.4);
+  letter-spacing: 0.14em;
+}
+
+.scroll-indicator {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  animation: float-y 2s ease-in-out infinite;
+}
+
+.scroll-indicator span {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: rgba(201,168,76,0.35);
+}
+
+.scroll-arrow {
+  width: 16px;
+  height: 16px;
+  border-right: 1px solid rgba(201,168,76,0.35);
+  border-bottom: 1px solid rgba(201,168,76,0.35);
+  transform: rotate(45deg);
+  margin-top: -4px;
+}
+
+@keyframes float-y {
+  0%,100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(6px); }
+}
+
+/* ── 功能区 ── */
+.features {
+  background: var(--bg);
+  padding: 56px 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.features::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 80px;
+  background: linear-gradient(to bottom, #1a0830, transparent);
+  pointer-events: none;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  margin-bottom: 10px;
+  color: var(--text);
+}
+
+.section-desc {
+  font-size: 11px;
+  color: var(--sub);
+  letter-spacing: 0.08em;
+  line-height: 1.8;
+}
+
+.feature-grid-3 {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.feature-card {
+  background: var(--card);
+  border: 1px solid rgba(201,168,76,0.12);
+  border-radius: 16px;
+  padding: 22px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  transition: border-color 0.2s;
+}
+
+.feature-card:hover { border-color: rgba(201,168,76,0.28); }
+
+.feature-left {
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.feature-symbol {
+  width: 48px;
+  height: 72px;
+  border-radius: 6px;
+  background: linear-gradient(160deg, #1a0d35, #2d1b69);
+  border: 1px solid rgba(201,168,76,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.feature-price {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px;
+  color: var(--gold);
+}
+
+.feature-right { flex: 1; }
+
+.feature-name {
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  margin-bottom: 6px;
+  color: var(--gold-light);
+}
+
+.feature-tagline {
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+  margin-bottom: 8px;
+  opacity: 0.75;
+}
+
+.feature-desc {
+  font-size: 11px;
+  color: var(--sub);
+  letter-spacing: 0.05em;
+  line-height: 1.85;
+}
+
+/* ── 场景区 ── */
+.scenes {
+  padding: 48px 20px;
+  background: linear-gradient(135deg, rgba(45,27,105,0.08), rgba(61,26,92,0.05));
+  border-top: 1px solid rgba(201,168,76,0.06);
+  border-bottom: 1px solid rgba(201,168,76,0.06);
+  position: relative;
+  z-index: 1;
+}
+
+.scenes-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.scene-item {
+  background: var(--card);
+  border: 1px solid rgba(201,168,76,0.1);
+  border-radius: 14px;
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.scene-glyph {
+  font-size: 26px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.scene-name {
+  font-size: 13px;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+  color: var(--gold-light);
+}
+
+.scene-desc {
+  font-size: 10px;
+  color: var(--sub);
+  letter-spacing: 0.04em;
+  line-height: 1.75;
+}
+
+/* ── 社会证明区 ── */
+.social-proof {
+  padding: 56px 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.quotes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.quote-card {
+  border-radius: 16px;
+  padding: 20px 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.quote-card:nth-child(1) { background: linear-gradient(135deg, rgba(45,27,105,0.25), rgba(22,18,42,0.9)); border: 1px solid rgba(100,60,200,0.2); }
+.quote-card:nth-child(2) { background: linear-gradient(135deg, rgba(61,26,92,0.2), rgba(22,18,42,0.9)); border: 1px solid rgba(201,168,76,0.15); }
+.quote-card:nth-child(3) { background: linear-gradient(135deg, rgba(45,27,105,0.2), rgba(22,18,42,0.9)); border: 1px solid rgba(100,60,200,0.15); }
+.quote-card:nth-child(4) { background: linear-gradient(135deg, rgba(61,26,92,0.25), rgba(22,18,42,0.9)); border: 1px solid rgba(201,168,76,0.15); }
+
+.quote-mark {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 40px;
+  color: var(--gold);
+  opacity: 0.4;
+  line-height: 0.8;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.quote-text {
+  font-size: 12px;
+  color: rgba(200,185,155,0.82);
+  line-height: 1.95;
+  letter-spacing: 0.05em;
+  margin-bottom: 14px;
+}
+
+.quote-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.quote-user {
+  font-size: 11px;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+}
+
+.quote-location {
+  font-size: 9px;
+  color: var(--sub);
+  letter-spacing: 0.12em;
+}
+
+/* ── 底部 CTA ── */
+.footer-cta {
+  padding: 56px 20px 24px;
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  background: linear-gradient(to bottom, transparent, rgba(45,27,105,0.1));
+}
+
+.footer-title {
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: 0.18em;
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.footer-title span { color: var(--gold-light); }
+
+.footer-sub {
+  font-size: 11px;
+  color: var(--sub);
+  letter-spacing: 0.1em;
+  line-height: 1.9;
+  margin-bottom: 28px;
+}
+
+.btn-cta {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto 20px;
+  padding: 16px 0;
+  background: linear-gradient(135deg, var(--gold-deep), var(--gold), var(--gold-light), var(--gold));
+  background-size: 200% auto;
+  animation: gold-shimmer 3s linear infinite;
+  border: none;
+  border-radius: 14px;
+  color: rgba(14,10,4,0.95);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  cursor: pointer;
+  box-shadow: 0 6px 28px rgba(201,168,76,0.3);
+  transition: transform 0.18s;
+  -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
+  text-align: center;
+}
+
+.btn-cta:hover { transform: translateY(-2px); }
+.btn-cta:active { transform: scale(0.97); }
+
+.disclaimer {
+  font-size: 9px;
+  color: rgba(200,185,155,0.22);
+  letter-spacing: 0.06em;
+  line-height: 1.7;
+  margin-top: 12px;
+  padding: 0 20px;
+}
+
+/* ── 底部品牌 ── */
+.brand-footer {
+  padding: 16px 24px calc(24px + env(safe-area-inset-bottom));
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  border-top: 1px solid rgba(201,168,76,0.06);
+}
+
+.brand-footer-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 13px;
+  letter-spacing: 0.3em;
+  color: rgba(201,168,76,0.3);
+  font-style: italic;
+  margin-bottom: 4px;
+}
+
+.brand-footer-sub {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  color: rgba(200,185,155,0.18);
+}
+
+/* ── 入场动画 ── */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ── 响应式 ── */
+@media (min-width: 380px) {
+  .hero-title { font-size: 34px; }
+  .feature-grid-3 { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 340px) {
+  .hero-title { font-size: 26px; }
+  .scenes-grid { grid-template-columns: 1fr; }
+  .tarot-card:nth-child(2) { width: 64px; height: 102px; }
+}
+
+/* ── 悬浮 CTA ── */
+#sticky-cta {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  max-width: 430px;
+  margin: 0 auto;
+  background: linear-gradient(135deg, #1a0830, #0d0a18);
+  border-top: 1px solid rgba(201,168,76,0.25);
+  padding: 12px 20px calc(12px + env(safe-area-inset-bottom));
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 999;
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  box-shadow: 0 -8px 32px rgba(0,0,0,0.4);
+}
+
+#sticky-cta-text { flex: 1; }
+#sticky-cta-text .t1 { font-size: 11px; letter-spacing: 0.12em; color: var(--gold); margin-bottom: 2px; }
+#sticky-cta-text .t2 { font-size: 10px; color: var(--sub); letter-spacing: 0.06em; }
+
+#sticky-cta-btn {
+  background: linear-gradient(135deg, var(--gold-deep), var(--gold), var(--gold-light), var(--gold));
+  background-size: 200% auto;
+  animation: gold-shimmer 3s linear infinite;
+  color: rgba(14,10,4,0.95);
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  padding: 11px 18px;
+  border-radius: 10px;
+  text-decoration: none;
+  white-space: nowrap;
+  box-shadow: 0 4px 18px rgba(201,168,76,0.35);
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ 1. 英雄区 ═══════════════════════════ -->
+<section class="hero">
+  <!-- 导航 -->
+  <nav class="nav">
+    <a href="/index.html" class="nav-logo">善缘</a>
+    <a href="/index.html" class="nav-home">返回首页</a>
+  </nav>
+
+  <!-- CSS 塔罗牌装饰 -->
+  <div class="tarot-cards">
+    <div class="tarot-card">
+      <span class="tarot-symbol">☽</span>
+      <span class="tarot-glyph">II</span>
+    </div>
+    <div class="tarot-card">
+      <span class="tarot-symbol">✦</span>
+      <span class="tarot-glyph">☉</span>
+    </div>
+    <div class="tarot-card">
+      <span class="tarot-symbol">⊕</span>
+      <span class="tarot-glyph">X</span>
+    </div>
+  </div>
+
+  <p class="hero-eyebrow">AI · Tarot · 78张智慧</p>
+  <h1 class="hero-title">AI 塔罗 · 洞见<br>你的<span>命运方向</span></h1>
+  <p class="hero-sub">从78张塔罗牌中抽出属于你的牌<br>AI即时解读，感情·事业·财运全覆盖</p>
+
+  <a class="btn-hero" href="/pages/tarot.html">立即免费占卜</a>
+  <p class="hero-hint">单牌免费 · 无需注册 · 即刻出结果</p>
+
+  <div class="scroll-indicator">
+    <span>向下探索</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ 2. 功能区 ═══════════════════════════ -->
+<section class="features fade-in">
+  <div class="section-header">
+    <span class="section-tag">占卜方式</span>
+    <h2 class="section-title">选择适合你的牌阵</h2>
+    <p class="section-desc">从单牌直觉到五维深度，<br>每一种解读都有它的意义</p>
+  </div>
+
+  <div class="feature-grid-3">
+    <!-- 单牌 -->
+    <div class="feature-card">
+      <div class="feature-left">
+        <div class="feature-symbol">☽</div>
+        <div class="feature-price">免费</div>
+      </div>
+      <div class="feature-right">
+        <div class="feature-name">单牌指引</div>
+        <div class="feature-tagline">一牌洞见当下</div>
+        <div class="feature-desc">
+          随机从78张大小阿尔卡那中抽出一张，AI根据正逆位即时解读，回答你此刻最迫切的问题。适合每日运势与情绪指引。
+        </div>
+      </div>
+    </div>
+
+    <!-- 三牌 -->
+    <div class="feature-card" style="border-color: rgba(201,168,76,0.3); background: linear-gradient(135deg, rgba(201,168,76,0.04), rgba(45,27,105,0.08));">
+      <div class="feature-left">
+        <div class="feature-symbol" style="background: linear-gradient(160deg, #2d1b69, #3d1a5c);">✦</div>
+        <div class="feature-price" style="color: var(--gold);">¥9.90</div>
+      </div>
+      <div class="feature-right">
+        <div class="feature-name" style="color: var(--gold-light);">三牌牌阵</div>
+        <div class="feature-tagline">过去·现在·未来</div>
+        <div class="feature-desc">
+          三张牌分别对应你的过去背景、现在处境与未来走向。AI综合三牌关系深度解析，揭示当前困局的根源与出路。<span style="color: var(--gold); font-size: 10px;">（最受欢迎）</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 五芒星 -->
+    <div class="feature-card">
+      <div class="feature-left">
+        <div class="feature-symbol">⊕</div>
+        <div class="feature-price">¥19.90</div>
+      </div>
+      <div class="feature-right">
+        <div class="feature-name">五芒星阵</div>
+        <div class="feature-tagline">五维度深度解读</div>
+        <div class="feature-desc">
+          五张牌覆盖情感·事业·财运·健康·精神五大维度，完整呈现生命当前的全貌。适合面临重大选择或人生转折时使用。
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ 3. 场景区 ═══════════════════════════ -->
+<section class="scenes fade-in">
+  <div class="section-header">
+    <span class="section-tag">适合时刻</span>
+    <h2 class="section-title">这些时刻，<br>塔罗给你指引</h2>
+  </div>
+
+  <div class="scenes-grid">
+    <div class="scene-item">
+      <span class="scene-glyph">♡</span>
+      <div class="scene-name">感情困惑时</div>
+      <div class="scene-desc">他对我的感情是真的吗？这段关系值得继续吗？</div>
+    </div>
+    <div class="scene-item">
+      <span class="scene-glyph">⚖</span>
+      <div class="scene-name">职业选择时</div>
+      <div class="scene-desc">该辞职吗？换赛道还是坚持？哪条路更适合我？</div>
+    </div>
+    <div class="scene-item">
+      <span class="scene-glyph">◈</span>
+      <div class="scene-name">财运迷茫时</div>
+      <div class="scene-desc">这笔投资值不值得？近期财运如何？哪里有机会？</div>
+    </div>
+    <div class="scene-item">
+      <span class="scene-glyph">☽</span>
+      <div class="scene-name">日常运势时</div>
+      <div class="scene-desc">今天适合主动出击吗？每天一张牌，感知今日能量。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ 4. 社会证明 ═══════════════════════════ -->
+<section class="social-proof fade-in">
+  <div class="section-header">
+    <span class="section-tag">真实反馈</span>
+    <h2 class="section-title">他们的塔罗故事</h2>
+    <p class="section-desc">来自世界各地华人社区的真实体验</p>
+  </div>
+
+  <div class="quotes-list">
+    <div class="quote-card">
+      <span class="quote-mark">"</span>
+      <p class="quote-text">
+        抱着试试看的心态抽了三牌阵，结果关于感情的那张牌解读精准到让我起了鸡皮疙瘩。AI把我犹豫不决的根源说得特别透，当时就想通了。已经连续占了三十多天了。
+      </p>
+      <div class="quote-footer">
+        <span class="quote-user">晚风 · 28岁</span>
+        <span class="quote-location">多伦多</span>
+      </div>
+    </div>
+
+    <div class="quote-card">
+      <span class="quote-mark">"</span>
+      <p class="quote-text">
+        工作压力大的时候每天抽一张单牌，就像给自己一个安静思考的仪式。有一次抽到逆位力量牌，AI提示我近期能量内耗过重，确实当时睡眠特别差，提醒得很及时。
+      </p>
+      <div class="quote-footer">
+        <span class="quote-user">蓝意 · 32岁</span>
+        <span class="quote-location">洛杉矶</span>
+      </div>
+    </div>
+
+    <div class="quote-card">
+      <span class="quote-mark">"</span>
+      <p class="quote-text">
+        纠结要不要接一个新的合作机会，做了五芒星阵，五张牌把我的内心冲突描述得很准。最后那张"世界"牌说时机成熟，果断接了，目前进展顺利。
+      </p>
+      <div class="quote-footer">
+        <span class="quote-user">陈思远 · 35岁</span>
+        <span class="quote-location">纽约</span>
+      </div>
+    </div>
+
+    <div class="quote-card">
+      <span class="quote-mark">"</span>
+      <p class="quote-text">
+        试了很多塔罗App，善缘的AI解读是最详细的。不只说牌面含义，会结合我提的问题给出具体建议，感觉是真的在认真分析，不是套模板。而且界面很美，抽牌体验很好。
+      </p>
+      <div class="quote-footer">
+        <span class="quote-user">若然 · 25岁</span>
+        <span class="quote-location">墨尔本</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════ 5. 底部 CTA ═══════════════════════════ -->
+<section class="footer-cta fade-in">
+  <div class="gold-line" style="margin-bottom: 28px;"></div>
+  <h2 class="footer-title">开始你的<span>塔罗之旅</span></h2>
+  <p class="footer-sub">
+    78张牌，每张都有它对你说的话<br>
+    此刻抽出的那张，也许正是你需要的答案
+  </p>
+  <a class="btn-cta" href="/pages/tarot.html">立即免费占卜 →</a>
+  <p class="disclaimer">内容仅供娱乐参考，不代替专业建议。善缘 AI 命理 · AIGC 生成 · © 2025 善缘明理研究团队</p>
+</section>
+
+<!-- ── 底部品牌 ── -->
+<div class="brand-footer">
+  <div class="brand-footer-name">善缘 · ShenYuan</div>
+  <div class="brand-footer-sub">ENLIGHTEN YOUR PATH</div>
+</div>
+
+<!-- ── 悬浮底部 CTA ── -->
+<div id="sticky-cta">
+  <div id="sticky-cta-text">
+    <div class="t1">单牌免费 · 无需注册</div>
+    <div class="t2">三牌牌阵 ¥9.90 起</div>
+  </div>
+  <a href="/pages/tarot.html" id="sticky-cta-btn">占卜 →</a>
+</div>
+
+<script>
+// 滚动淡入
+(function() {
+  const els = document.querySelectorAll('.fade-in');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+  }, { threshold: 0.1 });
+  els.forEach(el => io.observe(el));
+})();
+
+// 悬浮 CTA 显示/隐藏
+(function(){
+  const bar = document.getElementById('sticky-cta');
+  if (!bar) return;
+  window.addEventListener('scroll', function(){
+    const s = window.scrollY;
+    const h = document.body.scrollHeight - window.innerHeight;
+    if (s > 350 && s < h - 80) { bar.style.transform = 'translateY(0)'; }
+    else { bar.style.transform = 'translateY(100%)'; }
+  });
+})();
+</script>
+</body>
+</html>
