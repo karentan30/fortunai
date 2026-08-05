@@ -959,22 +959,34 @@ function generateInviteId() {
 function getInviteUrl(inviteId) {
   var nameA = (document.getElementById('nameA') ? document.getElementById('nameA').value.trim() : '') || '你的TA';
   var base = location.origin + '/pages/hehun.html';
-  return base + '?invite=' + encodeURIComponent(inviteId) + '&name=' + encodeURIComponent(nameA);
+  // Use server-side inviteId if available (cross-device), fallback to local
+  var sid = window._currentInviteIdServer || inviteId;
+  return base + '?invite=' + encodeURIComponent(sid) + '&name=' + encodeURIComponent(nameA);
 }
 
 function saveInviteRecord(inviteId) {
-  // Save Person A's data keyed by inviteId so invited person can retrieve it
+  // Save Person A's data on the server so invited person can retrieve from any device
   try {
     var record = {
       nameA: document.getElementById('nameA').value.trim() || '',
+      inviterName: document.getElementById('nameA').value.trim() || '',
       p1Year: document.getElementById('aYear').value,
       p1Month: document.getElementById('aMonth').value,
       p1Day: document.getElementById('aDay').value,
       p1Hour: document.getElementById('aHour').value,
       p1Gender: gA,
-      mode: window._hehunMode || 'marriage'
+      mode: window._hehunMode || 'marriage',
+      ref: localStorage.getItem('sy_ref_code') || ''
     };
-    localStorage.setItem('sy_invite_' + inviteId, JSON.stringify(record));
+    fetch('/api/invite/save', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(record)
+    }).then(function(r){ return r.json(); }).then(function(data){
+      if (data.inviteId) {
+        window._currentInviteIdServer = data.inviteId;
+      }
+    }).catch(function(){});
   } catch(e) {}
 }
 
@@ -988,33 +1000,73 @@ function ensureInviteId() {
   return _currentInviteId;
 }
 
-function inviteCopyLink() {
-  var id = ensureInviteId();
-  var url = getInviteUrl(id);
+function _doCopyText(text, successMsg) {
   var t = document.createElement('textarea');
-  t.value = url;
+  t.value = text;
   t.style.position = 'fixed'; t.style.left = '-9999px';
   document.body.appendChild(t); t.select();
   try {
     document.execCommand('copy');
-    showToast('专属邀请链接已复制！发给TA，让TA填上生辰一起测 ❤️');
+    showToast(successMsg);
   } catch(e) { showToast('复制失败，请手动复制链接', 'error'); }
   document.body.removeChild(t);
 }
 
+function _getServerInviteIdThen(callback) {
+  var localId = ensureInviteId();
+  // If server ID already returned, use it
+  if (window._currentInviteIdServer) {
+    callback(window._currentInviteIdServer);
+    return;
+  }
+  // Server save is in-flight; wait up to 3s
+  var waited = 0;
+  var poll = setInterval(function() {
+    waited += 100;
+    if (window._currentInviteIdServer) {
+      clearInterval(poll);
+      callback(window._currentInviteIdServer);
+    } else if (waited >= 3000) {
+      clearInterval(poll);
+      // Fallback: issue a fresh save and use that ID
+      var record = {
+        nameA: document.getElementById('nameA') ? document.getElementById('nameA').value.trim() : '',
+        inviterName: document.getElementById('nameA') ? document.getElementById('nameA').value.trim() : '',
+        p1Year: document.getElementById('aYear') ? document.getElementById('aYear').value : '',
+        p1Month: document.getElementById('aMonth') ? document.getElementById('aMonth').value : '',
+        p1Day: document.getElementById('aDay') ? document.getElementById('aDay').value : '',
+        p1Hour: document.getElementById('aHour') ? document.getElementById('aHour').value : '',
+        p1Gender: gA,
+        mode: window._hehunMode || 'marriage',
+        ref: localStorage.getItem('sy_ref_code') || ''
+      };
+      fetch('/api/invite/save', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(record)
+      }).then(function(r){ return r.json(); }).then(function(data){
+        if (data.inviteId) window._currentInviteIdServer = data.inviteId;
+        callback(data.inviteId || localId);
+      }).catch(function(){ callback(localId); });
+    }
+  }, 100);
+}
+
+function inviteCopyLink() {
+  ensureInviteId();
+  _getServerInviteIdThen(function(sid) {
+    var url = getInviteUrl(sid);
+    _doCopyText(url, '专属邀请链接已复制！发给TA，让TA填上生辰一起测 ❤️');
+  });
+}
+
 function inviteWechat() {
-  var id = ensureInviteId();
-  var url = getInviteUrl(id);
+  ensureInviteId();
   var nameA = (document.getElementById('nameA') ? document.getElementById('nameA').value.trim() : '') || '我';
-  var t = document.createElement('textarea');
-  t.value = nameA + '已为你们测了合婚，点链接填入你的生辰，一起看结果 ❤️\n' + url;
-  t.style.position = 'fixed'; t.style.left = '-9999px';
-  document.body.appendChild(t); t.select();
-  try {
-    document.execCommand('copy');
-    showToast('文案+链接已复制！打开微信粘贴发给TA 💬');
-  } catch(e) { showToast('复制失败', 'error'); }
-  document.body.removeChild(t);
+  _getServerInviteIdThen(function(sid) {
+    var url = getInviteUrl(sid);
+    _doCopyText(nameA + '已为你们测了合婚，点链接填入你的生辰，一起看结果 ❤️\n' + url, '文案+链接已复制！打开微信粘贴发给TA 💬');
+  });
 }
 
 function handleInviteParam() {
@@ -1031,38 +1083,55 @@ function handleInviteParam() {
     banner.classList.add('show');
   }
 
-  // Try to pre-fill Person A's data from localStorage invite record
-  try {
-    var record = JSON.parse(localStorage.getItem('sy_invite_' + inviteId) || 'null');
-    if (record) {
-      // Pre-fill Person A (the inviter's data) and hide that card
-      var cardA = document.querySelector('.person-card.person-a');
-      if (cardA) {
-        if (record.p1Year) document.getElementById('aYear').value = record.p1Year;
-        if (record.p1Month) document.getElementById('aMonth').value = record.p1Month;
-        if (record.p1Day) document.getElementById('aDay').value = record.p1Day;
-        if (record.p1Hour !== undefined) document.getElementById('aHour').value = record.p1Hour;
-        if (record.nameA) document.getElementById('nameA').value = record.nameA;
-        if (record.p1Gender) { gA = record.p1Gender; selG('a', record.p1Gender); }
-        if (record.mode) { window._hehunMode = record.mode; }
-        // Collapse Person A card to show it's prefilled
-        cardA.style.opacity = '0.6';
-        cardA.style.pointerEvents = 'none';
-        var lbl = cardA.querySelector('.person-label');
-        if (lbl) lbl.textContent = (record.nameA || 'TA') + ' · 已填写';
-      }
-      // Highlight Person B card
-      var cardB = document.querySelector('.person-card.person-b');
-      if (cardB) {
-        cardB.style.border = '2px solid rgba(91,191,160,0.5)';
-        var lblB = cardB.querySelector('.person-label');
-        if (lblB) lblB.textContent = '你 · 请填写';
-      }
-      // Update submit button
-      var btn = document.querySelector('.btn-calc');
-      if (btn) btn.textContent = '查看我们的合婚结果 →';
+  // Fetch Person A's data from server (works cross-device)
+  function applyInviteRecord(record) {
+    if (!record) return;
+    var cardA = document.querySelector('.person-card.person-a');
+    if (cardA) {
+      if (record.p1Year) document.getElementById('aYear').value = record.p1Year;
+      if (record.p1Month) document.getElementById('aMonth').value = record.p1Month;
+      if (record.p1Day) document.getElementById('aDay').value = record.p1Day;
+      if (record.p1Hour !== undefined && record.p1Hour !== '') document.getElementById('aHour').value = record.p1Hour;
+      var nameVal = record.nameA || record.inviterName || '';
+      if (nameVal) document.getElementById('nameA').value = nameVal;
+      if (record.p1Gender) { gA = record.p1Gender; selG('a', record.p1Gender); }
+      if (record.mode) { window._hehunMode = record.mode; }
+      cardA.style.opacity = '0.6';
+      cardA.style.pointerEvents = 'none';
+      var lbl = cardA.querySelector('.person-label');
+      if (lbl) lbl.textContent = (nameVal || 'TA') + ' · 已填写';
     }
-  } catch(e) {}
+    var cardB = document.querySelector('.person-card.person-b');
+    if (cardB) {
+      cardB.style.border = '2px solid rgba(91,191,160,0.5)';
+      var lblB = cardB.querySelector('.person-label');
+      if (lblB) lblB.textContent = '你 · 请填写';
+    }
+    var btn = document.querySelector('.btn-calc');
+    if (btn) btn.textContent = '查看我们的合婚结果 →';
+  }
+
+  // Try server-side first (works on any device), fallback to localStorage
+  fetch('/api/invite/' + encodeURIComponent(inviteId))
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(record) {
+      if (record) {
+        applyInviteRecord(record);
+      } else {
+        // Fallback: old localStorage-based invite (same device only)
+        try {
+          var local = JSON.parse(localStorage.getItem('sy_invite_' + inviteId) || 'null');
+          applyInviteRecord(local);
+        } catch(e) {}
+      }
+    })
+    .catch(function() {
+      try {
+        var local = JSON.parse(localStorage.getItem('sy_invite_' + inviteId) || 'null');
+        applyInviteRecord(local);
+      } catch(e) {}
+    });
+
   // Store invite context for after results
   window._inviteId = inviteId;
   window._inviterName = inviterName;

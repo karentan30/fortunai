@@ -118,6 +118,9 @@ app.use('/api/auth', authRouter);
 // 邀请裂变
 app.use('/api/referral', referralRouter);
 
+// 合婚邀请链接（服务端落盘，跨设备有效）
+app.use('/api/invite', require('./routes/invite'));
+
 // 支付（含 Stripe / 微信 / 支付宝 + 订单查询）
 // payment router 内部包含 /api/* 和 /pay/* 两类路径，挂在根路径
 app.use('/', paymentRouter);
