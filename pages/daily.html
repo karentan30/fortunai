@@ -373,7 +373,7 @@ body::before {
   background-clip:text;
   animation:gold-shimmer 3s linear infinite;
 }
-.date-ganzhi{animation:gold-shimmer 4s linear infinite}
+.date-ganzhi{background-size:300% auto;animation:gold-shimmer 4s linear infinite}
 
 /* 玻璃态 */
 .glass-card{
@@ -397,6 +397,10 @@ body::before {
 /* 星尘背景 */
 .stardust span{position:absolute;width:3px;height:3px;background:rgba(201,168,76,0.6);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
 .bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(14,10,4,1) 0%,rgba(14,10,4,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
+
+@keyframes load-breathe{0%,100%{opacity:0.5;transform:scale(0.97)}50%{opacity:1;transform:scale(1)}}
+@keyframes twinkle{0%,100%{opacity:0.3}50%{opacity:1}}
+@keyframes gold-shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
 </style>
 <link rel="manifest" href="/manifest.json">
 <link rel="stylesheet" href="/assets/css/common.css">
@@ -580,7 +584,7 @@ function showToast(msg, type) {
 }
 // Init year/day selectors
 var ySel = document.getElementById('year');
-for (var y = 2010; y >= 1920; y--) ySel.innerHTML += '<option value="'+y+'">'+y+'年</option>';
+for (var y = new Date().getFullYear(); y >= 1920; y--) ySel.innerHTML += '<option value="'+y+'">'+y+'年</option>';
 var mSel = document.getElementById('month');
 for (var m = 1; m <= 12; m++) mSel.innerHTML += '<option value="'+m+'">'+m+'月</option>';
 var dSel = document.getElementById('day');
@@ -590,6 +594,17 @@ for (var d = 1; d <= 31; d++) dSel.innerHTML += '<option value="'+d+'">'+d+'日<
 var today = new Date();
 var dateStr = today.getFullYear() + '年' + (today.getMonth()+1) + '月' + today.getDate() + '日 · ' + ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][today.getDay()];
 document.getElementById('dateZh').textContent = dateStr;
+// 初始化今日干支占位（API结果回来后会覆盖）
+(function(){
+  var TG = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  var DZ = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  // 甲子日起始基准：2000-01-07 为甲子日（JD=2451551，天干地支均从0起）
+  var base = new Date(2000, 0, 7); // 甲子日基准
+  var diff = Math.floor((today - base) / 86400000);
+  var tgIdx = ((diff % 10) + 10) % 10;
+  var dzIdx = ((diff % 12) + 12) % 12;
+  document.getElementById('dateGanzhi').textContent = TG[tgIdx] + DZ[dzIdx] + '日';
+})();
 
 var gender = 'male';
 
@@ -1016,6 +1031,8 @@ function urlBase64ToUint8Array(b64) {
     }
   });
   if(new URLSearchParams(location.search).get('activated')==='1'){
+    localStorage.setItem('sy_daily_sub','1');
+    localStorage.setItem('sy_daily_sub_ts', Date.now().toString());
     setTimeout(function(){if(typeof showToast==='function')showToast('每日天机订阅成功！☀️','success');},600);
   }
 })();

@@ -627,6 +627,11 @@ router.post('/ziwei/stream', rateLimitMiddleware, async (req, res) => {
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: '紫微斗数需要出生年月日时' });
     }
+    const ziweiAccess = hasFullAccess(req, ['ziwei_full', 'ziwei', 'member_monthly', 'member_yearly', 'member_quarterly', 'member_3year', 'member_daily', 'member_lifetime']);
+    if (!ziweiAccess) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(402).json({ error: '请先解锁紫微斗数深度报告', code: 'PAYMENT_REQUIRED' });
+    }
     const systemPrompt = '你是一位精通紫微斗数的命理师，师承中州派，从业30年，批过上万张命盘。你深谙紫微斗数精髓，能从命盘中看透一个人的一生轨迹。你的语言通俗易懂，不用晦涩术语唬人——要用大白话让从没学过紫微的人也能听懂。你的分析必须专业、深刻、具体。每次回答至少4000字。用Markdown格式输出，使用标题、加粗让报告结构清晰。语言：简体中文。';
     const userMsg = `出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour}时\n性别：${gender === 'male' ? '男' : '女'}\n\n请按以下结构出具完整紫微斗数命理报告（总字数不少于4000字）：\n## 一、命盘基本格局（200-300字）\n## 二、命宫主星深度解读（400-500字）\n## 三、主要宫位逐个分析（每个宫位200-300字，至少8个宫位）\n## 四、四化飞星分析（200-300字）\n## 五、当前大运详批（400-500字）\n## 六、流年关键点（300-400字）\n## 七、开运建议（200-300字）\n## 八、一句话点睛（50-100字）`;
 

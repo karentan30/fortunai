@@ -810,6 +810,24 @@ function handlePaidReturn() {
   if (!saved) { showToast('请重新输入信息', 'error'); return; }
   // 清除 ?paid=1
   if (window.history.replaceState) window.history.replaceState({}, '', '/pages/hehun.html');
+  // 恢复表单值，使 showResults 可读取
+  if (saved.p1Year) document.getElementById('aYear').value = saved.p1Year;
+  if (saved.p1Month) document.getElementById('aMonth').value = saved.p1Month;
+  if (saved.p1Day) document.getElementById('aDay').value = saved.p1Day;
+  if (saved.p1Hour !== undefined) document.getElementById('aHour').value = saved.p1Hour;
+  if (saved.p2Year) document.getElementById('bYear').value = saved.p2Year;
+  if (saved.p2Month) document.getElementById('bMonth').value = saved.p2Month;
+  if (saved.p2Day) document.getElementById('bDay').value = saved.p2Day;
+  if (saved.p2Hour !== undefined) document.getElementById('bHour').value = saved.p2Hour;
+  if (saved.p1Name) document.getElementById('nameA').value = saved.p1Name;
+  if (saved.p2Name) document.getElementById('nameB').value = saved.p2Name;
+  if (saved.p1Gender) { gA = saved.p1Gender; selG('a', saved.p1Gender); }
+  if (saved.p2Gender) { gB = saved.p2Gender; selG('b', saved.p2Gender); }
+  if (saved.mode) { window._hehunMode = saved.mode; }
+  // 隐藏输入区，显示结果区（含六维分析+评分环）
+  document.getElementById('inputScreen').style.display = 'none';
+  showResults(+saved.p1Year, +saved.p2Year);
+  // 付费后隐藏锁卡和吸底栏
   document.getElementById('lockedCard').style.display = 'none';
   document.getElementById('stickyBar').style.display = 'none';
   showToast('🎉 解锁成功！报告正在生成…', 'success');

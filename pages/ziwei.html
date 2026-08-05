@@ -351,14 +351,30 @@ function renderResult(seed, y, m, d, h) {
 
     var cell = document.createElement('div');
     if (i === 10) {
+      // 中央格：跨 col 2-4 row 2，显示命主信息；同时在下方附带 layoutOrder[10] 和 [11] 的宫位名
+      var palIdx10 = layoutOrder[10]; // 迁移宫(6)
+      var palIdx11 = layoutOrder[11]; // 交友宫(7)
+      var stars10 = assignment[palIdx10] || [];
+      var stars11 = assignment[palIdx11] || [];
+      var isMing10 = palIdx10 === mingPalace;
+      var isMing11 = palIdx11 === mingPalace;
       cell.className = 'palace center-empty';
       cell.style.gridColumn = '2/4';
       cell.style.gridRow = '2/3';
-      cell.innerHTML = '<div class="center-title"><div class="center-main">'+EB[h]+'时命</div><div class="center-sub">'+(gender==='male'?'男':'女')+'命</div></div>';
+      cell.innerHTML =
+        '<div class="center-title">' +
+          '<div class="center-main">'+EB[h]+'时命</div>' +
+          '<div class="center-sub">'+(gender==='male'?'男':'女')+'命</div>' +
+          '<div style="display:flex;gap:4px;margin-top:4px;font-size:7.5px;justify-content:center">' +
+            '<span style="color:rgba(74,159,212,0.5)">'+PALACES[palIdx10]+(isMing10?' ★':'')+(stars10.length?'·'+stars10[0]:'')+'</span>' +
+            '<span style="color:rgba(232,240,255,0.15)">|</span>' +
+            '<span style="color:rgba(74,159,212,0.5)">'+PALACES[palIdx11]+(isMing11?' ★':'')+(stars11.length?'·'+stars11[0]:'')+'</span>' +
+          '</div>' +
+        '</div>';
       grid.appendChild(cell);
       continue;
     }
-    if (i === 11) continue;
+    if (i === 11) continue; // 已在 i===10 中合并处理
 
     cell.className = 'palace' + (isMing ? ' main-star' : (stars.length > 0 ? ' highlight' : ''));
     cell.innerHTML = '<div class="palace-name">'+PALACES[palIdx]+(isMing?' ★':'')+'</div>' +
@@ -418,7 +434,7 @@ function renderResult(seed, y, m, d, h) {
         '<div class="fortune-title">'+f.title+'</div>' +
         '<div class="fortune-score" style="color:'+(score>75?'#8dd9bf':score>60?'#e8d08a':'#d4607a')+'">'+score+'</div>' +
       '</div>' +
-      '<div class="fortune-body">'+f.text+'</div>' +
+      '<div class="fortune-body hidden">'+f.text+'</div>' +
     '</div>';
   });
   document.getElementById('fortuneSections').innerHTML = fsHtml;
@@ -431,12 +447,14 @@ function renderResult(seed, y, m, d, h) {
   document.getElementById('yearGrid').innerHTML = [
     {n:'吉星', v:['文昌','化禄','天魁'][rng(seed,3)]},
     {n:'流年命宫', v:PALACES[rng(seed+3,12)]},
-    {n:'本命大运', v:(30+rng(seed,40))+'–'+(38+rng(seed,10))+'岁'},
+    {n:'本命大运', v:(function(){ var a=30+rng(seed,40); var b=a+10; return a+'–'+b+'岁'; })()},
     {n:'旺季', v:['春季2-4月','夏季6-8月','秋季9-11月'][rng(seed+6,3)]}
   ].map(function(it){ return '<div class="year-item"><div class="year-item-name">'+it.n+'</div><div class="year-item-val">'+it.v+'</div></div>'; }).join('');
 
-  document.getElementById('resultWrap').classList.add('show');
+  var resultEl = document.getElementById('resultWrap');
+  resultEl.classList.add('show');
   injectDisclaimer('resultWrap');
+  setTimeout(function(){ resultEl.scrollIntoView({behavior:'smooth', block:'start'}); }, 100);
 }
 
 function toggleFortune(head) {
@@ -480,9 +498,19 @@ function handlePaidReturn() {
   try { saved = JSON.parse(localStorage.getItem('sy_last_ziwei') || 'null'); } catch(e){}
   if (!saved) return;
   if (window.history.replaceState) window.history.replaceState({}, '', '/pages/ziwei.html');
+  // 隐藏表单和提交区，避免结果被遮挡
+  var formWrap = document.querySelector('.form-wrap');
+  var genderRow = document.querySelector('.gender-row');
+  var submitWrap = document.querySelector('.submit-wrap');
+  var introCard = document.querySelector('.intro-card');
+  if (formWrap) formWrap.style.display = 'none';
+  if (genderRow) genderRow.style.display = 'none';
+  if (submitWrap) submitWrap.style.display = 'none';
+  if (introCard) introCard.style.display = 'none';
   var resultEl = document.getElementById('resultWrap');
   resultEl.classList.add('show');
   resultEl.innerHTML = '<div id="zwStreamBox" style="padding:20px 16px;font-size:12px;line-height:1.9;color:rgba(232,240,255,0.8);white-space:pre-wrap;letter-spacing:0.04em">紫微星正在为你生成完整深度解读，请稍候…</div>';
+  setTimeout(function(){ resultEl.scrollIntoView({behavior:'smooth', block:'start'}); }, 100);
   var token = localStorage.getItem('sy_token') || '';
   fetch('/api/ziwei/stream', {
     method: 'POST',
