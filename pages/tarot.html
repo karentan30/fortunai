@@ -182,6 +182,12 @@ body::before {
 /* ── Question char counter ── */
 .q-counter { font-size: 10px; color: rgba(155,111,196,0.4); text-align: right; margin-top: 4px; letter-spacing: 0.04em; }
 .q-hint { font-size: 10px; color: rgba(155,111,196,0.45); margin-top: 6px; letter-spacing: 0.04em; }
+/* ── Preset question chips ── */
+.q-presets { display: flex; flex-wrap: wrap; gap: 7px; padding: 10px 0 4px; }
+.q-chip { font-size: 11px; color: rgba(200,170,255,0.75); background: rgba(107,63,160,0.12); border: 1px solid rgba(107,63,160,0.22); border-radius: 20px; padding: 5px 12px; cursor: pointer; letter-spacing: 0.03em; transition: all 0.18s; white-space: nowrap; }
+.q-chip:active, .q-chip.selected { background: rgba(107,63,160,0.28); border-color: rgba(155,111,196,0.5); color: rgba(230,210,255,0.95); }
+html.light-mode .q-chip { color: rgba(80,40,120,0.8); background: rgba(107,63,160,0.07); border-color: rgba(107,63,160,0.18); }
+html.light-mode .q-chip:active, html.light-mode .q-chip.selected { background: rgba(107,63,160,0.15); }
 
 /* ── Upgrade CTA buttons vertical stack ── */
 .upgrade-cta-btns { display: flex; flex-direction: column; gap: 8px; }
@@ -226,7 +232,17 @@ body::before {
 
 <div class="q-wrap">
   <div class="q-label">写下你的问题（越具体越准）</div>
-  <div class="q-hint">问题越具体，解读越精准 · 30字内最佳</div>
+  <div class="q-presets" id="qPresets">
+    <span class="q-chip" onclick="fillQuestion(this,'他对我的感情是认真的吗？')">💑 他是认真的吗</span>
+    <span class="q-chip" onclick="fillQuestion(this,'我和他还有没有在一起的可能？')">🌸 还有机会吗</span>
+    <span class="q-chip" onclick="fillQuestion(this,'这份工作机会该不该接受？')">💼 该接这份工作吗</span>
+    <span class="q-chip" onclick="fillQuestion(this,'最近我的财运走势怎么样？')">💰 近期财运如何</span>
+    <span class="q-chip" onclick="fillQuestion(this,'我现在适合换工作吗？')">🚀 现在适合跳槽吗</span>
+    <span class="q-chip" onclick="fillQuestion(this,'这件事我该继续坚持还是放手？')">🎯 该坚持还是放手</span>
+    <span class="q-chip" onclick="fillQuestion(this,'他/她最近在想什么？')">🔮 他在想什么</span>
+    <span class="q-chip" onclick="fillQuestion(this,'今年下半年整体运势如何？')">⭐ 下半年运势</span>
+  </div>
+  <div class="q-hint">点击快选 · 或直接输入你的问题 · 越具体越准</div>
   <div class="q-box">
     <textarea class="q-input" id="question" maxlength="120" placeholder="例：我和他还有没有机会？&#10;例：这份工作offer该不该接？&#10;例：今年下半年我的财运如何？" oninput="updateQCounter(this)"></textarea>
   </div>
@@ -676,6 +692,16 @@ function updateQCounter(textarea) {
   var len = textarea.value.length;
   counter.textContent = len + ' / 120';
   counter.style.color = len > 90 ? 'rgba(201,168,76,0.7)' : 'rgba(155,111,196,0.4)';
+}
+
+function fillQuestion(chip, text) {
+  var ta = document.getElementById('question');
+  ta.value = text;
+  updateQCounter(ta);
+  // highlight selected chip
+  document.querySelectorAll('.q-chip').forEach(function(c){ c.classList.remove('selected'); });
+  chip.classList.add('selected');
+  ta.focus();
 }
 
 function shareResult() {
