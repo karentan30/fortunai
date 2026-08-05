@@ -274,6 +274,11 @@ a{color:inherit;text-decoration:none}
         <option value="亥时">亥时 21:00–23:00</option>
       </select>
       <input type="text" id="f-city" placeholder="出生城市（如：北京、广州）" required>
+      <div style="display:flex;gap:8px">
+        <button type="button" id="g-female" onclick="setGender('female')" style="flex:1;padding:11px;border-radius:10px;font-size:14px;font-family:'Noto Serif SC',serif;cursor:pointer;border:1px solid rgba(201,168,76,.4);background:rgba(201,168,76,.18);color:var(--gold);font-weight:600">女生</button>
+        <button type="button" id="g-male" onclick="setGender('male')" style="flex:1;padding:11px;border-radius:10px;font-size:14px;font-family:'Noto Serif SC',serif;cursor:pointer;border:1px solid rgba(201,168,76,.15);background:transparent;color:rgba(255,255,255,.5)">男生</button>
+      </div>
+      <input type="hidden" id="f-gender" value="female">
       <button type="submit" class="btn-submit">免费查看我的命盘 →</button>
     </form>
   </div>
@@ -629,12 +634,24 @@ document.getElementById('birthForm').addEventListener('submit', function(e) {
     date: document.getElementById('f-date').value,
     time: document.getElementById('f-time').value,
     city: document.getElementById('f-city').value,
+    gender: document.getElementById('f-gender').value,
     ref: 'lp-master-cn'
   });
   setTimeout(()=>{
-    window.location.href = '../docs/sample-report-cn.html?' + p.toString();
+    window.location.href = 'report-cn.html?' + p.toString();
   }, 800);
 });
+
+// ── 性别切换 ──
+function setGender(g) {
+  document.getElementById('f-gender').value = g;
+  var female = document.getElementById('g-female');
+  var male = document.getElementById('g-male');
+  var on = 'border:1px solid rgba(201,168,76,.4);background:rgba(201,168,76,.18);color:var(--gold);font-weight:600';
+  var off = 'border:1px solid rgba(201,168,76,.15);background:transparent;color:rgba(255,255,255,.5)';
+  if(g==='female'){female.style.cssText+=' '+on;male.style.cssText+=' '+off;}
+  else{male.style.cssText+=' '+on;female.style.cssText+=' '+off;}
+}
 
 // ── 滚动到表单 ──
 function scrollToForm() {
