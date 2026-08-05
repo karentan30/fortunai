@@ -124,30 +124,9 @@ a{color:#c9a84c;text-decoration:none}
   <!-- 付款门 A -->
   <div id="gate-a" class="paywall-gate">
     <div class="gate-icon">🔮</div>
-    <h3 class="gate-title">解锁深度分析</h3>
-    <p class="gate-desc">一次解锁·永久查看</p>
-    <div style="text-align:left;margin:20px 0;display:grid;gap:12px">
-      <div style="display:flex;gap:12px;align-items:flex-start">
-        <span style="font-size:18px;flex-shrink:0">💰</span>
-        <div><div style="font-size:13px;font-weight:600;color:#c9a84c;letter-spacing:0.05em">财运格局</div><div style="font-size:12px;color:rgba(220,210,190,0.75);margin-top:2px;line-height:1.6">今年财运走势、偏财正财哪个更旺、最佳赚钱方向与避坑时机</div></div>
-      </div>
-      <div style="display:flex;gap:12px;align-items:flex-start">
-        <span style="font-size:18px;flex-shrink:0">💕</span>
-        <div><div style="font-size:13px;font-weight:600;color:#c9a84c;letter-spacing:0.05em">感情姻缘</div><div style="font-size:12px;color:rgba(220,210,190,0.75);margin-top:2px;line-height:1.6">桃花运强弱、最佳脱单窗口、另一半的命格特征与相处建议</div></div>
-      </div>
-      <div style="display:flex;gap:12px;align-items:flex-start">
-        <span style="font-size:18px;flex-shrink:0">🏆</span>
-        <div><div style="font-size:13px;font-weight:600;color:#c9a84c;letter-spacing:0.05em">事业格局</div><div style="font-size:12px;color:rgba(220,210,190,0.75);margin-top:2px;line-height:1.6">适合打工还是创业、贵人方位、今年升职加薪的最佳出手时机</div></div>
-      </div>
-      <div style="display:flex;gap:12px;align-items:flex-start">
-        <span style="font-size:18px;flex-shrink:0">🌿</span>
-        <div><div style="font-size:13px;font-weight:600;color:#c9a84c;letter-spacing:0.05em">健康预警</div><div style="font-size:12px;color:rgba(220,210,190,0.75);margin-top:2px;line-height:1.6">命中需注意的身体部位、今年健康低谷期及调养建议</div></div>
-      </div>
-      <div style="display:flex;gap:12px;align-items:flex-start">
-        <span style="font-size:18px;flex-shrink:0">🌊</span>
-        <div><div style="font-size:13px;font-weight:600;color:#c9a84c;letter-spacing:0.05em">十年大运</div><div style="font-size:12px;color:rgba(220,210,190,0.75);margin-top:2px;line-height:1.6">未来十年每个阶段的运势走向，哪几年是人生关键转折点</div></div>
-      </div>
-    </div>
+    <h3 class="gate-title" id="gate-title">解锁深度分析</h3>
+    <p class="gate-desc">一次解锁 · 永久查看</p>
+    <div id="gate-items" style="text-align:left;margin:20px 0;display:grid;gap:14px"></div>
     <div class="gate-price">¥19.9 <span class="gate-orig">¥59</span></div>
     <button class="gate-btn" onclick="syPay('a','wechat')">🟢 微信扫码解锁</button>
     <span class="gate-alt" onclick="syPay('a','alipay')">支付宝支付</span>
@@ -187,6 +166,70 @@ var LOAD_TIPS = ['正在计算四柱八字...','分析五行能量分布...','�
 var _tipIdx = 0, _loadPct = 0, _syPoll = null, _syMethod = 'wechat';
 
 function qs(name){ var u=new URLSearchParams(location.search); return (u.get(name)||'').trim(); }
+
+// ── 个性化付款门 ──
+function renderGate(){
+  var name = qs('name') || '你';
+  var date = qs('date'); // 1991-10-05
+  var gender = qs('gender');
+  var year = date ? parseInt(date.split('-')[0]) : 1990;
+  var curYear = new Date().getFullYear();
+  var age = curYear - year;
+
+  // 根据出生年推算生肖和天干
+  var SHENGXIAO = ['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪'];
+  var sx = SHENGXIAO[(year - 4) % 12];
+
+  // 性别相关词
+  var isF = gender === 'female';
+  var pref = isF ? '她的' : '他的';
+
+  // 个性化标题
+  document.getElementById('gate-title').textContent = name + ' · 专属深度命盘';
+
+  // 5条个性化内容
+  var items = [
+    {
+      icon: '💰',
+      title: name + '的财运格局',
+      desc: curYear + '年财运是涨还是跌？' + (age < 30 ? '年轻' + sx + '命' : sx + '命' + age + '岁') + '的偏财时机与最应避开的破财月份'
+    },
+    {
+      icon: '💕',
+      title: isF ? '她的姻缘密码' : '他的桃花运势',
+      desc: isF
+        ? (age < 30 ? '感情空窗还是遇见对的人？' : '婚姻运何时开花？') + '命中另一半的生肖与方位，' + curYear + '年最旺桃花的季节'
+        : (age < 30 ? '何时遇见她？' : '感情何时稳定？') + '命中另一半的特征，' + curYear + '年感情破冰时机'
+    },
+    {
+      icon: '🏆',
+      title: name + '适合什么事业？',
+      desc: sx + '命' + (isF ? '女' : '男') + '命中的财禄方向——打工升职还是自己创业更旺？' + curYear + '年的贵人在哪个方位出现'
+    },
+    {
+      icon: '🌿',
+      title: '命中健康预警',
+      desc: '生于' + (date ? date.replace(/-/g, '年').replace('年', '年').split('年').slice(0,2).join('年') + '月' : '此日') + '需重点护养的脏腑，' + curYear + '年容易出现的健康低谷与调养时机'
+    },
+    {
+      icon: '🌊',
+      title: '未来十年大运走势',
+      desc: age + '岁正处于哪段大运？接下来几年是爬坡积累还是收获期，哪一年是命运的关键转折点'
+    }
+  ];
+
+  var html = items.map(function(it){
+    return '<div style="display:flex;gap:12px;align-items:flex-start">'
+      + '<span style="font-size:18px;flex-shrink:0">' + it.icon + '</span>'
+      + '<div><div style="font-size:13px;font-weight:600;color:#c9a84c;letter-spacing:0.05em">' + it.title + '</div>'
+      + '<div style="font-size:12px;color:rgba(220,210,190,0.78);margin-top:3px;line-height:1.65">' + it.desc + '</div></div>'
+      + '</div>';
+  }).join('');
+
+  var el = document.getElementById('gate-items');
+  if(el) el.innerHTML = html;
+}
+document.addEventListener('DOMContentLoaded', renderGate);
 
 // ── 进度条动画 ──
 function startLoadAnim(){
