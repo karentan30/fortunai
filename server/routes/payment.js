@@ -343,6 +343,7 @@ const CONFIGS={
   member_lifetime:{icon:'♾️',title:'终身会员已激活',sub:'永久畅享 · 与缘同在',benefits:['全部AI占算永久无限次','全部报告专属档案','终身功能更新'],btn:'开始使用',url:'/pages/bazi.html?member=1'},
   member_daily:{icon:'☀️',title:'日会员已激活',sub:'今日畅享 · 24小时全开',benefits:['今日全部AI占算无限次','全产品24小时畅用','体验完整会员权益'],btn:'开始使用',url:'/pages/bazi.html?member=1'},
   daily_sub:{icon:'☀️',title:'每日天机已订阅',sub:'日日开运 · 天机指引',benefits:['每日五行运势推送','专属Affirmation冥想词','明日预告提前知'],btn:'查看今日天机',url:'/pages/daily.html?activated=1'},
+  saju_kr_full:{icon:'🔮',title:'사주 리포트 잠금 해제',sub:'결제 완료 · 완전한 사주 분석이 열렸어요',benefits:['천간지지 완전 해석','10년 대운 + 올해 유년 분석','행동 가이드 및 개운 조언'],btn:'리포트 확인하기',url:'/pages/saju-KR.html?activated=1'},
   joss_basic:{icon:'🕯️',title:'代烧订单已确认',sub:'法师接单 · 虔诚履约',benefits:['标准纸钱 + 金元宝 + 祈福','48小时内安排法事','仪式视频发送至邮箱'],btn:'查看订单详情',url:'/pages/daishao-en.html?order=1'},
   joss_premium:{icon:'🏮',title:'尊享代烧已确认',sub:'豪华法事 · 诚心供奉',benefits:['豪华纸质别墅 + 法器全套','专属法师 1对1 仪式','高清视频 48小时内发送'],btn:'查看订单详情',url:'/pages/daishao-en.html?order=1'},
   joss_supreme:{icon:'⛩️',title:'至尊法事已受理',sub:'大法事 · 隆重承办',benefits:['全套冥器 + 多位法师联诵','直播仪式 实时观看','专属报告 + 法事证书'],btn:'查看订单详情',url:'/pages/daishao-en.html?order=1'},

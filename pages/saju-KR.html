@@ -638,6 +638,52 @@ function checkout(tier) {
   }
 }
 
+// startKrPayment: Stripe checkout for saju_kr_full (₩9,900)
+function startKrPayment() {
+  if (localStorage.getItem('sy_paid_saju_kr_full') === '1') {
+    unlockFullReport();
+    return;
+  }
+  var btn = document.querySelector('.btn-unlock');
+  if (btn) { btn.disabled = true; btn.textContent = '결제 페이지로 이동 중…'; }
+  fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      product: 'saju_kr_full',
+      token: localStorage.getItem('sy_token') || '',
+      region: 'kr',
+      successUrl: location.origin + '/api/success?product=saju_kr_full'
+    })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.url) { window.location.href = d.url; }
+    else { toast('결제 오류, 다시 시도해 주세요', 'error'); if (btn) { btn.disabled = false; btn.textContent = '₩9,900으로 잠금 해제'; } }
+  }).catch(function(){
+    toast('결제 오류, 다시 시도해 주세요', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '₩9,900으로 잠금 해제'; }
+  });
+}
+
+function unlockFullReport() {
+  document.querySelectorAll('.report-blur').forEach(function(el){ el.classList.remove('report-blur'); });
+  var gate = document.querySelector('.unlock-gate');
+  if (gate) gate.remove();
+  var cta = document.getElementById('stickyCta');
+  if (cta) cta.remove();
+}
+
+// Handle ?activated=1 return from Stripe success page
+(function(){
+  var params = new URLSearchParams(location.search);
+  if (params.get('activated') === '1') {
+    localStorage.setItem('sy_paid_saju_kr_full', '1');
+    try { history.replaceState(null, '', location.pathname); } catch(e){}
+  }
+  if (localStorage.getItem('sy_paid_saju_kr_full') === '1') {
+    document.addEventListener('DOMContentLoaded', unlockFullReport);
+  }
+})();
+
 // Check if Stripe is available
 fetch('/api/products').then(function(r){ return r.json(); }).then(function(){ window._stripeAvail = false; }).catch(function(){});
 

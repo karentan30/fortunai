@@ -337,6 +337,7 @@ const PRODUCTS = {
   bazi_basic:      { name: '基础命盘',         amount: 990,    amountCny: 1990,  desc: '日主+五行+今年运势' },
   bazi_full:       { name: '完整命盘',          amount: 1990,   amountCny: 3990,  desc: '六维+十年大运+流月', amountKrw: 9900 },
   bazi_vip:        { name: '深度批命',          amount: 3990,   amountCny: 7990,  desc: '大师级·终身档案', amountKrw: 19900 },
+  saju_kr_full:    { name: '사주팔자 완전 분석', amount: 750,    amountCny: 0,     desc: '사주 완전 분석 보고서 (천간지지 + 대운 + 유년)', amountKrw: 9900 },
   daily_sub:       { name: '每日天机订阅',      amount: 490,    amountCny: 1990,  desc: '每日天机·单功能订阅' },
   tarot:           { name: '塔罗占卜',          amount: 390,    amountCny: 990,   desc: 'AI塔罗解读' },
   tarot_3:         { name: '塔罗三张牌阵',      amount: 900,    amountCny: 990,   desc: 'AI深度三张牌解读（过去·现在·未来）' },
