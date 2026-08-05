@@ -155,6 +155,10 @@ app.use('/api', emailRouter);
 // 合婚裂变（hepan 双人邀请）
 app.use('/api/hepan', require('./routes/hepan'));
 
+// Affiliate 推广追踪
+const { router: affiliateRouter } = require('./routes/affiliate');
+app.use('/api', affiliateRouter);
+
 // ── 全局错误处理 ──
 app.use(function(err, req, res, next) {
   console.error('[FATAL]', err.message);

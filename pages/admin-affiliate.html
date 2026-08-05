@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>善缘 · Affiliate 后台</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0f0a1e;color:#e8d08a;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;padding:24px 16px}
+h1{font-size:20px;font-weight:600;color:#c9a84c;margin-bottom:24px;letter-spacing:.05em}
+.card{background:#1a0f2e;border:1px solid rgba(201,168,76,.2);border-radius:12px;padding:20px;margin-bottom:20px}
+.card h2{font-size:14px;color:#c9a84c;margin-bottom:16px;text-transform:uppercase;letter-spacing:.1em}
+label{display:block;font-size:12px;color:#a08050;margin-bottom:4px}
+input,select{width:100%;background:#0f0a1e;border:1px solid rgba(201,168,76,.3);color:#e8d08a;padding:10px 12px;border-radius:8px;font-size:14px;margin-bottom:12px;outline:none}
+input:focus,select:focus{border-color:#c9a84c}
+.btn{background:#c9a84c;color:#0f0a1e;border:none;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer;font-size:14px;width:100%}
+.btn:hover{background:#e8d08a}
+.btn-sm{width:auto;padding:6px 14px;font-size:12px}
+.btn-outline{background:transparent;border:1px solid #c9a84c;color:#c9a84c}
+.btn-outline:hover{background:rgba(201,168,76,.1)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{color:#a08050;text-align:left;padding:8px 10px;border-bottom:1px solid rgba(201,168,76,.15);font-weight:500}
+td{padding:10px;border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+tr:hover td{background:rgba(201,168,76,.04)}
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.badge-green{background:rgba(80,200,120,.15);color:#50c878}
+.badge-yellow{background:rgba(201,168,76,.15);color:#c9a84c}
+.link-box{background:#0f0a1e;border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:10px 12px;font-size:12px;color:#a08050;word-break:break-all;margin-top:8px}
+.stat{text-align:right}
+.login-wrap{max-width:360px;margin:80px auto}
+#app{display:none}
+.tag{font-size:11px;color:#a08050}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div class="login-wrap" id="loginWrap">
+  <div class="card">
+    <h2>Affiliate 后台登录</h2>
+    <label>Admin Token</label>
+    <input type="password" id="tokenInput" placeholder="输入 ADMIN_TOKEN" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn" onclick="doLogin()">进入后台</button>
+  </div>
+</div>
+
+<div id="app">
+<h1>善缘 · Affiliate 管理后台</h1>
+
+<!-- 新建 Affiliate -->
+<div class="card">
+  <h2>新建推广合作方</h2>
+  <label>合作方名称</label>
+  <input id="newName" placeholder="如：FengshuiMall">
+  <label>推广代码（字母/数字，用于链接）</label>
+  <input id="newCode" placeholder="如：FENGSHUI" style="text-transform:uppercase">
+  <label>佣金比例</label>
+  <select id="newRate">
+    <option value="0.15">15%（标准）</option>
+    <option value="0.20">20%（高级合作）</option>
+    <option value="0.10">10%（基础）</option>
+  </select>
+  <button class="btn" onclick="createAffiliate()">创建</button>
+  <div id="createMsg" style="margin-top:10px;font-size:13px"></div>
+</div>
+
+<!-- 推广链接预览 -->
+<div class="card" id="linkCard" style="display:none">
+  <h2>推广链接</h2>
+  <div class="tag">发给合作方，用于追踪来源流量</div>
+  <div class="link-box" id="linkBox"></div>
+  <button class="btn btn-outline btn-sm" style="margin-top:10px" onclick="copyLink()">复制链接</button>
+</div>
+
+<!-- 统计总览 -->
+<div class="card">
+  <h2>合作方统计</h2>
+  <button class="btn btn-outline btn-sm" onclick="loadList()" style="margin-bottom:12px">刷新</button>
+  <div id="listWrap">
+    <div style="color:#a08050;font-size:13px">加载中…</div>
+  </div>
+</div>
+
+</div>
+
+<script>
+var ADMIN_TOKEN = '';
+var BASE = '';
+
+function doLogin() {
+  var t = document.getElementById('tokenInput').value.trim();
+  if (!t) return;
+  ADMIN_TOKEN = t;
+  fetch('/api/admin/affiliate/list?token=' + encodeURIComponent(t))
+    .then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.error) { alert('Token 错误'); return; }
+      document.getElementById('loginWrap').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      renderList(d.affiliates);
+    })
+    .catch(function(){ alert('连接失败'); });
+}
+
+function createAffiliate() {
+  var name = document.getElementById('newName').value.trim();
+  var code = document.getElementById('newCode').value.trim().toUpperCase();
+  var rate = parseFloat(document.getElementById('newRate').value);
+  if (!name || !code) { alert('请填写名称和代码'); return; }
+
+  fetch('/api/admin/affiliate/create', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','X-Admin-Token': ADMIN_TOKEN},
+    body: JSON.stringify({ name, code, commission_rate: rate, token: ADMIN_TOKEN })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    var msg = document.getElementById('createMsg');
+    if (d.ok) {
+      msg.style.color = '#50c878';
+      msg.textContent = '✅ 创建成功！';
+      var link = location.origin + '/?ref=' + code;
+      document.getElementById('linkBox').textContent = link;
+      document.getElementById('linkCard').style.display = 'block';
+      window._lastLink = link;
+      loadList();
+    } else {
+      msg.style.color = '#e05050';
+      msg.textContent = '❌ ' + (d.error || '创建失败');
+    }
+  });
+}
+
+function copyLink() {
+  if (!window._lastLink) return;
+  navigator.clipboard.writeText(window._lastLink).then(function(){
+    alert('已复制：' + window._lastLink);
+  });
+}
+
+function loadList() {
+  fetch('/api/admin/affiliate/list?token=' + encodeURIComponent(ADMIN_TOKEN))
+    .then(function(r){ return r.json(); })
+    .then(function(d){ renderList(d.affiliates || []); });
+}
+
+function renderList(list) {
+  var wrap = document.getElementById('listWrap');
+  if (!list || !list.length) {
+    wrap.innerHTML = '<div style="color:#a08050;font-size:13px">暂无合作方</div>';
+    return;
+  }
+  var html = '<table><thead><tr>'
+    + '<th>合作方</th><th>代码</th><th>佣金率</th><th class="stat">点击</th>'
+    + '<th class="stat">成交</th><th class="stat">待结算</th><th>操作</th>'
+    + '</tr></thead><tbody>';
+  list.forEach(function(a) {
+    html += '<tr>'
+      + '<td>' + esc(a.name) + '</td>'
+      + '<td><span class="badge badge-yellow">' + esc(a.code) + '</span></td>'
+      + '<td>' + Math.round((a.commission_rate||0)*100) + '%</td>'
+      + '<td class="stat">' + (a.clicks||0) + '</td>'
+      + '<td class="stat">' + (a.orders_paid||0) + '</td>'
+      + '<td class="stat">$' + (a.commission_pending||0).toFixed(2) + '</td>'
+      + '<td><button class="btn btn-outline btn-sm" onclick="payout(\'' + esc(a.code) + '\')">结算</button></td>'
+      + '</tr>';
+  });
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function payout(code) {
+  if (!confirm('确认标记 ' + code + ' 全部待结算佣金为已付？')) return;
+  fetch('/api/admin/affiliate/payout/' + encodeURIComponent(code), {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','X-Admin-Token': ADMIN_TOKEN},
+    body: JSON.stringify({ token: ADMIN_TOKEN })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    alert('已结算 ' + d.marked + ' 笔');
+    loadList();
+  });
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+</script>
+</body>
+</html>

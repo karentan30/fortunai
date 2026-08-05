@@ -31,6 +31,12 @@ const {
 } = require('../lib/store');
 const { sendEmail, getClientIp, resolveUserFromToken } = require('../lib/utils');
 const { rateLimitMiddleware, simpleRateLimitMiddleware, authMiddleware } = require('../middleware');
+const { recordAffiliateOrder, completeAffiliateOrder } = require('./affiliate');
+
+// helper: 从请求提取 ref_code（body > header > query）
+function _extractRef(req) {
+  return (req.body && req.body.ref_code) || req.headers['x-affiliate-ref'] || req.query.ref_code || '';
+}
 
 // Stripe（只在 key 存在时加载）
 const STRIPE_SECRET_KEY    = process.env.STRIPE_PAY_SECRET_KEY;
@@ -177,6 +183,8 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
     });
 
     insertOrder.run(orderNo, product, unitAmount, payCurrency, userId, donorName || '', contact || '', wishText || '', session.id);
+    var refCode = _extractRef(req);
+    if (refCode) recordAffiliateOrder(orderNo, refCode, product, unitAmount / 100);
     console.log(`[CHECKOUT] ${orderNo} — ${prod.name} $${(prod.amount/100).toFixed(2)}`);
     res.json({ url: session.url, sessionId: session.id, orderNo });
   } catch (err) {
@@ -210,6 +218,7 @@ router.post('/stripe-webhook', async (req, res) => {
         const orderNo = session.metadata?.order_no;
         if (orderNo) {
           _updOrder('completed', orderNo);
+          completeAffiliateOrder(orderNo);
           const subId = session.subscription;
           const mode = session.mode;
           if (subId && stripe) {
@@ -480,7 +489,7 @@ router.post('/pay/wechat/notify', (req, res) => {
   var r = _completeCnOrder(oid, feeCents, d.transaction_id || '');
   if (r === 'notfound') { console.error('[wx/notify] 未知订单 ' + oid); return res.send(pay.wxReplyXml(false, 'order not found')); }
   if (r === 'amount_mismatch') { console.error('[wx/notify] 金额不符 ' + oid + ' paid=' + feeCents); return res.send(pay.wxReplyXml(false, 'amount mismatch')); }
-  if (r === 'paid') console.log('[wx/notify] PAID ' + oid);
+  if (r === 'paid') { console.log('[wx/notify] PAID ' + oid); completeAffiliateOrder(oid); }
   return res.send(pay.wxReplyXml(true, 'OK'));
 });
 
@@ -549,7 +558,7 @@ router.post('/pay/alipay/notify', (req, res) => {
   var r = _completeCnOrder(oid, paidCents, d.trade_no || '');
   if (r === 'notfound') { console.error('[alipay/notify] 未知订单 ' + oid); return res.send('fail'); }
   if (r === 'amount_mismatch') { console.error('[alipay/notify] 金额不符 ' + oid + ' paid=' + paidCents); return res.send('fail'); }
-  if (r === 'paid') console.log('[alipay/notify] PAID ' + oid);
+  if (r === 'paid') { console.log('[alipay/notify] PAID ' + oid); completeAffiliateOrder(oid); }
   return res.send('success');
 });
 
@@ -569,6 +578,8 @@ router.post('/pay/stripe/create', rateLimitMiddleware, async (req, res) => {
     var oid = pay.genOutTradeNo('st');
     var usdAmt = prod.amount;  // amount 字段单位分
     _insCnOrder(oid, product, usdAmt, null, 'stripe');
+    var refCodeStripe = _extractRef(req);
+    if (refCodeStripe) recordAffiliateOrder(oid, refCodeStripe, product, usdAmt / 100);
 
     var rawSucc = (req.body && req.body.success_url || '').trim();
     var rawCancel = (req.body && req.body.cancel_url || '').trim();
@@ -613,7 +624,7 @@ router.get('/pay/stripe/query', async (req, res) => {
         if (s.status === 'paid') {
           if (localOid) {
             var ccr = _completeCnOrder(localOid, null, hubOid || localOid);
-            if (ccr === 'paid') console.log('[pay/stripe/query] PAID ' + localOid);
+            if (ccr === 'paid') { console.log('[pay/stripe/query] PAID ' + localOid); completeAffiliateOrder(localOid); }
           }
           return res.json({ status: 'paid', product: localOrder ? localOrder.product : product });
         }
