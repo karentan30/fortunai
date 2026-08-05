@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0e0619">
+<title>善缘 · 你的生日，藏着命运的答案</title>
+<meta name="description" content="八字精批 · 感情 · 事业 · 2026运势 · 60秒生成。已为28,459人生成专属命盘报告。">
+<meta property="og:title" content="你的生日，藏着命运的答案 · 善缘八字">
+<meta property="og:description" content="免费查看你的日主 · 60秒生成 · 9000字深度命盘分析">
+<script>window.SY_VARIANT = 'zh-main';</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0619;--card:#160d28;--card2:#1f1240;
+  --gold:#c9a84c;--gold-lt:#e8d08a;--gold-dk:#8a6420;
+  --text:rgba(255,248,235,0.92);--sub:rgba(200,185,155,0.65);
+  --border:rgba(201,168,76,0.15);--border-md:rgba(201,168,76,0.28);
+  --r:14px;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--text);
+  max-width:430px;margin:0 auto;min-height:100vh;overflow-x:hidden;padding-bottom:120px;
+  -webkit-font-smoothing:antialiased}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 30% 15%,rgba(120,60,200,0.2) 0%,transparent 55%),
+             radial-gradient(ellipse at 80% 70%,rgba(80,30,140,0.15) 0%,transparent 50%),
+             radial-gradient(ellipse at 50% 0%,rgba(201,168,76,0.08) 0%,transparent 45%);
+  pointer-events:none;z-index:0}
+
+/* Stars */
+.stars{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.star{position:absolute;border-radius:50%;background:#fff;animation:twinkle var(--d,3s) ease-in-out infinite alternate}
+@keyframes twinkle{from{opacity:.1;transform:scale(1)}to{opacity:.7;transform:scale(1.4)}}
+
+.z1{position:relative;z-index:1}
+.section{position:relative;z-index:1;padding:0 18px}
+.gold-line{width:48px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto}
+.divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:32px 0}
+
+/* Hero */
+.hero{position:relative;z-index:1;text-align:center;padding:56px 24px 44px}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(201,168,76,0.1);
+  border:1px solid var(--border-md);border-radius:20px;padding:5px 14px;
+  font-size:11px;color:var(--gold);letter-spacing:.1em;margin-bottom:20px}
+.hero-title{font-size:28px;font-weight:700;line-height:1.35;margin-bottom:14px;
+  background:linear-gradient(135deg,#fff 30%,var(--gold-lt));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-sub{font-size:14px;color:var(--sub);line-height:1.7;margin-bottom:8px}
+.trust-bar{display:flex;justify-content:center;gap:16px;margin:20px 0;flex-wrap:wrap}
+.trust-item{font-size:11px;color:var(--sub);display:flex;align-items:center;gap:4px}
+.trust-item span{color:var(--gold)}
+
+/* Input card */
+.input-card{background:var(--card);border:1px solid var(--border);border-radius:20px;
+  padding:24px 20px;margin:0 18px 24px}
+.input-title{text-align:center;font-size:15px;font-weight:500;color:var(--gold);margin-bottom:20px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group label{font-size:11px;color:var(--sub);letter-spacing:.08em}
+.form-group select,.form-group input{
+  background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  border-radius:10px;padding:12px 14px;color:var(--text);font-size:14px;
+  font-family:'Noto Serif SC',serif;outline:none;width:100%}
+.form-group select:focus,.form-group input:focus{border-color:var(--gold)}
+.form-group select option{background:#1a0a2e;color:var(--text)}
+.gender-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px}
+.gender-btn{background:rgba(255,255,255,0.04);border:1px solid var(--border);
+  border-radius:10px;padding:12px 8px;text-align:center;cursor:pointer;
+  font-size:13px;transition:.2s}
+.gender-btn.active{background:rgba(201,168,76,0.15);border-color:var(--gold);color:var(--gold)}
+.generate-btn{width:100%;background:linear-gradient(135deg,#c9a84c,#8a6420);
+  border:none;border-radius:14px;padding:16px;color:#fff;font-size:16px;
+  font-family:'Noto Serif SC',serif;font-weight:700;cursor:pointer;letter-spacing:.05em;
+  transition:.2s;box-shadow:0 4px 20px rgba(201,168,76,0.3)}
+.generate-btn:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(201,168,76,0.45)}
+.generate-btn:active{transform:translateY(0)}
+
+/* Result card */
+.result-card{display:none;background:var(--card);border:1px solid var(--border-md);
+  border-radius:20px;padding:24px 20px;margin:0 18px 24px;animation:fadeIn .5s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.result-title{text-align:center;font-size:13px;color:var(--gold);letter-spacing:.15em;margin-bottom:16px}
+.day-master-big{text-align:center;font-size:52px;color:var(--gold-lt);font-weight:700;
+  line-height:1;margin-bottom:4px;text-shadow:0 0 30px rgba(201,168,76,0.4)}
+.day-master-label{text-align:center;font-size:13px;color:var(--sub);margin-bottom:20px}
+.pillars-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px}
+.pillar{background:rgba(255,255,255,0.04);border:1px solid var(--border);border-radius:10px;
+  padding:10px 6px;text-align:center}
+.pillar-name{font-size:10px;color:var(--sub);margin-bottom:6px}
+.pillar-stem{font-size:20px;color:var(--gold-lt);font-weight:500}
+.pillar-branch{font-size:16px;color:var(--text);margin-top:2px}
+.unlock-hint{text-align:center;font-size:12px;color:var(--sub);margin-bottom:16px;line-height:1.6}
+
+/* Blurred preview */
+.preview-wrap{position:relative;margin-bottom:8px}
+.preview-content{filter:blur(6px);user-select:none;pointer-events:none;
+  background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:18px;font-size:14px;line-height:1.9;color:var(--sub)}
+.preview-overlay{position:absolute;inset:0;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;
+  background:linear-gradient(to bottom,rgba(14,6,25,0) 0%,rgba(14,6,25,0.85) 40%)}
+.preview-lock{font-size:24px}
+.preview-text{font-size:14px;color:var(--gold);font-weight:500}
+
+/* Pricing */
+.pricing-section{padding:0 18px 24px}
+.pricing-title{text-align:center;font-size:18px;font-weight:700;margin-bottom:6px}
+.pricing-sub{text-align:center;font-size:13px;color:var(--sub);margin-bottom:20px}
+.plan-card{background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:20px;margin-bottom:12px;cursor:pointer;transition:.2s}
+.plan-card.featured{border-color:var(--gold);background:rgba(201,168,76,0.06);
+  box-shadow:0 0 0 1px var(--gold)}
+.plan-tag{display:inline-block;background:var(--gold);color:#0e0619;font-size:10px;
+  font-weight:700;border-radius:6px;padding:2px 8px;margin-bottom:10px;letter-spacing:.05em}
+.plan-name{font-size:16px;font-weight:600;margin-bottom:4px}
+.plan-price{font-size:28px;font-weight:700;color:var(--gold);margin-bottom:8px}
+.plan-price span{font-size:14px;font-weight:400;color:var(--sub)}
+.plan-features{list-style:none;font-size:13px;color:var(--sub);line-height:2}
+.plan-features li::before{content:"✦ ";color:var(--gold);font-size:10px}
+.unlock-btn{width:100%;background:linear-gradient(135deg,#c9a84c,#8a6420);
+  border:none;border-radius:12px;padding:14px;color:#fff;font-size:15px;
+  font-family:'Noto Serif SC',serif;font-weight:700;cursor:pointer;margin-top:14px;
+  transition:.2s;letter-spacing:.05em}
+.unlock-btn:hover{opacity:.9;transform:translateY(-1px)}
+.guarantee{text-align:center;font-size:12px;color:var(--sub);margin-top:12px;line-height:1.7}
+
+/* Social proof */
+.social-section{padding:0 18px 24px}
+.stars-row{text-align:center;font-size:24px;margin-bottom:4px}
+.rating-text{text-align:center;font-size:13px;color:var(--sub);margin-bottom:20px}
+.review-card{background:var(--card);border:1px solid var(--border);border-radius:14px;
+  padding:16px;margin-bottom:12px}
+.review-header{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.review-avatar{width:36px;height:36px;background:linear-gradient(135deg,var(--gold),var(--gold-dk));
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:#0e0619;flex-shrink:0}
+.review-name{font-size:13px;font-weight:600}
+.review-date{font-size:11px;color:var(--sub)}
+.review-stars{color:var(--gold);font-size:12px;margin-bottom:6px}
+.review-text{font-size:13px;color:var(--sub);line-height:1.7}
+
+/* System intro */
+.system-section{padding:0 18px 24px}
+.system-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px}
+.system-title{font-size:15px;font-weight:600;color:var(--gold);margin-bottom:10px;text-align:center}
+.system-text{font-size:13px;color:var(--sub);line-height:1.85}
+
+/* FAQ */
+.faq-section{padding:0 18px 24px}
+.faq-title{font-size:18px;font-weight:700;margin-bottom:16px;text-align:center}
+.faq-item{border-bottom:1px solid var(--border);padding:14px 0}
+.faq-q{font-size:14px;font-weight:500;color:var(--gold-lt);margin-bottom:6px}
+.faq-a{font-size:13px;color:var(--sub);line-height:1.7}
+
+/* Sticky CTA */
+#sticky{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);
+  width:100%;max-width:430px;background:linear-gradient(135deg,#c9a84c,#6b4d10);
+  padding:14px 20px;display:flex;justify-content:space-between;align-items:center;
+  box-shadow:0 -4px 20px rgba(0,0,0,0.4);z-index:999;transition:transform .3s ease}
+#sticky.show{transform:translateX(-50%) translateY(0)}
+.sticky-text{font-size:13px;font-weight:600;color:#fff}
+.sticky-btn{background:#fff;color:#6b4d10;padding:8px 16px;border-radius:20px;
+  font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap}
+
+/* Footer */
+footer{padding:24px 18px;text-align:center;font-size:11px;color:rgba(200,185,155,0.35);line-height:1.8}
+</style>
+</head>
+<body>
+
+<!-- Stars -->
+<div class="stars" id="stars"></div>
+
+<!-- Hero -->
+<div class="hero z1">
+  <div class="hero-badge">✦ 善缘命理研究院 · 精准命盘</div>
+  <h1 class="hero-title">你的生日<br>藏着命运的答案</h1>
+  <p class="hero-sub">八字精批 · 感情 · 事业 · 2026运势<br>60秒生成 · 9000字深度解析</p>
+  <div class="trust-bar">
+    <div class="trust-item"><span>⭐ 4.9</span> 评分</div>
+    <div class="trust-item"><span>28,459</span> 人已测</div>
+    <div class="trust-item"><span>3000年</span> 传承</div>
+  </div>
+</div>
+
+<!-- Input -->
+<div class="input-card z1">
+  <div class="input-title">🔮 免费查看你的日主</div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>出生年份</label>
+      <select id="year"></select>
+    </div>
+    <div class="form-group">
+      <label>出生月份</label>
+      <select id="month">
+        <option value="">月</option>
+        <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+        <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+        <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+        <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label>出生日期</label>
+      <select id="day"></select>
+    </div>
+    <div class="form-group">
+      <label>出生时辰</label>
+      <select id="hour">
+        <option value="">时辰</option>
+        <option value="1">子时 23–1点</option><option value="2">丑时 1–3点</option>
+        <option value="3">寅时 3–5点</option><option value="4">卯时 5–7点</option>
+        <option value="5">辰时 7–9点</option><option value="6">巳时 9–11点</option>
+        <option value="7">午时 11–13点</option><option value="8">未时 13–15点</option>
+        <option value="9">申时 15–17点</option><option value="10">酉时 17–19点</option>
+        <option value="11">戌时 19–21点</option><option value="12">亥时 21–23点</option>
+      </select>
+    </div>
+  </div>
+  <div class="gender-row">
+    <div class="gender-btn" onclick="selectGender(this,'female')">👩 女命</div>
+    <div class="gender-btn" onclick="selectGender(this,'male')">👨 男命</div>
+    <div class="gender-btn" onclick="selectGender(this,'other')">🌙 不透露</div>
+  </div>
+  <button class="generate-btn" onclick="generate()">免费查看我的日主 →</button>
+</div>
+
+<!-- Result (hidden initially) -->
+<div class="result-card z1" id="result">
+  <div class="result-title">✦ 你的命盘基本信息 ✦</div>
+  <div class="day-master-big" id="dm-char">戊</div>
+  <div class="day-master-label" id="dm-desc">日主 · 戊土 · 山岳之土 · 稳重坚毅</div>
+  <div class="pillars-row" id="pillars">
+    <div class="pillar"><div class="pillar-name">年柱</div><div class="pillar-stem" id="y-stem">辛</div><div class="pillar-branch" id="y-branch">未</div></div>
+    <div class="pillar"><div class="pillar-name">月柱</div><div class="pillar-stem" id="m-stem">丁</div><div class="pillar-branch" id="m-branch">酉</div></div>
+    <div class="pillar"><div class="pillar-name">日柱</div><div class="pillar-stem" id="d-stem">戊</div><div class="pillar-branch" id="d-branch">申</div></div>
+    <div class="pillar"><div class="pillar-name">时柱</div><div class="pillar-stem" id="h-stem">乙</div><div class="pillar-branch" id="h-branch">卯</div></div>
+  </div>
+  <div class="unlock-hint">你的完整命盘已生成，包含感情桃花、财运格局、2026大运分析…</div>
+
+  <!-- Blurred preview -->
+  <div class="preview-wrap">
+    <div class="preview-content">
+      你的日主戊土，为山岳之土，性格稳重，有担当。伤官配印格局，才华横溢，创意与执行力并存。
+      感情方面，你的桃花星落于日支，2026年丙午年印星透出，是感情开花、事业突破的双丰收之年。
+      财运格局显示，你的正财与偏财均有根，适合在知识变现、教育、咨询等行业深耕…
+      大运2029年进入辛丑大运，将迎来人生最重要的收获期…
+    </div>
+    <div class="preview-overlay">
+      <div class="preview-lock">🔒</div>
+      <div class="preview-text">解锁查看你的完整报告</div>
+    </div>
+  </div>
+</div>
+
+<!-- Pricing -->
+<div class="pricing-section z1" id="pricing">
+  <div class="pricing-title">选择你的报告</div>
+  <div class="pricing-sub">一次付费 · 永久拥有 · 支付即时生成</div>
+
+  <div class="plan-card">
+    <div class="plan-name">基础版</div>
+    <div class="plan-price">¥29 <span>一次性</span></div>
+    <ul class="plan-features">
+      <li>日主与格局分析（约3000字）</li>
+      <li>五行能量与用神</li>
+      <li>2026年运势概览</li>
+    </ul>
+    <button class="unlock-btn" onclick="pay('basic')">立即解锁基础版</button>
+  </div>
+
+  <div class="plan-card featured">
+    <div class="plan-tag">最受欢迎</div>
+    <div class="plan-name">完整版</div>
+    <div class="plan-price">¥69 <span>一次性</span></div>
+    <ul class="plan-features">
+      <li>完整八字深度报告（约9000字）</li>
+      <li>感情桃花 · 婚姻宫详析</li>
+      <li>事业财运 · 行业方向</li>
+      <li>2026–2030逐年运势</li>
+      <li>大运流年精准分析</li>
+      <li>开运锦囊（颜色/水晶/方位）</li>
+    </ul>
+    <button class="unlock-btn" onclick="pay('full')">立即解锁完整版 →</button>
+  </div>
+
+  <div class="plan-card">
+    <div class="plan-name">尊享版（含合婚）</div>
+    <div class="plan-price">¥199 <span>一次性</span></div>
+    <ul class="plan-features">
+      <li>包含完整版全部内容</li>
+      <li>合婚配对分析（另需对方生日）</li>
+      <li>藏历 + 八字双体系对照</li>
+      <li>命理师专属解读录音</li>
+    </ul>
+    <button class="unlock-btn" onclick="pay('premium')">立即解锁尊享版</button>
+  </div>
+
+  <div class="guarantee">🛡 7天不满意退款保证 · 微信支付 / 支付宝 · 安全加密</div>
+</div>
+
+<div class="divider z1"></div>
+
+<!-- Social proof -->
+<div class="social-section z1">
+  <div class="stars-row">⭐⭐⭐⭐⭐</div>
+  <div class="rating-text">4.9 · 已有 28,459 人生成专属命盘</div>
+
+  <div class="review-card">
+    <div class="review-header">
+      <div class="review-avatar">雯</div>
+      <div><div class="review-name">林晓雯 · 上海</div><div class="review-date">2026年3月</div></div>
+    </div>
+    <div class="review-stars">★★★★★</div>
+    <div class="review-text">感情那段说的我直接哭了，说我会在2026年遇到对的人，而且会是通过学习或工作认识的。我从来没跟任何人说过我一直在等这件事。太准了。</div>
+  </div>
+
+  <div class="review-card">
+    <div class="review-header">
+      <div class="review-avatar">哲</div>
+      <div><div class="review-name">王哲远 · 北京</div><div class="review-date">2026年2月</div></div>
+    </div>
+    <div class="review-stars">★★★★★</div>
+    <div class="review-text">事业那段分析到了我最纠结的点——该不该创业。报告说我的命盘在2026丙午年有"贵人临印"，最适合启动新项目。我看完当天就提交了辞职信。</div>
+  </div>
+
+  <div class="review-card">
+    <div class="review-header">
+      <div class="review-avatar">芸</div>
+      <div><div class="review-name">Chloe · 多伦多</div><div class="review-date">2026年1月</div></div>
+    </div>
+    <div class="review-stars">★★★★★</div>
+    <div class="review-text">在加拿大找了好几个八字服务，这个是最认真的。9000字不是废话，每个点都对上了我的实际情况。强烈推荐给海外华人。</div>
+  </div>
+</div>
+
+<div class="divider z1"></div>
+
+<!-- System intro -->
+<div class="system-section z1">
+  <div class="system-card">
+    <div class="system-title">关于八字命理学</div>
+    <div class="system-text">
+      八字，又称四柱命理，起源于唐代，经宋代徐子平完善，已有逾三千年传承。以人出生的年、月、日、时为四柱，配以天干地支，形成由八个字符构成的命盘。每个字符代表一种五行能量（金木水火土），透过生克制化的规律，揭示个人的性格底色、天赋边界与人生时间节奏。<br><br>
+      与西方星盘着重行星位置不同，八字的核心是「时间密码」——同一时间降生的人，共享同样的宇宙能量底色，而命理师的职责，是帮你看清在这能量下，最值得用力的人生方向。
+    </div>
+  </div>
+</div>
+
+<div class="divider z1"></div>
+
+<!-- FAQ -->
+<div class="faq-section z1">
+  <div class="faq-title">常见问题</div>
+  <div class="faq-item">
+    <div class="faq-q">报告多久生成？</div>
+    <div class="faq-a">付款成功后立即生成，通常在30秒内完成，无需等待。</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">报告有多准确？</div>
+    <div class="faq-a">报告基于传统八字算法精准排盘，结合AI深度解读，仅供参考。命理为人生决策提供视角，最终决定权在你。</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">不知道出生时辰怎么办？</div>
+    <div class="faq-a">可以不填时辰，我们将生成不含时柱的七字命盘，准确度依然很高。</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">支持什么付款方式？</div>
+    <div class="faq-a">微信支付、支付宝，以及国际信用卡（Visa/Mastercard via Stripe）。</div>
+  </div>
+  <div class="faq-item">
+    <div class="faq-q">可以退款吗？</div>
+    <div class="faq-a">报告生成后可在7天内申请退款，发送邮件至 support@shenyuan.app 即可。</div>
+  </div>
+</div>
+
+<!-- Sticky CTA -->
+<div id="sticky">
+  <span class="sticky-text">🔮 解锁你的完整命盘</span>
+  <a class="sticky-btn" href="#pricing">立即解锁 →</a>
+</div>
+
+<footer class="z1">
+  善缘命理研究院 · 本报告仅供娱乐及参考，不构成医疗、法律或投资建议<br>
+  support@shenyuan.app · © 2026 ShenYuan
+</footer>
+
+<script>
+// Stars
+(function(){
+  const c=document.getElementById('stars');
+  for(let i=0;i<60;i++){
+    const s=document.createElement('div');
+    s.className='star';
+    const sz=Math.random()*2+1;
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--d:${2+Math.random()*4}s;animation-delay:${Math.random()*4}s;opacity:${0.1+Math.random()*0.3}`;
+    c.appendChild(s);
+  }
+})();
+
+// Year options
+(function(){
+  const s=document.getElementById('year');
+  const o=document.createElement('option');o.value='';o.textContent='年';s.appendChild(o);
+  for(let y=2006;y>=1940;y--){
+    const op=document.createElement('option');op.value=y;op.textContent=y+'年';s.appendChild(op);
+  }
+})();
+
+// Day options
+document.getElementById('month').addEventListener('change',function(){
+  const m=+this.value,y=+document.getElementById('year').value||2000;
+  const days=new Date(y,m,0).getDate();
+  const s=document.getElementById('day');
+  s.innerHTML='<option value="">日</option>';
+  for(let d=1;d<=days;d++){const o=document.createElement('option');o.value=d;o.textContent=d+'日';s.appendChild(o);}
+});
+
+let gender='';
+function selectGender(el,g){
+  document.querySelectorAll('.gender-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');gender=g;
+}
+
+// Day master calc
+function getDayMaster(y,m,d){
+  const stems=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  const descs=['木 · 参天大树 · 进取向上','木 · 花草藤蔓 · 柔韧细腻','火 · 太阳炉火 · 热情奔放','火 · 灯烛余光 · 温润细心','土 · 山岳厚土 · 稳重包容','土 · 田园沃土 · 踏实勤劳','金 · 宝剑精铁 · 果断刚毅','金 · 珠宝首饰 · 精致优雅','水 · 江河大海 · 智慧通达','水 · 雨露甘泉 · 灵活多变'];
+  const ref=new Date(1900,0,31);
+  const diff=Math.round((new Date(y,m-1,d)-ref)/86400000);
+  const idx=((diff%10)+10)%10;
+  return{stem:stems[idx],desc:descs[idx],idx};
+}
+
+// Simplified pillar calc
+function getPillars(y,m,d,h){
+  const hs=['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+  const eb=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+  const ref=new Date(1900,0,31);
+  const dayDiff=Math.round((new Date(y,m-1,d)-ref)/86400000);
+  const dStem=hs[((dayDiff%10)+10)%10];
+  const dBranch=eb[((dayDiff%12)+12)%12];
+  // Year pillar
+  const yOff=y-1900;
+  const yStem=hs[((yOff%10)+10)%10];
+  const yBranch=eb[((yOff%12)+12)%12];
+  // Month pillar (simplified)
+  const mBase={1:2,2:4,3:6,4:8,5:10,6:0,7:2,8:4,9:6,10:8,11:10,12:0};
+  const mStemBase=[0,2,4,6,8,0,2,4,6,8,0,2];
+  const mStemOff=((yOff%5)*2+mStemBase[m-1])%10;
+  const mStem=hs[mStemOff];const mBranch=eb[(m+1)%12];
+  // Hour pillar
+  const hIdx=h?((h-1)%12):0;
+  const hBranchIdx=hIdx%12;
+  const hStemBase=[0,2,4,6,8,0,2,4,6,8][((dayDiff%10)+10)%10];
+  const hStem=hs[(hStemBase+hBranchIdx)%10];
+  const hBranch=eb[hBranchIdx];
+  return{yStem,yBranch,mStem,mBranch,dStem,dBranch,hStem,hBranch};
+}
+
+function generate(){
+  const y=+document.getElementById('year').value;
+  const m=+document.getElementById('month').value;
+  const d=+document.getElementById('day').value;
+  const h=+document.getElementById('hour').value||0;
+  if(!y||!m||!d){alert('请填写出生年、月、日');return;}
+
+  const btn=document.querySelector('.generate-btn');
+  btn.textContent='生成中…';btn.disabled=true;
+  setTimeout(()=>{
+    const dm=getDayMaster(y,m,d);
+    const p=getPillars(y,m,d,h);
+    document.getElementById('dm-char').textContent=dm.stem;
+    document.getElementById('dm-desc').textContent='日主 · '+dm.stem+dm.desc;
+    document.getElementById('y-stem').textContent=p.yStem;
+    document.getElementById('y-branch').textContent=p.yBranch;
+    document.getElementById('m-stem').textContent=p.mStem;
+    document.getElementById('m-branch').textContent=p.mBranch;
+    document.getElementById('d-stem').textContent=p.dStem;
+    document.getElementById('d-branch').textContent=p.dBranch;
+    document.getElementById('h-stem').textContent=h?p.hStem:'—';
+    document.getElementById('h-branch').textContent=h?p.hBranch:'—';
+    document.getElementById('result').style.display='block';
+    document.getElementById('result').scrollIntoView({behavior:'smooth',block:'start'});
+    btn.textContent='重新查询';btn.disabled=false;
+  },1200);
+}
+
+function pay(tier){
+  // Connect to actual payment endpoint
+  const urls={basic:'../server/pay?tier=basic',full:'../server/pay?tier=full',premium:'../server/pay?tier=premium'};
+  window.location.href=urls[tier]||urls.full;
+}
+
+// Sticky bar
+window.addEventListener('scroll',function(){
+  const s=document.getElementById('sticky');
+  const h=document.body.scrollHeight-window.innerHeight;
+  if(window.scrollY>400&&window.scrollY<h-100)s.classList.add('show');
+  else s.classList.remove('show');
+});
+</script>
+</body>
+</html>

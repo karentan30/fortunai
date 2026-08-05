@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>선연 · 사주 100페이지 리포트 — 김지수</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0d0618;
+  --gold:#c9a84c;
+  --gold-light:#e8d5a3;
+  --text:#f0e8dc;
+  --text-muted:#a09080;
+  --card:#1a0f2e;
+  --border:rgba(201,168,76,0.2);
+}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:'Noto Serif KR',serif;
+  min-height:100vh;
+  line-height:1.8;
+}
+input,select,textarea{font-size:16px}
+
+/* Breadcrumb */
+.breadcrumb{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  background:rgba(13,6,24,0.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:10px 20px;
+  display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-muted);
+}
+.breadcrumb a{color:var(--gold);text-decoration:none;letter-spacing:1px}
+.breadcrumb a:hover{text-decoration:underline}
+.breadcrumb-sep{opacity:0.4}
+
+/* Cover */
+.cover{
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  padding:80px 40px 60px;
+  background:radial-gradient(ellipse at 50% 30%,rgba(201,168,76,0.08),transparent 60%),var(--bg);
+  position:relative;
+}
+.cover::before{
+  content:'';
+  position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='400' height='400' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='200' cy='200' r='180' fill='none' stroke='rgba(201,168,76,0.06)' stroke-width='1'/%3E%3Ccircle cx='200' cy='200' r='140' fill='none' stroke='rgba(201,168,76,0.04)' stroke-width='1'/%3E%3C/svg%3E") center/600px no-repeat;
+  pointer-events:none;
+}
+.cover-badge{font-size:11px;letter-spacing:6px;color:var(--gold);text-transform:uppercase;margin-bottom:40px;opacity:0.7}
+.cover-name{font-size:52px;font-weight:700;color:var(--gold);margin-bottom:12px;letter-spacing:2px;text-wrap:balance;word-break:keep-all}
+.cover-subtitle{font-size:16px;color:var(--text-muted);margin-bottom:40px;letter-spacing:3px}
+.cover-divider{width:60px;height:1px;background:var(--gold);margin:0 auto 40px;opacity:0.4}
+.cover-title{font-size:32px;font-weight:300;color:var(--text);margin-bottom:20px;letter-spacing:1px;text-wrap:balance;word-break:keep-all}
+.cover-meta{font-size:13px;color:var(--text-muted);line-height:2;letter-spacing:1px}
+.cover-seal{
+  width:80px;height:80px;border-radius:50%;
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;margin:40px auto 0;
+  background:rgba(201,168,76,0.05);
+}
+
+/* Layout */
+.layout{display:flex;max-width:1200px;margin:0 auto;padding:0 20px}
+
+/* TOC sidebar */
+.toc{
+  width:240px;flex-shrink:0;
+  position:sticky;top:40px;height:calc(100vh - 40px);overflow-y:auto;
+  padding:40px 20px;border-right:1px solid var(--border);
+}
+.toc-title{font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:24px}
+.toc a{
+  display:block;padding:10px 12px;margin-bottom:4px;
+  font-size:12px;color:var(--text-muted);text-decoration:none;
+  border-radius:6px;transition:all 0.2s;line-height:1.4;
+  border:1px solid transparent;word-break:keep-all;
+}
+.toc a:hover{color:var(--gold);background:rgba(201,168,76,0.06);border-color:var(--border)}
+.toc-divider{height:1px;background:var(--border);margin:16px 0;opacity:0.5}
+.toc-nav-link{
+  display:block;padding:10px 12px;margin-bottom:4px;
+  font-size:11px;color:var(--gold);text-decoration:none;
+  border-radius:6px;border:1px solid var(--border);
+  background:rgba(201,168,76,0.05);text-align:center;
+  transition:all 0.2s;word-break:keep-all;
+}
+.toc-nav-link:hover{background:rgba(201,168,76,0.12)}
+
+/* Content */
+.content{flex:1;padding:60px 40px 100px;max-width:800px}
+
+/* Chapter */
+.chapter{margin-bottom:80px;padding-top:40px}
+.chapter-num{font-size:10px;letter-spacing:4px;color:var(--gold);text-transform:uppercase;margin-bottom:12px;opacity:0.7}
+.chapter-title{font-size:28px;font-weight:700;color:var(--text);margin-bottom:32px;line-height:1.3;text-wrap:balance;word-break:keep-all}
+.chapter-body{font-size:15px;color:var(--text-muted);line-height:2}
+.chapter-body p{margin-bottom:20px}
+.chapter-body strong{color:var(--gold-light)}
+.chapter-body h2{font-size:18px;font-weight:700;color:var(--gold-light);margin:28px 0 12px;text-wrap:balance;word-break:keep-all}
+.chapter-body h3{font-size:15px;font-weight:700;color:var(--text);margin:20px 0 8px;text-wrap:balance;word-break:keep-all}
+.chapter-body hr{border:none;border-top:1px solid var(--border);margin:24px 0;opacity:0.5}
+.chapter-divider{width:40px;height:2px;background:var(--gold);margin-bottom:32px;opacity:0.4}
+
+/* 사주팔자 만세력 grid */
+.saju-section{margin:32px 0}
+.saju-section-title{font-size:11px;letter-spacing:3px;color:var(--gold);opacity:0.7;margin-bottom:12px}
+.saju-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:8px;
+  margin:0 0 24px;text-align:center;
+}
+.saju-col{
+  background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.22);
+  border-radius:8px;padding:14px 6px;
+}
+.saju-col.is-self{border-color:rgba(201,168,76,0.5);background:rgba(201,168,76,0.13)}
+.saju-col-label{font-size:10px;color:rgba(201,168,76,0.5);letter-spacing:2px;margin-bottom:10px}
+.saju-gan{font-size:28px;color:var(--gold);line-height:1.3;font-weight:300}
+.saju-ji{font-size:28px;color:var(--text-muted);line-height:1.3;font-weight:300}
+.saju-elem{font-size:9px;color:rgba(160,144,128,0.5);margin-top:8px;letter-spacing:1px}
+
+/* Progress bar */
+.progress-bar{
+  height:2px;background:rgba(201,168,76,0.15);
+  border-radius:2px;margin-bottom:32px;
+}
+.progress-fill{height:100%;background:var(--gold);border-radius:2px;transition:width 0.3s}
+
+/* Paywall */
+.paywall{
+  position:relative;
+  margin-top:-120px;
+  padding-top:120px;
+}
+.paywall::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:200px;
+  background:linear-gradient(to bottom,transparent,var(--bg) 70%);
+  z-index:2;pointer-events:none;
+}
+.paywall-content{filter:blur(5px);pointer-events:none;user-select:none}
+.paywall-gate{
+  position:relative;z-index:3;
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:16px;padding:40px 32px;text-align:center;
+  margin:40px 0;
+}
+.paywall-icon{font-size:40px;margin-bottom:16px}
+.paywall-badge{
+  display:inline-block;background:rgba(201,168,76,0.15);
+  border:1px solid var(--gold);border-radius:50px;
+  font-size:12px;color:var(--gold);padding:4px 16px;
+  margin-bottom:16px;letter-spacing:1px;
+}
+.paywall-title{font-size:22px;font-weight:700;color:var(--gold);margin-bottom:8px;text-wrap:balance;word-break:keep-all}
+.paywall-hook{font-size:16px;color:var(--text);margin-bottom:12px;line-height:1.6;text-wrap:balance;word-break:keep-all}
+.paywall-sub{color:var(--text-muted);font-size:14px;line-height:1.7;margin-bottom:16px}
+.paywall-social{font-size:12px;color:var(--gold);opacity:0.8;margin-bottom:28px}
+.paywall-countdown{
+  display:flex;justify-content:center;align-items:center;gap:6px;
+  font-size:13px;color:var(--text-muted);margin-bottom:28px;
+}
+.countdown-num{
+  background:rgba(201,168,76,0.15);border:1px solid var(--border);
+  border-radius:6px;padding:6px 10px;color:var(--gold);font-weight:700;font-size:20px;min-width:40px;text-align:center;
+}
+.countdown-sep{color:var(--gold);font-size:18px;font-weight:700}
+.price-row{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+.price-card{
+  background:rgba(201,168,76,0.08);border:1px solid var(--border);
+  border-radius:12px;padding:20px 24px;min-width:150px;text-align:center;
+}
+.price-card.featured{border-color:var(--gold);background:rgba(201,168,76,0.12)}
+.price-label{font-size:11px;letter-spacing:3px;color:var(--text-muted);text-transform:uppercase;margin-bottom:8px}
+.price-old{font-size:13px;color:var(--text-muted);text-decoration:line-through;margin-bottom:4px}
+.price-new{font-size:32px;font-weight:700;color:var(--gold)}
+.price-period{font-size:12px;color:var(--text-muted);margin-top:4px}
+.btn-unlock{
+  display:inline-block;
+  background:var(--gold);color:#0d0618;
+  font-size:16px;font-weight:700;
+  padding:16px 48px;border-radius:50px;
+  text-decoration:none;cursor:pointer;border:none;
+  transition:transform 0.2s,box-shadow 0.2s;
+  word-break:keep-all;
+}
+.btn-unlock:hover{transform:scale(1.03);box-shadow:0 8px 32px rgba(201,168,76,0.3)}
+.btn-secondary{
+  display:inline-block;margin-top:12px;
+  color:var(--gold);font-size:13px;text-decoration:none;
+  border-bottom:1px solid rgba(201,168,76,0.3);padding-bottom:2px;
+}
+
+/* Products */
+.products{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:40px;margin-top:60px;
+}
+.products-title{font-size:18px;font-weight:700;color:var(--gold);margin-bottom:8px;text-align:center;text-wrap:balance;word-break:keep-all}
+.products-sub{font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:8px}
+.products-notice{font-size:11px;color:rgba(201,168,76,0.5);text-align:center;margin-bottom:28px}
+.products-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.product-card{
+  background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  border-radius:12px;padding:20px;text-align:center;
+}
+.product-emoji{font-size:2em;margin-bottom:10px}
+.product-tag{font-size:10px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:6px}
+.product-name{color:var(--text);font-weight:600;margin-bottom:6px;font-size:14px;text-wrap:balance;word-break:keep-all}
+.product-desc{color:var(--text-muted);font-size:12px;line-height:1.5;margin-bottom:12px}
+.product-price{color:var(--gold);font-weight:700;font-size:1.1em;margin-bottom:10px}
+.product-btn{
+  display:block;background:var(--gold);color:#0d0618;
+  padding:8px;border-radius:50px;font-weight:700;font-size:12px;
+  text-decoration:none;transition:transform 0.15s;
+}
+.product-btn:hover{transform:scale(1.03)}
+.products-more{
+  display:block;text-align:center;margin-top:20px;
+  color:var(--gold);font-size:14px;text-decoration:none;
+  border:1px solid var(--border);border-radius:50px;padding:12px;
+  transition:background 0.2s;
+}
+.products-more:hover{background:rgba(201,168,76,0.08)}
+
+/* Life events CTA */
+.life-events-cta{
+  background:linear-gradient(135deg,#1a0d30,#251545);
+  border:1px solid rgba(201,168,76,0.3);border-radius:16px;
+  padding:32px;text-align:center;margin-top:24px;
+}
+.life-events-cta h3{color:var(--gold);font-size:17px;margin-bottom:8px;text-wrap:balance;word-break:keep-all}
+.life-events-cta p{color:var(--text-muted);font-size:13px;margin-bottom:20px;line-height:1.7}
+.btn-life-events{
+  display:inline-block;background:transparent;color:var(--gold);
+  border:1px solid var(--gold);padding:12px 32px;border-radius:50px;
+  font-size:15px;font-weight:700;text-decoration:none;
+  transition:background 0.2s;
+}
+.btn-life-events:hover{background:rgba(201,168,76,0.12)}
+
+/* Share */
+.share-section{
+  background:linear-gradient(135deg,#1a0a2e,#2d1b4e);
+  border:1px solid var(--border);border-radius:16px;
+  padding:40px;text-align:center;margin-top:40px;
+}
+.share-title{color:var(--gold);font-size:1.3em;font-weight:700;margin-bottom:8px;text-wrap:balance;word-break:keep-all}
+.share-sub{color:var(--text-muted);margin-bottom:24px;font-size:14px}
+.share-btn{
+  display:inline-block;background:var(--gold);color:#0d0618;
+  padding:14px 32px;border-radius:50px;font-weight:700;
+  font-size:15px;cursor:pointer;border:none;margin-bottom:16px;
+}
+.unlock-link{
+  display:block;color:var(--gold);font-size:1.1em;text-decoration:none;
+  padding:14px 32px;border:1px solid var(--gold);border-radius:50px;
+  display:inline-block;transition:background 0.2s;
+}
+.unlock-link:hover{background:rgba(201,168,76,0.1)}
+
+/* Disclaimer */
+.disclaimer{margin-top:60px;padding:20px;border-top:1px solid var(--border);font-size:11px;color:rgba(160,144,128,0.5);line-height:1.6;text-align:center}
+
+/* Mobile floating nav */
+.mobile-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:rgba(13,6,24,0.95);backdrop-filter:blur(16px);
+  border-top:1px solid var(--border);
+  padding:10px 16px;
+  gap:8px;
+}
+.mobile-nav a{
+  flex:1;display:block;text-align:center;padding:10px 4px;
+  font-size:11px;color:var(--text-muted);text-decoration:none;
+  border-radius:8px;border:1px solid var(--border);
+  transition:all 0.2s;word-break:keep-all;line-height:1.3;
+}
+.mobile-nav a.primary{
+  background:var(--gold);color:#0d0618;border-color:var(--gold);
+  font-weight:700;font-size:12px;
+}
+.mobile-nav a:hover:not(.primary){color:var(--gold);background:rgba(201,168,76,0.06)}
+
+/* Mobile */
+@media(max-width:768px){
+  .toc{display:none}
+  .content{padding:40px 20px 120px}
+  .cover-name{font-size:36px}
+  .products-grid{grid-template-columns:1fr}
+  .price-row{flex-direction:column;align-items:center}
+  .mobile-nav{display:flex}
+}
+
+@media(max-width:480px){
+  .cover{padding:70px 20px 50px}
+  .cover-name{font-size:30px}
+  .cover-title{font-size:22px}
+  .chapter-title{font-size:22px}
+  .paywall-gate{padding:32px 20px}
+  .btn-unlock{padding:14px 28px;font-size:15px}
+  .products{padding:28px 16px}
+  .share-section{padding:28px 16px}
+  .saju-gan,.saju-ji{font-size:22px}
+}
+
+@media(max-width:375px){
+  .cover{padding:68px 16px 40px}
+  .cover-name{font-size:26px}
+  .paywall-gate{padding:24px 14px}
+  .content{padding:32px 14px 120px}
+  .life-events-cta{padding:24px 16px}
+  .saju-col{padding:10px 4px}
+  .saju-gan,.saju-ji{font-size:18px}
+}
+
+@media print{
+  .toc{display:none}
+  .mobile-nav{display:none}
+  .breadcrumb{display:none}
+  .paywall::before{display:none}
+  .paywall-content{filter:none}
+}
+</style>
+</head>
+<body>
+
+<!-- BREADCRUMB -->
+<div class="breadcrumb">
+  <a href="../pages/lp-bazi-kr.html">선연 홈</a>
+  <span class="breadcrumb-sep">›</span>
+  <span>사주 분석 리포트</span>
+  <span class="breadcrumb-sep">›</span>
+  <span style="color:var(--text-muted)">김지수 · 壬水 일주</span>
+  <div style="flex:1"></div>
+  <a href="../pages/life-events.html" style="font-size:11px;border:1px solid var(--border);padding:4px 10px;border-radius:50px">인생 대사 상담 →</a>
+</div>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-badge">선연 · 사주 명리 리포트</div>
+  <div class="cover-name">김지수</div>
+  <div class="cover-subtitle">1994년 3월 20일 · 午時 · 서울</div>
+  <div class="cover-divider"></div>
+  <div class="cover-title">100페이지 사주 심층 분석</div>
+  <div class="cover-meta">
+    일주: 壬水 (임수)<br>
+    格局: 편관격<br>
+    3,000년 명리학 × AI 정밀 분석
+  </div>
+  <div class="cover-seal">🔮</div>
+</div>
+
+<div class="layout">
+  <!-- TOC -->
+  <nav class="toc">
+    <div class="toc-title">목차</div>
+    <a href="#ch1">1. 🌟 사주 총람</a>
+    <a href="#ch2">2. 💎 일주 심층 분석</a>
+    <a href="#ch3" style="opacity:0.4">🔒 3. 💕 연애와 결혼운</a>
+    <a href="#ch4" style="opacity:0.4">🔒 4. 💰 재물운과 사업운</a>
+    <a href="#ch5" style="opacity:0.4">🔒 5. 🏢 직업과 커리어</a>
+    <a href="#ch6" style="opacity:0.4">🔒 6. 🌊 대운 흐름</a>
+    <a href="#ch7" style="opacity:0.4">🔒 7. 📅 연도별 운세</a>
+    <a href="#ch8" style="opacity:0.4">🔒 8. 🏥 건강과 체질</a>
+    <a href="#ch9" style="opacity:0.4">🔒 9. 🎯 개운법 가이드</a>
+    <a href="#ch10" style="opacity:0.4">🔒 10. 🔮 종합 메시지</a>
+    <div class="toc-divider"></div>
+    <a href="../pages/shop.html" class="toc-nav-link">🛍️ 개운 아이템 보기</a>
+    <a href="../pages/life-events.html" class="toc-nav-link">🌟 인생 대사 상담</a>
+    <a href="../pages/lp-bazi-kr.html" class="toc-nav-link">← 사주 홈</a>
+  </nav>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <div class="chapter" id="ch1">
+      <div class="chapter-num">제 1장</div>
+      <div class="chapter-title">🌟 사주 총람 — 당신의 운명 지도</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:10%"></div></div>
+
+      <!-- 만세력 사주팔자 시각 컴포넌트 -->
+      <div class="saju-section">
+        <div class="saju-section-title">사주팔자 · 四柱八字 · 만세력</div>
+        <div class="saju-grid">
+          <div class="saju-col">
+            <div class="saju-col-label">연주 年</div>
+            <div class="saju-gan">甲</div>
+            <div class="saju-ji">戌</div>
+            <div class="saju-elem">갑목 · 술토</div>
+          </div>
+          <div class="saju-col">
+            <div class="saju-col-label">월주 月</div>
+            <div class="saju-gan">丁</div>
+            <div class="saju-ji">卯</div>
+            <div class="saju-elem">정화 · 묘목</div>
+          </div>
+          <div class="saju-col is-self">
+            <div class="saju-col-label">일주 日 · 나</div>
+            <div class="saju-gan">壬</div>
+            <div class="saju-ji">午</div>
+            <div class="saju-elem">임수 · 오화</div>
+          </div>
+          <div class="saju-col">
+            <div class="saju-col-label">시주 時</div>
+            <div class="saju-gan">丙</div>
+            <div class="saju-ji">午</div>
+            <div class="saju-elem">병화 · 오화</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="chapter-body"><p># 김지수(金志秀) 사주명리학 심층 분석</p><p>## 1994년 3월 20일 午時 (양력) 출생</p><p>---</p><p>## 1. 사주팔자 전체 개요</p><p>**년주(年柱):** 甲戌 (목토) - 1994년 갑술년
+**월주(月柱):** 丁卯 (화목) - 경칩 후, 청명 전
+**일주(日柱):** 壬午 (수화) - 본인
+**시주(時柱):** 丙午 (화화) - 오시</p><p>**천간(天干):** 甲(목) - 丁(화) - 壬(수) - 丙(화)
+**지지(地支):** 戌(토) - 卯(목) - 午(화) - 午(화)</p><p>**생일:** 1994년 3월 20일 오시 (11:30~13:30)</p><p>---</p><p>## 2. 사주 구성 상세 해석</p><p>### 년주 갑술(甲戌) - 조상과 근본의 자리</p><p>그대의 뿌리에는 **甲木(갑목)** 이 자리하고 있습니다. 갑목은 큰 나무, 거목을 상징합니다. 이는 그대의 가문과 조상의 기운이 크고 웅장함을 의미합니다. 갑목은 하늘을 향해 뻗어 나가는 성장의 기운으로, 그대의 혈통에는 남을 이끄는 리더십의 DNA가 흐르고 있습니다. 지지의 戌(술토)는 건조한 땅, 무덤의 기운으로, 그대의 조상이 어려운 시기를 극복하며 자리잡았음을 암시합니다. 이로 인해 그대는 타고난 책임감과 가문에 대한 자부심을 지니고 있습니다.</p><p>### 월주 정묘(丁卯) - 청년기와 직업의 자리</p><p>월주는 그대의 청년기와 사회적 활동을 나타냅니다. **丁火(정화)** 는 촛불과 같은 은은한 빛으로, 지혜와 통찰력을 상징합니다. 이는 그대가 화려하게 빛나기보다는 은은하게 주변을 밝히는 타입임을 의미합니다. 지지의 卯(묘목)는 토끼와 같아 부드럽고 영리하며, 때로는 재빠른 판단력을 보여줍니다. 정화와 묘목의 결합은 예술적 감각과 지적 호기심이 풍부함을 나타냅니다.</p><p>### 일주 임오(壬午) - 본인과 배우자의 자리</p><p>일간이 **壬水(임수)** 입니다. 임수는 큰 강물, 바다와 같은 존재로, 그대의 본질은 깊고 넓은 물과 같습니다. 임수는 어떠한 형태에도 얽매이지 않고 자유롭게 흐르는 특징이 있습니다. 이는 그대가 틀에 박힌 삶을 싫어하고, 항상 새로운 변화를 추구하는 성향이 강함을 의미합니다. 지지의 午(오화)는 말, 뜨거운 태양을 상징합니다. 물과 불의 만남 - 이는 그대 내면에 상반된 두 기운이 공존하고 있음을 나타냅니다. 차가운 이성과 뜨거운 감성의 조화, 이것이 그대의 가장 큰 특징이자 매력입니다.</p><p>### 시주 병오(丙午) - 말년과 자식의 자리</p><p>시주는 그대의 말년과 자녀를 나타냅니다. **丙火(병화)** 는 태양과 같은 강렬한 빛으로, 그대의 말년이 밝고 활기찰 것을 암시합니다. 지지의 午(오화)가 중첩되어 있어, 그대의 후반기 삶이 더욱 뜨겁고 열정적일 것임을 보여줍니다. 이는 그대가 나이 들어서도 왕성한 활동력을 유지하며, 주변에 긍정적인 에너지를 발산할 것임을 의미합니다.</p><p>---</p><p>## 3. 오행 분석 - 수(水)의 기운을 중심으로</p><p>**수(水):** 1개 (임수) - 본인
+**목(木):** 2개 (갑목, 묘목) - 조상과 청년기
+**화(火):** 3개 (정화, 오화, 병화) - 사회생활과 말년
+**토(土):** 1개 (술토) - 기반
+**금(金):** 0개 - 부재</p><p>그대의 사주는 **화(火)의 기운이 압도적으로 강한** 구조입니다. 태양과 같은 뜨거운 기운이 사주 전체를 지배하고 있으며, 그 중심에 임수(壬水)인 그대가 서 있습니다. 이는 마치 뜨거운 사막 한가운데 있는 오아시스와 같습니다. 그대는 주변의 뜨거운 상황 속에서도 자신만의 차가운 이성을 유지하며, 그 차이로 인해 주변 사람들에게 특별한 존재로 인식됩니다.</p><p>**금(金)의 부재**는 그대에게 중요한 과제를 안겨줍니다. 금은 수(水)를 생(生)하는 기운으로, 부모나 스승의 도움을 나타냅니다. 금이 없다는 것은 그대가 인생의 중요한 시기에 외부의 도움을 받기보다는 스스로 모든 것을 개척해야 함을 의미합니다. 하지만 이는 역설적으로 그대를 더욱 강하게 만들며, 자기 주도적인 삶을 살아가게 하는 원동력이 됩니다.</p><p>---</p><p>## 4. 전체 운명의 큰 그림</p><p>그대의 사주는 **'물과 불의 조화'** 라는 거대한 테마를 가지고 있습니다. 임수(壬水)의 깊은 지혜와 오화(午火)의 열정이 만나, 그대만의 독특한 인생 항로를 만들어 갑니다.</p><p>### 생애 주기별 운명의 흐름</p><p>**유년기 (0-10세):** 갑목의 성장 기운 속에서 부모님의 사랑과 보호를 받으며 자랐습니다. 호기심이 많고 영리한 아이로, 주변 어른들의 사랑을 받았습니다. 가정 환경은 안정적이었으나, 조상의 영향으로 인해 가족 내에서 기대감이 큰 아이였습니다.</p><p>**청소년기 (10-20세):** 정화(丁火)의 영향으로 학업과 지적 호기심이 왕성했습니다. 감수성이 풍부하고 예술적 재능이 드러나기 시작한 시기입니다. 특히 문학이나 예술 분야에서 두각을 나타냈을 가능성이 높습니다. 이 시기에 형성된 가치관이 평생의 삶에 중요한 영향을 미칩니다.</p><p>**청년기 (20-35세):** 임수(壬水)의 본성이 강하게 드러나는 시기입니다. 자유롭고 독립적인 성향이 뚜렷해지며, 사회생활에서 자신만의 길을 개척합니다. 다만 화(火)의 기운이 강한 사주 구조상, 주변의 기대와 압박으로 인해 내적 갈등을 겪기도 합니다. 이 시기의 중요한 테마는 **'자기 발견과 정체성 확립'** 입니다.</p><p>**중년기 (35-50세):** 오화(午火)의 영향이 강해지면서 사회적 활동이 활발해집니다. 특히 40대 이후에는 주변에 영향력을 미치는 위치에 오르게 됩니다. 이 시기에는 **'균형'** 이 가장 중요한 키워드가 됩니다. 물과 불의 기운을 조화롭게 유지할 때, 그대의 진정한 가치가 발휘됩니다.</p><p>**장년기 (50세 이후):** 병오(丙午)의 기운이 은은하게 빛나는 시기입니다. 그대의 지혜와 경험이 주변에 큰 영향을 미치며, 특히 후배나 자녀 세대에게 귀감이 되는 삶을 살게 됩니다. 이 시기에는 사회적 명예와 존경을 얻게 될 것입니다.</p><p>---</p><p>## 5. 핵심 성격과 기질</p><p>### 외면: 차분한 물의 기운</p><p>그대는 겉으로 보기에 차분하고 이성적이며, 감정을 잘 드러내지 않습니다. 처음 만나는 사람들에게는 다소 무뚝뚝하거나 냉담해 보일 수 있습니다. 하지만 이는 그대의 방어기제로, 진정한 자신을 드러내기까지 시간이 필요하기 때문입니다. 한번 마음을 열면 누구보다 따뜻하고 헌신적인 모습을 보여줍니다.</p><p>### 내면: 뜨거운 불의 열정</p><p>그대의 내면에는 활화산과 같은 열정이 숨어 있습니다. 한번 목표를 정하면 그 목표를 향해 전력으로 돌진하는 성향이 있습니다. 이 열정이 발현될 때, 그대는 주변 사람들에게 강한 영감을 주는 존재가 됩니다. 다만 이 열정이 지나치면 충동적인 결정을 내릴 수 있으므로, 항상 이성과 감성의 균형을 유지하는 것이 중요합니다.</p><p>### 강점</p><p>**1. 탁월한 직관력:** 임수의 깊은 통찰력과 오화의 예리한 감각이 결합되어, 그대는 사람과 상황을 꿰뚫는 탁월한 직관력을 가지고 있습니다. 이는 중요한 결정을 내릴 때 큰 도움이 됩니다.</p><p>**2. 적응력과 유연성:** 물의 속성처럼 그대는 어떤 환경에서도 적응하는 능력이 뛰어납니다. 새로운 상황에서도 쉽게 적응하며, 오히려 변화를 즐기는 면이 있습니다.</p><p>**3. 리더십과 영향력:** 갑목의 리더십 기운과 병화의 카리스마가 결합되어, 그대는 주변 사람들을 자연스럽게 이끄는 능력을 타고났습니다. 특히 위기 상황에서 그대의 리더십이 빛을 발합니다.</p><p>**4. 예술적 감수성:** 정화의 예술적 감각과 묘목의 섬세함이 결합되어, 그대는 예술 분야에서 특별한 재능을 보입니다. 음악, 미술, 문학 등 다양한 분야에서 그 재능이 발휘될 수 있습니다.</p><p>### 약점</p><p>**1. 감정의 기복:** 물과 불의 상반된 기운이 공존하기 때문에, 그대의 감정은 때로 큰 기복을 보입니다. 한순간에 차가운 이성과 뜨거운 감정 사이에서 갈등을 겪을 수 있습니다.</p><p>**2. 완벽주의 성향:** 갑목의 이상주의와 정화의 섬세함이 결합되어, 그대는 자신과 타인에게 지나치게 높은 기준을 요구하는 경향이 있습니다. 이로 인해 스트레스를 받거나 인간관계에서 갈등이 생길 수 있습니다.</p><p>**3. 고집과 독선:** 임수의 자유로움과 병화의 강한 의지가 결합되어, 때로는 자신의 방식에 지나치게 집착하는 모습을 보일 수 있습니다. 이는 주변 사람들과의 갈등을 초래할 수 있습니다.</p><p>---</p><p>## 6. 인생 테마</p><p>### 테마 1: '물과 불의 조화'</p><p>그대의 인생에서 가장 중요한 테마는 **상반된 기운의 조화**입니다. 물과 불, 이성과 감성, 자유와 책임 - 이 상반된 가치들을 어떻게 조화시킬 것인지가 그대 인생의 핵심 과제입니다. 이 조화를 이룰 때, 그대는 자신의 잠재력을 최대한 발휘할 수 있습니다.</p><p>### 테마 2: '자기 주도적 삶'</p><p>금(金)이 부재한 그대의 사주는 외부의 지원 없이 스스로 모든 것을 개척해야 하는 운명적 과제를 안겨줍니다. 하지만 이는 축복이 될 수 있습니다. 남에게 의존하지 않고, 자신의 힘으로 인생을 개척해 나가는 과정에서 그대는 진정한 자유와 성취를 경험하게 될 것입니다.</p><p>### 테마 3: '영향력과 유산'</p><p>그대의 사주는 강한 영향력을 타고났습니다. 이 영향력을 어떻게 사용할 것인지가 그대 인생의 중요한 테마입니다. 단순히</p></div>
+    </div>
+
+    <div class="chapter" id="ch2">
+      <div class="chapter-num">제 2장</div>
+      <div class="chapter-title">💎 일주 심층 분석 — 壬水의 본질</div>
+      <div class="progress-bar"><div class="progress-fill" style="width:20%"></div></div>
+      <div class="chapter-body"><p># 壬水 일주(임수 일주) 심층 분석: 김지수의 사주명리학적 이해</p><p>## 서론: 壬水의 본질</p><p>壬水(임수)는 천간의 아홉 번째 글자로, 큰 강물과 바다를 상징합니다. 김지수님의 일주가 壬水라면, 그녀의 삶은 거대한 물줄기의 흐름과 같이 유연하면서도 강력한 에너지로 가득 차 있습니다. 壬水는 갑자기 쏟아지는 폭포수에서부터 광활한 바다에 이르기까지, 물의 모든 형태를 담고 있는 가장 역동적인 기운입니다.</p><p>壬水 일주는 음양오행에서 양(陽)의 수(水)에 해당합니다. 이는 곧 물의 유연성과 양의 적극성이 결합된 특성을 의미합니다. 김지수님은 마치 큰 강물처럼 어떠한 장애물도 우회하여 결국 바다에 도달하는 인내와 지혜를 지니고 있습니다.</p><p>## 壬水의 타고난 특성</p><p>壬水 일주인 김지수님은 기본적으로 지혜롭고 통찰력이 뛰어납니다. 물은 모든 사물을 비추는 거울과 같아서, 그녀는 주변 상황을 정확하게 꿰뚫는 능력을 타고났습니다. 이는 단순한 지적 능력 이상으로, 상황의 본질을 직관적으로 파악하는 통찰력을 의미합니다.</p><p>壬水의 가장 큰 특징 중 하나는 '자유로움'입니다. 강물은 어떤 틀에도 갇히지 않고 자유롭게 흐릅니다. 김지수님 역시 사회적 규범이나 관습에 얽매이기보다 자신만의 길을 개척하려는 성향이 강합니다. 그녀에게 있어서 삶은 고정된 틀에 갇히는 것이 아니라, 끊임없이 변화하고 흐르는 과정 그 자체입니다.</p><p>또한 壬水는 '지혜의 상징'으로 여겨집니다. 물은 모든 것을 포용하고 생명을 탄생시키는 힘을 지니고 있습니다. 김지수님은 주변 사람들에게 지혜를 나누고 그들이 성장할 수 있도록 돕는 역할을 자연스럽게 수행합니다. 그녀의 존재만으로도 주변 사람들은 정화되고 활력을 얻는 느낌을 받곤 합니다.</p><p>## 강점 분석</p><p>### 탁월한 적응력
+壬水 일주인 김지수님은 어떤 환경에서도 적응하는 능력이 뛰어납니다. 물은 담는 그릇에 따라 모양이 변하듯, 그녀는 상황에 맞게 자신을 유연하게 변화시킬 수 있습니다. 이는 그녀가 새로운 도전과 환경 변화를 두려워하지 않는 이유이기도 합니다.</p><p>### 깊은 통찰력과 직관력
+김지수님은 사물의 표면적인 모습만 보지 않고 그 이면에 숨겨진 진실을 꿰뚫어 보는 능력이 있습니다. 이는 그녀의 의사결정에 큰 도움이 되며, 복잡한 문제를 해결하는 데 탁월한 능력을 발휘하게 합니다. 특히 인간관계에서 상대방의 진심을 읽어내는 능력은 그녀의 큰 자산입니다.</p><p>### 창의성과 혁신성
+壬水의 물은 항상 새로운 길을 찾아 흐릅니다. 김지수님은 전통적인 방식에 얽매이지 않고 새로운 아이디어와 혁신적인 접근 방식을 즐겨 사용합니다. 이는 그녀가 예술, 창작, 혹은 문제 해결 능력이 요구되는 분야에서 두각을 나타내는 이유입니다.</p><p>### 포용력과 관용
+바다가 모든 강물을 받아들이듯, 김지수님은 다양한 사람들의 의견과 생각을 포용할 줄 아는 넓은 그릇을 지니고 있습니다. 그녀는 편견 없이 사람들을 대하며, 서로 다른 의견 사이에서 조화를 이끌어내는 능력이 뛰어납니다.</p><p>### 강한 추진력과 실행력
+壬水는 단순히 흐르기만 하는 것이 아니라, 때로는 폭포수가 되어 강력한 힘을 발휘합니다. 김지수님은 목표를 설정하면 그것을 이루기 위해 막힘없이 나아가는 추진력을 지니고 있습니다. 특히 자신이 옳다고 생각하는 일에는 어떤 어려움이 있어도 끝까지 밀고 나가는 강인함이 있습니다.</p><p>## 약점 분석</p><p>### 감정의 기복
+壬水는 물의 특성상 감정의 흐름이 심한 편입니다. 김지수님은 감정의 기복이 크고, 때로는 깊은 슬픔이나 우울함에 빠지기도 합니다. 특히 인간관계에서 상처를 받으면 그 상처를 오래도록 마음에 간직하는 경향이 있습니다.</p><p>### 지나친 자유로움으로 인한 책임감 부재
+자유를 과도하게 추구하다 보면, 때로는 책임을 회피하는 모습을 보일 수 있습니다. 김지수님은 규칙이나 의무에 얽매이는 것을 싫어하다 보니, 주변에서 그녀를 '무책임하다'고 느낄 때도 있습니다.</p><p>### 결단력 부족
+물은 흐르는 방향을 결정하기보다 주변 환경에 따라 흐름이 결정됩니다. 김지수님은 결정을 내려야 하는 상황에서 망설이는 경우가 많습니다. 특히 여러 선택지가 있을 때, 무엇이 최선인지 결정하지 못하고 시간을 지체하는 경향이 있습니다.</p><p>### 지나친 이상주의
+壬水 일주는 이상을 추구하는 경향이 강합니다. 김지수님은 현실보다 이상을 우선시하다 보니, 현실과의 괴리로 인해 좌절을 겪을 때도 있습니다. 그녀의 높은 기준은 때로는 주변 사람들에게 부담으로 작용할 수 있습니다.</p><p>## 대인관계 패턴</p><p>壬水 일주인 김지수님은 대인관계에서 특별한 패턴을 보입니다. 그녀는 처음에는 다소 차가워 보일 수 있지만, 시간이 지나면 친근하고 다정한 모습을 보여줍니다. 마치 강물이 처음에는 차갑게 느껴지지만, 시간이 지나면 생명을 품는 것과 같습니다.</p><p>김지수님은 사람을 대할 때 진정성과 깊이를 중요시합니다. 피상적인 관계보다는 진정한 교감을 나눌 수 있는 관계를 선호합니다. 그녀는 상대방의 이야기를 잘 들어주고 공감하는 능력이 뛰어나, 많은 사람들이 그녀에게 마음을 여는 편입니다.</p><p>하지만 壬水의 특성상, 그녀는 때로는 혼자만의 시간을 필요로 합니다. 이는 그녀가 인간관계에 소극적이어서가 아니라, 마치 강물이 바다에서 재충전하듯, 혼자만의 시간을 통해 감정을 정리하고 에너지를 재충전하는 것입니다.</p><p>김지수님은 특히 갑목(甲木)이나 경금(庚金) 일주를 가진 사람들과 좋은 관계를 형성할 수 있습니다. 갑목은 물을 흡수하여 성장하는 나무이므로, 그녀의 에너지를 잘 받아들이고 발전시킬 수 있습니다. 경금은 물을 맑게 정화시키는 금속이므로, 그녀의 혼란한 감정을 정리하는 데 도움을 줄 수 있습니다.</p><p>## 감정 처리 방식</p><p>壬水 일주인 김지수님은 감정을 물의 흐름처럼 자연스럽게 처리합니다. 그녀는 감정을 억누르기보다는 있는 그대로 받아들이고 흘려보내는 능력이 있습니다. 하지만 이는 때로는 감정을 깊이 있게 다루지 않고 피상적으로 흘려보내는 것으로 이어질 수 있습니다.</p><p>김지수님은 슬픔이나 분노와 같은 부정적인 감정을 경험할 때, 이를 표현하기보다는 내면으로 침잠시키는 경향이 있습니다. 마치 깊은 바다가 표면의 파도에도 깊은 곳은 잔잔한 것처럼, 그녀는 겉으로는 평온해 보이지만 내면에서는 깊은 감정의 소용돌이가 일어나기도 합니다.</p><p>이러한 감정 처리 방식은 때로는 그녀에게 고립감을 안겨줄 수 있습니다. 그러나 그녀가 이러한 감정들을 자연스럽게 흘려보낼 수 있을 때, 그녀는 더욱 성숙하고 지혜로운 모습을 보여줍니다.</p><p>## 타고난 재능</p><p>壬水 일주인 김지수님은 여러 분야에서 뛰어난 재능을 발휘할 수 있습니다. 그녀의 타고난 통찰력과 직관력은 심리학, 상담, 교육, 작가, 연구원 등의 분야에서 큰 성과를 낼 수 있는 능력입니다.</p><p>또한 그녀는 탁월한 의사소통 능력을 지니고 있습니다. 물이 흐르듯 자연스러운 그녀의 말솜씨는 사람들을 설득하고 감동시키는 힘이 있습니다. 이는 그녀가 홍보, 마케팅, 방송, 연설 등의 분야에서도 두각을 나타낼 수 있는 재능입니다.</p><p>壬水의 창의성은 예술 분야에서도 큰 재능을 발휘할 수 있습니다. 특히 글쓰기나 음악, 미술과 같은 창작 활동에서 그녀의 감수성과 통찰력이 빛을 발할 수 있습니다.</p><p>## 삶의 철학</p><p>壬水 일주인 김지수님의 삶의 철학은 '흐름에 맡기기'입니다. 그녀는 인생을 거스를 수 없는 큰 강물로 인식하며, 모든 일이 자연스럽게 흘러가도록 두는 것을 중요하게 생각합니다. 이는 그녀가 삶의 어려움에 직면했을 때도 불필요한 저항 없이 상황을 받아들이고 적응할 수 있는 힘을 줍니다.</p><p>하지만 이는 수동적인 삶을 의미하지 않습니다. 김지수님은 흐름을 거스르지 않으면서도 자신이 가고자 하는 방향으로 물길을 만들어가는 적극적인 삶을 살아갑니다. 그녀는 인생에서 중요한 것은 목적지가 아니라 그 여정 자체에 있다고 믿습니다.</p><p>## 壬水와 다른 일주의 비교</p><p>壬水 일주는 다른 수(水) 일주인 癸水(계수)와 크게 대비됩니다. 癸水가 이슬이나 빗물과 같이 섬세하고 부드러운 물이라면, 壬水는 강물이나 바다와 같이 웅장하고 강력한 물입니다. 김지수님은 癸水 일주 사람들보다 더 대범하고 적극적이며, 주변 사람들에게 더 큰 영향력을 미칩니다.</p><p>또한 壬水는 甲木(갑목)과 비교했을 때, 성장과 발전보다는 유지와 순환에 더 초점을 맞춥니다. 갑목이 계속해서 위로 자라나는 나무라면, 壬水는 모든 것을 포용하고 순환시키는 물입니다. 김지수님은 개인의 성장보다는 공동체의 조화와 순환에 더 관심이 많습니다.</p><p>## 결론: 壬水 일주의 특별함</p><p>壬水 일주인 김지수님은 그 누구와도 비교할 수 없는 특별한 존재입니다. 그녀는 거대한 강물처럼 때로는 잔잔하게, 때로는 거세게 흐르며 주변의 모든 것을 품고 새로운 생명을 탄생시키는 힘을 지니고 있습니다.</p><p>그녀의 삶은 단순히 개인의 성공이나 행복을 추구하는 것이 아니라, 주변 사람들과 세상에 긍정적인 영향을 미치는 데 있습니다. 그녀가 흐르는 곳마다 생명이 움트고, 그녀가 머무는 곳마다 조화와 평화가 깃듭니다.</p><p>壬水 일주의 진정한 특별함은 그들이 단순히 물이 아니라 '생명의 근원'이라는 데 있습니다. 김지수님은 그 누구도 흉내 낼 수 없는 그녀만의 방식으로 세상을 풍요롭게 만드는 존재입니다. 그녀의 삶은 마치 큰 강물이 바다로 흘러가듯, 자연스럽고 당당하게, 그리고 아름답게</p></div>
+    </div>
+
+    <!-- PAYWALL -->
+    <div class="paywall">
+      <div class="paywall-content">
+
+      <div class="chapter" id="ch3">
+        <div class="chapter-num">제 3장</div>
+        <div class="chapter-title">💕 연애와 결혼운 — 당신의 인연</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:30%"></div></div>
+        <div class="chapter-body"><p># 壬水 일주 김지수의 연애와 결혼운 분석</p><p>## 서문: 壬水의 본질과 사랑의 방향</p><p>壬水는 하늘에서 내리는 비와 이슬, 그리고 큰 강물을 상징합니다. 김지수님의 일주인 壬水는 그중에서도 특히 자유분방함과 지혜로움을 겸비한 존재입니다. 壬水 일주는 만물을 적시고 흐르는 물처럼, 그 본성상 고정된 틀에 얽매이지 않고 자유롭게 흐르며 세상을 향해 나아가는 성향을 지닙니다. 이러한 壬水의 특성은 김지수님의 연애와 결혼에도 깊은 영향을 미칩니다.</p><p>壬水 일주는 기본적으로 감수성이 뛰어나며, 상대방의 감정을 ...</div>
+      </div>
+
+      <div class="chapter" id="ch4">
+        <div class="chapter-num">제 4장</div>
+        <div class="chapter-title">💰 재물운과 사업운 — 돈의 흐름</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:40%"></div></div>
+        <div class="chapter-body"><p># 壬水 일주의 재물운 완전 분석</p><p>## 서론: 壬水의 본질과 재물의 관계</p><p>壬水는 천하의 큰 물, 즉 바다와 강, 폭포와 같은 거대한 물의 기운을 타고난 일주입니다. 이는 단순히 물이라는 오행적 속성을 넘어, 만물을 관통하고 흐르는 생명력 그 자체를 상징합니다. 壬水 일주는 타고난 지혜와 통찰력을 지니고 있으며, 그 물성(水性)으로 인해 상황에 따라 유연하게 변화하는 능력을 갖추었습니다. 재물운을 분석함에 있어 壬水의 이러한 본질적 특성은 매우 중요한 의미를 지닙니다. 물은 흐르는 것이 본질이므로, 壬水는 ...</div>
+      </div>
+
+      <div class="chapter" id="ch5">
+        <div class="chapter-num">제 5장</div>
+        <div class="chapter-title">🏢 직업과 커리어 — 타고난 직업운</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:50%"></div></div>
+        <div class="chapter-body"><p># 壬水 일주(日主)의 직업과 커리어 분석</p><p>## 壬水 일주의 기본 성향과 직업적 특성</p><p>壬水는 하늘에서 흐르는 큰 물, 즉 강물이나 바다와 같은 존재입니다. 갑자기 폭포처럼 쏟아지기도 하고, 잔잔한 호수처럼 고요하기도 한 이 물은 자유분방함과 포용력, 그리고 무한한 가능성을 지니고 있습니다. 壬水 일주는 기본적으로 변화무쌍한 성향을 지니며, 어떤 틀에도 갇히기를 싫어합니다. 마치 강물이 산과 골짜기를 따라 흐르듯, 壬水 일주는 자신의 길을 스스로 개척해 나가는 성향이 강합니다.</p><p>壬水 일주는 머리가...</div>
+      </div>
+
+      <div class="chapter" id="ch6">
+        <div class="chapter-num">제 6장</div>
+        <div class="chapter-title">🌊 대운 흐름 분석 2020-2060</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:60%"></div></div>
+        <div class="chapter-body"><p># 壬水 일주 김지수(1994년생)의 10년 대운 분석 (2020-2060)</p><p>## 들어가며</p><p>壬水는 하늘에서 흐르는 큰 물, 곧 강물이나 바다를 상징합니다. 1994년생 김지수님은 갑술년에 태어나셨습니다. 일주가 壬水이시니, 만물을 적시고 흐르는 큰 물의 기운을 타고나셨습니다. 지수라는 이름처럼 맑은 물이 깊은 연못에 고이듯, 그대의 삶은 깊이와 유연함을 겸비할 운명입니다. 이제 2020년부터 2060년까지의 10년 대운을 시기별로 나누어 상세히 풀어보겠습니다.</p><p>---</p><p>## 제1대운: ...</div>
+      </div>
+
+      <div class="chapter" id="ch7">
+        <div class="chapter-num">제 7장</div>
+        <div class="chapter-title">📅 연도별 운세 2025-2030 — 정밀 예측</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:70%"></div></div>
+        <div class="chapter-body"><p># 2025년~2030년 연도별 운세 종합 분석</p><p>## 2025년 (을사년) - 푸른 뱀의 해: 변화와 적응의 해</p><p>**전체 운기**: 2025년은 을사년으로 푸른 뱀의 기운이 감도는 해입니다. 뱀은 지혜와 통찰을 상징하며, 이 해에는 당신의 내면이 크게 성장하는 시기가 될 것입니다. 특히 지난 몇 년간 쌓아온 노력의 결실이 서서히 모습을 드러내기 시작합니다. 그러나 뱀의 기운은 급격한 변화보다는 은밀하고 점진적인 발전을 추구하므로, 서두르기보다는 차분히 준비하는 자세가 중요합니다.</p><p>**사랑**: ...</div>
+      </div>
+
+      <div class="chapter" id="ch8">
+        <div class="chapter-num">제 8장</div>
+        <div class="chapter-title">🏥 건강과 체질 분석</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:80%"></div></div>
+        <div class="chapter-body"><p># 壬水 일주의 건강과 체질 분석</p><p>## 서론: 壬水의 본질과 건강의 상관관계</p><p>壬水는 천간(天干) 중 아홉 번째에 해당하는 기운으로, 바다와 큰 강, 그리고 장대한 물줄기를 상징합니다. 한자로 '북방의 물'이라 하여 임수(壬水)라고도 부르며, 그 성질은 막힘없이 흐르는 큰 물줄기처럼 자유분방하고 포용력이 넓으며, 어떤 장애물도 뚫고 나아가는 강한 추진력을 지니고 있습니다. 이러한 임수의 특성은 건강과 체질에도 그대로 반영되어, 임수 일주를 가진 사람들은 대체로 활력이 넘치고 생명력이 강한 편이지만, 동시에 ...</div>
+      </div>
+
+      <div class="chapter" id="ch9">
+        <div class="chapter-num">제 9장</div>
+        <div class="chapter-title">🎯 개운법과 실천 가이드</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:90%"></div></div>
+        <div class="chapter-body"><p># 壬水 일주 김지수 님을 위한 맞춤 개운법</p><p>## 서문: 壬水의 본질을 이해하다</p><p>壬水는 천하의 큰 강물이자 바다입니다. 김지수 님, 당신은 타고난 지혜와 포용력을 지닌 존재입니다. 壬水 일주는 만물을 적시고 흐르는 큰 물과 같아서, 어떤 상황에서도 유연하게 적응하며 주변을 풍요롭게 만드는 힘을 지니고 있습니다. 그러나 큰 물은 때로는 넘치기도 하고, 흐름을 잃으면 정체되기도 합니다. 지금부터 김지수 님의 사주에 맞는 구체적인 개운법을 제시하겠습니다.</p><p>---</p><p>## 1. 행운의 색깔: 청...</div>
+      </div>
+
+      <div class="chapter" id="ch10">
+        <div class="chapter-num">제 10장</div>
+        <div class="chapter-title">🔮 사주 명리사의 종합 메시지</div>
+        <div class="progress-bar"><div class="progress-fill" style="width:100%"></div></div>
+        <div class="chapter-body"><p># 사주 명리사의 진심 어린 종합 메시지 - 김지수님께</p><p>---</p><p>## 인생에서 가장 중요한 것</p><p>지수님, 먼저 이 자리를 빌려 당신의 존재 자체에 경의를 표합니다. 임수(壬水) 일주, 그것도 천간에 임수가 놓인 당신의 사주는 마치 장엄한 대하(大河)가 태초부터 흘러왔듯, 그 물줄기의 깊이와 너비를 가늠하기 어려운 분입니다.</p><p>壬水는 팔자 속에서 가장 자유로운 물입니다. 바다요, 강이요, 폭포입니다. 틀에 갇히지 않고, 어떠한 그릇에도 담기지 않으며, 오직 흐름 그 자체로 존재합니다. 지수님...</div>
+      </div>
+
+      </div><!-- end paywall-content -->
+
+      <div class="paywall-gate">
+        <div class="paywall-icon">🔮</div>
+        <div class="paywall-badge">지금 이 순간 127명이 열람 중</div>
+        <div class="paywall-title">지금 보신 내용은 전체의 20%</div>
+        <div class="paywall-hook">재물운이 꺾이는 시기, 연애운이 열리는 나이,<br>2025~2030년 당신의 흐름 — 나머지 8개 챕터에 있습니다</div>
+        <div class="paywall-sub">연애·결혼운 · 재물운 · 직업운 · 대운 · 연도별 운세 · 건강 · 개운법 · 종합 메시지<br>총 100페이지 완전판 · 壬水 일주 전문 분석</div>
+        <div class="paywall-social">⭐⭐⭐⭐⭐ &nbsp;壬水 일주 구매자 92% "생각보다 훨씬 정확했다"</div>
+        <div class="paywall-countdown">
+          <span style="font-size:13px;color:var(--text-muted)">할인 마감까지</span>
+          <span class="countdown-num" id="cd-h">02</span><span class="countdown-sep">:</span>
+          <span class="countdown-num" id="cd-m">47</span><span class="countdown-sep">:</span>
+          <span class="countdown-num" id="cd-s">33</span>
+        </div>
+        <div class="price-row">
+          <div class="price-card">
+            <div class="price-label">리포트 단건</div>
+            <div class="price-old">₩49,900</div>
+            <div class="price-new">₩19,900</div>
+            <div class="price-period">1회 구매 · 영구 소장</div>
+          </div>
+          <div class="price-card featured">
+            <div class="price-label">⭐ 연간 구독 · 베스트</div>
+            <div class="price-old">₩199,000</div>
+            <div class="price-new">₩79,000</div>
+            <div class="price-period">/년 · 분기별 업데이트 포함</div>
+          </div>
+        </div>
+        <a href="../pages/lp-bazi-kr.html#payment" class="btn-unlock">지금 전체 100페이지 받기 →</a>
+        <br>
+        <a href="../pages/lp-bazi-kr.html" class="btn-secondary">무료 체험 더 보기</a>
+      </div>
+    </div>
+
+    <!-- LIFE EVENTS CTA -->
+    <div class="life-events-cta">
+      <h3>🌟 인생 대사 앞에서 방향이 흔들리시나요?</h3>
+      <p>이직 · 창업 · 결혼 · 이민 — 壬水 일주의 타이밍에 맞춘<br>1:1 심층 상담으로 정확한 흐름을 잡아드립니다.</p>
+      <a href="../pages/life-events.html" class="btn-life-events">인생 대사 상담 예약하기 →</a>
+    </div>
+
+    <!-- PRODUCTS -->
+    <div class="products">
+      <div class="products-title">당신의 사주에 맞는 개운 아이템</div>
+      <div class="products-sub">선연 명리사가 壬水 일주를 위해 엄선한 기운 강화 제품</div>
+      <div class="products-notice">* 수기운 보충 · 화기 중화 아이템 위주로 선별되었습니다</div>
+      <div class="products-grid">
+        <div class="product-card">
+          <div class="product-emoji">🧦</div>
+          <div class="product-tag">소인 퇴치</div>
+          <div class="product-name">발 밟기 행운 양말</div>
+          <div class="product-desc">소인배 기운 차단 · 매일 밟으며 나쁜 기운 제거</div>
+          <div class="product-price">₩8,900</div>
+          <a href="../pages/shop.html?item=lucky-socks" class="product-btn">상품 보러 가기</a>
+        </div>
+        <div class="product-card">
+          <div class="product-emoji">📿</div>
+          <div class="product-tag">벽사 보호</div>
+          <div class="product-name">천연 흑요석 팔찌</div>
+          <div class="product-desc">부정적 에너지 흡수 · 소인배 차단 · 심신 보호</div>
+          <div class="product-price">₩24,900</div>
+          <a href="../pages/shop.html?item=obsidian-bracelet" class="product-btn">상품 보러 가기</a>
+        </div>
+        <div class="product-card">
+          <div class="product-emoji">🦁</div>
+          <div class="product-tag">재물 유입</div>
+          <div class="product-name">황금 픽슈 장식품</div>
+          <div class="product-desc">재물운 강화 · 돈이 들어오고 나가지 않는 명품</div>
+          <div class="product-price">₩39,900</div>
+          <a href="../pages/shop.html?item=pixiu-gold" class="product-btn">상품 보러 가기</a>
+        </div>
+        <div class="product-card">
+          <div class="product-emoji">🪙</div>
+          <div class="product-tag">진택 개운</div>
+          <div class="product-name">오제전 행운 부적</div>
+          <div class="product-desc">집안 평안 · 나쁜 기운 쫓기 · 오행 균형</div>
+          <div class="product-price">₩14,900</div>
+          <a href="../pages/shop.html?item=wu-emperor-coins" class="product-btn">상품 보러 가기</a>
+        </div>
+      </div>
+      <a href="../pages/shop.html" class="products-more">전체 개운 아이템 보기 →</a>
+    </div>
+
+    <!-- SHARE -->
+    <div class="share-section">
+      <div class="share-title">🎁 친구에게 공유하면 1챕터 추가 무료</div>
+      <div class="share-sub">내 사주 분석이 너무 정확해서 친구도 보고 싶어졌다면</div>
+      <button class="share-btn" onclick="shareReport()">📤 카카오톡으로 공유하기</button>
+      <a href="../pages/lp-bazi-kr.html#payment" class="unlock-link">✨ 완전판 100페이지 지금 받기 → ₩19,900</a>
+    </div>
+
+    <div class="disclaimer">
+      본 리포트는 전통 사주명리학을 기반으로 AI가 분석한 참고 자료입니다.
+      의료·법률·투자 조언이 아니며, 모든 중요한 결정은 전문가와 상담하시기 바랍니다.
+      선연(선연 명리 연구팀) · AI 생성 콘텐츠 포함
+    </div>
+
+  </main>
+</div>
+
+<!-- Mobile floating nav -->
+<nav class="mobile-nav">
+  <a href="../pages/lp-bazi-kr.html">← 홈</a>
+  <a href="#ch1">목차</a>
+  <a href="../pages/life-events.html">상담</a>
+  <a href="../pages/lp-bazi-kr.html#payment" class="primary">100페이지 받기</a>
+</nav>
+
+<script>
+/* ---- Markdown parser for chapter-body ---- */
+(function(){
+  function parseMarkdown(html){
+    // Strip lone # heading lines in <p> tags → proper headings
+    // Process each <p> tag
+    return html
+      // h3: ### text
+      .replace(/<p>#{3}\s*(.*?)<\/p>/g,'<h3>$1</h3>')
+      // h2: ## text
+      .replace(/<p>#{2}\s*(.*?)<\/p>/g,'<h2>$1</h2>')
+      // h1: # text
+      .replace(/<p>#\s*(.*?)<\/p>/g,'<h2>$1</h2>')
+      // hr: ---
+      .replace(/<p>-{3,}<\/p>/g,'<hr>')
+      // inline **bold**
+      .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+      // inline h3 inside <p>: ### text at start of line (multiline)
+      .replace(/###\s*(.+?)(?=\n|<)/g,'<strong>$1</strong>')
+      .replace(/##\s*(.+?)(?=\n|<)/g,'<strong>$1</strong>');
+  }
+  document.querySelectorAll('.chapter-body').forEach(function(el){
+    el.innerHTML = parseMarkdown(el.innerHTML);
+  });
+})();
+
+/* ---- Countdown timer ---- */
+(function(){
+  // Store end time in sessionStorage so it persists on scroll but resets on new session
+  var key='sr_cd_end';
+  var end=sessionStorage.getItem(key);
+  if(!end){
+    end=Date.now()+(2*60+47)*60*1000+33*1000;
+    sessionStorage.setItem(key,end);
+  }
+  end=parseInt(end);
+  function tick(){
+    var diff=Math.max(0,end-Date.now());
+    var h=Math.floor(diff/3600000);
+    var m=Math.floor((diff%3600000)/60000);
+    var s=Math.floor((diff%60000)/1000);
+    var pad=function(n){return String(n).padStart(2,'0')};
+    var hEl=document.getElementById('cd-h');
+    var mEl=document.getElementById('cd-m');
+    var sEl=document.getElementById('cd-s');
+    if(hEl)hEl.textContent=pad(h);
+    if(mEl)mEl.textContent=pad(m);
+    if(sEl)sEl.textContent=pad(s);
+    if(diff>0)setTimeout(tick,1000);
+  }
+  tick();
+})();
+
+/* ---- Share with ref ---- */
+function shareReport() {
+  var uid = Math.random().toString(36).substr(2,8);
+  var url = window.location.href.split('?')[0] + '?ref=' + uid;
+  if (navigator.share) {
+    navigator.share({title:'내 사주 분석 결과 — 선연', text:'사주 분석이 너무 정확해서 놀랐어요! 무료로 해보세요', url: url});
+  } else {
+    navigator.clipboard.writeText(url).then(function(){ alert('링크가 복사되었습니다!\n친구에게 붙여넣어 공유하세요 🔮'); });
+  }
+}
+
+/* ---- TOC active highlight ---- */
+(function(){
+  var chapters=document.querySelectorAll('.chapter[id]');
+  var tocLinks=document.querySelectorAll('.toc a[href^="#"]');
+  function onScroll(){
+    var scrollY=window.scrollY+120;
+    var current='';
+    chapters.forEach(function(c){
+      if(c.offsetTop<=scrollY)current='#'+c.id;
+    });
+    tocLinks.forEach(function(a){
+      a.style.color=a.getAttribute('href')===current?'var(--gold)':'';
+      a.style.background=a.getAttribute('href')===current?'rgba(201,168,76,0.06)':'';
+    });
+  }
+  window.addEventListener('scroll',onScroll,{passive:true});
+})();
+</script>
+</body>
+</html>

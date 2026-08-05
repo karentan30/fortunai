@@ -27,6 +27,7 @@
   --ink-text: rgba(40,35,30,0.92);
   --sub-text: rgba(255,245,220,0.58);
 }
+html.light-mode { --sub-text: rgba(40,35,30,0.55); }
 html, body { background: var(--bg); font-family: 'Noto Serif SC', serif; color: var(--ink-text); -webkit-font-smoothing: antialiased; }
 body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 120px; }
 body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.1) 0%, transparent 50%); pointer-events:none; z-index:0; }
@@ -43,7 +44,8 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 .form-section { padding:14px 16px; }
 .form-label { font-size:10px; letter-spacing:0.18em; color:rgba(201,168,76,0.5); margin-bottom:10px; }
-.form-hint { font-size:9px; color:rgba(255,245,220,0.3); margin-bottom:10px; letter-spacing:0.06em; }
+.form-hint { font-size:11px; color:rgba(255,245,220,0.3); margin-bottom:10px; letter-spacing:0.06em; }
+html.light-mode .form-hint { color:rgba(40,35,30,0.45); }
 .field-group { background:var(--card); border:1px solid rgba(201,168,76,0.12); border-radius:8px; overflow:hidden; }
 .field-row { display:flex; align-items:center; padding:0 14px; border-bottom:1px solid rgba(201,168,76,0.08); }
 .field-row:last-child { border-bottom:none; }
@@ -87,7 +89,8 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .upload-area:active { border-color:rgba(201,168,76,0.6); }
 .upload-area-icon { font-size:22px; margin-bottom:5px; }
 .upload-area-text { font-size:10px; color:rgba(201,168,76,0.45); letter-spacing:0.08em; line-height:1.7; }
-.upload-hint { font-size:9px; color:rgba(255,245,220,0.25); margin-top:3px; letter-spacing:0.04em; }
+.upload-hint { font-size:11px; color:rgba(255,245,220,0.25); margin-top:3px; letter-spacing:0.04em; }
+html.light-mode .upload-hint { color:rgba(40,35,30,0.4); }
 .upload-previews { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
 .preview-thumb { width:64px; height:64px; object-fit:cover; border-radius:6px; border:1px solid rgba(201,168,76,0.2); }
 .preview-wrap { position:relative; }
@@ -98,6 +101,8 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .btn-gen:disabled { opacity:0.4; cursor:default; }
 
 /* ── Report screen ── */
+.report-screen { display:none; }
+.report-screen.show { display:block; }
 .chart-header { padding:20px 16px 0; }
 .name-row { display:flex; align-items:baseline; gap:12px; margin-bottom:4px; }
 .report-name { font-size:22px; letter-spacing:0.14em; }
@@ -122,7 +127,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .load-glyph { font-size:60px; color:rgba(201,168,76,0.3); font-weight:300; animation:load-breathe 2s ease-in-out infinite; }
 .load-text { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:14px; color:rgba(201,168,76,0.5); letter-spacing:0.18em; }
 .load-steps { display:flex; flex-direction:column; gap:6px; margin-top:8px; }
-.load-step { font-size:10px; color:rgba(255,245,220,0.3); letter-spacing:0.08em; }
+.load-step { font-size:12px; color:rgba(255,245,220,0.3); letter-spacing:0.08em; }
 
 /* Error screen */
 .error-screen { position:relative; z-index:1; display:none; text-align:center; padding:60px 20px; }
@@ -154,6 +159,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .stardust span{position:absolute;width:3px;height:3px;background:rgba(201,168,76,0.6);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
 @keyframes twinkle{0%,100%{opacity:0;transform:scale(0.5)}50%{opacity:1;transform:scale(1)}}
 .bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(14,10,4,1) 0%,rgba(14,10,4,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
+html.light-mode .bottom-gradient{background:linear-gradient(to top,var(--bg) 0%,transparent 100%)}
 
 /* Mingua badge */
 .mingua-badge { display:inline-block; font-size:9px; color:rgba(201,168,76,0.7); border:1px solid rgba(201,168,76,0.25); border-radius:10px; padding:1px 7px; margin-left:8px; letter-spacing:0.04em; }
@@ -208,7 +214,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   <!-- 户主信息 -->
   <div class="form-section page-enter page-enter-d3">
     <div class="form-label">户主/当家人信息</div>
-    <div style="font-size:9px;color:rgba(255,245,220,0.3);margin-bottom:10px;letter-spacing:0.06em">用于推算命卦，判断阴宅方位与后代运势的配合</div>
+    <div class="form-hint" style="margin-bottom:10px">用于推算命卦，判断阴宅方位与后代运势的配合</div>
     <div class="field-group">
       <div class="date-row">
         <span class="date-label">出生年月日<span class="required-star">*</span></span>
@@ -291,7 +297,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
     <button class="btn-gen" id="submitBtn" onclick="generateReport()">开始阴宅分析</button>
   </div>
 
-  <div style="text-align:center;font-size:9px;color:rgba(255,245,220,0.2);padding:0 24px 20px;letter-spacing:0.06em;position:relative;z-index:1">
+  <div style="text-align:center;font-size:11px;color:rgba(255,245,220,0.2);padding:0 24px 20px;letter-spacing:0.06em;position:relative;z-index:1">
     本平台采用正统堪舆风水理论·已服务千余户家庭·评测结果仅供参考
   </div>
 </div>
@@ -555,11 +561,15 @@ function generateReport() {
   var city = document.getElementById('city').value.trim();
   var relation = document.getElementById('relation').value;
   var masterYear = parseInt(document.getElementById('masterYear').value);
+  var masterMonth = parseInt(document.getElementById('masterMonth').value);
+  var masterDay = parseInt(document.getElementById('masterDay').value);
   var masterGender = document.getElementById('masterGender').value;
 
   if (!city) { showToast('请填写城市/地区', 'error'); return; }
   if (!relation) { showToast('请选择逝者与家族关系', 'error'); return; }
   if (!masterYear) { showToast('请选择户主出生年份', 'error'); return; }
+  if (!masterMonth) { showToast('请选择户主出生月份', 'error'); return; }
+  if (!masterDay) { showToast('请选择户主出生日期', 'error'); return; }
   if (!masterGender) { showToast('请选择户主性别', 'error'); return; }
 
   var candidates = collectCandidates();
@@ -577,6 +587,8 @@ function generateReport() {
     city: city,
     relation: relation,
     masterBirthYear: masterYear,
+    masterBirthMonth: masterMonth,
+    masterBirthDay: masterDay,
     masterGender: masterGender,
     masterMingua: minguaVal,
     concerns: concerns,
@@ -590,6 +602,7 @@ function generateReport() {
   document.getElementById('errorScreen').classList.remove('show');
   document.getElementById('reportScreen').innerHTML = '';
   document.getElementById('reportScreen').classList.remove('show');
+  document.getElementById('reportScreen').style.display = '';
 
   var steps = ['读取地理信息…','分析山水格局…','推演子孙运势…','生成对比报告…'];
   var stepsEl = document.getElementById('loadSteps');
@@ -605,6 +618,16 @@ function generateReport() {
   btn.textContent = '分析中…';
 
   var token = localStorage.getItem('sy_token') || '';
+  if (!token) {
+    // No auth token — redirect to payment/login page
+    showToast('请先登录或完成支付后继续', 'error');
+    setTimeout(function(){ window.location.href = 'yinzhai-intro.html'; }, 1800);
+    document.getElementById('loadingScreen').classList.remove('show');
+    document.getElementById('inputScreen').style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '开始阴宅分析';
+    return;
+  }
   fetch('/api/yinzhai/stream', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
@@ -617,8 +640,8 @@ function generateReport() {
 
     document.getElementById('loadingScreen').classList.remove('show');
     var reportEl = document.getElementById('reportScreen');
-    reportEl.style.display = 'block';
-    reportEl.innerHTML = '<div style="padding:16px;font-size:12px;color:rgba(255,245,220,0.5);letter-spacing:0.06em;line-height:2;white-space:pre-wrap;font-family:Noto Serif SC,serif" id="streamPreview"></div>';
+    reportEl.classList.add('show');
+    reportEl.innerHTML = '<div style="padding:16px;font-size:12px;color:rgba(255,245,220,0.5);letter-spacing:0.06em;line-height:2;white-space:pre-wrap;font-family:Noto Serif SC,serif" id="streamPreview"><div style="text-align:center;color:rgba(201,168,76,0.4);letter-spacing:0.1em;padding:20px 0">正在生成报告…</div></div>';
     var preview = document.getElementById('streamPreview');
 
     function read() {
@@ -634,7 +657,7 @@ function generateReport() {
           if (!line.startsWith('data: ')) return;
           try {
             var ev = JSON.parse(line.slice(6));
-            if (ev.type === 'chunk') { accumulated += ev.content; if (preview) preview.textContent = accumulated; }
+            if (ev.type === 'chunk') { accumulated += ev.content; /* do not display raw stream text */ }
             else if (ev.type === 'done') { btn.disabled = false; btn.textContent = '开始阴宅分析'; showReport(accumulated); }
             else if (ev.type === 'error') { showError(ev.message || '生成失败'); }
           } catch(e) {}
@@ -659,17 +682,21 @@ function showError(msg) {
 
 function retry() {
   document.getElementById('errorScreen').classList.remove('show');
-  if (lastPayload) {
-    generateReport();
-  } else {
-    document.getElementById('inputScreen').style.display = 'block';
-  }
+  // Always show inputScreen so user can confirm or correct data before retrying
+  document.getElementById('inputScreen').style.display = 'block';
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = false;
+  btn.textContent = '开始阴宅分析';
+  window.scrollTo(0, 0);
 }
 
 function showReport(text) {
   var reportEl = document.getElementById('reportScreen');
   var sections = parseAISections(text);
   var html = '';
+
+  // Back button
+  html += '<div style="padding:16px 16px 0;"><button onclick="backToForm()" style="background:none;border:none;font-family:\'Noto Serif SC\',serif;font-size:13px;color:rgba(201,168,76,0.6);cursor:pointer;padding:4px 0;letter-spacing:0.06em">← 重新填写</button></div>';
 
   // Header
   var city = lastPayload ? lastPayload.city : '';
@@ -698,10 +725,23 @@ function showReport(text) {
     html += '<div class="ai-plain-text page-enter">' + escapeHtml(text) + '</div>';
   }
 
+  // Bottom CTA
+  html += '<div style="padding:16px 16px 20px;text-align:center"><button onclick="backToForm()" style="padding:12px 32px;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light),var(--gold));border:none;border-radius:4px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;font-weight:500;letter-spacing:0.16em;cursor:pointer;box-shadow:0 4px 16px rgba(201,168,76,0.25)">再次分析</button></div>';
+
   html += '<div style="height:40px"></div>';
   reportEl.innerHTML = html;
-  reportEl.style.display = 'block';
+  reportEl.classList.add('show');
   injectDisclaimer('reportScreen');
+  window.scrollTo(0, 0);
+}
+
+function backToForm() {
+  document.getElementById('reportScreen').classList.remove('show');
+  document.getElementById('reportScreen').style.display = '';
+  document.getElementById('inputScreen').style.display = 'block';
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = false;
+  btn.textContent = '开始阴宅分析';
   window.scrollTo(0, 0);
 }
 

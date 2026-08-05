@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#5bbfa0">
+<meta name="theme-color" content="#1a1208">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>善缘 · 风水评测</title>
 <meta name="description" content="善缘风水评测 — AI房屋风水分析，八宅吉凶位">
@@ -46,10 +46,13 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .field-group { background:var(--card); border:1px solid rgba(201,168,76,0.12); border-radius:8px; overflow:hidden; }
 .field-row { display:flex; align-items:center; padding:0 14px; border-bottom:1px solid rgba(201,168,76,0.08); }
 .field-row:last-child { border-bottom:none; }
-.field-label { font-size:11px; color:var(--sub-text); letter-spacing:0.06em; min-width:64px; flex-shrink:0; }
+.field-label { font-size:11px; color:rgba(40,35,30,0.45); letter-spacing:0.06em; min-width:64px; flex-shrink:0; }
+:root.light-mode .field-label { color:rgba(40,35,30,0.45); }
+html:not(.light-mode) .field-label { color:rgba(201,168,76,0.65); }
 .field-input, .field-select, .field-textarea { flex:1; background:none; border:none; outline:none; font-family:'Noto Serif SC',serif; font-size:13px; color:var(--ink-text); padding:12px 8px; letter-spacing:0.04em; -webkit-appearance:none; }
 .field-select option { background:var(--card); color:var(--ink-text); }
-.field-input::placeholder, .field-textarea::placeholder { color:rgba(255,245,220,0.18); }
+.field-input::placeholder, .field-textarea::placeholder { color:rgba(40,35,30,0.25); }
+html:not(.light-mode) .field-input::placeholder, html:not(.light-mode) .field-textarea::placeholder { color:rgba(255,245,220,0.35); }
 .field-textarea { resize:none; min-height:60px; line-height:1.7; }
 
 .required-star { color:rgba(220,100,80,0.7); margin-left:2px; font-size:12px; }
@@ -87,6 +90,8 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .btn-gen:disabled { opacity:0.4; cursor:default; }
 
 /* ── Report screen ── */
+.report-screen { display:none; position:relative; z-index:1; }
+.report-screen.show { display:block; }
 
 /* Chart header */
 .chart-header { padding:20px 16px 0; }
@@ -135,13 +140,26 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   animation:gold-shimmer 3s linear infinite !important;
 }
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}
+@keyframes load-breathe{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.8;transform:scale(1.08)}}
+@keyframes step-fade{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
 .page-enter-d1{animation-delay:.1s}.page-enter-d2{animation-delay:.2s}
 .page-enter-d3{animation-delay:.3s}.page-enter-d4{animation-delay:.4s}
 .page-enter-d5{animation-delay:.5s}.page-enter-d6{animation-delay:.6s}
 
 /* Stardust */
 .stardust span{position:absolute;width:3px;height:3px;background:rgba(201,168,76,0.6);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
-.bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,rgba(14,10,4,1) 0%,rgba(14,10,4,.8) 30%,transparent 100%);pointer-events:none;z-index:998}
+.bottom-gradient{position:fixed;bottom:0;left:0;right:0;height:100px;background:linear-gradient(to top,var(--bg) 0%,transparent 100%);pointer-events:none;z-index:998}
+/* sticky CTA for paywall */
+.sticky-cta-bar{position:sticky;bottom:0;left:0;right:0;z-index:100;background:linear-gradient(to top,var(--bg) 60%,transparent 100%);padding:16px 16px 24px;text-align:center}
+.btn-unlock{display:inline-block;width:100%;max-width:340px;padding:15px 0;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light),var(--gold));border:none;border-radius:4px;color:rgba(14,10,4,0.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:0.18em;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,0.3);text-decoration:none}
+/* report action buttons */
+.report-actions{display:flex;gap:8px;padding:0 16px 8px;flex-wrap:wrap}
+.btn-action{flex:1;min-width:80px;padding:11px 8px;background:none;border:1px solid rgba(201,168,76,0.25);border-radius:4px;color:rgba(201,168,76,0.7);font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:0.1em;cursor:pointer;text-align:center;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:4px}
+.btn-action:active{transform:scale(0.97)}
+/* error screen extra buttons */
+.error-actions{display:flex;gap:10px;justify-content:center;margin-top:10px}
+.btn-modify{padding:12px 24px;background:none;border:1px solid rgba(201,168,76,0.3);border-radius:4px;color:rgba(201,168,76,0.7);font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:0.1em;cursor:pointer}
 </style>
 <link rel="stylesheet" href="/assets/css/common.css">
 </head>
@@ -351,7 +369,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   </div>
 
   <div style="text-align:center;font-size:9px;color:rgba(255,245,220,0.2);padding:0 24px 20px;letter-spacing:0.06em;position:relative;z-index:1">
-    本平台采用正统玄空飞星风水算法·已服务 12,846 位用户·评测结果仅供参考
+    本平台采用正统玄空飞星算法，结合命卦与八宅理论·评测结果仅供参考
   </div>
 </div>
 
@@ -366,7 +384,10 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 <div class="error-screen" id="errorScreen">
   <div class="error-icon">🏮</div>
   <div class="error-text" id="errorText">网络异常，请稍后重试</div>
-  <button class="btn-retry" onclick="retry()">重新评测</button>
+  <div class="error-actions">
+    <button class="btn-retry" onclick="retry()">重新提交</button>
+    <button class="btn-modify" onclick="goModify()">修改信息</button>
+  </div>
 </div>
 
 <!-- Report screen -->
@@ -658,9 +679,26 @@ function removePhoto(type, idx) {
   });
 }
 
+function escHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function goModify() {
+  document.getElementById('errorScreen').classList.remove('show');
+  document.getElementById('inputScreen').style.display = 'block';
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = false;
+  btn.textContent = '评测风水';
+}
+
 function generateReport() {
   var facing = document.getElementById('facing').value;
   if (!facing) { showToast('请选择房屋朝向', 'error'); return; }
+  // Immediately disable to prevent double-click
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = '评算中…';
 
   var payload = {
     facing: facing,
@@ -685,10 +723,6 @@ function generateReport() {
       stepsEl.innerHTML += '<div class="load-step">✓ '+s+'</div>';
     }, i * 350);
   });
-
-  var btn = document.getElementById('submitBtn');
-  btn.disabled = true;
-  btn.textContent = '评算中…';
 
   var loadingDuration = steps.length * 350 + 400;
   var apiCalled = false;
@@ -789,16 +823,29 @@ function showReport(text) {
       html += '<div class="ai-section page-enter" style="animation-delay:'+(i*0.08)+'s">';
       html += '<div class="ai-section-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');var a=this.querySelector(\'.ai-section-arrow\');a.classList.toggle(\'open\')">';
       html += '<div class="ai-section-icon">'+sec.emoji+'</div>';
-      html += '<div class="ai-section-title">'+(sec.title||'风水分析')+'</div>';
+      html += '<div class="ai-section-title">'+escHtml(sec.title||'风水分析')+'</div>';
       html += '<div class="ai-section-arrow">⬇</div>';
       html += '</div>';
-      html += '<div class="ai-section-body"><div class="ai-section-text">'+sec.lines.join('\n')+'</div></div>';
+      html += '<div class="ai-section-body"><div class="ai-section-text">'+sec.lines.map(escHtml).join('\n')+'</div></div>';
       html += '</div>';
     }
     html += '</div>';
   } else {
-    html += '<div class="ai-plain-text page-enter">'+text+'</div>';
+    html += '<div class="ai-plain-text page-enter">'+escHtml(text)+'</div>';
   }
+
+  // Report action buttons (P1-4)
+  html += '<div class="report-actions">';
+  html += '<button class="btn-action" onclick="resetForm()">🔄 再测一次</button>';
+  html += '<button class="btn-action" onclick="shareResult()">📤 分享结果</button>';
+  html += '<a class="btn-action" href="bazi.html">🔮 查看八字报告</a>';
+  html += '</div>';
+
+  // Paywall CTA (P0-4)
+  html += '<div class="sticky-cta-bar">';
+  html += '<button class="btn-unlock" onclick="unlockFullReport()">解锁完整八宅吉位报告 · ¥9.9</button>';
+  html += '<div style="font-size:9px;color:rgba(201,168,76,0.4);margin-top:6px;letter-spacing:0.06em">包含财位·旺气位·化煞建议·五行调场方案</div>';
+  html += '</div>';
 
   html += '<div style="height:40px"></div>';
 
@@ -829,6 +876,35 @@ function parseAISections(text) {
   }
   if (current && current.lines.length) sections.push(current);
   return sections;
+}
+
+function resetForm() {
+  document.getElementById('reportScreen').classList.remove('show');
+  document.getElementById('inputScreen').style.display = 'block';
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = false;
+  btn.textContent = '评测风水';
+  window.scrollTo(0, 0);
+}
+
+function shareResult() {
+  var title = '善缘风水评测结果';
+  var url = window.location.href;
+  if (navigator.share) {
+    navigator.share({ title: title, url: url }).catch(function(){});
+  } else {
+    try {
+      navigator.clipboard.writeText(url);
+      showToast('链接已复制', '');
+    } catch(e) {
+      showToast('请手动复制页面链接', '');
+    }
+  }
+}
+
+function unlockFullReport() {
+  // TODO: integrate Stripe checkout or WeChat Pay
+  showToast('付费功能即将上线，敬请期待', '');
 }
 </script>
 

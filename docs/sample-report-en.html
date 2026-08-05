@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ShenYuan · BaZi Destiny Report · Alex Chen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#f7f5f0; color:#1a1a1a; font-family:'Inter',sans-serif; max-width:860px; margin:0 auto; font-size:16px; line-height:1.85; }
+.hero { background:#0a0a14; color:#fff; padding:60px 52px 52px; position:relative; overflow:hidden; }
+.hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 70% 50% at 50% 0%, rgba(201,168,76,0.12) 0%, transparent 60%); }
+.hero-brand { font-size:10px; letter-spacing:6px; color:rgba(201,168,76,0.6); margin-bottom:36px; position:relative; }
+.hero-title { font-family:'Playfair Display',serif; font-size:34px; font-weight:600; margin-bottom:8px; position:relative; }
+.hero-sub { font-size:14px; color:rgba(255,255,255,0.5); margin-bottom:36px; position:relative; }
+.meta-row { display:flex; gap:28px; flex-wrap:wrap; position:relative; }
+.meta-label { font-size:10px; color:rgba(255,255,255,0.3); letter-spacing:2px; margin-bottom:4px; }
+.meta-val { font-size:14px; color:rgba(255,255,255,0.82); }
+.meta-val.accent { color:#c9a84c; font-size:20px; font-weight:600; }
+.content { padding:48px 52px; }
+.chapter { font-family:'Playfair Display',serif; font-size:22px; font-weight:600; color:#1a1a1a; margin:52px 0 16px; padding-bottom:10px; border-bottom:2px solid #1a1a1a; display:flex; align-items:center; gap:10px; }
+.chapter::before { content:attr(data-n); font-size:12px; background:#1a1a1a; color:#c9a84c; padding:2px 8px; border-radius:4px; font-family:'Inter',sans-serif; font-weight:700; }
+h3 { font-size:16px; font-weight:600; color:#2a2a2a; margin:22px 0 10px; }
+h3::before { content:'◆ '; color:#c9a84c; font-size:11px; }
+p { margin-bottom:14px; color:#3a3a3a; }
+ul { padding-left:20px; margin-bottom:14px; }
+li { margin-bottom:8px; color:#3a3a3a; }
+strong { color:#1a1a1a; font-weight:700; }
+em { color:#b07d30; font-style:normal; font-weight:600; }
+.highlight-box { background:#fffbf0; border:1px solid rgba(201,168,76,0.3); border-left:4px solid #c9a84c; border-radius:8px; padding:18px 22px; margin:16px 0; }
+.highlight-box .label { font-size:10px; letter-spacing:2px; color:#c9a84c; margin-bottom:6px; }
+.highlight-box .value { font-size:18px; font-weight:700; color:#1a1a1a; }
+.info-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:16px 0; }
+.info-card { background:#fff; border:1px solid #e5e0d5; border-radius:10px; padding:18px; }
+.info-icon { font-size:24px; margin-bottom:8px; }
+.info-label { font-size:11px; color:#999; margin-bottom:4px; }
+.info-val { font-size:15px; font-weight:600; color:#1a1a1a; }
+blockquote { border-left:4px solid #c9a84c; padding:14px 20px; margin:20px 0; background:#fffdf5; color:#555; font-style:italic; font-family:'Playfair Display',serif; }
+.year-row { display:flex; gap:12px; margin:12px 0; align-items:flex-start; }
+.year-tag { background:#1a1a1a; color:#c9a84c; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:700; white-space:nowrap; flex-shrink:0; margin-top:2px; }
+.year-body { color:#3a3a3a; font-size:15px; }
+.locked-section { position:relative; margin-top:48px; }
+.locked-content { filter:blur(4px); pointer-events:none; user-select:none; opacity:0.5; }
+.locked-overlay { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; background:rgba(247,245,240,0.7); backdrop-filter:blur(2px); border-radius:8px; z-index:10; text-align:center; padding:32px; }
+.locked-overlay h3 { font-family:'Playfair Display',serif; font-size:22px; color:#1a1a1a; margin-bottom:8px; }
+.locked-overlay h3::before { content:none; }
+.locked-overlay p { color:#666; margin-bottom:20px; font-size:15px; }
+.unlock-btn { display:inline-block; background:linear-gradient(135deg,#c9a84c,#8a6420); color:#000; padding:14px 36px; border-radius:50px; font-size:15px; font-weight:700; text-decoration:none; letter-spacing:0.5px; }
+.upgrade-section { background:#0a0a14; color:#fff; padding:40px 52px; margin-top:48px; }
+.upgrade-title { font-family:'Playfair Display',serif; font-size:22px; margin-bottom:8px; color:#c9a84c; }
+.upgrade-sub { font-size:14px; color:rgba(255,255,255,0.5); margin-bottom:24px; }
+.upgrade-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; }
+.upgrade-card { background:rgba(255,255,255,0.05); border:1px solid rgba(201,168,76,0.25); border-radius:12px; padding:18px; text-align:center; }
+.upgrade-price { font-size:20px; font-weight:700; color:#c9a84c; margin-bottom:4px; }
+.upgrade-name { font-size:13px; color:rgba(255,255,255,0.7); }
+.upgrade-btn { display:block; margin-top:10px; background:linear-gradient(135deg,#c9a84c,#8a6420); color:#000; padding:8px; border-radius:8px; font-size:12px; font-weight:700; text-decoration:none; text-align:center; }
+.share-section { background:#fff; border:1px solid #e5e0d5; border-radius:16px; padding:32px 40px; margin-top:32px; text-align:center; }
+.share-section h3 { font-family:'Playfair Display',serif; font-size:20px; color:#1a1a1a; margin-bottom:8px; }
+.share-section h3::before { content:none; }
+.share-section p { color:#666; margin-bottom:20px; }
+.share-btns { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+.share-btn { padding:10px 24px; border-radius:50px; font-size:14px; font-weight:600; cursor:pointer; border:none; }
+.share-btn.primary { background:#c9a84c; color:#000; }
+.share-btn.secondary { background:#f0ece2; color:#333; }
+.footer { text-align:center; color:#aaa; font-size:12px; padding:32px 52px; border-top:1px solid #e5e0d5; margin-top:48px; line-height:1.8; }
+@keyframes twinkle { 0%,100%{opacity:0.15} 50%{opacity:0.7} }
+.star-anim { position:absolute; width:2px; height:2px; background:#c9a84c; border-radius:50%; animation:twinkle 3s infinite; }
+@media(max-width:600px){ .content,.hero{ padding:32px 24px; } .info-grid{ grid-template-columns:1fr; } .upgrade-grid{ grid-template-columns:1fr; } .share-btns{flex-direction:column;align-items:center;} }
+</style>
+</head>
+<body>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const userName = params.get('name') || 'Alex';
+const userDate = params.get('date') || '1992-03-15';
+const userCity = params.get('city') || 'New York';
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.user-name').forEach(el => el.textContent = userName);
+  document.querySelectorAll('.user-city').forEach(el => el.textContent = userCity);
+});
+</script>
+
+<div class="hero">
+  <div class="star-anim" style="top:10%;left:20%;animation-delay:0s"></div>
+  <div class="star-anim" style="top:25%;left:75%;animation-delay:1.2s"></div>
+  <div class="star-anim" style="top:60%;left:90%;animation-delay:0.7s"></div>
+  <div class="star-anim" style="top:80%;left:40%;animation-delay:2s"></div>
+  <div class="hero-brand">善缘 · SHENYUAN · BAZI DESTINY REPORT</div>
+  <h1 class="hero-title">Destiny Report of <span class="user-name">Alex</span> Chen</h1>
+  <p class="hero-sub">Chinese BaZi · Four Pillars of Destiny · AI-Powered Analysis · 3,000 Years of Wisdom</p>
+  <div class="meta-row">
+    <div><div class="meta-label">DATE OF BIRTH</div><div class="meta-val">March 15, 1992 · 07:00</div></div>
+    <div><div class="meta-label">BIRTH CITY</div><div class="meta-val"><span class="user-city">New York</span></div></div>
+    <div><div class="meta-label">FOUR PILLARS</div><div class="meta-val">辛未 丁卯 壬戌 甲辰</div></div>
+    <div><div class="meta-label">DAY MASTER</div><div class="meta-val accent">Water (壬)</div></div>
+    <div><div class="meta-label">CURRENT LUCK CYCLE</div><div class="meta-val">庚子 (2022–2032)</div></div>
+  </div>
+</div>
+
+<div class="content">
+
+<h2 class="chapter" data-n="01">🌟 Your Destiny Overview</h2>
+
+<div class="info-grid">
+  <div class="info-card"><div class="info-icon">🌊</div><div class="info-label">DAY MASTER</div><div class="info-val">Yang Water (壬水)</div></div>
+  <div class="info-card"><div class="info-icon">⭐</div><div class="info-label">CHART STRUCTURE</div><div class="info-val">Killing Controlled by Resource (杀印相生)</div></div>
+  <div class="info-card"><div class="info-icon">🔥</div><div class="info-label">FAVORABLE ELEMENTS</div><div class="info-val">Metal · Water</div></div>
+  <div class="info-card"><div class="info-icon">⚡</div><div class="info-label">UNFAVORABLE ELEMENTS</div><div class="info-val">Earth · Fire (excess)</div></div>
+</div>
+
+<h3>Who You Are at Your Core</h3>
+<p>Your Day Master is <strong>Yang Water (壬水)</strong> — the great ocean, the deep river, the water that moves mountains. This is one of the most powerful and fluid archetypes in the entire BaZi system. Where Yin Water is a gentle stream, you are the tide: unpredictable in timing, irresistible in force, and capable of reshaping the landscape around you when conditions align.</p>
+
+<p>Water people don't fight obstacles head-on — they go around, under, or through. You have an instinctive ability to navigate complexity that leaves others baffled. This isn't strategic genius in the conventional sense; it's a deeper kind of intelligence that reads the path of least resistance and follows it with precision. In practice, this means you excel in environments where the rules are ambiguous, the structure is loose, and adaptability is more valuable than consistency.</p>
+
+<blockquote>"The great ocean does not refuse any river. This is why it is great."<br>— Lao Tzu</blockquote>
+
+<p>Your chart carries the <strong>Killing Controlled by Resource structure (杀印相生)</strong>, which in classical BaZi is considered one of the highest-tier configurations. The "killing star" (七杀) in your chart represents bold ambition, raw drive, and an edge that makes others slightly uncomfortable — but your chart's Resource element tames it, transforms it into wisdom and authority rather than recklessness. People with this structure historically end up in positions of leadership, not by seeking power, but because situations repeatedly demand that they step up.</p>
+
+<div class="highlight-box">
+  <div class="label">CORE CHARACTER PATTERN</div>
+  <div class="value">Deep thinker with an ocean of internal complexity — outwardly fluid and calm, inwardly running strong currents.</div>
+</div>
+
+<h3>Your Three Defining Strengths</h3>
+<ul>
+  <li><strong>Strategic depth:</strong> You see 5 steps ahead where others see 2. This is the Resource star at work — you absorb information like water absorbs everything, and synthesize it into insight that feels almost intuitive.</li>
+  <li><strong>Relational intelligence:</strong> Water adapts to every container. You have a rare ability to connect meaningfully with very different types of people — the executive and the artist, the skeptic and the dreamer — without losing your own center.</li>
+  <li><strong>Resilience under pressure:</strong> Water can be compressed, diverted, frozen — but it always finds its way. You have a constitutional ability to recover from setbacks that others would find career-ending. Not because you're unaffected, but because you process and move on faster than most.</li>
+</ul>
+
+<h3>The Shadow Side You Should Know</h3>
+<p>Yang Water people carry a particular challenge: <strong>the tendency to flow everywhere and commit nowhere.</strong> The same fluidity that is your superpower can become a liability when life demands you to hold a fixed shape — in long-term projects, stable relationships, or business ventures that require consistency over years. You may find yourself fascinated by the beginning of things and bored by their maintenance.</p>
+
+<p>Your 戌 (Dog) day pillar introduces an Earth element that sits in tension with your Water Day Master. This creates an inner friction between your desire for freedom and your need for stability — and it shows up externally as periods where you're simultaneously drawn to change and paralyzed by it. The resolution, as your chart suggests, comes through your 2022–2032 luck cycle (covered in detail in Chapter 4).</p>
+
+<h2 class="chapter" data-n="02">💰 Wealth & Career Fortune</h2>
+
+<h3>Your Wealth Type: Indirect Wealth (偏财)</h3>
+<p>In the BaZi system, there are two types of wealth: Direct Wealth (正财) comes from structured employment, stable salary, predictable income streams — the kind of wealth that rewards consistency and patience. <strong>Indirect Wealth (偏财)</strong> is different. It arrives in surges, through opportunity, risk-taking, side ventures, speculation, and unconventional paths. Yang Water people are almost universally Indirect Wealth types.</p>
+
+<p>This means a few critical things for your financial life:</p>
+<ul>
+  <li>You are not built to accumulate slowly through salary — you will find it frustrating and limiting.</li>
+  <li>Your wealth peaks come in concentrated windows, not as steady growth.</li>
+  <li>You likely have multiple income streams, or are most comfortable with variable income models.</li>
+  <li>Your best financial decisions have probably come from acting on instinct quickly, not after prolonged deliberation.</li>
+</ul>
+
+<div class="highlight-box">
+  <div class="label">WEALTH PEAK WINDOW</div>
+  <div class="value">2026 — 2029 is your primary wealth accumulation window in this decade.</div>
+</div>
+
+<h3>Career Paths Where Your Chart Excels</h3>
+<p>Your chart's <strong>Resource star (印星)</strong> is extremely well-placed, pointing to fields involving knowledge, communication, research, education, law, and creative intellectual work. The killing star (七杀) adds ambition and executive capacity. The combination suggests careers at the intersection of intellectual authority and real-world impact.</p>
+
+<p>Highest alignment fields: <strong>finance and investment, consulting, law, media and publishing, technology strategy, creative direction, research and academia.</strong></p>
+
+<p>Where you will struggle: Pure operations roles, rigid bureaucratic structures, any environment that rewards process over outcome, any career that confines you to a single fixed function for more than 3 years.</p>
+
+<h3>The 2024–2027 Career Trajectory</h3>
+<p>Your current luck cycle (庚子, Metal-Water) is extremely favorable for professional elevation. The Metal element feeds Water — your Day Master — giving you unusual reserves of energy and clarity during this period. Concretely, this cycle favors:</p>
+<ul>
+  <li>Taking on leadership roles that previously felt too exposed or risky</li>
+  <li>Building or monetizing intellectual assets (courses, writing, consulting, IP)</li>
+  <li>Strategic career moves that expand scope and visibility</li>
+  <li>Partnerships where you contribute strategic vision and partner contributes execution</li>
+</ul>
+
+<p>The window between <strong>late 2025 and mid-2027</strong> is particularly strong. Multiple favorable flow-year interactions create what classical BaZi texts describe as a "gathering of water" — resources, opportunities, and recognition arriving together. This is not a window to be cautious in.</p>
+
+<h2 class="chapter" data-n="03">💕 Love & Relationships</h2>
+
+<h3>Your Relationship Pattern</h3>
+<p>The Spouse Palace in your chart sits in the <strong>戌 (Dog) pillar</strong>, carrying Earth energy. For a Water Day Master, Earth is the element that "controls" — which in relationship terms means you are drawn to partners who ground you, who have a stability and rootedness that you lack. But the same Earth energy that attracts you can also clash with your Water nature when the grounding becomes constraint.</p>
+
+<p>This creates a recurring relationship pattern: you attract, and are attracted to, people who are steady, principled, and somewhat serious — and then over time, you find that steadiness feels like weight rather than anchor. The resolution isn't finding someone less grounded; it's developing your own capacity for stillness so you need less grounding from the outside.</p>
+
+<h3>Your Ideal Partner Profile (BaZi Compatibility)</h3>
+<p>Charts with strong <strong>Metal</strong> energy make the best partners for Yang Water people. Metal produces Water — it feeds rather than drains you. These individuals tend to be principled, decisive, aesthetically refined, and have a natural authority that you respect. They give you structure without suffocating you.</p>
+
+<p>Charts with strong <strong>Wood</strong> energy are also highly compatible. Water feeds Wood, which means the relationship has a natural direction of energy — you nourish their growth, and their vitality reflects back on you.</p>
+
+<blockquote>"The right relationship doesn't make you more Water — it makes you a better ocean."</blockquote>
+
+<h3>Key Relationship Years: 2025–2028</h3>
+<p>The Peach Blossom (桃花) interaction in your chart activates significantly during the <strong>2025 and 2026 flow years</strong>. For those already in relationships, this period often brings a deepening — movement on joint decisions, shared ventures, or significant milestones. For those single, these two years represent one of the highest-probability windows in this decade for meeting a genuinely compatible partner.</p>
+
+<p>The caveat: 2027 brings a minor Earth-Water clash in your chart. This doesn't signal rupture, but it does signal a year where relationship communication requires more deliberate care. Misunderstandings during this period have a tendency to calcify if left unaddressed.</p>
+
+<h2 class="chapter" data-n="04">📅 Annual Forecast: 2025–2027</h2>
+
+<div class="year-row">
+  <div class="year-tag">2025 乙巳</div>
+  <div class="year-body"><strong>Wood Snake year.</strong> The Wood element activates your chart's output star — a year of high creative and intellectual productivity. Your ideas find audiences. Projects you've been developing gain momentum and visibility. Career-wise, expect recognition that translates into tangible opportunities. Financially, income is variable but the high points are significant. In relationships: deepening for existing partnerships. Watch for overextension — Water can flow into too many channels simultaneously this year.</div>
+</div>
+
+<div class="year-row">
+  <div class="year-tag">2026 丙午</div>
+  <div class="year-body"><strong>Fire Horse year.</strong> This is your most significant year in the 2025–2030 window. The Fire element creates a wealth trigger in your chart — Indirect Wealth activation is strong. Financially, this is the year to act on the opportunities that 2025 reveals. Career: a major transition is likely, either in role, scope, or sector. One high-stakes decision you make this year will shape the trajectory of the entire next decade. Health watch: Fire year means your nervous system will be under strain — sleep, exercise, and deliberate recovery are not optional this year.</div>
+</div>
+
+<div class="year-row">
+  <div class="year-tag">2027 丁未</div>
+  <div class="year-body"><strong>Fire Goat year.</strong> Consolidation year. The gains of 2026 need to be secured and integrated — trying to push harder this year than the previous will lead to waste and friction. The Earth in 丁未 clashes mildly with your Water, creating decision fatigue and minor relationship friction. Best use of this year: build the systems and relationships that make your 2026 gains durable. Travel, rest, and anything that restores perspective is well-supported by the year's energy.</div>
+</div>
+
+<h2 class="chapter" data-n="05">🎯 Your Hidden Talents</h2>
+
+<h3>What Yang Water People Do That Others Cannot</h3>
+<p>The five elements produce five fundamental types of intelligence. Water's intelligence is <strong>strategic, connective, and systemic</strong>. Yang Water specifically has a capacity for seeing how systems interact — not just the parts, but the relationships between parts and the emergent properties of those relationships.</p>
+
+<p>In concrete terms, this often manifests as an ability to:</p>
+<ul>
+  <li><strong>Build networks that others find mysterious:</strong> You maintain relationships across very different social and professional worlds, and you intuitively know which connections to make at which moment.</li>
+  <li><strong>Read situations before they fully unfold:</strong> You notice early signals that others dismiss, and your instinct about where things are heading is more accurate than you typically give yourself credit for.</li>
+  <li><strong>Operate effectively in ambiguity:</strong> Where others need clear structures and defined roles, you function — often brilliantly — when the ground is shifting. This is a rare and commercially valuable capability.</li>
+  <li><strong>Absorb and synthesize information at volume:</strong> Your Resource star (印星) gives you an unusual capacity for learning — you process and integrate new domains faster than most, and connect ideas across fields in ways that produce genuine innovation.</li>
+</ul>
+
+<div class="highlight-box">
+  <div class="label">TALENT THAT YOUR CHART MARKS AS UNUSUALLY STRONG</div>
+  <div class="value">Cross-domain synthesis — the ability to take patterns from one field and apply them with precision to a completely different one.</div>
+</div>
+
+<h3>The Talent Most at Risk of Going Unexpressed</h3>
+<p>Your chart carries significant <strong>Output star (食神/伤官)</strong> energy — this is the star of creativity, expression, and original thinking. Yang Water people with strong Output stars often have writing ability, communicative intelligence, and creative vision that runs far deeper than what they typically show. The risk: Water's natural tendency toward depth means this talent stays internal. The people who know you well suspect you're more interesting and capable than you let on. They're right.</p>
+
+<p>Your chart specifically suggests that any creative or communicative work you do — writing, speaking, teaching, making — is likely to be of unusual quality. This is not a secondary talent; for you, it may be the primary one. Whether you build a career on it is a separate question. But recognizing it as genuinely exceptional rather than dismissing it as a hobby is likely a prerequisite for your deepest satisfaction.</p>
+
+</div><!-- end .content -->
+
+<!-- LOCKED SECTION: Chapters 6–10 -->
+<div class="locked-section" style="padding:0 52px; margin:0;">
+  <div class="locked-content">
+    <div style="padding:32px 0;">
+      <h2 style="font-family:'Playfair Display',serif;font-size:22px;margin:16px 0 8px;color:#1a1a1a;">⚕️ Chapter 6: Health & Vitality</h2>
+      <p>Your Water element governs kidneys, urinary system, and the nervous system. The Earth-Water tension in your chart creates recurring patterns around... [locked]</p>
+      <h2 style="font-family:'Playfair Display',serif;font-size:22px;margin:32px 0 8px;color:#1a1a1a;">👨‍👩‍👧 Chapter 7: Family & Legacy</h2>
+      <p>The relationship between your chart's Parent stars and your actual family dynamics reveals something counterintuitive about... [locked]</p>
+      <h2 style="font-family:'Playfair Display',serif;font-size:22px;margin:32px 0 8px;color:#1a1a1a;">📅 Chapter 8: Month-by-Month 2026 Forecast</h2>
+      <p>January–March: A Metal window opens unexpectedly. April: the month your chart marks for decisive action. May–July... [locked]</p>
+      <h2 style="font-family:'Playfair Display',serif;font-size:22px;margin:32px 0 8px;color:#1a1a1a;">🌙 Chapter 9: Ritual & Practice Recommendations</h2>
+      <p>Based on your element profile: the three practices most likely to shift your fortune trajectory are... [locked]</p>
+      <h2 style="font-family:'Playfair Display',serif;font-size:22px;margin:32px 0 8px;color:#1a1a1a;">🚀 Chapter 10: Your 2026–2035 Strategic Roadmap</h2>
+      <p>A decade-level view of your luck cycle transitions, with specific recommendations for each 2-year window... [locked]</p>
+    </div>
+  </div>
+  <div class="locked-overlay">
+    <h3>Chapters 6–10 are locked</h3>
+    <p>Unlock the complete 100-page report including month-by-month forecasts, health analysis, family dynamics, ritual recommendations, and your full 2026–2035 strategic roadmap.</p>
+    <a href="../pages/shop.html?ref=en-report&product=ch7-10" class="unlock-btn">Unlock Chapters 7–10 for $9.99 →</a>
+  </div>
+</div>
+
+<div class="upgrade-section">
+  <div class="upgrade-title">Complete Your Reading</div>
+  <div class="upgrade-sub">You've seen 2 of 10 chapters free. Unlock deeper dimensions of your chart.</div>
+  <div class="upgrade-grid">
+    <div class="upgrade-card">
+      <div class="upgrade-price">Free</div>
+      <div class="upgrade-name">Ch. 1–2 Preview</div>
+      <a href="#" class="upgrade-btn" style="background:#444;color:#ccc;">Current</a>
+    </div>
+    <div class="upgrade-card" style="border-color:#c9a84c;">
+      <div class="upgrade-price">$4.99</div>
+      <div class="upgrade-name">Ch. 3–6 Deep Analysis</div>
+      <a href="../pages/shop.html?ref=en-report&product=ch3-6" class="upgrade-btn">Unlock Now →</a>
+    </div>
+    <div class="upgrade-card">
+      <div class="upgrade-price">$24.99/yr</div>
+      <div class="upgrade-name">All 10 Chapters + Updates</div>
+      <a href="../pages/shop.html?ref=en-report&product=annual" class="upgrade-btn">Best Value →</a>
+    </div>
+  </div>
+</div>
+
+<!-- Life Events cross-sell -->
+<div style="padding:0 52px;margin-bottom:32px;">
+  <div style="background:linear-gradient(135deg,#0d0618,#1a0a2e);border:1px solid rgba(201,168,76,0.3);border-radius:16px;padding:32px;text-align:center;">
+    <div style="color:#c9a84c;font-size:11px;letter-spacing:4px;text-transform:uppercase;margin-bottom:8px;">Consult a Master</div>
+    <h3 style="font-family:'Playfair Display',serif;color:#f5f0eb;font-size:1.3em;font-weight:700;margin-bottom:8px;text-wrap:balance;">Major life decisions deserve a deeper reading</h3>
+    <h3 style="display:none"></h3>
+    <p style="color:#a09080;margin-bottom:20px;font-size:14px;text-wrap:balance;">Marriage timing · Career pivots · Baby naming · Moving &amp; relocation · Choosing an auspicious date</p>
+    <a href="../pages/life-events.html" style="display:inline-block;background:transparent;border:1px solid #c9a84c;color:#c9a84c;padding:12px 28px;border-radius:50px;font-size:14px;font-weight:700;text-decoration:none;letter-spacing:0.5px;">Explore Life Events Consultation →</a>
+  </div>
+</div>
+
+<!-- Remedy Products -->
+<div style="padding:0 52px;margin-bottom:40px;">
+  <div style="background:linear-gradient(135deg,#1a0a2e,#2d1b4e);padding:40px 32px;border-radius:16px;">
+    <div style="text-align:center;margin-bottom:28px;">
+      <div style="color:#c9a84c;font-size:11px;letter-spacing:4px;text-transform:uppercase;margin-bottom:8px;">Based on your chart</div>
+      <h3 style="color:#f5f0eb;font-size:1.5em;font-weight:700;text-wrap:balance;">Your Personalized Remedy Recommendations</h3>
+      <p style="color:#a09080;margin-top:8px;font-size:14px;">Curated by our BaZi masters for your specific chart weaknesses</p>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:20px;text-align:center;">
+        <div style="font-size:2.2em;margin-bottom:10px;">🧦</div>
+        <div style="color:#c9a84c;font-size:11px;letter-spacing:2px;margin-bottom:6px;">Block Petty People</div>
+        <div style="color:#f5f0eb;font-weight:700;margin-bottom:8px;">Villain-Stomping Lucky Socks</div>
+        <div style="color:#a09080;font-size:13px;margin-bottom:14px;">For charts with 7-Killings · Ward off energy drains daily</div>
+        <div style="color:#c9a84c;font-weight:700;margin-bottom:12px;">$4.99</div>
+        <a href="../pages/shop.html?ref=en-report&product=socks" style="display:block;background:#c9a84c;color:#0d0618;padding:10px;border-radius:50px;font-weight:700;font-size:13px;text-decoration:none;">Buy Now</a>
+      </div>
+      <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:20px;text-align:center;">
+        <div style="font-size:2.2em;margin-bottom:10px;">📿</div>
+        <div style="color:#c9a84c;font-size:11px;letter-spacing:2px;margin-bottom:6px;">Protection</div>
+        <div style="color:#f5f0eb;font-weight:700;margin-bottom:8px;">Black Obsidian Bracelet</div>
+        <div style="color:#a09080;font-size:13px;margin-bottom:14px;">Absorbs negative energy · shields against obstacles</div>
+        <div style="color:#c9a84c;font-weight:700;margin-bottom:12px;">$9.99</div>
+        <a href="../pages/shop.html?ref=en-report&product=obsidian" style="display:block;background:#c9a84c;color:#0d0618;padding:10px;border-radius:50px;font-weight:700;font-size:13px;text-decoration:none;">Buy Now</a>
+      </div>
+      <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:20px;text-align:center;">
+        <div style="font-size:2.2em;margin-bottom:10px;">🦁</div>
+        <div style="color:#c9a84c;font-size:11px;letter-spacing:2px;margin-bottom:6px;">Attract Wealth</div>
+        <div style="color:#f5f0eb;font-weight:700;margin-bottom:8px;">Pi Xiu Wealth Charm</div>
+        <div style="color:#a09080;font-size:13px;margin-bottom:14px;">Only takes in, never releases · amplifies money luck</div>
+        <div style="color:#c9a84c;font-weight:700;margin-bottom:12px;">$14.99</div>
+        <a href="../pages/shop.html?ref=en-report&product=pixiu" style="display:block;background:#c9a84c;color:#0d0618;padding:10px;border-radius:50px;font-weight:700;font-size:13px;text-decoration:none;">Buy Now</a>
+      </div>
+      <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:20px;text-align:center;">
+        <div style="font-size:2.2em;margin-bottom:10px;">🪙</div>
+        <div style="color:#c9a84c;font-size:11px;letter-spacing:2px;margin-bottom:6px;">Home Blessing</div>
+        <div style="color:#f5f0eb;font-weight:700;margin-bottom:8px;">Five Emperor Coins</div>
+        <div style="color:#a09080;font-size:13px;margin-bottom:14px;">Balance the 5 elements · protect home energy</div>
+        <div style="color:#c9a84c;font-weight:700;margin-bottom:12px;">$7.99</div>
+        <a href="../pages/shop.html?ref=en-report&product=coins" style="display:block;background:#c9a84c;color:#0d0618;padding:10px;border-radius:50px;font-weight:700;font-size:13px;text-decoration:none;">Buy Now</a>
+      </div>
+    </div>
+    <p style="color:#555;font-size:11px;text-align:center;margin-top:16px;">* Products curated by ShenYuan masters based on your specific chart · Not medical advice</p>
+  </div>
+</div>
+
+<div style="padding:0 52px;">
+  <div class="share-section">
+    <h3>🎁 Share & Unlock a Bonus Chapter</h3>
+    <p>Share your report with a friend and both of you unlock Chapter 8: Month-by-Month 2026 Forecast for free.</p>
+    <div class="share-btns">
+      <button class="share-btn primary" onclick="shareReport()">📤 Share My Reading</button>
+      <button class="share-btn secondary" onclick="copyLink()">🔗 Copy Link</button>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  <strong>善缘 · ShenYuan</strong><br>
+  This report is generated using the traditional Chinese BaZi (Four Pillars of Destiny) system, cross-referenced with AI analysis of over 200,000 historical charts.<br>
+  For informational and reflective purposes only. Not a substitute for professional financial, medical, or legal advice.<br><br>
+  <a href="../pages/lp-master-EN.html" style="color:#c9a84c;text-decoration:none;">← Get a New Reading</a>
+  &nbsp;·&nbsp;
+  <a href="../pages/shop.html?ref=en-report-footer" style="color:#c9a84c;text-decoration:none;">Fortune Shop</a>
+  &nbsp;·&nbsp;
+  <a href="../pages/life-events.html" style="color:#c9a84c;text-decoration:none;">Life Events Consultation</a>
+  <br><br>
+  © 2026 ShenYuan · 3,000 Years of Chinese Wisdom, Powered by AI
+</div>
+
+<script>
+function shareReport() {
+  const uid = Math.random().toString(36).substr(2,8);
+  const shareUrl = window.location.href.split('?')[0] + '?ref=' + uid;
+  const text = 'I just got my BaZi destiny reading — it described me better than any personality test. Try yours (free): ' + shareUrl;
+  if (navigator.share) {
+    navigator.share({ title: 'My BaZi Destiny Report', text: text, url: shareUrl });
+  } else {
+    navigator.clipboard.writeText(shareUrl).then(() => alert('Link copied! Share it with a friend.'));
+  }
+}
+function copyLink() {
+  const uid = Math.random().toString(36).substr(2,8);
+  const url = window.location.href.split('?')[0] + '?ref=' + uid;
+  navigator.clipboard.writeText(url).then(() => alert('Link copied!'));
+}
+</script>
+</body>
+</html>

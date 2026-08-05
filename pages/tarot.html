@@ -51,7 +51,7 @@ body::before {
 .topic-wrap { position: relative; z-index: 1; padding: 14px 16px 8px; }
 .topic-label { font-size: 10px; letter-spacing: 0.18em; color: rgba(155,111,196,0.5); margin-bottom: 10px; }
 .topic-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
-.topic-btn { background: var(--deep-card); border: 1px solid rgba(107,63,160,0.2); border-radius: 6px; padding: 10px 6px; text-align: center; cursor: pointer; transition: all 0.22s; }
+.topic-btn { background: var(--deep-card); border: 1px solid rgba(107,63,160,0.2); border-radius: 6px; padding: 10px 6px; text-align: center; cursor: pointer; transition: all 0.22s; min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .topic-btn.selected { border-color: var(--violet-mid); background: rgba(107,63,160,0.2); }
 .topic-recent { border-color: rgba(201,168,76,0.35); background: rgba(201,168,76,0.05); }
 .topic-recent .topic-icon { color: #c9a84c; }
@@ -70,7 +70,7 @@ body::before {
 /* ── Spread selector ── */
 .spread-wrap { position: relative; z-index: 1; padding: 8px 16px 16px; }
 .spread-row { display: flex; gap: 7px; }
-.spread-opt { flex: 1; background: var(--deep-card); border: 1px solid rgba(107,63,160,0.18); border-radius: 7px; padding: 10px 8px; text-align: center; cursor: pointer; transition: all 0.2s; }
+.spread-opt { flex: 1; background: var(--deep-card); border: 1px solid rgba(107,63,160,0.18); border-radius: 7px; padding: 10px 8px; text-align: center; cursor: pointer; transition: all 0.2s; min-height: 44px; }
 .spread-opt.selected { border-color: var(--violet-mid); background: rgba(107,63,160,0.18); }
 .spread-num { font-family: 'Cormorant Garamond', serif; font-size: 22px; color: rgba(155,111,196,0.6); font-weight: 300; }
 .spread-opt.selected .spread-num { color: var(--violet-light); }
@@ -127,12 +127,38 @@ body::before {
 .btn-redo { width: 100%; padding: 12px 0; background: transparent; border: 1px solid rgba(107,63,160,0.3); border-radius: 4px; color: rgba(196,160,224,0.6); font-family: 'Noto Serif SC', serif; font-size: 13px; letter-spacing: 0.16em; cursor: pointer; margin-top: 4px; transition: all 0.2s; }
 .btn-redo:active { background: rgba(107,63,160,0.15); }
 
-/* ── Sample cards ── */
+/* ── Five-card layout: 3+2 rows to prevent overflow on 390px ── */
+.card-trio.five-spread {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: auto auto;
+  gap: 8px;
+}
+.card-trio.five-spread .tarot-slot:nth-child(4),
+.card-trio.five-spread .tarot-slot:nth-child(5) {
+  grid-column: span 1;
+}
+.card-trio.five-spread .tarot-slot:nth-child(4) { grid-column-start: 1; grid-row: 2; }
+.card-trio.five-spread .tarot-slot:nth-child(5) { grid-column-start: 2; grid-row: 2; }
+/* Two bottom cards centered via padding hack */
+.card-trio.five-spread { justify-items: center; }
+
+/* ── Theme toggle fixed position ── */
+.theme-toggle { position: fixed; top: 16px; right: 16px; z-index: 999; background: none; border: none; cursor: pointer; font-size: 18px; padding: 4px; }
+
+/* ── Question char counter ── */
+.q-counter { font-size: 10px; color: rgba(155,111,196,0.4); text-align: right; margin-top: 4px; letter-spacing: 0.04em; }
+.q-hint { font-size: 10px; color: rgba(155,111,196,0.45); margin-top: 6px; letter-spacing: 0.04em; }
+
+/* ── Upgrade CTA buttons vertical stack ── */
+.upgrade-cta-btns { display: flex; flex-direction: column; gap: 8px; }
+.upgrade-cta-btns .btn-redo { width: 100%; flex: none; }
 </style>
 <link rel="stylesheet" href="/assets/css/common.css">
+<script src="/assets/js/common.js"></script>
 </head>
 <body>
-<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题" style="z-index:999">🌙</button>
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题">🌙</button>
 
 
 <button class="back-btn" onclick="history.back()">‹ 返回</button>
@@ -158,9 +184,11 @@ body::before {
 
 <div class="q-wrap">
   <div class="q-label">写下你的问题（越具体越准）</div>
+  <div class="q-hint">问题越具体，解读越精准 · 30字内最佳</div>
   <div class="q-box">
-    <textarea class="q-input" id="question" placeholder="例：我和他还有没有机会？&#10;例：这份工作offer该不该接？&#10;例：今年下半年我的财运如何？"></textarea>
+    <textarea class="q-input" id="question" maxlength="120" placeholder="例：我和他还有没有机会？&#10;例：这份工作offer该不该接？&#10;例：今年下半年我的财运如何？" oninput="updateQCounter(this)"></textarea>
   </div>
+  <div class="q-counter" id="qCounter">0 / 120</div>
 </div>
 
 <div class="spread-wrap">
@@ -204,11 +232,11 @@ body::before {
   <div class="interp-section" id="upgradeCta" style="display:none;border-color:rgba(201,168,76,0.2);background:linear-gradient(135deg,rgba(201,168,76,0.06),rgba(155,111,196,0.04))">
     <div class="interp-head"><div class="interp-dot" style="background:var(--gold)"></div><div class="interp-title" style="color:var(--gold-light)">深度解读</div></div>
     <div style="font-size:11px;color:rgba(240,234,255,0.55);letter-spacing:0.04em;line-height:1.9;margin-bottom:12px">
-      单张牌只能看到表层启示。<strong style="color:var(--gold-light)">三张牌阵（过去·现在·未来）</strong>或<strong style="color:var(--gold-light)">五芒星牌阵</strong>能给你完整的方向。
+      想看你的<strong style="color:var(--gold-light)">过去·现在·未来完整走向</strong>？解锁AI深度解读，看清全局。
     </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn-redo" style="flex:1;border-color:rgba(201,168,76,0.3);color:var(--gold-light)" onclick="upgradeTarot(this, 3)">三张牌阵 · $9</button>
-      <button class="btn-redo" style="flex:1;border-color:rgba(155,111,196,0.3);color:var(--violet-light)" onclick="upgradeTarot(this, 5)">五芒星牌阵 · $19</button>
+    <div class="upgrade-cta-btns">
+      <button class="btn-redo" style="border-color:rgba(201,168,76,0.5);color:var(--gold-light);background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.04))" onclick="upgradeTarot(this, 3)">三张牌阵（过去·现在·未来）$9 USD</button>
+      <button class="btn-redo" style="border-color:rgba(155,111,196,0.3);color:var(--violet-light)" onclick="upgradeTarot(this, 5)">五芒星牌阵（五维深度）$19 USD</button>
     </div>
   </div>
 
@@ -216,18 +244,6 @@ body::before {
 </div>
 
 <script>
-function showToast(msg, type) {
-  var t = document.createElement('div');
-  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
-  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
-  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
-  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
-  t.textContent = msg;
-  t.onclick = function(){ t.style.opacity = "0"; t.style.transition = "opacity 0.3s"; setTimeout(function(){ t.remove(); },300); };
-  document.body.appendChild(t);
-  if (t._toastTimer) clearTimeout(t._toastTimer);
-  t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
-}
 var CARDS = [
   {name:'愚者', roman:'0', glyph:'零', energy:'新开始·冒险·天真', desc:'象征全新旅程的开始，带着纯粹的心上路，无所畏惧。'},
   {name:'魔术师', roman:'I', glyph:'一', energy:'意志·创造·主导', desc:'你拥有实现目标所需的一切工具，关键在于能否善加利用。'},
@@ -284,29 +300,47 @@ function selectSpread(el, n, type) {
 function drawCards() {
   var q = document.getElementById('question').value.trim();
   if (!q) { showToast('请先写下你的问题'); return; }
+  var btn = document.querySelector('.btn-draw');
+  btn.disabled = true;
+  document.getElementById('question').disabled = true;
   document.getElementById('loadingWrap').classList.add('show');
   document.getElementById('resultWrap').classList.remove('show');
-  document.querySelector('.btn-draw').style.display = 'none';
-  setTimeout(function(){
-    document.getElementById('loadingWrap').classList.remove('show');
-    showResult(q);
-  }, 2200);
-}
-
-function showResult(question) {
-  var n = currentSpread;
-  var drawn = [];
-  var pool = CARDS.slice();
-  for (var i = 0; i < n; i++) {
+  btn.style.display = 'none';
+  // Draw cards NOW before any async, save to localStorage for paid flow
+  var pool = CARDS.slice(); var drawn = [];
+  for (var i = 0; i < currentSpread; i++) {
     var idx = Math.floor(Math.random() * pool.length);
     var card = pool.splice(idx, 1)[0];
     var reversed = Math.random() < 0.3;
     drawn.push({ card: card, reversed: reversed });
   }
+  try { localStorage.setItem('sy_tarot_drawn', JSON.stringify(drawn.map(function(d){ return {name:d.card.name, roman:d.card.roman, glyph:d.card.glyph, energy:d.card.energy, desc:d.card.desc, reversed:d.reversed}; }))); } catch(e){}
+  setTimeout(function(){
+    document.getElementById('loadingWrap').classList.remove('show');
+    document.getElementById('question').disabled = false;
+    showResult(q, drawn);
+  }, 2200);
+}
+
+function showResult(question, drawn) {
+  var n = currentSpread;
+  // drawn is passed in from drawCards (already saved to localStorage)
+  if (!drawn) {
+    // fallback: reconstruct from localStorage (paid return flow passes its own drawn)
+    drawn = [];
+    var pool = CARDS.slice();
+    for (var i = 0; i < n; i++) {
+      var idx = Math.floor(Math.random() * pool.length);
+      var card = pool.splice(idx, 1)[0];
+      var reversed = Math.random() < 0.3;
+      drawn.push({ card: card, reversed: reversed });
+    }
+  }
 
   var positions = n === 1 ? ['当前启示'] : n === 3 ? POSITIONS_3 : POSITIONS_5;
   var trio = document.getElementById('cardTrio');
   trio.innerHTML = '';
+  trio.className = 'card-trio' + (n === 5 ? ' five-spread' : '');
   drawn.forEach(function(d, i) {
     trio.innerHTML += '<div class="tarot-slot">' +
       '<div class="tarot-card" style="transform:rotate('+(d.reversed?180:0)+'deg)">' +
@@ -331,8 +365,11 @@ function showResult(question) {
   };
   var im = interpMap[currentTopic] || interpMap['custom'];
 
+  // Add question keyword echo for personalisation
+  var qSnippet = question.length > 10 ? question.slice(0, 10) + '…' : question;
+
   document.getElementById('interpTitle').textContent = im.title;
-  document.getElementById('interpText').innerHTML = im.prefix +
+  document.getElementById('interpText').innerHTML = '关于你问的「' + qSnippet + '」，' + im.prefix +
     (rev ? '「<span class="interp-highlight">'+mainCard.name+'</span> 逆位」提醒你：'+mainCard.desc.replace('你','此刻的你') + ' 逆位时能量受阻，建议放慢脚步，重新审视内心真正的渴望。'
          : '「<span class="interp-highlight">'+mainCard.name+'</span>」正位的能量是：'+mainCard.desc + ' ' + mainCard.energy + '是此刻最需要关注的核心能量。') +
     (drawn.length > 1 ? '<br><br>从整体牌阵来看，'+drawn[0].card.name+'（'+positions[0]+'）与'+drawn[drawn.length-1].card.name+'（'+positions[drawn.length-1]+'）形成了呼应——过去的积累正在为未来的结果铺路。' : '');
@@ -354,25 +391,35 @@ function showResult(question) {
 
 function upgradeTarot(btnEl, n) {
   var price = n === 3 ? 9 : 19;
+  var productId = n === 3 ? 'tarot_3' : 'tarot_5';
   btnEl.disabled = true;
   btnEl.textContent = '跳转支付…';
-  // Save context for paid return
-  try { localStorage.setItem('sy_last_tarot', JSON.stringify({ question: document.getElementById('question').value, topic: currentTopic, spread: n })); } catch(e){}
+  // Save context for paid return: question, topic, spread, AND the already-drawn cards
+  var savedDrawn = null;
+  try { savedDrawn = JSON.parse(localStorage.getItem('sy_tarot_drawn') || 'null'); } catch(e){}
+  try {
+    localStorage.setItem('sy_last_tarot', JSON.stringify({
+      question: document.getElementById('question').value,
+      topic: currentTopic,
+      spread: n,
+      drawn: savedDrawn  // preserve the exact cards shown to user
+    }));
+  } catch(e){}
   fetch('/api/create-checkout', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
-      product: 'bazi_basic',
+      product: productId,
       price: price,
       token: localStorage.getItem('sy_token') || '',
       successUrl: location.origin + '/pages/tarot.html?paid=1&spread=' + n
     })
   }).then(function(r){ return r.json(); }).then(function(data){
     if(data.url) window.location.href = data.url;
-    else { btnEl.disabled = false; btnEl.textContent = n===3?'三张牌阵 · $9':'五芒星牌阵 · $19'; }
+    else { btnEl.disabled = false; btnEl.textContent = n===3?'三张牌阵$9':'五芒星$19'; }
   }).catch(function(){
     btnEl.disabled = false;
-    btnEl.textContent = n===3?'三张牌阵 · $9':'五芒星牌阵 · $19';
+    btnEl.textContent = n===3?'三张牌阵$9':'五芒星$19';
   });
 }
 
@@ -384,20 +431,37 @@ function handlePaidReturn() {
   if (window.history.replaceState) window.history.replaceState({}, '', '/pages/tarot.html');
   var params = new URLSearchParams(location.search);
   var spread = parseInt(params.get('spread') || saved.spread || '3');
-  // Draw random cards for display
-  var pool = CARDS.slice(); var drawn = [];
-  for (var i = 0; i < spread; i++) { var idx = Math.floor(Math.random()*pool.length); drawn.push({card:pool.splice(idx,1)[0], reversed:Math.random()<0.3}); }
   var positions = spread === 3 ? POSITIONS_3 : POSITIONS_5;
+
+  // Reconstruct drawn cards from saved data (same cards user saw before paying)
+  var drawn = [];
+  if (saved.drawn && saved.drawn.length === spread) {
+    drawn = saved.drawn.map(function(d) {
+      // Find matching card from CARDS array to get full object
+      var found = CARDS.filter(function(c){ return c.name === d.name; })[0];
+      return { card: found || d, reversed: d.reversed };
+    });
+  } else {
+    // Fallback: random draw (should rarely happen)
+    var pool = CARDS.slice();
+    for (var i = 0; i < spread; i++) { var idx = Math.floor(Math.random()*pool.length); drawn.push({card:pool.splice(idx,1)[0], reversed:Math.random()<0.3}); }
+  }
+
   var trio = document.getElementById('cardTrio');
   trio.innerHTML = '';
   drawn.forEach(function(d, i) {
-    trio.innerHTML += '<div class="tarot-slot"><div class="tarot-card" style="transform:rotate('+(d.reversed?180:0)+'deg)"><div class="card-glyph">'+d.card.glyph+'</div><div class="card-num">'+d.card.roman+'</div><div class="card-name-sm">'+d.card.name+(d.reversed?' 逆位':'')+'</div></div><div class="slot-label">'+positions[i]+'</div></div>';
+    var c = d.card;
+    trio.innerHTML += '<div class="tarot-slot"><div class="tarot-card" style="transform:rotate('+(d.reversed?180:0)+'deg)"><div class="card-glyph">'+c.glyph+'</div><div class="card-num">'+c.roman+'</div><div class="card-name-sm">'+c.name+(d.reversed?' 逆位':'')+'</div></div><div class="slot-label">'+positions[i]+'</div></div>';
   });
+
   document.getElementById('resultWrap').classList.add('show');
+  document.getElementById('upgradeCta').style.display = 'none';  // hide upgrade CTA for paid
   document.querySelector('.btn-draw').style.display = 'none';
   document.getElementById('interpTitle').textContent = '完整AI解读';
   document.getElementById('interpText').textContent = 'AI 正在为你生成深度牌阵解读，请稍候…';
   document.getElementById('adviceText').textContent = '';
+  document.querySelector('.advice-box').style.display = 'none';  // hide until AI fills it
+
   var cardPayload = drawn.map(function(d,i){ return {name:d.card.name, position:positions[i], reversed:d.reversed}; });
   var token = localStorage.getItem('sy_token') || '';
   fetch('/api/tarot/stream', {
@@ -405,7 +469,8 @@ function handlePaidReturn() {
     headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token},
     body: JSON.stringify({ cards: cardPayload, question: saved.question, topic: saved.topic })
   }).then(function(res) {
-    if (!res.ok) throw new Error('stream error');
+    if (!res.ok) throw new Error('stream error ' + res.status);
+    document.querySelector('.advice-box').style.display = '';  // show once stream starts
     var reader = res.body.getReader();
     var decoder = new TextDecoder();
     var buf = '', accumulated = '';
@@ -424,17 +489,55 @@ function handlePaidReturn() {
           } catch(e) {}
         });
         read();
-      });
+      }).catch(function() { showErrorRetry(); });
     }
     read();
-  }).catch(function() { document.getElementById('interpText').textContent = '网络异常，请刷新重试'; });
+  }).catch(function() { showErrorRetry(); });
+
+  function showErrorRetry() {
+    showToast('网络异常，AI解读加载失败', 'error');
+    document.getElementById('interpText').textContent = '网络异常，请点击下方按钮重新加载。';
+    document.querySelector('.advice-box').style.display = 'none';
+    var retryBtn = document.createElement('button');
+    retryBtn.className = 'btn-redo';
+    retryBtn.style.marginTop = '12px';
+    retryBtn.textContent = '重新加载解读';
+    retryBtn.onclick = function(){ location.reload(); };
+    var section = document.getElementById('interpSection');
+    if (!section.querySelector('.retry-btn-injected')) {
+      retryBtn.classList.add('retry-btn-injected');
+      section.appendChild(retryBtn);
+    }
+  }
 }
 
 function resetDraw() {
   document.getElementById('resultWrap').classList.remove('show');
-  document.querySelector('.btn-draw').style.display = 'block';
+  document.querySelector('.advice-box').style.display = '';  // restore advice-box visibility
+  var btn = document.querySelector('.btn-draw');
+  btn.style.display = 'block';
+  btn.disabled = false;
   document.getElementById('question').value = '';
+  document.getElementById('question').disabled = false;
+  // Reset spread to single (free) and topic to love
+  currentSpread = 1;
+  currentTopic = 'love';
+  document.querySelectorAll('.spread-opt').forEach(function(o){ o.classList.remove('selected'); });
+  var spreadOpts = document.querySelectorAll('.spread-opt');
+  if (spreadOpts[0]) spreadOpts[0].classList.add('selected');
+  document.querySelectorAll('.topic-btn').forEach(function(b){ b.classList.remove('selected'); });
+  var firstTopic = document.querySelector('.topic-btn');
+  if (firstTopic) firstTopic.classList.add('selected');
+  window.scrollTo(0, 0);
 }
+function updateQCounter(textarea) {
+  var counter = document.getElementById('qCounter');
+  if (!counter) return;
+  var len = textarea.value.length;
+  counter.textContent = len + ' / 120';
+  counter.style.color = len > 90 ? 'rgba(201,168,76,0.7)' : 'rgba(155,111,196,0.4)';
+}
+
 function injectDisclaimer(containerId) {
   var c = document.getElementById(containerId);
   if (!c || c.querySelector('.sy-disclaimer')) return;
@@ -456,6 +559,5 @@ function injectDisclaimer(containerId) {
 (function(){var t=localStorage.getItem('sy_theme');if(t==='light'){document.documentElement.classList.add('light-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='☀️';}handlePaidReturn();})();
 function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('light-mode');var l=e.classList.contains('light-mode');if(b)b.textContent=l?'☀️':'🌙';localStorage.setItem('sy_theme',l?'light':'dark');}
 </script>
-<script src="/assets/js/common.js"></script>
 </body>
 </html>

@@ -121,8 +121,8 @@ function mdToHtml(md) {
 async function main() {
   const outDir = path.join(__dirname);
 
-  // ── 报告1: 人生报告（女，1991.10.6 卯时）──
-  const bazi1 = calcBazi(1991, 10, 6, 5, 'female');
+  // ── 报告1: 人生报告（女，1991.10.5 卯时）──
+  const bazi1 = calcBazi(1991, 10, 5, 5, 'female');
   const chart1 = `【精确排盘（算法计算，请严格使用）】
 四柱：${bazi1.fourPillars}　日主：${bazi1.dayMaster}（${bazi1.dayMasterElement}）　身${bazi1.isStrong?'强':'弱'}
 五行：金${bazi1.wuxing['金'].toFixed(1)} 木${bazi1.wuxing['木'].toFixed(1)} 水${bazi1.wuxing['水'].toFixed(1)} 火${bazi1.wuxing['火'].toFixed(1)} 土${bazi1.wuxing['土'].toFixed(1)}
@@ -144,11 +144,11 @@ async function main() {
 ## 🎯 开运锦囊（颜色/方位/水晶/数字，当年用2026年）
 ## 💌 命理师的叮嘱（给这位命主的真心话）`;
 
-  const user1 = `请为我批算八字。出生：1991年10月6日卯时，女性，请全面分析命盘。`;
+  const user1 = `请为我批算八字。出生：1991年10月5日卯时，女性，请全面分析命盘。`;
 
   const text1 = await deepseekFull(sys1, user1, '报告1:人生报告(女)');
   fs.writeFileSync(path.join(outDir, 'api-人生报告-v1.html'),
-    wrapHtml('八字命理报告', text1, `1991年10月6日 · 卯时 · 女 · 己土日主 · ${bazi1.fourPillars}`));
+    wrapHtml('八字命理报告', text1, `1991年10月5日 · 卯时 · 女 · 戊土日主 · ${bazi1.fourPillars}`));
   console.log('✅ 报告1已保存：api-人生报告-v1.html');
 
   // ── 报告2: 人生报告（男，1989.3.12 酉时）──
@@ -165,9 +165,9 @@ async function main() {
     wrapHtml('八字命理报告', text2, `1989年3月12日 · 酉时 · 男 · ${bazi2.dayMaster}${bazi2.dayMasterElement}日主 · ${bazi2.fourPillars}`));
   console.log('✅ 报告2已保存：api-人生报告-v2.html');
 
-  // ── 报告3: 合婚报告（1991.10.6 卯时 女 + 1989.3.12 酉时 男）──
+  // ── 报告3: 合婚报告（1991.10.5 卯时 女 + 1989.3.12 酉时 男）──
   const hChart = `【精确排盘（算法计算）】
-A方（女，1991.10.6 卯时）：四柱 ${bazi1.fourPillars}　日主 ${bazi1.dayMaster}${bazi1.dayMasterElement}　身${bazi1.isStrong?'强':'弱'}
+A方（女，1991.10.5 卯时）：四柱 ${bazi1.fourPillars}　日主 ${bazi1.dayMaster}${bazi1.dayMasterElement}　身${bazi1.isStrong?'强':'弱'}
   五行：金${bazi1.wuxing['金'].toFixed(1)} 木${bazi1.wuxing['木'].toFixed(1)} 水${bazi1.wuxing['水'].toFixed(1)} 火${bazi1.wuxing['火'].toFixed(1)} 土${bazi1.wuxing['土'].toFixed(1)}
   大运：${bazi1.daYun.slice(0,5).map(d=>d.name+'('+d.startAge+'岁)').join(' ')}
 B方（男，1989.3.12 酉时）：四柱 ${bazi2.fourPillars}　日主 ${bazi2.dayMaster}${bazi2.dayMasterElement}　身${bazi2.isStrong?'强':'弱'}
@@ -188,7 +188,7 @@ B方（男，1989.3.12 酉时）：四柱 ${bazi2.fourPillars}　日主 ${bazi2.
 ## 八、婚后注意事项
 ## 九、命理师叮嘱（分别致A方和B方）`;
 
-  const user3 = `A方（女）：1991年10月6日卯时\nB方（男）：1989年3月12日酉时\n请详细合婚分析。`;
+  const user3 = `A方（女）：1991年10月5日卯时\nB方（男）：1989年3月12日酉时\n请详细合婚分析。`;
   const text3 = await deepseekFull(sys3, user3, '报告3:合婚报告v1');
   fs.writeFileSync(path.join(outDir, 'api-合婚报告-v1.html'),
     wrapHtml('合婚配对报告', text3, `A方 ${bazi1.dayMaster}${bazi1.dayMasterElement} · B方 ${bazi2.dayMaster}${bazi2.dayMasterElement} · 合婚综合评分`));
@@ -207,7 +207,7 @@ B方（男，1989.3.12 酉时）：四柱 ${bazi2.fourPillars}　日主 ${bazi2.
 ## 💍 最佳结婚年份
 ## 💌 致这对恋人的一封信`;
 
-  const user4 = `A方（女）：1991年10月6日卯时\nB方（男）：1989年3月12日酉时\n请用感情诗篇的风格分析这段感情。`;
+  const user4 = `A方（女）：1991年10月5日卯时\nB方（男）：1989年3月12日酉时\n请用感情诗篇的风格分析这段感情。`;
   const text4 = await deepseekFull(sys4, user4, '报告4:合婚报告v2(恋爱版)');
   fs.writeFileSync(path.join(outDir, 'api-合婚报告-v2.html'),
     wrapHtml('感情配对报告', text4, `A方 ${bazi1.dayMaster}${bazi1.dayMasterElement} · B方 ${bazi2.dayMaster}${bazi2.dayMasterElement} · 感情诗篇版`));

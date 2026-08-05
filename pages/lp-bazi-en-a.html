@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="stylesheet" href="brand-tokens.css">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#5bbfa0">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
@@ -483,6 +484,10 @@ body::before {
 .footer-links a { font-size: 10px; color: var(--muted); text-decoration: none; }
 .footer-links a:hover { color: var(--jade); }
 </style>
+<!-- TikTok Pixel -->
+<script>!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load('SHENYUAN_TIKTOK_PIXEL_ID');ttq.page()}(window,document,'ttq');</script>
+<!-- Meta/FB Pixel -->
+<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','SHENYUAN_FB_PIXEL_ID');fbq('track','PageView');</script>
 </head>
 <body>
 
@@ -517,10 +522,36 @@ body::before {
   <p class="hero-sub">
     BaZi is a 3,000-year-old system that maps your birth moment to five natural elements — Wood, Fire, Earth, Metal, Water. It doesn't predict the future. It reveals the patterns underneath it.
   </p>
-  <div class="hero-cta-wrap">
-    <button class="btn-primary" id="heroCtaBtn" onclick="window.location.href='/pages/bazi-en.html'">
-      Try It Free — See My Chart
-    </button>
+  <div id="enBirthForm" style="width:100%;max-width:360px;margin:0 auto 10px;background:rgba(22,18,42,0.85);border:1px solid rgba(91,191,160,0.3);border-radius:16px;padding:20px 18px;">
+    <p style="color:#5bbfa0;font-size:11px;letter-spacing:0.2em;text-align:center;margin-bottom:14px;">✦ FREE READING · ENTER YOUR DETAILS ✦</p>
+    <form id="enForm" style="display:flex;flex-direction:column;gap:10px;">
+      <input type="text" id="en-name" placeholder="Your name" required style="background:rgba(255,255,255,0.06);border:1px solid rgba(91,191,160,0.3);border-radius:8px;padding:11px 14px;color:#f0e6d2;font-size:16px;outline:none;">
+      <input type="date" id="en-date" required style="background:rgba(255,255,255,0.06);border:1px solid rgba(91,191,160,0.3);border-radius:8px;padding:11px 14px;color:#f0e6d2;font-size:16px;outline:none;color-scheme:dark;">
+      <select id="en-time" style="background:rgba(22,18,42,0.95);border:1px solid rgba(91,191,160,0.3);border-radius:8px;padding:11px 14px;color:#f0e6d2;font-size:16px;outline:none;">
+        <option value="">Birth time (optional)</option>
+        <option value="0-2">Midnight – 2am</option><option value="2-4">2am – 4am</option>
+        <option value="4-6">4am – 6am</option><option value="6-8">6am – 8am</option>
+        <option value="8-10">8am – 10am</option><option value="10-12">10am – Noon</option>
+        <option value="12-14">Noon – 2pm</option><option value="14-16">2pm – 4pm</option>
+        <option value="16-18">4pm – 6pm</option><option value="18-20">6pm – 8pm</option>
+        <option value="20-22">8pm – 10pm</option><option value="22-24">10pm – Midnight</option>
+      </select>
+      <input type="text" id="en-city" placeholder="Birth city (e.g. New York, London)" required style="background:rgba(255,255,255,0.06);border:1px solid rgba(91,191,160,0.3);border-radius:8px;padding:11px 14px;color:#f0e6d2;font-size:16px;outline:none;">
+      <button type="submit" style="background:linear-gradient(135deg,#2d8a6e,#5bbfa0,#7dd9b8);color:#0d1e17;font-size:14px;font-weight:700;letter-spacing:0.1em;padding:13px;border:none;border-radius:10px;cursor:pointer;">
+        See My Free Chart →
+      </button>
+    </form>
+  </div>
+  <script>
+  document.getElementById('enForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    if(typeof fbq!=='undefined')fbq('track','Lead');
+    if(typeof ttq!=='undefined')ttq.track('SubmitForm');
+    const p=new URLSearchParams({name:document.getElementById('en-name').value,date:document.getElementById('en-date').value,time:document.getElementById('en-time').value,city:document.getElementById('en-city').value,ref:'lp-en-a'});
+    window.location.href='/docs/sample-report-en.html?'+p.toString();
+  });
+  </script>
+  <div class="hero-cta-wrap" style="margin-top:8px;">
     <button class="btn-secondary" onclick="document.getElementById('whatIsBazi').scrollIntoView({behavior:'smooth'})">
       Tell me what BaZi actually is
     </button>
@@ -816,7 +847,7 @@ body::before {
         <li>8 major life cycles (大运)</li>
         <li>Year 2026 forecast</li>
       </ul>
-      <button class="btn-tier primary-tier" onclick="window.location.href='/pages/bazi-en.html'">Get Full Report →</button>
+      <button class="btn-tier primary-tier sy-btn-primary" onclick="window.location.href='/pages/bazi-en.html'">Get Full Report →</button>
     </div>
     <!-- Premium -->
     <div class="price-card" style="animation-delay:0.16s">
@@ -884,6 +915,36 @@ body::before {
   </div>
 </div>
 
+<!-- ── FAQ ── -->
+<section class="section" style="padding:48px 24px;">
+  <div class="section-head">
+    <div class="label-cap">FAQ</div>
+    <h2 class="section-title">Common questions</h2>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:0;max-width:560px;margin:24px auto 0;">
+    <details style="border-bottom:1px solid rgba(91,191,160,0.15);padding:16px 0;">
+      <summary style="font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;letter-spacing:0.01em;">How long does the reading take to generate? <span style="color:var(--jade);font-size:18px;line-height:1;">+</span></summary>
+      <p style="font-size:13px;color:var(--sub);line-height:1.8;margin-top:10px;padding-right:8px;">Under 60 seconds after payment. The AI processes your birth data and generates a personalized full report instantly — no queue, no waiting for a human reader.</p>
+    </details>
+    <details style="border-bottom:1px solid rgba(91,191,160,0.15);padding:16px 0;">
+      <summary style="font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;letter-spacing:0.01em;">I don't know my exact birth time. Does that matter? <span style="color:var(--jade);font-size:18px;line-height:1;">+</span></summary>
+      <p style="font-size:13px;color:var(--sub);line-height:1.8;margin-top:10px;padding-right:8px;">Birth time determines the Hour Pillar (~25% of the chart). Without it, you'll get a 3-pillar reading covering Year, Month, and Day — which is still highly accurate for personality, career patterns, and major life cycles.</p>
+    </details>
+    <details style="border-bottom:1px solid rgba(91,191,160,0.15);padding:16px 0;">
+      <summary style="font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;letter-spacing:0.01em;">How is this different from Western astrology or a birth chart? <span style="color:var(--jade);font-size:18px;line-height:1;">+</span></summary>
+      <p style="font-size:13px;color:var(--sub);line-height:1.8;margin-top:10px;padding-right:8px;">Western astrology maps planetary positions against 12 zodiac signs. BaZi maps your birth moment to five elements (Wood, Fire, Earth, Metal, Water) and analyzes how those elements interact and shift through time. It's more focused on timing, energy cycles, and practical decision-making windows than archetypes.</p>
+    </details>
+    <details style="border-bottom:1px solid rgba(91,191,160,0.15);padding:16px 0;">
+      <summary style="font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;letter-spacing:0.01em;">What's in the full report? <span style="color:var(--jade);font-size:18px;line-height:1;">+</span></summary>
+      <p style="font-size:13px;color:var(--sub);line-height:1.8;margin-top:10px;padding-right:8px;">5,000–9,000 words covering: Day Master analysis (your core energy type), five-element balance, 10-year major cycle (Luck Pillar), year-by-year 2025–2027 forecast, career fit, relationship patterns, and health tendencies — with specific, actionable guidance for each.</p>
+    </details>
+    <details style="padding:16px 0;">
+      <summary style="font-size:14px;font-weight:500;color:var(--ink);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;letter-spacing:0.01em;">Can I get a refund? <span style="color:var(--jade);font-size:18px;line-height:1;">+</span></summary>
+      <p style="font-size:13px;color:var(--sub);line-height:1.8;margin-top:10px;padding-right:8px;">Because the report is digitally generated and delivered instantly upon payment, we don't offer refunds on completed readings. We recommend trying the free preview first — if it resonates, you'll know the full report is worth it.</p>
+    </details>
+  </div>
+</section>
+
 <!-- ── FINAL CTA ── -->
 <section class="final-cta" id="finalCta">
   <div class="jade-line" style="margin-bottom:24px"></div>
@@ -898,6 +959,17 @@ body::before {
     <span>No account needed</span>
     <span class="hero-trust-dot"></span>
     <span>AIGC labeled</span>
+  </div>
+</section>
+
+<!-- ── SHARE SECTION ── -->
+<section style="text-align:center;padding:12px 22px 32px;position:relative;z-index:1">
+  <div style="width:48px;height:2px;background:linear-gradient(90deg,transparent,#5bbfa0,transparent);margin:0 auto 20px"></div>
+  <p style="font-size:11px;letter-spacing:0.16em;text-transform:uppercase;color:#5bbfa0;margin-bottom:8px">Share With Friends</p>
+  <p style="font-size:13px;color:rgba(60,75,65,0.65);margin-bottom:18px;line-height:1.6">Refer a friend and earn — when they buy,<br>you get <strong style="color:#5bbfa0">$3 off</strong> your next reading</p>
+  <div style="display:flex;gap:10px;justify-content:center;max-width:300px;margin:0 auto">
+    <a onclick="shareWA_en()" style="flex:1;background:#25D366;color:#fff;padding:11px 8px;border-radius:12px;font-size:13px;font-weight:700;text-align:center;text-decoration:none;cursor:pointer;display:block">📲 WhatsApp</a>
+    <a onclick="copyLink_en(this)" style="flex:1;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);color:#c9a84c;padding:11px 8px;border-radius:12px;font-size:13px;font-weight:700;text-align:center;text-decoration:none;cursor:pointer;display:block">🔗 Copy link</a>
   </div>
 </section>
 
@@ -925,6 +997,18 @@ body::before {
 </div>
 
 <script>
+function shareWA_en() {
+  var url = 'https://shenyuan.mylumee.cn/pages/lp-bazi-en.html?ref=wa';
+  var text = encodeURIComponent('Just tried this ancient Chinese astrology AI and it described me better than any Myers-Briggs 🔮 Try it free: ' + url);
+  window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
+}
+function copyLink_en(el) {
+  var url = 'https://shenyuan.mylumee.cn/pages/lp-bazi-en-a.html?ref=copy';
+  navigator.clipboard.writeText(url).then(function() {
+    var orig = el.textContent; el.textContent = '✓ Copied!'; el.style.background = 'rgba(201,168,76,0.2)';
+    setTimeout(function(){ el.textContent = orig; el.style.background = 'rgba(201,168,76,0.1)'; }, 2000);
+  });
+}
 // Scroll helpers
 function scrollToCTA() {
   document.getElementById('finalCta').scrollIntoView({ behavior: 'smooth' });

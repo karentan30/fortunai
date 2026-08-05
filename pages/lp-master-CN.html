@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d0618">
+<title>善缘 · 你的命，写在出生那一刻</title>
+<meta name="description" content="3000年八字命理 × AI精算。输入生辰，免费查看你的命盘——财运、感情、事业、大运全解析。">
+<meta property="og:title" content="善缘 · 你的命，写在出生那一刻">
+<meta property="og:description" content="127,483人已通过善缘看清自己的命局。完全免费，30秒生成。">
+<meta property="og:image" content="/og-card.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<!-- TikTok Pixel -->
+<script>!function(w,d,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie"],ttq.setAndDefer=function(t,e){t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(t){for(var e=ttq._i[t]||[],n=0;n<ttq.methods.length;n++)ttq.setAndDefer(e,ttq.methods[n]);return e},ttq.load=function(e,n){var i="https://analytics.tiktok.com/i18n/pixel/events.js";ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=i,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var o=document.createElement("script");o.type="text/javascript",o.async=!0,o.src=i+"?sdkid="+e+"&lib="+t;var a=document.getElementsByTagName("script")[0];a.parentNode.insertBefore(o,a)};ttq.load('SHENYUAN_TIKTOK_PIXEL_ID');ttq.page()}(window,document,'ttq');</script>
+<!-- FB Pixel -->
+<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','SHENYUAN_FB_PIXEL_ID');fbq('track','PageView');</script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#0d0618;
+  --card:#1a1030;
+  --gold:#c9a84c;
+  --gold-l:#e8d08a;
+  --gold-d:#8a6420;
+  --gold-dim:rgba(201,168,76,.25);
+  --text:rgba(240,230,210,.93);
+  --sub:rgba(200,185,155,.58);
+  --jade:#5bbfa0;
+  --r:16px;
+}
+
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:antialiased}
+body{max-width:430px;margin:0 auto;min-height:100vh;overflow-x:hidden;position:relative}
+section{position:relative;z-index:1}
+a{color:inherit;text-decoration:none}
+
+/* ── 星空 ── */
+#starCanvas{position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.65}
+
+/* ── 共用 ── */
+.gold-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto}
+.section-tag{display:inline-block;font-size:10px;letter-spacing:.22em;color:var(--gold);border:1px solid var(--gold-dim);border-radius:20px;padding:3px 12px;margin-bottom:14px}
+.section-title{font-size:20px;font-weight:300;letter-spacing:.15em;line-height:1.5;margin-bottom:10px;text-wrap:balance;word-break:keep-all}
+.section-desc{font-size:11px;color:var(--sub);letter-spacing:.08em;line-height:1.9}
+
+.fade-in{opacity:0;transform:translateY(22px);transition:opacity .65s ease,transform .65s ease}
+.fade-in.visible{opacity:1;transform:translateY(0)}
+
+/* ── 顶栏 ── */
+.topbar{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;z-index:100;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;background:linear-gradient(to bottom,rgba(13,6,24,.95),transparent)}
+.topbar-logo{font-size:15px;letter-spacing:.3em;color:var(--gold);font-weight:400}
+.topbar-cta{font-size:11px;letter-spacing:.15em;color:rgba(14,10,4,.9);background:var(--gold);border:none;border-radius:20px;padding:7px 16px;cursor:pointer;font-family:'Noto Serif SC',serif}
+
+/* ── 英雄区 ── */
+.hero{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:80px 20px 60px;position:relative}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 25%,rgba(201,168,76,.13) 0%,rgba(100,60,200,.07) 45%,transparent 70%);pointer-events:none}
+
+.hero-eyebrow{font-family:'Cormorant Garamond',serif;font-size:12px;letter-spacing:.35em;color:var(--gold);opacity:.75;margin-bottom:22px;font-style:italic}
+.hero-h1{font-size:34px;font-weight:300;letter-spacing:.12em;line-height:1.45;margin-bottom:16px;text-shadow:0 0 50px rgba(201,168,76,.25);text-wrap:balance;word-break:keep-all}
+.hero-h1 em{font-style:normal;color:var(--gold-l)}
+
+.typewriter-wrap{min-height:52px;display:flex;align-items:center;justify-content:center;margin-bottom:28px}
+.typewriter{font-size:13px;color:var(--sub);letter-spacing:.1em;line-height:1.8}
+.tw-cursor{display:inline-block;width:2px;height:1em;background:var(--gold);margin-left:2px;animation:blink .9s step-end infinite;vertical-align:middle}
+@keyframes blink{0%,100%{opacity:.8}50%{opacity:0}}
+
+/* ── 表单区 ── */
+.form-wrap{width:100%;max-width:380px;margin:0 auto 12px;background:rgba(26,16,48,.9);border:1px solid rgba(201,168,76,.3);border-radius:var(--r);padding:22px 20px;backdrop-filter:blur(10px)}
+.form-wrap p.form-label{color:var(--gold);font-size:11px;letter-spacing:.2em;text-align:center;margin-bottom:16px}
+.birth-form{display:flex;flex-direction:column;gap:10px}
+.birth-form input,.birth-form select{background:rgba(255,255,255,.05);border:1px solid rgba(201,168,76,.28);border-radius:10px;padding:12px 14px;color:var(--text);font-family:'Noto Serif SC',serif;font-size:16px;outline:none;transition:border-color .2s;width:100%;color-scheme:dark}
+.birth-form input:focus,.birth-form select:focus{border-color:var(--gold)}
+.birth-form select{background-color:rgba(20,12,38,.95)}
+.btn-submit{background:linear-gradient(135deg,var(--gold-d),var(--gold),var(--gold-l),var(--gold));background-size:200% auto;animation:shimmer 3s linear infinite;color:rgba(10,6,2,.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:600;letter-spacing:.2em;padding:14px;border:none;border-radius:12px;cursor:pointer;width:100%;margin-top:4px;box-shadow:0 4px 24px rgba(201,168,76,.3);transition:transform .15s,box-shadow .15s}
+.btn-submit:hover{transform:translateY(-2px);box-shadow:0 8px 36px rgba(201,168,76,.45)}
+.btn-submit:active{transform:scale(.97)}
+@keyframes shimmer{0%{background-position:0% 50%}100%{background-position:200% 50%}}
+
+.hero-micro{font-size:10px;color:var(--sub);letter-spacing:.12em;margin-top:4px}
+
+.scroll-hint{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:5px;animation:float 2.2s ease-in-out infinite}
+.scroll-hint span{font-size:9px;letter-spacing:.2em;color:rgba(201,168,76,.4)}
+.scroll-arrow{width:14px;height:14px;border-right:1px solid rgba(201,168,76,.38);border-bottom:1px solid rgba(201,168,76,.38);transform:rotate(45deg);margin-top:-3px}
+@keyframes float{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(7px)}}
+
+/* ── 媒体提及条 ── */
+.media-bar{background:rgba(255,255,255,.03);border-top:1px solid rgba(201,168,76,.08);border-bottom:1px solid rgba(201,168,76,.08);padding:14px 20px;text-align:center}
+.media-bar p{font-size:9px;letter-spacing:.2em;color:var(--sub);margin-bottom:10px}
+.media-logos{display:flex;justify-content:center;gap:24px;align-items:center;flex-wrap:wrap}
+.media-logo{font-size:11px;letter-spacing:.1em;color:rgba(200,185,155,.4);font-family:'Cormorant Garamond',serif}
+
+/* ── 数字条 ── */
+.numbers-bar{background:linear-gradient(135deg,rgba(201,168,76,.07),rgba(100,60,200,.05));border-top:1px solid var(--gold-dim);border-bottom:1px solid var(--gold-dim);padding:20px 24px;text-align:center}
+.numbers-row{display:flex;justify-content:center;gap:28px;margin-bottom:10px}
+.num-item{text-align:center}
+.num-val{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--gold-l);display:block;line-height:1;margin-bottom:4px}
+.num-label{font-size:9px;letter-spacing:.14em;color:var(--sub)}
+.num-sub{font-size:11px;color:var(--sub);letter-spacing:.1em}
+.num-sub strong{color:var(--gold)}
+
+/* ── 对比区（八字 vs 星座） ── */
+.compare{padding:44px 20px;text-align:center}
+.compare-table{margin-top:22px;border:1px solid var(--gold-dim);border-radius:var(--r);overflow:hidden}
+.compare-header{display:grid;grid-template-columns:1.2fr 1fr 1fr;background:rgba(201,168,76,.08);border-bottom:1px solid var(--gold-dim)}
+.compare-header div{padding:11px 8px;font-size:10px;letter-spacing:.12em;color:var(--gold);text-align:center}
+.compare-row{display:grid;grid-template-columns:1.2fr 1fr 1fr;border-bottom:1px solid rgba(201,168,76,.06)}
+.compare-row:last-child{border-bottom:none}
+.compare-row div{padding:11px 6px;font-size:11px;color:var(--sub);text-align:center;line-height:1.5;word-break:break-all}
+.compare-row .cr-label{color:var(--text);text-align:left;padding-left:14px}
+.compare-row .cr-good{color:var(--jade)}
+.compare-row .cr-bad{color:rgba(200,185,155,.35)}
+.compare-highlight{color:var(--gold)!important}
+
+/* ── 报告预览 ── */
+.preview{padding:44px 20px}
+.preview-card{background:var(--card);border:1px solid var(--gold-dim);border-radius:var(--r);overflow:hidden}
+.preview-header{padding:14px 18px 12px;border-bottom:1px solid rgba(201,168,76,.1);display:flex;align-items:center;gap:12px}
+.preview-badge{font-size:9px;letter-spacing:.2em;color:var(--gold);border:1px solid var(--gold-dim);padding:3px 8px;border-radius:6px}
+.preview-title-text{font-size:13px;letter-spacing:.1em;flex:1}
+.preview-body{padding:18px;position:relative}
+.preview-chunk{font-size:12px;color:rgba(200,185,155,.8);line-height:2.1;letter-spacing:.04em}
+.preview-chunk .hl{color:var(--gold-l);font-weight:500}
+.preview-chunk .hl2{color:var(--jade)}
+.preview-chunk .hl3{color:rgba(200,140,200,.9)}
+.preview-sep{height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,.15),transparent);margin:14px 0}
+.preview-blur{font-size:11px;color:rgba(200,185,155,.5);line-height:1.9;filter:blur(3px);user-select:none;letter-spacing:.03em}
+.preview-mask{position:absolute;bottom:0;left:0;right:0;height:170px;background:linear-gradient(to bottom,transparent,rgba(26,16,48,.65) 35%,rgba(26,16,48,.97));display:flex;align-items:flex-end;padding-bottom:22px;justify-content:center}
+.mask-inner{text-align:center}
+.mask-label{font-size:10px;color:var(--gold);letter-spacing:.16em;display:block;margin-bottom:10px}
+.mask-btn{font-size:12px;letter-spacing:.18em;color:rgba(10,6,2,.9);background:linear-gradient(135deg,var(--gold-d),var(--gold));border:none;border-radius:8px;padding:10px 26px;cursor:pointer;font-family:'Noto Serif SC',serif}
+
+/* 四柱示意 */
+.sizhu{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 18px 18px}
+.zhu{background:rgba(201,168,76,.05);border:1px solid rgba(201,168,76,.12);border-radius:10px;text-align:center;padding:10px 4px}
+.zhu.dm{border-color:rgba(201,168,76,.4);background:rgba(201,168,76,.09)}
+.zhu-lbl{font-size:8px;color:var(--sub);letter-spacing:.1em;margin-bottom:6px}
+.zhu-tian{font-size:20px;color:var(--gold-l);font-weight:300;margin-bottom:3px}
+.zhu.dm .zhu-tian{color:var(--gold)}
+.zhu-di{font-size:16px;color:var(--jade);font-weight:300}
+.zhu-elem{font-size:7px;color:var(--sub);margin-top:4px}
+
+/* ── 功能卡片 ── */
+.features{padding:44px 20px}
+.feature-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px}
+.feature-card{background:var(--card);border:1px solid rgba(201,168,76,.1);border-radius:14px;padding:18px 14px 16px;transition:border-color .2s,transform .2s}
+.feature-card:hover{border-color:rgba(201,168,76,.28)}
+.feature-card:active{transform:scale(.97)}
+.feature-icon{width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:12px;background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.15)}
+.feature-name{font-size:13px;letter-spacing:.1em;margin-bottom:6px;color:var(--gold-l)}
+.feature-desc{font-size:12px;color:var(--sub);letter-spacing:.04em;line-height:1.9}
+
+/* ── 用户故事 ── */
+.stories{padding:44px 20px}
+.story-cards{display:flex;flex-direction:column;gap:12px;margin-top:24px}
+.story-card{background:var(--card);border:1px solid rgba(201,168,76,.1);border-radius:14px;padding:18px;position:relative;overflow:hidden}
+.story-card::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:linear-gradient(to bottom,var(--gold),transparent)}
+.story-head{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.story-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.2);flex-shrink:0}
+.story-name{font-size:12px;letter-spacing:.1em;color:var(--gold-l);margin-bottom:2px}
+.story-info{font-size:10px;color:var(--sub);letter-spacing:.06em}
+.story-stars{color:var(--gold);font-size:12px;margin-left:auto}
+.story-text{font-size:12px;color:rgba(200,185,155,.8);line-height:1.95;letter-spacing:.04em}
+.story-tag{display:inline-block;margin-top:12px;font-size:9px;letter-spacing:.15em;color:var(--gold);border:1px solid var(--gold-dim);border-radius:12px;padding:2px 10px}
+
+/* ── 定价 ── */
+.pricing{padding:44px 20px}
+.countdown-bar{background:rgba(201,168,76,.1);border:1px solid var(--gold-dim);border-radius:10px;padding:10px 16px;text-align:center;margin-bottom:20px;display:flex;align-items:center;justify-content:center;gap:10px}
+.countdown-label{font-size:10px;letter-spacing:.12em;color:var(--gold)}
+.countdown-timer{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold-l);letter-spacing:.1em;min-width:80px}
+.plan-cards{display:flex;flex-direction:column;gap:10px;margin:20px 0}
+.plan-card{background:var(--card);border:1px solid rgba(201,168,76,.1);border-radius:14px;padding:16px 18px;display:flex;align-items:flex-start;gap:12px;transition:border-color .2s}
+.plan-card.featured{border-color:rgba(201,168,76,.4);background:rgba(201,168,76,.05)}
+.plan-card:hover{border-color:rgba(201,168,76,.3)}
+.plan-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.plan-name{font-size:14px;letter-spacing:.1em;margin-bottom:4px;color:var(--gold-l)}
+.plan-card.featured .plan-name::after{content:'推荐';font-size:9px;letter-spacing:.1em;color:rgba(10,6,2,.9);background:var(--gold);border-radius:8px;padding:1px 8px;margin-left:8px;vertical-align:middle}
+.plan-desc{font-size:11px;color:var(--sub);line-height:1.8;letter-spacing:.04em;margin-bottom:8px}
+.plan-tags{display:flex;flex-wrap:wrap;gap:6px}
+.plan-tag{font-size:9px;letter-spacing:.12em;color:var(--gold);border:1px solid var(--gold-dim);border-radius:8px;padding:2px 8px}
+.plan-price-wrap{text-align:right;flex-shrink:0;margin-left:auto}
+.plan-price{font-family:'Cormorant Garamond',serif;font-size:26px;color:var(--gold-l);display:block;line-height:1}
+.plan-price-old{font-size:11px;color:var(--sub);text-decoration:line-through;display:block;margin-bottom:2px}
+.plan-card.free .plan-price{color:var(--jade)}
+.btn-pricing{display:block;width:100%;padding:15px;background:linear-gradient(135deg,var(--gold-d),var(--gold),var(--gold-l),var(--gold));background-size:200% auto;animation:shimmer 3s linear infinite;color:rgba(10,6,2,.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:600;letter-spacing:.2em;border:none;border-radius:12px;cursor:pointer;text-align:center;box-shadow:0 4px 24px rgba(201,168,76,.3)}
+.btn-pricing:hover{box-shadow:0 8px 36px rgba(201,168,76,.45);transform:translateY(-1px)}
+
+/* ── FAQ ── */
+.faq{padding:40px 20px}
+.faq-list{margin-top:20px}
+.faq-item{border-bottom:1px solid rgba(201,168,76,.1)}
+.faq-q{width:100%;background:none;border:none;color:var(--text);font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:.08em;padding:16px 0;display:flex;justify-content:space-between;align-items:center;cursor:pointer;text-align:left;gap:12px}
+.faq-arrow{color:var(--gold);font-size:14px;flex-shrink:0;transition:transform .25s}
+.faq-arrow.open{transform:rotate(180deg)}
+.faq-a{display:none;font-size:12px;color:var(--sub);line-height:1.9;padding-bottom:16px;letter-spacing:.04em}
+.faq-a.open{display:block}
+
+/* ── 分享钩子 ── */
+.share-hook{background:linear-gradient(135deg,rgba(201,168,76,.08),rgba(100,60,200,.06));border:1px solid var(--gold-dim);border-radius:var(--r);padding:28px 20px;margin:0 20px 20px;text-align:center}
+.share-hook h3{font-size:16px;font-weight:300;letter-spacing:.12em;color:var(--gold);margin-bottom:8px}
+.share-hook p{font-size:11px;color:var(--sub);letter-spacing:.06em;margin-bottom:18px;line-height:1.8}
+.btn-share{background:rgba(201,168,76,.15);border:1px solid var(--gold);color:var(--gold);font-family:'Noto Serif SC',serif;font-size:12px;letter-spacing:.15em;padding:11px 28px;border-radius:30px;cursor:pointer}
+.btn-share:hover{background:rgba(201,168,76,.25)}
+
+/* ── 底部CTA ── */
+.footer-cta{padding:50px 20px 40px;text-align:center;position:relative;z-index:1}
+.footer-hook{font-size:24px;font-weight:300;letter-spacing:.12em;line-height:1.6;margin-bottom:14px;text-wrap:balance;word-break:keep-all}
+.footer-hook em{font-style:normal;color:var(--gold-l)}
+.footer-sub{font-size:12px;color:var(--sub);letter-spacing:.08em;line-height:1.9;margin-bottom:28px}
+
+/* ── 免责 ── */
+.disclaimer{padding:20px;text-align:center;border-top:1px solid rgba(201,168,76,.08)}
+.aigc-tag{display:inline-flex;align-items:center;gap:8px;margin-bottom:12px}
+.aigc-dot{width:6px;height:6px;border-radius:50%;background:var(--gold);opacity:.6;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+.aigc-text{font-size:9px;letter-spacing:.2em;color:var(--sub)}
+.disclaimer-text{font-size:9px;color:rgba(200,185,155,.35);letter-spacing:.06em;line-height:1.9}
+
+/* ── 悬浮底栏 ── */
+.sticky-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(100%);width:100%;max-width:430px;background:rgba(13,6,24,.97);border-top:1px solid var(--gold-dim);padding:12px 20px 18px;z-index:200;transition:transform .3s ease;display:flex;align-items:center;gap:12px}
+.sticky-bar.show{transform:translateX(-50%) translateY(0)}
+.sticky-price{font-size:12px;color:var(--sub);letter-spacing:.06em}
+.sticky-price strong{color:var(--gold-l);font-size:18px;font-family:'Cormorant Garamond',serif}
+.sticky-btn{flex:1;padding:12px;background:linear-gradient(135deg,var(--gold-d),var(--gold));color:rgba(10,6,2,.9);font-family:'Noto Serif SC',serif;font-size:13px;font-weight:600;letter-spacing:.18em;border:none;border-radius:10px;cursor:pointer}
+</style>
+</head>
+<body>
+
+<canvas id="starCanvas"></canvas>
+
+<!-- 顶栏 -->
+<div class="topbar">
+  <span class="topbar-logo">善缘 · ShenYuan</span>
+  <button class="topbar-cta" onclick="scrollToForm()">免费测算</button>
+</div>
+
+<!-- ══════════════ 1. 英雄区 ══════════════ -->
+<section class="hero">
+  <p class="hero-eyebrow">BAZI · DESTINY · AI INSIGHTS</p>
+  <h1 class="hero-h1">你的命，<br>写在<em>出生那一刻</em></h1>
+
+  <div class="typewriter-wrap">
+    <p class="typewriter" id="twEl"></p><span class="tw-cursor"></span>
+  </div>
+
+  <div class="gold-line" style="margin-bottom:28px"></div>
+
+  <!-- 生辰表单 -->
+  <div class="form-wrap" id="birthFormWrap">
+    <p class="form-label">✦ 输入生辰，免费预览命盘 ✦</p>
+    <form class="birth-form" id="birthForm">
+      <input type="text" id="f-name" placeholder="你的姓名" required>
+      <div style="display:grid;grid-template-columns:2fr 1fr 1fr;gap:8px" id="dateFields">
+        <select id="f-year" required style="background:rgba(20,12,38,.95);border:1px solid rgba(201,168,76,.28);border-radius:10px;padding:12px 10px;color:var(--text);font-family:'Noto Serif SC',serif;font-size:16px;outline:none;width:100%;color-scheme:dark"></select>
+        <select id="f-month" required style="background:rgba(20,12,38,.95);border:1px solid rgba(201,168,76,.28);border-radius:10px;padding:12px 6px;color:var(--text);font-family:'Noto Serif SC',serif;font-size:16px;outline:none;width:100%;color-scheme:dark"></select>
+        <select id="f-day" required style="background:rgba(20,12,38,.95);border:1px solid rgba(201,168,76,.28);border-radius:10px;padding:12px 6px;color:var(--text);font-family:'Noto Serif SC',serif;font-size:16px;outline:none;width:100%;color-scheme:dark"></select>
+      </div>
+      <input type="hidden" id="f-date">
+      <select id="f-time">
+        <option value="">出生时辰（可选）</option>
+        <option value="子时">子时 23:00–01:00</option>
+        <option value="丑时">丑时 01:00–03:00</option>
+        <option value="寅时">寅时 03:00–05:00</option>
+        <option value="卯时">卯时 05:00–07:00</option>
+        <option value="辰时">辰时 07:00–09:00</option>
+        <option value="巳时">巳时 09:00–11:00</option>
+        <option value="午时">午时 11:00–13:00</option>
+        <option value="未时">未时 13:00–15:00</option>
+        <option value="申时">申时 15:00–17:00</option>
+        <option value="酉时">酉时 17:00–19:00</option>
+        <option value="戌时">戌时 19:00–21:00</option>
+        <option value="亥时">亥时 21:00–23:00</option>
+      </select>
+      <input type="text" id="f-city" placeholder="出生城市（如：北京、广州）" required>
+      <button type="submit" class="btn-submit">免费查看我的命盘 →</button>
+    </form>
+  </div>
+  <p class="hero-micro">完全免费 · 无需注册 · 30秒生成 · 逾9000字报告</p>
+
+  <div class="scroll-hint">
+    <span>向下探索</span>
+    <div class="scroll-arrow"></div>
+  </div>
+</section>
+
+<!-- ══════════════ 媒体提及 ══════════════ -->
+<div class="media-bar fade-in">
+  <p>已在各平台自然传播</p>
+  <div class="media-logos">
+    <span class="media-logo">小红书 · 10万+笔记</span>
+    <span class="media-logo">抖音 · 5000万+播放</span>
+    <span class="media-logo">知乎命理区</span>
+    <span class="media-logo">微博占卜话题</span>
+  </div>
+</div>
+
+<!-- ══════════════ 数字条 ══════════════ -->
+<div class="numbers-bar fade-in">
+  <div class="numbers-row">
+    <div class="num-item">
+      <span class="num-val" id="userCount">0</span>
+      <span class="num-label">人已测算</span>
+    </div>
+    <div class="num-item">
+      <span class="num-val">9,000+</span>
+      <span class="num-label">字深度报告</span>
+    </div>
+    <div class="num-item">
+      <span class="num-val">92%</span>
+      <span class="num-label">用户满意度</span>
+    </div>
+  </div>
+  <p class="num-sub">已有 <strong>127,483 人</strong> 通过善缘找到自己命局的答案</p>
+</div>
+
+<!-- ══════════════ 对比：八字 vs 星座 ══════════════ -->
+<section class="compare fade-in">
+  <div style="text-align:center">
+    <span class="section-tag">为什么选择八字</span>
+    <h2 class="section-title">比星座准10倍<br>因为它算的是你这个人</h2>
+    <p class="section-desc">星座只看出生月份，12种结果给80亿人<br>八字精算年月日时，每个人的命盘独一无二</p>
+  </div>
+  <div class="compare-table">
+    <div class="compare-header">
+      <div>维度</div>
+      <div style="color:var(--gold)">✦ 四柱八字</div>
+      <div>☽ 西方星座</div>
+    </div>
+    <div class="compare-row">
+      <div class="cr-label">精准度</div>
+      <div class="cr-good compare-highlight">年月日时 × 4维</div>
+      <div class="cr-bad">仅出生月份</div>
+    </div>
+    <div class="compare-row">
+      <div class="cr-label">独特组合</div>
+      <div class="cr-good compare-highlight">数十亿种命盘</div>
+      <div class="cr-bad">仅12种</div>
+    </div>
+    <div class="compare-row">
+      <div class="cr-label">历史</div>
+      <div class="cr-good compare-highlight">3000年验证</div>
+      <div class="cr-bad">2000年</div>
+    </div>
+    <div class="compare-row">
+      <div class="cr-label">流年预测</div>
+      <div class="cr-good compare-highlight">精确到月份</div>
+      <div class="cr-bad">年度笼统</div>
+    </div>
+    <div class="compare-row">
+      <div class="cr-label">出生地影响</div>
+      <div class="cr-good compare-highlight">✓ 含时区修正</div>
+      <div class="cr-bad">✗ 不考虑</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 报告预览 ══════════════ -->
+<section class="preview fade-in">
+  <div style="text-align:center;margin-bottom:24px">
+    <span class="section-tag">报告预览</span>
+    <h2 class="section-title">你的答案，藏在命盘里</h2>
+    <p class="section-desc">以下为真实报告片段示意<br>解读深度超越市面九成命理工具</p>
+  </div>
+
+  <div class="sizhu">
+    <div class="zhu"><div class="zhu-lbl">年柱</div><div class="zhu-tian">甲</div><div class="zhu-di">子</div><div class="zhu-elem">木·水</div></div>
+    <div class="zhu"><div class="zhu-lbl">月柱</div><div class="zhu-tian">庚</div><div class="zhu-di">戌</div><div class="zhu-elem">金·土</div></div>
+    <div class="zhu dm"><div class="zhu-lbl">日柱（我）</div><div class="zhu-tian">甲</div><div class="zhu-di">午</div><div class="zhu-elem">木·火</div></div>
+    <div class="zhu"><div class="zhu-lbl">时柱</div><div class="zhu-tian">壬</div><div class="zhu-di">申</div><div class="zhu-elem">水·金</div></div>
+  </div>
+
+  <div class="preview-card">
+    <div class="preview-header">
+      <span class="preview-badge">善缘 · 深度解析</span>
+      <span class="preview-title-text">五行格局 · 日主分析</span>
+    </div>
+    <div class="preview-body">
+      <div class="preview-chunk">
+        <span class="hl">甲木日主</span>，生于<span class="hl2">秋月</span>，时值<span class="hl">庚金</span>司令，金旺克木，日主力弱，喜<span class="hl2">水</span>生扶、<span class="hl3">火</span>泄秀。命局中壬水透干，食神格局显现，主聪慧好学、善言辞、有艺术感知力……
+        <br><br>
+        流年<span class="hl">2025乙巳年</span>，巳火入局，木火通明。此年为<span class="hl3">事业转变之年</span>，七月后大运与流年形成拱局，有贵人相助，适合…
+      </div>
+      <div class="preview-sep"></div>
+      <div class="preview-blur">感情宫位分析：日支午火为伤官，主情感丰沛却不易安于平淡。2025年遇正财透出，感情有新缘起伏……财运格局：正偏财混杂，宜开源而非节流，适合创业、自媒体等非固定收入领域……大运流年互动：乙巳大运入局，木火之气渐旺，35岁后运势显著好转……</div>
+      <div class="preview-mask">
+        <div class="mask-inner">
+          <span class="mask-label">免费生成 · 满意再付费解锁</span>
+          <button class="mask-btn" onclick="document.querySelector('.pricing').scrollIntoView({behavior:'smooth',block:'start'})">查看解锁方式 →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 功能清单 ══════════════ -->
+<section class="features fade-in">
+  <div style="text-align:center">
+    <span class="section-tag">六大维度</span>
+    <h2 class="section-title">深度剖析，不止算命</h2>
+    <p class="section-desc">每个维度都有具体建议，不是玄学<br>是你看得懂的人生参考</p>
+  </div>
+  <div class="feature-grid">
+    <div class="feature-card"><div class="feature-icon">☯</div><div class="feature-name">五行格局</div><div class="feature-desc">日主强弱、喜用神、五行平衡分析，看清底层性格底色</div></div>
+    <div class="feature-card"><div class="feature-icon">🌊</div><div class="feature-name">大运流年</div><div class="feature-desc">未来十年大运走向，逐年流年吉凶，知道何时发力最有效</div></div>
+    <div class="feature-card"><div class="feature-icon">💰</div><div class="feature-name">财运分析</div><div class="feature-desc">正财偏财格局，财运旺衰时间段，最适合你的赚钱方式</div></div>
+    <div class="feature-card"><div class="feature-icon">🌸</div><div class="feature-name">感情宫位</div><div class="feature-desc">桃花格局、婚姻时机、感情模式，为何反复遇到相似的人</div></div>
+    <div class="feature-card"><div class="feature-icon">⚡</div><div class="feature-name">事业适配</div><div class="feature-desc">最适合你的行业、职位类型、贵人方向，避开天克地冲</div></div>
+    <div class="feature-card"><div class="feature-icon">🌿</div><div class="feature-name">健康提示</div><div class="feature-desc">命局对应的体质偏向，需注意的器官与调养方向</div></div>
+  </div>
+</section>
+
+<!-- ══════════════ 用户故事 ══════════════ -->
+<section class="stories fade-in">
+  <div style="text-align:center;margin-bottom:4px">
+    <span class="section-tag">真实反馈</span>
+    <h2 class="section-title">他们在命盘里<br>找到了答案</h2>
+  </div>
+  <div class="story-cards">
+    <div class="story-card">
+      <div class="story-head">
+        <div class="story-avatar">🌙</div>
+        <div><div class="story-name">沈 · 职场人 · 29岁</div><div class="story-info">北京 · 互联网行业 · 2025.03</div></div>
+        <div class="story-stars">★★★★★</div>
+      </div>
+      <p class="story-text">在决定辞职前算了一次，看到今年是换工作的大运，七煞透干利于破旧立新。犹豫了半年的事，算完当天就交了离职信。走了之后确实遇到了更好的机会，薪资涨了40%。</p>
+      <span class="story-tag">事业转机</span>
+    </div>
+    <div class="story-card">
+      <div class="story-head">
+        <div class="story-avatar">🌺</div>
+        <div><div class="story-name">林 · 研究生 · 26岁</div><div class="story-info">广州 · 合婚分析 · 2025.01</div></div>
+        <div class="story-stars">★★★★★</div>
+      </div>
+      <p class="story-text">合婚算出来我们命局有冲，但报告说"冲而不破，反而互补"。了解了对方弱点在哪里、我该怎么配合，反而相处比以前稳多了。不是叫你分手，是叫你更懂他。</p>
+      <span class="story-tag">感情合婚</span>
+    </div>
+    <div class="story-card">
+      <div class="story-head">
+        <div class="story-avatar">⭐</div>
+        <div><div class="story-name">陈 · 自由职业者 · 33岁</div><div class="story-info">上海 · 健康调理 · 2024.11</div></div>
+        <div class="story-stars">★★★★<span style="color:rgba(200,185,155,.3)">★</span></div>
+      </div>
+      <p class="story-text">一直睡不好，失眠两年了。算完才知道是金水旺的体质，喜用神是火，所以怕冷、易焦虑。按报告建议调了作息和饮食，大概一个月慢慢好多了。报告内容很准，要是开运产品选项再多一些就更好了。</p>
+      <span class="story-tag">健康调理</span>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 定价 ══════════════ -->
+<section class="pricing fade-in">
+  <div style="text-align:center;margin-bottom:4px">
+    <span class="section-tag">解锁方式</span>
+    <h2 class="section-title">免费看前两章，深度报告按需解锁</h2>
+    <p class="section-desc">无需注册 · 30秒生成 · 满意再付费</p>
+  </div>
+
+  <div class="countdown-bar">
+    <span class="countdown-label">⏰ 限时优惠，剩余</span>
+    <span class="countdown-timer" id="countdown">23:47:12</span>
+  </div>
+
+  <div class="plan-cards">
+    <div class="plan-card free">
+      <div class="plan-icon">🌱</div>
+      <div style="flex:1">
+        <div class="plan-name">第1-2章 · 免费</div>
+        <div class="plan-desc">四柱命盘 + 日主性格分析，了解你是什么人</div>
+        <div class="plan-tags"><span class="plan-tag">四柱排盘</span><span class="plan-tag">五行图</span><span class="plan-tag">日主解析</span></div>
+      </div>
+      <div class="plan-price-wrap"><span class="plan-price">免费</span></div>
+    </div>
+    <div class="plan-card featured">
+      <div class="plan-icon">✨</div>
+      <div style="flex:1">
+        <div class="plan-name">第3-6章 · 深度解析</div>
+        <div class="plan-desc">感情运 · 财运密码 · 事业峰值 · 健康体质</div>
+        <div class="plan-tags"><span class="plan-tag">财运格局</span><span class="plan-tag">感情宫位</span><span class="plan-tag">事业适配</span><span class="plan-tag">健康提示</span></div>
+      </div>
+      <div class="plan-price-wrap">
+        <span class="plan-price-old">¥59</span>
+        <span class="plan-price">¥19.9</span>
+      </div>
+    </div>
+    <div class="plan-card">
+      <div class="plan-icon">🌌</div>
+      <div style="flex:1">
+        <div class="plan-name">第7-10章 · 大运流年</div>
+        <div class="plan-desc">十年大运走势 + 年度流年 + 2026具体预测 + 开运建议</div>
+        <div class="plan-tags"><span class="plan-tag">大运十年</span><span class="plan-tag">流年分析</span><span class="plan-tag">开运建议</span></div>
+      </div>
+      <div class="plan-price-wrap">
+        <span class="plan-price-old">¥99</span>
+        <span class="plan-price">¥39.9</span>
+        <span style="font-size:9px;color:var(--sub);display:block">（单独购买）</span>
+      </div>
+    </div>
+    <div class="plan-card" style="border-color:rgba(201,168,76,0.4)">
+      <div class="plan-icon">👑</div>
+      <div style="flex:1">
+        <div class="plan-name">年度订阅</div>
+        <div class="plan-desc">全部10章 + 每季流年更新 + 每月开运日历 + 优先客服</div>
+        <div class="plan-tags"><span class="plan-tag">全部章节</span><span class="plan-tag">季度更新</span><span class="plan-tag">开运日历</span><span class="plan-tag">优先服务</span></div>
+      </div>
+      <div class="plan-price-wrap">
+        <span class="plan-price-old">¥299</span>
+        <span class="plan-price">¥99/年</span>
+        <span style="font-size:10px;color:#a09080;display:block">每天不到3毛钱</span>
+      </div>
+    </div>
+  </div>
+
+  <button class="btn-pricing" onclick="scrollToForm()">免费先生成我的命盘 →</button>
+
+  <div style="text-align:center;margin-top:14px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
+    <span style="font-size:11px;color:rgba(200,185,155,.45);letter-spacing:.06em">付款方式</span>
+    <span style="font-size:12px;background:rgba(7,193,96,.15);border:1px solid rgba(7,193,96,.3);color:#07c160;border-radius:6px;padding:3px 10px;letter-spacing:.06em">💚 微信支付</span>
+    <span style="font-size:12px;background:rgba(0,160,233,.12);border:1px solid rgba(0,160,233,.28);color:#00a0e9;border-radius:6px;padding:3px 10px;letter-spacing:.06em">🔵 支付宝</span>
+    <span style="font-size:11px;color:rgba(200,185,155,.35);letter-spacing:.04em">安全加密 🔒</span>
+  </div>
+
+  <div style="text-align:center;padding:20px 0 4px;border-top:1px solid rgba(201,168,76,0.15);margin-top:20px;">
+    <p style="color:#a09080;font-size:13px;">✨ 购买报告后解锁专属开运产品推荐（踩小人袜 · 貔貅 · 黑曜石手链）</p>
+  </div>
+</section>
+
+<!-- ══════════════ FAQ ══════════════ -->
+<section class="faq fade-in">
+  <div style="text-align:center">
+    <span class="section-tag">常见问题</span>
+    <h2 class="section-title">你可能想知道的</h2>
+  </div>
+  <div class="faq-list">
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">报告多快能拿到？<span class="faq-arrow">▾</span></button>
+      <div class="faq-a">付款后立即生成，通常在30秒内完成。无需等待，无需人工审核。</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">不知道出生时辰可以算吗？<span class="faq-arrow">▾</span></button>
+      <div class="faq-a">可以。不填时辰会生成三柱命盘（年月日），大部分分析仍然准确，只是时柱相关的分析（健康体质、晚年运势）会略有缺失。</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">为什么需要填出生城市？<span class="faq-arrow">▾</span></button>
+      <div class="faq-a">经度不同导致真太阳时不同，最大差异可达2小时。填入城市让善缘自动修正时区偏差，确保你的命盘精准。例如同样是早上8点，乌鲁木齐和上海的真太阳时相差2小时以上。</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">和其他算命工具有什么区别？<span class="faq-arrow">▾</span></button>
+      <div class="faq-a">善缘用精确的四柱排盘算法（非泛星座），结合AI对命理体系的深度理解生成个性化解读。不套模板，每一份都是针对你的八字专属分析，9000字报告远超市面同类工具。</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">报告会有多长？有多详细？<span class="faq-arrow">▾</span></button>
+      <div class="faq-a">完整报告约8000-9000字，涵盖五行格局、大运流年、财运、感情、事业、健康六大维度，每项都有具体建议，不是泛泛而谈。深度版还包含未来十年逐年大运分析。</div>
+    </div>
+    <div class="faq-item">
+      <button class="faq-q" onclick="toggleFaq(this)">这是迷信吗？<span class="faq-arrow">▾</span></button>
+      <div class="faq-a">八字命理是3000年积累的统计学系统，不是神灵预测。就像MBTI帮你了解性格，八字帮你了解自己的时运规律和天赋方向。本报告仅供参考，最终决策权在你自己。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ 分享钩子 ══════════════ -->
+<div class="share-hook fade-in">
+  <h3>🎁 让好友也来看看</h3>
+  <p>分享你的命盘给朋友，对方测算后<br>你们双方各解锁一章额外内容</p>
+  <button class="btn-share" onclick="shareReport()">📤 分享善缘给好友</button>
+</div>
+
+<!-- ══════════════ 底部 CTA ══════════════ -->
+<section class="footer-cta fade-in">
+  <div class="gold-line" style="margin-bottom:30px"></div>
+  <p class="footer-hook">命运不是终点，<br>是<em>看清自己</em>的起点</p>
+  <p class="footer-sub">不是迷信，是换一个角度看自己<br>看清格局，才能用对力气</p>
+  <button class="btn-pricing" onclick="scrollToForm()" style="max-width:320px;display:block;margin:0 auto">现在生成我的命盘 →</button>
+</section>
+
+<!-- ══════════════ 免责 ══════════════ -->
+<div class="disclaimer">
+  <div class="aigc-tag"><div class="aigc-dot"></div><span class="aigc-text">AIGC · 由人工智能生成 · 善缘 AI 命理</span><div class="aigc-dot"></div></div>
+  <p class="disclaimer-text">本报告由 AI 依据传统命理理论生成，仅供参考，不构成医疗、法律、投资建议。<br>命理结果受信息准确性影响，请以实际情况为准。善缘尊重个人自主决策权。<br>© 2025 善缘 ShenYuan · 善缘明理研究团队</p>
+</div>
+
+<!-- 悬浮底栏 -->
+<div class="sticky-bar" id="stickyBar">
+  <div class="sticky-price">解锁第3-6章 <strong>¥19.9</strong><br><span style="font-size:9px;color:var(--sub)">原价¥59，限时</span></div>
+  <button class="sticky-btn" onclick="scrollToForm()">免费先测算 →</button>
+</div>
+
+<script>
+// ── 出生日期三选框（避免iOS长滚动）──
+(function(){
+  const yEl=document.getElementById('f-year');
+  const mEl=document.getElementById('f-month');
+  const dEl=document.getElementById('f-day');
+  const yOpt=document.createElement('option');yOpt.value='';yOpt.textContent='出生年份';yEl.appendChild(yOpt);
+  for(let y=2010;y>=1940;y--){const o=document.createElement('option');o.value=y;o.textContent=y+'年';yEl.appendChild(o);}
+  const mOpt=document.createElement('option');mOpt.value='';mOpt.textContent='月';mEl.appendChild(mOpt);
+  for(let m=1;m<=12;m++){const o=document.createElement('option');o.value=String(m).padStart(2,'0');o.textContent=m+'月';mEl.appendChild(o);}
+  function updateDays(){
+    const y=parseInt(yEl.value)||2000,mo=parseInt(mEl.value)||1;
+    const days=new Date(y,mo,0).getDate();
+    const prev=dEl.value;
+    dEl.innerHTML='';
+    const dOpt=document.createElement('option');dOpt.value='';dOpt.textContent='日';dEl.appendChild(dOpt);
+    for(let d=1;d<=days;d++){const o=document.createElement('option');o.value=String(d).padStart(2,'0');o.textContent=d+'日';dEl.appendChild(o);}
+    if(prev&&parseInt(prev)<=days) dEl.value=prev;
+  }
+  updateDays();
+  yEl.addEventListener('change',updateDays);
+  mEl.addEventListener('change',updateDays);
+})();
+
+// ── 表单提交（含加载态）──
+document.getElementById('birthForm').addEventListener('submit', function(e) {
+  e.preventDefault();
+  if(typeof fbq!=='undefined') fbq('track','Lead');
+  if(typeof ttq!=='undefined') ttq.track('SubmitForm');
+  const btn = this.querySelector('.btn-submit');
+  // 组合日期
+  const y=document.getElementById('f-year').value;
+  const mo=document.getElementById('f-month').value;
+  const d=document.getElementById('f-day').value;
+  if(!y||!mo||!d){alert('请选择完整的出生年月日');return;}
+  document.getElementById('f-date').value=`${y}-${mo}-${d}`;
+  btn.disabled = true;
+  btn.textContent = '⏳ 正在排盘，请稍候…';
+  const p = new URLSearchParams({
+    name: document.getElementById('f-name').value,
+    date: document.getElementById('f-date').value,
+    time: document.getElementById('f-time').value,
+    city: document.getElementById('f-city').value,
+    ref: 'lp-master-cn'
+  });
+  setTimeout(()=>{
+    window.location.href = '../docs/sample-report-cn.html?' + p.toString();
+  }, 800);
+});
+
+// ── 滚动到表单 ──
+function scrollToForm() {
+  document.getElementById('birthFormWrap').scrollIntoView({behavior:'smooth',block:'center'});
+  setTimeout(()=>document.getElementById('f-name').focus(), 600);
+}
+
+// ── FAQ 折叠 ──
+function toggleFaq(btn) {
+  const ans = btn.nextElementSibling;
+  const arr = btn.querySelector('.faq-arrow');
+  const isOpen = ans.classList.contains('open');
+  document.querySelectorAll('.faq-a.open').forEach(a=>a.classList.remove('open'));
+  document.querySelectorAll('.faq-arrow.open').forEach(a=>a.classList.remove('open'));
+  if(!isOpen){ans.classList.add('open');arr.classList.add('open');}
+}
+
+// ── 倒计时（localStorage持久化，刷新不重置）──
+(function(){
+  const el = document.getElementById('countdown');
+  const KEY = 'sy_cd_end';
+  const DURATION = 24*3600*1000; // 24小时
+  let endTs = parseInt(localStorage.getItem(KEY)||'0',10);
+  if(!endTs || endTs < Date.now()){
+    endTs = Date.now() + DURATION;
+    localStorage.setItem(KEY, endTs);
+  }
+  setInterval(()=>{
+    let remaining = Math.max(0, Math.floor((endTs - Date.now())/1000));
+    if(remaining===0){endTs=Date.now()+DURATION;localStorage.setItem(KEY,endTs);}
+    const h=Math.floor(remaining/3600),m=Math.floor((remaining%3600)/60),s=remaining%60;
+    el.textContent=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  },1000);
+})();
+
+// ── 用户数字动画 ──
+(function(){
+  const el = document.getElementById('userCount');
+  const target = 127483;
+  let current = 120000;
+  const step = ()=>{
+    current += Math.floor(Math.random()*150+80);
+    if(current>=target) current=target;
+    el.textContent = current.toLocaleString();
+    if(current<target) setTimeout(step,30);
+  };
+  const io = new IntersectionObserver(entries=>{
+    if(entries[0].isIntersecting){step();io.disconnect();}
+  });
+  io.observe(el);
+})();
+
+// ── 悬浮底栏 ──
+(function(){
+  const bar = document.getElementById('stickyBar');
+  window.addEventListener('scroll',()=>{
+    const s=window.scrollY, h=document.body.scrollHeight-window.innerHeight;
+    if(s>400&&s<h-100) bar.classList.add('show');
+    else bar.classList.remove('show');
+  });
+})();
+
+// ── 分享 ──
+function shareReport() {
+  const uid = Math.random().toString(36).substr(2,8);
+  const url = `${window.location.origin}/pages/lp-master-CN.html?ref=${uid}`;
+  if(navigator.share){
+    navigator.share({title:'善缘 · 八字命盘',text:'AI精算了我的八字命盘，准到起鸡皮疙瘩！你也来测测',url});
+  } else {
+    navigator.clipboard.writeText(url).then(()=>alert('链接已复制！'));
+  }
+  if(typeof ttq!=='undefined') ttq.track('Share');
+}
+
+// ── 打字机 ──
+(function(){
+  const lines=['感情为什么总是不顺？','你的财运高峰，在哪一年？','为什么努力工作却原地踏步？','下一个人生转折点，什么时候来？','你天生适合做什么？'];
+  const el=document.getElementById('twEl');
+  let li=0,ci=0,del=false,pause=0;
+  function type(){
+    const cur=lines[li];
+    if(pause>0){pause--;setTimeout(type,80);return;}
+    if(!del){ci++;el.textContent=cur.slice(0,ci);if(ci>=cur.length){del=true;pause=30;}}
+    else{ci--;el.textContent=cur.slice(0,ci);if(ci<=0){del=false;li=(li+1)%lines.length;pause=8;}}
+    setTimeout(type,del?38:90);
+  }
+  type();
+})();
+
+// ── 星空 ──
+(function(){
+  const canvas=document.getElementById('starCanvas');
+  const ctx=canvas.getContext('2d');
+  let stars=[],W,H;
+  function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+  function init(){
+    stars=[];
+    const n=Math.min(150,Math.floor(W*H/4000));
+    for(let i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.3+.2,a:Math.random()*.6+.1,sp:Math.random()*.3+.05,dr:(Math.random()-.5)*.18,ts:Math.random()*.018+.004,td:1});
+  }
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    for(const s of stars){
+      s.y-=s.sp;s.x+=s.dr;s.a+=s.ts*s.td;
+      if(s.a>.85||s.a<.05) s.td*=-1;
+      if(s.y<-4){s.y=H+4;s.x=Math.random()*W;}
+      if(s.x<-4||s.x>W+4) s.x=Math.random()*W;
+      ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(201,168,76,${s.a.toFixed(2)})`;ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  resize();init();draw();
+  window.addEventListener('resize',()=>{resize();init();});
+})();
+
+// ── 滚动淡入 ──
+(function(){
+  const io=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('visible');io.unobserve(e.target);}});
+  },{threshold:.1});
+  document.querySelectorAll('.fade-in').forEach(el=>io.observe(el));
+})();
+
+// ── 顶部栏按钮也绑定 ──
+document.querySelector('.topbar-cta').addEventListener('click', scrollToForm);
+</script>
+</body>
+</html>

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relatório BaZi — Ana Lima | ShenYuan</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --gold:#c9a84c;--gold-light:#e8c96a;--bg:#0d0618;--bg2:#1a0a2e;
+  --text:#f0ebe4;--muted:#a09080;--accent:#e8d5c4;
+}
+body{background:var(--bg);color:var(--text);font-family:'Noto Serif',serif;line-height:1.8}
+
+/* Stars */
+body::before{
+  content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse at 20% 30%, rgba(201,168,76,0.04) 0%,transparent 60%),
+             radial-gradient(ellipse at 80% 70%, rgba(138,43,226,0.06) 0%,transparent 60%);
+}
+
+.container{max-width:860px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+/* Header */
+.report-header{
+  text-align:center;padding:80px 24px 60px;
+  background:linear-gradient(180deg,rgba(26,10,46,0.95) 0%,transparent 100%);
+}
+.brand-name{font-size:11px;letter-spacing:6px;color:rgba(201,168,76,0.6);text-transform:uppercase;margin-bottom:24px}
+.report-title{font-size:clamp(1.8em,4vw,2.8em);font-weight:700;color:var(--gold);line-height:1.2;margin-bottom:16px;text-wrap:balance}
+.report-subtitle{font-size:1.1em;color:var(--accent);margin-bottom:32px}
+.user-badge{
+  display:inline-flex;align-items:center;gap:12px;
+  background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);
+  border-radius:50px;padding:12px 28px;margin-bottom:48px;
+}
+.user-badge .name{font-size:1.1em;font-weight:700;color:var(--gold)}
+.user-badge .detail{font-size:0.85em;color:var(--muted)}
+.pillars-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:12px;
+  max-width:500px;margin:0 auto;
+}
+.pillar{
+  background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);
+  border-radius:12px;padding:16px 8px;text-align:center;
+}
+.pillar-label{font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
+.pillar-cn{font-size:1.8em;color:var(--gold);margin-bottom:4px}
+.pillar-pt{font-size:0.75em;color:var(--accent)}
+
+/* TOC */
+.toc{
+  background:rgba(201,168,76,0.04);border:1px solid rgba(201,168,76,0.12);
+  border-radius:16px;padding:40px;margin:48px 0;
+}
+.toc h3{color:var(--gold);letter-spacing:3px;font-size:0.85em;text-transform:uppercase;margin-bottom:24px}
+.toc-list{list-style:none}
+.toc-list li{
+  padding:10px 0;border-bottom:1px solid rgba(201,168,76,0.08);
+  display:flex;align-items:center;gap:12px;
+}
+.toc-list li:last-child{border-bottom:none}
+.toc-list a{color:var(--accent);text-decoration:none;flex:1;transition:color 0.2s}
+.toc-list a:hover{color:var(--gold)}
+.toc-badge{font-size:10px;padding:3px 8px;border-radius:20px;background:rgba(201,168,76,0.15);color:var(--gold)}
+.toc-badge.locked{background:rgba(255,255,255,0.05);color:var(--muted)}
+
+/* Chapter */
+.chapter{padding:64px 0;border-bottom:1px solid rgba(201,168,76,0.1)}
+.chapter:last-child{border-bottom:none}
+.chapter-num{font-size:10px;letter-spacing:4px;color:rgba(201,168,76,0.5);text-transform:uppercase;margin-bottom:12px}
+.chapter h2{font-size:clamp(1.4em,3vw,2em);color:var(--gold);margin-bottom:32px;text-wrap:balance;line-height:1.3}
+.chapter p{margin-bottom:20px;color:var(--accent);font-size:1.05em;text-align:justify}
+.chapter h3{font-size:1.2em;color:var(--text);margin:32px 0 16px;text-wrap:balance}
+.chapter h4{font-size:1em;color:var(--gold);margin:24px 0 12px}
+.chapter ul,.chapter ol{margin:16px 0 24px 24px;color:var(--accent)}
+.chapter li{margin-bottom:10px}
+.chapter table{width:100%;border-collapse:collapse;margin:24px 0}
+.chapter th{background:rgba(201,168,76,0.12);color:var(--gold);padding:12px 16px;text-align:left;font-size:0.9em}
+.chapter td{padding:12px 16px;border-bottom:1px solid rgba(201,168,76,0.08);color:var(--accent);font-size:0.95em}
+.chapter blockquote{
+  border-left:3px solid var(--gold);padding:20px 24px;
+  background:rgba(201,168,76,0.05);margin:24px 0;border-radius:0 8px 8px 0;
+  font-style:italic;color:var(--text);
+}
+.highlight-box{
+  background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(138,43,226,0.08));
+  border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:24px;margin:24px 0;
+}
+
+/* Paywall */
+.paywall-section{position:relative;padding:48px 0}
+.paywall-blur{
+  filter:blur(6px);opacity:0.4;pointer-events:none;
+  max-height:200px;overflow:hidden;
+}
+.paywall-overlay{
+  position:absolute;top:0;left:0;right:0;bottom:0;
+  background:linear-gradient(180deg,transparent 0%,var(--bg) 40%);
+  display:flex;align-items:flex-end;justify-content:center;padding-bottom:32px;
+}
+.paywall-card{
+  background:linear-gradient(135deg,#1a0a2e,#2d1b4e);
+  border:1px solid rgba(201,168,76,0.3);border-radius:20px;
+  padding:40px 32px;text-align:center;max-width:500px;width:100%;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+}
+.paywall-card h3{color:var(--gold);font-size:1.4em;margin-bottom:12px;text-wrap:balance}
+.paywall-card p{color:var(--muted);margin-bottom:24px;font-size:0.95em}
+.price-row{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:8px}
+.price-old{color:var(--muted);text-decoration:line-through;font-size:1em}
+.price-new{color:var(--gold);font-size:2em;font-weight:700}
+.price-note{color:var(--muted);font-size:0.85em;margin-bottom:24px}
+.btn-unlock{
+  display:block;background:var(--gold);color:#0d0618;
+  padding:18px 40px;border-radius:50px;font-weight:700;font-size:1.1em;
+  text-decoration:none;border:none;cursor:pointer;width:100%;
+  transition:transform 0.2s,box-shadow 0.2s;
+  letter-spacing:0.5px;
+}
+.btn-unlock:hover{transform:scale(1.02);box-shadow:0 8px 30px rgba(201,168,76,0.4)}
+.btn-sub{
+  display:block;background:transparent;color:var(--gold);
+  padding:14px 40px;border-radius:50px;font-weight:600;font-size:0.95em;
+  text-decoration:none;border:1px solid rgba(201,168,76,0.4);
+  margin-top:12px;cursor:pointer;transition:all 0.2s;
+}
+.btn-sub:hover{background:rgba(201,168,76,0.1)}
+.pix-note{font-size:0.8em;color:var(--muted);margin-top:12px}
+
+/* Products */
+.products-section{padding:64px 0;text-align:center}
+.products-section h3{color:var(--gold);font-size:1.4em;margin-bottom:8px;text-wrap:balance}
+.products-section p{color:var(--muted);margin-bottom:32px;font-size:0.9em}
+.products-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:520px;margin:0 auto}
+.product-card{
+  background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.15);
+  border-radius:12px;padding:20px;text-align:center;
+}
+.product-icon{font-size:2.2em;margin-bottom:10px}
+.product-tag{font-size:10px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;margin-bottom:6px}
+.product-name{color:var(--text);font-weight:700;margin-bottom:6px;font-size:0.95em;text-wrap:balance}
+.product-desc{color:var(--muted);font-size:0.8em;margin-bottom:14px}
+.product-price{color:var(--gold);font-weight:700;font-size:1.1em;margin-bottom:12px}
+.btn-product{
+  display:block;background:var(--gold);color:#0d0618;
+  padding:9px;border-radius:50px;font-weight:700;font-size:0.85em;
+  text-decoration:none;
+}
+
+/* Share */
+.share-section{
+  background:linear-gradient(135deg,rgba(26,10,46,0.9),rgba(45,27,78,0.9));
+  border:1px solid rgba(201,168,76,0.2);border-radius:16px;
+  padding:40px 32px;text-align:center;margin:48px 0;
+}
+.share-section h3{color:var(--gold);font-size:1.3em;margin-bottom:12px;text-wrap:balance}
+.share-section p{color:var(--muted);margin-bottom:24px}
+.btn-share{
+  background:var(--gold);color:#0d0618;padding:14px 36px;
+  border-radius:50px;font-weight:700;border:none;cursor:pointer;font-size:1em;
+}
+
+/* Testimonials */
+.testimonials{padding:48px 0}
+.testimonials h3{color:var(--gold);text-align:center;margin-bottom:32px;font-size:1.3em}
+.testimonials-grid{display:grid;gap:20px}
+.testimonial{
+  background:rgba(255,255,255,0.03);border:1px solid rgba(201,168,76,0.1);
+  border-radius:12px;padding:24px;
+}
+.t-stars{color:var(--gold);margin-bottom:8px}
+.t-text{color:var(--accent);font-style:italic;margin-bottom:12px;font-size:0.95em}
+.t-author{font-size:0.85em;color:var(--muted)}
+
+/* Footer */
+footer{
+  text-align:center;padding:48px 24px;
+  border-top:1px solid rgba(201,168,76,0.1);
+  color:var(--muted);font-size:0.8em;line-height:1.8;
+}
+footer .brand{color:var(--gold);font-size:1em;margin-bottom:8px}
+
+/* Responsive */
+@media(max-width:600px){
+  .pillars-grid{grid-template-columns:repeat(2,1fr)}
+  .products-grid{grid-template-columns:repeat(2,1fr)}
+}
+
+/* Print */
+@media print{
+  body{background:#fff;color:#000}
+  .paywall-section,.share-section,.products-section{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="report-header">
+  <div class="container">
+    <div class="brand-name">ShenYuan · 선연 · 善缘</div>
+    <h1 class="report-title">Seu Relatório Completo de Destino BaZi</h1>
+    <p class="report-subtitle">3.000 Anos de Sabedoria Chinesa × Inteligência Artificial</p>
+    <div class="user-badge">
+      <div>
+        <div class="name" id="user-name">Ana Lima</div>
+        <div class="detail">15 de março de 1992 · 23h · São Paulo</div>
+      </div>
+    </div>
+    <div class="pillars-grid">
+      <div class="pillar"><div class="pillar-label">Ano</div><div class="pillar-cn">壬申</div><div class="pillar-pt">Água Yang / Macaco</div></div>
+      <div class="pillar"><div class="pillar-label">Mês</div><div class="pillar-cn">丁卯</div><div class="pillar-pt">Fogo Yin / Coelho</div></div>
+      <div class="pillar"><div class="pillar-label">Dia ★</div><div class="pillar-cn">甲子</div><div class="pillar-pt">Madeira Yang / Rato</div></div>
+      <div class="pillar"><div class="pillar-label">Hora</div><div class="pillar-cn">壬子</div><div class="pillar-pt">Água Yang / Rato</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- TOC -->
+<nav class="toc">
+  <h3>Índice do Relatório</h3>
+  <ul class="toc-list">
+    <li><a href="#cap1">🌟 Visão Geral do Destino</a><span class="toc-badge">Grátis</span></li>
+    <li><a href="#cap2">💎 Seu Dia Mestre — Madeira Yang</a><span class="toc-badge">Grátis</span></li>
+    <li><a href="#cap3">💕 Amor e Relacionamentos</a><span class="toc-badge locked">🔒 R$59</span></li>
+    <li><a href="#cap4">💰 Riqueza e Prosperidade</a><span class="toc-badge locked">🔒 R$59</span></li>
+    <li><a href="#cap5">🏢 Carreira e Propósito</a><span class="toc-badge locked">🔒 R$59</span></li>
+    <li><a href="#cap6">🌊 Grandes Ciclos de Dez Anos</a><span class="toc-badge locked">🔒 R$59</span></li>
+    <li><a href="#cap7">📅 Previsão 2025–2030</a><span class="toc-badge locked">🔒 R$59</span></li>
+    <li><a href="#cap8">🏥 Saúde e Vitalidade</a><span class="toc-badge locked">🔒 R$59</span></li>
+    <li><a href="#cap9">🎯 Guia de Ativação da Sorte</a><span class="toc-badge locked">🔒 R$59</span></li>
+    <li><a href="#cap10">🔮 Mensagem Final do Mestre</a><span class="toc-badge locked">🔒 R$59</span></li>
+  </ul>
+</nav>
+
+<!-- FREE CHAPTERS -->
+<div id="cap1" class="chapter">
+  <div class="chapter-num">Capítulo 01 · Grátis</div>
+  <h2>🌟 Visão Geral do Destino — Seu Mapa BaZi Completo</h2>
+
+<p>Ana, antes de a gente mergulhar de cabeça nesse seu mapa, deixa eu te explicar uma coisa importante. O BaZi (que significa "Oito Caracteres" ou "Quatro Pilares") não é essa brincadeira de horóscopo de jornal que a gente lê no café da manhã e esquece na hora do almoço. Não, amiga. O BaZi é uma ferramenta milenar chinesa que calcula a energia do exato momento em que você nasceu — com hora, minuto, dia, mês e ano — e transforma isso em um mapa completo da sua personalidade, dos seus talentos, dos seus desafios e até das tendências da sua vida. Enquanto o horóscopo ocidental olha só para a posição do Sol no seu nascimento (ou seja, apenas um aspecto de um personagem enorme), o BaZi analisa oito componentes diferentes que interagem entre si, como uma orquestra onde cada instrumento tem seu papel e seu tom. É por isso que duas pessoas que nasceram no mesmo dia, mas em horários diferentes, podem ter personalidades e destinos completamente distintos no BaZi. No horóscopo ocidental, elas seriam "do mesmo signo" — e olha que isso a gente sabe que não faz sentido nenhum, né? Você provavelmente já conheceu alguém do mesmo signo que você que é completamente diferente de você. Pois é. O BaZi explica essa diferença.</p>
+
+<p>Então vamos ao que interessa: o seu mapa, Ana. Você nasceu em 15 de março de 1992, às 23h, em São Paulo. E essa combinação específica — essa fração de segundo em que o universo conspirou para te trazer ao mundo — gerou os seguintes Quatro Pilares:</p>
+
+<div style="overflow-x:auto; background-color:#fdf6e3; border-radius:12px; padding:20px; margin:20px 0; font-family: 'Segoe UI', sans-serif; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+<table style="width:100%; border-collapse:collapse; text-align:center;">
+<tr style="background-color:#d4a574; color:white;">
+<th style="padding:12px; border-radius:8px 0 0 0;">Pilar</th>
+<th style="padding:12px;">Ano<br><small>(1992)</small></th>
+<th style="padding:12px;">Mês<br><small>(Março)</small></th>
+<th style="padding:12px;">Dia<br><small>(15)</small></th>
+<th style="padding:12px;">Hora<br><small>(23h)</small></th>
+</tr>
+<tr style="background-color:#fff;">
+<td style="padding:12px; font-weight:bold;">🌞 Céu (Elemento)</td>
+<td style="padding:12px; color:#1a5276;"><strong>壬 Água Yang</strong></td>
+<td style="padding:12px; color:#c0392b;"><strong>丁 Fogo Yin</strong></td>
+<td style="padding:12px; color:#27ae60;"><strong>甲 Madeira Yang</strong> ⭐</td>
+<td style="padding:12px; color:#1a5276;"><strong>壬 Água Yang</strong></td>
+</tr>
+<tr style="background-color:#f9f3e7;">
+<td style="padding:12px; font-weight:bold;">🌍 Terra (Animal)</td>
+<td style="padding:12px;">🐵 Macaco (申)</td>
+<td style="padding:12px;">🐰 Coelho (卯)</td>
+<td style="padding:12px;">🐀 Rato (子)</td>
+<td style="padding:12px;">🐀 Rato (子)</td>
+</tr>
+<tr style="background-color:#fff;">
+<td style="padding:12px; font-weight:bold;">🌿 Ramo (Elemento Oculto)</td>
+<td style="padding:12px;">Metal + Água</td>
+<td style="padding:12px;">Madeira</td>
+<td style="padding:12px;">Água</td>
+<td style="padding:12px;">Água</td>
+</tr>
+</table>
+</div>
+
+<p>Seu <strong>Dia Mestre</strong> — o elemento mais importante do seu mapa — é a <strong>Madeira Yang (甲木 Jiǎ Mù)</strong>: a Grande Árvore. Isso não é à toa, Ana. A Grande Árvore é aquela que cresce forte, imponente, com raízes profundas. É o ipê amarelo no meio da praça, o jequitibá centenário da mata atlântica. É disso que você é feita. E olha que lindo: seu mapa inteiro revela que você é uma árvore extremamente bem regada. Vamos fazer uma conta rápida dos elementos:</p>
+
+<ul style="background-color:#fef9e7; padding:20px 20px 20px 40px; border-radius:8px; list-style-type: none;">
+<li style="margin-bottom:8px;">🌳 <strong>Madeira:</strong> 3 ocorrências (Madeira Yang no Dia, Madeira Yin no Mês, Madeira oculta no Coelho) — MUITO forte</li>
+<li style="margin-bottom:8px;">💧 <strong>Água:</strong> 4 ocorrências (2 Água Yang no Ano e Hora, 2 Água oculta nos Ratos) — ABUNDANTE</li>
+<li style="margin-bottom:8px;">🔥 <strong>Fogo:</strong> 1 ocorrência (Fogo Yin no Mês) — moderado</li>
+<li style="margin-bottom:8px;">⛰️ <strong>Terra:</strong> 0 ocorrências — INEXISTENTE</li>
+<li style="margin-bottom:8px;">⚙️ <strong>Metal:</strong> 1 ocorrência (Metal oculto no Macaco) — fraco</li>
+</ul>
+
+<p>Ou seja, Ana: sua estrutura é pura madeira com uma hidratação absurda de água. Você é uma árvore que nunca passou sede — nem em São Paulo na pior seca, nem depois daquele feriado prolongado em que a cidade inteira viaja e você fica sozinha no apê. A água no seu mapa é como a umidade de uma floresta depois da chuva — constante, inescapável, quase exagerada. E isso te define profundamente.</p>
+
+<h3>🌱 Sua Personalidade: A Grande Árvore Determinada</h3>
+
+<p>Ana, quem tem a Madeira Yang como Dia Mestre é, por natureza, uma pessoa de presença. Você não passa despercebida — não porque seja barulhenta, mas porque tem uma <em>aura</em> de solidez que as pessoas sentem. Quando você entra num ambiente, as pessoas percebem que tem alguém com "pegada" ali. Isso é a energia da Grande Árvore. Você é aquela amiga que todo mundo procura quando precisa de apoio, de um conselho sério ou de alguém que segure a barra numa emergência. Você tem um instinto protetor natural, quase maternal, mesmo que não tenha filhos ou que não se veja como um "pilar" da família. As pessoas se apoiam em você feito um tronco robusto.</p>
+
+<p>Mas tem um detalhe importante: a sua água abundante torna você também uma pessoa profundamente emocional e intensa. A água no BaZi representa sentimentos, intuição, conexão espiritual, fluxo. Com quatro águas no mapa, você sente tudo — e eu quero dizer <em>TUDO</em> — de forma amplificada. Você é do tipo que chora em comercial de margarina (fala a verdade, já choreu num final de novela das nove? Claro que sim), que sente a energia dos lugares e das pessoas, que fica abalada quando vê injustiça no mundo. Sua intuição é um radar poderoso. Quantas vezes você não "sentiu" que algo ia acontecer e depois aconteceu? Isso não é coincidência, é a água do seu mapa falando.</p>
+
+<p>O problema é que Água demais pode <em>apagar</em> o fogo, e você tem pouco fogo no mapa. O Fogo representa paixão, expressão, visibilidade, comunicação. No seu caso, Ana, existe uma tendência a guardar sentimentos para si — por que as pessoas vão entender? Deixa quieto. É melhor evitar conflito. Você pode se sentir frequentemente incompreendida, como se ninguém visse a intensidade que você carrega por dentro. É a clássica "aquário de lágrimas dentro da floresta" — por fora, aquela árvore firme e serena; por dentro, um rio caudaloso de emoções.</p>
+
+<p>A falta de Terra no seu mapa é outro dado crucial. A Terra é o elemento que representa estabilidade prática, organização, "pés no chão". Com zero Terra, Ana, você provavelmente tem dificuldade com rotinas, com burocracia, com coisas que exigem método. Talvez você comece mil coisas e termine poucas. Talvez sua área do trabalho (ou seu quarto) seja uma zona criativa, mas caótica. Talvez você tenha dificuldade de guardar dinheiro porque viver o agora parece mais importante. Isso é clássico de mapa sem Terra. E não é preguiça, tá? É energia. Sua energia simplesmente não flui para o mundo prático do mesmo jeito que flui para o mundo das ideias e dos sentimentos. Mas relaxa, a gente vai trabalhar isso com conselhos práticos ao longo do relatório.</p>
+
+<p>O Metal fraco — apenas um Metal escondido no Macaco do seu Ano — representa sua dificuldade em dizer "não". Metal corta, define limites. Sem Metal forte, você tende a absorver problemas dos outros, a se sobrecarregar de responsabilidades que não são suas, a aceitar desaforo (principalmente no trânsito de São Paulo, que testa qualquer um). Aprender a impor limites vai ser um dos grandes temas da sua vida — acredite.</p>
+
+<h3>🎯 Seu Tema de Vida Central</h3>
+
+<p>Quando eu juntei todas essas peças, Ana, o que apareceu com força total foi isso: <strong>você nasceu para ser o porto seguro em meio à tempestade</strong>. Nasceu para ser a raiz de uma família, de um grupo, de uma comunidade. Você veio ao mundo com o dom de nutrir, de proteger, de dar direção. De verdade. O seu mapa é o mapa de uma cuidadora nata, de uma líder silenciosa, de alguém que segura a mão dos outros na hora do sufoco, mas que muitas vezes esquece de cuidar de si mesma no processo.</p>
+
+<p>Seu destino está em canalizar essa força da Madeira e essa profundidade da Água para criar algo que dure — um projeto, um negócio, uma família, um movimento. Você não nasceu para coisas fúteis e superficiais. Tudo em você precisa ter um propósito maior. Por isso que empregos puramente operacionais, sem sentido emocional, te deprimem. Você precisa de <em>significado</em>. Quando você encontra esse significado, Ana, ninguém te segura. Você é capaz de mover montanhas — ou de recriar uma floresta inteira no cimentado de São Paulo.</p>
+
+<p>Mas tem um aviso importante: no BaZi, quando um elemento é abundante demais (no caso, Água) e outro é totalmente ausente (Terra), existe o risco de desequilíbrio. Você pode sentir que está sempre correndo atrás do próprio rabo, se emocionando demais em situações que pedem pé no chão, ou se frustrando com a própria falta de organização. Isso não é defeito de caráter, Ana. É configuração energética. A boa notícia? Tudo isso pode ser equilibrado com escolhas certas — e a gente vai falar disso em detalhes nos próximos capítulos.</p>
+
+<h3>🇧🇷 Como Isso Aparece no Seu Cotidiano Brasileiro</h3>
+
+<p>Lembra daquele estereótipo da "mãe brasileira"? Aquela que briga com o balconista da padaria se ela te vê sem café, que organiza o churrasco de domingo inteiro, que até hoje pergunta se você "está comendo direito" mesmo tendo 30 anos nas costas? Então, em versão mais jovem e sem a formalidade da maternidade, essa é você, Ana. As pessoas do seu convívio provavelmente já te chamaram de "mãezona" ou de "protetora". Você é aquela que no grupo do WhatsApp se preocupa se todo mundo chegou bem, que no trabalho sempre pergunta se alguém está passando mal, que no rolê fica de olho em quem bebeu demais. Você carrega esse papel com naturalidade — mas lembra que eu falei do Metal fraco? Então. Cuidado para não carregar esse peso sozinha o tempo todo.</p>
+
+<p>A energia da água abundante te conecta com a intuição, e isso no Brasil se traduz em uma forte sensibilidade espiritual. Você pode gostar de coisas como astrologia (olha você aqui lendo um relatório de BaZi!), tarot, vidência, energias, ou simplesmente ter uma natureza mística que te leva a acreditar em sinais, sonhos reveladores. A água é o elemento dos videntes. Na minha experiência com mapas como o seu, pessoas com essa composição costumam ter sonhos vívidos e, às vezes, até premonições. Se você já sonhou com alguém que não via há tempo e essa pessoa te ligou no dia seguinte, isso não é coincidência — é o seu mapa trabalhando.</p>
+
+<p>Falando de coisas mais terrenas: a falta de Terra no seu mapa é uma explicação clássica para seus problemas com dinheiro e organização prática, não é mesmo? Sabe quando você faz um Pix errado no calor do momento, ou esquecer de pagar uma conta que nem venceu ainda? Nessa parte, a gente precisa falar com honestidade. Talvez você esteja vivendo em modo "empolgação" — vendo uma promoção da Black Friday e comprando sem pensar, ou gastando demais em rolês porque o presente é mais atraente que o futuro. O lado bom? Você provavelmente nunca passou por uma experiência de vida econômica sufocante, porque sua energia é de buscar o que te anima. O lado ruim? Falta Terra para criar reservas, planejar, estabilizar.</p>
+
+<p>E o seu Fogo fraco explica uma coisa importante num país tão extrovertido quanto o Brasil. Enquanto todo mundo no Carnaval está pulando atrás do trio elétrico (ou na rua, ou no bloco), você pode preferir ficar em casa curtindo uma série ou conversando com um amigo próximo. Não há nada de errado nisso — só não deixe o Fogo se apagar de vez. O Fogo representa sua alegria pública, sua capacidade de brilhar, de mostrar seu trabalho e receber aplausos. Se a água apagar seu fogo, você corre o risco de se anular, de deixar os outros tomarem o crédito, de não se posicionar. Nada disso, Ana. Vamos acender essa fogueira nos próximos capítulos.</p>
+
+<p>Suas duas Águas Yang, no Ano e na Hora, são uma energia de furacão interno. Na Hora Zi (23h), que rege o futuro e a espiritualidade, você tem uma conexão profunda com o invisível. Isso te torna noturna — talvez você produza melhor à noite, quando o mundo acalma. Já o Macaco no seu Ano traz inteligência astuta, capacidade de aprender rápido e até certa malandragem cultural. Você não é ingênua — você entende do jogo, só escolhe não jogar sujo. E o Coelho no mês te dá uma diplomacia natural, uma elegância no trato com as pessoas, que lembra aquele jeitinho paulistano de ser simpático sem deixar de ser direto.</p>
+
+<div style="background-color:#eaf2f8; border-left:5px solid #2980b9; padding:15px; margin:20px 0; border-radius:8px;">
+<p style="margin:0;"><strong>✨ Recado rápido de amiga:</strong> Ana, quando eu olho para o seu mapa, eu vejo uma mulher que tem o dom de curar ambientes. Você já deve ter percebido que quando você chega num lugar, o clima muda — as pessoas se sentem mais seguras, mais acolhidas. Isso é sua Madeira criando uma "sombra protetora". Valorize isso. Não é pouca coisa, não.</p>
+</div>
+
+<p>Agora, um alerta honesto: a água em excesso também pode virar ansiedade. Com tanta Água no mapa, você pode ter tendência a se preocupar demais com o futuro, a fazer "catastrofização
+</div>
+
+<div id="cap2" class="chapter">
+  <div class="chapter-num">Capítulo 02 · Grátis</div>
+  <h2>💎 Seu Dia Mestre — Madeira Yang: A Grande Árvore Inabalável</h2>
+
+<p>No coração do seu mapa BaZi, Ana, reside o seu Day Master (Dia Mestre): a energia que rege sua essência, seu temperamento e a forma como você interage com o mundo. Você nasceu sob o signo de 甲 (Jiǎ), a Madeira Yang. Para compreender profundamente quem você é, é essencial abandonar a imagem de um simples arbusto ou de um delicado vaso de planta. A Madeira Yang é a árvore imponente, o carvalho centenário, o cedro que se ergue em direção ao céu, desafiando tempestades e estações. Não é o bambu flexível que se curva ao vento (isso seria Madeira Yin); você é a força que resiste, que permanece de pé, que cresce lenta, mas inexoravelmente, em direção à luz.</p>
+
+<p>Sua personalidade é marcada por uma liderança natural que não precisa de holofotes ou discursos inflamados. A liderança da Madeira Yang é silenciosa, mas magnética. As pessoas ao seu redor sentem sua estabilidade e buscam seu conselho, pois você transmite uma sensação de segurança inabalável. Você é a pessoa que, em uma crise, mantém a calma e traça o caminho a seguir. Sua palavra tem peso, e sua presença ocupa espaço — não de forma autoritária, mas pela simples força de sua integridade. Você cresce de forma constante, como uma árvore que adiciona anéis ao seu tronco a cada ano: sem pressa, mas sem pausa. Cada experiência, desafio ou aprendizado é absorvido e incorporado à sua estrutura, tornando-o mais forte e mais resiliente.</p>
+
+<p>No entanto, essa mesma rigidez que é sua maior bênção pode se tornar sua maldição. A árvore que não se dobra pode quebrar sob ventos muito fortes. Sua determinação em manter seus princípios é admirável, mas pode se transformar em teimosia. Quando você acredita que está certa — e geralmente está — é quase impossível fazê-la mudar de ideia. Essa inflexibilidade pode afastar pessoas que tentam ajudá-la, e pode fazer com que você lute contra moinhos de vento, desgastando sua energia em batalhas que poderiam ser vencidas com uma simples diplomacia. A chave para o seu crescimento, Ana, é aprender a diferença entre ser firme e ser rígida, entre ter raízes profundas e estar aprisionada por elas.</p>
+
+<p>No trabalho, você é a coluna vertebral de qualquer equipe. Você prospera em ambientes que valorizam o esforço de longo prazo, a construção de projetos sólidos e a meritocracia. Você não é de pular de galho em galho; prefere plantar uma semente e nutrir seu crescimento até que se torne uma árvore frondosa. Profissões que exigem visão estratégica, arquitetura, engenharia, administração de grandes projetos, ou mesmo liderança empresarial, são terrenos férteis para você. No entanto, tenha cuidado: sua tendência a assumir responsabilidades demais, por achar que ninguém faz tão bem quanto você, pode levá-la à exaustão. Aprender a delegar é um dos seus maiores desafios. Como a árvore que precisa de solo fértil, você prospera em ambientes de trabalho éticos, com propósito claro e onde sua autoridade é respeitada. Ambientes caóticos, com regras mutáveis ou politicagem mesquinha, sufocam sua alma e a fazem sentir-se como uma árvore enraizada em terra infértil.</p>
+
+<p>No amor, Ana, você é a parceira que oferece proteção e estabilidade. Você não é do tipo que se entrega facilmente a paixões avassaladoras; seu amor é construído como uma casa: tijolo por tijolo, com fundação sólida. Você busca um parceiro que seja seu igual, que possa crescer ao seu lado sem tentar podá-la ou sufocar seu espaço. Relacionamentos para você são um projeto de longo prazo, e a lealdade é seu valor mais alto. Entretanto, sua dificuldade em expressar vulnerabilidade pode criar uma muralha entre você e seu par. Você tende a acreditar que demonstrar fraqueza é um sinal de colapso, quando, na verdade, é a ponte para a intimidade genuína. O seu amor pode parecer, às vezes, mais como o cuidado de um guardião do que como a entrega de um amante. Seu parceiro precisa entender que sua aparente frieza é, na verdade, uma tentativa de proteger a ambos. E você precisa lembrar que até a árvore mais forte precisa que seus galhos sejam tocados pelo vento.</p>
+
+<p>Quando o assunto é dinheiro, Madeira Yang é acumuladora por natureza. Você vê os recursos como o solo que permite seu crescimento contínuo. Você não é extravagante, mas também não é mesquinha: gosta de investir em coisas de qualidade, duráveis, que tenham valor de longo prazo. Terrenos, imóveis, educação, ou ações de empresas sólidas são seu estilo de investimento. O que você precisa evitar é a tendência de reter recursos em excesso, por medo de escassez futura. A árvore que não solta suas folhas no outono não consegue renovar sua seiva na primavera. Da mesma forma, você precisa permitir que o dinheiro flua, que ele seja usado para nutrir sua vida e a vida das pessoas que você ama, em vez de se tornar uma casca protetora que a isola do mundo.</p>
+
+<p>Na saúde, o fígado e a vesícula biliar são seus órgãos mais sensíveis, pois são justamente os órgãos da Madeira no corpo humano. Sua propensão ao estresse e à frustração (quando as coisas não saem como planejado) pode se manifestar como tensão nos ombros, dores de cabeça tensionais ou problemas digestivos. Você precisa de movimento e de espaço para "crescer". Exercícios que alongam o corpo, como ioga, pilates ou dança, são excelentes para liberar a energia presa nos seus tendões e músculos. Além disso, a natureza é o seu verdadeiro santuário. Passar tempo em florestas, parques ou mesmo cuidando de um jardim é essencial para recarregar suas energias vitais. Você não é uma pessoa que se restaura com o ócio; você se restaura com o crescimento, com o contato com a vida em suas formas mais simples e orgânicas.</p>
+
+<p>No vasto universo do BaZi, existem cinco tipos de Madeira, cada um com suas nuances. É importante você saber onde se encaixa para não se confundir com outras expressões dessa energia. Os cinco são:</p>
+
+<p><strong>1. A Madeira da Floresta (甲子):</strong> é a árvore que cresce em uma comunidade, cercada por outras. Você não é essa: você busca individualidade e se sente sufocada em ambientes extremamente coletivistas.</p>
+
+<p><strong>2. A Madeira da Montanha (甲寅):</strong> este é o tigre, a árvore que cresce em solo rochoso, em terrenos íngremes. É a mais agressiva e competitiva das madeiras. Embora você tenha essa raiz em seu mapa (se seu Ramo de Ano ou do Dia for 寅), sua expressão tende a ser mais civilizada.</p>
+
+<p><strong>3. A Madeira do Jardim (甲辰):</strong> é a árvore frutífera, que cresce em solo cultivado e é podada pelo jardineiro. Carrega uma energia mais maleável e produtiva.</p>
+
+<p><strong>4. A Madeira da Praia (甲戌):</strong> é a árvore que cresce na beira do mar, sujeita à maresia e aos ventos fortes. É uma madeira que se adapta a condições adversas, mas pode se tornar endurecida demais.</p>
+
+<p><strong>5. A Madeira do Templo (甲午):</strong> é a árvore queimada pelo sol, ou a que se ergue alta e exposta. É a mais visionária e expansiva, mas também a mais facilmente inflamável.</p>
+
+<p>Você, Ana, com sua data de nascimento, possui a Madeira Yang em sua forma mais pura, o que lhe confere a essência do carvalho: robusta, majestosa e de crescimento lento. Você não está interessada em atalhos; você quer construir algo que perdure gerações. Essa é a sua marca: a solidez que inspira confiança e o tempo que você investe em tudo o que faz. É essa energia que, historicamente, construiu grandes impérios e dinastias. Se você olhar para líderes latinos e brasileiros, encontrará ecos dessa energia em figuras como <strong>José de Alencar</strong> (o escritor que literalmente “construiu” a identidade nacional brasileira em seus romances] ou <strong>Juscelino Kubitschek</strong> (o presidente que ergueu Brasília no meio do nada, com a visão de uma árvore que planta sua própria floresta]. No esporte, <strong>Rafael Nadal</strong> (embora espanhol) é um exemplo clássico de Madeira Yang: joga com intensidade, constrói cada ponto como uma obra de alvenaria, e sua força mental é seu maior trunfo. Na música, <strong>Ivete Sangalo</strong>, com sua presença de palco imponente e sua carreira construída tijolo por tijolo, também pode ser vista como uma expressão da grande árvore que comanda o seu ecossistema.</p>
+
+<p>Sua maior força oculta, Ana, é a <strong>capacidade de regeneração silenciosa</strong>. Como uma árvore que perde um galho em uma tempestade e simplesmente se reorganiza para crescer em outra direção, você possui uma resiliência que é praticamente sobrenatural. As pessoas ao seu redor podem entrar em pânico, mas você permanece centrada, sabendo que o tempo e a paciência são seus aliados. Você é a pessoa que, após um desastre, está lá na manhã seguinte, varrendo os cacos e começando a reconstrução. Essa força fica oculta porque não é barulhenta; é a força da seiva que sobe das raízes e traz vida novamente para a copa, mesmo após o inverno mais rigoroso. É essa energia que faz com que os outros se agarrem a você em tempos de crise, pois sabem que ali encontrarem estabilidade.</p>
+
+<p>Seu calcanhar de Aquiles, por outro lado, é a <strong>solidão estratégica</strong>. Você se acostumou a estar no topo da colina, observando o horizonte, e desde cedo aprendeu que depender dos outros é um risco. Essa autossuficiência, que é seu orgulho, torna-se sua armadilha: você pode passar meses, até anos, sem realmente se abrir com alguém, acumulando um peso que nenhuma árvore deveria carregar sozinha. Sua dificuldade em pedir ajuda não é falta de humildade; é um mecanismo de defesa que, se não for monitorado, a deixará isolada em uma ilha de sua própria força, cercada de pessoas que a admiram de longe, mas que não conseguem tocá-la de perto.</p>
+
+<p>Para viver melhor a energia da Madeira Yang, meu conselho prático é: <strong>cultive o "não-fazer" deliberado</strong>. A sua natureza a impulsiona a agir, construir e resolver. Reserve, conscientemente, um tempo do seu dia para simplesmente existir, sem meta, sem objetivo. Sente-se sob uma árvore (ou observe uma), respire e aprecie o fato de que a natureza não tem pressa. Em segundo lugar, <strong>pratique o desapego de opiniões</strong>. Faça um exercício para você mesma: pelo menos uma vez por semana, entre em uma conversa com a intenção deliberada de concordar com alguém, mesmo que você discorde. Isso não é fraqueza; é como a árvore que se curva para que a tempestade passe. Por fim, <strong>busque um "parceiro de raiz"</strong>: alguém que possa ser seu amigo, mentor ou terapeuta, que você respeite e com quem possa baixar a guarda sem medo de ser julgada. Você não precisa se tornar um bambu, Ana. O mundo precisa que você continue sendo o carvalho. Mas lembre-se: até o carvalho mais majestoso depende do solo, da água e do sol ao seu redor. Aceitar esses nutrientes não é fraqueza; é a mais sábia forma de se manter forte.</p>
+</div>
+
+<!-- PAYWALL -->
+<div class="paywall-section">
+  <div class="paywall-blur">
+    <div id="cap3" class="chapter">
+      <div class="chapter-num">Capítulo 03</div>
+      <h2>💕 Amor e Relacionamentos — Seu Código Romântico</h2>
+
+<p>Ana, quando olhamos para os seus Pilares do Destino através das lentes do BaZi, o que encontramos é uma assinatura amorosa tão generosa quanto complexa. Seu Dia Mestre é Madeira Yang (甲木), a grande árvore que cresce em direção ao céu, que abraça o sol e desafia tempestades. Mas a sua história romântica não é definida apenas por essa força vital — ela é escrita pela interação entre a Água que a nutre em excesso e os Metais que, ao tentarem esculpi-la, acabam gerando atrito. O resultado é um código romântico onde o cuidado é abundante, mas o controle é profundamente rejeitado. E é exatamente sobre isso que vamos mergulhar agora.</p>
+
+<p>Primeiro, vamos entender que tipo de parceiro(a) você atrai naturalmente. Com tanta Água (水) em seus pilares — lembrando que a Água é o "alimento" da Madeira —, você se torna um imã para pessoas que possuem uma energia cuidadora, emocional e até maternal. Não é raro que você atraia parceiros que queiram te proteger, que queiram te dar suporte, que queiram estar ao seu lado nos momentos de tempestade. Isso pode ser maravilhoso nos primeiros meses de relação, quando a sensação de ser amparada 
+    </div>
+  </div>
+  <div class="paywall-overlay">
+    <div class="paywall-card">
+      <h3>🔒 Continue Lendo — Seu Destino Completo Aguarda</h3>
+      <p>Desbloqueie amor, riqueza, carreira, saúde e previsão 2025–2030</p>
+      <div class="price-row">
+        <span class="price-old">R$149</span>
+        <span class="price-new">R$59</span>
+      </div>
+      <p class="price-note">Relatório completo de 100 páginas · Acesso vitalício</p>
+      <a href="../pages/shop.html?lang=pt-br&from=report100&plan=full" class="btn-unlock">Desbloquear Relatório Completo — R$59 →</a>
+      <a href="../pages/shop.html?lang=pt-br&from=report100&plan=annual" class="btn-sub">Assinatura Anual R$199/ano (4 atualizações)</a>
+      <p class="pix-note">💳 Pix · Cartão de crédito · Parcelamento disponível</p>
+    </div>
+  </div>
+</div>
+
+<!-- LOCKED CHAPTER PREVIEWS (blurred) -->
+
+<div class="paywall-section" style="margin-top:0">
+  <div class="paywall-blur" style="max-height:120px">
+    <div class="chapter"><div class="chapter-num">Capítulo 04</div>```html
+<section class="capitulo-bazi" id="capitulo-4">
+  <header class="capitulo-header">
+    <h2>💰 Capítulo 4: Riqueza e Prosperidade — Quando o Dinheiro Flui Para Você</h2>
+    <p class="subtitulo">Ana Lima · Madeira Yang · Uma análise profunda da sua relação com a abundância</p>
+    <div class="decor-divider">✦ ✦ ✦</div>
+  </header>
+
+  <div class="conteudo-principal">
+
+    <p class="introducao</div>
+  </div>
+  <div class="paywall-overlay" style="background:linear-gradient(180deg,transparent 0%,var(--bg) 60%)">
+    <a href="../pages/shop.html?lang=pt-br&from=report100&plan=full" class="btn-unlock" style="max-width:300px">🔒 Desbloquear por R$59</a>
+  </div>
+</div>
+<div class="paywall-section" style="margin-top:0">
+  <div class="paywall-blur" style="max-height:120px">
+    <div class="chapter"><div class="chapter-num">Capítulo 05</div>```html
+<section id="capitulo5" class="capitulo-bazi" data-ano="2025" data-signo="Madeira Yang" data-idioma="pt-BR">
+  <style>
+    .capitulo-bazi {
+      font-family: 'Georgia', 'Times New Roman', serif;
+      line-height: 1.7;
+      color: #2c3e50;
+      background: #fdfaf6;
+      padding: 2.5rem 2rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+      max-width: 900</div>
+  </div>
+  <div class="paywall-overlay" style="background:linear-gradient(180deg,transparent 0%,var(--bg) 60%)">
+    <a href="../pages/shop.html?lang=pt-br&from=report100&plan=full" class="btn-unlock" style="max-width:300px">🔒 Desbloquear por R$59</a>
+  </div>
+</div>
+<div class="paywall-section" style="margin-top:0">
+  <div class="paywall-blur" style="max-height:120px">
+    <div class="chapter"><div class="chapter-num">Capítulo 06</div>```html
+<article>
+  <h1>Capítulo 6: 🌊 Seus Grandes Ciclos de Dez Anos — O Mapa da Sua Vida</h1>
+
+  <p>
+    Se você já sentiu que em alguns anos a vida parecia uma avenida larga, com sinal verde em todos os cruzamentos, e em outros anos parecia que você estava andando contra o vento, carregando pedras na mochila — saiba que isso não é aleatório, nem castigo, nem azar. É o ritmo dos seus <strong>Gra</div>
+  </div>
+  <div class="paywall-overlay" style="background:linear-gradient(180deg,transparent 0%,var(--bg) 60%)">
+    <a href="../pages/shop.html?lang=pt-br&from=report100&plan=full" class="btn-unlock" style="max-width:300px">🔒 Desbloquear por R$59</a>
+  </div>
+</div>
+<div class="paywall-section" style="margin-top:0">
+  <div class="paywall-blur" style="max-height:120px">
+    <div class="chapter"><div class="chapter-num">Capítulo 07</div>```html
+<section id="capitulo7-previsao-2025-2030">
+  <h2>Capítulo 7: 📅 Previsão Ano a Ano 2025–2030 — Seu Calendário do Destino</h2>
+  <p><em>Base de cálculo: BaZi de Ana Lima — Dia Mestre <strong>Madeira Yang (Jia)</strong> | Ciclo atual: <strong>Metal Yin (Xin)</strong> (2022–2032).</em></p>
+
+  <hr>
+
+  <!-- 2025 -->
+  <article style="margin-bottom: 2.5rem; border-left: 4px solid #2e7d32; paddin</div>
+  </div>
+  <div class="paywall-overlay" style="background:linear-gradient(180deg,transparent 0%,var(--bg) 60%)">
+    <a href="../pages/shop.html?lang=pt-br&from=report100&plan=full" class="btn-unlock" style="max-width:300px">🔒 Desbloquear por R$59</a>
+  </div>
+</div>
+<div class="paywall-section" style="margin-top:0">
+  <div class="paywall-blur" style="max-height:120px">
+    <div class="chapter"><div class="chapter-num">Capítulo 08</div>```html
+<article>
+  <h1>Capítulo 8: 🏥 Saúde e Vitalidade — O Que Seu BaZi Revela Sobre Seu Corpo</h1>
+
+  <p><em>Este conteúdo é educacional e baseado na leitura do Bazi (Os Quatro Pilares do Destino) sob a perspectiva da Medicina Tradicional Chinesa (MTC). Ele <strong>NÃO</strong> constitui diagnóstico médico, prescrição de tratamento ou substituto para consultas com profissionais de saúde. Sempre</div>
+  </div>
+  <div class="paywall-overlay" style="background:linear-gradient(180deg,transparent 0%,var(--bg) 60%)">
+    <a href="../pages/shop.html?lang=pt-br&from=report100&plan=full" class="btn-unlock" style="max-width:300px">🔒 Desbloquear por R$59</a>
+  </div>
+</div>
+<div class="paywall-section" style="margin-top:0">
+  <div class="paywall-blur" style="max-height:120px">
+    <div class="chapter"><div class="chapter-num">Capítulo 09</div>```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capítulo 9 · Guia de Ativação da Sorte — Ana Lima</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #faf7f2;
+            f</div>
+  </div>
+  <div class="paywall-overlay" style="background:linear-gradient(180deg,transparent 0%,var(--bg) 60%)">
+    <a href="../pages/shop.html?lang=pt-br&from=report100&plan=full" class="btn-unlock" style="max-width:300px">🔒 Desbloquear por R$59</a>
+  </div>
+</div>
+<div class="paywall-section" style="margin-top:0">
+  <div class="paywall-blur" style="max-height:120px">
+    <div class="chapter"><div class="chapter-num">Capítulo 010</div>```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Capítulo 10 — Mensagem Final</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+     </div>
+  </div>
+  <div class="paywall-overlay" style="background:linear-gradient(180deg,transparent 0%,var(--bg) 60%)">
+    <a href="../pages/shop.html?lang=pt-br&from=report100&plan=full" class="btn-unlock" style="max-width:300px">🔒 Desbloquear por R$59</a>
+  </div>
+</div>
+
+<!-- PRODUCTS -->
+<div class="products-section">
+  <h3>Produtos Selecionados Para Sua Energia</h3>
+  <p>Recomendados pela nossa equipe de numerologia para Madeira Yang</p>
+  <div class="products-grid">
+    <div class="product-card">
+      <div class="product-icon">🧦</div>
+      <div class="product-tag">Afastar Inimigos</div>
+      <div class="product-name">Meias da Sorte — Pisando em Energias Negativas</div>
+      <div class="product-desc">7 pares (um para cada dia) · Neutraliza inveja e má sorte</div>
+      <div class="product-price">R$29</div>
+      <a href="../pages/shop.html?lang=pt-br&from=report100" class="btn-product">Comprar Agora</a>
+    </div>
+    <div class="product-card">
+      <div class="product-icon">📿</div>
+      <div class="product-tag">Proteção</div>
+      <div class="product-name">Pulseira de Obsidiana Negra</div>
+      <div class="product-desc">Absorve energias negativas · Protege Madeira Yang</div>
+      <div class="product-price">R$69</div>
+      <a href="../pages/shop.html?lang=pt-br&from=report100" class="btn-product">Comprar Agora</a>
+    </div>
+    <div class="product-card">
+      <div class="product-icon">🪙</div>
+      <div class="product-tag">Prosperidade</div>
+      <div class="product-name">Amuleto Cinco Moedas Imperiais</div>
+      <div class="product-desc">Atrai riqueza Terra · Compensa elemento ausente</div>
+      <div class="product-price">R$39</div>
+      <a href="../pages/shop.html?lang=pt-br&from=report100" class="btn-product">Comprar Agora</a>
+    </div>
+    <div class="product-card">
+      <div class="product-icon">🦁</div>
+      <div class="product-tag">Riqueza</div>
+      <div class="product-name">Pi Xiu — O Guardião da Riqueza</div>
+      <div class="product-desc">Atrai dinheiro, nunca deixa sair · Ideal para Madeira</div>
+      <div class="product-price">R$89</div>
+      <a href="../pages/shop.html?lang=pt-br&from=report100" class="btn-product">Comprar Agora</a>
+    </div>
+  </div>
+</div>
+
+<!-- SHARE -->
+<div class="share-section">
+  <h3>🎁 Compartilhe e Ganhe — Uma Amiga Merece Saber</h3>
+  <p>Compartilhe seu mapa BaZi e vocês duas desbloqueiam um capítulo grátis cada</p>
+  <button class="btn-share" onclick="shareReport()">📤 Compartilhar Meu Destino</button>
+</div>
+
+<!-- TESTIMONIALS -->
+<div class="testimonials">
+  <h3>O Que Dizem Nossas Usuárias</h3>
+  <div class="testimonials-grid">
+    <div class="testimonial">
+      <div class="t-stars">★★★★★</div>
+      <p class="t-text">"Fiz o relatório esperando algo genérico, igual a horóscopo de revista. Fiquei de queixo caído quando descrevi meu padrão em relacionamentos — exatamente o que vivo há 10 anos. A análise do ciclo de Metal explicou por que os últimos 2 anos foram tão difíceis. Agora consigo entender, não só sofrer."</p>
+      <div class="t-author">Fernanda Costa · Belo Horizonte · Junho 2025</div>
+    </div>
+    <div class="testimonial">
+      <div class="t-stars">★★★★★</div>
+      <p class="t-text">"A previsão para 2026 disse que seria meu ano de visibilidade profissional. Fiz o relatório em janeiro, em março me chamaram para uma promoção que não esperava. Coincidência? Pode ser. Mas agora vivo cada mês com mais intenção."</p>
+      <div class="t-author">Juliana Mendes · Recife · Maio 2025</div>
+    </div>
+    <div class="testimonial">
+      <div class="t-stars">★★★★★</div>
+      <p class="t-text">"Já fiz mapa astral ocidental, tarot, até fui em terapeuta. O BaZi foi diferente porque não me deu respostas — me deu perguntas melhores. Entendi por que eu gasto dinheiro tão rápido quanto ganho, e o que fazer de diferente. O guia de ativação foi o capítulo mais prático que já li."</p>
+      <div class="t-author">Carolina Alves · Porto Alegre · Julho 2025</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<div style="background:#0d0618;padding:32px 24px;text-align:center;border-top:1px solid rgba(201,168,76,0.15)">
+  <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:16px">
+    <a href="../pages/shop.html?lang=pt-br&from=report100" style="display:inline-block;background:#c9a84c;color:#000;font-weight:700;font-size:13px;padding:12px 22px;border-radius:50px;text-decoration:none;letter-spacing:0.03em">🛍️ Ver todos os produtos →</a>
+    <a href="../pages/life-events.html?lang=pt-br&from=report100" style="display:inline-block;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);color:#c9a84c;font-size:13px;font-weight:600;padding:12px 22px;border-radius:50px;text-decoration:none">🔮 Consulta humana →</a>
+  </div>
+  <a href="../pages/lp-master-PT-BR.html" style="display:inline-block;color:rgba(255,255,255,0.35);font-size:11px;letter-spacing:1px;text-decoration:none">← Voltar ao início</a>
+</div>
+<footer>
+  <div class="brand">ShenYuan · 善缘</div>
+  <p>3.000 anos de sabedoria · Analisado por IA · Revisado por especialistas</p>
+  <p style="margin-top:12px;font-size:0.75em">Este relatório é gerado por inteligência artificial com base em sistemas de numerologia milenar. Não substitui aconselhamento médico, jurídico ou financeiro profissional. Fins informativos e de reflexão pessoal.</p>
+</footer>
+
+<script>
+// Read URL params
+const p = new URLSearchParams(window.location.search);
+const name = p.get('name');
+if(name) document.getElementById('user-name').textContent = name;
+
+function shareReport(){
+  const uid = Math.random().toString(36).substr(2,8);
+  const url = window.location.href.split('?')[0]+'?ref='+uid;
+  if(navigator.share){
+    navigator.share({title:'Meu Relatório BaZi — ShenYuan',text:'Descobri meu destino com 3.000 anos de sabedoria chinesa. Vem ver o seu!',url});
+  } else {
+    navigator.clipboard.writeText(url).then(()=>alert('Link copiado! Cole no WhatsApp para sua amiga 💛'));
+  }
+}
+</script>
+</body>
+</html>

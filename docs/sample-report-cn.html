@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>你的八字命盘报告 · 善缘</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0d0618;--card:#16122a;--gold:#c9a84c;--gold-light:#e8d08a;--text:rgba(240,230,210,0.92);--sub:rgba(200,185,155,0.65);--jade:#5bbfa0}
+body{background:var(--bg);color:var(--text);font-family:'Noto Serif SC',serif;max-width:480px;margin:0 auto;padding-bottom:120px;-webkit-font-smoothing:antialiased}
+.topbar{background:rgba(13,6,24,0.95);border-bottom:1px solid rgba(201,168,76,0.2);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50}
+.brand{font-family:'Cormorant Garamond',serif;font-size:18px;letter-spacing:0.08em;color:var(--gold)}
+.aigc-badge{font-size:9px;letter-spacing:0.12em;color:var(--sub);border:1px solid rgba(201,168,76,0.25);padding:3px 8px;border-radius:10px}
+.hero-report{padding:40px 24px 32px;text-align:center;background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,0.1) 0%,transparent 60%)}
+.report-eyebrow{font-size:10px;letter-spacing:0.25em;color:var(--jade);margin-bottom:16px}
+.report-name{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:400;color:var(--gold-light);margin-bottom:6px}
+.report-date{font-size:13px;color:var(--sub);margin-bottom:24px;letter-spacing:0.05em}
+.pillars{display:flex;gap:10px;justify-content:center;margin-bottom:24px}
+.pillar{text-align:center;background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.2);border-radius:10px;padding:12px 14px;min-width:64px}
+.p-label{font-size:9px;letter-spacing:0.1em;color:var(--sub);margin-bottom:6px}
+.p-tian{font-family:'Noto Serif SC',serif;font-size:22px;color:var(--gold-light)}
+.p-di{font-family:'Noto Serif SC',serif;font-size:20px;color:var(--jade)}
+.day-master-card{background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.25);border-radius:14px;padding:20px;margin:0 20px 32px;text-align:center}
+.dm-label{font-size:10px;letter-spacing:0.18em;color:var(--gold);margin-bottom:8px}
+.dm-title{font-size:20px;color:var(--gold-light);margin-bottom:8px;font-weight:500}
+.dm-desc{font-size:13px;color:var(--sub);line-height:1.8}
+.section{padding:24px 20px;border-top:1px solid rgba(201,168,76,0.1)}
+.section-tag{font-size:9px;letter-spacing:0.18em;color:var(--gold);border:1px solid rgba(201,168,76,0.25);border-radius:20px;padding:3px 10px;display:inline-block;margin-bottom:12px}
+.section-title{font-size:19px;font-weight:300;letter-spacing:0.1em;margin-bottom:14px;line-height:1.4}
+.section-body{font-size:14px;color:var(--sub);line-height:1.85}
+.section-body p{margin-bottom:14px}
+.section-body strong{color:var(--text)}
+.insight-box{background:rgba(91,191,160,0.07);border-left:3px solid var(--jade);border-radius:0 10px 10px 0;padding:14px 16px;margin:14px 0;font-size:13px;color:rgba(200,230,220,0.85);line-height:1.8}
+.year-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(201,168,76,0.08)}
+.year-num{font-size:16px;color:var(--gold);min-width:44px}
+.year-bar-wrap{flex:1;height:6px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden}
+.year-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--jade),var(--gold))}
+.year-label{font-size:11px;color:var(--sub);min-width:60px;text-align:right}
+.blur-section{position:relative;overflow:hidden;min-height:280px}
+.blur-content{filter:blur(6px);pointer-events:none;user-select:none;opacity:0.6}
+.paywall{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:linear-gradient(to bottom,transparent 0%,rgba(13,6,24,0.7) 25%,rgba(13,6,24,0.97) 50%);padding:20px}
+.paywall-title{font-size:20px;font-weight:400;color:var(--gold-light);margin-bottom:8px;letter-spacing:0.05em}
+.paywall-sub{font-size:13px;color:var(--sub);margin-bottom:20px;line-height:1.7;max-width:280px}
+.paywall-price{font-size:32px;font-weight:700;color:var(--gold);margin-bottom:4px}
+.paywall-orig{font-size:13px;color:var(--sub);text-decoration:line-through;margin-bottom:18px}
+.btn-unlock{display:block;background:linear-gradient(135deg,#8a6420,#c9a84c,#e8d08a);color:rgba(14,10,4,0.95);font-size:15px;font-weight:600;padding:16px 32px;border-radius:50px;border:none;cursor:pointer;letter-spacing:0.12em;box-shadow:0 6px 24px rgba(201,168,76,0.4);text-decoration:none;width:100%;max-width:280px;margin:0 auto;font-family:'Noto Serif SC',serif}
+.share-box{background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.2);border-radius:14px;padding:24px 20px;margin:24px 20px;text-align:center}
+.share-title{font-size:17px;color:var(--gold-light);margin-bottom:8px;letter-spacing:0.08em}
+.share-sub{font-size:13px;color:var(--sub);margin-bottom:16px;line-height:1.7}
+.btn-share{background:transparent;border:1px solid rgba(201,168,76,0.4);color:var(--gold);font-size:14px;padding:12px 24px;border-radius:30px;cursor:pointer;width:100%;font-family:'Noto Serif SC',serif}
+.disclaimer{padding:20px;font-size:10px;color:rgba(200,185,155,0.3);line-height:1.7;letter-spacing:0.02em;border-top:1px solid rgba(201,168,76,0.08)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">善缘 ShenYuan</div>
+  <div class="aigc-badge">AIGC · 仅供参考娱乐</div>
+</div>
+
+<div class="hero-report">
+  <div class="report-eyebrow">✦ 八字命盘 · 个人专属报告 ✦</div>
+  <div class="report-name" id="displayName">正在排盘…</div>
+  <div class="report-date" id="displayDate"></div>
+  <div class="pillars">
+    <div class="pillar"><div class="p-label">年柱</div><div class="p-tian">辛</div><div class="p-di">未</div></div>
+    <div class="pillar"><div class="p-label">月柱</div><div class="p-tian">丁</div><div class="p-di">酉</div></div>
+    <div class="pillar" style="border-color:rgba(201,168,76,0.5);background:rgba(201,168,76,0.12)"><div class="p-label" style="color:var(--gold)">日柱 ★</div><div class="p-tian" style="color:#ffd700">戊</div><div class="p-di" style="color:#ffd700">申</div></div>
+    <div class="pillar"><div class="p-label">时柱</div><div class="p-tian">乙</div><div class="p-di">卯</div></div>
+  </div>
+</div>
+
+<div class="day-master-card">
+  <div class="dm-label">日主 · 你的命理本质</div>
+  <div class="dm-title">戊土日主 · 厚土如山</div>
+  <div class="dm-desc">稳重、可信、低调而有力量。你默默托举他人，不求回报。如山岳，一旦决定便不可动摇——但对赢得你信任的人，你慷慨如大地。你的成功往往来得晚，但一旦来临，便是深根之树，风雨不动。</div>
+</div>
+
+<div class="section">
+  <span class="section-tag">第一章</span>
+  <div class="section-title">五行格局 · 你的底层密码</div>
+  <div class="section-body">
+    <p>你的四柱中，<strong>金气极重</strong>（申月、辛年、酉支），被<strong>时柱乙卯木</strong>所对抗。这种金木交战的格局，塑造了你人生最核心的主题：<strong>规则与自由的张力、稳定与突破的博弈</strong>。</p>
+    <p>金气过盛，往往赋予极强的分析能力、高标准，以及快速穿透模糊的能力。你可能从小就发现自己能看到别人看不到的解法——有时因此感到孤独，因为跟上你节奏的人太少。</p>
+    <div class="insight-box">
+      ✦ 核心洞见：时柱乙卯代表你的内在自我——创造力、理想主义、对成长的渴望。它被周围金气压制，这解释了你反复感受到的那种"自己还没有真正发挥出来"的感觉。但这棵树，正在向上。
+    </div>
+    <p><strong>戊土日主</strong>在金木之间充当缓冲，吸收并分配能量。这让你天然擅长调和、综合——看见多方立场，走中间道路，却不失自己的根基。这是极稀有的领导力天赋。</p>
+  </div>
+</div>
+
+<div class="section">
+  <span class="section-tag">第二章</span>
+  <div class="section-title">感情宫 · 你的爱情密码</div>
+  <div class="section-body">
+    <p>你的<strong>夫妻宫（日支申金）</strong>藏庚金——官星入库，感情多有内敛，不轻易示弱。在爱情中，你往往是付出更多的那一方，却因为不善表达需求而让对方猜测你的边界。</p>
+    <p>最适合你的伴侣：有主见、能独立，不需要你时刻照料，但懂得主动靠近你——因为你不会先开口。</p>
+    <div class="insight-box">
+      ✦ 2025–2027流年：桃花运激活。这不是被动等待的时间，而是主动打开的时间。无论你现在是单身还是在感情中，这段时间回报的是刻意的情感开放。
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <span class="section-tag">第三章</span>
+  <div class="section-title">财运时机 · 你的钱来自哪里</div>
+  <div class="section-body">
+    <p>你的财星坐月柱——财运与<strong>你的社会声誉和职业网络</strong>高度绑定，而非单纯靠埋头苦干。你越曝光，越赚钱。这不是让你"出卖自己"，而是你的命理结构决定了：<strong>你的才华需要被看见，才会被兑现</strong>。</p>
+    <p>你的财运走势不是平滑上升，而是<strong>阶梯式跃迁</strong>：长期蓄力之后，突然跨越。这个过程不是失败，是你的本性。</p>
+    <div class="year-row"><div class="year-num">2025</div><div class="year-bar-wrap"><div class="year-bar" style="width:58%"></div></div><div class="year-label" style="color:var(--jade)">积累期 ↑</div></div>
+    <div class="year-row"><div class="year-num">2026</div><div class="year-bar-wrap"><div class="year-bar" style="width:88%"></div></div><div class="year-label" style="color:#ffd700">爆发年 ★</div></div>
+    <div class="year-row"><div class="year-num">2027</div><div class="year-bar-wrap"><div class="year-bar" style="width:72%"></div></div><div class="year-label" style="color:var(--jade)">收获期</div></div>
+    <div class="year-row"><div class="year-num">2028</div><div class="year-bar-wrap"><div class="year-bar" style="width:48%"></div></div><div class="year-label">巩固期</div></div>
+  </div>
+</div>
+
+<!-- PAYWALL -->
+<div class="section blur-section">
+  <div class="blur-content">
+    <span class="section-tag">第四章</span>
+    <div class="section-title">十年大运 · 你的人生节奏</div>
+    <div class="section-body">
+      <p>你当前大运走甲子（阳木临水），从28岁开始，持续十年。这个大运支持知识扩展、跨地域发展、建立能够超越你个人的系统。水润土，你的情感深度在这段时间会被激活……</p>
+      <p>下一个大运从38岁左右开始，带来根本性的转变……</p>
+    </div>
+  </div>
+  <div class="paywall">
+    <div class="paywall-title">解锁完整版报告</div>
+    <div class="paywall-sub">还有7章 · 100页深度解读 · 月度运势2025–2030 · 开运建议 · 合婚分析</div>
+    <div class="paywall-price">¥9.9</div>
+    <div class="paywall-orig">原价 ¥199</div>
+    <a href="/pages/bazi.html?ref=sample-cn" class="btn-unlock">立即解锁完整报告 →</a>
+  </div>
+</div>
+
+<!-- ── Loop: 开运产品入口 ── -->
+<div style="margin:24px 20px;display:flex;flex-direction:column;gap:10px">
+  <a href="/pages/shop.html?ref=report-cn" style="display:block;background:linear-gradient(135deg,rgba(201,168,76,.12),rgba(201,168,76,.06));border:1px solid rgba(201,168,76,.35);border-radius:14px;padding:16px 20px;text-align:center;text-decoration:none;color:inherit">
+    <div style="font-size:13px;color:#c9a84c;letter-spacing:.12em;margin-bottom:4px">✦ 查看专属开运产品</div>
+    <div style="font-size:11px;color:rgba(200,185,155,.6);letter-spacing:.06em">貔貅 · 黑曜石手链 · 踩小人袜 · 命理周边</div>
+  </a>
+  <a href="/pages/life-events.html?ref=report-cn" style="display:block;background:rgba(91,191,160,.06);border:1px solid rgba(91,191,160,.25);border-radius:14px;padding:16px 20px;text-align:center;text-decoration:none;color:inherit">
+    <div style="font-size:13px;color:#5bbfa0;letter-spacing:.12em;margin-bottom:4px">🔮 人生大事一对一咨询</div>
+    <div style="font-size:11px;color:rgba(200,185,155,.6);letter-spacing:.06em">婚嫁 · 择业 · 购房 · 出行 — 真人命理师深度解读</div>
+  </a>
+</div>
+
+<div class="share-box">
+  <div class="share-title">🌙 分享给朋友</div>
+  <div class="share-sub">把链接分享给朋友，他们免费解锁第四章，你也获得额外开运建议</div>
+  <button class="btn-share" onclick="shareReport()">📤 分享我的命盘</button>
+</div>
+
+<div class="disclaimer">⚠️ AIGC内容声明：本报告由人工智能生成，仅供娱乐参考，不构成人生、财务、医疗或法律建议。八字命理为中国传统文化，结果仅为参考。满18周岁用户适用。善缘 ShenYuan · shenyuan.mylumee.cn</div>
+
+<script>
+const p = new URLSearchParams(window.location.search);
+const name = p.get('name') || '您';
+const date = p.get('date') || '';
+const city = p.get('city') || '';
+document.getElementById('displayName').textContent = name + ' 的八字命盘';
+if(date){
+  const d = new Date(date + 'T12:00:00');
+  const formatted = d.getFullYear() + '年' + (d.getMonth()+1) + '月' + d.getDate() + '日';
+  document.getElementById('displayDate').textContent = formatted + (city ? ' · ' + city : '');
+}
+function shareReport(){
+  const uid = Math.random().toString(36).substr(2,8);
+  const url = window.location.origin + '/pages/lp-master-CN.html?ref=' + uid;
+  if(navigator.share){
+    navigator.share({title:'我的八字命盘',text:'AI精算了我的八字，准到起鸡皮疙瘩！你也来测测：',url});
+  } else {
+    navigator.clipboard.writeText(url).then(()=>alert('链接已复制，分享给朋友吧！'));
+  }
+}
+</script>
+</body>
+</html>
