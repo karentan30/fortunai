@@ -710,6 +710,52 @@ function getDailyReading() {
       }
       // 注：若API未返回干支则保留页面上已有内容（不清空）
 
+      // ── 解析幸运色 ──
+      var colorMap = { '天青': '#5bbfa0', '月白': '#e8e4d8', '黛蓝': '#3d5a80', '红': '#e63946', '橙': '#f4a261', '黄': '#e9c46a', '绿': '#2a9d8f', '蓝': '#457b9d', '紫': '#7b2d8b', '金': '#c9a84c', '白': '#f0ede8', '黑': '#2d2d2d', '粉': '#ffb3c6', '棕': '#8b6357', '灰': '#9e9e9e' };
+      var colorMatch = reading.match(/幸运色[^：:]*[：:]\s*([^\n（(【]{2,8})/);
+      if (!colorMatch) colorMatch = reading.match(/\*\*幸运色\*\*[^：:]*[：:]\s*([^\n（(【]{2,8})/);
+      if (!colorMatch) colorMatch = reading.match(/1[.、．]\s*\*?\*?([^\s（(【\*]{2,6}色?)\*?\*?[（(]/);
+      if (colorMatch) {
+        var cname = colorMatch[1].replace(/[*\s]/g,'').split('、')[0].split('，')[0].split(',')[0];
+        var cnEl = document.getElementById('luckyColorName');
+        if (cnEl) cnEl.textContent = cname;
+        var swEl = document.getElementById('luckyColorSwatch');
+        if (swEl) {
+          var hexColor = null;
+          Object.keys(colorMap).forEach(function(k){ if (cname.indexOf(k) !== -1 && !hexColor) hexColor = colorMap[k]; });
+          if (hexColor) swEl.style.background = hexColor;
+        }
+      }
+
+      // ── 解析幸运数字 ──
+      var numMatch = reading.match(/幸运数字[^：:]*[：:][^0-9]*(\d)[^0-9]*(\d)[^0-9]*(\d)/);
+      if (!numMatch) numMatch = reading.match(/\*\*幸运数字\*\*[^：:]*[：:][^0-9]*(\d)[^0-9]*(\d)[^0-9]*(\d)/);
+      if (numMatch) {
+        var nums = numMatch[1] + ' · ' + numMatch[2] + ' · ' + numMatch[3];
+        var numEl = document.getElementById('luckyNumber');
+        if (numEl) numEl.textContent = nums;
+      }
+
+      // ── 解析宜忌 ──
+      var yiMatch = reading.match(/今日宜[^：:\n]*[：:]([^\n]{5,80})/);
+      if (!yiMatch) yiMatch = reading.match(/宜[签会开表整饮祈拜运动社交]\S{0,10}(?:[、，,]\S{0,10}){1,4}/);
+      if (yiMatch) {
+        var yiItems = yiMatch[1] ? yiMatch[1].replace(/[*\s]/g,'').split(/[、，,]/).filter(Boolean).slice(0,3) : [];
+        var yiContainer = document.querySelector('.yi-list') || document.getElementById('yiList');
+        if (yiContainer && yiItems.length) {
+          yiContainer.innerHTML = yiItems.map(function(s){ return '<div class="yi-item">宜 ' + s + '</div>'; }).join('');
+        }
+      }
+      var jiMatch = reading.match(/今日忌[^：:\n]*[：:]([^\n]{5,80})/);
+      if (!jiMatch) jiMatch = reading.match(/忌[动远熬口穿抢]\S{0,10}(?:[、，,]\S{0,10}){1,4}/);
+      if (jiMatch) {
+        var jiItems = jiMatch[1] ? jiMatch[1].replace(/[*\s]/g,'').split(/[、，,]/).filter(Boolean).slice(0,3) : [];
+        var jiContainer = document.querySelector('.ji-list') || document.getElementById('jiList');
+        if (jiContainer && jiItems.length) {
+          jiContainer.innerHTML = jiItems.map(function(s){ return '<div class="ji-item">忌 ' + s + '</div>'; }).join('');
+        }
+      }
+
       document.getElementById('resultArea').style.display = 'block';
       document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
       injectDisclaimer('resultArea');
