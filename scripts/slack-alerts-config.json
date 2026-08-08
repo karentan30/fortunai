@@ -1,0 +1,95 @@
+{
+  "webhook_url": "${SLACK_WEBHOOK_URL}",
+  "channel": "#shenyuan-alerts",
+  "alerts": [
+    {
+      "name": "payment_failure_rate",
+      "description": "支付失败率过高",
+      "metric": "payment_success_rate",
+      "threshold": 95,
+      "comparison": "less_than",
+      "severity": "critical",
+      "message": "🚨 支付成功率低于 95%，当前: {value}%",
+      "action": "立刻检查Stripe webhook配置"
+    },
+    {
+      "name": "service_down",
+      "description": "服务宕机",
+      "metric": "pm2_status",
+      "threshold": 0,
+      "comparison": "equals",
+      "severity": "critical",
+      "message": "🚨 PM2 shenyuan 服务离线！",
+      "action": "SSH登录服务器，运行 pm2 restart shenyuan"
+    },
+    {
+      "name": "high_error_rate",
+      "description": "错误日志过多",
+      "metric": "error_count_per_hour",
+      "threshold": 10,
+      "comparison": "greater_than",
+      "severity": "warning",
+      "message": "⚠️ 最近1小时错误数: {value}",
+      "action": "检查PM2日志，查找错误原因"
+    },
+    {
+      "name": "low_daily_active_users",
+      "description": "DAU低于预期",
+      "metric": "dau",
+      "threshold": 20,
+      "comparison": "less_than",
+      "severity": "warning",
+      "message": "⚠️ DAU过低: {value}，目标50+",
+      "action": "检查邀请链接是否失效，考虑增加KOL"
+    },
+    {
+      "name": "low_conversion_rate",
+      "description": "转化率低于预期",
+      "metric": "conversion_rate",
+      "threshold": 3,
+      "comparison": "less_than",
+      "severity": "warning",
+      "message": "⚠️ 转化率过低: {value}%，目标5-8%",
+      "action": "检查报告生成是否正常，调整文案"
+    },
+    {
+      "name": "referral_link_broken",
+      "description": "邀请链接失效",
+      "metric": "referral_usage_rate",
+      "threshold": 5,
+      "comparison": "less_than",
+      "severity": "warning",
+      "message": "⚠️ 邀请参与率过低: {value}%，目标10%+",
+      "action": "检查邀请入口位置，验证前端ref_code参数"
+    },
+    {
+      "name": "database_size_critical",
+      "description": "数据库容量接近满",
+      "metric": "disk_usage",
+      "threshold": 85,
+      "comparison": "greater_than",
+      "severity": "warning",
+      "message": "⚠️ 磁盘使用率: {value}%",
+      "action": "清理旧数据或扩容"
+    },
+    {
+      "name": "daily_success",
+      "description": "每日成功达标通知",
+      "metric": "dau_and_payment",
+      "threshold": null,
+      "comparison": "custom",
+      "severity": "info",
+      "message": "✅ 今日达标: DAU {dau} | 付费 {payment} | 转化 {conversion_rate}%",
+      "action": "可选：分享到微信/小红书鼓舞团队"
+    }
+  ],
+  "retry_policy": {
+    "max_attempts": 3,
+    "backoff_seconds": 5
+  },
+  "quiet_hours": {
+    "start": "22:00",
+    "end": "08:00",
+    "mute_warning_severity": true
+  }
+}
