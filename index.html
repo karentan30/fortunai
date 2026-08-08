@@ -1,6 +1,29 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
+<script>
+(function() {
+  var CN_REGIONS = ['CN', 'TW', 'HK', 'SG', 'MO'];
+  var KR_REGION = 'KR';
+  var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  var timer = controller ? setTimeout(function() { controller.abort(); }, 2000) : null;
+  var fetchOpts = controller ? { signal: controller.signal } : {};
+  fetch('https://ipapi.co/json/', fetchOpts)
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      if (timer) clearTimeout(timer);
+      var cc = data && data.country_code ? data.country_code : '';
+      if (cc === KR_REGION) {
+        window.location.replace('/pages/saju-landing-KR.html');
+      } else if (cc && CN_REGIONS.indexOf(cc) === -1) {
+        window.location.replace('/pages/bazi-en.html');
+      }
+    })
+    .catch(function() {
+      if (timer) clearTimeout(timer);
+    });
+})();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#c9a84c">
