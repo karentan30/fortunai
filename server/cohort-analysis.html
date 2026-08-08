@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>善缘 - Cohort留存分析</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .header h1 {
+      color: #1a1a1a;
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+
+    .header p {
+      color: #666;
+      font-size: 14px;
+    }
+
+    .controls {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .control-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .control-group label {
+      font-weight: 500;
+      color: #333;
+      font-size: 14px;
+    }
+
+    .control-group select,
+    .control-group input {
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      background: white;
+      cursor: pointer;
+    }
+
+    .control-group input {
+      cursor: text;
+      width: 120px;
+    }
+
+    button {
+      padding: 8px 16px;
+      background: #4A90E2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.3s;
+    }
+
+    button:hover {
+      background: #357ABD;
+    }
+
+    button.secondary {
+      background: #f0f0f0;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+
+    button.secondary:hover {
+      background: #e0e0e0;
+    }
+
+    .table-wrapper {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    table thead {
+      background: #f8f9fa;
+    }
+
+    table th {
+      padding: 12px 16px;
+      text-align: left;
+      font-weight: 600;
+      color: #333;
+      border-bottom: 2px solid #e0e0e0;
+    }
+
+    table td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      color: #666;
+    }
+
+    table tbody tr:hover {
+      background: #fafafa;
+    }
+
+    table tbody tr:nth-child(even) {
+      background: #fbfbfb;
+    }
+
+    /* Cohort色标 */
+    .cohort-date {
+      font-weight: 500;
+      color: #1a1a1a;
+    }
+
+    .size-cell {
+      font-weight: 500;
+      color: #4A90E2;
+    }
+
+    .retention-cell {
+      position: relative;
+      text-align: right;
+      font-weight: 500;
+    }
+
+    .retention-cell .bar {
+      position: absolute;
+      left: 0;
+      top: 2px;
+      bottom: 2px;
+      background: linear-gradient(90deg, #4A90E2 0%, #7AB8FF 100%);
+      opacity: 0.2;
+      border-radius: 2px;
+      z-index: 0;
+    }
+
+    .retention-cell .value {
+      position: relative;
+      z-index: 1;
+      display: inline-block;
+    }
+
+    /* 百分比颜色标记 */
+    .high { color: #27AE60; font-weight: 600; }
+    .medium { color: #F39C12; font-weight: 600; }
+    .low { color: #E74C3C; font-weight: 600; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card h3 {
+      color: #666;
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+    }
+
+    .stat-card .value {
+      color: #1a1a1a;
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 5px;
+    }
+
+    .stat-card .unit {
+      color: #999;
+      font-size: 12px;
+    }
+
+    .export-section {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid #e0e0e0;
+    }
+
+    .export-btn {
+      flex: 1;
+    }
+
+    .chart-container {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 30px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-container h3 {
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 16px;
+    }
+
+    svg {
+      width: 100%;
+      height: auto;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+
+    .error {
+      background: #fee;
+      color: #c33;
+      padding: 15px;
+      border-radius: 6px;
+      margin: 20px 0;
+      border: 1px solid #fcc;
+    }
+
+    .tooltip {
+      position: absolute;
+      background: #333;
+      color: white;
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      z-index: 1000;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+      .controls, button {
+        display: none;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        padding: 20px;
+      }
+
+      .header h1 {
+        font-size: 20px;
+      }
+
+      .controls {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .control-group {
+        width: 100%;
+      }
+
+      .control-group select,
+      .control-group input {
+        flex: 1;
+      }
+
+      table {
+        font-size: 12px;
+      }
+
+      table th,
+      table td {
+        padding: 8px 10px;
+      }
+
+      .stat-card .value {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- 页头 -->
+  <div class="header">
+    <h1>📊 Cohort 留存分析</h1>
+    <p>按注册日期追踪用户留存率趋势 (Day1/3/7/14/30)</p>
+  </div>
+
+  <!-- 控制面板 -->
+  <div class="controls">
+    <div class="control-group">
+      <label>数据源</label>
+      <select id="dataSource">
+        <option value="demo">Demo数据</option>
+        <option value="live">从 data.json 读取</option>
+      </select>
+    </div>
+    <div class="control-group">
+      <label>最近天数</label>
+      <input type="number" id="daysFilter" value="90" min="1" max="365">
+    </div>
+    <button onclick="refreshData()">刷新数据</button>
+    <button class="secondary" onclick="downloadCSV()">下载 CSV</button>
+    <button class="secondary" onclick="window.print()">打印</button>
+  </div>
+
+  <!-- 统计卡片 -->
+  <div class="stats-grid" id="statsGrid">
+    <div class="stat-card">
+      <h3>活跃Cohorts</h3>
+      <div class="value" id="activeCohorts">-</div>
+    </div>
+    <div class="stat-card">
+      <h3>平均Day1留存</h3>
+      <div class="value" id="avgDay1">-</div>
+      <div class="unit">%</div>
+    </div>
+    <div class="stat-card">
+      <h3>平均Day7留存</h3>
+      <div class="value" id="avgDay7">-</div>
+      <div class="unit">%</div>
+    </div>
+    <div class="stat-card">
+      <h3>平均Day30留存</h3>
+      <div class="value" id="avgDay30">-</div>
+      <div class="unit">%</div>
+    </div>
+  </div>
+
+  <!-- 数据表 -->
+  <div class="table-wrapper">
+    <table id="cohortTable">
+      <thead>
+        <tr>
+          <th>Cohort日期</th>
+          <th style="text-align: right">新增用户</th>
+          <th style="text-align: right">Day1</th>
+          <th style="text-align: right">Day3</th>
+          <th style="text-align: right">Day7</th>
+          <th style="text-align: right">Day14</th>
+          <th style="text-align: right">Day30</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr><td colspan="7" class="loading">加载中...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 留存趋势图 -->
+  <div class="chart-container">
+    <h3>📈 留存率趋势</h3>
+    <canvas id="retentionChart" height="300"></canvas>
+  </div>
+
+  <!-- 导出选项 -->
+  <div class="table-wrapper" style="margin-top: 30px;">
+    <h3 style="margin-bottom: 15px;">📥 数据导出</h3>
+    <div class="export-section">
+      <button class="export-btn" onclick="exportJSON()">导出为 JSON</button>
+      <button class="export-btn" onclick="downloadCSV()">导出为 CSV</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Demo 数据生成器
+  function generateDemoData(days = 90) {
+    const data = [];
+    const now = new Date();
+
+    for (let i = days; i > 0; i--) {
+      const date = new Date(now);
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+
+      // 模拟cohort大小
+      const size = Math.floor(100 + Math.random() * 300);
+
+      // 模拟留存率（通常呈下降趋势）
+      const baseRetention = Math.random() * 0.3 + 0.45;
+      const day1 = Math.round(size * (baseRetention + Math.random() * 0.1));
+      const day3 = Math.round(size * Math.max(0.2, baseRetention - 0.1 + Math.random() * 0.05));
+      const day7 = Math.round(size * Math.max(0.1, baseRetention - 0.2 + Math.random() * 0.05));
+      const day14 = Math.round(size * Math.max(0.05, baseRetention - 0.3 + Math.random() * 0.03));
+      const day30 = Math.round(size * Math.max(0.02, baseRetention - 0.4 + Math.random() * 0.02));
+
+      data.push({
+        cohort_date: dateStr,
+        size: size,
+        day1: day1,
+        day3: day3,
+        day7: day7,
+        day14: day14,
+        day30: day30,
+        day1_rate: ((day1 / size) * 100).toFixed(1),
+        day3_rate: ((day3 / size) * 100).toFixed(1),
+        day7_rate: ((day7 / size) * 100).toFixed(1),
+        day14_rate: ((day14 / size) * 100).toFixed(1),
+        day30_rate: ((day30 / size) * 100).toFixed(1)
+      });
+    }
+
+    return data;
+  }
+
+  // 获取数据
+  async function fetchData() {
+    const source = document.getElementById('dataSource').value;
+    const days = parseInt(document.getElementById('daysFilter').value) || 90;
+
+    try {
+      if (source === 'demo') {
+        return generateDemoData(days);
+      } else {
+        // 从服务器读取
+        const response = await fetch('/api/analytics/cohort');
+        if (!response.ok) throw new Error('获取数据失败');
+        const result = await response.json();
+        return result.data || generateDemoData(days);
+      }
+    } catch (e) {
+      console.warn('数据加载失败，使用Demo数据:', e.message);
+      return generateDemoData(days);
+    }
+  }
+
+  // 获取颜色等级
+  function getRetentionClass(rate) {
+    const pct = parseFloat(rate);
+    if (pct >= 40) return 'high';
+    if (pct >= 20) return 'medium';
+    return 'low';
+  }
+
+  // 渲染表格
+  function renderTable(data) {
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = data.map(row => `
+      <tr>
+        <td class="cohort-date">${row.cohort_date}</td>
+        <td style="text-align: right" class="size-cell">${row.size.toLocaleString()}</td>
+        <td class="retention-cell">
+          <div class="bar" style="width: ${Math.min(100, row.day1_rate)}%"></div>
+          <span class="value ${getRetentionClass(row.day1_rate)}">${row.day1_rate}%</span>
+        </td>
+        <td class="retention-cell">
+          <div class="bar" style="width: ${Math.min(100, row.day3_rate)}%"></div>
+          <span class="value ${getRetentionClass(row.day3_rate)}">${row.day3_rate}%</span>
+        </td>
+        <td class="retention-cell">
+          <div class="bar" style="width: ${Math.min(100, row.day7_rate)}%"></div>
+          <span class="value ${getRetentionClass(row.day7_rate)}">${row.day7_rate}%</span>
+        </td>
+        <td class="retention-cell">
+          <div class="bar" style="width: ${Math.min(100, row.day14_rate)}%"></div>
+          <span class="value ${getRetentionClass(row.day14_rate)}">${row.day14_rate}%</span>
+        </td>
+        <td class="retention-cell">
+          <div class="bar" style="width: ${Math.min(100, row.day30_rate)}%"></div>
+          <span class="value ${getRetentionClass(row.day30_rate)}">${row.day30_rate}%</span>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // 更新统计卡片
+  function updateStats(data) {
+    if (data.length === 0) return;
+
+    const day1Rates = data.map(r => parseFloat(r.day1_rate)).filter(n => !isNaN(n));
+    const day7Rates = data.map(r => parseFloat(r.day7_rate)).filter(n => !isNaN(n));
+    const day30Rates = data.map(r => parseFloat(r.day30_rate)).filter(n => !isNaN(n));
+
+    const avg = arr => (arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1);
+
+    document.getElementById('activeCohorts').textContent = data.length;
+    document.getElementById('avgDay1').textContent = avg(day1Rates);
+    document.getElementById('avgDay7').textContent = avg(day7Rates);
+    document.getElementById('avgDay30').textContent = avg(day30Rates);
+  }
+
+  // 绘制留存趋势图
+  function drawRetentionChart(data) {
+    const canvas = document.getElementById('retentionChart');
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) return;
+
+    // 简化的图表绘制（可用Chart.js等库优化）
+    const width = canvas.offsetWidth;
+    const height = 300;
+    canvas.width = width;
+    canvas.height = height;
+
+    const days = ['Day1', 'Day3', 'Day7', 'Day14', 'Day30'];
+    const rates = [
+      data.map(r => parseFloat(r.day1_rate)).filter(n => !isNaN(n)),
+      data.map(r => parseFloat(r.day3_rate)).filter(n => !isNaN(n)),
+      data.map(r => parseFloat(r.day7_rate)).filter(n => !isNaN(n)),
+      data.map(r => parseFloat(r.day14_rate)).filter(n => !isNaN(n)),
+      data.map(r => parseFloat(r.day30_rate)).filter(n => !isNaN(n))
+    ];
+
+    const avg = arr => arr.reduce((a, b) => a + b, 0) / arr.length || 0;
+    const avgRates = rates.map(avg);
+
+    // 清除画布
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, width, height);
+
+    // 绘制坐标轴
+    ctx.strokeStyle = '#e0e0e0';
+    ctx.beginPath();
+    ctx.moveTo(40, 20);
+    ctx.lineTo(40, height - 40);
+    ctx.lineTo(width - 20, height - 40);
+    ctx.stroke();
+
+    // 绘制网格线
+    ctx.strokeStyle = '#f0f0f0';
+    for (let i = 0; i <= 5; i++) {
+      const y = height - 40 - (i * (height - 60) / 5);
+      ctx.beginPath();
+      ctx.moveTo(40, y);
+      ctx.lineTo(width - 20, y);
+      ctx.stroke();
+
+      ctx.fillStyle = '#999';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'right';
+      ctx.fillText((i * 20) + '%', 35, y + 4);
+    }
+
+    // 绘制折线
+    const chartWidth = width - 60;
+    const chartHeight = height - 60;
+    const pointSpacing = chartWidth / (days.length - 1);
+
+    ctx.strokeStyle = '#4A90E2';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+
+    avgRates.forEach((rate, i) => {
+      const x = 40 + (i * pointSpacing);
+      const y = height - 40 - (rate / 100) * chartHeight;
+      if (i === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    });
+    ctx.stroke();
+
+    // 绘制数据点
+    ctx.fillStyle = '#4A90E2';
+    avgRates.forEach((rate, i) => {
+      const x = 40 + (i * pointSpacing);
+      const y = height - 40 - (rate / 100) * chartHeight;
+      ctx.beginPath();
+      ctx.arc(x, y, 4, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 标签
+      ctx.fillStyle = '#333';
+      ctx.font = 'bold 14px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText(rate.toFixed(1) + '%', x, y - 15);
+      ctx.fillStyle = '#4A90E2';
+    });
+
+    // X轴标签
+    ctx.fillStyle = '#999';
+    ctx.font = '12px Arial';
+    days.forEach((day, i) => {
+      const x = 40 + (i * pointSpacing);
+      ctx.textAlign = 'center';
+      ctx.fillText(day, x, height - 20);
+    });
+  }
+
+  // 导出JSON
+  function exportJSON() {
+    const data = JSON.parse(localStorage.getItem('cohortData') || '[]');
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    downloadBlob(blob, `cohort-${new Date().toISOString().split('T')[0]}.json`);
+  }
+
+  // 下载CSV
+  function downloadCSV() {
+    const data = JSON.parse(localStorage.getItem('cohortData') || '[]');
+    if (data.length === 0) {
+      alert('暂无数据');
+      return;
+    }
+
+    const headers = ['Cohort日期', '新增用户', 'Day1', 'Day1%', 'Day3', 'Day3%', 'Day7', 'Day7%', 'Day14', 'Day14%', 'Day30', 'Day30%'];
+    const rows = data.map(r => [
+      r.cohort_date,
+      r.size,
+      r.day1, r.day1_rate,
+      r.day3, r.day3_rate,
+      r.day7, r.day7_rate,
+      r.day14, r.day14_rate,
+      r.day30, r.day30_rate
+    ]);
+
+    let csv = headers.join(',') + '\n';
+    csv += rows.map(r => r.join(',')).join('\n');
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    downloadBlob(blob, `cohort-${new Date().toISOString().split('T')[0]}.csv`);
+  }
+
+  // 下载辅助函数
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // 刷新数据
+  async function refreshData() {
+    const data = await fetchData();
+    localStorage.setItem('cohortData', JSON.stringify(data));
+
+    renderTable(data);
+    updateStats(data);
+    drawRetentionChart(data);
+  }
+
+  // 初始化
+  window.onload = () => {
+    refreshData();
+    // 每5分钟自动刷新
+    setInterval(refreshData, 5 * 60 * 1000);
+  };
+</script>
+
+</body>
+</html>

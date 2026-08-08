@@ -1,0 +1,209 @@
+{
+  "meta": {
+    "description": "善缘命理平台 Slack Webhook 配置模板",
+    "version": "1.0",
+    "createdDate": "2026-08-08",
+    "lastUpdated": "2026-08-08",
+    "documentation": "https://api.slack.com/messaging/webhooks",
+    "status": "需要通过Slack App配置获取真实webhook URL"
+  },
+
+  "webhooks": {
+    "alerts": {
+      "name": "告警通道",
+      "channel": "#shenyuan-alerts",
+      "description": "系统告警、错误、异常通知",
+      "triggers": [
+        "支付失败率超过阈值",
+        "服务器内存/磁盘占用过高",
+        "API错误率突增",
+        "邀请激活流失率过高",
+        "数据库连接异常",
+        "第三方服务超时"
+      ],
+      "webhookUrl": "https://hooks.slack.com/services/YOUR/WEBHOOK/ALERTS",
+      "environment": "SLACK_WEBHOOK_ALERTS"
+    },
+
+    "payment": {
+      "name": "支付事件通道",
+      "channel": "#shenyuan-payments",
+      "description": "支付成功/失败详细记录，用于财务审计",
+      "triggers": [
+        "订单创建",
+        "支付成功",
+        "支付失败(Stripe返回错误)",
+        "退款申请",
+        "支付延迟(>5秒)"
+      ],
+      "webhookUrl": "https://hooks.slack.com/services/YOUR/WEBHOOK/PAYMENT",
+      "environment": "SLACK_WEBHOOK_PAYMENT",
+      "permissions": [
+        "view_order_details",
+        "access_payment_history"
+      ]
+    },
+
+    "invites": {
+      "name": "邀请激活通道",
+      "channel": "#shenyuan-invites",
+      "description": "邀请发送、激活转化、报酬发放监控",
+      "triggers": [
+        "邀请链接生成",
+        "邀请接受",
+        "用户激活",
+        "报酬发放",
+        "激活失效通知"
+      ],
+      "webhookUrl": "https://hooks.slack.com/services/YOUR/WEBHOOK/INVITES",
+      "environment": "SLACK_WEBHOOK_INVITES"
+    },
+
+    "infra": {
+      "name": "基础设施通道",
+      "channel": "#shenyuan-infra",
+      "description": "服务器健康、部署、故障恢复",
+      "triggers": [
+        "服务器CPU/内存/磁盘告警",
+        "部署成功/失败",
+        "自动故障转移",
+        "备份完成/失败",
+        "SSL证书即将过期"
+      ],
+      "webhookUrl": "https://hooks.slack.com/services/YOUR/WEBHOOK/INFRA",
+      "environment": "SLACK_WEBHOOK_INFRA"
+    }
+  },
+
+  "setupInstructions": {
+    "step1": "访问 https://api.slack.com/apps",
+    "step2": "点击 'Create New App' -> 选择 'From scratch'",
+    "step3": "命名为 'ShenYuan Alerts'，选择工作区",
+    "step4": "左侧菜单 -> 'Incoming Webhooks' -> 打开",
+    "step5": "点击 'Add New Webhook to Workspace'",
+    "step6": "选择对应的Slack频道(#shenyuan-alerts等)",
+    "step7": "复制生成的webhook URL到下方对应字段",
+    "step8": "重复步骤5-7为每个webhook生成URL",
+    "step9": "将webhook URL写入 ~/.env.production 或环境变量"
+  },
+
+  "envFileExample": {
+    "description": "在 ~/.env.production 中配置(仅本地开发用.env)",
+    "content": "SLACK_WEBHOOK_ALERTS=https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXX\nSLACK_WEBHOOK_PAYMENT=https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXX\nSLACK_WEBHOOK_INVITES=https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXX\nSLACK_WEBHOOK_INFRA=https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXX"
+  },
+
+  "pmm2Deployment": {
+    "command": "pm2 start slack-alerts.js -i 1 --env production --name shenyuan-alerts",
+    "restartPolicy": "autorestart",
+    "monitoring": "pm2 monit",
+    "logs": "pm2 logs shenyuan-alerts",
+    "autostartOnBoot": "pm2 startup && pm2 save"
+  },
+
+  "testingGuide": {
+    "testPaymentSuccess": "curl -X POST http://localhost:3007/alert/payment -H 'Content-Type: application/json' -d '{\"type\": \"success\", \"amount\": 99.9, \"orderId\": \"test-001\", \"userId\": \"user-123\", \"processingTime\": 1200}'",
+    "testPaymentFailure": "curl -X POST http://localhost:3007/alert/payment -H 'Content-Type: application/json' -d '{\"type\": \"failure\", \"amount\": 99.9, \"orderId\": \"test-002\", \"userId\": \"user-456\", \"error\": \"Card declined\", \"processingTime\": 5200}'",
+    "testInvite": "curl -X POST http://localhost:3007/alert/invite -H 'Content-Type: application/json' -d '{\"referrer\": \"user-123\", \"invitee\": \"new-user\", \"activated\": true, \"activatedAt\": \"2026-08-08T12:00:00Z\", \"reward\": 50}'",
+    "testServerMetrics": "curl -X POST http://localhost:3007/alert/server -H 'Content-Type: application/json' -d '{\"memory\": 82, \"disk\": 88, \"cpu\": 45, \"errors\": 5, \"requests\": 250}'",
+    "checkMetrics": "curl http://localhost:3007/metrics",
+    "healthCheck": "curl http://localhost:3007/health"
+  },
+
+  "messageFormatSpec": {
+    "paymentSuccess": {
+      "color": "36a64f",
+      "emoji": ":moneybag:",
+      "fields": ["类型", "金额", "订单ID", "用户", "时间"]
+    },
+    "paymentFailure": {
+      "color": "ff0000",
+      "emoji": ":warning:",
+      "fields": ["类型", "金额", "订单ID", "用户", "时间", "错误信息"]
+    },
+    "inviteActivation": {
+      "color": "0099ff",
+      "emoji": ":rocket:",
+      "fields": ["邀请者", "被邀请者", "状态", "激活时间", "报酬", "时间"]
+    },
+    "alert": {
+      "critical": { "color": "ff0000", "emoji": ":rotating_light:" },
+      "warning": { "color": "ff9900", "emoji": ":warning:" },
+      "info": { "color": "0099ff", "emoji": ":information_source:" }
+    }
+  },
+
+  "thresholds": {
+    "paymentErrorRate": "5% (超过时触发告警)",
+    "paymentDelay": "5秒 (处理时间超过时触发告警)",
+    "inviteDropoff": "30% (激活流失率超过时触发告警)",
+    "serverMemory": "80% (占用超过时触发告警)",
+    "serverDisk": "85% (占用超过时触发告警)",
+    "apiErrorRate": "2% (错误率超过时触发告警)",
+    "apiResponseTime": "3秒 (响应时间超过时触发告警)"
+  },
+
+  "alertDelay": {
+    "same": "300秒 (同类型告警最多300秒发一次)",
+    "critical": "60秒 (严重告警最多60秒发一次)"
+  },
+
+  "integrationGuide": {
+    "backend": {
+      "description": "在支付/邀请处理逻辑中调用告警端点",
+      "paymentExample": "POST http://localhost:3007/alert/payment",
+      "inviteExample": "POST http://localhost:3007/alert/invite",
+      "serverExample": "POST http://localhost:3007/alert/server (定期上报,如cron 5分钟)"
+    },
+    "frontend": {
+      "description": "前端无需调用(后端调用),但可查询指标",
+      "metricsEndpoint": "GET http://localhost:3007/metrics"
+    },
+    "monitoring": {
+      "description": "使用pm2 + UptimeRobot监控告警系统本身",
+      "uptimeRobotUrl": "http://localhost:3007/health",
+      "alertInterval": "每5分钟检查一次健康状态"
+    }
+  },
+
+  "slackChannelSetup": {
+    "shenyuanAlerts": {
+      "name": "#shenyuan-alerts",
+      "description": "系统级告警和错误通知",
+      "members": ["@on-call-engineer", "@product-lead"],
+      "notifications": "所有(勿关闭)"
+    },
+    "shenyuanPayments": {
+      "name": "#shenyuan-payments",
+      "description": "支付事件详细记录(财务审计用)",
+      "members": ["@finance-team", "@ceo", "@cto"],
+      "notifications": "全部(审计追踪)"
+    },
+    "shenyuanInvites": {
+      "name": "#shenyuan-invites",
+      "description": "邀请激活转化漏斗监控",
+      "members": ["@growth-team", "@product-lead"],
+      "notifications": "仅高优先级"
+    },
+    "shenyuanInfra": {
+      "name": "#shenyuan-infra",
+      "description": "基础设施监控、部署、故障转移",
+      "members": ["@devops-team", "@on-call-sre"],
+      "notifications": "所有(及时响应)"
+    }
+  },
+
+  "troubleshooting": {
+    "webhookNotConfigured": "确保已创建webhook并添加到环境变量,运行 'echo $SLACK_WEBHOOK_ALERTS' 验证",
+    "messageNotAppearing": "检查Slack频道权限,确认bot已加入频道,查看 pm2 logs shenyuan-alerts 的错误日志",
+    "duplicateAlerts": "告警去重逻辑在工作,同一告警300秒内仅发一次(critical 60秒),可通过修改CONFIG.alertDelay调整",
+    "metricsIncorrect": "检查后端是否正确POST到告警端点,确认数据格式正确,参考 testingGuide 中的curl命令",
+    "highMemoryUsage": "可能是内存泄漏,检查 pm2 logs 日志,考虑增加NODE_OPTIONS=--max-old-space-size=1024"
+  },
+
+  "security": {
+    "webhookExposure": "webhook URL包含密钥,勿在代码中硬编码,仅通过环境变量传递,勿提交到git",
+    "rateLimit": "Slack webhook默认限流 ~1请求/秒,超出会返回429,系统已实现缓冲去重规避",
+    "authentication": "webhook URL即身份验证,仅支持HTTPS,本地127.0.0.1监听",
+    "ipRestriction": "在nginx反向代理或firewall中仅允许后端服务器访问告警端口"
+  }
+}

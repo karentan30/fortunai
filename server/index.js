@@ -159,6 +159,10 @@ app.use('/api/hepan', require('./routes/hepan'));
 const { router: affiliateRouter } = require('./routes/affiliate');
 app.use('/api', affiliateRouter);
 
+// KPI 监控仪表板
+const kpiRouter = require('./routes/kpi');
+app.use('/api/kpi', kpiRouter);
+
 // ── 全局错误处理 ──
 app.use(function(err, req, res, next) {
   console.error('[FATAL]', err.message);

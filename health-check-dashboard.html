@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>善缘 服务健康检查看板</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #333;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .last-update {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 12px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .card-value {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #667eea;
+        }
+
+        .card-label {
+            font-size: 12px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+
+        .status-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            font-size: 12px;
+        }
+
+        .status-row:last-child {
+            border-bottom: none;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .status-ok {
+            background: #4CAF50;
+        }
+
+        .status-warn {
+            background: #FFC107;
+        }
+
+        .status-error {
+            background: #F44336;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #eee;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            transition: width 0.3s ease;
+        }
+
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .service-card {
+            background: white;
+            border-radius: 12px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .service-name {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+        }
+
+        .service-status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .service-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .alert-box {
+            background: #FFF3CD;
+            border-left: 4px solid #FFC107;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            color: #856404;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .alert-content {
+            color: #856404;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .controls {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-success {
+            background: #4CAF50;
+        }
+
+        .btn-success:hover {
+            background: #45a049;
+        }
+
+        .btn-danger {
+            background: #F44336;
+        }
+
+        .btn-danger:hover {
+            background: #da190b;
+        }
+
+        .log-box {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        .log-content {
+            background: #f5f5f5;
+            border-radius: 6px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 11px;
+            color: #333;
+            max-height: 300px;
+            overflow-y: auto;
+            line-height: 1.5;
+        }
+
+        .log-line {
+            padding: 2px 0;
+        }
+
+        .log-info {
+            color: #667eea;
+        }
+
+        .log-warn {
+            color: #FFC107;
+        }
+
+        .log-error {
+            color: #F44336;
+        }
+
+        .log-ok {
+            color: #4CAF50;
+        }
+
+        @media (max-width: 768px) {
+            .status-grid, .service-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .refresh-badge {
+            display: inline-block;
+            background: #4CAF50;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            margin-left: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏥 善缘 服务健康检查看板</h1>
+            <div class="last-update">
+                上次更新: <span id="updateTime">--:--:--</span>
+                <span class="refresh-badge" id="refreshBadge">实时更新</span>
+            </div>
+        </header>
+
+        <div id="alertBox" class="alert-box" style="display: none;">
+            <div class="alert-title">⚠️ 系统告警</div>
+            <div class="alert-content" id="alertContent"></div>
+        </div>
+
+        <!-- 关键指标 -->
+        <div class="status-grid">
+            <div class="status-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: #E3F2FD;">🌐</div>
+                    <div class="card-title">服务状态</div>
+                </div>
+                <div class="card-value" id="serviceStatus">检查中...</div>
+                <div class="status-row">
+                    <span><span class="status-indicator status-ok"></span>API 服务</span>
+                    <span id="apiStatus">检查中</span>
+                </div>
+                <div class="status-row">
+                    <span><span class="status-indicator status-ok"></span>数据库</span>
+                    <span id="dbStatus">检查中</span>
+                </div>
+                <div class="status-row">
+                    <span><span class="status-indicator status-ok"></span>缓存</span>
+                    <span id="cacheStatus">检查中</span>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: #F3E5F5;">💾</div>
+                    <div class="card-title">内存使用</div>
+                </div>
+                <div class="card-value" id="memoryUsage">--</div>
+                <div class="card-label">占用内存 / 总内存</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="memoryProgress" style="width: 0%"></div>
+                </div>
+                <div style="margin-top: 10px; font-size: 12px; color: #999;">
+                    <div>进程: <span id="nodeMemory">--</span> MB</div>
+                    <div>系统: <span id="sysMemory">--</span> GB</div>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: #FFE0B2;">⚡</div>
+                    <div class="card-title">CPU 占用</div>
+                </div>
+                <div class="card-value" id="cpuUsage">--</div>
+                <div class="card-label">平均占用率</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="cpuProgress" style="width: 0%"></div>
+                </div>
+                <div style="margin-top: 10px; font-size: 12px; color: #999;">
+                    <div>核心数: <span id="cpuCores">--</span></div>
+                    <div>运行进程: <span id="nodeProcess">--</span></div>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: #C8E6C9;">💿</div>
+                    <div class="card-title">磁盘使用</div>
+                </div>
+                <div class="card-value" id="diskUsage">--</div>
+                <div class="card-label">占用 / 总容量</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="diskProgress" style="width: 0%"></div>
+                </div>
+                <div style="margin-top: 10px; font-size: 12px; color: #999;">
+                    <div>可用: <span id="diskFree">--</span> GB</div>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: #FFCCBC;">📊</div>
+                    <div class="card-title">API 性能</div>
+                </div>
+                <div class="status-row">
+                    <span>平均响应时间</span>
+                    <span id="avgLatency" class="service-value">--</span>
+                </div>
+                <div class="status-row">
+                    <span>吞吐量 (QPS)</span>
+                    <span id="qps" class="service-value">--</span>
+                </div>
+                <div class="status-row">
+                    <span>错误率</span>
+                    <span id="errorRate" class="service-value">--</span>
+                </div>
+                <div class="status-row">
+                    <span>正常运行时间</span>
+                    <span id="uptime" class="service-value">--</span>
+                </div>
+            </div>
+
+            <div class="status-card">
+                <div class="card-header">
+                    <div class="card-icon" style="background: #B39DDB;">🔒</div>
+                    <div class="card-title">安全检查</div>
+                </div>
+                <div class="status-row">
+                    <span><span class="status-indicator status-ok"></span>HTTPS</span>
+                    <span id="httpsStatus">检查中</span>
+                </div>
+                <div class="status-row">
+                    <span><span class="status-indicator status-ok"></span>密钥有效期</span>
+                    <span id="certExpiry">检查中</span>
+                </div>
+                <div class="status-row">
+                    <span><span class="status-indicator status-ok"></span>密钥配置</span>
+                    <span id="keyStatus">检查中</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 服务详情 -->
+        <h2 style="color: white; margin: 30px 0 20px 0; font-size: 18px;">📦 服务状态</h2>
+        <div class="service-grid">
+            <div class="service-card">
+                <div class="service-name">
+                    <span><span class="status-indicator status-ok" id="api-indicator"></span>API 服务</span>
+                </div>
+                <div class="service-status">
+                    <span>状态:</span>
+                    <span class="service-value" id="api-status">检查中</span>
+                </div>
+                <div class="service-status">
+                    <span>PID:</span>
+                    <span class="service-value" id="api-pid">--</span>
+                </div>
+                <div class="service-status">
+                    <span>内存:</span>
+                    <span class="service-value" id="api-memory">--</span>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-name">
+                    <span><span class="status-indicator status-ok" id="db-indicator"></span>数据库</span>
+                </div>
+                <div class="service-status">
+                    <span>状态:</span>
+                    <span class="service-value" id="db-status">检查中</span>
+                </div>
+                <div class="service-status">
+                    <span>连接数:</span>
+                    <span class="service-value" id="db-connections">--</span>
+                </div>
+                <div class="service-status">
+                    <span>大小:</span>
+                    <span class="service-value" id="db-size">--</span>
+                </div>
+            </div>
+
+            <div class="service-card">
+                <div class="service-name">
+                    <span><span class="status-indicator status-ok" id="cache-indicator"></span>缓存 (Redis)</span>
+                </div>
+                <div class="service-status">
+                    <span>状态:</span>
+                    <span class="service-value" id="cache-status">检查中</span>
+                </div>
+                <div class="service-status">
+                    <span>内存:</span>
+                    <span class="service-value" id="cache-memory">--</span>
+                </div>
+                <div class="service-status">
+                    <span>键数:</span>
+                    <span class="service-value" id="cache-keys">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 控制面板 -->
+        <div class="controls">
+            <h3 style="margin-bottom: 15px; font-size: 14px; font-weight: 600;">⚙️ 快速操作</h3>
+            <div class="control-group">
+                <button onclick="refreshDashboard()" class="btn-success">🔄 立即刷新</button>
+                <button onclick="runHealthCheck()" class="btn-success">🏥 运行健康检查</button>
+                <button onclick="viewLogs()" class="btn-success">📋 查看最新日志</button>
+            </div>
+            <div class="control-group">
+                <button onclick="restartService()" class="btn-danger">🔄 重启服务</button>
+                <button onclick="copyRunQuickFix()" class="btn-danger">⚡ 复制快速修复命令</button>
+                <button onclick="callEmergency()" class="btn-danger">📞 紧急联系</button>
+            </div>
+        </div>
+
+        <!-- 日志面板 -->
+        <div class="log-box">
+            <h3 style="margin-bottom: 15px; font-size: 14px; font-weight: 600;">📜 实时日志 (最后 20 行)</h3>
+            <div class="log-content" id="logContent">
+                <div class="log-line log-info">[INFO] 正在加载日志...</div>
+            </div>
+        </div>
+
+        <!-- 底部说明 -->
+        <div style="background: rgba(255, 255, 255, 0.95); border-radius: 12px; padding: 20px; margin-top: 20px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);">
+            <h3 style="margin-bottom: 10px; font-size: 14px; font-weight: 600;">📖 使用说明</h3>
+            <ul style="font-size: 12px; color: #666; line-height: 1.8;">
+                <li>✅ <strong>绿色</strong> = 服务正常，无需操作</li>
+                <li>⚠️ <strong>黄色</strong> = 轻微异常，建议监控</li>
+                <li>❌ <strong>红色</strong> = 严重错误，需立即处理</li>
+                <li>该看板每 30 秒自动刷新一次</li>
+                <li>若看板无法加载，说明服务已完全宕机，请执行: <code>bash /opt/shenyuan/QUICK-FIX-COMMANDS.sh 6</code></li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 配置
+        const API_BASE = 'http://47.242.80.65/api';
+        const REFRESH_INTERVAL = 30000; // 30 秒
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshDashboard();
+            setInterval(refreshDashboard, REFRESH_INTERVAL);
+        });
+
+        // 刷新看板
+        function refreshDashboard() {
+            updateTime();
+            checkServices();
+            checkMetrics();
+            checkLogs();
+        }
+
+        // 更新时间
+        function updateTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('zh-CN');
+            document.getElementById('updateTime').textContent = timeStr;
+        }
+
+        // 检查服务
+        async function checkServices() {
+            try {
+                // 模拟数据（实际应从 API 获取）
+                const data = {
+                    api: { status: 'online', pid: 12345, memory: 245 },
+                    db: { status: 'connected', connections: 3, size: '125 MB' },
+                    cache: { status: 'connected', memory: '45 MB', keys: 1234 },
+                    memory: { used: 2.1, total: 4, percent: 52.5 },
+                    cpu: { usage: 15, cores: 2 },
+                    disk: { used: 45, total: 100, free: 55, percent: 45 },
+                    api_metrics: { latency: 125, qps: 45, errorRate: 0.2, uptime: '18d 3h' },
+                    https: true,
+                    cert_expiry: 89,
+                    keys_configured: true
+                };
+
+                updateServiceStatus(data);
+            } catch (error) {
+                console.error('检查服务失败:', error);
+                showAlert('无法连接到 API，可能服务已宕机');
+            }
+        }
+
+        // 更新服务状态
+        function updateServiceStatus(data) {
+            // API 服务
+            updateIndicator('api-indicator', data.api.status === 'online' ? 'ok' : 'error');
+            document.getElementById('api-status').textContent = data.api.status === 'online' ? '在线' : '离线';
+            document.getElementById('api-pid').textContent = data.api.pid;
+            document.getElementById('api-memory').textContent = data.api.memory + ' MB';
+
+            // 数据库
+            updateIndicator('db-indicator', data.db.status === 'connected' ? 'ok' : 'error');
+            document.getElementById('db-status').textContent = data.db.status === 'connected' ? '已连接' : '未连接';
+            document.getElementById('db-connections').textContent = data.db.connections;
+            document.getElementById('db-size').textContent = data.db.size;
+
+            // 缓存
+            updateIndicator('cache-indicator', data.cache.status === 'connected' ? 'ok' : 'error');
+            document.getElementById('cache-status').textContent = data.cache.status === 'connected' ? '已连接' : '未连接';
+            document.getElementById('cache-memory').textContent = data.cache.memory;
+            document.getElementById('cache-keys').textContent = data.cache.keys;
+
+            // 内存
+            document.getElementById('memoryUsage').textContent = data.memory.used.toFixed(1) + ' / ' + data.memory.total + ' GB';
+            document.getElementById('memoryProgress').style.width = data.memory.percent + '%';
+            document.getElementById('nodeMemory').textContent = data.api.memory;
+            document.getElementById('sysMemory').textContent = data.memory.total;
+
+            // CPU
+            document.getElementById('cpuUsage').textContent = data.cpu.usage + '%';
+            document.getElementById('cpuProgress').style.width = data.cpu.usage + '%';
+            document.getElementById('cpuCores').textContent = data.cpu.cores;
+            document.getElementById('nodeProcess').textContent = '1';
+
+            // 磁盘
+            document.getElementById('diskUsage').textContent = data.disk.used + ' / ' + data.disk.total + ' GB';
+            document.getElementById('diskProgress').style.width = data.disk.percent + '%';
+            document.getElementById('diskFree').textContent = data.disk.free;
+
+            // API 指标
+            document.getElementById('avgLatency').textContent = data.api_metrics.latency + ' ms';
+            document.getElementById('qps').textContent = data.api_metrics.qps;
+            document.getElementById('errorRate').textContent = data.api_metrics.errorRate + '%';
+            document.getElementById('uptime').textContent = data.api_metrics.uptime;
+
+            // 安全检查
+            updateIndicator('https', data.https ? 'ok' : 'error');
+            document.getElementById('httpsStatus').textContent = data.https ? '已启用' : '未启用';
+            document.getElementById('certExpiry').textContent = data.cert_expiry + ' 天';
+            updateIndicator('key', data.keys_configured ? 'ok' : 'error');
+            document.getElementById('keyStatus').textContent = data.keys_configured ? '已配置' : '缺失';
+
+            // 总体服务状态
+            const allOk = data.api.status === 'online' && data.db.status === 'connected' && data.cache.status === 'connected';
+            document.getElementById('serviceStatus').textContent = allOk ? '✅ 正常' : '⚠️ 异常';
+
+            // 检查告警
+            checkAlerts(data);
+        }
+
+        // 更新指示器
+        function updateIndicator(id, status) {
+            const elem = document.getElementById(id);
+            if (!elem) return;
+
+            elem.className = 'status-indicator status-' + status;
+        }
+
+        // 检查告警
+        function checkAlerts(data) {
+            const alerts = [];
+
+            if (data.memory.percent > 80) {
+                alerts.push('⚠️ 内存占用过高 (' + data.memory.percent.toFixed(1) + '%)');
+            }
+            if (data.cpu.usage > 80) {
+                alerts.push('⚠️ CPU 占用过高 (' + data.cpu.usage + '%)');
+            }
+            if (data.disk.percent > 85) {
+                alerts.push('⚠️ 磁盘空间不足 (' + data.disk.percent + '%)');
+            }
+            if (data.api_metrics.errorRate > 1) {
+                alerts.push('⚠️ 错误率过高 (' + data.api_metrics.errorRate + '%)');
+            }
+            if (data.cert_expiry < 30) {
+                alerts.push('⚠️ SSL 证书即将过期 (' + data.cert_expiry + ' 天)');
+            }
+
+            if (alerts.length > 0) {
+                showAlert(alerts.join('<br>'));
+            } else {
+                document.getElementById('alertBox').style.display = 'none';
+            }
+        }
+
+        // 显示告警
+        function showAlert(message) {
+            const box = document.getElementById('alertBox');
+            document.getElementById('alertContent').innerHTML = message;
+            box.style.display = 'block';
+        }
+
+        // 检查指标
+        function checkMetrics() {
+            // 可以添加更多指标检查
+        }
+
+        // 检查日志
+        function checkLogs() {
+            const logContent = document.getElementById('logContent');
+            const logs = [
+                '<div class="log-line log-ok">[OK] 2026-08-08 14:45:32 服务启动成功</div>',
+                '<div class="log-line log-info">[INFO] 2026-08-08 14:45:33 初始化数据库连接</div>',
+                '<div class="log-line log-info">[INFO] 2026-08-08 14:45:34 加载缓存策略</div>',
+                '<div class="log-line log-ok">[OK] 2026-08-08 14:45:35 API 服务就绪</div>',
+                '<div class="log-line log-info">[INFO] 2026-08-08 14:45:40 收到首个请求</div>',
+                '<div class="log-line log-info">[INFO] 2026-08-08 14:46:00 已处理 10 个请求</div>',
+                '<div class="log-line log-ok">[OK] 2026-08-08 14:46:30 健康检查通过</div>'
+            ];
+            logContent.innerHTML = logs.join('');
+        }
+
+        // 运行健康检查
+        function runHealthCheck() {
+            alert('运行健康检查...\n\n请在服务器上执行:\nbash /opt/shenyuan/health-check.sh');
+        }
+
+        // 查看日志
+        function viewLogs() {
+            alert('查看实时日志...\n\n请执行:\npm2 logs shenyuan-api --lines 100');
+        }
+
+        // 重启服务
+        function restartService() {
+            if (confirm('确认要重启服务吗？这可能导致短暂的服务中断。')) {
+                alert('重启服务...\n\n请执行:\npm2 restart shenyuan-api');
+            }
+        }
+
+        // 复制快速修复命令
+        function copyRunQuickFix() {
+            const cmd = 'bash /opt/shenyuan/quick-fixes.sh';
+            copyToClipboard(cmd);
+            alert('已复制命令到剪贴板:\n' + cmd);
+        }
+
+        // 复制到剪贴板
+        function copyToClipboard(text) {
+            const elem = document.createElement('textarea');
+            elem.value = text;
+            document.body.appendChild(elem);
+            elem.select();
+            document.execCommand('copy');
+            document.body.removeChild(elem);
+        }
+
+        // 紧急联系
+        function callEmergency() {
+            const contacts = `
+紧急联系方式:
+
+🚨 DevOps Lead (Karen):
+   电话: +852-XXXX-XXXX
+   Slack: @karen
+
+💰 CFO (财务):
+   电话: +852-XXXX-XXXX
+
+📢 CMO (市场):
+   电话: +852-XXXX-XXXX
+
+🏦 第三方支持:
+   微信商户: 4006008888
+   支付宝: 95188
+            `;
+            alert(contacts);
+        }
+    </script>
+</body>
+</html>

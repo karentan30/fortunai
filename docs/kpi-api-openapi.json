@@ -1,0 +1,528 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "善缘 KPI 监控 API",
+    "description": "实时数据聚合、转化分析、风险告警",
+    "version": "1.0.0",
+    "contact": {
+      "name": "善缘开发团队",
+      "url": "https://shenyuan.mylumee.cn"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3021",
+      "description": "本地开发环境"
+    },
+    {
+      "url": "https://shenyuan.mylumee.cn",
+      "description": "生产环境"
+    }
+  ],
+  "paths": {
+    "/api/kpi/metrics": {
+      "get": {
+        "summary": "获取主要KPI指标及图表数据",
+        "description": "返回DAU/付费用户/GMV/AOV/转化率等核心指标，以及所有图表数据（留存/支付分布/地理分布/趋势）",
+        "operationId": "getMetrics",
+        "tags": ["核心指标"],
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "成功返回KPI数据",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MetricsResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "服务器错误",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kpi/ab-tests": {
+      "get": {
+        "summary": "获取A/B测试落地页排行",
+        "description": "返回所有A/B测试页面的访问量、转化数、转化率、趋势，已排序",
+        "operationId": "getABTests",
+        "tags": ["A/B测试"],
+        "responses": {
+          "200": {
+            "description": "成功返回测试数据",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ABTestsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kpi/referrals": {
+      "get": {
+        "summary": "获取邀请裂变排行榜",
+        "description": "返回Top用户的邀请数、转化数、转化率、返佣金额",
+        "operationId": "getReferrals",
+        "tags": ["邀请裂变"],
+        "responses": {
+          "200": {
+            "description": "成功返回邀请排行",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReferralsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kpi/errors": {
+      "get": {
+        "summary": "获取错误告警",
+        "description": "返回当前系统的错误和警告（支付失败/Webhook异常/响应缓慢）",
+        "operationId": "getErrors",
+        "tags": ["监控告警"],
+        "responses": {
+          "200": {
+            "description": "成功返回告警列表",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/kpi/docs": {
+      "get": {
+        "summary": "获取API文档（HTML格式）",
+        "description": "返回可视化的API文档页面",
+        "operationId": "getDocs",
+        "tags": ["文档"],
+        "responses": {
+          "200": {
+            "description": "成功返回HTML文档",
+            "content": {
+              "text/html": {}
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "MetricsResponse": {
+        "type": "object",
+        "required": ["success", "timestamp", "metrics"],
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-08-08T12:00:00.000Z"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/Metrics"
+          },
+          "charts": {
+            "$ref": "#/components/schemas/Charts"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Alert"
+            }
+          }
+        }
+      },
+      "Metrics": {
+        "type": "object",
+        "properties": {
+          "dau": {
+            "type": "integer",
+            "description": "日活用户数",
+            "example": 1234
+          },
+          "dauChange": {
+            "type": "number",
+            "description": "DAU环比变化百分比",
+            "example": 5.2
+          },
+          "paidUsers": {
+            "type": "integer",
+            "description": "付费用户总数",
+            "example": 345
+          },
+          "paidUsersChange": {
+            "type": "number",
+            "description": "付费用户环比变化百分比",
+            "example": 3.1
+          },
+          "gmv": {
+            "type": "number",
+            "description": "成交金额（人民币）",
+            "example": 12500.50
+          },
+          "gmvChange": {
+            "type": "number",
+            "description": "成交金额环比变化百分比",
+            "example": 8.5
+          },
+          "aov": {
+            "type": "number",
+            "description": "平均客单价（人民币）",
+            "example": 36.23
+          },
+          "aovChange": {
+            "type": "number",
+            "description": "平均客单价环比变化百分比",
+            "example": -2.1
+          },
+          "conversionRate": {
+            "type": "number",
+            "description": "转化率（百分比）",
+            "example": 12.5
+          },
+          "crChange": {
+            "type": "number",
+            "description": "转化率环比变化百分比",
+            "example": -1.2
+          },
+          "orderCount": {
+            "type": "integer",
+            "description": "今日订单数",
+            "example": 345
+          },
+          "referralCount": {
+            "type": "integer",
+            "description": "邀请人数",
+            "example": 123
+          },
+          "referralChange": {
+            "type": "number",
+            "description": "邀请人数环比变化百分比",
+            "example": 4.5
+          }
+        }
+      },
+      "Charts": {
+        "type": "object",
+        "properties": {
+          "retention": {
+            "type": "object",
+            "description": "用户留存曲线数据",
+            "properties": {
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": ["Day 0", "Day 1", "Day 3", "Day 7"]
+              },
+              "retention": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "description": "留存率百分比数组",
+                "example": [100, 65, 45, 30]
+              }
+            }
+          },
+          "paymentDistribution": {
+            "type": "object",
+            "description": "支付方式分布",
+            "properties": {
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": ["微信支付", "Stripe", "支付宝"]
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "description": "各支付方式占比百分比",
+                "example": [45, 35, 20]
+              }
+            }
+          },
+          "geographic": {
+            "type": "object",
+            "description": "地理分布",
+            "properties": {
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": ["中国", "海外", "韩国"]
+              },
+              "values": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "example": [60, 25, 15]
+              }
+            }
+          },
+          "paymentTrends": {
+            "type": "object",
+            "description": "7日支付方式趋势",
+            "properties": {
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "example": ["D1", "D2", "D3", "D4", "D5", "D6", "D7"]
+              },
+              "wechat": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "stripe": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              },
+              "alipay": {
+                "type": "array",
+                "items": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "funnel": {
+            "type": "object",
+            "description": "转化漏斗",
+            "properties": {
+              "conversion": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "description": "[访问, 注册, 首购]",
+                "example": [100, 85, 65]
+              },
+              "dropoff": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "description": "流失数",
+                "example": [15, 20]
+              }
+            }
+          }
+        }
+      },
+      "ABTestsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "tests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ABTest"
+            }
+          }
+        }
+      },
+      "ABTest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "页面A (控制组)"
+          },
+          "visits": {
+            "type": "integer",
+            "description": "访问用户数",
+            "example": 850
+          },
+          "conversions": {
+            "type": "integer",
+            "description": "转化数（付款用户数）",
+            "example": 127
+          },
+          "rate": {
+            "type": "number",
+            "description": "转化率百分比",
+            "example": 14.94
+          },
+          "trend": {
+            "type": "number",
+            "description": "与前一期对比的变化百分比",
+            "example": 2.5
+          },
+          "status": {
+            "type": "string",
+            "enum": ["winning", "running", "losing"],
+            "description": "测试状态",
+            "example": "winning"
+          }
+        }
+      },
+      "ReferralsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "referrers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Referrer"
+            }
+          }
+        }
+      },
+      "Referrer": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "user_12345"
+          },
+          "name": {
+            "type": "string",
+            "example": "用户12345"
+          },
+          "invited": {
+            "type": "integer",
+            "description": "邀请人数",
+            "example": 45
+          },
+          "converted": {
+            "type": "integer",
+            "description": "邀请用户中的付费转化数",
+            "example": 12
+          },
+          "commission": {
+            "type": "number",
+            "description": "返佣金额（人民币）",
+            "example": 1250.50
+          }
+        }
+      },
+      "ErrorsResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Alert"
+            }
+          },
+          "alerts": {
+            "type": "integer",
+            "description": "告警总数",
+            "example": 2
+          }
+        }
+      },
+      "Alert": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "payment_failure_rate"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["error", "warning", "success"],
+            "example": "error"
+          },
+          "icon": {
+            "type": "string",
+            "example": "❌"
+          },
+          "message": {
+            "type": "string",
+            "example": "支付失败率过高: 6.2% (阈值: 5%)"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "example": "服务暂时不可用，请稍后重试"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sessionId"
+      }
+    }
+  },
+  "security": [
+    {
+      "cookieAuth": []
+    }
+  ],
+  "tags": [
+    {
+      "name": "核心指标",
+      "description": "主要KPI指标查询"
+    },
+    {
+      "name": "A/B测试",
+      "description": "落地页A/B测试数据"
+    },
+    {
+      "name": "邀请裂变",
+      "description": "邀请排行榜和返佣数据"
+    },
+    {
+      "name": "监控告警",
+      "description": "系统错误和警告告警"
+    },
+    {
+      "name": "文档",
+      "description": "API文档"
+    }
+  ]
+}

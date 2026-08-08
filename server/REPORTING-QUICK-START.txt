@@ -1,0 +1,249 @@
+================================================================================
+投放数据报告系统 - 快速参考 (2026-08-08)
+================================================================================
+
+📦 已生成的4个生产级文件
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 文件                    │ 功能              │ 运行方式                        │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ daily-report.js         │ 自动生成日报      │ node server/daily-report.js    │
+│ analytics-export.js     │ 导出各维度数据    │ node server/analytics-export.js│
+│ cohort-analysis.html    │ 留存可视化        │ open server/cohort-analysis.html
+│ weekly-report-template  │ 周报模板(Markdown)│ 手工填充变量                    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+🚀 一分钟快速开始
+
+1️⃣ 生成昨天的日报
+   $ node server/daily-report.js
+   
+   输出: server/reports/report-2026-08-07.json
+   包含: DAU/收入/转化率/支付成功率/环比对标/洞察分析
+
+2️⃣ 导出cohort留存数据(用于投资者演讲)
+   $ node server/analytics-export.js cohort json export/cohort.json
+   
+   输出: Day1/3/7/14/30留存率表 (支持JSON/CSV)
+
+3️⃣ 查看留存可视化(无需数据源，Demo模式)
+   $ open server/cohort-analysis.html
+   
+   浏览器中:
+   - 选择"Demo数据"
+   - 自动生成90天模拟数据
+   - 留存趋势图 + 表格
+
+4️⃣ 导出其他维度
+   $ node server/analytics-export.js funnel json      # 转化漏斗
+   $ node server/analytics-export.js traffic csv      # 流量来源(CSV)
+   $ node server/analytics-export.js products json    # 商品销售排行
+   $ node server/analytics-export.js payment json     # 支付方式分布
+   $ node server/analytics-export.js retention json   # 用户留存率
+
+📊 核心概念
+
+daily_stats (日统计字段)
+├── page_views           页面访问数
+├── unique_visitors      DAU(日活用户)
+├── report_generated     命盘生成人数
+├── checkout_started     进入支付人数
+├── payment_completed    支付成功笔数
+├── payment_failed       支付失败笔数
+├── revenue             总收入(USD)
+├── avg_session_duration 平均会话时长(秒)
+├── bounce_rate         跳出率(%)
+├── top_sources         流量来源{source: count}
+├── top_products        畅销产品{product: count}
+└── payment_methods     支付方式{method: count}
+
+关键指标计算
+├── DAU = unique_visitors
+├── ARPU = revenue / DAU
+├── 转化率 = payment_completed / page_views * 100%
+├── 支付成功率 = payment_completed / (payment_completed + payment_failed) * 100%
+├── D1留存 = 第2天活跃用户 / 新增用户 * 100%
+└── D7留存 = 第8天活跃用户 / 新增用户 * 100%
+
+🔑 命令速记表
+
+# 日报生成
+node server/daily-report.js                # 自动计算昨天
+node server/daily-report.js 2026-08-01     # 指定日期
+
+# 维度导出(7种维度)
+node server/analytics-export.js daily      # 日统计
+node server/analytics-export.js cohort     # Cohort留存
+node server/analytics-export.js funnel     # 转化漏斗
+node server/analytics-export.js traffic    # 流量来源
+node server/analytics-export.js products   # 商品销售
+node server/analytics-export.js payment    # 支付方式
+node server/analytics-export.js retention  # 用户留存
+node server/analytics-export.js all        # 所有数据
+
+# 格式选项
+node server/analytics-export.js traffic json              # 输出JSON
+node server/analytics-export.js traffic csv export/t.csv  # 输出CSV到文件
+node server/analytics-export.js traffic csv               # CSV到stdout
+
+# 可视化
+open server/cohort-analysis.html           # Demo数据(无需服务器)
+open http://localhost:3000/cohort-analysis.html  # 实时数据(需服务器)
+
+📁 文件结构
+
+shenyuan/
+├── server/
+│   ├── data.json                    # 核心数据(后端维护)
+│   ├── daily-report.js              # ✅ 日报生成器(334行)
+│   ├── analytics-export.js          # ✅ 数据导出器(472行)
+│   ├── cohort-analysis.html         # ✅ 留存可视化(693行)
+│   ├── weekly-report-template.md    # ✅ 周报模板(195行)
+│   ├── reports/
+│   │   ├── report-2026-08-07.json   # 日报输出
+│   │   └── report-2026-08-08.json
+│   └── export/
+│       ├── cohort.json              # 导出数据
+│       ├── traffic.csv
+│       └── ...
+
+🛠 自动化cron设置(可选)
+
+# 编辑crontab
+crontab -e
+
+# 每天早8:00运行日报生成
+0 8 * * * node server/daily-report.js >> /tmp/daily-report.log 2>&1
+
+# 验证运行
+tail -f /tmp/daily-report.log
+ls -lt server/reports/*.json | head -1
+
+📈 使用场景
+
+场景             使用工具                  输出
+──────────────────────────────────────────────────────
+每日Stand-up     daily-report.js          JSON摘要报告
+周报提交         weekly-report-template   Markdown格式
+CEO演讲          analytics-export.js      汇总数据JSON
+投资者见面       cohort-analysis.html     留存表格
+产品优化         funnel分析               漏斗转化率
+营销优化         traffic分析              流量来源分布
+
+✅ 生产就绪特性
+
+✓ daily-report.js
+  - 自动计算转化率/ARPU/支付成功率
+  - 环比对标(与前一天对比)
+  - 智能洞察生成(P0告警+正向反馈)
+  - JSON输出(易于集成)
+
+✓ analytics-export.js
+  - 7种维度导出
+  - JSON + CSV双格式支持
+  - 聚合数据自动计算
+  - 百分比自动生成
+
+✓ cohort-analysis.html
+  - 纯前端(无需后端)
+  - Demo数据内置
+  - Day1/3/7/14/30留存表
+  - 趋势图 + 色标警示
+
+✓ weekly-report-template.md
+  - 52个模板变量
+  - vs目标对标
+  - vs竞品对标
+  - Markdown格式
+
+🐛 故障排查
+
+Q: 报告显示 DAU: 0?
+A: data.json可能为空。检查:
+   cat server/data.json | jq '.daily_stats | keys'
+
+Q: Cohort分析无数据?
+A: data.json缺少users字段。检查:
+   cat server/data.json | jq '.users | length'
+
+Q: CSV无法在Excel打开?
+A: 改用JSON格式，或指定UTF-8编码
+
+Q: 脚本报错"Cannot find module"?
+A: 确保在shenyuan目录运行，检查data.json路径
+
+💡 与现有系统集成
+
+# 后端需维护 server/data.json 的 daily_stats:
+
+{
+  "daily_stats": {
+    "2026-08-08": {
+      "date": "2026-08-08",
+      "page_views": 50000,
+      "unique_visitors": 1250,
+      "report_generated": 3000,
+      "checkout_started": 450,
+      "payment_completed": 123,
+      "payment_failed": 10,
+      "referral_clicked": 280,
+      "share_clicked": 156,
+      "revenue": 2450.50,
+      "currency": "USD",
+      "avg_session_duration": 185,
+      "bounce_rate": 42.5,
+      "top_sources": {
+        "organic": 15000,
+        "paid_search": 12000,
+        "referral": 8000
+      },
+      "top_products": {
+        "bazi_full": 45,
+        "bazi_basic": 35,
+        "upgrade": 28
+      },
+      "payment_methods": {
+        "stripe": 85,
+        "wechat": 25,
+        "alipay": 13
+      }
+    }
+  },
+  "users": [
+    {
+      "user_id": "u123",
+      "signup_date": "2026-08-01T10:00:00Z",
+      "last_active": "2026-08-08T18:00:00Z"
+    }
+  ]
+}
+
+🔧 扩展计划(未来功能)
+
+[ ] 自动生成周报脚本
+[ ] PostHog集成导入
+[ ] Google Analytics 4集成
+[ ] Slack/钉钉通知
+[ ] 邮件报告分发
+[ ] 数据异常告警
+[ ] A/B测试分析
+
+📞 支持与维护
+
+创建时间: 2026-08-08
+总代码行: 1694行
+状态: ✅ 生产就绪
+验证: Node.js命令行 + HTML浏览器
+
+================================================================================
+快速查询: 需要什么数据?
+
+DAU/收入/转化?        → node server/daily-report.js
+留存率?              → node server/analytics-export.js retention json
+漏斗分析?            → node server/analytics-export.js funnel json
+流量来源?            → node server/analytics-export.js traffic csv
+商品排行?            → node server/analytics-export.js products json
+Cohort表格?          → open server/cohort-analysis.html
+全部数据?            → node server/analytics-export.js all json
+
+================================================================================

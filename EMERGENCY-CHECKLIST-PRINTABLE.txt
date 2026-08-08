@@ -1,0 +1,450 @@
+================================================================================
+善缘 ShenYuan — 投放突发事件应急清单（可打印版）
+2026-08-08 | v1.0 | HK 服务器 47.242.80.65
+================================================================================
+
+🚨 SECTION 1: 支付失败 (P1) - 目标恢复时间 5-15 分钟
+────────────────────────────────────────────────────────────────────────────
+
+症状确认：
+☐ 用户报告"充不了值"或"支付失败"
+☐ 查看 Sentry: payment.create-checkout 5xx
+☐ 查看 PostHog: 支付转化率 <5%（正常 30%+）
+
+快速诊断 (5 分钟)：
+
+☐ 1. SSH 登录服务器
+   ssh root@47.242.80.65
+
+☐ 2. 查最近支付日志
+   pm2 logs shenyuan-api --lines 100 | grep -E "pay|payment" | tail -20
+
+☐ 3. 确认支付密钥配置
+   cat /opt/shenyuan/server/.env | grep -E "WECHAT_|ALIPAY_"
+
+   应看到以下内容均已配置：
+   WECHAT_APP_ID=wx...
+   WECHAT_MCH_ID=123...
+   WECHAT_API_KEY=XXXX...
+   ALIPAY_APP_ID=2021...
+   ALIPAY_PRIVATE_KEY=-----BEGIN...
+
+☐ 4. 测试支付端点
+   curl -s "http://47.242.80.65/api/products" | jq '.'
+
+   应返回商品列表（不是 404/500）
+
+快速修复：
+
+若是环境变量缺失：
+☐ 补充缺失的密钥
+   echo "WECHAT_APP_ID=PASTE_HERE" >> /opt/shenyuan/server/.env
+
+☐ 重启服务
+   pm2 restart shenyuan-api
+
+☐ 查启动日志（应无错）
+   pm2 logs shenyuan-api | head -30
+
+若是第三方 API 返回错误：
+☐ 检查错误日志详情
+   pm2 logs shenyuan-api --err | tail -50
+
+☐ 访问第三方平台检查：
+   ☐ 微信: https://pay.weixin.qq.com (商户平台)
+   ☐ 支付宝: https://open.alipay.com (开放平台)
+
+验证恢复：
+☐ 测试创建支付订单
+   curl -X POST "http://47.242.80.65/api/create-checkout" \
+     -H "Content-Type: application/json" \
+     -d '{"productId": "bazi-report", "paymentMethod": "wechat_native"}' | jq '.code'
+
+   应返回 200 或 "SUCCESS"
+
+☐ 观察支付转化率
+   PostHog 查看最近 5 分钟转化率恢复到 >20%
+
+事后处理：
+☐ 导出失败订单列表（用于补偿）
+   curl -s "http://47.242.80.65/api/admin/orders?status=failed&limit=50" | jq '.'
+
+☐ 将列表交给财务/客服进行用户补偿
+☐ 记录事故报告: docs/incidents/[YYYY-MM-DD]-payment-failure.md
+
+
+================================================================================
+🚨 SECTION 2: 服务宕机 (P0) - 目标恢复时间 2-10 分钟
+────────────────────────────────────────────────────────────────────────────
+
+症状确认：
+☐ 前端无法加载 (curl -s http://47.242.80.65 返回 5xx/timeout)
+☐ API 无响应 (curl -s http://47.242.80.65/api/health 返回 timeout)
+☐ 用户报告"网站打不开"
+
+自动恢复检查 (应自动处理，无需干预)：
+
+☐ 1. SSH 登录
+   ssh root@47.242.80.65
+
+☐ 2. 查 PM2 状态
+   pm2 status
+
+   若 shenyuan-api 显示 "online"，自动恢复已完成 ✅
+   若显示 "stopped"，PM2 会在 10s 内自动重启
+
+手动重启 (若自动恢复失效)：
+
+级别 1: PM2 快速重启
+☐ 3. 重启服务
+   pm2 restart shenyuan-api
+
+☐ 4. 等待 10 秒后确认启动
+   sleep 10
+   pm2 status
+
+☐ 5. 查启动日志
+   pm2 logs shenyuan-api | head -30
+
+   应看到 "Server running on port 3021"
+
+级别 2: 完整服务重启 (若 PM2 重启失效)
+
+☐ 6. 强制杀死旧进程
+   killall -9 node
+   sleep 2
+
+☐ 7. 重新启动 PM2
+   pm2 start /opt/shenyuan/server/index.js --name "shenyuan-api" --instances 1
+
+☐ 8. 保存 PM2 配置
+   pm2 save
+   pm2 startup
+
+级别 3: 依赖恢复 (若级别 2 仍失效)
+
+☐ 9. 检查依赖损坏
+   cd /opt/shenyuan/server
+   npm list --depth=0 2>&1 | grep -i "extraneous\|missing"
+
+☐ 10. 重装依赖
+   rm -rf node_modules package-lock.json
+   npm install --production
+
+☐ 11. 重启服务
+   pm2 restart shenyuan-api
+
+数据恢复：
+
+☐ 12. 检查数据文件完整性
+   ls -lh /opt/shenyuan/server/data.json
+   file /opt/shenyuan/server/data.json
+
+   应返回 "JSON text data"（非 "data" 或截断状态）
+
+☐ 13. 若数据损坏，从 Git 恢复
+   git -C /opt/shenyuan checkout server/data.json
+   pm2 restart shenyuan-api
+
+☐ 14. 若 Git 恢复不行，从备份恢复
+   cp /opt/shenyuan/.backups/data-latest.json /opt/shenyuan/server/data.json
+   pm2 restart shenyuan-api
+
+验证恢复：
+
+☐ 15. 测试前端
+   curl -s http://47.242.80.65 | head -50
+   应返回 HTML 内容（非 5xx 错误）
+
+☐ 16. 测试 API
+   curl -s http://47.242.80.65/api/health | jq '.'
+   应返回 {"status":"ok"}
+
+☐ 17. 测试响应时间
+   time curl -s http://47.242.80.65/api/health > /dev/null
+   应 <500ms
+
+☐ 18. 检查内存使用（异常泄漏导致频繁重启）
+   ps aux | grep node | grep -v grep
+
+
+================================================================================
+🚨 SECTION 3: 邀请链接失效 (P2) - 目标恢复时间 5-30 分钟
+────────────────────────────────────────────────────────────────────────────
+
+症状确认：
+☐ 用户通过邀请链接无法建立配对
+☐ 链接返回 404 或静默跳转
+☐ 已生成的邀请码无法查询
+
+排查步骤：
+
+☐ 1. 确认邀请链接格式
+   邀请链接应为：
+   https://shenyuan.mylumee.cn/hepan?invite_code=ABC123
+   或
+   https://shenyuan.mylumee.cn?ref=alice
+
+☐ 2. SSH 登录查日志
+   ssh root@47.242.80.65
+   pm2 logs shenyuan-api | grep -E "invite_code|ref=" | tail -10
+
+☐ 3. 查邀请数据库
+   curl -s "http://47.242.80.65/api/admin/invites?limit=10" | jq '.'
+
+☐ 4. 测试邀请码生成
+   curl -X POST "http://47.242.80.65/api/invite/generate" \
+     -H "Content-Type: application/json" \
+     -d '{"user_id": "test@example.com", "type": "hepan"}' | jq '.invite_code'
+
+快速修复：
+
+若邀请表损坏：
+☐ 5. 从备份恢复
+   cp /opt/shenyuan/.backups/invites-latest.json /opt/shenyuan/server/data.json
+   pm2 restart shenyuan-api
+
+若邀请链接过期（默认 30 天）：
+☐ 6. 修改过期时间
+   echo "INVITE_EXPIRY_DAYS=90" >> /opt/shenyuan/server/.env
+   pm2 restart shenyuan-api
+
+验证恢复：
+☐ 7. 生成新邀请码并测试
+   curl -X POST "http://47.242.80.65/api/invite/generate" \
+     -H "Content-Type: application/json" \
+     -d '{"user_id": "test@example.com", "type": "hepan"}' | jq '.'
+
+   应返回 { "invite_code": "ABC123", "expires_at": "..." }
+
+
+================================================================================
+🚨 SECTION 4: 数据泄露 (P0) - 目标响应时间 <5 分钟
+────────────────────────────────────────────────────────────────────────────
+
+⚠️  立即启动应急流程（不要延迟）
+
+症状确认：
+☐ 用户邮箱/支付信息在公网可见
+☐ 敏感文件被访问（.env, data.json）
+☐ 异常的 API 大量数据导出
+
+P0 立即响应 (第 1 分钟)：
+
+☐ 1. 隔离服务器（仅 Karen/DevOps 执行）
+   ssh root@47.242.80.65
+
+   # 断掉出站连接（防止黑客继续渗透/数据外流）
+   sudo iptables -A OUTPUT -j DROP
+
+   或切换为只读模式：
+   mount -o remount,ro /opt/shenyuan
+
+☐ 2. 通知紧急小组（立即）
+   ☐ 电话通知 Karen (DevOps Lead)
+   ☐ 飞书 @CMO @CFO @安全 发送
+   ☐ 消息内容: "🚨 数据泄露检测, [简述], 已隔离"
+
+☐ 3. 保存审计日志（第 2 分钟）
+   mkdir -p /tmp/incident_$(date +%s)
+
+   pm2 logs shenyuan-api --lines 10000 > /tmp/incident_*/api.log
+   git -C /opt/shenyuan log --all --oneline > /tmp/incident_*/git.log
+   tar czf /tmp/incident.tar.gz /tmp/incident_*
+
+☐ 4. 重置所有密钥（第 3 分钟）
+   ssh root@47.242.80.65
+
+   # 编辑 .env，更改所有 KEY/SECRET：
+   nano /opt/shenyuan/server/.env
+
+   # 必须更改的字段：
+   - WECHAT_API_KEY=<new_value>
+   - ALIPAY_PRIVATE_KEY=<new_value>
+   - STRIPE_KEY=<new_value>
+   - JWT_SECRET=<new_value>
+   - 其他 API KEY
+
+☐ 5. 恢复干净备份（第 4 分钟）
+   # 断网状态下从离线备份恢复
+   cp /opt/shenyuan/.backups/data-preincident.json /opt/shenyuan/server/data.json
+
+   # 验证数据完整性
+   jq '.' /opt/shenyuan/server/data.json > /dev/null && echo "JSON valid"
+
+验证恢复：
+
+☐ 6. 敏感文件应返回 403
+   curl -s http://47.242.80.65/data.json | head -1
+   应返回: {"error":"forbidden"} 或 403 错误
+
+   curl -s http://47.242.80.65/server/.env | head -1
+   应返回: {"error":"forbidden"} 或 403 错误
+
+☐ 7. 所有旧 session/token 已失效
+   # 检查是否有强制登出所有用户的流程
+   curl -X POST http://47.242.80.65/api/admin/revoke-all-sessions
+
+事后处理 (恢复后)：
+
+☐ 8. 用户通知邮件（由 CMO 发送）
+   主题: 数据安全通知 - 善缘账户检查建议
+
+   内容模板: [见手册 Section 4.2]
+
+☐ 9. 事故报告
+   cat > /tmp/security_incident_report.md << 'EOF'
+   # 安全事故报告
+   - 事故时间: 2026-08-08 14:30 UTC
+   - 发现时间: 2026-08-08 14:35 UTC
+   - 修复时间: 2026-08-08 14:42 UTC
+   - 影响用户数: NNN
+   - 泄露范围: [用户邮箱/支付信息/...]
+   - 根因: [XXX]
+   - 修复措施: [XXX]
+   EOF
+
+☐ 10. 通知法务 (合规)
+   ☐ GDPR 影响评估 (欧盟用户)
+   ☐ CCPA 影响评估 (美国用户)
+   ☐ 大陆个人信息保护法评估
+
+
+================================================================================
+🚨 SECTION 5: 流量暴涨宕机 (P0) - 目标响应时间 1-5 分钟
+────────────────────────────────────────────────────────────────────────────
+
+症状确认：
+☐ 用户报告"速度很慢"或"无法连接"
+☐ CPU/内存占用 >90%
+☐ 响应时间 >5s (正常 <500ms)
+☐ 日志显示请求队列堆积 (queue depth >1000)
+
+自动扩容检查 (应已启用，无需干预)：
+
+☐ 1. SSH 登录
+   ssh root@47.242.80.65
+
+☐ 2. 查 PM2 cluster 模式
+   pm2 status
+
+   应显示多个 shenyuan-api 进程在线：
+   shenyuan-api  cluster  0  online  ...
+   shenyuan-api  cluster  1  online  ...
+   shenyuan-api  cluster  2  online  ...
+   shenyuan-api  cluster  3  online  ...
+
+若未启用 cluster 模式，立即启用：
+
+☐ 3. 删除旧配置
+   pm2 delete shenyuan-api
+
+☐ 4. 启用 cluster 模式
+   pm2 start /opt/shenyuan/server/index.js --name "shenyuan-api" --instances max
+
+☐ 5. 保存配置
+   pm2 save
+   pm2 startup
+
+限流配置：
+
+☐ 6. 检查 Caddy 限流规则
+   grep -A 5 "rate_limit" /etc/caddy/Caddyfile
+
+   若无，添加：
+   sudo tee -a /etc/caddy/Caddyfile << 'EOF'
+   # 流量限流
+   rate 100/s        # 全局 100 req/s
+   EOF
+
+   sudo systemctl reload caddy
+
+☐ 7. 检查应用层限流
+   grep -r "rateLimit\|rate_limit" /opt/shenyuan/server --include="*.js" | head -3
+
+   若无，检查是否已配置 RATE_LIMIT_* 环境变量：
+   grep "RATE_LIMIT" /opt/shenyuan/server/.env
+
+缓存预热：
+
+☐ 8. 启用 Redis 缓存（若已安装）
+   ps aux | grep redis
+
+   若未运行，启动：
+   redis-cli ping  # 应返回 PONG
+
+   若返回 connection refused，安装：
+   sudo apt-get install redis-server
+   sudo systemctl start redis-server
+
+☐ 9. 预热热点数据缓存
+   curl -X POST http://47.242.80.65/api/admin/cache-warmup
+
+   应返回 {"cached_items": NNN}
+
+验证恢复：
+
+☐ 10. 验证进程数
+   ps aux | grep "node.*index.js" | grep -v grep | wc -l
+   应 ≥4
+
+☐ 11. 验证 QPS 恢复正常
+   # 测试 100 并发请求
+   for i in {1..100}; do curl -s http://47.242.80.65/api/health > /dev/null & done
+
+   pm2 logs shenyuan-api | grep QPS | tail -3
+   应显示 QPS <500
+
+☐ 12. 验证响应时间
+   time curl -s http://47.242.80.65/api/health > /dev/null
+   应 <500ms
+
+☐ 13. 检查缓存命中
+   curl -s "http://47.242.80.65/api/products?from_cache=true" | jq '.cache_hit'
+   应返回 true
+
+
+================================================================================
+📞 紧急联系方式 (保存在钥匙管理/加密笔记中)
+────────────────────────────────────────────────────────────────────────────
+
+技术团队：
+Karen (DevOps Lead):        +852-XXXX-XXXX
+[Backend Eng]:              +852-XXXX-XXXX
+[Payment Eng]:              +852-XXXX-XXXX
+[Security Eng]:             +852-XXXX-XXXX
+
+业务团队：
+CMO:                        +852-XXXX-XXXX
+CFO/Finance:                +852-XXXX-XXXX
+Legal/Compliance:           +852-XXXX-XXXX
+
+第三方支持：
+微信商户支持:               4006008888 (工作时间)
+支付宝商户支持:             95188 (7x24)
+Stripe 支持:                 support@stripe.com (邮件)
+
+服务器提供商：
+阿里云 HK:                  +86-400-606-5500
+
+
+================================================================================
+✅ 最后一步：确认恢复完成
+────────────────────────────────────────────────────────────────────────────
+
+☐ 1. 所有服务恢复正常
+☐ 2. 用户数据完整无损
+☐ 3. 所有告警已消除
+☐ 4. 事故报告已记录
+☐ 5. 相关人员已通知
+☐ 6. 用户通知邮件已发送 (若需要)
+☐ 7. 事后复盘已安排 (P0 事件 24h 内)
+
+记录时间：________   处理人员：__________   验证人员：__________
+
+
+================================================================================
+文档维护者: Karen (DevOps Lead)
+最后更新: 2026-08-08
+下次审查: 2026-09-08
+================================================================================
