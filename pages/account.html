@@ -414,6 +414,7 @@ body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:100px}
 <script>
 var BASE = '';
 var LANG = 'zh';
+var isLoading = false;
 
 function getToken() {
   return localStorage.getItem('sy_token');
@@ -426,6 +427,36 @@ function showToast(msg, type) {
   t.onclick = function(){ t.className = 'toast'; };
   if (t._toastTimer) clearTimeout(t._toastTimer);
   t._toastTimer = setTimeout(function(){ t.className = 'toast'; }, 3000);
+}
+
+function showError(fieldId, msg) {
+  var errorEl = document.getElementById(fieldId + 'Error');
+  if (errorEl) {
+    errorEl.textContent = msg;
+    var input = document.getElementById(fieldId);
+    if (input) input.classList.add('form-error');
+  }
+}
+
+function clearError(fieldId) {
+  var errorEl = document.getElementById(fieldId + 'Error');
+  if (errorEl) errorEl.textContent = '';
+  var input = document.getElementById(fieldId);
+  if (input) input.classList.remove('form-error');
+}
+
+function validateEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function validatePassword(pwd) {
+  return pwd && pwd.length >= 6 && /[a-zA-Z]/.test(pwd) && /[0-9]/.test(pwd);
+}
+
+function validateBirthday(bd) {
+  if (!bd) return true; // optional
+  var d = new Date(bd);
+  return d instanceof Date && !isNaN(d) && d.getFullYear() > 1900 && d < new Date();
 }
 
 function switchTab(tabName) {
@@ -457,6 +488,9 @@ function loadReports() {
     return;
   }
 
+  isLoading = true;
+  document.getElementById('reportList').style.opacity = '0.6';
+
   fetch(BASE + '/api/orders/mine', {
     headers: { 'Authorization': 'Bearer ' + token }
   })
@@ -469,13 +503,19 @@ function loadReports() {
     var reports = orders.filter(function(o) {
       var name = o.product_name || o.name || '';
       return name.indexOf('报告') >= 0 || name.indexOf('八字') >= 0 || name.indexOf('合婚') >= 0 || name.indexOf('读') >= 0;
+    }).sort(function(a, b) {
+      return new Date(b.created_at || 0) - new Date(a.created_at || 0);
     });
 
     renderReports(reports);
+    isLoading = false;
+    document.getElementById('reportList').style.opacity = '1';
   })
   .catch(function(err) {
     console.error('Report load error:', err);
     document.getElementById('reportList').innerHTML = '<div class="empty-state"><span class="empty-icon">⚠️</span><div class="empty-text">暂无报告</div></div>';
+    isLoading = false;
+    document.getElementById('reportList').style.opacity = '1';
   });
 }
 
@@ -529,20 +569,32 @@ function loadReferrals() {
     return;
   }
 
+  isLoading = true;
+  showSkeletonReferrals();
+
   fetch(BASE + '/api/referral/mine', {
     headers: { 'Authorization': 'Bearer ' + token }
   })
-  .then(function(r) { return r.ok ? r.json() : Promise.reject(new Error('获取失败')); })
+  .then(function(r) {
+    if (!r.ok) return Promise.reject(new Error(r.status === 401 ? '登录已过期' : '获取失败'));
+    return r.json();
+  })
   .then(function(data) {
-    referralData = data;
-    renderReferralCodes(data);
-    renderReferralStats(data);
-    renderReferralTable(data);
+    referralData = data || {};
+    renderReferralCodes(data || {});
+    renderReferralStats(data || {});
+    renderReferralTable(data || {});
+    isLoading = false;
   })
   .catch(function(err) {
     console.error('Referral load error:', err);
     document.getElementById('refCodesContainer').innerHTML = '<div class="empty-state"><span class="empty-icon">⚠️</span><div class="empty-text">加载失败</div></div>';
+    isLoading = false;
   });
+}
+
+function showSkeletonReferrals() {
+  document.getElementById('refCodesContainer').innerHTML = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;opacity:0.5"><div class="ref-code-card"><div class="skeleton" style="width:40%;height:11px;margin:6px auto"></div></div></div>';
 }
 
 function renderReferralCodes(data) {
@@ -586,19 +638,28 @@ function renderReferralStats(data) {
   var invited = data.invited_count || 0;
   var converted = data.converted_count || 0;
   var rate = invited > 0 ? Math.round(converted / invited * 100) : 0;
-  var tier = data.current_tier || 'Pending';
-  var bonus = data.total_bonus || 0;
+  var tier = data.current_tier || 'pending';
+
+  // Fix: bonus_amount replaces total_bonus
+  var bonus = data.bonus_amount || data.total_bonus || 0;
+  bonus = parseInt(bonus) || 0;
+
+  var tierLabels = { pending: '等待中', basic: '基础', standard: '标准', premium: '高级' };
+  var tierName = tierLabels[tier] || tier;
 
   var html = '<div class="ref-stats">';
   html += '<div class="ref-stat-grid">';
   html += '<div class="ref-stat-item"><span class="ref-stat-value">' + invited + '</span><span class="ref-stat-label">已邀请</span></div>';
   html += '<div class="ref-stat-item"><span class="ref-stat-value">' + converted + '</span><span class="ref-stat-label">已转化</span></div>';
   html += '<div class="ref-stat-item"><span class="ref-stat-value">' + rate + '%</span><span class="ref-stat-label">转化率</span></div>';
-  html += '<div class="ref-stat-item"><span class="ref-stat-value">¥' + bonus + '</span><span class="ref-stat-label">预期收益</span></div>';
+  html += '<div class="ref-stat-item"><span class="ref-stat-value">¥' + bonus + '</span><span class="ref-stat-label">累计奖励</span></div>';
   html += '</div>';
   html += '<div class="ref-tier-info">';
   html += '<div class="ref-tier-label">当前等级</div>';
-  html += '<div class="ref-tier-value">' + tier + '</div>';
+  html += '<div class="ref-tier-value">' + tierName + '</div>';
+  if (data.next_tier_at) {
+    html += '<div class="ref-bonus" style="font-size:11px;margin-top:4px">下一等级还需邀请 ' + (data.next_tier_at - invited) + ' 人</div>';
+  }
   html += '</div></div>';
 
   document.getElementById('refStatsContainer').innerHTML = html;
@@ -611,21 +672,21 @@ function renderReferralTable(data) {
     return;
   }
 
-  var html = '<div style="overflow-x:auto"><table class="ref-table"><thead><tr><th>日期</th><th>用户</th><th>渠道</th><th>状态</th><th>奖励</th></tr></thead><tbody>';
+  var html = '<div style="overflow-x:auto"><table class="ref-table"><thead><tr><th>日期</th><th>用户</th><th>渠道</th><th>状态</th></tr></thead><tbody>';
 
   invitees.forEach(function(inv) {
-    var date = inv.created_at ? inv.created_at.substring(0, 10) : '';
-    var name = inv.invitee_email ? inv.invitee_email.substring(0, inv.invitee_email.indexOf('@')) : '用户';
+    var date = inv.created_at ? inv.created_at.substring(0, 10) : '未知';
+    var email = inv.invitee_email || inv.email || '';
+    var name = email ? email.substring(0, email.indexOf('@')) : '用户';
     var ch = inv.channel || '其他';
-    var status = inv.converted ? '✅ 已转化' : '❌ 未购买';
-    var bonus = inv.bonus || 0;
+    var status = inv.converted ? '✅ 已转化' : '⏳ 待转化';
+    var statusClass = inv.converted ? 'ref-status-ok' : 'ref-status-wait';
 
     html += '<tr>';
     html += '<td>' + date + '</td>';
-    html += '<td>' + name + '</td>';
+    html += '<td title="' + email + '">' + name + '</td>';
     html += '<td>' + ch + '</td>';
-    html += '<td><span class="' + (inv.converted ? 'ref-status-ok' : 'ref-status-wait') + '">' + status + '</span></td>';
-    html += '<td>¥' + bonus + '</td>';
+    html += '<td><span class="' + statusClass + '">' + status + '</span></td>';
     html += '</tr>';
   });
 
@@ -641,20 +702,45 @@ function loadSubscription() {
     return;
   }
 
-  fetch(BASE + '/api/auth/me', {
-    headers: { 'Authorization': 'Bearer ' + token }
-  })
-  .then(function(r) { return r.ok ? r.json() : Promise.reject(new Error('获取失败')); })
-  .then(function(data) {
-    renderSubscription(data.membership || {});
+  isLoading = true;
+  document.getElementById('subscriptionContainer').style.opacity = '0.6';
+
+  Promise.all([
+    fetch(BASE + '/api/auth/me', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    }).then(r => r.ok ? r.json() : Promise.reject(new Error('获取失败'))),
+    fetch(BASE + '/api/subscription/history', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    }).then(r => r.ok ? r.json() : { history: [] })
+  ])
+  .then(function(results) {
+    var data = results[0] || {};
+    var history = results[1]?.history || [];
+    renderSubscription(data.membership || {}, history);
+    isLoading = false;
+    document.getElementById('subscriptionContainer').style.opacity = '1';
   })
   .catch(function(err) {
     console.error('Subscription load error:', err);
-    document.getElementById('subscriptionContainer').innerHTML = '<div class="empty-state"><span class="empty-icon">⚠️</span><div class="empty-text">加载失败</div></div>';
+    // Fallback: render without history
+    fetch(BASE + '/api/auth/me', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    })
+    .then(r => r.ok ? r.json() : Promise.reject())
+    .then(data => {
+      renderSubscription(data.membership || {}, []);
+      isLoading = false;
+      document.getElementById('subscriptionContainer').style.opacity = '1';
+    })
+    .catch(() => {
+      document.getElementById('subscriptionContainer').innerHTML = '<div class="empty-state"><span class="empty-icon">⚠️</span><div class="empty-text">加载失败</div></div>';
+      isLoading = false;
+      document.getElementById('subscriptionContainer').style.opacity = '1';
+    });
   });
 }
 
-function renderSubscription(membership) {
+function renderSubscription(membership, history) {
   var isMember = membership.isMember || false;
   var expiresAt = membership.expiresAt || null;
   var tier = membership.tier || 'Standard';
@@ -672,10 +758,12 @@ function renderSubscription(membership) {
   }
 
   var daysLeft = 0;
+  var isExpired = false;
   if (expiresAt) {
     var expDate = new Date(expiresAt);
     var now = new Date();
     daysLeft = Math.ceil((expDate - now) / (1000 * 60 * 60 * 24));
+    isExpired = daysLeft <= 0;
   }
 
   var html = '<div class="subscription-card">';
@@ -686,8 +774,12 @@ function renderSubscription(membership) {
   html += '<span class="sub-info-value">' + (expiresAt ? expiresAt.substring(0, 10) : '无限期') + '</span>';
   html += '</div>';
   html += '<div class="sub-info-row">';
-  html += '<span class="sub-info-label">剩余天数</span>';
-  html += '<span class="sub-info-value">' + daysLeft + ' 天 <span class="sub-status-badge" style="margin-left:8px">✅ 活跃</span></span>';
+  html += '<span class="sub-info-label">状态</span>';
+  if (isExpired) {
+    html += '<span class="sub-info-value"><span class="sub-status-badge" style="background:var(--error-light);color:var(--error)">已过期</span></span>';
+  } else {
+    html += '<span class="sub-info-value">' + daysLeft + ' 天<span class="sub-status-badge" style="margin-left:8px">✅ 活跃</span></span>';
+  }
   html += '</div>';
   html += '<div class="sub-btn-group">';
   html += '<button class="btn-renew" onclick="handleRenew()">立即续费</button>';
@@ -696,13 +788,24 @@ function renderSubscription(membership) {
   html += '</div>';
 
   // History table
-  html += '<div style="margin-top:20px">';
-  html += '<div class="sub-history-title">订阅历史</div>';
-  html += '<div style="overflow-x:auto">';
-  html += '<table class="sub-history-table">';
-  html += '<thead><tr><th>开始</th><th>到期</th><th>套餐</th><th>金额</th></tr></thead>';
-  html += '<tbody><tr><td>' + (expiresAt ? expiresAt.substring(0, 10) : '') + '</td><td>' + (expiresAt ? expiresAt.substring(0, 10) : '') + '</td><td>' + tier + '</td><td>' + price + '</td></tr></tbody>';
-  html += '</table></div></div>';
+  if (history && history.length > 0) {
+    html += '<div style="margin-top:20px">';
+    html += '<div class="sub-history-title">订阅历史</div>';
+    html += '<div style="overflow-x:auto">';
+    html += '<table class="sub-history-table">';
+    html += '<thead><tr><th>开始</th><th>到期</th><th>套餐</th><th>金额</th></tr></thead>';
+    html += '<tbody>';
+    history.forEach(function(h) {
+      html += '<tr>';
+      html += '<td>' + (h.start_date ? h.start_date.substring(0, 10) : '') + '</td>';
+      html += '<td>' + (h.end_date ? h.end_date.substring(0, 10) : '') + '</td>';
+      html += '<td>' + (h.tier || '标准') + '</td>';
+      html += '<td>¥' + (h.amount || 0) + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody>';
+    html += '</table></div></div>';
+  }
 
   document.getElementById('subscriptionContainer').innerHTML = html;
 }
@@ -726,22 +829,38 @@ function loadSettings() {
   var token = getToken();
   if (!token) return;
 
+  isLoading = true;
+
   fetch(BASE + '/api/auth/me', {
     headers: { 'Authorization': 'Bearer ' + token }
   })
   .then(function(r) { return r.ok ? r.json() : Promise.reject(new Error('获取失败')); })
   .then(function(data) {
     var user = data.user || {};
+
+    // Reset all error states
+    document.querySelectorAll('.form-error-msg').forEach(function(el) { el.textContent = ''; });
+    document.querySelectorAll('.form-error').forEach(function(el) { el.classList.remove('form-error'); });
+
     document.getElementById('inputName').value = user.name || '';
     document.getElementById('inputEmail').value = user.email || '';
     document.getElementById('inputBirthday').value = user.birthday || '';
 
+    // Fix: properly initialize radio buttons
+    document.querySelectorAll('input[name="gender"]').forEach(function(el) {
+      el.checked = false;
+    });
     if (user.gender) {
-      document.querySelector('input[name="gender"][value="' + user.gender + '"]').checked = true;
+      var genderInput = document.querySelector('input[name="gender"][value="' + user.gender + '"]');
+      if (genderInput) genderInput.checked = true;
     }
+
+    isLoading = false;
   })
   .catch(function(err) {
     console.error('Settings load error:', err);
+    showToast('加载设置失败', 'error');
+    isLoading = false;
   });
 }
 
@@ -752,9 +871,31 @@ function handleSaveSettings() {
     return;
   }
 
-  var name = document.getElementById('inputName').value;
+  if (isLoading) return;
+
+  var name = (document.getElementById('inputName').value || '').trim();
   var birthday = document.getElementById('inputBirthday').value;
   var gender = document.querySelector('input[name="gender"]:checked') ? document.querySelector('input[name="gender"]:checked').value : '';
+
+  // Clear all previous errors
+  document.querySelectorAll('.form-error-msg').forEach(function(el) { el.textContent = ''; });
+  document.querySelectorAll('.form-error').forEach(function(el) { el.classList.remove('form-error'); });
+
+  // Validate
+  var hasError = false;
+  if (name && name.length > 50) {
+    showError('inputName', '昵称不能超过50个字符');
+    hasError = true;
+  }
+  if (birthday && !validateBirthday(birthday)) {
+    showError('inputBirthday', '生日格式不正确或日期无效');
+    hasError = true;
+  }
+
+  if (hasError) return;
+
+  isLoading = true;
+  showToast('正在保存…');
 
   fetch(BASE + '/api/user/profile', {
     method: 'POST',
@@ -764,54 +905,159 @@ function handleSaveSettings() {
     },
     body: JSON.stringify({ name: name, birthday: birthday, gender: gender })
   })
-  .then(function(r) { return r.ok ? r.json() : Promise.reject(new Error('保存失败')); })
+  .then(function(r) {
+    if (!r.ok) return Promise.reject(new Error(r.status === 401 ? '登录已过期' : '保存失败'));
+    return r.json();
+  })
   .then(function(data) {
     showToast('设置已保存', 'success');
+    isLoading = false;
   })
   .catch(function(err) {
+    console.error('Save error:', err);
     showToast('保存失败，请稍后重试', 'error');
+    isLoading = false;
   });
 }
 
 function handleChangePassword() {
-  var newPass = prompt('请输入新密码 (至少6位):');
-  if (!newPass || newPass.length < 6) {
-    showToast('密码至少6位', 'error');
+  document.getElementById('passwordModal').classList.add('active');
+  // Clear fields
+  document.getElementById('currentPassword').value = '';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('confirmPassword').value = '';
+  document.querySelectorAll('.modal-body .form-error-msg').forEach(el => el.textContent = '');
+}
+
+function closePasswordModal() {
+  document.getElementById('passwordModal').classList.remove('active');
+  document.getElementById('currentPassword').value = '';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('confirmPassword').value = '';
+  document.querySelectorAll('.modal-body .form-error-msg').forEach(el => el.textContent = '');
+}
+
+function submitPasswordChange() {
+  var token = getToken();
+  if (!token) {
+    showToast('请先登录', 'error');
     return;
   }
-  showToast('功能开发中…');
+
+  if (isLoading) return;
+
+  var currentPassword = document.getElementById('currentPassword').value;
+  var newPassword = document.getElementById('newPassword').value;
+  var confirmPassword = document.getElementById('confirmPassword').value;
+
+  // Clear errors
+  clearError('currentPassword');
+  clearError('newPassword');
+  clearError('confirmPassword');
+
+  // Validate
+  if (!currentPassword) {
+    showError('currentPassword', '请输入当前密码');
+    return;
+  }
+  if (!newPassword) {
+    showError('newPassword', '请输入新密码');
+    return;
+  }
+  if (!validatePassword(newPassword)) {
+    showError('newPassword', '密码至少6位，需包含字母和数字');
+    return;
+  }
+  if (newPassword !== confirmPassword) {
+    showError('confirmPassword', '两次输入的密码不一致');
+    return;
+  }
+
+  isLoading = true;
+
+  fetch(BASE + '/api/auth/verify-password', {
+    method: 'POST',
+    headers: {
+      'Authorization': 'Bearer ' + token,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ password: currentPassword })
+  })
+  .then(r => {
+    if (!r.ok) return Promise.reject(new Error('当前密码错误'));
+    return fetch(BASE + '/api/user/change-password', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ new_password: newPassword })
+    });
+  })
+  .then(r => {
+    if (!r.ok) return Promise.reject(new Error('修改失败'));
+    return r.json();
+  })
+  .then(() => {
+    showToast('密码已修改', 'success');
+    closePasswordModal();
+    isLoading = false;
+  })
+  .catch(err => {
+    showError('currentPassword', err.message);
+    isLoading = false;
+  });
 }
 
 function handleLogoutDevice() {
-  showToast('已登出当前设备', 'success');
+  if (!confirm('确定要登出当前设备吗？')) return;
+  showToast('正在登出…', 'success');
   setTimeout(function() {
     localStorage.removeItem('sy_token');
+    localStorage.removeItem('sy_user');
     window.location.href = '/pages/login.html';
   }, 600);
 }
 
 function handleLogoutAll() {
   if (!confirm('将登出所有登录的设备，确定吗？')) return;
-  showToast('已登出所有设备', 'success');
+  showToast('正在登出…', 'success');
   setTimeout(function() {
     localStorage.removeItem('sy_token');
+    localStorage.removeItem('sy_user');
     window.location.href = '/pages/login.html';
   }, 600);
 }
 
-// Init
+// Init — with back button fallback (solves direct link issue)
 (function() {
   var token = getToken();
   if (!token) {
-    window.location.href = '/pages/login.html';
+    showToast('登录已过期，请重新登录', 'error');
+    setTimeout(function() {
+      window.location.href = '/pages/login.html';
+    }, 1500);
     return;
   }
+
+  // Back button fallback: if no history, go to /index.html
+  var backBtn = document.querySelector('.header-back');
+  backBtn.onclick = function() {
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.location.href = '/index.html';
+    }
+  };
 
   // Load profile
   fetch(BASE + '/api/auth/me', {
     headers: { 'Authorization': 'Bearer ' + token }
   })
-  .then(function(r) { return r.ok ? r.json() : Promise.reject(new Error('获取失败')); })
+  .then(function(r) {
+    if (!r.ok) return Promise.reject(new Error(r.status === 401 ? '登录已过期' : '加载失败'));
+    return r.json();
+  })
   .then(function(data) {
     var user = data.user || {};
     document.getElementById('profileEmail').textContent = user.email || '';
@@ -819,10 +1065,23 @@ function handleLogoutAll() {
   })
   .catch(function(err) {
     console.error('Profile load error:', err);
+    // If auth fails, redirect to login
+    if (err.message.indexOf('已过期') >= 0) {
+      showToast('登录已过期，请重新登录', 'error');
+      setTimeout(function() {
+        localStorage.removeItem('sy_token');
+        window.location.href = '/pages/login.html';
+      }, 1500);
+    }
   });
 
   // Load reports by default
   loadReports();
+
+  // Close password modal on Escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closePasswordModal();
+  });
 })();
 </script>
 </body>

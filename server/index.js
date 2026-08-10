@@ -17,6 +17,7 @@ const divinationRouter = require('./routes/divination');
 const dailyRouter     = require('./routes/daily');
 const adminRouter     = require('./routes/admin');
 const abRouter        = require('./routes/ab');
+const videoCallRouter = require('./routes/video-call');
 
 const PORT = process.env.PORT || 3021;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:' + PORT;
@@ -148,6 +149,9 @@ app.use('/api', abRouter);
 // 邮件订阅（旧路由保留兼容）
 app.use('/api', require('./routes/subscribe'));
 
+// 实时视频通话（Agora 集成）
+app.use('/api/video-call', videoCallRouter);
+
 // 每日邮件推送系统
 const { router: emailRouter, sendDailyBatch } = require('./routes/email');
 app.use('/api', emailRouter);
@@ -166,6 +170,10 @@ app.use('/api/kpi', kpiRouter);
 // 地理定价系统
 const geoRouter = require('./routes/geo');
 app.use('/api/geo', geoRouter);
+
+// 客服系统（AI chat + 工单管理）
+const supportRouter = require('./routes/support');
+app.use('/api', supportRouter);
 
 // ── 全局错误处理 ──
 app.use(function(err, req, res, next) {

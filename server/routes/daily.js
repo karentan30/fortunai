@@ -320,20 +320,179 @@ router.post('/chat-summary', authMiddleware, async (req, res) => {
 });
 
 // ══════════════════════════════════════════
-// POST /api/feedback — 用户反馈
+// POST /api/feedback — 用户反馈（新版含评分、分类）
 // ══════════════════════════════════════════
 router.post('/feedback', rateLimitMiddleware, (req, res) => {
   try {
-    const { name, email, message } = req.body;
-    if (!name || !email || !message) return res.status(400).json({ error: '请填写完整信息' });
+    const { name, email, message, rating, category, readingType, lang } = req.body;
+
+    // 兼容旧格式（name/email/message）和新格式（rating/category）
+    if (!message) return res.status(400).json({ error: '请填写反馈内容' });
+
     if (!_M.feedbacks) _M.feedbacks = [];
-    _M.feedbacks.push({ id: _M._id.o++, name, email, message, created_at: new Date().toISOString() });
+
+    const feedback = {
+      id: _M._id.o++,
+      name: name || '匿名用户',
+      email: email || '',
+      message,
+      rating: rating || 0,  // 1-5 星级（0 = 不评分）
+      category: category || 'general',  // 分类: quality/accuracy/ui/performance/other/general
+      readingType: readingType || '',  // 占算类型
+      lang: lang || 'zh',
+      ip: getClientIp(req),
+      userAgent: req.headers['user-agent'] || '',
+      created_at: new Date().toISOString()
+    };
+
+    _M.feedbacks.push(feedback);
     _persist();
-    console.log('[FEEDBACK]', name, email, message.slice(0, 60));
-    res.json({ success: true, message: '感谢您的反馈，我们将尽快回复！' });
+
+    // SECURITY FIX: Redact PII from logs
+    const crypto = require('crypto');
+    const nameHash = crypto.createHash('sha256').update(feedback.name).digest('hex').slice(0, 8);
+    const emailHash = feedback.email ? crypto.createHash('sha256').update(feedback.email).digest('hex').slice(0, 8) : 'anon';
+    console.log('[FEEDBACK]', {
+      id: feedback.id,
+      rating: feedback.rating,
+      category: feedback.category,
+      user: nameHash,
+      email: emailHash
+    });
+
+    res.json({
+      success: true,
+      message: '感谢您的反馈！您的意见对我们很重要',
+      feedbackId: feedback.id
+    });
   } catch (err) {
     console.error('[FEEDBACK ERR]', err.message);
     res.status(500).json({ error: '提交失败，请稍后重试' });
+  }
+});
+
+// ══════════════════════════════════════════
+// GET /api/feedback/stats — 反馈统计（管理后台）
+// ══════════════════════════════════════════
+router.get('/feedback/stats', authMiddleware, (req, res) => {
+  try {
+    // 仅管理员可访问
+    const userRole = (req.user && req.user.role) || '';
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: '权限不足' });
+    }
+
+    const feedbacks = _M.feedbacks || [];
+
+    // 基础统计
+    const stats = {
+      total: feedbacks.length,
+      avgRating: 0,
+      byRating: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+      byCategory: {},
+      byReadingType: {},
+      recentFeedbacks: feedbacks.slice(-20).reverse(),
+      topIssues: []
+    };
+
+    // 计算平均评分
+    const ratedFeedbacks = feedbacks.filter(f => f.rating > 0);
+    if (ratedFeedbacks.length > 0) {
+      stats.avgRating = (ratedFeedbacks.reduce((sum, f) => sum + f.rating, 0) / ratedFeedbacks.length).toFixed(2);
+    }
+
+    // 按评分统计
+    feedbacks.forEach(f => {
+      if (f.rating >= 1 && f.rating <= 5) {
+        stats.byRating[f.rating]++;
+      }
+    });
+
+    // 按分类统计
+    feedbacks.forEach(f => {
+      const cat = f.category || 'general';
+      stats.byCategory[cat] = (stats.byCategory[cat] || 0) + 1;
+    });
+
+    // 按占算类型统计
+    feedbacks.forEach(f => {
+      if (f.readingType) {
+        const type = f.readingType;
+        stats.byReadingType[type] = (stats.byReadingType[type] || 0) + 1;
+      }
+    });
+
+    // TOP 10 问题（按关键词统计）
+    const keywords = {};
+    feedbacks.forEach(f => {
+      const msg = (f.message || '').toLowerCase();
+      const words = msg.split(/[\s,，。！\s]+/).filter(w => w.length > 2);
+      words.forEach(word => {
+        keywords[word] = (keywords[word] || 0) + 1;
+      });
+    });
+
+    stats.topIssues = Object.entries(keywords)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([word, count]) => ({ word, count }));
+
+    res.json(stats);
+  } catch (err) {
+    console.error('[FEEDBACK STATS ERR]', err.message);
+    res.status(500).json({ error: '获取统计失败' });
+  }
+});
+
+// ══════════════════════════════════════════
+// GET /api/feedback/:id — 获取单条反馈详情
+// ══════════════════════════════════════════
+router.get('/feedback/:id', authMiddleware, (req, res) => {
+  try {
+    const userRole = (req.user && req.user.role) || '';
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: '权限不足' });
+    }
+
+    const feedbackId = parseInt(req.params.id);
+    const feedback = (_M.feedbacks || []).find(f => f.id === feedbackId);
+
+    if (!feedback) {
+      return res.status(404).json({ error: '反馈不存在' });
+    }
+
+    res.json(feedback);
+  } catch (err) {
+    console.error('[FEEDBACK GET ERR]', err.message);
+    res.status(500).json({ error: '获取反馈失败' });
+  }
+});
+
+// ══════════════════════════════════════════
+// DELETE /api/feedback/:id — 删除反馈（管理后台）
+// ══════════════════════════════════════════
+router.delete('/feedback/:id', authMiddleware, (req, res) => {
+  try {
+    const userRole = (req.user && req.user.role) || '';
+    if (userRole !== 'admin') {
+      return res.status(403).json({ error: '权限不足' });
+    }
+
+    const feedbackId = parseInt(req.params.id);
+    if (!_M.feedbacks) _M.feedbacks = [];
+
+    const idx = _M.feedbacks.findIndex(f => f.id === feedbackId);
+    if (idx === -1) {
+      return res.status(404).json({ error: '反馈不存在' });
+    }
+
+    _M.feedbacks.splice(idx, 1);
+    _persist();
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('[FEEDBACK DELETE ERR]', err.message);
+    res.status(500).json({ error: '删除失败' });
   }
 });
 

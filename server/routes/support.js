@@ -196,4 +196,161 @@ router.post('/support-ticket', async function(req, res) {
   }
 });
 
+// ── 工单列表（后台查询） ──
+router.get('/support-tickets', function(req, res) {
+  try {
+    var tickets = [];
+
+    // 从JSONL读取所有工单
+    try {
+      var content = fs.readFileSync(TICKET_FILE, 'utf8');
+      content.split('\n').forEach(function(line) {
+        if (line.trim()) {
+          try {
+            tickets.push(JSON.parse(line));
+          } catch (e) {
+            console.warn('parse error:', e.message);
+          }
+        }
+      });
+    } catch (e) {
+      console.warn('[support-tickets] read file error:', e.message);
+    }
+
+    // 按时间逆序
+    tickets.sort(function(a, b) {
+      return new Date(b.ts) - new Date(a.ts);
+    });
+
+    res.json({ ok: true, tickets: tickets, count: tickets.length });
+  } catch (e) {
+    console.error('[support-tickets]', e.message);
+    res.status(500).json({ error: '查询失败' });
+  }
+});
+
+// ── 更新工单状态 ──
+router.post('/support-ticket/:id/status', function(req, res) {
+  try {
+    var ticketId = req.params.id;
+    var newStatus = (req.body.status || '').toLowerCase();
+
+    if (!['new', 'open', 'resolved'].includes(newStatus)) {
+      return res.status(400).json({ error: '无效状态' });
+    }
+
+    var tickets = [];
+    var found = false;
+
+    // 读取并更新
+    try {
+      var content = fs.readFileSync(TICKET_FILE, 'utf8');
+      var lines = content.split('\n').filter(function(l) { return l.trim(); });
+
+      tickets = lines.map(function(line) {
+        try {
+          var t = JSON.parse(line);
+          if (t.id === ticketId) {
+            t.status = newStatus;
+            t.updated_at = new Date().toISOString();
+            found = true;
+          }
+          return t;
+        } catch (e) {
+          return null;
+        }
+      }).filter(Boolean);
+
+      // 重写JSONL
+      fs.writeFileSync(TICKET_FILE, tickets.map(function(t) { return JSON.stringify(t); }).join('\n') + '\n', 'utf8');
+    } catch (e) {
+      console.error('[support-ticket-update] error:', e.message);
+    }
+
+    if (!found) {
+      return res.status(404).json({ error: '工单不存在' });
+    }
+
+    res.json({ ok: true, message: '状态已更新' });
+  } catch (e) {
+    console.error('[support-ticket-update]', e.message);
+    res.status(500).json({ error: '更新失败' });
+  }
+});
+
+// ── 消息历史（持久化本地） ──
+router.get('/support-messages/:email', function(req, res) {
+  try {
+    var email = req.params.email;
+    if (!email || !email.includes('@')) {
+      return res.status(400).json({ error: '无效邮箱' });
+    }
+
+    // 从JSONL查找该邮箱的最新对话
+    var tickets = [];
+    try {
+      var content = fs.readFileSync(TICKET_FILE, 'utf8');
+      content.split('\n').forEach(function(line) {
+        if (line.trim()) {
+          try {
+            var t = JSON.parse(line);
+            if (t.email === email) {
+              tickets.push(t);
+            }
+          } catch (e) {}
+        }
+      });
+    } catch (e) {
+      console.warn('[support-messages] read error:', e.message);
+    }
+
+    // 返回最新工单的对话记录
+    var latestTicket = tickets.length > 0 ? tickets[tickets.length - 1] : null;
+    var messages = latestTicket ? (latestTicket.conversation || []) : [];
+
+    res.json({ ok: true, messages: messages });
+  } catch (e) {
+    console.error('[support-messages]', e.message);
+    res.status(500).json({ error: '查询失败' });
+  }
+});
+
+// ── 统计信息 ──
+router.get('/support-stats', function(req, res) {
+  try {
+    var tickets = [];
+
+    try {
+      var content = fs.readFileSync(TICKET_FILE, 'utf8');
+      content.split('\n').forEach(function(line) {
+        if (line.trim()) {
+          try {
+            tickets.push(JSON.parse(line));
+          } catch (e) {}
+        }
+      });
+    } catch (e) {
+      console.warn('[support-stats] read error:', e.message);
+    }
+
+    var stats = {
+      total: tickets.length,
+      new: tickets.filter(function(t) { return t.status === 'new'; }).length,
+      open: tickets.filter(function(t) { return t.status === 'open'; }).length,
+      resolved: tickets.filter(function(t) { return t.status === 'resolved'; }).length,
+      byProduct: {
+        lumee: tickets.filter(function(t) { return t.product === 'lumee'; }).length,
+        slim: tickets.filter(function(t) { return t.product === 'slim'; }).length,
+        shenyuan: tickets.filter(function(t) { return t.product === 'shenyuan'; }).length,
+        wujing: tickets.filter(function(t) { return t.product === 'wujing'; }).length
+      }
+    };
+
+    res.json({ ok: true, stats: stats });
+  } catch (e) {
+    console.error('[support-stats]', e.message);
+    res.status(500).json({ error: '统计失败' });
+  }
+});
+
 module.exports = router;

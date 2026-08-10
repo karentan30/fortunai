@@ -730,11 +730,21 @@ function showToast(msg, type) {
   if (t._toastTimer) clearTimeout(t._toastTimer);
   t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
 }
-// Init year/day selectors
+// SECURITY FIX: Use appendChild instead of innerHTML += to prevent XSS
 var ySel = document.getElementById('year');
-for (var y = 2026; y >= 1920; y--) ySel.innerHTML += '<option value="'+y+'">'+y+'年</option>';
+for (var y = 2026; y >= 1920; y--) {
+  var opt = document.createElement('option');
+  opt.value = y;
+  opt.textContent = y + '年';
+  ySel.appendChild(opt);
+}
 var dSel = document.getElementById('day');
-for (var d = 1; d <= 31; d++) dSel.innerHTML += '<option value="'+d+'">'+d+'日</option>';
+for (var d = 1; d <= 31; d++) {
+  var opt = document.createElement('option');
+  opt.value = d;
+  opt.textContent = d + '日';
+  dSel.appendChild(opt);
+}
 
 var gender = 'male';
 var lastBaziInput = null;
@@ -795,7 +805,9 @@ function generateReport(btn) {
 function streamBaziReport(input, mode, btn, onDone) {
   if (isStreaming) return;
   isStreaming = true;
-  var token = localStorage.getItem('sy_token') || '';
+  // SECURITY FIX: Token is now in httpOnly cookie, automatically sent by browser
+  // DO NOT read from localStorage - use backend authentication via cookie
+  var token = '';
   var accumulated = '';
   var reportStarted = false;
   var streamEl = null;
@@ -875,7 +887,9 @@ function streamBaziReport(input, mode, btn, onDone) {
 
 // 非流式回退（付费完成后重新加载用）
 function fetchBaziReport(input, mode) {
-  var token = localStorage.getItem('sy_token') || '';
+  // SECURITY FIX: Token is now in httpOnly cookie, automatically sent by browser
+  // DO NOT read from localStorage - use backend authentication via cookie
+  var token = '';
   return fetch('/api/bazi', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
@@ -1017,22 +1031,38 @@ function injectDisclaimer(containerId) {
   c.appendChild(d);
 }
 
+// SECURITY: Generate CSRF token for payment requests
+function generateCSRFToken() {
+  return 'csrf_' + Math.random().toString(36).substr(2, 16) + '_' + Date.now();
+}
+var csrfToken = generateCSRFToken();
+sessionStorage.setItem('sy_csrf_token', csrfToken);
+
 function createCheckout(btn, tier, price) {
   var label = btn.textContent;
   btn.disabled = true;
   btn.textContent = '跳转支付…';
+
   // P0-2① 支付跳转前把生日入参存起来，付费回流时读回自动重出报告
   if (lastBaziInput) {
     try { localStorage.setItem('sy_last_bazi', JSON.stringify(lastBaziInput)); } catch(e){}
   }
+
+  // SECURITY: Get fresh CSRF token for this request
+  var currentCSRF = sessionStorage.getItem('sy_csrf_token') || csrfToken;
+
   fetch('/api/create-checkout', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json'},
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': currentCSRF  // Add CSRF token header
+    },
+    credentials: 'include',  // Include httpOnly cookies
     body: JSON.stringify({
       product: tier === 'member' ? 'member_monthly' : 'bazi_full',
       tier: tier,
       price: price,
-      token: localStorage.getItem('sy_token') || '',
+      // DO NOT send token in body - it's in httpOnly cookie now
       // P0-2③ 支付成功后带 ?paid=1 回本页触发付费回流
       successUrl: location.origin + '/pages/bazi.html?paid=1'
     })
@@ -1045,13 +1075,21 @@ function createCheckout(btn, tier, price) {
       // CN用户：调微信/支付宝下单接口显示扫码弹窗
       var product = tier === 'member' ? 'member_monthly' : 'bazi_full';
       fetch('/api/pay/wechat/create', {
-        method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({product: product, method:'wechat', token: localStorage.getItem('sy_token')||''})
+        method:'POST',
+        headers: {
+          'Content-Type':'application/json',
+          'X-CSRF-Token': currentCSRF
+        },
+        credentials: 'include',  // Include httpOnly cookies
+        body: JSON.stringify({product: product, method:'wechat'})
       }).then(function(r){return r.json();}).then(function(pd){
         btn.disabled = false; btn.textContent = label;
         if(pd.code_url) { showCnPayModal(pd.code_url, pd.out_trade_no, pd.amount); }
         else { showToast('支付服务暂不可用，请稍后重试', 'error'); }
-      }).catch(function(){ btn.disabled=false; btn.textContent=label; showToast('网络异常，请重试','error'); });
+      }).catch(function(err){
+        btn.disabled=false; btn.textContent=label;
+        showToast('网络异常: ' + (err.message || '请重试'), 'error');
+      });
     }
     else { showToast('跳转失败，请重试', 'error'); btn.disabled = false; btn.textContent = label; }
   }).catch(function(){
@@ -1066,28 +1104,89 @@ function showCnPayModal(codeUrl, outTradeNo, amountFen) {
     modal = document.createElement('div');
     modal.id = 'cnPayModal';
     modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
-    modal.innerHTML='<div style="background:#faf8f5;border-radius:16px;padding:28px 24px;max-width:320px;width:90%;text-align:center">'
-      +'<div style="font-size:16px;font-weight:600;margin-bottom:6px;color:#2c2418">微信/支付宝扫码支付</div>'
-      +'<div id="cnPayAmt" style="font-size:22px;font-weight:700;color:#c8a45c;margin-bottom:12px"></div>'
-      +'<img id="cnPayQr" src="" alt="支付二维码" style="width:200px;height:200px;border-radius:8px;border:1px solid #e8e0d0">'
-      +'<div style="font-size:12px;color:#9a8a72;margin-top:10px">支付完成后页面自动刷新</div>'
-      +'<button onclick="document.getElementById(\'cnPayModal\').remove()" style="margin-top:16px;background:none;border:1px solid #c8a45c;color:#c8a45c;padding:8px 24px;border-radius:8px;cursor:pointer;font-size:13px">取消</button>'
-      +'</div>';
+
+    // SECURITY FIX: Create modal structure safely with DOM APIs, not innerHTML
+    var container = document.createElement('div');
+    container.style.cssText = 'background:#faf8f5;border-radius:16px;padding:28px 24px;max-width:320px;width:90%;text-align:center';
+
+    var title = document.createElement('div');
+    title.style.cssText = 'font-size:16px;font-weight:600;margin-bottom:6px;color:#2c2418';
+    title.textContent = '微信/支付宝扫码支付';
+
+    var amountDiv = document.createElement('div');
+    amountDiv.id = 'cnPayAmt';
+    amountDiv.style.cssText = 'font-size:22px;font-weight:700;color:#c8a45c;margin-bottom:12px';
+    amountDiv.textContent = amt;
+
+    var qrImg = document.createElement('img');
+    qrImg.id = 'cnPayQr';
+    qrImg.alt = '支付二维码';
+    qrImg.style.cssText = 'width:200px;height:200px;border-radius:8px;border:1px solid #e8e0d0';
+    qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(codeUrl);
+
+    var countdownDiv = document.createElement('div');
+    countdownDiv.style.cssText = 'font-size:12px;color:#c8a45c;margin-top:10px;font-weight:500';
+    countdownDiv.innerHTML = '二维码有效期: <span id="cnPayCountdown">60</span>秒';
+
+    var msgDiv = document.createElement('div');
+    msgDiv.style.cssText = 'font-size:12px;color:#9a8a72;margin-top:6px';
+    msgDiv.textContent = '支付完成后页面自动刷新';
+
+    var cancelBtn = document.createElement('button');
+    cancelBtn.style.cssText = 'margin-top:16px;background:none;border:1px solid #c8a45c;color:#c8a45c;padding:8px 24px;border-radius:8px;cursor:pointer;font-size:13px';
+    cancelBtn.textContent = '取消';
+    cancelBtn.onclick = function() { modal.remove(); };
+
+    container.appendChild(title);
+    container.appendChild(amountDiv);
+    container.appendChild(qrImg);
+    container.appendChild(countdownDiv);
+    container.appendChild(msgDiv);
+    container.appendChild(cancelBtn);
+    modal.appendChild(container);
     document.body.appendChild(modal);
   }
-  document.getElementById('cnPayAmt').textContent = amt;
-  document.getElementById('cnPayQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(codeUrl);
+
   modal.style.display='flex';
-  // 轮询支付结果
+
+  // Countdown timer (60 seconds)
+  var countdownEl = document.getElementById('cnPayCountdown');
+  var countdown = 60;
+  var countdownTimer = setInterval(function(){
+    countdown--;
+    if (countdownEl) countdownEl.textContent = countdown;
+    if (countdown <= 0) {
+      clearInterval(countdownTimer);
+      modal.remove();
+      showToast('支付二维码已过期，请重新发起支付', 'error');
+      return;
+    }
+  }, 1000);
+
+  // 轮询支付结果 (P0-1: 修复无限轮询·加超时)
+  var pollCount = 0, maxPolls = 20; // 20 * 3s = 60s timeout
   var pollTimer = setInterval(function(){
+    pollCount++;
+    if (pollCount > maxPolls) {
+      clearInterval(pollTimer);
+      clearInterval(countdownTimer);
+      modal.remove();
+      showToast('支付超时(60秒)，请检查网络后重试', 'error');
+      return;
+    }
     fetch('/api/pay/wechat/query?out_trade_no='+encodeURIComponent(outTradeNo))
-      .then(function(r){return r.json();}).then(function(d){
+      .then(function(r){return r.json();})
+      .then(function(d){
         if(d.paid || d.status==='paid'){
           clearInterval(pollTimer);
+          clearInterval(countdownTimer);
           modal.remove();
           location.href = location.pathname+'?paid=1';
         }
-      }).catch(function(){});
+      })
+      .catch(function(err){
+        console.warn('[Payment] Query failed:', err.message);
+      });
   }, 3000);
 }
 
@@ -1124,7 +1223,9 @@ function handlePaidReturn() {
   if (saved && saved.year) { proceedWithPaidReport(saved); return; }
 
   // localStorage没有 → 从后端查最近输入（兜底）
-  var token = localStorage.getItem('sy_token') || '';
+  // SECURITY FIX: Token is now in httpOnly cookie, automatically sent by browser
+  // DO NOT read from localStorage - use backend authentication via cookie
+  var token = '';
   fetch('/api/bazi/recent-input', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},

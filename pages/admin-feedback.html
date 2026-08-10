@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>善缘 · 反馈管理后台</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #faf8f5;
+  --card: #ffffff;
+  --jade: #5bbfa0;
+  --gold: #c9a84c;
+  --ink: rgba(40,35,30,0.92);
+  --sub: rgba(80,70,55,0.7);
+}
+
+html, body {
+  font-family: 'Noto Serif SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+body {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(201,168,76,0.2);
+}
+
+.header h1 {
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.logout-btn {
+  padding: 8px 16px;
+  background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.3);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.logout-btn:hover {
+  background: rgba(201,168,76,0.2);
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: var(--card);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--sub);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--jade);
+}
+
+.stat-desc {
+  font-size: 11px;
+  color: var(--sub);
+  margin-top: 8px;
+}
+
+/* Rating Distribution */
+.chart-section {
+  background: var(--card);
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.chart-title {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.rating-bars {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end;
+}
+
+.rating-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+
+.bar {
+  width: 100%;
+  background: rgba(91,191,160,0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  height: 150px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.bar-fill {
+  width: 100%;
+  background: linear-gradient(180deg, rgba(91,191,160,0.9), rgba(91,191,160,0.7));
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.bar-fill:hover {
+  background: linear-gradient(180deg, var(--jade), rgba(91,191,160,0.9));
+}
+
+.bar-label {
+  font-size: 11px;
+  color: var(--sub);
+}
+
+.bar-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* Two Column Layout */
+.content-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+@media (max-width: 1024px) {
+  .content-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Category Stats */
+.category-stats,
+.reading-types {
+  background: var(--card);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.category-stats h3,
+.reading-types h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.category-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(201,168,76,0.1);
+}
+
+.category-item:last-child {
+  border-bottom: none;
+}
+
+.category-name {
+  font-size: 12px;
+}
+
+.category-count {
+  background: rgba(91,191,160,0.1);
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--jade);
+}
+
+/* Top Issues */
+.top-issues {
+  background: var(--card);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 30px;
+}
+
+.top-issues h3 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.issue-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(201,168,76,0.05);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.issue-rank {
+  font-weight: 600;
+  color: var(--gold);
+  min-width: 24px;
+  text-align: center;
+}
+
+.issue-word {
+  flex: 1;
+}
+
+.issue-count {
+  background: rgba(91,191,160,0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--jade);
+}
+
+/* Feedback List */
+.feedback-section {
+  background: var(--card);
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.feedback-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.feedback-header h3 {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.filter-btns {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-btn {
+  padding: 6px 12px;
+  background: rgba(201,168,76,0.1);
+  border: 1px solid rgba(201,168,76,0.2);
+  border-radius: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-btn.active {
+  background: var(--jade);
+  color: white;
+  border-color: var(--jade);
+}
+
+.filter-btn:hover {
+  border-color: var(--jade);
+}
+
+/* Feedback Item */
+.feedback-item {
+  border: 1px solid rgba(201,168,76,0.1);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: all 0.2s;
+}
+
+.feedback-item:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.feedback-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.feedback-user {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex: 1;
+}
+
+.user-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(91,191,160,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--jade);
+}
+
+.user-info h4 {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.user-info p {
+  font-size: 11px;
+  color: var(--sub);
+}
+
+.feedback-meta {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.rating-stars {
+  display: flex;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.star-filled {
+  color: var(--gold);
+}
+
+.star-empty {
+  color: rgba(201,168,76,0.3);
+}
+
+.category-badge {
+  background: rgba(91,191,160,0.1);
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--jade);
+  white-space: nowrap;
+}
+
+.time-badge {
+  font-size: 11px;
+  color: var(--sub);
+  white-space: nowrap;
+}
+
+.delete-btn {
+  background: rgba(180,40,40,0.1);
+  border: none;
+  color: rgba(180,40,40,0.8);
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  transition: all 0.2s;
+}
+
+.delete-btn:hover {
+  background: rgba(180,40,40,0.2);
+}
+
+.feedback-message {
+  background: rgba(201,168,76,0.05);
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--ink);
+  margin-bottom: 12px;
+}
+
+.feedback-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--sub);
+}
+
+/* Loading & Error States */
+.loading {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--sub);
+}
+
+.error {
+  background: rgba(180,40,40,0.1);
+  border: 1px solid rgba(180,40,40,0.2);
+  border-radius: 8px;
+  padding: 16px;
+  color: rgba(180,40,40,0.8);
+  margin-bottom: 20px;
+}
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(201,168,76,0.1);
+}
+
+.page-btn {
+  width: 32px;
+  height: 32px;
+  border: 1px solid rgba(201,168,76,0.2);
+  background: white;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.page-btn:hover,
+.page-btn.active {
+  background: var(--jade);
+  color: white;
+  border-color: var(--jade);
+}
+
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>📊 反馈管理后台</h1>
+    <p style="font-size: 12px; color: var(--sub); margin-top: 4px;">善缘用户反馈统计与分析</p>
+  </div>
+  <button class="logout-btn" onclick="logout()">登出</button>
+</div>
+
+<div id="errorContainer"></div>
+
+<!-- Stats Grid -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">总反馈数</div>
+    <div class="stat-value" id="totalCount">0</div>
+    <div class="stat-desc">全部用户反馈</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">平均评分</div>
+    <div class="stat-value" id="avgRating">0</div>
+    <div class="stat-desc">满分 5.0 星</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">五星反馈</div>
+    <div class="stat-value" id="fiveStarCount">0</div>
+    <div class="stat-desc" id="fiveStarPercent">0%</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">低分反馈</div>
+    <div class="stat-value" id="lowRatingCount">0</div>
+    <div class="stat-desc" id="lowRatingPercent">0%</div>
+  </div>
+</div>
+
+<!-- Rating Distribution Chart -->
+<div class="chart-section">
+  <div class="chart-title">📈 评分分布</div>
+  <div class="rating-bars">
+    <div class="rating-bar">
+      <div class="bar">
+        <div class="bar-fill" id="bar1" style="height: 0%"></div>
+      </div>
+      <div class="bar-count" id="count1">0</div>
+      <div class="bar-label">★★★★★ 5星</div>
+    </div>
+    <div class="rating-bar">
+      <div class="bar">
+        <div class="bar-fill" id="bar2" style="height: 0%"></div>
+      </div>
+      <div class="bar-count" id="count2">0</div>
+      <div class="bar-label">★★★★☆ 4星</div>
+    </div>
+    <div class="rating-bar">
+      <div class="bar">
+        <div class="bar-fill" id="bar3" style="height: 0%"></div>
+      </div>
+      <div class="bar-count" id="count3">0</div>
+      <div class="bar-label">★★★☆☆ 3星</div>
+    </div>
+    <div class="rating-bar">
+      <div class="bar">
+        <div class="bar-fill" id="bar4" style="height: 0%"></div>
+      </div>
+      <div class="bar-count" id="count4">0</div>
+      <div class="bar-label">★★☆☆☆ 2星</div>
+    </div>
+    <div class="rating-bar">
+      <div class="bar">
+        <div class="bar-fill" id="bar5" style="height: 0%"></div>
+      </div>
+      <div class="bar-count" id="count5">0</div>
+      <div class="bar-label">★☆☆☆☆ 1星</div>
+    </div>
+  </div>
+</div>
+
+<!-- Two Column Stats -->
+<div class="content-layout">
+  <div class="category-stats">
+    <h3>📋 问题分类统计</h3>
+    <div id="categoryStats"></div>
+  </div>
+  <div class="reading-types">
+    <h3>🔮 占算类型分布</h3>
+    <div id="readingTypeStats"></div>
+  </div>
+</div>
+
+<!-- Top Issues -->
+<div class="top-issues">
+  <h3>⚠️ 高频关键词</h3>
+  <div id="topIssuesContainer"></div>
+</div>
+
+<!-- Feedback List -->
+<div class="feedback-section">
+  <div class="feedback-header">
+    <h3>💬 最近反馈</h3>
+    <div class="filter-btns">
+      <button class="filter-btn active" onclick="filterByRating('all')">全部</button>
+      <button class="filter-btn" onclick="filterByRating(5)">5 星</button>
+      <button class="filter-btn" onclick="filterByRating(4)">4 星</button>
+      <button class="filter-btn" onclick="filterByRating(3)">3 星</button>
+      <button class="filter-btn" onclick="filterByRating('low')">1-2 星</button>
+    </div>
+  </div>
+  <div id="feedbackList"></div>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<script>
+// Global state
+let allFeedbacks = [];
+let filteredFeedbacks = [];
+let currentPage = 1;
+const itemsPerPage = 10;
+let currentFilter = 'all';
+let stats = {};
+
+// 检查登录
+function checkAuth() {
+  const token = localStorage.getItem('sy_admin_token');
+  if (!token) {
+    window.location.href = '/pages/admin-login.html';
+  }
+  return token;
+}
+
+// 加载统计数据
+async function loadStats() {
+  try {
+    const token = checkAuth();
+    const response = await fetch('/api/feedback/stats', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (response.status === 403) {
+      showError('权限不足，请使用管理员账号登录');
+      return;
+    }
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    stats = await response.json();
+    allFeedbacks = stats.recentFeedbacks || [];
+    filteredFeedbacks = allFeedbacks;
+
+    renderStats();
+    renderChart();
+    renderCategoryStats();
+    renderReadingTypeStats();
+    renderTopIssues();
+    renderFeedbackList();
+  } catch (err) {
+    console.error('[Load Error]', err);
+    showError('加载数据失败：' + err.message);
+  }
+}
+
+// 渲染统计卡片
+function renderStats() {
+  document.getElementById('totalCount').textContent = stats.total || 0;
+  document.getElementById('avgRating').textContent = stats.avgRating || '0';
+
+  const fiveStarCount = stats.byRating?.[5] || 0;
+  const ratedTotal = Object.values(stats.byRating || {}).reduce((a,b) => a+b, 0) || 1;
+
+  document.getElementById('fiveStarCount').textContent = fiveStarCount;
+  document.getElementById('fiveStarPercent').textContent = ((fiveStarCount / ratedTotal) * 100 | 0) + '%';
+
+  const lowCount = (stats.byRating?.[1] || 0) + (stats.byRating?.[2] || 0);
+  document.getElementById('lowRatingCount').textContent = lowCount;
+  document.getElementById('lowRatingPercent').textContent = ((lowCount / ratedTotal) * 100 | 0) + '%';
+}
+
+// 渲染评分图表
+function renderChart() {
+  const byRating = stats.byRating || {};
+  const maxCount = Math.max(...Object.values(byRating), 1);
+
+  for (let i = 1; i <= 5; i++) {
+    const count = byRating[i] || 0;
+    const percent = (count / maxCount) * 100;
+    document.getElementById('bar' + i).style.height = percent + '%';
+    document.getElementById('count' + i).textContent = count;
+  }
+}
+
+// 渲染分类统计
+function renderCategoryStats() {
+  const byCat = stats.byCategory || {};
+  const html = Object.entries(byCat)
+    .sort((a, b) => b[1] - a[1])
+    .map(([cat, count]) => `
+      <div class="category-item">
+        <div class="category-name">${getCategoryLabel(cat)}</div>
+        <div class="category-count">${count}</div>
+      </div>
+    `).join('');
+
+  document.getElementById('categoryStats').innerHTML = html || '<p style="color: var(--sub); font-size: 12px;">暂无数据</p>';
+}
+
+// 渲染占算类型
+function renderReadingTypeStats() {
+  const byType = stats.byReadingType || {};
+  const html = Object.entries(byType)
+    .sort((a, b) => b[1] - a[1])
+    .map(([type, count]) => `
+      <div class="category-item">
+        <div class="category-name">${type || '未指定'}</div>
+        <div class="category-count">${count}</div>
+      </div>
+    `).join('');
+
+  document.getElementById('readingTypeStats').innerHTML = html || '<p style="color: var(--sub); font-size: 12px;">暂无数据</p>';
+}
+
+// 渲染高频关键词
+function renderTopIssues() {
+  const issues = stats.topIssues || [];
+  const html = issues.slice(0, 10).map((item, idx) => `
+    <div class="issue-item">
+      <div class="issue-rank">#${idx + 1}</div>
+      <div class="issue-word">"${item.word}"</div>
+      <div class="issue-count">${item.count} 次</div>
+    </div>
+  `).join('');
+
+  document.getElementById('topIssuesContainer').innerHTML = html || '<p style="color: var(--sub); font-size: 12px;">暂无数据</p>';
+}
+
+// 过滤反馈
+function filterByRating(rating) {
+  currentFilter = rating;
+  currentPage = 1;
+
+  // 更新按钮状态
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.remove('active');
+  });
+  event.target.classList.add('active');
+
+  // 过滤数据
+  if (rating === 'all') {
+    filteredFeedbacks = allFeedbacks;
+  } else if (rating === 'low') {
+    filteredFeedbacks = allFeedbacks.filter(f => f.rating <= 2);
+  } else {
+    filteredFeedbacks = allFeedbacks.filter(f => f.rating === rating);
+  }
+
+  renderFeedbackList();
+}
+
+// 渲染反馈列表
+function renderFeedbackList() {
+  const start = (currentPage - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  const pageFeedbacks = filteredFeedbacks.slice(start, end);
+
+  const html = pageFeedbacks.map(f => `
+    <div class="feedback-item">
+      <div class="feedback-head">
+        <div class="feedback-user">
+          <div class="user-avatar">${f.name.charAt(0).toUpperCase()}</div>
+          <div class="user-info">
+            <h4>${escapeHtml(f.name)}</h4>
+            <p>${f.email || '未提供邮箱'}</p>
+          </div>
+        </div>
+        <div class="feedback-meta">
+          <div class="rating-stars">
+            ${Array(f.rating).fill('').map(() => '<span class="star-filled">★</span>').join('')}
+            ${Array(5 - f.rating).fill('').map(() => '<span class="star-empty">★</span>').join('')}
+          </div>
+          <div class="category-badge">${getCategoryLabel(f.category)}</div>
+          <div class="time-badge">${formatTime(f.created_at)}</div>
+          <button class="delete-btn" onclick="deleteFeedback(${f.id})">删除</button>
+        </div>
+      </div>
+      <div class="feedback-message">${escapeHtml(f.message)}</div>
+      <div class="feedback-footer">
+        <span>${f.readingType ? '占算类型：' + f.readingType : ''}</span>
+        <span>IP: ${f.ip || '未记录'}</span>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('feedbackList').innerHTML = html || '<p style="color: var(--sub); text-align: center; padding: 20px;">暂无反馈</p>';
+  renderPagination();
+}
+
+// 分页
+function renderPagination() {
+  const totalPages = Math.ceil(filteredFeedbacks.length / itemsPerPage);
+  if (totalPages <= 1) {
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+
+  let html = '';
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+  }
+  document.getElementById('pagination').innerHTML = html;
+}
+
+function goToPage(page) {
+  currentPage = page;
+  renderFeedbackList();
+  document.querySelector('.feedback-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+// 删除反馈
+async function deleteFeedback(id) {
+  if (!confirm('确定要删除这条反馈吗？')) return;
+
+  try {
+    const token = checkAuth();
+    const response = await fetch(`/api/feedback/${id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+    // 重新加载
+    loadStats();
+  } catch (err) {
+    showError('删除失败：' + err.message);
+  }
+}
+
+// 工具函数
+function getCategoryLabel(cat) {
+  const labels = {
+    quality: '准确度',
+    accuracy: '信息完整',
+    ui: '界面体验',
+    performance: '加载速度',
+    other: '其他问题',
+    general: '通用反馈'
+  };
+  return labels[cat] || cat || '未分类';
+}
+
+function formatTime(isoTime) {
+  const date = new Date(isoTime);
+  const now = new Date();
+  const diff = now - date;
+
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff / 60000) + '分钟前';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + '小时前';
+  if (diff < 604800000) return Math.floor(diff / 86400000) + '天前';
+
+  return date.toLocaleDateString('zh-CN');
+}
+
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function showError(msg) {
+  const container = document.getElementById('errorContainer');
+  container.innerHTML = `<div class="error">${escapeHtml(msg)}</div>`;
+  setTimeout(() => {
+    container.innerHTML = '';
+  }, 5000);
+}
+
+function logout() {
+  localStorage.removeItem('sy_admin_token');
+  window.location.href = '/pages/admin-login.html';
+}
+
+// 初始化
+window.addEventListener('load', loadStats);
+</script>
+</body>
+</html>

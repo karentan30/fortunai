@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>善缘客服</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* ── Widget 浮窗容器 ── */
+        .support-widget-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            z-index: 99999;
+            --primary: #9b6ba8;
+            --primary-light: #c9a8d4;
+            --border: #e5dce6;
+        }
+
+        /* ── 浮球按钮 ── */
+        .support-widget-button {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99999;
+        }
+
+        .support-widget-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(155, 107, 168, 0.3);
+        }
+
+        .support-widget-button.active {
+            display: none;
+        }
+
+        /* ── 窗口容器 ── */
+        .support-widget-window {
+            display: none;
+            position: absolute;
+            bottom: 80px;
+            right: 0;
+            width: 380px;
+            height: 600px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 40px rgba(0, 0, 0, 0.16);
+            flex-direction: column;
+            z-index: 99999;
+            animation: slideUp 0.3s ease;
+            max-height: 90vh;
+        }
+
+        .support-widget-window.open {
+            display: flex;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ── Header ── */
+        .support-widget-header {
+            padding: 16px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .support-widget-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .support-widget-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .support-widget-close:hover {
+            opacity: 0.8;
+        }
+
+        /* ── 消息区域 ── */
+        .support-widget-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            background: #f9f7fa;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .support-widget-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .support-widget-messages::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .support-widget-messages::-webkit-scrollbar-thumb {
+            background: #d4c5d9;
+            border-radius: 3px;
+        }
+
+        /* ── 消息气泡 ── */
+        .support-message {
+            display: flex;
+            gap: 8px;
+            animation: messageIn 0.3s ease;
+        }
+
+        @keyframes messageIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .support-message.user {
+            justify-content: flex-end;
+        }
+
+        .support-message-bubble {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .support-message.ai .support-message-bubble {
+            background: white;
+            color: #333;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+
+        .support-message.user .support-message-bubble {
+            background: var(--primary);
+            color: white;
+        }
+
+        .support-message-loading {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .support-message-loading span {
+            width: 6px;
+            height: 6px;
+            background: var(--primary);
+            border-radius: 50%;
+            animation: pulse 1.4s infinite;
+        }
+
+        .support-message-loading span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .support-message-loading span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.3;
+                transform: scale(0.8);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        /* ── 输入区域 ── */
+        .support-widget-input-area {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+            background: white;
+            border-radius: 0 0 12px 12px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .support-widget-input {
+            flex: 1;
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 8px 14px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .support-widget-input:focus {
+            border-color: var(--primary);
+        }
+
+        .support-widget-send {
+            background: var(--primary);
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .support-widget-send:hover:not(:disabled) {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            transform: scale(1.05);
+        }
+
+        .support-widget-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* ── 菜单 / 快捷回复 ── */
+        .support-widget-menu {
+            padding: 12px;
+            border-top: 1px solid var(--border);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .support-widget-menu-item {
+            background: #f0ebf5;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+            color: #666;
+        }
+
+        .support-widget-menu-item:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* ── 升级人工客服表单 ── */
+        .support-widget-escalate {
+            padding: 16px;
+            border-top: 1px solid var(--border);
+            background: #faf8fb;
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .support-widget-escalate.show {
+            display: flex;
+        }
+
+        .support-widget-escalate-label {
+            font-size: 12px;
+            color: #999;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .support-widget-escalate input {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .support-widget-escalate input:focus {
+            border-color: var(--primary);
+        }
+
+        .support-widget-escalate textarea {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 13px;
+            outline: none;
+            resize: none;
+            min-height: 80px;
+            font-family: inherit;
+        }
+
+        .support-widget-escalate textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .support-widget-escalate-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .support-widget-escalate-buttons button {
+            flex: 1;
+            padding: 8px;
+            border-radius: 6px;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .support-widget-escalate-submit {
+            background: var(--primary);
+            color: white;
+        }
+
+        .support-widget-escalate-submit:hover {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+        }
+
+        .support-widget-escalate-cancel {
+            background: #f0ebf5;
+            color: #666;
+        }
+
+        .support-widget-escalate-cancel:hover {
+            background: #e5dce6;
+        }
+
+        /* ── 移动端适配 ── */
+        @media (max-width: 480px) {
+            .support-widget-container {
+                bottom: 10px;
+                right: 10px;
+            }
+
+            .support-widget-window {
+                width: calc(100vw - 20px);
+                height: calc(100vh - 100px);
+                max-height: 85vh;
+            }
+
+            .support-widget-button {
+                width: 50px;
+                height: 50px;
+                font-size: 22px;
+            }
+        }
+
+        /* ── 无消息时的欢迎状态 ── */
+        .support-widget-welcome {
+            padding: 20px 16px;
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .support-widget-welcome strong {
+            color: var(--primary);
+            display: block;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="support-widget-container" id="supportContainer">
+        <!-- 浮球按钮 -->
+        <button class="support-widget-button" id="supportButton" title="打开客服">💬</button>
+
+        <!-- 对话窗口 -->
+        <div class="support-widget-window" id="supportWindow">
+            <!-- Header -->
+            <div class="support-widget-header">
+                <h3>🌙 善缘客服</h3>
+                <button class="support-widget-close" id="closeBtn">✕</button>
+            </div>
+
+            <!-- 消息区域 -->
+            <div class="support-widget-messages" id="messagesContainer">
+                <div class="support-widget-welcome">
+                    <strong>你好～</strong>
+                    有什么可以帮你的吗？<br>关于八字、代烧、订阅的问题都可以问我哦
+                </div>
+            </div>
+
+            <!-- 菜单 -->
+            <div class="support-widget-menu" id="quickMenuContainer">
+                <button class="support-widget-menu-item" data-action="faq-bazi">八字怎么看</button>
+                <button class="support-widget-menu-item" data-action="faq-baishao">代烧是什么</button>
+                <button class="support-widget-menu-item" data-action="faq-payment">如何支付</button>
+                <button class="support-widget-menu-item" data-action="escalate">找人工客服</button>
+            </div>
+
+            <!-- 升级人工表单 -->
+            <div class="support-widget-escalate" id="escalateForm">
+                <div class="support-widget-escalate-label">联系方式</div>
+                <input type="email" id="escalateEmail" placeholder="请输入邮箱" required>
+                <textarea id="escalateMessage" placeholder="请简要描述问题"></textarea>
+                <div class="support-widget-escalate-buttons">
+                    <button class="support-widget-escalate-submit" id="submitEscalate">提交工单</button>
+                    <button class="support-widget-escalate-cancel" id="cancelEscalate">取消</button>
+                </div>
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="support-widget-input-area">
+                <input type="text" class="support-widget-input" id="messageInput" placeholder="输入消息..." autocomplete="off">
+                <button class="support-widget-send" id="sendBtn">→</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════
+        // Widget 逻辑
+        // ═══════════════════════════════════════
+
+        const config = {
+            apiBase: (() => {
+                const origins = {
+                    'localhost:3021': 'http://localhost:3021',
+                    '47.242.80.65:3021': 'http://47.242.80.65:3021',
+                    'shenyuan.mylumee.cn': 'https://shenyuan.mylumee.cn',
+                    'shenyuan.vercel.app': 'https://shenyuan.vercel.app',
+                    'fortunai.vercel.app': 'https://fortunai.vercel.app'
+                };
+                return origins[window.location.host] || window.location.origin;
+            })(),
+            product: 'shenyuan',
+            messageLimit: 50
+        };
+
+        class SupportWidget {
+            constructor() {
+                this.messages = this.loadMessages();
+                this.isOpen = false;
+                this.isLoading = false;
+                this.init();
+            }
+
+            init() {
+                this.cacheDOM();
+                this.attachEventListeners();
+                this.restoreState();
+            }
+
+            cacheDOM() {
+                this.button = document.getElementById('supportButton');
+                this.window = document.getElementById('supportWindow');
+                this.closeBtn = document.getElementById('closeBtn');
+                this.messagesContainer = document.getElementById('messagesContainer');
+                this.messageInput = document.getElementById('messageInput');
+                this.sendBtn = document.getElementById('sendBtn');
+                this.quickMenu = document.getElementById('quickMenuContainer');
+                this.escalateForm = document.getElementById('escalateForm');
+                this.escalateEmail = document.getElementById('escalateEmail');
+                this.escalateMessage = document.getElementById('escalateMessage');
+            }
+
+            attachEventListeners() {
+                this.button.addEventListener('click', () => this.toggle());
+                this.closeBtn.addEventListener('click', () => this.close());
+                this.sendBtn.addEventListener('click', () => this.sendMessage());
+                this.messageInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        this.sendMessage();
+                    }
+                });
+
+                // 快捷菜单
+                this.quickMenu.querySelectorAll('.support-widget-menu-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        const action = e.target.dataset.action;
+                        this.handleMenuAction(action);
+                    });
+                });
+
+                // 人工客服表单
+                document.getElementById('submitEscalate').addEventListener('click', () => this.submitEscalate());
+                document.getElementById('cancelEscalate').addEventListener('click', () => this.hideEscalateForm());
+            }
+
+            toggle() {
+                this.isOpen ? this.close() : this.open();
+            }
+
+            open() {
+                this.isOpen = true;
+                this.window.classList.add('open');
+                this.button.classList.add('active');
+                this.messageInput.focus();
+                this.saveState();
+            }
+
+            close() {
+                this.isOpen = false;
+                this.window.classList.remove('open');
+                this.button.classList.remove('active');
+                this.saveState();
+            }
+
+            renderMessages() {
+                const shouldScroll = this.messagesContainer.scrollHeight - this.messagesContainer.scrollTop < 100;
+
+                if (this.messages.length === 0) {
+                    this.messagesContainer.innerHTML = `
+                        <div class="support-widget-welcome">
+                            <strong>你好～</strong>
+                            有什么可以帮你的吗？<br>关于八字、代烧、订阅的问题都可以问我哦
+                        </div>
+                    `;
+                    return;
+                }
+
+                this.messagesContainer.innerHTML = this.messages.map(msg => `
+                    <div class="support-message ${msg.role}">
+                        <div class="support-message-bubble">${this.escapeHtml(msg.content)}</div>
+                    </div>
+                `).join('');
+
+                if (shouldScroll) {
+                    this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+                }
+            }
+
+            addMessage(role, content) {
+                this.messages.push({ role, content, ts: Date.now() });
+                this.messages = this.messages.slice(-this.config.messageLimit);
+                this.saveMessages();
+                this.renderMessages();
+            }
+
+            showLoading() {
+                const loadingEl = document.createElement('div');
+                loadingEl.className = 'support-message ai';
+                loadingEl.innerHTML = `
+                    <div class="support-message-bubble" style="padding: 8px 12px;">
+                        <div class="support-message-loading">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                        </div>
+                    </div>
+                `;
+                this.messagesContainer.appendChild(loadingEl);
+                this.messagesContainer.scrollTop = this.messagesContainer.scrollHeight;
+                return loadingEl;
+            }
+
+            removeLoading(el) {
+                el?.remove();
+            }
+
+            async sendMessage() {
+                const text = this.messageInput.value.trim();
+                if (!text || this.isLoading) return;
+
+                this.messageInput.value = '';
+                this.addMessage('user', text);
+                this.isLoading = true;
+                this.sendBtn.disabled = true;
+
+                const loadingEl = this.showLoading();
+
+                try {
+                    const res = await fetch(`${config.apiBase}/api/support-chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            product: config.product,
+                            message: text,
+                            history: this.messages.slice(-6)
+                        })
+                    });
+
+                    const data = await res.json();
+                    this.removeLoading(loadingEl);
+
+                    if (data.reply) {
+                        this.addMessage('ai', data.reply);
+                    } else {
+                        this.addMessage('ai', '抱歉，暂时无法连接，请稍后重试');
+                    }
+                } catch (e) {
+                    this.removeLoading(loadingEl);
+                    this.addMessage('ai', '网络错误，请稍后重试');
+                } finally {
+                    this.isLoading = false;
+                    this.sendBtn.disabled = false;
+                    this.messageInput.focus();
+                }
+            }
+
+            handleMenuAction(action) {
+                const faqMap = {
+                    'faq-bazi': '请问八字怎么看啊？',
+                    'faq-baishao': '代烧是怎么一回事？',
+                    'faq-payment': '支付方式有哪些？'
+                };
+
+                if (action === 'escalate') {
+                    this.showEscalateForm();
+                } else if (faqMap[action]) {
+                    this.messageInput.value = faqMap[action];
+                    this.messageInput.focus();
+                }
+            }
+
+            showEscalateForm() {
+                this.quickMenu.style.display = 'none';
+                this.escalateForm.classList.add('show');
+                this.escalateEmail.focus();
+            }
+
+            hideEscalateForm() {
+                this.escalateForm.classList.remove('show');
+                this.quickMenu.style.display = 'grid';
+            }
+
+            async submitEscalate() {
+                const email = this.escalateEmail.value.trim();
+                const message = this.escalateMessage.value.trim();
+
+                if (!email || !message) {
+                    alert('请填写邮箱和问题');
+                    return;
+                }
+
+                try {
+                    const res = await fetch(`${config.apiBase}/api/support-ticket`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            product: config.product,
+                            email: email,
+                            question: message,
+                            conversation: this.messages
+                        })
+                    });
+
+                    const data = await res.json();
+                    if (data.ok) {
+                        this.addMessage('ai', '✓ 已收到你的工单，我们会在24小时内回复你的邮箱。感谢耐心等待！');
+                        this.escalateEmail.value = '';
+                        this.escalateMessage.value = '';
+                        this.hideEscalateForm();
+                    } else {
+                        alert(data.error || '提交失败，请稍后重试');
+                    }
+                } catch (e) {
+                    alert('提交失败，请检查网络后重试');
+                }
+            }
+
+            saveMessages() {
+                try {
+                    localStorage.setItem('shenyuan_support_messages', JSON.stringify(this.messages));
+                } catch (e) {
+                    console.warn('localStorage save failed:', e);
+                }
+            }
+
+            loadMessages() {
+                try {
+                    const stored = localStorage.getItem('shenyuan_support_messages');
+                    return stored ? JSON.parse(stored) : [];
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            saveState() {
+                try {
+                    localStorage.setItem('shenyuan_support_open', this.isOpen);
+                } catch (e) {
+                    console.warn('localStorage state save failed:', e);
+                }
+            }
+
+            restoreState() {
+                try {
+                    const wasOpen = localStorage.getItem('shenyuan_support_open') === 'true';
+                    if (wasOpen) this.open();
+                    this.renderMessages();
+                } catch (e) {
+                    this.renderMessages();
+                }
+            }
+
+            escapeHtml(text) {
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return text.replace(/[&<>"']/g, m => map[m]);
+            }
+        }
+
+        // ═══════════════════════════════════════
+        // Init
+        // ═══════════════════════════════════════
+
+        // 延迟加载，避免阻塞页面渲染
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                window.supportWidget = new SupportWidget();
+            });
+        } else {
+            window.supportWidget = new SupportWidget();
+        }
+    </script>
+</body>
+</html>

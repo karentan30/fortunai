@@ -1,7 +1,13 @@
 const https = require('https');
 const fs = require('fs');
 
-const API_KEY = 'sk-8597ac6c84d344039e09c8f947e4022b';
+// SECURITY: Use environment variable instead of hardcoded key
+// Previous key sk-8597ac6c84d344039e09c8f947e4022b has been REVOKED
+const API_KEY = process.env.DEEPSEEK_API_KEY || '';
+if (!API_KEY) {
+  console.error('ERROR: DEEPSEEK_API_KEY environment variable not set');
+  process.exit(1);
+}
 
 // CORRECT birth data
 const BAZI = {
