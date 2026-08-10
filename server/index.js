@@ -17,7 +17,7 @@ const divinationRouter = require('./routes/divination');
 const dailyRouter     = require('./routes/daily');
 const adminRouter     = require('./routes/admin');
 const abRouter        = require('./routes/ab');
-const videoCallRouter = require('./routes/video-call');
+// const videoCallRouter = require('./routes/video-call'); // TODO: fix agora-access-token version
 
 const PORT = process.env.PORT || 3021;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:' + PORT;
@@ -150,7 +150,7 @@ app.use('/api', abRouter);
 app.use('/api', require('./routes/subscribe'));
 
 // 实时视频通话（Agora 集成）
-app.use('/api/video-call', videoCallRouter);
+// app.use('/api/video-call', videoCallRouter); // TODO: fix agora-access-token version
 
 // 每日邮件推送系统
 const { router: emailRouter, sendDailyBatch } = require('./routes/email');
