@@ -1331,6 +1331,7 @@ router.post('/fengshui', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 // POST /api/geo-fortune — 地域命理分析
 // ══════════════════════════════════════════
+router.get('/geo-fortune', (req, res) => res.status(405).json({ error: 'Method Not Allowed', hint: 'Use POST' }));
 router.post('/geo-fortune', rateLimitMiddleware, async (req, res) => {
   try {
     const { latitude, longitude, birthYear, birthMonth, birthDay, gender } = req.body;
