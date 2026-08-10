@@ -109,6 +109,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 .footnote{text-align:center;padding:20px;position:relative;z-index:1;font-size:9px;color:var(--sub-text);letter-spacing:0.06em;line-height:1.7;opacity:0.7}
 
+/* ── 中元节横幅 ── */
+.zhongyuan-banner{display:none;background:linear-gradient(135deg,#6b1a1a 0%,#8b2020 50%,#5a1212 100%);padding:12px 16px;text-align:center;position:relative;overflow:hidden}
+.zhongyuan-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(201,168,76,.15) 0%,transparent 65%);pointer-events:none}
+.zhongyuan-banner .zy-icon{font-size:18px;margin-right:6px;filter:drop-shadow(0 0 6px rgba(201,168,76,.6))}
+.zhongyuan-banner .zy-text{font-size:12px;color:rgba(245,233,192,.95);letter-spacing:.08em;line-height:1.6}
+.zhongyuan-banner .zy-text b{color:#e8d08a}
+.zhongyuan-banner .zy-deadline{font-size:10px;color:rgba(245,233,192,.65);letter-spacing:.06em;margin-top:3px}
+
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;line-height:1.6;text-align:center;font-family:'Noto Serif SC',serif;cursor:pointer;transition:opacity 0.3s;opacity:0;pointer-events:none}
 .toast.show{opacity:1;pointer-events:auto}
 .toast.error{background:rgba(180,40,40,0.92);border:1px solid rgba(220,80,80,0.4);color:rgba(255,220,220,0.95)}
@@ -121,6 +129,12 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 </head>
 <body>
 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题" style="z-index:999">🌙</button>
+
+<!-- 中元节横幅（7/15-9/5农历期间自动显示） -->
+<div class="zhongyuan-banner" id="zyBanner">
+  <div><span class="zy-icon">🕯️</span><span class="zy-text"><b>中元节特别活动</b> · 邀好友一起为先人代烧，双方各得一次免费运势查询</span></div>
+  <div class="zy-deadline" id="zyDeadline"></div>
+</div>
 
 <button class="back-btn" onclick="history.back()">‹ 返回</button>
 
@@ -306,10 +320,26 @@ function esc(s) {
 
 var _sharePlatformTexts = { wechat: '', moments: '', xhs: '' };
 
+function isZhongyuanSeason() {
+  var now = new Date();
+  var y = now.getFullYear(); var m = now.getMonth()+1; var d = now.getDate();
+  // 2026中元节：农历七月十五 = 公历8月28日；活动窗口8/10-9/5
+  if (y === 2026 && m === 8 && d >= 10) return true;
+  if (y === 2026 && m === 9 && d <= 5) return true;
+  return false;
+}
+
 function buildPlatformTexts(url, code) {
-  _sharePlatformTexts.wechat = '嘿，我最近在用善缘测八字，感觉挺准的！你也来试试？用我的邀请码 ' + code + ' 注册，你们都能解锁一次免费合婚报告 →\n' + url;
-  _sharePlatformTexts.moments = '【善缘 · 八字命理】\n刚测了自己的命盘，五行分析+大运流年，比我想的深很多。\n感兴趣的朋友可以试试，用我的邀请码 ' + code + ' 有惊喜 🎁\n' + url;
-  _sharePlatformTexts.xhs = '姐妹们！发现一个超准的AI八字命理平台🔮\n\n→ 五行能量分析\n→ 财运格局详批\n→ 大运流年预测\n\n用我的邀请码「' + code + '」注册，你我各得一次免费合婚报告✨\n\n#八字命理 #合婚 #命理测算 #善缘\n' + url;
+  var zy = isZhongyuanSeason();
+  if (zy) {
+    _sharePlatformTexts.wechat = '中元节快到了，我在善缘给爸妈预约了代烧。\n身在海外回不去，这是我能做的。\n用我的邀请码 ' + code + ' 注册，你也能免费查一次运势，或者一起预约代烧 →\n' + url;
+    _sharePlatformTexts.moments = '【中元节 · 善缘代烧】🕯️\n今年中元节我没办法回家，预约了善缘代烧服务，全程视频回传，法师在香港代为祭拜。\n心意到了，就够了。\n感兴趣的朋友用邀请码「' + code + '」有优惠，双方各得一次免费运势查询 🙏\n#中元节 #代烧 #海外华人 #善缘\n' + url;
+    _sharePlatformTexts.xhs = '🕯️姐妹们，中元节快到了\n\n在国外的我今年第一次试了线上代烧，是善缘的服务，有实时直播，法师在香港帮我替爸妈上香，看着那边的火，突然就哭了。\n\n→ 全程直播见证\n→ 视频存档纪念\n→ 全球华人可预约\n\n用我的邀请码「' + code + '」注册，你我各得一次免费运势查询✨\n\n#中元节 #代烧 #海外华人 #思念 #善缘\n' + url;
+  } else {
+    _sharePlatformTexts.wechat = '嘿，我最近在用善缘测八字，感觉挺准的！你也来试试？用我的邀请码 ' + code + ' 注册，你们都能解锁一次免费合婚报告 →\n' + url;
+    _sharePlatformTexts.moments = '【善缘 · 八字命理】\n刚测了自己的命盘，五行分析+大运流年，比我想的深很多。\n感兴趣的朋友可以试试，用我的邀请码 ' + code + ' 有惊喜 🎁\n' + url;
+    _sharePlatformTexts.xhs = '姐妹们！发现一个超准的AI八字命理平台🔮\n\n→ 五行能量分析\n→ 财运格局详批\n→ 大运流年预测\n\n用我的邀请码「' + code + '」注册，你我各得一次免费合婚报告✨\n\n#八字命理 #合婚 #命理测算 #善缘\n' + url;
+  }
   var ids = { wechat: 'shareTextWechat', moments: 'shareTextMoments', xhs: 'shareTextXhs' };
   Object.keys(ids).forEach(function(k) {
     var el = document.getElementById(ids[k]);
@@ -366,6 +396,14 @@ function loadReferral(token) {
 }
 
 (function init(){
+  // 中元节横幅
+  if (isZhongyuanSeason()) {
+    var banner = document.getElementById('zyBanner');
+    if (banner) banner.style.display = 'block';
+    var dl = document.getElementById('zyDeadline');
+    if (dl) dl.textContent = '活动截止 2026年9月5日 · 今年中元节 8月28日';
+  }
+
   var token = getToken();
   if (!token) {
     document.getElementById('guestView').style.display = 'block';

@@ -20,7 +20,7 @@ a{color:var(--gold);text-decoration:none}
 .load-sub{color:rgba(255,255,255,.4);font-size:13px;margin-bottom:32px}
 .load-bar-wrap{width:240px;height:4px;background:rgba(201,168,76,.15);border-radius:2px;overflow:hidden;margin:0 auto}
 .load-bar{height:100%;background:linear-gradient(90deg,#b8922f,#e0c875);border-radius:2px;width:0;transition:width .4s ease}
-.load-tip{color:rgba(255,255,255,.3);font-size:11px;margin-top:16px;min-height:18px;letter-spacing:.05em}
+.load-tip{color:rgba(255,255,255,.3);font-size:13px;margin-top:16px;min-height:18px;letter-spacing:.05em}
 
 /* Error */
 #error-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:8999;align-items:center;justify-content:center;text-align:center;padding:32px;flex-direction:column;gap:16px}
@@ -34,7 +34,7 @@ a{color:var(--gold);text-decoration:none}
 #report.show{display:block}
 
 .rp-cover{text-align:center;padding:64px 0 48px;border-bottom:1px solid rgba(201,168,76,.2);margin-bottom:48px}
-.rp-brand{font-size:10px;letter-spacing:6px;color:rgba(201,168,76,.5);margin-bottom:24px}
+.rp-brand{font-size:12px;letter-spacing:6px;color:rgba(201,168,76,.5);margin-bottom:24px}
 .rp-name{font-size:38px;color:#fff;font-weight:300;letter-spacing:6px;margin-bottom:12px;font-family:'Cormorant Garamond',serif}
 .rp-date{color:rgba(255,255,255,.4);font-size:13px;letter-spacing:2px;margin-bottom:24px}
 
@@ -82,7 +82,7 @@ a{color:var(--gold);text-decoration:none}
 .back-bar a{color:rgba(201,168,76,.5)}
 
 /* AIGC disclaimer */
-.aigc-bar{text-align:center;padding:16px;font-size:10px;color:rgba(200,185,155,.35);letter-spacing:.06em;line-height:1.8;border-top:1px solid rgba(201,168,76,.06);margin-top:32px}
+.aigc-bar{text-align:center;padding:16px;font-size:12px;color:rgba(200,185,155,.35);letter-spacing:.06em;line-height:1.8;border-top:1px solid rgba(201,168,76,.06);margin-top:32px}
 
 @media(max-width:600px){
   #report{padding:32px 16px 80px}
@@ -115,7 +115,6 @@ a{color:var(--gold);text-decoration:none}
     <div class="rp-brand">S H E N Y U A N · B A Z I · D E S T I N Y</div>
     <div class="rp-name" id="rp-name">—</div>
     <div class="rp-date" id="rp-date">—</div>
-    <div style="font-size:10px;letter-spacing:.15em;color:rgba(201,168,76,.35);margin-top:8px">🤖 AI-GENERATED · FOR REFERENCE & ENTERTAINMENT · NOT PROFESSIONAL ADVICE</div>
   </div>
 
   <!-- Free content -->
@@ -126,10 +125,16 @@ a{color:var(--gold);text-decoration:none}
     <div class="gate-icon">🔮</div>
     <h3 class="gate-title">Unlock Your Full Destiny Report</h3>
     <p class="gate-desc">Love & Marriage · Wealth & Finance · Career Path · Ten-Year Luck Cycles · Year-by-Year Forecast</p>
+    <div id="countdown-bar" style="font-size:12px;color:#e05c5c;letter-spacing:.06em;margin-bottom:10px;min-height:18px"></div>
     <div class="gate-price">$2.99 <span class="gate-orig">$19</span></div>
-    <button class="gate-btn" onclick="syPay('a','wechat')">🟢 Pay via WeChat</button>
     <button class="gate-stripe" id="stripe-btn-a" onclick="syPayStripe('a')">💳 Pay with Card ($2.99)</button>
-    <span class="gate-alt" onclick="syPay('a','alipay')">Pay via Alipay</span>
+    <details style="margin-top:14px;text-align:left">
+      <summary style="font-size:13px;color:rgba(201,168,76,.5);cursor:pointer;letter-spacing:.08em;list-style:none;text-align:center">Other payment options ▾</summary>
+      <div style="margin-top:10px;text-align:center">
+        <button class="gate-btn" style="font-size:13px;padding:10px 0;margin-bottom:8px" onclick="syPay('a','wechat')">🟢 Pay via WeChat</button>
+        <span class="gate-alt" onclick="syPay('a','alipay')">Pay via Alipay</span>
+      </div>
+    </details>
   </div>
 
   <!-- Locked content (blurred preview) -->
@@ -145,7 +150,7 @@ a{color:var(--gold);text-decoration:none}
 
   <div class="back-bar"><a href="lp-master-EN.html">← Re-enter birth details</a> · <a href="life-events.html">Consult a Master</a></div>
 
-  <div class="aigc-bar">AI-generated content · For entertainment & reference purposes only · Does not constitute medical, legal, or financial advice<br>ShenYuan · Metaphysical AI · All rights reserved</div>
+  <div class="aigc-bar">🤖 AI-GENERATED · FOR REFERENCE & ENTERTAINMENT · NOT PROFESSIONAL ADVICE<br>AI-generated content · Does not constitute medical, legal, or financial advice<br>ShenYuan · Metaphysical AI · All rights reserved</div>
 </div>
 
 <!-- Pay Modal -->
@@ -160,6 +165,25 @@ a{color:var(--gold);text-decoration:none}
 </div>
 
 <script>
+(function(){
+  var DURATION = 24*60*60*1000;
+  var key = 'sy_offer_start';
+  var start = sessionStorage.getItem(key);
+  if(!start){ start = Date.now(); sessionStorage.setItem(key, start); }
+  function tick(){
+    var bar = document.getElementById('countdown-bar');
+    if(!bar) return;
+    var elapsed = Date.now() - parseInt(start);
+    var remaining = DURATION - elapsed;
+    if(remaining <= 0){ bar.textContent = ''; return; }
+    var h = Math.floor(remaining/3600000);
+    var m = Math.floor((remaining%3600000)/60000);
+    var s = Math.floor((remaining%60000)/1000);
+    bar.textContent = '⏰ Limited offer — expires in ' + h + ':' + (m<10?'0'+m:m) + ':' + (s<10?'0'+s:s);
+    setTimeout(tick, 1000);
+  }
+  tick();
+})();
 var SY_API = (location.hostname==='localhost'||location.hostname==='127.0.0.1') ? 'http://localhost:3021/api' : '/api';
 var TIME_MAP = {子时:0,丑时:1,寅时:3,卯时:5,辰时:7,巳时:9,午时:11,未时:13,申时:15,酉时:17,戌时:19,亥时:21};
 var LOAD_TIPS = ['Mapping year & month pillars...','Analyzing your Day Master...','Calculating Five Elements balance...','Reading your luck cycles...','Finalizing your destiny report...'];
@@ -402,12 +426,12 @@ function copyLink(){
       You've unlocked your full report.<br>
       Upgrade now for unlimited readings all year —<br>
       <span style="color:#d4af37;font-size:16px">only $49</span>
-      <span style="color:#6a5a3a;text-decoration:line-through;font-size:11px;margin-left:4px">orig. $196</span>
+      <span style="color:#6a5a3a;text-decoration:line-through;font-size:13px;margin-left:4px">orig. $196</span>
     </div>
     <div style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:10px;padding:12px 14px;margin-bottom:18px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px"><span style="font-size:13px">♾️</span><span style="font-size:11px;color:#c8a84c">All readings unlimited · 365 days</span></div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px"><span style="font-size:13px">💑</span><span style="font-size:11px;color:#c8a84c">Compatibility · Zi Wei · Tarot included</span></div>
-      <div style="display:flex;align-items:center;gap:8px"><span style="font-size:13px">📅</span><span style="font-size:11px;color:#c8a84c">Save 41% vs monthly · 75% vs single</span></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px"><span style="font-size:13px">♾️</span><span style="font-size:13px;color:#c8a84c">All readings unlimited · 365 days</span></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px"><span style="font-size:13px">💑</span><span style="font-size:13px;color:#c8a84c">Compatibility · Zi Wei · Tarot included</span></div>
+      <div style="display:flex;align-items:center;gap:8px"><span style="font-size:13px">📅</span><span style="font-size:13px;color:#c8a84c">Save 41% vs monthly · 75% vs single</span></div>
     </div>
     <button id="upsell-cta-en" onclick="syAnnualUpgradeEN()" style="display:block;width:100%;padding:14px 0;border:none;border-radius:12px;background:linear-gradient(135deg,#9a7529,#d4af37,#f5e8b0);color:#1a0f2e;font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:0.08em;box-shadow:0 4px 20px rgba(212,175,55,0.35);margin-bottom:10px">
       Upgrade Now $49/year →
