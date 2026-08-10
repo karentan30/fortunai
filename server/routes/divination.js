@@ -85,7 +85,17 @@ async function baziKoreanHandler(req, res) {
     const result = await deepseekChat(messages, { maxTokens: full ? 16384 : 3500 });
     insertReading.run('bazi', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('bazi', req.body, result);
-    res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId });
+    var _bz = null;
+    try { _bz = calcBazi(Number(birthYear), Number(birthMonth), Number(birthDay), Number(birthHour)||0, gender||'female'); } catch(e) {}
+    var pillars = _bz ? {
+      year:  { gan: _bz.year.gan,  zhi: _bz.year.zhi,  label: '년주' },
+      month: { gan: _bz.month.gan, zhi: _bz.month.zhi, label: '월주' },
+      day:   { gan: _bz.day.gan,   zhi: _bz.day.zhi,   label: '일주' },
+      hour:  { gan: _bz.hour.gan,  zhi: _bz.hour.zhi,  label: '시주' },
+      dayMaster: _bz.dayMaster,
+      dayMasterElement: _bz.dayMasterElement
+    } : null;
+    res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId, pillars });
   } catch (err) {
     console.error('[BAZI-KO ERR]', err.message);
     res.status(500).json({ error: 'AI가 잠시 바빠요. 잠시 후 다시 시도해 주세요.' });
@@ -130,7 +140,17 @@ ${full ? `Generate a comprehensive report with these sections (emoji heading req
     const result = await deepseekChat(messages, { maxTokens: full ? 16384 : 3500 });
     insertReading.run('bazi', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('bazi', req.body, result);
-    res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId });
+    var _bze = null;
+    try { _bze = calcBazi(Number(birthYear), Number(birthMonth), Number(birthDay), Number(birthHour)||0, gender||'female'); } catch(e) {}
+    var pillarsEn = _bze ? {
+      year:  { gan: _bze.year.gan,  zhi: _bze.year.zhi,  label: 'Year Pillar' },
+      month: { gan: _bze.month.gan, zhi: _bze.month.zhi, label: 'Month Pillar' },
+      day:   { gan: _bze.day.gan,   zhi: _bze.day.zhi,   label: 'Day Pillar' },
+      hour:  { gan: _bze.hour.gan,  zhi: _bze.hour.zhi,  label: 'Hour Pillar' },
+      dayMaster: _bze.dayMaster,
+      dayMasterElement: _bze.dayMasterElement
+    } : null;
+    res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId, pillars: pillarsEn });
   } catch (err) {
     console.error('[BAZI-EN ERR]', err.message);
     res.status(500).json({ error: 'The AI reader is temporarily busy. Please try again in a moment.' });
@@ -614,7 +634,7 @@ B方：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined ? p2Hour+'时'
 // ══════════════════════════════════════════
 router.post('/hehun/stream', rateLimitMiddleware, async (req, res) => {
   try {
-    const { p1Year, p1Month, p1Day, p1Hour, p2Year, p2Month, p2Day, p2Hour, p1Gender, p2Gender, p1Name, p2Name, mode } = req.body;
+    const { p1Year, p1Month, p1Day, p1Hour, p2Year, p2Month, p2Day, p2Hour, p1Gender, p2Gender, p1Name, p2Name, mode, lang } = req.body;
     if (!p1Year || !p2Year) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: '请提供双方出生信息' });
@@ -625,11 +645,95 @@ router.post('/hehun/stream', rateLimitMiddleware, async (req, res) => {
       return res.status(400).json({ error: '仅限18岁以上用户使用' });
     }
     const isDating = mode === 'dating';
-    const nameA = p1Name || 'A方';
-    const nameB = p2Name || 'B方';
+    const hehunLang = lang || 'zh';
 
-    const systemPrompt = isDating
-      ? `你是一位洞悉人心的感情命理师，从业三十年，见过无数恋爱中的人。你说话温柔又直率——你不会粉饰，但也不会只说坏事。你深知恋爱的美丽和它的复杂。请用命运诗篇的笔触，为${nameA}和${nameB}写一份深度恋爱配对分析报告（6000-8000字）。用Markdown格式，简体中文。
+    // Deterministic compatibility score — same pair always gets same score
+    const hashInput = [p1Year, p1Month, p1Day, p2Year, p2Month, p2Day].join('-');
+    let hashVal = 0;
+    for (let i = 0; i < hashInput.length; i++) hashVal = (hashVal * 31 + hashInput.charCodeAt(i)) & 0x7fffffff;
+    const compatScore = 65 + (hashVal % 32);
+    const dims = {
+      wuxing:        60 + (hashVal >> 3)  % 40,
+      personality:   60 + (hashVal >> 7)  % 40,
+      values:        60 + (hashVal >> 11) % 40,
+      communication: 60 + (hashVal >> 15) % 40,
+      emotional:     60 + (hashVal >> 19) % 40,
+      future:        60 + (hashVal >> 23) % 40
+    };
+
+    const nameA = p1Name || (hehunLang === 'ko' ? 'A' : hehunLang === 'en' ? 'Person A' : 'A方');
+    const nameB = p2Name || (hehunLang === 'ko' ? 'B' : hehunLang === 'en' ? 'Person B' : 'B方');
+
+    let systemPrompt;
+    if (hehunLang === 'en') {
+      systemPrompt = isDating
+        ? `You are a warm, insightful relationship compatibility reader with 30 years of experience in BaZi (Four Pillars of Destiny). You write honest, compassionate reports in fluent English. Use Markdown format. Write 4000-6000 words.
+
+Analysis sections:
+## 💕 Compatibility Score & Overall Outlook
+## 🌊 How You Each Love — Emotional Patterns
+## 💬 Communication & Conflict Styles
+## 🌟 Where You Naturally Connect
+## ⚡ Relationship Challenges to Navigate
+## 🏠 Day-to-Day Chemistry & Living Together
+## 💫 Your Relationship Journey (next 1-3 years)
+## 🎯 3 Actionable Tips to Strengthen This Bond
+## 💌 The Bottom Line: Is This Love Worth Pursuing?
+
+Style: Flowing narrative, not bullet lists. End each section with one memorable line. Use the pre-computed compatibility score provided.`
+        : `You are a respected BaZi compatibility analyst with 40+ years of experience. You write warm, direct, and practical compatibility reports in fluent English. Use Markdown format, 6000-8000 words.
+
+Analysis sections:
+## 1. Overall Compatibility Score & Summary
+## 2. Five Elements Harmony & Clash Analysis
+## 3. Personality Compatibility — Core Natures
+## 4. Values & Life Goals Alignment
+## 5. Conflict Patterns & How to Resolve Them
+## 6. Who Leads, Who Grounds — Energy Dynamics
+## 7. Family & Children Prospects
+## 8. Extended Family Compatibility
+## 9. Best Marriage Timing & Auspicious Years
+## 10. Top 3 Things to Work On After Marriage
+## 11. Classical BaZi Compatibility Wisdom
+## 12. Final Verdict — Should You Build a Life Together?
+
+Use the pre-computed compatibility score provided. Give specific year recommendations.`;
+    } else if (hehunLang === 'ko') {
+      systemPrompt = isDating
+        ? `당신은 30년 경력의 따뜻하고 통찰력 있는 궁합 전문 명리사입니다. 사주명리를 바탕으로 솔직하고 따뜻한 궁합 리포트를 한국어로 작성합니다. 마크다운 형식, 4000-6000자.
+
+분석 항목:
+## 💕 궁합 점수 및 전체 흐름
+## 🌊 두 사람의 감정 패턴 — 어떻게 사랑하나요
+## 💬 소통 방식과 갈등 패턴
+## 🌟 자연스럽게 통하는 부분
+## ⚡ 함께 넘어야 할 도전
+## 🏠 함께 살면 어떨까 — 일상의 궁합
+## 💫 이 관계의 앞날 (1-3년 전망)
+## 🎯 관계를 더 좋게 만드는 3가지 조언
+## 💌 한마디 결론 — 이 사랑 계속할 가치 있나요?
+
+스타일: 리스트보다 흐르는 문장으로. 제공된 궁합 점수를 활용하세요.`
+        : `당신은 40년 이상 경력의 사주명리 궁합 전문가입니다. 따뜻하고 직접적이며 실용적인 궁합 리포트를 한국어로 작성합니다. 마크다운 형식, 6000-8000자.
+
+분석 항목:
+## 1. 궁합 총평 및 점수
+## 2. 오행 상생상극 분석
+## 3. 성격 궁합 — 두 사람의 본성
+## 4. 가치관과 인생 방향의 일치도
+## 5. 갈등 패턴과 해결 방법
+## 6. 누가 이끌고 누가 안정시키나 — 에너지 역학
+## 7. 자녀 및 가정운
+## 8. 양가 가족과의 궁합
+## 9. 최적 결혼 시기와 길일
+## 10. 결혼 후 꼭 주의해야 할 3가지
+## 11. 고전 사주 궁합 원리
+## 12. 최종 결론 — 이 인연, 맺어야 할까요?
+
+제공된 궁합 점수를 사용하세요. 구체적인 연도 추천을 포함하세요.`;
+    } else {
+      systemPrompt = isDating
+        ? `你是一位洞悉人心的感情命理师，从业三十年，见过无数恋爱中的人。你说话温柔又直率——你不会粉饰，但也不会只说坏事。你深知恋爱的美丽和它的复杂。请用命运诗篇的笔触，为${nameA}和${nameB}写一份深度恋爱配对分析报告（6000-8000字）。用Markdown格式，简体中文。
 
 分析维度：
 ## 💕 缘分分数（百分制）与总体感情走向
@@ -642,9 +746,8 @@ router.post('/hehun/stream', rateLimitMiddleware, async (req, res) => {
 ## 🎯 让这段感情更好的3个具体建议
 ## 💌 一句话：这段感情值得吗
 
-写作风格：命运诗篇。不用给打分列表，用连贯的叙述段落。每节结尾用一句令人心头一震的话。直接进入两人的感情画像。`
-
-      : `你是一位德高望重的合婚师，从业四十余年，阅人无数，撮合过上千对姻缘。你说话诚恳、直率、不留情面，但句句为对方好。你深知婚姻不是儿戏，合婚分析必须全面深刻、落到实地。用Markdown格式，简体中文，8000-12000字。
+写作风格：命运诗篇。不用给打分列表，用连贯的叙述段落。每节结尾用一句令人心头一震的话。直接进入两人的感情画像。请使用已提供的缘分分数。`
+        : `你是一位德高望重的合婚师，从业四十余年，阅人无数，撮合过上千对姻缘。你说话诚恳、直率、不留情面，但句句为对方好。你深知婚姻不是儿戏，合婚分析必须全面深刻、落到实地。用Markdown格式，简体中文，8000-12000字。
 
 详细分析：
 ## 一、合婚总评与缘分分数（百分制）
@@ -658,12 +761,46 @@ router.post('/hehun/stream', rateLimitMiddleware, async (req, res) => {
 ## 九、最佳结婚年份与时机
 ## 十、婚后最需要注意的3件事
 ## 十一、合婚古诀引用与命理依据
-## 十二、一句话结论——这段婚姻值得进入吗`;
+## 十二、一句话结论——这段婚姻值得进入吗
+
+请使用已提供的缘分分数。`;
+    }
 
     // ── 双方精确排盘（算法排，不让AI猜）──
     const bazi1 = calcBazi(Number(p1Year), Number(p1Month), Number(p1Day), Number(p1Hour)||0, p1Gender||'female');
     const bazi2 = calcBazi(Number(p2Year), Number(p2Month), Number(p2Day), Number(p2Hour)||0, p2Gender||'male');
-    const hehunChart = `【精确排盘数据（由万年历算法计算，请严格使用，不得自行推算或修改）】
+
+    let hehunChart, userMsg;
+    if (hehunLang === 'en') {
+      hehunChart = `[Pre-computed BaZi Chart Data — use exactly as provided, do not recalculate]
+${nameA} (${p1Gender==='male'?'Male':'Female'}):
+  Four Pillars: ${bazi1.fourPillars}  Day Master: ${bazi1.dayMaster} (${bazi1.dayMasterElement})  ${bazi1.isStrong?'Strong':'Weak'} chart
+  Five Elements: Metal${bazi1.wuxing['金'].toFixed(1)} Wood${bazi1.wuxing['木'].toFixed(1)} Water${bazi1.wuxing['水'].toFixed(1)} Fire${bazi1.wuxing['火'].toFixed(1)} Earth${bazi1.wuxing['土'].toFixed(1)}
+${nameB} (${p2Gender==='male'?'Male':'Female'}):
+  Four Pillars: ${bazi2.fourPillars}  Day Master: ${bazi2.dayMaster} (${bazi2.dayMasterElement})  ${bazi2.isStrong?'Strong':'Weak'} chart
+  Five Elements: Metal${bazi2.wuxing['金'].toFixed(1)} Wood${bazi2.wuxing['木'].toFixed(1)} Water${bazi2.wuxing['水'].toFixed(1)} Fire${bazi2.wuxing['火'].toFixed(1)} Earth${bazi2.wuxing['土'].toFixed(1)}
+Pre-computed compatibility score: ${compatScore}/100`;
+      userMsg = `${hehunChart}
+
+${nameA}: Born ${p1Year}/${p1Month}/${p1Day}${p1Hour !== undefined && p1Hour !== '' ? ' at '+p1Hour+':00' : ''} · ${p1Gender === 'male' ? 'Male' : 'Female'}
+${nameB}: Born ${p2Year}/${p2Month}/${p2Day}${p2Hour !== undefined && p2Hour !== '' ? ' at '+p2Hour+':00' : ''} · ${p2Gender === 'male' ? 'Male' : 'Female'}
+Please analyze compatibility using the chart data above. Use ${compatScore}/100 as the overall score.`;
+    } else if (hehunLang === 'ko') {
+      hehunChart = `[사전 계산된 사주 데이터 — 정확하게 사용하고 재계산 금지]
+${nameA} (${p1Gender==='male'?'남':'여'}):
+  사주: ${bazi1.fourPillars}  일간: ${bazi1.dayMaster} (${bazi1.dayMasterElement})  ${bazi1.isStrong?'신강':'신약'}
+  오행: 금${bazi1.wuxing['金'].toFixed(1)} 목${bazi1.wuxing['木'].toFixed(1)} 수${bazi1.wuxing['水'].toFixed(1)} 화${bazi1.wuxing['火'].toFixed(1)} 토${bazi1.wuxing['土'].toFixed(1)}
+${nameB} (${p2Gender==='male'?'남':'여'}):
+  사주: ${bazi2.fourPillars}  일간: ${bazi2.dayMaster} (${bazi2.dayMasterElement})  ${bazi2.isStrong?'신강':'신약'}
+  오행: 금${bazi2.wuxing['金'].toFixed(1)} 목${bazi2.wuxing['木'].toFixed(1)} 수${bazi2.wuxing['水'].toFixed(1)} 화${bazi2.wuxing['火'].toFixed(1)} 토${bazi2.wuxing['土'].toFixed(1)}
+사전 계산된 궁합 점수: ${compatScore}/100`;
+      userMsg = `${hehunChart}
+
+${nameA}: ${p1Year}년 ${p1Month}월 ${p1Day}일${p1Hour !== undefined && p1Hour !== '' ? ' '+p1Hour+'시' : ''} · ${p1Gender === 'male' ? '남성' : '여성'}
+${nameB}: ${p2Year}년 ${p2Month}월 ${p2Day}일${p2Hour !== undefined && p2Hour !== '' ? ' '+p2Hour+'시' : ''} · ${p2Gender === 'male' ? '남성' : '여성'}
+위 데이터를 바탕으로 궁합을 분석해주세요. 종합 점수는 ${compatScore}/100을 사용하세요.`;
+    } else {
+      hehunChart = `【精确排盘数据（由万年历算法计算，请严格使用，不得自行推算或修改）】
 ${nameA}（${p1Gender==='male'?'男':'女'}）：
   四柱：${bazi1.fourPillars}　日主：${bazi1.dayMaster}（${bazi1.dayMasterElement}）　身${bazi1.isStrong?'强':'弱'}
   五行：金${bazi1.wuxing['金'].toFixed(1)} 木${bazi1.wuxing['木'].toFixed(1)} 水${bazi1.wuxing['水'].toFixed(1)} 火${bazi1.wuxing['火'].toFixed(1)} 土${bazi1.wuxing['土'].toFixed(1)}
@@ -672,22 +809,23 @@ ${nameB}（${p2Gender==='male'?'男':'女'}）：
   四柱：${bazi2.fourPillars}　日主：${bazi2.dayMaster}（${bazi2.dayMasterElement}）　身${bazi2.isStrong?'强':'弱'}
   五行：金${bazi2.wuxing['金'].toFixed(1)} 木${bazi2.wuxing['木'].toFixed(1)} 水${bazi2.wuxing['水'].toFixed(1)} 火${bazi2.wuxing['火'].toFixed(1)} 土${bazi2.wuxing['土'].toFixed(1)}
   大运：${bazi2.daYun.slice(0,6).map(d=>d.name+'('+d.startAge+'岁)').join(' ')}
-当前年份：${new Date().getFullYear()}年`;
-
-    const userMsg = `${hehunChart}
+当前年份：${new Date().getFullYear()}年
+预计算缘分分数：${compatScore}/100`;
+      userMsg = `${hehunChart}
 
 ${nameA}：${p1Year}年${p1Month}月${p1Day}日${p1Hour !== undefined && p1Hour !== '' ? p1Hour+'时' : ''} · ${p1Gender === 'male' ? '男' : '女'}
 ${nameB}：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined && p2Hour !== '' ? p2Hour+'时' : ''} · ${p2Gender === 'male' ? '男' : '女'}
-请依据以上精确排盘数据进行合婚分析，所有八字相关结论必须与上方数据一致。`;
+请依据以上精确排盘数据进行合婚分析，缘分总分使用${compatScore}/100，所有八字相关结论必须与上方数据一致。`;
+    }
 
-    const fullAccess = hasFullAccess(req, ['bazi', 'hehun', 'ziwei', 'xingming', 'astrology', '八字', '合婚', '紫微', '姓名', '占星']);
+    const fullAccess = hasFullAccess(req, ['bazi', 'hehun', 'hehun_full', 'hehun_kr', 'hehun_kr_full', 'ziwei', 'xingming', 'astrology', '八字', '合婚', '궁합', '紫微', '姓名', '占星']);
 
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.flushHeaders();
-    res.write(`data: ${JSON.stringify({ type: 'meta', mode: isDating ? 'dating' : 'marriage' })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: 'meta', mode: isDating ? 'dating' : 'marriage', score: compatScore, dims, lang: hehunLang })}\n\n`);
 
     const streamBody = await deepseekStream(
       [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }],
@@ -1684,6 +1822,34 @@ router.post('/bazi/recent-input', (req, res) => {
 });
 
 // ══════════════════════════════════════════
+// GET /api/hehun/recent-input
+// ══════════════════════════════════════════
+router.get('/hehun/recent-input', (req, res) => {
+  try {
+    var auth = req.headers['authorization'] || '';
+    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : (req.query.token || '');
+    var t = getToken ? getToken.get(token) : null;
+    var userId = t ? t.user_id : null;
+    if (!userId) return res.json({ input: null });
+    const { _M: _hM } = require('../lib/store');
+    var recent = _hM.readings.filter(r => r.user_id === userId && r.type === 'hehun');
+    recent.sort((a, b) => (b.id || 0) - (a.id || 0));
+    if (recent.length === 0) return res.json({ input: null });
+    var last = recent[0];
+    var inp = typeof last.input === 'string' ? JSON.parse(last.input) : last.input;
+    res.json({ input: {
+      p1Year: inp.p1Year, p1Month: inp.p1Month, p1Day: inp.p1Day, p1Hour: inp.p1Hour,
+      p2Year: inp.p2Year, p2Month: inp.p2Month, p2Day: inp.p2Day, p2Hour: inp.p2Hour,
+      p1Gender: inp.p1Gender, p2Gender: inp.p2Gender, p1Name: inp.p1Name || '', p2Name: inp.p2Name || '',
+      lang: inp.lang || 'zh', mode: inp.mode || 'marriage'
+    }});
+  } catch (err) {
+    console.error('[HEHUN RECENT INPUT ERR]', err.message);
+    res.json({ input: null });
+  }
+});
+
+// ══════════════════════════════════════════
 // GET /api/context/:id — QA 上下文
 // ══════════════════════════════════════════
 router.get('/context/:id', (req, res) => {
@@ -2249,18 +2415,121 @@ ${tibetData.element}${tibetData.zodiac}带来的三个深刻天赋，以及两�
 // ══════════════════════════════════════════
 router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
   try {
-    const { birthYear, birthMonth, birthDay, birthHour, gender, question, mode } = req.body;
+    const { birthYear, birthMonth, birthDay, birthHour, gender, question, mode, lang } = req.body;
     if (!birthYear || !birthMonth || !birthDay) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: '请提供出生年月日' });
     }
     const full = hasFullAccess(req, ['bazi', '八字', '사주']);
+
+    // ── 精确排盘（真实算法，不依赖AI猜算）──
+    const bazi = calcBazi(Number(birthYear), Number(birthMonth), Number(birthDay), Number(birthHour) || 0, gender);
+
+    // ── 共用 SSE 建连逻辑 ──
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.flushHeaders();
+
+    // ── 韩文 사주 流式分支 ──
+    if (lang === 'ko') {
+      var pillarsKo = {
+        year:  { gan: bazi.year.gan,  zhi: bazi.year.zhi,  label: '년주' },
+        month: { gan: bazi.month.gan, zhi: bazi.month.zhi, label: '월주' },
+        day:   { gan: bazi.day.gan,   zhi: bazi.day.zhi,   label: '일주' },
+        hour:  { gan: bazi.hour.gan,  zhi: bazi.hour.zhi,  label: '시주' },
+        dayMaster: bazi.dayMaster,
+        dayMasterElement: bazi.dayMasterElement
+      };
+      res.write(`data: ${JSON.stringify({ type: 'meta', pillars: pillarsKo, tier: full ? 'full' : 'basic', locked: !full })}\n\n`);
+
+      var modeInsKo = (mode === 'gentle')
+        ? '\n\n【말투】따뜻하고 부드럽게, 무서운 말을 하지 마세요. 문제가 있어도 먼저 안아주고, 이해시키고, 이끌어 주세요.'
+        : '\n\n【말투】담백하고 따뜻하게, 꾸짖지 않고 솔직하게. 무서운 예언은 하지 마세요.';
+      var freePartKo = full
+        ? ''
+        : ' [무료 기본판] 아래 항목만 간단히(200-300자씩): 사주판, 오행 균형, 올해 운세 한 단락. 마지막에 "더 깊은 풀이(재물·애정·직업·건강·대운·10년 유년)는 심층 리포트에서 확인하세요"라고 안내하세요. 겁주지 말고 4-5문장으로 부드럽게 마무리.';
+      var sysKo = '당신은 정통 사주명리를 바탕으로 AI로 심층 운세 리포트를 쓰는 명리 연구원입니다. 독자를 무섭게 하지 않고, 따뜻하게 곁을 지키는 말투로 씁니다. 불안을 부추기는 예언은 절대 하지 않습니다.'
+        + '\n\n【전문 용어】십성(정관/편관/정인/편인/비견/겁재/상관/식신/정재/편재), 신살, 용신, 일간 등 한국 명리 용어를 정확히 사용하세요. 한문을 병기하지 말고 순수 한국어로 쓰세요.'
+        + '\n\n【글쓰기 톤】다정하고 잔잔하게. "좋은 사주다/나쁜 사주다"라는 이분법을 쓰지 않고, "강점과 약점, 그리고 잘 살리는 법"으로 풀어냅니다. 구체적인 조언(색·방위·습관)을 반드시 포함하세요.'
+        + '\n\n【구성】만세력 사주판(년월일시柱), 일간과 용신, 오행 균형과 보완법, 그리고 핵심 운세. 장르는 리포트보다 위로와 통찰.'
+        + modeInsKo + freePartKo;
+      var userKo = `내 사주를 봐주세요.\n출생: ${birthYear}년 ${birthMonth}월 ${birthDay}일${birthHour !== undefined && birthHour !== '' ? ' ' + birthHour + '시' : ' (태어난 시간 모름)'}\n성별: ${gender === 'male' ? '남성' : '여성'}\n관심: ${question || '전체 운세'}\n\n사주명리로 심층 분석해 주세요.`;
+
+      var messagesKo = buildReadingPrompt(sysKo, userKo);
+      var streamBodyKo = await deepseekStream(messagesKo, { maxTokens: full ? 16384 : 3500, timeout: 300000 });
+      var readerKo = streamBodyKo.getReader();
+      var decoderKo = new TextDecoder('utf-8');
+      var fullTextKo = '';
+      var bufKo = '';
+      while (true) {
+        var _rKo = await readerKo.read();
+        if (_rKo.done) { bufKo += decoderKo.decode(); break; }
+        bufKo += decoderKo.decode(_rKo.value, { stream: true });
+        var linesKo = bufKo.split('\n');
+        bufKo = linesKo.pop();
+        for (var _lKo of linesKo) {
+          if (!_lKo.startsWith('data: ')) continue;
+          var _rawKo = _lKo.slice(6).trim();
+          if (_rawKo === '[DONE]') continue;
+          try { var _jKo = JSON.parse(_rawKo); var _cKo = (_jKo.choices && _jKo.choices[0] && _jKo.choices[0].delta && _jKo.choices[0].delta.content) || ''; if (_cKo) { fullTextKo += _cKo; res.write(`data: ${JSON.stringify({ type: 'chunk', content: _cKo })}\n\n`); } } catch(e) {}
+        }
+      }
+      insertReading.run('bazi', JSON.stringify(req.body), fullTextKo, req.userId);
+      var ctxIdKo = saveQaContext('bazi', req.body, fullTextKo);
+      res.write(`data: ${JSON.stringify({ type: 'done', contextId: ctxIdKo })}\n\n`);
+      res.end();
+      return;
+    }
+
+    // ── 英文 BaZi 流式分支 ──
+    if (lang === 'en') {
+      var pillarsEn = {
+        year:  { gan: bazi.year.gan,  zhi: bazi.year.zhi,  label: 'Year Pillar' },
+        month: { gan: bazi.month.gan, zhi: bazi.month.zhi, label: 'Month Pillar' },
+        day:   { gan: bazi.day.gan,   zhi: bazi.day.zhi,   label: 'Day Pillar' },
+        hour:  { gan: bazi.hour.gan,  zhi: bazi.hour.zhi,  label: 'Hour Pillar' },
+        dayMaster: bazi.dayMaster,
+        dayMasterElement: bazi.dayMasterElement
+      };
+      res.write(`data: ${JSON.stringify({ type: 'meta', pillars: pillarsEn, tier: full ? 'full' : 'basic', locked: !full })}\n\n`);
+
+      var freeSuffixEn = full ? '' : `\n\nIMPORTANT: This is the free preview. Output ONLY these 3 chapters:\n📜 Four Pillars Chart\n🌊 Five Elements Analysis\n🌟 This Year's Fortune\n\nAfter completing these 3 chapters (around 1000-1500 words total), output exactly:\n---LOCKED---\n\nThen output a brief teaser listing the locked chapters.`;
+      var sysEn = `You are a master BaZi (Four Pillars of Destiny) reader with 30+ years of experience, trained in classical Chinese metaphysics. You write warm, insightful, and practical reports in fluent English. Never be scary or fatalistic — you help people understand their strengths and navigate challenges.${freeSuffixEn}`;
+      var userEn = `Please analyze my BaZi chart and generate a deep destiny report.\nBirth details:\n- Date: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', Hour: ' + birthHour + ':00' : ' (birth hour unknown)'}\n- Gender: ${gender === 'male' ? 'Male' : 'Female'}\n\n${full ? 'Generate a comprehensive report covering: Four Pillars Chart, Five Elements Analysis, This Year Fortune, Wealth & Career, Love & Relationships, Ten-Year Luck Cycles, Year-by-Year Forecast, Personalized Recommendations, and a Personal Message.' : 'Generate a free preview with ONLY 3 sections then the LOCKED separator.'}`;
+
+      var messagesEn = buildReadingPrompt(sysEn, userEn);
+      var streamBodyEn = await deepseekStream(messagesEn, { maxTokens: full ? 16384 : 3500, timeout: 300000 });
+      var readerEn = streamBodyEn.getReader();
+      var decoderEn = new TextDecoder('utf-8');
+      var fullTextEn = '';
+      var bufEn = '';
+      while (true) {
+        var _rEn = await readerEn.read();
+        if (_rEn.done) { bufEn += decoderEn.decode(); break; }
+        bufEn += decoderEn.decode(_rEn.value, { stream: true });
+        var linesEn = bufEn.split('\n');
+        bufEn = linesEn.pop();
+        for (var _lEn of linesEn) {
+          if (!_lEn.startsWith('data: ')) continue;
+          var _rawEn = _lEn.slice(6).trim();
+          if (_rawEn === '[DONE]') continue;
+          try { var _jEn = JSON.parse(_rawEn); var _cEn = (_jEn.choices && _jEn.choices[0] && _jEn.choices[0].delta && _jEn.choices[0].delta.content) || ''; if (_cEn) { fullTextEn += _cEn; res.write(`data: ${JSON.stringify({ type: 'chunk', content: _cEn })}\n\n`); } } catch(e) {}
+        }
+      }
+      insertReading.run('bazi', JSON.stringify(req.body), fullTextEn, req.userId);
+      var ctxIdEn = saveQaContext('bazi', req.body, fullTextEn);
+      res.write(`data: ${JSON.stringify({ type: 'done', contextId: ctxIdEn })}\n\n`);
+      res.end();
+      return;
+    }
+
+    // ── 中文八字流式（默认）──
     const modeInstruction = (mode === 'gentle')
       ? '\n\n【说话模式】你温暖治愈，以鼓励为主，让人感到被理解。'
       : '\n\n【说话模式】你说话直率，但句句为对方好，直接指出问题。';
 
-    // ── 精确排盘（真实算法，不依赖AI猜算）──
-    const bazi = calcBazi(Number(birthYear), Number(birthMonth), Number(birthDay), Number(birthHour) || 0, gender);
     const baziChart = `【精确排盘结果（由万年历算法计算，请严格使用以下数据，不得自行推算或修改）】
 年柱：${bazi.year.gan}${bazi.year.zhi}　月柱：${bazi.month.gan}${bazi.month.zhi}　日柱：${bazi.day.gan}${bazi.day.zhi}　时柱：${bazi.hour.gan}${bazi.hour.zhi}
 四柱：${bazi.fourPillars}
@@ -2275,12 +2544,6 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
       : `你是一位八字命理师。\n\n${baziChart}\n\n【免费预览版】只写3个部分：📜四柱排盘简介、🟤五行能量分析、🌟今年（${new Date().getFullYear()}年）运势概览（各200-300字）。最后说明完整报告含15个维度，可付费解锁。${modeInstruction}`;
 
     const userPrompt = `请为我批算八字。出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour !== undefined ? birthHour + '时' : ''}，性别：${gender === 'male' ? '男' : '女'}，关注：${question || '请全面分析命盘'}`;
-
-    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.flushHeaders();
 
     // 发送元数据
     res.write(`data: ${JSON.stringify({ type: 'meta', tier: full ? 'full' : 'basic', locked: !full })}\n\n`);

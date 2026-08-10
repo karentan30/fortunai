@@ -164,7 +164,7 @@ const getReadingsByUser = {
 // 🔴 P1-1 付费墙修复: 精确白名单，bazi_trial 不解锁完整报告
 const UNLOCK_BY_CATEGORY = {
   'bazi': ['bazi_full','bazi_vip'], '八字': ['bazi_full','bazi_vip'], '사주': ['bazi_full','bazi_vip'],
-  'hehun': ['hehun'], '合婚': ['hehun'],
+  'hehun': ['hehun'], '合婚': ['hehun'], '궁합': ['hehun'], 'hehun_kr': ['hehun'], 'hehun_full': ['hehun'], 'hehun_kr_full': ['hehun'],
   'ziwei': ['ziwei'], '紫微': ['ziwei'],
   'xingming': ['xingming'], '姓名': ['xingming'],
   'astrology': ['astrology'], '占星': ['astrology'],
@@ -391,7 +391,7 @@ function updateStreak(userId) {
 // ── Product prices ──
 const PRODUCTS = {
   bazi_basic:      { name: '基础命盘',         amount: 990,    amountCny: 1990,  desc: '日主+五行+今年运势' },
-  bazi_full:       { name: '完整命盘',          amount: 1990,   amountCny: 3990,  desc: '六维+十年大运+流月', amountKrw: 9900 },
+  bazi_full:       { name: '完整命盘',          amount: 990,    amountCny: 3990,  desc: '六维+十年大运+流月', amountKrw: 9900 },
   bazi_vip:        { name: '深度批命',          amount: 3990,   amountCny: 7990,  desc: '大师级·终身档案', amountKrw: 19900 },
   saju_kr_full:    { name: '사주팔자 완전 분석', amount: 750,    amountCny: 5500,  desc: '사주 완전 분석 보고서 (천간지지 + 대운 + 유년)', amountKrw: 9900 },
   daily_sub:       { name: '每日天机订阅',      amount: 490,    amountCny: 1990,  desc: '每日天机·单功能订阅' },
@@ -401,11 +401,13 @@ const PRODUCTS = {
   ziwei_full:      { name: '紫微斗数深度解读',  amount: 1990,   amountCny: 3990,  desc: '十二宫位+大运+流年完整批命' },
   duanshi_full:    { name: '断事问卦完整解读',  amount: 990,    amountCny: 990,   desc: '六爻起卦·吉凶断事·行动建议' },
   hehun:           { name: '合婚配对',          amount: 1990,   amountCny: 3990,  desc: '双方八字合婚分析', amountKrw: 4900 },
-  member_monthly:  { name: '月度会员',          amount: 690,    amountCny: 1990,  desc: '全部AI占算无限次·完整报告不锁定', amountKrw: 12900 },
-  member_yearly:   { name: '年度会员',          amount: 4900,   amountCny: 9900,  desc: '全年畅用·合婚报告·水晶挂件' },
+  hehun_full:      { name: 'Compatibility Reading', amount: 1990, amountCny: 3990, desc: 'Full BaZi compatibility analysis', amountKrw: 19900 },
+  hehun_kr_full:   { name: '궁합 완전 분석',    amount: 1500,   amountCny: 3990,  desc: '궁합 완전 분석 보고서', amountKrw: 19900 },
+  member_monthly:  { name: '月度会员',          amount: 990,    amountCny: 1990,  desc: '全部AI占算无限次·完整报告不锁定', amountKrw: 9900 },
+  member_yearly:   { name: '年度会员',          amount: 6900,   amountCny: 9900,  desc: '全年畅用·合婚报告·水晶挂件' },
   member_lifetime: { name: '终身会员',          amount: 18800,  amountCny: 68800, desc: '永久畅享·全部报告·专属档案' },
   member_daily:    { name: '日会员',            amount: 299,    amountCny: 990,   desc: '24小时无限使用' },
-  member_quarterly:{ name: '季会员',            amount: 1499,   amountCny: 6900,  desc: '三个月畅享' },
+  member_quarterly:{ name: '季会员',            amount: 2490,   amountCny: 6900,  desc: '三个月畅享' },
   member_3year:    { name: '三年会员',          amount: 9900,   amountCny: 9900,  desc: '超值三年·比年费省32%' },
   fengshui_full:   { name: '风水评测完整报告',   amount: 1990,   amountCny: 5990,  desc: '八宅飞星双体系·家庭命卦·12章节完整报告' },
   yinzhai_full:    { name: '阴宅风水分析',       amount: 6990,   amountCny: 19900, desc: '墓地选址·多候选对比·子孙运势·安葬日期' },

@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5bbfa0">
+<meta name="description" content="ShenYuan · AI Destiny Advisor · Ask anything about fate, fortune, love &amp; life timing. Powered by 3,000 years of Chinese metaphysics.">
+<title>ShenYuan · AI Destiny Advisor</title>
+<link rel="icon" href="/favicon.svg">
+<meta property="og:title" content="ShenYuan · AI Destiny Advisor">
+<meta property="og:description" content="Ask anything about your fate, fortune, love &amp; life cycles. Free 5 questions daily.">
+<meta property="og:image" content="/og-card.png">
+<meta property="og:url" content="https://shenyuan.app/pages/chat-EN.html">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://shenyuan.app/pages/chat-EN.html">
+<link rel="alternate" hreflang="en" href="https://shenyuan.app/pages/chat-EN.html">
+<link rel="alternate" hreflang="zh" href="https://shenyuan.app/pages/chat.html">
+<link rel="alternate" hreflang="x-default" href="https://shenyuan.app/en.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --jade:#5bbfa0;--jade-light:#8dd9bf;--jade-deep:#3d9e82;
+  --gold:#c9a84c;--gold-deep:#8a6420;
+  --bg:#faf8f5;--card:#ffffff;--ink:rgba(40,35,30,0.92);--sub:rgba(60,52,40,0.85);--light:rgba(70,60,48,0.68);
+}
+html,body{background:var(--bg);font-family:'Inter',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased;height:100%}
+body{max-width:400px;margin:0 auto;display:flex;flex-direction:column;padding:0;min-height:100%}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(91,191,160,0.07) 0%,transparent 55%);pointer-events:none;z-index:0}
+
+/* Header */
+.header{padding:14px 16px 10px;text-align:center;border-bottom:1px solid rgba(91,191,160,0.1);flex-shrink:0;position:relative;z-index:1}
+.logo{font-family:'Cormorant Garamond',serif;font-size:13px;letter-spacing:0.3em;color:var(--jade)}
+.logo-sub{font-size:12px;color:var(--sub);letter-spacing:0.12em;margin-top:3px}
+
+/* Nav buttons */
+.back-btn{position:fixed;top:14px;left:14px;z-index:10;background:none;border:none;font-size:13px;color:rgba(91,191,160,0.6);cursor:pointer;font-family:'Inter',sans-serif}
+.lang-toggle{position:fixed;top:14px;right:14px;z-index:10;font-size:11px;background:rgba(250,248,245,0.88);backdrop-filter:blur(8px);border:1px solid rgba(91,191,160,0.2);border-radius:20px;padding:5px 10px;color:var(--sub);text-decoration:none;letter-spacing:0.04em}
+
+/* Quick questions */
+.quick-q{display:flex;gap:6px;padding:8px 16px 4px;flex-wrap:wrap;flex-shrink:0;position:relative;z-index:1}
+.qq-btn{font-size:11px;min-height:38px;padding:8px 12px;border:1px solid rgba(91,191,160,0.15);border-radius:14px;background:var(--card);color:var(--sub);cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.2s;-webkit-tap-highlight-color:transparent;display:inline-flex;align-items:center}
+.qq-btn:hover{border-color:var(--jade);color:var(--jade)}
+.qq-btn:active{transform:scale(0.95)}
+
+/* Quota bar */
+.quota-bar{text-align:center;font-size:11px;color:var(--sub);letter-spacing:0.04em;padding:4px 16px 6px;flex-shrink:0;position:relative;z-index:1}
+
+/* Chat area */
+.chat-area{flex:1;overflow-y:auto;padding:12px 16px;display:flex;flex-direction:column;gap:12px;position:relative;z-index:1}
+.msg{max-width:85%;padding:10px 14px;border-radius:10px;font-size:13px;line-height:1.75;letter-spacing:0.02em;animation:fadeIn 0.3s ease;word-wrap:break-word}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg.user{align-self:flex-end;background:var(--jade);color:#fff;border-radius:10px 10px 2px 10px}
+.msg.ai{align-self:flex-start;background:var(--card);color:var(--ink);border:1px solid rgba(91,191,160,0.1);border-radius:10px 10px 10px 2px;box-shadow:0 1px 6px rgba(0,0,0,0.04)}
+.msg.ai .role{font-size:12px;color:var(--jade);letter-spacing:0.08em;margin-bottom:4px}
+
+/* Typing indicator */
+.typing{display:flex;gap:3px;padding:4px 0}
+.typing span{width:5px;height:5px;border-radius:50%;background:var(--jade);animation:bounce 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-4px)}}
+
+/* Input bar */
+.input-bar{display:flex;gap:8px;padding:12px 16px;border-top:1px solid rgba(91,191,160,0.1);flex-shrink:0;background:var(--bg);position:relative;z-index:1;padding-bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+.input-bar input{flex:1;padding:10px 14px;border:1px solid rgba(91,191,160,0.15);border-radius:20px;background:var(--card);color:var(--ink);font-family:'Inter',sans-serif;font-size:13px;outline:none;min-height:44px}
+.input-bar input:focus{border-color:var(--jade)}
+.input-bar input::placeholder{color:rgba(80,70,55,0.4)}
+.input-bar button{width:44px;height:44px;border-radius:50%;border:none;background:var(--jade);color:#fff;font-size:18px;cursor:pointer;flex-shrink:0;transition:all 0.2s;-webkit-tap-highlight-color:transparent}
+.input-bar button:disabled{opacity:0.4}
+.input-bar button:active{transform:scale(0.9)}
+
+/* Paywall card */
+.paywall-card{text-align:center;padding:20px 16px;margin:12px 0;background:var(--card);border:1px solid rgba(201,168,76,0.2);border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.05)}
+.paywall-card h3{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--gold-deep);letter-spacing:0.06em;font-weight:400;margin:8px 0 6px}
+.paywall-card p{font-size:12px;color:var(--sub);line-height:1.65;margin-bottom:14px}
+.paywall-btn{display:inline-block;padding:11px 28px;background:linear-gradient(135deg,var(--gold-deep),var(--gold));border-radius:22px;color:rgba(14,10,4,0.9);font-size:13px;letter-spacing:0.08em;text-decoration:none;font-weight:500;margin-bottom:4px}
+.paywall-alt{display:block;margin-top:10px;font-size:12px;color:var(--sub)}
+.paywall-alt a{color:var(--jade);text-decoration:none}
+</style>
+<link rel="stylesheet" href="/assets/css/common.css">
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">← Back</button>
+<a class="lang-toggle" href="/pages/chat.html">中文版</a>
+
+<div class="header">
+  <div class="logo">S H E N Y U A N · AI ADVISOR</div>
+  <div class="logo-sub">3,000 years of Chinese metaphysics · AI wisdom</div>
+</div>
+
+<div class="quick-q" id="quickQ">
+  <button class="qq-btn" onclick="ask('What is my wealth fortune this year?')">💰 Wealth this year</button>
+  <button class="qq-btn" onclick="ask('Am I compatible with my partner?')">💕 Love compatibility</button>
+  <button class="qq-btn" onclick="ask('Is now a good time to change careers?')">💼 Career timing</button>
+  <button class="qq-btn" onclick="ask('What life cycle am I currently in?')">🔯 My life cycle</button>
+  <button class="qq-btn" onclick="ask('When is my next lucky period?')">✨ Next lucky period</button>
+</div>
+
+<div class="quota-bar" id="quotaBar">
+  Free questions today: <span id="freeRemaining">5</span> remaining · <a href="member-en.html" style="color:var(--jade);text-decoration:none">Members get unlimited chats</a>
+</div>
+
+<div class="chat-area" id="chatArea">
+  <div class="msg ai" id="welcome">
+    <div class="role">✦ AI Destiny Advisor · AI-Generated</div>
+    Hello, I am ShenYuan's AI Destiny Advisor. Share your birth date and time, or simply ask me anything about fate, fortune, love, or life timing. ☯️
+  </div>
+</div>
+
+<div class="input-bar">
+  <input id="input" placeholder="Ask about your destiny..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send()}" autocomplete="off">
+  <button id="sendBtn" onclick="send()" aria-label="Send">➤</button>
+</div>
+
+<script>
+var msgs = [];
+var sending = false;
+var freeRemaining = 5;
+var paywallShown = false;
+var isMember = false;
+
+// Persistent session ID to track free quota
+var _sessionId = localStorage.getItem('sy_session_id');
+if (!_sessionId) {
+  _sessionId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : (Date.now().toString(36) + Math.random().toString(36).slice(2));
+  localStorage.setItem('sy_session_id', _sessionId);
+}
+
+// Load real quota from server on page load
+function loadQuota() {
+  fetch('/api/chat/quota', {
+    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('sy_token') || '') }
+  }).then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.isMember) { isMember = true; freeRemaining = -1; }
+      else { freeRemaining = d.remaining !== undefined ? d.remaining : 5; }
+      updateQuotaUI();
+    }).catch(function(){ /* silently keep default */ });
+}
+
+function updateQuotaUI() {
+  var el = document.getElementById('freeRemaining');
+  var bar = document.getElementById('quotaBar');
+  if (!el) return;
+  if (isMember) {
+    bar.innerHTML = '✦ Unlimited · <a href="member-en.html" style="color:var(--jade);text-decoration:none">Membership active</a>';
+    return;
+  }
+  el.textContent = freeRemaining;
+  el.style.color = freeRemaining <= 1 ? '#e8605a' : 'inherit';
+}
+
+loadQuota();
+restoreHistory();
+
+function decrementQuota(n) {
+  if (n !== undefined) { freeRemaining = n; }
+  else { freeRemaining = Math.max(0, freeRemaining - 1); }
+  updateQuotaUI();
+}
+
+function showPaywall() {
+  if (paywallShown) return;
+  paywallShown = true;
+  var input = document.getElementById('input');
+  var btn = document.getElementById('sendBtn');
+  if (input) { input.disabled = true; input.placeholder = 'Unlock membership to continue'; }
+  if (btn) btn.disabled = true;
+
+  var area = document.getElementById('chatArea');
+  var div = document.createElement('div');
+  div.className = 'paywall-card';
+  div.innerHTML =
+    '<div style="font-size:28px;margin-bottom:4px">✨</div>' +
+    '<h3>You\'ve used today\'s free questions</h3>' +
+    '<p>Upgrade to membership for unlimited daily conversations,<br>plus full access to all destiny reports.</p>' +
+    '<a href="member-en.html" class="paywall-btn">Unlock Membership · $9.90/mo</a>' +
+    '<div class="paywall-alt">Or <a href="bazi-en.html">get a free BaZi reading →</a></div>';
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function addMsg(text, role) {
+  var area = document.getElementById('chatArea');
+  var div = document.createElement('div');
+  div.className = 'msg ' + role;
+  if (role === 'ai') {
+    div.innerHTML = '<div class="role">✦ AI Destiny Advisor · AI-Generated</div>' +
+      escHtml(text).replace(/\n/g, '<br>');
+  } else {
+    div.textContent = text;
+  }
+  area.appendChild(div);
+  // If the answer touches love/partner, cross-sell the compatibility reading.
+  if (role === 'ai' && /\b(love|partner|relationship|marriage|romance|compatib|soulmate|spouse|dating)\b/i.test(text)) {
+    var refCard = document.createElement('div');
+    refCard.style.cssText = 'align-self:flex-start;max-width:85%;margin-top:-4px';
+    refCard.innerHTML =
+      '<a href="hehun-en.html" style="display:flex;align-items:center;gap:8px;padding:11px 14px;background:linear-gradient(135deg,rgba(201,96,122,0.08),rgba(201,96,122,0.04));border:1px solid rgba(201,96,122,0.3);border-radius:12px;color:#c9607a;text-decoration:none;font-size:12px;font-weight:500;letter-spacing:0.02em">' +
+      '<span style="font-size:16px">💑</span><span>Get full compatibility reading →</span></a>';
+    area.appendChild(refCard);
+  }
+  area.scrollTop = area.scrollHeight;
+  return div;
+}
+
+// ── Chat history persistence (per session) ──
+function _histKey(){ return 'sy_chat_hist_en_' + _sessionId; }
+function saveHistory() {
+  try { localStorage.setItem(_histKey(), JSON.stringify(msgs.slice(-40))); } catch(e){}
+}
+function restoreHistory() {
+  var saved;
+  try { saved = JSON.parse(localStorage.getItem(_histKey())||'null'); } catch(e){}
+  if (!saved || !saved.length) return;
+  msgs = saved;
+  saved.forEach(function(m){ addMsg(m.content, m.role === 'assistant' ? 'ai' : 'user'); });
+}
+
+function send() {
+  var input = document.getElementById('input');
+  var text = input.value.trim();
+  if (!text || sending) return;
+  ask(text);
+}
+
+function ask(text) {
+  if (!text) return;
+  if (!isMember && freeRemaining <= 0) { showPaywall(); return; }
+
+  sending = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  addMsg(text, 'user');
+  document.getElementById('input').value = '';
+
+  // Typing indicator
+  var area = document.getElementById('chatArea');
+  var typing = document.createElement('div');
+  typing.className = 'msg ai';
+  typing.id = 'typing';
+  typing.innerHTML = '<div class="role">✦ AI Destiny Advisor · AI-Generated</div><div class="typing"><span></span><span></span><span></span></div>';
+  area.appendChild(typing);
+  area.scrollTop = area.scrollHeight;
+
+  msgs.push({ role: 'user', content: text });
+  saveHistory();
+  var msgsToSend = msgs.length > 10 ? msgs.slice(msgs.length - 10) : msgs;
+
+  fetch('/api/chat', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Session-Id': _sessionId
+    },
+    body: JSON.stringify({ messages: msgsToSend, lang: 'en' })
+  }).then(function(r){ return r.json(); })
+    .then(function(d){
+      var t = document.getElementById('typing');
+      if (t) t.remove();
+      sending = false;
+      document.getElementById('sendBtn').disabled = false;
+
+      if (d.limited) {
+        decrementQuota(0);
+        showPaywall();
+      } else if (d.answer) {
+        decrementQuota();
+        addMsg(d.answer, 'ai');
+        msgs.push({ role: 'assistant', content: d.answer });
+        saveHistory();
+      } else {
+        addMsg('The AI advisor is temporarily unavailable. Please try again shortly.', 'ai');
+      }
+    }).catch(function(){
+      var t = document.getElementById('typing');
+      if (t) t.remove();
+      sending = false;
+      document.getElementById('sendBtn').disabled = false;
+      addMsg('The AI advisor is temporarily unavailable. Please try again shortly.', 'ai');
+    });
+}
+</script>
+<script src="/assets/js/common.js"></script>
+<script>if(window.SY&&SY.initMembership)SY.initMembership();</script>
+</body>
+</html>

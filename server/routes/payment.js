@@ -63,22 +63,23 @@ function _payResolveUser(token) {
 
 // ── Stripe Price IDs (Capstone account) ──
 const STRIPE_PRICE_IDS = {
-  // ── USD prices (verified) ──
-  'bazi_full':            'price_1TzAjGEAXrE2YgcrRzUY78Ko',
-  'member_yearly':        'price_1TzAjQEAXrE2YgcrHYurEL8Z',
-  'member_quarterly':     'price_1U0BwvEAXrE2YgcrTU0PFGZm',
-  // ── USD prices (pending creation in Stripe Dashboard) ──
-  // 'member_monthly':    'price_PENDING_usd',
-  // ── KRW prices (verified) ──
-  'bazi_full_krw':        'price_1TzrGREAXrE2Ygcr1dOkiv2O',
-  'saju_kr_full_krw':     'price_TBD_saju_kr_full',  // TODO: create in Stripe Dashboard
-  'bazi_vip_krw':         'price_1TzrGUEAXrE2YgcrtAXjFt9M',
-  'hehun_krw':            'price_1TzAriEAXrE2YgcrWEj4Azdn',
-  'member_monthly_krw':   'price_1TzrGWEAXrE2YgcrhrIIeMXC',
-  // ── CNY prices (pending creation in Stripe Dashboard) ──
-  // 'bazi_full_cny':     'price_PENDING_cny',
-  // 'member_monthly_cny':'price_PENDING_cny',
-  // 'member_yearly_cny': 'price_PENDING_cny',
+  // ── USD prices (created 2026-08-10 via Stripe API, metadata[sku] 对齐) ──
+  'bazi_full':            'price_1U2uotEAXrE2YgcrdOvtLSB6',  // $9.90 一次性
+  'hehun_full':           'price_1U2uotEAXrE2YgcrnW5iYdrj',  // $19.90 一次性
+  'member_monthly':       'price_1U2uouEAXrE2YgcrhD1McCY5',  // $9.90/月
+  'member_quarterly':     'price_1U2uouEAXrE2YgcrjtiXb7h6',  // $24.90/3月
+  'member_yearly':        'price_1U2uovEAXrE2YgcrwvxdsOUC',  // $69/年
+  // ⚠️ 旧的错价 price 勿启用：RzUY78Ko($6.90月)/HYurEL8Z($49年)/TU0PFGZm($14.99季) 已被上面新价替代
+  // ── KRW prices ──
+  // 仅保留与 store.js amountKrw 完全一致的固定 price；不一致的走 price_data 动态（unitAmount=amountKrw，永远与前端展示一致）
+  'saju_kr_full_krw':     'price_1TzAjREAXrE2YgcrLqhHWUtf',  // ₩9,900 완전 사주 ✅=store 9900
+  'hehun_krw':            'price_1TzAriEAXrE2YgcrWEj4Azdn',  // ₩4,900 ✅=store 4900
+  'hehun_kr_full_krw':    'price_1TzArhEAXrE2YgcrIT1fwmGX',  // ₩19,900 深度사주 ✅=store 19900
+  // ⚠️ 以下旧 KRW price 与当前 store.js 已不符（KR 市场已降价），故不启用固定 price，改走动态：
+  //   bazi_full_krw    旧 price=₩14,900 但 store=₩9,900  → price_data 动态
+  //   bazi_vip_krw     旧 price=₩24,900 但 store=₩19,900 → price_data 动态
+  //   member_monthly_krw 旧 price=₩12,900 但 store=₩9,900 → price_data 动态（recurring month krw）
+  // ── CNY prices：走微信/支付宝，不经 Stripe ──
 };
 
 // ══════════════════════════════════════════
@@ -360,6 +361,8 @@ const CONFIGS={
   bazi_basic:{icon:'🔮',title:'命盘已解锁',sub:'基础八字命理 · 即刻查阅',benefits:['日主五行基础分析','今年运势概览','关键命理特征'],btn:'查看命盘',url:'/pages/bazi.html?unlocked=1'},
   bazi_trial:{icon:'🔮',title:'体验命盘已解锁',sub:'快速简批 · 即刻查阅',benefits:['日主五行速批','今年关键运势','体验完整版报告'],btn:'查看命盘',url:'/pages/bazi.html?unlocked=1'},
   hehun:{icon:'💕',title:'合婚报告已生成',sub:'双命交汇 · 情缘揭晓',benefits:['双方八字合婚深度分析','情感运势 + 婚期吉日','五行互补与化解方案'],btn:'查看合婚报告',url:'/pages/hehun.html?unlocked=1'},
+  hehun_full:{icon:'💕',title:'Compatibility Report Unlocked',sub:'Payment complete · Your reading is ready',benefits:['Full BaZi compatibility analysis','Best marriage timing','Five Elements harmony'],btn:'View Report',url:'/pages/hehun.html?unlocked=1'},
+  hehun_kr_full:{icon:'💕',title:'궁합 리포트 잠금 해제',sub:'결제 완료 · 궁합 분석이 열렸어요',benefits:['오행 상생상극 완전 분석','최적 결혼 시기','궁합 개선 가이드'],btn:'리포트 확인하기',url:'/pages/saju-KR.html?unlocked=1&type=hehun'},
   tarot:{icon:'🃏',title:'塔罗已揭示',sub:'牌面已开 · 天意已显',benefits:['AI深度塔罗解读','当下处境与建议','行动指引'],btn:'查看塔罗',url:'/pages/tarot.html?unlocked=1'},
   member_monthly:{icon:'✨',title:'月度会员已激活',sub:'月度畅享 · 全功能开放',benefits:['全部AI占算无限次','八字/合婚/塔罗/紫微全通','每日天机会员专属版'],btn:'开始使用',url:'/pages/bazi.html?member=1'},
   member_yearly:{icon:'🌟',title:'年度会员已激活',sub:'全年畅享 · 至尊体验',benefits:['全部AI占算无限次 · 365天','比月费省41%','合婚配对报告 + 水晶挂件权益'],btn:'开始使用',url:'/pages/bazi.html?member=1'},
@@ -642,7 +645,7 @@ router.get('/pay/stripe/query', async (req, res) => {
             var ccr = _completeCnOrder(localOid, null, hubOid || localOid);
             if (ccr === 'paid') { console.log('[pay/stripe/query] PAID ' + localOid); completeAffiliateOrder(localOid); }
           }
-          return res.json({ status: 'paid', product: localOrder ? localOrder.product : product });
+          return res.json({ status: 'paid', product: localOrder ? localOrder.product : '' });
         }
       } catch (e) { console.error('[pay/stripe/query] hub 查单异常', e.message); }
     }

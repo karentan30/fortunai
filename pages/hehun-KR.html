@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f7f4ef">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>선연 · 정밀 궁합</title>
+<meta name="description" content="선연 정밀 궁합 — AI 사주 궁합 분석, 두 사람 사주 인연 지수·오행 상생상극·올해 연애운">
+<meta property="og:title" content="선연 · 정밀 궁합">
+<meta property="og:description" content="선연 정밀 궁합 — AI 사주 궁합 분석, 두 사람 사주 인연 지수·오행 상생상극·올해 연애운">
+<meta property="og:image" content="/og-card.png">
+<meta property="og:url" content="https://shenyuan.app/pages/hehun-KR.html">
+<link rel="canonical" href="https://shenyuan.app/pages/hehun-KR.html">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&family=Noto+Serif+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f7f4ef; --paper:#fdfbf8; --card:#ffffff; --mid:#f5f0e8;
+  --accent:#7c6cf0;
+  --gold:#9a7529; --gold-soft:rgba(154,117,41,0.12); --gold-light:#c9a84c; --gold-deep:#8a6a26;
+  --jade:#3f9e82; --jade-mid:#8dd9bf;
+  --rose:#d4736b; --rose-light:#e89088; --rose-dark:#b05048;
+  --ink:rgba(58,48,38,0.92); --sub:rgba(80,68,50,0.7); --text:rgba(58,48,38,0.92);
+  --line:rgba(154,117,41,0.2);
+}
+html,body{background:var(--bg);font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;color:var(--text);-webkit-font-smoothing:antialiased}
+body{max-width:420px;margin:0 auto;min-height:100vh;padding-bottom:130px;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 30% 0%,rgba(212,115,107,0.08) 0%,transparent 50%),
+             radial-gradient(ellipse at 70% 0%,rgba(154,117,41,0.06) 0%,transparent 50%);
+  pointer-events:none;z-index:0}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;
+  font-family:inherit;font-size:13px;color:rgba(212,115,107,0.55);cursor:pointer;transition:color 0.2s}
+.back-btn:hover{color:var(--rose)}
+
+/* ── header ── */
+.header{position:relative;z-index:1;text-align:center;padding:60px 20px 28px}
+.header-smoke{display:none}
+.header-title{font-size:24px;font-weight:400;letter-spacing:0.16em;margin-bottom:6px;color:var(--ink)}
+.header-sub{font-size:13px;letter-spacing:0.18em;color:rgba(212,115,107,0.7);margin-bottom:1px}
+.rose-line{width:70px;height:1px;background:linear-gradient(90deg,transparent,var(--rose),transparent);margin:14px auto 0}
+
+/* ── mode selector ── */
+.mode-row{display:flex;gap:10px;padding:0 16px 16px;position:relative;z-index:1}
+.mode-btn{flex:1;padding:12px 8px;border-radius:10px;border:1.5px solid rgba(212,115,107,0.3);background:rgba(212,115,107,0.06);color:var(--rose);font-family:inherit;font-size:13px;cursor:pointer;letter-spacing:0.06em;transition:all 0.2s}
+.mode-btn.active{border-color:rgba(212,115,107,0.8);background:rgba(212,115,107,0.18)}
+
+/* ── input section ── */
+.input-screen{position:relative;z-index:1}
+.persons-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:20px 16px 0}
+.person-card{background:var(--card);border-radius:10px;padding:12px;border:1px solid}
+.person-a{border-color:rgba(212,115,107,0.2)}
+.person-b{border-color:rgba(63,158,130,0.2)}
+.person-label{font-size:10px;letter-spacing:0.16em;margin-bottom:8px;text-align:center}
+.person-a .person-label{color:var(--rose)}
+.person-b .person-label{color:var(--jade)}
+.name-input{width:100%;background:var(--mid);border:1px solid rgba(154,117,41,0.12);border-radius:8px;color:var(--text);font-family:inherit;font-size:12px;padding:8px 8px;margin-bottom:8px;outline:none;min-height:36px;text-align:center;letter-spacing:0.08em}
+.person-a .name-input:focus{border-color:rgba(212,115,107,0.4)}
+.person-b .name-input:focus{border-color:rgba(63,158,130,0.4)}
+.mini-select{width:100%;background:var(--mid);border:1px solid rgba(154,117,41,0.12);border-radius:8px;color:var(--text);font-family:inherit;font-size:11px;padding:7px 6px;margin-bottom:6px;-webkit-appearance:none;outline:none;min-height:36px}
+.mini-select option{background:var(--card)}
+.gender-row{display:flex;gap:5px;margin-top:4px}
+.g-opt{flex:1;text-align:center;padding:6px 0;border-radius:8px;font-size:11px;cursor:pointer;border:1px solid rgba(154,117,41,0.15);color:var(--sub);transition:all 0.2s}
+.person-a .g-opt.sel{border-color:var(--rose);background:rgba(212,115,107,0.12);color:var(--rose-light)}
+.person-b .g-opt.sel{border-color:var(--jade);background:rgba(63,158,130,0.1);color:var(--jade-mid)}
+
+/* tier selector */
+.tier-section{padding:16px 16px 0;position:relative;z-index:1}
+.tier-label{font-size:10px;letter-spacing:0.2em;color:var(--sub);margin-bottom:10px}
+.tier-row{display:flex;gap:7px}
+.tier-card{flex:1;background:var(--card);border:1px solid rgba(212,115,107,0.1);border-radius:12px;padding:10px 8px;text-align:center;cursor:pointer;transition:all 0.2s}
+.tier-card.sel{border-color:var(--gold);background:rgba(154,117,41,0.06)}
+.tier-name{font-size:11px;letter-spacing:0.04em;margin-bottom:3px;color:var(--ink)}
+.tier-price{font-size:18px;color:var(--gold);font-weight:700}
+.tier-desc{font-size:11px;color:var(--sub);margin-top:2px}
+
+/* submit */
+.submit-wrap{padding:14px 16px 0;position:relative;z-index:1}
+.btn-calc{width:100%;padding:14px 0;background:linear-gradient(135deg,#8a6a26,#c9a84c,#e8d08a);border:none;border-radius:14px;color:rgba(58,38,18,0.95);font-family:inherit;font-size:14px;font-weight:700;letter-spacing:0.2em;cursor:pointer;box-shadow:0 4px 20px rgba(154,117,41,0.2);transition:all 0.2s}
+.btn-calc:hover{box-shadow:0 6px 28px rgba(154,117,41,0.35);transform:translateY(-1px)}
+.btn-calc:disabled{opacity:0.55;cursor:not-allowed;transform:none!important}
+
+/* loading */
+.loading-wrap{display:none;position:relative;z-index:1;text-align:center;padding:52px 20px}
+.loading-wrap.show{display:block}
+.sy-spinner{display:inline-block;width:42px;height:42px;border:3px solid rgba(154,117,41,0.18);border-top-color:var(--gold);border-radius:50%;animation:spin 0.9s linear infinite;margin-bottom:16px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-txt{font-size:11px;color:var(--rose);letter-spacing:0.18em;opacity:0.8}
+
+/* results */
+.results{display:none;position:relative;z-index:1}
+.results.show{display:block;animation:fadeUp 0.5s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* score ring */
+.score-wrap{text-align:center;padding:24px 16px 16px}
+.score-ring{width:120px;height:120px;margin:0 auto 14px;position:relative}
+.score-ring svg{transform:rotate(-90deg)}
+.ring-bg{stroke:rgba(154,117,41,0.1);fill:none;stroke-width:7}
+.ring-fill{fill:none;stroke-width:7;stroke-linecap:round;transition:stroke-dasharray 1.4s ease}
+.score-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-num{font-size:36px;line-height:1;font-weight:700;color:var(--gold)}
+.score-pct{font-size:13px;margin-left:1px;opacity:0.7}
+.score-lbl{font-size:11px;color:var(--sub);letter-spacing:0.1em;margin-top:2px}
+.score-grade{font-size:20px;letter-spacing:0.14em;margin-bottom:4px;color:var(--ink)}
+.score-sub{font-size:10px;color:var(--sub);letter-spacing:0.1em}
+
+/* story */
+.story-section{padding:20px 16px;margin:0 0 8px;background:linear-gradient(135deg,rgba(212,115,107,0.06),rgba(154,117,41,0.03));border-radius:12px;border:1px solid rgba(212,115,107,0.1);margin:0 16px 14px}
+.story-text{font-size:13px;line-height:1.9;color:var(--ink);letter-spacing:0.05em}
+.story-text strong{color:var(--rose-light);font-weight:600}
+
+/* dimensions */
+.dims-section{padding:0 16px;margin-bottom:14px}
+.dims-label{font-size:10px;letter-spacing:0.2em;color:var(--sub);margin-bottom:10px}
+.dim-card{background:var(--card);border:1px solid rgba(212,115,107,0.08);border-radius:12px;padding:12px 14px;margin-bottom:7px}
+.dim-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
+.dim-name{font-size:12px;letter-spacing:0.06em;color:var(--ink)}
+.dim-score{font-size:16px;color:var(--gold);font-weight:700}
+.dim-bar-bg{height:4px;background:rgba(212,115,107,0.12);border-radius:2px;overflow:hidden;margin-bottom:5px}
+.dim-bar-fill{height:100%;border-radius:2px;transition:width 1s ease}
+.dim-desc{font-size:10px;color:var(--sub);line-height:1.7}
+
+/* 오행 */
+.wuxing-section{padding:0 16px;margin-bottom:14px}
+.wx-card{background:var(--card);border-radius:10px;padding:14px;border:1px solid rgba(154,117,41,0.1)}
+.wx-row{display:flex;align-items:center;justify-content:space-around;padding:10px 0}
+.wx-person{text-align:center}
+.wx-elem-icon{font-size:32px;margin-bottom:4px}
+.wx-elem-name{font-size:11px;letter-spacing:0.1em;color:var(--ink)}
+.wx-elem-sub{font-size:11px;color:var(--sub);margin-top:2px}
+.wx-arrow{font-size:22px;color:var(--gold)}
+.wx-rel{text-align:center;margin-top:8px;padding-top:8px;border-top:1px solid rgba(154,117,41,0.1)}
+.wx-rel-tag{display:inline-block;font-size:10px;padding:4px 14px;border-radius:10px;letter-spacing:0.1em;background:rgba(154,117,41,0.1);color:var(--gold)}
+
+/* 올해 운세 */
+.year-section{padding:0 16px;margin-bottom:14px}
+.year-card{background:var(--card);border-radius:10px;padding:14px;border:1px solid rgba(63,158,130,0.1)}
+.year-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.year-icon{font-size:18px}
+.year-title{font-size:13px;letter-spacing:0.08em;color:var(--ink)}
+.year-badge{margin-left:auto;font-size:11px;padding:3px 9px;border-radius:8px;background:rgba(63,158,130,0.1);color:var(--jade)}
+.year-text{font-size:10px;color:var(--sub);line-height:1.8}
+
+/* 파트너와 함께 확인하기 (key viral CTA) */
+.partner-cta{margin:0 16px 14px;padding:18px;background:linear-gradient(135deg,rgba(212,115,107,0.10),rgba(154,117,41,0.07));border:1.5px solid rgba(212,115,107,0.25);border-radius:14px;text-align:center}
+.partner-cta-title{font-size:15px;font-weight:700;color:#3a2f22;margin-bottom:6px;letter-spacing:0.04em}
+.partner-cta-desc{font-size:12px;color:var(--sub);line-height:1.7;margin-bottom:14px}
+.partner-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.partner-btn{display:inline-flex;align-items:center;gap:6px;padding:10px 16px;border-radius:10px;font-size:13px;cursor:pointer;font-family:inherit;border:none;transition:all 0.2s;font-weight:600}
+.partner-btn-copy{background:var(--gold);color:#fff;box-shadow:0 3px 12px rgba(154,117,41,0.3)}
+.partner-btn-kakao{background:#FEE500;color:#3a1d1d}
+
+/* locked */
+.locked-card{position:relative;margin:0 16px 14px;background:var(--card);border:1px solid rgba(212,115,107,0.1);border-radius:10px;overflow:hidden}
+.locked-inner{padding:16px;filter:blur(5px);pointer-events:none;user-select:none}
+.locked-inner-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:11px;color:var(--sub)}
+.locked-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(250,246,238,0.92)}
+.lock-icon{font-size:26px;margin-bottom:8px}
+.lock-title{font-size:11px;color:var(--sub);margin-bottom:12px;letter-spacing:0.1em}
+.lock-btn{padding:12px 28px;background:linear-gradient(135deg,#8a6420,#c9a84c,#e8d08a);border:none;border-radius:12px;color:rgba(58,38,18,0.95);font-family:inherit;font-size:13px;font-weight:700;letter-spacing:0.14em;cursor:pointer;box-shadow:0 4px 16px rgba(154,117,41,0.3)}
+
+/* full report */
+#fullReportWrap{display:none;margin-top:20px;padding:0 16px}
+#fullReportContent{font-size:12.5px;line-height:1.9;color:var(--text);white-space:pre-wrap}
+
+/* sticky */
+.sticky-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:420px;padding:14px 16px 20px;padding-bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid rgba(212,115,107,0.12);box-shadow:0 -4px 20px rgba(0,0,0,0.05);z-index:90;display:none}
+.sticky-cta{width:100%;padding:13px 0;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light));border:none;border-radius:14px;color:rgba(58,38,18,0.95);font-family:inherit;font-size:13px;font-weight:700;letter-spacing:0.16em;cursor:pointer;transition:all 0.2s}
+.sticky-cta:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(154,117,41,0.4)}
+
+/* invite banner */
+.invite-banner{display:none;margin:0 16px 14px;padding:14px 16px;border-radius:14px;background:linear-gradient(135deg,rgba(212,115,107,0.15),rgba(154,117,41,0.08));border:1px solid rgba(212,115,107,0.3);text-align:center;position:relative;z-index:2;animation:fadeUp 0.5s ease both}
+.invite-banner.show{display:block}
+.invite-banner-emoji{font-size:28px;margin-bottom:6px}
+.invite-banner-title{font-size:14px;color:var(--ink);letter-spacing:0.1em;margin-bottom:4px}
+.invite-banner-sub{font-size:11px;color:var(--sub);letter-spacing:0.06em}
+
+/* disclaimer */
+.disclaimer{padding:14px 16px;text-align:center;font-size:10px;color:var(--sub);line-height:1.7;border-top:1px solid rgba(154,117,41,0.1);margin:0 16px}
+
+/* toast */
+.sy-toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:11px 16px;border-radius:9px;font-size:13px;text-align:center;font-family:'Apple SD Gothic Neo','Noto Sans KR',sans-serif;background:rgba(58,48,38,0.96);color:#e0c874;pointer-events:none;opacity:0;transition:opacity .25s}
+.sy-toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back()">← 뒤로</button>
+
+<!-- Invite banner: shown when ?invite= param detected -->
+<div class="invite-banner" id="inviteBanner">
+  <div class="invite-banner-emoji">❤️</div>
+  <div class="invite-banner-title" id="inviteBannerTitle">TA가 함께 궁합 보자고 초대했어요</div>
+  <div class="invite-banner-sub">생년월일을 입력해서 인연 지수를 확인해 보세요</div>
+</div>
+
+<div class="header">
+  <div style="font-size:52px;text-align:center;margin-bottom:12px;opacity:0.85">💑</div>
+  <div class="header-title">선연 · 정밀 궁합</div>
+  <div class="header-sub">사주로 보는 두 사람의 인연</div>
+  <div class="rose-line"></div>
+</div>
+
+<!-- 모드 선택 -->
+<div class="mode-row">
+  <button class="mode-btn active" id="modeDating" onclick="setMode('dating')">💕 연애 궁합</button>
+  <button class="mode-btn" id="modeMarriage" onclick="setMode('marriage')">💍 결혼 궁합</button>
+</div>
+
+<!-- 입력 폼 -->
+<div class="input-screen" id="inputScreen">
+  <div class="persons-row">
+    <!-- 나 -->
+    <div class="person-card person-a">
+      <div class="person-label">나</div>
+      <input class="name-input" id="nameA" type="text" maxlength="8" placeholder="이름 (선택)">
+      <select class="mini-select" id="aYear">
+        <option value="">년도</option>
+        <script>for(var y=2006;y>=1950;y--) document.write('<option value="'+y+'">'+y+'년</option>')</script>
+      </select>
+      <select class="mini-select" id="aMonth">
+        <option value="">월</option>
+        <script>for(var m=1;m<=12;m++) document.write('<option value="'+m+'">'+m+'월</option>')</script>
+      </select>
+      <select class="mini-select" id="aDay">
+        <option value="">일</option>
+        <script>for(var d=1;d<=31;d++) document.write('<option value="'+d+'">'+d+'일</option>')</script>
+      </select>
+      <select class="mini-select" id="aHour">
+        <option value="">태어난 시간 모름</option>
+        <option value="0">자시 (23-01)</option><option value="1">축시 (01-03)</option>
+        <option value="2">인시 (03-05)</option><option value="3">묘시 (05-07)</option>
+        <option value="4">진시 (07-09)</option><option value="5">사시 (09-11)</option>
+        <option value="6">오시 (11-13)</option><option value="7">미시 (13-15)</option>
+        <option value="8">신시 (15-17)</option><option value="9">유시 (17-19)</option>
+        <option value="10">술시 (19-21)</option><option value="11">해시 (21-23)</option>
+      </select>
+      <div class="gender-row">
+        <div class="g-opt sel" id="aM" onclick="selG('a','male')">남성 ♂</div>
+        <div class="g-opt" id="aF" onclick="selG('a','female')">여성 ♀</div>
+      </div>
+    </div>
+    <!-- 상대방 -->
+    <div class="person-card person-b">
+      <div class="person-label">상대방</div>
+      <input class="name-input" id="nameB" type="text" maxlength="8" placeholder="이름 (선택)">
+      <select class="mini-select" id="bYear">
+        <option value="">년도</option>
+        <script>for(var y2=2006;y2>=1950;y2--) document.write('<option value="'+y2+'">'+y2+'년</option>')</script>
+      </select>
+      <select class="mini-select" id="bMonth">
+        <option value="">월</option>
+        <script>for(var m2=1;m2<=12;m2++) document.write('<option value="'+m2+'">'+m2+'월</option>')</script>
+      </select>
+      <select class="mini-select" id="bDay">
+        <option value="">일</option>
+        <script>for(var d2=1;d2<=31;d2++) document.write('<option value="'+d2+'">'+d2+'일</option>')</script>
+      </select>
+      <select class="mini-select" id="bHour">
+        <option value="">태어난 시간 모름</option>
+        <option value="0">자시 (23-01)</option><option value="1">축시 (01-03)</option>
+        <option value="2">인시 (03-05)</option><option value="3">묘시 (05-07)</option>
+        <option value="4">진시 (07-09)</option><option value="5">사시 (09-11)</option>
+        <option value="6">오시 (11-13)</option><option value="7">미시 (13-15)</option>
+        <option value="8">신시 (15-17)</option><option value="9">유시 (17-19)</option>
+        <option value="10">술시 (19-21)</option><option value="11">해시 (21-23)</option>
+      </select>
+      <div class="gender-row">
+        <div class="g-opt" id="bM" onclick="selG('b','male')">남성 ♂</div>
+        <div class="g-opt sel" id="bF" onclick="selG('b','female')">여성 ♀</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 티어 선택 -->
+  <div class="tier-section">
+    <div class="tier-label">궁합 리포트 선택</div>
+    <div class="tier-row">
+      <div class="tier-card sel" id="t1" onclick="selTier(1)">
+        <div class="tier-name">기본 궁합</div>
+        <div class="tier-price">무료</div>
+        <div class="tier-desc">인연 점수 + 간략 해설</div>
+      </div>
+      <div class="tier-card" id="t2" onclick="selTier(2)">
+        <div class="tier-name">프리미엄 궁합</div>
+        <div class="tier-price">₩19,900</div>
+        <div class="tier-desc">12차원 분석 + 결혼 길일</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="submit-wrap">
+    <button class="btn-calc" onclick="startCalc()">궁합 보기 →</button>
+    <div style="text-align:center;font-size:10px;color:var(--sub);margin-top:10px;letter-spacing:0.06em">기본 미리보기 먼저 · 만족하면 완전 리포트 열기</div>
+  </div>
+</div>
+
+<!-- 로딩 -->
+<div class="loading-wrap" id="loadingWrap">
+  <div class="sy-spinner"></div>
+  <div class="load-txt">인연을 계산하는 중입니다…</div>
+</div>
+
+<!-- 결과 -->
+<div class="results" id="results">
+
+  <div class="score-wrap">
+    <div class="score-ring">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle class="ring-bg" cx="60" cy="60" r="52"/>
+        <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="52"
+          stroke="#c9a84c" stroke-dasharray="0 326.7" stroke-linecap="round"/>
+      </svg>
+      <div class="score-inner">
+        <div class="score-num" id="scoreNum">0<span class="score-pct">%</span></div>
+        <div class="score-lbl">인연 지수</div>
+      </div>
+    </div>
+    <div class="score-grade" id="scoreGrade">—</div>
+    <div class="score-sub" id="scoreSub">—</div>
+  </div>
+
+  <!-- 두 사람의 이야기 -->
+  <div class="story-section">
+    <div id="storyText" class="story-text"></div>
+  </div>
+
+  <!-- 차원 분석 -->
+  <div class="dims-section">
+    <div class="dims-label">6개 차원 궁합 분석</div>
+    <div id="dimsList"></div>
+  </div>
+
+  <!-- 오행 상생상극 -->
+  <div class="wuxing-section">
+    <div class="dims-label">오행 상생상극</div>
+    <div class="wx-card">
+      <div class="wx-row">
+        <div class="wx-person">
+          <div class="wx-elem-icon" id="wxIconA">🔥</div>
+          <div class="wx-elem-name" id="wxNameA">화(火) 기운</div>
+          <div class="wx-elem-sub" id="wxYearA">나</div>
+        </div>
+        <div class="wx-arrow" id="wxArrow">⇌</div>
+        <div class="wx-person">
+          <div class="wx-elem-icon" id="wxIconB">🪨</div>
+          <div class="wx-elem-name" id="wxNameB">토(土) 기운</div>
+          <div class="wx-elem-sub" id="wxYearB">상대방</div>
+        </div>
+      </div>
+      <div class="wx-rel">
+        <span class="wx-rel-tag" id="wxRelTag">상생 · 대길</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 올해 운세 -->
+  <div class="year-section">
+    <div class="dims-label">2026년 인연 운세</div>
+    <div class="year-card">
+      <div class="year-head">
+        <span class="year-icon">📅</span>
+        <span class="year-title">2026 병오년</span>
+        <span class="year-badge" id="yearBadge">길년</span>
+      </div>
+      <div class="year-text" id="yearText">분석 중…</div>
+    </div>
+  </div>
+
+  <!-- ★ 파트너와 함께 확인하기 (viral CTA) ★ -->
+  <div class="partner-cta" id="partnerCta" style="display:none">
+    <div style="font-size:28px;margin-bottom:8px">💌</div>
+    <div class="partner-cta-title">파트너와 함께 확인하기</div>
+    <div class="partner-cta-desc">상대방에게 링크를 보내면, 상대방이 직접 정보를 입력해서<br>함께 인연 지수를 확인할 수 있어요</div>
+    <div class="partner-btns">
+      <button class="partner-btn partner-btn-copy" onclick="inviteCopyLink()">🔗 링크 복사하기</button>
+      <button class="partner-btn partner-btn-kakao" onclick="shareKakao()">💬 카카오톡으로 보내기</button>
+    </div>
+  </div>
+
+  <!-- locked (완전 리포트) -->
+  <div class="locked-card" id="lockedCard">
+    <div class="locked-inner">
+      <div class="locked-inner-row">🔮 완전한 12차원 궁합 분석</div>
+      <div class="locked-inner-row">📅 10년 인연 운세 예측</div>
+      <div class="locked-inner-row">🌟 최적 결혼 길일 추천 (3개)</div>
+      <div class="locked-inner-row">💍 오행 충극 해결 방안</div>
+    </div>
+    <div class="locked-overlay">
+      <div class="lock-icon">🔒</div>
+      <div class="lock-title">완전한 궁합 리포트 열기</div>
+      <button class="lock-btn" onclick="startUnlock()">₩19,900으로 잠금 해제</button>
+    </div>
+  </div>
+
+  <!-- full report area -->
+  <div id="fullReportWrap">
+    <div style="font-size:13px;color:var(--gold);letter-spacing:0.08em;text-align:center;margin-bottom:14px;font-weight:600">━━ 완전한 궁합 리포트 ━━</div>
+    <div id="fullReportContent"></div>
+    <div style="margin:20px 0 8px;padding:16px;background:rgba(63,158,130,0.06);border:1px solid rgba(63,158,130,0.15);border-radius:14px;text-align:center">
+      <div style="font-size:12px;color:var(--sub);margin-bottom:10px">✦ 나 자신의 사주도 깊이 이해하기 ✦</div>
+      <a href="saju-KR.html" style="display:inline-block;padding:9px 22px;background:var(--jade);border-radius:20px;color:#fff;font-size:13px;text-decoration:none;letter-spacing:0.06em;margin:0 4px">내 사주 리포트 →</a>
+      <a href="chat-KR.html" style="display:inline-block;padding:9px 22px;background:rgba(154,117,41,0.1);border:1px solid rgba(154,117,41,0.25);border-radius:20px;color:var(--gold);font-size:13px;text-decoration:none;letter-spacing:0.06em;margin:0 4px">AI 명리사에게 물어보기</a>
+    </div>
+  </div>
+
+</div>
+
+<!-- sticky bar -->
+<div class="sticky-bar" id="stickyBar">
+  <button class="sticky-cta" onclick="startUnlock()">완전한 궁합 리포트 열기 · ₩19,900</button>
+</div>
+
+<div class="sy-toast" id="syToast"></div>
+
+<script>
+var gA = 'male', gB = 'female';
+var _tier = 1;
+var _mode = 'dating';
+var _currentInviteId = null;
+var _currentInviteIdServer = null;
+
+function selG(person, g) {
+  if (person === 'a') {
+    gA = g;
+    document.getElementById('aM').className = 'g-opt' + (g==='male' ? ' sel' : '');
+    document.getElementById('aF').className = 'g-opt' + (g==='female' ? ' sel' : '');
+  } else {
+    gB = g;
+    document.getElementById('bM').className = 'g-opt' + (g==='male' ? ' sel' : '');
+    document.getElementById('bF').className = 'g-opt' + (g==='female' ? ' sel' : '');
+  }
+}
+
+function selTier(t) {
+  _tier = t;
+  [1,2].forEach(function(i) {
+    document.getElementById('t'+i).className = 'tier-card' + (i===t ? ' sel' : '');
+  });
+}
+
+function setMode(m) {
+  _mode = m;
+  document.getElementById('modeDating').className = 'mode-btn' + (m==='dating' ? ' active' : '');
+  document.getElementById('modeMarriage').className = 'mode-btn' + (m==='marriage' ? ' active' : '');
+}
+
+function showToast(msg) {
+  var t = document.getElementById('syToast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 3000);
+}
+
+function startCalc() {
+  var aY = document.getElementById('aYear').value;
+  var aM = document.getElementById('aMonth').value;
+  var aD = document.getElementById('aDay').value;
+  var bY = document.getElementById('bYear').value;
+  var bM = document.getElementById('bMonth').value;
+  var bD = document.getElementById('bDay').value;
+
+  if (!aY || !aM || !aD) { showToast('내 생년월일을 입력해 주세요'); return; }
+  if (!bY || !bM || !bD) { showToast('상대방 생년월일을 입력해 주세요'); return; }
+
+  var saved = {
+    p1Year:aY, p1Month:aM, p1Day:aD,
+    p1Hour: document.getElementById('aHour').value,
+    p1Gender: gA,
+    p1Name: document.getElementById('nameA').value.trim(),
+    p2Year:bY, p2Month:bM, p2Day:bD,
+    p2Hour: document.getElementById('bHour').value,
+    p2Gender: gB,
+    p2Name: document.getElementById('nameB').value.trim(),
+    mode: _mode
+  };
+  localStorage.setItem('sy_last_hehun_kr', JSON.stringify(saved));
+
+  document.getElementById('inputScreen').style.display = 'none';
+  document.getElementById('loadingWrap').classList.add('show');
+
+  var _previewData = { score: 75, story: '', dimensions: [] };
+  var _previewDone = false;
+  function _showPreview() {
+    if (_previewDone) return; _previewDone = true;
+    document.getElementById('loadingWrap').classList.remove('show');
+    renderResult(_previewData);
+  }
+  var _previewGuard = setTimeout(_showPreview, 12000);
+
+  fetch('/api/hehun/stream', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      p1Year:aY, p1Month:aM, p1Day:aD,
+      p1Hour: saved.p1Hour, p1Gender: gA,
+      p1Name: saved.p1Name,
+      p2Year:bY, p2Month:bM, p2Day:bD,
+      p2Hour: saved.p2Hour, p2Gender: gB,
+      p2Name: saved.p2Name,
+      mode: _mode, lang: 'ko',
+      token: localStorage.getItem('sy_token') || ''
+    })
+  }).then(function(res) {
+    if (!res.ok || !res.body) { clearTimeout(_previewGuard); _showPreview(); return; }
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder('utf-8');
+    var buf = '';
+    function read() {
+      reader.read().then(function(r) {
+        if (r.done) { clearTimeout(_previewGuard); _showPreview(); return; }
+        buf += decoder.decode(r.value, {stream:true});
+        var lines = buf.split('\n'); buf = lines.pop();
+        lines.forEach(function(line) {
+          if (!line.startsWith('data: ')) return;
+          var raw = line.slice(6).trim();
+          if (raw === '[DONE]') return;
+          try {
+            var ev = JSON.parse(raw);
+            if (ev.type === 'meta') {
+              // Apply real score from backend
+              if (typeof ev.score === 'number' && ev.score > 0) {
+                _previewData.score = Math.min(100, Math.max(1, Math.round(ev.score)));
+              }
+              // Map dims object to dimensions array expected by renderResult
+              if (ev.dims) {
+                var DIM_KEY_MAP = [
+                  {key:'emotional', name:'감정', defaultDesc:'감정 연결 분석 중'},
+                  {key:'personality', name:'성격', defaultDesc:'성격 궁합 분석 중'},
+                  {key:'communication', name:'소통', defaultDesc:'소통 방식 분석 중'},
+                  {key:'values', name:'가치관', defaultDesc:'가치관 분석 중'},
+                  {key:'wuxing', name:'생활', defaultDesc:'생활 스타일 분석 중'},
+                  {key:'future', name:'결혼', defaultDesc:'결혼 운세 분석 중'}
+                ];
+                _previewData.dimensions = DIM_KEY_MAP.map(function(m) {
+                  return { name: m.name, score: Math.min(97, Math.max(45, Math.round(ev.dims[m.key]||75))), desc: m.defaultDesc };
+                });
+              }
+              clearTimeout(_previewGuard); _showPreview();
+            }
+          } catch(e) {}
+        });
+        if (!_previewDone) read();
+      }).catch(function() { clearTimeout(_previewGuard); _showPreview(); });
+    }
+    read();
+  }).catch(function() {
+    clearTimeout(_previewGuard); _showPreview();
+  });
+}
+
+var GRADE_MAP = [
+  [90, '천생연분 ✦', '두 사람은 운명이 이어준 인연입니다'],
+  [80, '좋은 인연 ☯', '서로 보완하며 함께 성장하는 사주'],
+  [70, '성장하는 인연', '노력으로 더 깊어지는 관계'],
+  [60, '보완 필요 ⚡', '차이를 이해하면 단단해지는 인연'],
+  [0,  '도전적 인연', '서로 다름을 받아들이는 여정']
+];
+
+var WX_ELEM = {
+  木: {icon:'🌿', name:'목(木) 기운'},
+  火: {icon:'🔥', name:'화(火) 기운'},
+  土: {icon:'🪨', name:'토(土) 기운'},
+  金: {icon:'⚙️', name:'금(金) 기운'},
+  水: {icon:'💧', name:'수(水) 기운'}
+};
+
+var DIM_LABELS_KO = {
+  '性格': '성격 궁합', '感情': '감정 연결', '沟通': '소통 방식',
+  '价值观': '가치관', '生活': '생활 스타일', '婚姻': '결혼 운세',
+  '성격': '성격 궁합', '감정': '감정 연결', '소통': '소통 방식',
+  '가치관': '가치관', '생활': '생활 스타일', '결혼': '결혼 운세'
+};
+
+function renderResult(data) {
+  window._syScore = data.score || 75;
+  var score = window._syScore;
+
+  // Animate score ring
+  setTimeout(function() {
+    var circ = 326.7;
+    var fill = circ * score / 100;
+    document.getElementById('ringFill').setAttribute('stroke-dasharray', fill + ' ' + (circ - fill));
+    var numEl = document.getElementById('scoreNum');
+    var start = 0;
+    var interval = setInterval(function() {
+      start += 2;
+      if (start >= score) { start = score; clearInterval(interval); }
+      numEl.innerHTML = start + '<span class="score-pct">%</span>';
+    }, 20);
+  }, 100);
+
+  // Grade
+  var grade = GRADE_MAP[GRADE_MAP.length-1];
+  for (var i=0; i<GRADE_MAP.length; i++) {
+    if (score >= GRADE_MAP[i][0]) { grade = GRADE_MAP[i]; break; }
+  }
+  document.getElementById('scoreGrade').textContent = grade[1];
+  document.getElementById('scoreSub').textContent = grade[2];
+
+  // Story
+  var storyEl = document.getElementById('storyText');
+  storyEl.innerHTML = (data.story || '두 사람의 인연 이야기를 분석하고 있습니다…').replace(/\n/g,'<br>');
+
+  // Dimensions
+  var dims = data.dimensions || [];
+  var dimsList = document.getElementById('dimsList');
+  dimsList.innerHTML = '';
+  dims.forEach(function(dim) {
+    var label = DIM_LABELS_KO[dim.name] || dim.name;
+    var color = dim.score >= 80 ? '#c9a84c' : dim.score >= 60 ? '#3f9e82' : '#d4736b';
+    dimsList.innerHTML += '<div class="dim-card">' +
+      '<div class="dim-head"><span class="dim-name">' + label + '</span><span class="dim-score" style="color:'+color+'">' + dim.score + '%</span></div>' +
+      '<div class="dim-bar-bg"><div class="dim-bar-fill" style="width:'+dim.score+'%;background:'+color+'"></div></div>' +
+      '<div class="dim-desc">' + (dim.desc || '') + '</div></div>';
+  });
+
+  // Wuxing
+  if (data.wuxingA) {
+    var wA = WX_ELEM[data.wuxingA] || {icon:'☯',name:data.wuxingA};
+    var wB = WX_ELEM[data.wuxingB] || {icon:'☯',name:data.wuxingB};
+    document.getElementById('wxIconA').textContent = wA.icon;
+    document.getElementById('wxNameA').textContent = wA.name;
+    document.getElementById('wxIconB').textContent = wB.icon;
+    document.getElementById('wxNameB').textContent = wB.name;
+    if (data.wuxingRel) document.getElementById('wxRelTag').textContent = data.wuxingRel;
+    var nameA = document.getElementById('nameA').value.trim() || '나';
+    var nameB = document.getElementById('nameB').value.trim() || '상대방';
+    document.getElementById('wxYearA').textContent = nameA;
+    document.getElementById('wxYearB').textContent = nameB;
+  }
+
+  // Year fortune
+  if (data.yearFortune) {
+    document.getElementById('yearText').textContent = data.yearFortune;
+    if (data.yearBadge) document.getElementById('yearBadge').textContent = data.yearBadge;
+  }
+
+  // Show results
+  var resultsEl = document.getElementById('results');
+  resultsEl.classList.add('show');
+
+  // Show partner CTA after a brief delay
+  setTimeout(function() {
+    document.getElementById('partnerCta').style.display = 'block';
+    saveInviteRecord();
+  }, 800);
+
+  // Show sticky bar if tier 2 selected
+  if (_tier >= 2) {
+    document.getElementById('stickyBar').style.display = 'block';
+  }
+
+  // Check if already paid (Stripe return)
+  var params = new URLSearchParams(location.search);
+  if (params.get('activated') === '1' || params.get('paid') === '1') {
+    startFullReport();
+  }
+}
+
+function startUnlock() {
+  var saved;
+  try { saved = JSON.parse(localStorage.getItem('sy_last_hehun_kr') || 'null'); } catch(e) {}
+  var token = localStorage.getItem('sy_token') || 'guest';
+  if (saved) {
+    fetch('/api/create-checkout', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        product: 'hehun_kr_full',
+        currency: 'krw',
+        amount: 19900,
+        token: token,
+        successUrl: location.href.split('?')[0] + '?activated=1'
+      })
+    }).then(function(r){ return r.json(); }).then(function(d){
+      if (d.url) window.location.href = d.url;
+      else showToast('결제 오류: ' + (d.error || '알 수 없는 오류'));
+    }).catch(function(){ showToast('결제 연결 오류'); });
+  } else {
+    showToast('먼저 궁합을 계산해 주세요');
+  }
+}
+
+function startFullReport() {
+  var saved;
+  try { saved = JSON.parse(localStorage.getItem('sy_last_hehun_kr') || 'null'); } catch(e) {}
+  if (!saved) { return; }
+
+  document.getElementById('lockedCard').style.display = 'none';
+  document.getElementById('stickyBar').style.display = 'none';
+  showToast('🎉 잠금 해제 완료! 완전한 리포트 준비 중…');
+
+  var wrap = document.getElementById('fullReportWrap');
+  wrap.style.display = 'block';
+  var contentEl = document.getElementById('fullReportContent');
+  contentEl.style.whiteSpace = 'pre-wrap';
+  contentEl.textContent = '';
+
+  var accumulated = '';
+  fetch('/api/hehun/stream', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('sy_token') || '')},
+    body: JSON.stringify({
+      p1Year: saved.p1Year, p1Month: saved.p1Month, p1Day: saved.p1Day,
+      p1Hour: saved.p1Hour || '', p1Gender: saved.p1Gender,
+      p1Name: saved.p1Name || '', p2Name: saved.p2Name || '',
+      p2Year: saved.p2Year, p2Month: saved.p2Month, p2Day: saved.p2Day,
+      p2Hour: saved.p2Hour || '', p2Gender: saved.p2Gender,
+      mode: saved.mode || _mode, lang: 'ko',
+      token: localStorage.getItem('sy_token') || ''
+    })
+  }).then(function(res) {
+    if (!res.ok || !res.body) { contentEl.textContent = '생성 실패, 다시 시도해 주세요'; return; }
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder('utf-8');
+    var buf = '';
+    function read() {
+      reader.read().then(function(r) {
+        if (r.done) return;
+        buf += decoder.decode(r.value, {stream:true});
+        var lines = buf.split('\n'); buf = lines.pop();
+        lines.forEach(function(line) {
+          if (!line.startsWith('data: ')) return;
+          var raw = line.slice(6).trim();
+          if (raw === '[DONE]') return;
+          try {
+            var ev = JSON.parse(raw);
+            if (ev.type === 'meta') {
+              // Update score ring and dims for full report mode
+              if (typeof ev.score === 'number' && ev.score > 0) {
+                var sc = Math.min(100, Math.max(1, Math.round(ev.score)));
+                window._syScore = sc;
+                var circ2 = 326.7;
+                var fill2 = circ2 * sc / 100;
+                var ringEl = document.getElementById('ringFill');
+                if (ringEl) ringEl.setAttribute('stroke-dasharray', fill2 + ' ' + (circ2 - fill2));
+                var numEl2 = document.getElementById('scoreNum');
+                if (numEl2) numEl2.innerHTML = sc + '<span class="score-pct">%</span>';
+              }
+              if (ev.dims) {
+                var DIM_KEY_MAP2 = [
+                  {key:'emotional', name:'감정'}, {key:'personality', name:'성격'},
+                  {key:'communication', name:'소통'}, {key:'values', name:'가치관'},
+                  {key:'wuxing', name:'생활'}, {key:'future', name:'결혼'}
+                ];
+                var cards2 = document.querySelectorAll('#dimsList .dim-card');
+                DIM_KEY_MAP2.forEach(function(m, i) {
+                  if (!cards2[i]) return;
+                  var v = Math.min(97, Math.max(45, Math.round(ev.dims[m.key]||75)));
+                  var col = v>=80?'#c9a84c':v>=60?'#3f9e82':'#d4736b';
+                  var sc2El = cards2[i].querySelector('.dim-score');
+                  var bar2El = cards2[i].querySelector('.dim-bar-fill');
+                  if (sc2El) { sc2El.textContent = v+'%'; sc2El.style.color = col; }
+                  if (bar2El) { bar2El.style.width = v+'%'; bar2El.style.background = col; }
+                });
+              }
+            } else if (ev.type === 'chunk') { accumulated += ev.content; contentEl.textContent = accumulated; }
+          } catch(e) {}
+        });
+        read();
+      }).catch(function() { contentEl.textContent = '네트워크 오류, 새로고침 해주세요'; });
+    }
+    read();
+  }).catch(function() { contentEl.textContent = '네트워크 오류, 새로고침 해주세요'; });
+}
+
+// ── Invite / share functions ──
+function generateInviteId() {
+  return Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+}
+
+function saveInviteRecord() {
+  if (!_currentInviteId) _currentInviteId = generateInviteId();
+  var record = {
+    nameA: document.getElementById('nameA').value.trim() || '',
+    inviterName: document.getElementById('nameA').value.trim() || '',
+    p1Year: document.getElementById('aYear').value,
+    p1Month: document.getElementById('aMonth').value,
+    p1Day: document.getElementById('aDay').value,
+    p1Hour: document.getElementById('aHour').value,
+    p1Gender: gA,
+    mode: _mode,
+    ref: localStorage.getItem('sy_ref_code') || ''
+  };
+  fetch('/api/invite/save', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(record)
+  }).then(function(r){ return r.json(); }).then(function(data){
+    if (data.inviteId) _currentInviteIdServer = data.inviteId;
+  }).catch(function(){});
+}
+
+function getInviteUrl() {
+  var nameA = document.getElementById('nameA').value.trim() || '선연';
+  var sid = _currentInviteIdServer || _currentInviteId || generateInviteId();
+  return location.origin + '/pages/hehun-KR.html?invite=' + encodeURIComponent(sid) + '&name=' + encodeURIComponent(nameA);
+}
+
+function inviteCopyLink() {
+  var url = getInviteUrl();
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(function() {
+      showToast('초대 링크가 복사됐어요! 상대방에게 보내주세요 ❤️');
+    }).catch(function() { _fallbackCopy(url); });
+  } else {
+    _fallbackCopy(url);
+  }
+}
+
+function _fallbackCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select();
+  document.execCommand('copy');
+  document.body.removeChild(ta);
+  showToast('초대 링크가 복사됐어요!');
+}
+
+function shareKakao() {
+  var url = getInviteUrl();
+  var nameA = document.getElementById('nameA').value.trim() || '선연';
+  var lastChar = nameA.charCodeAt(nameA.length-1)-0xAC00;
+  var particle = (lastChar>=0 && lastChar%28!==0) ? '이' : '가';
+  var scoreStr = window._syScore ? '우리 궁합 ' + window._syScore + '점 💕 ' : '';
+  var text = scoreStr + nameA + particle + ' 당신과의 사주 궁합을 확인해 봤어요!\n너도 생년월일만 넣어봐 → ' + url;
+  if (navigator.share) {
+    navigator.share({title: '선연 궁합', text: text, url: url}).catch(function(){
+      _fallbackCopy(url);
+    });
+  } else {
+    _fallbackCopy(text);
+    showToast('문구+링크 복사 완료! 카카오톡에서 붙여넣기 해주세요 💬');
+  }
+}
+
+// Handle ?invite= param
+(function handleInvite() {
+  var params = new URLSearchParams(location.search);
+  var inviteId = params.get('invite');
+  var inviterName = params.get('name') || 'TA';
+  if (!inviteId) return;
+
+  var banner = document.getElementById('inviteBanner');
+  var bannerTitle = document.getElementById('inviteBannerTitle');
+  if (banner) {
+    var lc = inviterName.charCodeAt(inviterName.length-1)-0xAC00;
+    var pp = (lc>=0 && lc%28!==0) ? '이' : '가';
+    bannerTitle.textContent = inviterName + pp + ' 함께 궁합 보자고 초대했어요 ❤️';
+    banner.classList.add('show');
+  }
+
+  // Fetch Person A's data
+  fetch('/api/invite/load?id=' + encodeURIComponent(inviteId))
+    .then(function(r){ return r.json(); })
+    .then(function(record) {
+      if (!record) return;
+      if (record.p1Year) document.getElementById('aYear').value = record.p1Year;
+      if (record.p1Month) document.getElementById('aMonth').value = record.p1Month;
+      if (record.p1Day) document.getElementById('aDay').value = record.p1Day;
+      if (record.p1Hour !== undefined && record.p1Hour !== '') document.getElementById('aHour').value = record.p1Hour;
+      var nameVal = record.nameA || record.inviterName || '';
+      if (nameVal) document.getElementById('nameA').value = nameVal;
+      if (record.p1Gender) { gA = record.p1Gender; selG('a', record.p1Gender); }
+      if (record.mode) { _mode = record.mode; setMode(record.mode); }
+      // Dim out person A card to show it's pre-filled
+      document.querySelector('.person-card.person-a').style.opacity = '0.65';
+    }).catch(function(){});
+})();
+
+// Capture ?ref=
+(function() {
+  try {
+    var r = new URLSearchParams(location.search).get('ref');
+    if (r) localStorage.setItem('sy_ref_code', r);
+  } catch(e) {}
+})();
+</script>
+
+<div class="disclaimer">
+  만 19세 이상만 이용 가능합니다 · 본 서비스는 오락 및 참고 목적으로만 제공됩니다<br>
+  의학적·법률적 판단을 대신하지 않습니다 · 입력 정보는 리포트 생성에만 사용됩니다
+</div>
+
+<script src="/assets/js/common.js"></script>
+</body>
+</html>
