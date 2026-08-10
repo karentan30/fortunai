@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5bbfa0">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<title>邀请排行榜·善缘裂变中心｜善缘</title>
+<meta name="description" content="善缘邀请排行榜 — 实时展示邀请者Top10排名，查看你的邀请成绩、奖励等级与预期收益。邀1位好友解锁报告，邀100位升级尊享权益。">
+<meta property="og:title" content="善缘 · 邀请排行榜">
+<meta property="og:description" content="善缘邀请排行榜 — 实时邀请者排名，奖励等级系统，分享赚收益">
+<meta property="og:image" content="/og-card.png">
+<meta property="og:url" content="https://shenyuan.mylumee.cn/pages/leaderboard.html">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://shenyuan.mylumee.cn/pages/leaderboard.html">
+<link rel="alternate" hreflang="zh" href="https://shenyuan.mylumee.cn/pages/leaderboard.html">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&display=swap">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #faf8f5; --card: #ffffff; --mid: #f5f0e8;
+  --gold: #c9a84c; --gold-light: #e8d08a; --gold-deep: #8a6420;
+  --jade: #5bbfa0; --jade-mid: #8dd9bf;
+  --amber: #c9820a; --amber-light: #e8b86a;
+  --ink-text: rgba(40,35,30,0.92);
+  --sub-text: rgba(80,70,55,0.72);
+}
+html, body { background: var(--bg); font-family: 'Noto Serif SC', serif; color: var(--ink-text); -webkit-font-smoothing: antialiased; }
+body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.1) 0%, transparent 50%); pointer-events:none; z-index:0; }
+
+.back-btn { position:fixed; top:16px; left:16px; z-index:99; background:none; border:none; font-family:'Noto Serif SC',serif; font-size:13px; color:rgba(201,168,76,0.6); cursor:pointer; padding:4px 0; }
+.back-btn:active { transform:scale(0.97); }
+
+.lang-toggle { position:fixed; top:16px; right:16px; z-index:100; font-size:11px; background:rgba(250,248,245,0.85); backdrop-filter:blur(8px); border:1px solid rgba(201,168,76,0.2); border-radius:20px; padding:6px 12px; color:var(--sub-text); text-decoration:none; letter-spacing:0.04em; transition:color .2s; }
+.lang-toggle:hover { color:var(--gold); }
+
+.container { position:relative; z-index:1; padding:60px 16px 16px; }
+
+/* ── Header ── */
+.header { text-align:center; margin-bottom:28px; }
+.header-title { font-size:20px; font-weight:400; letter-spacing:0.22em; margin-bottom:5px; }
+.header-sub { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:13px; letter-spacing:0.26em; color:rgba(201,168,76,0.45); margin-bottom:14px; }
+.gold-line { width:60px; height:1px; background:linear-gradient(90deg,transparent,var(--gold),transparent); margin:0 auto; }
+
+/* ── Leaderboard Table ── */
+.leaderboard-sec { background:var(--card); border:1px solid rgba(201,168,76,0.1); border-radius:12px; margin-bottom:18px; overflow:hidden; }
+.lb-head { display:grid; grid-template-columns:auto 1fr 80px 80px 80px; gap:12px; padding:12px 14px; background:rgba(201,168,76,0.08); border-bottom:1px solid rgba(201,168,76,0.12); font-size:11px; letter-spacing:0.1em; color:rgba(201,168,76,0.5); font-weight:500; }
+.lb-row { display:grid; grid-template-columns:auto 1fr 80px 80px 80px; gap:12px; padding:14px; border-bottom:1px solid rgba(201,168,76,0.08); align-items:center; transition:background 0.2s; }
+.lb-row:last-child { border-bottom:none; }
+.lb-row:hover { background:rgba(201,168,76,0.03); }
+
+.lb-rank { text-align:center; min-width:36px; }
+.lb-rank-num { font-size:16px; font-weight:600; color:var(--gold); font-family:'Cormorant Garamond',serif; }
+.lb-rank.top1 .lb-rank-num { color:#ffd700; text-shadow:0 0 8px rgba(255,215,0,0.3); }
+.lb-rank.top2 .lb-rank-num { color:#c0c0c0; }
+.lb-rank.top3 .lb-rank-num { color:#cd7f32; }
+
+.lb-name { }
+.lb-name-text { font-size:13px; color:var(--ink-text); letter-spacing:0.04em; margin-bottom:3px; }
+.lb-name-hint { font-size:11px; color:rgba(80,70,55,0.5); letter-spacing:0.02em; }
+
+.lb-invited { text-align:center; font-size:13px; color:var(--ink-text); font-weight:500; }
+.lb-invited-hint { font-size:10px; color:rgba(80,70,55,0.5); letter-spacing:0.02em; margin-top:2px; }
+
+.lb-converted { text-align:center; font-size:13px; color:var(--jade); font-weight:500; }
+.lb-tier { text-align:center; font-size:11px; font-weight:600; letter-spacing:0.08em; padding:4px 8px; border-radius:6px; white-space:nowrap; }
+.lb-tier.premium { background:rgba(201,168,76,0.2); color:var(--gold); }
+.lb-tier.standard { background:rgba(141,217,191,0.15); color:var(--jade); }
+.lb-tier.basic { background:rgba(80,70,55,0.08); color:var(--sub-text); }
+
+.lb-empty { padding:40px 16px; text-align:center; }
+.lb-empty-icon { font-size:48px; opacity:0.25; margin-bottom:12px; }
+.lb-empty-text { font-size:13px; color:rgba(201,168,76,0.5); letter-spacing:0.06em; }
+
+/* ── My Score Card ── */
+.card-my-score { background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.03)); border:1px solid rgba(201,168,76,0.2); border-radius:12px; padding:18px; margin-bottom:18px; }
+.score-title { font-size:12px; letter-spacing:0.2em; color:rgba(201,168,76,0.45); margin-bottom:14px; }
+.score-row { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:14px; }
+.score-row:last-of-type { margin-bottom:0; }
+.score-label { font-size:13px; color:var(--sub-text); letter-spacing:0.06em; }
+.score-value { font-size:20px; color:var(--gold); font-weight:600; font-family:'Cormorant Garamond',serif; }
+.score-hint { font-size:11px; color:rgba(201,168,76,0.5); letter-spacing:0.04em; }
+
+/* ── Progress Bar ── */
+.progress-sec { margin-top:16px; padding-top:16px; border-top:1px solid rgba(201,168,76,0.1); }
+.progress-title { font-size:12px; letter-spacing:0.1em; color:rgba(201,168,76,0.5); margin-bottom:10px; }
+.tier-bars { display:flex; gap:6px; margin-bottom:12px; }
+.tier-bar { flex:1; height:32px; background:var(--card); border:1px solid rgba(201,168,76,0.12); border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:600; letter-spacing:0.08em; cursor:pointer; transition:all 0.2s; position:relative; overflow:hidden; }
+.tier-bar.active { border-color:var(--gold); background:rgba(201,168,76,0.1); color:var(--gold); }
+.tier-bar::before { content:''; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent); opacity:0; transition:opacity 0.3s; }
+.tier-bar:hover::before { opacity:1; }
+
+.progress-info { font-size:12px; color:var(--sub-text); letter-spacing:0.04em; text-align:center; margin-top:10px; }
+.progress-info strong { color:var(--gold); font-weight:600; }
+
+/* ── Referral Code Section ── */
+.code-sec { background:var(--card); border:1px solid rgba(201,168,76,0.1); border-radius:12px; padding:16px 14px; margin-bottom:18px; }
+.code-label { font-size:12px; letter-spacing:0.2em; color:rgba(201,168,76,0.45); margin-bottom:10px; }
+.code-channels { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.channel-box { background:rgba(201,168,76,0.04); border:1px solid rgba(201,168,76,0.12); border-radius:8px; padding:12px; text-align:center; cursor:pointer; transition:all 0.2s; }
+.channel-box:hover { background:rgba(201,168,76,0.08); border-color:rgba(201,168,76,0.25); }
+.channel-name { font-size:11px; letter-spacing:0.08em; color:rgba(201,168,76,0.5); margin-bottom:6px; }
+.channel-code { font-size:14px; font-weight:600; color:var(--gold-light); font-family:monospace; letter-spacing:0.12em; }
+.channel-box.copied .channel-code::after { content:' ✓'; font-size:12px; color:var(--jade); }
+
+/* ── Share Buttons ── */
+.btn-group { display:flex; gap:10px; margin-bottom:18px; }
+.btn { flex:1; padding:12px 0; border:none; border-radius:10px; font-family:'Noto Serif SC',serif; font-size:12px; font-weight:500; letter-spacing:0.12em; cursor:pointer; transition:all 0.2s; }
+.btn-primary { background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light),var(--gold)); color:rgba(14,10,4,0.95); box-shadow:0 4px 16px rgba(201,168,76,0.25); }
+.btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 24px rgba(201,168,76,0.35); }
+.btn-primary:active { transform:translateY(0); }
+.btn-secondary { background:rgba(91,191,160,0.08); border:1.5px solid rgba(91,191,160,0.4); color:var(--jade); }
+.btn-secondary:hover { background:rgba(91,191,160,0.14); }
+.btn-secondary:active { transform:scale(0.97); }
+
+/* ── Share Card Canvas ── */
+.card-preview { background:var(--card); border:1px solid rgba(201,168,76,0.1); border-radius:12px; padding:0; overflow:hidden; margin-bottom:18px; display:none; }
+.card-preview.show { display:block; }
+.card-canvas-wrap { width:100%; aspect-ratio:9/12; background:rgba(14,10,4,0.95); }
+
+/* ── Reward Tiers Info ── */
+.tiers-info { background:rgba(201,168,76,0.05); border:1px solid rgba(201,168,76,0.12); border-radius:12px; padding:16px 14px; margin-bottom:18px; }
+.tier-item { margin-bottom:12px; }
+.tier-item:last-child { margin-bottom:0; }
+.tier-name { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.tier-badge { font-size:10px; font-weight:700; letter-spacing:0.1em; padding:2px 8px; border-radius:4px; }
+.tier-badge.premium { background:rgba(201,168,76,0.3); color:var(--gold-deep); }
+.tier-badge.standard { background:rgba(141,217,191,0.25); color:#2a7a6b; }
+.tier-badge.basic { background:rgba(80,70,55,0.15); color:var(--sub-text); }
+.tier-desc { font-size:12px; color:var(--sub-text); letter-spacing:0.04em; line-height:1.6; }
+
+/* ── Loading & Error ── */
+.loading { text-align:center; padding:40px 20px; }
+.spinner { display:inline-block; width:20px; height:20px; border:2px solid rgba(201,168,76,0.2); border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.error-msg { background:rgba(197,91,72,0.1); border:1px solid rgba(197,91,72,0.3); border-radius:8px; padding:12px; font-size:12px; color:rgba(197,91,72,0.8); letter-spacing:0.04em; margin-bottom:16px; }
+
+/* ── Animations ── */
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+.fade-in { animation:fadeUp 0.4s ease forwards; }
+.fade-in.d1 { animation-delay:0.1s; }
+.fade-in.d2 { animation-delay:0.15s; }
+.fade-in.d3 { animation-delay:0.2s; }
+
+/* ── Responsive ── */
+@media (max-width:480px) {
+  .lb-head, .lb-row { grid-template-columns:auto 1fr 70px 70px; }
+  .lb-head, .lb-row { gap:8px; padding:10px 12px; }
+  .lb-invited-hint, .lb-name-hint { display:none; }
+  .tier-bars { grid-template-columns:1fr 1fr 1fr; }
+}
+
+</style>
+</head>
+<body>
+
+<button class="back-btn" onclick="history.back();">← 返回</button>
+<a href="javascript:void(0)" class="lang-toggle" id="langToggle" onclick="toggleLang()">EN</a>
+
+<div class="container">
+  <!-- Header -->
+  <div class="header fade-in d1">
+    <div class="header-title">邀请排行榜</div>
+    <div class="header-sub">Referral Leaderboard</div>
+    <div class="gold-line"></div>
+  </div>
+
+  <!-- My Score Card -->
+  <div class="card-my-score fade-in d2" id="myScoreCard">
+    <div class="score-title">你的成绩</div>
+    <div class="score-row">
+      <span class="score-label">排名</span>
+      <div style="text-align:right;">
+        <div class="score-value" id="myRank" style="font-size:24px;">—</div>
+      </div>
+    </div>
+    <div class="score-row">
+      <span class="score-label">邀请数</span>
+      <div style="text-align:right;">
+        <div class="score-value" id="myInvited">0</div>
+        <div class="score-hint" id="myInvitedHint">人</div>
+      </div>
+    </div>
+    <div class="score-row">
+      <span class="score-label">已转化</span>
+      <div style="text-align:right;">
+        <div class="score-value" id="myConverted">0</div>
+        <div class="score-hint" id="myConvertedHint">人</div>
+      </div>
+    </div>
+    <div class="score-row">
+      <span class="score-label">奖励等级</span>
+      <div style="text-align:right;">
+        <div class="score-value" id="myTier" style="font-size:14px; font-weight:600;">获取中...</div>
+      </div>
+    </div>
+
+    <!-- Progress Bars -->
+    <div class="progress-sec">
+      <div class="progress-title">等级进度</div>
+      <div class="tier-bars">
+        <div class="tier-bar" data-tier="premium" onclick="showTierInfo('premium')">
+          Premium<br><span style="font-size:10px; font-weight:400;">1-100</span>
+        </div>
+        <div class="tier-bar" data-tier="standard" onclick="showTierInfo('standard')">
+          Standard<br><span style="font-size:10px; font-weight:400;">101-200</span>
+        </div>
+        <div class="tier-bar" data-tier="basic" onclick="showTierInfo('basic')">
+          Basic<br><span style="font-size:10px; font-weight:400;">201+</span>
+        </div>
+      </div>
+      <div class="progress-info" id="progressInfo">登录以查看进度</div>
+    </div>
+  </div>
+
+  <!-- Referral Codes Section -->
+  <div class="code-sec fade-in d3">
+    <div class="code-label">5渠道邀请码</div>
+    <div class="code-channels" id="codeChannels">
+      <div class="channel-box" onclick="copyCode(this)">
+        <div class="channel-name">TikTok</div>
+        <div class="channel-code" data-channel="tiktok">—</div>
+      </div>
+      <div class="channel-box" onclick="copyCode(this)">
+        <div class="channel-name">小红书</div>
+        <div class="channel-code" data-channel="xiaohongshu">—</div>
+      </div>
+      <div class="channel-box" onclick="copyCode(this)">
+        <div class="channel-name">WeChat</div>
+        <div class="channel-code" data-channel="wechat">—</div>
+      </div>
+      <div class="channel-box" onclick="copyCode(this)">
+        <div class="channel-name">YouTube</div>
+        <div class="channel-code" data-channel="youtube">—</div>
+      </div>
+      <div class="channel-box" onclick="copyCode(this)">
+        <div class="channel-name">其他</div>
+        <div class="channel-code" data-channel="organic">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share Buttons -->
+  <div class="btn-group fade-in d3">
+    <button class="btn btn-primary" onclick="generateShareCard()">生成分享卡</button>
+    <button class="btn btn-secondary" onclick="shareLink()">分享链接</button>
+  </div>
+
+  <!-- Share Card Canvas -->
+  <div class="card-preview fade-in" id="cardPreview">
+    <div class="card-canvas-wrap">
+      <canvas id="shareCanvas" width="600" height="800"></canvas>
+    </div>
+    <div class="btn-group" style="margin-bottom:0;">
+      <button class="btn btn-primary" onclick="downloadCard()">下载卡片 PNG</button>
+      <button class="btn btn-secondary" onclick="closeCard()">关闭</button>
+    </div>
+  </div>
+
+  <!-- Reward Tiers Info -->
+  <div class="tiers-info fade-in d3">
+    <div style="font-size:12px; letter-spacing:0.2em; color:rgba(201,168,76,0.45); margin-bottom:12px;">等级奖励体系</div>
+    <div class="tier-item">
+      <div class="tier-name">
+        <span class="tier-badge premium">Premium</span>
+        <span style="font-size:12px; color:var(--sub-text);">1-100 邀请</span>
+      </div>
+      <div class="tier-desc">✦ 每邀请1人获得¥50 邀请奖励<br>✦ 升至此等级解锁高级功能与专属权益</div>
+    </div>
+    <div class="tier-item">
+      <div class="tier-name">
+        <span class="tier-badge standard">Standard</span>
+        <span style="font-size:12px; color:var(--sub-text);">101-200 邀请</span>
+      </div>
+      <div class="tier-desc">✦ 每邀请1人获得¥30 邀请奖励<br>✦ 额外享受合作伙伴特殊权益</div>
+    </div>
+    <div class="tier-item">
+      <div class="tier-name">
+        <span class="tier-badge basic">Basic</span>
+        <span style="font-size:12px; color:var(--sub-text);">201+ 邀请</span>
+      </div>
+      <div class="tier-desc">✦ 每邀请1人获得¥10 邀请奖励<br>✦ 开放API与联盟计划对接</div>
+    </div>
+  </div>
+
+  <!-- Leaderboard -->
+  <div class="leaderboard-sec fade-in d3">
+    <div style="font-size:12px; letter-spacing:0.2em; color:rgba(201,168,76,0.45); padding:14px 14px 10px; border-bottom:1px solid rgba(201,168,76,0.08);">实时排行 (Top 10)</div>
+    <div class="lb-head">
+      <div>排名</div>
+      <div>昵称</div>
+      <div>邀请</div>
+      <div>转化</div>
+      <div>等级</div>
+    </div>
+    <div id="leaderboardList">
+      <div class="lb-empty">
+        <div class="lb-empty-icon">📊</div>
+        <div class="lb-empty-text">加载排行榜中...</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const API_BASE = window.location.origin;
+let myData = null;
+let leaderboardData = [];
+let refreshTimer = null;
+
+// ── Initialization ──
+async function init() {
+  await fetchMyData();
+  await fetchLeaderboard();
+  startAutoRefresh();
+  updateTierBars();
+}
+
+// ── Fetch My Data ──
+async function fetchMyData() {
+  try {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      document.getElementById('myScoreCard').innerHTML = '<div class="lb-empty"><div class="lb-empty-text">请先 <a href="/pages/bazi.html" style="color:var(--gold);">登录账户</a> 查看你的邀请成绩</div></div>';
+      return;
+    }
+    const res = await fetch(`${API_BASE}/api/referral/mine`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (res.ok) {
+      myData = await res.json();
+      updateMyScoreCard();
+    } else if (res.status === 401) {
+      document.getElementById('myScoreCard').innerHTML = '<div class="lb-empty"><div class="lb-empty-text">请先登录查看你的成绩</div></div>';
+    }
+  } catch (e) {
+    console.error('Failed to fetch my data:', e);
+  }
+}
+
+// ── Update My Score Card ──
+function updateMyScoreCard() {
+  if (!myData) return;
+
+  // Update codes
+  Object.entries(myData.ref_codes || {}).forEach(([channel, code]) => {
+    const box = document.querySelector(`[data-channel="${channel}"]`);
+    if (box) box.textContent = code;
+  });
+
+  // Update stats
+  document.getElementById('myInvited').textContent = myData.invited_count || 0;
+  document.getElementById('myConverted').textContent = 0; // 需要后端补充转化数据
+
+  const tier = myData.current_tier || 'pending';
+  const tierNames = { premium: 'Premium', standard: 'Standard', basic: 'Basic', pending: '未激活' };
+  document.getElementById('myTier').textContent = tierNames[tier];
+
+  // Update progress
+  const invited = myData.invited_count || 0;
+  let nextTarget = 1;
+  if (invited < 1) nextTarget = 1;
+  else if (invited < 100) nextTarget = 100;
+  else if (invited < 200) nextTarget = 200;
+  else nextTarget = null;
+
+  if (nextTarget) {
+    document.getElementById('progressInfo').innerHTML = `再邀请 <strong>${nextTarget - invited}</strong> 位好友升级`;
+  } else {
+    document.getElementById('progressInfo').innerHTML = '已达最高等级 Premium ✦';
+  }
+
+  // Update my rank (需要后端提供排行数据)
+  document.getElementById('myRank').textContent = '—';
+}
+
+// ── Update Tier Bars ──
+function updateTierBars() {
+  if (!myData) return;
+  const invited = myData.invited_count || 0;
+  const bars = document.querySelectorAll('.tier-bar');
+  bars.forEach(bar => {
+    bar.classList.remove('active');
+    const tier = bar.dataset.tier;
+    if ((tier === 'premium' && invited <= 100) ||
+        (tier === 'standard' && invited > 100 && invited <= 200) ||
+        (tier === 'basic' && invited > 200)) {
+      bar.classList.add('active');
+    }
+  });
+}
+
+// ── Fetch Leaderboard ──
+async function fetchLeaderboard() {
+  try {
+    const res = await fetch(`${API_BASE}/api/referral/leaderboard`);
+    if (res.ok) {
+      leaderboardData = await res.json();
+      renderLeaderboard();
+    }
+  } catch (e) {
+    console.error('Failed to fetch leaderboard:', e);
+    document.getElementById('leaderboardList').innerHTML = '<div class="lb-empty"><div class="error-msg">排行榜加载失败，请刷新重试</div></div>';
+  }
+}
+
+// ── Render Leaderboard ──
+function renderLeaderboard() {
+  const list = document.getElementById('leaderboardList');
+  if (!leaderboardData || leaderboardData.length === 0) {
+    list.innerHTML = '<div class="lb-empty"><div class="lb-empty-text">暂无邀请者排行</div></div>';
+    return;
+  }
+
+  let html = '';
+  leaderboardData.slice(0, 10).forEach((item, idx) => {
+    const rank = idx + 1;
+    const tierClass = item.tier || 'basic';
+    const tierNames = { premium: 'Premium', standard: 'Standard', basic: 'Basic' };
+    html += `
+      <div class="lb-row fade-in" style="animation-delay:${0.1 + idx * 0.05}s;">
+        <div class="lb-rank ${rank <= 3 ? 'top' + rank : ''}">
+          <div class="lb-rank-num">#${rank}</div>
+        </div>
+        <div class="lb-name">
+          <div class="lb-name-text">${escape(item.name || '匿名')}</div>
+          <div class="lb-name-hint">${item.email ? item.email.substring(0, 15) + '...' : '—'}</div>
+        </div>
+        <div class="lb-invited">
+          <div class="lb-invited">${item.invited_count || 0}</div>
+          <div class="lb-invited-hint">邀请</div>
+        </div>
+        <div class="lb-converted">
+          <div class="lb-converted">${item.converted_count || 0}</div>
+          <div class="lb-invited-hint">转化</div>
+        </div>
+        <div style="text-align:center;">
+          <div class="lb-tier ${tierClass}">${tierNames[tierClass]}</div>
+        </div>
+      </div>
+    `;
+  });
+  list.innerHTML = html;
+}
+
+// ── Copy Code ──
+function copyCode(el) {
+  const code = el.querySelector('.channel-code').textContent;
+  if (code === '—') return;
+  navigator.clipboard.writeText(code).then(() => {
+    el.classList.add('copied');
+    setTimeout(() => el.classList.remove('copied'), 2000);
+  });
+}
+
+// ── Generate Share Card ──
+function generateShareCard() {
+  if (!myData) {
+    alert('请先登录');
+    return;
+  }
+
+  const canvas = document.getElementById('shareCanvas');
+  const ctx = canvas.getContext('2d');
+  const code = myData.ref_codes?.organic || myData.ref_code || 'SHARE';
+  const invited = myData.invited_count || 0;
+  const tier = myData.current_tier || 'basic';
+  const tierNames = { premium: 'Premium', standard: 'Standard', basic: 'Basic' };
+
+  // Background
+  const grad = ctx.createLinearGradient(0, 0, 0, 800);
+  grad.addColorStop(0, '#1a1005');
+  grad.addColorStop(1, '#0e0a04');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, 600, 800);
+
+  // Border
+  ctx.strokeStyle = 'rgba(201, 168, 76, 0.3)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.roundRect(16, 16, 568, 768, 16);
+  ctx.stroke();
+
+  // Top gradient line
+  const gradTop = ctx.createLinearGradient(0, 0, 600, 0);
+  gradTop.addColorStop(0, 'rgba(201, 168, 76, 0)');
+  gradTop.addColorStop(0.5, 'rgba(201, 168, 76, 1)');
+  gradTop.addColorStop(1, 'rgba(201, 168, 76, 0)');
+  ctx.fillStyle = gradTop;
+  ctx.fillRect(0, 0, 600, 4);
+
+  // Brand text
+  ctx.font = '13px "Noto Serif SC"';
+  ctx.fillStyle = 'rgba(201, 168, 76, 0.6)';
+  ctx.textAlign = 'center';
+  ctx.letterSpacing = 8;
+  ctx.fillText('善 缘 · S H E N Y U A N', 300, 90);
+
+  // Divider
+  ctx.strokeStyle = 'rgba(201, 168, 76, 0.3)';
+  ctx.beginPath();
+  ctx.moveTo(100, 104);
+  ctx.lineTo(500, 104);
+  ctx.stroke();
+
+  // Main title
+  ctx.font = 'bold 28px "Noto Serif SC"';
+  ctx.fillStyle = '#f0ead8';
+  ctx.fillText('我在善缘算了命', 300, 170);
+  ctx.font = '22px "Noto Serif SC"';
+  ctx.fillStyle = 'rgba(240, 234, 216, 0.7)';
+  ctx.fillText('邀你一起来测', 300, 215);
+
+  // Seal circle
+  ctx.strokeStyle = 'rgba(201, 168, 76, 0.4)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(300, 360, 110, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(201, 168, 76, 0.05)';
+  ctx.fill();
+
+  // Code label & code
+  ctx.font = '11px "Noto Serif SC"';
+  ctx.fillStyle = 'rgba(201, 168, 76, 0.6)';
+  ctx.fillText('邀 请 码', 300, 345);
+  ctx.font = 'bold 36px monospace';
+  ctx.fillStyle = '#e8d08a';
+  ctx.fillText(code, 300, 388);
+
+  // Invited count
+  ctx.font = '12px "Noto Serif SC"';
+  ctx.fillStyle = 'rgba(201, 168, 76, 0.5)';
+  ctx.fillText(`已邀请 ${invited} 位好友`, 300, 430);
+
+  // Divider 2
+  ctx.strokeStyle = 'rgba(201, 168, 76, 0.3)';
+  ctx.beginPath();
+  ctx.moveTo(150, 510);
+  ctx.lineTo(450, 510);
+  ctx.stroke();
+
+  // Benefit text
+  ctx.font = '16px "Noto Serif SC"';
+  ctx.fillStyle = 'rgba(240, 234, 216, 0.85)';
+  ctx.fillText('✦ 邀1位好友', 300, 548);
+  ctx.fillStyle = '#c9a84c';
+  ctx.fillText('解锁免费合婚报告', 300, 578);
+
+  // Tier badge
+  ctx.font = 'bold 14px "Noto Serif SC"';
+  const tierColors = { premium: '#c9a84c', standard: '#5bbfa0', basic: 'rgba(80, 70, 55, 0.7)' };
+  ctx.fillStyle = tierColors[tier];
+  ctx.textAlign = 'center';
+  ctx.fillText(`等级: ${tierNames[tier]}`, 300, 630);
+
+  // Share URL (simplified)
+  ctx.font = '9px monospace';
+  ctx.fillStyle = 'rgba(201, 168, 76, 0.25)';
+  ctx.fillText('shenyuan.mylumee.cn', 300, 760);
+
+  document.getElementById('cardPreview').classList.add('show');
+}
+
+// ── Download Card ──
+function downloadCard() {
+  const canvas = document.getElementById('shareCanvas');
+  const link = document.createElement('a');
+  link.href = canvas.toDataURL('image/png');
+  link.download = `shenyuan-share-${Date.now()}.png`;
+  link.click();
+}
+
+// ── Close Card ──
+function closeCard() {
+  document.getElementById('cardPreview').classList.remove('show');
+}
+
+// ── Share Link ──
+function shareLink() {
+  if (!myData) {
+    alert('请先登录');
+    return;
+  }
+  const url = myData.channel_urls?.organic || myData.share_url;
+  if (navigator.share) {
+    navigator.share({
+      title: '善缘 · 邀请排行榜',
+      text: myData.share_text || '我在善缘算了命，邀你一起来测',
+      url: url
+    });
+  } else {
+    navigator.clipboard.writeText(url);
+    alert('链接已复制到剪贴板');
+  }
+}
+
+// ── Show Tier Info ──
+function showTierInfo(tier) {
+  alert(`${tier.toUpperCase()}: 完整信息请查看下方等级说明`);
+}
+
+// ── Auto Refresh ──
+function startAutoRefresh() {
+  refreshTimer = setInterval(() => {
+    fetchLeaderboard();
+    if (myData) fetchMyData();
+  }, 5000);
+}
+
+// ── Escape HTML ──
+function escape(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ── Language Toggle ──
+function toggleLang() {
+  const lang = document.documentElement.lang === 'zh-CN' ? 'en' : 'zh-CN';
+  if (lang === 'en') {
+    window.location.href = window.location.href.replace('/leaderboard.html', '/leaderboard-en.html');
+  } else {
+    window.location.href = window.location.href.replace('/leaderboard-en.html', '/leaderboard.html');
+  }
+}
+
+// ── Init on Load ──
+window.addEventListener('load', init);
+window.addEventListener('beforeunload', () => {
+  if (refreshTimer) clearInterval(refreshTimer);
+});
+</script>
+</body>
+</html>
