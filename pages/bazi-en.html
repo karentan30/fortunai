@@ -10,15 +10,16 @@
 <meta property="og:title" content="ShenYuan · BaZi Destiny Reading">
 <meta property="og:description" content="Ancient Chinese astrology decoded by AI — discover your elemental makeup, career fortune, relationship destiny &amp; major life cycles.">
 <meta property="og:image" content="/og-card.png">
-<meta property="og:url" content="https://shenyuan.app/pages/bazi-en.html">
+<meta property="og:url" content="https://shenyuan.mylumee.cn/pages/bazi-en.html">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="ShenYuan · BaZi Destiny Reading">
 <meta name="twitter:description" content="Ancient Chinese astrology decoded by AI — discover your elemental makeup, career fortune, relationship destiny &amp; major life cycles.">
-<link rel="canonical" href="https://shenyuan.app/pages/bazi-en.html">
-<link rel="alternate" hreflang="en" href="https://shenyuan.app/pages/bazi-en.html">
-<link rel="alternate" hreflang="zh" href="https://shenyuan.app/pages/bazi.html">
-<link rel="alternate" hreflang="x-default" href="https://shenyuan.app/">
+<link rel="canonical" href="https://shenyuan.mylumee.cn/pages/bazi-en.html">
+<link rel="alternate" hreflang="en" href="https://shenyuan.mylumee.cn/pages/bazi-en.html">
+<link rel="alternate" hreflang="zh" href="https://shenyuan.mylumee.cn/pages/bazi.html">
+<link rel="alternate" hreflang="ko" href="https://shenyuan.mylumee.cn/pages/saju-KR.html">
+<link rel="alternate" hreflang="x-default" href="https://shenyuan.mylumee.cn/">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"WebPage","name":"ShenYuan · BaZi Destiny Reading","url":"https://shenyuan.app/pages/bazi-en.html","description":"Ancient Chinese astrology decoded by AI — discover your elemental makeup, career fortune, relationship destiny & major life cycles.","inLanguage":"en","isPartOf":{"@type":"WebSite","name":"善缘 ShenYuan","url":"https://shenyuan.app"},"breadcrumb":{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"ShenYuan","item":"https://shenyuan.app"},{"@type":"ListItem","position":2,"name":"BaZi Destiny Reading","item":"https://shenyuan.app/pages/bazi-en.html"}]}}
 </script>
@@ -483,6 +484,7 @@ function generateReport(btn) {
   fetchBaziReportSSE(lastBaziInput, currentMode, btn);
 }
 
+// Legacy blocking fetch — kept as SSE fallback
 function fetchBaziReport(input, mode) {
   var token = localStorage.getItem('sy_token') || '';
   return fetch('/api/bazi', {
@@ -495,6 +497,260 @@ function fetchBaziReport(input, mode) {
       token:token, lang:'en'
     })
   }).then(function(r){ return r.json(); });
+}
+
+// SSE-based streaming fetch — tries /api/bazi/stream first, falls back to fetchBaziReport on any error
+function fetchBaziReportSSE(input, mode, btn) {
+  var token = localStorage.getItem('sy_token') || '';
+  var usedFallback = false;
+
+  function fallback(reason) {
+    if (usedFallback) return;
+    usedFallback = true;
+    fetchBaziReport(input, mode).then(function(data){
+      document.getElementById('loadingScreen').classList.remove('show');
+      if (btn) { btn.disabled=false; btn.textContent = btn._label||'Free Preview · Generate My BaZi Chart'; }
+      if (data && data.reading) {
+        showReport(data.reading, data.contextId, data.tier, data.locked, data.pillars || null);
+      } else {
+        document.getElementById('inputScreen').style.display='block';
+        showToast('Failed to generate report, please try again', 'error');
+      }
+    }).catch(function(){
+      document.getElementById('loadingScreen').classList.remove('show');
+      document.getElementById('inputScreen').style.display='block';
+      if (btn) { btn.disabled=false; btn.textContent = btn._label||'Free Preview · Generate My BaZi Chart'; }
+      showToast('Network error, please check your connection and retry', 'error');
+    });
+  }
+
+  var accumulated = '';
+  var metaReceived = false;
+  var reportInitialized = false;
+  var streamDone = false;
+  // Safety fallback: if nothing arrives in 30s, drop to blocking path
+  var guard = setTimeout(function(){ if (!streamDone) fallback('timeout'); }, 30000);
+
+  fetch('/api/bazi/stream', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer '+token },
+    body: JSON.stringify({
+      birthYear:input.year, birthMonth:input.month, birthDay:input.day, birthHour:input.hour,
+      gender:input.gender, mode:mode||'truth',
+      question:'Please provide a comprehensive analysis of my BaZi chart in English.',
+      token:token, lang:'en'
+    })
+  }).then(function(res) {
+    if (!res.ok || !res.body) { clearTimeout(guard); fallback('no-body'); return; }
+    var reader = res.body.getReader();
+    var decoder = new TextDecoder('utf-8');
+    var buf = '';
+
+    function read() {
+      reader.read().then(function(r) {
+        if (r.done) {
+          clearTimeout(guard);
+          streamDone = true;
+          // Stream ended without a 'done' event — finalize if we started rendering
+          if (reportInitialized) {
+            finalizeSSEReport(accumulated, null, metaReceived ? window._sseLockedFlag : true);
+          } else if (!usedFallback) {
+            fallback('stream-ended-early');
+          }
+          return;
+        }
+        buf += decoder.decode(r.value, {stream:true});
+        var lines = buf.split('\n'); buf = lines.pop();
+        lines.forEach(function(line) {
+          if (!line.startsWith('data: ')) return;
+          var raw = line.slice(6).trim();
+          if (raw === '[DONE]') return;
+          try {
+            var ev = JSON.parse(raw);
+
+            if (ev.type === 'meta') {
+              clearTimeout(guard);
+              metaReceived = true;
+              window._sseLockedFlag = ev.locked || (ev.tier === 'basic');
+              // Convert backend pillars {year/month/day/hour:{gan,zhi,label}} → array [{tian,di,label,isDay?}]
+              if (ev.pillars) {
+                var p = ev.pillars;
+                var arr = [
+                  { label: 'Year',  tian: p.year.gan,  di: p.year.zhi },
+                  { label: 'Month', tian: p.month.gan, di: p.month.zhi },
+                  { label: 'Day',   tian: p.day.gan,   di: p.day.zhi,  isDay: true },
+                  { label: 'Hour',  tian: p.hour.gan,  di: p.hour.zhi }
+                ];
+                window._backendPillars = arr;
+              }
+              // Transition: hide loading, initialize report skeleton immediately
+              document.getElementById('loadingScreen').classList.remove('show');
+              if (btn) { btn.disabled=false; btn.textContent = btn._label||'Free Preview · Generate My BaZi Chart'; }
+              initSSEReport(ev.locked || (ev.tier === 'basic'));
+              reportInitialized = true;
+
+            } else if (ev.type === 'chunk') {
+              if (!reportInitialized) return; // guard: shouldn't happen but skip safely
+              accumulated += ev.content;
+              // Progressive reveal into reportContent
+              var rc = document.getElementById('reportContent');
+              if (rc) {
+                rc.style.whiteSpace = 'pre-wrap';
+                rc.textContent = accumulated;
+              }
+
+            } else if (ev.type === 'done') {
+              clearTimeout(guard);
+              streamDone = true;
+              finalizeSSEReport(accumulated, ev.contextId, window._sseLockedFlag);
+            }
+          } catch(e) {}
+        });
+        if (!streamDone && !usedFallback) read();
+      }).catch(function() { clearTimeout(guard); fallback('read-error'); });
+    }
+    read();
+  }).catch(function() { clearTimeout(guard); fallback('fetch-error'); });
+}
+
+// Render the report skeleton (header + four pillars + Day Master hook + streaming placeholder)
+// Called immediately on meta receipt so user sees chart before text finishes.
+function initSSEReport(isLocked) {
+  var reportEl = document.getElementById('reportScreen');
+  var html = '';
+
+  html += '<div style="display:flex;align-items:center;gap:6px;margin:12px 16px 0;padding:7px 12px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:6px;font-size:12px;color:rgba(201,168,76,0.8);letter-spacing:0.04em">' +
+    '<span style="font-size:12px">✨</span>' +
+    '<span><b>AI-Generated Content</b> · For entertainment and self-reflection only. Your destiny is in your hands.</span>' +
+    '</div>';
+
+  if (lastBaziInput) {
+    var n = lastBaziInput.name || (lastBaziInput.gender==='male' ? 'Sir' : 'Ms.');
+    html += '<div class="chart-header">';
+    html += '<div class="name-row"><div class="report-name">'+n+'</div><div class="report-tag">AI Destiny Analysis · AIGC</div></div>';
+    html += '<div class="birth-info">'+
+      (lastBaziInput.month ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][lastBaziInput.month-1] : '') + ' ' +
+      (lastBaziInput.day||'') + ', ' + (lastBaziInput.year||'') + ' · ' +
+      (lastBaziInput.gender==='male'?'Male':'Female')+'</div>';
+    html += '<div class="divider"></div></div>';
+  }
+
+  // Build pillars overview using backend pillars already stored in window._backendPillars
+  var parsed = { hasDaymaster: true, pillars: null, elements: null };
+  if (lastBaziInput && lastBaziInput.year) {
+    var _bp = window._backendPillars;
+    var computed = (_bp && Array.isArray(_bp) && _bp.length===4) ? _bp : (function(){
+      var y2 = lastBaziInput.year, m2 = lastBaziInput.month, d2 = lastBaziInput.day;
+      var h2 = (typeof lastBaziInput.hour === 'number' && !isNaN(lastBaziInput.hour)) ? lastBaziInput.hour : 0;
+      return getBazi(y2, m2, d2, h2);
+    })();
+    parsed.pillars = computed;
+    if (!parsed.elements) {
+      var ec2 = {木:0,火:0,土:0,金:0,水:0};
+      computed.forEach(function(z) {
+        ec2[ELEM_ZH[z.tian]] = (ec2[ELEM_ZH[z.tian]]||0) + 2;
+        ec2[ELEM_DI_ZH[z.di]] = (ec2[ELEM_DI_ZH[z.di]]||0) + 1;
+      });
+      var tot = 0; Object.keys(ec2).forEach(function(k){ tot += ec2[k]; });
+      parsed.elements = {};
+      Object.keys(ec2).forEach(function(k){ parsed.elements[k] = Math.round(ec2[k]/tot*100); });
+    }
+  }
+
+  html += buildBaziOverview(parsed);
+  if (isLocked) html += buildDayMasterInsight(parsed);
+  html += getModeToggleHTML();
+  // Streaming text area — starts empty, filled by chunk events
+  html += '<div id="reportContent" style="padding:0 16px;font-size:14px;line-height:1.8;color:rgba(50,44,34,0.9);white-space:pre-wrap"></div>';
+
+  // Lucky timing hook placeholder
+  html += '<div class="zhuanyun-hook" style="margin:24px 16px;padding:20px;background:linear-gradient(135deg,#1a1035,#2d1b69);border-radius:16px;border:1px solid rgba(160,130,255,0.3);text-align:center;">' +
+    '<div id="zhuanyun-month" style="font-size:24px;font-weight:900;color:#fff;margin-bottom:8px;line-height:1.3;">Loading…</div>' +
+    '<div id="zhuanyun-desc" style="font-size:13px;color:rgba(255,255,255,0.65);margin-bottom:20px;line-height:1.6;">Your chart shows an upcoming turning point. Set a reminder so you don\'t miss it.</div>' +
+    '<button onclick="setZhuanyunReminder()" style="width:100%;padding:14px;background:linear-gradient(135deg,#6B3FE0,#A082FF);border:none;border-radius:12px;color:#fff;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.02em;">Set Reminder · Notify me when my luck shifts 📅</button>' +
+    '<div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:10px;">Free · we\'ll remind you when the window opens</div>' +
+    '</div>';
+
+  html += '<div style="height:'+(isLocked?'150px':'40px')+'"></div>';
+
+  reportEl.innerHTML = html;
+  reportEl.classList.add('show');
+  injectDisclaimer('reportScreen');
+}
+
+// Called on 'done' event (or stream-end fallback) — finalizes renderUltimateReport, paywall, share card etc.
+function finalizeSSEReport(fullText, contextId, isLocked) {
+  var reportEl = document.getElementById('reportScreen');
+  if (contextId) reportEl.dataset.contextId = contextId;
+
+  // Replace streaming pre-wrap text with renderUltimateReport's rich HTML
+  renderUltimateReport(fullText, 'reportContent');
+
+  document.getElementById('qaSection').style.display = isLocked ? 'none' : 'block';
+  document.getElementById('shareBar').classList.add('show');
+  var rb = document.getElementById('referralBanner');
+  if (rb) rb.style.display='block';
+
+  // Paywall sticky CTA
+  var oldCta = document.getElementById('stickyCta');
+  if (oldCta) oldCta.remove();
+  if (isLocked) {
+    var cta = document.createElement('div');
+    cta.className = 'sticky-cta';
+    cta.id = 'stickyCta';
+    cta.innerHTML =
+      '<div class="cta-row"><div class="cta-desc">Unlock: 5,000+ word full reading · Wealth, Romance &amp; Career in depth · 8 Major Life Cycles · Next 10 Years forecast</div></div>' +
+      '<div style="text-align:center;font-size:11px;color:var(--gold-light);letter-spacing:0.02em;line-height:1.6;margin-bottom:10px">A traditional BaZi consultation costs $120+.<br>Your full AI reading: <b style="color:#e8d08a;font-size:14px">$9.90</b></div>' +
+      '<div style="background:rgba(201,168,76,0.05);border-radius:6px;padding:10px;margin-bottom:10px;font-size:11px">' +
+      '<div style="display:grid;grid-template-columns:1fr 34px 34px;gap:1px;letter-spacing:0.02em">' +
+      '<div style="padding:5px 0;color:var(--sub-text)"></div>' +
+      '<div style="padding:5px 0;text-align:center;color:var(--sub-text)"><span style="font-size:11px">🔓</span><br>Free</div>' +
+      '<div style="padding:5px 0;text-align:center;color:var(--gold-light)"><span style="font-size:11px">💎</span><br>Full</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">Four Pillars Chart</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">Five Elements Analysis</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">Wealth Fortune</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:var(--gold)">🔒</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">Romance &amp; Career</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:var(--gold)">🔒</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">8 Major Life Cycles</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:var(--gold)">🔒</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">Next 10 Years Forecast</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:var(--gold)">🔒</div>' +
+      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
+      '</div></div>' +
+      '<button class="btn-unlock" onclick="createCheckout(this,\'full\',9.9)">Unlock Full Report · $9.90</button>' +
+      '<button class="btn-member" onclick="createCheckout(this,\'member\',9.9)">👑 Unlimited Membership · <b style="font-size:16px;color:#8dd9bf">$9.90</b>/mo <span style="text-decoration:line-through;font-size:12px;opacity:0.6">$19.90/reading</span></button>';
+    document.body.appendChild(cta);
+  }
+
+  var rc = document.getElementById('reportContent');
+  if (rc) rc.appendChild(buildDailyActionBlockEN(fullText));
+
+  var shareCardWrap = document.createElement('div');
+  shareCardWrap.style.cssText = 'padding:16px 16px 0';
+  shareCardWrap.innerHTML =
+    '<div style="background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(91,191,160,0.06));border:1px solid rgba(201,168,76,0.28);border-radius:14px;padding:16px">' +
+    '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">' +
+    '<span style="font-size:24px">📸</span>' +
+    '<div><div style="font-size:14px;font-weight:500;letter-spacing:0.06em;color:rgba(232,208,138,0.95)">My Destiny Card</div>' +
+    '<div style="font-size:11px;color:rgba(200,196,180,0.55)">Beautiful chart image · Save &amp; share with friends</div></div></div>' +
+    '<button onclick="generateShareCardEN()" style="width:100%;padding:13px 0;background:linear-gradient(135deg,#8a6420,#c9a84c,#e8d08a,#c9a84c);border:none;border-radius:12px;color:rgba(14,10,4,0.95);font-family:\'Inter\',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.06em;cursor:pointer;box-shadow:0 4px 16px rgba(201,168,76,0.35)">📲 Generate My Destiny Card</button>' +
+    '</div>';
+  if (rc) rc.appendChild(shareCardWrap);
+
+  var hehunCTA = document.createElement('div');
+  hehunCTA.style.cssText = 'margin:16px 0 0';
+  hehunCTA.innerHTML =
+    '<a href="/pages/hehun-en.html" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 0;background:linear-gradient(135deg,rgba(201,96,122,0.08),rgba(201,96,122,0.04));border:1px solid rgba(201,96,122,0.3);border-radius:14px;color:#c9607a;font-family:\'Inter\',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.04em;text-decoration:none">' +
+    '💑 Check Compatibility · Share with your partner →</a>';
+  if (rc) rc.appendChild(hehunCTA);
 }
 
 function runLoadingSteps() {
@@ -620,20 +876,8 @@ function handlePaidReturn() {
     document.getElementById('inputScreen').style.display='none';
     document.getElementById('loadingScreen').classList.add('show');
     runLoadingSteps();
-    fetchBaziReport(input, currentMode).then(function(d){
-      document.getElementById('loadingScreen').classList.remove('show');
-      if (d && d.reading) {
-        showReport(d.reading, d.contextId, d.tier, d.locked, d.pillars || null);
-        showToast('Payment successful — your full reading is unlocked!');
-      } else {
-        document.getElementById('inputScreen').style.display='block';
-        showToast('Report failed to load, please try generating again', 'error');
-      }
-    }).catch(function(){
-      document.getElementById('loadingScreen').classList.remove('show');
-      document.getElementById('inputScreen').style.display='block';
-      showToast('Network error, please try again', 'error');
-    });
+    showToast('Payment successful — your full reading is unlocked!');
+    fetchBaziReportSSE(input, currentMode, null);
   }
   var saved = null;
   try { saved = JSON.parse(localStorage.getItem('sy_last_bazi')||'null'); } catch(e){}
