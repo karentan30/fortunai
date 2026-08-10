@@ -50,14 +50,95 @@ router.post('/daily', rateLimitMiddleware, async (req, res) => {
       _persist();
     }
 
-    const { birthYear, birthMonth, birthDay, birthHour, gender } = req.body;
+    const { birthYear, birthMonth, birthDay, birthHour, gender, lang } = req.body;
+    const dailyLang = lang || 'zh';
     const today = new Date();
     const dateStr = today.toISOString().split('T')[0];
 
-    const messages = buildReadingPrompt(
-      '你是一位晨间命理师，专门为人们开启美好的一天。你温暖如晨光，鼓励如春风，实用如老友。你熟读老黄历、精通五行生克，知道每一天的干支运势对人的影响。你的目标是给用户一整天的高能量和好心情。每次都给出具体的、个性化的、可执行的建议。每次回答至少1500字。用Markdown格式输出。语言：简体中文。',
-      `用户：${birthYear||'?'}年${birthMonth||'?'}月${birthDay||'?'}日生 · ${gender === 'male' ? '男' : gender === 'female' ? '女' : ''}
+    // Deterministic daily seed — same person + same date = same lucky values
+    const dateNum = today.getFullYear() * 10000 + (today.getMonth() + 1) * 100 + today.getDate();
+    const birthNum = (Number(birthYear) || 0) * 10000 + (Number(birthMonth) || 0) * 100 + (Number(birthDay) || 0);
+    const seed = dateNum + birthNum;
+    const ELEMENTS_ZH = ['木', '火', '土', '金', '水'];
+    const ELEMENTS_EN = ['Wood', 'Fire', 'Earth', 'Metal', 'Water'];
+    const ELEMENTS_KO = ['목', '화', '토', '금', '수'];
+    const todayElementZh = ELEMENTS_ZH[seed % 5];
+    const todayElementEn = ELEMENTS_EN[seed % 5];
+    const todayElementKo = ELEMENTS_KO[seed % 5];
+    const luckyNum1 = (seed % 9) + 1;
+    const luckyNum2 = ((seed >> 3) % 9) + 1;
+    const luckyNum3 = ((seed >> 6) % 9) + 1;
+
+    let messages;
+    if (dailyLang === 'en') {
+      messages = buildReadingPrompt(
+        'You are a warm, practical morning fortune teller who blends Chinese Five Elements wisdom with modern life advice. You give specific, actionable guidance that people can use today. Write at least 1000 words in fluent English. Use Markdown headers (##).',
+        `User born: ${birthYear||'?'}/${birthMonth||'?'}/${birthDay||'?'} · ${gender === 'male' ? 'Male' : gender === 'female' ? 'Female' : ''}
+Today's date: ${dateStr}
+Today's dominant element (pre-computed): ${todayElementEn}
+Today's lucky numbers (pre-computed): ${luckyNum1}, ${luckyNum2}, ${luckyNum3}
+
+Please generate a complete, warm, energizing daily fortune report of at least 1000 words using Markdown sections:
+
+## Today's Energy Overview
+Describe today's overall energy theme, what element is dominant, and what kinds of activities flow best today.
+
+## Five Elements Balance
+Today's element percentages (use the pre-computed dominant element: ${todayElementEn}). What to strengthen, what to release, practical life application.
+
+## Your Lucky Details
+Lucky colors (3, explain why), lucky numbers (use ${luckyNum1}, ${luckyNum2}, ${luckyNum3}), best directions for wealth and love, most auspicious time window today.
+
+## Personal Affirmation
+A unique, heartfelt affirmation rooted in today's energy — not a template, speak directly to the reader.
+
+## 3 Small Actions for Today
+Three specific, doable actions (under 15 minutes each) to align with today's energy.
+
+## Today's Ancient Wisdom
+A short poem or classical quote that resonates with today's energy theme, with your personal interpretation.
+
+## Today's Energy Key
+One warm, powerful closing message — the "energy key" for today.`
+      );
+    } else if (dailyLang === 'ko') {
+      messages = buildReadingPrompt(
+        '당신은 따뜻하고 실용적인 매일 운세 상담사입니다. 오행 지혜를 바탕으로 현대 생활에 맞는 구체적인 조언을 드립니다. 한국어로 최소 1000자 이상 작성하세요. 마크다운 헤더(##) 사용.',
+        `사용자 생년월일: ${birthYear||'?'}년 ${birthMonth||'?'}월 ${birthDay||'?'}일 · ${gender === 'male' ? '남성' : gender === 'female' ? '여성' : ''}
+오늘 날짜: ${dateStr}
+오늘의 지배 오행(사전 계산): ${todayElementKo}
+오늘의 행운 숫자(사전 계산): ${luckyNum1}, ${luckyNum2}, ${luckyNum3}
+
+마크다운 섹션으로 최소 1000자 이상의 매일 운세 리포트를 작성해주세요:
+
+## 오늘의 에너지 개요
+오늘의 전반적인 에너지 테마, 지배 오행, 어떤 활동이 잘 맞는지 설명하세요.
+
+## 오행 균형
+오늘의 오행 비율(사전 계산된 지배 오행: ${todayElementKo}). 보충할 것, 완화할 것, 실생활 적용법.
+
+## 오늘의 행운 정보
+행운의 색상 3가지(이유 설명), 행운의 숫자(${luckyNum1}, ${luckyNum2}, ${luckyNum3} 사용), 재물과 사랑의 방향, 오늘 가장 길한 시간대.
+
+## 나만의 확언
+오늘 에너지에 뿌리를 둔 독특하고 진심 어린 확언 — 직접 독자에게 말하듯이.
+
+## 오늘의 작은 행동 3가지
+오늘의 에너지와 맞춰 할 수 있는 구체적인 행동 3가지(각 15분 이내).
+
+## 오늘의 지혜
+오늘 에너지 테마와 공명하는 짧은 시나 고전 명언과 해석.
+
+## 오늘의 에너지 열쇠
+따뜻하고 힘 있는 마무리 메시지 — 오늘의 "에너지 열쇠".`
+      );
+    } else {
+      messages = buildReadingPrompt(
+        '你是一位晨间命理师，专门为人们开启美好的一天。你温暖如晨光，鼓励如春风，实用如老友。你熟读老黄历、精通五行生克，知道每一天的干支运势对人的影响。你的目标是给用户一整天的高能量和好心情。每次都给出具体的、个性化的、可执行的建议。每次回答至少1500字。用Markdown格式输出。语言：简体中文。',
+        `用户：${birthYear||'?'}年${birthMonth||'?'}月${birthDay||'?'}日生 · ${gender === 'male' ? '男' : gender === 'female' ? '女' : ''}
 今日日期：${dateStr}
+今日主导五行（预计算）：${todayElementZh}
+今日幸运数字（预计算）：${luckyNum1}、${luckyNum2}、${luckyNum3}
 
 请根据今天的干支五行和用户可能的日主，生成一份完整、温暖、充满能量的每日运势报告，至少1500字。每个章节用Markdown标题（##）形式：
 
@@ -67,14 +148,14 @@ router.post('/daily', rateLimitMiddleware, async (req, res) => {
 - 今日冲煞（冲什么生肖、什么时辰最需要注意）
 
 ## 二、五行能量评分（200-300字）
+- 今日主导五行为${todayElementZh}，结合用户日主展开分析
 - 木、火、土、金、水今日能量百分比（精确到具体数字，总和100%）
-- 今日哪个五行当令、哪个最弱
 - 对用户来说，今日需要补什么五行、泄什么五行
 - 对应到行动上：今天的能量适合做什么类型的事情
 
 ## 三、今日幸运信息（100-150字）
 - 幸运色（3个颜色，说明为什么选这些颜色）
-- 幸运数字（3个数字，结合今日干支的五行数理）
+- 幸运数字：${luckyNum1}、${luckyNum2}、${luckyNum3}（结合今日干支的五行数理解释）
 - 幸运方位（求财方位、求感情方位）
 - 最吉利的时辰（几点到几点）
 
@@ -89,12 +170,13 @@ router.post('/daily', rateLimitMiddleware, async (req, res) => {
 
 ## 七、今日能量寄语（50-100字）
 最后给用户一句温暖有力的话，作为今天的"能量钥匙"。`
-    );
+      );
+    }
 
     const result = await deepseekChat(messages, { maxTokens: 8192 });
     insertReading.run('daily', JSON.stringify(req.body), result, req.userId);
     const streakData = updateStreak(req.userId || req.ip);
-    res.json({ reading: result, streak: streakData.streak });
+    res.json({ reading: result, streak: streakData.streak, lang: dailyLang });
   } catch (err) {
     console.error('[DAILY ERR]', err.message);
     if (mon && mon.captureException) mon.captureException(err, { tags: { api: 'daily' } });

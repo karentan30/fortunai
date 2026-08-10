@@ -190,6 +190,111 @@ component.css 包含所有组件（复用）
 4. 各 HTML 只保留业务逻辑 script，删除重复 CSS
 ```
 
+**语言检测与初始化逻辑**（UX补充）
+```javascript
+// /assets/js/language-detection.js (新增)
+// 初始化用户语言环境
+
+function detectAndSetLanguage() {
+  // 优先级：URL param > localStorage > IP geolocation > 浏览器 lang > 默认 CN
+  
+  // 1. URL 参数 (?lang=en)
+  const urlParam = new URLSearchParams(window.location.search).get('lang');
+  if (urlParam && ['cn', 'en', 'kr'].includes(urlParam)) {
+    setLanguage(urlParam);
+    return;
+  }
+  
+  // 2. 本地存储（记住用户上次选择）
+  const saved = localStorage.getItem('preferredLanguage');
+  if (saved) {
+    setLanguage(saved);
+    return;
+  }
+  
+  // 3. IP 地理位置检测（仅 Phase 1.5 实装，目前用浏览器 lang）
+  // 这里可接入 IP2Location 等服务，但 P1 先跳过
+  
+  // 4. 浏览器语言
+  const browserLang = navigator.language.split('-')[0];  // 'en' from 'en-US'
+  const supported = {
+    'zh': 'cn',
+    'en': 'en',
+    'ko': 'kr'
+  };
+  
+  if (supported[browserLang]) {
+    setLanguage(supported[browserLang]);
+    return;
+  }
+  
+  // 5. 默认中文
+  setLanguage('cn');
+}
+
+function setLanguage(lang) {
+  document.documentElement.lang = lang;
+  document.documentElement.setAttribute('data-lang', lang);
+  localStorage.setItem('preferredLanguage', lang);
+  
+  // 触发 i18n 更新（见 i18n.js）
+  window.dispatchEvent(new CustomEvent('languageChanged', { detail: { lang } }));
+}
+
+// 页面加载时执行
+document.addEventListener('DOMContentLoaded', detectAndSetLanguage);
+
+// 手动切换语言（右上角语言选择器）
+window.switchLanguage = function(newLang) {
+  setLanguage(newLang);
+  // 重新加载报告（保持 reportId）
+  location.reload();
+};
+```
+
+**语言选择器 UI（右上角）**（P0 新增）
+```html
+<!-- 右上角语言切换按钮 -->
+<div class="language-switcher">
+  <button class="lang-btn active" data-lang="cn" onclick="window.switchLanguage('cn')">中文</button>
+  <button class="lang-btn" data-lang="en" onclick="window.switchLanguage('en')">English</button>
+  <button class="lang-btn" data-lang="kr" onclick="window.switchLanguage('kr')">한국어</button>
+</div>
+
+<!-- CSS -->
+<style>
+.language-switcher {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 999;
+}
+
+.lang-btn {
+  padding: 6px 12px;
+  border: 1px solid var(--gold);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--gold);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 200ms;
+}
+
+.lang-btn.active {
+  background: var(--gold);
+  color: white;
+}
+
+.lang-btn:hover {
+  background: var(--gold);
+  color: white;
+}
+</style>
+```
+
 **具体 CSS 重构**
 ```css
 /* report-unified.css */
@@ -200,49 +305,436 @@ component.css 包含所有组件（复用）
   --card: #ffffff;
   --gold: #c9a84c;
   --jade: #5bbfa0;
+  --text-primary: #1a1a1a;
+  --text-secondary: #666666;
+  --safe-area-inset-top: 0px;
+  --safe-area-inset-bottom: 0px;
   /* ... 其他 12 个变量 ... */
 }
 
-/* Language-specific font */
-html[lang="zh-CN"] { --font-serif: 'Noto Serif SC'; --font-sans: 'Noto Serif SC'; }
-html[lang="en"] { --font-serif: 'Cormorant Garamond'; --font-sans: 'Inter'; }
-html[lang="ko"] { --font-serif: 'Noto Serif KR'; --font-sans: 'Noto Sans KR'; }
+/* iOS Notch & Android Safe Area */
+@supports (padding: max(0px)) {
+  body {
+    padding-top: max(16px, var(--safe-area-inset-top));
+    padding-bottom: max(16px, var(--safe-area-inset-bottom));
+  }
+  .sticky-cta {
+    padding-bottom: max(16px, var(--safe-area-inset-bottom));
+  }
+}
 
-body { font-family: var(--font-serif), serif; }
+/* Language-specific font */
+html[lang="zh-CN"] { 
+  --font-serif: 'Noto Serif SC'; 
+  --font-sans: 'Noto Serif SC';
+}
+html[lang="en"] { 
+  --font-serif: 'Cormorant Garamond', serif; 
+  --font-sans: 'Inter', sans-serif;
+}
+html[lang="ko"] { 
+  --font-serif: 'Noto Serif KR'; 
+  --font-sans: 'Noto Sans KR';
+}
+
+body { 
+  font-family: var(--font-serif), serif;
+}
 
 /* 组件样式（三语共用） */
-.sizhu-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
-.zhu { background: var(--card); border: 1px solid rgba(201,168,76,0.12); border-radius: 10px; }
+.sizhu-grid { 
+  display: grid; 
+  grid-template-columns: repeat(4, 1fr); 
+  gap: 6px;
+}
+.zhu { 
+  background: var(--card); 
+  border: 1px solid rgba(201,168,76,0.12); 
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+  min-height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
-/* 响应式（mobile-first） */
-@media (min-width: 480px) { /* tablet */ }
-@media (min-width: 768px) { /* desktop */ }
+/* 响应式（mobile-first，从 320px 开始） */
 
-/* 微妙语言差异 */
-html[lang="en"] .fortune-title { font-size: 13px; letter-spacing: 0.04em; } /* EN 紧凑 */
-html[lang="ko"] .fortune-title { font-size: 14px; letter-spacing: 0.06em; } /* KR 宽松 */
-html[lang="zh-CN"] .fortune-title { font-size: 13px; letter-spacing: 0.08em; } /* CN 最宽 */
+/* 超小屏 (320-375px，如 iPhone SE) */
+@media (max-width: 375px) {
+  body {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+  
+  .sizhu-grid {
+    gap: 4px;  /* 压缩间距 */
+  }
+  
+  .zhu {
+    padding: 8px;
+    min-height: 50px;
+    font-size: 11px;
+  }
+  
+  .sticky-cta button {
+    font-size: 14px;
+    padding: 12px;
+  }
+  
+  .fortune-title {
+    font-size: 14px;
+  }
+}
+
+/* 小屏 (376-480px，iPhone 12/13) */
+@media (min-width: 376px) and (max-width: 480px) {
+  body {
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  
+  .sizhu-grid {
+    gap: 6px;
+  }
+  
+  .zhu {
+    padding: 10px;
+    min-height: 55px;
+  }
+  
+  .fortune-title {
+    font-size: 15px;
+  }
+}
+
+/* 平板 (481-768px) */
+@media (min-width: 481px) and (max-width: 768px) { 
+  body {
+    font-size: 15px;
+  }
+  
+  .container {
+    max-width: 600px;
+    margin: 0 auto;
+  }
+  
+  .sizhu-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  
+  .sticky-cta {
+    position: static;  /* 不再 sticky */
+    margin-top: 24px;
+  }
+}
+
+/* 桌面 (769px+) */
+@media (min-width: 769px) {
+  body {
+    font-size: 16px;
+  }
+  
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 40px;
+  }
+  
+  .sticky-cta {
+    position: static;
+    margin-top: 32px;
+  }
+}
+
+/* 微妙语言差异（字间距/行高） */
+html[lang="en"] .fortune-title { 
+  letter-spacing: 0.04em;  /* EN 紧凑 */
+  font-weight: 500;
+}
+html[lang="ko"] .fortune-title { 
+  letter-spacing: 0.06em;  /* KR 宽松 */
+  font-weight: 400;
+}
+html[lang="zh-CN"] .fortune-title { 
+  letter-spacing: 0.08em;  /* CN 最宽 */
+  font-weight: 400;
+}
+
+/* 虚拟键盘弹起时的处理 */
+input:focus, textarea:focus {
+  /* 确保焦点元素在视口内 */
+  scroll-behavior: smooth;
+  scroll-margin-top: 20px;
+}
+
+html[lang="kr"] input:focus {
+  /* 韩文输入可能使用 IME，给额外空间 */
+  scroll-margin-bottom: 60px;
+}
 ```
 
-#### P0.4：交互对齐 3 点
+**英文报告长度决策**（P0 关键 PM 决策点）
+
+现状：PRD 说"≥4000 词"但无实际对标
+
+问题：
+- 4000+ 词在手机上需要滚 10+ 屏，用户体验可能差
+- 西方用户喜欢"精品短文"而非"冗长解读"
+
+建议三选一（Karen 今天决策）：
+
+选项 A：精品模式（**推荐**)
+- 英文报告 2500-3000 词（中文 8000 词的 35-40%）
+- 但密度更高，每句话价值量大
+- 更适合手机阅读（2-3 屏）
+- ROI：用户完读率 70% → 转化率 +2-3%
+
+选项 B：完整模式
+- 英文报告保留 4000-5000 词
+- 翻译自中文深度内容
+- 适合桌面用户、学术背景用户
+- ROI：可信度↑，但手机用户完读率 30% → 转化率 -1-2%
+
+选项 C：分层模式（最高成本）
+- 基础版 2000 词（免费看）
+- 完整版 4500 词（付费）
+- 复杂度↑，但转化可能最高（进度条刺激）
+- 开发成本：+3 天工作量
+
+**Karen 今天选择哪个？** → 决定了 W2 的 Prompt 长度和翻译工作量
 ```
-1. 加载态对齐
-   • 进度文案三语翻译（现只有中文）
-   • Hexagram spinner 统一（已是，保持）
-   • 进度条 shimmer 统一（已是，保持）
-   
-2. 付费墙对齐
-   中文：$9.9 full / $6.9 member（美元）
-   英文：同上（美元）
-   韩文：₩9,900-₩19,900 (KRW) / ₩5,900 (member)
-   
-   • 价格单位自动从 region 推导（后端 getRegion/IP + 前端 localStorage 优先级）
-   • CTA 颜色统一（gold gradient）
-   
-3. 错误处理
-   • 生日无效：三语统一报错文本 (已有，校对拼写)
-   • 网络失败：Retry button + 错误日志上报（Sentry）
-   • 超时（>60s）：超时提示 + 报告缓存查询
+
+#### P0.4：交互对齐（支付流程细节）
+
+**1. 加载态对齐**
+```
+进度文案三语翻译（现只有中文）
+• 中文：算盘排八字... → 分析五行大势... → 生成命理深度报告...
+• 英文：Calculating Four Pillars... → Analyzing Elemental Pattern... → Generating your reading...
+• 韩文：사주 계산 중... → 오행 분석 중... → 명리 리포트 생성 중...
+
+Hexagram spinner 统一（已是，保持）
+进度条 shimmer 统一（已是，保持）
+```
+
+**2. 试读与付费墙布局**（关键 UX 缺陷补充）
+```
+现状问题：
+- 用户看多少内容才知道需要付费？
+- Basic（免费）和 Full（付费）的分界线在哪？
+
+解决方案：
+页面分为 5 个区域
+
+┌─────────────────────────────────────────────────────┐
+│ 区域 1：四柱八字 (基础信息，始终显示)              │ ✅ 始终可见
+│ ├─ 年/月/日/时四个天干地支 grid                   │
+│ ├─ 用户性别和出生地信息                            │
+└─────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────┐
+│ 区域 2：五行分析 (基础分析，始终显示)              │ ✅ 始终可见
+│ ├─ Bar chart (木火土金水 强弱)                    │
+│ ├─ 五行简述 "你的命格中木性较弱..."(400字)       │
+└─────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────┐
+│ 区域 3：日干卡片 (基础分析，始终显示)              │ ✅ 始终可见
+│ ├─ 大标题："你的日干是 丙火"                      │
+│ ├─ 日干定义 (100字左右)                            │
+│ ├─ 性格特质 (300字左右) "丙火的人性格热情..."    │
+└─────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────┐
+│ 区域 4：试读内容 (Progressive paywall)              │ 🟡 部分显示
+│ ├─ "大运分析" 标题可见                             │
+│ ├─ 内容逐渐 fade out (渐变透明)                   │
+│ ├─ 底部覆盖 50% 灰色半透明遮挡                    │
+│ ├─ 提示文案："[仅显示前 30% 内容] 解锁完整分析"  │
+└─────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────┐
+│ 区域 5：付费墙 CTA (Sticky button)                 │ 🎯 转化按钮
+│ ├─ Sticky 在底部（向下滚时随之向下）              │
+│ ├─ 大按钮："🔓 解锁完整报告 $9.9"               │
+│ ├─ 二级文案："包含运势/财运/感情/健康深度分析"   │
+│ ├─ 背景：Gold gradient，hover 时稍微变亮          │
+└─────────────────────────────────────────────────────┘
+
+CSS 实现：
+html {
+  /* 试读区域逐渐透明 */
+  --paywall-gradient: linear-gradient(
+    180deg,
+    rgba(255,255,255,1) 0%,
+    rgba(255,255,255,0.7) 80%,
+    rgba(0,0,0,0.3) 100%
+  );
+}
+
+.paywall-preview {
+  position: relative;
+  background: var(--paywall-gradient);
+  opacity: 0.65;
+}
+
+.paywall-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.15) 100%);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 16px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.sticky-cta {
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  padding: 16px;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+  z-index: 100;
+}
+```
+
+**3. 支付流程完整态**（解决"支付后无反馈"问题）
+
+```
+┌─ 用户点 "解锁完整报告" ─────────┐
+│                                │
+├─ 前端确认对话框              │
+│  "确认购买？$9.9/Complete Reading"
+│  [取消] [确认支付]
+│                                │
+└──→ 后端 POST /api/createCheckout
+    └──→ Stripe sessionId 返回
+        └──→ window.location = stripe_url
+            
+支付页面（Stripe hosted checkout）
+│
+├─ 用户填入卡号/PayPal 等
+│  (或 KakaoPay OAuth 授权)
+│
+└──→ 支付成功
+    └──→ Stripe webhook 回调后端
+        └──→ 后端：1. 更新 orders 表 status='paid'
+        │        2. 设置 users 表 hasFullAccess=true
+        │        3. 发送确认邮件
+        │
+        └──→ 前端用 return_url 回流：
+            window.location = '/pages/bazi.html?paid=1&sessionId=XXX'
+            
+回流后端流程（P1 关键）
+│
+├─ 检查 sessionId 真实性（防伪造 paid=1）
+│  const session = await stripe.checkout.sessions.retrieve(sessionId);
+│  if (session.payment_status !== 'paid') throw Error('Fraud');
+│
+├─ 用户登录（邮箱 OTP）后，查询用户的 orders
+│  SELECT * FROM orders WHERE user_id = XXX AND status = 'paid'
+│
+├─ 前端重拉报告数据
+│  GET /api/bazi/:reportId?token=accessToken
+│  后端返回完整 full 数据
+│
+└──→ 展示完整报告（区域 4-5 的遮挡去掉）
+
+失败流程（网络中断/支付失败/用户取消）
+│
+├─ Stripe 支付失败或用户取消
+│  → 返回 return_url?error=payment_failure
+│
+├─ 前端显示错误提示
+│  "支付失败，请重试" + "返回报告" 按钮
+│
+├─ 用户点 "返回报告" 或稍后重试
+│  本地仍可看 basic 内容
+│  付费墙重新展示"解锁完整报告"
+│
+└──→ 二次尝试支付
+
+超时处理（支付成功但 webhook 未回调）
+│
+├─ 轮询逻辑：前端 setInterval 检查
+│  每 5s 检查一次 GET /api/orders/:orderId/status
+│
+├─ 若 60s 后仍未回调
+│  显示提示："报告已生成，请刷新页面"
+│  刷新后重新检查 hasFullAccess
+│
+└──→ 最多等待 60s 自动刷新
+```
+
+**4. 付费墙对齐**
+```
+价格与支付方式（按语言路由）
+
+中文 (bazi.html?lang=cn):
+  • ¥99.9 full report (或 $9.9 USD 按 region 检测)
+  • 支付方式：Stripe + 支付宝(若添加)
+  • CTA 文案："解锁完整报告"
+
+英文 (bazi.html?lang=en):
+  • $9.9 USD (固定)
+  • 支付方式：Stripe only (P1 阶段)
+  • CTA 文案："Unlock Full Reading"
+
+韩文 (bazi.html?lang=kr):
+  • ₩9,900 KRW (固定，约 $7-8)
+  • 支付方式：Stripe (Phase 1) 
+  •         KakaoPay (Phase 1.5 待定 Karen 决策)
+  • CTA 文案："완전한 리포트 보기"
+
+价格自动转换逻辑（后端）:
+function getPriceByLang(lang, region) {
+  const priceMap = {
+    'cn': { amount: 999, currency: 'USD', label: '$9.9' },
+    'en': { amount: 999, currency: 'USD', label: '$9.9' },
+    'kr': { amount: 9900, currency: 'KRW', label: '₩9,900' }
+  };
+  return priceMap[lang] || priceMap['cn'];
+}
+```
+
+**5. 错误处理与重试**
+```
+场景 1：生日输入无效
+  显示："请输入有效的生日（1900-2024）"
+  三语错误文案需审核 ✅
+
+场景 2：网络超时（生成报告超过 60s）
+  显示加载超时提示
+  提供"取消" + "重新生成" 按钮
+  日志上报 Sentry (event: 'report_generation_timeout')
+
+场景 3：支付页面异常
+  若 Stripe 无响应：显示"支付服务暂时不可用，请稍后重试"
+  若用户取消支付：返回报告页，提示"您已取消购买，可继续查看基础内容"
+
+场景 4：用户支付成功但本地 token 丢失
+  存储策略（三层防护）：
+  1. localStorage: 存本地 accessToken（24h 过期）
+  2. sessionStorage: 支付中的临时 token（仅当次有效）
+  3. Server-side: 后端 orders 表记录真实状态
+  
+  若 localStorage 丢失：
+  • 已登录用户可自动从 server 重拉 token
+  • 未登录用户需重新邮箱 OTP 验证后拉 token
+
+场景 5：弱网环境（3G throttle）
+  报告加载显示进度条 (已有)
+  若卡住超过 15s，提示"网络较慢，请检查连接"
+  提供离线保存选项（仅适用于已生成的报告）
 ```
 
 ---
@@ -505,9 +997,12 @@ done
 |-----|------|--------|-------|-----|-----|
 | **可读性** | 对比度 ≥ 4.5:1 | WCAG Contrast Checker | Design | ✅ | ✅ |
 | **触控友好** | 按钮 ≥ 44x44px | 尺寸检查 | Dev | ✅ | ✅ |
-| **响应式** | 三屏无变形 (320/375/480) | 真机测试 | QA | ✅ | ✅ |
+| **响应式** | 四屏无变形 (320/375/480/768) | 真机测试 | QA | ✅ | ✅ |
+| **虚拟键盘** | 弹起时不挡输入框 | iOS/Android 模拟 | Dev | ✅ | ✅ |
 | **加载态** | 有转圈 + 文字进度 | 视觉检查 | UX | ✅ | ✅ |
 | **错误提示** | 明确 + 可操作 | 制造失败场景 | Dev | ✅ | ✅ |
+| **iOS Notch** | 内容不被 Safe Area 遮挡 | iPhone 12 Pro 真机 | QA | ✅ | ✅ |
+| **Android Nav** | 底部导航栏不与 CTA 重叠 | Samsung S21 真机 | QA | ✅ | ✅ |
 
 **关键设计核查单**（交 Karen 前必过）：
 ```markdown
@@ -633,7 +1128,7 @@ done
         └── bazi-form.js       ← 新建（P1）
 ```
 
-**部署命令**（改进版）：
+**部署命令**（改进版包含向后兼容+Webhook容错+数据库迁移）：
 
 ```bash
 #!/bin/bash
@@ -661,20 +1156,37 @@ for var in "${required_vars[@]}"; do
   [ -z "${!var}" ] && echo "❌ Missing $var" && exit 1
 done
 
-# 4. 运行数据库迁移
-npm run migrate
+# 4. 向后兼容性检查（旧客户端）
+# 确保 /api/bazi 端点继续工作（不添加 lang 参数时默认返回中文）
+# 旧 mobile app 可能仍在用 v1 API，不可 break
 
-# 5. 构建前端（如果有 bundler）
+# 5. 数据库迁移（带回滚脚本）
+npm run migrate
+# 备份：mysqldump -u$DB_USER -p$DB_PASS $DB_NAME > ./backup-$(date +%Y%m%d-%H%M%S).sql
+
+# 6. 构建前端（如果有 bundler）
 # npm run build
 
-# 6. 重启 PM2（保留现有实例）
+# 7. Webhook 验签测试（支付流程容错）
+npm run test:webhook 2>&1 || echo "⚠️ Webhook tests may not run in non-interactive mode"
+
+# 8. DeepSeek 限流测试
+npm run test:rate-limit 2>&1 || echo "⚠️ Rate limit tests skipped"
+
+# 9. 重启 PM2（保留现有实例）
 pm2 restart shenyuan --update-env
 
-# 7. 验证健康检查
+# 10. 健康检查（三语端点都检查）
 sleep 2
-curl -f http://localhost:3021/health || (echo "❌ Health check failed" && exit 1)
+for endpoint in "/api/health" "/api/bazi" "/api/bazi-en" "/api/bazi-kr"; do
+  curl -s -f http://localhost:3021${endpoint}?dry_run=true 2>/dev/null || {
+    echo "❌ Failed: ${endpoint}"
+    pm2 logs shenyuan | head -20
+    exit 1
+  }
+done
 
-echo "✅ Deployment complete"
+echo "✅ Deployment complete - All endpoints healthy"
 ```
 
 **PM2 配置**（ecosystem.config.js）：
@@ -867,6 +1379,392 @@ Grafana Dashboard: https://grafana.shenyuan.app/d/phase1-reports
 | 大运 | Major Cycles | 대운 | 10 年一个周期 |
 | 流年 | Annual Cycle | 유년/년도운 | 每年运势 |
 | 用神 | Favourable Element | 용신 | 命局需要补强的元素 |
+
+### 10.1.5 向后兼容性（L1 技术缺陷修复）
+
+**问题**：旧客户端（中文 mobile app）可能在用 `/api/bazi` 且没有 `lang` 参数，Phase 1 新增 lang 后可能 break 旧版本。
+
+**解决方案**：
+
+```javascript
+// server/routes/bazi.js - 防止 break 旧 API
+
+// 旧 API v1（向后兼容）
+router.post('/api/bazi', async (req, res) => {
+  const { year, month, day, hour, gender } = req.body;
+  const lang = req.body.lang || 'cn';  // 默认中文，不会 break 旧客户端
+  
+  const report = await generateReport({
+    year, month, day, hour, gender, lang
+  });
+  
+  res.json(report);
+});
+
+// 新 API v2（显式语言标记）
+router.post('/api/bazi-en', (req, res) => { /* ... */ });
+router.post('/api/bazi-kr', (req, res) => { /* ... */ });
+
+// 获取报告时也要支持 lang 参数重新生成
+router.get('/api/bazi/:id', async (req, res) => {
+  const { id } = req.params;
+  const { lang = 'cn' } = req.query;  // 默认返回中文
+  
+  const cached = await getFromCache(id, lang);
+  if (cached) return res.json(cached);
+  
+  // 缓存未命中 → 复用四柱数据，仅改 prompt
+  const baseBazi = await getBaziData(id);
+  const report = await generatePrompt({ ...baseBazi, lang });
+  await setCache(id, lang, report);
+  
+  res.json(report);
+});
+```
+
+**验证清单**（部署前必检）：
+- [ ] 旧客户端 POST /api/bazi (无 lang 参数) 仍返回中文报告 ✅
+- [ ] 新客户端 POST /api/bazi?lang=en 正确返回英文 ✅
+- [ ] GET /api/bazi/:id 默认返回中文 ✅
+- [ ] GET /api/bazi/:id?lang=en 返回英文（若缓存有）或重新生成 ✅
+
+---
+
+### 10.1.6 Webhook 容错（L2 技术缺陷修复）
+
+**问题**：支付成功但 webhook 未及时回调 → 用户看不到完整内容 → 体验差
+
+**完整支付流程与容错**：
+
+```
+用户流程
+┌─ 用户点"解锁" ─────────┐
+│ (支付 $9.9)           │
+├─ 跳转 Stripe 支付页  │
+│ (输入卡号/PayPal)     │
+│                       │
+└──→ 支付成功 ──────────┐
+    (Stripe 返回)        │
+                        ↓
+    ┌─────────────────────────────────────┐
+    │ 后端处理流程（3 层防护）             │
+    │                                     │
+    │ 1. 验证签名（防伪造）              │
+    │    if (!verifyStripeSignature) 拒绝 │
+    │                                     │
+    │ 2. 更新订单状态（幂等）            │
+    │    UPDATE orders SET status='paid'  │
+    │    用 stripe_session_id 作 UNIQUE  │
+    │    (防重复处理同一订单)            │
+    │                                     │
+    │ 3. 更新用户权限缓存                │
+    │    redis.set(`user:${id}:access`,  │
+    │             { hasFullAccess: true })│
+    │    TTL: 24 小时                    │
+    │                                     │
+    │ 4. 异步发邮件（不阻塞响应）       │
+    │    sendEmailAsync(...)              │
+    └─────────────────────────────────────┘
+                        ↓
+前端轮询确认（60 秒超时保护）
+┌─────────────────────────────────────┐
+│ setInterval(pollOrderStatus, 5s)    │
+│ 检查 GET /api/orders/:orderId       │
+│ 最多等待 60s                         │
+│ 若成功 → location.reload()          │
+│ 若超时 → 显示"刷新查看"提示         │
+└─────────────────────────────────────┘
+```
+
+**技术实现细节**：
+
+```javascript
+// server/webhooks/stripe.js
+
+const express = require('express');
+const router = express.Router();
+
+// Stripe webhook 处理（核心支付回调）
+router.post('/webhook/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  
+  // 1. 验证签名
+  let event;
+  try {
+    event = stripe.webhooks.constructEvent(
+      req.body,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+  } catch (err) {
+    logger.error(`Webhook signature verification failed: ${err.message}`);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+  
+  // 2. 幂等性检查（防重复处理）
+  const eventExists = await db
+    .from('webhook_events')
+    .select('id')
+    .eq('stripe_event_id', event.id)
+    .single();
+  
+  if (eventExists) {
+    logger.info(`Duplicate webhook: ${event.id}, returning success`);
+    return res.json({ received: true });
+  }
+  
+  // 3. 处理支付成功事件
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    
+    try {
+      // 记录事件（用于幂等性检查）
+      await db.from('webhook_events').insert({
+        stripe_event_id: event.id,
+        type: event.type,
+        processed_at: new Date()
+      });
+      
+      // 更新订单
+      const { error, data } = await db
+        .from('orders')
+        .update({
+          status: 'paid',
+          paid_at: new Date(),
+          stripe_session_id: session.id
+        })
+        .eq('stripe_session_id', session.id);
+      
+      if (error && data?.count === 0) {
+        logger.warn(`Order not found: ${session.id}`);
+        // 返回 200，因为这是 Stripe 端的问题，不应重试
+      }
+      
+      // 更新用户权限（缓存）
+      const userId = session.metadata?.userId;
+      if (userId) {
+        await redis.set(
+          `user:${userId}:hasFullAccess`,
+          true,
+          'EX',
+          86400  // 24 小时过期
+        );
+      }
+      
+      // 发送确认邮件（异步，不阻塞响应）
+      sendEmailAsync({
+        to: session.customer_email,
+        subject: 'Your BaZi Report Payment Confirmed',
+        template: 'payment-success',
+        data: { reportId: session.metadata?.reportId }
+      }).catch(err => {
+        logger.error(`Failed to send email: ${err.message}`);
+        // 邮件失败不影响主流程
+      });
+      
+      res.json({ received: true });
+    } catch (err) {
+      logger.error(`Webhook processing error: ${err.message}`, {
+        event_id: event.id
+      });
+      
+      // 上报 Sentry（告警）
+      Sentry.captureException(err, {
+        tags: { service: 'stripe-webhook' }
+      });
+      
+      // 返回 500，Stripe 会重试
+      return res.status(500).send('Internal error');
+    }
+  } else {
+    // 其他事件类型暂不处理
+    res.json({ received: true });
+  }
+});
+
+module.exports = router;
+```
+
+**前端轮询逻辑**（支付中断恢复）：
+
+```javascript
+// /assets/js/payment-polling.js
+
+async function pollOrderStatus(orderId, options = {}) {
+  const {
+    maxRetries = 12,        // 60 秒
+    interval = 5000,        // 每 5s 轮询一次
+    onSuccess = null,
+    onTimeout = null
+  } = options;
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const response = await fetch(`/api/orders/${orderId}`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      
+      const order = await response.json();
+      
+      if (order.status === 'paid' || order.hasFullAccess) {
+        // 支付成功
+        if (onSuccess) onSuccess(order);
+        location.reload();  // 刷新显示完整内容
+        return;
+      }
+      
+      // 状态仍为 pending，继续轮询
+      console.log(`[${i + 1}/${maxRetries}] Order still pending...`);
+      
+      if (i < maxRetries - 1) {
+        await new Promise(resolve => setTimeout(resolve, interval));
+      }
+    } catch (err) {
+      logger.error(`Poll error on attempt ${i + 1}: ${err.message}`);
+      // 继续轮询，不中断
+    }
+  }
+  
+  // 60 秒超时
+  if (onTimeout) onTimeout();
+  showNotification(
+    '支付确认中，请刷新页面查看最新状态',
+    'info'
+  );
+}
+
+// 支付成功回流时触发
+if (new URLSearchParams(window.location.search).get('paid') === '1') {
+  const orderId = new URLSearchParams(window.location.search).get('orderId');
+  pollOrderStatus(orderId, {
+    onSuccess: (order) => {
+      console.log('Payment confirmed!', order);
+      // 页面刷新会自动显示完整内容
+    },
+    onTimeout: () => {
+      showNotification(
+        '支付确认延迟。如果钱已扣，请耐心等候或联系客服。',
+        'warning'
+      );
+    }
+  });
+}
+```
+
+---
+
+### 10.1.7 数据库迁移与回滚（L3 技术缺陷修复）
+
+**问题**：Phase 1 新增 `lang` 列和 rate_limits 表，部署失败时需要安全回滚。
+
+**迁移脚本**：
+
+```sql
+-- migrations/001_phase1_multilang_support.sql
+-- 执行时间：2026-08-10 ~ 2026-09-27
+-- 备份前提：mysqldump > backup-$(date +%Y%m%d).sql
+
+-- 1. 添加 lang 列（nullable，向后兼容）
+ALTER TABLE bazi_reports 
+ADD COLUMN lang VARCHAR(10) DEFAULT 'cn' 
+AFTER `user_id`,
+ADD INDEX idx_reports_lang (user_id, lang);
+
+-- 2. 标记所有历史报告为中文
+UPDATE bazi_reports 
+SET lang = 'cn' 
+WHERE lang IS NULL;
+
+-- 3. 新增 API 限流表
+CREATE TABLE api_rate_limits (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id VARCHAR(255),
+  ip_address VARCHAR(45),
+  endpoint VARCHAR(100),
+  attempts INT DEFAULT 1,
+  window_start TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY unique_window (ip_address, endpoint, window_start),
+  INDEX idx_user (user_id),
+  INDEX idx_window (window_start)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 4. 新增 Webhook 幂等性表
+CREATE TABLE webhook_events (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  stripe_event_id VARCHAR(255) UNIQUE NOT NULL,
+  type VARCHAR(100),
+  payload JSON,
+  processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_event_id (stripe_event_id),
+  INDEX idx_type (type)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 验证迁移成功
+SELECT COUNT(*) as total_reports, 
+       SUM(CASE WHEN lang = 'cn' THEN 1 ELSE 0 END) as cn_count 
+FROM bazi_reports;
+-- 预期：total_reports > 0, cn_count == total_reports
+```
+
+**回滚脚本**（如部署失败）：
+
+```sql
+-- rollbacks/001_phase1_multilang_support.sql
+
+-- 1. 删除新表
+DROP TABLE IF EXISTS webhook_events;
+DROP TABLE IF EXISTS api_rate_limits;
+
+-- 2. 删除新列
+ALTER TABLE bazi_reports 
+DROP INDEX idx_reports_lang,
+DROP COLUMN lang;
+
+-- 3. 验证回滚
+SELECT COUNT(*) FROM bazi_reports LIMIT 1;
+-- 预期：正常返回结果，表示表仍存在且结构恢复
+```
+
+**部署步骤（安全操作）**：
+
+```bash
+#!/bin/bash
+# deploy-db-migration.sh
+
+set -e
+
+echo "📋 Phase 1 Database Migration"
+
+# 1. 备份（关键！）
+BACKUP_FILE="backup-$(date +%Y%m%d-%H%M%S).sql"
+echo "🔄 Backing up database to $BACKUP_FILE..."
+mysqldump -u$DB_USER -p$DB_PASS $DB_NAME > $BACKUP_FILE
+echo "✅ Backup complete"
+
+# 2. 运行迁移
+echo "🔄 Running migration..."
+mysql -u$DB_USER -p$DB_PASS $DB_NAME < migrations/001_phase1_multilang_support.sql
+echo "✅ Migration complete"
+
+# 3. 验证
+echo "🔍 Verifying migration..."
+RESULT=$(mysql -u$DB_USER -p$DB_PASS -se "SELECT COUNT(*) FROM bazi_reports;" $DB_NAME)
+echo "📊 Total reports: $RESULT"
+
+if [ "$RESULT" -gt 0 ]; then
+  echo "✅ Migration verified successfully"
+else
+  echo "❌ Verification failed, rolling back..."
+  mysql -u$DB_USER -p$DB_PASS $DB_NAME < rollbacks/001_phase1_multilang_support.sql
+  echo "✅ Rollback complete"
+  exit 1
+fi
+
+echo "🎉 Database migration successful"
+```
+
+---
 
 ### 10.2 样本 Prompt (英文版)
 

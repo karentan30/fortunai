@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f7f4ef">
+<meta name="description" content="선연 · AI 명리사 · AI 사주 분석, 오락 및 참고 목적">
+<title>선연 · AI 명리사</title>
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700&family=Noto+Serif+KR:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gold:#9a7529;
+  --gold-soft:rgba(154,117,41,0.12);
+  --gold-light:rgba(154,117,41,0.25);
+  --gold-deep:#7a5c1e;
+  --bg:#f7f4ef;
+  --paper:#fdfbf8;
+  --ink:rgba(58,48,38,0.92);
+  --ink-dim:rgba(58,48,38,0.6);
+}
+html,body{
+  background:var(--bg);
+  font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  height:100%;
+}
+body{
+  max-width:420px;
+  margin:0 auto;
+  display:flex;
+  flex-direction:column;
+  padding:0;
+  min-height:100dvh;
+}
+.header{
+  padding:14px 16px 10px;
+  text-align:center;
+  border-bottom:1px solid var(--gold-soft);
+  flex-shrink:0;
+  background:var(--paper);
+}
+.logo{
+  font-family:'Nanum Myeongjo',serif;
+  font-size:13px;
+  letter-spacing:0.3em;
+  color:var(--gold);
+}
+.logo-sub{
+  font-size:10px;
+  color:var(--ink-dim);
+  letter-spacing:0.12em;
+  margin-top:3px;
+  font-family:'Noto Serif KR',serif;
+  font-weight:300;
+}
+.back-btn{
+  position:fixed;
+  top:14px;
+  left:14px;
+  z-index:10;
+  background:none;
+  border:none;
+  font-size:13px;
+  color:var(--ink-dim);
+  cursor:pointer;
+  font-family:inherit;
+}
+.chat-area{
+  flex:1;
+  overflow-y:auto;
+  padding:12px 16px;
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  background:var(--bg);
+}
+.msg{
+  max-width:85%;
+  padding:10px 14px;
+  border-radius:10px;
+  font-size:13px;
+  line-height:1.8;
+  letter-spacing:0.02em;
+  animation:fadeIn 0.3s ease;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.msg.user{
+  align-self:flex-end;
+  background:var(--gold);
+  color:#fff;
+  border-radius:10px 10px 2px 10px;
+}
+.msg.ai{
+  align-self:flex-start;
+  background:var(--paper);
+  color:var(--ink);
+  border:1px solid var(--gold-soft);
+  border-radius:10px 10px 10px 2px;
+}
+.msg.ai .role{
+  font-size:11px;
+  color:var(--gold);
+  letter-spacing:0.08em;
+  margin-bottom:4px;
+}
+.input-bar{
+  display:flex;
+  gap:8px;
+  padding:12px 16px;
+  border-top:1px solid var(--gold-soft);
+  flex-shrink:0;
+  background:var(--paper);
+}
+.input-bar input{
+  flex:1;
+  padding:10px 14px;
+  border:1px solid var(--gold-light);
+  border-radius:20px;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:inherit;
+  font-size:13px;
+  outline:none;
+}
+.input-bar input:focus{border-color:var(--gold)}
+.input-bar input:disabled{opacity:0.5;cursor:not-allowed}
+.input-bar button{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  border:none;
+  background:var(--gold);
+  color:#fff;
+  font-size:18px;
+  cursor:pointer;
+  flex-shrink:0;
+  transition:all 0.2s;
+}
+.input-bar button:disabled{opacity:0.4;cursor:not-allowed}
+.quick-q{
+  display:flex;
+  gap:6px;
+  padding:8px 16px 4px;
+  flex-wrap:wrap;
+  flex-shrink:0;
+  background:var(--paper);
+  border-bottom:1px solid var(--gold-soft);
+}
+.qq-btn{
+  font-size:10px;
+  padding:5px 10px;
+  border:1px solid var(--gold-light);
+  border-radius:12px;
+  background:var(--bg);
+  color:var(--ink-dim);
+  cursor:pointer;
+  font-family:inherit;
+  transition:all 0.2s;
+}
+.qq-btn:hover{border-color:var(--gold);color:var(--gold)}
+.typing{display:flex;gap:3px;padding:4px 0}
+.typing span{
+  width:5px;height:5px;border-radius:50%;
+  background:var(--gold);
+  animation:bounce 1.2s infinite;
+}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-4px)}}
+.free-counter{
+  text-align:center;
+  font-size:11px;
+  color:var(--ink-dim);
+  letter-spacing:0.06em;
+  padding:2px 16px 6px;
+  flex-shrink:0;
+  background:var(--paper);
+}
+.disclaimer{
+  text-align:center;
+  font-size:11px;
+  color:var(--ink-dim);
+  letter-spacing:0.05em;
+  padding:6px 16px 10px;
+  flex-shrink:0;
+  background:var(--paper);
+  border-top:1px solid var(--gold-soft);
+  line-height:1.6;
+}
+</style>
+<link rel="stylesheet" href="/assets/css/common.css">
+</head>
+<body>
+<button class="back-btn" onclick="history.back()">← 뒤로</button>
+
+<div class="header">
+  <div class="logo">선 연 · AI 명리사</div>
+  <div class="logo-sub">전통 사주명리 · AI 해설</div>
+</div>
+
+<div class="quick-q" id="quickQ">
+  <button class="qq-btn" onclick="ask('올해 재물운은요?')">💰 올해 재물운은요?</button>
+  <button class="qq-btn" onclick="ask('이 사람과 잘 맞을까요?')">💕 이 사람과 잘 맞을까요?</button>
+  <button class="qq-btn" onclick="ask('이직하기 좋은 때인가요?')">💼 이직하기 좋은 때인가요?</button>
+  <button class="qq-btn" onclick="ask('요즘 구설수 있을까요?')">🌑 요즘 구설수 있을까요?</button>
+  <button class="qq-btn" onclick="ask('언제쯤 좋은 운이 올까요?')">✨ 언제쯤 좋은 운이 올까요?</button>
+</div>
+
+<div class="free-counter" id="freeCounter">
+  오늘 무료 남은 횟수: <span id="freeRemaining">5</span>회 · 회원은 무제한
+</div>
+
+<div class="chat-area" id="chatArea">
+  <div class="msg ai" id="welcome" style="align-self:flex-start">
+    <div class="role">✦ AI 명리사 · AI 생성</div>
+    안녕하세요, 저는 선연 AI 명리사입니다. 생년월일을 알려주시거나, 운세·인연·재물에 관한 어떤 질문이든 물어보세요. 오늘의 연애운이 궁금하신가요? ✨
+  </div>
+</div>
+
+<div class="input-bar">
+  <input id="input" placeholder="궁금한 것을 물어보세요..." onkeydown="if(event.key==='Enter')send()" autofocus>
+  <button id="sendBtn" onclick="send()">➤</button>
+</div>
+
+<div class="disclaimer">
+  만 19세 이상만 이용 가능합니다 · 본 서비스는 오락 및 참고 목적으로만 제공됩니다
+</div>
+
+<script>
+var msgs = [];
+var sending = false;
+var freeRemaining = 5;
+var paywallShown = false;
+var isMember = false;
+
+// 세션 ID — 무료 횟수 추적 (VPN 우회 방지 보조)
+var _sessionId = localStorage.getItem('sy_session_id');
+if (!_sessionId) {
+  _sessionId = (typeof crypto !== 'undefined' && crypto.randomUUID)
+    ? crypto.randomUUID()
+    : (Date.now().toString(36) + Math.random().toString(36).slice(2));
+  localStorage.setItem('sy_session_id', _sessionId);
+}
+
+// 페이지 진입 시 실제 남은 횟수 조회
+function loadQuota() {
+  fetch('/api/chat/quota', {
+    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('sy_token') || '') }
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.isMember) {
+        isMember = true;
+        freeRemaining = -1;
+        updateQuotaUI();
+      } else {
+        freeRemaining = (d.remaining !== undefined) ? d.remaining : freeRemaining;
+        updateQuotaUI();
+      }
+    })
+    .catch(function() {});
+}
+
+function updateQuotaUI() {
+  var el = document.getElementById('freeRemaining');
+  var wrap = document.getElementById('freeCounter');
+  if (!el || !wrap) return;
+  if (isMember) {
+    el.textContent = '∞';
+    wrap.style.color = 'var(--gold)';
+    return;
+  }
+  el.textContent = freeRemaining;
+  el.style.color = freeRemaining <= 1 ? '#c0392b' : 'inherit';
+}
+
+loadQuota();
+
+function updateFreeCounter(n) {
+  freeRemaining = (n !== undefined) ? n : Math.max(0, freeRemaining - 1);
+  var el = document.getElementById('freeRemaining');
+  if (el) {
+    el.textContent = freeRemaining;
+    el.style.color = freeRemaining <= 1 ? '#c0392b' : 'inherit';
+  }
+}
+
+function addPaywallCard() {
+  if (paywallShown) return;
+  paywallShown = true;
+  var inputEl = document.getElementById('input');
+  inputEl.disabled = true;
+  inputEl.placeholder = '회원 가입 후 계속 이용하세요';
+  document.getElementById('sendBtn').disabled = true;
+
+  var area = document.getElementById('chatArea');
+  var div = document.createElement('div');
+  div.style.cssText = [
+    'text-align:center',
+    'padding:20px 16px',
+    'margin:12px 0',
+    'background:var(--paper)',
+    'border:1px solid var(--gold-light)',
+    'border-radius:12px'
+  ].join(';');
+  div.innerHTML =
+    '<div style="font-size:24px;margin-bottom:8px">💬</div>' +
+    '<div style="font-size:14px;color:var(--ink);margin-bottom:4px;letter-spacing:0.08em">' +
+      '오늘 무료 이용 횟수를 모두 사용했어요' +
+    '</div>' +
+    '<div style="font-size:11px;color:var(--ink-dim);margin-bottom:12px;line-height:1.8">' +
+      '회원이 되시면 무제한으로 이용하시고,<br>완전한 사주 리포트도 함께 열어드려요' +
+    '</div>' +
+    '<a href="saju-KR.html" style="display:inline-block;padding:10px 28px;' +
+      'background:linear-gradient(135deg,var(--gold-deep),var(--gold));' +
+      'border-radius:20px;color:#fff;font-size:13px;letter-spacing:0.1em;text-decoration:none">' +
+      '회원 가입 · 월 ₩9,900' +
+    '</a>' +
+    '<div style="margin-top:10px;font-size:10px;color:var(--ink-dim)">' +
+      '또는 <a href="saju-KR.html" style="color:var(--gold)">무료 사주 보기</a>' +
+    '</div>';
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function addMsg(text, role) {
+  var area = document.getElementById('chatArea');
+  var div = document.createElement('div');
+  div.className = 'msg ' + role;
+  if (role === 'ai') {
+    div.innerHTML = '<div class="role">✦ AI 명리사 · AI 생성</div>' + text.replace(/\n/g, '<br>');
+  } else {
+    div.textContent = text;
+  }
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function send() {
+  var input = document.getElementById('input');
+  var text = input.value.trim();
+  if (!text || sending) return;
+  ask(text);
+}
+
+function ask(text) {
+  if (!text) return;
+  if (!isMember && freeRemaining <= 0) {
+    addPaywallCard();
+    return;
+  }
+  sending = true;
+  document.getElementById('sendBtn').disabled = true;
+
+  addMsg(text, 'user');
+  document.getElementById('input').value = '';
+
+  // 타이핑 인디케이터 표시
+  var area = document.getElementById('chatArea');
+  var typing = document.createElement('div');
+  typing.className = 'msg ai';
+  typing.id = 'typing';
+  typing.innerHTML =
+    '<div class="role">✦ AI 명리사 · AI 생성</div>' +
+    '<div class="typing"><span></span><span></span><span></span></div>';
+  area.appendChild(typing);
+  area.scrollTop = area.scrollHeight;
+
+  msgs.push({ role: 'user', content: text });
+
+  // 대화 컨텍스트 최근 10개로 제한
+  var msgsToSend = msgs.length > 10 ? msgs.slice(msgs.length - 10) : msgs;
+
+  fetch('/api/chat', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Session-Id': _sessionId
+    },
+    body: JSON.stringify({ messages: msgsToSend, lang: 'ko' })
+  })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var typingEl = document.getElementById('typing');
+      if (typingEl) typingEl.remove();
+      sending = false;
+      document.getElementById('sendBtn').disabled = false;
+
+      if (d.limited) {
+        updateFreeCounter(0);
+        addPaywallCard();
+      } else if (d.answer) {
+        updateFreeCounter();
+        addMsg(d.answer, 'ai');
+        msgs.push({ role: 'assistant', content: d.answer });
+      } else {
+        addMsg('AI가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해 주세요.', 'ai');
+      }
+    })
+    .catch(function() {
+      var typingEl = document.getElementById('typing');
+      if (typingEl) typingEl.remove();
+      sending = false;
+      document.getElementById('sendBtn').disabled = false;
+      addMsg('AI가 일시적으로 응답하지 않습니다. 잠시 후 다시 시도해 주세요.', 'ai');
+    });
+}
+</script>
+<script src="/assets/js/common.js"></script>
+<script>if(window.SY&&SY.initMembership)SY.initMembership();</script>
+</body>
+</html>

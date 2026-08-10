@@ -315,6 +315,11 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .ur-body.open{display:block}
 .ur-text{font-size:12.5px;line-height:2;color:rgba(50,44,34,0.86);letter-spacing:0.04em;white-space:pre-wrap;padding:0 14px 14px}
 
+/* ── Share card FAB ── */
+@keyframes shareCardPulse{0%,100%{box-shadow:0 4px 20px rgba(201,168,76,0.4),0 0 0 0 rgba(201,168,76,0.3)}50%{box-shadow:0 4px 28px rgba(201,168,76,0.6),0 0 0 8px rgba(201,168,76,0)}}
+.share-card-fab{display:none;position:fixed;bottom:80px;right:16px;z-index:90;background:linear-gradient(135deg,#8a6420,#c9a84c,#e8d08a);border:none;border-radius:50px;color:rgba(14,10,4,0.95);font-family:'Noto Serif SC',serif;font-size:12px;font-weight:600;letter-spacing:0.1em;padding:10px 16px;cursor:pointer;animation:shareCardPulse 2.5s ease-in-out infinite;white-space:nowrap}
+.share-card-fab.visible{display:block}
+
 /* ── Ring Charts ── */
 .elem-ring-wrap{display:flex;justify-content:space-around;align-items:flex-start;padding:4px 0}
 .elem-ring-item{display:flex;flex-direction:column;align-items:center;gap:4px;animation:fadeUp 0.6s ease both}
@@ -634,6 +639,9 @@ input::placeholder,textarea::placeholder { color: rgba(200,196,180,0.25) !import
   <div class="qa-history" id="qaHistory"></div>
 </div>
 
+<!-- Floating share card button (visible after report generated) -->
+<button class="share-card-fab" id="shareCardFab" onclick="generateShareCard()">📸 生成命盘卡</button>
+
 <!-- Share bar -->
 <div class="share-bar" id="shareBar">
   <!-- 主裂变按钮：合婚引导 -->
@@ -911,6 +919,9 @@ function showReport(aiText, contextId, tier, locked) {
   renderAITextReport(aiText, contextId, isLocked);
   document.getElementById('qaSection').style.display = isLocked ? 'none' : 'block';
   document.getElementById('shareBar').classList.add('show');
+  // 显示浮动命盘卡按钮
+  var fab = document.getElementById('shareCardFab');
+  if (fab) fab.classList.add('visible');
   // 显示主裂变分享按钮
   var smb = document.getElementById('shareMainBtn');
   if (smb) smb.style.display = 'block';
@@ -1202,19 +1213,58 @@ function renderAITextReport(text, contextId, isLocked) {
   // Render ultimate report with collapsible section cards
   renderUltimateReport(text, 'reportContent', isLocked);
   injectDisclaimer('reportScreen');
-  // 快赢2: 命盘分享卡按钮 (仅付费用户)
-  if (!isLocked) {
-    var shareCardBtn = document.createElement('div');
-    shareCardBtn.style.cssText = 'text-align:center;padding:16px 16px 0';
-    shareCardBtn.innerHTML = '<button onclick="generateShareCard()" style="background:linear-gradient(135deg,var(--gold-deep),var(--gold));border:none;border-radius:12px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;font-weight:500;letter-spacing:0.18em;padding:12px 24px;cursor:pointer;box-shadow:0 4px 16px rgba(201,168,76,0.3)">生成命盘卡 · 分享</button>';
-    document.getElementById('reportContent').appendChild(shareCardBtn);
+  // 今日最佳行动 block (所有用户)
+  var rc = document.getElementById('reportContent');
+  if (rc) rc.appendChild(buildDailyActionBlock(text));
+
+  // 分享卡片按钮 (所有用户可见，付费用户可直接分享，免费用户看到解锁提示)
+  var shareCardWrap = document.createElement('div');
+  shareCardWrap.style.cssText = 'padding:16px 16px 0';
+  if (isLocked) {
+    shareCardWrap.innerHTML =
+      '<div style="background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(201,168,76,0.03));border:1px solid rgba(201,168,76,0.25);border-radius:14px;padding:16px;text-align:center">' +
+      '<div style="font-size:16px;margin-bottom:6px">📸</div>' +
+      '<div style="font-size:13px;font-weight:500;letter-spacing:0.1em;color:rgba(232,208,138,0.9);margin-bottom:4px">生成我的命盘卡片</div>' +
+      '<div style="font-size:12px;color:rgba(200,196,180,0.55);margin-bottom:12px">精美命盘图 · 长按保存发朋友圈</div>' +
+      '<button onclick="generateShareCard()" style="background:linear-gradient(135deg,rgba(138,100,32,0.8),rgba(201,168,76,0.9));border:none;border-radius:10px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;font-weight:500;letter-spacing:0.15em;padding:11px 28px;cursor:pointer;box-shadow:0 4px 14px rgba(201,168,76,0.25)">📲 生成命盘卡 · 分享朋友圈</button>' +
+      '</div>';
+  } else {
+    shareCardWrap.innerHTML =
+      '<div style="background:linear-gradient(135deg,rgba(10,8,2,0.9),rgba(30,22,8,0.85));border:1px solid rgba(201,168,76,0.35);border-radius:16px;padding:18px;position:relative;overflow:hidden">' +
+      '<div style="position:absolute;right:-8px;top:-8px;font-size:60px;opacity:0.06">🏮</div>' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">' +
+      '<div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#8a6420,#c9a84c);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📸</div>' +
+      '<div><div style="font-size:14px;font-weight:600;letter-spacing:0.1em;color:rgba(232,208,138,0.98)">生成我的命盘卡片</div>' +
+      '<div style="font-size:11px;color:rgba(200,196,180,0.5);letter-spacing:0.04em;margin-top:2px">四柱八字 · 五行雷达图 · 核心运势 · 长按保存</div></div></div>' +
+      '<div style="display:flex;gap:8px;margin-bottom:14px;font-size:11px;color:rgba(200,196,180,0.45)">' +
+      '<div style="flex:1;text-align:center;padding:8px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.12);border-radius:8px">🖼️<br>高清图片<br>390×690</div>' +
+      '<div style="flex:1;text-align:center;padding:8px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.12);border-radius:8px">📡<br>Web Share<br>一键分享</div>' +
+      '<div style="flex:1;text-align:center;padding:8px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.12);border-radius:8px">💑<br>邀好友<br>合婚配对</div>' +
+      '</div>' +
+      '<button onclick="generateShareCard()" style="width:100%;padding:14px 0;background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a,#c9a84c,#8a6420);background-size:200% auto;animation:gold-shimmer 3s linear infinite;border:none;border-radius:12px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:14px;font-weight:600;letter-spacing:0.2em;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,0.4)">📲 生成命盘卡 · 截图发朋友圈</button>' +
+      '<div style="text-align:center;margin-top:10px;font-size:11px;color:rgba(200,196,180,0.35);letter-spacing:0.08em">长按图片保存 · 发送给朋友邀请合婚</div>' +
+      '</div>';
   }
+  if (rc) rc.appendChild(shareCardWrap);
+
+  // 合婚CTA (所有用户)
+  var hehunCTA = document.createElement('div');
+  hehunCTA.style.cssText = 'margin:16px 0 0';
+  hehunCTA.innerHTML =
+    '<a href="/pages/hehun.html" style="display:flex;align-items:center;gap:12px;padding:16px;background:linear-gradient(135deg,rgba(15,8,4,0.9),rgba(201,96,122,0.08));border:1px solid rgba(201,96,122,0.35);border-radius:16px;text-decoration:none;position:relative;overflow:hidden">' +
+    '<div style="position:absolute;right:-4px;top:-4px;font-size:50px;opacity:0.06">💑</div>' +
+    '<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,rgba(201,96,122,0.3),rgba(201,96,122,0.15));display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:1px solid rgba(201,96,122,0.25)">💑</div>' +
+    '<div style="flex:1"><div style="font-size:14px;font-weight:600;color:#e8809a;letter-spacing:0.08em;font-family:\'Noto Serif SC\',serif;margin-bottom:3px">邀好友合婚</div>' +
+    '<div style="font-size:12px;color:rgba(200,196,180,0.5);letter-spacing:0.04em">你们命格合不合？发命盘给TA一秒知晓</div></div>' +
+    '<span style="font-size:18px;color:rgba(201,96,122,0.6)">→</span>' +
+    '</a>';
+  if (rc) rc.appendChild(hehunCTA);
+
   // 快赢3: 订阅入口 (所有用户)
   var subHook = document.createElement('div');
   subHook.className = 'subscribe-hook';
-  subHook.style.cssText = 'text-align:center;padding:24px;background:#f5f0e8;border-radius:12px;margin:24px 16px 0';
-  subHook.innerHTML = '<div style="font-size:15px;font-weight:500;margin-bottom:4px">每日天机 · 专属运势推送</div><div style="font-size:13px;color:#888;margin-bottom:16px">每天早8点，收到今日五行能量与宜忌</div><div style="display:flex;gap:8px;max-width:320px;margin:0 auto"><input type="email" id="subscribeEmail" placeholder="输入邮箱" style="flex:1;padding:10px 14px;border:1px solid #d4c9a8;border-radius:8px;font-size:14px"><button onclick="submitSubscribe()" style="background:#5bbfa0;color:white;border:none;padding:10px 16px;border-radius:8px;font-size:14px;cursor:pointer;white-space:nowrap">订阅</button></div><div id="subscribeMsg" style="font-size:12px;color:#5bbfa0;margin-top:8px;display:none">✓ 已订阅，明天早8点见</div>';
-  var rc = document.getElementById('reportContent');
+  subHook.style.cssText = 'text-align:center;padding:24px;background:rgba(14,14,14,0.6);border:1px solid rgba(201,168,76,0.1);border-radius:12px;margin:16px 0 0';
+  subHook.innerHTML = '<div style="font-size:15px;font-weight:500;margin-bottom:4px;color:rgba(232,208,138,0.9);letter-spacing:0.08em">每日天机 · 专属运势推送</div><div style="font-size:13px;color:rgba(200,196,180,0.55);margin-bottom:16px">每天早8点，收到今日五行能量与宜忌</div><div style="display:flex;gap:8px;max-width:320px;margin:0 auto"><input type="email" id="subscribeEmail" placeholder="输入邮箱" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.15);border-radius:8px;font-size:14px;color:rgba(240,238,230,0.8);font-family:inherit"><button onclick="submitSubscribe()" style="background:rgba(91,191,160,0.15);border:1px solid rgba(91,191,160,0.35);color:#5bbfa0;padding:10px 16px;border-radius:8px;font-size:14px;cursor:pointer;white-space:nowrap;font-family:inherit">订阅</button></div><div id="subscribeMsg" style="font-size:12px;color:#5bbfa0;margin-top:8px;display:none">✓ 已订阅，明天早8点见</div>';
   if (rc) rc.appendChild(subHook);
 }
 
@@ -1310,6 +1360,69 @@ function genRingSvg(pct, size, strokeW, color) {
     'font-size="'+fs+'" font-family="\'Cormorant Garamond\',serif">'+(pct||0)+'</text></svg>';
 }
 
+// ── 五行雷达图SVG ──
+function genWuxingRadar(elemData, size) {
+  size = size || 180;
+  var cx = size / 2, cy = size / 2;
+  var r = size * 0.36;
+  var order = ['木','火','土','金','水'];
+  var colors = {'木':'#5bbfa0','火':'#e8603a','土':'#c9a84c','金':'#b8c8d4','水':'#4a9fd4'};
+  // angles: top is 木(-90°), then clockwise
+  var angles = order.map(function(_, i){ return (i * 72 - 90) * Math.PI / 180; });
+  function pt(ang, pct) {
+    var rr = r * Math.min(Math.max((pct||0)/100, 0.05), 1);
+    return [cx + rr * Math.cos(ang), cy + rr * Math.sin(ang)];
+  }
+  // Grid circles
+  var gridSvg = '';
+  [0.25, 0.5, 0.75, 1].forEach(function(f) {
+    var pts2 = angles.map(function(a){ var p = [cx+r*f*Math.cos(a), cy+r*f*Math.sin(a)]; return p[0]+','+p[1]; });
+    gridSvg += '<polygon points="'+pts2.join(' ')+'" fill="none" stroke="rgba(201,168,76,0.08)" stroke-width="1"/>';
+  });
+  // Grid spokes
+  var spokesSvg = angles.map(function(a){
+    return '<line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+r*Math.cos(a))+'" y2="'+(cy+r*Math.sin(a))+'" stroke="rgba(201,168,76,0.1)" stroke-width="1"/>';
+  }).join('');
+  // Data polygon
+  var dataPts = order.map(function(el, i){ return pt(angles[i], elemData[el] || 0); });
+  var polyPts = dataPts.map(function(p){ return p[0]+','+p[1]; }).join(' ');
+  // Gradient fill — use a simple semi-transparent gold
+  var dataSvg = '<polygon points="'+polyPts+'" fill="rgba(201,168,76,0.15)" stroke="rgba(201,168,76,0.7)" stroke-width="1.5" stroke-linejoin="round"/>';
+  // Data dots
+  var dotsSvg = dataPts.map(function(p, i){
+    var el = order[i];
+    return '<circle cx="'+p[0]+'" cy="'+p[1]+'" r="4" fill="'+colors[el]+'" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>';
+  }).join('');
+  // Labels
+  var labelR = r + 18;
+  var labelSvg = order.map(function(el, i) {
+    var lx = cx + labelR * Math.cos(angles[i]);
+    var ly = cy + labelR * Math.sin(angles[i]);
+    var pct = elemData[el] || 0;
+    return '<text x="'+lx+'" y="'+(ly-4)+'" text-anchor="middle" fill="'+colors[el]+'" font-size="10" font-family="\'Noto Serif SC\',serif">'+el+'</text>'+
+           '<text x="'+lx+'" y="'+(ly+9)+'" text-anchor="middle" fill="rgba(200,196,180,0.55)" font-size="8" font-family="\'Cormorant Garamond\',serif">'+pct+'%</text>';
+  }).join('');
+  return '<svg width="'+size+'" height="'+size+'" viewBox="0 0 '+size+' '+size+'" style="overflow:visible">'+
+    gridSvg + spokesSvg + dataSvg + dotsSvg + labelSvg + '</svg>';
+}
+
+// ── 大字分数卡 ──
+function genBigScoreCard(label, score, color) {
+  return '<div style="text-align:center;background:linear-gradient(135deg,rgba(14,10,4,0.6),rgba(24,18,8,0.4));border:1px solid rgba(201,168,76,0.12);border-radius:10px;padding:12px 8px;min-width:64px">'+
+    '<div style="font-family:\'Cormorant Garamond\',serif;font-size:32px;line-height:1;color:'+(color||'var(--gold-light)')+';font-weight:300">'+score+'</div>'+
+    '<div style="font-size:10px;color:rgba(200,196,180,0.5);letter-spacing:0.1em;margin-top:3px">'+label+'</div>'+
+    '</div>';
+}
+
+// ── 精美分隔线 ──
+function genSectionDivider(icon) {
+  return '<div style="display:flex;align-items:center;gap:10px;margin:14px 0;padding:0 16px">'+
+    '<div style="flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2))"></div>'+
+    '<span style="font-size:14px;color:rgba(201,168,76,0.4)">'+(icon||'✦')+'</span>'+
+    '<div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(201,168,76,0.2),transparent)"></div>'+
+    '</div>';
+}
+
 // ── 从文本解析八字数据 ──
 function tryParseBaziData(text) {
   var result = { hasDaymaster: text.indexOf('日主') !== -1, pillars: null, elements: null, scores: null, daymaster: null };
@@ -1357,30 +1470,37 @@ function buildBaziOverview(parsed) {
     html += '</div></div>';
   }
   if (parsed.elements && Object.keys(parsed.elements).length > 0) {
-    html += '<div style="margin:0 16px 10px;background:var(--card);border:1px solid rgba(201,168,76,.1);border-radius:10px;padding:14px">';
-    html += '<div style="font-size:12px;letter-spacing:.2em;color:rgba(201,168,76,.5);margin-bottom:10px">五行能量</div>';
-    html += '<div class="elem-ring-wrap">';
-    ['木','火','土','金','水'].forEach(function(el, i) {
-      if (parsed.elements[el] !== undefined) {
-        html += '<div class="elem-ring-item" style="animation-delay:'+(i*0.08)+'s">'+
-          genRingSvg(parsed.elements[el],52,4,ec[el]) +
-          '<span style="font-size:9px;color:'+ec[el]+'">'+el+'</span></div>';
-      }
+    // 五行雷达图 + 环形图双展示
+    html += '<div style="margin:0 16px 10px;background:linear-gradient(135deg,rgba(14,10,4,0.7),rgba(24,18,8,0.5));border:1px solid rgba(201,168,76,.18);border-radius:12px;padding:16px;position:relative;overflow:hidden">';
+    html += '<div style="position:absolute;right:-10px;top:-10px;font-size:80px;opacity:0.04;transform:rotate(15deg)">☯</div>';
+    html += '<div style="font-size:12px;letter-spacing:.2em;color:rgba(201,168,76,.6);margin-bottom:12px;display:flex;align-items:center;gap:6px"><span style="font-size:14px">🌿</span> 五行能量分布</div>';
+    html += '<div style="display:flex;align-items:center;gap:8px">';
+    // Radar chart on left
+    html += '<div style="flex-shrink:0">'+genWuxingRadar(parsed.elements, 170)+'</div>';
+    // Bars on right
+    html += '<div style="flex:1;display:flex;flex-direction:column;gap:6px">';
+    ['木','火','土','金','水'].forEach(function(el) {
+      var pct = parsed.elements[el] || 0;
+      var col = ec[el] || '#c9a84c';
+      html += '<div style="display:flex;align-items:center;gap:6px">'+
+        '<span style="font-size:11px;color:'+col+';min-width:14px">'+el+'</span>'+
+        '<div style="flex:1;height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden">'+
+          '<div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:3px;transition:width 0.8s ease"></div>'+
+        '</div>'+
+        '<span style="font-size:10px;color:rgba(200,196,180,0.5);min-width:28px;text-align:right">'+pct+'%</span>'+
+      '</div>';
     });
-    html += '</div></div>';
+    html += '</div></div></div>';
   }
   if (parsed.scores && Object.keys(parsed.scores).length > 0) {
     var sc = {'财':'var(--gold)','事':'#4a9fd4','情':'#e8605a','康':'#5bbfa0','运':'var(--amber)'};
     var sl = {'财':'财运','事':'事业','情':'感情','康':'健康','运':'运势'};
-    html += '<div style="margin:0 16px 12px;background:var(--card);border:1px solid rgba(201,168,76,.1);border-radius:10px;padding:14px">';
-    html += '<div style="font-size:12px;letter-spacing:.2em;color:rgba(201,168,76,.5);margin-bottom:10px">命格评鉴</div>';
-    html += '<div class="score-rings">';
-    var idx = 0;
+    var scRaw = {'财':'#c9a84c','事':'#4a9fd4','情':'#e8605a','康':'#5bbfa0','运':'#c9820a'};
+    html += '<div style="margin:0 16px 12px;background:linear-gradient(135deg,rgba(14,10,4,0.7),rgba(24,18,8,0.5));border:1px solid rgba(201,168,76,.18);border-radius:12px;padding:16px">';
+    html += '<div style="font-size:12px;letter-spacing:.2em;color:rgba(201,168,76,.6);margin-bottom:12px;display:flex;align-items:center;gap:6px"><span style="font-size:14px">📊</span> 命格评鉴</div>';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">';
     Object.keys(parsed.scores).forEach(function(key) {
-      html += '<div class="score-ring-item" style="animation-delay:'+(idx*0.1)+'s">'+
-        genRingSvg(parsed.scores[key],56,4,sc[key]||'var(--gold)') +
-        '<span style="font-size:9px;color:rgba(80,70,55,.6);letter-spacing:.1em">'+(sl[key]||key)+'</span></div>';
-      idx++;
+      html += genBigScoreCard(sl[key]||key, parsed.scores[key], scRaw[key]);
     });
     html += '</div></div>';
   }
@@ -1469,7 +1589,17 @@ function renderUltimateReport(text, containerId, isLocked) {
       html += '<div class="paywall-overlay" style="position:relative;background:none;padding:0"><div style="font-size:13px;font-weight:500;letter-spacing:0.1em;color:var(--gold);margin-bottom:10px">解锁完整命盘</div><button onclick="createCheckout(this,\'full\',9.9)" style="background:linear-gradient(135deg,var(--gold-deep),var(--gold));border:none;border-radius:10px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;padding:10px 24px;cursor:pointer">立即解锁 · USD $9.90 →</button></div>';
       html += '</div>';
     } else {
-      html += '<div class="ur-card" style="animation-delay:'+(i*0.08)+'s">';
+      // Add decorative divider every 3 sections
+      if (i > 0 && i % 3 === 0) {
+        html += genSectionDivider(['✦','☯','✧','⟡'][Math.floor(i/3)%4]);
+      }
+      // First 2 sections get gradient highlight style
+      var isHighlight = (i < 2 && sec.content.length > 0);
+      if (isHighlight) {
+        html += '<div class="ur-card" style="animation-delay:'+(i*0.08)+'s;background:linear-gradient(135deg,rgba(14,10,4,0.85),rgba(201,168,76,0.05));border-color:rgba(201,168,76,0.22)">';
+      } else {
+        html += '<div class="ur-card" style="animation-delay:'+(i*0.08)+'s">';
+      }
       html += '<div class="ur-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ur-arrow\').classList.toggle(\'open\')">';
       html += '<span class="ur-emoji">'+(sec.emoji||'📜')+'</span>';
       html += '<span class="ur-title">'+escHtml(sec.title)+'</span>';
@@ -1482,59 +1612,322 @@ function renderUltimateReport(text, containerId, isLocked) {
   container.innerHTML = html;
 }
 
-// ── 快赢2: 命盘分享卡 ──
+// ── 今日最佳行动 (每日更新，增加复访) ──
+function buildDailyActionBlock(aiText) {
+  var el = document.createElement('div');
+  var today = new Date();
+  var dd = today.getDate(), mm = today.getMonth()+1, yy = today.getFullYear();
+  var dayOfYear = Math.floor((today - new Date(yy,0,0)) / 86400000);
+
+  // 从命盘提取喜用神
+  var favorElem = '';
+  if (aiText) {
+    var m = aiText.match(/喜[用神]神?[：:是为]*\s*([木火土金水])/);
+    if (m) favorElem = m[1];
+    if (!favorElem) {
+      m = aiText.match(/宜[补]([木火土金水])/);
+      if (m) favorElem = m[1];
+    }
+  }
+
+  var ELEM_ACTIONS = {
+    '木': ['今日宜：穿绿色衣物，向东方出行，多接触植物', '今日利于开始新项目、主动出击、扩展人脉', '早上7-9点能量最旺，重要事务优先安排'],
+    '火': ['今日宜：与人热情互动，适合社交谈判', '南方方位有利，穿红橙暖色调提振气场', '午时11-13点是你的黄金时段'],
+    '土': ['今日宜：稳扎稳打，处理积压事务，整理环境', '居中守正，不宜冒进，适合深思熟虑后再行动', '下午13-15点适合谈判和签约'],
+    '金': ['今日宜：整理财务、签订合同、精简冗余', '穿白色或金属色，西方有利，适合收尾工作', '下午15-17点适合重要决策'],
+    '水': ['今日宜：学习充电、深思内省、处理情感事务', '北方有利，蓝黑色调加持，适合灵感创作', '夜间21-23点思维最清晰']
+  };
+
+  var actionList = favorElem && ELEM_ACTIONS[favorElem] ? ELEM_ACTIONS[favorElem] : [
+    '今日宜：保持平稳心态，避免重大决策', '与家人或亲近之人多沟通，化解误会', '傍晚17-19点适合运动，助排解浊气'
+  ];
+
+  var ELEM_COLORS = {'木':'#5bbfa0','火':'#e8603a','土':'#c9a84c','金':'#b8c8d4','水':'#4a9fd4'};
+  var elemColor = (favorElem && ELEM_COLORS[favorElem]) || '#c9a84c';
+
+  var dateStr = yy+'年'+mm+'月'+dd+'日';
+  var actionIdx = dayOfYear % actionList.length;
+
+  el.style.cssText = 'margin:12px 0 0';
+  el.innerHTML =
+    '<div style="background:linear-gradient(135deg,rgba(14,10,4,0.95),rgba(24,20,12,0.9));border:1px solid rgba(201,168,76,0.2);border-radius:14px;padding:16px;position:relative;overflow:hidden">' +
+    '<div style="position:absolute;right:12px;top:12px;font-size:40px;opacity:0.07">☀️</div>' +
+    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">' +
+    '<span style="font-size:18px">⚡</span>' +
+    '<div><div style="font-size:13px;font-weight:500;letter-spacing:0.12em;color:rgba(232,208,138,0.95)">今日最佳行动</div>' +
+    '<div style="font-size:11px;color:rgba(200,196,180,0.45);letter-spacing:0.06em">'+dateStr+'  ·  每日更新</div></div>' +
+    (favorElem ? '<span style="margin-left:auto;font-size:11px;background:rgba('+hexToRgb(elemColor)+',0.15);border:1px solid rgba('+hexToRgb(elemColor)+',0.3);border-radius:6px;padding:2px 8px;color:'+elemColor+';letter-spacing:0.08em">补'+favorElem+'</span>' : '') +
+    '</div>' +
+    '<div style="font-size:13px;color:rgba(220,208,170,0.88);line-height:1.85;letter-spacing:0.04em">' +
+    actionList.map(function(a,i){ return '<div style="display:flex;gap:8px;margin-bottom:'+(i<actionList.length-1?'8':'0')+'px"><span style="color:'+elemColor+';font-size:11px;margin-top:3px;flex-shrink:0">▸</span><span>'+a+'</span></div>'; }).join('') +
+    '</div></div>';
+  return el;
+}
+function hexToRgb(hex) {
+  var r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+  return r+','+g+','+b;
+}
+
+// ── 快赢2: 命盘分享卡 (390×690 精美版) ──
 function generateShareCard() {
-  var canvas = document.createElement('canvas');
-  canvas.width = 1080; canvas.height = 1080;
-  var ctx = canvas.getContext('2d');
-  // Background
-  ctx.fillStyle = '#faf8f5';
-  ctx.fillRect(0, 0, 1080, 1080);
-  // Gold border
-  ctx.strokeStyle = 'rgba(201,168,76,0.35)';
-  ctx.lineWidth = 3;
-  ctx.strokeRect(32, 32, 1016, 1016);
-  // Top logo
-  ctx.fillStyle = 'rgba(201,168,76,0.9)';
-  ctx.font = '400 52px serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('善缘 · AI命理', 540, 160);
-  // Gold line
-  ctx.strokeStyle = 'rgba(201,168,76,0.4)';
-  ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(240, 200); ctx.lineTo(840, 200); ctx.stroke();
-  // Extract key phrase from report DOM
-  var keyword = '命运自在掌握';
-  var dmMatch = lastAiText && lastAiText.match(/日主[：:]\s*([甲乙丙丁戊己庚辛壬癸][^\s，。]{0,5})/);
-  if (dmMatch) keyword = dmMatch[1];
-  var fmMatch = lastAiText && lastAiText.match(/([偏正食伤财官印枭]{1,2}格[^，。\n]{0,8})/);
-  if (fmMatch) keyword = (dmMatch ? dmMatch[1] + '·' : '') + fmMatch[1];
-  // Main text
-  ctx.fillStyle = 'rgba(40,35,30,0.92)';
-  ctx.font = '500 80px serif';
-  ctx.fillText(keyword, 540, 540);
-  // User name
-  var uname = (lastBaziInput && lastBaziInput.name) ? lastBaziInput.name + '的命盘' : '我的八字命盘';
-  ctx.fillStyle = 'rgba(80,70,55,0.6)';
-  ctx.font = '300 38px serif';
-  ctx.fillText(uname, 540, 640);
-  // Decorative yin-yang
-  ctx.fillStyle = 'rgba(201,168,76,0.25)';
-  ctx.font = '140px serif';
-  ctx.textAlign = 'right';
-  ctx.fillText('☯', 1020, 980);
-  // Bottom domain
-  ctx.fillStyle = 'rgba(80,70,55,0.45)';
-  ctx.font = '300 30px serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('shenyuan.mylumee.cn', 540, 1010);
-  // Download
-  canvas.toBlob(function(blob) {
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'mingpan-card.png';
-    a.click();
-  }, 'image/png');
+  if (!lastBaziInput) { showToast('请先生成命盘报告', 'error'); return; }
+  showToast('生成命盘卡…');
+  document.fonts.ready.then(function() {
+    var W = 780, H = 1380; // 2x for retina, displays as 390×690
+    var cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    var ctx = cv.getContext('2d');
+
+    // ── Background: deep navy gradient ──
+    var bgGrad = ctx.createLinearGradient(0, 0, W, H);
+    bgGrad.addColorStop(0, '#0a0d1a');
+    bgGrad.addColorStop(0.5, '#0f1628');
+    bgGrad.addColorStop(1, '#0d1220');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Subtle radial glows
+    [[W*0.2, H*0.15, 280], [W*0.8, H*0.4, 200], [W*0.3, H*0.75, 180]].forEach(function(g) {
+      var rg = ctx.createRadialGradient(g[0], g[1], 0, g[0], g[1], g[2]);
+      rg.addColorStop(0, 'rgba(201,168,76,0.06)');
+      rg.addColorStop(1, 'rgba(201,168,76,0)');
+      ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+    });
+
+    // ── Outer border ──
+    var bGrad = ctx.createLinearGradient(0, 0, W, H);
+    bGrad.addColorStop(0, 'rgba(201,168,76,0.5)');
+    bGrad.addColorStop(0.5, 'rgba(232,208,138,0.8)');
+    bGrad.addColorStop(1, 'rgba(201,168,76,0.5)');
+    ctx.strokeStyle = bGrad; ctx.lineWidth = 2;
+    ctx.strokeRect(20, 20, W-40, H-40);
+    ctx.strokeStyle = 'rgba(201,168,76,0.15)'; ctx.lineWidth = 1;
+    ctx.strokeRect(28, 28, W-56, H-56);
+
+    // Corner decorations
+    var co = 20, cs = 32;
+    [[[co,co],[co+cs,co],[co,co+cs]],[[W-co,co],[W-co-cs,co],[W-co,co+cs]],
+     [[co,H-co],[co+cs,H-co],[co,H-co-cs]],[[W-co,H-co],[W-co-cs,H-co],[W-co,H-co-cs]]
+    ].forEach(function(pts) {
+      ctx.strokeStyle = 'rgba(201,168,76,0.7)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); ctx.lineTo(pts[1][0],pts[1][1]); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(pts[0][0],pts[0][1]); ctx.lineTo(pts[2][0],pts[2][1]); ctx.stroke();
+    });
+
+    function hline(y, opacity) {
+      var g = ctx.createLinearGradient(W*0.08, 0, W*0.92, 0);
+      g.addColorStop(0, 'rgba(201,168,76,0)');
+      g.addColorStop(0.5, 'rgba(201,168,76,'+(opacity||0.4)+')');
+      g.addColorStop(1, 'rgba(201,168,76,0)');
+      ctx.strokeStyle = g; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(W*0.08, y); ctx.lineTo(W*0.92, y); ctx.stroke();
+    }
+
+    // ── Logo / Header ──
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(201,168,76,0.35)'; ctx.font = '24px "Noto Serif SC",serif';
+    ctx.fillText('✦  S H E N Y U A N  ✦', W/2, 78);
+    ctx.fillStyle = 'rgba(232,208,138,0.95)'; ctx.font = 'bold 90px "Noto Serif SC",serif';
+    ctx.fillText('善缘', W/2, 170);
+    ctx.fillStyle = 'rgba(201,168,76,0.55)'; ctx.font = '26px "Noto Serif SC",serif';
+    ctx.fillText('命 理 · 四 柱 八 字 命 盘', W/2, 210);
+    hline(238, 0.35);
+
+    // ── User info ──
+    var name = (lastBaziInput && lastBaziInput.name) ? lastBaziInput.name : '';
+    var gLabel = (lastBaziInput && lastBaziInput.gender === 'female') ? '女命' : '男命';
+    var bStr = lastBaziInput.year + '年' + lastBaziInput.month + '月' + lastBaziInput.day + '日';
+    if (lastBaziInput.hour !== null && lastBaziInput.hour !== undefined) {
+      var hrs = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+      bStr += ' ' + (hrs[Math.floor(lastBaziInput.hour/2)] || '') + '时';
+    }
+    var infoY = 278;
+    if (name) {
+      ctx.fillStyle = 'rgba(240,238,230,0.95)'; ctx.font = '52px "Noto Serif SC",serif';
+      ctx.fillText(name, W/2, infoY); infoY += 58;
+    }
+    ctx.fillStyle = 'rgba(200,196,180,0.6)'; ctx.font = '26px "Noto Serif SC",serif';
+    ctx.fillText(gLabel + ' · ' + bStr, W/2, infoY); infoY += 46;
+    hline(infoY); infoY += 44;
+
+    // ── 四柱 Pillars ──
+    ctx.fillStyle = 'rgba(201,168,76,0.45)'; ctx.font = '24px "Noto Serif SC",serif';
+    ctx.fillText('四  柱  八  字', W/2, infoY); infoY += 38;
+    var pillars = parsePillarsFromText(lastAiText) || [];
+    if (pillars.length === 4) {
+      var pW = 130, pGap = 20, pSX = (W - 4*pW - 3*pGap) / 2;
+      pillars.forEach(function(p, i) {
+        var px = pSX + i*(pW+pGap), py = infoY;
+        var pH = 220;
+        // card bg
+        ctx.fillStyle = p.isDay ? 'rgba(201,168,76,0.12)' : 'rgba(255,255,255,0.03)';
+        ctx.beginPath(); ctx.roundRect ? ctx.roundRect(px,py,pW,pH,12) : ctx.rect(px,py,pW,pH); ctx.fill();
+        ctx.strokeStyle = p.isDay ? 'rgba(201,168,76,0.55)' : 'rgba(201,168,76,0.15)';
+        ctx.lineWidth = p.isDay ? 2 : 1;
+        ctx.beginPath(); ctx.roundRect ? ctx.roundRect(px,py,pW,pH,12) : ctx.rect(px,py,pW,pH); ctx.stroke();
+        // label
+        ctx.fillStyle = 'rgba(180,168,128,0.5)'; ctx.font = '20px "Noto Serif SC",serif'; ctx.textAlign = 'center';
+        ctx.fillText(p.label, px+pW/2, py+32);
+        // tian gan
+        ctx.fillStyle = p.isDay ? 'rgba(232,208,138,0.95)' : 'rgba(220,208,160,0.85)';
+        ctx.font = 'bold 72px "Noto Serif SC",serif';
+        ctx.fillText(p.tian, px+pW/2, py+128);
+        // di zhi
+        ctx.fillStyle = p.isDay ? 'rgba(141,217,191,0.95)' : 'rgba(141,217,191,0.7)';
+        ctx.font = '56px "Noto Serif SC",serif';
+        ctx.fillText(p.di, px+pW/2, py+196);
+        ctx.textAlign = 'center';
+      });
+      infoY += 220 + 40;
+    } else {
+      infoY += 30;
+    }
+    hline(infoY, 0.25); infoY += 40;
+
+    // ── Day master + key insight ──
+    var dmMatch = lastAiText && lastAiText.match(/日主[：:]\s*([甲乙丙丁戊己庚辛壬癸])([木火土金水])/);
+    if (dmMatch) {
+      ctx.fillStyle = 'rgba(201,168,76,0.9)'; ctx.font = '30px "Noto Serif SC",serif'; ctx.textAlign = 'center';
+      ctx.fillText('日主 ' + dmMatch[1] + dmMatch[2] + ' · 以' + dmMatch[2] + '论命', W/2, infoY);
+      infoY += 46;
+    }
+    // Core sentence
+    if (lastAiText) {
+      var sents = lastAiText.split(/[。！？]/).map(function(s){return s.replace(/[#\*\[\]（）\(\)「」]/g,'').trim();})
+        .filter(function(s){return s.length >= 18 && s.length <= 50;});
+      var insight = sents[2] || sents[1] || sents[0] || '';
+      if (insight) {
+        ctx.fillStyle = 'rgba(201,168,76,0.18)'; ctx.font = 'italic 56px Georgia,serif'; ctx.textAlign = 'left';
+        ctx.fillText('"', W*0.08, infoY + 10);
+        ctx.fillStyle = 'rgba(232,222,185,0.88)'; ctx.font = '28px "Noto Serif SC",serif'; ctx.textAlign = 'center';
+        var maxTW = W * 0.76, chs = insight.split(''), curL = '', wrL = [];
+        chs.forEach(function(c){if(ctx.measureText(curL+c).width>maxTW){wrL.push(curL);curL=c;}else curL+=c;});
+        if(curL) wrL.push(curL);
+        wrL.slice(0,3).forEach(function(l,li){ctx.fillText(l,W/2,infoY+li*40);});
+        infoY += wrL.slice(0,3).length*40 + 30;
+      }
+    }
+    hline(infoY, 0.2); infoY += 36;
+
+    // ── Five elements: radar pentagon + bars ──
+    var elemData = {};
+    if (lastAiText) {
+      ['木','火','土','金','水'].forEach(function(el){
+        var m = lastAiText.match(new RegExp(el+'[\\s]*[：:]\\s*(\\d+)[\\s]*%'));
+        if(m) elemData[el] = parseInt(m[1]);
+      });
+    }
+    var elemNames = ['木','火','土','金','水'];
+    var elemColors2 = {'木':'#5bbfa0','火':'#e8603a','土':'#c9a84c','金':'#b8c8d4','水':'#4a9fd4'};
+    if (Object.keys(elemData).length > 0) {
+      ctx.fillStyle = 'rgba(201,168,76,0.45)'; ctx.font = '22px "Noto Serif SC",serif'; ctx.textAlign = 'center';
+      ctx.fillText('五 行 能 量', W/2, infoY); infoY += 38;
+
+      // Draw pentagon radar
+      var radarR = 90, radarCX = W/2, radarCY = infoY + radarR + 10;
+      var radarAngles = elemNames.map(function(_,i){ return (i*72 - 90) * Math.PI / 180; });
+      // Grid
+      [0.25,0.5,0.75,1].forEach(function(f){
+        ctx.beginPath();
+        radarAngles.forEach(function(a,ai){
+          var x = radarCX + radarR*f*Math.cos(a), y = radarCY + radarR*f*Math.sin(a);
+          ai===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+        });
+        ctx.closePath();
+        ctx.strokeStyle = 'rgba(201,168,76,0.08)'; ctx.lineWidth = 1; ctx.stroke();
+      });
+      // Spokes
+      radarAngles.forEach(function(a){
+        ctx.beginPath(); ctx.moveTo(radarCX,radarCY); ctx.lineTo(radarCX+radarR*Math.cos(a), radarCY+radarR*Math.sin(a));
+        ctx.strokeStyle = 'rgba(201,168,76,0.1)'; ctx.lineWidth = 1; ctx.stroke();
+      });
+      // Data polygon
+      ctx.beginPath();
+      elemNames.forEach(function(el,i){
+        var pct = Math.min(Math.max((elemData[el]||0)/100, 0.05),1);
+        var x = radarCX + radarR*pct*Math.cos(radarAngles[i]);
+        var y = radarCY + radarR*pct*Math.sin(radarAngles[i]);
+        i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+      });
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(201,168,76,0.18)'; ctx.fill();
+      ctx.strokeStyle = 'rgba(201,168,76,0.7)'; ctx.lineWidth = 2; ctx.stroke();
+      // Dots + labels
+      elemNames.forEach(function(el,i){
+        var pct = Math.min(Math.max((elemData[el]||0)/100,0.05),1);
+        var dx = radarCX + radarR*pct*Math.cos(radarAngles[i]);
+        var dy = radarCY + radarR*pct*Math.sin(radarAngles[i]);
+        ctx.beginPath(); ctx.arc(dx,dy,6,0,Math.PI*2);
+        ctx.fillStyle = elemColors2[el]||'#c9a84c'; ctx.fill();
+        // label outside
+        var lx = radarCX + (radarR+22)*Math.cos(radarAngles[i]);
+        var ly = radarCY + (radarR+22)*Math.sin(radarAngles[i]);
+        ctx.fillStyle = elemColors2[el]||'#c9a84c'; ctx.font = '20px "Noto Serif SC",serif'; ctx.textAlign='center';
+        ctx.fillText(el, lx, ly+4);
+        ctx.fillStyle='rgba(200,196,180,0.55)'; ctx.font='16px "Cormorant Garamond",serif';
+        ctx.fillText((elemData[el]||0)+'%', lx, ly+20);
+      });
+
+      infoY = radarCY + radarR + 40;
+      // Bars below radar
+      var barW = W * 0.72, barX = W * 0.14, barH = 14;
+      elemNames.forEach(function(el) {
+        var pct = elemData[el] || 0;
+        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+        if(ctx.roundRect){ ctx.beginPath(); ctx.roundRect(barX,infoY,barW,barH,barH/2); ctx.fill(); }
+        else { ctx.fillRect(barX,infoY,barW,barH); }
+        if(pct > 0) {
+          ctx.fillStyle = elemColors2[el] || '#c9a84c';
+          var fw = barW * pct / 100;
+          if(ctx.roundRect){ ctx.beginPath(); ctx.roundRect(barX,infoY,fw,barH,barH/2); ctx.fill(); }
+          else { ctx.fillRect(barX,infoY,fw,barH); }
+        }
+        ctx.fillStyle = 'rgba(200,196,180,0.7)'; ctx.font = '18px "Noto Serif SC",serif'; ctx.textAlign = 'left';
+        ctx.fillText(el, barX - 28, infoY + 12);
+        ctx.fillStyle = elemColors2[el] || '#c9a84c'; ctx.textAlign = 'right';
+        ctx.fillText(pct + '%', barX + barW + 32, infoY + 12);
+        infoY += 26;
+      });
+      infoY += 10;
+    }
+
+    // ── Yin-yang watermark ──
+    ctx.fillStyle = 'rgba(201,168,76,0.08)'; ctx.font = '160px serif'; ctx.textAlign = 'center';
+    ctx.fillText('☯', W/2, Math.min(infoY + 90, H - 140));
+
+    // ── Footer ──
+    hline(H - 120, 0.3);
+    ctx.fillStyle = 'rgba(201,168,76,0.6)'; ctx.font = '26px "Noto Serif SC",serif'; ctx.textAlign = 'center';
+    ctx.fillText('善缘命理  ·  shenyuan.app', W/2, H - 88);
+    ctx.fillStyle = 'rgba(200,196,180,0.35)'; ctx.font = '22px "Noto Serif SC",serif';
+    ctx.fillText('你求什么 · 自有天机', W/2, H - 58);
+    ctx.fillStyle = 'rgba(201,168,76,0.4)'; ctx.font = '20px "Noto Serif SC",serif';
+    ctx.fillText('扫码看你的命盘 · 合婚配对 →', W/2, H - 28);
+
+    cv.toBlob(function(blob) {
+      if (!blob) { showToast('生成失败，请重试', 'error'); return; }
+      var url = URL.createObjectURL(blob);
+      // Try Web Share API first (mobile)
+      if (navigator.share && navigator.canShare) {
+        var file = new File([blob], '善缘命盘_'+(lastBaziInput.name||'八字')+'.png', {type:'image/png'});
+        if (navigator.canShare({files:[file]})) {
+          navigator.share({files:[file], title:'我的八字命盘', text:'用善缘算了八字，太准了！'})
+            .then(function(){ URL.revokeObjectURL(url); showToast('分享成功 ✨'); })
+            .catch(function(){ fallbackDownload(url); });
+          return;
+        }
+      }
+      fallbackDownload(url);
+    }, 'image/png');
+
+    function fallbackDownload(url) {
+      var a = document.createElement('a');
+      a.href = url; a.download = '善缘命盘_'+(lastBaziInput.name||'八字')+'.png';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
+      showToast('命盘卡已保存！长按图片发朋友圈 ✨');
+    }
+  });
 }
 
 // ── 快赢3: 邮件订阅 ──

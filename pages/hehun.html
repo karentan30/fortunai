@@ -397,18 +397,18 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
     <div class="tier-row">
       <div class="tier-card" id="t1" onclick="selTier(1)">
         <div class="tier-name">基础合婚</div>
-        <div class="tier-price">$9.90</div>
-        <div class="tier-desc">相合度+五行</div>
+        <div class="tier-price">¥9.9</div>
+        <div class="tier-desc">相合度+五行（免费预览）</div>
       </div>
       <div class="tier-card sel" id="t2" onclick="selTier(2)">
         <div class="tier-name">完整合婚</div>
-        <div class="tier-price">$19.90</div>
-        <div class="tier-desc">全维度+化解</div>
+        <div class="tier-price">¥39</div>
+        <div class="tier-desc">全12维度+10年运程</div>
       </div>
       <div class="tier-card" id="t3" onclick="selTier(3)">
         <div class="tier-name">大师批婚</div>
-        <div class="tier-price">$49</div>
-        <div class="tier-desc">语音解读</div>
+        <div class="tier-price">¥199</div>
+        <div class="tier-desc">语音解读+化解方案</div>
       </div>
     </div>
   </div>
@@ -422,6 +422,15 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
   <div style="font-size:12px;color:rgba(220,210,175,0.8);line-height:1.75;font-style:italic">"把这个结果发给婆婆看，婆婆说和她当年找师父算的结论一致，就放心了很多。我觉得这个挺准的。"</div>
   <div style="font-size:10px;color:rgba(200,184,122,0.5);margin-top:6px">— 加拿大 · 多伦多 · 教师 · 2026.08</div>
 </div>
+  <!-- 邀请TA填写：填完己方信息后出现 -->
+  <div id="inviteTaSection" style="display:none;margin:14px 16px 0;padding:14px 16px;background:linear-gradient(135deg,rgba(91,191,160,0.08),rgba(201,168,76,0.05));border:1px solid rgba(91,191,160,0.25);border-radius:14px;text-align:center;animation:fadeUp 0.4s ease both">
+    <div style="font-size:11px;color:rgba(91,191,160,0.85);letter-spacing:0.12em;margin-bottom:8px">✦ 不知道TA的生辰？ ✦</div>
+    <button onclick="handleInviteTA()" style="width:100%;padding:11px 0;border:1.5px solid rgba(91,191,160,0.45);border-radius:12px;background:rgba(91,191,160,0.08);color:rgba(91,191,160,0.9);font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:0.12em;cursor:pointer;transition:all 0.2s" onmouseenter="this.style.background='rgba(91,191,160,0.16)'" onmouseleave="this.style.background='rgba(91,191,160,0.08)'">
+      🔗 生成专属邀请链接，让TA来填
+    </button>
+    <div style="font-size:10px;color:rgba(200,184,122,0.45);margin-top:7px;letter-spacing:0.06em">TA打开链接，你的信息已自动保存</div>
+  </div>
+
   <div class="submit-wrap page-enter page-enter-d5">
     <button class="btn-calc" onclick="startCalc()">推算合婚 →</button>
     <div style="text-align:center;font-size:10px;color:rgba(200,184,122,0.55);margin-top:10px;letter-spacing:0.08em">先看配对预览，满意再解锁完整合婚报告</div>
@@ -503,17 +512,20 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
   <!-- locked -->
   <div class="locked-card" id="lockedCard">
     <div class="locked-inner">
-      <div class="locked-inner-row">📅 大凶日期回避（婚宴/领证）</div>
+      <div class="locked-inner-row">🔮 全12维度深度合婚分析</div>
+      <div class="locked-inner-row">📅 10年婚姻运程预测</div>
       <div class="locked-inner-row">🌟 最佳婚期推荐（3个吉日）</div>
-      <div class="locked-inner-row">🔮 五行冲克化解方案</div>
-      <div class="locked-inner-row">💍 婚戒宝石旺婚推荐</div>
+      <div class="locked-inner-row">💍 五行冲克化解方案+分享卡</div>
     </div>
     <div class="locked-overlay">
       <div class="lock-icon">🔒</div>
       <div class="lock-title">解锁完整合婚报告</div>
-      <button class="lock-btn">解锁完整报告 · $19.90</button>
+      <button class="lock-btn">解锁完整合婚报告 · ¥39</button>
       <div class="lock-divider">— 或 —</div>
       <button class="lock-share-btn" onclick="unlockByShare(this)">🔗 分享给朋友，免费解锁</button>
+      <div style="margin-top:10px">
+        <button onclick="invitePartnerFromLocked()" style="background:none;border:none;color:rgba(91,191,160,0.75);font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:0.1em;cursor:pointer;text-decoration:underline;padding:4px 0">💌 发给另一半一起看 →</button>
+      </div>
     </div>
   </div>
 
@@ -525,7 +537,8 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
 
   <!-- Invite TA section (shown after result is visible) -->
   <div class="invite-share" id="inviteShare">
-    <div class="invite-share-title">✦ 邀请TA一起查看 ✦</div>
+    <div class="invite-share-title">✦ 发给另一半，TA只需填生辰 ✦</div>
+    <div style="font-size:10px;color:rgba(210,180,168,0.5);text-align:center;margin-bottom:10px;letter-spacing:0.06em">你的信息已保存，TA打开链接即可直接查看结果</div>
     <div class="invite-btns">
       <div class="invite-btn" onclick="inviteCopyLink()">
         <span class="invite-btn-icon">🔗</span>
@@ -535,7 +548,7 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
         <span class="invite-btn-icon">💬</span>
         <span class="invite-btn-label">微信发送</span>
       </div>
-      <div class="invite-btn" onclick="generateShareImage()">
+      <div class="invite-btn" onclick="generateAndShareImage()">
         <span class="invite-btn-icon">🖼</span>
         <span class="invite-btn-label">生成截图卡</span>
       </div>
@@ -544,7 +557,7 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
 
   <!-- Share bar -->
   <div class="share-bar" id="shareBar">
-    <div class="share-btn" onclick="generateShareImage()" style="border-color:rgba(201,168,76,0.35);background:rgba(201,168,76,0.06)">
+    <div class="share-btn" onclick="generateAndShareImage()" style="border-color:rgba(201,168,76,0.35);background:rgba(201,168,76,0.06)">
       <span class="share-icon">🖼</span>
       <span class="share-label" style="color:var(--gold)">分享图</span>
     </div>
@@ -566,7 +579,7 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
 
 <!-- sticky -->
 <div class="sticky-bar" id="stickyBar">
-  <button class="sticky-cta">解锁完整报告 · $19.90</button>
+  <button class="sticky-cta">解锁完整合婚报告 · ¥39 / ₩9,900</button>
 </div>
 
 <script>
@@ -601,7 +614,7 @@ function setMode(m) {
     if (headerSub) headerSub.textContent = '八字合缘 · 共识同心';
     if (headerIcon) headerIcon.textContent = '囍';
     document.querySelectorAll('.locked-inner-row').forEach(function(el, i) {
-      var items = ['📅 大凶日期回避（婚宴/领证）', '🌟 最佳婚期推荐（3个吉日）', '🔮 五行冲克化解方案', '💍 婚戒宝石旺婚推荐'];
+      var items = ['🔮 全12维度深度合婚分析', '📅 10年婚姻运程预测', '🌟 最佳婚期推荐（3个吉日）', '💍 五行冲克化解方案+分享卡'];
       if (items[i]) el.textContent = items[i];
     });
     var lockTitle2 = document.querySelector('.lock-title');
@@ -645,17 +658,17 @@ function selTier(n){
 }
 // 🔴 修复: 锁卡/吸底 CTA 金额随所选档位同步(之前写死 $19.9/$49, 用户选$9.9却被收$49)
 function syncPaywall(){
-  var TIER_MAP = { 1:['basic',9.9,'基础报告'], 2:['full',19.9,'完整报告'], 3:['master',49,'大师批婚'] };
+  var TIER_MAP = { 1:['basic',9.9,'基础报告'], 2:['full',39,'完整合婚报告'], 3:['master',199,'大师批婚'] };
   var t = TIER_MAP[curTier] || TIER_MAP[2];
   var lockBtn = document.querySelector('.lock-btn');
   if (lockBtn) {
     lockBtn.onclick = function(){ createCheckout(this, t[0], t[1]); };
-    lockBtn.textContent = '解锁' + t[2] + ' · $' + t[1].toFixed(2);
+    lockBtn.textContent = '解锁' + t[2] + ' · ¥' + t[1];
   }
   var sticky = document.querySelector('.sticky-cta');
   if (sticky) {
     sticky.onclick = function(){ createCheckout(this, t[0], t[1]); };
-    sticky.textContent = '解锁' + t[2] + ' · $' + t[1].toFixed(2) + (t[0]==='master' ? ' · 专业语音解读' : '');
+    sticky.textContent = '解锁' + t[2] + ' · ¥' + t[1] + (t[0]==='master' ? ' · 专业语音解读' : ' / ₩' + (t[0]==='full' ? '9,900' : '2,900'));
   }
 }
 
@@ -1329,6 +1342,157 @@ function shareCopyLink(url) {
   catch(e) { showToast('复制失败', 'error'); }
   document.body.removeChild(t);
 }
+
+// ── 填完己方信息后显示邀请TA区块 ──
+function checkShowInviteTA() {
+  var ay = document.getElementById('aYear').value;
+  var am = document.getElementById('aMonth').value;
+  var ad = document.getElementById('aDay').value;
+  var section = document.getElementById('inviteTaSection');
+  if (!section) return;
+  if (ay && am && ad) {
+    section.style.display = 'block';
+  } else {
+    section.style.display = 'none';
+  }
+}
+
+// ── 邀请TA填写（计算前） ──
+function handleInviteTA() {
+  var ay = document.getElementById('aYear').value;
+  var am = document.getElementById('aMonth').value;
+  var ad = document.getElementById('aDay').value;
+  if (!ay || !am || !ad) { showToast('请先填写自己的出生年月日', 'error'); return; }
+
+  // Save Person A data then copy invite link
+  var inviteId = generateInviteId();
+  var record = {
+    nameA: document.getElementById('nameA').value.trim() || '',
+    inviterName: document.getElementById('nameA').value.trim() || '',
+    p1Year: ay, p1Month: am, p1Day: ad,
+    p1Hour: document.getElementById('aHour').value,
+    p1Gender: gA,
+    mode: window._hehunMode || 'marriage',
+    ref: localStorage.getItem('sy_ref_code') || ''
+  };
+
+  // Save to localStorage as immediate fallback
+  try { localStorage.setItem('sy_invite_' + inviteId, JSON.stringify(record)); } catch(e) {}
+
+  // Save to server and get canonical inviteId
+  fetch('/api/invite/save', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(record)
+  }).then(function(r){ return r.json(); }).then(function(data){
+    var sid = (data && data.inviteId) ? data.inviteId : inviteId;
+    window._currentInviteIdServer = sid;
+    _doSendInviteLink(sid, record.inviterName || '我');
+  }).catch(function(){
+    _doSendInviteLink(inviteId, record.inviterName || '我');
+  });
+}
+
+function _doSendInviteLink(sid, senderName) {
+  var nameA = senderName || document.getElementById('nameA').value.trim() || '我';
+  var base = location.origin + '/pages/hehun.html';
+  var url = base + '?invite=' + encodeURIComponent(sid) + '&name=' + encodeURIComponent(nameA);
+  var text = nameA + ' 已填好了信息，点链接填入你的生辰，一起看合婚结果 ❤️\n' + url;
+
+  if (navigator.share) {
+    navigator.share({ title: '善缘合婚 · 邀请你一起测', text: text, url: url })
+      .catch(function() { _doCopyText(url, '专属邀请链接已复制！发给TA来填生辰 ❤️'); });
+  } else {
+    _doCopyText(url, '专属邀请链接已复制！发给TA来填生辰 ❤️');
+  }
+}
+
+// ── 锁卡上"发给另一半一起看"按钮 ──
+function invitePartnerFromLocked() {
+  var score = window._syScore || '?';
+  var nameA = window._syNameA || document.getElementById('nameA').value.trim() || '我';
+  var grade = window._syGrade || '';
+  _getServerInviteIdThen(function(sid) {
+    var base = location.origin + '/pages/hehun.html';
+    var url = base + '?invite=' + encodeURIComponent(sid) + '&name=' + encodeURIComponent(nameA);
+    var text = '【善缘合婚】' + nameA + '已测了我们的合婚，分数' + score + '% ' + grade + '\n发给你一起看完整报告：\n' + url;
+    if (navigator.share) {
+      navigator.share({ title: '善缘合婚报告', text: text, url: url })
+        .catch(function() { _doCopyText(url, '链接已复制，发给另一半一起看！'); });
+    } else {
+      _doCopyText(url, '链接已复制，发给另一半一起看！');
+    }
+  });
+}
+
+// ── Web Share API 增强版生成分享图 ──
+function generateAndShareImage() {
+  var score = window._syScore || 0;
+  var nameA = window._syNameA || '你';
+  var nameB = window._syNameB || 'TA';
+  var grade = window._syGrade || '';
+  var S = 1080;
+  var c = document.createElement('canvas');
+  c.width = S; c.height = S;
+  var ctx = c.getContext('2d');
+  // (reuse same drawing code as generateShareImage)
+  // Background
+  var bg = ctx.createLinearGradient(0,0,S,S);
+  bg.addColorStop(0,'#1a0810'); bg.addColorStop(0.5,'#250c1a'); bg.addColorStop(1,'#0f0508');
+  ctx.fillStyle = bg; ctx.fillRect(0,0,S,S);
+  ctx.strokeStyle='rgba(201,168,76,0.25)'; ctx.lineWidth=2;
+  ctx.strokeRect(40,40,S-80,S-80);
+  ctx.strokeStyle='rgba(201,168,76,0.12)'; ctx.lineWidth=1;
+  ctx.strokeRect(52,52,S-104,S-104);
+  var acc=[[[40,40],[80,40],[40,80]],[[S-40,40],[S-80,40],[S-40,80]],[[40,S-40],[80,S-40],[40,S-80]],[[S-40,S-40],[S-80,S-40],[S-40,S-80]]];
+  ctx.strokeStyle='rgba(201,168,76,0.6)'; ctx.lineWidth=2;
+  acc.forEach(function(pts){ctx.beginPath();ctx.moveTo(pts[0][0],pts[0][1]);ctx.lineTo(pts[1][0],pts[1][1]);ctx.moveTo(pts[0][0],pts[0][1]);ctx.lineTo(pts[2][0],pts[2][1]);ctx.stroke();});
+  ctx.fillStyle='rgba(201,168,76,0.75)'; ctx.font='500 26px "Apple SD Gothic Neo",sans-serif';
+  ctx.textAlign='center'; ctx.fillText('✦  S H E N Y U A N  ·  善 缘  ✦',S/2,108);
+  var nameStr = nameA + '  ❤  ' + nameB;
+  ctx.fillStyle='rgba(255,255,255,0.92)'; ctx.font='bold 58px "Apple SD Gothic Neo","PingFang SC",sans-serif';
+  ctx.fillText(nameStr,S/2,200);
+  var cx=S/2, cy=490, r=168;
+  ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+  ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=16; ctx.stroke();
+  var ringColor = score>=76?'#5bbfa0':score>=55?'#c9a84c':'#c9607a';
+  ctx.beginPath(); ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+(score/100)*Math.PI*2);
+  ctx.strokeStyle=ringColor; ctx.lineWidth=16; ctx.lineCap='round'; ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.font='bold 108px "Cormorant Garamond","Georgia",serif';
+  ctx.textAlign='center'; ctx.fillText(score,cx,cy+22);
+  ctx.fillStyle='rgba(255,255,255,0.45)'; ctx.font='500 22px "Apple SD Gothic Neo",sans-serif';
+  ctx.fillText('%  合婚匹配度',cx+36,cy+22);
+  ctx.fillStyle=ringColor; ctx.font='bold 52px "Apple SD Gothic Neo","PingFang SC",sans-serif';
+  ctx.fillText(grade,cx,cy+r+64);
+  ctx.strokeStyle='rgba(201,168,76,0.2)'; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(S/2-180,cy+r+128); ctx.lineTo(S/2+180,cy+r+128); ctx.stroke();
+  ctx.fillStyle='rgba(201,168,76,0.65)'; ctx.font='22px "Apple SD Gothic Neo",sans-serif';
+  ctx.fillText('测你们的合婚 →  shenyuan.app',cx,cy+r+168);
+  ctx.fillStyle='rgba(255,255,255,0.25)'; ctx.font='18px "Apple SD Gothic Neo",sans-serif';
+  ctx.fillText('扫一扫 · 2人才能测合婚',cx,cy+r+200);
+
+  c.toBlob(function(blob){
+    if (navigator.share && navigator.canShare && navigator.canShare({files:[new File([blob],'hehun.png',{type:'image/png'})]})) {
+      navigator.share({
+        title: '善缘合婚 · ' + nameA + ' & ' + nameB,
+        text: '我们合婚匹配度 ' + score + '%，' + grade + '！快来测测你们 → shenyuan.app',
+        files: [new File([blob], '善缘合婚-' + nameA + nameB + '.png', {type:'image/png'})]
+      }).catch(function() {
+        // fallback to download
+        var url=URL.createObjectURL(blob);
+        var a=document.createElement('a');
+        a.href=url; a.download='善缘合婚-'+nameA+nameB+'.png'; a.click();
+        setTimeout(function(){URL.revokeObjectURL(url);},1000);
+      });
+    } else {
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a');
+      a.href=url; a.download='善缘合婚-'+nameA+nameB+'.png'; a.click();
+      setTimeout(function(){URL.revokeObjectURL(url);},1000);
+      showToast('分享图已保存，长按发给TA一起看！');
+    }
+  },'image/png');
+}
 </script>
 
 <!-- 星尘粒子生成 -->
@@ -1354,7 +1518,17 @@ function injectDisclaimer(containerId) {
 </script>
 
 <script>
-(function(){var t=localStorage.getItem('sy_theme');if(t==='dark'){document.documentElement.classList.add('dark-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='🌙';}handlePaidReturn();handleInviteParam();})();
+(function(){
+  var t=localStorage.getItem('sy_theme');
+  if(t==='dark'){document.documentElement.classList.add('dark-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='🌙';}
+  handlePaidReturn();
+  handleInviteParam();
+  // Listen to Person A fields to show invite-TA section
+  ['aYear','aMonth','aDay'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('change', checkShowInviteTA);
+  });
+})();
 function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'☀️';localStorage.setItem('sy_theme',l?'dark':'light');}
 </script>
 <script src="/assets/js/common.js"></script>
