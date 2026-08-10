@@ -10,45 +10,82 @@ const router = require('express').Router();
 const {
   getUserById, getUserOrders,
   invitedCount, wasInvited, getUserByRefCode, createReferral, grantReferralReward,
+  CHANNELS, REWARD_TIERS,
 } = require('../lib/store');
 const { buildShareUrl } = require('../lib/utils');
 const { simpleRateLimitMiddleware, authMiddleware } = require('../middleware');
 
 // GET /api/referral/mine — 我的邀请码/分享链接/统计
+// P1修复: 返回5渠道邀请码 + 当前奖励等级
 router.get('/mine', authMiddleware, (req, res) => {
   if (!req.user) return res.status(401).json({ error: '请先登录' });
   const u = getUserById.get(req.user.id);
   if (!u) return res.status(401).json({ error: '请先登录' });
-  const share_url = buildShareUrl(u.ref_code, req);
+
+  // 查询完整user对象获得ref_codes
+  const fullUser = require('../lib/store')._M.users.find(x => x.id === req.user.id);
+  const ref_codes = fullUser?.ref_codes || { organic: fullUser?.ref_code };
+
+  const invited = invitedCount(req.user.id);
+  const tier = REWARD_TIERS.find(t => invited >= t.min && (t.max < 0 || invited <= t.max));
+
+  // 为每个渠道生成分享链接
+  const channel_urls = {};
+  Object.entries(ref_codes).forEach(([channel, code]) => {
+    channel_urls[channel] = buildShareUrl(code, req, channel);
+  });
+
   res.json({
-    ref_code: u.ref_code,
-    share_url,
-    invited_count: invitedCount(req.user.id),
-    share_text: `我在善缘算了命,挺准的,你也来测测 → ${share_url}`
+    ref_codes: ref_codes,           // { tiktok: 'ABC_TK', xiaohongshu: 'DEF_XH', ... }
+    channel_urls: channel_urls,     // 每渠道分享链接
+    share_url: buildShareUrl(ref_codes.organic, req),  // 兼容旧接口
+    ref_code: ref_codes.organic,    // 兼容旧接口
+    invited_count: invited,
+    current_tier: tier?.level || 'pending',
+    next_tier_at: tier?.max < 0 ? null : tier?.max + 1,  // 下一等级需要邀请数
+    share_text: `我在善缘算了命,挺准的,你也来测测 → ${buildShareUrl(ref_codes.organic, req)}`
   });
 });
 
 // POST /api/referral/claim — 老用户补填邀请码
+// P1修复: 支持?ref_channel查询参数记录来源
 router.post('/claim', simpleRateLimitMiddleware, authMiddleware, (req, res) => {
   if (!req.user) return res.status(401).json({ error: '请先登录' });
   const ref = req.body && req.body.ref;
+  const channel = req.query.ref_channel || req.body?.channel || 'organic';
   if (!ref) return res.status(400).json({ error: '请提供邀请码' });
   if (wasInvited(req.user.id)) return res.status(400).json({ error: '你已使用过邀请码' });
   const inviter = getUserByRefCode.get(ref);
   if (!inviter) return res.status(400).json({ error: '邀请码无效' });
   if (inviter.id === req.user.id) return res.status(400).json({ error: '不能使用自己的邀请码' });
-  createReferral(inviter.id, req.user.id);
+  createReferral(inviter.id, req.user.id, channel);
   grantReferralReward(inviter.id);
-  res.json({ ok: true, invited_count: invitedCount(req.user.id) });
+
+  // 返回邀请者的新等级
+  const invited = invitedCount(inviter.id);
+  const tier = REWARD_TIERS.find(t => invited >= t.min && (t.max < 0 || invited <= t.max));
+
+  res.json({
+    ok: true,
+    inviter_id: inviter.id,
+    inviter_tier: tier?.level || 'pending',
+    invited_count: invited
+  });
 });
 
 // GET /api/referral/share-card?token=xxx  — SVG share card
+// P1修复: 支持?channel参数指定渠道，默认organic
 router.get('/share-card', authMiddleware, (req, res) => {
   if (!req.user) return res.status(401).json({ error: '请先登录' });
   const u = getUserById.get(req.user.id);
   if (!u) return res.status(401).json({ error: '请先登录' });
-  const shareUrl = buildShareUrl(u.ref_code, req);
-  const code = u.ref_code || '';
+
+  const fullUser = require('../lib/store')._M.users.find(x => x.id === req.user.id);
+  const ref_codes = fullUser?.ref_codes || { organic: fullUser?.ref_code };
+  const channel = req.query.channel || 'organic';
+  const code = ref_codes[channel] || ref_codes.organic || '';
+
+  const shareUrl = buildShareUrl(code, req, channel);
   const invCount = invitedCount(req.user.id);
 
   const svg = `<?xml version="1.0" encoding="UTF-8"?>

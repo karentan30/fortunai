@@ -59,22 +59,39 @@ function _flushStore() {
 process.on('SIGTERM', () => { _flushStore(); process.exit(0); });
 process.on('SIGINT',  () => { _flushStore(); process.exit(0); });
 
+// ── 渠道定义 ──
+const CHANNELS = ['tiktok', 'xiaohongshu', 'wechat', 'youtube', 'organic'];
+
 // ── 生成唯一 6 位大写 base36 邀请码 ──
 function genRefCode() {
   var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
   for (var attempt = 0; attempt < 50; attempt++) {
     var buf = crypto.randomBytes(6), code = '';
     for (var i = 0; i < 6; i++) { code += chars[buf[i] % 36]; }
-    if (!_M.users.some(u => u.ref_code === code)) return code;
+    // 检查所有渠道中的邀请码是否已存在
+    if (!_M.users.some(u => u.ref_codes && Object.values(u.ref_codes).some(rc => rc.split('_')[0] === code))) return code;
   }
   return crypto.randomBytes(4).toString('hex').toUpperCase().slice(0, 6);
+}
+
+// ── 为用户生成 5 渠道邀请码 ──
+function genRefCodesForUser() {
+  const codes = {};
+  CHANNELS.forEach(ch => {
+    const base = genRefCode();
+    const suffix = ch.substring(0, 2).toUpperCase();
+    codes[ch] = base + '_' + suffix; // e.g. ABC123_TK for tiktok
+  });
+  return codes;
 }
 
 // ── 数据访问对象 ──
 const insertUser = {
   run(e, h) {
     const id = _M._id.u++;
-    _M.users.push({ id, email: e, password_hash: h, name: '', ref_code: genRefCode(), created_at: new Date().toISOString() });
+    // P1修复: 改为生成5渠道邀请码，保留ref_code字段兼容旧接口(取organic渠道)
+    const ref_codes = genRefCodesForUser();
+    _M.users.push({ id, email: e, password_hash: h, name: '', ref_codes: ref_codes, ref_code: ref_codes.organic, created_at: new Date().toISOString() });
     _persist();
     return { lastInsertRowid: id };
   }
@@ -91,7 +108,12 @@ const getUserByRefCode = {
     if (!c) return undefined;
     var code = String(c).trim().toUpperCase();
     if (!code) return undefined;
-    return _M.users.find(u => u.ref_code === code);
+    // P1修复: 支持新的渠道邀请码格式(含_后缀)，也支持旧的ref_code格式
+    return _M.users.find(u => {
+      if (u.ref_code === code) return true;  // 兼容旧格式
+      if (u.ref_codes && Object.values(u.ref_codes).includes(code)) return true;  // 新格式
+      return false;
+    });
   }
 };
 const insertToken = {
@@ -224,13 +246,20 @@ function _updOrderExpiry(oNo, expIso) {
   if (o) { o.expires_at = expIso; o.payment_status = 'completed'; _persist(); }
 }
 
-function _setOrExtendSub(pid, email, expIso) {
-  const existing = _M.orders.find(x => x.product === pid && x.payment_status === 'completed' && x.user_id === null && x.contact === email);
-  if (existing) { existing.expires_at = expIso; _persist(); return; }
+function _setOrExtendSub(pid, email, expIso, stripeSessionId) {
+  // P1修复：幂等性检查 — 若已存在相同sessionId的订单，直接返回(防webhook重复投递)
+  if (stripeSessionId) {
+    const existing = _M.orders.find(x => x.stripe_session_id === stripeSessionId && x.product === pid);
+    if (existing) {
+      console.log('[store] Idempotent: skipping duplicate order', stripeSessionId);
+      existing.expires_at = expIso; _persist(); return;
+    }
+  }
+
   _M.orders.push({
     id: _M._id.o++, order_no: 'SY-SUB-' + Date.now() + '-' + crypto.randomBytes(3).toString('hex'),
     product: pid, amount: 0, currency: 'usd', user_id: null, donor_name: '', contact: email, wish_text: '',
-    stripe_session_id: '', payment_status: 'completed', expires_at: expIso, created_at: new Date().toISOString()
+    stripe_session_id: stripeSessionId || '', payment_status: 'completed', expires_at: expIso, created_at: new Date().toISOString()
   });
   _persist();
 }
@@ -279,6 +308,13 @@ function _insJossOrder(oNo, p, amt, cur, dN, c, wT, ps) {
   _persist();
 }
 
+// ── 奖励分层（前100倍数机制）──
+const REWARD_TIERS = [
+  { min: 1, max: 100, level: 'premium', bonus_type: 'referral_premium', amount: 50 },
+  { min: 101, max: 200, level: 'standard', bonus_type: 'referral_standard', amount: 30 },
+  { min: 201, max: -1, level: 'basic', bonus_type: 'referral_basic', amount: 10 }
+];
+
 // ── Referral helpers ──
 function invitedCount(uid) {
   return _M.referrals.filter(r => r.inviter_id === uid).length;
@@ -288,29 +324,49 @@ function wasInvited(uid) {
   return _M.referrals.some(r => r.invitee_id === uid);
 }
 
-function createReferral(inviterId, inviteeId) {
-  var ref = { id: _M._id.rf++, inviter_id: inviterId, invitee_id: inviteeId, created_at: new Date().toISOString() };
+function createReferral(inviterId, inviteeId, channel) {
+  // P1修复: 记录来源渠道
+  var ref = { id: _M._id.rf++, inviter_id: inviterId, invitee_id: inviteeId, channel: channel || 'organic', created_at: new Date().toISOString() };
   _M.referrals.push(ref);
   _persist();
   return ref;
 }
 
 function grantReferralReward(inviterId) {
+  // P1修复: 按邀请数分层发放奖励
   if (!_M.rewards) _M.rewards = [];
-  var already = _M.rewards.find(r => r.user_id === inviterId && r.type === 'referral_basic' && !r.used);
-  if (!already) {
-    _M.rewards.push({ user_id: inviterId, type: 'referral_basic', used: false, created_at: new Date().toISOString() });
-    _persist();
-  }
+  const count = invitedCount(inviterId);
+  const tier = REWARD_TIERS.find(t => count >= t.min && (t.max < 0 || count <= t.max));
+  if (!tier) return; // 不符合任何等级
+
+  // 检查该等级是否已发过奖励，防重复发放
+  const alreadyGivenTier = _M.rewards.find(r =>
+    r.user_id === inviterId &&
+    r.type === tier.bonus_type &&
+    !r.used
+  );
+  if (alreadyGivenTier) return;
+
+  _M.rewards.push({
+    user_id: inviterId,
+    type: tier.bonus_type,
+    amount: tier.amount,
+    level: tier.level,
+    triggered_at_count: count,
+    used: false,
+    created_at: new Date().toISOString()
+  });
+  _persist();
 }
 
-function tryApplyReferral(refCode, inviteeId) {
+function tryApplyReferral(refCode, inviteeId, channel) {
+  // P1修复: 支持渠道参数(来自?ref_channel查询参数)
   if (!refCode) return false;
   var inviter = getUserByRefCode.get(refCode);
   if (!inviter) return false;
   if (inviter.id === inviteeId) return false;
   if (wasInvited(inviteeId)) return false;
-  createReferral(inviter.id, inviteeId);
+  createReferral(inviter.id, inviteeId, channel || 'organic');
   grantReferralReward(inviter.id);
   return true;
 }
@@ -393,6 +449,7 @@ module.exports = {
   _updOrder, _updOrderExpiry, _setOrExtendSub,
   _findOrder, _insCnOrder, _completeCnOrder, _insSub, _allOrders, _insJossOrder,
   // Referral
+  CHANNELS, REWARD_TIERS, genRefCodesForUser,
   invitedCount, wasInvited, createReferral, grantReferralReward, tryApplyReferral,
   // Streak
   updateStreak,
