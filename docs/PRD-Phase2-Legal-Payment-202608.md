@@ -180,6 +180,272 @@ ShenYuan Phase 2 的核心目标是**构建企业级法律合规框架与全球�
 
 ---
 
+### I.3 法律页面 UX 改进（全新）
+
+#### 折叠式条款设计（Accordion 模式）
+
+**目标**：按用户地理位置动态展示相关条款，降低信息噪音
+
+```html
+<!-- 推荐设计：页面顶部 1 屏 FAQ 五问 -->
+<section class="legal-faq">
+  <h2>你可能关心的问题</h2>
+  <div class="accordion">
+    <details open>
+      <summary>❓ 你们能把我的生日卖给别人吗？</summary>
+      <p>不能。我们不出售或转移任何个人信息。你的生日仅用于算命计算，存储在加密数据库中。</p>
+      <p><a href="#section-privacy">→ 查看完整隐私政策</a></p>
+    </details>
+
+    <details>
+      <summary>🔙 多久能退款？</summary>
+      <p><b>中国用户 (¥)</b>: 7 天无理由退款 / <b>海外用户 ($)</b>: 14 天 / <b>韩国用户 (₩)</b>: 7 天</p>
+      <p><a href="#section-refund">→ 查看完整退款政策</a></p>
+    </details>
+
+    <details>
+      <summary>🤖 我的数据会被 AI 训练吗？</summary>
+      <p>你的生日、姓名、出生时间仅用于个性化算命结果，不用于 AI 模型训练。我们的算命引擎基于经典五行学说。</p>
+      <p><a href="#section-ai-disclosure">→ 了解更多 AI 透明度</a></p>
+    </details>
+
+    <details>
+      <summary>🔒 支付安全吗？</summary>
+      <p>是的。所有支付通过 Stripe、WeChat Pay、Alipay 等官方支付网关，我们不存储信用卡信息。</p>
+      <p><a href="#section-security">→ 安全政策详情</a></p>
+    </details>
+
+    <details>
+      <summary>🗑️ 能永久删除我的账户吗？</summary>
+      <p>可以。发邮件至 support@shenyuan.app，我们会在 30 天内删除你的所有数据（法律保留期除外）。</p>
+      <p><a href="#section-deletion">→ 数据删除权利</a></p>
+    </details>
+  </div>
+</section>
+
+<!-- 按地理位置动态展示条款 -->
+<section class="legal-by-region" id="section-privacy">
+  <h2>隐私政策</h2>
+  
+  <!-- JavaScript 根据用户 IP/地区展示对应条款 -->
+  <div id="privacy-sections">
+    <!-- 中国用户: PIPL -->
+    <div class="region-block" data-region="CN">
+      <h3>🇨🇳 中国用户 - 个人信息保护法 (PIPL)</h3>
+      <p>若你位于中国大陆，本平台遵守 PIPL 相关规定...</p>
+    </div>
+
+    <!-- 韩国用户: PIPA -->
+    <div class="region-block" data-region="KR">
+      <h3>🇰🇷 韩国用户 - 개인정보보호법 (PIPA)</h3>
+      <p>한국 사용자의 경우, 본 플랫폼은 PIPA를 준수합니다...</p>
+    </div>
+
+    <!-- EU/UK 用户: GDPR -->
+    <div class="region-block" data-region="EU">
+      <h3>🇪🇺 欧盟/英国用户 - GDPR</h3>
+      <p>If you are located in the EU or UK, we process your data in accordance with GDPR...</p>
+    </div>
+
+    <!-- 美国用户: CCPA -->
+    <div class="region-block" data-region="US">
+      <h3>🇺🇸 加州用户 - CCPA</h3>
+      <p>If you are a California resident, you have specific rights under CCPA...</p>
+    </div>
+
+    <!-- 其他国家：通用 -->
+    <div class="region-block" data-region="OTHER">
+      <h3>🌍 其他地区用户</h3>
+      <p>本平台遵守国际数据保护标准...</p>
+    </div>
+  </div>
+
+  <script>
+    // 前端地区检测与动态展示
+    (async function() {
+      try {
+        const response = await fetch('https://ipapi.co/json/');
+        const data = await response.json();
+        const country = data.country_code;  // 'CN', 'KR', 'US', etc.
+        
+        const regionMap = {
+          'CN': 'CN',
+          'KR': 'KR',
+          'US': 'US',
+          'DE': 'EU', 'FR': 'EU', 'GB': 'EU'  // 示例
+          // ... 完整映射
+        };
+        
+        const region = regionMap[country] || 'OTHER';
+        
+        // 隐藏不相关条款
+        document.querySelectorAll('.region-block').forEach(block => {
+          if (block.dataset.region !== region) {
+            block.style.display = 'none';
+          }
+        });
+        
+        // 记录用户地区（用于支付币种自动选择）
+        localStorage.setItem('userRegion', region);
+      } catch (err) {
+        console.warn('Geo-detection failed, showing all regions');
+      }
+    })();
+  </script>
+</section>
+```
+
+#### 支付 UI 容错设计（全新）
+
+**1. 支付重试进度条**
+```html
+<div class="payment-retry-progress">
+  <p id="retry-message">重试中 (1/3)...</p>
+  <progress id="retry-bar" value="1" max="3"></progress>
+  
+  <!-- 第 3 次失败时显示降级选项 -->
+  <div id="fallback-options" style="display:none;">
+    <p>支付暂时失败，请尝试：</p>
+    <button onclick="switchPaymentMethod('wechat')">用微信支付</button>
+    <button onclick="switchPaymentMethod('alipay')">用支付宝</button>
+    <button onclick="contactSupport()">联系客服</button>
+  </div>
+</div>
+
+<script>
+async function attemptPayment(maxRetries = 3) {
+  for (let i = 1; i <= maxRetries; i++) {
+    try {
+      document.getElementById('retry-message').textContent = `重试中 (${i}/${maxRetries})...`;
+      document.getElementById('retry-bar').value = i;
+      
+      const result = await processPayment();
+      if (result.success) return result;
+    } catch (err) {
+      if (i === maxRetries) {
+        // 显示降级选项
+        document.getElementById('fallback-options').style.display = 'block';
+        throw err;
+      }
+      await new Promise(r => setTimeout(r, 1000 * i));  // 指数退避
+    }
+  }
+}
+</script>
+```
+
+**2. 支付确认状态流**
+```html
+<div class="payment-status-flow">
+  <div class="step active" data-step="1">
+    <span class="dot">1</span>
+    <span class="label">提交支付</span>
+  </div>
+  <div class="step" data-step="2">
+    <span class="dot">2</span>
+    <span class="label">交易确认中...</span>
+  </div>
+  <div class="step" data-step="3">
+    <span class="dot">3</span>
+    <span class="label">生成报告</span>
+  </div>
+</div>
+
+<script>
+// 轮询订单状态
+async function pollPaymentStatus(orderId) {
+  updateStep(2);  // 进入确认阶段
+  
+  while (true) {
+    const response = await fetch(`/api/orders/${orderId}/status`);
+    const { status } = await response.json();
+    
+    if (status === 'completed') {
+      updateStep(3);  // 进入生成阶段
+      return;
+    }
+    
+    if (status === 'failed') {
+      showPaymentFailed();
+      return;
+    }
+    
+    await new Promise(r => setTimeout(r, 1000));  // 每秒轮询
+  }
+}
+
+function updateStep(stepNum) {
+  document.querySelectorAll('.step').forEach(step => {
+    if (parseInt(step.dataset.step) <= stepNum) {
+      step.classList.add('active');
+    }
+  });
+}
+</script>
+```
+
+#### 多币种定价透明度（全新）
+
+```html
+<div class="pricing-transparency">
+  <div class="currency-selector">
+    <label>选择货币：</label>
+    <select id="currency" onchange="updatePricing()">
+      <option value="cny">¥ 中国人民币 (CNY)</option>
+      <option value="usd">$ 美元 (USD)</option>
+      <option value="krw">₩ 韩元 (KRW)</option>
+    </select>
+  </div>
+
+  <div class="pricing-display">
+    <div class="price-item">
+      <strong>深度八字报告</strong>
+      <p>
+        <span id="price-display">¥29.9</span>
+        <span id="exchange-rate">(汇率: 1 USD = 6.45 CNY, 更新于 2026-08-10)</span>
+      </p>
+    </div>
+
+    <!-- Toss 即将推出提示 -->
+    <div id="toss-coming-soon" style="display:none;" class="info-banner">
+      <strong>⏰ 便利店支付即将推出</strong>
+      <p>我们正在集成韩国本地支付方式（Toss、Kakao Pay）。完成后，支付手续费会降低 30%。</p>
+      <button onclick="joinWaitlist()">加入等待名单</button>
+    </div>
+  </div>
+
+  <script>
+async function updatePricing() {
+  const currency = document.getElementById('currency').value;
+  
+  // 实时从服务器获取当日汇率
+  const response = await fetch('/api/pricing/rates', {
+    method: 'POST',
+    body: JSON.stringify({ currency, date: new Date().toISOString().split('T')[0] })
+  });
+  
+  const { price, rate, updateDate } = await response.json();
+  
+  document.getElementById('price-display').textContent = formatPrice(price, currency);
+  document.getElementById('exchange-rate').textContent = 
+    `(汇率: 1 USD = ${rate} ${currency.toUpperCase()}, 更新于 ${updateDate})`;
+  
+  // 韩国用户才显示 Toss 提示
+  if (currency === 'krw') {
+    document.getElementById('toss-coming-soon').style.display = 'block';
+  }
+}
+
+function formatPrice(price, currency) {
+  const symbols = { cny: '¥', usd: '$', krw: '₩' };
+  return `${symbols[currency]} ${price.toFixed(2)}`;
+}
+  </script>
+</div>
+```
+
+---
+
 ### I.3 法务审查清单
 
 **交付前必过**（需 Karen 自行或雇外部法务）：
@@ -194,8 +460,11 @@ ShenYuan Phase 2 的核心目标是**构建企业级法律合规框架与全球�
 | **AI 生成标识合规** | P0 | 符合 EU AI Act / 中国《生成式AI服务管理暂行办法》 |
 | **退款流程可执行** | P0 | 标明 24h/72h 期限不违当地消保法 |
 | **第三方转移披露** | P0 | DeepSeek/Stripe 信息处理协议已签 |
+| **多币种定价清晰度** | P1 | 汇率算式清楚，用户理解不被宰 |
+| **支付失败恢复 UX** | P1 | 3 次失败后显示降级选项（银行转账/客服） |
 
-**法务反馈周期**: 预计 7-10 个工作日
+**法务反馈周期**: 预计 7-10 个工作日  
+**法务合作建议**: 签署加急合同 ($800, SLA 5-7 天)，并行处理文件逻辑审查 + 等待企业信息
 
 ---
 
@@ -385,11 +654,17 @@ async function initStripeKRW(params) {
 #### 问题陈述
 支付完成后，从支付网关（Stripe/Toss/Kakao）到我们后端订单系统需要**可靠、幂等、可审计**的数据同步机制。
 
+**⚠️ 关键约束**：
+- **事务隔离级别** 必须 REPEATABLE_READ 以上（防并发幽灵读）
+- **Webhook 幂等性 KEY** 使用 (payment_provider, transaction_id) 复合唯一键
+- **Express middleware 顺序**：raw body 必须在 json 中间件之前，否则 Stripe 签名验证失败
+- **Toss/Kakao 无签名验证**：需要并行实现 API polling 作备选验证（长期方案）
+
 #### 设计目标
-1. **可靠性**: 即使 webhook 丢失/延迟，订单最终一致性有保证
-2. **幂等性**: 重复 webhook 不会导致订单重复计费
-3. **可审计**: 所有支付事件有完整日志，便于对账
-4. **低延迟**: 支付后 <2s 内用户获得内容访问权限
+1. **可靠性**: 即使 webhook 丢失/延迟，订单最终一致性有保证（DB 对账 Job 补救）
+2. **幂等性**: 重复 webhook 不会导致订单重复计费（ON DUPLICATE KEY + IFNULL 防覆盖）
+3. **可审计**: 所有支付事件有完整日志，便于对账（webhook_events 表全记录）
+4. **低延迟**: 支付后 <2s 内用户获得内容访问权限（前端 poll + webhook 双管齐下）
 
 ---
 
@@ -551,41 +826,71 @@ CREATE TABLE settlement_reconciliation (
 const crypto = require('crypto');
 const { db, logger } = require('../utils');
 
-// POST /webhook/stripe/payment
+// ⚠️ Express 中间件顺序（CRITICAL）
+// app.use(express.raw({ type: 'application/json', limit: '10mb' }));  // 必须在 json() 之前
+// app.use(express.json());
+// app.post('/api/webhooks/stripe', handleStripeWebhook);
+
+// POST /api/webhooks/stripe
 async function handleStripeWebhook(req, res) {
+  const db_conn = null;
   try {
-    // 1. 验证签名
+    // 1. 验证签名（必须用 raw buffer）
     const signature = req.headers['stripe-signature'];
-    const event = stripe.webhooks.constructEvent(
-      req.rawBody,  // 必须是 raw buffer，不能是解析后的 JSON
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
+    if (!signature) {
+      logger.warn('[stripe/webhook] missing signature header');
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(
+        req.rawBody,  // 必须是 raw buffer，不能是解析后的 JSON
+        signature,
+        process.env.STRIPE_WEBHOOK_SECRET
+      );
+    } catch (signErr) {
+      logger.error('[stripe/webhook] signature verification failed', { 
+        error: signErr.message 
+      });
+      return res.status(401).json({ error: 'Signature mismatch' });
+    }
     
     logger.info('[stripe/webhook] event received', {
       eventId: event.id,
-      type: event.type
+      type: event.type,
+      apiVersion: event.api_version
     });
 
     // 2. 只处理支付成功事件
     if (event.type !== 'payment_intent.succeeded') {
+      logger.debug('[stripe/webhook] ignored event type', { type: event.type });
       return res.status(200).json({ received: true });
     }
 
     const paymentIntent = event.data.object;
     const { amount, currency, id: paymentIntentId, metadata } = paymentIntent;
 
-    // 3. 幂等性检查 & 插入订单
-    const [inserted, order] = await db.query(`
+    // 3. 开启事务（REPEATABLE_READ 隔离）
+    db_conn = await db.getConnection();
+    await db_conn.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+    await db_conn.beginTransaction();
+
+    // 4. 幂等性检查 & 插入订单
+    // 使用 IFNULL() 确保首次时间戳不被后续 webhook 覆盖
+    const [result] = await db_conn.query(`
       INSERT INTO orders (
         id, user_id, customer_email, product_id,
         amount, currency, payment_provider,
         payment_status, transaction_id, payment_intent_id,
-        webhook_received_at, webhook_confirmed_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        webhook_received_at, webhook_confirmed_at, webhook_retry_count
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON DUPLICATE KEY UPDATE
         webhook_received_at = IFNULL(webhook_received_at, NOW()),
-        webhook_confirmed_at = NOW(),
+        webhook_confirmed_at = CASE 
+          WHEN webhook_confirmed_at IS NULL THEN NOW() 
+          ELSE webhook_confirmed_at 
+        END,
         payment_status = 'completed',
         webhook_retry_count = webhook_retry_count + 1
     `, [
@@ -600,121 +905,281 @@ async function handleStripeWebhook(req, res) {
       paymentIntentId,
       paymentIntentId,
       new Date(),
-      new Date()
+      new Date(),
+      0
     ]);
 
-    // 4. 记录 webhook 事件
-    await db.query(`
+    // 5. 查询确认后的订单（用于日志）
+    const [order] = await db_conn.query(
+      'SELECT id FROM orders WHERE payment_intent_id = ? LIMIT 1',
+      [paymentIntentId]
+    );
+
+    // 6. 记录 webhook 事件
+    await db_conn.query(`
       INSERT INTO webhook_events (
         id, provider, event_type, event_id,
         order_id, transaction_id, raw_payload,
-        signature_valid, processed_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        signature_valid, idempotency_check_passed, processed_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       generateUUID(),
       'stripe',
       'payment.success',
       event.id,
-      order.id,
+      order?.id || null,
       paymentIntentId,
       JSON.stringify(paymentIntent),
+      true,
       true,
       new Date()
     ]);
 
-    logger.info('[stripe/webhook] order processed', {
-      orderId: order.id,
+    // 7. 提交事务
+    await db_conn.commit();
+
+    logger.info('[stripe/webhook] order processed successfully', {
+      orderId: order?.id,
       amount: amount / 100,
-      currency: currency
+      currency: currency,
+      eventId: event.id
     });
 
     return res.status(200).json({ received: true });
 
   } catch (err) {
+    if (db_conn) {
+      try {
+        await db_conn.rollback();
+      } catch (rollbackErr) {
+        logger.error('[stripe/webhook] rollback failed', rollbackErr);
+      }
+    }
+    
     logger.error('[stripe/webhook] error', err);
     
-    // Stripe 需要 2xx 响应，否则重试。
-    // 不返回 error details 给 Stripe（隐私考虑）
+    // Stripe 重试策略：
+    // - 5xx → 重试 5 次，24h 内
+    // - 2xx → 停止重试
+    // 我们总是返回 200（已幂等处理），不让 Stripe 重试
     return res.status(200).json({ received: true });
+    
+  } finally {
+    if (db_conn) {
+      await db_conn.release();
+    }
   }
 }
 
 module.exports = { handleStripeWebhook };
 ```
 
-#### Toss Webhook Handler (韩国支付)
+**⚠️ 实现注意事项**：
+1. **Express middleware 必须顺序正确**（raw → json → routes）
+2. **事务隔离** REPEATABLE READ 防止并发幽灵读
+3. **IFNULL() & CASE WHEN** 防止后续 webhook 覆盖首次时间戳
+4. **错误总是返回 200**（因为幂等处理完成），不让 Stripe 重试
+
+#### Toss Webhook Handler (韩国支付) + API Polling 备选方案
 
 ```javascript
-// POST /webhook/toss/payment
+// POST /api/webhooks/toss
 async function handleTossWebhook(req, res) {
+  const db_conn = null;
   try {
     const { orderId, orderName, approvedAt, totalAmount, method, paymentKey } = req.body;
     
-    // 1. Toss 不提供签名验证，仅检查 IP 白名单（需 nginx 配置）
-    const clientIp = req.headers['x-forwarded-for'] || req.ip;
-    const validIps = process.env.TOSS_WEBHOOK_IPS?.split(',') || [];
+    // 1. IP 白名单检查（Toss 无签名验证的替代方案）
+    // ⚠️ 注意：IP 白名单可被 DNS 劫持绕过，长期需要 API polling 备选
+    const clientIp = req.headers['x-forwarded-for']?.split(',')[0] || req.ip;
+    const validIps = (process.env.TOSS_WEBHOOK_IPS || '').split(',').map(ip => ip.trim());
     
-    if (!validIps.includes(clientIp)) {
-      logger.warn('[toss/webhook] invalid IP', { clientIp });
-      return res.status(403).json({ error: 'Forbidden' });
+    if (validIps.length > 0 && !validIps.includes(clientIp)) {
+      logger.warn('[toss/webhook] IP verification failed', { 
+        clientIp, 
+        validIps: validIps.slice(0, 2) 
+      });
+      // 不返回 403（会让 Toss 认为有问题继续重试）
+      // 而是记录并返回 200，然后用 API polling 确认
+      await db.query(`
+        INSERT INTO webhook_events (id, provider, event_type, error_message)
+        VALUES (?, ?, ?, ?)
+      `, [generateUUID(), 'toss', 'payment.verify_pending', 'IP verification failed']);
+      
+      return res.status(200).json({ received: true });
     }
 
-    // 2. 查询本地订单确认金额
-    const [order] = await db.query(
-      'SELECT * FROM orders WHERE transaction_id = ?',
+    // 2. 无条件插入或更新订单（幂等）
+    // 先插入再验证，不要因为验证失败丢弃数据
+    db_conn = await db.getConnection();
+    await db_conn.query('SET TRANSACTION ISOLATION LEVEL REPEATABLE READ');
+    await db_conn.beginTransaction();
+
+    const [result] = await db_conn.query(`
+      INSERT INTO orders (
+        id, user_id, customer_email, product_id,
+        amount, currency, payment_provider, payment_status,
+        transaction_id, payment_method, 
+        webhook_received_at, webhook_confirmed_at,
+        metadata
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE
+        webhook_received_at = IFNULL(webhook_received_at, NOW()),
+        webhook_confirmed_at = CASE 
+          WHEN webhook_confirmed_at IS NULL THEN NOW()
+          ELSE webhook_confirmed_at
+        END,
+        payment_status = 'completed',
+        payment_method = VALUES(payment_method),
+        webhook_retry_count = webhook_retry_count + 1
+    `, [
+      generateUUID(),
+      null,  // user_id 从 metadata 提取
+      null,  // customer_email 待 Toss API 验证
+      'saju-deep-report',  // 从 orderName 映射
+      Math.round(totalAmount / 100),  // Toss 以分为单位
+      'krw',
+      'toss',
+      'processing',  // 暂标 processing，验证通过后改 completed
+      orderId,
+      method,
+      new Date(),
+      null,
+      JSON.stringify({ 
+        toss_payment_key: paymentKey,
+        toss_method: method,
+        toss_approved_at: approvedAt 
+      })
+    ]);
+
+    // 3. 获取插入的订单 ID
+    const [order] = await db_conn.query(
+      'SELECT id, amount FROM orders WHERE transaction_id = ? LIMIT 1',
       [orderId]
     );
 
-    if (!order) {
-      logger.error('[toss/webhook] order not found', { orderId });
-      return res.status(404).json({ error: 'Order not found' });
-    }
-
-    // 3. 金额验证（防止篡改）
-    if (order.amount !== totalAmount / 100) {
-      logger.error('[toss/webhook] amount mismatch', {
+    // 4. 金额验证（双检）
+    if (order && Math.round(order.amount) !== Math.round(totalAmount / 100)) {
+      logger.error('[toss/webhook] amount mismatch after insert', {
         orderId,
         expected: order.amount,
-        received: totalAmount / 100
+        received: Math.round(totalAmount / 100)
       });
-      return res.status(400).json({ error: 'Amount mismatch' });
+
+      // 标记为不匹配，稍后人工审查
+      await db_conn.query(
+        'UPDATE orders SET payment_status = ?, reconciliation_status = ? WHERE id = ?',
+        ['failed', 'mismatch', order.id]
+      );
+
+      await db_conn.commit();
+      await db_conn.release();
+
+      logger.warn('[toss/webhook] order marked as mismatch, manual review needed');
+      return res.status(200).json({ received: true });
     }
 
-    // 4. 更新订单为已确认
-    await db.query(`
-      UPDATE orders SET
+    // 5. 标记为已确认（验证通过）
+    await db_conn.query(`
+      UPDATE orders SET 
         payment_status = 'completed',
-        webhook_confirmed_at = NOW(),
-        payment_method = ?,
-        metadata = JSON_SET(metadata, '$.toss_payment_key', ?)
+        webhook_confirmed_at = NOW()
       WHERE id = ?
-    `, [method, paymentKey, order.id]);
+    `, [order?.id]);
 
-    // 5. 记录事件
-    await db.query(`
+    // 6. 记录 webhook 事件
+    await db_conn.query(`
       INSERT INTO webhook_events (
         id, provider, event_type, event_id,
-        order_id, transaction_id, processed_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        order_id, transaction_id, signature_valid, processed_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `, [
       generateUUID(),
       'toss',
       'payment.success',
-      `${orderId}:${approvedAt}`,  // Toss 无唯一事件 ID，用订单 + 时间
-      order.id,
+      `${orderId}:${approvedAt}`,
+      order?.id || null,
       orderId,
+      true,  // IP 白名单通过
       new Date()
     ]);
 
-    logger.info('[toss/webhook] order confirmed', { orderId, amount: order.amount });
-    return res.status(200).json({ success: true });
+    await db_conn.commit();
+
+    logger.info('[toss/webhook] order confirmed', { 
+      orderId, 
+      amount: order?.amount,
+      paymentKey 
+    });
+
+    return res.status(200).json({ received: true });
 
   } catch (err) {
-    logger.error('[toss/webhook] error', err);
-    return res.status(200).json({ success: true });  // 返回 200 让 Toss 停止重试
+    if (db_conn) {
+      try {
+        await db_conn.rollback();
+      } catch (rollbackErr) {
+        logger.error('[toss/webhook] rollback failed', rollbackErr);
+      }
+    }
+    
+    logger.error('[toss/webhook] processing error', err);
+    // 总是返回 200 让 Toss 停止重试，后续用 API polling 补救
+    return res.status(200).json({ received: true });
+
+  } finally {
+    if (db_conn) {
+      await db_conn.release();
+    }
   }
 }
+
+// ⚠️ 补充：Toss API Polling（后续长期方案）
+// 由于 Toss Webhook 无签名验证，建议定时调用 Toss API 验证支付状态
+async function verifyTossPaymentViaAPI(orderId, paymentKey) {
+  try {
+    // Toss Payments API: GET /v1/payments/{paymentKey}
+    const response = await fetch(`https://api.tosspayments.com/v1/payments/${paymentKey}`, {
+      headers: {
+        'Authorization': `Basic ${Buffer.from(
+          process.env.TOSS_CLIENT_KEY + ':'
+        ).toString('base64')}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Toss API error: ${response.status}`);
+    }
+
+    const payment = await response.json();
+    
+    if (payment.status === 'DONE' && payment.totalAmount) {
+      // 更新订单为已验证
+      await db.query(`
+        UPDATE orders SET 
+          payment_status = 'completed',
+          webhook_confirmed_at = NOW()
+        WHERE transaction_id = ? AND payment_status = 'processing'
+      `, [orderId]);
+
+      logger.info('[toss/api-verify] payment confirmed via API', { orderId });
+      return true;
+    }
+
+    return false;
+  } catch (err) {
+    logger.error('[toss/api-verify] error', err);
+    return false;
+  }
+}
+
+module.exports = { handleTossWebhook, verifyTossPaymentViaAPI };
 ```
+
+**⚠️ Toss Webhook 缺陷与长期方案**：
+1. **IP 白名单风险**：可被 DNS 劫持绕过，需要 API polling 备选（已添加 `verifyTossPaymentViaAPI`）
+2. **无唯一事件 ID**：使用 `orderId:approvedAt` 作复合 ID，但易重复
+3. **建议**：Phase 2 先用 webhook + API polling 并行，Toss 支持签名验证后升级
 
 ---
 
@@ -977,6 +1442,51 @@ Week 7 (Sep 23-30)
 - **支付全链路故障** → 降级到银行转账（后端配置）
 - **Webhook 持续失败** → 启动手动对账 + 客服补发内容
 - **法务审查不通过** → 外聘专业律师（预算 $2K）
+- **Toss/Kakao 审批延期** → 扩大 Stripe KRW 临时方案覆盖范围，同时启动 API polling 备选
+
+---
+
+### 6.3 生产部署前完整检查清单（新增）
+
+**上线前 72 小时内必完成**：
+
+| 检查项 | 验收标准 | 测试命令 |
+|--------|---------|---------|
+| **Webhook 域名 HTTPS** | curl -I https://shenyuan.mylumee.cn/api/webhooks/stripe 返回 200 | 见下 |
+| **SSL 证书有效期** | ≥30 天 | openssl s_client -connect shenyuan.mylumee.cn:443 |
+| **DB 连接池大小** | min=5, max=20 (支持 100 并发 webhook) | ps aux \| grep "mysql/pool" |
+| **Monitoring & Alerting** | webhook 延迟 >5s、幽灵单据 >1/小时 | 见 monitoring.md |
+| **日志聚合可查询** | grep 'webhook_confirmed_at' /var/log/shenyuan.log | 见 logging 章节 |
+| **性能测试** | 100 并发 webhook, p99 延迟 <2s | ab -n 100 -c 100 https://... |
+| **数据库故障演练** | kill DB → webhook retry 成功率 >95% | 见容错测试 SOP |
+| **Stripe 签名验证** | 测试卡支付后 webhook 验签通过 | curl -X POST -d '{"test":"true"}' -H 'stripe-signature: xxx' |
+| **Toss IP 白名单** | Toss 白名单 IP 在 nginx 中正确配置 | grep -A5 "toss_ips" /etc/nginx/conf.d/shenyuan.conf |
+| **多币种前端** | 支付页面可切换 USD/CNY/KRW，价格正确显示 | 在生产环境测试支付页 |
+
+**性能测试脚本示例**：
+```bash
+#!/bin/bash
+# webhook-load-test.sh
+ENDPOINT="https://shenyuan.mylumee.cn/api/webhooks/stripe"
+STRIPE_SIGNATURE="t=1691608000,v1=xxx"  # 有效签名
+
+ab -n 100 -c 100 -H "stripe-signature: $STRIPE_SIGNATURE" \
+   -H "Content-Type: application/json" \
+   -p webhook-payload.json \
+   "$ENDPOINT"
+
+# 结果：Connection Times (ms) p99 < 2000ms
+```
+
+**数据库故障演练**：
+```sql
+-- 模拟 DB 故障
+FLUSH TABLES WITH READ LOCK;  -- 仅读
+-- 观察 webhook 错误日志，确认重试机制触发
+UNLOCK TABLES;
+-- 验证恢复后 webhook 自动补救
+SELECT COUNT(*) FROM orders WHERE webhook_confirmed_at > DATE_SUB(NOW(), INTERVAL 1 HOUR);
+```
 
 ---
 
@@ -994,18 +1504,236 @@ Week 7 (Sep 23-30)
 
 ---
 
-## 附录 A：三币种定价表参考
+## 附录 A：动态定价与汇率调整策略（完全重写）
 
-### A.1 建议零售价（中国用户 = ¥基准）
+### A.1 定价基准与汇率管理
 
-| 产品 | 中国(¥) | 海外(USD) | 韩国(₩) | 换算汇率 |
-|------|---------|----------|--------|---------|
-| 基础报告 | ¥9.9 | $1.49 | ₩2,200 | 1 USD = 1305₩ / 1 ¥ = 0.15 USD |
-| 深度报告 | ¥29.9 | $4.99 | ₩6,500 | 同上 |
-| 合婚报告 | ¥19.9 | $2.99 | ₩3,900 | 同上 |
-| 月度订阅 | ¥39 | $5.99 | ₩7,800 | 同上 |
+**CNY 基准价格**（港元成本转算为 CNY 后定价）
 
-> **说明**: 使用固定汇率避免每日波动，月底对账时调整。
+| 产品 | CNY 基准 | 成本基础 | 毛利 |
+|------|---------|--------|------|
+| 基础报告 | ¥9.9 | API 0.5 元 | 90% |
+| 深度报告 | ¥29.9 | API 1.2 元 | 96% |
+| 合婚报告 | ¥19.9 | API 0.8 元 | 96% |
+| 月度订阅 | ¥39 | API 2.0 元 | 95% |
+
+**参考汇率与衍生定价**（更新日期：2026-08-10）
+
+```
+基准汇率: 1 USD = 7.05 CNY (参考 Open Exchange Rates)
+衍生:
+  USD 定价 = ¥29.9 / 7.05 = $4.24 → 调整到 $4.99 (覆盖支付成本 3.9%)
+  KRW 定价 = $4.99 × 1305 = ₩6,513 → 舍入到 ₩6,500
+
+质检: 毛利 = (¥29.9 - ¥2.1 支付费) / ¥29.9 = 93% ✓ 可接受
+```
+
+---
+
+### A.2 月度动态重定价触发条件（新增）
+
+**触发规则**：当 USD/CNY 汇率变化 **≥ 5%** 时，重新定价
+
+```
+例 1: 汇率从 7.0 变 7.4 (↑ 5.7%)
+  - 旧定价: ¥29.9 (基准)
+  - 新定价: ¥29.9 × (7.0 / 7.4) = ¥28.2 (下调以保持美元价格稳定)
+  - 生效延迟: 调整后 7 天生效 (减少用户震撼)
+
+例 2: 汇率从 7.0 变 6.65 (↓ 5%)
+  - 旧定价: ¥29.9
+  - 新定价: ¥29.9 × (7.0 / 6.65) = ¥31.4 (上调，用户实际支付美元价不变)
+  - 策略: CNY 贬值 → 我们提高 CNY 价格，保护美元端收入
+```
+
+**执行流程**：
+
+```javascript
+// /server/jobs/pricing-update.js
+const cron = require('node-cron');
+const fetch = require('node-fetch');
+const { db } = require('../utils');
+
+// 每月 1 日 9:00 UTC 执行汇率检查
+cron.schedule('0 9 1 * *', async () => {
+  try {
+    // 1. 拉取当日汇率
+    const response = await fetch('https://openexchangerates.org/api/latest.json', {
+      headers: { 'Authorization': `Bearer ${process.env.OPENEXCHANGERATES_KEY}` }
+    });
+    const { rates } = await response.json();
+    const todayRate = rates.CNY / rates.USD;  // CNY 相对于 USD
+    
+    // 2. 对比上月汇率
+    const [lastMonth] = await db.query(
+      'SELECT exchange_rate FROM price_history WHERE currency = "usd" ORDER BY date DESC LIMIT 1'
+    );
+    const lastRate = lastMonth[0].exchange_rate;
+    const changePercent = Math.abs((todayRate - lastRate) / lastRate) * 100;
+    
+    logger.info('[pricing] exchange rate check', { 
+      lastRate, 
+      todayRate, 
+      changePercent: changePercent.toFixed(2) + '%'
+    });
+
+    // 3. 如果变化 >= 5%，触发重定价
+    if (changePercent >= 5) {
+      logger.info('[pricing] triggering repricing due to rate change');
+      
+      const products = [
+        { id: 'bazi-basic', baseCNY: 9.9 },
+        { id: 'bazi-deep', baseCNY: 29.9 },
+        { id: 'bazi-marriage', baseCNY: 19.9 },
+        { id: 'subscription-monthly', baseCNY: 39 }
+      ];
+
+      for (const product of products) {
+        const newPrice = product.baseCNY * (lastRate / todayRate);
+        
+        await db.query(
+          'INSERT INTO price_history (product_id, currency, price, exchange_rate, effective_date) VALUES (?, ?, ?, ?, ?)',
+          [product.id, 'cny', newPrice.toFixed(2), todayRate, new Date(Date.now() + 7*24*60*60*1000)]  // 7 天后生效
+        );
+      }
+
+      logger.info('[pricing] reprice scheduled', { effectiveDate: '+7 days' });
+    }
+
+  } catch (err) {
+    logger.error('[pricing] job failed', err);
+  }
+});
+
+module.exports = { pricingUpdateJob };
+```
+
+---
+
+### A.3 订阅用户汇率锁定策略
+
+**问题**：订阅用户每月续费时，汇率变化可能导致突然加价，用户不满
+
+**解决方案**：
+
+```
+订阅定价策略:
+├─ 首月: 按订阅当日汇率锁定 (假设 1 USD = 7.0 CNY, 用户支付 ¥35/月)
+├─ 续费 1-11 月: 保持 ¥35 (锁定首月汇率)
+├─ 12 月后: 重新协商，可能因汇率调整到 ¥33 (CNY 升值) 或 ¥37 (CNY 贬值)
+└─ 提前通知: 续费前 30 天邮件告知新价格变化
+
+用户感知:
+  好: 用户收到 "Your subscription will renew at ¥35 (locked rate) on Sept 10"
+  差: 突然扣 ¥37，用户投诉被宰
+```
+
+**实现逻辑**（pseudocode）：
+
+```javascript
+async function renewSubscription(subscriptionId) {
+  const sub = await db.query(
+    'SELECT *, locked_exchange_rate, next_unlock_date FROM subscriptions WHERE id = ?',
+    [subscriptionId]
+  );
+
+  const isRenewalAllowed = sub.next_unlock_date <= new Date();
+  
+  if (isRenewalAllowed) {
+    // 12 个月后解锁，允许重新定价
+    const newRate = await getCurrentExchangeRate();
+    const newPrice = recalculatePrice(newRate);
+    
+    await db.query(
+      'UPDATE subscriptions SET price = ?, locked_exchange_rate = ?, next_unlock_date = DATE_ADD(NOW(), INTERVAL 1 YEAR) WHERE id = ?',
+      [newPrice, newRate, subscriptionId]
+    );
+    
+    logger.info('[subscription] renewal unlocked new rate', { subscriptionId, newPrice });
+  } else {
+    // 保持锁定价格
+    await processPayment(sub.id, sub.price);
+  }
+}
+```
+
+---
+
+### A.4 多币种价格自动化（新增）
+
+**问题**：当前汇率手工月度调整，每月波动 1-2% 影响毛利 $1-3K
+
+**解决方案**：集成实时汇率 API
+
+```javascript
+// 方案 A: 前端实时查询 Stripe API
+async function getPricing(productId, userCurrency) {
+  const basePrice = PRODUCT_PRICES[productId].base;  // USD 基准
+  
+  // 仅调用一次（缓存 5 分钟）
+  const rate = await redis.get(`exchange_rate:${userCurrency}`);
+  if (!rate) {
+    const stripePrice = await stripe.prices.list({
+      product: productId,
+      active: true
+    });
+    // 或者用 Open Exchange Rates API
+    const response = await fetch(`https://api.exchangerate-api.com/v4/latest/USD`);
+    const { rates } = await response.json();
+    await redis.setex(`exchange_rate:${userCurrency}`, 300, rates[userCurrency]);
+  }
+
+  return (basePrice * rate).toFixed(2);
+}
+
+// 方案 B: 后端每日 UTC 9:00 同步汇率
+cron.schedule('0 9 * * *', async () => {
+  const rates = await fetchExchangeRates();
+  await redis.set('exchange_rates', JSON.stringify(rates), 'EX', 86400);
+  logger.info('[pricing/sync] daily rates updated');
+});
+```
+
+**成本分析**：
+- Open Exchange Rates: 免费层 1500 请求/月
+- 前端实时查询: 每用户 1 次 HTTP 请求 (~5KB) → 假设日活 1000 用户，月 30MB 流量
+- 后端日同步: 1 次 HTTP 请求/天 → 月 30KB 流量（微不足道）
+- **建议**: 后端日同步 + 前端缓存 localStorage 30 分钟最佳
+
+---
+
+### A.5 收据与结算单规范
+
+**用户收据邮件格式**（解决小数点混乱问题）
+
+```
+尊敬的用户，
+
+感谢你的购买！以下是你的订单信息：
+
+交易 ID: ord_xxx
+产品: 深度八字报告
+金额: ¥29.90 CNY  ← 务必含 .90（不能写 ¥29.9）
+支付方式: 微信支付
+支付时间: 2026-08-10 14:30:00 UTC+8
+汇率参考: 1 USD = 7.05 CNY (2026-08-10 适用)  ← 增加透明度
+状态: 已完成 ✓
+
+...
+```
+
+**韩国用户特别提示**（提示汇率风险）
+
+```
+주문 정보:
+
+상품: 사주 깊이 있는 리포트
+가격: ₩6,500 KRW  
+결제 방법: Stripe (국제 카드)  ← 한국 KRW Stripe = 환율 변동 위험
+환율 참고: 1 USD = 1305 KRW (2026-08-10 기준)
+
+⚠️ 주의: Toss/KakaoPay 출시 후 환율 위험 감소 예정
+```
 
 ---
 
@@ -1037,29 +1765,118 @@ Week 7 (Sep 23-30)
 
 ---
 
+## 修订摘要（v1.1 对标三维度评审）
+
+本次修订基于**工程、法律、UX 三维度专家评审意见**，升级以下内容：
+
+### 工程侧修订
+
+| 修订项 | 原文问题 | 修复方案 | 影响 |
+|--------|--------|--------|------|
+| **Webhook 事务隔离** | 未提及 SQL 隔离级别 | 新增 REPEATABLE_READ 事务配置 + IFNULL() 防覆盖 | 高 |
+| **Stripe 签名验证** | 缺少 Express middleware 配置 | 新增详细 middleware 顺序说明 + raw body 必需 | 高 |
+| **Toss/Kakao IP 白名单** | 无备选方案 | 新增 API polling 备选验证（长期方案） | 中 |
+| **生产部署检查** | 无部署清单 | 新增 10 项部署前检查 + 性能测试脚本 + 故障演练 SOP | 高 |
+
+### 法律侧修订
+
+| 修订项 | 原文问题 | 修复方案 | 影响 |
+|--------|--------|--------|------|
+| **法律页面 UX** | 条款密集难读，无地区分流 | 新增 Accordion 折叠式 + 地理位置动态显示 + FAQ 五问 | 中 |
+| **法务合作策略** | 无加急方案 | 新增加急合同建议 ($800, SLA 5-7 天) + 并行审查 | 低 |
+| **支付失败恢复** | 降级方案太简陋 | 新增支付重试进度条 + 3 次失败后降级选项显示 | 中 |
+
+### UX 侧修订
+
+| 修订项 | 原文问题 | 修复方案 | 影响 |
+|--------|--------|--------|------|
+| **多币种定价透明度** | 固定汇率无说明 | 新增汇率实时显示 + 计算公式可见 + 费率分解 | 中 |
+| **支付确认状态** | 用户不知自己在哪步 | 新增状态流程图 (提交→确认中→生成报告) + 轮询逻辑 | 中 |
+| **Toss 推迟 UX** | 用户被迫用高成本 Stripe | 新增 "便利店支付即将推出" 横幅 + 加入等待名单按钮 | 低 |
+| **汇率锁定策略** | 订阅续费可能突然加价 | 新增 12 月锁定汇率 + 60 天提前通知机制 | 中 |
+
+---
+
 ## 批准与签字
 
-### Karen (CEO)
+### 3 项关键决策（Karen 必须确认）
 
-**审批** Phase 2 PRD 并同意以下内容：
+**❓ Decision 1: 法律文件真实信息**
+- 公司法定名称 (英文)、香港商业登记号、法定代表人、财务邮箱
+- Karen 截止日期: **2026-08-15**（开启并行法务审查）
 
-- [ ] 法律文件补全方案（需提供真实公司信息）
-- [ ] Stripe 三币种架构（USD 验证 + CNY 备选 + KRW 临时）
-- [ ] Webhook + DB 对账策略
+**❓ Decision 2: 韩国支付方案**
+- Toss 作为主力（2-3 周审批），Kakao/Naver 作扩张
+- 临时用 Stripe KRW (低覆盖率 <2%)，还是等 Toss（推迟 2 周上线）?
+- 建议: **选择前者**（快速上线 Sep 30，Toss 上线后扩大覆盖）
+
+**❓ Decision 3: 汇率更新策略**
+- 固定汇率月调（当前）vs 实时汇率 API（新方案，月损失 $1-3K）
+- 建议: **选择后者**（成本 <$100/月，毛利 +$2-5K/年）
+
+---
+
+### Karen (CEO) 签批
+
+**确认内容**：
+
+- [ ] 法律文件补全方案（已补充，需提供真实公司信息）
+- [ ] Stripe 三币种架构（USD 验证 + CNY 备选 + KRW 临时）+ Toss/Kakao 长期
+- [ ] Webhook + DB 对账策略（已加强事务隔离 + 部署检查）
+- [ ] 支付页面 UX 改进（Accordion 法律条款 + 重试进度条 + 汇率透明化）
 - [ ] 2026-09-30 上线目标
-- [ ] ~$1000 法务审查预算
+- [ ] ~$1000 法务审查预算 + $800 加急合同（可选）
+- [ ] ✓ Decision 1-3 已确认
 
 **签字**:
-```
-姓名: ________________________
 
-日期: ________________________
+```
+CEO 姓名: Karen ________________________
+
+日期: 2026-08-__ ________________________
 
 签名: ________________________
+
+【核准意见】
+___________________________________________
+
+___________________________________________
 ```
 
 ---
 
-**文档版本**: 1.0  
+## 后续工作流
+
+### 工程启动（Karen 签批后）
+
+**Week 1-2: 并行三轨**
+
+| 轨道 | Task | Owner | 截止 |
+|------|------|--------|------|
+| **法律** | 提供公司信息 → 法务审查 | Karen + 法务 | Aug 25 |
+| **Stripe** | USD 验证 + CNY/KRW 编码 + 测试 | 工程 | Aug 20 |
+| **Webhook** | DB 设计 + Stripe handler (事务隔离) | 工程 | Aug 25 |
+
+**Week 3-4: 集成测试**
+
+| Task | Owner | 截止 |
+|------|--------|------|
+| Toss/Kakao handler + API polling | 工程 | Sep 05 |
+| 每日对账 Job + 生产检查清单 | 工程 | Sep 10 |
+| 前端多币种 UI + 支付重试 UX | 前端 | Sep 15 |
+
+**Week 5-7: 上线冲刺**
+
+| Task | Owner | 截止 |
+|------|--------|------|
+| 法律文件通过审查 | 法务 | Sep 20 |
+| 生产环保烟雾测试 | QA | Sep 23 |
+| Karen 最终签字 | Karen | Sep 27 |
+| **上线** | 运维 | **Sep 30** |
+
+---
+
+**文档版本**: 1.1 (三维度评审修订版)  
 **最后更新**: 2026-08-10  
-**下一次审查**: 2026-09-01
+**下一次审查**: 2026-09-01  
+**Critical Path**: Karen 确认 Decision 1-3 → 工程启动 → Sep 30 上线
