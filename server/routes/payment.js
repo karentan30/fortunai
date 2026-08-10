@@ -71,7 +71,7 @@ const STRIPE_PRICE_IDS = {
   // 'member_monthly':    'price_PENDING_usd',
   // ── KRW prices (verified) ──
   'bazi_full_krw':        'price_1TzrGREAXrE2Ygcr1dOkiv2O',
-  'saju_kr_full_krw':     'price_1TzrGREAXrE2Ygcr1dOkiv2O',
+  'saju_kr_full_krw':     'price_TBD_saju_kr_full',  // TODO: create in Stripe Dashboard
   'bazi_vip_krw':         'price_1TzrGUEAXrE2YgcrtAXjFt9M',
   'hehun_krw':            'price_1TzAriEAXrE2YgcrWEj4Azdn',
   'member_monthly_krw':   'price_1TzrGWEAXrE2YgcrhrIIeMXC',
@@ -264,6 +264,7 @@ router.post('/stripe-webhook', async (req, res) => {
         const subId = obj.subscription || obj.id || '';
         const email = obj.customer_email || '';
         const periodEnd = obj.current_period_end ? obj.current_period_end * 1000 : null;
+        const invoiceId = obj.invoice || obj.id || '';  // 幂等key: invoice ID
         if (subId && stripe && periodEnd) {
           try {
             _insSub(email, subId);
@@ -271,13 +272,13 @@ router.post('/stripe-webhook', async (req, res) => {
               return o.stripe_subscription_id === subId || (o.metadata && o.metadata.sub_id === subId);
             });
             if (!pending.length) {
-              stripe.invoices.retrieve(obj.invoice || (obj.id || ''), { expand: ['lines.data.price.product'] }).then(function(inv) {
+              stripe.invoices.retrieve(invoiceId, { expand: ['lines.data.price.product'] }).then(function(inv) {
                 const line = inv.lines && inv.lines.data && inv.lines.data[0];
                 const prodName = line && line.price && line.price.product && (line.price.product.name || '');
                 if (prodName) {
                   let pid = null;
                   Object.keys(PRODUCTS).forEach(function(k) { if (PRODUCTS[k].name === prodName) pid = k; });
-                  if (pid) _setOrExtendSub(pid, email, new Date(periodEnd).toISOString());
+                  if (pid) _setOrExtendSub(pid, email, new Date(periodEnd).toISOString(), invoiceId);  // P1修复: 传invoiceId作幂等key
                 }
               }).catch(function(e) { console.error('[WEBHOOK invoice expand]', e.message); });
             }

@@ -289,39 +289,44 @@ function getABTestData(data) {
 }
 
 /**
- * 获取邀请排行榜
+ * 获取邀请排行榜 (Top 10)
+ * 依赖 _M.referrals 和 _M.orders 数组
  */
 function getReferralData(data) {
-  const users = data.users || [];
+  const referrals = data.referrals || [];
   const orders = data.orders || [];
 
   const referrers = {};
 
-  users.forEach(user => {
-    if (user.referredBy) {
-      if (!referrers[user.referredBy]) {
-        referrers[user.referredBy] = {
-          id: user.referredBy,
-          name: `用户${user.referredBy}`,
-          invited: 0,
-          converted: 0,
-          commission: 0
-        };
-      }
-      referrers[user.referredBy].invited++;
+  referrals.forEach(r => {
+    if (!referrers[r.inviter_id]) {
+      referrers[r.inviter_id] = {
+        user_id: r.inviter_id,
+        name: `用户${r.inviter_id}`,
+        invited: 0,
+        converted: 0,
+        commission: 0
+      };
+    }
+    referrers[r.inviter_id].invited++;
 
-      // 统计转化 (有付款订单)
-      const userOrders = orders.filter(o => o.userId === user.id && o.status === 'paid');
-      if (userOrders.length > 0) {
-        referrers[user.referredBy].converted++;
-        // 简单返佣逻辑: 每笔订单返佣 5%
-        referrers[user.referredBy].commission += userOrders.reduce((sum, o) => sum + (o.amount || 0), 0) * 0.05;
-      }
+    // 统计转化 (邀请者的被邀请人有付款订单)
+    const inviteeOrders = orders.filter(
+      o => o.user_id === r.invitee_id && o.payment_status === 'completed'
+    );
+    if (inviteeOrders.length > 0) {
+      referrers[r.inviter_id].converted++;
+      // 简单返佣逻辑: 每笔订单返佣 5%
+      referrers[r.inviter_id].commission += inviteeOrders.reduce(
+        (sum, o) => sum + (o.amount || 0), 0
+      ) * 0.05;
     }
   });
 
   return Object.values(referrers)
-    .sort((a, b) => b.converted - a.converted);
+    .sort((a, b) => b.converted - a.converted)
+    .slice(0, 10)
+    .map((r, i) => ({ ...r, rank: i + 1 }));
 }
 
 /**
