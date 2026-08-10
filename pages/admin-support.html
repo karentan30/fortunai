@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客服管理后台 - 善缘</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            font-size: 24px;
+            color: #9b6ba8;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat-card {
+            text-align: center;
+        }
+
+        .stat-card strong {
+            font-size: 24px;
+            color: #333;
+            display: block;
+        }
+
+        .stat-card small {
+            color: #999;
+            font-size: 12px;
+        }
+
+        /* ── Filter & Search ── */
+        .controls {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls input,
+        .controls select,
+        .controls button {
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .controls input:focus,
+        .controls select:focus {
+            border-color: #9b6ba8;
+        }
+
+        .controls button {
+            background: #9b6ba8;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .controls button:hover {
+            background: linear-gradient(135deg, #9b6ba8, #c9a8d4);
+        }
+
+        /* ── Tickets List ── */
+        .tickets-list {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .tickets-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tickets-table th {
+            background: #f9f9f9;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 13px;
+            color: #666;
+            border-bottom: 2px solid #e0e0e0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tickets-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 13px;
+        }
+
+        .tickets-table tbody tr {
+            transition: background 0.2s;
+        }
+
+        .tickets-table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .ticket-status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 11px;
+            text-transform: uppercase;
+        }
+
+        .status-new {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-open {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-resolved {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .ticket-email {
+            color: #9b6ba8;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .ticket-email:hover {
+            text-decoration: underline;
+        }
+
+        .ticket-product {
+            font-size: 12px;
+            padding: 2px 6px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            display: inline-block;
+        }
+
+        .ticket-actions {
+            display: flex;
+            gap: 6px;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .btn-small:hover {
+            background: #f5f5f5;
+            border-color: #9b6ba8;
+            color: #9b6ba8;
+        }
+
+        /* ── Modal ── */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .modal-body h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            text-transform: uppercase;
+            margin-top: 16px;
+            margin-bottom: 8px;
+        }
+
+        .modal-body h3:first-child {
+            margin-top: 0;
+        }
+
+        .info-row {
+            display: flex;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-label {
+            width: 100px;
+            font-weight: 600;
+            color: #666;
+            font-size: 13px;
+        }
+
+        .info-value {
+            flex: 1;
+            color: #333;
+            word-break: break-all;
+        }
+
+        .conversation-item {
+            padding: 10px;
+            margin: 6px 0;
+            border-radius: 6px;
+            border-left: 3px solid transparent;
+        }
+
+        .conversation-item.user {
+            background: #e3f2fd;
+            border-left-color: #1976d2;
+        }
+
+        .conversation-item.ai {
+            background: #f5f5f5;
+            border-left-color: #999;
+        }
+
+        .conversation-role {
+            font-weight: 600;
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .conversation-content {
+            font-size: 13px;
+            line-height: 1.5;
+            color: #333;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .btn-primary {
+            background: #9b6ba8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #9b6ba8, #c9a8d4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* ── Empty State ── */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .empty-state strong {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 8px;
+            color: #666;
+        }
+
+        /* ── Loading ── */
+        .loading {
+            text-align: center;
+            padding: 40px 20px;
+            color: #999;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #e0e0e0;
+            border-top-color: #9b6ba8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                gap: 16px;
+                align-items: flex-start;
+            }
+
+            .header-stats {
+                flex-wrap: wrap;
+                width: 100%;
+            }
+
+            .controls {
+                flex-direction: column;
+            }
+
+            .controls input,
+            .controls select,
+            .controls button {
+                width: 100%;
+            }
+
+            .tickets-table {
+                font-size: 12px;
+            }
+
+            .tickets-table th,
+            .tickets-table td {
+                padding: 8px;
+            }
+
+            .ticket-actions {
+                flex-direction: column;
+            }
+
+            .modal-content {
+                width: 95%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>📋 客服工单管理</h1>
+            <div class="header-stats">
+                <div class="stat-card">
+                    <strong id="statNew">0</strong>
+                    <small>新工单</small>
+                </div>
+                <div class="stat-card">
+                    <strong id="statOpen">0</strong>
+                    <small>进行中</small>
+                </div>
+                <div class="stat-card">
+                    <strong id="statResolved">0</strong>
+                    <small>已解决</small>
+                </div>
+            </div>
+        </header>
+
+        <!-- Controls -->
+        <div class="controls">
+            <input type="text" id="searchInput" placeholder="搜索邮箱或问题...">
+            <select id="statusFilter">
+                <option value="">所有状态</option>
+                <option value="new">新工单</option>
+                <option value="open">进行中</option>
+                <option value="resolved">已解决</option>
+            </select>
+            <select id="productFilter">
+                <option value="">所有产品</option>
+                <option value="shenyuan">善缘</option>
+                <option value="lumee">鹿觅</option>
+                <option value="slim">Slim</option>
+                <option value="wujing">舞镜</option>
+            </select>
+            <button id="refreshBtn">🔄 刷新</button>
+        </div>
+
+        <!-- Tickets List -->
+        <div class="tickets-list">
+            <div id="ticketsContainer" class="loading">
+                <div class="spinner"></div>
+                <p>加载中...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ticket Detail Modal -->
+    <div class="modal" id="ticketModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>工单详情</h2>
+                <button class="modal-close" id="modalClose">✕</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- 动态填充 -->
+            </div>
+            <div class="modal-footer">
+                <select id="statusUpdate">
+                    <option value="new">新工单</option>
+                    <option value="open">进行中</option>
+                    <option value="resolved">已解决</option>
+                </select>
+                <button class="btn-secondary" id="closeModalBtn">关闭</button>
+                <button class="btn-primary" id="saveStatusBtn">保存状态</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = (() => {
+            const origins = {
+                'localhost:3021': 'http://localhost:3021',
+                '47.242.80.65:3021': 'http://47.242.80.65:3021',
+                'shenyuan.mylumee.cn': 'https://shenyuan.mylumee.cn',
+                'shenyuan.vercel.app': 'https://shenyuan.vercel.app',
+                'fortunai.vercel.app': 'https://fortunai.vercel.app'
+            };
+            return origins[window.location.host] || window.location.origin;
+        })();
+
+        class AdminSupport {
+            constructor() {
+                this.tickets = [];
+                this.filteredTickets = [];
+                this.currentTicket = null;
+                this.init();
+            }
+
+            init() {
+                this.cacheDOM();
+                this.attachEventListeners();
+                this.loadTickets();
+                setInterval(() => this.loadTickets(), 30000); // 每30秒刷新一次
+            }
+
+            cacheDOM() {
+                this.container = document.getElementById('ticketsContainer');
+                this.modal = document.getElementById('ticketModal');
+                this.modalBody = document.getElementById('modalBody');
+                this.searchInput = document.getElementById('searchInput');
+                this.statusFilter = document.getElementById('statusFilter');
+                this.productFilter = document.getElementById('productFilter');
+                this.refreshBtn = document.getElementById('refreshBtn');
+                this.statNew = document.getElementById('statNew');
+                this.statOpen = document.getElementById('statOpen');
+                this.statResolved = document.getElementById('statResolved');
+            }
+
+            attachEventListeners() {
+                this.refreshBtn.addEventListener('click', () => this.loadTickets());
+                this.searchInput.addEventListener('input', () => this.applyFilters());
+                this.statusFilter.addEventListener('change', () => this.applyFilters());
+                this.productFilter.addEventListener('change', () => this.applyFilters());
+                document.getElementById('modalClose').addEventListener('click', () => this.closeModal());
+                document.getElementById('closeModalBtn').addEventListener('click', () => this.closeModal());
+                document.getElementById('saveStatusBtn').addEventListener('click', () => this.saveStatus());
+            }
+
+            async loadTickets() {
+                try {
+                    // 从后端读取工单（需要实现对应接口）
+                    // 这里使用本地存储演示
+                    const stored = localStorage.getItem('shenyuan_support_tickets');
+                    this.tickets = stored ? JSON.parse(stored) : [];
+                    this.tickets.sort((a, b) => new Date(b.ts) - new Date(a.ts));
+                    this.applyFilters();
+                    this.updateStats();
+                } catch (e) {
+                    console.error('加载工单失败:', e);
+                    this.showError('加载工单失败');
+                }
+            }
+
+            applyFilters() {
+                const search = this.searchInput.value.toLowerCase();
+                const status = this.statusFilter.value;
+                const product = this.productFilter.value;
+
+                this.filteredTickets = this.tickets.filter(ticket => {
+                    const matchSearch = !search ||
+                        ticket.email.toLowerCase().includes(search) ||
+                        (ticket.question && ticket.question.toLowerCase().includes(search));
+                    const matchStatus = !status || ticket.status === status;
+                    const matchProduct = !product || ticket.product === product;
+                    return matchSearch && matchStatus && matchProduct;
+                });
+
+                this.renderTickets();
+            }
+
+            renderTickets() {
+                if (this.filteredTickets.length === 0) {
+                    this.container.innerHTML = `
+                        <div class="empty-state">
+                            <strong>暂无工单</strong>
+                            <p>所有工单已解决～</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const html = `
+                    <table class="tickets-table">
+                        <thead>
+                            <tr>
+                                <th>工单ID</th>
+                                <th>邮箱</th>
+                                <th>产品</th>
+                                <th>问题</th>
+                                <th>状态</th>
+                                <th>时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${this.filteredTickets.map(ticket => `
+                                <tr>
+                                    <td><code style="font-size:11px;color:#999">${ticket.id}</code></td>
+                                    <td><a href="mailto:${ticket.email}" class="ticket-email">${this.escapeHtml(ticket.email)}</a></td>
+                                    <td><span class="ticket-product">${this.getProductName(ticket.product)}</span></td>
+                                    <td>${this.escapeHtml((ticket.question || '').slice(0, 40))}...</td>
+                                    <td><span class="ticket-status status-${ticket.status}">${this.getStatusName(ticket.status)}</span></td>
+                                    <td><small>${new Date(ticket.ts).toLocaleDateString('zh-CN')}</small></td>
+                                    <td class="ticket-actions">
+                                        <button class="btn-small" onclick="app.viewTicket('${ticket.id}')">查看</button>
+                                        <button class="btn-small" onclick="app.replyViaEmail('${ticket.email}')">回复</button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                this.container.innerHTML = html;
+            }
+
+            viewTicket(ticketId) {
+                this.currentTicket = this.tickets.find(t => t.id === ticketId);
+                if (!this.currentTicket) return;
+
+                const convoHtml = (this.currentTicket.conversation || []).map(msg => `
+                    <div class="conversation-item ${msg.role}">
+                        <div class="conversation-role">${msg.role === 'user' ? '用户' : 'AI客服'}</div>
+                        <div class="conversation-content">${this.escapeHtml(msg.content)}</div>
+                    </div>
+                `).join('');
+
+                this.modalBody.innerHTML = `
+                    <div class="info-row">
+                        <div class="info-label">工单ID</div>
+                        <div class="info-value"><code>${this.currentTicket.id}</code></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">邮箱</div>
+                        <div class="info-value"><a href="mailto:${this.currentTicket.email}">${this.currentTicket.email}</a></div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">产品</div>
+                        <div class="info-value">${this.getProductName(this.currentTicket.product)}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">状态</div>
+                        <div class="info-value">${this.getStatusName(this.currentTicket.status)}</div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-label">时间</div>
+                        <div class="info-value">${new Date(this.currentTicket.ts).toLocaleString('zh-CN')}</div>
+                    </div>
+                    ${this.currentTicket.ip ? `
+                    <div class="info-row">
+                        <div class="info-label">IP</div>
+                        <div class="info-value"><code>${this.currentTicket.ip}</code></div>
+                    </div>
+                    ` : ''}
+                    <h3>初始问题</h3>
+                    <div class="info-value" style="padding:8px;background:#f9f9f9;border-radius:4px">
+                        ${this.escapeHtml(this.currentTicket.question || '(无)')}
+                    </div>
+                    ${convoHtml ? `
+                    <h3>对话记录</h3>
+                    ${convoHtml}
+                    ` : ''}
+                `;
+
+                document.getElementById('statusUpdate').value = this.currentTicket.status;
+                this.modal.classList.add('show');
+            }
+
+            closeModal() {
+                this.modal.classList.remove('show');
+                this.currentTicket = null;
+            }
+
+            saveStatus() {
+                if (!this.currentTicket) return;
+
+                const newStatus = document.getElementById('statusUpdate').value;
+                const ticketIndex = this.tickets.findIndex(t => t.id === this.currentTicket.id);
+                if (ticketIndex >= 0) {
+                    this.tickets[ticketIndex].status = newStatus;
+                    localStorage.setItem('shenyuan_support_tickets', JSON.stringify(this.tickets));
+                    this.applyFilters();
+                    this.updateStats();
+                    this.closeModal();
+                    alert('状态已更新');
+                }
+            }
+
+            replyViaEmail(email) {
+                // 打开邮件客户端
+                window.location.href = `mailto:${email}?subject=【善缘客服】回复工单`;
+            }
+
+            updateStats() {
+                const stats = {
+                    new: this.tickets.filter(t => t.status === 'new').length,
+                    open: this.tickets.filter(t => t.status === 'open').length,
+                    resolved: this.tickets.filter(t => t.status === 'resolved').length
+                };
+                this.statNew.textContent = stats.new;
+                this.statOpen.textContent = stats.open;
+                this.statResolved.textContent = stats.resolved;
+            }
+
+            showError(msg) {
+                this.container.innerHTML = `
+                    <div class="empty-state">
+                        <strong>错误</strong>
+                        <p>${msg}</p>
+                    </div>
+                `;
+            }
+
+            getProductName(product) {
+                const map = { lumee: '鹿觅', slim: 'Slim', shenyuan: '善缘', wujing: '舞镜' };
+                return map[product] || product;
+            }
+
+            getStatusName(status) {
+                const map = { new: '新工单', open: '进行中', resolved: '已解决' };
+                return map[status] || status;
+            }
+
+            escapeHtml(text) {
+                if (!text) return '';
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return text.replace(/[&<>"']/g, m => map[m]);
+            }
+        }
+
+        const app = new AdminSupport();
+    </script>
+</body>
+</html>

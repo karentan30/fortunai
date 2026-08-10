@@ -2,14 +2,40 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<meta name="supported-color-schemes" content="dark light">
 <title>ShenYuan Order Confirmation</title>
 <style>
-body {
+:root {
+  color-scheme: dark light;
+}
+html, body {
   margin: 0;
   padding: 0;
+}
+body {
   background: #0d0820;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #f0eeE6;
+  word-break: break-word;
+}
+.preheader {
+  display: none;
+  font-size: 1px;
+  color: #0d0820;
+  line-height: 1px;
+  max-height: 0;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
 }
 .container {
   max-width: 600px;
@@ -18,37 +44,55 @@ body {
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid rgba(212,175,55,0.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 .header {
   background: linear-gradient(135deg, #1a0f2e 0%, #2d1b4e 100%);
-  padding: 32px 24px 24px;
+  padding: 32px 24px;
   text-align: center;
   border-bottom: 1px solid rgba(212,175,55,0.15);
 }
 .header-icon {
-  font-size: 28px;
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: 12px;
+  display: block;
+}
+.brand-logo {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #d4af37;
   margin-bottom: 8px;
 }
 .header-title {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
   color: #d4af37;
   letter-spacing: 0.05em;
   margin: 0;
+  padding: 0;
 }
 .header-subtitle {
-  font-size: 12px;
-  color: rgba(212,175,55,0.5);
-  margin-top: 4px;
-  letter-spacing: 0.15em;
+  font-size: 11px;
+  color: rgba(212,175,55,0.55);
+  margin-top: 6px;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
 }
 .content {
   padding: 32px 24px;
 }
+.greeting {
+  color: rgba(240,238,230,0.9);
+  font-size: 15px;
+  line-height: 1.7;
+  margin: 0 0 20px 0;
+  padding: 0;
+}
 .order-box {
-  background: rgba(212,175,55,0.06);
-  border: 1px solid rgba(212,175,55,0.15);
+  background: rgba(212,175,55,0.08);
+  border: 1px solid rgba(212,175,55,0.2);
   border-radius: 12px;
   padding: 24px;
   margin-bottom: 24px;
@@ -57,17 +101,19 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 0;
-  border-bottom: 1px solid rgba(212,175,55,0.1);
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(212,175,55,0.12);
   color: rgba(240,238,230,0.85);
   font-size: 14px;
 }
 .order-item:last-child {
   border-bottom: none;
+  padding-bottom: 0;
 }
 .order-label {
   font-weight: 600;
   color: #d4af37;
+  min-width: 80px;
 }
 .order-value {
   text-align: right;
@@ -78,15 +124,9 @@ body {
   font-size: 16px;
   font-weight: 700;
 }
-.greeting {
-  color: rgba(240,238,230,0.85);
-  font-size: 15px;
-  line-height: 1.6;
-  margin: 0 0 24px 0;
-}
 .features {
-  background: rgba(212,175,55,0.04);
-  border-left: 3px solid #d4af37;
+  background: rgba(212,175,55,0.05);
+  border-left: 4px solid #d4af37;
   border-radius: 0 8px 8px 0;
   padding: 16px 20px;
   margin: 24px 0;
@@ -94,144 +134,210 @@ body {
   font-size: 14px;
   line-height: 1.8;
 }
+.features-title {
+  font-weight: 700;
+  color: #d4af37;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
 .feature-item {
   margin: 8px 0;
-  padding-left: 20px;
+  padding-left: 24px;
   position: relative;
 }
-.feature-item:before {
-  content: '✓';
+.feature-item::before {
+  content: '\2713';
   color: #d4af37;
   position: absolute;
   left: 0;
   font-weight: bold;
 }
+.expiry-notice {
+  background: rgba(212,175,55,0.08);
+  border: 1px solid rgba(212,175,55,0.2);
+  border-radius: 8px;
+  padding: 14px;
+  margin: 20px 0;
+  font-size: 13px;
+  color: rgba(212,175,55,0.85);
+  line-height: 1.6;
+}
+.expiry-notice strong {
+  color: #d4af37;
+}
 .cta {
   text-align: center;
-  margin: 28px 0;
+  margin: 32px 0;
 }
 .btn {
   display: inline-block;
-  background: linear-gradient(135deg, #d4af37, #b8972e);
+  background: linear-gradient(135deg, #d4af37 0%, #b8972e 100%);
   color: #1a0f2e;
   text-decoration: none;
-  padding: 14px 40px;
+  padding: 16px 48px;
   border-radius: 10px;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  transition: transform 0.2s, box-shadow 0.2s;
+  border: 0;
+  cursor: pointer;
+  mso-padding-alt: 16px 48px;
+  text-align: center;
 }
 .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(212,175,55,0.3);
+  background: linear-gradient(135deg, #e6c547 0%, #ccaa37 100%);
 }
 .btn-text {
-  margin-top: 10px;
-  font-size: 12px;
-  color: rgba(212,175,55,0.4);
+  margin-top: 12px;
+  font-size: 11px;
+  color: rgba(212,175,55,0.45);
+}
+.divider {
+  height: 1px;
+  background: rgba(212,175,55,0.1);
+  margin: 24px 0;
+  border: 0;
+}
+.help-section {
+  background: rgba(212,175,55,0.04);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 24px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(240,238,230,0.8);
+}
+.help-section strong {
+  color: #d4af37;
 }
 .footer {
   border-top: 1px solid rgba(212,175,55,0.1);
-  padding: 16px 24px;
+  padding: 20px 24px;
   text-align: center;
-  font-size: 11px;
-  color: rgba(240,238,230,0.3);
-  line-height: 1.6;
+  font-size: 10px;
+  color: rgba(240,238,230,0.4);
+  line-height: 1.7;
+  background: rgba(0,0,0,0.2);
 }
 .footer-link {
-  color: rgba(212,175,55,0.4);
+  color: rgba(212,175,55,0.45);
   text-decoration: none;
 }
 .footer-link:hover {
   text-decoration: underline;
 }
-.expiry-notice {
-  background: rgba(212,175,55,0.08);
-  border: 1px solid rgba(212,175,55,0.2);
-  border-radius: 8px;
-  padding: 12px;
-  margin: 16px 0;
-  font-size: 13px;
-  color: rgba(212,175,55,0.8);
+@media (max-width: 600px) {
+  .container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+  .content {
+    padding: 24px 16px !important;
+  }
+  .header {
+    padding: 24px 16px !important;
+  }
+  .header-title {
+    font-size: 20px !important;
+  }
+  .footer {
+    padding: 16px 12px !important;
+  }
 }
-.expiry-notice strong {
-  color: #d4af37;
+@media (prefers-color-scheme: light) {
+  body {
+    background: #f5f5f5;
+  }
+  .container {
+    background: #ffffff;
+    border-color: rgba(212,175,55,0.2);
+  }
+  .greeting {
+    color: #2c2c2c;
+  }
+  .order-box {
+    background: rgba(212,175,55,0.05);
+  }
 }
 </style>
 </head>
 <body>
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0820;padding:20px 0">
-  <tr><td align="center">
-    <div class="container">
-      <!-- Header -->
-      <div class="header">
-        <div class="header-icon">✅</div>
-        <h1 class="header-title">Thank You for Your Purchase</h1>
-        <p class="header-subtitle">SHEN YUAN · Order Confirmation</p>
+<div class="preheader">Your ShenYuan order has been confirmed. Access activated immediately to your complete Ba Zi annual reading report.</div>
+<table role="presentation" style="width:100%;background:#0d0820;padding:20px 0">
+  <tr>
+    <td align="center">
+      <div class="container">
+        <!-- Header -->
+        <div class="header">
+          <div class="brand-logo">SHEN YUAN</div>
+          <div class="header-icon" role="img" aria-label="Order Confirmed">✅</div>
+          <h1 class="header-title">Thank You for Your Purchase</h1>
+          <p class="header-subtitle">ORDER CONFIRMATION · 订单确认</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+          <p class="greeting">Dear Valued Customer,</p>
+          <p class="greeting">Thank you for choosing ShenYuan! We have received your order and immediately activated your access. You can now view your complete Ba Zi annual reading and analysis.</p>
+
+          <!-- Order Details -->
+          <div class="order-box">
+            <div class="order-item">
+              <span class="order-label">Order Number</span>
+              <span class="order-value" style="font-family: 'Courier New', monospace; letter-spacing: 0.05em;">{{orderNo}}</span>
+            </div>
+            <div class="order-item">
+              <span class="order-label">Product</span>
+              <span class="order-value">{{product}}</span>
+            </div>
+            <div class="order-item">
+              <span class="order-label">Amount</span>
+              <span class="order-value highlight">{{currency}}{{amount}}</span>
+            </div>
+            <div class="order-item">
+              <span class="order-label">Valid Until</span>
+              <span class="order-value">{{expiryDate}}</span>
+            </div>
+          </div>
+
+          <!-- Expiry Notice -->
+          <div class="expiry-notice">
+            <strong>💡 Important:</strong> You can view and download your report at any time during the validity period. We will send you a renewal reminder 7 days before expiration.
+          </div>
+
+          <!-- Features -->
+          <div class="features">
+            <div class="features-title">What You Can Now Access:</div>
+            <div class="feature-item">Complete Ba Zi annual reading and analysis</div>
+            <div class="feature-item">Deep insights into your birth chart characteristics</div>
+            <div class="feature-item">Professional fortune guidance and recommendations</div>
+            <div class="feature-item">Download and save your report permanently</div>
+          </div>
+
+          <!-- CTA -->
+          <div class="cta">
+            <a href="{{reportUrl}}" class="btn">🔮 View Your Report Now</a>
+            <div class="btn-text">Click to access your personal dashboard and view your complete report</div>
+          </div>
+
+          <!-- Help Section -->
+          <div class="help-section">
+            <strong>Need Help?</strong> Please reply to this email or visit our help center. Our astrology research team is ready to assist you anytime.
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+          ShenYuan · shenyuan.mylumee.cn<br>
+          © 2026 ShenYuan Astrology Research Team. All rights reserved.<br>
+          This order confirmation is legally binding.<br>
+          <a href="https://shenyuan.mylumee.cn/legal-en.html" class="footer-link">Terms of Service</a> ·
+          <a href="https://shenyuan.mylumee.cn/legal-en.html" class="footer-link">Privacy Policy</a>
+        </div>
       </div>
-
-      <!-- Content -->
-      <div class="content">
-        <p class="greeting">Dear Valued Customer,</p>
-        <p class="greeting">Thank you for choosing ShenYuan! We have received your order and activated your access immediately.</p>
-
-        <!-- Order Details Box -->
-        <div class="order-box">
-          <div class="order-item">
-            <span class="order-label">Order Number</span>
-            <span class="order-value" style="font-family: monospace;">{{orderNo}}</span>
-          </div>
-          <div class="order-item">
-            <span class="order-label">Product</span>
-            <span class="order-value">{{product}}</span>
-          </div>
-          <div class="order-item">
-            <span class="order-label">Amount</span>
-            <span class="order-value highlight">{{amount}}</span>
-          </div>
-          <div class="order-item">
-            <span class="order-label">Valid Until</span>
-            <span class="order-value">{{expiryDate}}</span>
-          </div>
-        </div>
-
-        <!-- Expiry Notice -->
-        <div class="expiry-notice">
-          💡 You can view and download your report at any time during the validity period. We will send you a renewal reminder 7 days before expiration.
-        </div>
-
-        <!-- Features -->
-        <div class="features">
-          <div style="font-weight:600;margin-bottom:12px;color:#d4af37">What You Can Now Access:</div>
-          <div class="feature-item">Complete Ba Zi annual reading and analysis</div>
-          <div class="feature-item">Deep insights into your birth chart characteristics</div>
-          <div class="feature-item">Professional fortune guidance and recommendations</div>
-          <div class="feature-item">Download and save your report permanently</div>
-        </div>
-
-        <!-- CTA -->
-        <div class="cta">
-          <a href="{{reportUrl}}" class="btn">🔮 View Your Report Now</a>
-          <div class="btn-text">Click to access your personal dashboard</div>
-        </div>
-
-        <p class="greeting" style="margin-top:24px;font-size:13px">
-          <strong>Need Help?</strong><br>
-          Please reply to this email or visit our help center. Our astrology research team is ready to assist you anytime.
-        </p>
-      </div>
-
-      <!-- Footer -->
-      <div class="footer">
-        ShenYuan · shenyuan.mylumee.cn<br>
-        © 2026 ShenYuan Astrology Research Team. All rights reserved.<br>
-        This order confirmation is legally binding.<br>
-        <a href="https://shenyuan.mylumee.cn/legal-en.html" class="footer-link">Terms of Service</a> ·
-        <a href="https://shenyuan.mylumee.cn/legal-en.html" class="footer-link">Privacy Policy</a>
-      </div>
-    </div>
-  </td></tr>
+    </td>
+  </tr>
 </table>
 </body>
 </html>

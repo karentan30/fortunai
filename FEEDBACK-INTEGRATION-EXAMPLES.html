@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>反馈系统集成示例</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Noto Serif SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #faf8f5;
+  color: rgba(40,35,30,0.92);
+  line-height: 1.8;
+  padding: 40px 20px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+h1, h2, h3 { margin-top: 30px; margin-bottom: 12px; }
+h1 { font-size: 28px; }
+h2 { font-size: 20px; border-bottom: 2px solid #5bbfa0; padding-bottom: 8px; }
+h3 { font-size: 16px; }
+code {
+  background: rgba(201,168,76,0.1);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Monaco', monospace;
+  font-size: 13px;
+}
+pre {
+  background: rgba(40,35,30,0.05);
+  border-left: 3px solid #5bbfa0;
+  padding: 16px;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 16px 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.example { background: #ffffff; border: 1px solid rgba(201,168,76,0.2); border-radius: 8px; padding: 16px; margin: 16px 0; }
+.code-label { font-size: 12px; color: rgba(80,70,55,0.7); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<h1>善缘反馈系统 — 集成示例代码</h1>
+
+<p style="color: rgba(80,70,55,0.7); font-size: 14px; margin: 20px 0;">
+本文档提供了在各个报告页面集成反馈弹窗的具体示例代码。
+</p>
+
+---
+
+<h2>📋 基本集成模板</h2>
+
+<p>在所有报告页面 (report.html, report-en.html, report-kr.html 等) 的最后，在 <code>&lt;/body&gt;</code> 标签前添加以下代码：</p>
+
+<div class="example">
+  <div class="code-label">HTML - 标准集成</div>
+  <pre>&lt;!-- 反馈弹窗脚本 --&gt;
+&lt;script src="/assets/js/feedback-modal.js"&gt;&lt;/script&gt;
+
+&lt;!-- 初始化反馈系统 --&gt;
+&lt;script&gt;
+(function() {
+  // 确保 DOM 完全加载
+  function initFeedback() {
+    // 报告生成完成后，延迟显示反馈弹窗
+    setTimeout(function() {
+      FeedbackModal.show({
+        readingType: 'bazi',  // 替换为实际占算类型
+        lang: 'zh',
+        onSuccess: function(response) {
+          console.log('反馈已提交，ID:', response.feedbackId);
+        }
+      });
+    }, 2000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFeedback);
+  } else {
+    initFeedback();
+  }
+})();
+&lt;/script&gt;</pre>
+</div>
+
+---
+
+<h2>📍 针对各报告页面的具体集成</h2>
+
+<h3>1️⃣ report.html (八字命理 - 中文)</h3>
+
+<div class="example">
+  <div class="code-label">HTML - report.html 末尾</div>
+  <pre>&lt;script src="/assets/js/feedback-modal.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+// 在报告完全渲染后显示反馈弹窗
+(function() {
+  const targetElement = document.querySelector('.report-footer');
+
+  if (targetElement) {
+    // 使用 MutationObserver 检测报告生成完成
+    const observer = new MutationObserver(function(mutations) {
+      setTimeout(function() {
+        FeedbackModal.show({
+          readingType: 'bazi',
+          lang: 'zh',
+          onSuccess: function() {
+            // 可选：记录用户反馈行为埋点
+            if (window.analytics) {
+              window.analytics.track('feedback_submitted', { type: 'bazi' });
+            }
+          }
+        });
+        observer.disconnect();
+      }, 1500);
+    });
+
+    observer.observe(targetElement, { childList: true, subtree: true });
+  }
+})();
+&lt;/script&gt;</pre>
+</div>
+
+<h3>2️⃣ report-en.html (英文版本)</h3>
+
+<div class="example">
+  <div class="code-label">HTML - report-en.html 末尾</div>
+  <pre>&lt;script src="/assets/js/feedback-modal.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+(function() {
+  setTimeout(function() {
+    FeedbackModal.show({
+      readingType: 'bazi',
+      lang: 'en'
+    });
+  }, 2000);
+})();
+&lt;/script&gt;</pre>
+</div>
+
+<h3>3️⃣ report-kr.html (韩文版本)</h3>
+
+<div class="example">
+  <div class="code-label">HTML - report-kr.html 末尾</div>
+  <pre>&lt;script src="/assets/js/feedback-modal.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+(function() {
+  setTimeout(function() {
+    FeedbackModal.show({
+      readingType: 'bazi',
+      lang: 'kr'
+    });
+  }, 2000);
+})();
+&lt;/script&gt;</pre>
+</div>
+
+---
+
+<h2>🎯 高级集成示例</h2>
+
+<h3>条件显示反馈弹窗</h3>
+
+<p>仅在用户首次查看报告时显示：</p>
+
+<div class="example">
+  <div class="code-label">JavaScript - 条件显示</div>
+  <pre>&lt;script&gt;
+(function() {
+  function initFeedback() {
+    // 检查是否已显示过反馈弹窗
+    const sessionKey = 'feedback_shown_' + new Date().toISOString().slice(0, 10);
+    const shown = sessionStorage.getItem(sessionKey);
+
+    if (shown) {
+      console.log('[Feedback] 今日已显示反馈弹窗');
+      return;
+    }
+
+    setTimeout(function() {
+      FeedbackModal.show({
+        readingType: 'bazi',
+        lang: 'zh',
+        onSuccess: function() {
+          sessionStorage.setItem(sessionKey, '1');
+        }
+      });
+    }, 2000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFeedback);
+  } else {
+    initFeedback();
+  }
+})();
+&lt;/script&gt;</pre>
+</div>
+
+<h3>通过按钮手动触发反馈</h3>
+
+<p>添加一个"反馈"按钮，用户可随时点击打开反馈弹窗：</p>
+
+<div class="example">
+  <div class="code-label">HTML - 添加反馈按钮</div>
+  <pre>&lt;!-- 在页面适当位置添加按钮 --&gt;
+&lt;button id="feedbackBtn" onclick="openFeedback()" style="
+  padding: 10px 20px;
+  background: rgba(91,191,160,0.9);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px;
+"&gt;💬 提供反馈&lt;/button&gt;
+
+&lt;script src="/assets/js/feedback-modal.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+function openFeedback() {
+  FeedbackModal.show({
+    readingType: 'bazi',
+    lang: 'zh'
+  });
+}
+&lt;/script&gt;</pre>
+</div>
+
+<h3>集成Google Analytics埋点</h3>
+
+<div class="example">
+  <div class="code-label">JavaScript - 埋点集成</div>
+  <pre>&lt;script&gt;
+(function() {
+  function initFeedback() {
+    setTimeout(function() {
+      FeedbackModal.show({
+        readingType: 'bazi',
+        lang: 'zh',
+        onSuccess: function(response) {
+          // Google Analytics 事件
+          if (window.gtag) {
+            gtag('event', 'feedback_submitted', {
+              feedback_id: response.feedbackId,
+              reading_type: 'bazi',
+              language: 'zh'
+            });
+          }
+
+          // 自定义事件
+          if (window.dataLayer) {
+            window.dataLayer.push({
+              event: 'feedback_submitted',
+              feedbackId: response.feedbackId
+            });
+          }
+        }
+      });
+    }, 2000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFeedback);
+  } else {
+    initFeedback();
+  }
+})();
+&lt;/script&gt;</pre>
+</div>
+
+<h3>针对不同占算类型的集成</h3>
+
+<div class="example">
+  <div class="code-label">JavaScript - 动态读取占算类型</div>
+  <pre>&lt;script&gt;
+(function() {
+  // 根据当前页面动态确定占算类型
+  function getReadingType() {
+    const pathname = window.location.pathname;
+
+    if (pathname.includes('report')) return 'bazi';
+    if (pathname.includes('tarot')) return 'tarot';
+    if (pathname.includes('ziwei')) return 'ziwei';
+    if (pathname.includes('hehun')) return 'hehun';
+    if (pathname.includes('astrology')) return 'astrology';
+
+    return 'general';
+  }
+
+  // 根据URL路径动态确定语言
+  function getLanguage() {
+    if (window.location.pathname.includes('-en')) return 'en';
+    if (window.location.pathname.includes('-kr')) return 'kr';
+    return 'zh';
+  }
+
+  function initFeedback() {
+    setTimeout(function() {
+      FeedbackModal.show({
+        readingType: getReadingType(),
+        lang: getLanguage()
+      });
+    }, 2000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFeedback);
+  } else {
+    initFeedback();
+  }
+})();
+&lt;/script&gt;</pre>
+</div>
+
+---
+
+<h2>🔧 自定义弹窗样式</h2>
+
+<p>如需修改弹窗的颜色、字体等样式，可在 feedback-modal.js 中调整以下部分：</p>
+
+<div class="example">
+  <div class="code-label">CSS - 自定义样式</div>
+  <pre>/* 修改星级按钮颜色 */
+.star-btn {
+  color: #c9a84c;  /* 改为你的品牌色 */
+}
+
+/* 修改提交按钮颜色 */
+.feedback-submit-btn {
+  background: #5bbfa0;  /* 改为你的品牌色 */
+}
+
+/* 修改弹窗背景 */
+#feedbackModal {
+  background: rgba(0, 0, 0, 0.5);  /* 调整透明度 */
+}</pre>
+</div>
+
+---
+
+<h2>📊 前端埋点示例</h2>
+
+<p>建议在反馈系统中集成以下埋点来追踪用户行为：</p>
+
+<div class="example">
+  <div class="code-label">JavaScript - 完整埋点方案</div>
+  <pre>&lt;script src="/assets/js/feedback-modal.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+// 反馈埋点配置
+const FeedbackTracking = {
+  trackOpen: function(type, lang) {
+    if (window.gtag) {
+      gtag('event', 'feedback_modal_opened', {
+        reading_type: type,
+        language: lang,
+        timestamp: new Date().toISOString()
+      });
+    }
+  },
+
+  trackRating: function(rating) {
+    if (window.gtag) {
+      gtag('event', 'feedback_rating_selected', {
+        rating: rating,
+        timestamp: new Date().toISOString()
+      });
+    }
+  },
+
+  trackSubmit: function(rating, category, type) {
+    if (window.gtag) {
+      gtag('event', 'feedback_submitted', {
+        rating: rating,
+        category: category,
+        reading_type: type,
+        timestamp: new Date().toISOString()
+      });
+    }
+  },
+
+  trackClose: function(reason) {
+    if (window.gtag) {
+      gtag('event', 'feedback_modal_closed', {
+        reason: reason,
+        timestamp: new Date().toISOString()
+      });
+    }
+  }
+};
+
+// 集成埋点
+function initFeedbackWithTracking() {
+  const readingType = 'bazi';
+  const lang = 'zh';
+
+  FeedbackTracking.trackOpen(readingType, lang);
+
+  FeedbackModal.show({
+    readingType: readingType,
+    lang: lang,
+    onSuccess: function(response) {
+      FeedbackTracking.trackSubmit(
+        document.getElementById('feedbackRating')?.value || 0,
+        document.getElementById('feedbackCategory')?.value || 'general',
+        readingType
+      );
+    },
+    onClose: function() {
+      FeedbackTracking.trackClose('user_closed');
+    }
+  });
+}
+
+setTimeout(initFeedbackWithTracking, 2000);
+&lt;/script&gt;</pre>
+</div>
+
+---
+
+<h2>🚀 部署检查清单</h2>
+
+<div style="background: rgba(91,191,160,0.1); border: 1px solid #5bbfa0; border-radius: 8px; padding: 16px; margin: 20px 0;">
+  <p style="font-weight: 600; margin-bottom: 12px;">集成完成前，请确认以下项目：</p>
+  <ul style="margin-left: 20px;">
+    <li>✓ 复制 <code>/assets/js/feedback-modal.js</code> 到项目</li>
+    <li>✓ 更新 <code>server/routes/daily.js</code> 的反馈路由</li>
+    <li>✓ 访问 <code>/pages/admin-feedback.html</code> 验证后台可用</li>
+    <li>✓ 在各报告页面添加反馈弹窗脚本</li>
+    <li>✓ 测试反馈提交、查看、删除功能</li>
+    <li>✓ 验证各语言版本的弹窗显示正确</li>
+    <li>✓ 检查管理员认证是否正常工作</li>
+    <li>✓ 确保反馈数据正确持久化到 data.json</li>
+  </ul>
+</div>
+
+---
+
+<h2>❓ 常见问题</h2>
+
+<p><strong>Q: 如何隐藏用户名和邮箱字段？</strong></p>
+<p>A: 在 feedback-modal.js 中找到 userInfoHtml，将 display:none 改为 display:flex 即可让字段可选显示。</p>
+
+<p><strong>Q: 如何修改反馈分类选项？</strong></p>
+<p>A: 在 feedback-modal.js 中找到 CATEGORIES 对象，添加或修改选项：</p>
+<pre>const CATEGORIES = {
+  quality: '准确度',
+  custom: '我的自定义分类'  // 新增
+};</pre>
+
+<p><strong>Q: 如何让反馈弹窗在特定条件下显示？</strong></p>
+<p>A: 在 onSuccess/onClose 回调中添加条件判断，或使用 sessionStorage 来控制显示频率。</p>
+
+<p><strong>Q: 反馈数据存储在哪里？</strong></p>
+<p>A: 存储在内存 (_M.feedbacks) 中，每次更新后通过 _persist() 落盘到 server/data.json。</p>
+
+---
+
+<p style="text-align: center; color: rgba(80,70,55,0.7); margin-top: 40px; font-size: 12px;">
+善缘反馈系统 © 2026 | 完整集成文档见 FEEDBACK-INTEGRATION.md
+</p>
+
+</body>
+</html>

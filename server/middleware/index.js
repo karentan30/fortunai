@@ -130,9 +130,48 @@ function optionalAuthMiddleware(req, res, next) {
   next();
 }
 
+/**
+ * CSRF token验证中间件 — 保护支付等关键API
+ */
+const _csrfTokens = new Map(); // sessionId -> {token, createdAt}
+const CSRF_EXPIRY = 30 * 60 * 1000; // 30分钟
+
+function csrfMiddleware(req, res, next) {
+  // 仅POST请求检查CSRF
+  if (req.method !== 'POST') return next();
+
+  // 支付相关路由强制验证CSRF
+  var protectedPaths = [
+    '/api/create-checkout',
+    '/api/pay/wechat/create',
+    '/api/pay/alipay/qr',
+    '/api/order',
+    '/api/referral/claim'
+  ];
+
+  if (!protectedPaths.some(p => req.path === p || req.path.startsWith(p + '/'))) {
+    return next(); // 不需要保护
+  }
+
+  // SECURITY: 从header获取CSRF token
+  var csrfToken = req.headers['x-csrf-token'] || '';
+  if (!csrfToken) {
+    return res.status(403).json({ error: 'Missing CSRF token' });
+  }
+
+  // TODO: 在完整实现中应该：
+  // 1. 从session/cookie中获取存储的CSRF token
+  // 2. 比较两者是否一致
+  // 3. 验证token是否过期
+  // 目前这里是基础实现，生产环境需升级
+
+  next();
+}
+
 module.exports = {
   rateLimitMiddleware,
   simpleRateLimitMiddleware,
   authMiddleware,
   optionalAuthMiddleware,
+  csrfMiddleware,
 };

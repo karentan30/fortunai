@@ -33,9 +33,23 @@ const { sendEmail, getClientIp, resolveUserFromToken } = require('../lib/utils')
 const { rateLimitMiddleware, simpleRateLimitMiddleware, authMiddleware } = require('../middleware');
 const { recordAffiliateOrder, completeAffiliateOrder } = require('./affiliate');
 
-// helper: 从请求提取 ref_code（body > header > query）
+// SECURITY: 从请求提取并验证 ref_code（body > header > query）
+const REF_CODE_PATTERN = /^[a-zA-Z0-9_-]{1,32}$/;
+
 function _extractRef(req) {
-  return (req.body && req.body.ref_code) || req.headers['x-affiliate-ref'] || req.query.ref_code || '';
+  var code = (req.body && req.body.ref_code) || req.headers['x-affiliate-ref'] || req.query.ref_code || '';
+  code = String(code).trim();
+
+  // SECURITY FIX: Validate ref_code format before accepting
+  if (code && !REF_CODE_PATTERN.test(code)) {
+    console.warn('[SECURITY] Invalid ref_code format attempted:', code.slice(0, 20));
+    return '';
+  }
+
+  // TODO: Could add database check here to verify code exists
+  // if (code && !isValidAffiliateCode(code)) return '';
+
+  return code;
 }
 
 // Stripe（只在 key 存在时加载）

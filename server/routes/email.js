@@ -197,7 +197,10 @@ router.post('/email/subscribe', (req, res) => {
     subs.push(entry);
   }
   saveSubs(subs);
-  console.log('[email.subscribe]', email);
+  // SECURITY FIX: Redact email from logs
+  const crypto = require('crypto');
+  const emailHash = crypto.createHash('sha256').update(email).digest('hex').slice(0, 8);
+  console.log('[email.subscribe]', emailHash);
   res.json({ ok: true });
 });
 

@@ -2,14 +2,40 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<meta name="supported-color-schemes" content="dark light">
 <title>续费提醒 - 善缘</title>
 <style>
-body {
+:root {
+  color-scheme: dark light;
+}
+html, body {
   margin: 0;
   padding: 0;
+}
+body {
   background: #0d0820;
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #f0eeE6;
+  word-break: break-word;
+}
+.preheader {
+  display: none;
+  font-size: 1px;
+  color: #0d0820;
+  line-height: 1px;
+  max-height: 0;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
 }
 .container {
   max-width: 600px;
@@ -18,38 +44,51 @@ body {
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid rgba(212,175,55,0.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 .header {
   background: linear-gradient(135deg, #1a0f2e 0%, #2d1b4e 100%);
-  padding: 32px 24px 24px;
+  padding: 32px 24px;
   text-align: center;
   border-bottom: 1px solid rgba(212,175,55,0.15);
 }
 .header-icon {
-  font-size: 28px;
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: 12px;
+  display: block;
+}
+.brand-logo {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #d4af37;
   margin-bottom: 8px;
 }
 .header-title {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
   color: #d4af37;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.08em;
   margin: 0;
+  padding: 0;
 }
 .header-subtitle {
-  font-size: 12px;
-  color: rgba(212,175,55,0.5);
-  margin-top: 4px;
+  font-size: 11px;
+  color: rgba(212,175,55,0.55);
+  margin-top: 6px;
   letter-spacing: 0.2em;
+  text-transform: uppercase;
 }
 .content {
   padding: 32px 24px;
 }
 .greeting {
-  color: rgba(240,238,230,0.85);
+  color: rgba(240,238,230,0.9);
   font-size: 15px;
-  line-height: 1.6;
-  margin: 0 0 24px 0;
+  line-height: 1.7;
+  margin: 0 0 20px 0;
+  padding: 0;
 }
 .warning-box {
   background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.04));
@@ -64,12 +103,17 @@ body {
   font-weight: 700;
   color: #d4af37;
   margin: 0 0 12px 0;
-  display: flex;
-  align-items: center;
 }
 .warning-title .icon {
-  font-size: 20px;
+  display: inline-block;
   margin-right: 8px;
+}
+.days-left {
+  font-size: 20px;
+  font-weight: 700;
+  color: #d4af37;
+  display: inline-block;
+  min-width: 40px;
 }
 .warning-text {
   color: rgba(240,238,230,0.85);
@@ -88,13 +132,14 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
+  padding: 12px 0;
   border-bottom: 1px solid rgba(212,175,55,0.1);
   color: rgba(240,238,230,0.85);
   font-size: 14px;
 }
 .plan-item:last-child {
   border-bottom: none;
+  padding-bottom: 0;
 }
 .plan-label {
   font-weight: 600;
@@ -103,15 +148,11 @@ body {
 .plan-value {
   text-align: right;
   font-weight: 500;
-}
-.days-left {
-  font-size: 18px;
-  font-weight: 700;
-  color: #d4af37;
+  word-wrap: break-word;
 }
 .features {
-  background: rgba(212,175,55,0.04);
-  border-left: 3px solid #d4af37;
+  background: rgba(212,175,55,0.05);
+  border-left: 4px solid #d4af37;
   border-radius: 0 8px 8px 0;
   padding: 16px 20px;
   margin: 24px 0;
@@ -120,157 +161,207 @@ body {
   line-height: 1.8;
 }
 .feature-title {
-  font-weight: 600;
+  font-weight: 700;
   color: #d4af37;
   margin-bottom: 12px;
 }
 .feature-item {
   margin: 8px 0;
-  padding-left: 20px;
+  padding-left: 24px;
   position: relative;
 }
-.feature-item:before {
-  content: '✓';
+.feature-item::before {
+  content: '\2713';
   color: #d4af37;
   position: absolute;
   left: 0;
   font-weight: bold;
 }
 .benefit-box {
-  background: rgba(100, 200, 150, 0.08);
-  border: 1px solid rgba(100, 200, 150, 0.15);
+  background: rgba(100, 200, 150, 0.1);
+  border: 1px solid rgba(100, 200, 150, 0.2);
   border-radius: 8px;
   padding: 14px;
-  margin: 16px 0;
+  margin: 20px 0;
   font-size: 13px;
   color: rgba(100, 200, 150, 0.9);
+  line-height: 1.6;
 }
 .benefit-box strong {
-  color: rgba(100, 200, 150, 1);
+  color: #64c896;
 }
 .cta {
   text-align: center;
-  margin: 28px 0;
+  margin: 32px 0;
 }
 .btn {
   display: inline-block;
-  background: linear-gradient(135deg, #d4af37, #b8972e);
+  background: linear-gradient(135deg, #d4af37 0%, #b8972e 100%);
   color: #1a0f2e;
   text-decoration: none;
-  padding: 14px 40px;
+  padding: 16px 48px;
   border-radius: 10px;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  transition: transform 0.2s, box-shadow 0.2s;
+  border: 0;
+  cursor: pointer;
+  mso-padding-alt: 16px 48px;
+  text-align: center;
 }
 .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(212,175,55,0.3);
+  background: linear-gradient(135deg, #e6c547 0%, #ccaa37 100%);
 }
 .btn-text {
-  margin-top: 10px;
-  font-size: 12px;
-  color: rgba(212,175,55,0.4);
+  margin-top: 12px;
+  font-size: 11px;
+  color: rgba(212,175,55,0.45);
+}
+.help-section {
+  background: rgba(212,175,55,0.04);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 24px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(240,238,230,0.8);
+}
+.help-section strong {
+  color: #d4af37;
 }
 .footer {
   border-top: 1px solid rgba(212,175,55,0.1);
-  padding: 16px 24px;
+  padding: 20px 24px;
   text-align: center;
-  font-size: 11px;
-  color: rgba(240,238,230,0.3);
-  line-height: 1.6;
+  font-size: 10px;
+  color: rgba(240,238,230,0.4);
+  line-height: 1.7;
+  background: rgba(0,0,0,0.2);
 }
 .footer-link {
-  color: rgba(212,175,55,0.4);
+  color: rgba(212,175,55,0.45);
   text-decoration: none;
 }
 .footer-link:hover {
   text-decoration: underline;
 }
+@media (max-width: 600px) {
+  .container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+  .content {
+    padding: 24px 16px !important;
+  }
+  .header {
+    padding: 24px 16px !important;
+  }
+  .header-title {
+    font-size: 20px !important;
+  }
+  .footer {
+    padding: 16px 12px !important;
+  }
+}
+@media (prefers-color-scheme: light) {
+  body {
+    background: #f5f5f5;
+  }
+  .container {
+    background: #ffffff;
+    border-color: rgba(212,175,55,0.2);
+  }
+  .greeting {
+    color: #2c2c2c;
+  }
+}
 </style>
 </head>
 <body>
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0820;padding:20px 0">
-  <tr><td align="center">
-    <div class="container">
-      <!-- Header -->
-      <div class="header">
-        <div class="header-icon">⏰</div>
-        <h1 class="header-title">会员即将到期</h1>
-        <p class="header-subtitle">SHEN YUAN · 续费提醒</p>
-      </div>
-
-      <!-- Content -->
-      <div class="content">
-        <p class="greeting">亲爱的用户，您好！</p>
-        <p class="greeting">您的善缘会员权限即将到期。为了保持不间断的服务，我们提醒您及时续费。</p>
-
-        <!-- Warning Box -->
-        <div class="warning-box">
-          <h2 class="warning-title">
-            <span class="icon">⚠️</span>
-            距到期还有 <span class="days-left">{{daysLeft}}</span> 天
-          </h2>
-          <p class="warning-text">
-            您的 <strong>{{planName}}</strong> 会员将于 <strong>{{expiryDate}}</strong> 到期。<br>
-            续费后，您的所有报告、记录和数据都会被保留，无需重新生成！
-          </p>
+<div class="preheader">您的善缘会员即将到期。立即续费以保持不间断的服务，保留所有数据和报告。</div>
+<table role="presentation" style="width:100%;background:#0d0820;padding:20px 0">
+  <tr>
+    <td align="center">
+      <div class="container">
+        <!-- Header -->
+        <div class="header">
+          <div class="brand-logo">SHEN YUAN</div>
+          <div class="header-icon" role="img" aria-label="续费提醒">⏰</div>
+          <h1 class="header-title">会员即将到期</h1>
+          <p class="header-subtitle">RENEWAL REMINDER · 续费提醒</p>
         </div>
 
-        <!-- Plan Info -->
-        <div class="plan-info">
-          <div class="plan-item">
-            <span class="plan-label">当前套餐</span>
-            <span class="plan-value">{{planName}}</span>
+        <!-- Content -->
+        <div class="content">
+          <p class="greeting">亲爱的用户，您好！</p>
+          <p class="greeting">您的善缘会员权限即将到期。为了保持不间断的服务，我们提醒您及时续费。续费后，您的所有报告、记录和数据都会被完整保留。</p>
+
+          <!-- Warning Box -->
+          <div class="warning-box">
+            <h2 class="warning-title">
+              <span class="icon" role="img" aria-label="警告">⚠️</span>距到期还有 <span class="days-left">{{daysLeft}}</span> 天
+            </h2>
+            <p class="warning-text">
+              您的 <strong>{{planName}}</strong> 会员将于 <strong>{{expiryDate}}</strong> 到期。<br>
+              续费后，您的所有报告、记录和数据都会被保留，无需重新生成！
+            </p>
           </div>
-          <div class="plan-item">
-            <span class="plan-label">到期日期</span>
-            <span class="plan-value">{{expiryDate}}</span>
+
+          <!-- Plan Info -->
+          <div class="plan-info">
+            <div class="plan-item">
+              <span class="plan-label">当前套餐</span>
+              <span class="plan-value">{{planName}}</span>
+            </div>
+            <div class="plan-item">
+              <span class="plan-label">到期日期</span>
+              <span class="plan-value">{{expiryDate}}</span>
+            </div>
+            <div class="plan-item">
+              <span class="plan-label">续费价格</span>
+              <span class="plan-value" style="color:#d4af37;font-size:15px;font-weight:700">{{currency}}{{renewalPrice}}</span>
+            </div>
           </div>
-          <div class="plan-item">
-            <span class="plan-label">续费价格</span>
-            <span class="plan-value" style="color:#d4af37;font-size:15px;font-weight:700">{{renewalPrice}}</span>
+
+          <!-- Benefits -->
+          <div class="benefit-box">
+            <strong>💡 断点续约保障：</strong>续费后您的所有数据和记录完全保留，无需重新激活。享受连贯的服务体验。
+          </div>
+
+          <!-- Features -->
+          <div class="features">
+            <div class="feature-title">续费后您将继续享有：</div>
+            <div class="feature-item">完整的八字年运报告解读</div>
+            <div class="feature-item">持续的运势指导和建议</div>
+            <div class="feature-item">专业的命理研究团队支持</div>
+            <div class="feature-item">优先的客户服务和咨询</div>
+            <div class="feature-item">VIP 用户独享的更新功能</div>
+          </div>
+
+          <!-- CTA -->
+          <div class="cta">
+            <a href="{{renewUrl}}" class="btn">🔄 立即续费会员</a>
+            <div class="btn-text">保留所有数据，享受不间断服务</div>
+          </div>
+
+          <!-- Help Section -->
+          <div class="help-section">
+            <strong>有问题？</strong>我们的客服团队随时准备帮助您。如有任何疑问，请直接回复此邮件或访问我们的帮助中心。
           </div>
         </div>
 
-        <!-- Benefits -->
-        <div class="benefit-box">
-          💡 <strong>断点续约保障</strong>：续费后您的所有数据和记录完全保留，无需重新激活。享受连贯的服务体验。
+        <!-- Footer -->
+        <div class="footer">
+          善缘 · shenyuan.mylumee.cn<br>
+          © 2026 善缘命理研究团队。保留所有权利。<br>
+          为了确保您不会错过精彩内容，我们会在到期日期前提醒您。<br>
+          <a href="https://shenyuan.mylumee.cn/legal-cn.html" class="footer-link">服务条款</a> ·
+          <a href="https://shenyuan.mylumee.cn/legal-cn.html" class="footer-link">隐私政策</a>
         </div>
-
-        <!-- Features -->
-        <div class="features">
-          <div class="feature-title">续费后您将继续享有：</div>
-          <div class="feature-item">完整的八字年运报告解读</div>
-          <div class="feature-item">持续的运势指导和建议</div>
-          <div class="feature-item">专业的命理研究团队支持</div>
-          <div class="feature-item">优先的客户服务和咨询</div>
-          <div class="feature-item">VIP 用户独享的更新功能</div>
-        </div>
-
-        <!-- CTA -->
-        <div class="cta">
-          <a href="{{renewUrl}}" class="btn">🔄 立即续费会员</a>
-          <div class="btn-text">保留所有数据，享受不间断服务</div>
-        </div>
-
-        <p class="greeting" style="margin-top:24px;font-size:13px">
-          <strong>有问题？</strong><br>
-          我们的客服团队随时准备帮助您。如有任何疑问，请直接回复此邮件或访问我们的帮助中心。
-        </p>
       </div>
-
-      <!-- Footer -->
-      <div class="footer">
-        善缘 · shenyuan.mylumee.cn<br>
-        © 2026 善缘命理研究团队。保留所有权利。<br>
-        为了确保您不会错过精彩内容，我们会在到期日期前提醒您。<br>
-        <a href="https://shenyuan.mylumee.cn/legal-cn.html" class="footer-link">服务条款</a> ·
-        <a href="https://shenyuan.mylumee.cn/legal-cn.html" class="footer-link">隐私政策</a>
-      </div>
-    </div>
-  </td></tr>
+    </td>
+  </tr>
 </table>
 </body>
 </html>

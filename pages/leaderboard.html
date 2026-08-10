@@ -119,26 +119,31 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .code-sec { background:var(--card); border:1px solid rgba(201,168,76,0.1); border-radius:12px; padding:16px 14px; margin-bottom:18px; }
 .code-label { font-size:12px; letter-spacing:0.2em; color:rgba(201,168,76,0.45); margin-bottom:10px; }
 .code-channels { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
-.channel-box { background:rgba(201,168,76,0.04); border:1px solid rgba(201,168,76,0.12); border-radius:8px; padding:12px; text-align:center; cursor:pointer; transition:all 0.2s; }
+.channel-box { background:rgba(201,168,76,0.04); border:1px solid rgba(201,168,76,0.12); border-radius:8px; padding:12px; text-align:center; cursor:pointer; transition:all 0.2s; min-height: 60px; display: flex; flex-direction: column; justify-content: center; }
 .channel-box:hover { background:rgba(201,168,76,0.08); border-color:rgba(201,168,76,0.25); }
+.channel-box:focus-within { outline: 2px solid var(--gold); outline-offset: -1px; }
+.channel-box[role="button"]:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .channel-name { font-size:11px; letter-spacing:0.08em; color:rgba(201,168,76,0.5); margin-bottom:6px; }
-.channel-code { font-size:14px; font-weight:600; color:var(--gold-light); font-family:monospace; letter-spacing:0.12em; }
-.channel-box.copied .channel-code::after { content:' ✓'; font-size:12px; color:var(--jade); }
+.channel-code { font-size:14px; font-weight:600; color:var(--gold-light); font-family:monospace; letter-spacing:0.12em; word-break: break-all; }
+.channel-box.copied .channel-code::after { content:' ✓'; font-size:12px; color:var(--jade); margin-left: 4px; }
 
 /* ── Share Buttons ── */
 .btn-group { display:flex; gap:10px; margin-bottom:18px; }
-.btn { flex:1; padding:12px 0; border:none; border-radius:10px; font-family:'Noto Serif SC',serif; font-size:12px; font-weight:500; letter-spacing:0.12em; cursor:pointer; transition:all 0.2s; }
+.btn { flex:1; padding:12px 0; border:none; border-radius:10px; font-family:'Noto Serif SC',serif; font-size:12px; font-weight:500; letter-spacing:0.12em; cursor:pointer; transition:all 0.2s; min-height: 44px; display: flex; align-items: center; justify-content: center; }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
 .btn-primary { background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light),var(--gold)); color:rgba(14,10,4,0.95); box-shadow:0 4px 16px rgba(201,168,76,0.25); }
-.btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 24px rgba(201,168,76,0.35); }
-.btn-primary:active { transform:translateY(0); }
+.btn-primary:hover:not(:disabled) { transform:translateY(-1px); box-shadow:0 6px 24px rgba(201,168,76,0.35); }
+.btn-primary:active:not(:disabled) { transform:translateY(0); }
 .btn-secondary { background:rgba(91,191,160,0.08); border:1.5px solid rgba(91,191,160,0.4); color:var(--jade); }
-.btn-secondary:hover { background:rgba(91,191,160,0.14); }
-.btn-secondary:active { transform:scale(0.97); }
+.btn-secondary:hover:not(:disabled) { background:rgba(91,191,160,0.14); }
+.btn-secondary:active:not(:disabled) { transform:scale(0.97); }
 
 /* ── Share Card Canvas ── */
 .card-preview { background:var(--card); border:1px solid rgba(201,168,76,0.1); border-radius:12px; padding:0; overflow:hidden; margin-bottom:18px; display:none; }
 .card-preview.show { display:block; }
-.card-canvas-wrap { width:100%; aspect-ratio:9/12; background:rgba(14,10,4,0.95); }
+.card-canvas-wrap { width:100%; aspect-ratio:9/12; background:rgba(14,10,4,0.95); image-rendering: -webkit-optimize-contrast; }
+canvas { display: block; width: 100%; height: auto; }
 
 /* ── Reward Tiers Info ── */
 .tiers-info { background:rgba(201,168,76,0.05); border:1px solid rgba(201,168,76,0.12); border-radius:12px; padding:16px 14px; margin-bottom:18px; }
@@ -348,16 +353,81 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 <script>
 const API_BASE = window.location.origin;
+const MAX_RETRIES = 2;
+const RETRY_DELAY = 1000;
+const REQUEST_TIMEOUT = 8000;
 let myData = null;
 let leaderboardData = [];
 let refreshTimer = null;
+let isInitialized = false;
+
+// ── Localization Helper ──
+function formatNumber(num) {
+  return new Intl.NumberFormat('zh-CN').format(num);
+}
+
+function formatDate(date) {
+  return new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  }).format(date);
+}
+
+// ── Fetch with Timeout & Retry ──
+async function fetchWithRetry(url, options = {}, retries = MAX_RETRIES) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT);
+
+  try {
+    const res = await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        ...options.headers,
+        'Accept': 'application/json'
+      }
+    });
+    clearTimeout(timeoutId);
+
+    if (res.status === 401) {
+      localStorage.removeItem('auth_token');
+      throw new Error('auth_expired');
+    }
+    if (!res.ok && res.status >= 500 && retries > 0) {
+      await new Promise(r => setTimeout(r, RETRY_DELAY));
+      return fetchWithRetry(url, options, retries - 1);
+    }
+    return res;
+  } catch (e) {
+    clearTimeout(timeoutId);
+    if (e.name === 'AbortError') {
+      if (retries > 0) {
+        await new Promise(r => setTimeout(r, RETRY_DELAY));
+        return fetchWithRetry(url, options, retries - 1);
+      }
+      throw new Error('request_timeout');
+    }
+    throw e;
+  }
+}
 
 // ── Initialization ──
 async function init() {
-  await fetchMyData();
-  await fetchLeaderboard();
-  startAutoRefresh();
-  updateTierBars();
+  try {
+    await Promise.race([
+      Promise.all([fetchMyData(), fetchLeaderboard()]),
+      new Promise((_, reject) => setTimeout(() => reject(new Error('init_timeout')), 5000))
+    ]);
+    isInitialized = true;
+    startAutoRefresh();
+    updateTierBars();
+  } catch (e) {
+    console.error('Init failed:', e);
+    showError('页面加载超时，请检查网络连接');
+  }
 }
 
 // ── Fetch My Data ──
@@ -368,17 +438,23 @@ async function fetchMyData() {
       document.getElementById('myScoreCard').innerHTML = '<div class="lb-empty"><div class="lb-empty-text">请先 <a href="/pages/bazi.html" style="color:var(--gold);">登录账户</a> 查看你的邀请成绩</div></div>';
       return;
     }
-    const res = await fetch(`${API_BASE}/api/referral/mine`, {
-      headers: { 'Authorization': `Bearer ${token}` }
+    const res = await fetchWithRetry(`${API_BASE}/api/referral/mine`, {
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
     });
     if (res.ok) {
       myData = await res.json();
       updateMyScoreCard();
     } else if (res.status === 401) {
-      document.getElementById('myScoreCard').innerHTML = '<div class="lb-empty"><div class="lb-empty-text">请先登录查看你的成绩</div></div>';
+      document.getElementById('myScoreCard').innerHTML = '<div class="lb-empty"><div class="lb-empty-text">会话已过期，请 <a href="/pages/bazi.html" style="color:var(--gold);">重新登录</a></div></div>';
+    } else {
+      throw new Error(`API error: ${res.status}`);
     }
   } catch (e) {
-    console.error('Failed to fetch my data:', e);
+    if (e.message === 'auth_expired') {
+      document.getElementById('myScoreCard').innerHTML = '<div class="lb-empty"><div class="error-msg">登录已过期，请重新登录</div></div>';
+    } else {
+      console.error('Failed to fetch my data:', e);
+    }
   }
 }
 
@@ -386,36 +462,50 @@ async function fetchMyData() {
 function updateMyScoreCard() {
   if (!myData) return;
 
-  // Update codes
-  Object.entries(myData.ref_codes || {}).forEach(([channel, code]) => {
-    const box = document.querySelector(`[data-channel="${channel}"]`);
-    if (box) box.textContent = code;
-  });
+  try {
+    // Update codes
+    const codeChannels = document.getElementById('codeChannels');
+    if (codeChannels) {
+      Object.entries(myData.ref_codes || {}).forEach(([channel, code]) => {
+        const box = document.querySelector(`[data-channel="${channel}"]`);
+        if (box) box.textContent = code || '—';
+      });
+    }
 
-  // Update stats
-  document.getElementById('myInvited').textContent = myData.invited_count || 0;
-  document.getElementById('myConverted').textContent = 0; // 需要后端补充转化数据
+    // Update stats with localized numbers
+    const invited = myData.invited_count || 0;
+    const converted = myData.converted_count || 0;
 
-  const tier = myData.current_tier || 'pending';
-  const tierNames = { premium: 'Premium', standard: 'Standard', basic: 'Basic', pending: '未激活' };
-  document.getElementById('myTier').textContent = tierNames[tier];
+    document.getElementById('myInvited').textContent = formatNumber(invited);
+    document.getElementById('myConverted').textContent = formatNumber(converted);
 
-  // Update progress
-  const invited = myData.invited_count || 0;
-  let nextTarget = 1;
-  if (invited < 1) nextTarget = 1;
-  else if (invited < 100) nextTarget = 100;
-  else if (invited < 200) nextTarget = 200;
-  else nextTarget = null;
+    const tier = myData.current_tier || 'pending';
+    const tierNames = { premium: 'Premium', standard: 'Standard', basic: 'Basic', pending: '未激活' };
+    document.getElementById('myTier').textContent = tierNames[tier];
 
-  if (nextTarget) {
-    document.getElementById('progressInfo').innerHTML = `再邀请 <strong>${nextTarget - invited}</strong> 位好友升级`;
-  } else {
-    document.getElementById('progressInfo').innerHTML = '已达最高等级 Premium ✦';
+    // Update progress
+    let nextTarget = 1;
+    if (invited < 1) nextTarget = 1;
+    else if (invited < 100) nextTarget = 100;
+    else if (invited < 200) nextTarget = 200;
+    else nextTarget = null;
+
+    const progressEl = document.getElementById('progressInfo');
+    if (progressEl) {
+      if (nextTarget) {
+        progressEl.innerHTML = `再邀请 <strong>${formatNumber(nextTarget - invited)}</strong> 位好友升级`;
+      } else {
+        progressEl.innerHTML = '已达最高等级 Premium ✦';
+      }
+    }
+
+    // Update my rank
+    if (myData.rank) {
+      document.getElementById('myRank').textContent = myData.rank;
+    }
+  } catch (e) {
+    console.error('Error updating score card:', e);
   }
-
-  // Update my rank (需要后端提供排行数据)
-  document.getElementById('myRank').textContent = '—';
 }
 
 // ── Update Tier Bars ──
@@ -437,14 +527,29 @@ function updateTierBars() {
 // ── Fetch Leaderboard ──
 async function fetchLeaderboard() {
   try {
-    const res = await fetch(`${API_BASE}/api/referral/leaderboard`);
+    const res = await fetchWithRetry(`${API_BASE}/api/referral/leaderboard`);
     if (res.ok) {
       leaderboardData = await res.json();
       renderLeaderboard();
+    } else {
+      throw new Error(`API error: ${res.status}`);
     }
   } catch (e) {
     console.error('Failed to fetch leaderboard:', e);
-    document.getElementById('leaderboardList').innerHTML = '<div class="lb-empty"><div class="error-msg">排行榜加载失败，请刷新重试</div></div>';
+    if (e.message === 'request_timeout') {
+      showError('排行榜加载超时，请检查网络连接');
+    } else if (e.message.includes('Failed to fetch') || e.message === 'auth_expired') {
+      showError('无法连接服务器，请检查网络');
+    } else {
+      showError('排行榜加载失败，请稍后重试');
+    }
+  }
+}
+
+function showError(message) {
+  const list = document.getElementById('leaderboardList');
+  if (list) {
+    list.innerHTML = `<div class="lb-empty"><div class="error-msg">${escape(message)}</div></div>`;
   }
 }
 
@@ -452,7 +557,7 @@ async function fetchLeaderboard() {
 function renderLeaderboard() {
   const list = document.getElementById('leaderboardList');
   if (!leaderboardData || leaderboardData.length === 0) {
-    list.innerHTML = '<div class="lb-empty"><div class="lb-empty-text">暂无邀请者排行</div></div>';
+    list.innerHTML = '<div class="lb-empty"><div class="lb-empty-icon">📭</div><div class="lb-empty-text">暂无邀请者排行<br><span style="font-size:11px; margin-top:6px; display:block;">成为第一位邀请者 ✦</span></div></div>';
     return;
   }
 
@@ -461,21 +566,26 @@ function renderLeaderboard() {
     const rank = idx + 1;
     const tierClass = item.tier || 'basic';
     const tierNames = { premium: 'Premium', standard: 'Standard', basic: 'Basic' };
+    const invitedCount = formatNumber(item.invited_count || 0);
+    const convertedCount = formatNumber(item.converted_count || 0);
+    const rankClass = rank <= 3 ? `top${rank}` : '';
+    const email = item.email ? escape(item.email.substring(0, 15)) + '...' : '—';
+
     html += `
-      <div class="lb-row fade-in" style="animation-delay:${0.1 + idx * 0.05}s;">
-        <div class="lb-rank ${rank <= 3 ? 'top' + rank : ''}">
-          <div class="lb-rank-num">#${rank}</div>
+      <div class="lb-row fade-in" style="animation-delay:${Math.min(0.1 + idx * 0.05, 0.5)}s;" role="listitem">
+        <div class="lb-rank ${rankClass}">
+          <div class="lb-rank-num" aria-label="第 ${rank} 名">#${rank}</div>
         </div>
         <div class="lb-name">
-          <div class="lb-name-text">${escape(item.name || '匿名')}</div>
-          <div class="lb-name-hint">${item.email ? item.email.substring(0, 15) + '...' : '—'}</div>
+          <div class="lb-name-text" title="${escape(item.name || '匿名')}">${escape(item.name || '匿名')}</div>
+          <div class="lb-name-hint">${email}</div>
         </div>
         <div class="lb-invited">
-          <div class="lb-invited">${item.invited_count || 0}</div>
+          <div class="lb-invited">${invitedCount}</div>
           <div class="lb-invited-hint">邀请</div>
         </div>
         <div class="lb-converted">
-          <div class="lb-converted">${item.converted_count || 0}</div>
+          <div class="lb-converted">${convertedCount}</div>
           <div class="lb-invited-hint">转化</div>
         </div>
         <div style="text-align:center;">
@@ -484,135 +594,200 @@ function renderLeaderboard() {
       </div>
     `;
   });
-  list.innerHTML = html;
+  list.innerHTML = `<div role="list">${html}</div>`;
 }
 
 // ── Copy Code ──
 function copyCode(el) {
-  const code = el.querySelector('.channel-code').textContent;
-  if (code === '—') return;
-  navigator.clipboard.writeText(code).then(() => {
-    el.classList.add('copied');
-    setTimeout(() => el.classList.remove('copied'), 2000);
-  });
+  const codeEl = el.querySelector('.channel-code');
+  if (!codeEl) return;
+  const code = codeEl.textContent;
+  if (code === '—') {
+    showToast('邀请码暂未生成');
+    return;
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(code).then(() => {
+      el.classList.add('copied');
+      showToast('已复制到剪贴板 ✓');
+      setTimeout(() => el.classList.remove('copied'), 2000);
+    }).catch(() => {
+      fallbackCopy(code);
+    });
+  } else {
+    fallbackCopy(code);
+  }
+}
+
+function fallbackCopy(text) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.left = '-9999px';
+  document.body.appendChild(textarea);
+  try {
+    textarea.select();
+    document.execCommand('copy');
+    showToast('已复制到剪贴板 ✓');
+  } catch (e) {
+    showToast('复制失败，请手动复制');
+  }
+  document.body.removeChild(textarea);
+}
+
+function showToast(message) {
+  const toast = document.createElement('div');
+  toast.textContent = message;
+  toast.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(40,35,30,0.85);color:#f0ead8;padding:10px 16px;border-radius:8px;font-size:12px;z-index:1000;backdrop-filter:blur(8px);animation:slideUp 0.3s ease;letter-spacing:0.05em;';
+  document.body.appendChild(toast);
+  const style = document.createElement('style');
+  style.textContent = '@keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }';
+  if (!document.querySelector('style[data-toast]')) {
+    style.setAttribute('data-toast', '');
+    document.head.appendChild(style);
+  }
+  setTimeout(() => toast.remove(), 2500);
 }
 
 // ── Generate Share Card ──
 function generateShareCard() {
   if (!myData) {
-    alert('请先登录');
+    showToast('请先登录');
     return;
   }
 
-  const canvas = document.getElementById('shareCanvas');
-  const ctx = canvas.getContext('2d');
-  const code = myData.ref_codes?.organic || myData.ref_code || 'SHARE';
-  const invited = myData.invited_count || 0;
-  const tier = myData.current_tier || 'basic';
-  const tierNames = { premium: 'Premium', standard: 'Standard', basic: 'Basic' };
+  try {
+    const canvas = document.getElementById('shareCanvas');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    if (!ctx) {
+      showToast('浏览器不支持Canvas');
+      return;
+    }
 
-  // Background
-  const grad = ctx.createLinearGradient(0, 0, 0, 800);
-  grad.addColorStop(0, '#1a1005');
-  grad.addColorStop(1, '#0e0a04');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 600, 800);
+    const code = myData.ref_codes?.organic || myData.ref_code || 'SHARE';
+    const invited = myData.invited_count || 0;
+    const tier = myData.current_tier || 'basic';
+    const tierNames = { premium: 'Premium', standard: 'Standard', basic: 'Basic' };
 
-  // Border
-  ctx.strokeStyle = 'rgba(201, 168, 76, 0.3)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.roundRect(16, 16, 568, 768, 16);
-  ctx.stroke();
+    // Optimize canvas rendering
+    ctx.clearRect(0, 0, 600, 800);
 
-  // Top gradient line
-  const gradTop = ctx.createLinearGradient(0, 0, 600, 0);
-  gradTop.addColorStop(0, 'rgba(201, 168, 76, 0)');
-  gradTop.addColorStop(0.5, 'rgba(201, 168, 76, 1)');
-  gradTop.addColorStop(1, 'rgba(201, 168, 76, 0)');
-  ctx.fillStyle = gradTop;
-  ctx.fillRect(0, 0, 600, 4);
+    // Background
+    const grad = ctx.createLinearGradient(0, 0, 0, 800);
+    grad.addColorStop(0, '#1a1005');
+    grad.addColorStop(1, '#0e0a04');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, 600, 800);
 
-  // Brand text
-  ctx.font = '13px "Noto Serif SC"';
-  ctx.fillStyle = 'rgba(201, 168, 76, 0.6)';
-  ctx.textAlign = 'center';
-  ctx.letterSpacing = 8;
-  ctx.fillText('善 缘 · S H E N Y U A N', 300, 90);
+    // Border with rounded corners (fallback for older browsers)
+    if (ctx.roundRect) {
+      ctx.strokeStyle = 'rgba(201, 168, 76, 0.3)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(16, 16, 568, 768, 16);
+      ctx.stroke();
+    }
 
-  // Divider
-  ctx.strokeStyle = 'rgba(201, 168, 76, 0.3)';
-  ctx.beginPath();
-  ctx.moveTo(100, 104);
-  ctx.lineTo(500, 104);
-  ctx.stroke();
+    // Top gradient line
+    const gradTop = ctx.createLinearGradient(0, 0, 600, 0);
+    gradTop.addColorStop(0, 'rgba(201, 168, 76, 0)');
+    gradTop.addColorStop(0.5, 'rgba(201, 168, 76, 1)');
+    gradTop.addColorStop(1, 'rgba(201, 168, 76, 0)');
+    ctx.fillStyle = gradTop;
+    ctx.fillRect(0, 0, 600, 4);
 
-  // Main title
-  ctx.font = 'bold 28px "Noto Serif SC"';
-  ctx.fillStyle = '#f0ead8';
-  ctx.fillText('我在善缘算了命', 300, 170);
-  ctx.font = '22px "Noto Serif SC"';
-  ctx.fillStyle = 'rgba(240, 234, 216, 0.7)';
-  ctx.fillText('邀你一起来测', 300, 215);
+    // Brand text with proper font fallback
+    ctx.font = 'normal 13px "Noto Serif SC", serif';
+    ctx.fillStyle = 'rgba(201, 168, 76, 0.6)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('善 缘 · S H E N Y U A N', 300, 90);
 
-  // Seal circle
-  ctx.strokeStyle = 'rgba(201, 168, 76, 0.4)';
-  ctx.lineWidth = 1.5;
-  ctx.beginPath();
-  ctx.arc(300, 360, 110, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.fillStyle = 'rgba(201, 168, 76, 0.05)';
-  ctx.fill();
+    // Divider
+    ctx.strokeStyle = 'rgba(201, 168, 76, 0.3)';
+    ctx.beginPath();
+    ctx.moveTo(100, 104);
+    ctx.lineTo(500, 104);
+    ctx.stroke();
 
-  // Code label & code
-  ctx.font = '11px "Noto Serif SC"';
-  ctx.fillStyle = 'rgba(201, 168, 76, 0.6)';
-  ctx.fillText('邀 请 码', 300, 345);
-  ctx.font = 'bold 36px monospace';
-  ctx.fillStyle = '#e8d08a';
-  ctx.fillText(code, 300, 388);
+    // Main title
+    ctx.font = 'bold 28px "Noto Serif SC", serif';
+    ctx.fillStyle = '#f0ead8';
+    ctx.fillText('我在善缘算了命', 300, 170);
+    ctx.font = 'normal 22px "Noto Serif SC", serif';
+    ctx.fillStyle = 'rgba(240, 234, 216, 0.7)';
+    ctx.fillText('邀你一起来测', 300, 215);
 
-  // Invited count
-  ctx.font = '12px "Noto Serif SC"';
-  ctx.fillStyle = 'rgba(201, 168, 76, 0.5)';
-  ctx.fillText(`已邀请 ${invited} 位好友`, 300, 430);
+    // Seal circle
+    ctx.strokeStyle = 'rgba(201, 168, 76, 0.4)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(300, 360, 110, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = 'rgba(201, 168, 76, 0.05)';
+    ctx.fill();
 
-  // Divider 2
-  ctx.strokeStyle = 'rgba(201, 168, 76, 0.3)';
-  ctx.beginPath();
-  ctx.moveTo(150, 510);
-  ctx.lineTo(450, 510);
-  ctx.stroke();
+    // Code label & code
+    ctx.font = 'normal 11px "Noto Serif SC", serif';
+    ctx.fillStyle = 'rgba(201, 168, 76, 0.6)';
+    ctx.fillText('邀 请 码', 300, 345);
+    ctx.font = 'bold 36px "Courier New", monospace';
+    ctx.fillStyle = '#e8d08a';
+    ctx.textAlign = 'center';
+    ctx.fillText(code, 300, 388);
 
-  // Benefit text
-  ctx.font = '16px "Noto Serif SC"';
-  ctx.fillStyle = 'rgba(240, 234, 216, 0.85)';
-  ctx.fillText('✦ 邀1位好友', 300, 548);
-  ctx.fillStyle = '#c9a84c';
-  ctx.fillText('解锁免费合婚报告', 300, 578);
+    // Invited count
+    ctx.font = 'normal 12px "Noto Serif SC", serif';
+    ctx.fillStyle = 'rgba(201, 168, 76, 0.5)';
+    ctx.fillText(`已邀请 ${formatNumber(invited)} 位好友`, 300, 430);
 
-  // Tier badge
-  ctx.font = 'bold 14px "Noto Serif SC"';
-  const tierColors = { premium: '#c9a84c', standard: '#5bbfa0', basic: 'rgba(80, 70, 55, 0.7)' };
-  ctx.fillStyle = tierColors[tier];
-  ctx.textAlign = 'center';
-  ctx.fillText(`等级: ${tierNames[tier]}`, 300, 630);
+    // Divider 2
+    ctx.strokeStyle = 'rgba(201, 168, 76, 0.3)';
+    ctx.beginPath();
+    ctx.moveTo(150, 510);
+    ctx.lineTo(450, 510);
+    ctx.stroke();
 
-  // Share URL (simplified)
-  ctx.font = '9px monospace';
-  ctx.fillStyle = 'rgba(201, 168, 76, 0.25)';
-  ctx.fillText('shenyuan.mylumee.cn', 300, 760);
+    // Benefit text
+    ctx.font = 'normal 16px "Noto Serif SC", serif';
+    ctx.fillStyle = 'rgba(240, 234, 216, 0.85)';
+    ctx.fillText('✦ 邀1位好友', 300, 548);
+    ctx.fillStyle = '#c9a84c';
+    ctx.fillText('解锁免费合婚报告', 300, 578);
 
-  document.getElementById('cardPreview').classList.add('show');
+    // Tier badge
+    ctx.font = 'bold 14px "Noto Serif SC", serif';
+    const tierColors = { premium: '#c9a84c', standard: '#5bbfa0', basic: 'rgba(80, 70, 55, 0.7)' };
+    ctx.fillStyle = tierColors[tier];
+    ctx.textAlign = 'center';
+    ctx.fillText(`等级: ${tierNames[tier]}`, 300, 630);
+
+    // Share URL
+    ctx.font = 'normal 9px "Courier New", monospace';
+    ctx.fillStyle = 'rgba(201, 168, 76, 0.25)';
+    ctx.fillText('shenyuan.mylumee.cn', 300, 760);
+
+    document.getElementById('cardPreview').classList.add('show');
+    showToast('分享卡生成成功 ✓');
+  } catch (e) {
+    console.error('Failed to generate share card:', e);
+    showToast('生成分享卡失败，请重试');
+  }
 }
 
 // ── Download Card ──
 function downloadCard() {
-  const canvas = document.getElementById('shareCanvas');
-  const link = document.createElement('a');
-  link.href = canvas.toDataURL('image/png');
-  link.download = `shenyuan-share-${Date.now()}.png`;
-  link.click();
+  try {
+    const canvas = document.getElementById('shareCanvas');
+    const link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png', 0.95);
+    link.download = `shenyuan-share-${new Date().toISOString().split('T')[0]}.png`;
+    link.click();
+    showToast('下载已开始 ✓');
+  } catch (e) {
+    console.error('Download failed:', e);
+    showToast('下载失败，请重试');
+  }
 }
 
 // ── Close Card ──
@@ -623,19 +798,51 @@ function closeCard() {
 // ── Share Link ──
 function shareLink() {
   if (!myData) {
-    alert('请先登录');
+    showToast('请先登录');
     return;
   }
+
   const url = myData.channel_urls?.organic || myData.share_url;
+  if (!url) {
+    showToast('暂未获取分享链接');
+    return;
+  }
+
   if (navigator.share) {
     navigator.share({
       title: '善缘 · 邀请排行榜',
       text: myData.share_text || '我在善缘算了命，邀你一起来测',
       url: url
+    }).catch(e => {
+      if (e.name !== 'AbortError') {
+        console.error('Share failed:', e);
+        fallbackShare(url);
+      }
     });
   } else {
-    navigator.clipboard.writeText(url);
-    alert('链接已复制到剪贴板');
+    fallbackShare(url);
+  }
+}
+
+function fallbackShare(url) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('链接已复制 ✓');
+    }).catch(() => {
+      const textarea = document.createElement('textarea');
+      textarea.value = url;
+      textarea.style.position = 'fixed';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      try {
+        textarea.select();
+        document.execCommand('copy');
+        showToast('链接已复制 ✓');
+      } catch (e) {
+        showToast('复制失败，请手动分享');
+      }
+      document.body.removeChild(textarea);
+    });
   }
 }
 
@@ -644,19 +851,26 @@ function showTierInfo(tier) {
   alert(`${tier.toUpperCase()}: 完整信息请查看下方等级说明`);
 }
 
-// ── Auto Refresh ──
+// ── Auto Refresh with Performance Optimization ──
 function startAutoRefresh() {
+  // Reduce refresh frequency to 10s for better performance
   refreshTimer = setInterval(() => {
+    if (document.hidden) return; // Don't refresh if tab is hidden
     fetchLeaderboard();
     if (myData) fetchMyData();
-  }, 5000);
+  }, 10000);
 }
 
 // ── Escape HTML ──
 function escape(str) {
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return String(str).replace(/[&<>"']/g, m => map[m]);
 }
 
 // ── Language Toggle ──
@@ -669,10 +883,51 @@ function toggleLang() {
   }
 }
 
+// ── Keyboard Navigation ──
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    const preview = document.getElementById('cardPreview');
+    if (preview && preview.classList.contains('show')) {
+      closeCard();
+    }
+  }
+});
+
+// ── Performance Monitoring ──
+if (window.PerformanceObserver) {
+  try {
+    const perfObserver = new PerformanceObserver((list) => {
+      const entries = list.getEntries();
+      entries.forEach((entry) => {
+        if (entry.duration > 3000) {
+          console.warn(`Slow operation detected: ${entry.name} (${entry.duration.toFixed(2)}ms)`);
+        }
+      });
+    });
+    perfObserver.observe({ entryTypes: ['measure', 'navigation'] });
+  } catch (e) {
+    console.debug('PerformanceObserver not supported');
+  }
+}
+
 // ── Init on Load ──
-window.addEventListener('load', init);
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
+
 window.addEventListener('beforeunload', () => {
   if (refreshTimer) clearInterval(refreshTimer);
+});
+
+// ── Visibility Change Handler ──
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (refreshTimer) clearInterval(refreshTimer);
+  } else {
+    startAutoRefresh();
+  }
 });
 </script>
 </body>

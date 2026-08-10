@@ -4,7 +4,12 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 
-const API_KEY = process.env.DEEPSEEK_API_KEY || 'sk-8597ac6c84d344039e09c8f947e4022b';
+// SECURITY: Use environment variable only. Hardcoded key (sk-8597ac6c84d344039e09c8f947e4022b) has been REVOKED
+const API_KEY = process.env.DEEPSEEK_API_KEY || '';
+if (!API_KEY) {
+  console.error('ERROR: DEEPSEEK_API_KEY environment variable not set. Previous key has been revoked.');
+  process.exit(1);
+}
 const BASE_URL = 'https://shenyuan.mylumee.cn';
 const BLOG_DIR = path.join(__dirname);
 const TODAY = new Date().toISOString().split('T')[0];

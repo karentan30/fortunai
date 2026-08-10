@@ -2,14 +2,40 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark light">
+<meta name="supported-color-schemes" content="dark light">
 <title>회원권 갱신 안내 - 善缘</title>
 <style>
-body {
+:root {
+  color-scheme: dark light;
+}
+html, body {
   margin: 0;
   padding: 0;
+}
+body {
   background: #0d0820;
   font-family: -apple-system, BlinkMacSystemFont, '나눔고딕', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #f0eeE6;
+  word-break: break-word;
+}
+.preheader {
+  display: none;
+  font-size: 1px;
+  color: #0d0820;
+  line-height: 1px;
+  max-height: 0;
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+}
+table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
 }
 .container {
   max-width: 600px;
@@ -18,38 +44,51 @@ body {
   border-radius: 16px;
   overflow: hidden;
   border: 1px solid rgba(212,175,55,0.15);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
 .header {
   background: linear-gradient(135deg, #1a0f2e 0%, #2d1b4e 100%);
-  padding: 32px 24px 24px;
+  padding: 32px 24px;
   text-align: center;
   border-bottom: 1px solid rgba(212,175,55,0.15);
 }
 .header-icon {
-  font-size: 28px;
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: 12px;
+  display: block;
+}
+.brand-logo {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #d4af37;
   margin-bottom: 8px;
 }
 .header-title {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 700;
   color: #d4af37;
   letter-spacing: 0.05em;
   margin: 0;
+  padding: 0;
 }
 .header-subtitle {
-  font-size: 12px;
-  color: rgba(212,175,55,0.5);
-  margin-top: 4px;
-  letter-spacing: 0.15em;
+  font-size: 11px;
+  color: rgba(212,175,55,0.55);
+  margin-top: 6px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
 }
 .content {
   padding: 32px 24px;
 }
 .greeting {
-  color: rgba(240,238,230,0.85);
+  color: rgba(240,238,230,0.9);
   font-size: 15px;
-  line-height: 1.6;
-  margin: 0 0 24px 0;
+  line-height: 1.7;
+  margin: 0 0 20px 0;
+  padding: 0;
 }
 .warning-box {
   background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(212,175,55,0.04));
@@ -64,12 +103,17 @@ body {
   font-weight: 700;
   color: #d4af37;
   margin: 0 0 12px 0;
-  display: flex;
-  align-items: center;
 }
 .warning-title .icon {
-  font-size: 20px;
+  display: inline-block;
   margin-right: 8px;
+}
+.days-left {
+  font-size: 20px;
+  font-weight: 700;
+  color: #d4af37;
+  display: inline-block;
+  min-width: 40px;
 }
 .warning-text {
   color: rgba(240,238,230,0.85);
@@ -88,13 +132,14 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 0;
+  padding: 12px 0;
   border-bottom: 1px solid rgba(212,175,55,0.1);
   color: rgba(240,238,230,0.85);
   font-size: 14px;
 }
 .plan-item:last-child {
   border-bottom: none;
+  padding-bottom: 0;
 }
 .plan-label {
   font-weight: 600;
@@ -103,15 +148,11 @@ body {
 .plan-value {
   text-align: right;
   font-weight: 500;
-}
-.days-left {
-  font-size: 18px;
-  font-weight: 700;
-  color: #d4af37;
+  word-wrap: break-word;
 }
 .features {
-  background: rgba(212,175,55,0.04);
-  border-left: 3px solid #d4af37;
+  background: rgba(212,175,55,0.05);
+  border-left: 4px solid #d4af37;
   border-radius: 0 8px 8px 0;
   padding: 16px 20px;
   margin: 24px 0;
@@ -120,157 +161,207 @@ body {
   line-height: 1.8;
 }
 .feature-title {
-  font-weight: 600;
+  font-weight: 700;
   color: #d4af37;
   margin-bottom: 12px;
 }
 .feature-item {
   margin: 8px 0;
-  padding-left: 20px;
+  padding-left: 24px;
   position: relative;
 }
-.feature-item:before {
-  content: '✓';
+.feature-item::before {
+  content: '\2713';
   color: #d4af37;
   position: absolute;
   left: 0;
   font-weight: bold;
 }
 .benefit-box {
-  background: rgba(100, 200, 150, 0.08);
-  border: 1px solid rgba(100, 200, 150, 0.15);
+  background: rgba(100, 200, 150, 0.1);
+  border: 1px solid rgba(100, 200, 150, 0.2);
   border-radius: 8px;
   padding: 14px;
-  margin: 16px 0;
+  margin: 20px 0;
   font-size: 13px;
   color: rgba(100, 200, 150, 0.9);
+  line-height: 1.6;
 }
 .benefit-box strong {
-  color: rgba(100, 200, 150, 1);
+  color: #64c896;
 }
 .cta {
   text-align: center;
-  margin: 28px 0;
+  margin: 32px 0;
 }
 .btn {
   display: inline-block;
-  background: linear-gradient(135deg, #d4af37, #b8972e);
+  background: linear-gradient(135deg, #d4af37 0%, #b8972e 100%);
   color: #1a0f2e;
   text-decoration: none;
-  padding: 14px 40px;
+  padding: 16px 48px;
   border-radius: 10px;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.05em;
-  transition: transform 0.2s, box-shadow 0.2s;
+  border: 0;
+  cursor: pointer;
+  mso-padding-alt: 16px 48px;
+  text-align: center;
 }
 .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(212,175,55,0.3);
+  background: linear-gradient(135deg, #e6c547 0%, #ccaa37 100%);
 }
 .btn-text {
-  margin-top: 10px;
-  font-size: 12px;
-  color: rgba(212,175,55,0.4);
+  margin-top: 12px;
+  font-size: 11px;
+  color: rgba(212,175,55,0.45);
+}
+.help-section {
+  background: rgba(212,175,55,0.04);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 24px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(240,238,230,0.8);
+}
+.help-section strong {
+  color: #d4af37;
 }
 .footer {
   border-top: 1px solid rgba(212,175,55,0.1);
-  padding: 16px 24px;
+  padding: 20px 24px;
   text-align: center;
-  font-size: 11px;
-  color: rgba(240,238,230,0.3);
-  line-height: 1.6;
+  font-size: 10px;
+  color: rgba(240,238,230,0.4);
+  line-height: 1.7;
+  background: rgba(0,0,0,0.2);
 }
 .footer-link {
-  color: rgba(212,175,55,0.4);
+  color: rgba(212,175,55,0.45);
   text-decoration: none;
 }
 .footer-link:hover {
   text-decoration: underline;
 }
+@media (max-width: 600px) {
+  .container {
+    max-width: 100% !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+  }
+  .content {
+    padding: 24px 16px !important;
+  }
+  .header {
+    padding: 24px 16px !important;
+  }
+  .header-title {
+    font-size: 20px !important;
+  }
+  .footer {
+    padding: 16px 12px !important;
+  }
+}
+@media (prefers-color-scheme: light) {
+  body {
+    background: #f5f5f5;
+  }
+  .container {
+    background: #ffffff;
+    border-color: rgba(212,175,55,0.2);
+  }
+  .greeting {
+    color: #2c2c2c;
+  }
+}
 </style>
 </head>
 <body>
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#0d0820;padding:20px 0">
-  <tr><td align="center">
-    <div class="container">
-      <!-- Header -->
-      <div class="header">
-        <div class="header-icon">⏰</div>
-        <h1 class="header-title">회원권이 곧 만료됩니다</h1>
-        <p class="header-subtitle">善缘 · 갱신 안내</p>
-      </div>
-
-      <!-- Content -->
-      <div class="content">
-        <p class="greeting">존경하는 회원님께,</p>
-        <p class="greeting">善缘 회원권의 만료가 임박했습니다. 서비스 중단 없이 이용하시려면 지금 갱신하세요.</p>
-
-        <!-- Warning Box -->
-        <div class="warning-box">
-          <h2 class="warning-title">
-            <span class="icon">⚠️</span>
-            남은 기간 <span class="days-left">{{daysLeft}}</span> 일
-          </h2>
-          <p class="warning-text">
-            <strong>{{planName}}</strong> 회원권이 <strong>{{expiryDate}}</strong>에 만료됩니다.<br>
-            갱신 후에도 모든 보고서, 기록, 데이터가 완전히 보존됩니다!
-          </p>
+<div class="preheader">善缘 회원권이 곧 만료됩니다. 지금 갱신하여 서비스를 계속 받으세요. 모든 데이터와 보고서가 보존됩니다.</div>
+<table role="presentation" style="width:100%;background:#0d0820;padding:20px 0">
+  <tr>
+    <td align="center">
+      <div class="container">
+        <!-- Header -->
+        <div class="header">
+          <div class="brand-logo">SHEN YUAN</div>
+          <div class="header-icon" role="img" aria-label="갱신 안내">⏰</div>
+          <h1 class="header-title">회원권이 곧 만료됩니다</h1>
+          <p class="header-subtitle">RENEWAL REMINDER · 갱신 안내</p>
         </div>
 
-        <!-- Plan Info -->
-        <div class="plan-info">
-          <div class="plan-item">
-            <span class="plan-label">현재 회원권</span>
-            <span class="plan-value">{{planName}}</span>
+        <!-- Content -->
+        <div class="content">
+          <p class="greeting">존경하는 회원님께,</p>
+          <p class="greeting">善缘 회원권의 만료가 임박했습니다. 서비스 중단 없이 이용하시려면 지금 갱신하세요. 갱신 후에도 모든 보고서, 기록, 데이터가 완전히 보존됩니다.</p>
+
+          <!-- Warning Box -->
+          <div class="warning-box">
+            <h2 class="warning-title">
+              <span class="icon" role="img" aria-label="경고">⚠️</span>남은 기간 <span class="days-left">{{daysLeft}}</span> 일
+            </h2>
+            <p class="warning-text">
+              <strong>{{planName}}</strong> 회원권이 <strong>{{expiryDate}}</strong>에 만료됩니다.<br>
+              갱신 후에도 모든 보고서, 기록, 데이터가 완전히 보존됩니다!
+            </p>
           </div>
-          <div class="plan-item">
-            <span class="plan-label">만료 날짜</span>
-            <span class="plan-value">{{expiryDate}}</span>
+
+          <!-- Plan Info -->
+          <div class="plan-info">
+            <div class="plan-item">
+              <span class="plan-label">현재 회원권</span>
+              <span class="plan-value">{{planName}}</span>
+            </div>
+            <div class="plan-item">
+              <span class="plan-label">만료 날짜</span>
+              <span class="plan-value">{{expiryDate}}</span>
+            </div>
+            <div class="plan-item">
+              <span class="plan-label">갱신 가격</span>
+              <span class="plan-value" style="color:#d4af37;font-size:15px;font-weight:700">{{currency}}{{renewalPrice}}</span>
+            </div>
           </div>
-          <div class="plan-item">
-            <span class="plan-label">갱신 가격</span>
-            <span class="plan-value" style="color:#d4af37;font-size:15px;font-weight:700">{{renewalPrice}}</span>
+
+          <!-- Benefits -->
+          <div class="benefit-box">
+            <strong>💡 연속 서비스 보장:</strong> 갱신 후 모든 데이터와 기록이 완전히 보존되어 서비스가 중단되지 않습니다.
+          </div>
+
+          <!-- Features -->
+          <div class="features">
+            <div class="feature-title">계속 이용 가능한 서비스:</div>
+            <div class="feature-item">완전한 사주 연간 운세 해석</div>
+            <div class="feature-item">지속적인 운세 지도 및 조언</div>
+            <div class="feature-item">전문 명리 연구팀 지원</div>
+            <div class="feature-item">우선 고객 서비스 및 상담</div>
+            <div class="feature-item">VIP 회원 전용 신규 기능</div>
+          </div>
+
+          <!-- CTA -->
+          <div class="cta">
+            <a href="{{renewUrl}}" class="btn">🔄 회원권 갱신</a>
+            <div class="btn-text">모든 데이터를 보존하고 계속 이용하세요</div>
+          </div>
+
+          <!-- Help Section -->
+          <div class="help-section">
+            <strong>궁금한 점이 있으신가요?</strong> 고객 서비스팀이 언제든지 도움을 드릴 준비가 되어 있습니다. 이 이메일에 회신하거나 도움말 센터를 방문하세요.
           </div>
         </div>
 
-        <!-- Benefits -->
-        <div class="benefit-box">
-          💡 <strong>연속 서비스 보장</strong>: 갱신 후 모든 데이터와 기록이 완전히 보존되어 서비스가 중단되지 않습니다.
+        <!-- Footer -->
+        <div class="footer">
+          善缘 · shenyuan.mylumee.cn<br>
+          © 2026 善缘 명리 연구팀. 모든 권리 보유.<br>
+          만료일 전에 중요한 정보를 놓치지 않도록 갱신 안내를 보내드립니다.<br>
+          <a href="https://shenyuan.mylumee.cn/legal-kr.html" class="footer-link">이용약관</a> ·
+          <a href="https://shenyuan.mylumee.cn/legal-kr.html" class="footer-link">개인정보처리방침</a>
         </div>
-
-        <!-- Features -->
-        <div class="features">
-          <div class="feature-title">계속 이용 가능한 서비스:</div>
-          <div class="feature-item">완전한 사주 연간 운세 해석</div>
-          <div class="feature-item">지속적인 운세 지도 및 조언</div>
-          <div class="feature-item">전문 명리 연구팀 지원</div>
-          <div class="feature-item">우선 고객 서비스 및 상담</div>
-          <div class="feature-item">VIP 회원 전용 신규 기능</div>
-        </div>
-
-        <!-- CTA -->
-        <div class="cta">
-          <a href="{{renewUrl}}" class="btn">🔄 회원권 갱신</a>
-          <div class="btn-text">모든 데이터를 보존하고 계속 이용하세요</div>
-        </div>
-
-        <p class="greeting" style="margin-top:24px;font-size:13px">
-          <strong>궁금한 점이 있으신가요?</strong><br>
-          고객 서비스팀이 언제든지 도움을 드릴 준비가 되어 있습니다. 이 이메일에 회신하거나 도움말 센터를 방문하세요.
-        </p>
       </div>
-
-      <!-- Footer -->
-      <div class="footer">
-        善缘 · shenyuan.mylumee.cn<br>
-        © 2026 善缘 명리 연구팀. 모든 권리 보유.<br>
-        만료일 전에 중요한 정보를 놓치지 않도록 갱신 안내를 보내드립니다.<br>
-        <a href="https://shenyuan.mylumee.cn/legal-kr.html" class="footer-link">이용약관</a> ·
-        <a href="https://shenyuan.mylumee.cn/legal-kr.html" class="footer-link">개인정보처리방침</a>
-      </div>
-    </div>
-  </td></tr>
+    </td>
+  </tr>
 </table>
 </body>
 </html>

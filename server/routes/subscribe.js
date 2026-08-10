@@ -25,7 +25,10 @@ router.post('/subscribe', (req, res) => {
     subs.push({ email: email.trim().toLowerCase(), source: source || 'unknown', ts: Date.now() });
     saveSubs(subs);
   }
-  console.log('[subscribe]', email, 'from', source || 'unknown');
+  // SECURITY FIX: Redact email from logs
+  const crypto = require('crypto');
+  const emailHash = crypto.createHash('sha256').update(email).digest('hex').slice(0, 8);
+  console.log('[subscribe]', emailHash, 'from', source || 'unknown');
   res.json({ ok: true });
 });
 

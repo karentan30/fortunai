@@ -38,8 +38,18 @@ router.post('/register', simpleRateLimitMiddleware, (req, res) => {
     tryApplyReferral(ref, result.lastInsertRowid);
 
     const newUser = getUserById.get(result.lastInsertRowid);
-    console.log(`[AUTH] Register: ${email}${ref ? ' (ref:' + ref + ')' : ''}`);
-    res.json({ token, user: { id: result.lastInsertRowid, email }, ref_code: newUser.ref_code });
+    // SECURITY FIX: Redact email in logs (PII protection)
+    const emailHash = require('crypto').createHash('sha256').update(email).digest('hex').slice(0, 8);
+    console.log(`[AUTH] Register: ${emailHash}${ref ? ' (ref:' + ref + ')' : ''}`);
+    // SECURITY FIX: Return token in httpOnly cookie instead of JSON response
+    // Client should NOT store tokens in localStorage
+    res.cookie('sy_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 365 * 24 * 60 * 60 * 1000  // 1 year
+    });
+    res.json({ user: { id: result.lastInsertRowid, email }, ref_code: newUser.ref_code });
   } catch (err) {
     console.error('[AUTH ERR]', err);
     res.status(500).json({ error: '注册失败，请稍后重试' });
@@ -59,8 +69,17 @@ router.post('/login', simpleRateLimitMiddleware, (req, res) => {
     const token = generateToken();
     insertToken.run(user.id, token);
 
-    console.log(`[AUTH] Login: ${email}`);
-    res.json({ token, user: { id: user.id, email: user.email, name: user.name, ref_code: user.ref_code } });
+    // SECURITY FIX: Redact email in logs (PII protection)
+    const emailHash = require('crypto').createHash('sha256').update(email).digest('hex').slice(0, 8);
+    console.log(`[AUTH] Login: ${emailHash}`);
+    // SECURITY FIX: Return token in httpOnly cookie
+    res.cookie('sy_token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 365 * 24 * 60 * 60 * 1000  // 1 year
+    });
+    res.json({ user: { id: user.id, email: user.email, name: user.name, ref_code: user.ref_code } });
   } catch (err) {
     console.error('[AUTH ERR]', err);
     res.status(500).json({ error: '登录失败，请稍后重试' });
