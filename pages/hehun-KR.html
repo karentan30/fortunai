@@ -367,11 +367,11 @@ body::before{content:'';position:fixed;inset:0;
 
   <!-- 올해 운세 -->
   <div class="year-section">
-    <div class="dims-label">2026년 인연 운세</div>
+    <div class="dims-label" id="yearDimsLabel">2026년 인연 운세</div>
     <div class="year-card">
       <div class="year-head">
         <span class="year-icon">📅</span>
-        <span class="year-title">2026 병오년</span>
+        <span class="year-title" id="yearTitle">2026 병오년</span>
         <span class="year-badge" id="yearBadge">길년</span>
       </div>
       <div class="year-text" id="yearText">분석 중…</div>
@@ -895,5 +895,18 @@ function shareKakao() {
 </div>
 
 <script src="/assets/js/common.js"></script>
+<script>
+/* 동적 연도 + 간지: 매년 자동 갱신(2027 병오년 하드코딩 방지) */
+(function(){
+  var y = new Date().getFullYear();
+  var gan = ['갑','을','병','정','무','기','경','신','임','계'];
+  var zhi = ['자','축','인','묘','진','사','오','미','신','유','술','해'];
+  var ganzhi = gan[(y-4)%10] + zhi[(y-4)%12] + '년';
+  var t = document.getElementById('yearTitle');
+  if (t) t.textContent = y + ' ' + ganzhi;
+  var d = document.getElementById('yearDimsLabel');
+  if (d) d.textContent = y + '년 인연 운세';
+})();
+</script>
 </body>
 </html>
