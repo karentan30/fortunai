@@ -189,28 +189,43 @@ One warm, powerful closing message — the "energy key" for today.`
 // ══════════════════════════════════════════
 router.post('/chat', rateLimitMiddleware, async (req, res) => {
   try {
-    const { messages } = req.body;
+    const { messages, lang } = req.body;
     if (!messages || !messages.length) return res.status(400).json({ error: '请提供消息内容' });
 
-    const systemMsg = {
-      role: 'system',
-      content: '你是一位精通八字命理、紫微斗数、占星、塔罗的命理师，像温暖的朋友用大白话交流，不用文言文、不用"老朽""施主"。'
+    const SYSTEM_PROMPTS = {
+      en: 'You are a warm, insightful BaZi (Four Pillars) destiny advisor with deep knowledge of Chinese metaphysics, astrology, and tarot. Speak like a knowledgeable friend — clear, specific, never flowery or mystical-sounding.'
+        + '\n\nMOST IMPORTANT RULE: All destiny readings must be based on the user\'s actual birth date and time. If the user hasn\'t shared their birth year, month, day, approximate hour, and gender yet, you MUST gently ask first. Example: "To give you an accurate reading, could you share your birth date, approximate birth time, and whether you\'re male or female?"'
+        + '\nBefore you have their birth data, NEVER fabricate specific readings about years, wealth cycles, lucky numbers, or life forecasts — guessing without a birth chart will be wrong and obvious.'
+        + '\n\nKeep each reply to 150-300 words. Be specific but honest — say "I\'m not certain about this" when you\'re not. Always in English.',
+      ko: '당신은 사주(四柱, 네 기둥) 명리학과 점성술에 정통한 따뜻한 상담사입니다. 전문적이지만 친근한 친구처럼 명확하고 구체적으로 말하세요. 구어체 한국어를 사용하세요.'
+        + '\n\n【가장 중요한 규칙】모든 사주 해석은 사용자의 실제 생년월일시를 기반으로 해야 합니다. 사용자가 아직 생년월일시와 성별을 알려주지 않았다면 먼저 정중하게 물어보세요. 예: "정확한 사주 분석을 위해 생년월일, 태어난 시간(대략적으로도 괜찮아요), 그리고 성별을 알려주실 수 있을까요?"'
+        + '\n생년월일시를 받기 전에는 구체적인 운세, 재운, 대운, 행운의 숫자 등을 절대 지어내지 마세요.'
+        + '\n\n각 답변은 150~300자 이내로 유지하세요. 구체적이되 솔직하게 — 확실하지 않을 때는 "이 부분은 정확히 말씀드리기 어렵습니다"라고 말하세요. 항상 한국어로만 답변하세요.',
+      zh: '你是一位精通八字命理、紫微斗数、占星、塔罗的命理师，像温暖的朋友用大白话交流，不用文言文、不用"老朽""施主"。'
         + '\n\n【最重要的规则】命理判断必须基于用户的真实生辰八字。如果用户还没告诉你出生年月日时和性别，你【必须先温和地问清楚】，例如"想帮你算准，先告诉我你的出生年月日、大概几点、男生还是女生？时辰不确定也没关系"。'
         + '在拿到生辰之前，【绝对不要】编造具体的年份、财运、大运、幸运数字等判断——没有八字就瞎说会不准、也会被看穿。拿到生辰后，再基于八字给具体、温暖的分析。'
         + '\n\n每次回答200-400字，不要太长。建议要具体但诚实，不确定就说"这个我拿不准"。'
     };
 
-    // 付费定位: 免费每天5条, 会员($6.9/月)无限畅聊
+    const LIMIT_MSGS = {
+      en: 'You\'ve used all 5 free chats today. Upgrade to Premium ($6.90/month) for unlimited readings and full reports.',
+      ko: '오늘의 무료 상담 5회를 모두 사용하셨습니다. 프리미엄($6.90/월)으로 업그레이드하면 무제한 상담과 전체 리포트를 이용하실 수 있어요.',
+      zh: '今天的免费畅聊次数用完啦～开通会员($6.9/月)就能和命理师无限畅聊，还解锁全部完整报告哦。'
+    };
+
+    const chatLang = (lang === 'en' || lang === 'ko') ? lang : 'zh';
+    const systemMsg = { role: 'system', content: SYSTEM_PROMPTS[chatLang] };
+
+    // 免费每天5条, 会员无限
     var isMember = hasFullAccess(req, ['member']);
     if (!isMember) {
       var uid = resolveUserFromToken(req.headers['authorization'] || (req.body && req.body.token), { get: (t) => { const row = _M.tokens.find(x => x.token === t); return row || null; } });
       var day = new Date().toISOString().slice(0, 10);
-      // 优先用sessionId（持久存在localStorage，比IP更准确），回落到IP
       var sessionId = req.headers['x-session-id'];
       var ckey = (uid || sessionId || getClientIp(req)) + '_' + day;
       var used = _M.chatUsage[ckey] || 0;
       if (used >= 5) {
-        return res.json({ answer: '今天的免费畅聊次数用完啦～开通会员($6.9/月)就能和命理师无限畅聊，还解锁全部完整报告哦。', limited: true, needMember: true });
+        return res.json({ answer: LIMIT_MSGS[chatLang], limited: true, needMember: true });
       }
       _M.chatUsage[ckey] = used + 1;
     }
