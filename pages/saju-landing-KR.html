@@ -236,7 +236,7 @@ footer .disc{font-size:11px;color:rgba(243,236,224,.4);margin-top:14px;line-heig
         <span><a href="/pages/saju-legal-KR.html" style="color:#9a7529;text-decoration:underline">개인정보 처리방침</a> 및 <a href="/pages/saju-legal-KR.html" style="color:#9a7529;text-decoration:underline">이용약관</a>에 동의합니다</span>
       </label>
       <button class="cta" onclick="goFree()">30초 무료 사주 보기 →</button>
-      <p style="text-align:center;font-size:12px;color:var(--ink-dim);margin-top:6px;font-family:'Apple SD Gothic Neo',sans-serif">💳 카드/해외결제 가능 · 안전한 결제</p>
+      <p style="text-align:center;font-size:12px;color:var(--ink-dim);margin-top:6px;font-family:'Apple SD Gothic Neo',sans-serif">💳 카드 결제 이용 가능 · 카카오페이는 곧 오픈 예정이에요</p>
       <div class="free-note">🔒 입력 정보는 리포트 생성에만 써요 · 가입 없이 바로 확인</div>
       <div class="social-proof">만 19세 이상 이용 가능 · 입력 정보는 리포트 생성에만 사용</div>
     </div>
@@ -328,7 +328,7 @@ footer .disc{font-size:11px;color:rgba(243,236,224,.4);margin-top:14px;line-heig
   <section class="gung">
     <div class="st"><div class="badge">함께 보면 무료 🎁</div><div class="k">GUNGHAP</div><h2>둘이 함께 보는 궁합</h2><div class="line" style="background:#7a4fb0"></div></div>
     <p>마음에 둔 사람이 있나요?<br>두 사람 사주로 <b>30년 대운의 결</b>까지 맞춰 봐요.<br><b>친구·연인을 초대하면 궁합 리포트가 무료</b>.</p>
-    <button class="cta" onclick="shareKakaoGunghap()">친구와 궁합 보기 → 링크 복사</button>
+    <button class="cta" onclick="shareKakaoGunghap()">카톡으로 궁합 초대하기 →</button>
     <div class="mini-note" style="margin-top:12px">내 사주 결과를 카톡으로 보내면, 상대가 생년월일만 넣어도 바로 궁합이 나와요.</div>
   </section>
 
@@ -360,7 +360,7 @@ footer .disc{font-size:11px;color:rgba(243,236,224,.4);margin-top:14px;line-heig
     </div>
     </div>
     <button class="cta" style="margin-top:6px" onclick="location.href='saju-KR.html'">무료로 먼저 보기 →</button>
-    <div class="pay-icons"><span class="pay kko">💳 카드/해외결제 가능</span></div>
+    <div class="pay-icons"><span class="pay kko">💳 카드 결제 가능</span><span class="pay" style="background:#f5f5f5;color:#888;border:1px solid #ddd">💬 카카오페이 준비 중</span></div>
     <div class="pay-note">안전 결제 · 결제 후 7일 이내 미열람 시 환불 가능</div>
   </section>
 
@@ -439,23 +439,14 @@ function loginKakao(){
   setTimeout(function(){ document.getElementById('birthInput').focus(); }, 600);
 }
 
-/* ── 궁합 링크 복사 ── */
+/* ── 카카오톡 궁합 공유 → Web Share API + 클립보드 폴백 ── */
 function shareKakaoGunghap(){
   var shareUrl = location.origin + '/pages/saju-KR.html';
-  if (navigator.clipboard && navigator.clipboard.writeText) {
-    navigator.clipboard.writeText(shareUrl).then(function(){
-      syToast('친구에게 공유할 링크가 복사되었어요 📋');
-    }).catch(function(){
-      syToast('링크: ' + shareUrl);
-    });
+  var shareText = '🎋 무료 사주 한번 봐봐요! 오행·용신·올해 운세 무료로 알 수 있어요';
+  if (navigator.share) {
+    navigator.share({ title: '선연 사주', text: shareText, url: shareUrl }).catch(function(){});
   } else {
-    var ta = document.createElement('textarea');
-    ta.value = shareUrl;
-    ta.style.cssText = 'position:fixed;opacity:0';
-    document.body.appendChild(ta);
-    ta.select();
-    try { document.execCommand('copy'); syToast('친구에게 공유할 링크가 복사되었어요 📋'); } catch(e){ syToast('링크: ' + shareUrl); }
-    document.body.removeChild(ta);
+    navigator.clipboard ? navigator.clipboard.writeText(shareUrl).then(function(){ syToast('링크가 복사됐어요! 카톡에서 친구에게 보내주세요 🎁'); }).catch(function(){ syToast('링크: ' + shareUrl); }) : syToast('링크: ' + shareUrl);
   }
 }
 
