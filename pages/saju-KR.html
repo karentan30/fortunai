@@ -296,6 +296,18 @@ for (var m = 0; m < 12; m++) month.innerHTML += '<option value="'+(m+1)+'">'+MON
 // ?ref= 초대 코드 캡처 → localStorage에 저장(등록 시 귀속에 사용)
 (function(){ try { var r = new URLSearchParams(location.search).get('ref'); if (r) localStorage.setItem('sy_ref_code', r.trim().toUpperCase()); } catch(e){} })();
 
+// ?scrollTo=unlock — 랜딩 페이지에서 결제 바로 진입 시 잠금 해제 섹션으로 스크롤
+(function(){
+  try {
+    if (new URLSearchParams(location.search).get('scrollTo') === 'unlock') {
+      window.addEventListener('load', function() {
+        var gate = document.querySelector('.unlock-gate');
+        if (gate) { setTimeout(function(){ gate.scrollIntoView({behavior:'smooth',block:'center'}); }, 800); }
+      });
+    }
+  } catch(e) {}
+})();
+
 // URL param prefill (from landing page): ?y=1993&m=9&d=21&g=female&h=11&auto=1
 (function(){
   var p = new URLSearchParams(location.search);
