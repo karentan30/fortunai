@@ -63,13 +63,22 @@ function _payResolveUser(token) {
 
 // ── Stripe Price IDs (Capstone account) ──
 const STRIPE_PRICE_IDS = {
-  'member_monthly':      'price_1TzAjGEAXrE2YgcrRzUY78Ko',
-  'member_yearly':       'price_1TzAjQEAXrE2YgcrHYurEL8Z',
-  'member_quarterly':    'price_1U0BwvEAXrE2YgcrTU0PFGZm',
-  'bazi_full_krw':       'price_1TzrGREAXrE2Ygcr1dOkiv2O',
-  'bazi_vip_krw':        'price_1TzrGUEAXrE2YgcrtAXjFt9M',
-  'hehun_krw':           'price_1TzAriEAXrE2YgcrWEj4Azdn',
-  'member_monthly_krw':  'price_1TzrGWEAXrE2YgcrhrIIeMXC',
+  // ── USD prices (verified) ──
+  'bazi_full':            'price_1TzAjGEAXrE2YgcrRzUY78Ko',
+  'member_yearly':        'price_1TzAjQEAXrE2YgcrHYurEL8Z',
+  'member_quarterly':     'price_1U0BwvEAXrE2YgcrTU0PFGZm',
+  // ── USD prices (pending creation in Stripe Dashboard) ──
+  // 'member_monthly':    'price_PENDING_usd',
+  // ── KRW prices (verified) ──
+  'bazi_full_krw':        'price_1TzrGREAXrE2Ygcr1dOkiv2O',
+  'saju_kr_full_krw':     'price_1TzrGREAXrE2Ygcr1dOkiv2O',
+  'bazi_vip_krw':         'price_1TzrGUEAXrE2YgcrtAXjFt9M',
+  'hehun_krw':            'price_1TzAriEAXrE2YgcrWEj4Azdn',
+  'member_monthly_krw':   'price_1TzrGWEAXrE2YgcrhrIIeMXC',
+  // ── CNY prices (pending creation in Stripe Dashboard) ──
+  // 'bazi_full_cny':     'price_PENDING_cny',
+  // 'member_monthly_cny':'price_PENDING_cny',
+  // 'member_yearly_cny': 'price_PENDING_cny',
 };
 
 // ══════════════════════════════════════════
@@ -137,16 +146,22 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
     }
 
     const region = (req.body.region || '').toLowerCase();
-    const isKR = region === 'kr';
-    const payCurrency = isKR ? 'krw' : 'usd';
+    const currency = (req.body.currency || '').toLowerCase();
+    const isKR = region === 'kr' || currency === 'krw';
+    const isCNY = !isKR && (region === 'cn' || currency === 'cny');
+    const payCurrency = isKR ? 'krw' : isCNY ? 'cny' : 'usd';
     const payMethods = isKR
       ? (process.env.KR_PAY_METHODS ? process.env.KR_PAY_METHODS.split(',').map(s => s.trim()) : ['card'])
-      : ['card'];
+      : isCNY
+        ? ['card', 'alipay']
+        : ['card'];
 
     const isJoss = product.startsWith('joss_');
     let unitAmount;
     if (isKR) {
       unitAmount = prod.amountKrw || Math.round(prod.amount / 100 * 1300);
+    } else if (isCNY) {
+      unitAmount = prod.amountCny || Math.round(prod.amount / 100 * 725);
     } else if (isJoss && req.body.price) {
       const frontendCents = Math.round(parseFloat(req.body.price) * 100);
       unitAmount = Math.min(Math.max(frontendCents, prod.amount), prod.amount + 200000);
@@ -155,8 +170,8 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
     }
 
     const isSubscription = ['daily_sub','member_monthly','member_yearly','member_quarterly','member_3year','member_daily'].includes(product);
-    const krwKey = isKR ? product + '_krw' : null;
-    const priceId = (krwKey && STRIPE_PRICE_IDS[krwKey]) ? STRIPE_PRICE_IDS[krwKey] : STRIPE_PRICE_IDS[product];
+    const currKey = isKR ? product + '_krw' : isCNY ? product + '_cny' : product;
+    const priceId = STRIPE_PRICE_IDS[currKey] || STRIPE_PRICE_IDS[product] || null;
 
     const lineItem = priceId
       ? { price: priceId, quantity: 1 }
