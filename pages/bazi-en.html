@@ -480,21 +480,7 @@ function generateReport(btn) {
   document.getElementById('loadingScreen').classList.add('show');
   runLoadingSteps();
 
-  fetchBaziReport(lastBaziInput, currentMode).then(function(data){
-    document.getElementById('loadingScreen').classList.remove('show');
-    if (btn) { btn.disabled=false; btn.textContent = btn._label||'Free Preview · Generate My BaZi Chart'; }
-    if (data && data.reading) {
-      showReport(data.reading, data.contextId, data.tier, data.locked, data.pillars || null);
-    } else {
-      document.getElementById('inputScreen').style.display='block';
-      showToast('Failed to generate report, please try again', 'error');
-    }
-  }).catch(function(){
-    document.getElementById('loadingScreen').classList.remove('show');
-    document.getElementById('inputScreen').style.display='block';
-    if (btn) { btn.disabled=false; btn.textContent = btn._label||'Free Preview · Generate My BaZi Chart'; }
-    showToast('Network error, please check your connection and retry', 'error');
-  });
+  fetchBaziReportSSE(lastBaziInput, currentMode, btn);
 }
 
 function fetchBaziReport(input, mode) {
@@ -738,7 +724,7 @@ function buildDayMasterInsight(parsed) {
   return '<div style="margin:0 16px 14px;padding:16px 16px 18px;background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(91,191,160,0.04));border:1px solid rgba(201,168,76,0.22);border-radius:12px">' +
     '<div style="font-size:12px;letter-spacing:0.16em;color:rgba(201,168,76,0.75);text-transform:uppercase;margin-bottom:8px">Your Day Master</div>' +
     '<div style="font-size:14px;line-height:1.75;color:rgba(50,44,34,0.9)">Your Day Master is <b style="color:var(--gold-deep)">'+polarity+' '+dmElem+'</b> — '+body+'</div>' +
-    '<div style="font-size:11px;color:rgba(80,70,55,0.6);margin-top:10px;line-height:1.65;font-style:italic">This is just the surface. Your full reading maps exactly when your wealth peaks, who you\'re drawn to, and the years that will change everything.</div>' +
+    '<div style="font-size:12px;color:rgba(80,70,55,0.6);margin-top:10px;line-height:1.65;font-style:italic">This is just the surface. Your full reading maps exactly when your wealth peaks, who you\'re drawn to, and the years that will change everything.</div>' +
     '</div>';
 }
 
