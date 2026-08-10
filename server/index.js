@@ -163,6 +163,10 @@ app.use('/api', affiliateRouter);
 const kpiRouter = require('./routes/kpi');
 app.use('/api/kpi', kpiRouter);
 
+// 地理定价系统
+const geoRouter = require('./routes/geo');
+app.use('/api/geo', geoRouter);
+
 // ── 全局错误处理 ──
 app.use(function(err, req, res, next) {
   console.error('[FATAL]', err.message);

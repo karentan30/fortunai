@@ -73,6 +73,53 @@ router.post('/claim', simpleRateLimitMiddleware, authMiddleware, (req, res) => {
   });
 });
 
+// GET /api/referral/leaderboard — 排行榜 Top 10 (无需登录)
+router.get('/leaderboard', (req, res) => {
+  try {
+    const referrerStats = {};
+    // 统计每个邀请者的邀请数
+    (require('../lib/store')._M.referrals || []).forEach(ref => {
+      if (!referrerStats[ref.inviter_id]) {
+        referrerStats[ref.inviter_id] = { invited_count: 0, converted_count: 0, channels: {} };
+      }
+      referrerStats[ref.inviter_id].invited_count++;
+      referrerStats[ref.inviter_id].channels[ref.channel] = (referrerStats[ref.inviter_id].channels[ref.channel] || 0) + 1;
+    });
+
+    // 统计转化（有order的邀请者）
+    const orderUserIds = new Set((require('../lib/store')._M.orders || []).map(o => o.user_id).filter(Boolean));
+    Object.keys(referrerStats).forEach(uid => {
+      if (orderUserIds.has(uid)) {
+        referrerStats[uid].converted_count++;
+      }
+    });
+
+    // 获取用户信息并计算等级
+    const { REWARD_TIERS, getUserById } = require('../lib/store');
+    const leaderboard = Object.entries(referrerStats).map(([uid, stats]) => {
+      const user = getUserById.get(uid) || {};
+      const tier = REWARD_TIERS.find(t => stats.invited_count >= t.min && (t.max < 0 || stats.invited_count <= t.max));
+      return {
+        user_id: uid,
+        name: user.name || user.email?.split('@')[0] || '匿名用户',
+        email: user.email,
+        invited_count: stats.invited_count,
+        converted_count: stats.converted_count,
+        tier: tier?.level || 'basic',
+        reward_amount: tier?.amount || 0,
+        channels: stats.channels
+      };
+    })
+    .sort((a, b) => b.invited_count - a.invited_count)
+    .slice(0, 10);
+
+    res.json(leaderboard);
+  } catch (e) {
+    console.error('[referral.leaderboard] 错误:', e.message);
+    res.status(500).json({ error: '排行榜查询失败' });
+  }
+});
+
 // GET /api/referral/share-card?token=xxx  — SVG share card
 // P1修复: 支持?channel参数指定渠道，默认organic
 router.get('/share-card', authMiddleware, (req, res) => {

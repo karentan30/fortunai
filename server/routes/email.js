@@ -281,4 +281,119 @@ async function sendDailyBatch() {
   return { sent, failed, total: subs.length };
 }
 
+// ─── 新邮件系统（订单/续费/邀请）─────────────────────────
+
+const emailService = require('../lib/email-service');
+
+/**
+ * POST /api/email/send-order-confirmation
+ * 发送订单确认邮件
+ *
+ * 请求体：{
+ *   to: 'user@example.com',
+ *   orderNo: 'sy_20260810_001',
+ *   product: '八字年运报告',
+ *   amount: 9900,           // 分
+ *   expiresAt: '2027-08-10T00:00:00Z',
+ *   lang: 'cn'              // cn/en/kr
+ * }
+ */
+router.post('/email/send-order-confirmation', async (req, res) => {
+  const { to, orderNo, product, amount, expiresAt, lang = 'cn' } = req.body || {};
+
+  if (!to || !orderNo || !amount) {
+    return res.status(400).json({ error: 'to, orderNo, amount required' });
+  }
+
+  try {
+    const order = { orderNo, product, amount, expiresAt };
+    const ok = await emailService.sendOrderConfirmation(to, order, lang);
+    return res.json({ ok, email: to });
+  } catch (e) {
+    console.error('[email] send-order-confirmation error:', e.message);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+/**
+ * POST /api/email/send-renewal-reminder
+ * 发送续费提醒邮件
+ *
+ * 请求体：{
+ *   to: 'user@example.com',
+ *   planName: '年度会员',
+ *   expiresAt: '2027-08-10T00:00:00Z',
+ *   renewalPrice: 9900,     // 分
+ *   lang: 'cn'
+ * }
+ */
+router.post('/email/send-renewal-reminder', async (req, res) => {
+  const { to, planName, expiresAt, renewalPrice, lang = 'cn' } = req.body || {};
+
+  if (!to || !expiresAt || !renewalPrice) {
+    return res.status(400).json({ error: 'to, expiresAt, renewalPrice required' });
+  }
+
+  try {
+    const subscription = { planName, expiresAt, renewalPrice };
+    const ok = await emailService.sendRenewalReminder(to, subscription, lang);
+    return res.json({ ok, email: to });
+  } catch (e) {
+    console.error('[email] send-renewal-reminder error:', e.message);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+/**
+ * POST /api/email/send-referral-success
+ * 发送邀请成功邮件
+ *
+ * 请求体：{
+ *   to: 'referrer@example.com',
+ *   inviteeName: '张三',
+ *   reward: 1000,           // 分
+ *   currentLevel: '青铜',
+ *   nextLevelRequired: 3,   // 距下一等级还需邀请3人
+ *   lang: 'cn'
+ * }
+ */
+router.post('/email/send-referral-success', async (req, res) => {
+  const { to, inviteeName, reward, currentLevel, nextLevelRequired, lang = 'cn' } = req.body || {};
+
+  if (!to || !reward) {
+    return res.status(400).json({ error: 'to, reward required' });
+  }
+
+  try {
+    const referral = { inviteeName, reward, currentLevel, nextLevelRequired };
+    const ok = await emailService.sendReferralSuccess(to, referral, lang);
+    return res.json({ ok, email: to });
+  } catch (e) {
+    console.error('[email] send-referral-success error:', e.message);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+/**
+ * POST /api/admin/email/test-order
+ * 测试订单确认邮件（仅 ADMIN）
+ */
+router.post('/admin/email/test-order', async (req, res) => {
+  const token = req.headers['x-admin-token'] || req.body?.token;
+  if (token !== process.env.ADMIN_TOKEN) return res.status(403).json({ error: 'forbidden' });
+
+  try {
+    const order = {
+      orderNo: 'sy_test_' + Date.now(),
+      product: '测试产品',
+      amount: 9900,
+      expiresAt: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+    };
+    const ok = await emailService.sendOrderConfirmation('test@example.com', order, 'cn');
+    res.json({ ok, message: 'test email sent' });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 module.exports = { router, sendDailyBatch };
