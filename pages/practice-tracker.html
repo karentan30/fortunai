@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5bbfa0">
+<title>Daily Practice Tracker — build a mindful streak of prostrations, chanting & offering light | Runae</title>
+<meta name="description" content="A quiet daily practice tracker: check in when you bow, recite a sutra, or offer light. Watch your streak grow, saved privately on your device. A calm ritual, not a to-do list.">
+<meta property="og:title" content="Daily Practice Tracker — build a mindful streak">
+<meta property="og:description" content="Check in on prostrations, sutra recitation, and offering light. Your streak, saved privately on your device.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://runae.app/practice-tracker.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Daily Practice Tracker — Runae">
+<meta name="twitter:description" content="Build a mindful daily streak. Saved privately on your device.">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Runae Practice">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&family=Noto+Serif+SC:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --jade:#5bbfa0;--jade-deep:#3d9e82;--jade-light:#8dd9bf;
+  --jade-pale:rgba(91,191,160,0.08);--jade-border:rgba(91,191,160,0.22);
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;--gold-pale:rgba(201,168,76,0.08);--gold-border:rgba(201,168,76,0.30);
+  --bg:#faf8f5;--card:#ffffff;--surface:#f2f5f2;
+  --ink:#1a1a18;--sub:rgba(60,75,65,0.72);--muted:rgba(80,95,85,0.45);
+  --radius:14px;--shadow:0 2px 12px rgba(0,0,0,0.06);
+}
+html{background:var(--bg);-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;color:var(--ink);max-width:440px;margin:0 auto;
+  min-height:100dvh;overflow-x:hidden;
+  padding:0 0 calc(40px + env(safe-area-inset-bottom,0px));
+  padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(91,191,160,0.09) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 30% at 80% 100%,rgba(201,168,76,0.05) 0%,transparent 50%)}
+.z1{position:relative;z-index:1}
+.serif{font-family:'Playfair Display',serif}
+.han{font-family:'Noto Serif SC',serif}
+a{color:inherit;text-decoration:none}
+.topbar{display:flex;align-items:center;gap:10px;padding:16px 20px 6px}
+.back{font-size:13px;color:var(--jade-deep);font-weight:600}
+.brand{font-family:'Playfair Display',serif;font-size:13px;letter-spacing:.3em;color:var(--jade-deep);text-transform:uppercase;margin-left:auto}
+.wrap{padding:0 20px}
+
+.hero{text-align:center;padding:22px 20px 6px}
+.hero .icon{font-size:36px;margin-bottom:8px}
+.hero h1{font-family:'Playfair Display',serif;font-size:25px;font-weight:700;line-height:1.28;margin-bottom:8px}
+.hero h1 em{font-style:italic;color:var(--jade-deep)}
+.hero p{font-size:13px;color:var(--sub);line-height:1.65;max-width:350px;margin:0 auto}
+
+/* Streak dashboard */
+.streak-card{background:linear-gradient(135deg,#ffffff,#f4faf7);border:1px solid var(--jade-border);
+  border-radius:20px;padding:24px 20px;margin:20px 20px 0;box-shadow:0 6px 22px rgba(91,191,160,0.12);text-align:center}
+.streak-flame{font-size:44px;line-height:1;margin-bottom:4px}
+.streak-num{font-family:'Playfair Display',serif;font-size:52px;font-weight:700;color:var(--jade-deep);line-height:1}
+.streak-label{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:4px}
+.streak-stats{display:flex;justify-content:center;gap:26px;margin-top:18px;padding-top:16px;border-top:1px solid var(--jade-border)}
+.stat{text-align:center}
+.stat .v{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--ink)}
+.stat .l{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-top:2px}
+.today-flag{display:inline-flex;align-items:center;gap:6px;margin-top:16px;font-size:12px;font-weight:600;
+  padding:6px 14px;border-radius:20px}
+.today-flag.done{background:var(--jade-pale);color:var(--jade-deep);border:1px solid var(--jade-border)}
+.today-flag.open{background:var(--gold-pale);color:var(--gold-deep);border:1px solid var(--gold-border)}
+
+/* Practice check-in list */
+.section{padding:26px 20px 6px}
+.sec-cap{text-align:center;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--jade);font-weight:600;margin-bottom:8px}
+.sec-title{font-family:'Playfair Display',serif;text-align:center;font-size:21px;font-weight:700;margin-bottom:6px;line-height:1.3}
+.sec-sub{text-align:center;font-size:12.5px;color:var(--sub);line-height:1.6;margin:0 auto 18px;max-width:330px}
+
+.practice{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--jade-border);
+  border-radius:var(--radius);padding:15px 16px;margin-bottom:11px;box-shadow:var(--shadow);
+  cursor:pointer;transition:.18s;user-select:none;-webkit-tap-highlight-color:transparent}
+.practice:hover{border-color:var(--jade)}
+.practice.on{border-color:var(--jade);background:linear-gradient(135deg,#ffffff,var(--jade-pale))}
+.p-icon{font-size:26px;flex-shrink:0;width:30px;text-align:center}
+.p-body{flex:1;min-width:0}
+.p-body h3{font-size:14.5px;font-weight:600;color:var(--ink);display:flex;align-items:baseline;gap:7px}
+.p-body h3 .han{font-size:13px;color:var(--jade-deep);font-weight:600}
+.p-body p{font-size:12px;color:var(--sub);line-height:1.5;margin-top:2px}
+.p-check{flex-shrink:0;width:28px;height:28px;border-radius:50%;border:2px solid var(--jade-border);
+  display:flex;align-items:center;justify-content:center;transition:.18s;color:transparent;font-size:15px;font-weight:700}
+.practice.on .p-check{background:var(--jade);border-color:var(--jade);color:#fff}
+
+/* 30-day dot grid */
+.grid-card{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);padding:18px 16px;box-shadow:var(--shadow)}
+.grid-title{font-size:12px;font-weight:600;color:var(--sub);margin-bottom:12px;letter-spacing:.02em;text-align:center}
+.dots{display:grid;grid-template-columns:repeat(10,1fr);gap:7px}
+.dot{aspect-ratio:1;border-radius:5px;background:var(--surface);border:1px solid rgba(91,191,160,0.14)}
+.dot.filled{background:var(--jade);border-color:var(--jade);box-shadow:0 1px 4px rgba(91,191,160,.3)}
+.dot.today{outline:2px solid var(--gold);outline-offset:1px}
+.grid-legend{display:flex;justify-content:center;gap:16px;margin-top:12px;font-size:10.5px;color:var(--muted)}
+.grid-legend span{display:inline-flex;align-items:center;gap:5px}
+.lg{width:11px;height:11px;border-radius:3px;display:inline-block}
+
+/* Buttons */
+.btn-row{display:flex;gap:10px;margin-top:16px}
+.btn{flex:1;text-align:center;padding:13px;border-radius:12px;font-size:13.5px;font-weight:600;
+  border:1px solid var(--jade-border);background:var(--card);color:var(--jade-deep);cursor:pointer;transition:.18s;min-height:44px}
+.btn.primary{background:linear-gradient(135deg,var(--jade),var(--jade-deep));color:#fff;border:none;box-shadow:0 4px 14px rgba(91,191,160,.28)}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+
+/* Intention / note */
+.intent{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.intent label{display:block;font-size:12px;font-weight:600;color:var(--sub);margin-bottom:8px;letter-spacing:.02em}
+.intent input{width:100%;border:1px solid var(--jade-border);border-radius:10px;padding:12px 13px;font-family:inherit;
+  font-size:14px;color:var(--ink);background:var(--bg)}
+.intent input:focus{outline:none;border-color:var(--jade)}
+.intent .hint{font-size:11px;color:var(--muted);margin-top:8px;line-height:1.5}
+
+.ai-note{display:flex;align-items:flex-start;gap:8px;background:var(--jade-pale);
+  border:1px solid var(--jade-border);border-radius:12px;padding:11px 13px;margin:18px 20px 0;
+  font-size:11.5px;color:var(--jade-deep);line-height:1.55}
+.ai-note b{font-weight:600}
+
+/* Share card (rendered on demand) */
+#shareCard{position:fixed;inset:0;background:rgba(20,30,25,.55);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;z-index:100;padding:24px}
+#shareCard.show{display:flex}
+.share-inner{width:100%;max-width:320px;background:linear-gradient(160deg,#ffffff,#eef8f3);border-radius:22px;
+  padding:32px 26px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.3);border:1px solid var(--jade-border)}
+.share-inner .brand{font-family:'Playfair Display',serif;font-size:12px;letter-spacing:.34em;color:var(--jade-deep);text-transform:uppercase;margin:0 0 18px}
+.share-inner .flame{font-size:52px}
+.share-inner .n{font-family:'Playfair Display',serif;font-size:58px;font-weight:700;color:var(--jade-deep);line-height:1;margin:4px 0}
+.share-inner .u{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.share-inner .line{font-size:13.5px;color:var(--sub);line-height:1.6;margin-top:16px}
+.share-close{margin-top:22px;font-size:13px;color:var(--jade-deep);font-weight:600;cursor:pointer;padding:8px}
+
+.divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--jade-border),transparent);margin:8px 0}
+.mini-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.mini{display:block;background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);padding:16px 12px;text-align:center;box-shadow:var(--shadow);transition:.2s}
+.mini:hover{transform:translateY(-2px);border-color:var(--jade)}
+.mini .gicon{font-size:24px;margin-bottom:6px}
+.mini h3{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:3px}
+.mini p{font-size:11px;color:var(--muted)}
+footer{padding:26px 20px calc(28px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.85}
+footer a{color:var(--jade-deep);text-decoration:none}
+footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:var(--jade-deep);letter-spacing:.06em;margin-bottom:10px}
+.mini{min-height:44px}
+</style>
+</head>
+<body>
+
+<div class="topbar z1">
+  <a class="back" href="sutras.html">‹ Sutra Library</a>
+  <span class="brand">Runae</span>
+</div>
+
+<header class="hero z1">
+  <div class="icon">🪷</div>
+  <h1 class="serif">Your daily<br><em>practice, quietly kept</em></h1>
+  <p>Check in each day when you bow, recite, or offer light. Watch your streak grow — a gentle ritual, saved privately on your own device.</p>
+</header>
+
+<!-- STREAK DASHBOARD -->
+<div class="streak-card z1">
+  <div class="streak-flame" id="flame">🌱</div>
+  <div class="streak-num" id="streakNum">0</div>
+  <div class="streak-label">day streak</div>
+  <div class="streak-stats">
+    <div class="stat"><div class="v" id="totalDays">0</div><div class="l">Total days</div></div>
+    <div class="stat"><div class="v" id="bestStreak">0</div><div class="l">Best streak</div></div>
+    <div class="stat"><div class="v" id="totalActs">0</div><div class="l">Check-ins</div></div>
+  </div>
+  <div class="today-flag open" id="todayFlag">◷ Today is open</div>
+</div>
+
+<!-- CHECK-IN -->
+<section class="section z1">
+  <div class="sec-cap">Today's practice</div>
+  <h2 class="sec-title serif">Tap what you did today</h2>
+  <p class="sec-sub">Any one keeps your streak. Do it with a settled heart — that's the whole thing.</p>
+
+  <div class="practice" data-key="bow">
+    <div class="p-icon">🙏</div>
+    <div class="p-body">
+      <h3>Prostration <span class="han">拜佛</span></h3>
+      <p>A bow, or a full prostration — a moment of humility.</p>
+    </div>
+    <div class="p-check">✓</div>
+  </div>
+
+  <div class="practice" data-key="recite">
+    <div class="p-icon">📖</div>
+    <div class="p-body">
+      <h3>Recite a sutra <span class="han">誦經</span></h3>
+      <p>The Heart Sutra, or any passage that steadies you.</p>
+    </div>
+    <div class="p-check">✓</div>
+  </div>
+
+  <div class="practice" data-key="light">
+    <div class="p-icon">🕯️</div>
+    <div class="p-body">
+      <h3>Offer light <span class="han">供燈</span></h3>
+      <p>Light a candle or lamp with a quiet intention.</p>
+    </div>
+    <div class="p-check">✓</div>
+  </div>
+
+  <div class="practice" data-key="sit">
+    <div class="p-icon">🧘</div>
+    <div class="p-body">
+      <h3>Sit &amp; breathe <span class="han">靜坐</span></h3>
+      <p>A few minutes of stillness. No goal but presence.</p>
+    </div>
+    <div class="p-check">✓</div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn primary" id="saveBtn">Save today's check-in</button>
+    <button class="btn" id="shareBtn">Share streak</button>
+  </div>
+</section>
+
+<div class="wrap z1"><div class="divider"></div></div>
+
+<!-- 30 DAY GRID -->
+<section class="section z1">
+  <div class="sec-cap">Last 30 days</div>
+  <h2 class="sec-title serif">Your rhythm</h2>
+  <div class="grid-card">
+    <div class="grid-title">Each filled square is a day you showed up</div>
+    <div class="dots" id="dots"></div>
+    <div class="grid-legend">
+      <span><i class="lg" style="background:var(--surface);border:1px solid rgba(91,191,160,.2)"></i> Rest</span>
+      <span><i class="lg" style="background:var(--jade)"></i> Practiced</span>
+      <span><i class="lg" style="border:2px solid var(--gold)"></i> Today</span>
+    </div>
+  </div>
+</section>
+
+<div class="wrap z1"><div class="divider"></div></div>
+
+<!-- INTENTION -->
+<section class="section z1">
+  <div class="sec-cap">Optional</div>
+  <h2 class="sec-title serif">Hold an intention</h2>
+  <div class="intent">
+    <label for="intentInput">Who or what are you dedicating this to?</label>
+    <input id="intentInput" type="text" placeholder="e.g. peace of mind · a loved one · gratitude" maxlength="80">
+    <div class="hint">🪷 In tradition this is called <b>dedication</b> (回向) — a gentle turning of your practice toward others. Kept privately on your device.</div>
+  </div>
+</section>
+
+<div class="ai-note z1">🪷 <b>A personal ritual tool, not a religious claim.</b> Practice is offered for calm, focus, and reflection. Nothing here promises any specific outcome. Your check-ins are stored only on this device — nothing is uploaded.</div>
+
+<div class="wrap z1" style="margin-top:22px"><div class="divider"></div></div>
+
+<!-- RELATED -->
+<section class="section z1">
+  <div class="sec-cap">More from Runae</div>
+  <h2 class="sec-title serif">Keep going</h2>
+  <div class="mini-grid">
+    <a class="mini" href="sutra-heart.html">
+      <div class="gicon">📖</div>
+      <h3>Heart Sutra</h3>
+      <p>Read the text</p>
+    </a>
+    <a class="mini" href="sutras.html">
+      <div class="gicon">📿</div>
+      <h3>Sutra Library</h3>
+      <p>All texts</p>
+    </a>
+    <a class="mini" href="daishao-en.html">
+      <div class="gicon">🕯️</div>
+      <h3>Offerings</h3>
+      <p>Across the distance</p>
+    </a>
+    <a class="mini" href="explore.html">
+      <div class="gicon">🧭</div>
+      <h3>Explore</h3>
+      <p>Every reading</p>
+    </a>
+  </div>
+</section>
+
+<footer class="z1">
+  <div class="fbrand">Runae</div>
+  <div style="margin-bottom:10px">🪷 A personal practice tool · for calm &amp; reflection only.<br>Not medical, legal, financial, or religious advice.</div>
+  <div>support@runae.app · © 2026 Runae · <a href="privacy.html">Privacy</a> · <a href="legal-us.html">Terms</a></div>
+</footer>
+
+<!-- SHARE OVERLAY -->
+<div id="shareCard">
+  <div class="share-inner" id="shareInner">
+    <div class="brand">Runae</div>
+    <div class="flame" id="sFlame">🔥</div>
+    <div class="n" id="sNum">0</div>
+    <div class="u">day practice streak</div>
+    <div class="line" id="sLine">Showing up, one quiet day at a time. 🪷</div>
+    <div class="share-close" id="shareClose">Screenshot to share · Close ✕</div>
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var LS_KEY = 'runae_practice_v1';
+  // ---- date helpers (local time, YYYY-MM-DD) ----
+  function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  function today(){ return ymd(new Date()); }
+  function daysBetween(a,b){ // b - a in whole days
+    var da=new Date(a+'T00:00:00'), db=new Date(b+'T00:00:00');
+    return Math.round((db-da)/86400000);
+  }
+  // ---- load / save state ----
+  function load(){
+    try{ var raw=localStorage.getItem(LS_KEY); if(raw) return JSON.parse(raw); }catch(e){}
+    return { days:{}, best:0, intent:'' }; // days: { 'YYYY-MM-DD': ['bow','recite',...] }
+  }
+  function save(s){ try{ localStorage.setItem(LS_KEY, JSON.stringify(s)); }catch(e){} }
+  var state = load();
+
+  // ---- streak computation ----
+  function computeStreak(){
+    // count consecutive days ending today (or yesterday if today not yet done)
+    var keys = Object.keys(state.days).filter(function(k){ return state.days[k] && state.days[k].length; });
+    if(!keys.length) return 0;
+    var t = today();
+    var start;
+    if(state.days[t] && state.days[t].length){ start = t; }
+    else {
+      var y = ymd(new Date(Date.now()-86400000));
+      if(state.days[y] && state.days[y].length){ start = y; } else { return 0; }
+    }
+    var streak=0, cur=start;
+    while(state.days[cur] && state.days[cur].length){
+      streak++;
+      cur = ymd(new Date(new Date(cur+'T00:00:00').getTime()-86400000));
+    }
+    return streak;
+  }
+  function totalDays(){ return Object.keys(state.days).filter(function(k){return state.days[k]&&state.days[k].length;}).length; }
+  function totalActs(){ var n=0; for(var k in state.days){ if(state.days[k]) n+=state.days[k].length; } return n; }
+
+  function flameFor(s){ if(s>=30)return '🏆'; if(s>=14)return '✨'; if(s>=7)return '🔥'; if(s>=3)return '🌿'; if(s>=1)return '🕯️'; return '🌱'; }
+
+  // ---- render ----
+  var checks = {}; // today's in-progress selection
+  (state.days[today()]||[]).forEach(function(k){ checks[k]=true; });
+
+  function renderTiles(){
+    document.querySelectorAll('.practice').forEach(function(el){
+      var k = el.getAttribute('data-key');
+      el.classList.toggle('on', !!checks[k]);
+    });
+  }
+  function renderStats(){
+    var s = computeStreak();
+    document.getElementById('streakNum').textContent = s;
+    document.getElementById('flame').textContent = flameFor(s);
+    document.getElementById('totalDays').textContent = totalDays();
+    document.getElementById('bestStreak').textContent = Math.max(state.best||0, s);
+    document.getElementById('totalActs').textContent = totalActs();
+    var doneToday = state.days[today()] && state.days[today()].length;
+    var flag = document.getElementById('todayFlag');
+    if(doneToday){ flag.className='today-flag done'; flag.textContent='✓ Checked in today'; }
+    else { flag.className='today-flag open'; flag.textContent='◷ Today is open'; }
+  }
+  function renderGrid(){
+    var wrap = document.getElementById('dots'); wrap.innerHTML='';
+    var t = today();
+    for(var i=29;i>=0;i--){
+      var d = ymd(new Date(Date.now()-i*86400000));
+      var dot = document.createElement('div');
+      dot.className='dot';
+      if(state.days[d] && state.days[d].length) dot.classList.add('filled');
+      if(d===t) dot.classList.add('today');
+      dot.title = d;
+      wrap.appendChild(dot);
+    }
+  }
+  function renderAll(){ renderTiles(); renderStats(); renderGrid(); }
+
+  // ---- events ----
+  document.querySelectorAll('.practice').forEach(function(el){
+    el.addEventListener('click', function(){
+      var k = el.getAttribute('data-key');
+      checks[k] = !checks[k];
+      renderTiles();
+    });
+  });
+
+  document.getElementById('saveBtn').addEventListener('click', function(){
+    var picked = Object.keys(checks).filter(function(k){return checks[k];});
+    var t = today();
+    if(picked.length){ state.days[t] = picked; }
+    else { delete state.days[t]; }
+    var s = computeStreak();
+    state.best = Math.max(state.best||0, s);
+    save(state);
+    renderAll();
+    var btn=this, orig=btn.textContent;
+    btn.textContent = picked.length ? '✓ Saved · streak '+s : 'Cleared today';
+    setTimeout(function(){ btn.textContent=orig; }, 1600);
+  });
+
+  var intentEl = document.getElementById('intentInput');
+  intentEl.value = state.intent||'';
+  intentEl.addEventListener('input', function(){ state.intent=this.value; save(state); });
+
+  // ---- share overlay ----
+  var overlay = document.getElementById('shareCard');
+  document.getElementById('shareBtn').addEventListener('click', function(){
+    var s = computeStreak();
+    document.getElementById('sNum').textContent = s;
+    document.getElementById('sFlame').textContent = flameFor(s);
+    document.getElementById('sLine').textContent = s>=1
+      ? 'Showing up, one quiet day at a time. 🪷'
+      : 'Beginning today. Every streak starts at one. 🌱';
+    overlay.classList.add('show');
+  });
+  function closeShare(){ overlay.classList.remove('show'); }
+  document.getElementById('shareClose').addEventListener('click', closeShare);
+  overlay.addEventListener('click', function(e){ if(e.target===overlay) closeShare(); });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>
