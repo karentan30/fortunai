@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5bbfa0">
+<title>Runae · The everything-oracle — every reading worth asking, all in one place</title>
+<meta name="description" content="Runae is the everything-oracle: Tarot, I-Ching, Fortune Sticks, Moon Blocks, Four Pillars, Purple Star, Vedic, Maya, Tibetan and more. Ask a matter or understand yourself — every chart computed by a real engine, never guessed.">
+<meta property="og:title" content="Runae · The everything-oracle">
+<meta property="og:description" content="Every oracle worth asking, in one place. Real engines, not guesswork.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://runae.app/explore">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Runae">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --jade:#5bbfa0;--jade-deep:#3d9e82;--jade-light:#8dd9bf;
+  --jade-pale:rgba(91,191,160,0.08);--jade-border:rgba(91,191,160,0.22);
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;--gold-pale:rgba(201,168,76,0.08);--gold-border:rgba(201,168,76,0.30);
+  --bg:#faf8f5;--card:#ffffff;--surface:#f2f5f2;
+  --ink:#1a1a18;--sub:rgba(60,75,65,0.72);--muted:rgba(80,95,85,0.45);
+  --radius:14px;--shadow:0 2px 12px rgba(0,0,0,0.06);
+}
+html{background:var(--bg);-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;color:var(--ink);max-width:440px;margin:0 auto;
+  min-height:100dvh;overflow-x:hidden;
+  padding:0 0 calc(40px + env(safe-area-inset-bottom,0px));
+  padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(91,191,160,0.09) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 30% at 80% 100%,rgba(201,168,76,0.05) 0%,transparent 50%)}
+.z1{position:relative;z-index:1}
+.serif{font-family:'Playfair Display',serif}
+.wrap{padding:0 20px}
+.divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--jade-border),transparent);margin:6px 0}
+a{color:inherit;text-decoration:none}
+
+/* Jade orb mark */
+.clasp{position:relative;border-radius:50%;width:84px;height:84px;margin:0 auto 16px;
+  background:radial-gradient(circle at 34% 27%,rgba(255,255,255,0.92) 0%,rgba(255,255,255,0.35) 7%,transparent 18%),
+    radial-gradient(circle at 70% 68%,var(--jade-deep) 0%,transparent 38%),
+    radial-gradient(circle at 20% 72%,rgba(0,180,80,0.22) 0%,transparent 35%),
+    radial-gradient(ellipse at 42% 38%,var(--jade-light) 0%,var(--jade) 22%,var(--jade) 52%,var(--jade-deep) 100%);
+  box-shadow:0 6px 22px rgba(91,191,160,0.32)}
+.clasp::after{content:'';position:absolute;border-radius:50%;background:var(--bg);
+  width:20px;height:20px;top:50%;left:50%;transform:translate(-50%,-50%);
+  box-shadow:inset 0 2px 6px rgba(0,0,0,0.08)}
+
+/* Hero */
+.hero{text-align:center;padding:40px 20px 22px}
+.logo{font-family:'Playfair Display',serif;font-size:15px;letter-spacing:0.42em;color:var(--jade-deep);
+  text-transform:uppercase;margin-bottom:18px;padding-left:0.42em}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--jade-pale);
+  border:1px solid var(--jade-border);border-radius:20px;padding:6px 14px;
+  font-size:10px;color:var(--jade-deep);letter-spacing:.1em;text-transform:uppercase;margin-bottom:18px}
+.hero h1{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;line-height:1.28;
+  margin-bottom:14px;color:var(--ink)}
+.hero h1 em{font-style:italic;color:var(--jade-deep)}
+.hero-sub{font-size:14px;color:var(--sub);line-height:1.75;max-width:360px;margin:0 auto}
+.hero-sub b{color:var(--ink);font-weight:600}
+
+/* AI + accuracy note */
+.ai-note{display:flex;align-items:flex-start;gap:8px;background:var(--jade-pale);
+  border:1px solid var(--jade-border);border-radius:12px;padding:12px 14px;margin:18px 20px 0;
+  font-size:11.5px;color:var(--jade-deep);letter-spacing:.02em;line-height:1.55}
+.ai-note b{color:var(--jade-deep);font-weight:600}
+
+/* Zone shells */
+.zone{padding:30px 20px 8px}
+.zone-head{display:flex;align-items:baseline;gap:10px;margin-bottom:4px}
+.zone-kicker{font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-weight:700}
+.zone-a .zone-kicker{color:var(--jade)}
+.zone-b .zone-kicker{color:var(--gold-deep)}
+.zone h2{font-family:'Playfair Display',serif;font-size:23px;font-weight:700;line-height:1.25;margin-bottom:6px}
+.zone-sub{font-size:13px;color:var(--sub);line-height:1.6;max-width:360px;margin-bottom:8px}
+.zone-tag{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:600;border-radius:20px;padding:5px 11px;margin-bottom:16px}
+.zone-a .zone-tag{background:var(--jade-pale);border:1px solid var(--jade-border);color:var(--jade-deep)}
+.zone-b .zone-tag{background:var(--gold-pale);border:1px solid var(--gold-border);color:var(--gold-deep)}
+
+/* System cards */
+.cards{display:flex;flex-direction:column;gap:12px}
+.card{position:relative;background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);
+  padding:16px 16px;box-shadow:var(--shadow);transition:.2s;cursor:pointer}
+.card:hover{transform:translateY(-2px);border-color:var(--jade);box-shadow:0 6px 18px rgba(91,191,160,0.12)}
+.zone-b .card{border-color:var(--gold-border)}
+.zone-b .card:hover{border-color:var(--gold);box-shadow:0 6px 18px rgba(201,168,76,0.14)}
+.card.flagship{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 6px 20px rgba(201,168,76,0.14)}
+.card-top{display:flex;align-items:flex-start;gap:12px}
+.card-icon{flex-shrink:0;width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:23px;
+  background:var(--jade-pale);border:1px solid var(--jade-border)}
+.zone-b .card-icon{background:var(--gold-pale);border-color:var(--gold-border)}
+.card-main{flex:1;min-width:0}
+.card-name{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:2px;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.flag{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:var(--gold);border-radius:5px;padding:2px 6px}
+.card-what{font-size:12.5px;color:var(--sub);line-height:1.55}
+.card-bottom{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:12px}
+.card-ask{flex:1;min-width:0;font-size:11px;color:var(--muted);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-cta{flex-shrink:0;font-size:12.5px;font-weight:600;color:var(--jade-deep);white-space:nowrap}
+.zone-b .card-cta{color:var(--gold-deep)}
+
+/* Engine badge */
+.eng{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;
+  border-radius:20px;padding:3px 8px;white-space:nowrap}
+.eng.real{background:var(--gold-pale);border:1px solid var(--gold-border);color:var(--gold-deep)}
+.eng.ai{background:var(--jade-pale);border:1px solid var(--jade-border);color:var(--jade-deep)}
+.eng-abs{position:absolute;top:14px;right:14px}
+
+/* Ritual sub-note under a card */
+.ritual-hint{display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;color:var(--gold-deep);
+  background:var(--gold-pale);border:1px solid var(--gold-border);border-radius:20px;padding:3px 9px;margin-top:8px}
+
+/* Engine legend */
+.legend{background:var(--card);border:1px solid var(--gold-border);border-left:4px solid var(--gold);
+  border-radius:var(--radius);padding:18px 16px;margin:8px 20px 0}
+.legend h3{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--gold-deep);margin-bottom:12px}
+.leg-row{display:flex;align-items:flex-start;gap:10px;font-size:12.5px;color:var(--sub);line-height:1.55;margin-bottom:11px}
+.leg-row:last-child{margin-bottom:0}
+.leg-row b{color:var(--ink);font-weight:600}
+.leg-row .eng{margin-top:1px}
+
+/* Section heading (generic) */
+.sec-cap{text-align:center;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--jade);font-weight:600;margin-bottom:8px}
+.sec-title{font-family:'Playfair Display',serif;text-align:center;font-size:22px;font-weight:700;margin-bottom:6px;line-height:1.3}
+.sec-sub{text-align:center;font-size:13px;color:var(--sub);line-height:1.6;margin:0 auto 20px;max-width:340px}
+.section{padding:30px 20px}
+
+/* Ritual demo */
+.ritual-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ritual-card{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);padding:18px 14px;text-align:center;box-shadow:var(--shadow)}
+.ritual-stage{height:120px;display:flex;align-items:flex-end;justify-content:center;position:relative;margin-bottom:12px}
+/* Fortune sticks cylinder */
+.cyl{position:relative;width:56px;height:88px;border-radius:8px 8px 10px 10px;
+  background:linear-gradient(180deg,#d9c89a,#c2a865 55%,#a5883f);
+  box-shadow:inset 0 6px 10px rgba(0,0,0,.12),0 4px 12px rgba(138,100,32,.25);transform-origin:bottom center}
+.cyl::before{content:'';position:absolute;top:-6px;left:50%;transform:translateX(-50%);width:64px;height:12px;border-radius:50%;
+  background:linear-gradient(180deg,#8a6420,#5f4614)}
+.stick{position:absolute;top:-30px;left:50%;width:6px;height:52px;border-radius:3px;background:linear-gradient(180deg,#e9dcae,#c9a84c);transform-origin:bottom center}
+.stick.s1{transform:translateX(-16px) rotate(-11deg)}
+.stick.s2{transform:translateX(-3px) rotate(-2deg)}
+.stick.s3{transform:translateX(10px) rotate(9deg)}
+.cyl.shake{animation:shake .5s ease-in-out infinite}
+@keyframes shake{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(6deg)}}
+.chosen{position:absolute;top:2px;left:50%;transform:translateX(-50%) translateY(-14px);opacity:0;transition:.4s;
+  font-size:10px;font-weight:700;color:var(--gold-deep);background:#fff;border:1px solid var(--gold-border);border-radius:20px;padding:3px 9px;white-space:nowrap}
+.chosen.show{opacity:1;transform:translateX(-50%) translateY(-30px)}
+/* Moon blocks */
+.blocks{display:flex;gap:14px;align-items:flex-end}
+.blk{width:34px;height:52px;border-radius:34px 34px 8px 8px/60px 60px 8px 8px;
+  background:linear-gradient(140deg,#8a2e2e,#b34a3a 60%,#7a2222);box-shadow:0 4px 10px rgba(122,34,34,.3);transform-origin:bottom center}
+.blk.toss{animation:toss .6s ease-in-out infinite}
+@keyframes toss{0%,100%{transform:translateY(0) rotate(-8deg)}50%{transform:translateY(-38px) rotate(200deg)}}
+.result{opacity:0;transition:.4s;font-size:11px;font-weight:700;margin-top:2px}
+.result.show{opacity:1}
+.result.yes{color:var(--jade-deep)}
+.ritual-card h4{font-size:13.5px;font-weight:600;color:var(--ink);margin-bottom:3px}
+.ritual-card p{font-size:11px;color:var(--muted);line-height:1.5;margin-bottom:10px}
+.ritual-btn{display:inline-block;font-size:12px;font-weight:700;color:#3a2e0e;
+  background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);border:none;border-radius:20px;padding:8px 18px;cursor:pointer;box-shadow:0 4px 12px rgba(201,168,76,.3);min-height:40px}
+.ritual-btn:active{transform:translateY(1px)}
+.states{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:9.5px;color:var(--muted)}
+.states span b{color:var(--sub);font-weight:600}
+
+/* Anti-fatalism */
+.nofate{background:var(--jade-pale);border:1px solid var(--jade-border);border-radius:var(--radius);
+  padding:16px 16px;margin:8px 20px 0;font-size:12.5px;color:var(--sub);line-height:1.6;text-align:center}
+.nofate b{color:var(--jade-deep);font-weight:600}
+
+footer{padding:28px 20px calc(28px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.85}
+footer a{color:var(--jade-deep)}
+footer .fnav{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:12px}
+footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:var(--jade-deep);letter-spacing:.06em;margin-bottom:10px}
+button{font-family:inherit}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero z1">
+  <div class="logo">Runae</div>
+  <div class="clasp"></div>
+  <div class="badge">✦ The everything-oracle</div>
+  <h1 class="serif">Every oracle worth asking,<br><em>all in one place</em></h1>
+  <p class="hero-sub">The most complete divination hub — from a quick <b>Tarot pull</b> to your entire <b>life chart</b>. And every reading is <b>real</b>: charts are cast by precise engines, never guessed.</p>
+</header>
+
+<div class="ai-note z1"><span>🤖</span><div><b>AI-assisted, engine-accurate.</b> An AI writes your reading in plain English — but every birth chart is computed by a precise astronomical / calendar engine, so nothing is invented.</div></div>
+
+<!-- ZONE A -->
+<section class="zone zone-a z1">
+  <div class="zone-head"><span class="zone-kicker">Zone 1</span></div>
+  <h2 class="serif">Ask a matter</h2>
+  <p class="zone-sub">You have a question right now. Draw, toss or cast — and get a clear reading of this one situation.</p>
+  <span class="zone-tag">🟢 AI reading · interpretation of a live draw</span>
+
+  <div class="cards">
+
+    <div class="card">
+      <span class="eng ai eng-abs">🟢 AI reading</span>
+      <div class="card-top">
+        <div class="card-icon">🃏</div>
+        <div class="card-main">
+          <div class="card-name">Tarot</div>
+          <div class="card-what">Pull cards and read the story of your situation — past, present, where it's heading.</div>
+        </div>
+      </div>
+      <div class="card-bottom"><span class="card-ask">"Should I take the new job?"</span><span class="card-cta">Ask →</span></div>
+    </div>
+
+    <div class="card">
+      <span class="eng ai eng-abs">🟢 AI reading</span>
+      <div class="card-top">
+        <div class="card-icon">☯️</div>
+        <div class="card-main">
+          <div class="card-name">I-Ching · Book of Changes</div>
+          <div class="card-what">A six-line oracle of change and timing. Ask what to do when a situation is shifting.</div>
+        </div>
+      </div>
+      <div class="card-bottom"><span class="card-ask">"Is now the time to act, or wait?"</span><span class="card-cta">Ask →</span></div>
+    </div>
+
+    <div class="card">
+      <span class="eng ai eng-abs">🟢 AI reading</span>
+      <div class="card-top">
+        <div class="card-icon">🎋</div>
+        <div class="card-main">
+          <div class="card-name">Fortune Sticks</div>
+          <div class="card-what">Shake the bamboo cylinder until one numbered stick falls — draw a single omen verse for your worry.</div>
+        </div>
+      </div>
+      <span class="ritual-hint">🤚 Shake to draw</span>
+      <div class="card-bottom"><span class="card-ask">"What's the outlook for this?"</span><span class="card-cta">Shake →</span></div>
+    </div>
+
+    <div class="card">
+      <span class="eng ai eng-abs">🟢 AI reading</span>
+      <div class="card-top">
+        <div class="card-icon">🌙</div>
+        <div class="card-main">
+          <div class="card-name">Moon Blocks</div>
+          <div class="card-what">Toss two crescent blocks for a clean yes / no — or a "laughing" answer that says: ask again.</div>
+        </div>
+      </div>
+      <span class="ritual-hint">🪙 Toss for yes / no</span>
+      <div class="card-bottom"><span class="card-ask">"Do I have their blessing on this?"</span><span class="card-cta">Toss →</span></div>
+    </div>
+
+    <div class="card">
+      <span class="eng ai eng-abs">🟢 AI reading</span>
+      <div class="card-top">
+        <div class="card-icon">🧭</div>
+        <div class="card-main">
+          <div class="card-name">Qi Men · Timing &amp; Direction</div>
+          <div class="card-what">The best <em>timing and direction</em> to act on one decision — when to move, which way to face.</div>
+        </div>
+      </div>
+      <div class="card-bottom"><span class="card-ask">"When &amp; where should I make my move?"</span><span class="card-cta">Ask →</span></div>
+    </div>
+
+    <div class="card">
+      <span class="eng ai eng-abs">🟢 AI reading</span>
+      <div class="card-top">
+        <div class="card-icon">🔮</div>
+        <div class="card-main">
+          <div class="card-name">Da Liu Ren</div>
+          <div class="card-what">Ask one precise question, get one precise reading — a focused oracle for a single matter.</div>
+        </div>
+      </div>
+      <div class="card-bottom"><span class="card-ask">"Will the deal close this month?"</span><span class="card-cta">Ask →</span></div>
+    </div>
+
+  </div>
+</section>
+
+<div class="wrap z1"><div class="divider"></div></div>
+
+<!-- ZONE B -->
+<section class="zone zone-b z1">
+  <div class="zone-head"><span class="zone-kicker">Zone 2</span></div>
+  <h2 class="serif">Understand yourself</h2>
+  <p class="zone-sub">Who you are, and the whole shape of your life. These read your exact birth moment — so every chart is <b>cast by a real engine</b>, to the minute.</p>
+  <span class="zone-tag">🟡 Real engine · your chart is computed, never guessed</span>
+
+  <div class="cards">
+
+    <div class="card flagship">
+      <span class="eng real eng-abs">🟡 Real engine</span>
+      <div class="card-top">
+        <div class="card-icon">🪷</div>
+        <div class="card-main">
+          <div class="card-name">Four Pillars <span class="flag">Flagship</span></div>
+          <div class="card-what">Your birth-moment blueprint: character, love, career and the life cycles ahead — the deepest read of who you are.</div>
+        </div>
+      </div>
+      <div class="card-bottom"><span class="card-ask">Your exact date · time · place of birth</span><span class="card-cta">Chart me →</span></div>
+    </div>
+
+    <div class="card">
+      <span class="eng real eng-abs">🟡 Real engine</span>
+      <div class="card-top">
+        <div class="card-icon">✨</div>
+        <div class="card-main">
+          <div class="card-name">Purple Star</div>
+          <div class="card-what">A 12-palace star map of your life's domains — career, love, wealth, family — placed by your birth chart.</div>
+        </div>
+      </div>
+      <div class="card-bottom"><span class="card-ask">Your exact date · time · place of birth</span><span class="card-cta">Chart me →</span></div>
+    </div>
+
+    <div class="card">
+      <span class="eng real eng-abs">🟡 Real engine</span>
+      <div class="card-top">
+        <div class="card-icon">🕉️</div>
+        <div class="card-main">
+          <div class="card-name">Vedic · Indian astrology</div>
+          <div class="card-what">A sidereal birth chart from the Indian tradition — a different sky, a different portrait of you.</div>
+        </div>
+      </div>
+      <div class="card-bottom"><span class="card-ask">Your exact date · time · place of birth</span><span class="card-cta">Chart me →</span></div>
+    </div>
+
+    <div class="card">
+      <span class="eng real eng-abs">🟡 Real engine</span>
+      <div class="card-top">
+        <div class="card-icon">🗿</div>
+        <div class="card-main">
+          <div class="card-name">Maya calendar</div>
+          <div class="card-what">Your day-sign and galactic signature from the Mayan count — the archetype you were born into.</div>
+        </div>
+      </div>
+      <div class="card-bottom"><span class="card-ask">Your date of birth</span><span class="card-cta">Chart me →</span></div>
+    </div>
+
+    <div class="card">
+      <span class="eng real eng-abs">🟡 Real engine</span>
+      <div class="card-top">
+        <div class="card-icon">🏔️</div>
+        <div class="card-main">
+          <div class="card-name">Tibetan astrology</div>
+          <div class="card-what">Your element, animal and Mewa number from the Tibetan calendar — a Himalayan read of your nature.</div>
+        </div>
+      </div>
+      <div class="card-bottom"><span class="card-ask">Your date of birth</span><span class="card-cta">Chart me →</span></div>
+    </div>
+
+  </div>
+</section>
+
+<div class="wrap z1"><div class="divider"></div></div>
+
+<!-- ENGINE LEGEND -->
+<section class="section z1" style="padding-bottom:8px">
+  <div class="sec-cap">The Runae promise</div>
+  <h2 class="sec-title serif">Why every reading is real</h2>
+  <p class="sec-sub">Two kinds of reading — and we're honest about which is which.</p>
+  <div class="legend" style="margin-left:0;margin-right:0">
+    <h3>What the badge means</h3>
+    <div class="leg-row"><span class="eng real">🟡 Real engine</span><div><b>Your chart is computed, to the exact minute.</b> Four Pillars, Purple Star, Vedic, Maya and Tibetan are cast by a precise astronomical / calendar engine — never approximated, never guessed by AI.</div></div>
+    <div class="leg-row"><span class="eng ai">🟢 AI reading</span><div><b>An AI interprets your live draw</b> — the way a reader would. Tarot, I-Ching, Fortune Sticks, Moon Blocks, Qi Men and Da Liu Ren are draw-based, so the reading is interpretation, honestly labelled.</div></div>
+  </div>
+</section>
+
+<!-- RITUAL DEMO -->
+<section class="section z1">
+  <div class="sec-cap">Made to be felt</div>
+  <h2 class="sec-title serif">Shake it. Toss it. Watch it land.</h2>
+  <p class="sec-sub">The old rituals, on your phone — the kind of moment worth filming.</p>
+  <div class="ritual-grid">
+
+    <div class="ritual-card">
+      <div class="ritual-stage">
+        <div id="cyl" class="cyl">
+          <span class="stick s1"></span><span class="stick s2"></span><span class="stick s3"></span>
+        </div>
+        <span id="stickResult" class="chosen">Stick No. 27 · "Fair winds"</span>
+      </div>
+      <h4>Fortune Sticks</h4>
+      <p>Shake your phone (or hold the button) until one stick falls.</p>
+      <button class="ritual-btn" id="shakeBtn">Shake</button>
+    </div>
+
+    <div class="ritual-card">
+      <div class="ritual-stage">
+        <div class="blocks"><div id="b1" class="blk"></div><div id="b2" class="blk"></div></div>
+        <span id="blockResult" class="result">—</span>
+      </div>
+      <h4>Moon Blocks</h4>
+      <p>Flick up to toss. Three real outcomes, not a coin flip.</p>
+      <button class="ritual-btn" id="tossBtn">Toss</button>
+      <div class="states">
+        <span><b>Sacred</b> = yes</span><span><b>No</b> = angry</span><span><b>Laughing</b> = ask again</span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ANTI-FATALISM -->
+<div class="nofate z1"><b>This isn't fate.</b> A reading shows tendencies and timing, not a verdict. You still hold the pen.</div>
+
+<!-- FOOTER -->
+<footer class="z1">
+  <div class="fbrand">Runae · the everything-oracle</div>
+  <div class="fnav">
+    <a href="explore.html">Explore</a>
+    <a href="bazi-en.html">Four Pillars</a>
+    <a href="member-en.html">Membership</a>
+  </div>
+  <div style="margin-bottom:10px">🤖 AI-generated readings · for self-reflection &amp; entertainment only.<br>Not medical, legal, or financial advice.</div>
+  <div>support@runae.app · © 2026 Runae · <a href="privacy.html">Privacy</a> · <a href="legal-us.html">Terms</a></div>
+</footer>
+
+<script>
+// FORTUNE STICKS — shake (button hold or devicemotion) then one stick drops + verse reveal
+(function(){
+  var cyl=document.getElementById('cyl'),btn=document.getElementById('shakeBtn'),res=document.getElementById('stickResult');
+  var verses=['Stick No. 27 · "Fair winds"','Stick No. 8 · "Patience rewarded"','Stick No. 54 · "A door opens"','Stick No. 13 · "Wait one season"','Stick No. 41 · "Help arrives"'];
+  var shaking=false,timer=null;
+  function start(){ if(shaking)return; shaking=true; res.classList.remove('show'); cyl.classList.add('shake');
+    clearTimeout(timer); timer=setTimeout(finish,1400); }
+  function finish(){ cyl.classList.remove('shake'); shaking=false;
+    res.textContent=verses[Math.floor(Math.random()*verses.length)]; res.classList.add('show'); }
+  btn.addEventListener('click',start);
+  // real device shake
+  window.addEventListener('devicemotion',function(e){
+    var a=e.accelerationIncludingGravity; if(!a)return;
+    if((Math.abs(a.x||0)+Math.abs(a.y||0)+Math.abs(a.z||0))>34) start();
+  });
+})();
+
+// MOON BLOCKS — toss (button / swipe up) → 3-state result
+(function(){
+  var b1=document.getElementById('b1'),b2=document.getElementById('b2'),btn=document.getElementById('tossBtn'),res=document.getElementById('blockResult');
+  var tossing=false;
+  function toss(){ if(tossing)return; tossing=true; res.classList.remove('show','yes'); res.textContent='—';
+    b1.classList.add('toss'); b2.classList.add('toss');
+    setTimeout(function(){
+      b1.classList.remove('toss'); b2.classList.remove('toss'); tossing=false;
+      var f1=Math.random()<0.5, f2=Math.random()<0.5; // flat vs round-up
+      if(f1!==f2){ res.textContent='Sacred · YES ✦'; res.classList.add('yes'); }
+      else if(f1&&f2){ res.textContent='No · ask another way'; }
+      else { res.textContent='Laughing · ask again'; }
+      res.classList.add('show');
+    },1000);
+  }
+  btn.addEventListener('click',toss);
+  // swipe-up gesture on the stage
+  var stage=btn.closest('.ritual-card'),sy=null;
+  stage.addEventListener('touchstart',function(e){sy=e.touches[0].clientY;},{passive:true});
+  stage.addEventListener('touchend',function(e){ if(sy!==null&&(sy-e.changedTouches[0].clientY)>40) toss(); sy=null; },{passive:true});
+})();
+</script>
+</body>
+</html>

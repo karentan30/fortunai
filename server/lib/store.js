@@ -441,7 +441,7 @@ function updateStreak(userId) {
 // ── Product prices ──
 const PRODUCTS = {
   bazi_basic:      { name: '基础命盘',         amount: 990,    amountCny: 1990,  desc: '日主+五行+今年运势' },
-  bazi_full:       { name: '完整命盘',          amount: 990,    amountCny: 3990,  desc: '六维+十年大运+流月', amountKrw: 9900 },
+  bazi_full:       { name: '完整命盘',          amount: 1900,   amountCny: 3990,  desc: '六维+十年大运+流月', amountKrw: 9900 },
   bazi_vip:        { name: '深度批命',          amount: 3990,   amountCny: 7990,  desc: '大师级·终身档案', amountKrw: 19900 },
   saju_kr_full:    { name: '사주팔자 완전 분석', amount: 750,    amountCny: 5500,  desc: '사주 완전 분석 보고서 (천간지지 + 대운 + 유년)', amountKrw: 9900 },
   daily_sub:       { name: '每日天机订阅',      amount: 490,    amountCny: 1990,  desc: '每日天机·单功能订阅' },
@@ -456,7 +456,7 @@ const PRODUCTS = {
   hehun_full:      { name: 'Compatibility Reading', amount: 1990, amountCny: 3990, desc: 'Full BaZi compatibility analysis', amountKrw: 19900 },
   hehun_kr_full:   { name: '궁합 완전 분석',    amount: 1500,   amountCny: 3990,  desc: '궁합 완전 분석 보고서', amountKrw: 19900 },
   member_monthly:  { name: '月度会员',          amount: 990,    amountCny: 1990,  desc: '全部AI占算无限次·完整报告不锁定', amountKrw: 9900 },
-  member_yearly:   { name: '年度会员',          amount: 6900,   amountCny: 9900,  desc: '全年畅用·合婚报告·水晶挂件' },
+  member_yearly:   { name: '年度会员',          amount: 9900,   amountCny: 9900,  desc: '全报告无限+每月1次大师深度·合婚报告·水晶挂件' },
   member_lifetime: { name: '终身会员',          amount: 18800,  amountCny: 68800, desc: '永久畅享·全部报告·专属档案' },
   member_daily:    { name: '日会员',            amount: 299,    amountCny: 990,   desc: '24小时无限使用' },
   member_quarterly:{ name: '季会员',            amount: 2490,   amountCny: 6900,  desc: '三个月畅享' },

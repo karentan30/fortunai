@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5bbfa0">
+<title>Runae · Feng Shui for your real home — see lucky objects placed in your room</title>
+<meta name="description" content="Upload a photo of your room. Runae reads its feng shui, tells you what to place and why (tuned to your birth chart), then shows the objects placed right in your room. AI-powered. For inspiration only.">
+<meta property="og:title" content="Runae · See feng shui placed in your actual room">
+<meta property="og:description" content="Photo in → AI feng shui reading → objects visualized in your room → shop the look.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --jade:#5bbfa0;--jade-deep:#3d9e82;--jade-light:#8dd9bf;
+  --jade-pale:rgba(91,191,160,0.08);--jade-border:rgba(91,191,160,0.22);
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;--gold-pale:rgba(201,168,76,0.08);
+  --bg:#faf8f5;--card:#ffffff;--surface:#f2f5f2;
+  --ink:#1a1a18;--sub:rgba(60,75,65,0.72);--muted:rgba(80,95,85,0.45);
+  --radius:14px;--shadow:0 2px 12px rgba(0,0,0,0.06);
+  /* five-element accents */
+  --fire:#e08a5a;--water:#5a86e0;--wood:#5bbf7a;--metal:#c9a84c;--earth:#c79a5a;
+}
+html{background:var(--bg);-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;color:var(--ink);max-width:440px;margin:0 auto;
+  min-height:100dvh;overflow-x:hidden;
+  padding:0 0 calc(96px + env(safe-area-inset-bottom,0px));
+  padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(91,191,160,0.09) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 30% at 80% 100%,rgba(201,168,76,0.05) 0%,transparent 50%)}
+.z1{position:relative;z-index:1}
+.serif{font-family:'Playfair Display',serif}
+.wrap{padding:0 20px}
+.divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--jade-border),transparent);margin:6px 0}
+a{color:inherit}
+
+/* Jade orb mark */
+.clasp{position:relative;border-radius:50%;width:82px;height:82px;margin:0 auto 16px;
+  background:radial-gradient(circle at 34% 27%,rgba(255,255,255,0.92) 0%,rgba(255,255,255,0.35) 7%,transparent 18%),
+    radial-gradient(circle at 70% 68%,var(--jade-deep) 0%,transparent 38%),
+    radial-gradient(circle at 20% 72%,rgba(0,180,80,0.22) 0%,transparent 35%),
+    radial-gradient(ellipse at 42% 38%,var(--jade-light) 0%,var(--jade) 22%,var(--jade) 52%,var(--jade-deep) 100%);
+  box-shadow:0 6px 22px rgba(91,191,160,0.32)}
+.clasp::after{content:'';position:absolute;border-radius:50%;background:var(--bg);
+  width:20px;height:20px;top:50%;left:50%;transform:translate(-50%,-50%);
+  box-shadow:inset 0 2px 6px rgba(0,0,0,0.08)}
+
+/* Hero */
+.hero{text-align:center;padding:40px 20px 26px}
+.logo{font-family:'Playfair Display',serif;font-size:15px;letter-spacing:0.42em;color:var(--jade-deep);
+  text-transform:uppercase;margin-bottom:16px;padding-left:0.42em}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--jade-pale);
+  border:1px solid var(--jade-border);border-radius:20px;padding:6px 14px;
+  font-size:10px;color:var(--jade-deep);letter-spacing:.1em;text-transform:uppercase;margin-bottom:18px}
+.hero h1{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;line-height:1.28;margin-bottom:14px}
+.hero h1 em{font-style:italic;color:var(--jade-deep)}
+.hero-sub{font-size:14px;color:var(--sub);line-height:1.75;margin-bottom:24px}
+.hero-sub b{color:var(--ink);font-weight:600}
+.cta{display:block;max-width:320px;margin:0 auto;padding:16px 18px;text-align:center;text-decoration:none;
+  background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);border-radius:30px;color:#3a2e0e;
+  font-size:16px;font-weight:700;box-shadow:0 6px 20px rgba(201,168,76,0.36);transition:.2s;min-height:44px}
+.cta:hover{transform:translateY(-2px);box-shadow:0 9px 26px rgba(201,168,76,0.46)}
+.cta small{display:block;font-size:11px;font-weight:400;opacity:.9;margin-top:4px}
+.cta-note{font-size:11px;color:var(--muted);margin-top:12px;letter-spacing:.02em}
+
+.ai-note{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--jade-pale);
+  border:1px solid var(--jade-border);border-radius:12px;padding:11px 14px;margin:8px 20px 0;
+  font-size:11.5px;color:var(--jade-deep);line-height:1.5;text-align:center}
+
+/* Section shells */
+.section{padding:32px 20px}
+.sec-cap{text-align:center;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--jade);font-weight:600;margin-bottom:8px}
+.sec-title{font-family:'Playfair Display',serif;text-align:center;font-size:22px;font-weight:700;margin-bottom:6px;line-height:1.3}
+.sec-sub{text-align:center;font-size:13px;color:var(--sub);line-height:1.65;margin:0 auto 20px;max-width:340px}
+
+/* Flow steps (numbered) */
+.steps{display:flex;flex-direction:column;gap:12px;margin-top:18px}
+.step{display:flex;align-items:flex-start;gap:14px;background:var(--card);border:1px solid var(--jade-border);
+  border-radius:var(--radius);padding:15px 16px;box-shadow:var(--shadow)}
+.step-num{flex-shrink:0;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:var(--jade-pale);color:var(--jade-deep);font-family:'Playfair Display',serif;font-size:16px;font-weight:700}
+.step-body h3{font-size:14px;font-weight:600;margin-bottom:3px}
+.step-body p{font-size:12.5px;color:var(--sub);line-height:1.6}
+
+/* ---- Live demo device ---- */
+.demo-label{text-align:center;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:4px 0 14px}
+.phone{background:var(--card);border:1px solid var(--jade-border);border-radius:22px;box-shadow:0 10px 34px rgba(22,28,24,0.10);overflow:hidden;margin:0 auto;max-width:360px}
+.phone-bar{display:flex;align-items:center;gap:7px;padding:11px 15px;background:var(--surface);border-bottom:1px solid var(--jade-border)}
+.dot{width:8px;height:8px;border-radius:50%}
+.phone-bar .u{margin-left:auto;font-size:10.5px;color:var(--muted);letter-spacing:.08em}
+.screen{padding:16px 15px}
+
+/* Upload card */
+.uploader{border:2px dashed var(--jade-border);border-radius:var(--radius);background:var(--jade-pale);
+  padding:26px 16px;text-align:center;margin-bottom:12px}
+.uploader .big{font-size:30px;margin-bottom:8px}
+.uploader h4{font-size:14px;font-weight:600;margin-bottom:4px}
+.uploader p{font-size:11.5px;color:var(--sub);line-height:1.5}
+.chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.chip{font-size:11px;color:var(--jade-deep);background:var(--card);border:1px solid var(--jade-border);border-radius:16px;padding:5px 11px}
+
+/* Room photo mock (CSS-drawn placeholder "room") */
+.room{position:relative;border-radius:12px;overflow:hidden;height:180px;
+  background:linear-gradient(160deg,#efe9e0 0%,#e4dccf 55%,#d8cdb9 100%)}
+.room::before{content:'';position:absolute;inset:0;
+  background:linear-gradient(180deg,transparent 60%,rgba(120,100,70,0.10) 100%)}
+.room .wall{position:absolute;top:0;left:0;right:0;height:62%;background:linear-gradient(180deg,#f2ece2,#e8e0d2)}
+.room .floor{position:absolute;bottom:0;left:0;right:0;height:38%;background:linear-gradient(180deg,#cdbfa4,#bda98a)}
+.room .sofa{position:absolute;bottom:16%;left:12%;width:48%;height:26%;border-radius:8px 8px 5px 5px;background:#b9a98f;box-shadow:0 3px 8px rgba(0,0,0,.12)}
+.room .win{position:absolute;top:12%;right:12%;width:26%;height:38%;border-radius:4px;background:linear-gradient(160deg,#cfe4e8,#aecdd6);border:3px solid #efe9e0}
+.room .tag{position:absolute;top:9px;left:9px;font-size:9.5px;letter-spacing:.06em;background:rgba(26,26,24,.55);color:#fff;padding:3px 8px;border-radius:12px}
+
+/* scanning overlay */
+.scan{position:absolute;inset:0;background:rgba(91,191,160,.10);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.spinner{width:30px;height:30px;border-radius:50%;border:3px solid var(--jade-border);border-top-color:var(--jade-deep);animation:spin 0.9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scan p{font-size:11.5px;color:var(--jade-deep);font-weight:600}
+
+/* compass step */
+.compass{width:96px;height:96px;border-radius:50%;margin:6px auto 10px;position:relative;
+  background:radial-gradient(circle at 50% 50%,#fff 0%,#f2f5f2 70%);border:2px solid var(--jade-border);
+  box-shadow:var(--shadow)}
+.compass .needle{position:absolute;top:12px;left:50%;width:3px;height:36px;background:linear-gradient(180deg,var(--fire),#c94a4a);transform-origin:bottom center;transform:translateX(-50%) rotate(28deg);border-radius:2px}
+.compass .n{position:absolute;top:5px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;color:var(--jade-deep)}
+.compass .cap{position:absolute;bottom:-2px;left:50%;transform:translate(-50%,100%);font-size:11px;color:var(--sub);white-space:nowrap}
+
+/* analysis cards */
+.acard{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);padding:14px 14px;margin-bottom:11px;box-shadow:var(--shadow);position:relative}
+.acard .dir{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:#fff;border-radius:12px;padding:4px 10px;margin-bottom:9px}
+.d-wood{background:var(--wood)}.d-water{background:var(--water)}.d-fire{background:var(--fire)}.d-metal{background:var(--metal)}.d-earth{background:var(--earth)}
+.acard h4{font-size:14px;font-weight:600;margin-bottom:5px}
+.acard .now{font-size:12px;color:var(--sub);line-height:1.55;margin-bottom:8px}
+.acard .why{font-size:12px;color:var(--ink);line-height:1.55;background:var(--jade-pale);border-left:3px solid var(--jade);border-radius:0 8px 8px 0;padding:8px 10px;margin-bottom:8px}
+.acard .why b{color:var(--jade-deep)}
+.acard .free{font-size:11.5px;color:var(--gold-deep);background:var(--gold-pale);border-radius:8px;padding:7px 10px;line-height:1.5}
+.acard .free b{font-weight:600}
+/* locked card */
+.acard.locked{filter:none}
+.locked-veil{background:linear-gradient(180deg,rgba(255,255,255,.4),var(--card));border:1px dashed var(--jade-border);border-radius:var(--radius);padding:18px 14px;text-align:center;margin-bottom:11px}
+.locked-veil .lk{font-size:20px;margin-bottom:6px}
+.locked-veil h4{font-size:13.5px;font-weight:600;margin-bottom:3px}
+.locked-veil p{font-size:11.5px;color:var(--muted);margin-bottom:11px}
+
+/* visualization before/after */
+.viz{position:relative;border-radius:12px;overflow:hidden;height:200px}
+.viz .synth-tag{position:absolute;bottom:9px;left:9px;right:9px;font-size:9.5px;letter-spacing:.03em;background:rgba(26,26,24,.62);color:#fff;padding:5px 9px;border-radius:10px;text-align:center;line-height:1.4}
+/* placed object glow markers */
+.marker{position:absolute;border-radius:50%;box-shadow:0 0 0 3px rgba(255,255,255,.5)}
+.m-lamp{bottom:30%;left:66%;width:34px;height:34px;background:radial-gradient(circle,rgba(224,138,90,.9),rgba(224,138,90,.35));animation:glow 2s ease-in-out infinite}
+.m-plant{bottom:22%;left:20%;width:26px;height:26px;background:radial-gradient(circle,rgba(91,191,122,.9),rgba(91,191,122,.35))}
+@keyframes glow{0%,100%{box-shadow:0 0 0 3px rgba(255,255,255,.5),0 0 12px rgba(224,138,90,.5)}50%{box-shadow:0 0 0 3px rgba(255,255,255,.7),0 0 22px rgba(224,138,90,.85)}}
+.viz .placed-lamp{position:absolute;bottom:22%;left:63%;width:16px;height:40px;background:linear-gradient(180deg,#f2c98a,#d8a95a);border-radius:8px 8px 3px 3px;box-shadow:0 0 16px rgba(224,138,90,.55)}
+.viz .placed-plant{position:absolute;bottom:18%;left:17%;width:26px;height:34px;background:radial-gradient(ellipse at 50% 30%,#6fbf82,#3d8e5a);border-radius:50% 50% 6px 6px}
+.viz-switch{display:flex;gap:8px;margin-top:10px}
+.viz-switch button{flex:1;font-size:11.5px;font-weight:600;padding:8px;border-radius:9px;border:1px solid var(--jade-border);background:var(--card);color:var(--sub)}
+.viz-switch button.on{background:var(--jade);color:#fff;border-color:var(--jade)}
+
+/* product buy card */
+.pcard{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);padding:12px;margin-bottom:10px;box-shadow:var(--shadow)}
+.pthumb{width:58px;height:58px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px;background:var(--surface);border:1px solid var(--jade-border)}
+.pinfo{flex:1;min-width:0}
+.pinfo h5{font-size:13px;font-weight:600;margin-bottom:2px}
+.pinfo .rea{font-size:11px;color:var(--jade-deep);line-height:1.4;margin-bottom:3px}
+.pinfo .prow{display:flex;align-items:center;gap:8px}
+.pinfo .price{font-size:13px;font-weight:700;color:var(--ink)}
+.pinfo .stars{font-size:10.5px;color:var(--gold-deep)}
+.pbuy{flex-shrink:0;text-decoration:none;background:linear-gradient(135deg,var(--jade),var(--jade-deep));color:#fff;font-size:12px;font-weight:600;padding:9px 12px;border-radius:20px;white-space:nowrap;min-height:38px;display:flex;align-items:center}
+.aff-note{font-size:10.5px;color:var(--muted);text-align:center;margin:2px 0 4px;line-height:1.5}
+.free-alt{font-size:11.5px;color:var(--gold-deep);background:var(--gold-pale);border-radius:8px;padding:8px 11px;line-height:1.5;margin-top:2px}
+.free-alt b{font-weight:600}
+
+/* pricing */
+.plan{background:var(--card);border:1px solid var(--jade-border);border-radius:16px;padding:20px 18px;margin-bottom:13px;box-shadow:var(--shadow)}
+.plan.featured{border-color:var(--jade);box-shadow:0 0 0 1px var(--jade),0 6px 24px rgba(91,191,160,0.14)}
+.plan-tag{display:inline-block;background:var(--jade);color:#fff;font-size:10px;font-weight:600;border-radius:6px;padding:3px 9px;margin-bottom:9px;letter-spacing:.08em;text-transform:uppercase}
+.plan-name{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;margin-bottom:4px}
+.plan-price{font-size:28px;font-weight:700;color:var(--jade-deep);margin-bottom:2px}
+.plan-price span{font-size:13px;font-weight:400;color:var(--sub)}
+.plan-note{font-size:12px;color:var(--muted);margin-bottom:11px}
+.plan ul{list-style:none;font-size:12.5px;color:var(--sub);line-height:1.95}
+.plan ul li::before{content:"✓ ";color:var(--jade);font-weight:700}
+.plan-btn{display:block;text-align:center;text-decoration:none;width:100%;margin-top:14px;padding:13px;border-radius:12px;
+  background:linear-gradient(135deg,var(--jade),var(--jade-deep));color:#fff;font-size:14px;font-weight:600;transition:.2s;min-height:44px}
+.plan-btn.ghost{background:transparent;color:var(--jade-deep);border:1px solid var(--jade-border)}
+.plan-btn:hover{transform:translateY(-1px)}
+
+footer{padding:26px 20px calc(28px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.85}
+footer a{color:var(--jade-deep);text-decoration:none}
+footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:var(--jade-deep);letter-spacing:.06em;margin-bottom:10px}
+
+/* sticky */
+#sticky{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(110%);
+  width:100%;max-width:440px;background:linear-gradient(135deg,var(--jade),var(--jade-deep));
+  padding:14px 18px calc(14px + env(safe-area-inset-bottom,0px));
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  box-shadow:0 -4px 20px rgba(22,28,24,0.15);z-index:99;transition:transform .3s}
+#sticky.show{transform:translateX(-50%) translateY(0)}
+.sticky-text{font-size:13px;font-weight:600;color:#fff;line-height:1.3}
+.sticky-btn{background:#fff;color:var(--jade-deep);padding:11px 18px;border-radius:22px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;min-height:44px;display:flex;align-items:center}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero z1">
+  <div class="logo">Runae</div>
+  <div class="clasp"></div>
+  <div class="badge">✦ Feng Shui · for your real home</div>
+  <h1 class="serif">See lucky objects placed<br><em>in your actual room</em></h1>
+  <p class="hero-sub">Snap a photo of any room. Runae reads its <b>feng shui</b>, tells you what to place and <b>why</b> — tuned to your birth chart — then shows the objects <b>placed right in your room</b>. Then shop the look.</p>
+  <a class="cta" href="#demo">Scan my room free →<small>One photo. See your first fix in seconds.</small></a>
+  <div class="cta-note">Free room scan · Full home plan from $19 · No card to start</div>
+</header>
+
+<div class="ai-note z1">🤖 AI-powered · readings and room visuals are AI-generated. For cultural inspiration &amp; reflection — not guaranteed outcomes.</div>
+
+<!-- HOW IT WORKS -->
+<section class="section z1">
+  <div class="sec-cap">How it works</div>
+  <h2 class="sec-title serif">Photo in. Placed in your room. Shop.</h2>
+  <p class="sec-sub">No feng shui knowledge needed. Start with one photo.</p>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num serif">1</div>
+      <div class="step-body"><h3>Photograph your room</h3><p>One photo of the room you care about most. AI reads the layout, colors, materials, and clutter.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num serif">2</div>
+      <div class="step-body"><h3>Point your compass</h3><p>Stand in the doorway, face out. 15 seconds sets your room's direction — the one detail that makes it accurate.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num serif">3</div>
+      <div class="step-body"><h3>Add your chart <span style="color:var(--muted);font-weight:400">(optional)</span></h3><p>Reuse your Runae birth chart so advice is tuned to <b>your</b> element balance — not generic feng shui.</p></div>
+    </div>
+    <div class="step">
+      <div class="step-num serif">4</div>
+      <div class="step-body"><h3>See it placed &amp; shop</h3><p>AI drops the recommended objects into your real photo. Love it? One tap to buy — or do the free version yourself.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap z1"><div class="divider"></div></div>
+
+<!-- LIVE DEMO -->
+<section class="section z1" id="demo">
+  <div class="sec-cap">The experience</div>
+  <h2 class="sec-title serif">Walk through a real scan</h2>
+  <p class="demo-label">↓ Interactive preview — tap the toggles</p>
+
+  <!-- Screen A: upload + scanning -->
+  <div class="phone">
+    <div class="phone-bar"><span class="dot" style="background:#e08a5a"></span><span class="dot" style="background:#c9a84c"></span><span class="dot" style="background:#5bbfa0"></span><span class="u">runae.app · Step 1 of 4</span></div>
+    <div class="screen">
+      <div class="uploader">
+        <div class="big">📷</div>
+        <h4>Add a photo of your room</h4>
+        <p>Living room, bedroom, or entryway — whichever matters most. Just one to start.</p>
+        <div class="chips"><span class="chip">Living room</span><span class="chip">Bedroom</span><span class="chip">Entryway</span></div>
+      </div>
+      <div class="room">
+        <div class="wall"></div><div class="floor"></div>
+        <div class="sofa"></div><div class="win"></div>
+        <div class="tag">your_living_room.jpg</div>
+        <div class="scan"><div class="spinner"></div><p>AI is reading your space…</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:20px"></div>
+
+  <!-- Screen B: compass -->
+  <div class="phone">
+    <div class="phone-bar"><span class="dot" style="background:#e08a5a"></span><span class="dot" style="background:#c9a84c"></span><span class="dot" style="background:#5bbfa0"></span><span class="u">runae.app · Step 2 of 4</span></div>
+    <div class="screen" style="text-align:center">
+      <div class="compass"><span class="n">N</span><div class="needle"></div></div>
+      <h4 style="font-size:14px;font-weight:600;margin-bottom:4px">Stand in the doorway, face out</h4>
+      <p style="font-size:12px;color:var(--sub);line-height:1.55;margin-bottom:10px">This sets your room's <b style="color:var(--ink)">sitting direction</b> — the one detail feng shui hinges on.</p>
+      <div class="chips" style="justify-content:center"><span class="chip">▶ 15-sec demo: how to hold your phone</span></div>
+      <p style="font-size:11px;color:var(--muted);margin-top:9px">Can't get a clear reading? <b style="color:var(--jade-deep)">Use my address instead →</b></p>
+    </div>
+  </div>
+
+  <div style="height:20px"></div>
+
+  <!-- Screen C: analysis cards -->
+  <div class="phone">
+    <div class="phone-bar"><span class="dot" style="background:#e08a5a"></span><span class="dot" style="background:#c9a84c"></span><span class="dot" style="background:#5bbfa0"></span><span class="u">runae.app · Your reading</span></div>
+    <div class="screen">
+      <div style="font-size:11px;color:var(--jade-deep);background:var(--jade-pale);border:1px solid var(--jade-border);border-radius:10px;padding:9px 11px;margin-bottom:12px;line-height:1.5">
+        ✦ <b>Your chart favors Fire &amp; Wood.</b> Your living room reads a little cold — here's how to warm it, tuned to you.
+      </div>
+
+      <!-- free card 1 -->
+      <div class="acard">
+        <span class="dir d-fire">◆ Southeast · warm corner</span>
+        <h4>Add warmth to the cold corner</h4>
+        <p class="now">Vision spotted: cool light, bare wall, empty console by the window.</p>
+        <div class="why"><b>Why (your chart):</b> your Day Master is a little cold and <b>favors Fire</b> — a warm-light lamp and a warm-toned artwork lift the room's energy toward your element.</div>
+        <div class="free"><b>Free fix:</b> swap the cool bulb for a warm one and angle a lamp into that corner. No purchase needed.</div>
+      </div>
+
+      <!-- free card 2 -->
+      <div class="acard">
+        <span class="dir d-wood">◆ East · growth zone</span>
+        <h4>Bring living green to the east</h4>
+        <p class="now">Vision spotted: hard surfaces, no plants, flat energy on the east side.</p>
+        <div class="why"><b>Why (your chart):</b> you also <b>favor Wood</b> — real greenery on the east feeds growth energy that suits you.</div>
+        <div class="free"><b>Free fix:</b> move an existing plant east, or add one easy-care plant.</div>
+      </div>
+
+      <!-- locked -->
+      <div class="locked-veil">
+        <div class="lk">🔒</div>
+        <h4>4 more rooms mapped &amp; ready</h4>
+        <p>Bedroom, entryway, kitchen &amp; study — full placement plan + every "why".</p>
+        <a class="pbuy" style="margin:0 auto;display:inline-flex" href="#pricing">Unlock full home plan →</a>
+      </div>
+    </div>
+  </div>
+
+  <div style="height:20px"></div>
+
+  <!-- Screen D: VISUALIZATION (killer feature) -->
+  <div class="phone">
+    <div class="phone-bar"><span class="dot" style="background:#e08a5a"></span><span class="dot" style="background:#c9a84c"></span><span class="dot" style="background:#5bbfa0"></span><span class="u">runae.app · See it in your room</span></div>
+    <div class="screen">
+      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--jade);font-weight:600;text-align:center;margin-bottom:10px">✦ Killer feature · placed in your photo</div>
+
+      <div class="viz" id="vizStage">
+        <div class="room" style="height:200px;border-radius:12px">
+          <div class="wall"></div><div class="floor"></div>
+          <div class="sofa"></div><div class="win"></div>
+          <!-- placed objects (shown in "after") -->
+          <div class="placed-lamp" id="objLamp"></div>
+          <div class="placed-plant" id="objPlant"></div>
+          <!-- glow markers -->
+          <div class="marker m-lamp" id="mkLamp"></div>
+          <div class="marker m-plant" id="mkPlant"></div>
+        </div>
+        <div class="synth-tag">🤖 AI-composited preview — placement illustration. Actual product may differ. For inspiration only.</div>
+      </div>
+
+      <div class="viz-switch">
+        <button id="btnBefore" onclick="setViz('before')">Your room</button>
+        <button id="btnAfter" class="on" onclick="setViz('after')">Placed for you ✦</button>
+      </div>
+      <p style="font-size:10.5px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.5">Premium visual. Free plan shows a blurred preview + text; unlock for the clear render.</p>
+    </div>
+  </div>
+
+  <div style="height:20px"></div>
+
+  <!-- Screen E: shop the objects -->
+  <div class="phone">
+    <div class="phone-bar"><span class="dot" style="background:#e08a5a"></span><span class="dot" style="background:#c9a84c"></span><span class="dot" style="background:#5bbfa0"></span><span class="u">runae.app · Shop the look</span></div>
+    <div class="screen">
+      <div style="font-size:12px;color:var(--sub);line-height:1.5;margin-bottom:12px">Each object is picked for <b style="color:var(--ink)">your chart + this room</b>. Or skip it — every fix has a free version.</div>
+
+      <div class="pcard">
+        <div class="pthumb">💡</div>
+        <div class="pinfo">
+          <h5>Warm-light wood floor lamp</h5>
+          <div class="rea">◆ Fire · for your SE warm corner</div>
+          <div class="prow"><span class="price">$46</span><span class="stars">★ 4.6 (2.1k)</span></div>
+        </div>
+        <a class="pbuy" href="#">Buy →</a>
+      </div>
+
+      <div class="pcard">
+        <div class="pthumb">🪴</div>
+        <div class="pinfo">
+          <h5>Easy-care plant set (×2)</h5>
+          <div class="rea">◆ Wood · for your east growth zone</div>
+          <div class="prow"><span class="price">$34</span><span class="stars">★ 4.7 (5.8k)</span></div>
+        </div>
+        <a class="pbuy" href="#">Buy →</a>
+      </div>
+
+      <div class="pcard">
+        <div class="pthumb">🖼️</div>
+        <div class="pinfo">
+          <h5>Warm-toned abstract canvas</h5>
+          <div class="rea">◆ Fire · bare wall by the window</div>
+          <div class="prow"><span class="price">$58</span><span class="stars">★ 4.5 (940)</span></div>
+        </div>
+        <a class="pbuy" href="#">Buy →</a>
+      </div>
+
+      <div class="aff-note">We may earn a commission from these links. Hand-picked listings only — no cheap plastic.</div>
+      <div class="free-alt"><b>Don't want to buy?</b> Move a warm lamp into the SE corner and shift a plant east. Same feng shui, $0.</div>
+    </div>
+  </div>
+</section>
+
+<div class="wrap z1"><div class="divider"></div></div>
+
+<!-- ELEMENT MAPPING -->
+<section class="section z1">
+  <div class="sec-cap">Why it's personal</div>
+  <h2 class="sec-title serif">Tuned to your five elements</h2>
+  <p class="sec-sub">Your birth chart says which element you need more of. That drives the colors, materials &amp; objects we suggest.</p>
+  <div class="steps">
+    <div class="step"><div class="step-num serif" style="background:rgba(224,138,90,.14);color:var(--fire)">火</div><div class="step-body"><h3>Need Fire</h3><p>Warm lamps, reds &amp; ambers, wood, uplighting — placed south / warm corners.</p></div></div>
+    <div class="step"><div class="step-num serif" style="background:rgba(90,134,224,.14);color:var(--water)">水</div><div class="step-body"><h3>Need Water</h3><p>Mirrors, glass, flowing water features, blue-black tones — north / wealth spot.</p></div></div>
+    <div class="step"><div class="step-num serif" style="background:rgba(91,191,122,.14);color:var(--wood)">木</div><div class="step-body"><h3>Need Wood</h3><p>Living plants, greens, rattan &amp; wood, landscape art — east / southeast.</p></div></div>
+    <div class="step"><div class="step-num serif" style="background:rgba(201,168,76,.16);color:var(--metal)">金</div><div class="step-body"><h3>Need Metal</h3><p>Brass pieces, white crystals, round metal decor, whites — west / northwest.</p></div></div>
+  </div>
+</section>
+
+<div class="wrap z1"><div class="divider"></div></div>
+
+<!-- PRICING -->
+<section class="section z1" id="pricing">
+  <div class="sec-cap">Pricing</div>
+  <h2 class="sec-title serif">Scan free, unlock when ready</h2>
+  <p class="sec-sub">Your first room fix is always free.</p>
+
+  <div class="plan">
+    <div class="plan-name serif">Free room scan</div>
+    <div class="plan-price">$0</div>
+    <div class="plan-note">One photo · no card</div>
+    <ul>
+      <li>AI reads one room's feng shui</li>
+      <li>1–2 placement fixes + the "why"</li>
+      <li>Free do-it-yourself version of each fix</li>
+    </ul>
+    <a class="plan-btn ghost" href="#demo">Scan my room</a>
+  </div>
+
+  <div class="plan featured">
+    <div class="plan-tag">Most popular</div>
+    <div class="plan-name serif">Full home plan</div>
+    <div class="plan-price">$19 <span>one-time</span></div>
+    <div class="plan-note">Every room · yours forever</div>
+    <ul>
+      <li>Every room mapped, room-by-room</li>
+      <li>All placement advice + your chart's "why"</li>
+      <li>Complete shoppable object list</li>
+      <li>Free alternative for every fix</li>
+    </ul>
+    <a class="plan-btn" href="#demo">Get my home plan →</a>
+  </div>
+
+  <div class="plan">
+    <div class="plan-name serif">Runae Home membership</div>
+    <div class="plan-price">$99 <span>/ year</span></div>
+    <div class="plan-note">Billed yearly · cancel anytime</div>
+    <ul>
+      <li><b>Room visualizer — clear renders</b></li>
+      <li>Seasonal &amp; annual re-scans as your luck cycle shifts</li>
+      <li>Member discounts on curated objects</li>
+    </ul>
+    <a class="plan-btn ghost" href="#demo">See membership</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="z1">
+  <div class="fbrand">Runae</div>
+  <div style="margin-bottom:10px">🤖 AI-generated readings &amp; room visuals · a traditional feng shui craft for reflection &amp; inspiration.<br>Not a guarantee of luck, wealth, or health. Not medical, legal, or financial advice.</div>
+  <div>support@runae.app · © 2026 Runae · <a href="privacy.html">Privacy</a> · <a href="legal-us.html">Terms</a></div>
+</footer>
+
+<!-- STICKY -->
+<div id="sticky">
+  <span class="sticky-text">✦ Scan your room free</span>
+  <a class="sticky-btn" href="#demo">Start →</a>
+</div>
+
+<script>
+// visualization toggle
+function setViz(mode){
+  var after = mode==='after';
+  document.getElementById('objLamp').style.opacity = after?1:0;
+  document.getElementById('objPlant').style.opacity = after?1:0;
+  document.getElementById('mkLamp').style.opacity = after?1:0;
+  document.getElementById('mkPlant').style.opacity = after?1:0;
+  document.getElementById('btnAfter').classList.toggle('on', after);
+  document.getElementById('btnBefore').classList.toggle('on', !after);
+}
+// init transitions
+['objLamp','objPlant','mkLamp','mkPlant'].forEach(function(id){
+  var el=document.getElementById(id); if(el){el.style.transition='opacity .35s ease';}
+});
+// sticky show/hide
+window.addEventListener('scroll',function(){
+  var s=document.getElementById('sticky');
+  var h=document.body.scrollHeight-window.innerHeight;
+  if(window.scrollY>360&&window.scrollY<h-140)s.classList.add('show');else s.classList.remove('show');
+});
+</script>
+</body>
+</html>
