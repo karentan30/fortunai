@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5bbfa0">
+<title>Zodiac × MBTI × Ten Gods · Runae — your three-layer identity card</title>
+<meta name="description" content="You already know your zodiac and your MBTI. Add your Eastern Ten Gods layer — the deep third layer of who you are — and see how all three line up. AI-powered, from a precise Eastern engine. For self-reflection.">
+<meta property="og:title" content="Your zodiac + MBTI is basic — here's your third layer · Runae">
+<meta property="og:description" content="Zodiac × MBTI × Ten Gods. Three maps of you, triangulated into one identity card. Screenshot it. Send it to your group chat.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://runae.app/identity-triad">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Zodiac × MBTI × Ten Gods — your three-layer identity · Runae">
+<meta name="twitter:description" content="You know your zodiac and MBTI. Meet your third, deepest layer.">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --jade:#5bbfa0;--jade-deep:#3d9e82;--jade-light:#8dd9bf;
+  --jade-pale:rgba(91,191,160,0.08);--jade-border:rgba(91,191,160,0.22);
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;--gold-pale:rgba(201,168,76,0.08);
+  --bg:#faf8f5;--card:#ffffff;--surface:#f2f5f2;
+  --ink:#1a1a18;--sub:rgba(60,75,65,0.72);--muted:rgba(80,95,85,0.45);
+  --radius:14px;--shadow:0 2px 12px rgba(0,0,0,0.06);
+}
+html{background:var(--bg);-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;color:var(--ink);max-width:440px;margin:0 auto;
+  min-height:100dvh;overflow-x:hidden;padding:0 0 60px;
+  padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(91,191,160,0.10) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 30% at 80% 100%,rgba(201,168,76,0.05) 0%,transparent 50%)}
+.z1{position:relative;z-index:1}
+.serif{font-family:'Playfair Display',serif}
+.wrap{padding:0 20px}
+a{color:inherit}
+
+/* Hero */
+.hero{text-align:center;padding:40px 20px 22px}
+.logo{font-family:'Playfair Display',serif;font-size:14px;letter-spacing:0.42em;color:var(--jade-deep);
+  text-transform:uppercase;margin-bottom:16px;padding-left:0.42em}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--jade-pale);
+  border:1px solid var(--jade-border);border-radius:20px;padding:6px 14px;
+  font-size:10px;color:var(--jade-deep);letter-spacing:.1em;text-transform:uppercase;margin-bottom:18px}
+.hero h1{font-family:'Playfair Display',serif;font-size:27px;font-weight:700;line-height:1.3;margin-bottom:12px}
+.hero h1 em{font-style:italic;color:var(--jade-deep)}
+.hero-sub{font-size:14px;color:var(--sub);line-height:1.7;margin-bottom:6px}
+
+/* Lang switch */
+.lang{display:flex;justify-content:center;gap:6px;margin:0 0 8px}
+.lang button{background:none;border:1px solid var(--jade-border);border-radius:16px;padding:4px 12px;
+  font-size:11px;color:var(--sub);cursor:pointer;font-family:inherit}
+.lang button.on{background:var(--jade);border-color:var(--jade);color:#fff;font-weight:600}
+
+/* Form card */
+.formcard{background:var(--card);border:1px solid var(--jade-border);border-radius:16px;
+  padding:22px 18px;box-shadow:var(--shadow);margin:0 20px}
+.formcard h2{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;margin-bottom:4px;text-align:center}
+.formcard p.hint{font-size:12px;color:var(--muted);text-align:center;margin-bottom:16px}
+.grouplabel{font-size:10.5px;color:var(--jade-deep);letter-spacing:.08em;text-transform:uppercase;font-weight:600;margin:2px 0 8px}
+.frow{display:flex;gap:8px;margin-bottom:12px}
+.field{flex:1;display:flex;flex-direction:column}
+.field label{font-size:10.5px;color:var(--sub);letter-spacing:.04em;margin-bottom:4px;text-transform:uppercase}
+.field input,.field select{width:100%;padding:11px 10px;border:1px solid var(--jade-border);border-radius:10px;
+  font-size:15px;font-family:inherit;color:var(--ink);background:#fff;-webkit-appearance:none;appearance:none}
+.field select{background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0l5 6 5-6z' fill='%235bbfa0'/></svg>");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:28px}
+.field input:focus,.field select:focus{outline:none;border-color:var(--jade);box-shadow:0 0 0 3px var(--jade-pale)}
+.gender-row{display:flex;gap:8px;margin-bottom:16px}
+.gbtn{flex:1;padding:11px;border:1px solid var(--jade-border);border-radius:10px;background:#fff;
+  font-size:14px;font-family:inherit;color:var(--sub);cursor:pointer}
+.gbtn.on{background:var(--jade-pale);border-color:var(--jade);color:var(--jade-deep);font-weight:600}
+/* MBTI grid */
+.mbti-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:6px}
+.mbtn{padding:10px 2px;border:1px solid var(--jade-border);border-radius:9px;background:#fff;
+  font-size:12.5px;font-weight:600;letter-spacing:.03em;font-family:inherit;color:var(--sub);cursor:pointer;transition:.15s}
+.mbtn.on{background:var(--jade);border-color:var(--jade);color:#fff;box-shadow:0 3px 10px rgba(91,191,160,0.28)}
+.mbti-skip{text-align:center;font-size:11px;color:var(--muted);margin:6px 0 16px}
+.mbti-skip a{color:var(--jade-deep);text-decoration:underline;cursor:pointer}
+.hr{height:1px;background:linear-gradient(90deg,transparent,var(--jade-border),transparent);margin:16px 0}
+.cta{display:block;width:100%;padding:15px 18px;text-align:center;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);border-radius:26px;color:#3a2e0e;
+  font-size:16px;font-weight:700;font-family:inherit;box-shadow:0 6px 20px rgba(201,168,76,0.36);transition:.2s}
+.cta:hover{transform:translateY(-2px)}
+.cta:disabled{opacity:.6;cursor:default;transform:none}
+.err{color:#b04a3a;font-size:12.5px;text-align:center;margin-top:10px;min-height:14px}
+
+/* Loading */
+.loading{text-align:center;padding:40px 20px;display:none}
+.loading.on{display:block}
+.spinner{width:38px;height:38px;border:3px solid var(--jade-border);border-top-color:var(--jade);
+  border-radius:50%;margin:0 auto 14px;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{font-size:13px;color:var(--sub)}
+
+/* ── RESULT: the shareable three-layer identity card ── */
+.result{display:none;padding:8px 20px 0}
+.result.on{display:block}
+.tcard{position:relative;background:
+    radial-gradient(ellipse 90% 46% at 50% 0%,rgba(91,191,160,0.14) 0%,transparent 62%),
+    linear-gradient(160deg,#ffffff 0%,#f6faf8 100%);
+  border:1px solid var(--jade-border);border-radius:20px;padding:26px 20px 24px;
+  box-shadow:0 8px 30px rgba(91,191,160,0.16);text-align:center;overflow:hidden}
+.tcard::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,var(--jade-light),var(--jade),var(--gold))}
+.t-cap{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--jade);font-weight:600;margin-bottom:16px}
+/* three layers */
+.layers{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.layer{display:flex;align-items:center;gap:12px;text-align:left;border:1px solid var(--jade-border);
+  border-radius:13px;padding:12px 13px;background:rgba(255,255,255,0.72)}
+.layer.deep{border-color:var(--gold);background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(91,191,160,0.06));
+  box-shadow:0 4px 14px rgba(201,168,76,0.14)}
+.layer-badge{flex-shrink:0;width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;background:var(--jade-pale);color:var(--jade-deep)}
+.layer.deep .layer-badge{background:var(--gold-pale);color:var(--gold-deep);font-family:'Playfair Display',serif;font-size:17px;font-weight:700}
+.layer-body{flex:1;min-width:0}
+.layer-kicker{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:2px}
+.layer.deep .layer-kicker{color:var(--gold-deep)}
+.layer-name{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--ink);line-height:1.2}
+.layer-name em{font-style:italic;color:var(--jade-deep)}
+.layer.deep .layer-name em{color:var(--gold-deep)}
+.layer-meta{font-size:11px;color:var(--sub);line-height:1.4;margin-top:2px}
+.deep-flag{display:inline-block;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;background:var(--gold);color:#fff;
+  border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle;font-weight:700}
+/* rarity */
+.rarity{background:var(--jade-pale);border:1px solid var(--jade-border);border-radius:12px;padding:13px 15px;margin-bottom:12px}
+.rarity-stars{font-size:16px;letter-spacing:3px;margin-bottom:5px;color:var(--gold)}
+.rarity-label{font-family:'Playfair Display',serif;font-size:14.5px;font-weight:600;color:var(--jade-deep);margin-bottom:5px}
+.rarity-note{font-size:11.5px;color:var(--sub);line-height:1.55}
+.t-chart{font-size:10.5px;color:var(--muted);letter-spacing:.05em;margin-top:2px}
+.card-brand{margin-top:14px;font-family:'Playfair Display',serif;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--jade-deep);opacity:.75}
+
+/* Full reading (markdown) */
+.reading{background:var(--card);border:1px solid var(--jade-border);border-radius:14px;
+  padding:20px 18px;margin-top:16px;box-shadow:var(--shadow)}
+.reading h2{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--jade-deep);
+  margin:16px 0 6px;line-height:1.35}
+.reading h2:first-child{margin-top:0}
+.reading p{font-size:13.5px;color:var(--ink);line-height:1.72;margin-bottom:8px}
+.reading strong{color:var(--jade-deep)}
+
+/* CTA to full bazi (the hook) */
+.hookcta{margin-top:16px;background:linear-gradient(135deg,rgba(91,191,160,0.10),rgba(201,168,76,0.08));
+  border:1px solid var(--jade-border);border-radius:16px;padding:20px 18px;text-align:center}
+.hookcta h3{font-family:'Playfair Display',serif;font-size:16px;font-weight:600;color:var(--ink);margin-bottom:6px;line-height:1.35}
+.hookcta p{font-size:12.5px;color:var(--sub);line-height:1.6;margin-bottom:14px}
+.hookcta a{display:inline-block;padding:13px 24px;border-radius:24px;text-decoration:none;
+  background:linear-gradient(135deg,var(--jade),var(--jade-deep));color:#fff;font-size:14px;font-weight:700;
+  box-shadow:0 5px 16px rgba(91,191,160,0.3)}
+
+/* actions */
+.actions{display:flex;gap:10px;margin-top:16px}
+.actions button{flex:1;padding:13px;border-radius:24px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;border:none}
+.share-btn{background:var(--jade);color:#fff;box-shadow:0 4px 14px rgba(91,191,160,0.34)}
+.again-btn{background:#fff;border:1px solid var(--jade-border)!important;color:var(--jade-deep)}
+.share-hint{text-align:center;font-size:11.5px;color:var(--muted);margin-top:10px}
+
+/* disclaimer */
+.disclaimer{text-align:center;font-size:11px;color:var(--muted);line-height:1.7;padding:26px 24px 10px}
+.disclaimer b{color:var(--sub)}
+</style>
+</head>
+<body>
+
+<div class="hero z1">
+  <div class="logo">Runae</div>
+  <div class="badge">✦ Zodiac × MBTI × Ten Gods</div>
+  <h1 data-i18n="h1">Your zodiac &amp; MBTI are <em>basic</em>.<br>Here's your third layer.</h1>
+  <p class="hero-sub" data-i18n="sub">You already know two maps of yourself. Add your Eastern <b>Ten Gods</b> layer — the deep one — and watch all three line up.</p>
+</div>
+
+<div class="lang z1">
+  <button data-lang="en" class="on">EN</button>
+  <button data-lang="zh">中文</button>
+  <button data-lang="ko">한국어</button>
+</div>
+
+<!-- FORM -->
+<div class="formcard z1" id="formCard">
+  <h2 data-i18n="formTitle">Build your identity card</h2>
+  <p class="hint" data-i18n="formHint">Your birthday gives us layers 1 &amp; 3 · you pick layer 2</p>
+
+  <div class="grouplabel" data-i18n="gBirth">① + ③ · Your birthday</div>
+  <div class="frow">
+    <div class="field"><label data-i18n="lYear">Year</label><input id="y" type="number" inputmode="numeric" placeholder="1995" min="1900" max="2025"></div>
+    <div class="field"><label data-i18n="lMonth">Month</label><input id="m" type="number" inputmode="numeric" placeholder="8" min="1" max="12"></div>
+    <div class="field"><label data-i18n="lDay">Day</label><input id="d" type="number" inputmode="numeric" placeholder="30" min="1" max="31"></div>
+  </div>
+  <div class="frow">
+    <div class="field"><label data-i18n="lHour">Birth hour (0–23)</label>
+      <select id="h"><option value="" data-i18n="hourUnknown">Not sure</option></select>
+    </div>
+  </div>
+  <div class="gender-row">
+    <button class="gbtn on" data-g="female" data-i18n="gF">Female</button>
+    <button class="gbtn" data-g="male" data-i18n="gM">Male</button>
+  </div>
+
+  <div class="hr"></div>
+
+  <div class="grouplabel" data-i18n="gMbti">② · Your MBTI (you already know this)</div>
+  <div class="mbti-grid" id="mbtiGrid"></div>
+  <div class="mbti-skip"><span data-i18n="mbtiSkipTxt">Don't know your type?</span> <a id="mbtiSkip" data-i18n="mbtiSkipLink">Skip it →</a></div>
+
+  <button class="cta" id="goBtn" data-i18n="reveal">Reveal my three layers</button>
+  <div class="err" id="err"></div>
+</div>
+
+<!-- LOADING -->
+<div class="loading z1" id="loading">
+  <div class="spinner"></div>
+  <p data-i18n="loadingTxt">Triangulating your three layers…</p>
+</div>
+
+<!-- RESULT -->
+<div class="result z1" id="result">
+  <div class="tcard" id="tcard">
+    <div class="t-cap" data-i18n="whoYouAre">Who you really are</div>
+    <div class="layers">
+      <div class="layer">
+        <div class="layer-badge" id="zGlyph">✦</div>
+        <div class="layer-body">
+          <div class="layer-kicker" data-i18n="kZodiac">Layer 1 · Zodiac</div>
+          <div class="layer-name" id="zName">—</div>
+          <div class="layer-meta" id="zMeta">—</div>
+        </div>
+      </div>
+      <div class="layer" id="mbtiLayer">
+        <div class="layer-badge" id="mBadge">◇</div>
+        <div class="layer-body">
+          <div class="layer-kicker" data-i18n="kMbti">Layer 2 · MBTI</div>
+          <div class="layer-name" id="mName">—</div>
+          <div class="layer-meta" id="mMeta">—</div>
+        </div>
+      </div>
+      <div class="layer deep">
+        <div class="layer-badge" id="eBadge">☯</div>
+        <div class="layer-body">
+          <div class="layer-kicker" data-i18n="kEastern">Layer 3 · Ten Gods<span class="deep-flag" data-i18n="deepFlag">deep</span></div>
+          <div class="layer-name" id="eName">—</div>
+          <div class="layer-meta" id="eMeta">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="rarity">
+      <div class="rarity-stars" id="rarityStars">✦✦</div>
+      <div class="rarity-label" id="rarityLabel">—</div>
+      <div class="rarity-note" id="rarityNote">—</div>
+    </div>
+    <div class="t-chart" id="tChart"></div>
+    <div class="card-brand">Runae</div>
+  </div>
+
+  <div class="reading" id="reading"></div>
+
+  <div class="hookcta">
+    <h3 data-i18n="hookH">Layer 3 is only the surface of your chart.</h3>
+    <p data-i18n="hookP">Your Ten Gods archetype comes from a full Four Pillars chart — love, career, wealth, and the years ahead all live in there. See the whole thing.</p>
+    <a href="/pages/bazi-en.html" data-i18n="hookBtn">Read my full life report →</a>
+  </div>
+
+  <div class="actions">
+    <button class="share-btn" id="shareBtn" data-i18n="shareBtn">Screenshot &amp; share</button>
+    <button class="again-btn" id="againBtn" data-i18n="againBtn">Try another</button>
+  </div>
+  <p class="share-hint" data-i18n="shareHint">Send your card to the group chat — see whose third layer matches.</p>
+</div>
+
+<div class="disclaimer z1">
+  🤖 <b data-i18n="aiLabel">AI-generated</b> <span data-i18n="disc">· Layer 3 is computed from a precise Four Pillars engine (an ancient Eastern system); zodiac &amp; MBTI are popular self-reflection frameworks. All three are neutral lenses for fun and self-discovery — not a ranking, not fate, not a promise. For entertainment only — not medical, legal, or life-decision advice.</span>
+</div>
+
+<script>
+// ── i18n ──
+var I18N = {
+  en:{h1:"Your zodiac &amp; MBTI are <em>basic</em>.<br>Here's your third layer.",
+    sub:"You already know two maps of yourself. Add your Eastern <b>Ten Gods</b> layer — the deep one — and watch all three line up.",
+    formTitle:"Build your identity card",formHint:"Your birthday gives us layers 1 & 3 · you pick layer 2",
+    gBirth:"① + ③ · Your birthday",gMbti:"② · Your MBTI (you already know this)",
+    lYear:"Year",lMonth:"Month",lDay:"Day",lHour:"Birth hour (0–23)",hourUnknown:"Not sure",
+    gF:"Female",gM:"Male",mbtiSkipTxt:"Don't know your type?",mbtiSkipLink:"Skip it →",
+    reveal:"Reveal my three layers",loadingTxt:"Triangulating your three layers…",
+    whoYouAre:"Who you really are",kZodiac:"Layer 1 · Zodiac",kMbti:"Layer 2 · MBTI",kEastern:"Layer 3 · Ten Gods",deepFlag:"deep",
+    shareBtn:"Screenshot & share",againBtn:"Try another",
+    shareHint:"Send your card to the group chat — see whose third layer matches.",
+    hookH:"Layer 3 is only the surface of your chart.",
+    hookP:"Your Ten Gods archetype comes from a full Four Pillars chart — love, career, wealth, and the years ahead all live in there. See the whole thing.",
+    hookBtn:"Read my full life report →",aiLabel:"AI-generated",
+    disc:"· Layer 3 is computed from a precise Four Pillars engine (an ancient Eastern system); zodiac & MBTI are popular self-reflection frameworks. All three are neutral lenses for fun and self-discovery — not a ranking, not fate, not a promise. For entertainment only — not medical, legal, or life-decision advice.",
+    mbtiNone:"You skipped MBTI",mbtiNoneMeta:"Add it later for a sharper triangulation",
+    errDate:"Please enter a valid birth date.",errNet:"Rún is resting — please try again."},
+  zh:{h1:"星座和 MBTI 都太<em>基础</em>了。<br>这是你的第三层。",
+    sub:"你已经知道关于自己的两张地图。加上东方<b>十神</b>那层——最深的一层——看三家怎么对上。",
+    formTitle:"生成你的身份卡",formHint:"生日给出第 ① 和 ③ 层 · 第 ② 层你自己选",
+    gBirth:"① + ③ · 你的生日",gMbti:"② · 你的 MBTI（你早就知道）",
+    lYear:"年",lMonth:"月",lDay:"日",lHour:"出生时辰（0–23）",hourUnknown:"不确定",
+    gF:"女",gM:"男",mbtiSkipTxt:"不知道自己的类型？",mbtiSkipLink:"跳过 →",
+    reveal:"揭晓我的三层身份",loadingTxt:"正在三角合成你的三层身份…",
+    whoYouAre:"你到底是谁",kZodiac:"第 1 层 · 星座",kMbti:"第 2 层 · MBTI",kEastern:"第 3 层 · 十神",deepFlag:"深层",
+    shareBtn:"截图分享",againBtn:"换一个",
+    shareHint:"把卡片发到群里——看看谁的第三层跟你一样。",
+    hookH:"第三层只是你命盘的表面。",
+    hookP:"你的十神原型来自一张完整的四柱命盘——爱情、事业、财富、未来的流年都在里面。看看全貌。",
+    hookBtn:"读我的完整人生报告 →",aiLabel:"AI 生成",
+    disc:"· 第三层由精准四柱引擎排定（一套古老的东方体系）；星座和 MBTI 是流行的自我探索框架。三者都是中性的镜子，供娱乐与自我探索——不是排名、不是命定、也不是承诺。仅供娱乐——不构成医疗、法律或人生决策建议。",
+    mbtiNone:"你跳过了 MBTI",mbtiNoneMeta:"下次补上，三角会更精准",
+    errDate:"请输入有效的出生日期。",errNet:"Rún 暂时休息，请稍后再试。"},
+  ko:{h1:"별자리와 MBTI는 <em>기본</em>이에요.<br>당신의 세 번째 층을 보세요.",
+    sub:"자신에 대한 두 지도를 이미 알고 있죠. 동양의 <b>십신</b> 층 — 가장 깊은 층 — 을 더하고 셋이 어떻게 맞아떨어지는지 보세요.",
+    formTitle:"정체성 카드 만들기",formHint:"생일이 ①·③층을 · ②층은 직접 선택",
+    gBirth:"① + ③ · 생년월일",gMbti:"② · 당신의 MBTI (이미 알죠)",
+    lYear:"년",lMonth:"월",lDay:"일",lHour:"태어난 시 (0–23)",hourUnknown:"모름",
+    gF:"여성",gM:"남성",mbtiSkipTxt:"유형을 모르나요?",mbtiSkipLink:"건너뛰기 →",
+    reveal:"내 세 겹 정체성 보기",loadingTxt:"세 겹을 삼각 합성하는 중…",
+    whoYouAre:"진짜 당신",kZodiac:"1층 · 별자리",kMbti:"2층 · MBTI",kEastern:"3층 · 십신",deepFlag:"심층",
+    shareBtn:"캡처 & 공유",againBtn:"다시 하기",
+    shareHint:"카드를 단톡방에 보내보세요 — 누구의 세 번째 층이 같은지.",
+    hookH:"3층은 당신 사주의 표면일 뿐이에요.",
+    hookP:"당신의 십신 원형은 완전한 사주에서 나와요 — 사랑·일·재물·다가올 해가 모두 그 안에 있어요. 전체를 보세요.",
+    hookBtn:"내 전체 인생 리딩 보기 →",aiLabel:"AI 생성",
+    disc:"· 3층은 정밀 사주 엔진(오래된 동양 체계)으로 배반해요; 별자리와 MBTI는 대중적인 자기 탐구 틀이에요. 셋 다 중립적 렌즈로 재미와 자기 이해용이며 순위·운명·약속이 아니에요. 오락용이며 의료·법률·인생 결정 조언이 아니에요.",
+    mbtiNone:"MBTI를 건너뛰었어요",mbtiNoneMeta:"다음에 추가하면 삼각이 더 선명해져요",
+    errDate:"올바른 생년월일을 입력해주세요.",errNet:"루니가 쉬고 있어요 — 다시 시도해주세요."}
+};
+var lang='en', gender='female', mbti=null;
+function t(k){return (I18N[lang]&&I18N[lang][k])||I18N.en[k];}
+function applyI18n(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    var k=el.getAttribute('data-i18n'); var v=t(k);
+    if(k==='h1'||k==='sub'||k==='kEastern') el.innerHTML=v; else el.textContent=v;
+  });
+}
+
+// hour dropdown 0-23
+(function(){var sel=document.getElementById('h');for(var i=0;i<24;i++){var o=document.createElement('option');o.value=i;o.textContent=(i<10?'0'+i:i)+':00';sel.appendChild(o);}})();
+
+// MBTI buttons
+var MBTI_TYPES=['INTJ','INTP','ENTJ','ENTP','INFJ','INFP','ENFJ','ENFP','ISTJ','ISFJ','ESTJ','ESFJ','ISTP','ISFP','ESTP','ESFP'];
+(function(){
+  var g=document.getElementById('mbtiGrid');
+  MBTI_TYPES.forEach(function(tp){
+    var b=document.createElement('button'); b.type='button'; b.className='mbtn'; b.textContent=tp; b.setAttribute('data-m',tp);
+    b.addEventListener('click',function(){
+      if(mbti===tp){ mbti=null; b.classList.remove('on'); return; }
+      document.querySelectorAll('.mbtn').forEach(function(x){x.classList.remove('on');});
+      b.classList.add('on'); mbti=tp;
+    });
+    g.appendChild(b);
+  });
+})();
+document.getElementById('mbtiSkip').addEventListener('click',function(){
+  mbti=null; document.querySelectorAll('.mbtn').forEach(function(x){x.classList.remove('on');});
+});
+
+// lang buttons
+document.querySelectorAll('.lang button').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.lang button').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on'); lang=b.getAttribute('data-lang'); applyI18n();
+  });
+});
+// gender
+document.querySelectorAll('.gbtn').forEach(function(b){
+  b.addEventListener('click',function(){
+    document.querySelectorAll('.gbtn').forEach(function(x){x.classList.remove('on');});
+    b.classList.add('on'); gender=b.getAttribute('data-g');
+  });
+});
+
+// tiny markdown → html
+function mdToHtml(md){
+  var out=''; (md||'').split(/\n{2,}/).forEach(function(block){
+    block=block.trim(); if(!block) return;
+    if(/^##\s/.test(block)){ out+='<h2>'+esc(block.replace(/^##\s*/,''))+'</h2>'; return; }
+    var html=esc(block).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');
+    out+='<p>'+html+'</p>';
+  });
+  return out;
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+var STAR={rare:'✦✦✦', uncommon:'✦✦'};
+
+function reveal(data){
+  var L=data.layers||{};
+  // Layer 1 · zodiac
+  var z=L.zodiac||{};
+  document.getElementById('zGlyph').textContent=z.glyph||'✦';
+  document.getElementById('zName').innerHTML='<em>'+esc(z.name||'—')+'</em>';
+  document.getElementById('zMeta').textContent=(z.element?z.element+' sign · ':'')+(z.trait||'');
+  // Layer 2 · MBTI
+  var m=(L.mbti&&L.mbti.type)?L.mbti:null;
+  if(m&&m.type){
+    document.getElementById('mBadge').textContent=m.type.slice(0,2);
+    document.getElementById('mBadge').style.fontSize='13px';
+    document.getElementById('mBadge').style.fontWeight='700';
+    document.getElementById('mName').innerHTML='<em>'+esc(m.type)+'</em>';
+    document.getElementById('mMeta').textContent=(m.nick||'').replace(/^the\s+/i,'');
+  } else {
+    document.getElementById('mBadge').textContent='◇';
+    document.getElementById('mName').textContent=t('mbtiNone');
+    document.getElementById('mMeta').textContent=t('mbtiNoneMeta');
+  }
+  // Layer 3 · Eastern Ten Gods (deep)
+  var e=L.eastern||{};
+  document.getElementById('eName').innerHTML='<em>'+esc(e.name||'—')+'</em>';
+  document.getElementById('eMeta').textContent=(e.element||'')+(e.tenGod?(' · '+e.tenGod):'');
+  // rarity
+  document.getElementById('rarityStars').textContent=STAR[data.rarity.band]||'✦✦';
+  document.getElementById('rarityLabel').textContent=data.rarity.label;
+  document.getElementById('rarityNote').textContent=data.rarity.note;
+  document.getElementById('tChart').textContent=(data.chart&&data.chart.fourPillars)?('Day Master '+data.chart.dayMaster+' · '+data.chart.fourPillars):'';
+  document.getElementById('reading').innerHTML=mdToHtml(data.reading);
+  document.getElementById('formCard').style.display='none';
+  document.getElementById('loading').classList.remove('on');
+  document.getElementById('result').classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+document.getElementById('goBtn').addEventListener('click',function(){
+  var y=+document.getElementById('y').value, m=+document.getElementById('m').value, d=+document.getElementById('d').value;
+  var hv=document.getElementById('h').value; var h=hv===''?12:+hv;
+  var err=document.getElementById('err'); err.textContent='';
+  if(!y||!m||!d||m<1||m>12||d<1||d>31||y<1900||y>2025){ err.textContent=t('errDate'); return; }
+  var btn=this; btn.disabled=true;
+  document.getElementById('formCard').style.display='none';
+  document.getElementById('loading').classList.add('on');
+  fetch('/api/identity-triad',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({birthYear:y,birthMonth:m,birthDay:d,birthHour:h,gender:gender,mbti:mbti,lang:lang})})
+  .then(function(r){return r.json();})
+  .then(function(data){
+    btn.disabled=false;
+    if(!data||!data.layers){ throw new Error(data&&data.error||'no data'); }
+    reveal(data);
+  })
+  .catch(function(e){
+    btn.disabled=false;
+    document.getElementById('loading').classList.remove('on');
+    document.getElementById('formCard').style.display='block';
+    err.textContent=(e&&e.message&&e.message.length<80)?e.message:t('errNet');
+  });
+});
+
+document.getElementById('againBtn').addEventListener('click',function(){
+  document.getElementById('result').classList.remove('on');
+  document.getElementById('formCard').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+});
+
+// Share
+document.getElementById('shareBtn').addEventListener('click',function(){
+  var zn=document.getElementById('zName').textContent;
+  var en=document.getElementById('eName').textContent;
+  var text="My three layers on Runae: "+zn+" · "+(mbti||'—')+" · "+en+". What's your third layer? "+location.origin+"/pages/identity-triad.html";
+  if(navigator.share){
+    navigator.share({title:'My three-layer identity',text:text}).catch(function(){});
+  } else if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(function(){ alert(lang==='zh'?'已复制，去粘贴分享吧 · 或直接截图这张卡片 ↑':(lang==='ko'?'복사됐어요 · 또는 카드를 캡처하세요 ↑':'Copied — or just screenshot the card above ↑')); });
+  } else {
+    alert(lang==='zh'?'截图上面这张卡片分享给朋友吧 ↑':(lang==='ko'?'위 카드를 캡처해서 공유하세요 ↑':'Screenshot the card above to share ↑'));
+  }
+});
+
+applyI18n();
+</script>
+</body>
+</html>
