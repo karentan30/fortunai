@@ -87,6 +87,21 @@ body::before{content:'';position:fixed;inset:0;
 .tier-price{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--gold)}
 .tier-desc{font-size:9px;color:var(--sub);margin-top:2px}
 
+/* 三档卡片（信息展示，实际下单在结果页锁卡） */
+.tier3-list{display:flex;flex-direction:column;gap:9px}
+.tier3-card{position:relative;background:var(--card);border:1px solid rgba(201,96,122,0.14);border-radius:12px;padding:13px 14px;transition:border-color .25s,transform .25s}
+.tier3-card:hover{transform:translateY(-1px)}
+.tier3-popular{border-color:rgba(204,34,68,0.5);background:linear-gradient(135deg,rgba(204,34,68,0.1),rgba(201,168,76,0.04))}
+.tier3-master{border-color:rgba(201,168,76,0.4);background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(180,20,40,0.04))}
+.tier3-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tier3-name{font-size:14px;letter-spacing:0.05em;color:var(--ink)}
+.tier3-price{text-align:right;white-space:nowrap;display:flex;flex-direction:column;align-items:flex-end}
+.tier3-cn{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);line-height:1}
+.tier3-os{font-size:9px;color:var(--sub);margin-top:1px}
+.tier3-desc{font-size:10px;color:var(--sub);line-height:1.6;margin-top:6px}
+.tier3-tag{position:absolute;top:-8px;left:14px;font-size:9px;letter-spacing:0.08em;padding:2px 9px;border-radius:8px;background:linear-gradient(135deg,var(--rose-dark),var(--rose));color:#fff}
+.tier3-tag-master{background:linear-gradient(135deg,var(--gold-deep,#8a7020),var(--gold));color:rgba(15,8,10,0.9)}
+
 /* submit */
 .submit-wrap{padding:14px 16px 0;position:relative;z-index:1}
 .btn-calc{width:100%;padding:14px 0;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light));border:none;border-radius:14px;color:rgba(15,8,10,0.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:0.2em;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,0.2);transition:all 0.2s;transform:translateY(0)}
@@ -166,6 +181,20 @@ body::before{content:'';position:fixed;inset:0;
 .lock-icon{font-size:26px;margin-bottom:8px}
 .lock-title{font-size:11px;color:var(--sub);margin-bottom:12px;letter-spacing:0.1em}
 .lock-btn{padding:10px 24px;background:linear-gradient(135deg,var(--rose-dark),var(--rose),var(--rose-light));border:none;border-radius:12px;color:#fff;font-family:'Noto Serif SC',serif;font-size:12px;font-weight:500;letter-spacing:0.14em;cursor:pointer}
+/* 结果页三档解锁按钮 */
+.lock-tiers{width:100%;max-width:300px;display:flex;flex-direction:column;gap:9px;margin-bottom:4px}
+.lock-tier-btn{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:52px;padding:11px 14px;border:1px solid rgba(201,96,122,0.28);border-radius:12px;background:rgba(28,8,14,0.6);color:var(--ink);font-family:'Noto Serif SC',serif;cursor:pointer;text-align:left;transition:border-color .2s,transform .15s}
+.lock-tier-btn:hover{transform:translateY(-1px)}
+.lock-tier-btn:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+.lock-tier-popular{border-color:rgba(204,34,68,0.6);background:linear-gradient(135deg,rgba(204,34,68,0.18),rgba(201,168,76,0.06))}
+.lock-tier-master{border-color:rgba(201,168,76,0.55);background:linear-gradient(135deg,rgba(201,168,76,0.14),rgba(180,20,40,0.06))}
+.lock-tier-l{display:flex;flex-direction:column;gap:2px}
+.lock-tier-name{font-size:13px;letter-spacing:0.05em;color:rgba(248,230,220,0.95)}
+.lock-tier-sub{font-size:9px;color:var(--sub);letter-spacing:0.02em}
+.lock-tier-price{font-size:15px;font-weight:500;color:var(--gold);white-space:nowrap}
+.lock-tier-os{font-size:10px;color:var(--sub)}
+.lock-tier-badge{position:absolute;top:-8px;right:12px;font-size:8px;letter-spacing:0.06em;padding:2px 8px;border-radius:7px;background:linear-gradient(135deg,var(--rose-dark),var(--rose));color:#fff}
+.lock-tier-badge-master{background:linear-gradient(135deg,var(--gold-deep,#8a7020),var(--gold));color:rgba(15,8,10,0.9)}
 .lock-divider{font-size:10px;color:rgba(210,180,168,0.4);margin:10px 0 8px;letter-spacing:0.1em}
 .lock-share-btn{background:none;border:1px solid rgba(201,168,76,0.35);border-radius:10px;color:var(--gold);font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:0.12em;padding:8px 18px;cursor:pointer;transition:all .2s}
 .lock-share-btn:hover{background:rgba(201,168,76,0.1);border-color:rgba(201,168,76,0.6)}
@@ -395,22 +424,35 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
     </div>
   </div>
 
-  <!-- 报告说明（单一档位，与后端定价一致） -->
+  <!-- 三档报告说明（与后端 product key 严格对齐） -->
   <div class="tier-section">
-    <div class="tier-label">合婚报告</div>
-    <div class="tier-card sel" id="t2" style="cursor:default">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div style="text-align:left">
-          <div class="tier-name" style="font-size:13px;margin-bottom:3px">完整合婚报告</div>
-          <div class="tier-desc" style="font-size:10px">全六维深度分析 · 10年婚姻运程 · 最佳婚期 · 化解方案</div>
+    <div class="tier-label">合婚报告 · 三档任选</div>
+    <div class="tier3-list">
+      <div class="tier3-card">
+        <div class="tier3-head">
+          <div class="tier3-name">基础版</div>
+          <div class="tier3-price"><span class="tier3-cn">¥9.9</span><span class="tier3-os">海外 $4.9</span></div>
         </div>
-        <div style="text-align:right;white-space:nowrap">
-          <div class="tier-price" style="font-size:22px">¥39.9</div>
-          <div class="tier-desc" style="font-size:9px">海外 $19.90</div>
+        <div class="tier3-desc">四柱排盘 · 合婚总分 · 核心结论预览</div>
+      </div>
+      <div class="tier3-card tier3-popular">
+        <div class="tier3-tag">最受欢迎</div>
+        <div class="tier3-head">
+          <div class="tier3-name">完整版</div>
+          <div class="tier3-price"><span class="tier3-cn">¥39.9</span><span class="tier3-os">海外 $19.9</span></div>
         </div>
+        <div class="tier3-desc">完整六维合婚 · 10年婚姻运程 · 最佳婚期 · 化解方案</div>
+      </div>
+      <div class="tier3-card tier3-master">
+        <div class="tier3-tag tier3-tag-master">含真人连麦</div>
+        <div class="tier3-head">
+          <div class="tier3-name">👑 大师批婚</div>
+          <div class="tier3-price"><span class="tier3-cn">¥199</span><span class="tier3-os">海外 $49.9</span></div>
+        </div>
+        <div class="tier3-desc">完整版全部 · 5年感情流年 · 择日 · 化解 · 命理师私语 · 真人连麦</div>
       </div>
     </div>
-    <div style="text-align:center;font-size:10px;color:rgba(200,184,122,0.5);margin-top:8px;letter-spacing:0.06em">先免费看配对预览，满意再解锁完整报告</div>
+    <div style="text-align:center;font-size:10px;color:rgba(200,184,122,0.5);margin-top:10px;letter-spacing:0.06em">先免费看配对预览，满意再选档解锁完整报告</div>
   </div>
 
 <!-- Testimonials -->
@@ -526,10 +568,25 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
     </div>
     <div class="locked-overlay">
       <div class="lock-icon">🔒</div>
-      <div class="lock-title">解锁完整合婚报告</div>
-      <button class="lock-btn">解锁完整合婚报告 · ¥39.9</button>
+      <div class="lock-title">选择档位，解锁你们的合婚报告</div>
+      <div class="lock-tiers">
+        <button class="lock-tier-btn" data-product="hehun_basic" onclick="createCheckout(this)">
+          <span class="lock-tier-l"><span class="lock-tier-name">基础版</span><span class="lock-tier-sub">合婚总分 · 核心结论预览</span></span>
+          <span class="lock-tier-price">¥9.9<span class="lock-tier-os"> / $4.9</span></span>
+        </button>
+        <button class="lock-tier-btn lock-tier-popular" data-product="hehun" onclick="createCheckout(this)">
+          <span class="lock-tier-badge">最受欢迎</span>
+          <span class="lock-tier-l"><span class="lock-tier-name">完整版</span><span class="lock-tier-sub">完整六维 · 10年运程 · 婚期 · 化解</span></span>
+          <span class="lock-tier-price">¥39.9<span class="lock-tier-os"> / $19.9</span></span>
+        </button>
+        <button class="lock-tier-btn lock-tier-master" data-product="hehun_master" onclick="createCheckout(this)">
+          <span class="lock-tier-badge lock-tier-badge-master">含真人连麦</span>
+          <span class="lock-tier-l"><span class="lock-tier-name">👑 大师批婚</span><span class="lock-tier-sub">完整版+流年·择日·私语·真人连麦</span></span>
+          <span class="lock-tier-price">¥199<span class="lock-tier-os"> / $49.9</span></span>
+        </button>
+      </div>
       <div class="lock-divider">— 或 —</div>
-      <button class="lock-share-btn" onclick="unlockByShare(this)">🔗 分享给朋友，免费解锁</button>
+      <button class="lock-share-btn" onclick="unlockByShare(this)">🔗 分享给朋友一起测缘分</button>
       <div style="margin-top:10px">
         <button onclick="invitePartnerFromLocked()" style="background:none;border:none;color:rgba(91,191,160,0.75);font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:0.1em;cursor:pointer;text-decoration:underline;padding:4px 0">💌 发给另一半一起看 →</button>
       </div>
@@ -586,7 +643,7 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
 
 <!-- sticky -->
 <div class="sticky-bar" id="stickyBar">
-  <button class="sticky-cta">解锁完整合婚报告 · ¥39.9 / $19.90</button>
+  <button class="sticky-cta">解锁完整合婚报告 · ¥9.9 起</button>
 </div>
 
 <script>
@@ -658,17 +715,17 @@ function selG(p, g){
   else { gB=g; document.getElementById('bM').className='g-opt'+(g==='male'?' sel':''); document.getElementById('bF').className='g-opt'+(g==='female'?' sel':''); }
 }
 
-// 🔴 单一真实产品 hehun (后端 ¥39.9 / $19.90)——锁卡+吸底 CTA 与后端定价严格一致，杜绝选低价被收高价
+// 🔴 三档真实产品：hehun_basic ¥9.9/$4.9 · hehun ¥39.9/$19.9 · hehun_master ¥199/$49.9
+// 锁卡三个按钮各带 data-product，createCheckout 读取对应 key，严格杜绝显示价≠实收价。
+// 吸底 CTA 只负责滚动到锁卡三档，不直接下单（三档需用户选）。
 function syncPaywall(){
-  var lockBtn = document.querySelector('.lock-btn');
-  if (lockBtn) {
-    lockBtn.onclick = function(){ createCheckout(this); };
-    lockBtn.textContent = '解锁完整合婚报告 · ¥39.9';
-  }
   var sticky = document.querySelector('.sticky-cta');
   if (sticky) {
-    sticky.onclick = function(){ createCheckout(this); };
-    sticky.textContent = '解锁完整合婚报告 · ¥39.9 / $19.90';
+    sticky.onclick = function(){
+      var lc = document.getElementById('lockedCard');
+      if (lc) lc.scrollIntoView({behavior:'smooth', block:'center'});
+    };
+    sticky.textContent = '解锁完整合婚报告 · ¥9.9 起';
   }
 }
 
@@ -862,7 +919,9 @@ function showResults(ay,by){
 }
 
 function createCheckout(btn) {
-  var originalLabel = btn.textContent;
+  // 三档 product key 从按钮 data-product 读取；缺省回落完整版 hehun（严禁乱收费）
+  var product = (btn.getAttribute && btn.getAttribute('data-product')) || 'hehun';
+  var originalLabel = btn.innerHTML;
   btn.disabled = true;
   btn.textContent = '跳转支付…';
   try {
@@ -881,13 +940,14 @@ function createCheckout(btn) {
     d.p1Name = document.getElementById('nameA').value.trim() || '';
     d.p2Name = document.getElementById('nameB').value.trim() || '';
     d.mode = window._hehunMode || 'marriage';
+    d.product = product;
     localStorage.setItem('sy_last_hehun', JSON.stringify(d));
   } catch(e){}
   fetch('/api/create-checkout', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
-      product: 'hehun',
+      product: product,
       token: localStorage.getItem('sy_token') || '',
       successUrl: location.origin + '/pages/hehun.html?paid=1'
     })
@@ -898,20 +958,20 @@ function createCheckout(btn) {
       fetch('/api/pay/wechat/create', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ product: 'hehun', method: 'wechat', token: localStorage.getItem('sy_token') || '' })
+        body: JSON.stringify({ product: product, method: 'wechat', token: localStorage.getItem('sy_token') || '' })
       }).then(function(r){ return r.json(); }).then(function(pd){
-        btn.disabled = false; btn.textContent = originalLabel;
+        btn.disabled = false; btn.innerHTML = originalLabel;
         if (pd.code_url) { showCnPayModal(pd.code_url, pd.out_trade_no, pd.amount); }
         else { showToast('支付服务暂不可用，请稍后重试', 'error'); }
       }).catch(function(){
-        btn.disabled = false; btn.textContent = originalLabel;
+        btn.disabled = false; btn.innerHTML = originalLabel;
         showToast('网络异常，请重试', 'error');
       });
       return;
     }
-    showToast('跳转失败，请重试', 'error'); btn.disabled = false; btn.textContent = originalLabel;
+    showToast('跳转失败，请重试', 'error'); btn.disabled = false; btn.innerHTML = originalLabel;
   }).catch(function(){
-    showToast('网络异常，请重试', 'error'); btn.disabled = false; btn.textContent = originalLabel;
+    showToast('网络异常，请重试', 'error'); btn.disabled = false; btn.innerHTML = originalLabel;
   });
 }
 
@@ -968,6 +1028,150 @@ function showCnPayModal(codeUrl, outTradeNo, amountFen) {
   function cleanup(){ clearInterval(countdownTimer); clearInterval(pollTimer); if (modal) modal.remove(); }
   cancelBtn.onclick = cleanup;
 }
+// ── 报告按 tier 渲染的辅助 ──
+// tier: 'teaser'|'basic'|'full'|'master'。teaser/basic 显示已解锁部分+升级引导；full 完整六维；master 完整+专属节+连麦。
+function applyReportTier(tier) {
+  window._hehunTier = tier || 'full';
+  var upsell = document.getElementById('tierUpsell');
+  if (tier === 'teaser' || tier === 'basic') {
+    // 已解锁部分：保留锁卡引导升级；显示"升级到下一档"提示
+    if (!upsell) _renderTierUpsell(tier);
+    // 基础/预览档保留锁卡，让用户升级
+    var lc = document.getElementById('lockedCard');
+    if (lc) lc.style.display = 'block';
+  } else {
+    // full / master：隐藏升级提示与锁卡
+    if (upsell) upsell.style.display = 'none';
+    var lc2 = document.getElementById('lockedCard');
+    if (lc2) lc2.style.display = 'none';
+    var sb = document.getElementById('stickyBar');
+    if (sb) sb.style.display = 'none';
+  }
+}
+function _renderTierUpsell(tier) {
+  var wrap = document.getElementById('fullReportWrap');
+  if (!wrap || document.getElementById('tierUpsell')) return;
+  var box = document.createElement('div');
+  box.id = 'tierUpsell';
+  box.style.cssText = 'margin:18px 0 6px;padding:16px;border-radius:14px;background:linear-gradient(135deg,rgba(204,34,68,0.1),rgba(201,168,76,0.05));border:1px solid rgba(204,34,68,0.25);text-align:center';
+  var next = (tier === 'teaser' || tier === 'basic')
+    ? { name: '完整版', product: 'hehun', price: '¥39.9 / $19.9', desc: '解锁完整六维·10年运程·最佳婚期·化解方案' }
+    : { name: '大师批婚', product: 'hehun_master', price: '¥199 / $49.9', desc: '5年流年·择日·命理师私语·真人连麦' };
+  var title = document.createElement('div');
+  title.style.cssText = 'font-size:12px;color:var(--gold);letter-spacing:0.08em;margin-bottom:8px';
+  title.textContent = '✦ 升级到「' + next.name + '」看到更多 ✦';
+  var desc = document.createElement('div');
+  desc.style.cssText = 'font-size:11px;color:var(--sub);margin-bottom:12px;line-height:1.6';
+  desc.textContent = next.desc;
+  var btn = document.createElement('button');
+  btn.setAttribute('data-product', next.product);
+  btn.style.cssText = 'width:100%;padding:12px 0;border:none;border-radius:12px;background:linear-gradient(135deg,var(--rose-dark),var(--rose),var(--rose-light));color:#fff;font-family:"Noto Serif SC",serif;font-size:13px;letter-spacing:0.1em;cursor:pointer;min-height:44px';
+  btn.textContent = '升级到' + next.name + ' · ' + next.price;
+  btn.onclick = function(){ createCheckout(this); };
+  box.appendChild(title); box.appendChild(desc); box.appendChild(btn);
+  wrap.appendChild(box);
+}
+// master 专属：真人连麦预约入口（masterUnlock 时调用，安全 DOM 构建）
+function showMasterConsultEntry() {
+  var wrap = document.getElementById('fullReportWrap');
+  if (!wrap || document.getElementById('masterConsultEntry')) return;
+  var box = document.createElement('div');
+  box.id = 'masterConsultEntry';
+  box.style.cssText = 'margin:20px 0 8px;padding:18px 16px;border-radius:14px;background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(180,20,40,0.06));border:1px solid rgba(201,168,76,0.4);text-align:center';
+  var badge = document.createElement('div');
+  badge.style.cssText = 'font-size:10px;letter-spacing:0.14em;color:var(--gold);margin-bottom:8px';
+  badge.textContent = '👑 大师批婚专属';
+  var title = document.createElement('div');
+  title.style.cssText = 'font-size:14px;color:rgba(248,230,220,0.95);letter-spacing:0.06em;margin-bottom:6px';
+  title.textContent = '预约命理师，一对一连麦解读';
+  var sub = document.createElement('div');
+  sub.style.cssText = 'font-size:11px;color:var(--sub);line-height:1.6;margin-bottom:14px';
+  sub.textContent = '把你们的合婚细节讲给命理师听，当面问最在意的问题';
+  var btn = document.createElement('button');
+  btn.style.cssText = 'width:100%;padding:13px 0;border:none;border-radius:12px;background:linear-gradient(135deg,var(--gold-deep,#8a7020),var(--gold),var(--gold-light));color:rgba(15,8,10,0.92);font-family:"Noto Serif SC",serif;font-size:14px;font-weight:500;letter-spacing:0.1em;cursor:pointer;min-height:44px';
+  btn.textContent = '📞 预约命理师连麦';
+  btn.onclick = openConsultForm;
+  box.appendChild(badge); box.appendChild(title); box.appendChild(sub); box.appendChild(btn);
+  wrap.appendChild(box);
+}
+// 连麦预约表单（微信号 + 期望时段），安全 DOM 构建，绝不 innerHTML 拼用户输入
+function openConsultForm() {
+  var existing = document.getElementById('consultModal');
+  if (existing) existing.remove();
+  var modal = document.createElement('div');
+  modal.id = 'consultModal';
+  modal.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px);padding:16px';
+  var box = document.createElement('div');
+  box.style.cssText = 'background:#1c080e;border:1px solid rgba(201,168,76,0.28);border-radius:16px;padding:24px 20px;max-width:340px;width:100%';
+  var h = document.createElement('div');
+  h.style.cssText = 'font-size:15px;font-weight:500;color:rgba(248,230,220,0.95);letter-spacing:0.06em;margin-bottom:4px;font-family:"Noto Serif SC",serif';
+  h.textContent = '预约命理师连麦';
+  var hs = document.createElement('div');
+  hs.style.cssText = 'font-size:11px;color:var(--sub);margin-bottom:16px';
+  hs.textContent = '留下联系方式，命理师会尽快联系你安排时间';
+  var wxLabel = document.createElement('div');
+  wxLabel.style.cssText = 'font-size:11px;color:var(--gold);letter-spacing:0.06em;margin-bottom:6px';
+  wxLabel.textContent = '微信号 *';
+  var wxInput = document.createElement('input');
+  wxInput.type = 'text'; wxInput.maxLength = 40;
+  wxInput.placeholder = '你的微信号';
+  wxInput.style.cssText = 'width:100%;background:#280c14;border:1px solid rgba(201,168,76,0.2);border-radius:8px;color:rgba(248,230,220,0.92);font-family:"Noto Serif SC",serif;font-size:13px;padding:11px 12px;margin-bottom:14px;outline:none;min-height:44px';
+  var tLabel = document.createElement('div');
+  tLabel.style.cssText = 'font-size:11px;color:var(--gold);letter-spacing:0.06em;margin-bottom:6px';
+  tLabel.textContent = '期望时段 *';
+  var tSelect = document.createElement('select');
+  tSelect.style.cssText = 'width:100%;background:#280c14;border:1px solid rgba(201,168,76,0.2);border-radius:8px;color:rgba(248,230,220,0.92);font-family:"Noto Serif SC",serif;font-size:13px;padding:11px 12px;margin-bottom:14px;outline:none;min-height:44px;-webkit-appearance:none';
+  ['工作日 白天','工作日 晚上','周末 白天','周末 晚上','都可以，请安排'].forEach(function(t){
+    var o = document.createElement('option'); o.value = t; o.textContent = t; tSelect.appendChild(o);
+  });
+  var nLabel = document.createElement('div');
+  nLabel.style.cssText = 'font-size:11px;color:var(--gold);letter-spacing:0.06em;margin-bottom:6px';
+  nLabel.textContent = '想问的问题（选填）';
+  var nInput = document.createElement('textarea');
+  nInput.maxLength = 300; nInput.rows = 3;
+  nInput.placeholder = '例如：最想问的是婚期和化解方案';
+  nInput.style.cssText = 'width:100%;background:#280c14;border:1px solid rgba(201,168,76,0.2);border-radius:8px;color:rgba(248,230,220,0.92);font-family:"Noto Serif SC",serif;font-size:13px;padding:11px 12px;margin-bottom:16px;outline:none;resize:vertical';
+  var submitBtn = document.createElement('button');
+  submitBtn.style.cssText = 'width:100%;padding:13px 0;border:none;border-radius:12px;background:linear-gradient(135deg,var(--gold-deep,#8a7020),var(--gold),var(--gold-light));color:rgba(15,8,10,0.92);font-family:"Noto Serif SC",serif;font-size:14px;font-weight:500;letter-spacing:0.1em;cursor:pointer;min-height:44px';
+  submitBtn.textContent = '提交预约';
+  var cancelBtn = document.createElement('button');
+  cancelBtn.style.cssText = 'width:100%;margin-top:10px;background:none;border:none;color:var(--sub);font-family:"Noto Serif SC",serif;font-size:12px;cursor:pointer;padding:8px 0;min-height:44px';
+  cancelBtn.textContent = '取消';
+  cancelBtn.onclick = function(){ modal.remove(); };
+  submitBtn.onclick = function(){
+    var contact = wxInput.value.trim();
+    if (!contact) { showToast('请填写微信号', 'error'); wxInput.focus(); return; }
+    submitBtn.disabled = true; submitBtn.textContent = '提交中…';
+    fetch('/api/hehun/book-consult', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('sy_token') || '')},
+      body: JSON.stringify({ contact: contact, preferredTime: tSelect.value, note: nInput.value.trim() })
+    }).then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ return { ok: r.ok, d: d }; }); })
+      .then(function(res){
+        if (res.ok) {
+          modal.remove();
+          showToast('已提交 · 命理师会尽快联系你', 'success');
+          var entryBtn = document.querySelector('#masterConsultEntry button');
+          if (entryBtn) { entryBtn.textContent = '✓ 已预约，等待联系'; entryBtn.disabled = true; entryBtn.style.opacity = '0.6'; }
+        } else {
+          submitBtn.disabled = false; submitBtn.textContent = '提交预约';
+          showToast((res.d && res.d.message) || '提交失败，请重试', 'error');
+        }
+      }).catch(function(){
+        submitBtn.disabled = false; submitBtn.textContent = '提交预约';
+        showToast('网络异常，请重试', 'error');
+      });
+  };
+  box.appendChild(h); box.appendChild(hs);
+  box.appendChild(wxLabel); box.appendChild(wxInput);
+  box.appendChild(tLabel); box.appendChild(tSelect);
+  box.appendChild(nLabel); box.appendChild(nInput);
+  box.appendChild(submitBtn); box.appendChild(cancelBtn);
+  modal.appendChild(box);
+  document.body.appendChild(modal);
+  wxInput.focus();
+}
+
 // ── 付费回流 ──
 function handlePaidReturn() {
   if (location.search.indexOf('paid=1') < 0) return;
@@ -1041,10 +1245,14 @@ function handlePaidReturn() {
           if (raw === '[DONE]') return;
           try {
             var ev = JSON.parse(raw);
-            if (ev.type === 'chunk') {
+            if (ev.type === 'meta') {
+              applyReportTier(ev.tier);
+            } else if (ev.type === 'chunk') {
               accumulated += ev.content;
               if (!streamStarted) { streamStarted = true; }
               contentEl.innerHTML = renderReportMarkdown(accumulated);
+            } else if (ev.type === 'done') {
+              if (ev.masterUnlock) showMasterConsultEntry();
             }
           } catch(e) {}
         });
@@ -1122,7 +1330,7 @@ function _doShareUnlock() {
           if (!line.startsWith('data: ')) return;
           var raw = line.slice(6).trim();
           if (raw === '[DONE]') return;
-          try { var ev = JSON.parse(raw); if (ev.type === 'chunk') { accumulated += ev.content; contentEl.innerHTML = renderReportMarkdown(accumulated); } } catch(e) {}
+          try { var ev = JSON.parse(raw); if (ev.type === 'meta') { applyReportTier(ev.tier); } else if (ev.type === 'chunk') { accumulated += ev.content; contentEl.innerHTML = renderReportMarkdown(accumulated); } else if (ev.type === 'done') { if (ev.masterUnlock) showMasterConsultEntry(); } } catch(e) {}
         });
         read();
       }).catch(function() { contentEl.textContent = '网络异常，请刷新重试'; });
