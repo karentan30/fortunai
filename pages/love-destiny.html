@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Love Destiny · Runae — Your Soulmate, Peach Blossom & Seasons to Meet</title>
+<meta name="description" content="Runae's Love Destiny reads your Four Pillars to reveal your soulmate portrait, your peach-blossom charm, your love patterns, and the seasons it's easiest to meet. Your patterns — not a fixed fate.">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --jade:#5bbfa0; --jade-deep:#3d9e82; --jade-light:#8dd9bf;
+  --jade-pale:rgba(91,191,160,0.08); --jade-border:rgba(91,191,160,0.22);
+  --gold:#c9a84c; --gold-light:#e8d08a; --gold-deep:#8a6420; --gold-pale:rgba(201,168,76,0.08);
+  --bg:#faf8f5; --card:#ffffff; --surface:#f2f5f2;
+  --ink:#1a1a18; --sub:rgba(60,75,65,0.72); --muted:rgba(80,95,85,0.45);
+  --radius:14px; --shadow:0 2px 12px rgba(0,0,0,0.06);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Inter',sans-serif;background:var(--bg);color:var(--ink);
+  line-height:1.6;-webkit-font-smoothing:antialiased;position:relative;overflow-x:hidden;
+  padding:0 20px calc(40px + env(safe-area-inset-bottom));
+}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(91,191,160,0.09) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 30% at 80% 100%,rgba(201,168,76,0.05) 0%,transparent 50%);
+}
+.wrap{max-width:440px;margin:0 auto;position:relative}
+.z1{position:relative;z-index:1}
+.serif{font-family:'Playfair Display',serif}
+
+/* Hero */
+.hero{text-align:center;padding:36px 0 14px}
+.logo{font-family:'Playfair Display',serif;font-size:14px;letter-spacing:.42em;text-transform:uppercase;color:var(--jade-deep);font-weight:600}
+.clasp{width:36px;height:36px;margin:16px auto 14px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,var(--jade-light),var(--jade) 55%,var(--jade-deep));
+  box-shadow:0 4px 16px rgba(91,191,160,.35)}
+.badge{display:inline-block;background:var(--jade-pale);border:1px solid var(--jade-border);color:var(--jade-deep);
+  font-size:10px;letter-spacing:.14em;text-transform:uppercase;padding:5px 12px;border-radius:999px;font-weight:600}
+h1{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;line-height:1.22;margin:16px 0 10px}
+h1 em{color:var(--jade-deep)}
+.hero-sub{font-size:15px;color:var(--sub);max-width:340px;margin:0 auto}
+.hero-sub b{color:var(--ink)}
+.ai-note{margin:16px auto 0;max-width:400px;background:var(--jade-pale);border:1px solid var(--jade-border);
+  border-radius:10px;padding:8px 12px;font-size:12px;color:var(--jade-deep);text-align:center}
+
+/* Card / form */
+.card{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:20px;margin-top:18px}
+.card-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;margin-bottom:4px}
+.card-hint{font-size:12px;color:var(--muted);margin-bottom:14px}
+.field-row{display:flex;gap:10px;margin-bottom:12px}
+.field{flex:1;display:flex;flex-direction:column}
+.field label{font-size:11px;color:var(--sub);margin-bottom:5px;letter-spacing:.02em}
+.field select{width:100%;padding:11px 10px;border:1px solid var(--jade-border);border-radius:10px;
+  background:var(--surface);color:var(--ink);font-size:14px;font-family:inherit;appearance:none}
+.gender{display:flex;gap:10px;margin-top:4px}
+.gender button{flex:1;padding:11px;border:1px solid var(--jade-border);border-radius:10px;
+  background:var(--surface);color:var(--sub);font-size:14px;font-family:inherit;cursor:pointer;transition:.15s}
+.gender button.on{border-color:var(--jade);background:var(--jade-pale);color:var(--jade-deep);font-weight:600}
+
+.consent{display:flex;gap:9px;align-items:flex-start;margin:16px 2px 0;font-size:12px;color:var(--sub);cursor:pointer}
+.consent input{margin-top:2px;accent-color:var(--jade);width:16px;height:16px;flex-shrink:0}
+.consent b{color:var(--ink)}
+.consent a{color:var(--jade-deep)}
+
+.cta{width:100%;margin-top:18px;padding:16px;border:none;border-radius:12px;
+  background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);color:#fff;
+  font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;letter-spacing:.02em;
+  box-shadow:0 4px 16px rgba(201,168,76,.3);transition:.15s}
+.cta:disabled{opacity:.5;cursor:not-allowed;box-shadow:none}
+.cta:active{transform:translateY(1px)}
+
+/* Loading */
+.loading{display:none;text-align:center;padding:44px 0}
+.loading.show{display:block}
+.spinner{width:42px;height:42px;margin:0 auto 18px;border:3px solid var(--jade-border);
+  border-top-color:var(--jade-deep);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:var(--sub)}
+
+/* Result */
+.result{display:none;margin-top:18px}
+.result.show{display:block}
+.share-verdict{background:linear-gradient(135deg,#fff,var(--gold-pale));border:1px solid var(--gold-light);
+  border-radius:var(--radius);padding:22px 20px;text-align:center;box-shadow:var(--shadow);margin-bottom:16px}
+.share-verdict .vk{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-deep);font-weight:600}
+.share-verdict .vstar{font-size:26px;margin:10px 0 4px}
+.share-verdict .vd{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:var(--ink)}
+.share-verdict .vbrand{margin-top:12px;font-size:10px;color:var(--muted);letter-spacing:.1em}
+
+.reading{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:22px 20px}
+.reading h2{font-family:'Playfair Display',serif;font-size:19px;font-weight:600;color:var(--jade-deep);
+  margin:22px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--jade-border)}
+.reading h2:first-child{margin-top:0}
+.reading h3{font-size:15px;font-weight:600;margin:16px 0 6px}
+.reading p{font-size:14.5px;color:var(--ink);margin:0 0 10px}
+.reading strong{color:var(--jade-deep)}
+.reading em{color:var(--gold-deep);font-style:italic}
+
+.lock{margin-top:16px;background:var(--jade-pale);border:1px dashed var(--jade-border);border-radius:var(--radius);
+  padding:20px;text-align:center}
+.lock .lk-t{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;margin-bottom:6px}
+.lock .lk-s{font-size:13px;color:var(--sub);margin-bottom:14px}
+.lock ul{list-style:none;text-align:left;max-width:280px;margin:0 auto 16px;font-size:13px;color:var(--sub)}
+.lock li{padding:4px 0}.lock li::before{content:'✦ ';color:var(--jade-deep)}
+
+.share-btn{width:100%;margin-top:16px;padding:14px;border:1px solid var(--jade);border-radius:12px;
+  background:linear-gradient(135deg,var(--jade),var(--jade-deep));color:#fff;font-size:15px;font-weight:600;
+  font-family:inherit;cursor:pointer}
+.retry-btn{width:100%;margin-top:10px;padding:12px;border:1px solid var(--jade-border);border-radius:12px;
+  background:var(--surface);color:var(--sub);font-size:14px;font-family:inherit;cursor:pointer}
+
+.err{display:none;margin-top:16px;background:#fff4f4;border:1px solid #f2c2c2;color:#a44;
+  border-radius:12px;padding:14px;font-size:13px;text-align:center}
+.err.show{display:block}
+
+/* Disclaimer + footer */
+.disclaimer{margin-top:22px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.7;padding:0 4px}
+.disclaimer b{color:var(--sub)}
+footer{text-align:center;padding:28px 0 8px;margin-top:24px;border-top:1px solid var(--jade-border)}
+.fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:var(--jade-deep);letter-spacing:.06em}
+.fnav{margin:10px 0;display:flex;flex-wrap:wrap;gap:6px 14px;justify-content:center}
+.fnav a{font-size:12px;color:var(--sub);text-decoration:none}
+.fmeta{font-size:11px;color:var(--muted);margin-top:8px}
+.fmeta a{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="hero z1">
+    <div class="logo">Runae</div>
+    <div class="clasp"></div>
+    <div class="badge">✦ The Matchmaker · Yuè Lǎo</div>
+    <h1 class="serif">Your Love Destiny,<br><em>written in your pillars</em></h1>
+    <p class="hero-sub">Rún reads your <b>Four Pillars</b> to show you your soulmate portrait, your peach-blossom charm, the pattern love keeps repeating for you — and the seasons it's easiest to meet.</p>
+    <div class="ai-note">🤖 AI-powered · a real Eastern chart engine casts your pillars — Rún only reads them, never guesses</div>
+  </header>
+
+  <div class="card z1" id="input">
+    <div class="card-title">Your birth</div>
+    <div class="card-hint">Solar (Gregorian) calendar. Hour is optional but sharpens your Spouse Palace.</div>
+    <div class="field-row">
+      <div class="field"><label>Year</label><select id="birthYear"></select></div>
+      <div class="field"><label>Month</label><select id="birthMonth"></select></div>
+      <div class="field"><label>Day</label><select id="birthDay"></select></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Birth hour (optional)</label><select id="birthHour"></select></div>
+    </div>
+    <div class="gender">
+      <button type="button" class="on" data-g="female" onclick="pickG(this)">Female</button>
+      <button type="button" data-g="male" onclick="pickG(this)">Male</button>
+    </div>
+
+    <label class="consent">
+      <input type="checkbox" id="consent">
+      <span>I'm 18+ and understand this reads <b>my own</b> love patterns — for reflection and entertainment, not a promise about anyone. My birth data is encrypted, never sold, deletable anytime. (<a href="/legal-en.html#privacy">Privacy</a>)</span>
+    </label>
+
+    <button class="cta" id="goBtn" onclick="reveal()">Read my love destiny ✦</button>
+  </div>
+
+  <div class="loading z1" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadText">Casting your Four Pillars…</div>
+  </div>
+
+  <div class="err z1" id="err"></div>
+
+  <div class="result z1" id="result">
+    <div class="share-verdict" id="shareCard">
+      <div class="vk">Your Love Destiny</div>
+      <div class="vstar">💗</div>
+      <div class="vd serif" id="vdLine">The one your pillars keep pointing to…</div>
+      <div class="vbrand">RUNAE · AIGC · your patterns, not a fixed fate</div>
+    </div>
+
+    <div class="reading" id="reading"></div>
+
+    <div class="lock" id="lock" style="display:none">
+      <div class="lk-t">Unlock your full Love Destiny</div>
+      <div class="lk-s">You've seen your soulmate portrait. The rest of your chart is waiting.</div>
+      <ul>
+        <li>Your full peach-blossom map — where your charm shines</li>
+        <li>The love pattern you keep repeating (and a freer way)</li>
+        <li>Your seasons to meet — when it's easiest to open up</li>
+        <li>The Matchmaker's whisper, made to screenshot</li>
+      </ul>
+      <a class="cta" style="display:block;text-decoration:none;text-align:center" href="/pages/member-en.html">Unlock full reading</a>
+    </div>
+
+    <button class="share-btn" onclick="shareIt()">📸 Save my Love Destiny card</button>
+    <button class="retry-btn" onclick="reset()">Read again for another birth</button>
+  </div>
+
+  <div class="disclaimer z1">
+    <b>Your patterns, not a fixed fate.</b> Runae shows tendencies and seasons — never a promise that "you'll marry in year X." Whether love becomes something is always how you choose.<br><br>
+    🤖 AI-generated content (AIGC) · An ancient Eastern system, read for self-discovery · For entertainment & reflection only · 18+ · Not relationship, medical, legal, financial or psychological advice.
+  </div>
+
+  <footer class="z1">
+    <div class="fbrand">Runae</div>
+    <div class="fnav">
+      <a href="/pages/home-en.html">Home</a>
+      <a href="/pages/best-timing.html">Best Timing</a>
+      <a href="/pages/hehun-en.html">Compatibility</a>
+      <a href="/pages/bazi-en.html">Four Pillars</a>
+      <a href="/pages/chat-EN.html">Chat with Rún</a>
+    </div>
+    <div class="fmeta">© 2026 Runae · <a href="/legal-en.html#privacy">Privacy</a> · <a href="/legal-en.html#terms">Terms</a></div>
+  </footer>
+
+</div>
+
+<script>
+var gender='female';
+function pickG(btn){gender=btn.dataset.g;document.querySelectorAll('.gender button').forEach(function(b){b.classList.remove('on')});btn.classList.add('on');}
+
+// populate selects
+(function(){
+  var y=document.getElementById('birthYear'),m=document.getElementById('birthMonth'),d=document.getElementById('birthDay'),h=document.getElementById('birthHour');
+  var now=new Date().getFullYear();
+  var o='<option value="">Year</option>';for(var i=now;i>=1930;i--)o+='<option value="'+i+'">'+i+'</option>';y.innerHTML=o;
+  o='<option value="">Month</option>';for(i=1;i<=12;i++)o+='<option value="'+i+'">'+i+'</option>';m.innerHTML=o;
+  o='<option value="">Day</option>';for(i=1;i<=31;i++)o+='<option value="'+i+'">'+i+'</option>';d.innerHTML=o;
+  var HOURS=[['','Unknown birth hour'],[0,'Rat 子 · 11pm–1am'],[1,'Ox 丑 · 1–3am'],[2,'Tiger 寅 · 3–5am'],[3,'Rabbit 卯 · 5–7am'],[4,'Dragon 辰 · 7–9am'],[5,'Snake 巳 · 9–11am'],[6,'Horse 午 · 11am–1pm'],[7,'Goat 未 · 1–3pm'],[8,'Monkey 申 · 3–5pm'],[9,'Rooster 酉 · 5–7pm'],[10,'Dog 戌 · 7–9pm'],[11,'Pig 亥 · 9–11pm']];
+  o='';HOURS.forEach(function(x){o+='<option value="'+x[0]+'">'+x[1]+'</option>'});h.innerHTML=o;
+})();
+
+// tiny markdown → HTML (## h2, ### h3, **bold**, *em*, paragraphs)
+function mdToHtml(md){
+  if(!md)return'';
+  var lines=String(md).replace(/\r/g,'').split('\n'),out=[],buf=[];
+  function flush(){if(buf.length){out.push('<p>'+inline(buf.join(' '))+'</p>');buf=[];}}
+  function inline(s){return s
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/(^|[^*])\*(?!\*)([^*]+?)\*/g,'$1<em>$2</em>');}
+  lines.forEach(function(ln){
+    var t=ln.trim();
+    if(/^###\s+/.test(t)){flush();out.push('<h3>'+inline(t.replace(/^###\s+/,''))+'</h3>');}
+    else if(/^##\s+/.test(t)){flush();out.push('<h2>'+inline(t.replace(/^##\s+/,''))+'</h2>');}
+    else if(/^#\s+/.test(t)){flush();out.push('<h2>'+inline(t.replace(/^#\s+/,''))+'</h2>');}
+    else if(t===''){flush();}
+    else buf.push(t);
+  });
+  flush();return out.join('');
+}
+
+var LOADS=['Casting your Four Pillars…','Reading your Spouse Palace…','Tracing your peach blossom…','Finding your seasons to meet…'];
+var loadTimer;
+
+function reveal(){
+  var by=document.getElementById('birthYear').value,bm=document.getElementById('birthMonth').value,bd=document.getElementById('birthDay').value;
+  if(!by||!bm||!bd){showErr('Please pick your birth year, month and day.');return;}
+  if(!document.getElementById('consent').checked){showErr('Please confirm you\'re 18+ to continue.');return;}
+  hideErr();
+  document.getElementById('input').style.display='none';
+  document.getElementById('result').classList.remove('show');
+  var L=document.getElementById('loading');L.classList.add('show');
+  var i=0;document.getElementById('loadText').textContent=LOADS[0];
+  loadTimer=setInterval(function(){i=(i+1)%LOADS.length;document.getElementById('loadText').textContent=LOADS[i];},2200);
+
+  fetch('/api/love-destiny',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({birthYear:by,birthMonth:bm,birthDay:bd,birthHour:document.getElementById('birthHour').value,gender:gender,lang:'en'})
+  }).then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j};});})
+    .then(function(res){
+      clearInterval(loadTimer);document.getElementById('loading').classList.remove('show');
+      if(!res.ok||!res.j.reading){showErr((res.j&&res.j.error)||'Rún is resting — please try again.');document.getElementById('input').style.display='block';return;}
+      document.getElementById('reading').innerHTML=mdToHtml(res.j.reading);
+      document.getElementById('lock').style.display=res.j.locked?'block':'none';
+      var vd=document.querySelector('#reading h2');
+      if(vd)document.getElementById('vdLine').textContent=vd.textContent;
+      document.getElementById('result').classList.add('show');
+      window.scrollTo({top:0,behavior:'smooth'});
+    }).catch(function(){
+      clearInterval(loadTimer);document.getElementById('loading').classList.remove('show');
+      document.getElementById('input').style.display='block';
+      showErr('Network hiccup — please try again.');
+    });
+}
+
+function reset(){document.getElementById('result').classList.remove('show');document.getElementById('input').style.display='block';hideErr();window.scrollTo({top:0,behavior:'smooth'});}
+function showErr(m){var e=document.getElementById('err');e.textContent=m;e.classList.add('show');}
+function hideErr(){document.getElementById('err').classList.remove('show');}
+
+function shareIt(){
+  var line=document.getElementById('vdLine').textContent;
+  if(navigator.share){navigator.share({title:'My Love Destiny ✦',text:'Runae read my pillars: '+line,url:location.href}).catch(function(){});}
+  else{alert('Screenshot your Love Destiny card ✦ — jade & cream, the Runae mark, AIGC label. Share your soulmate portrait, not anyone\'s name.');}
+}
+
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}
+</script>
+</body>
+</html>
