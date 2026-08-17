@@ -145,9 +145,38 @@ footer{padding:26px 20px calc(26px + env(safe-area-inset-bottom,0px));text-align
 footer a{color:var(--jade-deep);text-decoration:none}
 footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:var(--jade-deep);letter-spacing:.06em;margin-bottom:10px}
 .ubtn,.cta{min-height:44px}
+
+/* 18+ age gate interstitial */
+.agegate{position:fixed;inset:0;z-index:200;background:rgba(20,26,22,0.55);backdrop-filter:blur(3px);
+  display:none;align-items:center;justify-content:center;padding:24px}
+.agegate.on{display:flex}
+.agegate .box{background:var(--card);border:1px solid var(--jade-border);border-radius:18px;max-width:340px;width:100%;
+  padding:26px 22px;text-align:center;box-shadow:0 14px 44px rgba(0,0,0,0.22)}
+.agegate .ic{font-size:30px;margin-bottom:10px}
+.agegate h3{font-family:'Playfair Display',serif;font-size:19px;margin-bottom:8px}
+.agegate p{font-size:12.5px;color:var(--sub);line-height:1.6;margin-bottom:18px}
+.agegate p b{color:var(--ink)}
+.agegate .ag-btns{display:flex;flex-direction:column;gap:9px}
+.agegate .ag-yes{background:linear-gradient(135deg,var(--jade),var(--jade-deep));color:#fff;border:none;
+  padding:14px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;min-height:44px}
+.agegate .ag-no{background:transparent;color:var(--sub);border:1px solid var(--jade-border);
+  padding:12px;border-radius:12px;font-size:12.5px;cursor:pointer;min-height:44px}
 </style>
 </head>
 <body>
+
+<!-- 18+ AGE GATE (photo = biometric data · adults only) -->
+<div id="ageGate" class="agegate">
+  <div class="box">
+    <div class="ic">🔞</div>
+    <h3 class="serif">One quick check</h3>
+    <p>Face reading uses a photo of your face — <b>personal (biometric) data</b>. This experience is for adults only.<br><br>Please confirm you're <b>18 or older</b> and that this is your own face.</p>
+    <div class="ag-btns">
+      <button class="ag-yes" onclick="passAgeGate()">I'm 18+ — continue</button>
+      <button class="ag-no" onclick="closeAgeGate()">I'm under 18 — go back</button>
+    </div>
+  </div>
+</div>
 
 <div class="topbar z1">
   <a href="home-en.html" class="back">‹</a>
@@ -180,7 +209,7 @@ footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:
 
   <div class="privacy">
     <span class="lock">🔐</span>
-    <div><b>Your photo is never stored.</b> It's analyzed in the moment and deleted right after — we keep the reading, not your face. Nothing is used to train AI or shared with anyone. <a href="privacy.html" style="color:var(--gold-deep);font-weight:600">How we handle photos ›</a></div>
+    <div><b>Your photo stays on your device — used in the moment, then discarded.</b> A face photo is personal (biometric) data, so we treat it that way: it's analyzed instantly and dropped right after — we keep the reading, not your face. Never stored, never used to train AI, never shared with anyone. <a href="privacy.html" style="color:var(--gold-deep);font-weight:600">How we handle photos ›</a></div>
   </div>
 
   <section class="section">
@@ -286,10 +315,31 @@ if(id==='view-analyzing')document.getElementById(id).classList.add('on');
 if(id==='view-result')document.getElementById(id).classList.add('on');
 window.scrollTo(0,0);
 }
+// ---- 18+ age gate: face photo = biometric data, adults only ----
+var _pendingDemo=false;
 function startDemo(e){
   if(e)e.preventDefault();
+  // gate the upload/analysis behind an 18+ confirmation (once per session)
+  if(sessionStorage.getItem('runae_age_ok')!=='1'){
+    _pendingDemo=true;
+    document.getElementById('ageGate').classList.add('on');
+    return;
+  }
+  runDemo();
+}
+function runDemo(){
   show('view-analyzing');
   setTimeout(function(){show('view-result');},2600);
+}
+function passAgeGate(){
+  sessionStorage.setItem('runae_age_ok','1');
+  document.getElementById('ageGate').classList.remove('on');
+  if(_pendingDemo){_pendingDemo=false;runDemo();}
+}
+function closeAgeGate(){
+  _pendingDemo=false;
+  document.getElementById('ageGate').classList.remove('on');
+  window.location.href='home-en.html';
 }
 </script>
 </body>
