@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5bbfa0">
+<title>Runae · Cross-Check — one chart, verified across systems</title>
+<meta name="description" content="Runae runs your birth chart through multiple ancient systems independently — BaZi and Zi Wei Dou Shu — then cross-checks them. Where they agree, you get high confidence. Where they clash, you see exactly why.">
+<meta property="og:title" content="Runae · Cross-Check">
+<meta property="og:description" content="Not one reading. Several ancient systems, run independently, then cross-checked. Agreement = high confidence. Conflict = we show you why.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --jade:#5bbfa0;--jade-deep:#3d9e82;--jade-light:#8dd9bf;
+  --jade-pale:rgba(91,191,160,0.08);--jade-border:rgba(91,191,160,0.22);
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;--gold-pale:rgba(201,168,76,0.08);
+  --warn:#c98a4c;--warn-pale:rgba(201,138,76,0.09);--warn-border:rgba(201,138,76,0.28);
+  --bg:#faf8f5;--card:#ffffff;--surface:#f2f5f2;
+  --ink:#1a1a18;--sub:rgba(60,75,65,0.72);--muted:rgba(80,95,85,0.45);
+  --radius:14px;--shadow:0 2px 12px rgba(0,0,0,0.06);
+}
+html{background:var(--bg);-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;color:var(--ink);max-width:440px;margin:0 auto;
+  min-height:100dvh;overflow-x:hidden;padding:0 0 calc(40px + env(safe-area-inset-bottom,0px))}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(91,191,160,0.09) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 30% at 80% 100%,rgba(201,168,76,0.05) 0%,transparent 50%)}
+.z1{position:relative;z-index:1}
+.serif{font-family:'Playfair Display',serif}
+.wrap{padding:0 20px}
+.jade-line{width:48px;height:2px;background:linear-gradient(90deg,transparent,var(--jade),transparent);margin:0 auto}
+a{color:inherit}
+
+/* Hero */
+.hero{text-align:center;padding:40px 20px 8px}
+.logo{font-family:'Playfair Display',serif;font-size:15px;letter-spacing:0.42em;color:var(--jade-deep);
+  text-transform:uppercase;margin-bottom:18px;padding-left:0.42em}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--jade-pale);
+  border:1px solid var(--jade-border);border-radius:20px;padding:6px 14px;
+  font-size:10px;color:var(--jade-deep);letter-spacing:.1em;text-transform:uppercase;margin-bottom:18px}
+.hero h1{font-family:'Playfair Display',serif;font-size:27px;font-weight:700;line-height:1.28;margin-bottom:12px}
+.hero h1 em{font-style:italic;color:var(--jade-deep)}
+.hero-sub{font-size:13.5px;color:var(--sub);line-height:1.7;margin-bottom:18px}
+.hero-sub b{color:var(--ink);font-weight:600}
+
+.ai-note{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--jade-pale);
+  border:1px solid var(--jade-border);border-radius:10px;padding:10px 14px;margin:14px 20px 0;
+  font-size:11.5px;color:var(--jade-deep);line-height:1.5}
+
+/* Systems row */
+.section{padding:26px 20px}
+.sec-cap{text-align:center;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--jade);font-weight:600;margin-bottom:8px}
+.sec-title{font-family:'Playfair Display',serif;text-align:center;font-size:21px;font-weight:700;margin-bottom:6px;line-height:1.3}
+.sec-sub{text-align:center;font-size:12.5px;color:var(--sub);line-height:1.6;margin:0 auto 18px;max-width:340px}
+
+.syschips{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.syschip{display:inline-flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--jade-border);
+  border-radius:20px;padding:8px 14px;font-size:12px;font-weight:600;color:var(--ink);box-shadow:var(--shadow)}
+.syschip .dot{width:8px;height:8px;border-radius:50%}
+.syschip.soon{opacity:.5;font-weight:400}
+.independent-note{text-align:center;font-size:11px;color:var(--muted);margin-top:8px;letter-spacing:.01em}
+
+/* Consensus gauge */
+.gauge{background:var(--card);border:1px solid var(--jade-border);border-radius:16px;padding:22px 20px;box-shadow:var(--shadow);text-align:center;margin-top:4px}
+.gauge-num{font-family:'Playfair Display',serif;font-size:48px;font-weight:700;color:var(--jade-deep);line-height:1}
+.gauge-num small{font-size:20px;color:var(--muted);font-weight:400}
+.gauge-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--jade);font-weight:600;margin-top:6px}
+.gauge-bar{height:8px;border-radius:6px;background:var(--surface);overflow:hidden;margin:16px 0 10px}
+.gauge-fill{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--jade-light),var(--jade),var(--jade-deep))}
+.gauge-cap{font-size:11.5px;color:var(--sub);line-height:1.55}
+
+/* Dimension cards (the cross-check comparison) */
+.dims{display:flex;flex-direction:column;gap:14px;margin-top:20px}
+.dim{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+.dim.diverge{border-color:var(--warn-border)}
+.dim-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--surface)}
+.dim-name{font-size:14px;font-weight:600;color:var(--ink)}
+.dim-name .ic{margin-right:7px}
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:20px;padding:4px 10px}
+.tag.consensus{background:var(--jade-pale);color:var(--jade-deep);border:1px solid var(--jade-border)}
+.tag.partial{background:var(--gold-pale);color:var(--gold-deep);border:1px solid rgba(201,168,76,0.3)}
+.tag.divergence{background:var(--warn-pale);color:var(--warn);border:1px solid var(--warn-border)}
+/* per-system verdict rows */
+.verdicts{padding:6px 16px 4px}
+.vrow{display:flex;align-items:baseline;gap:10px;padding:9px 0;border-bottom:1px dashed var(--surface)}
+.vrow:last-child{border-bottom:none}
+.vsys{flex-shrink:0;width:88px;font-size:11px;font-weight:600;color:var(--jade-deep)}
+.vbody{flex:1}
+.vverdict{font-size:13.5px;font-weight:600;color:var(--ink)}
+.vconf{font-size:10.5px;color:var(--muted);margin-left:6px;font-weight:500}
+.vreason{font-size:11.5px;color:var(--sub);line-height:1.5;margin-top:2px}
+.dim-summary{margin:2px 16px 14px;padding:11px 13px;border-radius:10px;font-size:12px;line-height:1.55}
+.dim-summary.consensus{background:var(--jade-pale);color:var(--jade-deep)}
+.dim-summary.partial{background:var(--gold-pale);color:var(--gold-deep)}
+.dim-summary.divergence{background:var(--warn-pale);color:#8a5a20}
+.dim-summary b{font-weight:700}
+
+.legend{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--sub);margin-top:18px}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+
+/* honesty box */
+.honest{background:var(--card);border:1px solid rgba(201,168,76,0.22);border-left:4px solid var(--gold);
+  border-radius:var(--radius);padding:18px 16px;margin-top:22px}
+.honest h3{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:var(--gold-deep);margin-bottom:9px}
+.honest p{font-size:12.5px;color:var(--sub);line-height:1.65}
+
+.actions{display:flex;gap:10px;margin-top:22px}
+.btn{flex:1;display:block;text-align:center;text-decoration:none;padding:14px;border-radius:12px;font-size:14px;font-weight:600;transition:.2s}
+.btn.primary{background:linear-gradient(135deg,var(--jade),var(--jade-deep));color:#fff;box-shadow:0 6px 18px rgba(91,191,160,0.28)}
+.btn.ghost{background:transparent;color:var(--jade-deep);border:1px solid var(--jade-border)}
+.btn:hover{transform:translateY(-1px)}
+
+footer{padding:26px 20px calc(26px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.85}
+footer a{color:var(--jade-deep);text-decoration:none}
+footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:var(--jade-deep);letter-spacing:.06em;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<div class="hero z1">
+  <div class="logo">Runae</div>
+  <span class="badge">✦ Cross-Check · Flagship</span>
+  <h1>One chart, <em>verified</em> across ancient systems</h1>
+  <p class="hero-sub">"BaZi says entrepreneur, Zi Wei says stay salaried — who do I listen to?" We run each system <b>independently</b> on the same chart, then cross-check them. Where they agree, you get high confidence. Where they clash, we show you <b>exactly why</b>.</p>
+</div>
+
+<div class="ai-note z1">🤖 Real charts from a precise Four Pillars &amp; Zi Wei engine — each system read independently, then compared.</div>
+
+<!-- SYSTEMS -->
+<div class="section z1">
+  <div class="sec-cap">Systems consulted</div>
+  <div class="syschips">
+    <div class="syschip"><span class="dot" style="background:var(--jade)"></span>BaZi · Four Pillars</div>
+    <div class="syschip"><span class="dot" style="background:var(--gold)"></span>Zi Wei Dou Shu</div>
+    <div class="syschip soon"><span class="dot" style="background:var(--muted)"></span>Vedic · soon</div>
+    <div class="syschip soon"><span class="dot" style="background:var(--muted)"></span>Tarot · soon</div>
+  </div>
+  <div class="independent-note">Each system排盘 &amp; read on its own — no system sees another's answer before the cross-check.</div>
+</div>
+
+<!-- CONSENSUS GAUGE -->
+<div class="section z1" style="padding-top:4px">
+  <div class="gauge">
+    <div class="gauge-num" id="overall">72<small>%</small></div>
+    <div class="gauge-label">Overall consensus</div>
+    <div class="gauge-bar"><div class="gauge-fill" id="overallFill" style="width:72%"></div></div>
+    <div class="gauge-cap">2 of 4 life dimensions align strongly across systems. 1 diverges — weigh it yourself below.</div>
+  </div>
+
+  <!-- DIMENSION COMPARISON -->
+  <div class="dims" id="dims">
+    <!-- WEALTH — consensus example -->
+    <div class="dim">
+      <div class="dim-head">
+        <div class="dim-name"><span class="ic">💰</span>Wealth</div>
+        <span class="tag consensus">⭐ Consensus · 88</span>
+      </div>
+      <div class="verdicts">
+        <div class="vrow"><div class="vsys">BaZi</div><div class="vbody"><span class="vverdict">Abundant</span><span class="vconf">conf 82</span><div class="vreason">Strong Wealth star rooted in the Day pillar; favorable element active in current luck cycle.</div></div></div>
+        <div class="vrow"><div class="vsys">Zi Wei</div><div class="vbody"><span class="vverdict">Abundant</span><span class="vconf">conf 79</span><div class="vreason">财帛 palace holds a wealth main-star with a 化禄 transformation — resourceful, money-attracting.</div></div></div>
+      </div>
+      <div class="dim-summary consensus"><b>⭐ Both systems agree:</b> a genuinely strong money signal. High-confidence — a shared read, not a coincidence.</div>
+    </div>
+
+    <!-- CAREER — divergence example (the killer case) -->
+    <div class="dim diverge">
+      <div class="dim-head">
+        <div class="dim-name"><span class="ic">💼</span>Career</div>
+        <span class="tag divergence">⚠️ Divergence · 40</span>
+      </div>
+      <div class="verdicts">
+        <div class="vrow"><div class="vsys">BaZi</div><div class="vbody"><span class="vverdict">Entrepreneurial</span><span class="vconf">conf 76</span><div class="vreason">Seven-Killings structure + independent Day Master leans toward building your own thing.</div></div></div>
+        <div class="vrow"><div class="vsys">Zi Wei</div><div class="vbody"><span class="vverdict">Steady / salaried</span><span class="vconf">conf 71</span><div class="vreason">官禄 palace favors institutions &amp; titles (天梁 + 文昌) — thrives inside structure, not chaos.</div></div></div>
+      </div>
+      <div class="dim-summary divergence"><b>⚠️ The systems disagree here.</b> BaZi reads "found your own thing"; Zi Wei reads "rise inside an organization." A likely both-true answer: build independently, but under a structured umbrella (studio, partner, or intrapreneur role). This is a decision to <b>weigh</b>, not a verdict to obey.</div>
+    </div>
+
+    <!-- LOVE — partial example -->
+    <div class="dim">
+      <div class="dim-head">
+        <div class="dim-name"><span class="ic">💞</span>Love &amp; Relationships</div>
+        <span class="tag partial">◐ Partial · 62</span>
+      </div>
+      <div class="verdicts">
+        <div class="vrow"><div class="vsys">BaZi</div><div class="vbody"><span class="vverdict">Committed</span><span class="vconf">conf 68</span><div class="vreason">Spouse palace stable; harmony outweighs clash in the branch relationships.</div></div></div>
+        <div class="vrow"><div class="vsys">Zi Wei</div><div class="vbody"><span class="vverdict">Independent</span><span class="vconf">conf 64</span><div class="vreason">夫妻 palace shows a self-directed streak — needs space inside closeness.</div></div></div>
+      </div>
+      <div class="dim-summary partial"><b>◐ Leaning aligned, with a nuance:</b> capable of commitment, but only with room to stay yourself. Both point to "close, not clingy."</div>
+    </div>
+
+    <!-- HEALTH — consensus example -->
+    <div class="dim">
+      <div class="dim-head">
+        <div class="dim-name"><span class="ic">🌿</span>Health &amp; Vitality</div>
+        <span class="tag consensus">⭐ Consensus · 81</span>
+      </div>
+      <div class="verdicts">
+        <div class="vrow"><div class="vsys">BaZi</div><div class="vbody"><span class="vverdict">Resilient</span><span class="vconf">conf 74</span><div class="vreason">Balanced elements with adequate Water — watch overwork, not fragility.</div></div></div>
+        <div class="vrow"><div class="vsys">Zi Wei</div><div class="vbody"><span class="vverdict">Resilient</span><span class="vconf">conf 77</span><div class="vreason">疾厄 palace calm, no major affliction stars — steady constitution.</div></div></div>
+      </div>
+      <div class="dim-summary consensus"><b>⭐ Both agree:</b> a robust baseline. The shared caution is pacing, not vulnerability. (Not medical advice.)</div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><span class="tag consensus" style="padding:2px 7px">⭐</span> Consensus</span>
+    <span><span class="tag partial" style="padding:2px 7px">◐</span> Partial</span>
+    <span><span class="tag divergence" style="padding:2px 7px">⚠️</span> Divergence</span>
+  </div>
+
+  <!-- HONESTY -->
+  <div class="honest">
+    <h3>What Cross-Check does &amp; doesn't prove</h3>
+    <p>Cross-Check runs each system independently and shows where they converge. <b>Agreement across systems does not prove a prediction will come true</b> — it only means several ancient lenses point the same way, which is worth noticing. Divergence isn't an error; it's two valid frameworks weighing different factors, and it's yours to reconcile. Nothing here is fate. All readings are AI-generated for self-reflection and entertainment only — not medical, legal, or financial advice.</p>
+  </div>
+
+  <div class="actions">
+    <a class="btn ghost" href="#" onclick="window.print();return false">Save / Screenshot</a>
+    <a class="btn primary" href="home-en.html">Run my Cross-Check</a>
+  </div>
+</div>
+
+<footer class="z1">
+  <div class="fbrand">Runae</div>
+  <div style="margin-bottom:10px">🤖 AI-generated · multi-system readings for self-reflection &amp; entertainment only.<br>Consensus ≠ certainty. Not medical, legal, or financial advice.</div>
+  <div>support@runae.app · © 2026 Runae · <a href="privacy.html">Privacy</a> · <a href="legal-us.html">Terms</a></div>
+</footer>
+
+<script>
+// Demo render is static above for the mockup. Wiring note for integration:
+//   POST /api/cross-check  →  { data: { systems, dimensions, perSystem, comparison, disclaimer } }
+//   overallConsensus → #overall + #overallFill width
+//   comparison.dimensions[key].status → tag class (consensus|partial|divergence)
+//   perSystem[sysId].dims[key] → {verdict, confidence, reason} rows
+// The static markup mirrors that exact shape so swap-in is 1:1.
+(function(){
+  var o=document.getElementById('overall');
+  if(o){var v=parseInt(o.textContent)||72;document.getElementById('overallFill').style.width=v+'%';}
+})();
+</script>
+</body>
+</html>
