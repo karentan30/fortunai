@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5bbfa0">
+<title>Runae · Life K-Line — see your whole life as a stock chart</title>
+<meta name="description" content="Turn your Eastern Four Pillars into a stock-style K-line chart of your whole life — the bull seasons, the bear seasons, the turning-point years. Calculated by a real engine, read by AI. Free big-picture chart.">
+<meta property="og:title" content="Runae · Your Life K-Line">
+<meta property="og:description" content="This isn't fortune-telling — it's your life's K-line chart. See your bull and bear seasons, drawn from an ancient Eastern method. Free.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://runae.app/life-kline">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Runae">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --jade:#5bbfa0;--jade-deep:#3d9e82;--jade-light:#8dd9bf;
+  --jade-pale:rgba(91,191,160,0.08);--jade-border:rgba(91,191,160,0.22);
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;--gold-pale:rgba(201,168,76,0.08);
+  --bg:#faf8f5;--card:#ffffff;--surface:#f2f5f2;
+  --ink:#1a1a18;--sub:rgba(60,75,65,0.72);--muted:rgba(80,95,85,0.45);
+  /* bull = jade green (up), bear = warm terracotta (down) — Eastern reading, not red/green trap */
+  --bull:#3d9e82;--bull-soft:rgba(61,158,130,0.14);
+  --bear:#c67a4e;--bear-soft:rgba(198,122,78,0.14);
+  --radius:14px;--shadow:0 2px 12px rgba(0,0,0,0.06);
+}
+html{background:var(--bg);-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;color:var(--ink);max-width:440px;margin:0 auto;
+  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(91,191,160,0.09) 0%,transparent 60%),var(--bg);
+  min-height:100vh;padding-bottom:40px}
+.serif{font-family:'Playfair Display',serif}
+.jade-line{width:48px;height:2px;background:linear-gradient(90deg,transparent,var(--jade),transparent);margin:14px auto}
+a{color:inherit;text-decoration:none}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:center;gap:9px;padding:20px 20px 4px}
+.clasp{width:20px;height:20px;border-radius:50%;flex-shrink:0;
+  background:radial-gradient(circle at 34% 27%,rgba(255,255,255,0.92) 0%,rgba(255,255,255,0.35) 7%,transparent 18%),
+    radial-gradient(circle at 70% 68%,var(--jade-deep) 0%,transparent 38%),
+    radial-gradient(ellipse at 42% 38%,var(--jade-light) 0%,var(--jade) 22%,var(--jade) 52%,var(--jade-deep) 100%)}
+.logo{font-family:'Playfair Display',serif;font-size:14px;letter-spacing:0.42em;color:var(--jade-deep)}
+
+.hero{text-align:center;padding:14px 22px 6px}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--jade-pale);border:1px solid var(--jade-border);
+  border-radius:20px;padding:6px 14px;font-size:10px;color:var(--jade-deep);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px}
+.hero h1{font-family:'Playfair Display',serif;font-size:27px;font-weight:700;line-height:1.28;margin-bottom:12px}
+.hero h1 em{font-style:italic;color:var(--jade-deep)}
+.hero-sub{font-size:13.5px;color:var(--sub);line-height:1.7;margin-bottom:6px}
+.hero-sub b{color:var(--ink);font-weight:600}
+
+.ai-note{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--jade-pale);
+  border:1px solid var(--jade-border);border-radius:12px;padding:11px 14px;margin:14px 20px 0;
+  font-size:11.5px;color:var(--jade-deep);letter-spacing:.02em;line-height:1.5;text-align:center}
+
+/* form */
+.form-card{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);
+  box-shadow:var(--shadow);margin:18px 20px;padding:20px 18px}
+.form-card h2{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;margin-bottom:4px}
+.form-card .cap{font-size:11.5px;color:var(--sub);margin-bottom:16px}
+label{display:block;font-size:11px;font-weight:600;color:var(--sub);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+.row{display:flex;gap:10px}
+.row .fld{flex:1}
+.fld{margin-bottom:14px}
+input,select{width:100%;border:1px solid var(--jade-border);border-radius:10px;padding:12px 12px;font-size:15px;
+  font-family:inherit;color:var(--ink);background:#fff;min-height:46px;-webkit-appearance:none}
+input:focus,select:focus{outline:none;border-color:var(--jade);box-shadow:0 0 0 3px var(--jade-pale)}
+.hint{font-size:10.5px;color:var(--muted);margin-top:-8px;margin-bottom:14px}
+.cta{display:block;width:100%;text-align:center;background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);
+  color:#3a2e0e;font-size:15px;font-weight:700;border:none;border-radius:30px;padding:15px;min-height:52px;
+  cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(201,168,76,0.28)}
+.cta:disabled{opacity:.6;cursor:default}
+.cta-note{font-size:11px;color:var(--muted);margin-top:10px;text-align:center}
+
+/* result */
+#result{display:none;padding:0 20px}
+.spin{display:none;text-align:center;padding:40px 20px;color:var(--jade-deep)}
+.spin.on{display:block}
+.spin .dot{display:inline-block;width:9px;height:9px;margin:0 3px;border-radius:50%;background:var(--jade);animation:b 1.2s infinite ease-in-out}
+.spin .dot:nth-child(2){animation-delay:.15s}.spin .dot:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.spin p{font-size:12.5px;color:var(--sub);margin-top:14px}
+
+.result-head{text-align:center;margin:6px 0 4px}
+.result-head .k{font-family:'Playfair Display',serif;font-size:21px;font-weight:700}
+.result-head .k em{font-style:italic;color:var(--jade-deep)}
+.result-head .meta{font-size:11.5px;color:var(--sub);margin-top:5px;line-height:1.6}
+.tag{display:inline-block;background:var(--jade-pale);border:1px solid var(--jade-border);border-radius:20px;
+  padding:3px 10px;font-size:10.5px;color:var(--jade-deep);margin:3px 3px 0}
+
+/* the chart */
+.chart-card{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:16px 12px 12px;margin:14px 0}
+.chart-card .clab{display:flex;justify-content:space-between;align-items:baseline;padding:0 4px 8px}
+.chart-card .clab b{font-family:'Playfair Display',serif;font-size:14px}
+.chart-card .clab span{font-size:10px;color:var(--muted)}
+#klineSvg{width:100%;height:auto;display:block;touch-action:none}
+.legend{display:flex;justify-content:center;gap:16px;margin-top:8px;font-size:10.5px;color:var(--sub)}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.legend .lb{background:var(--bull)}.legend .lr{background:var(--bear)}
+
+.turns{margin:12px 0}
+.turn{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--jade-border);
+  border-radius:12px;padding:12px 14px;margin-bottom:9px;box-shadow:var(--shadow)}
+.turn .yr{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;min-width:56px;text-align:center;line-height:1}
+.turn .yr small{display:block;font-size:9px;font-weight:400;color:var(--muted);letter-spacing:.06em;margin-top:3px}
+.turn .body{flex:1}
+.turn .body b{font-size:12.5px;display:block;margin-bottom:2px}
+.turn .body p{font-size:11.5px;color:var(--sub);line-height:1.5}
+.turn.peak .yr{color:var(--bull)}.turn.rise .yr{color:var(--bull)}.turn.trough .yr{color:var(--bear)}
+.pill{display:inline-block;font-size:9.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+  border-radius:6px;padding:2px 7px;margin-left:6px}
+.pill.bull{background:var(--bull-soft);color:var(--bull)}
+.pill.bear{background:var(--bear-soft);color:var(--bear)}
+
+.reading{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:20px 18px;margin:14px 0;font-size:13.5px;line-height:1.75;color:var(--ink)}
+.reading h3{font-family:'Playfair Display',serif;font-size:15px;color:var(--jade-deep);margin-bottom:10px}
+.reading p{margin-bottom:12px}
+.reading p:last-child{margin-bottom:0}
+
+/* paywall */
+.paywall{background:linear-gradient(135deg,rgba(91,191,160,0.06),rgba(201,168,76,0.06));
+  border:1px solid var(--jade-border);border-radius:var(--radius);padding:22px 18px;margin:14px 0;text-align:center}
+.paywall .lock{font-size:22px;margin-bottom:8px}
+.paywall h3{font-family:'Playfair Display',serif;font-size:16px;margin-bottom:6px}
+.paywall p{font-size:12.5px;color:var(--sub);line-height:1.6;margin-bottom:14px}
+.paywall .cta{max-width:260px;margin:0 auto}
+
+.share{display:flex;gap:10px;margin:14px 0 6px}
+.share button{flex:1;background:var(--jade-pale);border:1px solid var(--jade-border);color:var(--jade-deep);
+  font-size:12.5px;font-weight:600;border-radius:24px;padding:12px;min-height:46px;cursor:pointer;font-family:inherit}
+.share button:active{background:var(--jade-border)}
+
+.disc{font-size:10.5px;color:var(--muted);line-height:1.65;text-align:center;margin:16px 6px 4px}
+footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.85}
+footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:var(--jade-deep);letter-spacing:.06em;margin-bottom:8px}
+footer a{color:var(--jade-deep)}
+.err{display:none;background:var(--bear-soft);border:1px solid rgba(198,122,78,0.3);color:#8a4a24;
+  border-radius:10px;padding:12px 14px;font-size:12.5px;margin:12px 20px;text-align:center}
+</style>
+</head>
+<body>
+
+<div class="top"><span class="clasp"></span><span class="logo">RUNAE</span></div>
+
+<div class="hero">
+  <span class="badge">◆ Life K-Line · Four Pillars</span>
+  <h1>See your <em>whole life</em> as a stock chart</h1>
+  <p class="hero-sub">Your <b>bull seasons</b>, your <b>bear seasons</b>, the turning-point years — drawn from an ancient <b>Eastern Four Pillars</b> reading. Screenshot-worthy.</p>
+</div>
+<div class="ai-note">🤖 This isn't fortune-telling — it's your life's K-line, scored by a real Four Pillars engine and read by AI.</div>
+
+<!-- INPUT -->
+<div class="form-card" id="formCard">
+  <h2>Draw my Life K-Line</h2>
+  <p class="cap">Enter your birth details. Everything is computed by an exact engine — nothing invented.</p>
+  <div class="row">
+    <div class="fld"><label>Year</label><input id="y" type="number" inputmode="numeric" placeholder="1990" min="1900" max="2100"></div>
+    <div class="fld"><label>Month</label><input id="m" type="number" inputmode="numeric" placeholder="6" min="1" max="12"></div>
+    <div class="fld"><label>Day</label><input id="d" type="number" inputmode="numeric" placeholder="15" min="1" max="31"></div>
+  </div>
+  <div class="row">
+    <div class="fld"><label>Hour (optional)</label>
+      <select id="hour">
+        <option value="">Don't know</option>
+      </select>
+    </div>
+    <div class="fld"><label>Gender</label>
+      <select id="gender"><option value="male">Male</option><option value="female">Female</option></select>
+    </div>
+  </div>
+  <p class="hint">Hour sharpens the chart but isn't required — we'll use midday if unknown.</p>
+  <button class="cta" id="go">Draw my Life K-Line →</button>
+  <p class="cta-note">Free · big-picture chart + turning-point years</p>
+</div>
+
+<div class="err" id="err"></div>
+
+<div class="spin" id="spin"><span class="dot"></span><span class="dot"></span><span class="dot"></span><p>Casting your Four Pillars and scoring every year…</p></div>
+
+<!-- RESULT -->
+<div id="result">
+  <div class="result-head">
+    <div class="k serif">Your <em>Life K-Line</em></div>
+    <div class="meta" id="meta"></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="clab"><b class="serif">Life fortune trend</b><span id="spanLab"></span></div>
+    <svg id="klineSvg" viewBox="0 0 360 200" preserveAspectRatio="none"></svg>
+    <div class="legend"><span><i class="lb"></i>Bull season (tailwind)</span><span><i class="lr"></i>Bear season (headwind)</span></div>
+  </div>
+
+  <div class="turns" id="turns"></div>
+
+  <div class="reading" id="reading"></div>
+
+  <div class="paywall" id="paywall" style="display:none">
+    <div class="lock">🔒</div>
+    <h3>Unlock the year-by-year read</h3>
+    <p id="paywallMsg">Every single year decoded — its theme, and the smartest move for that season.</p>
+    <button class="cta" onclick="location.href='/pricing-en.html'">Unlock full read · $9.90/mo</button>
+  </div>
+
+  <div class="share">
+    <button id="shareBtn">Share my K-Line</button>
+    <button id="againBtn">Draw another</button>
+  </div>
+
+  <p class="disc">A "bull year" means the winds are behind you; a "bear year" means a season to build quietly — these are <b>trends, not guarantees</b>. This is the weather of your life, not your destiny. For self-reflection and entertainment only — not medical, legal, or financial advice.</p>
+</div>
+
+<footer>
+  <div class="fbrand">Runae</div>
+  Ancient Eastern wisdom, decoded by AI · <a href="/index.html">Home</a> · <a href="/legal-en.html">Terms</a>
+</footer>
+
+<script>
+const $ = s => document.querySelector(s);
+// populate hour options 0-23 with readable labels
+(function(){
+  const sel = $('#hour');
+  for(let h=0; h<24; h++){
+    const o=document.createElement('option'); o.value=h;
+    const ap = h<12?'am':'pm'; const h12 = h%12===0?12:h%12;
+    o.textContent = h12+':00 '+ap+' ('+String(h).padStart(2,'0')+':00)';
+    sel.appendChild(o);
+  }
+})();
+
+let lastChart = null;
+
+function showErr(msg){ const e=$('#err'); e.textContent=msg; e.style.display='block'; setTimeout(()=>e.style.display='none',5000); }
+
+async function draw(){
+  const y=+$('#y').value, m=+$('#m').value, d=+$('#d').value;
+  if(!y||!m||!d||y<1900||y>2100||m<1||m>12||d<1||d>31){ showErr('Please enter a valid birth date (year, month, day).'); return; }
+  const body = { year:y, month:m, day:d, gender:$('#gender').value };
+  if($('#hour').value!=='') body.hour = +$('#hour').value;
+
+  $('#go').disabled=true; $('#formCard').style.display='none'; $('#spin').classList.add('on');
+  let sid = localStorage.getItem('runae_sid'); if(!sid){ sid='s'+Math.random().toString(36).slice(2)+Date.now(); localStorage.setItem('runae_sid',sid); }
+  const token = localStorage.getItem('runae_token')||'';
+  try{
+    const res = await fetch('/api/life-kline',{ method:'POST',
+      headers:{ 'Content-Type':'application/json','x-session-id':sid, ...(token?{'Authorization':token}:{}) },
+      body: JSON.stringify(body) });
+    const data = await res.json();
+    $('#spin').classList.remove('on'); $('#go').disabled=false;
+    if(data.upgrade){ $('#formCard').style.display='block'; showErr(data.message||'Free reading used for today — come back tomorrow.'); return; }
+    if(data.error){ $('#formCard').style.display='block'; showErr(data.error); return; }
+    render(data);
+  }catch(e){
+    $('#spin').classList.remove('on'); $('#go').disabled=false; $('#formCard').style.display='block';
+    showErr('The chart is still drawing — please try again.');
+  }
+}
+
+function trendColor(t){ return (t==='bull'||t==='up') ? getCSS('--bull') : (t==='bear'||t==='down') ? getCSS('--bear') : '#9aa8a0'; }
+function getCSS(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+function render(data){
+  lastChart = data.chart;
+  const c = data.chart;
+  // meta
+  const elName = { '木':'Wood','火':'Fire','土':'Earth','金':'Metal','水':'Water' };
+  const favEN = (c.favorable||[]).map(x=>elName[x]||x).join(' + ');
+  $('#meta').innerHTML =
+    'Day Master · <b>'+(elName[c.dayMasterElement]||c.dayMasterElement)+'</b> '+
+    '<span class="tag">'+(c.verdict==='偏弱'||c.verdict==='弱'?'Balance: supported best by '+favEN:c.verdict==='偏旺'||c.verdict==='旺'?'Balance: thrives when it flows out':'Balance: steady')+'</span>';
+  $('#spanLab').textContent = c.span ? ('age '+c.span.fromAge+'–'+c.span.toAge) : '';
+
+  drawKline(c);
+  renderTurns(c.turningPoints);
+  // reading
+  $('#reading').innerHTML = '<h3>Reading your K-Line</h3>' + (data.reading||'').trim().split(/\n\n+/).map(p=>'<p>'+escapeHtml(p)+'</p>').join('');
+  // paywall for non-members
+  if(!data.full){ $('#paywall').style.display='block'; if(data.remaining!==undefined && data.remaining<=0) $('#paywallMsg').textContent='Every single year decoded — its theme, and the smartest move for that season. (Your free chart for today is done.)'; }
+  else $('#paywall').style.display='none';
+
+  $('#result').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function escapeHtml(s){ return s.replace(/[&<>]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[ch])); }
+
+// ── K-line: draw yearly scores as a candle-ish column + connecting line ──
+function drawKline(c){
+  const svg = $('#klineSvg');
+  const years = c.years||[];
+  const W=360, H=200, padL=6, padR=6, padT=10, padB=18;
+  const n = years.length || 1;
+  const innerW = W-padL-padR, innerH = H-padT-padB;
+  const colW = innerW/n;
+  const x = i => padL + colW*i + colW/2;
+  const yv = s => padT + innerH*(1 - (s-8)/(96-8)); // score 8..96 → bottom..top
+  const bull = getCSS('--bull'), bear = getCSS('--bear');
+
+  let bars='', gridline='', line='M', dots='';
+  // midline (score 50)
+  const midY = yv(50);
+  gridline += '<line x1="'+padL+'" y1="'+midY+'" x2="'+(W-padR)+'" y2="'+midY+'" stroke="rgba(0,0,0,0.06)" stroke-dasharray="3 4"/>';
+
+  years.forEach((p,i)=>{
+    const cx=x(i), top=yv(p.score), base=midY;
+    const up = p.score>=50;
+    const col = up?bull:bear;
+    const bw = Math.max(1.4, colW*0.42);
+    const ry = Math.min(top,base), rh = Math.abs(base-top);
+    bars += '<rect x="'+(cx-bw/2).toFixed(1)+'" y="'+ry.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+Math.max(0.8,rh).toFixed(1)+'" rx="0.8" fill="'+col+'" opacity="0.5"/>';
+    line += (i===0?'':' L')+cx.toFixed(1)+' '+top.toFixed(1);
+    if(p.volatile) dots += '<circle cx="'+cx.toFixed(1)+'" cy="'+top.toFixed(1)+'" r="1.8" fill="'+getCSS('--gold')+'"/>';
+  });
+
+  // decade age ticks
+  let ticks='';
+  (c.decades||[]).forEach(dc=>{
+    const idx = years.findIndex(p=>p.year>=dc.startYear);
+    if(idx>=0){ const cx=x(idx); ticks += '<text x="'+cx.toFixed(1)+'" y="'+(H-6)+'" font-size="7" fill="rgba(0,0,0,0.32)" text-anchor="middle" font-family="Inter">'+dc.startAge+'</text>'; }
+  });
+  // mark turning points
+  let marks='';
+  (c.turningPoints||[]).forEach(tp=>{
+    const idx = years.findIndex(p=>p.year===tp.year); if(idx<0) return;
+    const cx=x(idx), cy=yv(tp.score); const col = tp.kind==='trough'?bear:bull;
+    marks += '<circle cx="'+cx.toFixed(1)+'" cy="'+cy.toFixed(1)+'" r="3.4" fill="#fff" stroke="'+col+'" stroke-width="1.6"/>';
+    marks += '<text x="'+cx.toFixed(1)+'" y="'+(cy-6).toFixed(1)+'" font-size="8" font-weight="700" fill="'+col+'" text-anchor="middle" font-family="Inter">'+tp.year+'</text>';
+  });
+
+  svg.innerHTML = gridline + bars +
+    '<path d="'+line+'" fill="none" stroke="url(#kg)" stroke-width="1.6" stroke-linejoin="round"/>' +
+    dots + marks + ticks +
+    '<defs><linearGradient id="kg" x1="0" y1="0" x2="1" y2="0">'+
+    '<stop offset="0" stop-color="'+getCSS('--jade-deep')+'"/><stop offset="1" stop-color="'+getCSS('--jade')+'"/></linearGradient></defs>';
+}
+
+function renderTurns(tps){
+  const elc={ peak:{lbl:'Peak season',cls:'peak'}, rise:{lbl:'Biggest upswing',cls:'rise'}, trough:{lbl:'Toughest season',cls:'trough'} };
+  const desc={ peak:'Your strongest tailwind — the winds are behind you. A season to reach.', rise:'A turnaround year — momentum swings back up. Good ground to rebuild on.', trough:'Headwinds. A season to build quietly, protect your base, and be patient.' };
+  $('#turns').innerHTML = (tps||[]).map(tp=>{
+    const e=elc[tp.kind]||elc.peak;
+    const pill = tp.kind==='trough'?'<span class="pill bear">Bear</span>':'<span class="pill bull">Bull</span>';
+    return '<div class="turn '+e.cls+'"><div class="yr">'+tp.year+'<small>AGE '+tp.age+'</small></div>'+
+      '<div class="body"><b>'+e.lbl+pill+'</b><p>'+desc[tp.kind]+(tp.volatile?' A clash year — expect movement.':'')+'</p></div></div>';
+  }).join('');
+}
+
+$('#go').addEventListener('click', draw);
+$('#againBtn').addEventListener('click', ()=>{ $('#result').style.display='none'; $('#formCard').style.display='block'; window.scrollTo({top:0,behavior:'smooth'}); });
+$('#shareBtn').addEventListener('click', async ()=>{
+  const text = 'I turned my whole life into a stock K-line chart 📈 — my bull years, my bear years. This isn\'t fortune-telling, it\'s my Life K-Line. Try yours:';
+  const url = location.origin + '/life-kline';
+  try{ if(navigator.share){ await navigator.share({ title:'My Life K-Line · Runae', text, url }); } else { await navigator.clipboard.writeText(text+' '+url); showErr('Link copied — paste it anywhere.'); } }
+  catch(e){}
+});
+</script>
+</body>
+</html>
