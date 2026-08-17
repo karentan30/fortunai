@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5bbfa0">
+<title>Runae · Best Time to Reach Out</title>
+<meta name="description" content="Give us two birthdays and Runae shows the exact days and hours in the next 30 days when reaching out is most likely to land well. Timing guidance, not a promise.">
+<meta property="og:title" content="Runae · Best Time to Reach Out">
+<meta property="og:description" content="The exact day + hour to text them — read from both birth charts. Free first window.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --jade:#5bbfa0;--jade-deep:#3d9e82;--jade-light:#8dd9bf;
+  --jade-pale:rgba(91,191,160,0.08);--jade-border:rgba(91,191,160,0.22);
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;--gold-pale:rgba(201,168,76,0.08);
+  --rose:#c9607a;
+  --bg:#faf8f5;--card:#ffffff;--surface:#f2f5f2;
+  --ink:#1a1a18;--sub:rgba(60,75,65,0.72);--muted:rgba(80,95,85,0.45);
+  --radius:14px;--shadow:0 2px 12px rgba(0,0,0,0.06);
+}
+html{background:var(--bg);-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;color:var(--ink);max-width:440px;margin:0 auto;
+  min-height:100dvh;overflow-x:hidden;
+  padding:0 0 calc(40px + env(safe-area-inset-bottom,0px));
+  padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(91,191,160,0.09) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 30% at 80% 100%,rgba(201,168,76,0.05) 0%,transparent 50%)}
+.z1{position:relative;z-index:1}
+.serif{font-family:'Playfair Display',serif}
+.wrap{padding:0 20px}
+.jade-line{width:48px;height:2px;background:linear-gradient(90deg,transparent,var(--jade),transparent);margin:0 auto}
+
+/* clasp orb */
+.clasp{position:relative;border-radius:50%;width:80px;height:80px;margin:0 auto 14px;
+  background:radial-gradient(circle at 34% 27%,rgba(255,255,255,0.92) 0%,rgba(255,255,255,0.35) 7%,transparent 18%),
+    radial-gradient(circle at 70% 68%,var(--jade-deep) 0%,transparent 38%),
+    radial-gradient(circle at 20% 72%,rgba(0,180,80,0.22) 0%,transparent 35%),
+    radial-gradient(ellipse at 42% 38%,var(--jade-light) 0%,var(--jade) 22%,var(--jade) 52%,var(--jade-deep) 100%);
+  box-shadow:0 6px 22px rgba(91,191,160,0.32)}
+.clasp::after{content:'';position:absolute;border-radius:50%;background:var(--bg);
+  width:19px;height:19px;top:50%;left:50%;transform:translate(-50%,-50%);
+  box-shadow:inset 0 2px 6px rgba(0,0,0,0.08)}
+
+.back-btn{position:fixed;top:14px;left:14px;z-index:99;background:rgba(250,248,245,0.8);backdrop-filter:blur(8px);
+  border:1px solid var(--jade-border);border-radius:20px;font-size:13px;color:var(--jade-deep);cursor:pointer;
+  padding:7px 13px;text-decoration:none;min-height:36px;display:flex;align-items:center}
+
+/* hero */
+.hero{text-align:center;padding:48px 20px 22px}
+.logo{font-family:'Playfair Display',serif;font-size:14px;letter-spacing:0.42em;color:var(--jade-deep);
+  text-transform:uppercase;margin-bottom:16px;padding-left:0.42em}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--jade-pale);
+  border:1px solid var(--jade-border);border-radius:20px;padding:6px 14px;
+  font-size:10px;color:var(--jade-deep);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px}
+.hero h1{font-family:'Playfair Display',serif;font-size:27px;font-weight:700;line-height:1.28;
+  margin-bottom:12px;color:var(--ink)}
+.hero h1 em{font-style:italic;color:var(--jade-deep)}
+.hero-sub{font-size:13.5px;color:var(--sub);line-height:1.7;margin-bottom:0}
+.hero-sub b{color:var(--ink);font-weight:600}
+
+.ai-note{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--jade-pale);
+  border:1px solid var(--jade-border);border-radius:12px;padding:10px 14px;margin:16px 20px 0;
+  font-size:11px;color:var(--jade-deep);letter-spacing:.02em;line-height:1.5;text-align:center}
+
+/* form */
+.section{padding:26px 20px}
+.card{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);
+  padding:18px 16px;box-shadow:var(--shadow);margin-bottom:14px}
+.card-title{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--jade-deep);font-weight:600;margin-bottom:4px}
+.card-hint{font-size:11.5px;color:var(--muted);margin-bottom:14px;line-height:1.5}
+.field-row{display:flex;gap:8px;margin-bottom:10px}
+.field{flex:1;background:var(--surface);border:1px solid var(--jade-border);border-radius:10px;padding:5px 8px}
+.field label{display:block;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:1px}
+.field select,.field input{width:100%;background:none;border:none;outline:none;font-family:'Inter',sans-serif;
+  font-size:13px;color:var(--ink);padding:4px 2px;min-height:34px;-webkit-appearance:none}
+.gender{display:flex;gap:8px;margin-bottom:4px}
+.gender button{flex:1;background:var(--surface);border:1px solid var(--jade-border);border-radius:10px;
+  padding:10px;font-size:13px;color:var(--sub);cursor:pointer;min-height:44px;transition:.15s}
+.gender button.on{border-color:var(--jade);background:var(--jade-pale);color:var(--jade-deep);font-weight:600}
+
+.scenarios{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.scen{background:var(--surface);border:1px solid var(--jade-border);border-radius:12px;padding:14px 12px;
+  cursor:pointer;text-align:left;transition:.15s;min-height:44px}
+.scen.on{border-color:var(--jade);background:var(--jade-pale);box-shadow:0 0 0 1px var(--jade)}
+.scen .em{font-size:20px;display:block;margin-bottom:5px}
+.scen h4{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.scen p{font-size:10.5px;color:var(--muted);line-height:1.4}
+
+.consent{display:flex;gap:9px;align-items:flex-start;font-size:11px;color:var(--sub);line-height:1.5;
+  margin:14px 4px 2px}
+.consent input{margin-top:2px;accent-color:var(--jade-deep);width:15px;height:15px;flex-shrink:0}
+.consent a{color:var(--jade-deep)}
+
+.cta{display:block;width:100%;margin:18px 0 0;padding:16px 18px;text-align:center;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);border-radius:30px;color:#3a2e0e;
+  font-family:'Inter',sans-serif;font-size:16px;font-weight:700;box-shadow:0 6px 20px rgba(201,168,76,0.36);
+  transition:.2s;min-height:52px}
+.cta:disabled{opacity:.55;cursor:default}
+.cta small{display:block;font-size:11px;font-weight:400;opacity:.9;margin-top:3px}
+
+/* loading */
+#loading{display:none;text-align:center;padding:70px 30px}
+#loading.show{display:block}
+.spinner{width:44px;height:44px;margin:0 auto 20px;border-radius:50%;
+  border:3px solid var(--jade-border);border-top-color:var(--jade-deep);animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading .lz{font-size:14px;color:var(--jade-deep);font-weight:600;margin-bottom:6px}
+#loading .lz-sub{font-size:12px;color:var(--muted);line-height:1.6}
+
+/* result */
+#result{display:none}
+#result.show{display:block}
+.verdict{background:linear-gradient(135deg,#fff,var(--gold-pale));border:1px solid rgba(201,168,76,0.3);
+  border-radius:18px;padding:24px 20px;text-align:center;box-shadow:var(--shadow);margin-bottom:18px}
+.verdict .vk{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-deep);font-weight:600;margin-bottom:8px}
+.verdict .vd{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:var(--ink);line-height:1.25;margin-bottom:4px}
+.verdict .vd em{font-style:normal;color:var(--jade-deep)}
+.verdict .vt{font-size:12.5px;color:var(--sub);margin-top:8px;line-height:1.55}
+.verdict .star{font-size:22px}
+
+.sec-cap{text-align:center;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--jade);font-weight:600;margin:26px 0 4px}
+.sec-title{font-family:'Playfair Display',serif;text-align:center;font-size:20px;font-weight:700;margin-bottom:14px}
+
+/* calendar strip */
+.cal{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);padding:16px 12px;box-shadow:var(--shadow);margin-bottom:18px}
+.cal-legend{display:flex;justify-content:center;gap:16px;font-size:10.5px;color:var(--muted);margin-bottom:12px}
+.cal-legend b{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:middle;margin-right:4px}
+.dot-best{background:var(--gold)}.dot-good{background:var(--jade)}.dot-low{background:rgba(120,130,120,0.22)}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal-cell{aspect-ratio:1;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:var(--surface);font-size:10px;color:var(--muted);position:relative;cursor:default}
+.cal-cell.best{background:var(--gold-pale);border:1px solid rgba(201,168,76,0.4);color:var(--gold-deep);font-weight:700;cursor:pointer}
+.cal-cell.good{background:var(--jade-pale);border:1px solid var(--jade-border);color:var(--jade-deep);font-weight:600;cursor:pointer}
+.cal-cell .mk{font-size:11px;line-height:1;margin-top:1px}
+
+/* window cards */
+.win{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin-bottom:12px}
+.win.best{border-color:rgba(201,168,76,0.4);box-shadow:0 0 0 1px rgba(201,168,76,0.25),var(--shadow)}
+.win-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:8px}
+.win-date{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--ink)}
+.win-date span{font-size:12px;color:var(--sub);font-family:'Inter',sans-serif;font-weight:400}
+.win-tag{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;border-radius:6px;padding:3px 8px;white-space:nowrap}
+.win-tag.best{background:var(--gold);color:#3a2e0e}
+.win-tag.good{background:var(--jade-pale);color:var(--jade-deep);border:1px solid var(--jade-border)}
+.win-time{display:inline-flex;align-items:center;gap:6px;background:var(--jade-pale);border:1px solid var(--jade-border);
+  border-radius:8px;padding:6px 10px;font-size:12.5px;color:var(--jade-deep);font-weight:600;margin-bottom:10px}
+.win-why{font-size:12.5px;color:var(--sub);line-height:1.6;margin-bottom:8px}
+.win-why b{color:var(--ink);font-weight:600}
+.win-tone{font-size:12px;color:var(--sub);line-height:1.55;background:var(--surface);border-left:3px solid var(--jade);
+  border-radius:0 8px 8px 0;padding:9px 11px}
+.win-tone b{color:var(--jade-deep);font-weight:600}
+
+/* paywall */
+.lock{background:var(--card);border:1px dashed var(--jade-border);border-radius:var(--radius);padding:22px 18px;text-align:center;box-shadow:var(--shadow);margin-bottom:12px;position:relative}
+.lock-blur{filter:blur(5px);opacity:.5;pointer-events:none;user-select:none;margin-bottom:14px}
+.lock-blur .win-date{font-size:15px}
+.lock h3{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--ink);margin-bottom:6px}
+.lock p{font-size:12px;color:var(--sub);line-height:1.6;margin-bottom:14px}
+.lock ul{list-style:none;text-align:left;max-width:260px;margin:0 auto 16px;font-size:12.5px;color:var(--sub);line-height:1.9}
+.lock ul li::before{content:"✓ ";color:var(--jade);font-weight:700}
+.lock-price{font-size:26px;font-weight:700;color:var(--jade-deep);margin-bottom:2px}
+.lock-price span{font-size:12px;font-weight:400;color:var(--sub)}
+.lock-note{font-size:11px;color:var(--muted);margin-bottom:14px}
+.unlock-btn{display:block;width:100%;padding:15px;border:none;cursor:pointer;border-radius:12px;
+  background:linear-gradient(135deg,var(--jade),var(--jade-deep));color:#fff;font-size:15px;font-weight:600;min-height:50px}
+
+/* share */
+.share-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;margin-top:4px;
+  background:var(--surface);border:1px solid var(--jade-border);border-radius:12px;color:var(--jade-deep);
+  font-size:14px;font-weight:600;cursor:pointer;min-height:48px}
+.avoid{background:var(--card);border:1px solid rgba(201,96,122,0.22);border-left:4px solid var(--rose);
+  border-radius:var(--radius);padding:15px 16px;box-shadow:var(--shadow);margin-bottom:12px}
+.avoid h4{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--rose);font-weight:600;margin-bottom:6px}
+.avoid p{font-size:12px;color:var(--sub);line-height:1.6}
+
+.disclaimer{font-size:11px;color:var(--muted);line-height:1.7;text-align:center;padding:22px 24px 10px}
+.disclaimer b{color:var(--sub);font-weight:600}
+footer{padding:8px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.85}
+footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:var(--jade-deep);letter-spacing:.06em;margin-bottom:8px}
+footer a{color:var(--jade-deep);text-decoration:none}
+.demo-tag{position:fixed;top:14px;right:14px;z-index:99;font-size:9px;letter-spacing:.08em;background:rgba(201,168,76,0.14);
+  border:1px solid rgba(201,168,76,0.3);color:var(--gold-deep);border-radius:14px;padding:5px 9px;text-transform:uppercase}
+</style>
+</head>
+<body>
+
+<a class="back-btn" href="home-en.html">← Runae</a>
+<div class="demo-tag">Hi-fi mockup</div>
+
+<!-- ===== INPUT SCREEN ===== -->
+<div id="input">
+  <header class="hero z1">
+    <div class="logo">Runae</div>
+    <div class="clasp"></div>
+    <div class="badge">✦ Timing guidance</div>
+    <h1 class="serif">The best day &amp; hour to<br><em>reach out to them</em></h1>
+    <p class="hero-sub">Give us both birthdays. Runae reads the next <b>30 days</b> from both charts and shows the specific windows when a message is most likely to <b>land well</b>.</p>
+  </header>
+
+  <div class="ai-note z1">🤖 AI-powered · windows are computed from a real Four Pillars engine, not a generic horoscope</div>
+
+  <section class="section z1">
+    <!-- YOU -->
+    <div class="card">
+      <div class="card-title">You</div>
+      <div class="card-hint">Solar (Gregorian) calendar.</div>
+      <div class="field-row">
+        <div class="field"><label>Year</label><select id="y_year"></select></div>
+        <div class="field"><label>Month</label><select id="y_month"></select></div>
+        <div class="field"><label>Day</label><select id="y_day"></select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Birth hour (optional)</label><select id="y_hour"></select></div>
+      </div>
+      <div class="gender">
+        <button type="button" class="on" data-g="female" onclick="pickG(this,'you')">Female</button>
+        <button type="button" data-g="male" onclick="pickG(this,'you')">Male</button>
+      </div>
+    </div>
+
+    <!-- THEM -->
+    <div class="card">
+      <div class="card-title">Them</div>
+      <div class="card-hint">Roughly is fine — if you don't know their birth hour, leave it "Unknown". We'll read their day energy.</div>
+      <div class="field-row">
+        <div class="field"><label>Year</label><select id="t_year"></select></div>
+        <div class="field"><label>Month</label><select id="t_month"></select></div>
+        <div class="field"><label>Day</label><select id="t_day"></select></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Birth hour (optional)</label><select id="t_hour"></select></div>
+      </div>
+      <div class="gender">
+        <button type="button" class="on" data-g="male" onclick="pickG(this,'them')">Male</button>
+        <button type="button" data-g="female" onclick="pickG(this,'them')">Female</button>
+      </div>
+    </div>
+
+    <!-- SCENARIO -->
+    <div class="card">
+      <div class="card-title">What is this about?</div>
+      <div class="card-hint">This tunes the tone suggestions.</div>
+      <div class="scenarios">
+        <button type="button" class="scen on" data-s="crush" onclick="pickS(this)"><span class="em">🌱</span><h4>A crush</h4><p>Something's there, unspoken</p></button>
+        <button type="button" class="scen" data-s="ex_reconcile" onclick="pickS(this)"><span class="em">💔</span><h4>An ex</h4><p>Hoping to reconnect</p></button>
+        <button type="button" class="scen" data-s="win_over" onclick="pickS(this)"><span class="em">✨</span><h4>Win them over</h4><p>Someone I want to move</p></button>
+        <button type="button" class="scen" data-s="cold_contact" onclick="pickS(this)"><span class="em">🕊️</span><h4>Reconnect</h4><p>It's been a while</p></button>
+      </div>
+    </div>
+
+    <label class="consent z1">
+      <input type="checkbox" id="consent">
+      <span>I'm 18+ and understand this is a reflection tool about <b>my own timing</b> — entertainment only, not surveillance of another person. Birth data is encrypted, never sold, deletable anytime. (<a href="/legal-en.html#privacy">Privacy</a>)</span>
+    </label>
+
+    <div class="section" style="padding:0 0 4px">
+      <button class="cta" id="goBtn" onclick="run()" disabled>Find my golden windows →<small>Free: your next window · full 30 days from $19.90</small></button>
+    </div>
+  </section>
+</div>
+
+<!-- ===== LOADING ===== -->
+<div id="loading" class="z1">
+  <div class="spinner"></div>
+  <div class="lz" id="lzText">Casting both charts…</div>
+  <div class="lz-sub">Reading day &amp; hour energy across the next 30 days</div>
+</div>
+
+<!-- ===== RESULT ===== -->
+<div id="result" class="z1"><div class="wrap">
+
+  <div style="text-align:center;padding:36px 0 6px"><div class="logo" style="margin-bottom:6px">Runae</div><div class="jade-line"></div></div>
+
+  <!-- verdict -->
+  <div class="verdict" id="shareCard">
+    <div class="vk">Your next golden window</div>
+    <div class="vd" id="vdDate"><em>—</em></div>
+    <div class="star">⭐</div>
+    <div class="vt" id="vdTime">—</div>
+  </div>
+
+  <button class="share-btn" onclick="shareIt()">📸 Save my golden windows card</button>
+
+  <!-- calendar -->
+  <div class="sec-cap">Next 30 days</div>
+  <h2 class="sec-title serif">Your window map</h2>
+  <div class="cal">
+    <div class="cal-legend">
+      <span><b class="dot-best"></b>Best</span>
+      <span><b class="dot-good"></b>Good</span>
+      <span><b class="dot-low"></b>Quiet</span>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+  </div>
+
+  <!-- free window (full) -->
+  <div class="sec-cap">Free preview</div>
+  <h2 class="sec-title serif">Your best window</h2>
+  <div id="freeWin"></div>
+
+  <!-- avoid teaser -->
+  <div class="avoid">
+    <h4>⚠️ One day to skip</h4>
+    <p id="avoidText">There's a clash day coming where words tend to catch — the full plan flags it so you can give it a beat. Unlock to see which.</p>
+  </div>
+
+  <!-- paywall -->
+  <div class="sec-cap">Unlock the rest</div>
+  <h2 class="sec-title serif">All 30-day windows</h2>
+  <div class="lock">
+    <div class="lock-blur" id="lockPreview"></div>
+    <h3>+<span id="moreCount">4</span> more windows in the next 30 days</h3>
+    <p>Every date &amp; 时辰 with the reason and a tailored tone script — plus the days to avoid.</p>
+    <ul>
+      <li>All best &amp; good windows, full 30 days</li>
+      <li>Exact 时辰 (2-hour block) for each</li>
+      <li>What to say — tone script per window</li>
+      <li>Days to skip (clash days)</li>
+    </ul>
+    <div class="lock-price">$19.90 <span>one-off</span></div>
+    <div class="lock-note">or included in Runae membership · secure checkout</div>
+    <button class="unlock-btn" onclick="alert('Demo: routes to Stripe / 微信 / 支付宝 checkout (report price tier)')">Unlock full 30 days</button>
+  </div>
+
+  <div class="disclaimer">
+    <b>Timing guidance, not a promise.</b> A good window improves your odds and your own poise — it doesn't control anyone. You still choose the words, and the outcome is theirs to give.<br><br>
+    🤖 AI-generated content (AIGC) · For entertainment &amp; self-reflection only · 18+ · Not medical, legal, financial or psychological advice.
+  </div>
+
+  <footer>
+    <div class="fbrand">Runae</div>
+    <a href="/legal-en.html#terms">Terms</a> · <a href="/legal-en.html#privacy">Privacy</a>
+  </footer>
+</div></div>
+
+<script>
+// ============================================================
+//  NOTE: This is a hi-fi MOCKUP. In production, windows come from
+//  POST /api/best-timing which runs the deterministic bazi engine
+//  (getDayGanZhi / getHourGanZhi + scoring rubric). The client NEVER
+//  computes or invents dates. The block below only SIMULATES a
+//  plausible response so the prototype is interactive.
+// ============================================================
+
+var HOURS = [
+  {v:'',t:'Unknown birth hour'},
+  {v:0,t:'Rat 子 · 11pm–1am'},{v:1,t:'Ox 丑 · 1–3am'},{v:2,t:'Tiger 寅 · 3–5am'},
+  {v:3,t:'Rabbit 卯 · 5–7am'},{v:4,t:'Dragon 辰 · 7–9am'},{v:5,t:'Snake 巳 · 9–11am'},
+  {v:6,t:'Horse 午 · 11am–1pm'},{v:7,t:'Goat 未 · 1–3pm'},{v:8,t:'Monkey 申 · 3–5pm'},
+  {v:9,t:'Rooster 酉 · 5–7pm'},{v:10,t:'Dog 戌 · 7–9pm'},{v:11,t:'Pig 亥 · 9–11pm'}
+];
+var MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+function fillDate(pre){
+  var y=document.getElementById(pre+'_year'), m=document.getElementById(pre+'_month'),
+      d=document.getElementById(pre+'_day'), h=document.getElementById(pre+'_hour');
+  for(var yy=2010;yy>=1950;yy--)y.innerHTML+='<option value="'+yy+'">'+yy+'</option>';
+  MONTHS.forEach(function(nm,i){m.innerHTML+='<option value="'+(i+1)+'">'+nm+'</option>';});
+  for(var dd=1;dd<=31;dd++)d.innerHTML+='<option value="'+dd+'">'+dd+'</option>';
+  HOURS.forEach(function(o){h.innerHTML+='<option value="'+o.v+'">'+o.t+'</option>';});
+  y.value=1994;m.value=3;d.value=18;h.value='';
+}
+fillDate('you');fillDate('them');
+document.getElementById('you_hour').value=10;
+
+var G={you:'female',them:'male'}, SCEN='crush';
+function pickG(el,who){el.parentNode.querySelectorAll('button').forEach(function(b){b.classList.remove('on');});el.classList.add('on');G[who]=el.dataset.g;}
+function pickS(el){document.querySelectorAll('.scen').forEach(function(b){b.classList.remove('on');});el.classList.add('on');SCEN=el.dataset.s;}
+document.getElementById('consent').addEventListener('change',function(e){document.getElementById('goBtn').disabled=!e.target.checked;});
+
+// ---- template bank (why/tone) keyed by winning reason + scenario ----
+var WHYBANK={
+  target_shishang:"Their expressive star is lit today — they're in a softer, more open frame, so a message reads as warmth, not weight.",
+  target_taohua:"A peach-blossom day for them — attraction and sociability run high, and they're more inclined to lean toward connection.",
+  you_favourable:"Your own element runs smooth today, so you come across calm and unhurried — the message carries better because you do.",
+  pair_liuhe:"Both charts form a quiet bridge today — the energy between you two is cooperative rather than crossed."
+};
+var TONEBANK={
+  crush:"<b>Light and playful.</b> A small, specific hook — a song, a meme, a shared thing. No confession yet; just open the door.",
+  ex_reconcile:"<b>Warm, low-pressure.</b> A short, kind hello — no rehashing, no big talk. One line that says 'I thought of you', then leave space.",
+  win_over:"<b>Confident, generous.</b> Lead with something useful or genuinely admiring. Give before you ask; let the value land first.",
+  cold_contact:"<b>Easy and human.</b> Reference the last real thing you shared. Keep it brief — you're reopening a door, not making a speech."
+};
+
+// simulate a deterministic-looking response
+function fakeResponse(){
+  var today=new Date();
+  var seed=(parseInt(document.getElementById('you_day').value)*31+parseInt(document.getElementById('them_day').value)*7+SCEN.length)%9;
+  var offsets=[3+seed,9+((seed*2)%6),15+seed%5,21+((seed*3)%5),27+seed%3]; // spread across 30 days
+  var reasons=['target_shishang','pair_liuhe','you_favourable','target_taohua','pair_liuhe'];
+  var hourBlocks=[[19,21,'Dog 戌'],[9,11,'Snake 巳'],[13,15,'Goat 未'],[17,19,'Rooster 酉'],[11,13,'Horse 午']];
+  var wins=offsets.map(function(off,i){
+    var dt=new Date(today.getTime()+off*86400000);
+    return {
+      date:dt, iso:dt.toISOString().slice(0,10), off:off,
+      wd:WD[dt.getDay()], mon:MONTHS[dt.getMonth()], dnum:dt.getDate(),
+      label:i<2?'best':'good',
+      hStart:hourBlocks[i][0], hEnd:hourBlocks[i][1], shichen:hourBlocks[i][2],
+      reason:reasons[i], why:WHYBANK[reasons[i]], tone:TONEBANK[SCEN]
+    };
+  });
+  // avoid day
+  var av=new Date(today.getTime()+(6+seed)*86400000);
+  return {windows:wins, avoid:WD[av.getDay()]+' '+MONTHS[av.getMonth()]+' '+av.getDate(), lowDays:[2,5,8,12,17,20,24,28]};
+}
+
+function fmt12(h){var ap=h>=12?'pm':'am';var hh=h%12;if(hh===0)hh=12;return hh+ap;}
+
+function run(){
+  var btn=document.getElementById('goBtn');
+  if(btn.disabled)return;
+  document.getElementById('input').style.display='none';
+  document.getElementById('loading').classList.add('show');
+  var steps=['Casting both charts…','Reading their day energy…','Scoring the next 30 days…','Ranking the golden hours…'];
+  var i=0;var iv=setInterval(function(){i++;if(i<steps.length)document.getElementById('lzText').textContent=steps[i];},650);
+  setTimeout(function(){clearInterval(iv);render(fakeResponse());},2700);
+}
+
+function winCard(w,full){
+  var time=full?('<div class="win-time">🕐 '+fmt12(w.hStart)+'–'+fmt12(w.hEnd)+' · '+w.shichen+' hour</div>'):'';
+  var body=full?('<div class="win-why">'+w.why+'</div><div class="win-tone">'+w.tone+'</div>'):'';
+  return '<div class="win '+w.label+'">'+
+    '<div class="win-head"><div class="win-date">'+w.mon+' '+w.dnum+' <span>'+w.wd+'</span></div>'+
+    '<div class="win-tag '+w.label+'">'+(w.label==='best'?'⭐ Best':'Good')+'</div></div>'+
+    time+body+'</div>';
+}
+
+function render(res){
+  document.getElementById('loading').classList.remove('show');
+  var r=document.getElementById('result');r.classList.add('show');
+  var w0=res.windows[0];
+  document.getElementById('vdDate').innerHTML='<em>'+w0.wd+' '+w0.mon+' '+w0.dnum+'</em>';
+  document.getElementById('vdTime').textContent=fmt12(w0.hStart)+'–'+fmt12(w0.hEnd)+' · '+w0.shichen+' hour';
+  document.getElementById('freeWin').innerHTML=winCard(w0,true);
+  document.getElementById('moreCount').textContent=(res.windows.length-1);
+  // locked preview (blurred, dates hidden)
+  document.getElementById('lockPreview').innerHTML=res.windows.slice(1,3).map(function(w){return winCard(w,false);}).join('');
+  document.getElementById('avoidText').textContent='A clash day is coming — words tend to catch. The full plan flags it (around '+res.avoid.replace(/ \d+$/,'')+') so you can give it a beat.';
+  // calendar
+  var grid=document.getElementById('calGrid');grid.innerHTML='';
+  var winByOff={};res.windows.forEach(function(w){winByOff[w.off]=w.label;});
+  var today=new Date();
+  for(var d=1;d<=30;d++){
+    var dt=new Date(today.getTime()+d*86400000);
+    var lab=winByOff[d]||(res.lowDays.indexOf(d)>=0?'':'low');
+    var cls=lab==='best'?'best':lab==='good'?'good':'';
+    var mk=lab==='best'?'⭐':lab==='good'?'●':'';
+    grid.innerHTML+='<div class="cal-cell '+cls+'"><span>'+dt.getDate()+'</span><span class="mk">'+mk+'</span></div>';
+  }
+  window.scrollTo(0,0);
+}
+
+function shareIt(){
+  var w0text=document.getElementById('vdDate').textContent+' · '+document.getElementById('vdTime').textContent;
+  if(navigator.share){navigator.share({title:'My golden windows to reach out ✦',text:'Runae told me the exact day + hour: '+w0text,url:location.href}).catch(function(){});}
+  else{alert('Demo: renders a screenshottable share card — "My golden windows ✦" — jade/cream brand, Runae mark, AIGC label. No name of the other person shown.');}
+}
+</script>
+</body>
+</html>
