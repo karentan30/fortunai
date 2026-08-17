@@ -184,14 +184,11 @@ body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
 footer{padding:8px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.85}
 footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:var(--jade-deep);letter-spacing:.06em;margin-bottom:8px}
 footer a{color:var(--jade-deep);text-decoration:none}
-.demo-tag{position:fixed;top:14px;right:14px;z-index:99;font-size:9px;letter-spacing:.08em;background:rgba(201,168,76,0.14);
-  border:1px solid rgba(201,168,76,0.3);color:var(--gold-deep);border-radius:14px;padding:5px 9px;text-transform:uppercase}
 </style>
 </head>
 <body>
 
 <a class="back-btn" href="home-en.html">← Runae</a>
-<div class="demo-tag">Hi-fi mockup</div>
 
 <!-- ===== INPUT SCREEN ===== -->
 <div id="input">
@@ -261,6 +258,7 @@ footer a{color:var(--jade-deep);text-decoration:none}
 
     <div class="section" style="padding:0 0 4px">
       <button class="cta" id="goBtn" onclick="run()" disabled>Find my golden windows →<small>Free: your next window · full 30 days from $19.90</small></button>
+      <div id="err" style="display:none;color:var(--rose);font-size:12.5px;text-align:center;margin-top:12px;line-height:1.5"></div>
     </div>
   </section>
 </div>
@@ -325,7 +323,7 @@ footer a{color:var(--jade-deep);text-decoration:none}
     </ul>
     <div class="lock-price">$19.90 <span>one-off</span></div>
     <div class="lock-note">or included in Runae membership · secure checkout</div>
-    <button class="unlock-btn" onclick="alert('Demo: routes to Stripe / 微信 / 支付宝 checkout (report price tier)')">Unlock full 30 days</button>
+    <a class="unlock-btn" style="display:block;text-decoration:none;text-align:center" href="/pages/member-en.html">Unlock full 30 days</a>
   </div>
 
   <div class="disclaimer">
@@ -341,11 +339,11 @@ footer a{color:var(--jade-deep);text-decoration:none}
 
 <script>
 // ============================================================
-//  NOTE: This is a hi-fi MOCKUP. In production, windows come from
-//  POST /api/best-timing which runs the deterministic bazi engine
-//  (getDayGanZhi / getHourGanZhi + scoring rubric). The client NEVER
-//  computes or invents dates. The block below only SIMULATES a
-//  plausible response so the prototype is interactive.
+//  All windows come from POST /api/best-timing — the server runs the
+//  deterministic Four Pillars engine (getDayGanZhi / getHourGanZhi +
+//  a fixed scoring rubric). The client NEVER computes or invents dates:
+//  it only renders what the engine returns. Free tier shows the single
+//  next real window; the rest arrive locked (date=null) from the server.
 // ============================================================
 
 var HOURS = [
@@ -375,82 +373,109 @@ function pickG(el,who){el.parentNode.querySelectorAll('button').forEach(function
 function pickS(el){document.querySelectorAll('.scen').forEach(function(b){b.classList.remove('on');});el.classList.add('on');SCEN=el.dataset.s;}
 document.getElementById('consent').addEventListener('change',function(e){document.getElementById('goBtn').disabled=!e.target.checked;});
 
-// ---- template bank (why/tone) keyed by winning reason + scenario ----
-var WHYBANK={
-  target_shishang:"Their expressive star is lit today — they're in a softer, more open frame, so a message reads as warmth, not weight.",
-  target_taohua:"A peach-blossom day for them — attraction and sociability run high, and they're more inclined to lean toward connection.",
-  you_favourable:"Your own element runs smooth today, so you come across calm and unhurried — the message carries better because you do.",
-  pair_liuhe:"Both charts form a quiet bridge today — the energy between you two is cooperative rather than crossed."
-};
-var TONEBANK={
-  crush:"<b>Light and playful.</b> A small, specific hook — a song, a meme, a shared thing. No confession yet; just open the door.",
-  ex_reconcile:"<b>Warm, low-pressure.</b> A short, kind hello — no rehashing, no big talk. One line that says 'I thought of you', then leave space.",
-  win_over:"<b>Confident, generous.</b> Lead with something useful or genuinely admiring. Give before you ask; let the value land first.",
-  cold_contact:"<b>Easy and human.</b> Reference the last real thing you shared. Keep it brief — you're reopening a door, not making a speech."
-};
-
-// simulate a deterministic-looking response
-function fakeResponse(){
-  var today=new Date();
-  var seed=(parseInt(document.getElementById('you_day').value)*31+parseInt(document.getElementById('them_day').value)*7+SCEN.length)%9;
-  var offsets=[3+seed,9+((seed*2)%6),15+seed%5,21+((seed*3)%5),27+seed%3]; // spread across 30 days
-  var reasons=['target_shishang','pair_liuhe','you_favourable','target_taohua','pair_liuhe'];
-  var hourBlocks=[[19,21,'Dog 戌'],[9,11,'Snake 巳'],[13,15,'Goat 未'],[17,19,'Rooster 酉'],[11,13,'Horse 午']];
-  var wins=offsets.map(function(off,i){
-    var dt=new Date(today.getTime()+off*86400000);
-    return {
-      date:dt, iso:dt.toISOString().slice(0,10), off:off,
-      wd:WD[dt.getDay()], mon:MONTHS[dt.getMonth()], dnum:dt.getDate(),
-      label:i<2?'best':'good',
-      hStart:hourBlocks[i][0], hEnd:hourBlocks[i][1], shichen:hourBlocks[i][2],
-      reason:reasons[i], why:WHYBANK[reasons[i]], tone:TONEBANK[SCEN]
-    };
-  });
-  // avoid day
-  var av=new Date(today.getTime()+(6+seed)*86400000);
-  return {windows:wins, avoid:WD[av.getDay()]+' '+MONTHS[av.getMonth()]+' '+av.getDate(), lowDays:[2,5,8,12,17,20,24,28]};
-}
-
 function fmt12(h){var ap=h>=12?'pm':'am';var hh=h%12;if(hh===0)hh=12;return hh+ap;}
+function esc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return c==='&'?'&amp;':c==='<'?'&lt;':'&gt;';});}
+function showErr(m){var e=document.getElementById('err');e.textContent=m;e.style.display='block';}
+function hideErr(){document.getElementById('err').style.display='none';}
+function tok(){try{return localStorage.getItem('shenyuan_token')||localStorage.getItem('runae_token')||localStorage.getItem('token')||'';}catch(e){return '';}}
+
+var LOADING_TIMER=null;
 
 function run(){
   var btn=document.getElementById('goBtn');
   if(btn.disabled)return;
+  hideErr();
+  var yy=document.getElementById('you_year').value, ym=document.getElementById('you_month').value, yd=document.getElementById('you_day').value, yh=document.getElementById('you_hour').value;
+  var ty=document.getElementById('them_year').value, tm=document.getElementById('them_month').value, td=document.getElementById('them_day').value, th=document.getElementById('them_hour').value;
+  if(!yy||!ym||!yd||!ty||!tm||!td){showErr('Please pick both birth dates first.');return;}
+
   document.getElementById('input').style.display='none';
   document.getElementById('loading').classList.add('show');
+  window.scrollTo(0,0);
   var steps=['Casting both charts…','Reading their day energy…','Scoring the next 30 days…','Ranking the golden hours…'];
-  var i=0;var iv=setInterval(function(){i++;if(i<steps.length)document.getElementById('lzText').textContent=steps[i];},650);
-  setTimeout(function(){clearInterval(iv);render(fakeResponse());},2700);
+  var i=0;LOADING_TIMER=setInterval(function(){i=(i+1)%steps.length;document.getElementById('lzText').textContent=steps[i];},900);
+
+  var body={
+    you:{year:+yy,month:+ym,day:+yd,hour:(yh===''?null:+yh),gender:G.you},
+    them:{year:+ty,month:+tm,day:+td,hour:(th===''?null:+th),gender:G.them},
+    scenario:SCEN, rangeDays:30, lang:'en', tzOffset:new Date().getTimezoneOffset(), token:tok()
+  };
+
+  fetch('/api/best-timing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)})
+    .then(function(r){return r.json().then(function(j){return{ok:r.ok,j:j};});})
+    .then(function(res){
+      clearInterval(LOADING_TIMER);
+      document.getElementById('loading').classList.remove('show');
+      if(!res.ok||!res.j||!Array.isArray(res.j.windows)){
+        document.getElementById('input').style.display='block';
+        showErr((res.j&&res.j.error)||'Runae is resting — please try again.');
+        return;
+      }
+      if(!res.j.windows.length){
+        document.getElementById('input').style.display='block';
+        showErr(res.j.note||'No standout window in this range — try a different scenario.');
+        return;
+      }
+      render(res.j);
+    })
+    .catch(function(){
+      clearInterval(LOADING_TIMER);
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('input').style.display='block';
+      showErr('Network hiccup — please try again.');
+    });
 }
 
+// full=true → render date+why+tone; full=false → blurred teaser, NO real date/why/tone (server sent null)
 function winCard(w,full){
-  var time=full?('<div class="win-time">🕐 '+fmt12(w.hStart)+'–'+fmt12(w.hEnd)+' · '+w.shichen+' hour</div>'):'';
-  var body=full?('<div class="win-why">'+w.why+'</div><div class="win-tone">'+w.tone+'</div>'):'';
-  return '<div class="win '+w.label+'">'+
-    '<div class="win-head"><div class="win-date">'+w.mon+' '+w.dnum+' <span>'+w.wd+'</span></div>'+
-    '<div class="win-tag '+w.label+'">'+(w.label==='best'?'⭐ Best':'Good')+'</div></div>'+
+  var time=(full&&w.hourStart!=null)?('<div class="win-time">🕐 '+fmt12(w.hourStart)+'–'+fmt12(w.hourEnd)+' · '+esc(w.shichen)+' hour</div>'):'';
+  var body=full?('<div class="win-why">'+esc(w.why)+'</div><div class="win-tone">'+esc(w.tone)+'</div>'):'';
+  var dateLabel=full?(esc(w.mon)+' '+w.dnum+' <span>'+esc(w.weekday)+'</span>'):'• • •';
+  return '<div class="win '+(w.label==='best'?'best':'good')+'">'+
+    '<div class="win-head"><div class="win-date">'+dateLabel+'</div>'+
+    '<div class="win-tag '+(w.label==='best'?'best':'good')+'">'+(w.label==='best'?'⭐ Best':'Good')+'</div></div>'+
     time+body+'</div>';
 }
 
 function render(res){
-  document.getElementById('loading').classList.remove('show');
   var r=document.getElementById('result');r.classList.add('show');
-  var w0=res.windows[0];
-  document.getElementById('vdDate').innerHTML='<em>'+w0.wd+' '+w0.mon+' '+w0.dnum+'</em>';
-  document.getElementById('vdTime').textContent=fmt12(w0.hStart)+'–'+fmt12(w0.hEnd)+' · '+w0.shichen+' hour';
+  var w=res.windows, w0=w[0];
+  // verdict (free preview = first real window)
+  document.getElementById('vdDate').innerHTML='<em>'+esc(w0.weekday)+' '+esc(w0.mon)+' '+w0.dnum+'</em>';
+  document.getElementById('vdTime').textContent=(w0.hourStart!=null?fmt12(w0.hourStart)+'–'+fmt12(w0.hourEnd)+' · '+w0.shichen+' hour':'');
   document.getElementById('freeWin').innerHTML=winCard(w0,true);
-  document.getElementById('moreCount').textContent=(res.windows.length-1);
-  // locked preview (blurred, dates hidden)
-  document.getElementById('lockPreview').innerHTML=res.windows.slice(1,3).map(function(w){return winCard(w,false);}).join('');
-  document.getElementById('avoidText').textContent='A clash day is coming — words tend to catch. The full plan flags it (around '+res.avoid.replace(/ \d+$/,'')+') so you can give it a beat.';
-  // calendar
+
+  var paid=res.tier==='paid'||res.locked===false;
+  var moreCount=Math.max(0,(res.windowCount||w.length)-1);
+  document.getElementById('moreCount').textContent=moreCount;
+
+  if(paid){
+    // full: render every window with date+why+tone, hide the paywall
+    document.getElementById('freeWin').innerHTML=w.map(function(x){return winCard(x,true);}).join('');
+    var lock=document.querySelector('.lock'); if(lock)lock.style.display='none';
+    // avoid day with real date
+    if(res.avoid&&res.avoid.date){
+      document.getElementById('avoidText').textContent='Give '+esc(res.avoid.weekday)+' '+esc(res.avoid.mon)+' '+res.avoid.dnum+' a beat — words tend to catch that day.';
+    }else{
+      document.querySelector('.avoid').style.display='none';
+    }
+  }else{
+    // free: locked windows arrive as {date:null} — render blurred teasers, no real content in DOM
+    document.getElementById('lockPreview').innerHTML=w.slice(1,3).map(function(x){return winCard(x,false);}).join('');
+    if(res.avoid&&res.avoid.mon){
+      document.getElementById('avoidText').textContent='A clash day is coming (around '+esc(res.avoid.mon)+') — the full plan flags the exact date so you can give it a beat.';
+    }
+  }
+
+  // calendar strip — mark returned windows by offset; only paid shows low-day map
   var grid=document.getElementById('calGrid');grid.innerHTML='';
-  var winByOff={};res.windows.forEach(function(w){winByOff[w.off]=w.label;});
+  var winByOff={};w.forEach(function(x){if(x.off)winByOff[x.off]=x.label;});
+  var low=res.lowDays||[];
   var today=new Date();
   for(var d=1;d<=30;d++){
     var dt=new Date(today.getTime()+d*86400000);
-    var lab=winByOff[d]||(res.lowDays.indexOf(d)>=0?'':'low');
-    var cls=lab==='best'?'best':lab==='good'?'good':'';
+    var lab=winByOff[d];
+    var cls=lab==='best'?'best':lab==='good'?'good':(low.indexOf(d)>=0?'':'');
     var mk=lab==='best'?'⭐':lab==='good'?'●':'';
     grid.innerHTML+='<div class="cal-cell '+cls+'"><span>'+dt.getDate()+'</span><span class="mk">'+mk+'</span></div>';
   }
@@ -459,8 +484,11 @@ function render(res){
 
 function shareIt(){
   var w0text=document.getElementById('vdDate').textContent+' · '+document.getElementById('vdTime').textContent;
-  if(navigator.share){navigator.share({title:'My golden windows to reach out ✦',text:'Runae told me the exact day + hour: '+w0text,url:location.href}).catch(function(){});}
-  else{alert('Demo: renders a screenshottable share card — "My golden windows ✦" — jade/cream brand, Runae mark, AIGC label. No name of the other person shown.');}
+  if(navigator.share){navigator.share({title:'My golden windows to reach out ✦',text:'Runae read the day + hour: '+w0text,url:location.href}).catch(function(){});}
+  else{
+    var t=document.querySelector('.share-btn');var o=t.textContent;
+    t.textContent='📸 Screenshot this card to share ✦';setTimeout(function(){t.textContent=o;},2600);
+  }
 }
 </script>
 </body>

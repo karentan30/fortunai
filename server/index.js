@@ -149,6 +149,7 @@ app.use('/api', require('./routes/love-destiny'));
 app.use('/api', require('./routes/life-kline'));
 app.use('/api', require('./routes/chart-archetype'));
 app.use('/api', require('./routes/identity-triad'));
+app.use('/api', require('./routes/best-timing')); // 求复合最佳联系时机·真引擎排盘不客户端编date
 app.use('/api/cross-check', require('./routes/cross-check')); // 交叉验证·默认deny待预算
 
 // 每日运势 / AI 对话 / 用户反馈
