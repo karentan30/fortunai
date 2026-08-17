@@ -14,7 +14,8 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,600&family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -87,28 +88,75 @@ a{color:inherit}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading p{font-size:13px;color:var(--sub)}
 
-/* ── RESULT: the shareable archetype card ── */
+/* ── RESULT ── */
 .result{display:none;padding:8px 20px 0}
 .result.on{display:block}
-.archcard{position:relative;background:
-    radial-gradient(ellipse 90% 50% at 50% 0%,rgba(91,191,160,0.14) 0%,transparent 62%),
-    linear-gradient(160deg,#ffffff 0%,#f6faf8 100%);
-  border:1px solid var(--jade-border);border-radius:20px;padding:30px 22px 26px;
-  box-shadow:0 8px 30px rgba(91,191,160,0.16);text-align:center;overflow:hidden}
-.archcard::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;
-  background:linear-gradient(90deg,var(--jade-light),var(--jade),var(--gold))}
-.arch-cap{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--jade);font-weight:600;margin-bottom:12px}
-.arch-name{font-family:'Playfair Display',serif;font-size:34px;font-weight:700;line-height:1.15;color:var(--ink);margin-bottom:10px}
-.arch-name em{font-style:italic;color:var(--jade-deep)}
-.arch-tag{font-size:14px;color:var(--sub);line-height:1.6;font-style:italic;max-width:300px;margin:0 auto 18px}
-.arch-el{font-size:11.5px;letter-spacing:.06em;color:var(--gold-deep);text-transform:uppercase;margin-bottom:20px}
-/* rarity block */
-.rarity{background:var(--jade-pale);border:1px solid var(--jade-border);border-radius:12px;padding:14px 16px;margin-bottom:14px}
-.rarity-stars{font-size:17px;letter-spacing:3px;margin-bottom:6px;color:var(--gold)}
-.rarity-label{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:var(--jade-deep);margin-bottom:6px}
-.rarity-note{font-size:11.5px;color:var(--sub);line-height:1.55}
-.arch-chart{font-size:10.5px;color:var(--muted);letter-spacing:.05em;margin-top:2px}
-.card-brand{margin-top:16px;font-family:'Playfair Display',serif;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--jade-deep);opacity:.75}
+
+/* ═══ LUXURY DARK-GOLD RARITY CARD (share engine) ═══ */
+:root{
+  --lux-ink0:#0d0b08;--lux-ink1:#181310;--lux-ink2:#241a12;
+  --lux-gold:#c9a84c;--lux-gold-hi:#f6e6a8;--lux-gold-lo:#8a6420;
+  --lux-line:rgba(201,168,76,0.30);--lux-line-soft:rgba(201,168,76,0.14);
+  --lux-sub:rgba(232,208,138,0.60);
+}
+.archcard{position:relative;overflow:hidden;border-radius:22px;color:#fff;isolation:isolate;
+  aspect-ratio:9/16;padding:34px 26px;display:flex;flex-direction:column;text-align:left;
+  font-family:'Inter',sans-serif;
+  background:
+    radial-gradient(120% 80% at 50% -10%,rgba(201,168,76,0.18) 0%,transparent 55%),
+    radial-gradient(90% 60% at 50% 115%,rgba(201,168,76,0.10) 0%,transparent 60%),
+    linear-gradient(165deg,var(--lux-ink2) 0%,var(--lux-ink1) 42%,var(--lux-ink0) 100%);
+  box-shadow:0 12px 40px rgba(0,0,0,0.4)}
+.archcard::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:
+    repeating-linear-gradient(45deg,rgba(255,255,255,0.020) 0 1px,transparent 1px 6px),
+    repeating-linear-gradient(-45deg,rgba(0,0,0,0.06) 0 1px,transparent 1px 6px);
+  mix-blend-mode:overlay}
+.archcard::after{content:"";position:absolute;inset:12px;z-index:1;pointer-events:none;border-radius:14px;
+  border:1px solid var(--lux-line);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,0.4),inset 0 0 40px rgba(201,168,76,0.06),inset 0 0 0 6px rgba(0,0,0,0.25)}
+.archcard > *{position:relative;z-index:2}
+
+.foil{background:linear-gradient(100deg,var(--lux-gold-lo) 0%,var(--lux-gold) 24%,var(--lux-gold-hi) 44%,#fffbe8 50%,var(--lux-gold-hi) 56%,var(--lux-gold) 76%,var(--lux-gold-lo) 100%);
+  background-size:250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+  animation:foilSweep 5.5s linear infinite}
+@keyframes foilSweep{0%{background-position:180% 0}100%{background-position:-80% 0}}
+.foil-rule{height:1px;width:100%;border:none;margin:14px 0;
+  background:linear-gradient(90deg,transparent,var(--lux-line),var(--gold-light),var(--lux-line),transparent)}
+
+/* rarity badge */
+.rc-badge{position:absolute;top:20px;right:20px;z-index:3;display:flex;flex-direction:column;align-items:center;
+  padding:9px 13px 8px;border-radius:12px;line-height:1;
+  border:1px solid var(--grade-b,var(--gold));
+  background:linear-gradient(160deg,rgba(255,255,255,0.06),rgba(0,0,0,0.35));
+  box-shadow:0 0 18px var(--grade-glow,rgba(201,168,76,0.4)),inset 0 0 12px rgba(0,0,0,0.5)}
+.rc-badge .g{font-family:'Playfair Display',serif;font-weight:900;font-size:22px;letter-spacing:.04em;
+  color:var(--grade,var(--gold));text-shadow:0 0 14px var(--grade-glow,rgba(201,168,76,0.6))}
+.rc-badge .sub{font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-top:5px}
+.grade-UR {--grade:#ff5db1;--grade-b:rgba(255,93,177,0.6);--grade-glow:rgba(255,93,177,0.55)}
+.grade-SSR{--grade:#e8d08a;--grade-b:rgba(232,208,138,0.7);--grade-glow:rgba(232,208,138,0.55)}
+.grade-SR {--grade:#9db8ff;--grade-b:rgba(157,184,255,0.6);--grade-glow:rgba(157,184,255,0.5)}
+.grade-R  {--grade:#a8d8c0;--grade-b:rgba(168,216,192,0.5);--grade-glow:rgba(168,216,192,0.4)}
+
+.arch-cap{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--lux-sub);margin-bottom:auto}
+.arch-cap::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold)}
+.arch-name{font-family:'Noto Serif SC','Playfair Display',serif;font-size:44px;font-weight:700;line-height:1.06;letter-spacing:.01em;margin-top:8px;color:#fff}
+.arch-name em{font-style:normal}
+.arch-tag{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;line-height:1.45;color:var(--gold-light);margin-top:10px}
+.arch-el{font-size:10.5px;letter-spacing:.14em;color:var(--lux-sub);text-transform:uppercase;margin-top:10px}
+/* rarity block → occurrence band */
+.rarity{margin-top:16px}
+.rarity-stars{display:none}
+.rarity-top{display:flex;justify-content:space-between;align-items:baseline;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--lux-sub);margin-bottom:6px}
+.rarity-label{font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--gold-light);letter-spacing:.02em}
+.rarity-bar{height:5px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden;margin-bottom:8px}
+.rarity-bar span{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold-deep),var(--gold),var(--gold-light))}
+.rarity-note{font-size:11px;color:rgba(255,255,255,0.72);line-height:1.5}
+.arch-chart{font-size:9.5px;color:var(--lux-sub);letter-spacing:.04em;margin-top:12px}
+.card-foot{margin-top:auto;padding-top:16px;display:flex;justify-content:space-between;align-items:flex-end}
+.card-foot .brand{font-family:'Playfair Display',serif;font-size:15px;letter-spacing:.34em;color:var(--gold-light)}
+.card-foot .brand small{display:block;font-family:'Inter';font-size:7.5px;letter-spacing:.16em;color:var(--lux-sub);margin-top:4px;text-transform:uppercase}
+.card-foot .ai{font-size:7.5px;line-height:1.4;color:rgba(255,255,255,0.42);text-align:right;max-width:120px}
 
 /* Full reading (markdown) */
 .reading{background:var(--card);border:1px solid var(--jade-border);border-radius:14px;
@@ -182,17 +230,23 @@ a{color:inherit}
 <!-- RESULT -->
 <div class="result z1" id="result">
   <div class="archcard" id="archcard">
+    <div class="rc-badge" id="rcBadge"><span class="g" id="gradeG">—</span><span class="sub" id="gradeSub">Rarity</span></div>
     <div class="arch-cap" data-i18n="youAre">You are</div>
     <div class="arch-name" id="archName">—</div>
     <div class="arch-tag" id="archTag">—</div>
     <div class="arch-el" id="archEl">—</div>
+    <hr class="foil-rule">
     <div class="rarity">
-      <div class="rarity-stars" id="rarityStars">✦✦✦</div>
-      <div class="rarity-label" id="rarityLabel">—</div>
+      <div class="rarity-stars" id="rarityStars"></div>
+      <div class="rarity-top"><span data-i18n="rarityCap">Rarity band</span><span class="rarity-label" id="rarityLabel">—</span></div>
+      <div class="rarity-bar"><span id="rarityFill" style="width:40%"></span></div>
       <div class="rarity-note" id="rarityNote">—</div>
     </div>
     <div class="arch-chart" id="archChart"></div>
-    <div class="card-brand">Runae</div>
+    <div class="card-foot">
+      <div class="brand">RUNAE<small data-i18n="engineTag">Eastern chart engine</small></div>
+      <div class="ai" id="cardAi">AI-generated · engine data · self-reflection</div>
+    </div>
   </div>
 
   <div class="reading" id="reading"></div>
@@ -219,7 +273,8 @@ var I18N = {
     formTitle:"Enter your birth details",formHint:"Solar (Gregorian) calendar · read from a precise Eastern engine",
     lYear:"Year",lMonth:"Month",lDay:"Day",lHour:"Birth hour (0–23)",hourUnknown:"Not sure",
     gF:"Female",gM:"Male",reveal:"Reveal my archetype",loadingTxt:"Reading your Four Pillars…",
-    youAre:"You are",shareBtn:"Screenshot & share",againBtn:"Try another",
+    youAre:"You are",rarityCap:"Rarity band",engineTag:"Eastern chart engine",cardAi:"AI-generated · engine data · self-reflection",
+    shareBtn:"Save & share card",againBtn:"Try another",
     shareHint:"Send your card to the group chat — see who matches yours.",
     footerCta:"Go deeper → your full life reading",aiLabel:"AI-generated",
     disc:"from a precise Four Pillars engine — an ancient Eastern system. Your archetype is a neutral personality pattern, not a ranking or a promise of success. For self-reflection & entertainment only — not medical, legal, or life-decision advice.",
@@ -228,7 +283,8 @@ var I18N = {
     formTitle:"输入你的出生信息",formHint:"公历（阳历）· 由精准东方引擎排定",
     lYear:"年",lMonth:"月",lDay:"日",lHour:"出生时辰（0–23）",hourUnknown:"不确定",
     gF:"女",gM:"男",reveal:"揭晓我的命格原型",loadingTxt:"正在读你的四柱…",
-    youAre:"你是",shareBtn:"截图分享",againBtn:"换一个",
+    youAre:"你是",rarityCap:"稀有度",engineTag:"东方命理引擎",cardAi:"AI 生成 · 引擎数据 · 自我探索",
+    shareBtn:"保存并分享卡片",againBtn:"换一个",
     shareHint:"把你的卡片发到群里——看看谁跟你一样。",
     footerCta:"更深入 → 你的完整人生解读",aiLabel:"AI 生成",
     disc:"由精准四柱引擎排定——一套古老的东方体系。你的原型是中性的人格模式，不是排名，也不是成功的承诺。仅供自我探索与娱乐参考——不构成医疗、法律或人生决策建议。",
@@ -237,7 +293,8 @@ var I18N = {
     formTitle:"생년월일을 입력하세요",formHint:"양력 · 정밀 동양 엔진으로 배반",
     lYear:"년",lMonth:"월",lDay:"일",lHour:"태어난 시 (0–23)",hourUnknown:"모름",
     gF:"여성",gM:"남성",reveal:"내 명식 원형 보기",loadingTxt:"당신의 사주를 읽는 중…",
-    youAre:"당신은",shareBtn:"캡처 & 공유",againBtn:"다시 하기",
+    youAre:"당신은",rarityCap:"희귀도",engineTag:"동양 명식 엔진",cardAi:"AI 생성 · 엔진 데이터 · 자기 이해",
+    shareBtn:"카드 저장 & 공유",againBtn:"다시 하기",
     shareHint:"카드를 단톡방에 보내보세요 — 누가 같은지 확인해요.",
     footerCta:"더 깊이 → 전체 인생 리딩",aiLabel:"AI 생성",
     disc:"정밀 사주 엔진으로 배반한 오래된 동양 체계예요. 원형은 중립적 성격 패턴이며 순위나 성공의 약속이 아니에요. 자기 이해·오락 참고용이며 의료·법률·인생 결정 조언이 아니에요.",
@@ -283,16 +340,24 @@ function mdToHtml(md){
 }
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-var STAR = {rare:'✦✦✦', uncommon:'✦✦', common:'✦'};
+// rarity band → gaming grade + occurrence-bar width (visual only, NOT a fake %)
+var GRADE = {rare:{g:'UR',cls:'grade-UR',w:6}, uncommon:{g:'SR',cls:'grade-SR',w:26}, common:{g:'R',cls:'grade-R',w:64}};
 
 function reveal(data){
   document.getElementById('archName').innerHTML='<em>'+esc(data.archetype.name)+'</em>';
   document.getElementById('archTag').textContent='“'+data.archetype.tagline+'”';
   document.getElementById('archEl').textContent=data.archetype.element;
-  document.getElementById('rarityStars').textContent=STAR[data.rarity.band]||'✦';
+  // rarity grade badge + band (definitive band from backend, no invented %)
+  var gr=GRADE[data.rarity.band]||{g:'SSR',cls:'grade-SSR',w:16};
+  var card=document.getElementById('archcard');
+  card.classList.remove('grade-UR','grade-SSR','grade-SR','grade-R');
+  card.classList.add(gr.cls);
+  document.getElementById('gradeG').textContent=gr.g;
   document.getElementById('rarityLabel').textContent=data.rarity.label;
+  document.getElementById('rarityFill').style.width=gr.w+'%';
   document.getElementById('rarityNote').textContent=data.rarity.note;
   document.getElementById('archChart').textContent=(data.chart&&data.chart.fourPillars)?('Day Master '+data.chart.dayMaster+' · '+data.chart.fourPillars):'';
+  document.getElementById('cardAi').textContent=t('cardAi');
   document.getElementById('reading').innerHTML=mdToHtml(data.reading);
   document.getElementById('formCard').style.display='none';
   document.getElementById('loading').classList.remove('on');
@@ -330,18 +395,40 @@ document.getElementById('againBtn').addEventListener('click',function(){
   window.scrollTo({top:0,behavior:'smooth'});
 });
 
-// Share: try native share of the card image; fallback to share text / alert
+// ── Real image export: render card DOM → PNG → native file share (fallback: download) ──
+function renderCardPng(node){
+  return document.fonts.ready.then(function(){
+    return html2canvas(node,{backgroundColor:null,scale:Math.min(3,(window.devicePixelRatio||1)*2),useCORS:true,logging:false});
+  }).then(function(canvas){
+    return new Promise(function(res){ canvas.toBlob(function(b){res(b);},'image/png'); });
+  });
+}
 document.getElementById('shareBtn').addEventListener('click',function(){
+  var btn=this; var orig=btn.textContent; btn.disabled=true;
   var name=document.getElementById('archName').textContent;
   var text="I'm "+name+" on Runae — what's your chart archetype? "+location.origin+"/pages/chart-archetype.html";
-  if(navigator.share){
-    navigator.share({title:'My Chart Archetype',text:text}).catch(function(){});
-  } else if(navigator.clipboard){
-    navigator.clipboard.writeText(text).then(function(){ alert(lang==='zh'?'已复制，去粘贴分享吧 · 或直接截图这张卡片':(lang==='ko'?'복사됐어요 · 또는 카드를 캡처하세요':'Copied — or just screenshot the card above ↑')); });
-  } else {
-    alert(lang==='zh'?'截图上面这张卡片分享给朋友吧 ↑':(lang==='ko'?'위 카드를 캡처해서 공유하세요 ↑':'Screenshot the card above to share ↑'));
-  }
+  renderCardPng(document.getElementById('archcard')).then(function(blob){
+    btn.disabled=false; btn.textContent=orig;
+    var file=new File([blob],'runae-archetype.png',{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({files:[file],title:'My Chart Archetype',text:text}).catch(function(){});
+    } else {
+      var url=URL.createObjectURL(blob); var a=document.createElement('a');
+      a.href=url; a.download='runae-archetype.png'; document.body.appendChild(a); a.click();
+      document.body.removeChild(a); setTimeout(function(){URL.revokeObjectURL(url);},4000);
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(function(){});
+    }
+  }).catch(function(){
+    btn.disabled=false; btn.textContent=orig;
+    var name2=document.getElementById('archName').textContent;
+    var text2="I'm "+name2+" on Runae — what's your chart archetype? "+location.origin+"/pages/chart-archetype.html";
+    if(navigator.share){ navigator.share({title:'My Chart Archetype',text:text2}).catch(function(){}); return; }
+    fallbackAlert();
+  });
 });
+function fallbackAlert(){
+  alert(lang==='zh'?'截图上面这张卡片分享给朋友吧':(lang==='ko'?'위 카드를 캡처해서 공유하세요':'Screenshot the card above to share'));
+}
 
 applyI18n();
 </script>

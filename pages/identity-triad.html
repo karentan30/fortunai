@@ -16,7 +16,8 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400;1,600&family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -100,39 +101,81 @@ a{color:inherit}
 /* ── RESULT: the shareable three-layer identity card ── */
 .result{display:none;padding:8px 20px 0}
 .result.on{display:block}
-.tcard{position:relative;background:
-    radial-gradient(ellipse 90% 46% at 50% 0%,rgba(91,191,160,0.14) 0%,transparent 62%),
-    linear-gradient(160deg,#ffffff 0%,#f6faf8 100%);
-  border:1px solid var(--jade-border);border-radius:20px;padding:26px 20px 24px;
-  box-shadow:0 8px 30px rgba(91,191,160,0.16);text-align:center;overflow:hidden}
-.tcard::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;
-  background:linear-gradient(90deg,var(--jade-light),var(--jade),var(--gold))}
-.t-cap{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--jade);font-weight:600;margin-bottom:16px}
+/* ═══ LUXURY DARK-GOLD RARITY CARD ═══ */
+:root{
+  --lux-ink0:#0d0b08;--lux-ink1:#181310;--lux-ink2:#241a12;
+  --lux-gold:#c9a84c;--lux-gold-hi:#f6e6a8;--lux-gold-lo:#8a6420;
+  --lux-line:rgba(201,168,76,0.30);--lux-line-soft:rgba(201,168,76,0.14);
+  --lux-sub:rgba(232,208,138,0.60);
+}
+.tcard{position:relative;overflow:hidden;border-radius:22px;color:#fff;isolation:isolate;
+  aspect-ratio:9/16;padding:32px 24px;display:flex;flex-direction:column;text-align:left;
+  font-family:'Inter',sans-serif;
+  background:
+    radial-gradient(120% 80% at 50% -10%,rgba(201,168,76,0.18) 0%,transparent 55%),
+    radial-gradient(90% 60% at 50% 115%,rgba(201,168,76,0.10) 0%,transparent 60%),
+    linear-gradient(165deg,var(--lux-ink2) 0%,var(--lux-ink1) 42%,var(--lux-ink0) 100%);
+  box-shadow:0 12px 40px rgba(0,0,0,0.4)}
+.tcard::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:
+    repeating-linear-gradient(45deg,rgba(255,255,255,0.020) 0 1px,transparent 1px 6px),
+    repeating-linear-gradient(-45deg,rgba(0,0,0,0.06) 0 1px,transparent 1px 6px);
+  mix-blend-mode:overlay}
+.tcard::after{content:"";position:absolute;inset:12px;z-index:1;pointer-events:none;border-radius:14px;
+  border:1px solid var(--lux-line);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,0.4),inset 0 0 40px rgba(201,168,76,0.06),inset 0 0 0 6px rgba(0,0,0,0.25)}
+.tcard > *{position:relative;z-index:2}
+.foil-rule{height:1px;width:100%;border:none;margin:12px 0;
+  background:linear-gradient(90deg,transparent,var(--lux-line),var(--gold-light),var(--lux-line),transparent)}
+/* rarity badge */
+.rc-badge{position:absolute;top:18px;right:18px;z-index:3;display:flex;flex-direction:column;align-items:center;
+  padding:8px 12px 7px;border-radius:12px;line-height:1;
+  border:1px solid var(--grade-b,var(--gold));
+  background:linear-gradient(160deg,rgba(255,255,255,0.06),rgba(0,0,0,0.35));
+  box-shadow:0 0 18px var(--grade-glow,rgba(201,168,76,0.4)),inset 0 0 12px rgba(0,0,0,0.5)}
+.rc-badge .g{font-family:'Playfair Display',serif;font-weight:900;font-size:20px;letter-spacing:.04em;
+  color:var(--grade,var(--gold));text-shadow:0 0 14px var(--grade-glow,rgba(201,168,76,0.6))}
+.rc-badge .sub{font-size:7.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-top:5px}
+.grade-UR {--grade:#ff5db1;--grade-b:rgba(255,93,177,0.6);--grade-glow:rgba(255,93,177,0.55)}
+.grade-SSR{--grade:#e8d08a;--grade-b:rgba(232,208,138,0.7);--grade-glow:rgba(232,208,138,0.55)}
+.grade-SR {--grade:#9db8ff;--grade-b:rgba(157,184,255,0.6);--grade-glow:rgba(157,184,255,0.5)}
+.grade-R  {--grade:#a8d8c0;--grade-b:rgba(168,216,192,0.5);--grade-glow:rgba(168,216,192,0.4)}
+.t-cap{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--lux-sub);margin-bottom:16px}
+.t-cap::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold)}
 /* three layers */
-.layers{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
-.layer{display:flex;align-items:center;gap:12px;text-align:left;border:1px solid var(--jade-border);
-  border-radius:13px;padding:12px 13px;background:rgba(255,255,255,0.72)}
-.layer.deep{border-color:var(--gold);background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(91,191,160,0.06));
-  box-shadow:0 4px 14px rgba(201,168,76,0.14)}
-.layer-badge{flex-shrink:0;width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;
-  font-size:22px;background:var(--jade-pale);color:var(--jade-deep)}
-.layer.deep .layer-badge{background:var(--gold-pale);color:var(--gold-deep);font-family:'Playfair Display',serif;font-size:17px;font-weight:700}
+.layers{display:flex;flex-direction:column;gap:9px;margin-bottom:14px}
+.layer{display:flex;align-items:center;gap:11px;text-align:left;border:1px solid var(--lux-line-soft);
+  border-radius:12px;padding:11px 12px;background:rgba(255,255,255,0.03)}
+.layer.deep{border-color:var(--lux-line);
+  background:linear-gradient(135deg,rgba(201,168,76,0.12),rgba(201,168,76,0.03));
+  box-shadow:inset 0 0 20px rgba(201,168,76,0.08)}
+.layer-badge{flex-shrink:0;width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+  font-size:21px;background:rgba(255,255,255,0.05);color:var(--gold-light);border:1px solid var(--lux-line-soft)}
+.layer.deep .layer-badge{background:rgba(201,168,76,0.14);color:var(--gold-light);border-color:var(--lux-line);
+  font-family:'Playfair Display',serif;font-size:16px;font-weight:700}
 .layer-body{flex:1;min-width:0}
-.layer-kicker{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:2px}
-.layer.deep .layer-kicker{color:var(--gold-deep)}
-.layer-name{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;color:var(--ink);line-height:1.2}
-.layer-name em{font-style:italic;color:var(--jade-deep)}
-.layer.deep .layer-name em{color:var(--gold-deep)}
-.layer-meta{font-size:11px;color:var(--sub);line-height:1.4;margin-top:2px}
-.deep-flag{display:inline-block;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;background:var(--gold);color:#fff;
+.layer-kicker{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--lux-sub);font-weight:600;margin-bottom:2px}
+.layer.deep .layer-kicker{color:var(--gold-light)}
+.layer-name{font-family:'Noto Serif SC','Playfair Display',serif;font-size:17px;font-weight:600;color:#fff;line-height:1.2}
+.layer-name em{font-style:normal;color:var(--gold-light)}
+.layer.deep .layer-name em{color:var(--gold-light)}
+.layer-meta{font-size:10.5px;color:rgba(255,255,255,0.62);line-height:1.4;margin-top:2px}
+.deep-flag{display:inline-block;font-size:8px;letter-spacing:.1em;text-transform:uppercase;
+  background:linear-gradient(135deg,var(--gold),var(--gold-light));color:#1a1508;
   border-radius:5px;padding:1px 6px;margin-left:6px;vertical-align:middle;font-weight:700}
 /* rarity */
-.rarity{background:var(--jade-pale);border:1px solid var(--jade-border);border-radius:12px;padding:13px 15px;margin-bottom:12px}
-.rarity-stars{font-size:16px;letter-spacing:3px;margin-bottom:5px;color:var(--gold)}
-.rarity-label{font-family:'Playfair Display',serif;font-size:14.5px;font-weight:600;color:var(--jade-deep);margin-bottom:5px}
-.rarity-note{font-size:11.5px;color:var(--sub);line-height:1.55}
-.t-chart{font-size:10.5px;color:var(--muted);letter-spacing:.05em;margin-top:2px}
-.card-brand{margin-top:14px;font-family:'Playfair Display',serif;font-size:12px;letter-spacing:.3em;text-transform:uppercase;color:var(--jade-deep);opacity:.75}
+.rarity{margin-bottom:12px}
+.rarity-stars{display:none}
+.rarity-top{display:flex;justify-content:space-between;align-items:baseline;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--lux-sub);margin-bottom:6px}
+.rarity-label{font-family:'Playfair Display',serif;font-size:14.5px;font-weight:700;color:var(--gold-light);letter-spacing:.02em}
+.rarity-bar{height:5px;border-radius:3px;background:rgba(255,255,255,0.08);overflow:hidden;margin-bottom:8px}
+.rarity-bar span{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gold-deep),var(--gold),var(--gold-light))}
+.rarity-note{font-size:11px;color:rgba(255,255,255,0.72);line-height:1.55}
+.t-chart{font-size:9.5px;color:var(--lux-sub);letter-spacing:.04em;margin-top:2px}
+.card-foot{margin-top:auto;padding-top:14px;display:flex;justify-content:space-between;align-items:flex-end}
+.card-foot .brand{font-family:'Playfair Display',serif;font-size:15px;letter-spacing:.32em;color:var(--gold-light)}
+.card-foot .brand small{display:block;font-family:'Inter';font-size:7.5px;letter-spacing:.16em;color:var(--lux-sub);margin-top:4px;text-transform:uppercase}
+.card-foot .ai{font-size:7.5px;line-height:1.4;color:rgba(255,255,255,0.42);text-align:right;max-width:120px}
 
 /* Full reading (markdown) */
 .reading{background:var(--card);border:1px solid var(--jade-border);border-radius:14px;
@@ -219,6 +262,7 @@ a{color:inherit}
 <!-- RESULT -->
 <div class="result z1" id="result">
   <div class="tcard" id="tcard">
+    <div class="rc-badge" id="rcBadge"><span class="g" id="gradeG">—</span><span class="sub" id="gradeSub">Rarity</span></div>
     <div class="t-cap" data-i18n="whoYouAre">Who you really are</div>
     <div class="layers">
       <div class="layer">
@@ -246,13 +290,18 @@ a{color:inherit}
         </div>
       </div>
     </div>
+    <hr class="foil-rule">
     <div class="rarity">
-      <div class="rarity-stars" id="rarityStars">✦✦</div>
-      <div class="rarity-label" id="rarityLabel">—</div>
+      <div class="rarity-stars" id="rarityStars"></div>
+      <div class="rarity-top"><span data-i18n="rarityCap">Rarity band</span><span class="rarity-label" id="rarityLabel">—</span></div>
+      <div class="rarity-bar"><span id="rarityFill" style="width:40%"></span></div>
       <div class="rarity-note" id="rarityNote">—</div>
     </div>
     <div class="t-chart" id="tChart"></div>
-    <div class="card-brand">Runae</div>
+    <div class="card-foot">
+      <div class="brand">RUNAE<small data-i18n="engineTag">Ten Gods · Four Pillars engine</small></div>
+      <div class="ai" id="cardAi">AI-generated · engine data · self-reflection</div>
+    </div>
   </div>
 
   <div class="reading" id="reading"></div>
@@ -285,7 +334,8 @@ var I18N = {
     gF:"Female",gM:"Male",mbtiSkipTxt:"Don't know your type?",mbtiSkipLink:"Skip it →",
     reveal:"Reveal my three layers",loadingTxt:"Triangulating your three layers…",
     whoYouAre:"Who you really are",kZodiac:"Layer 1 · Zodiac",kMbti:"Layer 2 · MBTI",kEastern:"Layer 3 · Ten Gods",deepFlag:"deep",
-    shareBtn:"Screenshot & share",againBtn:"Try another",
+    rarityCap:"Rarity band",engineTag:"Ten Gods · Four Pillars engine",cardAi:"AI-generated · engine data · self-reflection",
+    shareBtn:"Save & share card",againBtn:"Try another",
     shareHint:"Send your card to the group chat — see whose third layer matches.",
     hookH:"Layer 3 is only the surface of your chart.",
     hookP:"Your Ten Gods archetype comes from a full Four Pillars chart — love, career, wealth, and the years ahead all live in there. See the whole thing.",
@@ -301,7 +351,8 @@ var I18N = {
     gF:"女",gM:"男",mbtiSkipTxt:"不知道自己的类型？",mbtiSkipLink:"跳过 →",
     reveal:"揭晓我的三层身份",loadingTxt:"正在三角合成你的三层身份…",
     whoYouAre:"你到底是谁",kZodiac:"第 1 层 · 星座",kMbti:"第 2 层 · MBTI",kEastern:"第 3 层 · 十神",deepFlag:"深层",
-    shareBtn:"截图分享",againBtn:"换一个",
+    rarityCap:"稀有度",engineTag:"十神 · 四柱引擎",cardAi:"AI 生成 · 引擎数据 · 自我探索",
+    shareBtn:"保存并分享卡片",againBtn:"换一个",
     shareHint:"把卡片发到群里——看看谁的第三层跟你一样。",
     hookH:"第三层只是你命盘的表面。",
     hookP:"你的十神原型来自一张完整的四柱命盘——爱情、事业、财富、未来的流年都在里面。看看全貌。",
@@ -317,7 +368,8 @@ var I18N = {
     gF:"여성",gM:"남성",mbtiSkipTxt:"유형을 모르나요?",mbtiSkipLink:"건너뛰기 →",
     reveal:"내 세 겹 정체성 보기",loadingTxt:"세 겹을 삼각 합성하는 중…",
     whoYouAre:"진짜 당신",kZodiac:"1층 · 별자리",kMbti:"2층 · MBTI",kEastern:"3층 · 십신",deepFlag:"심층",
-    shareBtn:"캡처 & 공유",againBtn:"다시 하기",
+    rarityCap:"희귀도",engineTag:"십신 · 사주 엔진",cardAi:"AI 생성 · 엔진 데이터 · 자기 이해",
+    shareBtn:"카드 저장 & 공유",againBtn:"다시 하기",
     shareHint:"카드를 단톡방에 보내보세요 — 누구의 세 번째 층이 같은지.",
     hookH:"3층은 당신 사주의 표면일 뿐이에요.",
     hookP:"당신의 십신 원형은 완전한 사주에서 나와요 — 사랑·일·재물·다가올 해가 모두 그 안에 있어요. 전체를 보세요.",
@@ -384,7 +436,7 @@ function mdToHtml(md){
 }
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-var STAR={rare:'✦✦✦', uncommon:'✦✦'};
+var GRADE={rare:{g:'UR',cls:'grade-UR',w:6}, uncommon:{g:'SR',cls:'grade-SR',w:26}, common:{g:'R',cls:'grade-R',w:64}};
 
 function reveal(data){
   var L=data.layers||{};
@@ -410,11 +462,17 @@ function reveal(data){
   var e=L.eastern||{};
   document.getElementById('eName').innerHTML='<em>'+esc(e.name||'—')+'</em>';
   document.getElementById('eMeta').textContent=(e.element||'')+(e.tenGod?(' · '+e.tenGod):'');
-  // rarity
-  document.getElementById('rarityStars').textContent=STAR[data.rarity.band]||'✦✦';
+  // rarity grade badge + band (from backend band, no invented %)
+  var gr=GRADE[data.rarity.band]||{g:'SSR',cls:'grade-SSR',w:16};
+  var card=document.getElementById('tcard');
+  card.classList.remove('grade-UR','grade-SSR','grade-SR','grade-R');
+  card.classList.add(gr.cls);
+  document.getElementById('gradeG').textContent=gr.g;
   document.getElementById('rarityLabel').textContent=data.rarity.label;
+  document.getElementById('rarityFill').style.width=gr.w+'%';
   document.getElementById('rarityNote').textContent=data.rarity.note;
   document.getElementById('tChart').textContent=(data.chart&&data.chart.fourPillars)?('Day Master '+data.chart.dayMaster+' · '+data.chart.fourPillars):'';
+  document.getElementById('cardAi').textContent=t('cardAi');
   document.getElementById('reading').innerHTML=mdToHtml(data.reading);
   document.getElementById('formCard').style.display='none';
   document.getElementById('loading').classList.remove('on');
@@ -452,18 +510,34 @@ document.getElementById('againBtn').addEventListener('click',function(){
   window.scrollTo({top:0,behavior:'smooth'});
 });
 
-// Share
+// ── Real image export: card DOM → PNG → native file share (fallback: download) ──
+function renderCardPng(node){
+  return document.fonts.ready.then(function(){
+    return html2canvas(node,{backgroundColor:null,scale:Math.min(3,(window.devicePixelRatio||1)*2),useCORS:true,logging:false});
+  }).then(function(canvas){
+    return new Promise(function(res){ canvas.toBlob(function(b){res(b);},'image/png'); });
+  });
+}
 document.getElementById('shareBtn').addEventListener('click',function(){
-  var zn=document.getElementById('zName').textContent;
-  var en=document.getElementById('eName').textContent;
+  var btn=this; var orig=btn.textContent; btn.disabled=true;
+  var zn=document.getElementById('zName').textContent, en=document.getElementById('eName').textContent;
   var text="My three layers on Runae: "+zn+" · "+(mbti||'—')+" · "+en+". What's your third layer? "+location.origin+"/pages/identity-triad.html";
-  if(navigator.share){
-    navigator.share({title:'My three-layer identity',text:text}).catch(function(){});
-  } else if(navigator.clipboard){
-    navigator.clipboard.writeText(text).then(function(){ alert(lang==='zh'?'已复制，去粘贴分享吧 · 或直接截图这张卡片 ↑':(lang==='ko'?'복사됐어요 · 또는 카드를 캡처하세요 ↑':'Copied — or just screenshot the card above ↑')); });
-  } else {
-    alert(lang==='zh'?'截图上面这张卡片分享给朋友吧 ↑':(lang==='ko'?'위 카드를 캡처해서 공유하세요 ↑':'Screenshot the card above to share ↑'));
-  }
+  renderCardPng(document.getElementById('tcard')).then(function(blob){
+    btn.disabled=false; btn.textContent=orig;
+    var file=new File([blob],'runae-identity.png',{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({files:[file],title:'My three-layer identity',text:text}).catch(function(){});
+    } else {
+      var url=URL.createObjectURL(blob); var a=document.createElement('a');
+      a.href=url; a.download='runae-identity.png'; document.body.appendChild(a); a.click();
+      document.body.removeChild(a); setTimeout(function(){URL.revokeObjectURL(url);},4000);
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(text).catch(function(){});
+    }
+  }).catch(function(){
+    btn.disabled=false; btn.textContent=orig;
+    if(navigator.share){ navigator.share({title:'My three-layer identity',text:text}).catch(function(){}); return; }
+    alert(lang==='zh'?'截图上面这张卡片分享给朋友吧':(lang==='ko'?'위 카드를 캡처해서 공유하세요':'Screenshot the card above to share'));
+  });
 });
 
 applyI18n();
