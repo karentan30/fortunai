@@ -37,6 +37,87 @@ const { getToken } = require('../lib/store');
 const { rateLimitMiddleware } = require('../middleware');
 const { PRODUCTS, matchProduct } = require('../data/products');
 
+// ── VIP/大师档探测（bazi_vip = $199 深度批命）──
+// 约束：仅改 divination.js/llm.js，不动 store.js。故 VIP 判定走 order_no(hub 微信/支付宝主路径·海外无登录)
+// + ADMIN_TOKEN(审核)。登录账号购买 bazi_vip 的判定为已知限制(store.hasFullAccess 只回布尔)，
+// 该路径仍会拿到完整版报告，只是不含 VIP 增量段——不影响付费墙，只是增量段少给，属安全侧降级。
+function detectBaziVip(req) {
+  try {
+    var auth = req.headers['authorization'] || '';
+    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
+    if (process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN) return true;
+    var _orderNo = (req.body && req.body.order_no) || '';
+    if (_orderNo) {
+      var _ord = _findOrder(_orderNo);
+      if (_ord && _ord.payment_status === 'completed' && String(_ord.product) === 'bazi_vip') return true;
+    }
+  } catch (e) {}
+  return false;
+}
+
+// $199【大师深度批命】相对 $19 完整版的真实增量段（不编造承诺·只加实打实的更深内容）
+const BAZI_VIP_ADDON_ZH = `
+
+━━━━━━━━━━━━━━━━━━━━━━
+【以下为「大师深度批命」专属增量内容，必须在上述16维度全部写完后，另起以下4个专属章节，每章写实写透，不得省略】
+
+17. 🗓️ 未来24个月逐月流月批（不少于1200字）
+- 从当前月份起，逐月批算未来24个月（不止逐年，精确到每个月）
+- 每月格式：**[年]年[月]月**：财/情/事三维吉凶+该月最宜做与最忌做的1件事+开运小提醒
+- 标出这24个月中3个最关键的转折月份并说明原因
+
+18. 🛡️ 深度化解与开运方案（不少于900字）
+- 针对命局忌神/凶煞，给出分层化解方案：日常习惯层、风水布局层、择吉行事层
+- 每项化解需说明"化解什么、为什么有效、具体怎么做、多久见效"
+- 给出一份可执行的90天开运行动清单（按周排布）
+
+19. 🔀 关键人生决策择时（不少于700字）
+- 针对结婚/置业/创业/跳槽/大额投资等重大决策，分别给出未来3年内的最佳时间窗与应回避时段
+- 每个决策附一句"若必须提前，如何用化解降低风险"
+
+20. 👑 大师叮嘱与终身命理档案说明（不少于500字）
+- 以最高档命理师身份，给命主一段专属的、有分量的终身叮嘱
+- 说明本档为「终身命理档案」，命主可在人生关键节点回看本报告对照验证`;
+
+const BAZI_VIP_ADDON_EN = `
+
+━━━━━━━━━━━━━━━━━━━━━━
+[The following is EXCLUSIVE to the "Master Deep Reading" tier. After completing all the standard chapters above, add these 4 exclusive chapters — write each fully, do not omit]
+
+🗓️ Month-by-Month Forecast for the Next 24 Months
+- Forecast every single month for the next 24 months (not just year-by-year — down to each month)
+- Per month: wealth/love/career outlook + the single most-favorable and most-unfavorable action + one lucky tip
+- Flag the 3 most pivotal months and explain why
+
+🛡️ Deep Remedies & Fortune-Enhancement Plan
+- Layered remedies for unfavorable elements: daily-habit layer, environment/feng-shui layer, timing-selection layer
+- For each: what it remedies, why it works, exactly how to do it, and how long until effect
+- Provide an actionable 90-day fortune plan laid out week by week
+
+🔀 Optimal Timing for Major Life Decisions
+- Best windows and windows to avoid over the next 3 years for marriage, property, starting a business, changing jobs, and large investments
+- For each, add one line on how to reduce risk if it must happen earlier
+
+👑 Master's Personal Charge & Lifetime Archive
+- A weighty, personalized closing charge from a master-level reader
+- Note this tier is a "Lifetime Destiny Archive" the reader can revisit at key life moments`;
+
+// ── 海外语种精确排盘注入 helper ──
+// 时辰不详(birthHour无效)时返回空串，不注入(避免编造假时柱)，降级回 LLM 处理"时辰不详"
+function baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender }) {
+  const _hasHour = birthHour !== undefined && birthHour !== null && birthHour !== '';
+  return _hasHour ? (buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour, gender }) || '') : '';
+}
+// 各语言"严格使用上方精确排盘"指令（排盘块本体是中文·万年历术语通用·此句用本地语言强约束 LLM 不自排）
+const CHART_STRICT = {
+  en: '\n\n[PRECISE CHART — computed by a professional Chinese perpetual-calendar engine below. You MUST use exactly these Four Pillars, Day Master, Ten Gods, hidden stems, pattern, favorable elements and Luck Cycles (大运). Do NOT recompute, guess, or alter any pillar or Luck Cycle. Interpret only.]\n',
+  ko: '\n\n[정밀 만세력 사주판 — 아래는 전문 만세력 엔진이 계산한 결과입니다. 사주(년월일시柱)·일간·십성·지장간·용신·대운을 반드시 그대로 사용하고, 절대 스스로 다시 계산하거나 바꾸지 마세요. 해석만 하세요.]\n',
+  'pt-br': '\n\n[MAPA PRECISO — calculado por um motor profissional de calendário chinês abaixo. Use EXATAMENTE estes Quatro Pilares, Mestre do Dia, Dez Deuses, elementos e Ciclos de Sorte (大运). NÃO recalcule nem altere. Apenas interprete.]\n',
+  th: '\n\n[แผนภูมิที่แม่นยำ — คำนวณโดยเครื่องมือปฏิทินจีนมืออาชีพด้านล่าง โปรดใช้สี่เสา ธาตุประจำวัน สิบเทพ ธาตุ และวัฏจักรโชคชะตา (大运) ตามนี้ทุกประการ ห้ามคำนวณใหม่หรือแก้ไข ให้ตีความเท่านั้น]\n',
+  es: '\n\n[MAPA PRECISO — calculado por un motor profesional de calendario chino abajo. Usa EXACTAMENTE estos Cuatro Pilares, Maestro del Día, Diez Dioses, elementos y Ciclos de Suerte (大运). NO recalcules ni modifiques. Solo interpreta.]\n',
+  'en-in': '\n\n[PRECISE CHART — computed by a professional Chinese perpetual-calendar engine below. You MUST use exactly these Four Pillars, Day Master, Ten Gods, hidden stems, favorable elements and Luck Cycles (大运). Do NOT recompute or alter any pillar or cycle. Interpret only.]\n'
+};
+
 // ── 免费报告内存缓存（24h TTL）──
 const reportCache = new Map();
 function cacheKey(params) {
@@ -76,11 +157,12 @@ async function baziKoreanHandler(req, res) {
       + '\n\n【구성】만세력 사주판(년월일시柱), 일간과 용신, 오행 균형과 보완법, 그리고 핵심 운세. 장르는 리포트보다 위로와 통찰.'
       + modeIns + freePart;
 
+    const _chartKo = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender });
     const userPrompt = `내 사주를 봐주세요.
 출생: ${birthYear}년 ${birthMonth}월 ${birthDay}일${birthHour !== undefined && birthHour !== '' ? ' ' + birthHour + '시' : ' (태어난 시간 모름)'}
 성별: ${gender === 'male' ? '남성' : '여성'}
 관심: ${question || '전체 운세'}
-
+${_chartKo ? CHART_STRICT.ko + _chartKo + '\n' : ''}
 사주명리로 심층 분석해 주세요.`;
 
     const messages = buildReadingPrompt(sysPrompt, userPrompt);
@@ -138,10 +220,22 @@ ${full ? `Generate a comprehensive report with these sections (emoji heading req
 🎯 Personalized Recommendations (lucky colors, numbers, directions, crystals, lifestyle — min 400 words)
 💌 A Personal Message (warm, personalized closing note — min 300 words)` : `Generate a free preview with ONLY these 3 sections then the LOCKED separator.`}`;
 
-    const messages = buildReadingPrompt(sysPrompt, userPrompt);
+    const _chartEn = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender });
+    const userPromptEn = userPrompt + (_chartEn ? CHART_STRICT.en + _chartEn + '\n' : '');
+    const messages = buildReadingPrompt(sysPrompt, userPromptEn);
     const result = await deepseekChat(messages, { maxTokens: full ? 16384 : 3500 });
-    insertReading.run('bazi', JSON.stringify(req.body), result, req.userId);
-    var ctxId = saveQaContext('bazi', req.body, result);
+    // $199 大师档增量（英文·第二次调用追加4个专属章节）
+    let resultEn2 = result;
+    if (full && detectBaziVip(req)) {
+      try {
+        const _vm = buildReadingPrompt('You are a master-tier BaZi reader.' + (_chartEn ? CHART_STRICT.en + _chartEn + '\n' : '') + BAZI_VIP_ADDON_EN,
+          'This is the exclusive add-on for the same person. Output ONLY the 4 exclusive chapters (24-month monthly forecast / deep remedies / decision timing / master charge). Do not repeat earlier chapters. Birth: ' + birthYear + '/' + birthMonth + '/' + birthDay + (birthHour !== undefined && birthHour !== '' ? ' ' + birthHour + ':00' : '') + ', ' + (gender === 'male' ? 'Male' : 'Female'));
+        const _vp = await deepseekChat(_vm, { maxTokens: full ? 16384 : 3500 });
+        if (_vp && _vp.trim()) resultEn2 = result + '\n\n' + _vp;
+      } catch (_e) { console.warn('[BAZI-EN VIP addon]', _e && _e.message); }
+    }
+    insertReading.run('bazi', JSON.stringify(req.body), resultEn2, req.userId);
+    var ctxId = saveQaContext('bazi', req.body, resultEn2);
     var _bze = null;
     try { _bze = calcBazi(Number(birthYear), Number(birthMonth), Number(birthDay), Number(birthHour)||0, gender||'female'); } catch(e) {}
     var pillarsEn = _bze ? {
@@ -152,7 +246,7 @@ ${full ? `Generate a comprehensive report with these sections (emoji heading req
       dayMaster: _bze.dayMaster,
       dayMasterElement: _bze.dayMasterElement
     } : null;
-    res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId, pillars: pillarsEn });
+    res.json({ reading: resultEn2, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId, pillars: pillarsEn });
   } catch (err) {
     console.error('[BAZI-EN ERR]', err.message);
     res.status(500).json({ error: 'The AI reader is temporarily busy. Please try again in a moment.' });
@@ -173,7 +267,8 @@ async function baziPtBrHandler(req, res) {
     const freeSuffix = full ? '' : `\n\nIMPORTANTE: Esta é a prévia gratuita. Gere APENAS estes 3 capítulos:\n📜 Mapa dos Quatro Pilares\n🌊 Análise dos Cinco Elementos\n🌟 Fortuna deste Ano\n\nApós completar os 3 capítulos (~1000-1500 palavras), escreva exatamente:\n---LOCKED---\n\nDepois liste os capítulos bloqueados:\n💰 Destino Financeiro e Profissional — disponível no relatório completo\n💕 Amor e Relacionamentos — disponível no relatório completo\n💼 Carreira e Propósito de Vida — disponível no relatório completo\n📅 Ciclos de Sorte de 10 Anos — disponível no relatório completo\n🔮 Previsão Ano a Ano — disponível no relatório completo`;
     const sysPrompt = `Você é um mestre em BaZi (Quatro Pilares do Destino) com mais de 30 anos de experiência na metafísica clássica chinesa. Você escreve relatórios calorosos, perspicazes e práticos em português brasileiro fluente. Explique os conceitos metafísicos chineses claramente, sem jargões, e sempre dê conselhos específicos e acionáveis. Nunca seja assustador ou fatalista — ajude as pessoas a entender seus pontos fortes e navegar pelos desafios.${freeSuffix}`;
     const userPrompt = `Por favor, analise meu mapa BaZi e gere um relatório de destino.\n\nDados de nascimento:\n- Data: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', Hora: ' + birthHour + ':00' : ' (hora de nascimento desconhecida)'}\n- Gênero: ${gender === 'male' ? 'Masculino' : 'Feminino'}\n\n${full ? `Gere um relatório completo com estas seções (título com emoji obrigatório):\n📜 Mapa dos Quatro Pilares (mín. 600 palavras)\n🌊 Análise dos Cinco Elementos (mín. 500 palavras)\n🌟 Fortuna deste Ano 2025-2026 (mín. 400 palavras)\n💰 Destino Financeiro (mín. 600 palavras)\n💕 Amor e Relacionamentos (mín. 600 palavras)\n💼 Carreira e Propósito (mín. 600 palavras)\n📅 Ciclos de Sorte de 10 Anos (mín. 800 palavras)\n🔮 Previsão Ano a Ano próximos 10 anos (mín. 600 palavras)\n🎯 Recomendações Personalizadas (mín. 400 palavras)\n💌 Mensagem Pessoal (mín. 300 palavras)` : `Gere apenas a prévia gratuita com os 3 capítulos e o separador LOCKED.`}`;
-    const messages = buildReadingPrompt(sysPrompt, userPrompt);
+    const _chartPt = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender });
+    const messages = buildReadingPrompt(sysPrompt, userPrompt + (_chartPt ? CHART_STRICT['pt-br'] + _chartPt + '\n' : ''));
     const result = await deepseekChat(messages, { maxTokens: full ? 16384 : 3500 });
     insertReading.run('bazi', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('bazi', req.body, result);
@@ -198,7 +293,8 @@ async function baziThHandler(req, res) {
     const freeSuffix = full ? '' : `\n\nสำคัญ: นี่คือตัวอย่างฟรี กรุณาสร้างเฉพาะ 3 บทนี้:\n📜 แผนภูมิสี่เสา\n🌊 การวิเคราะห์ธาตุทั้งห้า\n🌟 โชคลาภปีนี้\n\nหลังจากเสร็จ 3 บท (ประมาณ 1000-1500 คำ) ให้เขียน:\n---LOCKED---\n\nจากนั้นระบุบทที่ล็อก:\n💰 โชคลาภและการเงิน — ปลดล็อกในรายงานฉบับเต็ม\n💕 ความรักและความสัมพันธ์ — ปลดล็อกในรายงานฉบับเต็ม\n💼 อาชีพและเส้นทางชีวิต — ปลดล็อกในรายงานฉบับเต็ม\n📅 วัฏจักรโชคชะตา 10 ปี — ปลดล็อกในรายงานฉบับเต็ม\n🔮 พยากรณ์รายปี — ปลดล็อกในรายงานฉบับเต็ม`;
     const sysPrompt = `คุณเป็นปรมาจารย์ด้านปาจี (สี่เสาแห่งโชคชะตา) ที่มีประสบการณ์มากกว่า 30 ปีในอภิปรัชญาจีนคลาสสิก คุณเขียนรายงานที่อบอุ่น เข้าถึงได้ และปฏิบัติได้จริงในภาษาไทยที่คล่องแคล่ว อธิบายแนวคิดจีนโบราณอย่างชัดเจน และให้คำแนะนำที่เป็นรูปธรรม ไม่มีการทำนายที่น่ากลัว — ช่วยให้ผู้คนเข้าใจจุดแข็งของตนเอง${freeSuffix}`;
     const userPrompt = `กรุณาวิเคราะห์แผนภูมิปาจีของฉันและสร้างรายงานโชคชะตา\n\nข้อมูลการเกิด:\n- วันที่: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', เวลา: ' + birthHour + ':00' : ' (ไม่ทราบเวลาเกิด)'}\n- เพศ: ${gender === 'male' ? 'ชาย' : 'หญิง'}\n\n${full ? `สร้างรายงานฉบับเต็มพร้อมหัวข้อ emoji:\n📜 แผนภูมิสี่เสา (อย่างน้อย 600 คำ)\n🌊 การวิเคราะห์ธาตุทั้งห้า (อย่างน้อย 500 คำ)\n🌟 โชคลาภปีนี้ 2025-2026 (อย่างน้อย 400 คำ)\n💰 โชคลาภการเงิน (อย่างน้อย 600 คำ)\n💕 ความรักและความสัมพันธ์ (อย่างน้อย 600 คำ)\n💼 อาชีพและเส้นทางชีวิต (อย่างน้อย 600 คำ)\n📅 วัฏจักรโชคชะตา 10 ปี (อย่างน้อย 800 คำ)\n🔮 พยากรณ์รายปี 10 ปีข้างหน้า (อย่างน้อย 600 คำ)\n🎯 คำแนะนำส่วนตัว (อย่างน้อย 400 คำ)\n💌 ข้อความส่วนตัว (อย่างน้อย 300 คำ)` : `สร้างเฉพาะตัวอย่างฟรี 3 บทและตัวคั่น LOCKED`}`;
-    const messages = buildReadingPrompt(sysPrompt, userPrompt);
+    const _chartTh = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender });
+    const messages = buildReadingPrompt(sysPrompt, userPrompt + (_chartTh ? CHART_STRICT.th + _chartTh + '\n' : ''));
     const result = await deepseekChat(messages, { maxTokens: full ? 16384 : 3500 });
     insertReading.run('bazi', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('bazi', req.body, result);
@@ -223,7 +319,8 @@ async function baziEsHandler(req, res) {
     const freeSuffix = full ? '' : `\n\nIMPORTANTE: Esta es la vista previa gratuita. Genera SOLO estos 3 capítulos:\n📜 Mapa de los Cuatro Pilares\n🌊 Análisis de los Cinco Elementos\n🌟 Fortuna de este Año\n\nTras completar los 3 capítulos (~1000-1500 palabras), escribe exactamente:\n---LOCKED---\n\nLuego lista los capítulos bloqueados:\n💰 Destino Financiero y Profesional — disponible en el reporte completo\n💕 Amor y Relaciones — disponible en el reporte completo\n💼 Carrera y Propósito de Vida — disponible en el reporte completo\n📅 Ciclos de Suerte de 10 Años — disponible en el reporte completo\n🔮 Pronóstico Año a Año — disponible en el reporte completo`;
     const sysPrompt = `Eres un maestro en BaZi (Cuatro Pilares del Destino) con más de 30 años de experiencia en metafísica clásica china. Escribes reportes cálidos, perspicaces y prácticos en español latinoamericano fluido. Explicas los conceptos metafísicos chinos con claridad, sin jergas, y siempre das consejos específicos y accionables. Nunca seas aterrador ni fatalista — ayuda a las personas a entender sus fortalezas y navegar los desafíos.${freeSuffix}`;
     const userPrompt = `Por favor analiza mi mapa BaZi y genera un reporte de destino profundo.\n\nDatos de nacimiento:\n- Fecha: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', Hora: ' + birthHour + ':00' : ' (hora de nacimiento desconocida)'}\n- Género: ${gender === 'male' ? 'Masculino' : 'Femenino'}\n\n${full ? `Genera un reporte completo con estas secciones (título con emoji obligatorio):\n📜 Mapa de los Cuatro Pilares (mín. 600 palabras)\n🌊 Análisis de los Cinco Elementos (mín. 500 palabras)\n🌟 Fortuna de este Año 2025-2026 (mín. 400 palabras)\n💰 Destino Financiero (mín. 600 palabras)\n💕 Amor y Relaciones (mín. 600 palabras)\n💼 Carrera y Propósito (mín. 600 palabras)\n📅 Ciclos de Suerte de 10 Años (mín. 800 palabras)\n🔮 Pronóstico Año a Año próximos 10 años (mín. 600 palabras)\n🎯 Recomendaciones Personalizadas (mín. 400 palabras)\n💌 Mensaje Personal (mín. 300 palabras)` : `Genera solo la vista previa gratuita con los 3 capítulos y el separador LOCKED.`}`;
-    const messages = buildReadingPrompt(sysPrompt, userPrompt);
+    const _chartEs = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender });
+    const messages = buildReadingPrompt(sysPrompt, userPrompt + (_chartEs ? CHART_STRICT.es + _chartEs + '\n' : ''));
     const result = await deepseekChat(messages, { maxTokens: full ? 16384 : 3500 });
     insertReading.run('bazi', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('bazi', req.body, result);
@@ -248,7 +345,8 @@ async function baziInHandler(req, res) {
     const freeSuffix = full ? '' : `\n\nIMPORTANT: This is the free preview. Output ONLY these 3 chapters:\n📜 Four Pillars Chart\n🌊 Five Elements Analysis\n🌟 This Year's Fortune\n\nAfter completing these 3 chapters (around 1000-1500 words total), output exactly:\n---LOCKED---\n\nThen list the locked chapters:\n💰 Wealth & Finance Destiny — unlocked in full report\n💕 Love & Marriage Timing — unlocked in full report\n💼 Career & Life Purpose — unlocked in full report\n📅 Ten-Year Luck Cycles — unlocked in full report\n🔮 Year-by-Year Forecast — unlocked in full report`;
     const sysPrompt = `You are a master BaZi (Four Pillars of Destiny) reader with 30+ years of experience. You blend Chinese BaZi wisdom with insights that resonate deeply with Indian users — drawing parallels to Jyotish concepts like Rashi, Dasha, and Karma where helpful, while keeping the analysis rooted in BaZi. You write warm, insightful, and practical reports in fluent Indian English. Never be scary or fatalistic. Give specific, actionable guidance.${freeSuffix}`;
     const userPrompt = `Please analyse my BaZi chart and generate a deep destiny report.\n\nBirth details:\n- Date: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', Time: ' + birthHour + ':00' : ' (birth time unknown)'}\n- Gender: ${gender === 'male' ? 'Male' : 'Female'}\n\n${full ? `Generate a comprehensive report with these sections (emoji heading required for each):\n📜 Four Pillars Chart (Day Master, chart pattern, parallels with Vedic concepts — min 600 words)\n🌊 Five Elements Analysis (balance, what to strengthen — min 500 words)\n🌟 This Year's Fortune 2025-2026 (min 400 words)\n💰 Wealth & Finance Destiny (peak income years, best fields, investment timing — min 600 words)\n💕 Love & Marriage (marriage timing, ideal partner, relationship karma — min 600 words)\n💼 Career & Life Purpose (best career paths, peak years, mentor directions — min 600 words)\n📅 Ten-Year Luck Cycles (all major cycles with years and analysis — min 800 words)\n🔮 Year-by-Year Forecast (next 10 years — min 600 words)\n🎯 Personalised Recommendations (lucky colours, numbers, gemstones, directions — min 400 words)\n💌 A Personal Message (warm, personalised closing — min 300 words)` : `Generate a free preview with ONLY these 3 sections then the LOCKED separator.`}`;
-    const messages = buildReadingPrompt(sysPrompt, userPrompt);
+    const _chartIn = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender });
+    const messages = buildReadingPrompt(sysPrompt, userPrompt + (_chartIn ? CHART_STRICT['en-in'] + _chartIn + '\n' : ''));
     const result = await deepseekChat(messages, { maxTokens: full ? 16384 : 3500 });
     insertReading.run('bazi', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('bazi', req.body, result);
@@ -293,7 +391,7 @@ router.post('/bazi', rateLimitMiddleware, async (req, res) => {
 4. 开场用温暖轻松的语调，先共情后分析。用"我"和"你"直接对话，像一位从未见面却一眼就懂你的老朋友。
 
 【输出格式与字数硬性要求】
-⚠️ 这是用户付费购买的深度命理报告，字数不够不算完成。总字数必须达到12000-18000字。每个维度未达到字数下限，必须补写到位再进入下一维度。
+⚠️ 这是用户付费购买的深度命理报告。总字数控制在9000-11000字，务必写满、写透、写完整——16个维度一个都不能少、不能"略"、不能半途而止。字数分配要均衡，宁可每个维度写得扎实精炼，也不要前面铺张、后面（尤其大运/流年/命理师私语）被截断写不完。收尾维度（📅大运、🔮流年、💌命理师私语）必须完整写完，绝不允许写到一半戛然而止。
 
 你必须严格按照以下16个维度展开，每个维度标题必须用对应emoji开头，维度之间用空行分隔。
 
@@ -304,7 +402,7 @@ router.post('/bazi', rateLimitMiddleware, async (req, res) => {
 4. 💰 财运格局（正偏财分析、财库开闭、发财黄金年份、行业方向、投资禁忌、未来10年走势，不少于1000字）
 5. 💕 感情姻缘（夫妻宫、正缘特征含外貌性格职业、桃花类型、遇缘最佳年份、感情建议，不少于1000字）
 6. 💼 事业格局（官杀印星分析、职业路径判断、升职跳槽最佳时机精确到年月、贵人特征与出现时间、未来10年事业建议，不少于1000字）
-7. 🏥 健康预警和养生建议（先天体质弱项、高发病症预警、高危年龄段、养生运动饮食作息建议，具体到病名和食材，不少于800字）
+7. 🏥 健康预警和养生建议（先天体质弱项、需留意的身体系统、建议定期体检关注的方向、养生运动饮食作息建议——按脏腑系统与中医体质角度描述，不点名具体西医病名，落到食材，不少于800字）
 8. 📅 全部8步大运（每步大运干支+起止年份+不少于200字的深度分析，8步全部写完，不漏，合计不少于1600字）
 9. 🔮 未来10年逐年流年详批（每年财运/感情/事业百分制评分+关键提醒+吉神凶神具体列出，合计不少于1500字）
 10. ✨ 神煞分析（天乙贵人/桃花/驿马/华盖/文昌/太极贵人等，每个神煞的位置与具体影响，不少于600字）
@@ -316,7 +414,7 @@ router.post('/bazi', rateLimitMiddleware, async (req, res) => {
 16. 💌 命理师私语（这是最后一节，完全个性化——不是套话，是只对这个命主说的心里话。像一位看透一切却依然温柔的老朋友，说出命主最需要听到的那句话，以及一句发自内心的祝福，不少于400字）
 
 语言：简体中文。用朋友聊天的语气写，不要文言腔。重要信息加粗。引用古文时必须附白话解释。多用量化数据（百分比、分数、年份）增强说服力。每个维度字数不达标则补写，绝不允许以"略"或省略号代替。${modeInstruction}`,
-      `请为我批算八字命盘，生成一份完整的深度命理报告。总字数必须达到12000-18000字，每个维度字数未达下限不算完成，请补写。
+      `请为我批算八字命盘，生成一份完整的深度命理报告。总字数控制在9000-11000字，16个维度全部写完写透，字数均衡分配，务必保证收尾维度（大运/流年/命理师私语）完整不被截断。
 
 【基本信息】
 出生时间：${birthYear}年${birthMonth}月${birthDay}日${birthHour !== undefined ? birthHour + '时' : '（时辰不详）'}
@@ -374,7 +472,7 @@ ${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及�
 
 7. 🏥 健康预警和养生建议（不少于800字）
 - 先天体质弱项（从五行分析哪个脏腑最需要保护）
-- 高发病症预警（具体到病症名称，如"肝气郁结、心血管需注意、脾胃消化较弱"）
+- 需留意的身体系统与体检方向（按中医脏腑/系统角度描述，如"肝气易郁结、心血管系统建议定期关注、脾胃消化偏弱、内分泌需留意"，不点名具体西医病名如结节/增生等，避免制造恐慌）
 - 需要重点关注的年龄段（具体年份）
 - 养生建议：
   * 适合的运动类型（具体运动名称和频率）
@@ -466,7 +564,18 @@ ${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及�
       const cached = reportCache.get(ck);
       if (cached) { return res.json({ reading: cached, tier: 'basic', locked: true, cached: true }); }
     }
-    const result = await deepseekChat(useMessages, { maxTokens: freeMaxTokens });
+    let result = await deepseekChat(useMessages, { maxTokens: freeMaxTokens });
+    // $199 大师档：真实增量——单独一次 LLM 调用生成4个专属章节并追加（绕开单次16384 token上限，物理上多给内容）
+    if (full && detectBaziVip(req)) {
+      try {
+        const _vipMsgs = buildReadingPrompt(
+          '你是最高档【大师深度批命】命理师。' + (baziBlock ? '\n' + baziBlock + '\n严格采用上方精确排盘，禁止自行推算。\n' : '') + BAZI_VIP_ADDON_ZH,
+          '这是同一位命主的大师档专属增量部分。请只输出上述4个专属章节（🗓️逐月流月/🛡️深度化解/🔀择时/👑大师叮嘱），不要重复前面已写过的16个维度。出生:' + birthYear + '年' + birthMonth + '月' + birthDay + '日' + (birthHour !== undefined ? birthHour + '时' : '(时辰不详)') + '，性别:' + (gender === 'male' ? '男' : '女')
+        );
+        const _vipPart = await deepseekChat(_vipMsgs, { maxTokens: freeMaxTokens });
+        if (_vipPart && _vipPart.trim()) result = result + '\n\n' + _vipPart;
+      } catch (_ve) { console.warn('[BAZI VIP addon]', _ve && _ve.message); }
+    }
     // 免费版结果缓存24h
     if (!full) {
       const ck = cacheKey({ name: req.body.name || '', dob: (birthYear||'') + '-' + (birthMonth||'') + '-' + (birthDay||''), gender: gender||'', lang: lang||'zh' });
@@ -2643,7 +2752,8 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
         + '\n\n【글쓰기 톤】다정하고 잔잔하게. "좋은 사주다/나쁜 사주다"라는 이분법을 쓰지 않고, "강점과 약점, 그리고 잘 살리는 법"으로 풀어냅니다. 구체적인 조언(색·방위·습관)을 반드시 포함하세요.'
         + '\n\n【구성】만세력 사주판(년월일시柱), 일간과 용신, 오행 균형과 보완법, 그리고 핵심 운세. 장르는 리포트보다 위로와 통찰.'
         + modeInsKo + freePartKo;
-      var userKo = `내 사주를 봐주세요.\n출생: ${birthYear}년 ${birthMonth}월 ${birthDay}일${birthHour !== undefined && birthHour !== '' ? ' ' + birthHour + '시' : ' (태어난 시간 모름)'}\n성별: ${gender === 'male' ? '남성' : '여성'}\n관심: ${question || '전체 운세'}\n\n사주명리로 심층 분석해 주세요.`;
+      var _chartKoS = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender });
+      var userKo = `내 사주를 봐주세요.\n출생: ${birthYear}년 ${birthMonth}월 ${birthDay}일${birthHour !== undefined && birthHour !== '' ? ' ' + birthHour + '시' : ' (태어난 시간 모름)'}\n성별: ${gender === 'male' ? '남성' : '여성'}\n관심: ${question || '전체 운세'}${_chartKoS ? CHART_STRICT.ko + _chartKoS + '\n' : ''}\n\n사주명리로 심층 분석해 주세요.`;
 
       var messagesKo = buildReadingPrompt(sysKo, userKo);
       var streamBodyKo = await deepseekStream(messagesKo, { maxTokens: full ? 16384 : 3500, timeout: 300000 });
@@ -2685,7 +2795,8 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
 
       var freeSuffixEn = full ? '' : `\n\nIMPORTANT: This is the free preview. Output ONLY these 3 chapters:\n📜 Four Pillars Chart\n🌊 Five Elements Analysis\n🌟 This Year's Fortune\n\nAfter completing these 3 chapters (around 1000-1500 words total), output exactly:\n---LOCKED---\n\nThen output a brief teaser listing the locked chapters.`;
       var sysEn = `You are a master BaZi (Four Pillars of Destiny) reader with 30+ years of experience, trained in classical Chinese metaphysics. You write warm, insightful, and practical reports in fluent English. Never be scary or fatalistic — you help people understand their strengths and navigate challenges.${freeSuffixEn}`;
-      var userEn = `Please analyze my BaZi chart and generate a deep destiny report.\nBirth details:\n- Date: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', Hour: ' + birthHour + ':00' : ' (birth hour unknown)'}\n- Gender: ${gender === 'male' ? 'Male' : 'Female'}\n\n${full ? 'Generate a comprehensive report covering: Four Pillars Chart, Five Elements Analysis, This Year Fortune, Wealth & Career, Love & Relationships, Ten-Year Luck Cycles, Year-by-Year Forecast, Personalized Recommendations, and a Personal Message.' : 'Generate a free preview with ONLY 3 sections then the LOCKED separator.'}`;
+      var _chartEnS = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender });
+      var userEn = `Please analyze my BaZi chart and generate a deep destiny report.\nBirth details:\n- Date: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', Hour: ' + birthHour + ':00' : ' (birth hour unknown)'}\n- Gender: ${gender === 'male' ? 'Male' : 'Female'}${_chartEnS ? CHART_STRICT.en + _chartEnS + '\n' : ''}\n\n${full ? 'Generate a comprehensive report covering: Four Pillars Chart, Five Elements Analysis, This Year Fortune, Wealth & Career, Love & Relationships, Ten-Year Luck Cycles, Year-by-Year Forecast, Personalized Recommendations, and a Personal Message.' : 'Generate a free preview with ONLY 3 sections then the LOCKED separator.'}`;
 
       var messagesEn = buildReadingPrompt(sysEn, userEn);
       var streamBodyEn = await deepseekStream(messagesEn, { maxTokens: full ? 16384 : 3500, timeout: 300000 });
@@ -2729,7 +2840,7 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
 当前年份：${new Date().getFullYear()}年`;
 
     const sysPay = full
-      ? `你是一位精通八字命理的实力派命理师，既有正统传承，又懂现代人语言。\n\n${baziChart}\n\n你必须严格按照15个维度展开，总字数10000-15000字。维度用emoji开头：\n1.📜四柱八字排盘 2.🔥十神分析 3.🟤五行分析 4.💰财运格局 5.💕感情姻缘 6.💼事业格局 7.🏥健康预警 8.📅全部8步大运（使用上方精确大运数据） 9.🔮未来10年逐年流年（每年评分，从当前年份算起） 10.✨神煞分析 11.🌿藏干 12.👨‍👩‍👧‍👦父母/子女/夫妻宫 13.🎯开运锦囊 14.📖古法断语 15.💌命理师叮嘱\n每个维度必须基于上方排盘数据展开，给出具体年份/数字/颜色/物品。所有涉及年份的内容必须以当前年份为基准向未来推算。${modeInstruction}`
+      ? `你是一位精通八字命理的实力派命理师，既有正统传承，又懂现代人语言。\n\n${baziChart}\n\n你必须严格按照15个维度展开，总字数控制在9000-11000字，字数均衡分配，务必保证收尾维度（大运/流年/命理师叮嘱）完整写完不被截断。维度用emoji开头：\n1.📜四柱八字排盘 2.🔥十神分析 3.🟤五行分析 4.💰财运格局 5.💕感情姻缘 6.💼事业格局 7.🏥健康预警 8.📅全部8步大运（使用上方精确大运数据） 9.🔮未来10年逐年流年（每年评分，从当前年份算起） 10.✨神煞分析 11.🌿藏干 12.👨‍👩‍👧‍👦父母/子女/夫妻宫 13.🎯开运锦囊 14.📖古法断语 15.💌命理师叮嘱\n每个维度必须基于上方排盘数据展开，给出具体年份/数字/颜色/物品。所有涉及年份的内容必须以当前年份为基准向未来推算。${modeInstruction}`
       : `你是一位八字命理师。\n\n${baziChart}\n\n【免费预览版】只写3个部分：📜四柱排盘简介、🟤五行能量分析、🌟今年（${new Date().getFullYear()}年）运势概览（各200-300字）。最后说明完整报告含15个维度，可付费解锁。${modeInstruction}`;
 
     const userPrompt = `请为我批算八字。出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour !== undefined ? birthHour + '时' : ''}，性别：${gender === 'male' ? '男' : '女'}，关注：${question || '请全面分析命盘'}`;
