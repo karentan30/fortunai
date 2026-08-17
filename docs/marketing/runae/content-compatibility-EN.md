@@ -20,7 +20,7 @@ Format per script: **Hook (first 3s, spoken + on-screen text) → Structure/beat
 - **Hashtags:** #compatibility #situationship #relationshiptok #couplegoals #Runae #doweematch
 
 ### TT-2 · "Green flags vs red flags in our chart"
-- **Hook (3s):** *"Our compatibility reading had ONE green flag and one red flag and both were scarily accurate."* On-screen: "swipe won't save you, watch."
+- **Hook (3s):** *"Our compatibility reading had ONE green flag and one red flag and both were unsettlingly us."* On-screen: "swipe won't save you, watch."
 - **Structure:** Hook → show Romance dimension (high, green flag, smile) → show Conflict dimension (the honest one, wince) → "it literally described our last fight" → "tag your person, make them do it."
 - **Visuals:** Split-screen: card on left, reaction on right. Zoom-punch on the conflict line.
 - **CTA:** "Tag them 👇 make them run it and compare cards."
@@ -69,11 +69,11 @@ Format per script: **Hook (first 3s, spoken + on-screen text) → Structure/beat
 - **Hashtags:** #couplereaction #compatibility #couplegoals #relationshiptok #Runae #reactvideo
 
 ### TT-9 · "The one line that made me screenshot immediately"
-- **Hook (3s):** *"One line in our compatibility reading was so accurate I screenshotted it before I finished reading."* On-screen: "you'll want to send this one."
+- **Hook (3s):** *"One line in our compatibility reading was so disturbingly us I screenshotted it before I finished reading."* On-screen: "you'll want to send this one."
 - **Structure:** Hook → scroll to the standout line (a Growth or Values insight) → read it slowly → "how did it KNOW" → "sending this to him now."
 - **Visuals:** Screen-record the scroll, freeze-frame on the line with a highlight, cut to "sent ✅".
 - **CTA:** "Run yours and screenshot the line that gets you. Send it to your person 💌 Link in bio."
-- **Hashtags:** #screenshot #relatable #compatibility #relationshiptok #Runae #accurate
+- **Hashtags:** #screenshot #relatable #compatibility #relationshiptok #Runae #calledout
 
 ### TT-10 · "Testing every relationship I've ever had"
 - **Hook (3s):** *"I ran a compatibility reading on every person I've dated. The pattern is EMBARRASSING."* On-screen: "the through-line is me isn't it 💀"
@@ -83,6 +83,13 @@ Format per script: **Hook (first 3s, spoken + on-screen text) → Structure/beat
 - **CTA:** "Run your dating history. Find your pattern. Then send this to whoever needs to see it 👇"
 - **Hashtags:** #datinghistory #selfawareness #compatibility #patterns #Runae #relationshiptok
 
+### TT-11 · "The mistake you keep making with every 'match'" (pain-point / adversarial)
+- **Hook (3s):** *"You keep blaming timing and bad luck — but you pick the same incompatible person every single time, and the reading just showed me the exact dimension I ignore."* On-screen: "the pattern isn't them 💀"
+- **Structure:** Hook → "I ran three people I'd dated" → "same dimension came back low on all of them — the one I keep overriding" → "so it was never a them problem" → soft "it's a mirror, not a verdict" → invite.
+- **Visuals:** Rapid montage of blurred score rings, one dimension bar staying low each time, deadpan look to camera.
+- **CTA:** "Run your history and find the dimension you keep ignoring. Then send this to whoever needs to hear it 👇"
+- **Hashtags:** #datingpattern #situationship #compatibility #selfawareness #Runae #relationshiptok
+
 ---
 
 ## PART 2 — 10 Instagram Captions
@@ -91,7 +98,7 @@ Angle: couple / tag-me / group-chat share. Structure per caption: **Hook line �
 
 **IG-1**
 > We finally found out if we actually match — or if we're just really good at ignoring red flags. 😅
-> Ran our two birth dates through Runae and the six dimensions were… a little too accurate.
+> Ran our two birth dates through Runae and the six dimensions were… a little too us.
 > 👉 Run yours and send the card to your person. Then tell me who screenshotted first.
 > #compatibility #couplegoals #relationshipcheck #Runae #doweematch #relationshipsbelike
 
@@ -102,7 +109,7 @@ Angle: couple / tag-me / group-chat share. Structure per caption: **Hook line �
 > #tagyourperson #compatibility #couplegoals #Runae #relationshiptok #situationship
 
 **IG-3**
-> The Communication dimension read us so accurately I had to sit down.
+> The Communication dimension read us for filth — I had to sit down.
 > Turns out "you go quiet, I want to talk it out" has a whole explanation. 🫠
 > Screenshot yours and send it to them — watch them say "that's literally us."
 > #communication #lovelanguages #compatibility #Runae #couplegoals #relatable
@@ -138,10 +145,10 @@ Angle: couple / tag-me / group-chat share. Structure per caption: **Hook line �
 > #bestfriend #soulmate #friendshipgoals #compatibility #Runae #POV
 
 **IG-9**
-> One line in our reading was so accurate I screenshotted it mid-sentence. 📸
+> One line in our reading was so unsettlingly us I screenshotted it mid-sentence. 📸
 > The kind you send with no caption because it speaks for itself.
 > Run yours, find your line, send it to your person. 💌
-> #screenshot #relatable #compatibility #Runae #couplegoals #accurate
+> #screenshot #relatable #compatibility #Runae #couplegoals #calledout
 
 **IG-10**
 > Self-discovery disguised as a couples test. 😌
@@ -149,7 +156,7 @@ Angle: couple / tag-me / group-chat share. Structure per caption: **Hook line �
 > Run your two dates. Learn something about yourself. Then send it to someone who needs it.
 > #selfdiscovery #compatibility #growth #Runae #relationshiptok #patterns
 
-> **Note (honesty):** IG-1's "too accurate" and IG-3's "read us so accurately" are creator-voice reactions to a reflection tool, not claims of prediction. Keep on-card and caption framing as insight/reflection. Every post's linked page carries the AI-generated + entertainment disclaimer.
+> **Note (honesty + ad-policy):** All reaction lines are written as reflection/insight, not prediction. We deliberately avoid "accurate" language paired with relationship claims — ad-review systems read the copy literally (they don't see internal notes), and "accurate" + relationship prediction reads as an efficacy/overstatement risk. Use reflection phrasing instead: "disturbingly us," "read us for filth," "unsettlingly specific," "called out." Keep on-card and caption framing as insight/reflection. Every post's linked page carries the AI-generated + entertainment disclaimer.
 
 ---
 
@@ -238,9 +245,9 @@ Design goal: the moment the card appears, the user wants to screenshot and send 
    *"I ran a compatibility reading on my [ex] AND my [current] — the scores explain [everything / our whole timeline / why I left]."*
    → payoff: two rings, the gap, "healing is data now."
 
-3. **The Callout Accuracy:**
-   *"One line in our compatibility reading was so accurate I [screenshotted it before I finished / had to sit down / sent it with no caption]."*
-   → payoff: slow-read the line, "how did it KNOW."
+3. **The Callout Mirror:**
+   *"One line in our compatibility reading was so [disturbingly us / unsettlingly specific / read-us-for-filth] I [screenshotted it before I finished / had to sit down / sent it with no caption]."*
+   → payoff: slow-read the line, "how did it KNOW." (Avoid the word "accurate" in relationship copy — ad-policy overstatement risk; use reflection phrasing.)
 
 4. **The Same-Fight:**
    *"Turns out there's a reason we always fight about [the exact same thing / dishes / texting back] — and the [Conflict / Communication] dimension called it out."*
@@ -262,7 +269,7 @@ Design goal: the moment the card appears, the user wants to screenshot and send 
 - Couple/tag: `#couplegoals #coupletok #couplereaction #relationshipcheck #greenflag #redflag`
 - Communication: `#communication #lovelanguages #relationshipadvice #whywefight`
 - Ex/glow-up: `#exvscurrent #closure #glowup #patterns`
-- Self-discovery: `#selfdiscovery #growth #POV #relatable #accurate`
+- Self-discovery: `#selfdiscovery #growth #POV #relatable #calledout`
 
 **Volume rule:** TikTok 4-6 hashtags (mix 1 broad + 2-3 mid + 1-2 niche). IG 8-12 (add niche long-tail like `#compatibilitytest`, `#couplecheck`).
 

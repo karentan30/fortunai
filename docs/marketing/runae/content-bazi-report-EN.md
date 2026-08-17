@@ -30,7 +30,7 @@ Format: **[3-sec hook] → structure → visual notes → CTA → hashtags.** Al
 
 ### TT-02 · Angle: Eastern vs. Zodiac (the comparison hook)
 - **HOOK:** "Stop reading your horoscope. It's using your *birthday*. This uses your **exact birth minute.**"
-- **STRUCTURE:** hook (3s) → "Western zodiac: 12 signs, everyone born in a month gets the same reading." (5s) → "Four Pillars: your year, month, **day, and hour** — four layers, millions of combinations." (6s) → "That's why it feels unsettlingly specific instead of vague." (5s) → CTA.
+- **STRUCTURE:** hook (3s) → "Western zodiac: 12 signs, everyone born in a month gets the same reading." (5s) → "Four Pillars: your year, month, **day, and hour** — four layers that read *you*, not your whole birth month." (6s) → "That's why it feels unsettlingly specific instead of vague." (5s) → CTA.
 - **VISUALS:** Split screen — left "12 signs" grid greying out; right, four glowing pillars stacking. Clock ticking to the *minute* on the birth-time field.
 - **CTA:** "See yours free at runae.app — link in bio."
 - **HASHTAGS:** #zodiac #astrologytok #baziastrology #fourpillars #easternastrology #spiritualtok #runae
@@ -75,7 +75,7 @@ Format: **[3-sec hook] → structure → visual notes → CTA → hashtags.** Al
 
 ### TT-07 · Angle: Skeptic reversal ("I didn't believe it either")
 - **HOOK:** "I thought this was just horoscope stuff. Then it described the exact thing I've never told anyone."
-- **STRUCTURE:** hook (3s) → "Four Pillars doesn't use your sun sign. It uses the *minute* you were born — year, month, day, hour." (6s) → "So instead of 'you're a Leo,' it's reading a chart with millions of combinations." (6s) → "Mine called out the overthinking, the loyalty, the burnout pattern. Uncomfortably accurate." (5s) → CTA.
+- **STRUCTURE:** hook (3s) → "Four Pillars doesn't use your sun sign. It uses the *minute* you were born — year, month, day, hour." (6s) → "So instead of 'you're a Leo,' it's reading a chart that's only yours." (6s) → "Mine called out the overthinking, the loyalty, the burnout pattern. Disturbingly me." (5s) → CTA.
 - **VISUALS:** Creator talking to camera, unscripted/UGC feel, no polish; quick cut to the preview generating on their phone. **On-screen line: "🤖 AI reading · for reflection."**
 - **CTA:** "Try the free preview, judge for yourself → link in bio."
 - **HASHTAGS:** #skeptic #baziastrology #easternastrology #spiritualtok #astrologycheck #knowyourself #runae
@@ -109,6 +109,15 @@ Format: **[3-sec hook] → structure → visual notes → CTA → hashtags.** Al
 
 ---
 
+### TT-11 · Angle: Pain-point / self-sabotage callout (adversarial hook)
+- **HOOK (0–3s, on-screen + VO):** "You keep self-sabotaging the second things start going right — and no horoscope has ever told you why. This one did."
+- **STRUCTURE (15–25s):** 3s hook → "It's not a mindset problem you can affirmation your way out of. Your Four Pillars show it as a pattern in your chart — the element that floods in right when you're winning." (7s) → "Mine had a name for the thing I've been calling 'bad luck' for years." (5s) → "Runae reads it from your exact birth minute — then hands you the pattern, not a verdict." (5s) → CTA.
+- **VISUALS:** Creator to-camera, UGC/unpolished; quick cut to the report surfacing the pattern line; on-screen: **"🤖 AI reading · for reflection, not fate."**
+- **CTA:** "Find your pattern → link in bio. It's a starting point, not a sentence."
+- **HASHTAGS:** #selfsabotage #baziastrology #easternastrology #spiritualtok #shadowwork #knowyourself #runae
+
+---
+
 ## 2) 10 Instagram Captions (image / carousel)
 
 Format: **[hook first line] → body → CTA → hashtags → image suggestion.** Hook line is punchy enough to survive the "…more" truncation.
@@ -126,7 +135,7 @@ Format: **[hook first line] → body → CTA → hashtags → image suggestion.*
 
 ### IG-02 · Eastern vs. zodiac
 **Hook:** Your horoscope uses your birthday. This uses your exact birth *minute.*
-**Body:** Western astrology sorts everyone born in a month into the same sign. Four Pillars reads your **year, month, day, and hour** — four layers, millions of combinations. That's why an Eastern reading feels unsettlingly specific instead of vague and one-size-fits-all. Same ancient system that's been used for over 3,000 years — now translated into plain English by AI.
+**Body:** Western astrology sorts everyone born in a month into the same sign. Four Pillars reads your **year, month, day, and hour** — four layers that map you, not your whole birth month. That's why an Eastern reading feels unsettlingly specific instead of vague and one-size-fits-all. Same ancient system that's been used for over 3,000 years — now translated into plain English by AI.
 **CTA:** See yours free → link in bio.
 **HASHTAGS:** #zodiac #astrology #baziastrology #easternastrology #fourpillars #spiritualtok #astrologytok #runae
 **IMAGE:** Split graphic — "12 signs" grid vs. "4 pillars, millions of charts."
@@ -171,7 +180,7 @@ Format: **[hook first line] → body → CTA → hashtags → image suggestion.*
 
 ### IG-07 · Skeptic reversal
 **Hook:** I didn't believe it either — until it named the thing I've never told anyone.
-**Body:** I assumed this was horoscope-level vague. But Four Pillars doesn't use a sun sign — it reads the *minute* you were born, across four pillars with millions of combinations. Mine called out the overthinking, the loyalty, the burnout loop. Uncomfortably accurate. Try the free preview and judge for yourself — 🤖 it's an AI reading, meant for reflection, not fate.
+**Body:** I assumed this was horoscope-level vague. But Four Pillars doesn't use a sun sign — it reads the *minute* you were born, across four pillars that map you and no one else. Mine called out the overthinking, the loyalty, the burnout loop. Disturbingly specific. Try the free preview and judge for yourself — 🤖 it's an AI reading, meant for reflection, not fate.
 **CTA:** Free preview → link in bio.
 **HASHTAGS:** #skeptic #astrologycheck #baziastrology #easternastrology #spiritualtok #selfdiscovery #realtalk #runae
 **IMAGE:** Plain UGC-style photo of a phone showing the preview; handwritten-style caption sticker.
@@ -209,8 +218,8 @@ Format: **[hook first line] → body → CTA → hashtags → image suggestion.*
 
 Give these to any operator to mass-produce on-brand hooks. Keep `[element]`, `[trait]`, `[scenario]` swappable.
 
-1. **The Precision Flex** — *"Your zodiac gives you 12 [personality types / love readings / year forecasts]. This ancient Eastern system gives you millions."*
-   → Works for: personality, love, career, year-ahead. Always lands on "your exact birth minute."
+1. **The Precision Flex** — *"Your zodiac gives you 12 [personality types / love readings / year forecasts]. This ancient Eastern system reads the exact minute you were born — a chart that's only yours."*
+   → Works for: personality, love, career, year-ahead. Always lands on "your exact birth minute." (Note: reserve the punchier "…gives you millions" variant for max 1–2 hero posts per pack — it fatigues fast if every asset repeats it.)
 
 2. **The Callout Mirror** — *"Why you keep [attracting the wrong person / burning out / overthinking everything] — your chart already knew."*
    → Swap the pain point. Body: connect it to a `[element]` tendency → CTA to full report.
@@ -235,7 +244,7 @@ Give these to any operator to mass-produce on-brand hooks. Keep `[element]`, `[t
 `#baziastrology` `#easternastrology` `#fourpillars` `#birthchart` `#selfdiscovery` `#knowyourself` `#compatibility` `#careertok` `#lovetok` `#fiveelements`
 
 **NICHE (low competition, high intent — always include 2–3):**
-`#daymaster` `#baziconsulting` `#chineseastrologyalt` (⚠️ avoid — swap for) → `#easternzodiac` `#birthtimematters` `#elementalastrology` `#runae`
+`#daymaster` `#baziconsulting` `#easternzodiac` `#birthtimematters` `#elementalastrology` `#runae`
 
 > **Brand tag to seed every post:** `#runae` (build owned discovery over time).
 > **Ready-made combo (copy-paste):** `#spiritualtok #baziastrology #easternastrology #fourpillars #daymaster #selfdiscovery #astrologytok #runae`
