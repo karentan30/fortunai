@@ -251,6 +251,26 @@ function hehunTier(req) {
   } catch (e) { return null; }
 }
 
+// 只读: 判断登录用户是否有指定精确产品(如 bazi_vip)的已完成、未过期订单
+// 参照 hasFullAccess/hehunTier 取 token→user orders→过滤未过期。product 精确匹配，
+// 不走 UNLOCK_BY_CATEGORY 展开，故普通 full 用户(bazi_full)不会被误判成 vip。
+function hasVipAccess(req, product) {
+  try {
+    var auth = req.headers['authorization'] || '';
+    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
+    if (!token) return false;
+    // ADMIN_TOKEN 审核绕过
+    if (process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN) return true;
+    var t = getToken.get(token);
+    if (!t) return false;
+    var orders = getUserOrders.all(t.user_id) || [];
+    return orders.some(function(o) {
+      if (_isExpired(o)) return false;
+      return String(o.product || '') === String(product);
+    });
+  } catch (e) { return false; }
+}
+
 // 付费门+免责: 报告端点统一处理
 function gateMessages(req, keys, messages, fullMax) {
   fullMax = fullMax || 16384;
@@ -477,7 +497,7 @@ module.exports = {
   insertToken, getToken,
   getUserOrders, insertOrder, insertReading, getReadingsByUser,
   // 付费墙
-  UNLOCK_BY_CATEGORY, SUBSCRIBE_PRODUCTS, hasFullAccess, hehunTier, gateMessages,
+  UNLOCK_BY_CATEGORY, SUBSCRIBE_PRODUCTS, hasFullAccess, hasVipAccess, hehunTier, gateMessages,
   _isExpired,
   // 订单操作
   _updOrder, _updOrderExpiry, _setOrExtendSub,
