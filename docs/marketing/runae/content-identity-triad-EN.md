@@ -52,8 +52,8 @@ Format per script: **Hook (first 3s, spoken + on-screen) → Beats → Visuals �
 - **CTA:** "Run yours — is your trio uncommon or rare? drop it 👇 (common combos are still cool, don't @ me)"
 - **Hashtags:** #zodiac #mbti #rarepersonality #Runae #groupchat #personalitytest #fyp
 
-### TT-5 · "Ranking my three identity layers by how accurate they were"
-- **Hook (3s):** *"I ran all three of my identity layers and ranked them by accuracy — and the one I'd never heard of won."* On-screen: "🥉zodiac 🥈MBTI 🥇???"
+### TT-5 · "Ranking my three identity layers by how hard they read me"
+- **Hook (3s):** *"I ran all three of my identity layers and ranked them by how hard they read me — and the one I'd never heard of won."* On-screen: "🥉zodiac 🥈MBTI 🥇???"
 - **Beats:** Hook → "third place: my zodiac, cute but vague" → "second: my MBTI, solid, I know it well" → "first: my Eastern Ten Gods layer — the one I'd literally never seen — read me the hardest" → reveal that third layer → "how does the one I just met know me best??"
 - **Visuals:** Podium graphic 🥉🥈🥇 with the layer cards; the third layer takes gold. React to the winner.
 - **Honesty beat:** *"all three are reflection tools for fun — but layer 3 comes from a precise birth-chart engine, so it goes deeper."*
@@ -77,7 +77,7 @@ Format: **Hook line → body → honest beat → CTA → hashtags.** For carouse
 - **Hashtags:** #mbti #zodiac #thirdlayer #Runae #tengods #personalitytype #selfdiscovery
 
 ### IG-2 · Reel: the ⭐ agreement moment
-- **Caption:** "Three totally different systems — a star sign, an MBTI, and an ancient birth-chart archetype — and all three pointed at the same trait in me. ⭐ That's the part I can't unsee. It also shows where they DON'T agree, which is why it feels honest and not like hype. Run yours and tell me the one thing all three of yours agree on 👇 *AI-read from a real Four Pillars engine · for reflection only.*"
+- **Caption:** "Three systems that don't talk to each other just agreed on the same trait in me. A star sign, an MBTI, and an ancient birth-chart archetype — all pointing at one thing. ⭐ That's the part I can't unsee. It also shows where they DON'T agree, which is why it feels honest and not like hype. Run yours and tell me the one thing all three of yours agree on 👇 *AI-read from a real Four Pillars engine · for reflection only.*"
 - **Hashtags:** #mbti #zodiac #triangulation #Runae #personalitytest #whoami #fyp
 
 ### IG-3 · Reel: "the layer MBTI can't reach"

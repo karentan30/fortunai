@@ -15,7 +15,7 @@
 
 ---
 
-## 1 · BaZi Life Report (Day Master / Four Pillars · "more accurate than your star sign")
+## 1 · BaZi Life Report (Day Master / Four Pillars · "reads you deeper than your star sign")
 **Landing:** `runae.app/bazi-en`
 
 ### TikTok Scripts
@@ -32,7 +32,7 @@
 - **Structure:** Hook → type in exact birth minute → report generates → creator reads 3 lines that "shouldn't be knowable from a birthday" → soft landing ("this isn't fate btw, it literally says so") → CTA.
 - **Visuals:** Close-up of the minute field, report scroll, screenshot of the anti-fate line in the report.
 - **CTA:** "Get your blueprint → runae.app/bazi"
-- **Hashtags:** #birthchart #bazireading #fourpillars #accurateaf #spiritualtok #Runae
+- **Hashtags:** #birthchart #bazireading #fourpillars #readforfilth #spiritualtok #Runae
 
 **TT 1.3 — "Read to me by Rún"**
 - **3s hook:** "This isn't a horoscope app. It's a person named Rún who read my whole chart."
@@ -43,7 +43,7 @@
 
 ### IG Captions
 
-**IG 1.1** — Your zodiac sorts 8 billion people into 12 boxes. Your Four Pillars read the exact year, month, day, and *minute* you were born — that's millions of combinations, and one of them is you. Meet your Day Master. → runae.app/bazi *(Self-reflection & entertainment. AI-generated reading of an ancient Eastern system — not a prediction.)*
+**IG 1.1** — You've read your horoscope 100 times and it never once explained why you self-sabotage the moment things go well. Your zodiac sorts 8 billion people into 12 boxes. Your Four Pillars read the exact year, month, day, and *minute* you were born — one chart, and it's only yours. Meet your Day Master. → runae.app/bazi *(Self-reflection & entertainment. AI-generated reading of an ancient Eastern system — not a prediction.)*
 
 **IG 1.2** — "You go quiet when you're overwhelmed — that's your Metal pillar. It's not coldness. It's how you protect your edge." That's the kind of line your Four Pillars report opens with. Not a fortune. A mirror. → runae.app/bazi *(For reflection & entertainment. Not a prediction or advice.)*
 
@@ -101,7 +101,7 @@
 
 **TT 3.2 — "Read us for filth"**
 - **3s hook:** "We put both our birth times in and it read our whole relationship in 10 seconds."
-- **Structure:** Hook → couple reacts to the read together → one line lands too accurately → laughing/arguing → soft "it's not fate, it's a starting point" → CTA.
+- **Structure:** Hook → couple reacts to the read together → one line hits unsettlingly specific → laughing/arguing → soft "it's not fate, it's a starting point" → CTA.
 - **Visuals:** Two people, one phone, real reactions.
 - **CTA:** "Read your match → runae.app/hehun"
 - **Hashtags:** #couplecheck #relationshiptest #bazi #Runae #fyp
@@ -286,6 +286,8 @@
 ## 8 · Blessing & Prayer at Named Temples (overseas diaspora · monks chant properly · watch the livestream · cultural intention, not luck-changing)
 **Landing:** `runae.app/explore` (Blessing service)
 
+> **🚫 CHANNEL RESTRICTION (hard line — read before use):** This feature is **ORGANIC / NATURAL CONTENT ONLY. Do NOT run any of the scripts/captions below as PAID ADS on Meta or TikTok.** Paid-ad policies flag religious/temple services + implied institutional (temple/monk) endorsement as high-risk → account/ad rejection or ban risk. Content is retained here for organic posting (creator's own feed, no boost, no spend). **Remove entirely from the paid-ad pool.** If a paid religious-service angle is ever wanted, it must be re-cleared against current Meta/TikTok policy first.
+
 > **Compliance note (hard line):** frame as **cultural intention / heartfelt offering / connection to tradition** — **never** "guaranteed effective," "changes your luck," or any outcome promise. It's a way to send a wish through tradition, honored by monks who chant as tradition prescribes. No luck-changing claims anywhere.
 
 ### TikTok Scripts
@@ -361,5 +363,6 @@
 - **"Chinese" label:** none — everywhere uses Eastern / Four Pillars / BaZi / Day Master / element / 사주-free English. ✅
 - **Fabrication:** no fake testimonials or invented stats; all "reviews"/confessions are written as creator-performed script lines (marked as scripts), not quoted real customers. ✅
 - **Luck-changing (blessing):** explicitly barred in feature 8 with hard-line note; captions say "not luck-changing / no guaranteed outcomes / cultural intention." ✅
+- **Feature 8 paid-ad restriction:** flagged **ORGANIC-ONLY** — removed from the paid-ad pool (religious/temple-service + implied endorsement = paid-policy high-risk). Content retained for creator organic posting only. ✅
 - **Anti-fate + AI disclosure + entertainment disclaimer:** baked into Rún's persona lines and appended to every caption. ✅
 - **Win-back (feature 4):** reframed as *your* season/receptivity window, never a guarantee about another person's behavior; honest-disclaimer angle (TT 4.5 / IG 4.2) included. ✅
