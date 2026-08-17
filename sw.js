@@ -1,99 +1,167 @@
-/* 善缘 Service Worker — 离线缓存 + 推送通知 */
+/* Runae — Service Worker (PWA base)
+ * Scope: "/" (served from /sw.js → controls whole site)
+ *
+ * Strategy summary:
+ *   - Static assets  → cache-first (fast, offline-capable)
+ *   - /api/*         → NETWORK-ONLY, never cached (dynamic astrology + paid content)
+ *   - Navigations    → network-first, fall back to cache, then /offline.html
+ *   - Push           → scaffold only (structure + notificationclick), no live push service yet
+ *
+ * Bump CACHE_VERSION to bust all caches on the next activate.
+ */
 
-const CACHE = 'shenyuan-v2';
+const CACHE_VERSION = 'runae-v1';
+const CACHE_STATIC  = `runae-static-${CACHE_VERSION}`;
+
+/* Conservative precache list — core shell + offline page only.
+ * Do NOT add /api/* here. Keep this small; anything else is cached lazily. */
 const PRECACHE_URLS = [
-  '/',
-  '/index.html',
-  '/favicon.svg',
+  '/offline.html',
   '/manifest.json',
-  '/assets/css/style.css'
+  '/icon.svg',
+  '/favicon.svg',
+  '/pages/home-en.html'   // start_url (built by the homepage agent)
 ];
 
-/* ── 安装：预缓存核心资源 ── */
-self.addEventListener('install', function(event) {
+/* Never touch the network cache for these path prefixes. */
+function isApiRequest(url) {
+  return url.pathname.startsWith('/api/');
+}
+
+/* Same-origin only helper. */
+function isSameOrigin(url) {
+  return url.origin === self.location.origin;
+}
+
+/* ── install: precache shell, tolerate individual misses ── */
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE).then(function(cache) {
-      return cache.addAll(PRECACHE_URLS);
-    }).then(function() {
-      return self.skipWaiting();
-    })
+    caches.open(CACHE_STATIC).then((cache) =>
+      // addAll is atomic (fails all if one 404s). Add individually so a
+      // not-yet-built page (e.g. home-en.html) never breaks install.
+      Promise.all(
+        PRECACHE_URLS.map((u) =>
+          cache.add(u).catch((err) => console.warn('[sw] precache skip:', u, err))
+        )
+      )
+    ).then(() => self.skipWaiting())
   );
 });
 
-/* ── 激活：清理旧缓存 ── */
-self.addEventListener('activate', function(event) {
+/* ── activate: drop caches from previous versions ── */
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then(function(keys) {
-      return Promise.all(
-        keys.filter(function(k) { return k !== CACHE; })
-          .map(function(k) { return caches.delete(k); })
-      );
-    }).then(function() {
-      return self.clients.claim();
-    })
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys.filter((k) => k !== CACHE_STATIC).map((k) => caches.delete(k))
+      )
+    ).then(() => self.clients.claim())
   );
 });
 
-/* ── 请求拦截：网络优先，离线回退到缓存 ── */
-self.addEventListener('fetch', function(event) {
-  // 只拦截同源 GET 请求
-  if (event.request.method !== 'GET') return;
-  if (!event.request.url.startsWith(self.location.origin)) return;
+/* ── fetch: routing ── */
+self.addEventListener('fetch', (event) => {
+  const req = event.request;
 
+  // Only handle GET. POST/PUT (forms, payments) pass straight through.
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+
+  // Ignore cross-origin (CDN, analytics, fonts on other hosts, etc.).
+  if (!isSameOrigin(url)) return;
+
+  // 1) /api/* → NETWORK-ONLY. Never read or write cache.
+  //    Guarantees dynamic BaZi/fortune results and paid content are never stale.
+  if (isApiRequest(url)) {
+    event.respondWith(fetch(req));
+    return;
+  }
+
+  // 2) Navigations (HTML documents) → network-first, then cache, then offline page.
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const clone = res.clone();
+          caches.open(CACHE_STATIC).then((c) => c.put(req, clone));
+          return res;
+        })
+        .catch(() =>
+          caches.match(req).then((cached) => cached || caches.match('/offline.html'))
+        )
+    );
+    return;
+  }
+
+  // 3) Static assets (css/js/img/fonts/svg) → cache-first, lazily populate.
   event.respondWith(
-    fetch(event.request)
-      .then(function(response) {
-        // 成功的响应才缓存
-        if (response && response.status === 200) {
-          var clone = response.clone();
-          caches.open(CACHE).then(function(cache) {
-            cache.put(event.request, clone);
-          });
-        }
-        return response;
-      })
-      .catch(function() {
-        // 网络失败 → 从缓存取
-        return caches.match(event.request).then(function(cached) {
-          return cached || new Response('离线模式 — 请检查网络连接', {
-            status: 503,
-            statusText: 'Service Unavailable'
-          });
-        });
-      })
+    caches.match(req).then((cached) => {
+      if (cached) return cached;
+      return fetch(req)
+        .then((res) => {
+          // Only cache clean, complete, same-origin 200s.
+          if (res && res.status === 200 && res.type === 'basic') {
+            const clone = res.clone();
+            caches.open(CACHE_STATIC).then((c) => c.put(req, clone));
+          }
+          return res;
+        })
+        .catch(() => cached); // no cache + offline → let it fail naturally
+    })
   );
 });
 
-/* ── 推送通知接收 ── */
-self.addEventListener('push', function(event) {
-  var data = {};
+/* ──────────────────────────────────────────────────────────────
+ * PUSH NOTIFICATIONS — SCAFFOLD ONLY (future "daily fortune" push)
+ *
+ * Wiring left intentionally inert: no push service / VAPID keys yet.
+ * To activate later:
+ *   1. Generate VAPID keys, expose public key to the client.
+ *   2. Client: registration.pushManager.subscribe({ userVisibleOnly:true,
+ *        applicationServerKey: <vapidPublicKey> }) → POST subscription to backend.
+ *   3. Backend: send Web Push payloads { title, body, url, icon }.
+ * The handlers below already render + route notifications once payloads arrive.
+ * ────────────────────────────────────────────────────────────── */
+self.addEventListener('push', (event) => {
+  let data = {};
   try {
     data = event.data ? event.data.json() : {};
-  } catch(e) {
-    data = { title: '善缘', body: event.data ? event.data.text() : '' };
+  } catch (e) {
+    data = { title: 'Runae', body: event.data ? event.data.text() : '' };
   }
 
-  var title = data.title || '善缘 ShenYuan';
-  var options = {
-    body: data.body || '您有一条新的运势消息',
-    icon: '/favicon.svg',
-    badge: '/favicon.svg',
-    vibrate: [200, 100, 200],
-    data: data.url ? { url: data.url } : {}
+  const title = data.title || 'Runae';
+  const options = {
+    body: data.body || 'Your daily fortune is ready.',
+    icon: data.icon || '/icon-192.png',
+    badge: '/icon-192.png',
+    tag: data.tag || 'runae-daily',
+    data: { url: data.url || '/pages/home-en.html' }
   };
 
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || '/pages/home-en.html';
+
   event.waitUntil(
-    self.registration.showNotification(title, options)
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Focus an existing tab if one is already open, else open a new one.
+      for (const client of clientList) {
+        if ('focus' in client) {
+          client.navigate(target);
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(target);
+    })
   );
 });
 
-/* ── 通知点击 ── */
-self.addEventListener('notificationclick', function(event) {
-  event.notification.close();
-  var url = event.notification.data && event.notification.data.url;
-  if (url) {
-    event.waitUntil(
-      clients.openWindow(url)
-    );
-  }
+/* Allow the page to trigger an immediate SW update (optional helper). */
+self.addEventListener('message', (event) => {
+  if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
