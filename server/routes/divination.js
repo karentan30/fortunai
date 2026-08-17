@@ -32,7 +32,19 @@ const { calcBazi } = require('../bazi');
 const { buildBaziBlock } = require('../lib/bazi-engine/prompt-block');
 const { computeBaziChart } = require('../lib/bazi-engine');
 const astrology = require('../astrology.js');
-const { insertReading, hasFullAccess, hasVipAccess, hehunTier, gateMessages, saveQaContext, qaContext, _findOrder } = require('../lib/store');
+const { insertReading, hasFullAccess, hasVipAccess, hehunTier, hehunTierReadonly, gateMessages, gateReportAccess, memberTier, monthlyReportCreditRemaining, refundMonthlyReportCredit, saveQaContext, qaContext, _findOrder } = require('../lib/store');
+
+// 🔴 P0-C helper(专家复审): 报告端点若本请求消费了月会员 credit(gateReportAccess/hehunTier 会在
+//   req._syCreditUid 打标记), 而后续 LLM 生成抛错, 回补一次 credit, 防"扣了额度没拿到报告"。
+//   只对本请求真正扣过 credit 的情况回补(靠标记), 不误退其他请求已合法消费的额度。
+function _refundCreditOnFail(req) {
+  try {
+    if (req && req._syCreditUid != null) {
+      refundMonthlyReportCredit(req._syCreditUid, req);
+      req._syCreditUid = null; // 幂等: 只退一次
+    }
+  } catch (e) {}
+}
 const { getToken } = require('../lib/store');
 const { rateLimitMiddleware } = require('../middleware');
 const { PRODUCTS, matchProduct } = require('../data/products');
@@ -149,7 +161,7 @@ try { mon = require(process.env.MONITORING_PATH || require('path').join(__dirnam
 async function baziKoreanHandler(req, res) {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, question, mode } = req.body;
-    var full = hasFullAccess(req, ['bazi', '사주', '八字']);
+    var full = gateReportAccess(req, ['bazi', '사주', '八字']).full;
     // 订单号解锁：hub WeChat/Alipay 付款后无登录账号时使用
     if (!full) {
       var _orderNo = (req.body && req.body.order_no) || '';
@@ -196,6 +208,7 @@ ${_chartKo ? CHART_STRICT.ko + _chartKo + '\n' : ''}
     } : null;
     res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId, pillars });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[BAZI-KO ERR]', err.message);
     res.status(500).json({ error: 'AI가 잠시 바빠요. 잠시 후 다시 시도해 주세요.' });
   }
@@ -207,7 +220,7 @@ ${_chartKo ? CHART_STRICT.ko + _chartKo + '\n' : ''}
 async function baziEnglishHandler(req, res) {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, order_no } = req.body;
-    var full = hasFullAccess(req, ['bazi', '사주', '八字']);
+    var full = gateReportAccess(req, ['bazi', '사주', '八字']).full;
     if (!full && order_no) {
       var _o = _findOrder(order_no);
       if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
@@ -263,6 +276,7 @@ ${full ? `Generate a comprehensive report with these sections (emoji heading req
     } : null;
     res.json({ reading: resultEn2, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId, pillars: pillarsEn });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[BAZI-EN ERR]', err.message);
     res.status(500).json({ error: 'The AI reader is temporarily busy. Please try again in a moment.' });
   }
@@ -274,7 +288,7 @@ ${full ? `Generate a comprehensive report with these sections (emoji heading req
 async function baziPtBrHandler(req, res) {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, order_no } = req.body;
-    var full = hasFullAccess(req, ['bazi', '사주', '八字']);
+    var full = gateReportAccess(req, ['bazi', '사주', '八字']).full;
     if (!full && order_no) {
       var _o = _findOrder(order_no);
       if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
@@ -289,6 +303,7 @@ async function baziPtBrHandler(req, res) {
     var ctxId = saveQaContext('bazi', req.body, result);
     res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[BAZI-PT ERR]', err.message);
     res.status(500).json({ error: 'O leitor de IA está temporariamente ocupado. Tente novamente em breve.' });
   }
@@ -300,7 +315,7 @@ async function baziPtBrHandler(req, res) {
 async function baziThHandler(req, res) {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, order_no } = req.body;
-    var full = hasFullAccess(req, ['bazi', '사주', '八字']);
+    var full = gateReportAccess(req, ['bazi', '사주', '八字']).full;
     if (!full && order_no) {
       var _o = _findOrder(order_no);
       if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
@@ -315,6 +330,7 @@ async function baziThHandler(req, res) {
     var ctxId = saveQaContext('bazi', req.body, result);
     res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[BAZI-TH ERR]', err.message);
     res.status(500).json({ error: 'นักพยากรณ์ AI ยุ่งชั่วคราว กรุณาลองใหม่อีกครั้ง' });
   }
@@ -326,7 +342,7 @@ async function baziThHandler(req, res) {
 async function baziEsHandler(req, res) {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, order_no } = req.body;
-    var full = hasFullAccess(req, ['bazi', '사주', '八字']);
+    var full = gateReportAccess(req, ['bazi', '사주', '八字']).full;
     if (!full && order_no) {
       var _o = _findOrder(order_no);
       if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
@@ -341,6 +357,7 @@ async function baziEsHandler(req, res) {
     var ctxId = saveQaContext('bazi', req.body, result);
     res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[BAZI-ES ERR]', err.message);
     res.status(500).json({ error: 'El lector de IA está temporalmente ocupado. Por favor intenta de nuevo.' });
   }
@@ -352,7 +369,7 @@ async function baziEsHandler(req, res) {
 async function baziInHandler(req, res) {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, order_no } = req.body;
-    var full = hasFullAccess(req, ['bazi', '사주', '八字']);
+    var full = gateReportAccess(req, ['bazi', '사주', '八字']).full;
     if (!full && order_no) {
       var _o = _findOrder(order_no);
       if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
@@ -367,6 +384,7 @@ async function baziInHandler(req, res) {
     var ctxId = saveQaContext('bazi', req.body, result);
     res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[BAZI-IN ERR]', err.message);
     res.status(500).json({ error: 'The AI reader is temporarily busy. Please try again in a moment.' });
   }
@@ -561,7 +579,7 @@ ${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及�
 - 最后一句：一个发自内心的、针对此命盘专属的祝福（不用"一帆风顺"这类套话）`
     );
 
-    var full = hasFullAccess(req, ['bazi', '八字']);
+    var full = gateReportAccess(req, ['bazi', '八字']).full;
     var useMessages = messages;
     if (!full) {
       useMessages = buildReadingPrompt(
@@ -601,6 +619,7 @@ ${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及�
     var ctxId = saveQaContext('bazi', req.body, result);
     res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId, product: full ? matchProduct(result, 'bazi') : undefined });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[BAZI ERR]', err.message);
     if (mon && mon.captureException) mon.captureException(err, { tags: { api: 'bazi' } });
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试', detail: err.message });
@@ -642,6 +661,7 @@ ${cardDesc ? '牌面信息：\n' + cardDesc : '使用随机三张塔罗牌（过
     var ctxId = saveQaContext('tarot', req.body, result);
     res.json({ reading: result, contextId: ctxId, tier: _gt.full ? 'full' : 'basic', locked: !_gt.full });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[TAROT ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用', detail: err.message });
   }
@@ -679,6 +699,7 @@ router.post('/ziwei', rateLimitMiddleware, async (req, res) => {
     var ctxId = saveQaContext('ziwei', req.body, result);
     res.json({ analysis: result, contextId: ctxId });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[ZIWEI ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用', detail: err.message });
   }
@@ -712,6 +733,7 @@ router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
     insertReading.run('mianxiang', JSON.stringify({ question }), result, req.userId);
     res.json({ reading: result, tier: _gm.full ? 'full' : 'basic', locked: !_gm.full });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[MIANXIANG ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用', detail: err.message });
   }
@@ -755,6 +777,7 @@ B方：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined ? p2Hour+'时'
     var ctxId = saveQaContext('hehun', req.body, result);
     res.json({ reading: result, contextId: ctxId });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[HEHUN ERR]', err.message);
     if (mon && mon.captureException) mon.captureException(err, { tags: { api: 'hehun' } });
     res.status(500).json({ error: 'AI暂时不可用', detail: err.message });
@@ -1087,9 +1110,11 @@ ${nameB}：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined && p2Hour 
 请依据以上精确排盘数据进行合婚分析，缘分总分使用${compatScore}/100，所有八字相关结论必须与上方数据一致。`;
     }
 
-    const fullAccess = hasFullAccess(req, ['bazi', 'hehun', 'hehun_full', 'hehun_kr', 'hehun_kr_full', 'ziwei', 'xingming', 'astrology', '八字', '合婚', '궁합', '紫微', '姓名', '占星']);
-    // zh 分支按 tier 分档；en/ko 沿用 fullAccess（不扩三档）
+    // 🔴 0817: tier 已由 hehunTier(req) 统一判定(含月会员 credit 消费)。
+    //   en/ko 非三档分支直接复用 tier 结果, 避免月会员在 hehunTier 已扣 credit 后
+    //   又被 hasFullAccess 判为无权限造成"扣了 credit 却只给 basic"的漏账。
     const isFullTier = (tier === 'full' || tier === 'master');
+    const fullAccess = isFullTier;
     let maxTokens;
     if (hehunLang === 'zh') {
       maxTokens = tier === 'master' ? 14336 : tier === 'full' ? 12288 : tier === 'basic' ? 3000 : 1200;
@@ -1134,6 +1159,7 @@ ${nameB}：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined && p2Hour 
     res.write(`data: ${JSON.stringify(_doneEvt)}\n\n`);
     res.end();
   } catch(err) {
+    _refundCreditOnFail(req);
     console.error('[HEHUN-STREAM ERR]', err.message);
     try { res.write(`data: ${JSON.stringify({ type: 'error', message: '生成失败，请重试' })}\n\n`); res.end(); } catch(e) {}
   }
@@ -1149,8 +1175,8 @@ router.post('/hehun/book-consult', rateLimitMiddleware, async (req, res) => {
     const token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
     const t = token ? getToken.get(token) : null;
     if (!t) return res.status(401).json({ error: '请先登录' });
-    // 仅大师档可约
-    if (hehunTier(req) !== 'master') {
+    // 仅大师档可约。🔴 P0-B: 用只读版, 避免误消费月会员本月报告 credit(空扣漏账)。
+    if (hehunTierReadonly(req) !== 'master') {
       return res.status(403).json({ error: '真人连麦预约仅限大师批婚用户', code: 'MASTER_REQUIRED' });
     }
     const { contact, preferredTime, note } = req.body || {};
@@ -1235,22 +1261,24 @@ router.post('/ziwei/stream', rateLimitMiddleware, async (req, res) => {
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: '紫微斗数需要出生年月日时' });
     }
-    const ziweiAccess = hasFullAccess(req, ['ziwei_full', 'ziwei', 'member_monthly', 'member_yearly', 'member_quarterly', 'member_3year', 'member_daily', 'member_lifetime']);
-    if (!ziweiAccess) {
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(402).json({ error: '请先解锁紫微斗数深度报告', code: 'PAYMENT_REQUIRED' });
-    }
-    const systemPrompt = '你是一位精通紫微斗数的命理师，师承中州派，从业30年，批过上万张命盘。你深谙紫微斗数精髓，能从命盘中看透一个人的一生轨迹。你的语言通俗易懂，不用晦涩术语唬人——要用大白话让从没学过紫微的人也能听懂。你的分析必须专业、深刻、具体。每次回答至少4000字。用Markdown格式输出，使用标题、加粗让报告结构清晰。语言：简体中文。';
-    const userMsg = `出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour}时\n性别：${gender === 'male' ? '男' : '女'}\n\n请按以下结构出具完整紫微斗数命理报告（总字数不少于4000字）：\n## 一、命盘基本格局（200-300字）\n## 二、命宫主星深度解读（400-500字）\n## 三、主要宫位逐个分析（每个宫位200-300字，至少8个宫位）\n## 四、四化飞星分析（200-300字）\n## 五、当前大运详批（400-500字）\n## 六、流年关键点（300-400字）\n## 七、开运建议（200-300字）\n## 八、一句话点睛（50-100字）`;
+    // 🔴 P1修复(专家复审): 原为硬 402 全锁死, 违背"所有报告统一免费预览段"。
+    //   改为: 全解锁会员/单买/月会员(消费credit)→完整版; 未付费→免费预览段(命盘格局+命宫主星2节+锁定引导)。
+    const ziweiAccess = gateReportAccess(req, ['ziwei_full', 'ziwei']).full;
+    const ziweiSystemFull = '你是一位精通紫微斗数的命理师，师承中州派，从业30年，批过上万张命盘。你深谙紫微斗数精髓，能从命盘中看透一个人的一生轨迹。你的语言通俗易懂，不用晦涩术语唬人——要用大白话让从没学过紫微的人也能听懂。你的分析必须专业、深刻、具体。每次回答至少4000字。用Markdown格式输出，使用标题、加粗让报告结构清晰。语言：简体中文。';
+    const ziweiSystemPreview = '你是一位精通紫微斗数的命理师，师承中州派，从业30年。这是【免费预览版】，只输出前2个章节让用户感受真实价值，然后停止并引导解锁完整版。语言通俗易懂、用大白话。用Markdown格式。语言：简体中文。';
+    const systemPrompt = ziweiAccess ? ziweiSystemFull : ziweiSystemPreview;
+    const userMsg = ziweiAccess
+      ? `出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour}时\n性别：${gender === 'male' ? '男' : '女'}\n\n请按以下结构出具完整紫微斗数命理报告（总字数不少于4000字）：\n## 一、命盘基本格局（200-300字）\n## 二、命宫主星深度解读（400-500字）\n## 三、主要宫位逐个分析（每个宫位200-300字，至少8个宫位）\n## 四、四化飞星分析（200-300字）\n## 五、当前大运详批（400-500字）\n## 六、流年关键点（300-400字）\n## 七、开运建议（200-300字）\n## 八、一句话点睛（50-100字）`
+      : `出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour}时\n性别：${gender === 'male' ? '男' : '女'}\n\n这是【免费预览版】，只输出以下2个章节（合计约1200字，内容真实有用）：\n## 一、命盘基本格局（300-400字）\n## 二、命宫主星深度解读（500-600字）\n\n完成这2节后，输出一行"---LOCKED---"，然后原样输出以下锁定提示（不要展开）：\n🔒 主要宫位逐宫分析（12宫）· 完整版解锁\n🔒 四化飞星 · 完整版解锁\n🔒 当前大运详批 · 完整版解锁\n🔒 流年关键点 · 完整版解锁\n🔒 开运建议 · 完整版解锁`;
 
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.flushHeaders();
-    res.write(`data: ${JSON.stringify({ type: 'meta' })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: 'meta', tier: ziweiAccess ? 'full' : 'basic', locked: !ziweiAccess })}\n\n`);
 
-    const streamBody = await deepseekStream([{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }], { maxTokens: 8192, timeout: 300000 });
+    const streamBody = await deepseekStream([{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }], { maxTokens: ziweiAccess ? 8192 : 3000, timeout: 300000 });
     const reader = streamBody.getReader();
     const decoder = new TextDecoder('utf-8');
     let fullText = '', buf = '';
@@ -1271,6 +1299,7 @@ router.post('/ziwei/stream', rateLimitMiddleware, async (req, res) => {
     res.write(`data: ${JSON.stringify({ type: 'done', contextId: ctxId })}\n\n`);
     res.end();
   } catch(err) {
+    _refundCreditOnFail(req);
     console.error('[ZIWEI-STREAM ERR]', err.message);
     try { res.write(`data: ${JSON.stringify({ type: 'error', message: '生成失败' })}\n\n`); res.end(); } catch(e) {}
   }
@@ -1288,7 +1317,7 @@ router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
     }
 
     // 付费门：免费只给前两节预览
-    const fullAccess = hasFullAccess(req, ['fengshui', '风水', 'member_monthly', 'member_yearly', 'member_quarterly', 'member_3year', 'member_daily', 'member_lifetime']);
+    const fullAccess = gateReportAccess(req, ['fengshui', '风水']).full;
 
     const systemPrompt = `你是蒋大鸿三元玄空风水嫡传第九代传人，同时精研八宅明镜、三合水法与形势派堪舆，驻场实勘住宅逾三万套、走访海内外35年。你的报告素以"一针见血、落地即用"著称——绝不讲玄虚理论，只给具体到"这面墙放这个、那个角落换那件东西、哪天动工最吉"的实操建议。你同时运用玄空飞星（九星气场流动分析）与八宅明镜（命卦与朝向匹配）双体系互参，层次比单一体系深出一倍。
 
@@ -1577,6 +1606,7 @@ router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
     res.end();
   } catch(err) {
+    _refundCreditOnFail(req);
     console.error('[FENGSHUI-STREAM ERR]', err.message);
     try { res.write(`data: ${JSON.stringify({ type: 'error', message: '生成失败' })}\n\n`); res.end(); } catch(e) {}
   }
@@ -1602,7 +1632,8 @@ router.post('/yinzhai/stream', rateLimitMiddleware, async (req, res) => {
     const minguaGroupStr = [1,3,4,9].includes(mingua) ? '东四命' : '西四命';
 
     // 付费门：阴宅全程付费，无免费预览
-    const yinzhaiAccess = hasFullAccess(req, ['yinzhai', 'member_monthly', 'member_yearly', 'member_quarterly', 'member_3year', 'member_daily', 'member_lifetime']);
+    // 阴宅=高端报告(全程付费, 无免费预览)。全解锁会员/单买放行; 月会员消费本月 credit 放行。
+    const yinzhaiAccess = gateReportAccess(req, ['yinzhai']).full;
     if (!yinzhaiAccess) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(402).json({ error: 'payment_required', message: '阴宅风水为高端专属服务，需付费后方可使用', product: 'yinzhai' });
@@ -1743,6 +1774,7 @@ ${candidates.map((c, i) => `
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
     res.end();
   } catch(err) {
+    _refundCreditOnFail(req);
     console.error('[YINZHAI-STREAM ERR]', err.message);
     try { res.write(`data: ${JSON.stringify({ type: 'error', message: '生成失败' })}\n\n`); res.end(); } catch(e) {}
   }
@@ -1773,6 +1805,7 @@ router.post('/fengshui', rateLimitMiddleware, async (req, res) => {
     const analysis = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     res.json({ analysis });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[FENGSHUI ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
   }
@@ -1804,6 +1837,7 @@ router.post('/geo-fortune', rateLimitMiddleware, async (req, res) => {
     const analysis = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     res.json({ analysis, location: { lat: latitude, lng: longitude, regionElement: regionElement } });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[GEO ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
   }
@@ -1837,6 +1871,7 @@ router.post('/xingming', rateLimitMiddleware, async (req, res) => {
     var ctxId = saveQaContext('xingming', req.body, result);
     res.json({ reading: result, contextId: ctxId });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[XINGMING ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试', detail: err.message });
   }
@@ -1908,6 +1943,7 @@ ${chart.houses.map(h => '第' + h.number + '宫: ' + h.signZh + '(' + h.signEn +
       reading: result, contextId: ctxId
     });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[ASTROLOGY ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试', detail: err.message });
   }
@@ -1935,6 +1971,7 @@ router.post('/liuyao', rateLimitMiddleware, async (req, res) => {
     var ctxId = saveQaContext('liuyao', req.body, reading);
     res.json({ reading, contextId: ctxId, hexagram: guaYao });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[LIUYAO ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
   }
@@ -1957,6 +1994,7 @@ router.post('/lingqian', rateLimitMiddleware, async (req, res) => {
     var ctxId = saveQaContext('lingqian', req.body, reading);
     res.json({ reading, contextId: ctxId, qian: { number: qianNum, type: qianType } });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[LINGQIAN ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
   }
@@ -1983,6 +2021,7 @@ router.post('/daliuren', rateLimitMiddleware, async (req, res) => {
     var ctxId = saveQaContext('daliuren', req.body, reading);
     res.json({ reading, contextId: ctxId, lesson: { name: lesson, gods: randomDeities } });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[DALIUREN ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
   }
@@ -2009,6 +2048,7 @@ router.post('/qimen', rateLimitMiddleware, async (req, res) => {
     var ctxId = saveQaContext('qimen', req.body, reading);
     res.json({ reading, contextId: ctxId, door: currentDoor, star: currentStar });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[QIMEN ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
   }
@@ -2038,6 +2078,7 @@ router.post('/pastlife', rateLimitMiddleware, async (req, res) => {
     var ctxId = saveQaContext('pastlife', req.body, reading);
     res.json({ reading, contextId: ctxId });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[PASTLIFE ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
   }
@@ -2058,6 +2099,7 @@ router.post('/deity-guide', rateLimitMiddleware, async (req, res) => {
     const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     res.json({ reading });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[DEITY ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
   }
@@ -2078,6 +2120,7 @@ router.post('/offering-plan', rateLimitMiddleware, async (req, res) => {
     const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     res.json({ reading });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[OFFERING ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
   }
@@ -2105,6 +2148,7 @@ router.post('/zhiyuan', rateLimitMiddleware, async (req, res) => {
     var ctxId = saveQaContext('zhiyuan', req.body, reading);
     res.json({ reading, contextId: ctxId });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[ZHIYUAN ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用，请稍后重试' });
   }
@@ -2293,7 +2337,7 @@ router.post('/jyotish', rateLimitMiddleware, async (req, res) => {
     if (!dob || !tob) return res.status(400).json({ error: '出生日期和时间必填' });
 
     const jyotishData = calculateJyotish(dob, tob);
-    const full = hasFullAccess(req, ['jyotish_full', 'jyotish']);
+    const full = gateReportAccess(req, ['jyotish_full', 'jyotish']).full;
 
     const RASHI_EN = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
     const NAKSHATRA_EN = ['Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha','Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishtha','Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati'];
@@ -2433,6 +2477,7 @@ ${rashiName} + ${nakshatraName}的组合，赋予了${name}三种深刻的天赋
       product: full ? matchProduct(reading, 'jyotish') : undefined
     });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[JYOTISH ERR]', err.message);
     res.status(500).json({ error: '生成占星报告失败，请重试' });
   }
@@ -2446,7 +2491,7 @@ router.post('/maya', rateLimitMiddleware, async (req, res) => {
 
     const [year, month, day] = dob.split('-').map(Number);
     const tzolkinData = getTzolkin(year, month, day);
-    const full = hasFullAccess(req, ['maya_full', 'maya']);
+    const full = gateReportAccess(req, ['maya_full', 'maya']).full;
 
     const mayaLang = lang === 'zh' ? 'Chinese (Simplified)' : lang === 'kr' ? 'Korean' : 'English';
     const systemPrompt = full
@@ -2565,6 +2610,7 @@ Kin ${tzolkinData.kin}带给${name}的三种天赋——具体的、她自己也
       product: full ? matchProduct(reading, 'maya') : undefined
     });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[MAYA ERR]', err.message);
     res.status(500).json({ error: '生成玛雅报告失败，请重试' });
   }
@@ -2578,7 +2624,7 @@ router.post('/tibet', rateLimitMiddleware, async (req, res) => {
 
     const birthYear = new Date(dob).getFullYear();
     const tibetData = calculateTibetan(birthYear);
-    const full = hasFullAccess(req, ['tibet_full', 'tibet']);
+    const full = gateReportAccess(req, ['tibet_full', 'tibet']).full;
 
     const tibetLang = lang === 'zh' ? 'Chinese (Simplified)' : lang === 'kr' ? 'Korean' : 'English';
     const genderStr = gender === 'M' ? 'male' : 'female';
@@ -2717,6 +2763,7 @@ ${tibetData.element}${tibetData.zodiac}带来的三个深刻天赋，以及两�
       product: full ? matchProduct(reading, 'tibet') : undefined
     });
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[TIBET ERR]', err.message);
     res.status(500).json({ error: '生成藏传报告失败，请重试' });
   }
@@ -2770,7 +2817,7 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: '请提供出生年月日' });
     }
-    const full = hasFullAccess(req, ['bazi', '八字', '사주']);
+    const full = gateReportAccess(req, ['bazi', '八字', '사주']).full;
 
     // ── 精确排盘（真实算法，不依赖AI猜算）──
     const bazi = calcBazi(Number(birthYear), Number(birthMonth), Number(birthDay), Number(birthHour) || 0, gender);
@@ -2959,6 +3006,7 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
     if (product) res.write(`data: ${JSON.stringify({ type: 'product', product })}\n\n`);
     res.end();
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[BAZI-STREAM ERR]', err.message);
     try { res.write(`data: ${JSON.stringify({ type: 'error', message: '生成失败，请重试' })}\n\n`); res.end(); } catch(e) {}
   }
@@ -2976,7 +3024,7 @@ router.post('/jyotish/stream', rateLimitMiddleware, async (req, res) => {
     }
     const tobStr = tob || '12:00';
     const jyotishData = calculateJyotish(dob, tobStr);
-    const full = hasFullAccess(req, ['jyotish_full', 'jyotish']);
+    const full = gateReportAccess(req, ['jyotish_full', 'jyotish']).full;
     const RASHI_EN = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
     const NAKSHATRA_EN = ['Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha','Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishtha','Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati'];
     const rashiName = RASHI_EN[jyotishData.rashi] || 'Sagittarius';
@@ -3075,6 +3123,7 @@ Language: ${outputLangFull}. Writing style: destiny poetry. Scene over abstracti
     if (product) res.write(`data: ${JSON.stringify({ type: 'product', product })}\n\n`);
     res.end();
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[JYOTISH-STREAM ERR]', err.message);
     try { res.write(`data: ${JSON.stringify({ type: 'error', message: 'Generation failed, please retry' })}\n\n`); res.end(); } catch(e) {}
   }
@@ -3092,7 +3141,7 @@ router.post('/tibet/stream', rateLimitMiddleware, async (req, res) => {
     }
     const birthYear = new Date(dob).getFullYear();
     const tibetData = calculateTibetan(birthYear);
-    const full = hasFullAccess(req, ['tibet_full', 'tibet']);
+    const full = gateReportAccess(req, ['tibet_full', 'tibet']).full;
     const tibetLang = lang === 'zh' ? 'Chinese (Simplified)' : lang === 'kr' ? 'Korean' : 'English';
     const genderStr = gender === 'M' ? 'male' : 'female';
 
@@ -3193,6 +3242,7 @@ Language: ${tibetLangFull}. Writing style: destiny poetry — each chapter is a 
     if (product) res.write(`data: ${JSON.stringify({ type: 'product', product })}\n\n`);
     res.end();
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[TIBET-STREAM ERR]', err.message);
     try { res.write(`data: ${JSON.stringify({ type: 'error', message: 'Generation failed, please retry' })}\n\n`); res.end(); } catch(e) {}
   }
@@ -3210,7 +3260,7 @@ router.post('/maya/stream', rateLimitMiddleware, async (req, res) => {
     }
     const [year, month, day] = dob.split('-').map(Number);
     const tzolkinData = getTzolkin(year, month, day);
-    const full = hasFullAccess(req, ['maya_full', 'maya']);
+    const full = gateReportAccess(req, ['maya_full', 'maya']).full;
     const mayaLang = lang === 'zh' ? 'Chinese (Simplified)' : lang === 'kr' ? 'Korean' : 'English';
 
     const mayaLangFull = lang === 'hi' ? 'Hindi' : lang === 'ta' ? 'Tamil' : mayaLang;
@@ -3312,6 +3362,7 @@ Language: ${mayaLangFull}. Writing style: destiny poetry — each chapter ends w
     if (product) res.write(`data: ${JSON.stringify({ type: 'product', product })}\n\n`);
     res.end();
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[MAYA-STREAM ERR]', err.message);
     try { res.write(`data: ${JSON.stringify({ type: 'error', message: 'Generation failed, please retry' })}\n\n`); res.end(); } catch(e) {}
   }
