@@ -659,9 +659,35 @@ function _hehunBaseScore(ea, eb, ya, yb){
   let score = band[0] + idx + ((ya !== yb) ? 2 : -1); // 一阴一阳微加
   return { rel, score: Math.max(60, Math.min(92, score)) };
 }
+// 诚实点评:基于双方真日主五行生克关系的真话解读(非编造分数/预测),即时·零LLM
+const _WX_EN = { '木':'Wood', '火':'Fire', '土':'Earth', '金':'Metal', '水':'Water' };
+function _hehunCommentary(eA, eB, rel, lang){
+  const en = lang === 'en';
+  const A = en ? _WX_EN[eA] : eA, B = en ? _WX_EN[eB] : eB;
+  if (rel === '相生'){
+    const aGivesB = _WX_SHENG[eA] === eB;
+    if (en) return aGivesB
+      ? `Your ${A} nourishes their ${B} — you're naturally the giver who supports and lifts. Warmth flows easily; just keep it balanced so you receive too.`
+      : `Their ${B} nourishes your ${A} — they naturally nurture and cushion you. You feel cared for; remember to give back so it's never taken for granted.`;
+    return aGivesB
+      ? `你的${A}生TA的${B}——你天然愿意扶持对方,是关系里主动付出的一方。相处顺、给予多;留意别让付出失衡,也给对方回馈的空间。`
+      : `TA的${B}生你的${A}——对方天然愿意包容、滋养你,你常是被照顾的一方。暖意明显;记得也主动回应,别让好意被当作理所当然。`;
+  }
+  if (rel === '相克'){
+    const aCtrlB = _WX_KE[eA] === eB;
+    if (en) return aCtrlB
+      ? `Your ${A} controls their ${B} — you tend to lead, they tend to yield. There's both tension and momentum; the key is measure — too forceful strains the bond, balanced it elevates you both.`
+      : `Their ${B} controls your ${A} — they tend to lead, you tend to bend. Your flexibility is a real strength; just hold your boundaries so you don't lose yourself.`;
+    return aCtrlB
+      ? `你的${A}克TA的${B}——关系里你偏主导、对方偏包容,有张力也有推动力。克不是坏事,分寸是关键:强势过头易伤和气,拿捏好就是彼此成就。`
+      : `TA的${B}克你的${A}——对方偏主导、你偏柔韧,你更懂让步。这份包容是你的力量;但也要守住底线,别一味退到失去自己。`;
+  }
+  if (en) return `You share the ${A} element — kindred energy, instant familiarity, quick rapport. But sameness means shared blind spots; stay intentional about complementing each other.`;
+  return `你俩同属${A}——气场相近、容易一见如故,默契来得快。但同质也意味着盲区相同,遇事易一起钻牛角尖,需有意互补、给彼此提个醒。`;
+}
 router.post('/hehun/preview', rateLimitMiddleware, (req, res) => {
   try {
-    const { p1Year, p1Month, p1Day, p1Hour, p1Gender, p2Year, p2Month, p2Day, p2Hour, p2Gender } = req.body;
+    const { p1Year, p1Month, p1Day, p1Hour, p1Gender, p2Year, p2Month, p2Day, p2Hour, p2Gender, lang } = req.body;
     if (!p1Year || !p1Month || !p1Day || !p2Year || !p2Month || !p2Day) {
       return res.status(400).json({ ok:false, error:'请提供双方出生年月日' });
     }
@@ -680,6 +706,7 @@ router.post('/hehun/preview', rateLimitMiddleware, (req, res) => {
       b: { dayMaster: dmB, element: eB },
       relationship: rel,
       baseScore: score,
+      commentary: _hehunCommentary(eA, eB, rel, lang),
       note: '此为双方日主五行基础契合参考,完整八字深度合婚见解锁报告'
     });
   } catch (err) {
