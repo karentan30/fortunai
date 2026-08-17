@@ -7,8 +7,9 @@ const DEEPSEEK_KEY  = process.env.DS_KEY || process.env.DEEPSEEK_API_KEY;
 const USE_QWEN = !!DASHSCOPE_KEY;
 
 const LLM_KEY   = USE_QWEN ? DASHSCOPE_KEY : DEEPSEEK_KEY;
+// Qwen 端点默认走公网(VPC 内网端点仅同一阿里云 VPC 内可达)；如部署在阿里云 VPC 内可用 QWEN_BASE_URL 覆盖回 dashscope-vpc
 const LLM_URL   = USE_QWEN
-  ? 'https://dashscope-vpc.aliyuncs.com/compatible-mode/v1/chat/completions'
+  ? (process.env.QWEN_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions')
   : 'https://api.deepseek.com/v1/chat/completions';
 const LLM_MODEL = USE_QWEN
   ? (process.env.QWEN_MODEL || 'qwen-plus')
