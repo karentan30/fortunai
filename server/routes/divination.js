@@ -31,7 +31,7 @@ const { deepseekChat, deepseekStream, buildReadingPrompt } = require('../lib/llm
 const { calcBazi } = require('../bazi');
 const { buildBaziBlock } = require('../lib/bazi-engine/prompt-block');
 const astrology = require('../astrology.js');
-const { insertReading, hasFullAccess, gateMessages, saveQaContext, qaContext, _findOrder } = require('../lib/store');
+const { insertReading, hasFullAccess, hehunTier, gateMessages, saveQaContext, qaContext, _findOrder } = require('../lib/store');
 const { getToken } = require('../lib/store');
 const { rateLimitMiddleware } = require('../middleware');
 const { PRODUCTS, matchProduct } = require('../data/products');
@@ -653,6 +653,8 @@ router.post('/hehun/stream', rateLimitMiddleware, async (req, res) => {
     }
     const isDating = mode === 'dating';
     const hehunLang = lang || 'zh';
+    // 合婚三档分档（teaser=完全未付费）— 仅 zh 分支据此控制报告深度
+    const tier = hehunTier(req) || 'teaser';
 
     // Deterministic compatibility score — same pair always gets same score
     const hashInput = [p1Year, p1Month, p1Day, p2Year, p2Month, p2Day].join('-');
@@ -739,8 +741,64 @@ Use the pre-computed compatibility score provided. Give specific year recommenda
 
 제공된 궁합 점수를 사용하세요. 구체적인 연도 추천을 포함하세요.`;
     } else {
-      systemPrompt = isDating
-        ? `你是一位洞悉人心的感情命理师，从业三十年，见过无数恋爱中的人。你说话温柔又直率——你不会粉饰，但也不会只说坏事。你深知恋爱的美丽和它的复杂。请用命运诗篇的笔触，为${nameA}和${nameB}写一份深度恋爱配对分析报告（6000-8000字）。用Markdown格式，简体中文。
+      // ── zh 分支：按 tier 控制报告深度 ──
+      const _persona = '你是一位德高望重的合婚师，从业四十余年，阅人无数，撮合过上千对姻缘。你说话诚恳、直率、不留情面，但句句为对方好。你深知婚姻不是儿戏，合婚分析必须全面深刻、落到实地。用Markdown格式，简体中文。';
+      const _datingPersona = '你是一位洞悉人心的感情命理师，从业三十年，见过无数恋爱中的人。你说话温柔又直率——你不会粉饰，但也不会只说坏事。你深知恋爱的美丽和它的复杂。用Markdown格式，简体中文。';
+      if (tier === 'teaser') {
+        // 未付费预览：总分 + 1段核心结论，然后锁
+        systemPrompt = `${isDating ? _datingPersona : _persona}
+
+这是一份【免费预览版】，请只输出约400字：
+## 💕 合婚总分（百分制）
+（用已提供的缘分分数，一句话点评这个分数意味着什么）
+## 核心结论预览
+（写1段约250字的核心结论：概括两人最关键的一个匹配点或最需要留意的一个隐患，写到最动人处戛然而止，不展开细节）
+
+结尾必须另起一行写：「完整的四柱排盘、六维合婚详批、感情流年与开运化解，请解锁基础版（¥9.9）或完整版查看。」不要输出其它内容。`;
+      } else if (tier === 'basic') {
+        // 基础版：四柱 + 总分 + 3段核心结论，约1500字，然后锁
+        systemPrompt = `${isDating ? _datingPersona : _persona}
+
+这是一份【基础版】报告，约1500字，请按以下结构输出：
+## 一、双方四柱与合婚总分
+（列出双方四柱与日主，给出合婚总分及一句话总评，务必与上方精确排盘数据一致）
+## 二、性格互补
+（约400字：两人性格底色如何互补或相冲）
+## 三、沟通方式
+（约400字：两人沟通与冲突模式，会在哪里起争执）
+## 四、长期走势
+（约400字：这段关系的长期走向与最需留意之处）
+
+结尾必须另起一行写：「以上为基础版。完整的六维合婚详批（价值观/气场合度/子女缘/最佳结婚年份/古诀依据等）请解锁完整版（¥39.9）查看。」到此为止，不要展开更多维度。`;
+      } else if (tier === 'master') {
+        // 大师批婚：完整六维 + 4节大师专属
+        systemPrompt = `${isDating ? _datingPersona : _persona}本次为最高档【大师批婚】，字数8000-12000字。
+
+第一部分·完整六维合婚：
+## 一、合婚总评与缘分分数（百分制）
+## 二、五行互补度与元素相生相克
+## 三、性格匹配度——两人的心理底色
+## 四、价值观与人生方向兼容性
+## 五、吵架模式与冲突化解之道
+## 六、气场合度（谁带动谁，谁让谁稳定）
+## 七、生育子女缘分与家庭运
+## 八、双方原生家庭兼容性
+## 九、最佳结婚年份与时机
+## 十、婚后最需要注意的3件事
+## 十一、合婚古诀引用与命理依据
+## 十二、一句话结论——这段婚姻值得进入吗
+
+第二部分·👑大师批婚专属（务必逐节展开）：
+## 👑 一、未来5年逐年感情流年（从今年起逐年，每年给一个感情运势评分+一条关键提醒）
+## 👑 二、婚礼/订婚择日建议（结合双方八字给出具体吉利月份及理由）
+## 👑 三、双方开运化解方案（针对各自八字弱点给出方位/颜色/日常化解与增运之法）
+## 👑 四、命理师私语（用命理师第一人称，写一段只对这两个人说的、个性化的贴心话）
+
+请使用已提供的缘分分数。`;
+      } else {
+        // full：现有完整六维合婚报告
+        systemPrompt = isDating
+          ? `${_datingPersona}请用命运诗篇的笔触，为${nameA}和${nameB}写一份深度恋爱配对分析报告（6000-8000字）。
 
 分析维度：
 ## 💕 缘分分数（百分制）与总体感情走向
@@ -754,7 +812,7 @@ Use the pre-computed compatibility score provided. Give specific year recommenda
 ## 💌 一句话：这段感情值得吗
 
 写作风格：命运诗篇。不用给打分列表，用连贯的叙述段落。每节结尾用一句令人心头一震的话。直接进入两人的感情画像。请使用已提供的缘分分数。`
-        : `你是一位德高望重的合婚师，从业四十余年，阅人无数，撮合过上千对姻缘。你说话诚恳、直率、不留情面，但句句为对方好。你深知婚姻不是儿戏，合婚分析必须全面深刻、落到实地。用Markdown格式，简体中文，8000-12000字。
+          : `${_persona}字数8000-12000字。
 
 详细分析：
 ## 一、合婚总评与缘分分数（百分制）
@@ -771,6 +829,7 @@ Use the pre-computed compatibility score provided. Give specific year recommenda
 ## 十二、一句话结论——这段婚姻值得进入吗
 
 请使用已提供的缘分分数。`;
+      }
     }
 
     // ── 双方精确排盘（算法排，不让AI猜）──
@@ -826,17 +885,25 @@ ${nameB}：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined && p2Hour 
     }
 
     const fullAccess = hasFullAccess(req, ['bazi', 'hehun', 'hehun_full', 'hehun_kr', 'hehun_kr_full', 'ziwei', 'xingming', 'astrology', '八字', '合婚', '궁합', '紫微', '姓名', '占星']);
+    // zh 分支按 tier 分档；en/ko 沿用 fullAccess（不扩三档）
+    const isFullTier = (tier === 'full' || tier === 'master');
+    let maxTokens;
+    if (hehunLang === 'zh') {
+      maxTokens = tier === 'master' ? 14336 : tier === 'full' ? 12288 : tier === 'basic' ? 3000 : 1200;
+    } else {
+      maxTokens = fullAccess ? 12288 : 4000;
+    }
 
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.flushHeaders();
-    res.write(`data: ${JSON.stringify({ type: 'meta', mode: isDating ? 'dating' : 'marriage', score: compatScore, dims, lang: hehunLang })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: 'meta', mode: isDating ? 'dating' : 'marriage', score: compatScore, dims, lang: hehunLang, tier, locked: !isFullTier })}\n\n`);
 
     const streamBody = await deepseekStream(
       [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }],
-      { maxTokens: fullAccess ? 12288 : 4000, timeout: 300000 }
+      { maxTokens, timeout: 300000 }
     );
     const reader = streamBody.getReader();
     const decoder = new TextDecoder('utf-8');
@@ -859,11 +926,46 @@ ${nameB}：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined && p2Hour 
     }
     insertReading.run('hehun', JSON.stringify(req.body), fullText, req.userId);
     const ctxId = saveQaContext('hehun', req.body, fullText);
-    res.write(`data: ${JSON.stringify({ type: 'done', contextId: ctxId })}\n\n`);
+    const _doneEvt = { type: 'done', contextId: ctxId, tier };
+    if (tier === 'master') _doneEvt.masterUnlock = true;
+    res.write(`data: ${JSON.stringify(_doneEvt)}\n\n`);
     res.end();
   } catch(err) {
     console.error('[HEHUN-STREAM ERR]', err.message);
     try { res.write(`data: ${JSON.stringify({ type: 'error', message: '生成失败，请重试' })}\n\n`); res.end(); } catch(e) {}
+  }
+});
+
+// ══════════════════════════════════════════
+// POST /api/hehun/book-consult — 大师档真人连麦预约录单（MVP·只录单给运营）
+// ══════════════════════════════════════════
+router.post('/hehun/book-consult', rateLimitMiddleware, async (req, res) => {
+  try {
+    // 需登录
+    const auth = req.headers['authorization'] || '';
+    const token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
+    const t = token ? getToken.get(token) : null;
+    if (!t) return res.status(401).json({ error: '请先登录' });
+    // 仅大师档可约
+    if (hehunTier(req) !== 'master') {
+      return res.status(403).json({ error: '真人连麦预约仅限大师批婚用户', code: 'MASTER_REQUIRED' });
+    }
+    const { contact, preferredTime, note } = req.body || {};
+    if (!contact) return res.status(400).json({ error: '请留下联系方式' });
+    const booking = { contact, preferredTime: preferredTime || '', note: note || '' };
+    // 录单：复用 insertReading（type=hehun_consult_booking）
+    insertReading.run('hehun_consult_booking', JSON.stringify(booking), '', t.user_id);
+    // 可选飞书通知（无则跳过）
+    try {
+      if (mon && mon.feishuAlert) {
+        mon.feishuAlert('合婚·真人连麦预约', `联系方式:${contact} 期望时间:${booking.preferredTime} 备注:${booking.note}`, 'info');
+      }
+    } catch (e) {}
+    return res.json({ ok: true });
+  } catch (err) {
+    console.error('[HEHUN-BOOK ERR]', err.message);
+    if (mon && mon.captureException) mon.captureException(err, { tags: { api: 'hehun_book' } });
+    return res.status(500).json({ error: '预约失败，请重试' });
   }
 });
 

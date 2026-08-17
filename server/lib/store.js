@@ -164,7 +164,7 @@ const getReadingsByUser = {
 // 🔴 P1-1 付费墙修复: 精确白名单，bazi_trial 不解锁完整报告
 const UNLOCK_BY_CATEGORY = {
   'bazi': ['bazi_full','bazi_vip'], '八字': ['bazi_full','bazi_vip'], '사주': ['bazi_full','bazi_vip'],
-  'hehun': ['hehun'], '合婚': ['hehun'], '궁합': ['hehun'], 'hehun_kr': ['hehun'], 'hehun_full': ['hehun'], 'hehun_kr_full': ['hehun'],
+  'hehun': ['hehun','hehun_basic','hehun_master'], '合婚': ['hehun','hehun_basic','hehun_master'], '궁합': ['hehun','hehun_basic','hehun_master'], 'hehun_kr': ['hehun','hehun_basic','hehun_master'], 'hehun_full': ['hehun','hehun_basic','hehun_master'], 'hehun_kr_full': ['hehun','hehun_basic','hehun_master'],
   'ziwei': ['ziwei'], '紫微': ['ziwei'],
   'xingming': ['xingming'], '姓名': ['xingming'],
   'astrology': ['astrology'], '占星': ['astrology'],
@@ -219,6 +219,36 @@ function hasFullAccess(req, productKeys) {
     if (reward) { reward.used = true; _persist(); return true; }
     return false;
   } catch (e) { return false; }
+}
+
+// 合婚三档分档: 返回 'master' | 'full' | 'basic' | null
+// 参照 hasFullAccess 取 token→user orders→过滤未过期订单
+function hehunTier(req) {
+  try {
+    var auth = req.headers['authorization'] || '';
+    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
+    if (!token) return null;
+    // 管理员绕过 → 最高档
+    if (process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN) return 'master';
+    var t = getToken.get(token);
+    if (!t) return null;
+    var orders = (getUserOrders.all(t.user_id) || []).filter(function(o) { return !_isExpired(o); });
+    var owned = {};
+    orders.forEach(function(o) { owned[String(o.product || '')] = true; });
+    // master: 拥有 hehun_master
+    if (owned['hehun_master']) return 'master';
+    // full: 会员类(member_*) 或 hehun/hehun_full/hehun_kr_full
+    var fullKeys = SUBSCRIBE_PRODUCTS.concat(['member_lifetime', 'hehun', 'hehun_full', 'hehun_kr_full']);
+    for (var i = 0; i < fullKeys.length; i++) { if (owned[fullKeys[i]]) return 'full'; }
+    // basic: 拥有 hehun_basic
+    if (owned['hehun_basic']) return 'basic';
+    // 裂变奖励: 未使用的 referral_basic 消费一次 → basic
+    if (_M.rewards) {
+      var reward = _M.rewards.find(function(r) { return r.user_id === t.user_id && r.type === 'referral_basic' && !r.used; });
+      if (reward) { reward.used = true; _persist(); return 'basic'; }
+    }
+    return null;
+  } catch (e) { return null; }
 }
 
 // 付费门+免责: 报告端点统一处理
@@ -400,7 +430,9 @@ const PRODUCTS = {
   tarot_5:         { name: '塔罗五芒星牌阵',    amount: 1900,   amountCny: 1990,  desc: 'AI五芒星深度解读·五维度全析' },
   ziwei_full:      { name: '紫微斗数深度解读',  amount: 1990,   amountCny: 3990,  desc: '十二宫位+大运+流年完整批命' },
   duanshi_full:    { name: '断事问卦完整解读',  amount: 990,    amountCny: 990,   desc: '六爻起卦·吉凶断事·行动建议' },
+  hehun_basic:     { name: '合婚·基础版',       amount: 490,    amountCny: 990,   desc: '四柱+合婚总分+核心结论预览', amountKrw: 1900 },
   hehun:           { name: '合婚配对',          amount: 1990,   amountCny: 3990,  desc: '双方八字合婚分析', amountKrw: 4900 },
+  hehun_master:    { name: '合婚·大师批婚',     amount: 4990,   amountCny: 19900, desc: '完整+5年感情流年+择日+化解+命理师私语+真人连麦', amountKrw: 24900 },
   hehun_full:      { name: 'Compatibility Reading', amount: 1990, amountCny: 3990, desc: 'Full BaZi compatibility analysis', amountKrw: 19900 },
   hehun_kr_full:   { name: '궁합 완전 분석',    amount: 1500,   amountCny: 3990,  desc: '궁합 완전 분석 보고서', amountKrw: 19900 },
   member_monthly:  { name: '月度会员',          amount: 990,    amountCny: 1990,  desc: '全部AI占算无限次·完整报告不锁定', amountKrw: 9900 },
@@ -445,7 +477,7 @@ module.exports = {
   insertToken, getToken,
   getUserOrders, insertOrder, insertReading, getReadingsByUser,
   // 付费墙
-  UNLOCK_BY_CATEGORY, SUBSCRIBE_PRODUCTS, hasFullAccess, gateMessages,
+  UNLOCK_BY_CATEGORY, SUBSCRIBE_PRODUCTS, hasFullAccess, hehunTier, gateMessages,
   _isExpired,
   // 订单操作
   _updOrder, _updOrderExpiry, _setOrExtendSub,
