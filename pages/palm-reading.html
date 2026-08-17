@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5bbfa0">
+<title>Runae · Palm Reading — read the lines of your hand the Eastern way</title>
+<meta name="description" content="Snap a photo of your palm and let Runae read your lines the ancient Eastern way — life line, heart line, head line and more. For self-discovery & entertainment. Free preview.">
+<meta property="og:title" content="Runae · Palm Reading">
+<meta property="og:description" content="Ancient Eastern palm reading, decoded by AI. Free preview · Full reading from $9.">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --jade:#5bbfa0;--jade-deep:#3d9e82;--jade-light:#8dd9bf;
+  --jade-pale:rgba(91,191,160,0.08);--jade-border:rgba(91,191,160,0.22);
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;--gold-pale:rgba(201,168,76,0.08);
+  --bg:#faf8f5;--card:#ffffff;--surface:#f2f5f2;
+  --ink:#1a1a18;--sub:rgba(60,75,65,0.72);--muted:rgba(80,95,85,0.45);
+  --radius:14px;--shadow:0 2px 12px rgba(0,0,0,0.06);
+}
+html{background:var(--bg);-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;color:var(--ink);max-width:440px;margin:0 auto;
+  min-height:100dvh;overflow-x:hidden;
+  padding:0 0 calc(40px + env(safe-area-inset-bottom,0px));
+  padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(91,191,160,0.09) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 30% at 80% 100%,rgba(201,168,76,0.05) 0%,transparent 50%)}
+.z1{position:relative;z-index:1}
+.serif{font-family:'Playfair Display',serif}
+.wrap{padding:0 20px}
+.divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--jade-border),transparent);margin:6px 0}
+a{color:inherit}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 8px}
+.topbar .back{font-size:20px;color:var(--jade-deep);text-decoration:none;width:44px;height:44px;display:flex;align-items:center}
+.topbar .logo{font-family:'Playfair Display',serif;font-size:13px;letter-spacing:0.4em;color:var(--jade-deep);text-transform:uppercase;padding-left:0.4em}
+.topbar .spacer{width:44px}
+
+.hero{text-align:center;padding:14px 20px 22px}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--jade-pale);
+  border:1px solid var(--jade-border);border-radius:20px;padding:6px 14px;
+  font-size:10px;color:var(--jade-deep);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px}
+.hero h1{font-family:'Playfair Display',serif;font-size:27px;font-weight:700;line-height:1.28;margin-bottom:12px}
+.hero h1 em{font-style:italic;color:var(--jade-deep)}
+.hero-sub{font-size:13.5px;color:var(--sub);line-height:1.7;max-width:340px;margin:0 auto}
+
+.ai-note{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--jade-pale);
+  border:1px solid var(--jade-border);border-radius:12px;padding:11px 14px;margin:0 20px;
+  font-size:11.5px;color:var(--jade-deep);letter-spacing:.02em;line-height:1.5;text-align:center}
+
+.uploader{margin:22px 20px 0}
+.dropzone{border:2px dashed var(--jade-border);border-radius:18px;background:var(--card);
+  padding:34px 18px;text-align:center;box-shadow:var(--shadow);cursor:pointer;transition:.2s}
+.dropzone:hover{border-color:var(--jade)}
+.dropzone .palm-mark{width:88px;height:88px;margin:0 auto 14px;border-radius:50%;
+  background:radial-gradient(ellipse at 42% 38%,var(--jade-light) 0%,var(--jade) 40%,var(--jade-deep) 100%);
+  display:flex;align-items:center;justify-content:center;font-size:38px;box-shadow:0 6px 22px rgba(91,191,160,0.3)}
+.dropzone h3{font-size:15px;font-weight:600;margin-bottom:5px}
+.dropzone p{font-size:12px;color:var(--muted);line-height:1.55}
+.upload-btns{display:flex;gap:10px;margin-top:16px}
+.ubtn{flex:1;padding:14px;border-radius:12px;font-size:13.5px;font-weight:600;text-align:center;text-decoration:none;
+  min-height:44px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;border:none}
+.ubtn.primary{background:linear-gradient(135deg,var(--jade),var(--jade-deep));color:#fff}
+.ubtn.ghost{background:transparent;color:var(--jade-deep);border:1px solid var(--jade-border)}
+
+.hint{display:flex;gap:10px;background:var(--surface);border-radius:12px;padding:13px 15px;margin:14px 20px 0;
+  font-size:11.5px;color:var(--sub);line-height:1.55}
+.hint b{color:var(--ink);font-weight:600}
+.hint .em{font-size:16px;flex-shrink:0}
+
+.privacy{display:flex;align-items:flex-start;gap:10px;background:var(--gold-pale);
+  border:1px solid rgba(201,168,76,0.22);border-left:4px solid var(--gold);border-radius:12px;
+  padding:14px 16px;margin:14px 20px 0;font-size:11.5px;color:var(--sub);line-height:1.6}
+.privacy b{color:var(--gold-deep);font-weight:600}
+.privacy .lock{font-size:16px;flex-shrink:0}
+
+.section{padding:30px 20px}
+.sec-cap{text-align:center;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--jade);font-weight:600;margin-bottom:8px}
+.sec-title{font-family:'Playfair Display',serif;text-align:center;font-size:22px;font-weight:700;margin-bottom:6px;line-height:1.3}
+.sec-sub{text-align:center;font-size:13px;color:var(--sub);line-height:1.65;margin:0 auto 20px;max-width:340px}
+.lines{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.lineItem{display:flex;align-items:flex-start;gap:14px;background:var(--card);border:1px solid var(--jade-border);
+  border-radius:var(--radius);padding:15px 16px;box-shadow:var(--shadow)}
+.lineItem .dot{flex-shrink:0;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:var(--jade-pale);font-size:18px}
+.lineItem h3{font-size:13.5px;font-weight:600;margin-bottom:2px}
+.lineItem p{font-size:12px;color:var(--sub);line-height:1.55}
+
+.analyzing{display:none;text-align:center;padding:50px 30px}
+.analyzing.on{display:block}
+.spinner{width:66px;height:66px;margin:0 auto 20px;border-radius:50%;
+  border:4px solid var(--jade-border);border-top-color:var(--jade-deep);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.analyzing h3{font-family:'Playfair Display',serif;font-size:19px;margin-bottom:8px}
+.analyzing p{font-size:13px;color:var(--sub);line-height:1.6}
+.scan-steps{list-style:none;margin-top:18px;font-size:12.5px;color:var(--muted);line-height:2}
+.scan-steps li.done{color:var(--jade-deep)}
+.scan-steps li.done::before{content:"✓ ";font-weight:700}
+.scan-steps li.active{color:var(--ink)}
+.scan-steps li.active::before{content:"◌ "}
+
+.result{display:none;padding:8px 20px 20px}
+.result.on{display:block}
+.share-card{background:var(--card);border:1px solid var(--jade-border);border-radius:20px;
+  overflow:hidden;box-shadow:0 8px 30px rgba(0,0,0,0.08)}
+.sc-head{background:linear-gradient(135deg,var(--jade),var(--jade-deep));padding:22px 20px;text-align:center;color:#fff}
+.sc-head .kicker{font-size:10px;letter-spacing:.24em;text-transform:uppercase;opacity:.9;margin-bottom:8px}
+.sc-head h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;margin-bottom:4px}
+.sc-head .tag{font-size:12.5px;opacity:.92}
+.sc-body{padding:20px}
+.trait{display:flex;gap:12px;padding:14px 0;border-bottom:1px solid var(--jade-border)}
+.trait:last-child{border-bottom:none}
+.trait .em{font-size:22px;flex-shrink:0}
+.trait h4{font-size:13.5px;font-weight:600;margin-bottom:3px}
+.trait p{font-size:12.5px;color:var(--sub);line-height:1.6}
+.trait .zone{font-size:10px;color:var(--jade-deep);letter-spacing:.06em;text-transform:uppercase;font-weight:600;margin-bottom:2px}
+.sc-foot{padding:14px 20px;background:var(--surface);text-align:center;font-family:'Playfair Display',serif;
+  font-style:italic;font-size:12px;color:var(--jade-deep);letter-spacing:.06em}
+.result-actions{display:flex;gap:10px;margin-top:16px}
+.result-actions .ubtn{flex:1}
+
+.locked{position:relative;margin-top:14px;border:1px solid var(--jade-border);border-radius:16px;
+  background:var(--card);padding:22px 18px;text-align:center;box-shadow:var(--shadow);overflow:hidden}
+.locked::before{content:'🔒';font-size:26px;display:block;margin-bottom:8px}
+.locked h3{font-family:'Playfair Display',serif;font-size:17px;margin-bottom:6px}
+.locked p{font-size:12.5px;color:var(--sub);line-height:1.6;margin-bottom:14px}
+.locked .blur-lines{position:absolute;inset:auto 0 0 0;height:60px;background:linear-gradient(transparent,var(--card));pointer-events:none}
+.cta{display:block;max-width:320px;margin:0 auto;padding:15px 18px;text-align:center;text-decoration:none;
+  background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);border-radius:28px;color:#3a2e0e;
+  font-size:15px;font-weight:700;box-shadow:0 6px 20px rgba(201,168,76,0.36);min-height:44px}
+.cta small{display:block;font-size:11px;font-weight:400;opacity:.9;margin-top:3px}
+
+footer{padding:26px 20px calc(26px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.85}
+footer a{color:var(--jade-deep);text-decoration:none}
+footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:var(--jade-deep);letter-spacing:.06em;margin-bottom:10px}
+.ubtn,.cta{min-height:44px}
+</style>
+</head>
+<body>
+
+<div class="topbar z1">
+  <a href="home-en.html" class="back">‹</a>
+  <div class="logo">Runae</div>
+  <div class="spacer"></div>
+</div>
+
+<!-- ===== INTRO / UPLOAD ===== -->
+<div id="view-intro" class="z1">
+  <header class="hero">
+    <div class="badge">✦ Ancient Eastern palm reading</div>
+    <h1 class="serif">The lines of your hand,<br><em>read the Eastern way</em></h1>
+    <p class="hero-sub">Eastern palm reading (Shou Xiang) treats the lines and mounts of your palm as a story about temperament, love, and how you move through life. Snap your palm and let Runae read it.</p>
+  </header>
+
+  <div class="ai-note">🤖 AI-powered · for self-discovery &amp; entertainment — a fun mirror, never a prediction of your lifespan, health, or fate.</div>
+
+  <div class="uploader">
+    <label class="dropzone" for="file" onclick="startDemo(event)">
+      <div class="palm-mark">🖐</div>
+      <h3>Add a clear photo of your palm</h3>
+      <p>Open hand · fingers spread · palm facing the camera<br>in good light so the lines show</p>
+      <div class="upload-btns">
+        <span class="ubtn primary">📷 Take a photo</span>
+        <span class="ubtn ghost">🖼 Upload</span>
+      </div>
+    </label>
+    <input type="file" id="file" accept="image/*" hidden>
+  </div>
+
+  <div class="hint">
+    <span class="em">💡</span>
+    <div><b>Tip:</b> Use your dominant hand. Hold your palm flat, spread your fingers, and keep it in natural light — the clearer the lines, the richer your reading.</div>
+  </div>
+
+  <div class="privacy">
+    <span class="lock">🔐</span>
+    <div><b>Your photo is never stored.</b> It's read in the moment and deleted right after — we keep the reading, not the image. Nothing is used to train AI or shared. <a href="privacy.html" style="color:var(--gold-deep);font-weight:600">How we handle photos ›</a></div>
+  </div>
+
+  <section class="section">
+    <div class="sec-cap">What Runae reads</div>
+    <h2 class="sec-title serif">The lines of a palm</h2>
+    <p class="sec-sub">Classical palm reading follows a handful of major lines and mounts. Here's what each traditionally hints at.</p>
+    <div class="lines">
+      <div class="lineItem"><div class="dot">❤️</div><div><h3>Heart line</h3><p>How you love and connect — warmth, emotional style, and the way you open up.</p></div></div>
+      <div class="lineItem"><div class="dot">🧠</div><div><h3>Head line</h3><p>How you think and decide — logic, imagination, and focus.</p></div></div>
+      <div class="lineItem"><div class="dot">🌿</div><div><h3>Life line</h3><p>Your vitality and rhythm — energy and how you meet change. <b>Never a countdown of your lifespan.</b></p></div></div>
+      <div class="lineItem"><div class="dot">💫</div><div><h3>Fate &amp; mounts</h3><p>Drive, direction, and the fleshy mounts that color your temperament.</p></div></div>
+    </div>
+  </section>
+
+  <div class="wrap"><div class="divider"></div></div>
+
+  <div style="padding:26px 20px 6px;text-align:center">
+    <span class="cta" onclick="startDemo(event)" style="cursor:pointer">Read my palm →<small>Free preview · full reading from $9</small></span>
+    <div style="font-size:11px;color:var(--muted);margin-top:12px">No account needed to try · photo deleted after reading</div>
+  </div>
+</div>
+
+<!-- ===== ANALYZING ===== -->
+<div id="view-analyzing" class="analyzing z1">
+  <div class="spinner"></div>
+  <h3 class="serif">Reading your palm…</h3>
+  <p>Runae is tracing your lines and mounts.<br>This takes a few seconds.</p>
+  <ul class="scan-steps">
+    <li class="done">Detecting your palm &amp; fingers</li>
+    <li class="done">Tracing the major lines</li>
+    <li class="active">Reading the mounts</li>
+    <li>Writing your reading</li>
+  </ul>
+</div>
+
+<!-- ===== RESULT ===== -->
+<div id="view-result" class="result z1">
+  <div class="sec-cap" style="margin-bottom:12px">Your free preview</div>
+  <div class="share-card" id="shareCard">
+    <div class="sc-head">
+      <div class="kicker">Runae · Palm Reading</div>
+      <h2 class="serif">The Deep Heart Line</h2>
+      <div class="tag">Long heart line · steady head line</div>
+    </div>
+    <div class="sc-body">
+      <div class="trait">
+        <div class="em">❤️</div>
+        <div>
+          <div class="zone">Heart line</div>
+          <h4>You love with your whole heart</h4>
+          <p>A long, clear heart line traditionally points to someone who feels deeply and stays loyal — you'd rather love wholeheartedly than hold back.</p>
+        </div>
+      </div>
+      <div class="trait">
+        <div class="em">🧠</div>
+        <div>
+          <div class="zone">Head line</div>
+          <h4>Practical, with a creative streak</h4>
+          <p>A steady, gently curving head line suggests you balance common sense with imagination — grounded, but never boring.</p>
+        </div>
+      </div>
+      <div class="trait">
+        <div class="em">🌿</div>
+        <div>
+          <div class="zone">Life line</div>
+          <h4>Resilient energy</h4>
+          <p>A well-defined life line is read as steady vitality and the ability to bounce back — a rhythm of energy, not a clock on your years.</p>
+        </div>
+      </div>
+    </div>
+    <div class="sc-foot">✦ read your palm at runae.app</div>
+  </div>
+
+  <div class="result-actions">
+    <span class="ubtn ghost">↻ Try another photo</span>
+    <span class="ubtn primary">⤴ Share my card</span>
+  </div>
+
+  <div class="locked">
+    <h3 class="serif">Unlock your full palm reading</h3>
+    <p>Every major line and mount in depth — love &amp; relationship style, how you think &amp; decide, your energy and drive, strengths and blind spots. Written just for your hand.</p>
+    <a class="cta" href="bazi-en.html">Unlock full reading →<small>$9 one-time · yours forever</small></a>
+    <div class="blur-lines"></div>
+  </div>
+
+  <div class="ai-note" style="margin-top:16px">🤖 AI-generated for reflection &amp; fun only · never a prediction of your lifespan, health, or destiny · you write your own future.</div>
+</div>
+
+<footer class="z1">
+  <div class="fbrand">Runae</div>
+  <div style="margin-bottom:10px">🤖 AI-generated readings · for self-reflection &amp; entertainment only.<br>Not medical, psychological, or predictive advice. Your photo is deleted after analysis.</div>
+  <div>support@runae.app · © 2026 Runae · <a href="privacy.html">Privacy</a> · <a href="legal-us.html">Terms</a></div>
+</footer>
+
+<script>
+// DEMO ONLY — front-end state switch to show the flow. No real upload/analysis here.
+function show(id){['view-intro','view-analyzing','view-result'].forEach(function(v){
+  document.getElementById(v).classList.remove('on');
+  document.getElementById(v).style.display=(v===id)?'':'none';
+});
+if(id==='view-analyzing')document.getElementById(id).classList.add('on');
+if(id==='view-result')document.getElementById(id).classList.add('on');
+window.scrollTo(0,0);
+}
+function startDemo(e){
+  if(e)e.preventDefault();
+  show('view-analyzing');
+  setTimeout(function(){show('view-result');},2600);
+}
+</script>
+</body>
+</html>

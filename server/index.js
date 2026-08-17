@@ -140,6 +140,9 @@ app.use('/api', paymentRouter);
 // 占算引擎（AI reading）
 app.use('/api', divinationRouter);
 
+// 问事三系统（Tarot / Fortune Sticks / Moon Blocks — 随机抽 + AI 解读）
+app.use('/api', require('./routes/oracle'));
+
 // 每日运势 / AI 对话 / 用户反馈
 app.use('/api', dailyRouter);
 
