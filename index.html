@@ -2,26 +2,24 @@
 <html lang="zh-CN">
 <head>
 <script>
+// 语言偏好：默认永远留中文。仅在非华语环境顶部显示可关闭的"View in English"小横条，绝不强制跳转。
 (function() {
-  var CN_REGIONS = ['CN', 'TW', 'HK', 'SG', 'MO'];
-  var KR_REGION = 'KR';
-  var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
-  var timer = controller ? setTimeout(function() { controller.abort(); }, 2000) : null;
-  var fetchOpts = controller ? { signal: controller.signal } : {};
-  fetch('https://ipapi.co/json/', fetchOpts)
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-      if (timer) clearTimeout(timer);
-      var cc = data && data.country_code ? data.country_code : '';
-      if (cc === KR_REGION) {
-        window.location.replace('/pages/saju-landing-KR.html');
-      } else if (cc && CN_REGIONS.indexOf(cc) === -1) {
-        window.location.replace('/pages/bazi-en.html');
-      }
-    })
-    .catch(function() {
-      if (timer) clearTimeout(timer);
+  try {
+    var lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
+    if (lang.indexOf('zh') !== -1) return; // 华语用户直接留中文
+    if (localStorage.getItem('sy_lang_bar_dismissed') === '1') return;
+    document.addEventListener('DOMContentLoaded', function() {
+      var bar = document.createElement('div');
+      bar.style.cssText = 'position:sticky;top:0;z-index:9999;background:#1a1a2e;color:#e8dcc0;font-size:13px;text-align:center;padding:8px 36px 8px 12px;letter-spacing:0.04em';
+      bar.innerHTML = 'Prefer English? <a href="/pages/bazi-en.html" style="color:#d4af37;text-decoration:underline;margin-left:4px">View in English →</a>' +
+        '<span id="syLangClose" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;opacity:0.7">✕</span>';
+      document.body.insertBefore(bar, document.body.firstChild);
+      document.getElementById('syLangClose').onclick = function() {
+        bar.remove();
+        try { localStorage.setItem('sy_lang_bar_dismissed', '1'); } catch (e) {}
+      };
     });
+  } catch (e) {}
 })();
 </script>
 <meta charset="UTF-8">
@@ -141,7 +139,7 @@ body{max-width:420px;margin:0 auto;min-height:100vh;padding:0 16px calc(40px + e
 <a class="hero-cta" href="pages/bazi.html" id="heroCta">免费八字排盘 · 开始解读<small>合婚 / 命盘 / 运势 · 多功能一站</small></a>
 <div style="text-align:center;margin-top:10px"><a href="pages/hehun.html" style="font-size:12px;color:var(--ink-light);text-decoration:none;letter-spacing:0.06em">测我和TA的合婚缘分 →</a></div>
 
-<div style="text-align:center;font-size:11px;color:var(--jade-deep);letter-spacing:0.08em;margin:4px 0 6px">✦ 已为 <b>12,000+</b> 海外华人解读命盘 ✦</div>
+<div style="text-align:center;font-size:11px;color:var(--jade-deep);letter-spacing:0.08em;margin:4px 0 6px">✦ 为海外华人量身解读命盘 ✦</div>
 <div class="trust">
   <div class="trust-item">覆盖 <b>10+</b> 国家地区</div>
   <div class="trust-item">成人<b>18+</b> 专享</div>
@@ -164,9 +162,9 @@ body{max-width:420px;margin:0 auto;min-height:100vh;padding:0 16px calc(40px + e
     <span class="mbcrown">👑</span>
     <div class="mbinfo">
       <div class="mbtitle">善缘会员 · 全功能解锁</div>
-      <div class="mbsub">单次$9.90 → 会员仅$6.90/月全部功能不限次</div>
+      <div class="mbsub">单次$9.90 → 会员$9.90/月全部功能不限次</div>
     </div>
-    <div class="mbprice">$6.90/月</div>
+    <div class="mbprice">$9.90/月</div>
   </div>
   <div class="mbperks">
     <span class="mbperk">无限占算不限次</span>
