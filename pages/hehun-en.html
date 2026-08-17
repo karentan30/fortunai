@@ -569,7 +569,8 @@ function startCalc() {
   window._syInputs = { ay: ay, by: by, am: +am, bm: +bm, ad: +ad, bd: +bd };
   var payload = {
     p1Year: ay, p1Month: +am, p1Day: +ad, p1Hour: document.getElementById('aHour').value||'', p1Gender: gA,
-    p2Year: by, p2Month: +bm, p2Day: +bd, p2Hour: document.getElementById('bHour').value||'', p2Gender: gB
+    p2Year: by, p2Month: +bm, p2Day: +bd, p2Hour: document.getElementById('bHour').value||'', p2Gender: gB,
+    lang: 'en'
   };
 
   // 1) Honest base compatibility — must come from the server. No fallback number.
@@ -674,7 +675,9 @@ function showResults(ay, by, preview, server) {
   // Honest label under the score explaining exactly what this number is.
   var lblHost = document.getElementById('baseScoreNote');
   if (lblHost) {
-    lblHost.innerHTML = 'This is your <b>Day-Master Five-Element base compatibility</b> ('+relEN+'). ' +
+    var _cm = preview.commentary ? '<div style="color:var(--jade-mid);line-height:1.9;margin-bottom:10px">'+String(preview.commentary).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>' : '';
+    lblHost.innerHTML = _cm +
+      'This is your <b>Day-Master Five-Element base compatibility</b> ('+relEN+'). ' +
       'The full BaZi analysis — personality, values and life-stage timing — is in the unlocked report.';
   }
 
