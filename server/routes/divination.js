@@ -29,6 +29,7 @@ const path = require('path');
 const fs = require('fs');
 const { deepseekChat, deepseekStream, buildReadingPrompt } = require('../lib/llm');
 const { calcBazi } = require('../bazi');
+const { buildBaziBlock } = require('../lib/bazi-engine/prompt-block');
 const astrology = require('../astrology.js');
 const { insertReading, hasFullAccess, gateMessages, saveQaContext, qaContext, _findOrder } = require('../lib/store');
 const { getToken } = require('../lib/store');
@@ -272,6 +273,11 @@ router.post('/bazi', rateLimitMiddleware, async (req, res) => {
     if (lang === 'es') return baziEsHandler(req, res);
     if (lang === 'en-in') return baziInHandler(req, res);
 
+    // 精确排盘注入：用专业引擎预排盘，LLM 只解读不排盘（命理专家背书零硬错误）
+    // 时辰不详时不注入（否则会编造假时柱），降级回 LLM 按"时辰不详"处理
+    const _hasHour = birthHour !== undefined && birthHour !== null && birthHour !== '';
+    const baziBlock = _hasHour ? buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour, gender }) : '';
+
     const modeInstruction = (mode === 'gentle')
       ? '\n\n【说话模式】\n你温暖治愈、以鼓励为主，让人感到被理解。即使指出问题，也要先肯定再引导，用温柔的方式表达。'
       : '\n\n【说话模式】\n你说话直率、不留情面，但句句为对方好。直接指出问题，不拐弯抹角，用最直白的方式告诉命主真相。';
@@ -315,12 +321,13 @@ router.post('/bazi', rateLimitMiddleware, async (req, res) => {
 出生时间：${birthYear}年${birthMonth}月${birthDay}日${birthHour !== undefined ? birthHour + '时' : '（时辰不详）'}
 性别：${gender === 'male' ? '男' : '女'}
 用户关注：${question || '请全面分析命盘'}
+${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及全文的四柱/十神/藏干/格局/旺衰/用神/大运，必须严格采用上方【精确排盘结果】，不得自行推算或改动。\n' : ''}
 
 【输出要求】
 请严格按照以下16个维度展开，每个维度用对应的emoji作为标题开头，每个维度都必须基于上述生辰八字展开具体分析，不能泛泛而谈，不能以"略"或省略号代替任何内容。
 
 1. 📜 四柱八字排盘（不少于800字）
-- 先排出四柱八字表格（年柱·月柱·日柱·时柱，天干·地支各注）
+- 照上方【精确排盘结果】誊写四柱八字表格（年柱·月柱·日柱·时柱，天干·地支各注），不得自行推算改动
 - 分别解释每柱天干地支的五行属性、阴阳属性
 - 各柱代表的人生领域（年柱=祖上/早年/社会格局；月柱=父母/兄弟/青年运；日柱=自身/配偶；时柱=子女/晚年）
 - 整体八字格局判断（身强身弱、格局名称、用神喜忌）
@@ -2530,7 +2537,8 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
       ? '\n\n【说话模式】你温暖治愈，以鼓励为主，让人感到被理解。'
       : '\n\n【说话模式】你说话直率，但句句为对方好，直接指出问题。';
 
-    const baziChart = `【精确排盘结果（由万年历算法计算，请严格使用以下数据，不得自行推算或修改）】
+    // 优先用专业引擎(专家背书)富排盘；异常时降级回 bazi.js 简版
+    const baziChart = buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour, gender }) || `【精确排盘结果（由万年历算法计算，请严格使用以下数据，不得自行推算或修改）】
 年柱：${bazi.year.gan}${bazi.year.zhi}　月柱：${bazi.month.gan}${bazi.month.zhi}　日柱：${bazi.day.gan}${bazi.day.zhi}　时柱：${bazi.hour.gan}${bazi.hour.zhi}
 四柱：${bazi.fourPillars}
 日主：${bazi.dayMaster}（${bazi.dayMasterElement}）　身${bazi.isStrong ? '强' : '弱'}
