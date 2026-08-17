@@ -30,6 +30,7 @@ const fs = require('fs');
 const { deepseekChat, deepseekStream, buildReadingPrompt } = require('../lib/llm');
 const { calcBazi } = require('../bazi');
 const { buildBaziBlock } = require('../lib/bazi-engine/prompt-block');
+const { computeBaziChart } = require('../lib/bazi-engine');
 const astrology = require('../astrology.js');
 const { insertReading, hasFullAccess, hehunTier, gateMessages, saveQaContext, qaContext, _findOrder } = require('../lib/store');
 const { getToken } = require('../lib/store');
@@ -633,6 +634,57 @@ B方：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined ? p2Hour+'时'
     console.error('[HEHUN ERR]', err.message);
     if (mon && mon.captureException) mon.captureException(err, { tags: { api: 'hehun' } });
     res.status(500).json({ error: 'AI暂时不可用', detail: err.message });
+  }
+});
+
+// ══════════════════════════════════════════
+// POST /api/hehun/preview — 合婚免费预览·真日主五行基础分(无LLM·诚实·可辩护)
+// ══════════════════════════════════════════
+const _GAN_WUXING  = { '甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水' };
+const _GAN_YINYANG = { '甲':'阳','丙':'阳','戊':'阳','庚':'阳','壬':'阳','乙':'阴','丁':'阴','己':'阴','辛':'阴','癸':'阴' };
+const _WX_SHENG = { '木':'火','火':'土','土':'金','金':'水','水':'木' }; // A生B
+const _WX_KE    = { '木':'土','土':'水','水':'火','火':'金','金':'木' }; // A克B
+function _elemRelation(a, b){
+  if (a === b) return '比和';
+  if (_WX_SHENG[a] === b || _WX_SHENG[b] === a) return '相生';
+  if (_WX_KE[a] === b || _WX_KE[b] === a) return '相克';
+  return '比和';
+}
+function _hehunBaseScore(ea, eb, ya, yb){
+  const rel = _elemRelation(ea, eb);
+  // 五行关系定基础带(相生>比和>相克),带内按元素对确定性取值——非生日哈希
+  const band = rel === '相生' ? [82,90] : rel === '比和' ? [74,82] : [62,72];
+  const order = ['木','火','土','金','水'];
+  const idx = (order.indexOf(ea) + order.indexOf(eb)) % (band[1] - band[0] + 1);
+  let score = band[0] + idx + ((ya !== yb) ? 2 : -1); // 一阴一阳微加
+  return { rel, score: Math.max(60, Math.min(92, score)) };
+}
+router.post('/hehun/preview', rateLimitMiddleware, (req, res) => {
+  try {
+    const { p1Year, p1Month, p1Day, p1Hour, p1Gender, p2Year, p2Month, p2Day, p2Hour, p2Gender } = req.body;
+    if (!p1Year || !p1Month || !p1Day || !p2Year || !p2Month || !p2Day) {
+      return res.status(400).json({ ok:false, error:'请提供双方出生年月日' });
+    }
+    // 日主由日柱决定,与时辰无关——时辰缺省不影响准确性
+    const mk = (y,m,d,h,g) => computeBaziChart({ year:+y, month:+m, day:+d,
+      hour: (h !== undefined && h !== '' && h !== null) ? +h : 12,
+      gender: g === 'male' ? 'male' : 'female' });
+    const cA = mk(p1Year, p1Month, p1Day, p1Hour, p1Gender);
+    const cB = mk(p2Year, p2Month, p2Day, p2Hour, p2Gender);
+    const dmA = cA.bazi.siZhu.day.gan, dmB = cB.bazi.siZhu.day.gan;
+    const eA = _GAN_WUXING[dmA], eB = _GAN_WUXING[dmB];
+    const { rel, score } = _hehunBaseScore(eA, eB, _GAN_YINYANG[dmA], _GAN_YINYANG[dmB]);
+    res.json({
+      ok: true,
+      a: { dayMaster: dmA, element: eA },
+      b: { dayMaster: dmB, element: eB },
+      relationship: rel,
+      baseScore: score,
+      note: '此为双方日主五行基础契合参考,完整八字深度合婚见解锁报告'
+    });
+  } catch (err) {
+    console.error('[HEHUN PREVIEW ERR]', err.message);
+    res.status(500).json({ ok:false, error:'计算失败,请重试' });
   }
 });
 

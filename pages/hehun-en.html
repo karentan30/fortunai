@@ -229,7 +229,7 @@ body::before{content:'';position:fixed;inset:0;
 
 <!-- Social proof stats -->
 <div style="display:flex;justify-content:center;gap:16px;padding:12px 20px;margin:0 16px 12px;background:rgba(200,184,122,0.04);border:1px solid rgba(200,184,122,0.08);border-radius:10px">
-  <div style="text-align:center"><div style="font-size:16px;font-weight:500;color:rgba(200,184,122,0.9);font-family:'Cormorant Garamond',serif">Thousands</div><div style="font-size:12px;color:rgba(200,196,180,0.65);letter-spacing:0.06em">Couples Analyzed</div></div>
+  <div style="text-align:center"><div style="font-size:16px;font-weight:500;color:rgba(200,184,122,0.9);font-family:'Cormorant Garamond',serif">Day-Master</div><div style="font-size:12px;color:rgba(200,196,180,0.65);letter-spacing:0.06em">Real BaZi method</div></div>
   <div style="width:1px;background:rgba(200,184,122,0.1)"></div>
   <div style="text-align:center"><div style="font-size:16px;font-weight:500;color:rgba(200,184,122,0.9);font-family:'Cormorant Garamond',serif">Both charts</div><div style="font-size:12px;color:rgba(200,196,180,0.65);letter-spacing:0.06em">One reading</div></div>
   <div style="width:1px;background:rgba(200,184,122,0.1)"></div>
@@ -361,6 +361,9 @@ body::before{content:'';position:fixed;inset:0;
     <div class="score-grade" id="scoreGrade">—</div>
     <div class="score-sub" id="scoreSub">—</div>
   </div>
+
+  <!-- Honest explanation of exactly what the score is -->
+  <div id="baseScoreNote" style="margin:0 16px 12px;font-size:12px;line-height:1.7;color:rgba(80,70,55,0.72);text-align:center;letter-spacing:0.02em"></div>
 
   <!-- AIGC badge -->
   <div style="display:flex;align-items:center;gap:6px;margin:0 16px 12px;padding:7px 12px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:6px;font-size:12px;color:rgba(201,168,76,0.8);letter-spacing:0.04em">
@@ -528,11 +531,19 @@ function getElem(year) {
   return ELEM_EN[tg] || ['Wood','🌿'];
 }
 
-function det(a, b, min, max) { return min + Math.abs((a*31+b*17+a*b)%(max-min+1)); }
+// Map the server's five-element relationship to plain English.
+var REL_EN = {
+  '相生': 'Mutually Nourishing',
+  '比和': 'Harmonious · Same Element',
+  '相克': 'Challenging'
+};
 
-// Cached backend result for the current pair (score + AI narrative).
-// Populated by /api/hehun/stream; falls back to deterministic local calc if unavailable.
+// Honest server preview (real Day-Master five-element base compatibility).
+// Populated by /api/hehun/preview. NEVER fall back to a fabricated number.
+window._syPreview = null;
+// Optional richer backend result (dims + AI narrative) from /api/hehun/stream.
 window._syServer = null;
+window._syInputs = null;
 
 function startCalc() {
   var ay = +document.getElementById('aYear').value;
@@ -549,21 +560,46 @@ function startCalc() {
   var calcBtn = document.querySelector('.btn-calc'); if (calcBtn) { calcBtn.disabled = true; calcBtn.textContent = 'Calculating…'; }
   document.getElementById('inputScreen').style.display='none';
   document.getElementById('loadingWrap').classList.add('show');
+  var lw = document.getElementById('loadingWrap');
+  var lt = lw ? lw.querySelector('.load-txt') : null;
+  if (lt) lt.textContent = 'Analyzing both birth charts for compatibility…';
 
+  window._syPreview = null;
   window._syServer = null;
+  window._syInputs = { ay: ay, by: by, am: +am, bm: +bm, ad: +ad, bd: +bd };
   var payload = {
     p1Year: ay, p1Month: +am, p1Day: +ad, p1Hour: document.getElementById('aHour').value||'', p1Gender: gA,
-    p2Year: by, p2Month: +bm, p2Day: +bd, p2Hour: document.getElementById('bHour').value||'', p2Gender: gB,
-    token: localStorage.getItem('sy_token')||'', lang: 'en'
+    p2Year: by, p2Month: +bm, p2Day: +bd, p2Hour: document.getElementById('bHour').value||'', p2Gender: gB
   };
-  var done = false;
-  function finish() { if (done) return; done = true; showResults(ay, by, window._syServer); }
-  // Safety fallback: never leave the user on the spinner.
-  var guard = setTimeout(finish, 12000);
-  fetch('/api/hehun/stream', {
+
+  // 1) Honest base compatibility — must come from the server. No fallback number.
+  fetch('/api/hehun/preview', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify(payload)
+  }).then(function(res){
+    if (!res.ok) throw new Error('bad status');
+    return res.json();
+  }).then(function(data){
+    if (!data || data.ok !== true || typeof data.baseScore !== 'number') throw new Error('bad payload');
+    window._syPreview = data;
+    // 2) Fire the streaming call for the richer AI narrative (optional enhancement).
+    fetchNarrative(payload, function(){
+      showResults(ay, by, window._syPreview, window._syServer);
+    });
+  }).catch(function(){
+    showCalcError();
+  });
+}
+
+// Streaming AI narrative — best-effort. Calls done() when finished (or after a guard timeout).
+function fetchNarrative(payload, done) {
+  var finished = false;
+  function finish(){ if (finished) return; finished = true; done(); }
+  var guard = setTimeout(finish, 12000);
+  var body = JSON.stringify(Object.assign({ token: localStorage.getItem('sy_token')||'', lang: 'en' }, payload));
+  fetch('/api/hehun/stream', {
+    method: 'POST', headers: {'Content-Type':'application/json'}, body: body
   }).then(function(res) {
     if (!res.ok || !res.body) { clearTimeout(guard); finish(); return; }
     var reader = res.body.getReader();
@@ -581,49 +617,66 @@ function startCalc() {
           try {
             var ev = JSON.parse(raw);
             if (ev.type === 'meta') {
-              // Capture backend score and dims for showResults
-              window._syServer = { score: ev.score, dims: ev.dims, lang: ev.lang, mode: ev.mode };
-              clearTimeout(guard); finish();
+              window._syServer = { dims: ev.dims, storyPreview: ev.storyPreview, lang: ev.lang, mode: ev.mode };
             }
           } catch(e) {}
         });
-        if (!done) read();
+        if (!finished) read();
       }).catch(function() { clearTimeout(guard); finish(); });
     }
     read();
-  }).catch(function(){
-    clearTimeout(guard); finish();
-  });
+  }).catch(function(){ clearTimeout(guard); finish(); });
 }
 
-function showResults(ay, by, server) {
+// Never show a fabricated score. On failure, keep it honest and offer retry.
+function showCalcError() {
+  document.getElementById('loadingWrap').classList.remove('show');
+  var inp = document.getElementById('inputScreen');
+  if (inp) inp.style.display = '';
+  var calcBtn = document.querySelector('.btn-calc');
+  if (calcBtn) { calcBtn.disabled = false; calcBtn.textContent = 'Calculate Compatibility →'; }
+  showToast('Couldn\'t reach the reading service. Please try again.', 'error');
+}
+
+function showResults(ay, by, preview, server) {
+  preview = preview || window._syPreview || null;
   server = server || window._syServer || null;
+  // Honesty guard: without a real server base score we do NOT render a number.
+  if (!preview || typeof preview.baseScore !== 'number') { showCalcError(); return; }
   document.getElementById('loadingWrap').classList.remove('show');
   var am = +document.getElementById('aMonth').value||6;
   var bm = +document.getElementById('bMonth').value||6;
   var ad = +document.getElementById('aDay').value||15;
   var bd = +document.getElementById('bDay').value||15;
 
-  var aElemArr = getElem(ay); var aElem = aElemArr[0]; var aIcon = aElemArr[1];
-  var bElemArr = getElem(by); var bElem = bElemArr[0]; var bIcon = bElemArr[1];
+  // Elements come from the server's real Day-Master calc (not a birth-year guess).
+  var aElem = (preview.a && preview.a.element) || getElem(ay)[0];
+  var bElem = (preview.b && preview.b.element) || getElem(by)[0];
+  var ICON = {'Wood':'🌿','Fire':'🔥','Earth':'🪨','Metal':'⚪','Water':'💧'};
+  var aIcon = ICON[aElem] || '🌿';
+  var bIcon = ICON[bElem] || '🌿';
 
-  var relKey1 = aElem+bElem, relKey2 = bElem+aElem;
-  var isGenerate = SHENGS[relKey1]||SHENGS[relKey2];
-  var isConquer  = KES[relKey1]||KES[relKey2];
-  var rel = isGenerate ? 'Generating · Auspicious' : isConquer ? 'Controlling · Needs Harmony' : 'Balanced · Steady';
+  // Relationship label straight from the server (相生/比和/相克), mapped to English.
+  var relZh = preview.relationship || '';
+  var isGenerate = relZh === '相生';
+  var isConquer  = relZh === '相克';
+  var relEN = REL_EN[relZh] || 'Harmonious';
+  var rel = relEN;
   var relColor = isGenerate ? 'rgba(91,191,160,0.15)' : isConquer ? 'rgba(220,60,60,0.12)' : 'rgba(201,168,76,0.12)';
   var relText  = isGenerate ? 'var(--jade-mid)' : isConquer ? '#e08080' : 'var(--gold)';
-  var relBonus = isGenerate ? 8 : isConquer ? -8 : 0;
 
-  var base = det(ay, by, 55, 95);
-  var score = Math.min(97, Math.max(42, base+relBonus));
-  // Prefer the backend's unique score so re-running the same pair is consistent.
-  if (server && typeof server.score === 'number' && server.score > 0) {
-    score = Math.min(100, Math.max(1, Math.round(server.score)));
-  }
+  var score = Math.min(100, Math.max(1, Math.round(preview.baseScore)));
   window._syScore = score;
+  window._syRelEN = relEN;
   window._syNameA = document.getElementById('nameA').value.trim() || 'You';
   window._syNameB = document.getElementById('nameB').value.trim() || 'Partner';
+
+  // Honest label under the score explaining exactly what this number is.
+  var lblHost = document.getElementById('baseScoreNote');
+  if (lblHost) {
+    lblHost.innerHTML = 'This is your <b>Day-Master Five-Element base compatibility</b> ('+relEN+'). ' +
+      'The full BaZi analysis — personality, values and life-stage timing — is in the unlocked report.';
+  }
 
   // Animate score ring
   document.getElementById('results').classList.add('show');
@@ -652,38 +705,22 @@ function showResults(ay, by, server) {
   window._syGrade    = grades[0];
   window._syGradeSub = grades[1];
 
-  function safeMonth(base, offset) {
-    var m = (base + offset - 1) % 12 + 1;
-    return Math.max(1, Math.min(12, m));
-  }
-  var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  var m1 = MONTHS[safeMonth(6, Math.abs((ay+by)%4))-1];
-  var m2 = MONTHS[safeMonth(8, Math.abs((ay+by)%3))-1];
-  var m3 = MONTHS[safeMonth(5, Math.abs((ay-by)%4))-1];
-  var m4 = MONTHS[safeMonth(9, Math.abs((ay+by)%3))-1];
-
-  var dirs = ['Northeast','Southwest','Southeast','Northwest'];
-  var crystals = ['Rose Quartz','Amethyst','Citrine','Clear Quartz'];
-
+  // Story: prefer the backend's unique AI narrative. The local fallback is honest,
+  // element-based framing only — no fabricated "lucky months", directions or amulet placements.
   var storyLines = score>=85 ? [
-    'You are a destined pair. Born in '+ay+' and '+by+', your charts align naturally — '+aElem+' and '+bElem+' work in harmony, as if the universe designed you for each other.',
-    'Your energy fields resonate deeply. Not only in love, but across every chapter of life you will naturally support each other\'s growth. This level of compatibility is rare.',
-    '🔮 <strong>Action Tip:</strong> Around <strong>'+m1+'</strong>, choose an auspicious day to formalize your union. Place a cleansed crystal in the <strong>'+dirs[(ay+by)%4]+'</strong> corner of your bedroom to amplify your shared energy field.'
+    'On the Day-Master Five Elements, your charts sit in a <strong>'+relEN+'</strong> relationship — '+aElem+' and '+bElem+' support each other naturally. This is a strong, harmonious base.',
+    'A strong base is a starting point, not a guarantee. The full BaZi report looks at personality, values and life-stage timing to show where you flow together and where to be intentional.'
   ] : score>=70 ? [
-    'You share a solid compatibility foundation. Born in '+ay+' and '+by+', your elemental frequencies are close — this is the bedrock of a lasting, harmonious relationship.',
-    (isGenerate ? 'Fortunately, your '+aElem+' and '+bElem+' elements generate each other naturally — you replenish each other\'s energy, and just need a little patience.' : 'Your elements have some tension, but tension creates complementarity. The key is mutual understanding.'),
-    '🔮 <strong>Action Tip:</strong> Consider <strong>'+m2+'</strong> for a ceremony or milestone. Place a <strong>'+crystals[(ay+by)%4]+'</strong> in the '+dirs[(ay+by)%4]+' area of your home. Most importantly: schedule regular honest conversations — treat your relationship like the most precious seed in your life.'
+    'Your elements are close and complementary — a <strong>'+relEN+'</strong> dynamic between '+aElem+' and '+bElem+'. This is a solid foundation to build on.',
+    (isGenerate ? 'Because your elements nourish each other, you tend to replenish one another\'s energy — patience and honest communication go a long way.' : 'There is some healthy tension here; tension is what makes two people complementary rather than identical.')
   ] : score>=55 ? [
-    'Your compatibility calls for conscious tending. Born in '+ay+' and '+by+', your charts have differences — but difference is the basis of <strong>complementarity</strong>. Your gaps are each other\'s gifts.',
-    'Honestly: your elements have some '+(isConquer?'clash, but this is not an absolute barrier — it\'s a test of true commitment.':'friction, which calls for careful attunement.'),
-    '🔮 <strong>Action Tip:</strong> Consider registering your relationship in <strong>'+m3+'</strong>, then holding a celebration in <strong>'+m4+'</strong> on an auspicious day. Wearing black obsidian can help neutralize elemental tension. Strongly recommend a personalized consultation for a tailored harmony plan.'
+    'Your charts show real differences — a <strong>'+relEN+'</strong> dynamic between '+aElem+' and '+bElem+'. Difference is the basis of complementarity, not a verdict.',
+    'Honestly, your elements have some '+(isConquer?'friction, which is a call for conscious effort — not an absolute barrier.':'gentle contrast, which rewards attunement and patience.')+' The full report maps exactly where.'
   ] : [
-    'Your charts carry some elemental tension. This is not a curse — it is a <strong>test</strong>. Some of the most profound love stories have tension at their core, because overcoming it makes the bond precious.',
-    (aElem)+' and '+(bElem)+' have a controlling dynamic, which means your relationship requires <strong>more conscious effort and self-awareness</strong>. But if you choose to trust each other, every obstacle becomes a bridge.',
-    '🔮 <strong>Action Tip:</strong> <strong>Strongly recommend consulting a specialist</strong> for a personalized harmony plan. Choose a carefully selected auspicious date (around <strong>'+m4+'</strong>), wear protective amulets, and adjust your home\'s feng shui. Remember: no two people are permanently incompatible — only love that isn\'t given enough water.'
+    'Your charts carry a <strong>'+relEN+'</strong> dynamic — '+aElem+' and '+bElem+' pull on each other. This is a signal to be intentional, not a curse.',
+    'A challenging base simply means the relationship rewards more self-awareness and honest communication. The full BaZi report shows where the friction lives and how to work with it.'
   ];
 
-  // Prefer the backend's unique AI narrative; fall back to the local template.
   var serverStory = server && (server.storyPreview || server.preview || server.reading);
   if (serverStory && typeof serverStory === 'string' && serverStory.trim().length > 40) {
     document.getElementById('storyText').innerHTML = serverStory
@@ -695,48 +732,28 @@ function showResults(ay, by, server) {
     document.getElementById('storyText').innerHTML = storyLines.map(function(line){ return line.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>'); }).join('<br/><br/>');
   }
 
-  // Six dimensions
-  var m_love  = MONTHS[safeMonth(6, Math.abs((ay+am)%3))-1];
-  var m_money = MONTHS[safeMonth(9, Math.abs((ay*3)%3))-1];
-  var m_life  = MONTHS[safeMonth(6, Math.abs((ay+ad)%2))-1];
-  var m_child1= MONTHS[safeMonth(7, Math.abs((am*by)%5))-1];
-  var m_child2= MONTHS[safeMonth(8, Math.abs((am*by)%4))-1];
-  var m_career= MONTHS[safeMonth(10, Math.abs((ay+by)%2))-1];
-
+  // Six dimensions — teaser cards. We only show a NUMBER when the server provides a
+  // real per-dimension score (via server.dims). Otherwise the card is a locked preview:
+  // no fabricated per-dimension precision, and no "buy this amulet" instructions.
   var DIMS = [
-    {icon:'💕', name:'Emotional Resonance', base:det(ay+am, by+bm, 58, 96),
-      desc_hi:'Your emotional frequencies are beautifully aligned, creating natural intimacy. Around <strong>'+m_love+'</strong>, share your deepest truth — this month your communication energy is especially powerful.',
-      desc_lo:'Intentional communication is your key. Place a pink crystal by your bedside and spend even 10 minutes daily truly listening to each other — this ancient attunement technique accelerates emotional bonding.'},
-    {icon:'💰', name:'Financial Harmony', base:det(ay*3, by*3, 52, 92),
-      desc_hi:'Your financial energies complement beautifully — together you can build lasting abundance. Around <strong>'+m_money+'</strong>, start a joint investment or savings plan.',
-      desc_lo:'Your money mindsets differ — this is normal and workable. Before committing, have an honest conversation about financial goals and boundaries. Keep individual accounts while building shared reserves.'},
-    {icon:'🏠', name:'Lifestyle Compatibility', base:det(ay+ad, by+bd, 55, 94),
-      desc_hi:'Your daily rhythms align naturally. Place thriving plants in the '+dirs[(ay+ad)%4]+' corner of your home — not just for aesthetics, but to amplify your home\'s vitality energy.',
-      desc_lo:'Your life paces differ slightly — this is a beautiful invitation to learn each other\'s rhythms. Designate two weekly phone-free "together times." Warmth and patience transform any difference.'},
-    {icon:'👶', name:'Family Destiny', base:det(am*by, bm*ay, 60, 95),
-      desc_hi:'Your family destiny is strong and blessed. Around <strong>'+m_child1+'</strong>, begin preparations if family expansion is in your plans. A white jade pendant can support this intention.',
-      desc_lo:'The timing for family growth needs to align with your readiness. Use <strong>'+m_child2+'</strong> to focus on health and inner alignment first. A qilin (kylin) figurine in the north area of your home is a traditional symbol of family blessing.'},
-    {icon:'🤝', name:'Career Synergy', base:det(ay+by, am*bm, 56, 90),
-      desc_hi:'You are each other\'s lucky star — together you can achieve much more. Around <strong>'+m_career+'</strong>, launch a shared project or vision board. Green crystals on your work desk amplify partnership energy.',
-      desc_lo:'Your career directions differ — this is actually healthy. The key is respecting each other\'s professional space. Remember: different paths, same home. Place a yellow crystal in each of your workspaces as a symbol of that shared foundation.'},
-    {icon:'🔮', name:'Elemental Harmony', base:Math.min(96, Math.max(45, det(ay, by, 55, 90)+relBonus)),
-      desc_hi:aElem+' and '+bElem+' generate each other — a cosmically auspicious pairing. Choose matching crystals for each other that reflect your elements, wearing them as a pair to reinforce your energetic bond.',
-      desc_lo:'Your elements have some dynamic tension. Choosing an auspicious date around <strong>'+m_career+'</strong> for your union is especially important. Five Emperor Coins in the '+dirs[(ay+by)%4]+' area of your home is one of the oldest methods of elemental harmony correction.'},
+    {icon:'💕', name:'Emotional Resonance',   teaser:'How your emotional rhythms meet — where intimacy comes easily and where to slow down and listen.'},
+    {icon:'💰', name:'Financial Harmony',      teaser:'Your money temperaments side by side, and the honest conversation worth having before you commit.'},
+    {icon:'🏠', name:'Lifestyle Compatibility',teaser:'Daily-rhythm fit — sleep, pace, space and routines — and simple ways to bridge the gaps.'},
+    {icon:'👶', name:'Family Destiny',          teaser:'What your charts suggest about family life and long-term partnership, and how to prepare with intention.'},
+    {icon:'🤝', name:'Career Synergy',          teaser:'Whether your ambitions amplify or compete — and how to give each other room to grow.'},
+    {icon:'🔮', name:'Elemental Harmony',       teaser:aElem+' and '+bElem+' in a <strong>'+relEN+'</strong> relationship — the elemental core of your match, explained in depth.'}
   ];
 
   document.getElementById('dimsList').innerHTML = DIMS.map(function(d) {
-    var sc = Math.min(97, Math.max(45, d.base));
-    var color = sc>=76 ? 'var(--jade)' : sc>=55 ? 'var(--gold)' : 'var(--rose)';
     return '<div class="dim-card">' +
       '<div class="dim-head">' +
         '<div class="dim-name">'+d.icon+' '+d.name+'</div>' +
-        '<div class="dim-score" style="color:'+color+'">'+sc+'</div>' +
+        '<div class="dim-score" style="color:var(--gold);font-size:13px">🔒</div>' +
       '</div>' +
-      '<div class="dim-bar-bg"><div class="dim-bar-fill" style="width:'+sc+'%;background:'+color+'"></div></div>' +
-      '<div class="dim-desc">'+(sc>=70?d.desc_hi:d.desc_lo)+'</div>' +
+      '<div class="dim-desc">'+d.teaser+'</div>' +
       '</div>';
   }).join('');
-  // Override local dims with backend values if available
+  // If the backend supplied real per-dimension scores, reveal them.
   if (server && server.dims) { _applyDimsToUI(server.dims); }
 
   // Five elements display
@@ -751,18 +768,16 @@ function showResults(ay, by, server) {
   rt.textContent = rel; rt.style.background = relColor; rt.style.color = relText;
   rt.style.border = '1px solid '+relText; rt.style.padding = '4px 16px'; rt.style.borderRadius = '12px';
 
-  // 2026 year fortune
-  var yrScore = det(ay+2026, by+2026, 1, 10);
-  var isGood = yrScore>=6;
+  // Year-timing teaser — no fabricated verdict or specific month. Real timing (which
+  // years and months favour this pairing) is computed in the full paid report.
   var yb = document.getElementById('yearBadge');
-  yb.textContent = isGood ? '✨ Auspicious Year' : '⚠ Proceed Carefully';
-  yb.style.background = isGood ? 'rgba(91,191,160,0.12)' : 'rgba(201,168,76,0.1)';
-  yb.style.color = isGood ? 'var(--jade-mid)' : 'var(--gold)';
-  yb.style.border = '1px solid '+(isGood?'rgba(91,191,160,0.2)':'rgba(201,168,76,0.2)');
+  yb.textContent = '🔒 In full report';
+  yb.style.background = 'rgba(201,168,76,0.1)';
+  yb.style.color = 'var(--gold)';
+  yb.style.border = '1px solid rgba(201,168,76,0.2)';
   yb.style.borderRadius = '8px'; yb.style.padding = '2px 9px';
-  document.getElementById('yearText').textContent = isGood
-    ? '2026 is an auspicious year for your union. Your combined charts harmonize with the year\'s energy — consider formalizing your commitment around month '+(3+yrScore%4)+' for maximum auspiciousness.'
-    : '2026 carries some friction for this pairing. Consider solidifying your emotional foundation first, or hold a smaller intimate ceremony around month '+(yrScore+2)+'. A larger celebration may align better with 2027.';
+  document.getElementById('yearText').textContent =
+    'Auspicious timing for your union — which years and months favour milestones like engagement or marriage — is worked out from both full charts in the unlocked report.';
 
   injectDisclaimer('results');
 }
@@ -792,11 +807,18 @@ function _applyDimsToUI(dims) {
     var sc = Math.min(97, Math.max(45, Math.round(raw)));
     var color = sc>=76 ? 'var(--jade)' : sc>=55 ? 'var(--gold)' : 'var(--rose)';
     var scoreEl = card.querySelector('.dim-score');
-    var barEl = card.querySelector('.dim-bar-fill');
     var descEl = card.querySelector('.dim-desc');
-    if (scoreEl) { scoreEl.textContent = sc; scoreEl.style.color = color; }
-    if (barEl) { barEl.style.width = sc+'%'; barEl.style.background = color; }
-    // Toggle desc visibility based on new score (desc_hi/lo classes not available, skip desc swap)
+    // Reveal the real server score (replacing the 🔒 placeholder) and add a bar.
+    if (scoreEl) { scoreEl.textContent = sc; scoreEl.style.color = color; scoreEl.style.fontSize = ''; }
+    var barEl = card.querySelector('.dim-bar-fill');
+    if (!barEl && descEl) {
+      var barWrap = document.createElement('div');
+      barWrap.className = 'dim-bar-bg';
+      barWrap.innerHTML = '<div class="dim-bar-fill" style="width:'+sc+'%;background:'+color+'"></div>';
+      card.insertBefore(barWrap, descEl);
+    } else if (barEl) {
+      barEl.style.width = sc+'%'; barEl.style.background = color;
+    }
   });
 }
 

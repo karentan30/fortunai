@@ -252,8 +252,8 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   <div class="header">
     <div class="header-title">Your BaZi Destiny Reading</div>
     <div class="header-sub">FOUR PILLARS OF DESTINY · 八字命理</div>
-    <div class="header-desc">Ancient Chinese astrology decoded by AI — discover your elemental makeup, career fortune, relationship destiny and major life cycles</div>
-    <div style="font-size:12px;color:rgba(80,70,55,0.65);letter-spacing:0.04em;margin:8px 0 12px;padding:0 12px;line-height:1.6">Calculated from authentic 万年历 astronomical almanac data</div>
+    <div class="header-desc">Ancient Chinese astrology decoded by AI. Your <b>Four Pillars</b> — the year, month, day and hour of your birth — reveal your elemental makeup, career fortune, relationship destiny and major life cycles.</div>
+    <div style="font-size:12px;color:rgba(80,70,55,0.65);letter-spacing:0.04em;margin:8px 0 12px;padding:0 12px;line-height:1.6">Calculated from the Chinese perpetual-almanac (Wan Nian Li) astronomical data</div>
     <div class="gold-line"></div>
   </div>
 
@@ -368,7 +368,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 <!-- QA section -->
 <div id="qaSection">
-  <div class="qa-label">Ask the Oracle</div>
+  <div class="qa-label">AI Destiny Advisor</div>
   <div class="qa-row">
     <input id="qaInput" type="text" placeholder="e.g. What career suits me best?" class="qa-input">
     <button onclick="askQuestion()" class="qa-btn">Ask</button>
@@ -447,23 +447,9 @@ var ELEM_DI = {'子':'Water','丑':'Earth','寅':'Wood','卯':'Wood','辰':'Eart
 var ELEM_ZH = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
 var ELEM_DI_ZH = {'子':'水','丑':'土','寅':'木','卯':'木','辰':'土','巳':'火','午':'火','未':'土','申':'金','酉':'金','戌':'土','亥':'水'};
 
-function getBazi(y, m, d, h) {
-  var yearTian = TIAN[(y-4)%10];
-  var yearDi   = DI[(y-4)%12];
-  var monthTian = TIAN[((y-4)%5*2+m+1)%10];
-  var monthDi   = DI[(m+1)%12];
-  var dayBase   = (y*365+m*30+d+40)%60;
-  var dayTian   = TIAN[dayBase%10];
-  var dayDi     = DI[dayBase%12];
-  var hourTian  = TIAN[(dayBase%5*2+h)%10];
-  var hourDi    = DI[h%12];
-  return [
-    {label:'Year', tian:yearTian, di:yearDi},
-    {label:'Month', tian:monthTian, di:monthDi},
-    {label:'Day', tian:dayTian, di:dayDi, isDay:true},
-    {label:'Hour', tian:hourTian, di:hourDi}
-  ];
-}
+// Note: the birth chart (Four Pillars) is computed server-side and delivered via
+// window._backendPillars. We intentionally do NOT compute pillars in the browser —
+// a local approximation would be inaccurate and dishonest.
 
 function generateReport(btn) {
   btn = btn || (typeof event !== 'undefined' && event ? event.currentTarget : document.querySelector('.btn-gen'));
@@ -625,7 +611,7 @@ function initSSEReport(isLocked) {
     '</div>';
 
   if (lastBaziInput) {
-    var n = lastBaziInput.name || (lastBaziInput.gender==='male' ? 'Sir' : 'Ms.');
+    var n = lastBaziInput.name || 'Your Reading';
     html += '<div class="chart-header">';
     html += '<div class="name-row"><div class="report-name">'+n+'</div><div class="report-tag">AI Destiny Analysis · AIGC</div></div>';
     html += '<div class="birth-info">'+
@@ -635,17 +621,14 @@ function initSSEReport(isLocked) {
     html += '<div class="divider"></div></div>';
   }
 
-  // Build pillars overview using backend pillars already stored in window._backendPillars
+  // Build pillars overview using backend pillars only (window._backendPillars).
+  // Never fabricate a chart locally — if the server chart isn't ready, skip the pillar grid.
   var parsed = { hasDaymaster: true, pillars: null, elements: null };
   if (lastBaziInput && lastBaziInput.year) {
     var _bp = window._backendPillars;
-    var computed = (_bp && Array.isArray(_bp) && _bp.length===4) ? _bp : (function(){
-      var y2 = lastBaziInput.year, m2 = lastBaziInput.month, d2 = lastBaziInput.day;
-      var h2 = (typeof lastBaziInput.hour === 'number' && !isNaN(lastBaziInput.hour)) ? lastBaziInput.hour : 0;
-      return getBazi(y2, m2, d2, h2);
-    })();
+    var computed = (_bp && Array.isArray(_bp) && _bp.length===4) ? _bp : null;
     parsed.pillars = computed;
-    if (!parsed.elements) {
+    if (computed && !parsed.elements) {
       var ec2 = {木:0,火:0,土:0,金:0,水:0};
       computed.forEach(function(z) {
         ec2[ELEM_ZH[z.tian]] = (ec2[ELEM_ZH[z.tian]]||0) + 2;
@@ -967,6 +950,7 @@ function buildDayMasterInsight(parsed) {
   if (!body) return '';
   return '<div style="margin:0 16px 14px;padding:16px 16px 18px;background:linear-gradient(135deg,rgba(201,168,76,0.08),rgba(91,191,160,0.04));border:1px solid rgba(201,168,76,0.22);border-radius:12px">' +
     '<div style="font-size:12px;letter-spacing:0.16em;color:rgba(201,168,76,0.75);text-transform:uppercase;margin-bottom:8px">Your Day Master</div>' +
+    '<div style="font-size:12px;color:rgba(80,70,55,0.6);margin-bottom:8px;line-height:1.55">Your Day Master is the element of your birth-day pillar — the one that best represents you.</div>' +
     '<div style="font-size:14px;line-height:1.75;color:rgba(50,44,34,0.9)">Your Day Master is <b style="color:var(--gold-deep)">'+polarity+' '+dmElem+'</b> — '+body+'</div>' +
     '<div style="font-size:12px;color:rgba(80,70,55,0.6);margin-top:10px;line-height:1.65;font-style:italic">This is just the surface. Your full reading maps exactly when your wealth peaks, who you\'re drawn to, and the years that will change everything.</div>' +
     '</div>';
@@ -985,7 +969,7 @@ function renderAITextReport(text, contextId, isLocked) {
 
   // Header
   if (lastBaziInput) {
-    var n = lastBaziInput.name || (lastBaziInput.gender==='male' ? 'Sir' : 'Ms.');
+    var n = lastBaziInput.name || 'Your Reading';
     html += '<div class="chart-header">';
     html += '<div class="name-row"><div class="report-name">'+n+'</div><div class="report-tag">AI Destiny Analysis · AIGC</div></div>';
     html += '<div class="birth-info">'+
@@ -997,17 +981,13 @@ function renderAITextReport(text, contextId, isLocked) {
 
   var parsed = tryParseBaziData(text);
 
-  // Prefer backend pillars for accuracy; fall back to local getBazi() if not available.
+  // Use backend pillars only for accuracy. Never fabricate a chart locally.
   if (lastBaziInput && lastBaziInput.year && !parsed.pillars) {
     var _bp = window._backendPillars;
-    var computed = (_bp && Array.isArray(_bp) && _bp.length===4) ? _bp : (function(){
-      var y2 = lastBaziInput.year, m2 = lastBaziInput.month, d2 = lastBaziInput.day;
-      var h2 = (typeof lastBaziInput.hour === 'number' && !isNaN(lastBaziInput.hour)) ? lastBaziInput.hour : 0;
-      return getBazi(y2, m2, d2, h2);
-    })();
+    var computed = (_bp && Array.isArray(_bp) && _bp.length===4) ? _bp : null;
     parsed.pillars = computed;
     parsed.hasDaymaster = true;
-    if (!parsed.elements) {
+    if (computed && !parsed.elements) {
       var ec2 = {木:0,火:0,土:0,金:0,水:0};
       computed.forEach(function(z) {
         ec2[ELEM_ZH[z.tian]] = (ec2[ELEM_ZH[z.tian]]||0) + 2;
@@ -1065,44 +1045,11 @@ function renderAITextReport(text, contextId, isLocked) {
   if (rc) rc.appendChild(hehunCTA);
 }
 
+// Removed: the "Today's Best Action" block used day-of-year to rotate 5 hardcoded
+// blurbs — identical for everyone, not tied to the user's chart. Kept as a no-op
+// so existing call sites stay safe. Do NOT reintroduce generic daily "advice".
 function buildDailyActionBlockEN(aiText) {
-  var el = document.createElement('div');
-  var today = new Date();
-  var dayOfYear = Math.floor((today - new Date(today.getFullYear(),0,0)) / 86400000);
-  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var dateStr = months[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear();
-
-  var actions = [
-    ['🔥 Focus on bold action today — your Fire energy is strong. South-facing spaces boost your momentum.',
-     '💡 Best time window: 11am–1pm for important decisions and negotiations.',
-     '🎯 One thing to do: reach out to someone you\'ve been meaning to connect with.'],
-    ['🌿 Ground yourself today. Avoid rushing — Earth energy calls for steady progress.',
-     '💡 Best time window: 1pm–3pm for signing agreements or making plans.',
-     '🎯 One thing to do: organize one area of your life that feels chaotic.'],
-    ['💧 Reflective energy today. Ideal for learning, introspection, and creative work.',
-     '💡 Best time window: 9pm–11pm — your mind is sharpest late.',
-     '🎯 One thing to do: journal your thoughts or research something important.'],
-    ['🌳 Expansion energy is high. Good day to start new ventures or grow relationships.',
-     '💡 Best time window: 7am–9am — morning energy is your ally today.',
-     '🎯 One thing to do: take one step toward a goal you\'ve been postponing.'],
-    ['⚡ Metal energy brings clarity. Time to cut what no longer serves you.',
-     '💡 Best time window: 3pm–5pm for important decisions that need clear thinking.',
-     '🎯 One thing to do: declutter your space or finish something you started.']
-  ];
-  var todayActions = actions[dayOfYear % actions.length];
-
-  el.style.cssText = 'margin:12px 0 0';
-  el.innerHTML =
-    '<div style="background:linear-gradient(135deg,rgba(14,10,4,0.95),rgba(24,20,12,0.9));border:1px solid rgba(201,168,76,0.2);border-radius:14px;padding:16px;position:relative;overflow:hidden">' +
-    '<div style="position:absolute;right:12px;top:12px;font-size:40px;opacity:0.07">☀️</div>' +
-    '<div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">' +
-    '<span style="font-size:18px">⚡</span>' +
-    '<div><div style="font-size:13px;font-weight:600;letter-spacing:0.06em;color:rgba(232,208,138,0.95)">Today\'s Best Action</div>' +
-    '<div style="font-size:11px;color:rgba(200,196,180,0.45)">'+dateStr+'  ·  Updates daily</div></div></div>' +
-    '<div style="font-size:13px;color:rgba(220,208,170,0.88);line-height:1.85">' +
-    todayActions.map(function(a,i){ return '<div style="display:flex;gap:8px;margin-bottom:'+(i<todayActions.length-1?'8':'0')+'px"><span style="color:#c9a84c;font-size:11px;margin-top:3px;flex-shrink:0">▸</span><span>'+a+'</span></div>'; }).join('') +
-    '</div></div>';
-  return el;
+  return document.createComment('daily-action-removed');
 }
 
 function generateShareCardEN() {
@@ -1224,7 +1171,7 @@ function askQuestion() {
   var loadEl = document.createElement('div');
   loadEl.id = 'qaLoading';
   loadEl.style.cssText = 'text-align:left;margin-bottom:8px;font-size:12px;color:rgba(80,70,55,0.65);letter-spacing:0.04em';
-  loadEl.textContent = 'The Oracle is consulting the stars…';
+  loadEl.textContent = 'The AI Destiny Advisor is consulting the stars…';
   h.appendChild(loadEl);
   fetch('/api/ask-followup', {
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -1305,15 +1252,12 @@ function shareWhatsapp(url) {
   window.open('https://wa.me/?text='+text, '_blank');
 }
 
-// Lucky timing hook
+// Seasonal reminder hook — honest generic (NOT a per-user prediction; do not reintroduce a computed "your luck shifts in [month]" claim)
 function initZhuanyunMonth() {
-  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-  var zhuanyunIdx = (new Date().getMonth() + 2) % 12;
-  var monthName = months[zhuanyunIdx];
   var el = document.getElementById('zhuanyun-month');
-  if (el) el.textContent = '✦ Your luck shifts in '+monthName;
+  if (el) el.textContent = '✦ Track your seasonal luck cycles';
   var desc = document.getElementById('zhuanyun-desc');
-  if (desc) desc.innerHTML = 'Your next seasonal window (general forecast) starts around <b style="color:#c8aafe">'+monthName+'</b>.<br>Set a reminder so you don\'t miss it.';
+  if (desc) desc.innerHTML = 'BaZi luck moves in cycles through the year. Set a reminder to revisit your outlook each season.';
 }
 function setZhuanyunReminder() {
   var now = new Date();
