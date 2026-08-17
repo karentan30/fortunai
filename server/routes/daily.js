@@ -12,9 +12,12 @@
 const router = require('express').Router();
 const { deepseekChat, buildReadingPrompt } = require('../lib/llm');
 const {
-  insertReading, getReadingsByUser, hasFullAccess,
+  insertReading, getReadingsByUser, hasFullAccess, memberTier,
   updateStreak, _M, _persist,
 } = require('../lib/store');
+
+// 聊天每日免费/月会员限量(与 store.MONTHLY_CHAT_DAILY_LIMIT 对齐)
+const CHAT_DAILY_LIMIT = 5;
 const { getToken } = require('../lib/store');
 const { getClientIp, resolveUserFromToken } = require('../lib/utils');
 const { rateLimitMiddleware, authMiddleware } = require('../middleware');
@@ -35,8 +38,9 @@ const READING_TYPE_NAMES = {
 // ══════════════════════════════════════════
 router.post('/daily', rateLimitMiddleware, async (req, res) => {
   try {
-    // P0-10: 免费用户每日最多3次，付费会员无限
-    const isMember = hasFullAccess(req, ['member']);
+    // P0-10: 免费用户每日最多3次，会员(月会员+全解锁会员均含每日运势)无限
+    // 0817: 月会员套餐含"每日运势", 故 memberTier 非 null 即视为会员; 免费/游客限3次。
+    const isMember = memberTier(req) !== null;
     if (!isMember) {
       const uid = resolveUserFromToken(req.headers['authorization'] || (req.body && req.body.token), { get: (t) => { const row = _M.tokens.find(x => x.token === t); return row || null; } });
       const day = new Date().toISOString().slice(0, 10);
@@ -213,27 +217,32 @@ router.post('/chat', rateLimitMiddleware, async (req, res) => {
         + '\n\n每次回答200-400字，不要太长。要具体但诚实，不确定就说"这个我拿不准"。'
     };
 
+    // 到每日 5 句上限的提示。年会员($99/年)=无限畅聊; 月会员($9.9/月)含每天5句+每月1份完整报告。
     const LIMIT_MSGS = {
-      en: 'You\'ve used all 5 free chats with Rún today. Upgrade to Premium ($6.90/month) for unlimited chat with Rún — she remembers your chart — plus all full reports.',
-      ko: '오늘 루니와의 무료 상담 5회를 모두 사용하셨어요. 프리미엄($6.90/월)으로 업그레이드하면 루니와 무제한으로 이야기할 수 있고 — 루니가 당신의 사주를 기억해요 — 전체 리포트도 모두 열려요.',
-      zh: '今天和 Rún 的免费畅聊次数用完啦～开通会员($6.9/月)就能和 Rún 无限畅聊（她记得你的盘），还解锁全部完整报告哦。'
+      en: 'You\'ve reached today\'s 5 chats with Rún. Go Yearly ($99/yr) for unlimited chat — she remembers your chart — plus unlimited full reports. Or come back tomorrow for 5 more.',
+      ko: '오늘 루니와의 상담 5회를 모두 사용하셨어요. 연간 멤버십($99/년)이면 루니와 무제한으로 이야기하고 — 루니가 당신의 사주를 기억해요 — 모든 리포트도 무제한이에요. 아니면 내일 다시 5회 이용하실 수 있어요.',
+      zh: '今天和 Rún 的畅聊 5 句用完啦～升级年会员($99/年)就能无限畅聊（她记得你的盘）+全部报告无限。或明天再来还有 5 句。'
     };
 
     const chatLang = (lang === 'en' || lang === 'ko') ? lang : 'zh';
     const systemMsg = { role: 'system', content: SYSTEM_PROMPTS[chatLang] };
 
-    // 免费每天5条, 会员无限
-    var isMember = hasFullAccess(req, ['member']);
-    if (!isMember) {
+    // 🔴 0817 聊天配额: 全解锁会员(年/季/3年/终身/日)=无限; 月会员=每天5句(限量); 免费/游客=每天5句。
+    //   memberTier 返回 'unlimited'|'monthly'|null。仅 'unlimited' 免限量。
+    var tier = memberTier(req);
+    var isUnlimited = tier === 'unlimited';
+    if (!isUnlimited) {
       var uid = resolveUserFromToken(req.headers['authorization'] || (req.body && req.body.token), { get: (t) => { const row = _M.tokens.find(x => x.token === t); return row || null; } });
       var day = new Date().toISOString().slice(0, 10);
       var sessionId = req.headers['x-session-id'];
       var ckey = (uid || sessionId || getClientIp(req)) + '_' + day;
       var used = _M.chatUsage[ckey] || 0;
-      if (used >= 5) {
-        return res.json({ answer: LIMIT_MSGS[chatLang], limited: true, needMember: true });
+      if (used >= CHAT_DAILY_LIMIT) {
+        // 月会员已到每日上限 → 引导升级年费(无限聊天); 免费用户 → 引导开通会员
+        return res.json({ answer: LIMIT_MSGS[chatLang], limited: true, needMember: true, memberTier: tier });
       }
       _M.chatUsage[ckey] = used + 1;
+      _persist();
     }
     const allMessages = [systemMsg].concat(messages.slice(-10));
     const answer = await deepseekChat(allMessages, { maxTokens: 1024 });
@@ -249,8 +258,9 @@ router.post('/chat', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.get('/chat/quota', (req, res) => {
   try {
-    var isMember = hasFullAccess(req, ['member']);
-    if (isMember) return res.json({ isMember: true, remaining: -1 });
+    // 0817: 只有全解锁会员(unlimited)才是无限; 月会员和免费用户都每天5句限量。
+    var tier = memberTier(req);
+    if (tier === 'unlimited') return res.json({ isMember: true, tier: 'unlimited', remaining: -1 });
     var uid = null;
     const authH = req.headers['authorization'] || '';
     if (authH) {
@@ -262,7 +272,7 @@ router.get('/chat/quota', (req, res) => {
     var sessionId = req.headers['x-session-id'];
     var ckey = (uid || sessionId || getClientIp(req)) + '_' + day;
     var used = _M.chatUsage[ckey] || 0;
-    res.json({ isMember: false, remaining: Math.max(0, 5 - used), used: used, limit: 5 });
+    res.json({ isMember: tier === 'monthly', tier: tier || 'free', remaining: Math.max(0, CHAT_DAILY_LIMIT - used), used: used, limit: CHAT_DAILY_LIMIT });
   } catch (e) {
     res.json({ isMember: false, remaining: 5, error: e.message });
   }

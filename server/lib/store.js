@@ -24,7 +24,8 @@ const _DATA_FILE = process.env.DATA_FILE || path.join(__dirname, '../data.json')
   try {
     if (!fs.existsSync(_DATA_FILE)) return;
     const d = JSON.parse(fs.readFileSync(_DATA_FILE, 'utf8'));
-    for (const k of ['users','tokens','orders','readings','subs','referrals','feedbacks','chatUsage','abEvents']) {
+    // 🔴 0817: 加 reportCredits(月会员报告credit,防重启白刷) + dailyUsage(每日运势免费次数) + rewards + streaks 落盘恢复
+    for (const k of ['users','tokens','orders','readings','subs','referrals','feedbacks','chatUsage','abEvents','reportCredits','dailyUsage','rewards','streaks']) {
       if (Array.isArray(d[k])) _M[k] = d[k];
       else if (d[k] && typeof d[k] === 'object' && !Array.isArray(d[k])) _M[k] = d[k];
     }
@@ -165,33 +166,131 @@ const getReadingsByUser = {
 const UNLOCK_BY_CATEGORY = {
   'bazi': ['bazi_full','bazi_vip'], '八字': ['bazi_full','bazi_vip'], '사주': ['bazi_full','bazi_vip'],
   'hehun': ['hehun','hehun_basic','hehun_master'], '合婚': ['hehun','hehun_basic','hehun_master'], '궁합': ['hehun','hehun_basic','hehun_master'], 'hehun_kr': ['hehun','hehun_basic','hehun_master'], 'hehun_full': ['hehun','hehun_basic','hehun_master'], 'hehun_kr_full': ['hehun','hehun_basic','hehun_master'],
-  'ziwei': ['ziwei'], '紫微': ['ziwei'],
+  'ziwei': ['ziwei','ziwei_full'], '紫微': ['ziwei','ziwei_full'], 'ziwei_full': ['ziwei','ziwei_full'],
   'xingming': ['xingming'], '姓名': ['xingming'],
   'astrology': ['astrology'], '占星': ['astrology'],
   'fengshui': ['fengshui', 'fengshui_full'], '风水': ['fengshui', 'fengshui_full'],
-  'yinzhai': ['yinzhai_full'], '阴宅': ['yinzhai_full'],
+  'yinzhai': ['yinzhai_full','yinzhai'], '阴宅': ['yinzhai_full','yinzhai'],
   'liuyao': ['liuyao'], '六爻': ['liuyao'],
   'qimen': ['qimen'], '奇门': ['qimen'],
   'daliuren': ['daliuren'], '大六壬': ['daliuren'],
   'lingqian': ['lingqian'], '灵签': ['lingqian'],
   'pastlife': ['pastlife'], '前世': ['pastlife'],
   'tarot': ['tarot'], '塔罗': ['tarot'],
-  'jyotish_full': ['jyotish_full'], 'jyotish': ['jyotish_full'],
-  'maya_full': ['maya_full'], 'maya': ['maya_full'],
-  'tibet_full': ['tibet_full'], 'tibet': ['tibet_full'],
-  'mianxiang': ['member_monthly','member_yearly','member_lifetime','member_daily','member_quarterly','member_3year'],
-  '面相': ['member_monthly','member_yearly','member_lifetime','member_daily','member_quarterly','member_3year'],
-  'member': ['member_monthly','member_yearly','member_lifetime','member_daily','member_quarterly','member_3year'],
-  'zhiyuan_full': ['zhiyuan_full', 'member_monthly', 'member_yearly', 'member_quarterly', 'member_3year'],
-  'daily_sub': ['daily_sub', 'member_monthly', 'member_yearly', 'member_quarterly', 'member_3year', 'member_daily'],
+  'jyotish_full': ['jyotish_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'], 'jyotish': ['jyotish_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'],
+  'maya_full': ['maya_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'], 'maya': ['maya_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'],
+  'tibet_full': ['tibet_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'], 'tibet': ['tibet_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'],
+  // 🔴 0817: 'member'/面相 只映射「全解锁会员」。月会员(member_monthly)走 credit 机制,
+  //   由 hasFullAccess/gateMessages 里的 monthly 分支单独放行,不在这里直接解锁。
+  'mianxiang': ['member_yearly','member_lifetime','member_daily','member_quarterly','member_3year'],
+  '面相': ['member_yearly','member_lifetime','member_daily','member_quarterly','member_3year'],
+  'member': ['member_yearly','member_lifetime','member_daily','member_quarterly','member_3year'],
+  'zhiyuan_full': ['zhiyuan_full', 'member_yearly', 'member_quarterly', 'member_3year','member_lifetime','member_daily'],
+  // daily_sub(每日运势): 月会员也含每日运势, 故保留 member_monthly(每日运势不属"完整报告", 不消耗 credit)
+  'daily_sub': ['daily_sub', 'member_monthly', 'member_yearly', 'member_quarterly', 'member_3year', 'member_daily','member_lifetime'],
 };
 
 // 🔴 续费修复(0731): 订阅类产品加 expires_at 到期判断
 const SUBSCRIBE_PRODUCTS = ['member_monthly','member_yearly','member_quarterly','member_3year','member_daily','daily_sub'];
 
+// ── 会员分级(0817 最终阶梯) ──
+// 全解锁会员(报告无限+无限聊天+每月1次大师深度credit): 年/季/3年/终身/日
+const FULL_MEMBER_PRODUCTS = ['member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'];
+// 月会员(限量聊天5句/天 + 每月1份完整报告credit + 每日运势·不含大师深度·非全报告无限)
+const MONTHLY_MEMBER_PRODUCTS = ['member_monthly'];
+// 月会员每月完整报告 credit 额度
+const MONTHLY_REPORT_CREDIT = 1;
+// 月会员聊天每日限量
+const MONTHLY_CHAT_DAILY_LIMIT = 5;
+
+// 🔴 0817: 保证「全解锁会员」能无限解锁所有报告类目 —— 把 FULL_MEMBER_PRODUCTS 注入
+//   UNLOCK_BY_CATEGORY 每个类目(去重)。月会员(member_monthly)仍走 credit 机制,不在此注入。
+//   注意: 只注入报告类目; daily_sub 保留其原有 member_monthly(每日运势非报告,不耗 credit)。
+(function _injectFullMemberUnlock() {
+  Object.keys(UNLOCK_BY_CATEGORY).forEach(function(cat) {
+    var arr = UNLOCK_BY_CATEGORY[cat];
+    FULL_MEMBER_PRODUCTS.forEach(function(p) {
+      if (arr.indexOf(p) < 0) arr.push(p);
+    });
+  });
+})();
+
 function _isExpired(o) {
   if (!o.expires_at) return false;
   return Date.parse(o.expires_at) < Date.now();
+}
+
+// 取登录 token → user_id。无 token / 无效返回 null。
+function _uidFromReq(req) {
+  try {
+    var auth = req.headers['authorization'] || '';
+    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
+    if (!token) return null;
+    var t = getToken.get(token);
+    return t ? t.user_id : null;
+  } catch (e) { return null; }
+}
+
+// 判断用户拥有的会员档: 'unlimited' | 'monthly' | null
+// unlimited = 全解锁会员(FULL_MEMBER_PRODUCTS); monthly = 仅月会员。ADMIN_TOKEN → unlimited。
+function memberTier(req) {
+  try {
+    var auth = req.headers['authorization'] || '';
+    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
+    if (process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN) return 'unlimited';
+    if (!token) return null;
+    var t = getToken.get(token);
+    if (!t) return null;
+    var orders = (getUserOrders.all(t.user_id) || []).filter(function(o) { return !_isExpired(o); });
+    var owned = {};
+    orders.forEach(function(o) { owned[String(o.product || '')] = true; });
+    if (FULL_MEMBER_PRODUCTS.some(function(p) { return owned[p]; })) return 'unlimited';
+    if (owned['member_lifetime']) return 'unlimited';
+    if (MONTHLY_MEMBER_PRODUCTS.some(function(p) { return owned[p]; })) return 'monthly';
+    return null;
+  } catch (e) { return null; }
+}
+
+// 月会员当前 billing 月的 key。以最近一笔 member_monthly 订单的 created_at 起算，
+// 按 ~30天周期滚动，得到当前周期序号，配合 user_id 组成计数 key，实现按 billing 月重置。
+// 🔴 P1修复(专家复审): 原按"最新订单created_at滚动30天周期"会与 Stripe 实际账单日
+//   (按自然月扣费)逐月漂移,造成"没到账单日却已重置"客诉。改用自然月 YYYY-MM:
+//   直观可解释、与月度扣费天然对齐、不依赖订单时间线,也避免续费订单 user_id 缺失时的歧义。
+function _monthlyBillingKey(uid, req) {
+  return uid + '_rc_' + new Date().toISOString().slice(0, 7);
+}
+
+// 月会员完整报告 credit: 查询本 billing 月是否还有额度(未真正扣减)
+function monthlyReportCreditRemaining(uid, req) {
+  if (!_M.reportCredits) _M.reportCredits = {};
+  var key = _monthlyBillingKey(uid, req);
+  var used = _M.reportCredits[key] || 0;
+  return Math.max(0, MONTHLY_REPORT_CREDIT - used);
+}
+
+// 月会员完整报告 credit: 尝试消费一次。成功返回 true 并落盘; 无额度返回 false。
+function consumeMonthlyReportCredit(uid, req) {
+  if (!uid) return false;
+  if (!_M.reportCredits) _M.reportCredits = {};
+  var key = _monthlyBillingKey(uid, req);
+  var used = _M.reportCredits[key] || 0;
+  if (used >= MONTHLY_REPORT_CREDIT) return false;
+  _M.reportCredits[key] = used + 1;
+  _persist();
+  return true;
+}
+
+// 🔴 P0-C修复(专家复审): 报告生成(LLM)失败时回补已扣的 credit,防"扣了额度没拿到报告"漏账。
+//   端点在 gateReportAccess 返回 viaCredit=true 后, 若 LLM 抛错, 调此回滚。幂等下限保护到 0。
+function refundMonthlyReportCredit(uid, req) {
+  if (!uid) return false;
+  if (!_M.reportCredits) _M.reportCredits = {};
+  var key = _monthlyBillingKey(uid, req);
+  var used = _M.reportCredits[key] || 0;
+  if (used <= 0) return false;
+  _M.reportCredits[key] = used - 1;
+  _persist();
+  return true;
 }
 
 function hasFullAccess(req, productKeys) {
@@ -221,6 +320,42 @@ function hasFullAccess(req, productKeys) {
   } catch (e) { return false; }
 }
 
+// 🔴 P0-NEW修复(第二轮复审): 月会员"每月1份完整报告 credit"只覆盖【标准报告】,
+//   不能用 1 个 $9.9 credit 换走高端单品($69.9阴宅/大师深度/大师批婚)。
+//   CREDIT_INELIGIBLE_KEYS = credit 不可覆盖的高端类目/产品键; 命中则月会员不走 credit,
+//   必须单买对应高端产品或升全解锁会员。标准报告(八字/紫微/合婚/风水/塔罗/占星/姓名/
+//   六爻/奇门/大六壬/灵签/前世/高考志愿/jyotish/maya/tibet 等)照常吃 credit。
+var CREDIT_INELIGIBLE_KEYS = {
+  'yinzhai': true, '阴宅': true, 'yinzhai_full': true,   // $69.9 阴宅
+  'bazi_vip': true,                                       // $39.9 大师深度(另有 detectBaziVip 独立门,这里双保险)
+  'hehun_master': true,                                   // 大师批婚(另由 hehunTier 独立分档)
+};
+
+// ── 报告级访问判定(0817·会员分级核心)──
+// 返回 { full: bool, viaCredit: bool, tier: 'unlimited'|'monthly'|'paid'|'referral'|null }
+// 优先级: 单买/全解锁会员/裂变 → full(不耗 credit); 否则 月会员且本月还有 credit
+//   且该报告属"credit可覆盖的标准报告" → 消费1个 credit → full。
+// 报告端点用此判定; 聊天/每日运势不要用(它们各有自己的限量逻辑,别误耗报告 credit)。
+function gateReportAccess(req, productKeys) {
+  // 先复用 hasFullAccess: 单买/全解锁会员/裂变奖励
+  if (hasFullAccess(req, productKeys)) {
+    return { full: true, viaCredit: false, tier: 'paid' };
+  }
+  // 月会员: 消费本 billing 月的报告 credit —— 但高端单品不在 credit 覆盖范围
+  var uid = _uidFromReq(req);
+  if (uid && memberTier(req) === 'monthly') {
+    var creditEligible = !(productKeys || []).some(function(k) { return CREDIT_INELIGIBLE_KEYS[k]; });
+    if (creditEligible && consumeMonthlyReportCredit(uid, req)) {
+      // 🔴 P0-C: 打标记, 供端点在 LLM 失败时回补 credit(_refundCreditOnFail)。
+      try { req._syCreditUid = uid; } catch (e) {}
+      return { full: true, viaCredit: true, tier: 'monthly' };
+    }
+    // 月会员但 credit 用尽 / 或请求的是高端单品 → 走免费预览(高端单品端点自行 402)
+    return { full: false, viaCredit: false, tier: 'monthly' };
+  }
+  return { full: false, viaCredit: false, tier: null };
+}
+
 // 合婚三档分档: 返回 'master' | 'full' | 'basic' | null
 // 参照 hasFullAccess 取 token→user orders→过滤未过期订单
 function hehunTier(req) {
@@ -237,9 +372,17 @@ function hehunTier(req) {
     orders.forEach(function(o) { owned[String(o.product || '')] = true; });
     // master: 拥有 hehun_master
     if (owned['hehun_master']) return 'master';
-    // full: 会员类(member_*) 或 hehun/hehun_full/hehun_kr_full
-    var fullKeys = SUBSCRIBE_PRODUCTS.concat(['member_lifetime', 'hehun', 'hehun_full', 'hehun_kr_full']);
+    // full: 全解锁会员(年/季/3年/终身/日) 或 单买 hehun/hehun_full/hehun_kr_full
+    // 🔴 0817: 不再用 SUBSCRIBE_PRODUCTS(含 member_monthly)。月会员改走 credit,见下。
+    var fullKeys = FULL_MEMBER_PRODUCTS.concat(['member_lifetime', 'hehun', 'hehun_full', 'hehun_kr_full']);
     for (var i = 0; i < fullKeys.length; i++) { if (owned[fullKeys[i]]) return 'full'; }
+    // 月会员: 消费本月报告 credit → full; credit 用尽则降级(basic/裂变/teaser)
+    if (owned['member_monthly']) {
+      if (consumeMonthlyReportCredit(t.user_id, req)) {
+        try { req._syCreditUid = t.user_id; } catch (e) {} // 🔴 P0-C 失败回补标记
+        return 'full';
+      }
+    }
     // basic: 拥有 hehun_basic
     if (owned['hehun_basic']) return 'basic';
     // 裂变奖励: 未使用的 referral_basic 消费一次 → basic
@@ -247,6 +390,30 @@ function hehunTier(req) {
       var reward = _M.rewards.find(function(r) { return r.user_id === t.user_id && r.type === 'referral_basic' && !r.used; });
       if (reward) { reward.used = true; _persist(); return 'basic'; }
     }
+    return null;
+  } catch (e) { return null; }
+}
+
+// 🔴 P0-B修复(专家复审): hehunTier 会消费月会员 credit 与 referral 奖励(有副作用)。
+//   只读场景(如 book-consult 只判断是否 master)必须用此版本, 绝不扣 credit/奖励。
+//   返回 'master' | 'full' | 'basic' | null。
+function hehunTierReadonly(req) {
+  try {
+    var auth = req.headers['authorization'] || '';
+    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
+    if (!token) return null;
+    if (process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN) return 'master';
+    var t = getToken.get(token);
+    if (!t) return null;
+    var orders = (getUserOrders.all(t.user_id) || []).filter(function(o) { return !_isExpired(o); });
+    var owned = {};
+    orders.forEach(function(o) { owned[String(o.product || '')] = true; });
+    if (owned['hehun_master']) return 'master';
+    var fullKeys = FULL_MEMBER_PRODUCTS.concat(['member_lifetime', 'hehun', 'hehun_full', 'hehun_kr_full']);
+    for (var i = 0; i < fullKeys.length; i++) { if (owned[fullKeys[i]]) return 'full'; }
+    // 月会员本月还有 credit → 视作可升 full(但不在此扣减)
+    if (owned['member_monthly'] && monthlyReportCreditRemaining(t.user_id, req) > 0) return 'full';
+    if (owned['hehun_basic']) return 'basic';
     return null;
   } catch (e) { return null; }
 }
@@ -272,9 +439,12 @@ function hasVipAccess(req, product) {
 }
 
 // 付费门+免责: 报告端点统一处理
+// 🔴 0817: 改用 gateReportAccess — 全解锁会员/单买/裂变→full; 月会员消费本月1个报告 credit→full;
+//   月会员 credit 用尽 或 未付费 → 免费预览段(前2~3维度约2000字,其余锁定引导付费)。
 function gateMessages(req, keys, messages, fullMax) {
   fullMax = fullMax || 16384;
-  var full = hasFullAccess(req, keys);
+  var acc = gateReportAccess(req, keys);
+  var full = acc.full;
   var addon = '\n\n【必须遵守】报告最后必须附一行免责声明:"本报告由AI生成,仅供参考娱乐,不构成医学、法律、投资或人生重大决策建议。"';
   if (!full) {
     addon += '\n\n【基础版限制】本次为未付费的基础版,只输出最核心的前2~3个维度的概览(合计约2000字),其余维度不要展开。结尾必须明确告知:完整的详细分析(财运/姻缘/事业/大运流年/开运等)在【完整版报告】中付费解锁。';
@@ -282,7 +452,7 @@ function gateMessages(req, keys, messages, fullMax) {
   var out = (messages || []).map(function(m) {
     return (m && m.role === 'system') ? { role: 'system', content: (m.content || '') + addon } : m;
   });
-  return { messages: out, maxTokens: full ? fullMax : 3500, full: full };
+  return { messages: out, maxTokens: full ? fullMax : 3500, full: full, viaCredit: acc.viaCredit, memberTier: acc.tier };
 }
 
 // ── 订单操作 helpers ──
@@ -297,18 +467,29 @@ function _updOrderExpiry(oNo, expIso) {
 }
 
 function _setOrExtendSub(pid, email, expIso, stripeSessionId) {
+  // 🔴 P0-D修复(专家复审): 续费订单必须回填 user_id, 否则会员分级(memberTier/credit/getUserOrders
+  //   全靠 user_id 匹配)在首期到期后查不到续费订单 → 已续费老会员被判成免费用户,报告/无限聊天全掉线。
+  //   按 email 反查用户回填; 查不到则退回 null(保持旧行为,不阻断建单)。
+  var uid = null;
+  if (email) {
+    var u = getUserByEmail.get(email);
+    if (u) uid = u.id;
+  }
+
   // P1修复：幂等性检查 — 若已存在相同sessionId的订单，直接返回(防webhook重复投递)
   if (stripeSessionId) {
     const existing = _M.orders.find(x => x.stripe_session_id === stripeSessionId && x.product === pid);
     if (existing) {
       console.log('[store] Idempotent: skipping duplicate order', stripeSessionId);
-      existing.expires_at = expIso; _persist(); return;
+      existing.expires_at = expIso;
+      if (uid && existing.user_id == null) existing.user_id = uid; // 补历史缺失
+      _persist(); return;
     }
   }
 
   _M.orders.push({
     id: _M._id.o++, order_no: 'SY-SUB-' + Date.now() + '-' + crypto.randomBytes(3).toString('hex'),
-    product: pid, amount: 0, currency: 'usd', user_id: null, donor_name: '', contact: email, wish_text: '',
+    product: pid, amount: 0, currency: 'usd', user_id: uid, donor_name: '', contact: email, wish_text: '',
     stripe_session_id: stripeSessionId || '', payment_status: 'completed', expires_at: expIso, created_at: new Date().toISOString()
   });
   _persist();
@@ -441,13 +622,13 @@ function updateStreak(userId) {
 // ── Product prices ──
 const PRODUCTS = {
   bazi_basic:      { name: '基础命盘',         amount: 990,    amountCny: 1990,  desc: '日主+五行+今年运势' },
-  bazi_full:       { name: '完整命盘',          amount: 1900,   amountCny: 3990,  desc: '六维+十年大运+流月', amountKrw: 9900 },
+  bazi_full:       { name: '完整命盘',          amount: 1990,   amountCny: 3990,  desc: '六维+十年大运+流月', amountKrw: 9900 },
   bazi_vip:        { name: '深度批命',          amount: 3990,   amountCny: 7990,  desc: '大师级·终身档案', amountKrw: 19900 },
   saju_kr_full:    { name: '사주팔자 완전 분석', amount: 750,    amountCny: 5500,  desc: '사주 완전 분석 보고서 (천간지지 + 대운 + 유년)', amountKrw: 9900 },
   daily_sub:       { name: '每日天机订阅',      amount: 490,    amountCny: 1990,  desc: '每日天机·单功能订阅' },
   tarot:           { name: '塔罗占卜',          amount: 390,    amountCny: 990,   desc: 'AI塔罗解读' },
   tarot_3:         { name: '塔罗三张牌阵',      amount: 900,    amountCny: 990,   desc: 'AI深度三张牌解读（过去·现在·未来）' },
-  tarot_5:         { name: '塔罗五芒星牌阵',    amount: 1900,   amountCny: 1990,  desc: 'AI五芒星深度解读·五维度全析' },
+  tarot_5:         { name: '塔罗五芒星牌阵',    amount: 1990,   amountCny: 1990,  desc: 'AI五芒星深度解读·五维度全析' },
   ziwei_full:      { name: '紫微斗数深度解读',  amount: 1990,   amountCny: 3990,  desc: '十二宫位+大运+流年完整批命' },
   duanshi_full:    { name: '断事问卦完整解读',  amount: 990,    amountCny: 990,   desc: '六爻起卦·吉凶断事·行动建议' },
   hehun_basic:     { name: '合婚·基础版',       amount: 490,    amountCny: 990,   desc: '四柱+合婚总分+核心结论预览', amountKrw: 1900 },
@@ -455,8 +636,8 @@ const PRODUCTS = {
   hehun_master:    { name: '合婚·大师批婚',     amount: 4990,   amountCny: 19900, desc: '完整+5年感情流年+择日+化解+命理师私语+真人连麦', amountKrw: 24900 },
   hehun_full:      { name: 'Compatibility Reading', amount: 1990, amountCny: 3990, desc: 'Full BaZi compatibility analysis', amountKrw: 19900 },
   hehun_kr_full:   { name: '궁합 완전 분석',    amount: 1500,   amountCny: 3990,  desc: '궁합 완전 분석 보고서', amountKrw: 19900 },
-  member_monthly:  { name: '月度会员',          amount: 990,    amountCny: 1990,  desc: '全部AI占算无限次·完整报告不锁定', amountKrw: 9900 },
-  member_yearly:   { name: '年度会员',          amount: 9900,   amountCny: 9900,  desc: '全报告无限+每月1次大师深度·合婚报告·水晶挂件' },
+  member_monthly:  { name: '月度会员',          amount: 990,    amountCny: 1990,  desc: 'Rún每日5句·每月1份完整报告·每日运势', amountKrw: 9900 },
+  member_yearly:   { name: '年度会员',          amount: 9900,   amountCny: 9900,  desc: '无限畅聊+全报告无限+每月1次大师深度' },
   member_lifetime: { name: '终身会员',          amount: 18800,  amountCny: 68800, desc: '永久畅享·全部报告·专属档案' },
   member_daily:    { name: '日会员',            amount: 299,    amountCny: 990,   desc: '24小时无限使用' },
   member_quarterly:{ name: '季会员',            amount: 2490,   amountCny: 6900,  desc: '三个月畅享' },
@@ -499,6 +680,10 @@ module.exports = {
   // 付费墙
   UNLOCK_BY_CATEGORY, SUBSCRIBE_PRODUCTS, hasFullAccess, hasVipAccess, hehunTier, gateMessages,
   _isExpired,
+  // 会员分级(0817)
+  FULL_MEMBER_PRODUCTS, MONTHLY_MEMBER_PRODUCTS, MONTHLY_REPORT_CREDIT, MONTHLY_CHAT_DAILY_LIMIT,
+  memberTier, gateReportAccess, hehunTierReadonly,
+  monthlyReportCreditRemaining, consumeMonthlyReportCredit, refundMonthlyReportCredit,
   // 订单操作
   _updOrder, _updOrderExpiry, _setOrExtendSub,
   _findOrder, _insCnOrder, _completeCnOrder, _insSub, _allOrders, _insJossOrder,
