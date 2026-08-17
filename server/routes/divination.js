@@ -619,7 +619,7 @@ B方：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined ? p2Hour+'时'
 ## 六、气场合度（满分10分）
 ## 七、生育子女缘分（满分5分）
 ## 八、双方父母家庭兼容性（满分5分）
-## 九、最佳结婚年份（满分5分）
+## 九、最佳结婚年份与3个推荐吉日（满分5分·必须给出3个具体吉日：年份+月份，每个各附一句理由）
 ## 十、婚后需要注意的3个事项
 ## 十一、合婚古诀引用
 ## 十二、一句话结论`
@@ -780,7 +780,7 @@ Analysis sections:
 ## 6. Who Leads, Who Grounds — Energy Dynamics
 ## 7. Family & Children Prospects
 ## 8. Extended Family Compatibility
-## 9. Best Marriage Timing & Auspicious Years
+## 9. Best Marriage Timing — Auspicious Years & 3 Recommended Dates (you MUST give 3 specific auspicious dates: year + month, each with a one-line reason)
 ## 10. Top 3 Things to Work On After Marriage
 ## 11. Classical BaZi Compatibility Wisdom
 ## 12. Final Verdict — Should You Build a Life Together?
@@ -813,7 +813,7 @@ Use the pre-computed compatibility score provided. Give specific year recommenda
 ## 6. 누가 이끌고 누가 안정시키나 — 에너지 역학
 ## 7. 자녀 및 가정운
 ## 8. 양가 가족과의 궁합
-## 9. 최적 결혼 시기와 길일
+## 9. 최적 결혼 시기와 추천 길일 3개 (반드시 구체적인 길일 3개: 연도+월, 각각 이유 한 줄 포함)
 ## 10. 결혼 후 꼭 주의해야 할 3가지
 ## 11. 고전 사주 궁합 원리
 ## 12. 최종 결론 — 이 인연, 맺어야 할까요?
@@ -862,7 +862,7 @@ Use the pre-computed compatibility score provided. Give specific year recommenda
 ## 六、气场合度（谁带动谁，谁让谁稳定）
 ## 七、生育子女缘分与家庭运
 ## 八、双方原生家庭兼容性
-## 九、最佳结婚年份与时机
+## 九、最佳结婚年份与3个推荐吉日（必须给出3个具体吉日：年份+月份，每个各附一句理由）
 ## 十、婚后最需要注意的3件事
 ## 十一、合婚古诀引用与命理依据
 ## 十二、一句话结论——这段婚姻值得进入吗
@@ -902,7 +902,7 @@ Use the pre-computed compatibility score provided. Give specific year recommenda
 ## 六、气场合度（谁带动谁，谁让谁稳定）
 ## 七、生育子女缘分与家庭运
 ## 八、双方原生家庭兼容性
-## 九、最佳结婚年份与时机
+## 九、最佳结婚年份与3个推荐吉日（必须给出3个具体吉日：年份+月份，每个各附一句理由）
 ## 十、婚后最需要注意的3件事
 ## 十一、合婚古诀引用与命理依据
 ## 十二、一句话结论——这段婚姻值得进入吗
