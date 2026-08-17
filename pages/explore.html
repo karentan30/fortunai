@@ -188,6 +188,8 @@ button{font-family:inherit}
   <div class="badge">✦ The everything-oracle</div>
   <h1 class="serif">Every oracle worth asking,<br><em>all in one place</em></h1>
   <p class="hero-sub">The most complete divination hub — from a quick <b>Tarot pull</b> to your entire <b>life chart</b>. And every reading is <b>real</b>: charts are cast by precise engines, never guessed.</p>
+  <a href="bazi-en.html" style="display:inline-block;margin-top:18px;padding:15px 30px;border-radius:30px;background:linear-gradient(135deg,#d8b65a,#c9a84c,#b8923a);color:#3a2e0e;font-weight:700;font-size:16px;text-decoration:none;box-shadow:0 6px 20px rgba(201,168,76,.36)">See your life chart →</a>
+  <div style="margin-top:10px;font-size:12px;color:#8a8578">11 oracles · one place · free preview to start</div>
 </header>
 
 <div class="ai-note z1"><span>🤖</span><div><b>AI-assisted, engine-accurate.</b> An AI writes your reading in plain English — but every birth chart is computed by a precise astronomical / calendar engine, so nothing is invented.</div></div>
@@ -454,6 +456,22 @@ button{font-family:inherit}
   var stage=btn.closest('.ritual-card'),sy=null;
   stage.addEventListener('touchstart',function(e){sy=e.touches[0].clientY;},{passive:true});
   stage.addEventListener('touchend',function(e){ if(sy!==null&&(sy-e.changedTouches[0].clientY)>40) toss(); sy=null; },{passive:true});
+})();
+
+/* 卡片路由：已上线的真跳，未建的给 coming-soon（不死链） */
+(function(){
+  document.querySelectorAll('.card').forEach(function(card){
+    card.addEventListener('click',function(){
+      var name=(card.querySelector('.card-name')||{}).textContent||'';
+      if(/Four Pillars/i.test(name)){ location.href='bazi-en.html'; return; }
+      var t=document.createElement('div');
+      t.textContent='✦ '+name.trim()+' — coming soon. Start with your Four Pillars →';
+      t.style.cssText='position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9999;max-width:90%;background:#1f1a14;color:#f3ecdd;padding:12px 18px;border-radius:12px;font-size:13px;box-shadow:0 6px 24px rgba(0,0,0,.25);cursor:pointer';
+      t.onclick=function(){ location.href='bazi-en.html'; };
+      document.body.appendChild(t);
+      setTimeout(function(){ t.remove(); },3200);
+    });
+  });
 })();
 </script>
 </body>
