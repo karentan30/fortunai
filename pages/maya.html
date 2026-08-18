@@ -191,9 +191,51 @@ body::before { background: radial-gradient(ellipse at 50% 0%, rgba(45,122,74,0.3
 .section-content strong { color: #c4622d; }
 .report-back { color: rgba(61,175,160,0.6); }
 
+/* ══ 精装阅读增量升级 ══ */
+#readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.25);opacity:0;transition:opacity .3s;pointer-events:none}
+#readProgressWrap.show{opacity:1}
+#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a);box-shadow:0 0 8px rgba(201,168,76,0.5);transition:width .12s ease-out}
+#readProgressChapter{position:fixed;top:8px;right:12px;z-index:1200;font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:0.12em;color:rgba(232,208,138,0.85);background:rgba(10,8,4,0.72);border:1px solid rgba(201,168,76,0.22);border-radius:20px;padding:3px 11px;opacity:0;transition:opacity .3s;pointer-events:none;backdrop-filter:blur(6px)}
+#readProgressChapter.show{opacity:1}
+.chapter-cover{position:relative;margin:20px 4px 10px;border-radius:14px;overflow:hidden;min-height:168px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:fadeUp 0.6s ease both;background:#141018}
+.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.62;filter:saturate(0.92)}
+.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,6,3,0.35) 0%,rgba(8,6,3,0.55) 45%,rgba(8,6,3,0.9) 100%)}
+.chapter-cover-body{position:relative;padding:18px 18px 16px}
+.chapter-cover-num{font-family:'Cormorant Garamond','Noto Serif SC',serif;font-size:12px;letter-spacing:0.32em;color:rgba(232,208,138,0.82);margin-bottom:5px}
+.chapter-cover-num::before{content:'';display:inline-block;width:22px;height:1px;background:linear-gradient(90deg,rgba(201,168,76,0.7),transparent);vertical-align:middle;margin-right:8px}
+.chapter-cover-title{font-family:'Noto Serif SC',serif;font-size:21px;font-weight:600;letter-spacing:0.06em;color:#f3e6c0;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
+.chapter-cover-lead{font-size:12px;line-height:1.7;letter-spacing:0.03em;color:rgba(235,225,195,0.72);margin-top:7px;max-width:92%}
+.drop-cap::first-letter{float:left;font-family:'Noto Serif SC',Georgia,serif;font-size:3.4em;line-height:0.82;font-weight:700;color:#e8d08a;margin:0.04em 0.12em 0 0;text-shadow:0 2px 10px rgba(201,168,76,0.28)}
+.pull-quote{position:relative;margin:16px 10px;padding:6px 4px 6px 20px;text-align:center}
+.pull-quote::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,transparent,rgba(201,168,76,0.7),transparent);border-radius:2px}
+.pull-quote-text{font-family:'Noto Serif SC',serif;font-size:16px;font-weight:500;line-height:1.75;letter-spacing:0.04em;color:#e8d08a;text-shadow:0 1px 8px rgba(201,168,76,0.18)}
+.pull-quote-mark{font-family:'Cormorant Garamond',serif;font-size:26px;color:rgba(201,168,76,0.4);line-height:0}
+.hl-note{margin:12px 0;padding:13px 15px;background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03));border:1px solid rgba(201,168,76,0.34);border-left:3px solid #c9a84c;border-radius:10px;font-size:12.5px;line-height:1.9;letter-spacing:0.03em;color:rgba(235,225,195,0.92);box-shadow:0 2px 14px rgba(201,168,76,0.06)}
+.hl-note b,.hl-note strong{color:#e8d08a}
+.chapter-toc{margin:14px 4px 6px;padding:16px 16px 12px;background:linear-gradient(160deg,rgba(18,14,8,0.9),rgba(10,8,4,0.95));border:1px solid rgba(201,168,76,0.22);border-radius:14px;animation:fadeUp 0.5s ease both}
+.chapter-toc-title{font-size:12px;letter-spacing:0.2em;color:rgba(201,168,76,0.7);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.chapter-toc-item{display:flex;align-items:baseline;gap:10px;padding:8px 2px;border-bottom:1px dotted rgba(201,168,76,0.14);text-decoration:none;transition:all .2s}
+.chapter-toc-item:last-child{border-bottom:none}
+.chapter-toc-idx{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(201,168,76,0.6);min-width:26px}
+.chapter-toc-label{flex:1;font-size:13px;letter-spacing:0.04em;color:rgba(232,220,190,0.9)}
+.chapter-toc-arrow{font-size:12px;color:rgba(201,168,76,0.45)}
+#floatTocBtn{position:fixed;right:16px;bottom:96px;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#8a6420,#c9a84c);border:none;color:rgba(14,10,4,0.95);font-size:18px;cursor:pointer;z-index:1100;box-shadow:0 4px 16px rgba(201,168,76,0.4);display:none;align-items:center;justify-content:center}
+#floatTocBtn.show{display:flex}
+#floatTocPanel{display:none;position:fixed;right:16px;bottom:150px;z-index:1100;background:rgba(14,11,6,0.97);border:1px solid rgba(201,168,76,0.4);border-radius:12px;padding:14px;max-height:56vh;overflow-y:auto;width:min(230px,calc(100vw - 32px));box-shadow:0 10px 30px rgba(0,0,0,0.6);backdrop-filter:blur(8px)}
+#floatTocPanel.show{display:block;animation:fadeUp 0.25s ease both}
+#floatTocPanel .ft-title{font-size:12px;letter-spacing:0.16em;color:rgba(201,168,76,0.75);margin-bottom:10px}
+#floatTocPanel a{display:flex;gap:8px;color:rgba(232,220,190,0.85);text-decoration:none;padding:7px 0;font-size:12.5px;border-bottom:1px solid rgba(201,168,76,0.08);line-height:1.4}
+#floatTocPanel a:last-child{border-bottom:none}
+#floatTocPanel a .ft-idx{color:rgba(201,168,76,0.55);font-family:'Cormorant Garamond',serif}
+.rv-viz-section{margin:0 4px 16px}
+
 </style>
 </head>
 <body>
+<div id="readProgressWrap"><div id="readProgressBar"></div></div>
+<div id="readProgressChapter"></div>
+<button id="floatTocBtn" onclick="toggleFloatToc()">☰</button>
+<div id="floatTocPanel"><div class="ft-title">章节导航</div><div id="floatTocLinks"></div></div>
 
 <button class="back-btn" onclick="history.back()">← Back</button>
 
@@ -476,6 +518,14 @@ function showReport(data, tzolkin, sign, tone, name, year, month, day) {
 
   var html = '';
 
+  // Chapter cover — before kin badge
+  html += '<div class="chapter-cover">' +
+    '<img class="chapter-cover-img" loading="lazy" src="/samples/caijing/art-astrology.png" alt="" onerror="this.style.display=\'none\'">' +
+    '<div class="chapter-cover-veil"></div>' +
+    '<div class="chapter-cover-body"><div class="chapter-cover-num">Kin ' + tzolkin.kin + '</div>' +
+    '<div class="chapter-cover-title">' + sign.name + ' · Tone ' + tone + '</div>' +
+    '<div class="chapter-cover-lead">Your Maya birth Kin — ' + sign.essence + '</div></div></div>';
+
   // Kin Badge
   html += '<div class="kin-badge" style="animation:fadeUp 0.5s ease both">';
   html += '<div class="kin-number">Your Birth Kin</div>';
@@ -494,6 +544,14 @@ function showReport(data, tzolkin, sign, tone, name, year, month, day) {
   });
   html += '</div></div>';
 
+  // Score rings after the day signs wheel
+  if (window.ReportViz) {
+    html += '<div class="rv-viz-section">' + window.ReportViz.renderScoreRing.group([
+      { label: 'Kin', score: tzolkin.kin, max: 260, size: 96, tone: 'gold', sub: sign.name },
+      { label: 'Sacred Tone', score: tone, max: 13, size: 96, tone: 'jade', sub: TONES[tone] },
+    ], 'Your Tzolkin Energy') + '</div>';
+  }
+
   // Free sections
   var freeKeys = ['cosmic_identity', 'nawal_essence', 'tone_teaching'];
   var lockedKeys = ['shadow_gift', 'trecena', 'cycle_260', 'destiny_pattern'];
@@ -511,6 +569,13 @@ function showReport(data, tzolkin, sign, tone, name, year, month, day) {
     html += '</div>';
     html += '<div class="ai-card-body'+(i===0?' open':'')+'"><p class="ai-card-text">'+escHtml(text)+'</p></div>';
     html += '</div>';
+    // After first card body, inject the 260-day timeline
+    if (i === 0 && window.ReportViz) {
+      var steps = TONES.slice(1).map(function(t, idx) {
+        return { label: String(idx+1), sub: t, tone: idx+1 === tone ? 'gold' : 'neutral', current: idx+1 === tone };
+      });
+      html += '<div class="rv-viz-section">' + window.ReportViz.renderTimeline(steps, { title: '260-Day Tzolkin Wheel', subtitle: 'Your Galactic Tone position', foot: 'Your birth tone is highlighted · scroll to see full cycle' }) + '</div>';
+    }
   });
 
   // Locked sections
@@ -537,6 +602,9 @@ function showReport(data, tzolkin, sign, tone, name, year, month, day) {
     });
   }
 
+  // Pull quote before CTA
+  html += '<div class="pull-quote"><span class="pull-quote-mark">"</span><div class="pull-quote-text">You are Kin ' + tzolkin.kin + ' — ' + sign.name + ', Tone ' + tone + ' ' + (TONES[tone] || '') + '</div></div>';
+
   // PDF download button
   html += '<div style="display:flex;justify-content:center;padding:12px 16px 4px"><div class="share-btn pdf-download-btn" onclick="window.print()" style="cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;background:#fff;border:1px solid rgba(196,98,45,0.15);border-radius:14px;padding:12px 16px;min-width:76px;font-family:Inter,sans-serif"><span style="font-size:20px;line-height:1">📄</span><span style="font-size:10px;color:rgba(70,55,38,0.72);letter-spacing:0.06em;white-space:nowrap">Save PDF</span></div></div>';
 
@@ -546,6 +614,16 @@ function showReport(data, tzolkin, sign, tone, name, year, month, day) {
   var rs = document.getElementById('reportScreen');
   rs.innerHTML = html;
   rs.style.display = 'block';
+
+  // Update float TOC links and show button
+  var ftLinks = document.getElementById('floatTocLinks');
+  if (ftLinks) {
+    ftLinks.innerHTML = '<a href="#mayaReport"><span class="ft-idx">I</span>Your Kin</a>' +
+      '<a href="#mayaReport"><span class="ft-idx">II</span>Day Sign</a>' +
+      '<a href="#mayaReport"><span class="ft-idx">III</span>Sacred Tone</a>';
+    var btn = document.getElementById('floatTocBtn');
+    if (btn) btn.classList.add('show');
+  }
 
   // Sticky CTA if locked
   if (locked) showStickyPurchase(data.contextId || '');
@@ -603,6 +681,11 @@ function showStickyPurchase(contextId) {
   var rb = document.getElementById('reportBody'); if (rb) rb.appendChild(cta); else document.body.appendChild(cta);
 }
 
+function toggleFloatToc() {
+  var p = document.getElementById('floatTocPanel');
+  if (p) p.classList.toggle('show');
+}
+
 function purchase(productId, contextId) {
   var token = localStorage.getItem('sy_token') || '';
   fetch('/api/create-checkout', {
@@ -615,5 +698,27 @@ function purchase(productId, contextId) {
   .catch(function(){ showToast('Network error, please try again', 'error'); });
 }
 </script>
+<script>
+// ── 精装阅读体验工具 ──
+(function(){
+  var bar = document.getElementById('readProgressBar');
+  var wrap = document.getElementById('readProgressWrap');
+  if(bar) {
+    document.addEventListener('scroll', function(){
+      var h = document.documentElement.scrollHeight - window.innerHeight;
+      var pct = h > 0 ? (window.scrollY / h * 100) : 0;
+      bar.style.width = Math.min(100, pct) + '%';
+      if(pct > 2) wrap.classList.add('show'); else wrap.classList.remove('show');
+    }, {passive:true});
+  }
+  document.addEventListener('click', function(e){
+    var panel = document.getElementById('floatTocPanel');
+    var btn = document.getElementById('floatTocBtn');
+    if(panel && panel.classList.contains('show') && !panel.contains(e.target) && e.target !== btn)
+      panel.classList.remove('show');
+  });
+})();
+</script>
+<script src="/pages/report-viz.js"></script>
 </body>
 </html>

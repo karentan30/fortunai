@@ -105,11 +105,55 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 /* Stardust */
 .stardust span{position:absolute;width:3px;height:3px;background:rgba(91,191,160,0.5);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+/* ══ 精装阅读体验 ══ */
+#readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.25);opacity:0;transition:opacity .3s;pointer-events:none}
+#readProgressWrap.show{opacity:1}
+#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,#1a4a3a,var(--jade),var(--jade-mid));box-shadow:0 0 8px rgba(91,191,160,0.5);transition:width .12s ease-out}
+#readProgressChapter{position:fixed;top:8px;right:12px;z-index:1200;font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:0.12em;color:rgba(141,217,191,0.85);background:rgba(5,15,10,0.72);border:1px solid rgba(91,191,160,0.3);border-radius:20px;padding:3px 11px;opacity:0;transition:opacity .3s;pointer-events:none;backdrop-filter:blur(6px)}
+#readProgressChapter.show{opacity:1}
+.chapter-cover{position:relative;margin:20px 4px 10px;border-radius:14px;overflow:hidden;min-height:168px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 8px 30px rgba(0,0,0,0.5);animation:fadeUp 0.6s ease both;background:#0a1510}
+.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.55;filter:saturate(0.85)}
+.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,15,10,0.3) 0%,rgba(5,15,10,0.6) 45%,rgba(5,15,10,0.92) 100%)}
+.chapter-cover-body{position:relative;padding:18px 18px 16px}
+.chapter-cover-num{font-family:'Cormorant Garamond','Noto Serif SC',serif;font-size:12px;letter-spacing:0.32em;color:rgba(141,217,191,0.82);margin-bottom:5px}
+.chapter-cover-num::before{content:'';display:inline-block;width:22px;height:1px;background:linear-gradient(90deg,rgba(91,191,160,0.7),transparent);vertical-align:middle;margin-right:8px}
+.chapter-cover-title{font-family:'Noto Serif SC',serif;font-size:21px;font-weight:600;letter-spacing:0.06em;color:#e8f5f0;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
+.chapter-cover-lead{font-size:12px;line-height:1.7;letter-spacing:0.03em;color:rgba(200,240,225,0.72);margin-top:7px;max-width:92%}
+.drop-cap-first{float:left;font-family:'Noto Serif SC',Georgia,serif;font-size:3.4em;line-height:0.82;font-weight:700;color:var(--jade-mid);margin:0.04em 0.12em 0 0;text-shadow:0 2px 10px rgba(91,191,160,0.28)}
+.pull-quote{position:relative;margin:16px 10px;padding:6px 4px 6px 20px;text-align:center}
+.pull-quote::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,transparent,rgba(91,191,160,0.7),transparent);border-radius:2px}
+.pull-quote-text{font-family:'Noto Serif SC',serif;font-size:16px;font-weight:500;line-height:1.75;letter-spacing:0.04em;color:var(--jade-mid);text-shadow:0 1px 8px rgba(91,191,160,0.18)}
+.hl-note{margin:12px 0;padding:13px 15px;background:linear-gradient(135deg,rgba(91,191,160,0.1),rgba(91,191,160,0.03));border:1px solid rgba(91,191,160,0.34);border-left:3px solid var(--jade);border-radius:10px;font-size:12.5px;line-height:1.9;letter-spacing:0.03em;color:rgba(200,240,225,0.92)}
+.hl-note b,.hl-note strong{color:var(--jade-mid)}
+.chapter-toc{margin:14px 4px 6px;padding:16px 16px 12px;background:linear-gradient(160deg,rgba(5,15,10,0.9),rgba(3,10,7,0.95));border:1px solid rgba(91,191,160,0.22);border-radius:14px;animation:fadeUp 0.5s ease both}
+.chapter-toc-title{font-size:12px;letter-spacing:0.2em;color:rgba(91,191,160,0.7);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.chapter-toc-item{display:flex;align-items:baseline;gap:10px;padding:8px 2px;border-bottom:1px dotted rgba(91,191,160,0.14);text-decoration:none;transition:all .2s}
+.chapter-toc-item:last-child{border-bottom:none}
+.chapter-toc-idx{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(91,191,160,0.6);min-width:26px}
+.chapter-toc-label{flex:1;font-size:13px;letter-spacing:0.04em;color:rgba(200,240,225,0.9)}
+.chapter-toc-arrow{font-size:12px;color:rgba(91,191,160,0.45)}
+.rv-frame{background:linear-gradient(160deg,rgba(5,15,10,0.95),rgba(3,10,7,0.98));border:1px solid rgba(91,191,160,0.28);border-radius:14px;padding:16px;margin:12px 0;overflow:hidden}
+.rv-frame-title{font-size:12px;letter-spacing:0.18em;color:rgba(91,191,160,0.75);margin-bottom:8px}
+.rv-frame-sub{font-size:11px;color:rgba(200,240,225,0.5);letter-spacing:0.06em;margin-bottom:10px}
+.rv-frame-foot{font-size:10px;color:rgba(91,191,160,0.4);margin-top:10px;letter-spacing:0.06em;text-align:center}
+/* Qimen 9-palace static display */
+.qimen-grid-wrap{margin:12px 4px;padding:12px;background:linear-gradient(160deg,rgba(5,15,10,0.95),rgba(3,10,7,0.98));border:1px solid rgba(91,191,160,0.28);border-radius:14px}
+.qimen-grid-title{font-size:11px;letter-spacing:0.2em;color:rgba(91,191,160,0.7);margin-bottom:10px;text-align:center}
+.qimen-9grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.q9cell{background:rgba(91,191,160,0.06);border:1px solid rgba(91,191,160,0.15);border-radius:8px;padding:8px 4px;text-align:center;min-height:64px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px}
+.q9cell.center{border-color:rgba(201,168,76,0.3);background:rgba(201,168,76,0.06)}
+.q9cell-dir{font-size:9px;color:rgba(141,217,191,0.55);letter-spacing:0.08em}
+.q9cell-star{font-size:18px;font-weight:700;color:var(--jade-mid)}
+.q9cell-gate{font-size:10px;color:rgba(201,168,76,0.7);letter-spacing:0.06em}
+.q9cell-deity{font-size:9px;color:rgba(200,240,225,0.4)}
 </style>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/css/common.css">
+<script src="/pages/report-viz.js"></script>
 </head>
 <body>
+<div id="readProgressWrap"><div id="readProgressBar"></div></div>
+<div id="readProgressChapter"></div>
 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题" style="z-index:999">🌙</button>
 
 <div class="stardust" id="stardust"></div>
@@ -298,27 +342,142 @@ function renderReport(text, question) {
   var secs = parseSections(text);
   var el = document.getElementById('reportContent');
   var html = '';
+
+  // ── Chapter cover ──
+  html += '<div class="chapter-cover" style="margin:12px 16px 10px">';
+  html += '<img class="chapter-cover-img" src="/samples/caijing/art-fortune-year.png" alt="" onerror="this.style.display=\'none\'">';
+  html += '<div class="chapter-cover-veil"></div>';
+  html += '<div class="chapter-cover-body">';
+  html += '<div class="chapter-cover-num">奇门遁甲 · QI MEN DUN JIA</div>';
+  html += '<div class="chapter-cover-title">天机已演 · 局象呈现</div>';
+  html += '<div class="chapter-cover-lead">' + question.replace(/</g,'&lt;').substring(0,60) + '</div>';
+  html += '</div></div>';
+
+  // ── 九宫 grid ──
+  var qimenGridHtml = '';
+  if (window.ReportViz && typeof window.ReportViz.renderFlyingStarGrid === 'function') {
+    try {
+      qimenGridHtml = window.ReportViz.renderFlyingStarGrid({
+        title: '奇门局盘 · 九宫分布',
+        subtitle: '参考布局',
+        layout: 'luoshu',
+        cells: [
+          {star:4, dir:'东南', name:'巽', luck:'good', label:'文昌'},
+          {star:9, dir:'正南', name:'离', luck:'good', label:'明星', current:true},
+          {star:2, dir:'西南', name:'坤', luck:'bad', label:'凶门'},
+          {star:3, dir:'正东', name:'震', luck:'good', label:'生门'},
+          {star:5, dir:'中宫', name:'中', luck:'neutral', label:'太乙'},
+          {star:7, dir:'正西', name:'兑', luck:'bad', label:'伤门'},
+          {star:8, dir:'东北', name:'艮', luck:'good', label:'旺气'},
+          {star:1, dir:'正北', name:'坎', luck:'neutral', label:'休门'},
+          {star:6, dir:'西北', name:'乾', luck:'good', label:'开门'}
+        ]
+      });
+    } catch(e) { qimenGridHtml = ''; }
+  }
+  if (qimenGridHtml) {
+    html += '<div style="padding:0 16px">' + qimenGridHtml + '</div>';
+  } else {
+    // Static fallback 九宫
+    var cells9 = [
+      {dir:'东南',name:'巽',star:'四',gate:'文昌',deity:''},
+      {dir:'正南',name:'离',star:'九',gate:'明星',deity:'current'},
+      {dir:'西南',name:'坤',star:'二',gate:'凶门',deity:''},
+      {dir:'正东',name:'震',star:'三',gate:'生门',deity:''},
+      {dir:'中宫',name:'中',star:'五',gate:'太乙',deity:'center'},
+      {dir:'正西',name:'兑',star:'七',gate:'伤门',deity:''},
+      {dir:'东北',name:'艮',star:'八',gate:'旺气',deity:''},
+      {dir:'正北',name:'坎',star:'一',gate:'休门',deity:''},
+      {dir:'西北',name:'乾',star:'六',gate:'开门',deity:''}
+    ];
+    html += '<div class="qimen-grid-wrap" style="margin:12px 16px">';
+    html += '<div class="qimen-grid-title">奇门局盘 · 九宫分布</div>';
+    html += '<div class="qimen-9grid">';
+    for (var ci = 0; ci < cells9.length; ci++) {
+      var cc = cells9[ci];
+      var isCenter = cc.deity === 'center';
+      html += '<div class="q9cell' + (isCenter ? ' center' : '') + '">';
+      html += '<div class="q9cell-dir">' + cc.dir + '</div>';
+      html += '<div class="q9cell-star">' + cc.name + '</div>';
+      html += '<div class="q9cell-gate">' + cc.gate + '</div>';
+      html += '<div class="q9cell-deity">' + cc.star + '</div>';
+      html += '</div>';
+    }
+    html += '</div></div>';
+  }
+
+  // ── TOC ──
+  if (secs.length > 1) {
+    html += '<div class="chapter-toc" style="margin:14px 16px 6px">';
+    html += '<div class="chapter-toc-title"><span>▸</span>本局要目</div>';
+    for (var ti = 0; ti < secs.length; ti++) {
+      var ts = secs[ti];
+      var tidx = String(ti + 1).padStart(2, '0');
+      html += '<a class="chapter-toc-item" href="#qsec'+ti+'" onclick="var t=document.getElementById(\'qsec'+ti+'\');if(t){t.scrollIntoView({behavior:\'smooth\'});return false;}">';
+      html += '<span class="chapter-toc-idx">' + tidx + '</span>';
+      html += '<span class="chapter-toc-label">' + (ts.emoji||'') + ' ' + (ts.title||'局象解读') + '</span>';
+      html += '<span class="chapter-toc-arrow">›</span>';
+      html += '</a>';
+    }
+    html += '</div>';
+  }
+
+  // ── Sections ──
   if (secs.length > 0) {
     html += '<div class="ai-section-wrap">';
     for (var j = 0; j < secs.length; j++) {
       var s = secs[j];
       var bg = SECTION_ICONS[s.emoji] || 'rgba(91,191,160,0.2)';
-      html += '<div class="ai-section open">';
+      var bodyText = s.lines.join('\n');
+      var isFirst = j === 0;
+      var isSecond = j === 1;
+      var isLast = j === secs.length - 1 && secs.length > 1;
+      html += '<div class="ai-section open" id="qsec'+j+'">';
       html += '<div class="ai-section-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ai-section-arrow\').classList.toggle(\'open\')">';
       html += '<div class="ai-section-icon" style="background:'+bg+'">'+(s.emoji||'📜')+'</div>';
       html += '<div class="ai-section-title">'+(s.title||'局象解读')+'</div>';
       html += '<div class="ai-section-arrow">⬇</div>';
       html += '</div>';
-      html += '<div class="ai-section-body open"><div class="ai-section-text">'+s.lines.join('\n')+'</div></div>';
-      html += '</div>';
+      html += '<div class="ai-section-body open">';
+
+      if (isFirst && bodyText.length > 20) {
+        // Drop cap on first char of first section
+        var firstChar = bodyText.charAt(0);
+        var rest = bodyText.substring(1);
+        html += '<div class="ai-section-text"><span class="drop-cap-first">' + firstChar + '</span>' + rest + '</div>';
+      } else if (isSecond && bodyText.length > 30) {
+        // Pull quote: take first sentence or up to 50 chars
+        var pqMatch = bodyText.match(/^([^。！？\n]{10,50}[。！？]?)/);
+        var pqText = pqMatch ? pqMatch[1] : bodyText.substring(0, 50);
+        var pqRest = bodyText.substring(pqText.length);
+        html += '<div class="pull-quote"><div class="pull-quote-text">' + pqText + '</div></div>';
+        if (pqRest.trim()) {
+          html += '<div class="ai-section-text">' + pqRest + '</div>';
+        }
+      } else if (isLast) {
+        // Highlight note on last section
+        html += '<div class="hl-note">' + bodyText + '</div>';
+      } else {
+        html += '<div class="ai-section-text">' + bodyText + '</div>';
+      }
+
+      html += '</div></div>';
     }
     html += '</div>';
   } else {
     html += '<div style="padding:0 16px;font-size:11px;color:var(--text-dim);letter-spacing:0.04em;line-height:1.9;white-space:pre-wrap">'+text+'</div>';
   }
+
   el.innerHTML = html;
   document.getElementById('reportScreen').dataset.contextId = lastContextId || '';
   document.getElementById('reportScreen').classList.add('show');
+
+  // Activate progress bar
+  var pw = document.getElementById('readProgressWrap');
+  var pc = document.getElementById('readProgressChapter');
+  if (pw) pw.classList.add('show');
+  if (pc) { pc.textContent = '奇门遁甲 · 局象'; pc.classList.add('show'); }
+
   injectDisclaimer('reportScreen');
 }
 
@@ -388,6 +547,19 @@ function injectDisclaimer(containerId) {
   d.innerHTML = '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto;width:80%"></div><div style="font-size:10px;color:rgba(201,168,76,0.4);text-align:center;letter-spacing:0.06em;padding:10px 20px">仅供娱乐参考，切勿沉迷。命理是可能性的艺术，不是定数。</div>';
   c.appendChild(d);
 }
+
+(function(){
+  var wrap=document.getElementById('readProgressWrap');
+  var bar=document.getElementById('readProgressBar');
+  function update(){
+    var rpt=document.getElementById('reportScreen');
+    if(!rpt||!rpt.classList.contains('show'))return;
+    var h=document.documentElement;
+    var pct=Math.min(100,(h.scrollTop/Math.max(1,h.scrollHeight-h.clientHeight))*100);
+    bar.style.width=pct+'%';
+  }
+  document.addEventListener('scroll',update,{passive:true});
+})();
 </script>
 <script>
 (function(){

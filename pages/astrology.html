@@ -189,6 +189,92 @@ select option { background: var(--deep-mid); color: var(--star); }
   0%, 100% { opacity: 0.85; }
   50% { opacity: 1; }
 }
+
+/* ══════════ 精装报告阅读体验（对齐 bazi.html·深色星空变体） ══════════ */
+/* 顶部阅读进度条 */
+#readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.3);opacity:0;transition:opacity .3s;pointer-events:none}
+#readProgressWrap.show{opacity:1}
+#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,#2a5c8a,#4a8cc4,#7ab8e8);box-shadow:0 0 8px rgba(74,140,196,0.5);transition:width .12s ease-out}
+#readProgressChapter{position:fixed;top:8px;right:12px;z-index:1200;font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:0.12em;color:rgba(122,184,232,0.9);background:rgba(6,13,26,0.78);border:1px solid rgba(74,140,196,0.28);border-radius:20px;padding:3px 11px;opacity:0;transition:opacity .3s;pointer-events:none;backdrop-filter:blur(6px)}
+#readProgressChapter.show{opacity:1}
+
+/* 章节封面卡 */
+.chapter-cover{position:relative;margin:18px 0 10px;border-radius:14px;overflow:hidden;min-height:160px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 8px 30px rgba(0,0,0,0.5);animation:fadeUp 0.6s ease both;background:#0a1428}
+.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.55;filter:saturate(0.95)}
+.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,13,26,0.35) 0%,rgba(6,13,26,0.6) 45%,rgba(6,13,26,0.92) 100%)}
+.chapter-cover-body{position:relative;padding:18px 18px 16px}
+.chapter-cover-num{font-family:'Cormorant Garamond','Noto Serif SC',serif;font-size:12px;letter-spacing:0.32em;color:rgba(122,184,232,0.9);margin-bottom:5px}
+.chapter-cover-num::before{content:'';display:inline-block;width:22px;height:1px;background:linear-gradient(90deg,rgba(74,140,196,0.8),transparent);vertical-align:middle;margin-right:8px}
+.chapter-cover-title{font-family:'Noto Serif SC',serif;font-size:20px;font-weight:600;letter-spacing:0.06em;color:#eaf2ff;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
+.chapter-cover-lead{font-size:12px;line-height:1.7;letter-spacing:0.03em;color:rgba(210,225,250,0.75);margin-top:7px;max-width:92%}
+
+/* 首字下沉 */
+.ur-text .drop-cap::first-letter,.drop-cap-first{float:left;font-family:'Noto Serif SC',Georgia,serif;font-size:3.4em;line-height:0.82;font-weight:700;color:#7ab8e8;margin:0.04em 0.12em 0 0;text-shadow:0 2px 10px rgba(74,140,196,0.3)}
+
+/* 金句 pull quote */
+.pull-quote{position:relative;margin:16px 6px;padding:6px 4px 6px 20px;text-align:center}
+.pull-quote::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,transparent,rgba(74,140,196,0.7),transparent);border-radius:2px}
+.pull-quote-text{font-family:'Noto Serif SC',serif;font-size:15px;font-weight:500;line-height:1.75;letter-spacing:0.04em;color:#7ab8e8;text-shadow:0 1px 8px rgba(74,140,196,0.16)}
+.pull-quote-mark{font-family:'Cormorant Garamond',serif;font-size:24px;color:rgba(74,140,196,0.4);line-height:0}
+
+/* 高亮卡 */
+.hl-note{margin:12px 0;padding:13px 15px;background:linear-gradient(135deg,rgba(74,140,196,0.12),rgba(74,140,196,0.03));border:1px solid rgba(74,140,196,0.34);border-left:3px solid #4a8cc4;border-radius:10px;font-size:12.5px;line-height:1.9;letter-spacing:0.03em;color:rgba(215,228,250,0.92);box-shadow:0 2px 14px rgba(74,140,196,0.06)}
+.hl-note b,.hl-note strong{color:#7ab8e8}
+
+/* 章节目录 */
+.chapter-toc{margin:14px 0 6px;padding:16px 16px 12px;background:linear-gradient(160deg,rgba(10,20,40,0.92),rgba(6,13,26,0.96));border:1px solid rgba(74,140,196,0.22);border-radius:14px;animation:fadeUp 0.5s ease both}
+.chapter-toc-title{font-size:12px;letter-spacing:0.2em;color:rgba(122,184,232,0.8);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.chapter-toc-item{display:flex;align-items:baseline;gap:10px;padding:8px 2px;border-bottom:1px dotted rgba(74,140,196,0.16);text-decoration:none;transition:all .2s}
+.chapter-toc-item:last-child{border-bottom:none}
+.chapter-toc-item:active{opacity:0.6}
+.chapter-toc-idx{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(122,184,232,0.65);min-width:26px}
+.chapter-toc-label{flex:1;font-size:13px;letter-spacing:0.04em;color:rgba(220,232,252,0.9)}
+.chapter-toc-arrow{font-size:12px;color:rgba(74,140,196,0.5)}
+
+/* 悬浮 TOC 按钮 + 面板 */
+#floatTocBtn{position:fixed;right:16px;bottom:80px;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#4a8cc4);border:none;color:#eaf2ff;font-size:18px;cursor:pointer;z-index:1100;box-shadow:0 4px 16px rgba(74,140,196,0.4);display:none;align-items:center;justify-content:center}
+#floatTocBtn.show{display:flex}
+#floatTocPanel{display:none;position:fixed;right:16px;bottom:134px;z-index:1100;background:rgba(6,13,26,0.97);border:1px solid rgba(74,140,196,0.4);border-radius:12px;padding:14px;max-height:56vh;overflow-y:auto;width:min(230px,calc(100vw - 32px));box-shadow:0 10px 30px rgba(0,0,0,0.6);backdrop-filter:blur(8px)}
+#floatTocPanel.show{display:block;animation:fadeUp 0.25s ease both}
+#floatTocPanel .ft-title{font-size:12px;letter-spacing:0.16em;color:rgba(122,184,232,0.8);margin-bottom:10px}
+#floatTocPanel a{display:flex;gap:8px;color:rgba(220,232,252,0.85);text-decoration:none;padding:7px 0;font-size:12.5px;border-bottom:1px solid rgba(74,140,196,0.1);line-height:1.4}
+#floatTocPanel a:last-child{border-bottom:none}
+#floatTocPanel a .ft-idx{color:rgba(122,184,232,0.6);font-family:'Cormorant Garamond',serif}
+
+/* Ultimate report cards */
+.ultimate-report{display:flex;flex-direction:column;gap:8px}
+.ur-card{background:var(--deep-card);border:1px solid rgba(74,140,196,0.16);border-radius:10px;overflow:hidden;animation:fadeUp 0.5s ease both;transition:all 0.3s}
+.ur-card:hover{border-color:rgba(74,140,196,0.28);box-shadow:0 4px 20px rgba(74,140,196,0.08)}
+.ur-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none}
+.ur-emoji{font-size:18px;width:28px;text-align:center;flex-shrink:0}
+.ur-title{flex:1;font-size:13px;letter-spacing:0.08em;color:rgba(230,240,255,0.92)}
+.ur-arrow{font-size:13px;color:rgba(74,140,196,0.5);transition:transform 0.3s;flex-shrink:0}
+.ur-arrow.open{transform:rotate(180deg)}
+.ur-body{display:none}
+.ur-body.open{display:block}
+.ur-text{font-size:12.5px;line-height:2;color:rgba(205,220,245,0.86);letter-spacing:0.04em;white-space:pre-wrap;padding:0 14px 14px}
+.hl-year{color:#e8d08a;font-weight:500}
+.hl-score{color:#7ab8e8;font-weight:500}
+
+/* 行星落座表 */
+.planet-placements{margin:2px 0 0}
+.pp-row{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid rgba(74,140,196,0.1)}
+.pp-row:last-child{border-bottom:none}
+.pp-sym{font-size:17px;width:24px;text-align:center;flex-shrink:0}
+.pp-name{font-size:12px;color:rgba(205,220,245,0.75);min-width:52px;flex-shrink:0}
+.pp-sign{flex:1;font-size:13px;color:#eaf2ff;letter-spacing:0.04em}
+.pp-sign .en{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(122,184,232,0.6);margin-left:5px}
+.pp-deg{font-size:11px;color:var(--gold);flex-shrink:0}
+
+/* Paywall lock overlay for astrology */
+.astro-lock{position:relative;padding:16px;text-align:center}
+.astro-lock .al-title{font-size:13px;font-weight:500;letter-spacing:0.1em;color:#7ab8e8;margin-bottom:10px}
+.astro-lock .al-btn{background:linear-gradient(135deg,#1a3a5c,#4a8cc4);border:none;border-radius:10px;color:#eaf2ff;font-family:'Noto Serif SC',serif;font-size:13px;padding:10px 24px;cursor:pointer}
+
+@media print{
+  .chapter-cover{break-inside:avoid}
+  #readProgressWrap,#readProgressChapter,#floatTocBtn,#floatTocPanel{display:none !important}
+}
 </style>
 <link rel="stylesheet" href="../assets/css/style.css">
 <link rel="stylesheet" href="/assets/css/common.css">
@@ -386,6 +472,7 @@ select option { background: var(--deep-mid); color: var(--star); }
   </div>
 </div>
 
+<script src="/pages/report-viz.js"></script>
 <script>
 // ── City preset coordinates ──
 var CITY_COORDS = {
@@ -513,6 +600,152 @@ async function doReading() {
   }
 }
 
+// ── planet display metadata ──
+var PLANET_META = [
+  { key: 'sun',     sym: '☉', zh: '太阳', en: 'Sun' },
+  { key: 'moon',    sym: '☾', zh: '月亮', en: 'Moon' },
+  { key: 'rising',  sym: '↑', zh: '上升', en: 'Asc' },
+  { key: 'mercury', sym: '☿', zh: '水星', en: 'Mercury' },
+  { key: 'venus',   sym: '♀', zh: '金星', en: 'Venus' },
+  { key: 'mars',    sym: '♂', zh: '火星', en: 'Mars' },
+  { key: 'jupiter', sym: '♃', zh: '木星', en: 'Jupiter' },
+  { key: 'saturn',  sym: '♄', zh: '土星', en: 'Saturn' }
+];
+
+function escHtml(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+// ── 元素强度评分环（report-viz renderScoreRing）──
+function buildElementRings(chart){
+  if (!window.ReportViz || !window.ReportViz.renderScoreRing || !chart.elements) return '';
+  var toneMap = { '火 Fire':'bad', '土 Earth':'good', '风 Air':'gold', '水 Water':'jade' };
+  var rings = chart.elements.map(function(e){
+    var zh = e.name.split(' ')[0];
+    return { label: zh, score: e.percentage, max: 100, size: 74, tone: toneMap[e.name] || 'auto', showMax:false, sub: e.count + ' 星' };
+  });
+  return window.ReportViz.renderScoreRing.group(rings, '元素能量强度 · Element Balance');
+}
+
+// ── 行运时间轴（renderTimeline：木星/土星未来过境示意 + 当前年）──
+function buildTransitTimeline(chart){
+  if (!window.ReportViz || !window.ReportViz.renderTimeline) return '';
+  var thisYear = new Date().getFullYear();
+  // 木星约每年换一宫（黄道~30°/年），土星约2.5年一宫——用相对示意年做行运节点
+  var steps = [];
+  for (var k = -1; k <= 4; k++) {
+    var yr = thisYear + k;
+    steps.push({
+      label: String(yr),
+      sub: k === 0 ? '今年' : (k < 0 ? '去年' : '+' + k + '年'),
+      tone: (k === 0 ? 'gold' : (k === 1 || k === 3 ? 'jade' : 'neutral')),
+      current: (k === 0)
+    });
+  }
+  return window.ReportViz.renderTimeline(steps, {
+    title: '行运时间轴 · Jupiter / Saturn Transits',
+    subtitle: '木星约一年一宫 · 土星约两年半一宫',
+    foot: '示意性行运节点 · 精确逐年过境见完整版 · 仅供参考'
+  });
+}
+
+// ── 行星落座表 ──
+function buildPlanetTable(chart){
+  var rows = '';
+  PLANET_META.forEach(function(p){
+    var body = (p.key === 'sun' || p.key === 'moon' || p.key === 'rising') ? chart[p.key] : (chart.planets ? chart.planets[p.key] : null);
+    if (!body || body.signZh == null) return;
+    rows += '<div class="pp-row"><span class="pp-sym">'+p.sym+'</span>'
+      + '<span class="pp-name">'+p.zh+' '+p.en+'</span>'
+      + '<span class="pp-sign">'+escHtml(body.signZh)+'<span class="en">'+escHtml(body.signEn||'')+'</span></span>'
+      + '<span class="pp-deg">'+(body.degree!=null?body.degree+'°':'')+'</span></div>';
+  });
+  if (!rows) return '';
+  return '<div class="rv-frame"><div class="rv-frame-title">行星落座 · Planet Placements</div>'
+    + '<div class="planet-placements">'+rows+'</div>'
+    + '<div class="rv-frame-foot">后端精确天文引擎排盘 · 非模型自算</div></div>';
+}
+
+/* ══════════ 精装报告基元（对齐 bazi.html） ══════════ */
+var _CN_ORD = ['其一','其二','其三','其四','其五','其六','其七','其八','其九','其十','其十一','其十二','其十三','其十四'];
+function chineseOrdinal(i){ return _CN_ORD[i] || ('其' + (i + 1)); }
+function extractPullQuote(contentLines){
+  if (!contentLines || !contentLines.length) return '';
+  var joined = contentLines.join('').replace(/\*\*/g,'').replace(/[#>|]/g,'');
+  var sentences = joined.split(/[。！；\n.!;]/).map(function(s){ return s.trim(); })
+    .filter(function(s){ return s.length >= 8 && s.length <= 44; });
+  if (!sentences.length) return '';
+  var powerRe = /(核心|本质|天生|注定|最|唯|正是|意味|因为|当你|你的|关键|真正|其实)/;
+  var pick = null;
+  for (var i = 0; i < sentences.length; i++) { if (powerRe.test(sentences[i])) { pick = sentences[i]; break; } }
+  if (!pick) { sentences.sort(function(a,b){ return a.length - b.length; }); pick = sentences[Math.floor(sentences.length / 3)] || sentences[0]; }
+  return pick || '';
+}
+function isHighlightLine(line){
+  return /^(\s*)(⚠️|💡|🔑|📌|💌|关键[:：]|注意[:：]?|提醒[:：]?|切记[:：]?|重点[:：]?|寄语[:：]?)/.test(line);
+}
+function buildAstroChapterCover(idx, title, leadLine){
+  var lead = leadLine ? escHtml(String(leadLine).replace(/\*\*/g,'').slice(0, 48)) : '';
+  var html = '<div class="chapter-cover">';
+  html += '<img class="chapter-cover-img" loading="lazy" src="/samples/caijing/art-astrology.png" alt="" onerror="this.style.display=\'none\'">';
+  html += '<div class="chapter-cover-veil"></div>';
+  html += '<div class="chapter-cover-body">';
+  html += '<div class="chapter-cover-num">' + chineseOrdinal(idx) + '</div>';
+  html += '<div class="chapter-cover-title">' + escHtml(title) + '</div>';
+  if (lead) html += '<div class="chapter-cover-lead">' + lead + '</div>';
+  html += '</div></div>';
+  return html;
+}
+function _richAstro(s){
+  return escHtml(s)
+    .replace(/\*\*(.+?)\*\*/g,'<strong style="color:#7ab8e8">$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em style="color:#7ab8e8">$1</em>')
+    .replace(/(\d{4})年/g,'<span class="hl-year">$1年</span>')
+    .replace(/(\d+)分/g,'<span class="hl-score">$1分</span>');
+}
+function _renderBodyAstro(contentLines){
+  if (!contentLines || !contentLines.length) return '';
+  var out = '', normalBuf = [], droppedCap = false;
+  function flushNormal(){
+    if (!normalBuf.length) return;
+    var cls = 'ur-text';
+    var body = normalBuf.map(_richAstro).join('<br>');
+    if (!droppedCap) { cls += ' drop-cap'; droppedCap = true; }
+    out += '<div class="'+cls+'">'+body+'</div>';
+    normalBuf = [];
+  }
+  contentLines.forEach(function(ln){
+    if (isHighlightLine(ln)) { flushNormal(); out += '<div class="hl-note">'+_richAstro(ln)+'</div>'; }
+    else { normalBuf.push(ln); }
+  });
+  flushNormal();
+  return out;
+}
+// 把 reading 文本解析为章节
+function parseAstroSections(text){
+  var lines = String(text||'').split('\n');
+  var sections = [], current = null;
+  var emojiRe = /^([\u{1F300}-\u{1FAFF}☀☉☾↑☿♀♂♃♄♈-♓✦✧🌟🌙⬆️📅🪐🏠📐💰💕💼🏥💌📊🔮])/u;
+  for (var i = 0; i < lines.length; i++){
+    var line = lines[i]; var t = line.trim();
+    if (!t) { if (current) current.lines.push(''); continue; }
+    if (t === '---' || /^\|[\s|:\-]+\|$/.test(t)) continue;
+    var md = t.match(/^#{1,3}\s*(.+)$/);
+    var em = t.match(emojiRe);
+    var bold = t.match(/^\*{2}([^*]+)\*{2}\s*$/);
+    if (md || bold || (em && t.length <= 40)) {
+      if (current && current.lines.length) sections.push(current);
+      var title = md ? md[1].trim() : (bold ? bold[1].trim() : t);
+      var emoji = em ? em[1] : '✦';
+      current = { emoji: emoji, title: title.replace(emojiRe,'').trim() || title, lines: [] };
+    } else if (current) {
+      current.lines.push(line);
+    } else {
+      current = { emoji: '🌟', title: '星盘总览', lines: [line] };
+    }
+  }
+  if (current && current.lines.length) sections.push(current);
+  return sections;
+}
+
 function showResult(data) {
   var chart = data.chart;
 
@@ -529,19 +762,67 @@ function showResult(data) {
   document.getElementById('bigThreeCards').innerHTML = cardsHtml;
 
   // Summary
-  document.getElementById('summaryBar').innerHTML = '<div class="sb-text">' + chart.bigThree + '</div>';
+  document.getElementById('summaryBar').innerHTML = '<div class="sb-text">' + escHtml(chart.bigThree || (chart.summary && chart.summary.bigThree) || '') + '</div>';
 
   // SVG Astrolabe chart
   var userName = document.getElementById('nameInput').value.trim() || 'Your Chart';
-  document.getElementById('chartWrap').innerHTML = generateAstrolabe(userName);
+  var vizHtml = generateAstrolabe(userName);
+  // 精装图表：评分环 + 行星表 + 行运时间轴（数据缺失优雅降级）
+  try { vizHtml += buildElementRings(chart); } catch(e) {}
+  try { vizHtml += buildPlanetTable(chart); } catch(e) {}
+  try { vizHtml += buildTransitTimeline(chart); } catch(e) {}
+  document.getElementById('chartWrap').innerHTML = vizHtml;
 
-  // Reading content
-  var readingHtml = data.reading;
-  // Render markdown-like content
-  document.getElementById('readingContent').innerHTML = renderReading(readingHtml);
+  // ── 精装 reading：章节封面 + 首字下沉 + 金句 + 高亮卡 + 付费墙 ──
+  // 付费墙：以 ---LOCKED--- 为界，之后内容不进 DOM
+  var rawReading = String(data.reading || '');
+  var lockIdx = rawReading.indexOf('---LOCKED---');
+  var freeText = lockIdx >= 0 ? rawReading.slice(0, lockIdx) : rawReading;
+  var lockedTitles = [];
+  if (lockIdx >= 0) {
+    rawReading.slice(lockIdx + 12).split('\n').forEach(function(l){
+      var t = l.trim().replace(/^[-•·*]\s*/,'');
+      if (t && t.length <= 40 && !/解锁完整版可看到/.test(t)) lockedTitles.push(t.replace(/·\s*完整版解锁\s*$/,'').trim());
+    });
+  }
+
+  var sections = parseAstroSections(freeText);
+  var tocEntries = [];
+  var html = '<div class="ultimate-report">';
+  sections.forEach(function(sec, i){
+    var anchorId = 'achap-' + i;
+    tocEntries.push({ id: anchorId, title: sec.title || '星盘解读', locked:false });
+    var leadLine = '';
+    for (var k=0;k<sec.lines.length;k++){ if (sec.lines[k].trim()){ leadLine = sec.lines[k]; break; } }
+    html += '<a id="'+anchorId+'" style="display:block;text-decoration:none;color:inherit">' + buildAstroChapterCover(i, sec.title||'星盘解读', leadLine) + '</a>';
+    var pq=''; try { pq = extractPullQuote(sec.lines); } catch(e){}
+    if (pq) html += '<div class="pull-quote"><span class="pull-quote-mark">“</span><div class="pull-quote-text">'+escHtml(pq)+'</div><span class="pull-quote-mark">”</span></div>';
+    html += '<div class="ur-card" style="animation-delay:'+(i*0.08)+'s">';
+    html += '<div class="ur-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ur-arrow\').classList.toggle(\'open\')">';
+    html += '<span class="ur-emoji">'+(sec.emoji||'✦')+'</span><span class="ur-title">'+escHtml(sec.title||'星盘解读')+'</span><span class="ur-arrow open">▾</span></div>';
+    html += '<div class="ur-body open">'+_renderBodyAstro(sec.lines)+'</div></div>';
+  });
+  // 锁定章节（付费内容不进 DOM，只显示占位卡）
+  var baseIdx = sections.length;
+  var lockLabels = lockedTitles.length ? lockedTitles : ['🪐 行星落座详析（10颗行星）','🏠 12宫位深度解读','📐 主要相位详解','💰💕💼🏥 人生领域深度分析','📅 未来3年行运'];
+  lockLabels.forEach(function(lt, j){
+    var anchorId = 'achap-' + (baseIdx + j);
+    tocEntries.push({ id: anchorId, title: lt, locked:true });
+    html += '<div class="ur-card" id="'+anchorId+'" style="position:relative;min-height:76px">';
+    html += '<div class="ur-head"><span class="ur-emoji">🔒</span><span class="ur-title">'+escHtml(lt)+'</span></div>';
+    html += '<div class="astro-lock"><div class="al-title">解锁完整星盘报告</div><button class="al-btn" onclick="unlockFullAstro()">立即解锁完整版 →</button></div></div>';
+  });
+  html += '</div>';
+  document.getElementById('readingContent').innerHTML = html;
+  window._astroTocEntries = tocEntries;
 
   document.getElementById('resultWrap').classList.add('show');
   document.getElementById('followupWrap').classList.add('show');
+
+  // 章节目录 + 悬浮TOC + 阅读进度 + AIGC免责
+  try { injectAstroChapterTOC(tocEntries); } catch(e) {}
+  try { setupAstroReadingProgress(tocEntries); } catch(e) {}
+  try { injectAstroDisclaimer(); } catch(e) {}
 
   // Save context ID for follow-up
   window._astrologyContextId = data.contextId;
@@ -551,6 +832,91 @@ function showResult(data) {
 
   // Scroll to result
   document.getElementById('resultWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function unlockFullAstro(){
+  showError('付费功能即将上线，敬请期待');
+}
+
+function injectAstroDisclaimer(){
+  var host = document.getElementById('readingContent');
+  if (!host || document.getElementById('astroDisclaimer')) return;
+  var d = document.createElement('div');
+  d.id = 'astroDisclaimer';
+  d.innerHTML = '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(74,140,196,0.25),transparent);margin:14px auto 0;width:80%"></div>'
+    + '<div style="font-size:10px;color:rgba(122,184,232,0.5);text-align:center;letter-spacing:0.06em;padding:10px 20px;line-height:1.7">🤖 本报告由 AI 辅助生成，仅供参考与自我探索，不构成医学、法律、投资或人生重大决策建议。</div>';
+  host.appendChild(d);
+}
+
+// 章节目录 + 悬浮 TOC 面板
+function injectAstroChapterTOC(entries){
+  if (!entries || entries.length < 2) return;
+  var toc = document.createElement('div');
+  toc.className = 'chapter-toc';
+  var inner = '<div class="chapter-toc-title"><span>📖</span> 星盘报告目录 · 共 '+entries.length+' 章</div>';
+  entries.forEach(function(e, i){
+    inner += '<a class="chapter-toc-item" href="#'+e.id+'" onclick="return jumpToAstroChapter(event,\''+e.id+'\')">'
+      + '<span class="chapter-toc-idx">'+chineseOrdinal(i)+'</span>'
+      + '<span class="chapter-toc-label">'+escHtml(e.title)+(e.locked?' 🔒':'')+'</span>'
+      + '<span class="chapter-toc-arrow">›</span></a>';
+  });
+  toc.innerHTML = inner;
+  var ur = document.querySelector('#readingContent .ultimate-report');
+  if (ur && ur.firstChild) ur.insertBefore(toc, ur.firstChild);
+  else if (ur) ur.appendChild(toc);
+
+  var oldBtn = document.getElementById('floatTocBtn'); if (oldBtn) oldBtn.remove();
+  var oldPanel = document.getElementById('floatTocPanel'); if (oldPanel) oldPanel.remove();
+  var fbtn = document.createElement('button');
+  fbtn.id = 'floatTocBtn'; fbtn.className = 'show'; fbtn.setAttribute('aria-label','章节导航'); fbtn.innerHTML = '☰';
+  var panel = document.createElement('div');
+  panel.id = 'floatTocPanel';
+  var pInner = '<div class="ft-title">章节导航</div>';
+  entries.forEach(function(e, i){
+    pInner += '<a href="#'+e.id+'" onclick="return jumpToAstroChapter(event,\''+e.id+'\')"><span class="ft-idx">'+(i+1)+'.</span><span>'+escHtml(e.title)+(e.locked?' 🔒':'')+'</span></a>';
+  });
+  panel.innerHTML = pInner;
+  fbtn.onclick = function(ev){ ev.stopPropagation(); panel.classList.toggle('show'); };
+  document.addEventListener('click', function(ev){
+    if (panel.classList.contains('show') && !panel.contains(ev.target) && ev.target !== fbtn) panel.classList.remove('show');
+  });
+  document.body.appendChild(fbtn);
+  document.body.appendChild(panel);
+}
+function jumpToAstroChapter(ev, id){
+  if (ev) ev.preventDefault();
+  var el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+  var panel = document.getElementById('floatTocPanel'); if (panel) panel.classList.remove('show');
+  return false;
+}
+var _astroReadHandler = null;
+function setupAstroReadingProgress(entries){
+  var wrap = document.getElementById('readProgressWrap');
+  if (!wrap) { wrap = document.createElement('div'); wrap.id = 'readProgressWrap'; wrap.innerHTML = '<div id="readProgressBar"></div>'; document.body.appendChild(wrap); }
+  var chapLbl = document.getElementById('readProgressChapter');
+  if (!chapLbl) { chapLbl = document.createElement('div'); chapLbl.id = 'readProgressChapter'; document.body.appendChild(chapLbl); }
+  var bar = document.getElementById('readProgressBar');
+  var total = entries.length;
+  if (_astroReadHandler) window.removeEventListener('scroll', _astroReadHandler);
+  _astroReadHandler = function(){
+    var rw = document.getElementById('resultWrap');
+    if (!rw || !rw.classList.contains('show')) { wrap.classList.remove('show'); chapLbl.classList.remove('show'); return; }
+    var doc = document.documentElement;
+    var st = window.scrollY || doc.scrollTop || 0;
+    var sh = Math.max(doc.scrollHeight, document.body.scrollHeight) - window.innerHeight;
+    var pct = sh > 0 ? Math.min(Math.max(st / sh, 0), 1) : 0;
+    bar.style.width = (pct * 100).toFixed(1) + '%';
+    wrap.classList.add('show'); chapLbl.classList.add('show');
+    var curIdx = 0;
+    for (var i = 0; i < entries.length; i++) {
+      var el = document.getElementById(entries[i].id);
+      if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.35) curIdx = i;
+    }
+    chapLbl.textContent = '第 ' + (curIdx + 1) + ' / ' + total + ' 章';
+  };
+  window.addEventListener('scroll', _astroReadHandler, { passive: true });
+  _astroReadHandler();
 }
 
 function renderReading(text) {

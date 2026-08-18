@@ -210,9 +210,52 @@ body::before { background: radial-gradient(ellipse at 50% -5%, rgba(139,26,42,0.
 .cosmos-pill { background: rgba(20,8,16,0.5); border-color: rgba(201,168,76,0.12); }
 .cosmos-pill-val { color: rgba(240,224,200,0.9); }
 
+/* ══ 精装阅读增量升级 ══ */
+#readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.25);opacity:0;transition:opacity .3s;pointer-events:none}
+#readProgressWrap.show{opacity:1}
+#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a);box-shadow:0 0 8px rgba(201,168,76,0.5);transition:width .12s ease-out}
+#readProgressChapter{position:fixed;top:8px;right:12px;z-index:1200;font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:0.12em;color:rgba(232,208,138,0.85);background:rgba(10,8,4,0.72);border:1px solid rgba(201,168,76,0.22);border-radius:20px;padding:3px 11px;opacity:0;transition:opacity .3s;pointer-events:none;backdrop-filter:blur(6px)}
+#readProgressChapter.show{opacity:1}
+.chapter-cover{position:relative;margin:20px 4px 10px;border-radius:14px;overflow:hidden;min-height:168px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:fadeUp 0.6s ease both;background:#141018}
+.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.62;filter:saturate(0.92)}
+.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,6,3,0.35) 0%,rgba(8,6,3,0.55) 45%,rgba(8,6,3,0.9) 100%)}
+.chapter-cover-body{position:relative;padding:18px 18px 16px}
+.chapter-cover-num{font-family:'Cormorant Garamond','Noto Serif SC',serif;font-size:12px;letter-spacing:0.32em;color:rgba(232,208,138,0.82);margin-bottom:5px}
+.chapter-cover-num::before{content:'';display:inline-block;width:22px;height:1px;background:linear-gradient(90deg,rgba(201,168,76,0.7),transparent);vertical-align:middle;margin-right:8px}
+.chapter-cover-title{font-family:'Noto Serif SC',serif;font-size:21px;font-weight:600;letter-spacing:0.06em;color:#f3e6c0;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
+.chapter-cover-lead{font-size:12px;line-height:1.7;letter-spacing:0.03em;color:rgba(235,225,195,0.72);margin-top:7px;max-width:92%}
+.drop-cap::first-letter{float:left;font-family:'Noto Serif SC',Georgia,serif;font-size:3.4em;line-height:0.82;font-weight:700;color:#e8d08a;margin:0.04em 0.12em 0 0;text-shadow:0 2px 10px rgba(201,168,76,0.28)}
+.pull-quote{position:relative;margin:16px 10px;padding:6px 4px 6px 20px;text-align:center}
+.pull-quote::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,transparent,rgba(201,168,76,0.7),transparent);border-radius:2px}
+.pull-quote-text{font-family:'Noto Serif SC',serif;font-size:16px;font-weight:500;line-height:1.75;letter-spacing:0.04em;color:#e8d08a;text-shadow:0 1px 8px rgba(201,168,76,0.18)}
+.pull-quote-mark{font-family:'Cormorant Garamond',serif;font-size:26px;color:rgba(201,168,76,0.4);line-height:0}
+.hl-note{margin:12px 0;padding:13px 15px;background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03));border:1px solid rgba(201,168,76,0.34);border-left:3px solid #c9a84c;border-radius:10px;font-size:12.5px;line-height:1.9;letter-spacing:0.03em;color:rgba(235,225,195,0.92);box-shadow:0 2px 14px rgba(201,168,76,0.06)}
+.hl-note b,.hl-note strong{color:#e8d08a}
+.chapter-toc{margin:14px 4px 6px;padding:16px 16px 12px;background:linear-gradient(160deg,rgba(18,14,8,0.9),rgba(10,8,4,0.95));border:1px solid rgba(201,168,76,0.22);border-radius:14px;animation:fadeUp 0.5s ease both}
+.chapter-toc-title{font-size:12px;letter-spacing:0.2em;color:rgba(201,168,76,0.7);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.chapter-toc-item{display:flex;align-items:baseline;gap:10px;padding:8px 2px;border-bottom:1px dotted rgba(201,168,76,0.14);text-decoration:none;transition:all .2s}
+.chapter-toc-item:last-child{border-bottom:none}
+.chapter-toc-idx{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(201,168,76,0.6);min-width:26px}
+.chapter-toc-label{flex:1;font-size:13px;letter-spacing:0.04em;color:rgba(232,220,190,0.9)}
+.chapter-toc-arrow{font-size:12px;color:rgba(201,168,76,0.45)}
+#floatTocBtn{position:fixed;right:16px;bottom:96px;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#8a6420,#c9a84c);border:none;color:rgba(14,10,4,0.95);font-size:18px;cursor:pointer;z-index:1100;box-shadow:0 4px 16px rgba(201,168,76,0.4);display:none;align-items:center;justify-content:center}
+#floatTocBtn.show{display:flex}
+#floatTocPanel{display:none;position:fixed;right:16px;bottom:150px;z-index:1100;background:rgba(14,11,6,0.97);border:1px solid rgba(201,168,76,0.4);border-radius:12px;padding:14px;max-height:56vh;overflow-y:auto;width:min(230px,calc(100vw - 32px));box-shadow:0 10px 30px rgba(0,0,0,0.6);backdrop-filter:blur(8px)}
+#floatTocPanel.show{display:block;animation:fadeUp 0.25s ease both}
+#floatTocPanel .ft-title{font-size:12px;letter-spacing:0.16em;color:rgba(201,168,76,0.75);margin-bottom:10px}
+#floatTocPanel a{display:flex;gap:8px;color:rgba(232,220,190,0.85);text-decoration:none;padding:7px 0;font-size:12.5px;border-bottom:1px solid rgba(201,168,76,0.08);line-height:1.4}
+#floatTocPanel a:last-child{border-bottom:none}
+#floatTocPanel a .ft-idx{color:rgba(201,168,76,0.55);font-family:'Cormorant Garamond',serif}
+.rv-viz-section{margin:0 4px 16px}
+@keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:none; } }
+
 </style>
 </head>
 <body>
+<div id="readProgressWrap"><div id="readProgressBar"></div></div>
+<div id="readProgressChapter"></div>
+<button id="floatTocBtn" onclick="toggleFloatToc()">☰</button>
+<div id="floatTocPanel"><div class="ft-title">章节导航</div><div id="floatTocLinks"></div></div>
 
 <button class="back-btn" onclick="history.back()">← Back</button>
 
@@ -619,12 +662,34 @@ function renderReport(text, contextId, isLocked) {
   var sections = text.split(/\n(?=#{1,3}\s)/);
   var html = '';
 
+  // Chapter cover — before report content
+  html += '<div class="chapter-cover">' +
+    '<img class="chapter-cover-img" loading="lazy" src="/samples/caijing/art-spirit.png" alt="" onerror="this.style.display=\'none\'">' +
+    '<div class="chapter-cover-veil"></div>' +
+    '<div class="chapter-cover-body"><div class="chapter-cover-num">藏传命理</div>' +
+    '<div class="chapter-cover-title">Tibetan Kartsi · 卡尔斯</div>' +
+    '<div class="chapter-cover-lead">Wind Horse · Mewa · Parkha — the ancient Tibetan destiny art</div></div></div>';
+
   // AIGC banner
   html += '<div style="margin:0 0 14px;padding:8px 12px;background:rgba(232,130,26,0.06);border:1px solid rgba(232,130,26,0.15);border-radius:8px;font-size:10px;color:rgba(232,130,26,0.75);letter-spacing:0.04em;display:flex;align-items:center;gap:6px">' +
     '<span>🤖</span><span><b>AI-Generated Content</b> · Tibetan Kartsi tradition. For self-reflection, not prediction.</span></div>';
 
+  // Extract Mewa number from text for visualizations
+  var mewaNum = 5;
+  var mewaMatch = text.match(/Mewa[:\s#]*(\d)/i);
+  if (mewaMatch) mewaNum = parseInt(mewaMatch[1]) || 5;
+
+  // Score rings after cosmos-card area (injected into reportBody top)
+  if (window.ReportViz) {
+    html += '<div class="rv-viz-section">' + window.ReportViz.renderScoreRing.group([
+      { label: 'Wind Horse\nLungta', score: 7, max: 10, size: 96, tone: 'auto', sub: 'Energy level' },
+      { label: 'Mewa\n梅哇', score: mewaNum, max: 9, size: 96, tone: 'gold', sub: 'Life number' },
+    ], 'Tibetan Destiny Energies') + '</div>';
+  }
+
   var sectionCount = 0;
   var PAYWALL_AT = 4; // lock from section 5+
+  var firstUnlockedDone = false;
 
   sections.forEach(function(sec) {
     if (!sec.trim()) return;
@@ -654,12 +719,36 @@ function renderReport(text, contextId, isLocked) {
       if (heading) html += '<div class="section-heading">' + heading + '</div>';
       html += '<div class="section-content">' + content + '</div>';
       html += '</div>';
+      // After first unlocked section, add a pull quote
+      if (!firstUnlockedDone) {
+        firstUnlockedDone = true;
+        html += '<div class="pull-quote"><span class="pull-quote-mark">"</span><div class="pull-quote-text">Your Mewa ' + mewaNum + ' — the ancient Tibetan code woven into your birth moment</div></div>';
+      }
     }
   });
+
+  // Mewa cycle timeline — before paywall / at end of unlocked content
+  if (window.ReportViz) {
+    var mewaSteps = [1,2,3,4,5,6,7,8,9].map(function(n) {
+      return { label: String(n), sub: 'Mewa ' + n, tone: n === mewaNum ? 'gold' : 'neutral', current: n === mewaNum };
+    });
+    html += '<div class="rv-viz-section">' + window.ReportViz.renderTimeline(mewaSteps, { title: '9 Mewa Life Numbers', subtitle: 'Your birth Mewa highlighted', foot: 'The 9-year cycle of Tibetan destiny' }) + '</div>';
+  }
 
   document.getElementById('reportBody').innerHTML = html;
   document.getElementById('reportScreen').classList.add('show');
   window.scrollTo(0, 0);
+
+  // Update float TOC links and show button
+  var ftLinks = document.getElementById('floatTocLinks');
+  if (ftLinks) {
+    ftLinks.innerHTML =
+      '<a href="#reportScreen"><span class="ft-idx">I</span>Tibetan Zodiac</a>' +
+      '<a href="#reportScreen"><span class="ft-idx">II</span>Mewa Number</a>' +
+      '<a href="#reportScreen"><span class="ft-idx">III</span>Wind Horse</a>';
+    var floatBtn = document.getElementById('floatTocBtn');
+    if (floatBtn) floatBtn.classList.add('show');
+  }
 }
 
 function buildPaywallCta() {
@@ -748,6 +837,11 @@ function shareReport() {
   }
 }
 
+function toggleFloatToc() {
+  var p = document.getElementById('floatTocPanel');
+  if (p) p.classList.toggle('show');
+}
+
 function askFollowup() {
   var q = document.getElementById('qaInput').value.trim();
   if (!q) return;
@@ -764,5 +858,27 @@ function askFollowup() {
   }).catch(function(){ ansEl.textContent='Network error, please try again.'; });
 }
 </script>
+<script>
+// ── 精装阅读体验工具 ──
+(function(){
+  var bar = document.getElementById('readProgressBar');
+  var wrap = document.getElementById('readProgressWrap');
+  if(bar) {
+    document.addEventListener('scroll', function(){
+      var h = document.documentElement.scrollHeight - window.innerHeight;
+      var pct = h > 0 ? (window.scrollY / h * 100) : 0;
+      bar.style.width = Math.min(100, pct) + '%';
+      if(pct > 2) wrap.classList.add('show'); else wrap.classList.remove('show');
+    }, {passive:true});
+  }
+  document.addEventListener('click', function(e){
+    var panel = document.getElementById('floatTocPanel');
+    var btn = document.getElementById('floatTocBtn');
+    if(panel && panel.classList.contains('show') && !panel.contains(e.target) && e.target !== btn)
+      panel.classList.remove('show');
+  });
+})();
+</script>
+<script src="/pages/report-viz.js"></script>
 </body>
 </html>

@@ -160,8 +160,83 @@ body::after {
 .cta-note { text-align: center; font-size: 9px; color: rgba(232,240,255,0.2); margin-top: 8px; letter-spacing: 0.06em; }
 .paywall-blurred { filter: blur(5px); pointer-events: none; user-select: none; position: relative; }
 .paywall-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(transparent 0%, rgba(13,8,32,0.97) 40%); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 40px; z-index: 10; }
+
+/* ══════════ 精装阅读体验 (增量·对齐八字报告) ══════════ */
+@keyframes zwFadeUp { from { opacity:0; transform:translateY(16px);} to { opacity:1; transform:none; } }
+
+/* 顶部阅读进度条 + 章节标 */
+#zwProgressWrap { position:fixed; top:0; left:0; right:0; height:3px; z-index:1200; background:rgba(0,0,0,0.28); opacity:0; transition:opacity .3s; pointer-events:none; }
+#zwProgressWrap.show { opacity:1; }
+#zwProgressBar { height:100%; width:0; background:linear-gradient(90deg, var(--purple), var(--azure), var(--star-gold)); box-shadow:0 0 8px rgba(74,159,212,0.5); transition:width .12s ease-out; }
+#zwProgressChapter { position:fixed; top:8px; right:12px; z-index:1200; font-family:'Cormorant Garamond',serif; font-size:11px; letter-spacing:0.12em; color:rgba(138,196,232,0.9); background:rgba(8,16,26,0.72); border:1px solid rgba(74,159,212,0.28); border-radius:20px; padding:3px 11px; opacity:0; transition:opacity .3s; pointer-events:none; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
+#zwProgressChapter.show { opacity:1; }
+
+/* 章节封面卡 */
+.zw-chapter-cover { position:relative; margin:20px 0 10px; border-radius:14px; overflow:hidden; min-height:168px; display:flex; flex-direction:column; justify-content:flex-end; box-shadow:0 8px 30px rgba(0,0,0,0.45); animation:zwFadeUp 0.6s ease both; background:#0b1018; }
+.zw-chapter-cover-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0.6; filter:saturate(0.95); }
+.zw-chapter-cover-veil { position:absolute; inset:0; background:linear-gradient(180deg, rgba(6,10,18,0.32) 0%, rgba(6,10,18,0.56) 45%, rgba(6,10,18,0.92) 100%); }
+.zw-chapter-cover-body { position:relative; padding:18px 18px 16px; }
+.zw-chapter-cover-num { font-family:'Cormorant Garamond','Noto Serif SC',serif; font-size:12px; letter-spacing:0.32em; color:rgba(245,233,138,0.82); margin-bottom:5px; }
+.zw-chapter-cover-num::before { content:''; display:inline-block; width:22px; height:1px; background:linear-gradient(90deg, rgba(74,159,212,0.7), transparent); vertical-align:middle; margin-right:8px; }
+.zw-chapter-cover-title { font-family:'Noto Serif SC',serif; font-size:21px; font-weight:500; letter-spacing:0.06em; color:#f3ecc8; line-height:1.25; text-shadow:0 2px 12px rgba(0,0,0,0.65); }
+.zw-chapter-cover-lead { font-size:12px; line-height:1.7; letter-spacing:0.03em; color:rgba(230,236,255,0.72); margin-top:7px; max-width:92%; }
+
+/* 报告正文卡 */
+.zw-ur-card { background:var(--navy-card); border:1px solid rgba(74,159,212,0.14); border-radius:10px; overflow:hidden; animation:zwFadeUp 0.5s ease both; margin-bottom:12px; }
+.zw-ur-head { display:flex; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; user-select:none; }
+.zw-ur-emoji { font-size:16px; width:26px; text-align:center; flex-shrink:0; }
+.zw-ur-title { flex:1; font-size:13px; letter-spacing:0.08em; color:rgba(232,240,255,0.9); }
+.zw-ur-arrow { font-size:13px; color:rgba(74,159,212,0.4); transition:transform 0.3s; flex-shrink:0; }
+.zw-ur-arrow.open { transform:rotate(180deg); }
+.zw-ur-body { display:none; }
+.zw-ur-body.open { display:block; }
+.zw-ur-text { font-size:12.5px; line-height:2; color:rgba(232,240,255,0.82); letter-spacing:0.04em; padding:0 14px 14px; }
+
+/* 首字下沉 */
+.zw-ur-text.drop-cap::first-letter { float:left; font-family:'Noto Serif SC',Georgia,serif; font-size:3.4em; line-height:0.82; font-weight:600; color:var(--star-gold); margin:0.04em 0.12em 0 0; text-shadow:0 2px 10px rgba(245,233,138,0.28); }
+
+/* 富文本高亮 */
+.zw-hl-year { color:var(--star-gold); font-weight:500; }
+.zw-hl-score { color:var(--azure-light); font-weight:500; }
+.zw-hl-money { color:var(--gold-light); font-weight:500; }
+
+/* 金句 pull quote */
+.zw-pull-quote { position:relative; margin:16px 6px; padding:6px 4px 6px 20px; text-align:center; }
+.zw-pull-quote::before { content:''; position:absolute; left:6px; top:6px; bottom:6px; width:2px; background:linear-gradient(180deg, transparent, rgba(245,233,138,0.7), transparent); border-radius:2px; }
+.zw-pull-quote-text { font-family:'Noto Serif SC',serif; font-size:16px; font-weight:500; line-height:1.75; letter-spacing:0.04em; color:var(--star-gold); text-shadow:0 1px 8px rgba(245,233,138,0.18); }
+.zw-pull-quote-mark { font-family:'Cormorant Garamond',serif; font-size:26px; color:rgba(245,233,138,0.4); line-height:0; }
+
+/* 高亮卡 ⚠️/💡 */
+.zw-hl-note { margin:12px 0; padding:13px 15px; background:linear-gradient(135deg, rgba(74,159,212,0.1), rgba(74,159,212,0.03)); border:1px solid rgba(74,159,212,0.32); border-left:3px solid var(--azure); border-radius:10px; font-size:12.5px; line-height:1.9; letter-spacing:0.03em; color:rgba(232,240,255,0.9); }
+.zw-hl-note b, .zw-hl-note strong { color:var(--star-gold); }
+
+/* 章节目录 */
+.zw-chapter-toc { margin:14px 0 6px; padding:16px 16px 12px; background:linear-gradient(160deg, rgba(11,21,32,0.92), rgba(8,16,26,0.96)); border:1px solid rgba(74,159,212,0.22); border-radius:14px; animation:zwFadeUp 0.5s ease both; }
+.zw-chapter-toc-title { font-size:12px; letter-spacing:0.2em; color:rgba(138,196,232,0.75); margin-bottom:12px; display:flex; align-items:center; gap:7px; }
+.zw-chapter-toc-item { display:flex; align-items:baseline; gap:10px; padding:8px 2px; border-bottom:1px dotted rgba(74,159,212,0.14); text-decoration:none; transition:all .2s; }
+.zw-chapter-toc-item:last-child { border-bottom:none; }
+.zw-chapter-toc-item:active { opacity:0.6; }
+.zw-chapter-toc-idx { font-family:'Cormorant Garamond',serif; font-size:13px; color:rgba(245,233,138,0.6); min-width:26px; }
+.zw-chapter-toc-label { flex:1; font-size:13px; letter-spacing:0.04em; color:rgba(232,240,255,0.9); }
+.zw-chapter-toc-arrow { font-size:12px; color:rgba(74,159,212,0.45); }
+
+/* 悬浮 TOC 按钮 + 面板 */
+#zwFloatTocBtn { position:fixed; right:16px; bottom:96px; width:46px; height:46px; border-radius:50%; background:linear-gradient(135deg, var(--purple), var(--azure)); border:none; color:rgba(232,240,255,0.95); font-size:18px; cursor:pointer; z-index:1100; box-shadow:0 4px 16px rgba(74,159,212,0.4); display:none; align-items:center; justify-content:center; }
+#zwFloatTocBtn.show { display:flex; }
+#zwFloatTocPanel { display:none; position:fixed; right:16px; bottom:150px; z-index:1100; background:rgba(8,16,26,0.97); border:1px solid rgba(74,159,212,0.4); border-radius:12px; padding:14px; max-height:56vh; overflow-y:auto; width:min(230px, calc(100vw - 32px)); box-shadow:0 10px 30px rgba(0,0,0,0.6); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
+#zwFloatTocPanel.show { display:block; animation:zwFadeUp 0.25s ease both; }
+#zwFloatTocPanel .ft-title { font-size:12px; letter-spacing:0.16em; color:rgba(138,196,232,0.75); margin-bottom:10px; }
+#zwFloatTocPanel a { display:flex; gap:8px; color:rgba(232,240,255,0.85); text-decoration:none; padding:7px 0; font-size:12.5px; border-bottom:1px solid rgba(74,159,212,0.08); line-height:1.4; }
+#zwFloatTocPanel a:last-child { border-bottom:none; }
+#zwFloatTocPanel a .ft-idx { color:rgba(245,233,138,0.55); font-family:'Cormorant Garamond',serif; }
+
+@media print {
+  .zw-chapter-cover { break-inside:avoid; }
+  #zwProgressWrap, #zwProgressChapter, #zwFloatTocBtn, #zwFloatTocPanel { display:none !important; }
+}
 </style>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<script src="report-viz.js" defer></script>
 <link rel="stylesheet" href="../assets/css/style.css">
 <link rel="stylesheet" href="/assets/css/common.css">
 </head>
@@ -248,6 +323,10 @@ body::after {
   <div class="palace-label">命盘主星</div>
   <div class="stars-section" id="starsSection"></div>
 
+  <!-- 主星强度 / 各宫评分环 + 大限时间轴（增量·精装可视化） -->
+  <div id="zwScoreRings"></div>
+  <div id="zwDaxianTimeline"></div>
+
   <div id="fortuneSections"></div>
 
   <div class="year-strip" id="yearStrip">
@@ -279,6 +358,291 @@ function showToast(msg, type) {
       setTimeout(function(){ try { t.remove(); } catch(e){} }, 2200);
     }
   } catch(e) {}
+}
+
+// ══════════ 精装报告：工具 / 章节封面 / 金句 / 首字下沉 / 目录 / 进度条 ══════════
+function escHtml(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+var _ZW_CN_ORD = ['其一','其二','其三','其四','其五','其六','其七','其八','其九','其十','其十一','其十二','其十三','其十四'];
+function chineseOrdinal(i){ return _ZW_CN_ORD[i] || ('其' + (i + 1)); }
+
+// 宫位/维度 → 氛围图（关键词匹配，缺则用最贴近的现成图）
+var _ZW_CHAPTER_ART = [
+  { keys: ['命宫','命主','主星','命盘','格局','紫微','总论','概览','星盘','立命'], img: 'ziwei' },
+  { keys: ['财帛','财运','财富','钱财','偏财','正财','投资','进财'], img: 'wealth' },
+  { keys: ['夫妻','婚姻','姻缘','感情','配偶','伴侣','桃花','恋'], img: 'marriage' },
+  { keys: ['事业','官禄','工作','职场','贵人','升迁','功名'], img: 'career' },
+  { keys: ['疾厄','健康','身体','养生','病','体质'], img: 'health' },
+  { keys: ['福德','福报','心性','精神','享受','兴趣','修为','内心'], img: 'spirit' },
+  { keys: ['子女','儿女','子嗣','生育','后代'], img: 'children' },
+  { keys: ['田宅','家宅','房产','不动产','置业','家运'], img: 'family' },
+  { keys: ['迁移','出行','远行','驿马','外出','旅','远方'], img: 'travel' },
+  { keys: ['交友','朋友','人际','奴仆','社交','人缘'], img: 'love' },
+  { keys: ['兄弟','手足','父母','家人','亲属'], img: 'family' },
+  { keys: ['大限','大运','流年','运势','岁运','时运','未来','年运'], img: 'dayun' }
+];
+function getChapterArt(title){
+  var t = String(title || '');
+  for (var i = 0; i < _ZW_CHAPTER_ART.length; i++) {
+    var g = _ZW_CHAPTER_ART[i];
+    for (var j = 0; j < g.keys.length; j++) { if (t.indexOf(g.keys[j]) !== -1) return g.img; }
+  }
+  return 'ziwei'; // 兜底：紫微星空最中性
+}
+
+// 从章节正文抽一句金句
+function extractPullQuote(contentLines){
+  if (!contentLines || !contentLines.length) return '';
+  var joined = contentLines.join('').replace(/\*\*/g,'').replace(/[#>|]/g,'');
+  var sentences = joined.split(/[。！；\n]/).map(function(s){ return s.trim(); })
+    .filter(function(s){ return s.length >= 8 && s.length <= 42; });
+  if (!sentences.length) return '';
+  var powerRe = /(必|定|最|唯|终|皆|切勿|务必|注定|命中|天生|成败|关键|根本|谨记|铭记)/;
+  var pick = null;
+  for (var i = 0; i < sentences.length; i++) { if (powerRe.test(sentences[i])) { pick = sentences[i]; break; } }
+  if (!pick) {
+    sentences.sort(function(a,b){ return a.length - b.length; });
+    pick = sentences[Math.floor(sentences.length / 3)] || sentences[0];
+  }
+  return pick || '';
+}
+
+function isHighlightLine(line){
+  return /^(\s*)(⚠️|💡|🔑|📌|关键[:：]?|铁律[:：]?|注意[:：]?|提醒[:：]?|切记[:：]?|重点[:：]?)/.test(line);
+}
+
+// 章节封面卡
+function buildChapterCover(idx, title, leadLine){
+  var art = getChapterArt(title);
+  var lead = leadLine ? escHtml(String(leadLine).replace(/\*\*/g,'').slice(0, 46)) : '';
+  var html = '<div class="zw-chapter-cover">';
+  html += '<img class="zw-chapter-cover-img" loading="lazy" src="/samples/caijing/art-' + art + '.png" alt="" onerror="this.style.display=\'none\'">';
+  html += '<div class="zw-chapter-cover-veil"></div>';
+  html += '<div class="zw-chapter-cover-body">';
+  html += '<div class="zw-chapter-cover-num">' + chineseOrdinal(idx) + '</div>';
+  html += '<div class="zw-chapter-cover-title">' + escHtml(title) + '</div>';
+  if (lead) html += '<div class="zw-chapter-cover-lead">' + lead + '</div>';
+  html += '</div></div>';
+  return html;
+}
+
+// 把整份 AI 报告文本渲染成精装章节（付费墙锁定内容绝不进 DOM）
+function renderZiweiReport(text, containerId, isLocked){
+  var container = document.getElementById(containerId);
+  if (!container) return;
+  var sections = [];
+  var lines = String(text || '').split('\n');
+  var currentSection = null;
+  lines.forEach(function(line){
+    var trimmed = line.trim();
+    if (!trimmed) return;
+    if (/^\|[\s|:\-]+\|$/.test(trimmed)) return;
+    var isHiLine = isHighlightLine(trimmed);
+    var sectionMatch = !isHiLine && (
+      trimmed.match(/^#{1,3}\s*(.+)$/) ||
+      trimmed.match(/^([\u{1F300}-\u{1FAFF}✦✧▪▸▶]\s*)(.*?)$/u) ||
+      trimmed.match(/^\*{2}([^*]+)\*{2}/) ||
+      trimmed.match(/^(\d+[\.、]\s*.*)$/) ||
+      trimmed.match(/^([①②③④⑤⑥⑦⑧⑨⑩]\s*)(.*?)$/));
+    if (sectionMatch) {
+      if (currentSection) sections.push(currentSection);
+      var rawTitle = (sectionMatch[1]||sectionMatch[0]||trimmed).replace(/^#{1,3}\s*/,'').trim();
+      currentSection = { title: rawTitle, content: [] };
+    } else if (currentSection) {
+      if (!trimmed.startsWith('| :') && trimmed !== '---') currentSection.content.push(trimmed);
+    } else {
+      if (!sections.length) sections.push({ title: '命理概览', content: [] });
+      sections[sections.length - 1].content.push(trimmed);
+    }
+  });
+  if (currentSection) sections.push(currentSection);
+  if (sections.length === 0) sections.push({ title: '紫微命盘分析', content: lines });
+
+  function _rich(s){
+    return escHtml(s)
+      .replace(/\*\*(.+?)\*\*/g,'<strong style="color:var(--star-gold)">$1</strong>')
+      .replace(/(\d{4})年/g,'<span class="zw-hl-year">$1年</span>')
+      .replace(/(\d+)分/g,'<span class="zw-hl-score">$1分</span>')
+      .replace(/\$(\d+\.?\d*)/g,'<span class="zw-hl-money">$$$1</span>');
+  }
+  function _renderBody(contentLines){
+    if (!contentLines || !contentLines.length) return '';
+    var out = '', normalBuf = [], droppedCap = false;
+    function flushNormal(){
+      if (!normalBuf.length) return;
+      var cls = 'zw-ur-text';
+      var body = normalBuf.map(_rich).join('<br>');
+      if (!droppedCap) { cls += ' drop-cap'; droppedCap = true; }
+      out += '<div class="'+cls+'">'+body+'</div>';
+      normalBuf = [];
+    }
+    contentLines.forEach(function(ln){
+      if (isHighlightLine(ln)) { flushNormal(); out += '<div class="zw-hl-note">'+_rich(ln)+'</div>'; }
+      else normalBuf.push(ln);
+    });
+    flushNormal();
+    return out;
+  }
+
+  var _tocEntries = [];
+  var hasViz = (typeof window.ReportViz !== 'undefined');
+  var html = '<div class="ziwei-report">';
+  sections.forEach(function(sec, i){
+    var shouldBlur = isLocked && i >= 2;
+    var anchorId = 'zwchap-' + i;
+    _tocEntries.push({ id: anchorId, title: sec.title, locked: shouldBlur });
+
+    if (shouldBlur) {
+      // 付费内容不进 DOM，只显示锁定占位卡
+      html += '<div class="zw-ur-card" id="'+anchorId+'" style="position:relative;min-height:80px">';
+      html += '<div class="zw-ur-head"><span class="zw-ur-emoji">🔒</span>';
+      html += '<span class="zw-ur-title">'+escHtml(sec.title)+'</span></div>';
+      html += '<div style="padding:16px;text-align:center"><div style="font-size:13px;font-weight:500;letter-spacing:0.1em;color:var(--star-gold);margin-bottom:10px">解锁完整深度解读</div>';
+      html += '<button onclick="unlockZiwei(this)" style="background:linear-gradient(135deg,rgba(107,63,160,0.6),rgba(74,159,212,0.7));border:1px solid rgba(74,159,212,0.4);border-radius:10px;color:rgba(232,240,255,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;padding:10px 24px;cursor:pointer">立即解锁 · $19.90 →</button></div></div>';
+      return;
+    }
+
+    // ① 章节封面
+    var leadLine = (sec.content && sec.content.length) ? sec.content[0] : '';
+    html += '<a id="'+anchorId+'" style="display:block;text-decoration:none;color:inherit">' + buildChapterCover(i, sec.title, leadLine) + '</a>';
+
+    // ② 大限时间轴（插到大限/流年章节封面之后，数据缺失优雅跳过）
+    var artType = getChapterArt(sec.title);
+    if (artType === 'dayun' && hasViz && window._zwDaxian && window._zwDaxian.length >= 2) {
+      try {
+        var tl = window.ReportViz.renderTimeline(window._zwDaxian, {
+          title: '大限流年 · 十年一步', currentIdx: window._zwDaxianCur,
+          foot: '每步大限约十年 · 色带示节点属性 · 光标为当前所处大限'
+        });
+        if (tl) html += tl;
+      } catch(e) {}
+    }
+
+    // ③ 金句
+    var pq = '';
+    try { pq = extractPullQuote(sec.content); } catch(e) {}
+    if (pq) {
+      html += '<div class="zw-pull-quote"><span class="zw-pull-quote-mark">“</span>'
+        + '<div class="zw-pull-quote-text">'+escHtml(pq)+'</div>'
+        + '<span class="zw-pull-quote-mark">”</span></div>';
+    }
+
+    // ④ 正文卡（首字下沉 + 高亮卡）
+    html += '<div class="zw-ur-card">';
+    html += '<div class="zw-ur-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.zw-ur-arrow\').classList.toggle(\'open\')">';
+    html += '<span class="zw-ur-emoji">✦</span>';
+    html += '<span class="zw-ur-title">'+escHtml(sec.title)+'</span>';
+    html += '<span class="zw-ur-arrow open">▾</span></div>';
+    html += '<div class="zw-ur-body open">'+_renderBody(sec.content)+'</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  container.innerHTML = html;
+
+  try { injectZwChapterTOC(_tocEntries, container); } catch(e) {}
+  try { setupZwReadingProgress(_tocEntries); } catch(e) {}
+}
+
+function injectZwChapterTOC(entries, container){
+  if (!entries || entries.length < 2) return;
+  var toc = document.createElement('div');
+  toc.className = 'zw-chapter-toc';
+  var inner = '<div class="zw-chapter-toc-title"><span>📖</span> 命盘报告目录 · 共 '+entries.length+' 章</div>';
+  entries.forEach(function(e, i){
+    inner += '<a class="zw-chapter-toc-item" href="#'+e.id+'" onclick="return jumpToZwChapter(event,\''+e.id+'\')">'
+      + '<span class="zw-chapter-toc-idx">'+chineseOrdinal(i)+'</span>'
+      + '<span class="zw-chapter-toc-label">'+escHtml(e.title)+(e.locked?' 🔒':'')+'</span>'
+      + '<span class="zw-chapter-toc-arrow">›</span></a>';
+  });
+  toc.innerHTML = inner;
+  var rep = container.querySelector('.ziwei-report');
+  if (rep && rep.firstChild) rep.insertBefore(toc, rep.firstChild);
+  else container.insertBefore(toc, container.firstChild);
+
+  // 悬浮 TOC 按钮 + 面板
+  var oldBtn = document.getElementById('zwFloatTocBtn'); if (oldBtn) oldBtn.remove();
+  var oldPanel = document.getElementById('zwFloatTocPanel'); if (oldPanel) oldPanel.remove();
+  var btn = document.createElement('button');
+  btn.id = 'zwFloatTocBtn'; btn.className = 'show'; btn.setAttribute('aria-label','章节导航'); btn.innerHTML = '☰';
+  var panel = document.createElement('div');
+  panel.id = 'zwFloatTocPanel';
+  var pInner = '<div class="ft-title">章节导航</div>';
+  entries.forEach(function(e, i){
+    pInner += '<a href="#'+e.id+'" onclick="return jumpToZwChapter(event,\''+e.id+'\')"><span class="ft-idx">'+(i+1)+'.</span><span>'+escHtml(e.title)+(e.locked?' 🔒':'')+'</span></a>';
+  });
+  panel.innerHTML = pInner;
+  btn.onclick = function(ev){ ev.stopPropagation(); panel.classList.toggle('show'); };
+  document.addEventListener('click', function(ev){
+    if (panel.classList.contains('show') && !panel.contains(ev.target) && ev.target !== btn) panel.classList.remove('show');
+  });
+  document.body.appendChild(btn);
+  document.body.appendChild(panel);
+}
+
+function jumpToZwChapter(ev, id){
+  if (ev) ev.preventDefault();
+  var el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+  var panel = document.getElementById('zwFloatTocPanel'); if (panel) panel.classList.remove('show');
+  return false;
+}
+
+var _zwProgressHandler = null;
+function setupZwReadingProgress(entries){
+  var wrap = document.getElementById('zwProgressWrap');
+  if (!wrap) { wrap = document.createElement('div'); wrap.id = 'zwProgressWrap'; wrap.innerHTML = '<div id="zwProgressBar"></div>'; document.body.appendChild(wrap); }
+  var chapLbl = document.getElementById('zwProgressChapter');
+  if (!chapLbl) { chapLbl = document.createElement('div'); chapLbl.id = 'zwProgressChapter'; document.body.appendChild(chapLbl); }
+  var bar = document.getElementById('zwProgressBar');
+  var total = entries.length;
+  function metrics(){
+    var doc = document.documentElement;
+    var st = window.scrollY || doc.scrollTop || 0;
+    var sh = Math.max(doc.scrollHeight, document.body.scrollHeight) - window.innerHeight;
+    return { st: st, sh: sh };
+  }
+  if (_zwProgressHandler) window.removeEventListener('scroll', _zwProgressHandler);
+  _zwProgressHandler = function(){
+    var rw = document.getElementById('resultWrap');
+    if (!rw || !rw.classList.contains('show')) { wrap.classList.remove('show'); chapLbl.classList.remove('show'); return; }
+    var m = metrics();
+    var pct = m.sh > 0 ? Math.min(Math.max(m.st / m.sh, 0), 1) : 0;
+    bar.style.width = (pct * 100).toFixed(1) + '%';
+    wrap.classList.add('show'); chapLbl.classList.add('show');
+    var curIdx = 0;
+    for (var i = 0; i < entries.length; i++) {
+      var el = document.getElementById(entries[i].id);
+      if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.35) curIdx = i;
+    }
+    chapLbl.textContent = '第 ' + (curIdx + 1) + ' / ' + total + ' 章';
+  };
+  window.addEventListener('scroll', _zwProgressHandler, { passive: true });
+  _zwProgressHandler();
+}
+
+// 由基础命盘的种子数据构造大限时间轴步（10年一步·仅演示盘用，无引擎精确数据时优雅降级）
+function buildDaxianSteps(seed, birthYear){
+  try {
+    var startAge = 2 + rng(seed + 5, 6); // 2-7 起运
+    var curAge = null;
+    if (birthYear) { curAge = (new Date().getFullYear()) - parseInt(birthYear,10); if (curAge < 0 || curAge > 130) curAge = null; }
+    var EB2 = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
+    var GAN = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
+    var TONES = ['neutral','good','gold','jade','good','neutral','gold','bad'];
+    var TAGS = ['根基·学','成长·立','事业·进','中运·旺','守成·稳','转折·变','沉淀·藏','晚运·安'];
+    var steps = [], curIdx = -1;
+    var gi = rng(seed, 10), zi = rng(seed + 3, 12);
+    for (var k = 0; k < 8; k++) {
+      var a0 = startAge + k * 10, a1 = a0 + 9;
+      var gz = GAN[(gi + k) % 10] + EB2[(zi + k) % 12];
+      if (curAge != null && curAge >= a0 && curAge <= a1) curIdx = k;
+      steps.push({ label: gz, sub: a0 + '–' + a1 + '岁', tone: TONES[(rng(seed + k*7, 8))], tag: TAGS[k % TAGS.length], current: false });
+    }
+    if (curIdx < 0) curIdx = Math.min(2, steps.length - 1);
+    window._zwDaxian = steps;
+    window._zwDaxianCur = curIdx;
+    return { steps: steps, curIdx: curIdx };
+  } catch(e) { window._zwDaxian = null; return null; }
 }
 
 // Year selector
@@ -469,6 +833,38 @@ function renderResult(seed, y, m, d, h) {
   });
   document.getElementById('fortuneSections').innerHTML = fsHtml;
 
+  // 精装可视化：主星强度 + 各宫评分环（数据缺失/ReportViz未加载则优雅降级）
+  try {
+    var ringsEl = document.getElementById('zwScoreRings');
+    if (ringsEl && typeof window.ReportViz !== 'undefined') {
+      var mingStarName = (mingStars && mingStars.length) ? mingStars[0] : MAIN_STARS[rng(seed, MAIN_STARS.length)];
+      var rings = [
+        { label: mingStarName + '·命宫强度', score: 62 + rng(seed+13, 34), max: 100 },
+        { label: '事业', score: FORTUNES[0].score, max: 100 },
+        { label: '财运', score: FORTUNES[1].score, max: 100 },
+        { label: '感情', score: FORTUNES[2].score, max: 100 },
+        { label: '健康', score: FORTUNES[3].score, max: 100 }
+      ].map(function(r){ r.size = 96; return r; });
+      var ringsHtml = window.ReportViz.renderScoreRing.group(rings, '命身主星 · 十二宫强度');
+      ringsEl.innerHTML = ringsHtml || '';
+    }
+  } catch(e) {}
+
+  // 精装可视化：大限时间轴（10年一步，由演示盘种子推导）
+  try {
+    var tlEl = document.getElementById('zwDaxianTimeline');
+    if (tlEl && typeof window.ReportViz !== 'undefined') {
+      var dx = buildDaxianSteps(seed, y);
+      if (dx && dx.steps && dx.steps.length >= 2) {
+        var tlHtml = window.ReportViz.renderTimeline(dx.steps, {
+          title: '大限流年 · 十年一步', currentIdx: dx.curIdx,
+          foot: '每步大限约十年 · 色带示节点属性 · 光标为当前所处大限'
+        });
+        tlEl.innerHTML = tlHtml || '';
+      }
+    }
+  } catch(e) {}
+
   // Year fortune
   var yearScore = 60 + rng(seed*2, 35);
   document.getElementById('yearScore').textContent = yearScore + '分';
@@ -573,8 +969,7 @@ function handlePaidReturn() {
       reader.read().then(function(r) {
         if (r.done) {
           clearTimeout(streamTimeout); streamDone = true;
-          if (box) box.innerHTML = '<div style="white-space:pre-wrap">'+accumulated.replace(/</g,'&lt;')+'</div>';
-          injectDisclaimer('resultWrap');
+          renderZiweiDeepReport(accumulated);
           return;
         }
         buf += decoder.decode(r.value, {stream: true});
@@ -586,8 +981,7 @@ function handlePaidReturn() {
             if (ev.type === 'chunk') { accumulated += ev.content; if (box) box.textContent = accumulated; }
             else if (ev.type === 'done') {
               clearTimeout(streamTimeout); streamDone = true;
-              if (box) box.innerHTML = '<div style="white-space:pre-wrap">'+accumulated.replace(/</g,'&lt;')+'</div>';
-              injectDisclaimer('resultWrap');
+              renderZiweiDeepReport(accumulated);
             }
           } catch(e) {}
         });
@@ -622,6 +1016,32 @@ function handlePaidReturn() {
     }
   });
 }
+// 付费深度报告：把流式文本渲染成精装章节（章节封面/首字下沉/金句/高亮卡/目录/进度条/大限时间轴）
+function renderZiweiDeepReport(text) {
+  var resultEl = document.getElementById('resultWrap');
+  if (!resultEl) return;
+  // 由已保存的出生信息推导大限时间轴数据（无数据则时间轴优雅跳过）
+  try {
+    var s = JSON.parse(localStorage.getItem('sy_last_ziwei') || 'null');
+    if (s && s.birthYear) {
+      var seedD = parseInt(s.birthYear)*10000 + parseInt(s.birthMonth||1)*100 + parseInt(s.birthDay||1) + parseInt(s.birthHour||0)*0.1;
+      buildDaxianSteps(seedD, s.birthYear);
+    }
+  } catch(e) {}
+  // 顶部免责 + 报告挂载点
+  resultEl.innerHTML = '<div style="text-align:center;font-size:10px;color:rgba(201,168,76,0.55);letter-spacing:0.06em;padding:6px 16px 4px;">本深度报告由AI基于紫微斗数理论生成，仅供娱乐参考</div>' +
+    '<div id="zwDeepReport" style="padding:4px 16px 8px"></div>';
+  try {
+    renderZiweiReport(text, 'zwDeepReport', false); // 已付费，全部解锁，不锁定
+  } catch(e) {
+    // 兜底：纯文本
+    var box = document.getElementById('zwDeepReport');
+    if (box) box.innerHTML = '<div style="white-space:pre-wrap;font-size:12px;line-height:1.9;color:rgba(232,240,255,0.8)">'+escHtml(text)+'</div>';
+  }
+  injectDisclaimer('resultWrap');
+  setTimeout(function(){ resultEl.scrollIntoView({behavior:'smooth', block:'start'}); }, 60);
+}
+
 function injectDisclaimer(containerId) {
   var c = document.getElementById(containerId);
   if (!c || c.querySelector('.sy-disclaimer')) return;

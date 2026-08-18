@@ -142,11 +142,33 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .footer-verse{text-align:center;padding:24px 20px 40px;position:relative;z-index:1}
 .footer-verse-line{width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 12px}
 .footer-verse-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(201,168,76,0.35);letter-spacing:.28em}
+
+/* ══ 精装阅读增量升级 ══ */
+#readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.25);opacity:0;transition:opacity .3s;pointer-events:none}
+#readProgressWrap.show{opacity:1}
+#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a);box-shadow:0 0 8px rgba(201,168,76,0.5);transition:width .12s ease-out}
+.chapter-cover{position:relative;margin:16px 4px 10px;border-radius:14px;overflow:hidden;min-height:152px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:fadeUp 0.6s ease both;background:#141018}
+.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.62;filter:saturate(0.92)}
+.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,6,3,0.35) 0%,rgba(8,6,3,0.55) 45%,rgba(8,6,3,0.9) 100%)}
+.chapter-cover-body{position:relative;padding:16px 18px 14px}
+.chapter-cover-num{font-family:'Cormorant Garamond','Noto Serif SC',serif;font-size:12px;letter-spacing:0.32em;color:rgba(232,208,138,0.82);margin-bottom:5px}
+.chapter-cover-num::before{content:'';display:inline-block;width:22px;height:1px;background:linear-gradient(90deg,rgba(201,168,76,0.7),transparent);vertical-align:middle;margin-right:8px}
+.chapter-cover-title{font-family:'Noto Serif SC',serif;font-size:20px;font-weight:600;letter-spacing:0.06em;color:#f3e6c0;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
+.chapter-cover-lead{font-size:11px;line-height:1.7;letter-spacing:0.03em;color:rgba(235,225,195,0.72);margin-top:6px}
+.hl-note{margin:10px 0;padding:12px 14px;background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03));border:1px solid rgba(201,168,76,0.34);border-left:3px solid #c9a84c;border-radius:10px;font-size:12px;line-height:1.9;letter-spacing:0.03em;color:rgba(235,225,195,0.92)}
+.hl-note b,.hl-note strong{color:#e8d08a}
+.pull-quote{position:relative;margin:14px 10px;padding:6px 4px 6px 18px;text-align:center}
+.pull-quote::before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,transparent,rgba(201,168,76,0.7),transparent);border-radius:2px}
+.pull-quote-text{font-family:'Noto Serif SC',serif;font-size:15px;font-weight:500;line-height:1.75;letter-spacing:0.04em;color:#e8d08a}
+.pull-quote-mark{font-family:'Cormorant Garamond',serif;font-size:24px;color:rgba(201,168,76,0.4);line-height:0}
+.rv-viz-section{margin:0 4px 14px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 </style>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/css/common.css">
 </head>
 <body>
+<div id="readProgressWrap"><div id="readProgressBar"></div></div>
 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
 <div class="stardust" id="stardust"></div>
 <button class="back-btn" onclick="history.back()">‹ Back</button>
@@ -465,10 +487,15 @@ function renderAIInterpretation(text) {
   interpEl.style.flexDirection = 'column';
   interpEl.style.gap = '8px';
   injectDisclaimer('aiInterp');
+  if (currentStarNum) injectKyuseiCovers(currentStarNum);
 }
 
 function resetAll() {
   currentStarNum = null;
+  var injected = document.querySelector('.kyusei-cover-injected');
+  if (injected) injected.remove();
+  var vizSection = document.querySelector('.rv-viz-section');
+  if (vizSection) vizSection.remove();
   document.getElementById('starReveal').classList.remove('show');
   document.getElementById('fullWrap').style.display = 'none';
   document.getElementById('aiInterp').style.display = 'none';
@@ -526,11 +553,59 @@ function injectDisclaimer(containerId) {
   d.innerHTML='<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto;width:80%"></div><div style="font-size:10px;color:rgba(201,168,76,0.35);text-align:center;letter-spacing:.06em;padding:10px 20px">For entertainment and reflection only · 仅供娱乐参考 · エンターテインメント目的のみ</div>';
   c.appendChild(d);
 }
+
+function injectKyuseiCovers(starNum) {
+  var interp = document.getElementById('aiInterp');
+  if (!interp) return;
+  var starData = KYUSEI_STARS[starNum];
+  if (!starData) return;
+  // Guard: only inject once
+  if (document.querySelector('.kyusei-cover-injected')) return;
+
+  // Chapter cover
+  var coverHtml = '<div class="chapter-cover kyusei-cover-injected" style="margin:12px 4px 16px">' +
+    '<img class="chapter-cover-img" loading="lazy" src="/samples/caijing/art-fortune-year.png" alt="" onerror="this.style.display=\'none\'">' +
+    '<div class="chapter-cover-veil"></div>' +
+    '<div class="chapter-cover-body"><div class="chapter-cover-num">九星気学</div>' +
+    '<div class="chapter-cover-title">' + starData.numChar + '星 · ' + starData.name + '</div>' +
+    '<div class="chapter-cover-lead">' + starData.element + ' — ' + (starData.keywords || []).join(' · ') + '</div></div></div>';
+  interp.insertAdjacentHTML('beforebegin', coverHtml);
+
+  // Score ring + timeline using ReportViz
+  if (window.ReportViz) {
+    var ringHtml = window.ReportViz.renderScoreRing.group([
+      { label: starData.numChar + '星', score: starNum, max: 9, size: 96, tone: 'gold', sub: starData.element }
+    ], starData.nameEn || starData.name);
+
+    var tlSteps = [1,2,3,4,5,6,7,8,9].map(function(n) {
+      var s = KYUSEI_STARS[n];
+      return { label: s.numChar, sub: s.element.split(' ')[0], tone: n === starNum ? 'gold' : 'neutral', current: n === starNum };
+    });
+    var timelineHtml = window.ReportViz.renderTimeline(tlSteps, { title: '九星 · Nine Stars Cycle', subtitle: 'Your birth star highlighted', foot: '天地の気運 · Heaven and Earth\'s vital energy' });
+
+    interp.insertAdjacentHTML('beforebegin', '<div class="rv-viz-section">' + ringHtml + timelineHtml + '</div>');
+  }
+}
 </script>
 <script>
 (function(){var t=localStorage.getItem('sy_theme');if(t==='dark'){document.documentElement.classList.add('dark-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='🌙';}})();
 function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'🌙';localStorage.setItem('sy_theme',l?'dark':'dark');}
 </script>
 <script src="/assets/js/common.js"></script>
+<script>
+(function(){
+  var bar = document.getElementById('readProgressBar');
+  var wrap = document.getElementById('readProgressWrap');
+  if(bar) {
+    document.addEventListener('scroll', function(){
+      var h = document.documentElement.scrollHeight - window.innerHeight;
+      var pct = h > 0 ? (window.scrollY / h * 100) : 0;
+      bar.style.width = Math.min(100, pct) + '%';
+      if(pct > 2) wrap.classList.add('show'); else wrap.classList.remove('show');
+    }, {passive:true});
+  }
+})();
+</script>
+<script src="/pages/report-viz.js"></script>
 </body>
 </html>
