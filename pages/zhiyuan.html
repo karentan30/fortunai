@@ -136,6 +136,30 @@ body{max-width:420px;margin:0 auto;min-height:100vh;padding:0 16px 120px}
 
 /* Province select with scroll */
 .province-group{max-height:180px;overflow-y:auto}
+
+/* ══════════ 精装报告阅读体验 ══════════ */
+#readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.25);opacity:0;transition:opacity .3s;pointer-events:none}
+#readProgressWrap.show{opacity:1}
+#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a);box-shadow:0 0 8px rgba(201,168,76,0.5);transition:width .12s ease-out}
+.chapter-cover{position:relative;margin:20px 4px 10px;border-radius:14px;overflow:hidden;min-height:168px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:fadeUp 0.6s ease both;background:#141018}
+.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.62;filter:saturate(0.92)}
+.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,6,3,0.35) 0%,rgba(8,6,3,0.55) 45%,rgba(8,6,3,0.9) 100%)}
+.chapter-cover-body{position:relative;padding:18px 18px 16px}
+.chapter-cover-num{font-family:'Cormorant Garamond','Noto Serif SC',serif;font-size:12px;letter-spacing:0.32em;color:rgba(232,208,138,0.82);margin-bottom:5px}
+.chapter-cover-title{font-family:'Noto Serif SC',serif;font-size:21px;font-weight:600;letter-spacing:0.06em;color:#f3e6c0;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
+.chapter-cover-lead{font-size:12px;line-height:1.7;letter-spacing:0.03em;color:rgba(235,225,195,0.72);margin-top:7px;max-width:92%}
+.pull-quote{position:relative;margin:16px 10px;padding:6px 4px 6px 20px;text-align:center}
+.pull-quote::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,transparent,rgba(91,191,160,0.7),transparent);border-radius:2px}
+.pull-quote-text{font-family:'Noto Serif SC',serif;font-size:15px;font-weight:500;line-height:1.75;letter-spacing:0.04em;color:var(--jade, #5bbfa0);text-shadow:0 1px 8px rgba(91,191,160,0.18)}
+.hl-note{margin:12px 0;padding:13px 15px;background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03));border:1px solid rgba(201,168,76,0.34);border-left:3px solid #c9a84c;border-radius:10px;font-size:12px;line-height:1.9;letter-spacing:0.03em;color:rgba(235,225,195,0.92)}
+.chapter-toc{margin:14px 4px 6px;padding:16px 16px 12px;background:linear-gradient(160deg,rgba(18,14,8,0.9),rgba(10,8,4,0.95));border:1px solid rgba(201,168,76,0.22);border-radius:14px;animation:fadeUp 0.5s ease both}
+.chapter-toc-title{font-size:12px;letter-spacing:0.2em;color:rgba(201,168,76,0.7);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.chapter-toc-item{display:flex;align-items:baseline;gap:10px;padding:8px 2px;border-bottom:1px dotted rgba(201,168,76,0.14);text-decoration:none;transition:all .2s}
+.chapter-toc-item:last-child{border-bottom:none}
+.chapter-toc-idx{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(201,168,76,0.6);min-width:26px}
+.chapter-toc-label{flex:1;font-size:13px;letter-spacing:0.04em;color:rgba(232,220,190,0.9)}
+.chapter-toc-arrow{font-size:12px;color:rgba(201,168,76,0.45)}
+.drop-cap::first-letter{float:left;font-family:'Noto Serif SC',Georgia,serif;font-size:3.4em;line-height:0.82;font-weight:700;color:#e8d08a;margin:0.04em 0.12em 0 0;text-shadow:0 2px 10px rgba(201,168,76,0.28)}
 </style>
 <link rel="stylesheet" href="/assets/css/common.css">
 </head>
@@ -484,11 +508,51 @@ function generateReport() {
   subEl.textContent = province+' · '+score+'分'+(rank?' · 排名#'+rank:'')+' · '+genderText()+' · '+ELEM_MAP[dm]+'行日主';
 
   setTimeout(function() {
+    // Prepend luxury header
+    var luxuryHeader = '';
+    luxuryHeader += '<div style="display:flex;align-items:center;gap:6px;margin:12px 16px 0;padding:7px 12px;background:rgba(91,191,160,0.06);border:1px solid rgba(91,191,160,0.15);border-radius:6px;font-size:11px;color:rgba(91,191,160,0.75);letter-spacing:0.06em"><span>🤖</span><span><b>AI 生成内容</b> · 仅供参考，不代表录取概率。</span></div>';
+    luxuryHeader += '<div id="readProgressWrap"><div id="readProgressBar"></div></div>';
+    luxuryHeader += '<div class="chapter-cover">';
+    luxuryHeader += '<img class="chapter-cover-img" src="../samples/caijing/art-study.png" alt="" loading="lazy">';
+    luxuryHeader += '<div class="chapter-cover-veil"></div>';
+    luxuryHeader += '<div class="chapter-cover-body">';
+    luxuryHeader += '<div class="chapter-cover-num">LIFE PLANNING · MAJOR SELECTION</div>';
+    luxuryHeader += '<div class="chapter-cover-title">人生规划报告</div>';
+    luxuryHeader += '<div class="chapter-cover-lead">高考志愿 · 专业适配 · AI 命理分析</div>';
+    luxuryHeader += '</div></div>';
+    // Score rings
+    if (window.ReportViz) {
+      luxuryHeader += '<div style="margin:0 4px">' + window.ReportViz.renderScoreRing.group([
+        {label:'理工适配',score:72,max:100,sub:'STEM专业'},
+        {label:'人文适配',score:68,max:100,sub:'文科方向'},
+        {label:'艺术适配',score:55,max:100,sub:'艺术类别'}
+      ], '专业方向匹配度') + '</div>';
+    }
+    html = luxuryHeader + html;
+    // Append compliance note
+    html += '<div class="hl-note" style="margin:12px 16px"><b>重要提示</b>：本报告基于命理学参考分析，不代表实际录取概率。升学决策请以教育部数据及专业指导老师建议为准。未成年学生请与家长共同参考。</div>';
+
     document.getElementById('loadingScreen').classList.remove('show');
     document.getElementById('reportContent').innerHTML = html;
     document.getElementById('reportScreen').classList.add('show');
     document.getElementById('stickyCta').style.display = 'block';
+    initReadProgress();
   }, steps.length * 500 + 500);
+
+function initReadProgress() {
+  var bar = document.getElementById('readProgressBar');
+  var wrap = document.getElementById('readProgressWrap');
+  if (!bar || !wrap) return;
+  wrap.classList.add('show');
+  function updateProgress() {
+    var scrollTop = window.scrollY || document.documentElement.scrollTop;
+    var docH = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = docH > 0 ? Math.min(100, (scrollTop / docH) * 100) : 0;
+    bar.style.width = pct + '%';
+  }
+  window.addEventListener('scroll', updateProgress, {passive: true});
+  updateProgress();
+}
 }
 
 function genderText() { return gender === 'male' ? '男' : '女'; }
@@ -521,5 +585,6 @@ function handleUnlock() {
 </script>
 
 <script src="/assets/js/common.js"></script>
+<script src="/pages/report-viz.js"></script>
 </body>
 </html>

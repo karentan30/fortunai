@@ -111,6 +111,31 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 
 /* Stardust */
 .stardust span { position:absolute; width:3px; height:3px; background:rgba(201,168,76,0.6); border-radius:50%; animation:twinkle 3s ease-in-out infinite; opacity:0; transition:opacity .5s }
+
+/* ══════════ 精装报告阅读体验 ══════════ */
+#readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.25);opacity:0;transition:opacity .3s;pointer-events:none}
+#readProgressWrap.show{opacity:1}
+#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a);box-shadow:0 0 8px rgba(201,168,76,0.5);transition:width .12s ease-out}
+.chapter-cover{position:relative;margin:20px 4px 10px;border-radius:14px;overflow:hidden;min-height:168px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:fadeUp 0.6s ease both;background:#141018}
+.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.62;filter:saturate(0.92)}
+.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,6,3,0.35) 0%,rgba(8,6,3,0.55) 45%,rgba(8,6,3,0.9) 100%)}
+.chapter-cover-body{position:relative;padding:18px 18px 16px}
+.chapter-cover-num{font-family:'Cormorant Garamond','Noto Serif SC',serif;font-size:12px;letter-spacing:0.32em;color:rgba(232,208,138,0.82);margin-bottom:5px}
+.chapter-cover-title{font-family:'Noto Serif SC',serif;font-size:21px;font-weight:600;letter-spacing:0.06em;color:#f3e6c0;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
+.chapter-cover-lead{font-size:12px;line-height:1.7;letter-spacing:0.03em;color:rgba(235,225,195,0.72);margin-top:7px;max-width:92%}
+.pull-quote{position:relative;margin:16px 10px;padding:6px 4px 6px 20px;text-align:center}
+.pull-quote::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,transparent,rgba(201,168,76,0.7),transparent);border-radius:2px}
+.pull-quote-text{font-family:'Noto Serif SC',serif;font-size:15px;font-weight:500;line-height:1.75;letter-spacing:0.04em;color:var(--gold,#c9a84c);text-shadow:0 1px 8px rgba(201,168,76,0.18)}
+.hl-note{margin:12px 0;padding:13px 15px;background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03));border:1px solid rgba(201,168,76,0.34);border-left:3px solid #c9a84c;border-radius:10px;font-size:12px;line-height:1.9;letter-spacing:0.03em;color:rgba(235,225,195,0.92)}
+.chapter-toc{margin:14px 4px 6px;padding:16px 16px 12px;background:linear-gradient(160deg,rgba(18,14,8,0.9),rgba(10,8,4,0.95));border:1px solid rgba(201,168,76,0.22);border-radius:14px;animation:fadeUp 0.5s ease both}
+.chapter-toc-title{font-size:12px;letter-spacing:0.2em;color:rgba(201,168,76,0.7);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.chapter-toc-item{display:flex;align-items:baseline;gap:10px;padding:8px 2px;border-bottom:1px dotted rgba(201,168,76,0.14);text-decoration:none;transition:all .2s}
+.chapter-toc-item:last-child{border-bottom:none}
+.chapter-toc-idx{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(201,168,76,0.6);min-width:26px}
+.chapter-toc-label{flex:1;font-size:13px;letter-spacing:0.04em;color:rgba(232,220,190,0.9)}
+.chapter-toc-arrow{font-size:12px;color:rgba(201,168,76,0.45)}
+.drop-cap::first-letter{float:left;font-family:'Noto Serif SC',Georgia,serif;font-size:3.4em;line-height:0.82;font-weight:700;color:#e8d08a;margin:0.04em 0.12em 0 0;text-shadow:0 2px 10px rgba(201,168,76,0.28)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 </style>
 <link rel="stylesheet" href="/assets/css/common.css">
 </head>
@@ -293,6 +318,27 @@ function renderAITextReport(text, ctxId) {
   var html = '';
   var lat = document.getElementById('latitude').value;
   var lng = document.getElementById('longitude').value;
+
+  // Luxury header
+  html += '<div style="display:flex;align-items:center;gap:6px;margin:12px 16px 0;padding:7px 12px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:6px;font-size:11px;color:rgba(201,168,76,0.75);letter-spacing:0.06em"><span>🤖</span><span><b>AI 生成内容</b> · 仅供参考，不代表居住决策。</span></div>';
+  html += '<div id="readProgressWrap"><div id="readProgressBar"></div></div>';
+  html += '<div class="chapter-cover">';
+  html += '<img class="chapter-cover-img" src="../samples/caijing/art-travel.png" alt="" loading="lazy">';
+  html += '<div class="chapter-cover-veil"></div>';
+  html += '<div class="chapter-cover-body">';
+  html += '<div class="chapter-cover-num">GEO FORTUNE · LOCATION ENERGY</div>';
+  html += '<div class="chapter-cover-title">地理命理分析</div>';
+  html += '<div class="chapter-cover-lead">方位能量场 · 地域命格 · AI 命理分析</div>';
+  html += '</div></div>';
+  // Score rings for environmental adaptation
+  if (window.ReportViz) {
+    html += '<div style="margin:0 4px">' + window.ReportViz.renderScoreRing.group([
+      {label:'东方适配',score:78,max:100,sub:'木气方位'},
+      {label:'南方适配',score:65,max:100,sub:'火气方位'},
+      {label:'北方适配',score:58,max:100,sub:'水气方位'}
+    ], '环境适配度') + '</div>';
+  }
+
   html += '<div class="chart-header">';
   html += '<div class="name-row"><div class="report-name">地理命理分析</div><div class="report-tag">'+lat+', '+lng+'</div></div>';
   html += '<div class="divider"></div></div>';
@@ -313,10 +359,28 @@ function renderAITextReport(text, ctxId) {
   } else {
     html += '<div class="ai-plain-text">'+text+'</div>';
   }
+  // Compliance note
+  html += '<div class="hl-note" style="margin:12px 16px"><b>重要提示</b>：地理命理属传统文化参考，不建议因此做出搬迁决定。居住地选择请综合考虑生活、工作等实际因素。</div>';
   html += '<div style="height:40px"></div>';
   reportEl.innerHTML = html;
   reportEl.classList.add('show');
   injectDisclaimer('reportScreen');
+  initReadProgress();
+}
+
+function initReadProgress() {
+  var bar = document.getElementById('readProgressBar');
+  var wrap = document.getElementById('readProgressWrap');
+  if (!bar || !wrap) return;
+  wrap.classList.add('show');
+  function updateProgress() {
+    var scrollTop = window.scrollY || document.documentElement.scrollTop;
+    var docH = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = docH > 0 ? Math.min(100, (scrollTop / docH) * 100) : 0;
+    bar.style.width = pct + '%';
+  }
+  window.addEventListener('scroll', updateProgress, {passive: true});
+  updateProgress();
 }
 
 function generateReport() {
@@ -440,5 +504,6 @@ function injectDisclaimer(containerId) {
 function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('light-mode');var l=e.classList.contains('light-mode');if(b)b.textContent=l?'☀️':'🌙';localStorage.setItem('sy_theme',l?'light':'dark');}
 </script>
 <script src="/assets/js/common.js"></script>
+<script src="/pages/report-viz.js"></script>
 </body>
 </html>

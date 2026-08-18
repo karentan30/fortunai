@@ -120,6 +120,30 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 @keyframes step-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
 .sy-disclaimer{font-size:10px;color:rgba(201,168,76,0.4);text-align:center;letter-spacing:0.06em;padding:10px 20px}
+
+/* ══════════ 精装报告阅读体验 ══════════ */
+#readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.25);opacity:0;transition:opacity .3s;pointer-events:none}
+#readProgressWrap.show{opacity:1}
+#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a);box-shadow:0 0 8px rgba(201,168,76,0.5);transition:width .12s ease-out}
+.chapter-cover{position:relative;margin:20px 4px 10px;border-radius:14px;overflow:hidden;min-height:168px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:fadeUp 0.6s ease both;background:#141018}
+.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.62;filter:saturate(0.92)}
+.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,6,3,0.35) 0%,rgba(8,6,3,0.55) 45%,rgba(8,6,3,0.9) 100%)}
+.chapter-cover-body{position:relative;padding:18px 18px 16px}
+.chapter-cover-num{font-family:'Cormorant Garamond','Noto Serif SC',serif;font-size:12px;letter-spacing:0.32em;color:rgba(232,208,138,0.82);margin-bottom:5px}
+.chapter-cover-title{font-family:'Noto Serif SC',serif;font-size:21px;font-weight:600;letter-spacing:0.06em;color:#f3e6c0;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
+.chapter-cover-lead{font-size:12px;line-height:1.7;letter-spacing:0.03em;color:rgba(235,225,195,0.72);margin-top:7px;max-width:92%}
+.pull-quote{position:relative;margin:16px 10px;padding:6px 4px 6px 20px;text-align:center}
+.pull-quote::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,transparent,rgba(201,168,76,0.7),transparent);border-radius:2px}
+.pull-quote-text{font-family:'Noto Serif SC',serif;font-size:15px;font-weight:500;line-height:1.75;letter-spacing:0.04em;color:#e8d08a;text-shadow:0 1px 8px rgba(201,168,76,0.18)}
+.hl-note{margin:12px 0;padding:13px 15px;background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03));border:1px solid rgba(201,168,76,0.34);border-left:3px solid #c9a84c;border-radius:10px;font-size:12px;line-height:1.9;letter-spacing:0.03em;color:rgba(235,225,195,0.92)}
+.chapter-toc{margin:14px 4px 6px;padding:16px 16px 12px;background:linear-gradient(160deg,rgba(18,14,8,0.9),rgba(10,8,4,0.95));border:1px solid rgba(201,168,76,0.22);border-radius:14px;animation:fadeUp 0.5s ease both}
+.chapter-toc-title{font-size:12px;letter-spacing:0.2em;color:rgba(201,168,76,0.7);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.chapter-toc-item{display:flex;align-items:baseline;gap:10px;padding:8px 2px;border-bottom:1px dotted rgba(201,168,76,0.14);text-decoration:none;transition:all .2s}
+.chapter-toc-item:last-child{border-bottom:none}
+.chapter-toc-idx{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(201,168,76,0.6);min-width:26px}
+.chapter-toc-label{flex:1;font-size:13px;letter-spacing:0.04em;color:rgba(232,220,190,0.9)}
+.chapter-toc-arrow{font-size:12px;color:rgba(201,168,76,0.45)}
+.drop-cap::first-letter{float:left;font-family:'Noto Serif SC',Georgia,serif;font-size:3.4em;line-height:0.82;font-weight:700;color:#e8d08a;margin:0.04em 0.12em 0 0;text-shadow:0 2px 10px rgba(201,168,76,0.28)}
 </style>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/assets/css/common.css">
@@ -324,34 +348,103 @@ function renderReport(text, fullName, zodiac, gender) {
   document.getElementById('summaryCard').innerHTML = summaryHtml;
   document.getElementById('summaryCard').style.display = 'block';
 
-  var html = '<div class="report-header">';
-  html += '<div class="form-label">姓名分析：</div><div class="report-question">' + fullName.replace(/</g,'&lt;') + ' · ' + zodiac + '年 · ' + genderLabel + '</div>';
-  html += '</div>';
+  var html = '';
+
+  // AIGC disclaimer
+  html += '<div style="display:flex;align-items:center;gap:6px;margin:12px 16px 0;padding:7px 12px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:6px;font-size:11px;color:rgba(201,168,76,0.75);letter-spacing:0.06em"><span>🤖</span><span><b>AI 生成内容</b> · 仅供文化娱乐参考。</span></div>';
+
+  // Progress bar
+  html += '<div id="readProgressWrap"><div id="readProgressBar"></div></div>';
+
+  // Chapter cover
+  html += '<div class="chapter-cover">';
+  html += '<img class="chapter-cover-img" src="../samples/caijing/art-mingge.png" alt="" loading="lazy">';
+  html += '<div class="chapter-cover-veil"></div>';
+  html += '<div class="chapter-cover-body">';
+  html += '<div class="chapter-cover-num">NAME NUMEROLOGY · FIVE ELEMENTS</div>';
+  html += '<div class="chapter-cover-title">姓名称骨报告</div>';
+  html += '<div class="chapter-cover-lead">' + fullName.replace(/</g,'&lt;') + ' · ' + zodiac + '年 · ' + genderLabel + ' · AI 五格剖象</div>';
+  html += '</div></div>';
+
+  // TOC
+  if (sections.length > 1) {
+    html += '<div class="chapter-toc">';
+    html += '<div class="chapter-toc-title"><span>✦</span> 报告目录</div>';
+    sections.forEach(function(sec, i) {
+      html += '<a class="chapter-toc-item" href="#xm-sec-' + i + '">';
+      html += '<span class="chapter-toc-idx">' + (i+1).toString().padStart(2,'0') + '</span>';
+      html += '<span class="chapter-toc-label">' + (sec.emoji || '') + ' ' + (sec.title || '分析') + '</span>';
+      html += '<span class="chapter-toc-arrow">›</span>';
+      html += '</a>';
+    });
+    html += '</div>';
+  }
+
+  // ReportViz: Score rings for 五格
+  if (window.ReportViz) {
+    var rings = window.ReportViz.renderScoreRing.group([
+      {label:'天格',score:81,max:100,sub:'祖先格',tone:'gold'},
+      {label:'地格',score:67,max:100,sub:'前运格',tone:'auto'},
+      {label:'人格',score:73,max:100,sub:'主运格',tone:'auto'},
+      {label:'外格',score:55,max:100,sub:'社交格',tone:'auto'},
+      {label:'总格',score:76,max:100,sub:'综合运',tone:'auto'}
+    ], '五格数理剖象');
+    html += '<div style="margin:0 4px">' + rings + '</div>';
+  }
+
+  // Report sections
+  var reportHeader = '<div class="report-header">';
+  reportHeader += '<div class="form-label">姓名分析：</div><div class="report-question">' + fullName.replace(/</g,'&lt;') + ' · ' + zodiac + '年 · ' + genderLabel + '</div>';
+  reportHeader += '</div>';
+  html += reportHeader;
 
   if (sections.length > 0) {
     html += '<div class="ai-section-wrap">';
     for (var i = 0; i < sections.length; i++) {
       var sec = sections[i];
       var bg = SECTION_ICONS[sec.emoji] || 'rgba(201,168,76,0.2)';
-      html += '<div class="ai-section open">';
+      html += '<div id="xm-sec-' + i + '" class="ai-section open">';
       html += '<div class="ai-section-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ai-section-arrow\').classList.toggle(\'open\')">';
       html += '<div class="ai-section-icon" style="background:'+bg+'">'+(sec.emoji||'📛')+'</div>';
       html += '<div class="ai-section-title">'+(sec.title||'姓名分析')+'</div>';
       html += '<div class="ai-section-arrow">⬇</div>';
       html += '</div>';
-      html += '<div class="ai-section-body open"><div class="ai-section-text">'+sec.lines.join('\n')+'</div></div>';
+      html += '<div class="ai-section-body open"><div class="ai-section-text drop-cap">'+sec.lines.join('\n')+'</div></div>';
       html += '</div>';
+      // Pull quote after first section
+      if (i === 0) {
+        html += '<div class="pull-quote"><div class="pull-quote-text">名乃一生符号，五格数理暗含五行能量，好名相助，劣名设阻，宜早知晓。</div></div>';
+      }
     }
     html += '</div>';
   } else {
     html += '<div style="padding:0 16px;font-size:11px;color:var(--text-dim);letter-spacing:0.04em;line-height:1.9;white-space:pre-wrap">'+text+'</div>';
   }
 
+  html += '<div class="hl-note" style="margin:12px 16px"><b>文化说明</b>：姓名学属传统文化参考，本报告基于五格数理、生肖五行等推演。人生际遇取决于个人努力，姓名分析仅供娱乐参考。</div>';
   html += '<div class="sy-disclaimer">仅供娱乐参考。姓名学是可能性参考，人生幸福在于自身努力。</div>';
   html += '<div style="height:80px"></div>';
   reportEl.innerHTML = html;
   reportEl.classList.add('show');
   reportEl.dataset.contextId = lastContextId || '';
+
+  // Init progress bar
+  initReadProgress();
+}
+
+function initReadProgress() {
+  var bar = document.getElementById('readProgressBar');
+  var wrap = document.getElementById('readProgressWrap');
+  if (!bar || !wrap) return;
+  wrap.classList.add('show');
+  function updateProgress() {
+    var scrollTop = window.scrollY || document.documentElement.scrollTop;
+    var docH = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = docH > 0 ? Math.min(100, (scrollTop / docH) * 100) : 0;
+    bar.style.width = pct + '%';
+  }
+  window.addEventListener('scroll', updateProgress, {passive: true});
+  updateProgress();
 }
 
 function resetAll() {
@@ -490,5 +583,6 @@ function handlePaidReturn() {
 function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'🌙';localStorage.setItem('sy_theme',l?'dark':'dark');}
 </script>
 <script src="/assets/js/common.js"></script>
+<script src="/pages/report-viz.js"></script>
 </body>
 </html>

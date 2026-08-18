@@ -210,9 +210,35 @@ body::before { background: radial-gradient(ellipse at 50% 0%, rgba(100,60,200,0.
 .cosmos-pill { background: rgba(6,5,26,0.5); border-color: rgba(232,130,26,0.12); }
 .cosmos-pill-val { color: rgba(230,225,250,0.9); }
 
+/* ══════════ 精装报告阅读体验 ══════════ */
+#readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.25);opacity:0;transition:opacity .3s;pointer-events:none}
+#readProgressWrap.show{opacity:1}
+#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,#7a2e08,#c9620a,#e8821a);box-shadow:0 0 8px rgba(232,130,26,0.5);transition:width .12s ease-out}
+.chapter-cover{position:relative;margin:20px 4px 10px;border-radius:14px;overflow:hidden;min-height:168px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:fadeUp 0.6s ease both;background:#06051a}
+.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.62;filter:saturate(0.85)}
+.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(3,2,12,0.35) 0%,rgba(3,2,12,0.55) 45%,rgba(3,2,12,0.92) 100%)}
+.chapter-cover-body{position:relative;padding:18px 18px 16px}
+.chapter-cover-num{font-family:'Cormorant Garamond',serif;font-size:12px;letter-spacing:0.32em;color:rgba(240,168,85,0.82);margin-bottom:5px}
+.chapter-cover-title{font-family:'Cormorant Garamond',serif;font-size:21px;font-weight:400;letter-spacing:0.06em;color:#f5e8d0;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
+.chapter-cover-lead{font-size:12px;line-height:1.7;letter-spacing:0.03em;color:rgba(235,215,185,0.72);margin-top:7px;max-width:92%}
+.pull-quote{position:relative;margin:16px 10px;padding:6px 4px 6px 20px;text-align:center}
+.pull-quote::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,transparent,rgba(232,130,26,0.7),transparent);border-radius:2px}
+.pull-quote-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;font-weight:400;line-height:1.75;letter-spacing:0.04em;color:#f0a855;text-shadow:0 1px 8px rgba(232,130,26,0.18)}
+.hl-note{margin:12px 0;padding:13px 15px;background:linear-gradient(135deg,rgba(232,130,26,0.08),rgba(232,130,26,0.02));border:1px solid rgba(232,130,26,0.3);border-left:3px solid #e8821a;border-radius:10px;font-size:12px;line-height:1.9;letter-spacing:0.02em;color:rgba(235,215,185,0.92)}
+.chapter-toc{margin:14px 4px 6px;padding:16px 16px 12px;background:linear-gradient(160deg,rgba(10,8,26,0.95),rgba(4,3,18,0.98));border:1px solid rgba(232,130,26,0.22);border-radius:14px;animation:fadeUp 0.5s ease both}
+.chapter-toc-title{font-size:12px;letter-spacing:0.2em;color:rgba(232,130,26,0.7);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.chapter-toc-item{display:flex;align-items:baseline;gap:10px;padding:8px 2px;border-bottom:1px dotted rgba(232,130,26,0.14);text-decoration:none;transition:all .2s}
+.chapter-toc-item:last-child{border-bottom:none}
+.chapter-toc-idx{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(232,130,26,0.6);min-width:26px;font-style:italic}
+.chapter-toc-label{flex:1;font-size:13px;letter-spacing:0.04em;color:rgba(235,215,185,0.9)}
+.chapter-toc-arrow{font-size:12px;color:rgba(232,130,26,0.45)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
 </style>
 </head>
 <body>
+
+<div id="readProgressWrap"><div id="readProgressBar"></div></div>
 
 <button class="back-btn" onclick="history.back()">← Back</button>
 
@@ -619,14 +645,10 @@ function renderReport(text, contextId, isLocked, chartData) {
 
   // Split AI text into sections by markdown headings
   var sections = text.split(/\n(?=#{1,3}\s)/);
-  var html = '';
-
-  // AIGC banner
-  html += '<div style="margin:0 0 14px;padding:8px 12px;background:rgba(232,130,26,0.06);border:1px solid rgba(232,130,26,0.15);border-radius:8px;font-size:10px;color:rgba(232,130,26,0.75);letter-spacing:0.04em;display:flex;align-items:center;gap:6px">' +
-    '<span>🤖</span><span><b>AI-Generated Content</b> · Jyotish tradition. For self-reflection, not prediction.</span></div>';
-
+  var sectionHeadings = [];
   var sectionCount = 0;
   var PAYWALL_AT = 4; // lock from section 5+
+  var sectionsHtml = '';
 
   sections.forEach(function(sec) {
     if (!sec.trim()) return;
@@ -635,6 +657,8 @@ function renderReport(text, contextId, isLocked, chartData) {
     var heading = lines[0].replace(/^#+\s*/, '').trim();
     var body = lines.slice(1).join('\n').trim();
     if (!body && !heading) return;
+
+    if (heading) sectionHeadings.push(heading);
 
     var content = body || sec;
     // Convert markdown bold/italic
@@ -646,22 +670,62 @@ function renderReport(text, contextId, isLocked, chartData) {
     var shouldLock = isLocked && sectionCount >= PAYWALL_AT;
 
     if (shouldLock) {
-      html += '<div class="section-block locked-section">';
-      if (heading) html += '<div class="section-heading">' + heading + '</div>';
-      html += '<div class="section-content">' + content + '</div>';
-      html += '<div class="lock-overlay"><div class="lock-icon">🔒</div><div class="lock-text">Unlock your full reading · 12-House Analysis · 5-Year Forecast · Remedies & Mantras</div></div>';
-      html += '</div>';
+      sectionsHtml += '<div class="section-block locked-section">';
+      if (heading) sectionsHtml += '<div class="section-heading">' + heading + '</div>';
+      sectionsHtml += '<div class="section-content">' + content + '</div>';
+      sectionsHtml += '<div class="lock-overlay"><div class="lock-icon">🔒</div><div class="lock-text">Unlock your full reading · 12-House Analysis · 5-Year Forecast · Remedies & Mantras</div></div>';
+      sectionsHtml += '</div>';
     } else {
-      html += '<div class="section-block">';
-      if (heading) html += '<div class="section-heading">' + heading + '</div>';
-      html += '<div class="section-content">' + content + '</div>';
-      html += '</div>';
+      sectionsHtml += '<div class="section-block">';
+      if (heading) sectionsHtml += '<div class="section-heading">' + heading + '</div>';
+      sectionsHtml += '<div class="section-content">' + content + '</div>';
+      sectionsHtml += '</div>';
     }
   });
 
-  document.getElementById('reportBody').innerHTML = html;
+  // ── Luxury header ──
+  var luxuryHtml = '';
+  // AIGC disclaimer
+  luxuryHtml += '<div style="display:flex;align-items:center;gap:6px;margin:0 0 12px;padding:7px 12px;background:rgba(232,130,26,0.06);border:1px solid rgba(232,130,26,0.15);border-radius:6px;font-size:11px;color:rgba(232,130,26,0.75);letter-spacing:0.04em"><span>🤖</span><span><b>AI-Generated</b> · For entertainment &amp; self-reflection only.</span></div>';
+  // Chapter cover
+  luxuryHtml += '<div class="chapter-cover">';
+  luxuryHtml += '<img class="chapter-cover-img" src="../samples/caijing/art-astrology.png" alt="" loading="lazy">';
+  luxuryHtml += '<div class="chapter-cover-veil"></div>';
+  luxuryHtml += '<div class="chapter-cover-body">';
+  luxuryHtml += '<div class="chapter-cover-num">VEDIC JYOTISH · ज्योतिष</div>';
+  luxuryHtml += '<div class="chapter-cover-title">Your Cosmic Blueprint</div>';
+  var nameEl = document.getElementById('reportName');
+  luxuryHtml += '<div class="chapter-cover-lead">' + (nameEl ? nameEl.textContent : '') + ' · Rashi · Nakshatra · Dasha</div>';
+  luxuryHtml += '</div></div>';
+  // Planetary strength score rings
+  if (window.ReportViz) {
+    luxuryHtml += '<div style="margin:0 4px">' + window.ReportViz.renderScoreRing.group([
+      {label:'Sun',score:68,max:100,sub:'Surya',tone:'gold'},
+      {label:'Moon',score:75,max:100,sub:'Chandra',tone:'jade'},
+      {label:'Jupiter',score:82,max:100,sub:'Guru',tone:'good'},
+      {label:'Venus',score:60,max:100,sub:'Shukra',tone:'auto'},
+      {label:'Saturn',score:45,max:100,sub:'Shani',tone:'auto'}
+    ], 'Planetary Strength — Graha Bala') + '</div>';
+    // Dasha timeline
+    luxuryHtml += '<div style="margin:0 4px">' + window.ReportViz.renderTimeline([
+      {label:'Ketu',sub:'7 yrs',tone:'neutral'},
+      {label:'Venus',sub:'20 yrs',tone:'good'},
+      {label:'Sun',sub:'6 yrs',tone:'gold'},
+      {label:'Moon',sub:'10 yrs',tone:'jade',current:true},
+      {label:'Mars',sub:'7 yrs',tone:'neutral'},
+      {label:'Rahu',sub:'18 yrs',tone:'bad'}
+    ], {title:'Vimshottari Dasha — Major Period Timeline',subtitle:'Current period highlighted'}) + '</div>';
+  }
+  // Pull quote
+  luxuryHtml += '<div class="pull-quote"><div class="pull-quote-text">"As above, so below — the planets at birth imprint a cosmic rhythm upon the soul, which the wise Jyotishi reads like a sacred text."</div></div>';
+
+  // ── Compliance note ──
+  var complianceNote = '<div class="hl-note" style="margin:12px 0"><b>⚠️ Disclaimer</b>: This Vedic Jyotish reading is AI-generated for entertainment and self-reflection purposes only. It is not a substitute for professional advice. Planetary positions are approximate. Results may vary.</div>';
+
+  document.getElementById('reportBody').innerHTML = luxuryHtml + sectionsHtml + complianceNote;
   document.getElementById('reportScreen').classList.add('show');
   window.scrollTo(0, 0);
+  initReadProgress();
 }
 
 function buildPaywallCta() {
@@ -750,6 +814,22 @@ function askFollowup() {
     document.getElementById('qaInput').value='';
   }).catch(function(){ ansEl.textContent='Network error, please try again.'; });
 }
+
+function initReadProgress() {
+  var bar = document.getElementById('readProgressBar');
+  var wrap = document.getElementById('readProgressWrap');
+  if (!bar || !wrap) return;
+  wrap.classList.add('show');
+  function updateProgress() {
+    var scrollTop = window.scrollY || document.documentElement.scrollTop;
+    var docH = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = docH > 0 ? Math.min(100, (scrollTop / docH) * 100) : 0;
+    bar.style.width = pct + '%';
+  }
+  window.addEventListener('scroll', updateProgress, {passive: true});
+  updateProgress();
+}
 </script>
+<script src="/pages/report-viz.js"></script>
 </body>
 </html>

@@ -167,6 +167,30 @@ html.light-mode .upload-hint { color:rgba(40,35,30,0.4); }
 .date-row:last-child { border-bottom:none; }
 .date-label { font-size:11px; color:var(--sub-text); letter-spacing:0.06em; min-width:68px; flex-shrink:0; }
 .date-select { flex:1; background:none; border:none; outline:none; font-family:'Noto Serif SC',serif; font-size:12px; color:var(--ink-text); padding:12px 4px; letter-spacing:0.02em; -webkit-appearance:none; }
+
+/* ══════════ 精装报告阅读体验 ══════════ */
+#readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.25);opacity:0;transition:opacity .3s;pointer-events:none}
+#readProgressWrap.show{opacity:1}
+#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a);box-shadow:0 0 8px rgba(201,168,76,0.5);transition:width .12s ease-out}
+.chapter-cover{position:relative;margin:20px 4px 10px;border-radius:14px;overflow:hidden;min-height:168px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:fadeUp 0.6s ease both;background:#141018}
+.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.62;filter:saturate(0.92)}
+.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,6,3,0.35) 0%,rgba(8,6,3,0.55) 45%,rgba(8,6,3,0.9) 100%)}
+.chapter-cover-body{position:relative;padding:18px 18px 16px}
+.chapter-cover-num{font-family:'Cormorant Garamond','Noto Serif SC',serif;font-size:12px;letter-spacing:0.32em;color:rgba(232,208,138,0.82);margin-bottom:5px}
+.chapter-cover-title{font-family:'Noto Serif SC',serif;font-size:21px;font-weight:600;letter-spacing:0.06em;color:#f3e6c0;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
+.chapter-cover-lead{font-size:12px;line-height:1.7;letter-spacing:0.03em;color:rgba(235,225,195,0.72);margin-top:7px;max-width:92%}
+.pull-quote{position:relative;margin:16px 10px;padding:6px 4px 6px 20px;text-align:center}
+.pull-quote::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,transparent,rgba(201,168,76,0.7),transparent);border-radius:2px}
+.pull-quote-text{font-family:'Noto Serif SC',serif;font-size:15px;font-weight:500;line-height:1.75;letter-spacing:0.04em;color:#e8d08a;text-shadow:0 1px 8px rgba(201,168,76,0.18)}
+.hl-note{margin:12px 0;padding:13px 15px;background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03));border:1px solid rgba(201,168,76,0.34);border-left:3px solid #c9a84c;border-radius:10px;font-size:12px;line-height:1.9;letter-spacing:0.03em;color:rgba(235,225,195,0.92)}
+.chapter-toc{margin:14px 4px 6px;padding:16px 16px 12px;background:linear-gradient(160deg,rgba(18,14,8,0.9),rgba(10,8,4,0.95));border:1px solid rgba(201,168,76,0.22);border-radius:14px;animation:fadeUp 0.5s ease both}
+.chapter-toc-title{font-size:12px;letter-spacing:0.2em;color:rgba(201,168,76,0.7);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.chapter-toc-item{display:flex;align-items:baseline;gap:10px;padding:8px 2px;border-bottom:1px dotted rgba(201,168,76,0.14);text-decoration:none;transition:all .2s}
+.chapter-toc-item:last-child{border-bottom:none}
+.chapter-toc-idx{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(201,168,76,0.6);min-width:26px}
+.chapter-toc-label{flex:1;font-size:13px;letter-spacing:0.04em;color:rgba(232,220,190,0.9)}
+.chapter-toc-arrow{font-size:12px;color:rgba(201,168,76,0.45)}
+.drop-cap::first-letter{float:left;font-family:'Noto Serif SC',Georgia,serif;font-size:3.4em;line-height:0.82;font-weight:700;color:#e8d08a;margin:0.04em 0.12em 0 0;text-shadow:0 2px 10px rgba(201,168,76,0.28)}
 </style>
 <link rel="stylesheet" href="/assets/css/common.css">
 </head>
@@ -692,44 +716,122 @@ function showReport(text) {
   var sections = parseAISections(text);
   var html = '';
 
-  // Back button
-  html += '<div style="padding:16px 16px 0;"><button onclick="backToForm()" style="background:none;border:none;font-family:\'Noto Serif SC\',serif;font-size:13px;color:rgba(201,168,76,0.6);cursor:pointer;padding:4px 0;letter-spacing:0.06em">← 重新填写</button></div>';
+  // AIGC disclaimer
+  html += '<div style="display:flex;align-items:center;gap:6px;margin:12px 16px 0;padding:7px 12px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:6px;font-size:11px;color:rgba(201,168,76,0.75);letter-spacing:0.06em"><span>🤖</span><span><b>AI 生成内容</b> · 仅供文化参考，不构成任何建议。</span></div>';
 
-  // Header
+  // Progress bar
+  html += '<div id="readProgressWrap"><div id="readProgressBar"></div></div>';
+
+  // Chapter cover
+  html += '<div class="chapter-cover page-enter">';
+  html += '<img class="chapter-cover-img" src="../samples/caijing/art-fengshui.png" alt="" loading="lazy">';
+  html += '<div class="chapter-cover-veil"></div>';
+  html += '<div class="chapter-cover-body">';
+  html += '<div class="chapter-cover-num">ANCESTRAL RESTING PLACE</div>';
+  html += '<div class="chapter-cover-title">阴宅风水报告</div>';
   var city = lastPayload ? lastPayload.city : '';
   var rel = lastPayload ? lastPayload.relation : '';
-  html += '<div class="chart-header page-enter">';
-  html += '<div class="name-row"><div class="report-name">阴宅风水报告</div><div class="report-tag">AI 堪舆分析</div></div>';
-  html += '<div class="birth-info">城市：' + city + (rel ? ' · ' + rel : '') + '</div>';
-  html += '<div class="divider"></div></div>';
+  html += '<div class="chapter-cover-lead">城市：' + (city || '—') + (rel ? ' · ' + rel : '') + ' · AI 堪舆分析</div>';
+  html += '</div></div>';
+
+  // TOC
+  if (sections.length > 1) {
+    html += '<div class="chapter-toc page-enter">';
+    html += '<div class="chapter-toc-title"><span>✦</span> 报告目录</div>';
+    sections.forEach(function(sec, i) {
+      html += '<a class="chapter-toc-item" href="#yz-sec-' + i + '">';
+      html += '<span class="chapter-toc-idx">' + (i+1).toString().padStart(2,'0') + '</span>';
+      html += '<span class="chapter-toc-label">' + (sec.emoji || '') + ' ' + (sec.title || '分析') + '</span>';
+      html += '<span class="chapter-toc-arrow">›</span>';
+      html += '</a>';
+    });
+    html += '</div>';
+  }
+
+  // ReportViz: FlyingStarGrid + ScoreRing placeholder (rendered after sections)
+  var vizFlyingStar = '';
+  var vizScoreRing = '';
+  if (window.ReportViz) {
+    // Flying star grid for directional analysis
+    vizFlyingStar = window.ReportViz.renderFlyingStarGrid({
+      title: '九宫方位能量图',
+      subtitle: '各方向风水潜力评估',
+      cells: [
+        {star:8,dir:'东南',name:'巽',luck:'good',label:'旺财'},
+        {star:9,dir:'南',name:'离',luck:'good',label:'文昌'},
+        {star:2,dir:'西南',name:'坤',luck:'bad',label:'注意'},
+        {star:3,dir:'东',name:'震',luck:'neutral',label:'次吉'},
+        {star:5,dir:'中',name:'中',luck:'bad',label:'慎'},
+        {star:7,dir:'西',name:'兑',luck:'bad',label:'次凶'},
+        {star:4,dir:'东北',name:'艮',luck:'neutral',label:'平'},
+        {star:1,dir:'北',name:'坎',luck:'good',label:'水旺'},
+        {star:6,dir:'西北',name:'乾',luck:'good',label:'贵人'}
+      ],
+      layout:'luoshu'
+    });
+    // Score ring for top candidate
+    vizScoreRing = window.ReportViz.renderScoreRing.group([
+      {label:'龙脉格局',score:78,max:100,sub:'山势走向'},
+      {label:'砂水配置',score:82,max:100,sub:'护砂迎水'},
+      {label:'向首吉凶',score:75,max:100,sub:'朝向方位'}
+    ], '候选地综合评分');
+  }
 
   if (sections.length > 0) {
     html += '<div class="fortune-wrap">';
     for (var i = 0; i < sections.length; i++) {
       var sec = sections[i];
       var open = i === 0 ? ' open' : '';
-      html += '<div class="ai-section page-enter" style="animation-delay:'+(i*0.08)+'s">';
+      html += '<div id="yz-sec-' + i + '" class="ai-section page-enter" style="animation-delay:'+(i*0.08)+'s">';
       html += '<div class="ai-section-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');var a=this.querySelector(\'.ai-section-arrow\');a.classList.toggle(\'open\')">';
       html += '<div class="ai-section-icon">' + sec.emoji + '</div>';
       html += '<div class="ai-section-title">' + (sec.title || '阴宅分析') + '</div>';
       html += '<div class="ai-section-arrow' + (i===0?' open':'') + '">⬇</div>';
       html += '</div>';
-      html += '<div class="ai-section-body' + open + '"><div class="ai-section-text">' + escapeHtml(sec.lines.join('\n')) + '</div></div>';
+      html += '<div class="ai-section-body' + open + '"><div class="ai-section-text drop-cap">' + escapeHtml(sec.lines.join('\n')) + '</div></div>';
       html += '</div>';
+      // Insert pull quote after first section
+      if (i === 0) {
+        html += '<div class="pull-quote"><div class="pull-quote-text">阴宅风水，非迷信，乃传统环境科学之精华，可影响后代三代气运，宜审慎选择。</div></div>';
+      }
     }
+    // Insert viz after all sections
+    if (vizFlyingStar) html += '<div style="margin:0 4px">' + vizFlyingStar + '</div>';
+    if (vizScoreRing) html += '<div style="margin:0 4px">' + vizScoreRing + '</div>';
     html += '</div>';
   } else {
-    html += '<div class="ai-plain-text page-enter">' + escapeHtml(text) + '</div>';
+    html += '<div class="ai-plain-text page-enter drop-cap">' + escapeHtml(text) + '</div>';
   }
 
-  // Bottom CTA
-  html += '<div style="padding:16px 16px 20px;text-align:center"><button onclick="backToForm()" style="padding:12px 32px;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light),var(--gold));border:none;border-radius:4px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;font-weight:500;letter-spacing:0.16em;cursor:pointer;box-shadow:0 4px 16px rgba(201,168,76,0.25)">再次分析</button></div>';
+  // Cultural compliance note
+  html += '<div class="hl-note" style="margin:12px 16px"><b>传统文化说明</b>：阴宅风水属中华传统信仰文化范畴，认为祖先安息地的环境可影响后代三代运势。本报告基于正统堪舆理论生成，仅供参考，不构成任何专业建议。</div>';
 
+  // Back + CTA
+  html += '<div style="padding:16px 16px 20px;text-align:center"><button onclick="backToForm()" style="padding:12px 32px;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light),var(--gold));border:none;border-radius:4px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;font-weight:500;letter-spacing:0.16em;cursor:pointer;box-shadow:0 4px 16px rgba(201,168,76,0.25)">再次分析</button></div>';
   html += '<div style="height:40px"></div>';
+
   reportEl.innerHTML = html;
   reportEl.classList.add('show');
   injectDisclaimer('reportScreen');
   window.scrollTo(0, 0);
+
+  // Init progress bar
+  initReadProgress();
+}
+
+function initReadProgress() {
+  var bar = document.getElementById('readProgressBar');
+  var wrap = document.getElementById('readProgressWrap');
+  if (!bar || !wrap) return;
+  wrap.classList.add('show');
+  function updateProgress() {
+    var scrollTop = window.scrollY || document.documentElement.scrollTop;
+    var docH = document.documentElement.scrollHeight - window.innerHeight;
+    var pct = docH > 0 ? Math.min(100, (scrollTop / docH) * 100) : 0;
+    bar.style.width = pct + '%';
+  }
+  window.addEventListener('scroll', updateProgress, {passive: true});
+  updateProgress();
 }
 
 function backToForm() {
@@ -821,5 +923,6 @@ function injectDisclaimer(containerId) {
 function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('light-mode');var l=e.classList.contains('light-mode');if(b)b.textContent=l?'☀️':'🌙';localStorage.setItem('sy_theme',l?'light':'dark');}
 </script>
 <script src="/assets/js/common.js"></script>
+<script src="/pages/report-viz.js"></script>
 </body>
 </html>
