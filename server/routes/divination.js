@@ -713,13 +713,17 @@ router.post('/ziwei', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
   try {
-    const { question, imageBase64, mimeType } = req.body;
+    const { question, imageBase64, mimeType, lang } = req.body;
     // If front-end sent a photo, run vision extraction first; otherwise use caller-provided features (or none)
     let features = req.body.features || null;
     if (imageBase64 && !features) {
       features = await analyzeFace(imageBase64, mimeType);
       // analyzeFace returns null on no-key or error → graceful fallback (features stays null)
     }
+    const _LANG = { en: 'English', ko: '한국어', 'pt-br': 'Português (Brasil)', th: 'ไทย', es: 'Español' }[lang];
+    const _langLine = _LANG
+      ? `Output the ENTIRE report in ${_LANG}. Translate all palace/zone names to ${_LANG} (keep the Ma Yi / pinyin term in parentheses once). Do NOT output Chinese prose. Avoid the word "Chinese" — say "Eastern physiognomy / Ma Yi Shen Xiang".`
+      : '用 Markdown，标题分段，简体中文';
 
     // 系统角色：麻衣神相正宗体系
     const SYSTEM = `你是一位精通《麻衣神相》的正宗面相师，以宋代陈抟（希夷先生）传承的麻衣道者相法为宗，融汇三停五岳十二宫气色神韵一整套体系。
@@ -733,7 +737,8 @@ router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
 6. 气色神韵：面色明润为吉，晦暗为凶。眼神有光、顾盼有神为上相。
 7. 疾厄宫只说养生调理方向，严禁点病名、做医疗诊断。
 8. 结尾必须有"相师叮嘱"：强调面相随心性而变，鼓励积善修德，不宿命论。
-9. 用Markdown，标题分段，简体中文，每个宫位分析100-200字。`;
+9. 用Markdown，标题分段，每个宫位分析100-200字。
+【OUTPUT LANGUAGE】${_langLine}。`;
 
     const featureBlock = features
       ? `\n\n【照片特征描述（仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
@@ -781,12 +786,16 @@ router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.post('/shouxiang', rateLimitMiddleware, async (req, res) => {
   try {
-    const { question, hand, imageBase64, mimeType } = req.body;
+    const { question, hand, imageBase64, mimeType, lang } = req.body;
     let features = req.body.features || null;
     if (imageBase64 && !features) {
       features = await analyzePalm(imageBase64, mimeType);
     }
     const handLabel = hand === 'left' ? '左手' : '右手（主手）';
+    const _LANG = { en: 'English', ko: '한국어', 'pt-br': 'Português (Brasil)', th: 'ไทย', es: 'Español' }[lang];
+    const _langLine = _LANG
+      ? `Output the ENTIRE report in ${_LANG}. Translate all line/mount names to ${_LANG} (keep the pinyin term in parentheses once). Do NOT output Chinese prose. Avoid the word "Chinese" — say "Eastern palmistry / Ma Yi".`
+      : '用 Markdown，标题分段，简体中文';
 
     const SYSTEM = `你是一位精通《麻衣神相》手相篇的正宗手相师，以三大主线、八丘、特殊掌纹为核心体系断命。
 
@@ -798,7 +807,8 @@ router.post('/shouxiang', rateLimitMiddleware, async (req, res) => {
 5. 特殊掌型：川字掌（感情线智慧线合一，主专注执着）·断掌/通贯手（贯穿全掌，主个性鲜明）。
 6. 生命线长短不等于寿命长短——必须在此说明，避免用户恐慌。
 7. 结尾"相师叮嘱"：强调掌纹随人生经历和心态变化，不宿命论。
-8. 用Markdown，标题分段，简体中文，每部分100-180字。`;
+8. 用Markdown，标题分段，每部分100-180字。
+【OUTPUT LANGUAGE】${_langLine}。`;
 
     const featureBlock = features
       ? `\n\n【照片特征描述（${handLabel}，仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`

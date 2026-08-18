@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#b8944a">
+<meta name="description" content="Runae · Your Name in Any Language — Discover your authentic name in Japanese, French, Arabic, Korean and more.">
+<title>Runae · Your Name in Any Language</title>
+<meta property="og:title" content="Runae · Your Name in Any Language">
+<meta property="og:description" content="Get 3 authentic, culturally meaningful name candidates in any language — for language learners, travelers, and global souls.">
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0a04;--card:#1a140a;--mid:#241c10;
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
+  --ink:rgba(255,245,220,0.92);--sub:rgba(200,180,140,0.6);
+  --border:rgba(201,168,76,0.15);
+}
+html,body{background:var(--bg);font-family:'Cormorant Garamond','Georgia',serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+body{max-width:440px;margin:0 auto;min-height:100vh;padding-bottom:120px;overflow-y:auto}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,0.07) 0%,transparent 55%);pointer-events:none;z-index:0}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(201,168,76,0.5);cursor:pointer;padding:4px 0;min-height:44px;display:flex;align-items:center}
+
+/* ── Header ── */
+.header{text-align:center;padding:44px 20px 20px;position:relative;z-index:1}
+.header-icon{font-size:44px;margin-bottom:8px}
+.header-title{font-size:22px;font-weight:300;letter-spacing:0.14em;margin-bottom:4px}
+.header-subtitle{font-size:11px;letter-spacing:0.22em;color:rgba(201,168,76,0.4);margin-bottom:6px;font-style:italic}
+.header-tagline{font-size:12px;color:var(--sub);letter-spacing:0.06em;line-height:1.6;padding:0 24px;margin-bottom:14px}
+.gold-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto}
+
+/* ── Lang pills ── */
+.lang-scroll{display:flex;gap:7px;overflow-x:auto;padding:14px 16px 4px;scrollbar-width:none;position:relative;z-index:1}
+.lang-scroll::-webkit-scrollbar{display:none}
+.lang-pill{flex-shrink:0;padding:7px 13px;border:1px solid var(--border);border-radius:20px;font-size:11px;letter-spacing:0.08em;cursor:pointer;white-space:nowrap;transition:all .18s;color:var(--sub);background:var(--card);min-height:34px;display:flex;align-items:center}
+.lang-pill.active{border-color:var(--gold);background:rgba(201,168,76,0.14);color:var(--gold-light);font-weight:500}
+.lang-pill-hint{font-size:10px;letter-spacing:0.08em;color:rgba(201,168,76,0.28);padding:0 16px 10px;font-family:'Noto Serif SC',serif;position:relative;z-index:1}
+
+/* ── Form ── */
+.form-section{padding:10px 16px;position:relative;z-index:1}
+.form-label{font-size:9px;letter-spacing:0.18em;color:rgba(201,168,76,0.4);margin-bottom:9px;font-family:'Noto Serif SC',serif}
+.field-group{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:12px}
+.field-row{display:flex;align-items:center;padding:0 14px;border-bottom:1px solid rgba(201,168,76,0.07)}
+.field-row:last-child{border-bottom:none}
+.field-label{font-size:11px;color:var(--sub);letter-spacing:0.04em;min-width:68px;flex-shrink:0;font-family:'Noto Serif SC',serif}
+.field-input,.field-select{flex:1;background:none;border:none;outline:none;color:var(--ink);padding:13px 8px;letter-spacing:0.04em;-webkit-appearance:none;min-height:44px}
+.field-input{font-family:'Cormorant Garamond',serif;font-size:15px}
+.field-select{font-family:'Cormorant Garamond',serif;font-size:13px}
+.field-select option{background:#1a140a;color:var(--ink)}
+.custom-lang-row{display:none}
+.custom-lang-row.show{display:flex}
+.gender-row{display:flex;gap:8px;margin-bottom:12px}
+.gender-opt{flex:1;background:var(--card);border:1px solid var(--border);border-radius:6px;padding:11px 0;text-align:center;font-size:12px;color:var(--sub);letter-spacing:0.08em;cursor:pointer;transition:all .2s;min-height:44px;display:flex;align-items:center;justify-content:center}
+.gender-opt.active{border-color:var(--gold);background:rgba(201,168,76,0.12);color:var(--gold-light)}
+.birth-hint{font-size:10px;color:rgba(201,168,76,0.3);letter-spacing:0.06em;text-align:center;margin-bottom:14px}
+.btn-gen{width:100%;padding:15px 0;background:linear-gradient(135deg,#8a6420,#c9a84c,#e8d08a);border:none;border-radius:4px;color:rgba(14,10,4,0.95);font-family:'Noto Serif SC',serif;font-size:14px;letter-spacing:0.22em;cursor:pointer;box-shadow:0 4px 20px rgba(201,168,76,0.25);min-height:50px;transition:opacity .2s}
+.btn-gen:disabled{opacity:0.55;cursor:not-allowed}
+
+/* ── Loading ── */
+.loading-screen{display:none;text-align:center;padding:80px 20px;position:relative;z-index:1}
+.loading-screen.show{display:block}
+.loading-ring{width:48px;height:48px;border:2px solid rgba(201,168,76,0.1);border-top-color:var(--gold);border-radius:50%;animation:spin .85s linear infinite;margin:0 auto 20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-family:'Noto Serif SC',serif;font-size:12px;color:var(--sub);letter-spacing:0.1em;line-height:1.8}
+
+/* ── Results ── */
+.result-screen{display:none;position:relative;z-index:1;padding:0 16px}
+.result-screen.show{display:block}
+.result-header{text-align:center;padding:24px 0 16px}
+.result-for{font-size:10px;letter-spacing:0.14em;color:rgba(201,168,76,0.4);font-family:'Noto Serif SC',serif;margin-bottom:4px}
+.result-lang{font-size:16px;letter-spacing:0.1em;color:var(--gold)}
+
+/* ── Name cards ── */
+.names-container{display:flex;flex-direction:column;gap:14px;margin-bottom:16px}
+.name-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px 18px;position:relative;overflow:hidden;cursor:pointer;transition:border-color .2s}
+.name-card:hover{border-color:rgba(201,168,76,0.35)}
+.name-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
+.nc-num{position:absolute;top:14px;right:16px;font-size:10px;color:rgba(201,168,76,0.3);letter-spacing:0.12em;font-family:'Noto Serif SC',serif}
+.nc-native{font-size:32px;color:var(--gold-light);letter-spacing:4px;font-weight:300;line-height:1.2;margin-bottom:6px;font-family:'Noto Serif SC',serif}
+.nc-roman{font-size:14px;color:rgba(91,191,160,0.85);letter-spacing:2px;font-style:italic;margin-bottom:12px}
+.nc-body{font-size:12px;color:var(--sub);line-height:1.9;letter-spacing:0.04em;white-space:pre-wrap;word-break:break-word}
+
+/* ── Share card (off-screen for capture) ── */
+.share-capture-zone{position:fixed;left:-9999px;top:0;width:375px;pointer-events:none}
+.share-card-el{width:375px;min-height:500px;background:linear-gradient(160deg,#1a140a 0%,#0e0a04 100%);border:1px solid rgba(201,168,76,0.3);border-radius:16px;padding:40px 28px 32px;font-family:'Cormorant Garamond',Georgia,serif;box-shadow:0 0 60px rgba(201,168,76,0.08);overflow:hidden;position:relative}
+.share-card-el::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#c9a84c,#e8d08a,#c9a84c,transparent)}
+.sc-logo{font-size:9px;letter-spacing:0.22em;color:rgba(201,168,76,0.4);margin-bottom:28px;font-family:'Noto Serif SC',serif}
+.sc-label{font-size:9px;letter-spacing:0.18em;color:rgba(201,168,76,0.35);margin-bottom:10px;font-family:'Noto Serif SC',serif}
+.sc-name-original{font-size:13px;color:rgba(255,245,220,0.55);margin-bottom:4px;letter-spacing:0.06em}
+.sc-lang{font-size:11px;color:rgba(201,168,76,0.5);letter-spacing:0.14em;margin-bottom:24px;font-family:'Noto Serif SC',serif}
+.sc-native{font-size:48px;color:#e8d08a;letter-spacing:6px;font-weight:300;line-height:1.15;margin-bottom:8px;font-family:'Noto Serif SC',serif}
+.sc-roman{font-size:16px;color:rgba(91,191,160,0.8);letter-spacing:2px;font-style:italic;margin-bottom:20px}
+.sc-meaning{font-size:12px;color:rgba(200,180,140,0.7);line-height:1.8;letter-spacing:0.04em;border-top:1px solid rgba(201,168,76,0.1);padding-top:16px;white-space:pre-wrap;word-break:break-word}
+.sc-footer{margin-top:24px;font-size:9px;color:rgba(201,168,76,0.25);letter-spacing:0.14em;font-family:'Noto Serif SC',serif}
+
+/* ── Action bar ── */
+.action-bar{display:flex;gap:8px;margin:16px 0}
+.action-btn{flex:1;padding:11px 0;border:1px solid var(--border);border-radius:6px;background:var(--card);color:var(--sub);font-size:11px;letter-spacing:0.08em;cursor:pointer;text-align:center;font-family:'Noto Serif SC',serif;min-height:44px;transition:border-color .18s}
+.action-btn:hover{border-color:rgba(201,168,76,0.35)}
+.action-btn.primary{background:linear-gradient(135deg,#8a6420,#c9a84c);color:rgba(14,10,4,0.9);border:none;font-weight:500}
+
+/* ── Disclaimer ── */
+.disclaimer{text-align:center;padding:8px 0 24px}
+.disclaimer span{font-size:9px;color:rgba(201,168,76,0.22);font-family:'Noto Serif SC',serif;letter-spacing:0.06em}
+</style>
+<link rel="stylesheet" href="/assets/css/common.css">
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme" style="z-index:999">🌙</button>
+
+<!-- INPUT SCREEN -->
+<div id="inputScreen">
+  <button class="back-btn" onclick="history.back()">← Back</button>
+  <div class="header">
+    <div class="header-icon">✦</div>
+    <div class="header-title">Your Name in Any Language</div>
+    <div class="header-subtitle">SOUL NAME GENERATOR</div>
+    <div class="header-tagline">Discover your authentic name in another culture — meaningful, pronounceable, and truly yours.</div>
+    <div class="gold-line"></div>
+  </div>
+
+  <!-- Language picker pills -->
+  <div class="lang-scroll" id="langPills">
+    <div class="lang-pill active" data-lang="Japanese" onclick="pickLang(this)">🇯🇵 Japanese</div>
+    <div class="lang-pill" data-lang="Korean" onclick="pickLang(this)">🇰🇷 Korean</div>
+    <div class="lang-pill" data-lang="French" onclick="pickLang(this)">🇫🇷 French</div>
+    <div class="lang-pill" data-lang="Spanish" onclick="pickLang(this)">🇪🇸 Spanish</div>
+    <div class="lang-pill" data-lang="Arabic" onclick="pickLang(this)">🇦🇪 Arabic</div>
+    <div class="lang-pill" data-lang="Chinese" onclick="pickLang(this)">🇨🇳 Chinese</div>
+    <div class="lang-pill" data-lang="Italian" onclick="pickLang(this)">🇮🇹 Italian</div>
+    <div class="lang-pill" data-lang="German" onclick="pickLang(this)">🇩🇪 German</div>
+    <div class="lang-pill" data-lang="Russian" onclick="pickLang(this)">🇷🇺 Russian</div>
+    <div class="lang-pill" data-lang="Portuguese" onclick="pickLang(this)">🇧🇷 Portuguese</div>
+    <div class="lang-pill" data-lang="Hindi" onclick="pickLang(this)">🇮🇳 Hindi</div>
+    <div class="lang-pill" data-lang="Thai" onclick="pickLang(this)">🇹🇭 Thai</div>
+    <div class="lang-pill" data-lang="Hebrew" onclick="pickLang(this)">🇮🇱 Hebrew</div>
+    <div class="lang-pill" data-lang="Greek" onclick="pickLang(this)">🇬🇷 Greek</div>
+    <div class="lang-pill" data-lang="Turkish" onclick="pickLang(this)">🇹🇷 Turkish</div>
+    <div class="lang-pill" data-lang="Vietnamese" onclick="pickLang(this)">🇻🇳 Vietnamese</div>
+    <div class="lang-pill" data-lang="__other__" onclick="pickLang(this)">✦ Other…</div>
+  </div>
+  <div class="lang-pill-hint">← Scroll for more languages</div>
+
+  <div class="form-section">
+    <!-- Custom language input -->
+    <div class="field-group custom-lang-row" id="customLangRow">
+      <div class="field-row">
+        <span class="field-label">Language</span>
+        <input class="field-input" id="customLang" placeholder="e.g. Swahili, Latin, Icelandic…" oninput="onCustomLangInput()" maxlength="60">
+      </div>
+    </div>
+
+    <div class="form-label">YOUR NAME</div>
+    <div class="field-group">
+      <div class="field-row">
+        <span class="field-label">Name</span>
+        <input class="field-input" id="origName" placeholder="Your name (any language)" maxlength="80">
+      </div>
+      <div class="field-row">
+        <span class="field-label">Vibe</span>
+        <input class="field-input" id="personality" placeholder="e.g. gentle, fierce, creative… (optional)" maxlength="120">
+      </div>
+    </div>
+
+    <div class="form-label">GENDER</div>
+    <div class="gender-row">
+      <div class="gender-opt active" onclick="pickGender(this,'female')">♀ Feminine</div>
+      <div class="gender-opt" onclick="pickGender(this,'male')">♂ Masculine</div>
+      <div class="gender-opt" onclick="pickGender(this,'neutral')">◈ Neutral</div>
+    </div>
+
+    <div class="form-label">BIRTH DATE — optional, adds elemental nuance</div>
+    <div class="field-group" style="margin-bottom:6px">
+      <div class="field-row">
+        <span class="field-label">Year</span>
+        <input class="field-input" id="birthYear" type="number" min="1900" max="2020" placeholder="e.g. 1993">
+      </div>
+      <div class="field-row">
+        <span class="field-label">Month</span>
+        <input class="field-input" id="birthMonth" type="number" min="1" max="12" placeholder="1–12">
+      </div>
+      <div class="field-row">
+        <span class="field-label">Day</span>
+        <input class="field-input" id="birthDay" type="number" min="1" max="31" placeholder="1–31">
+      </div>
+    </div>
+    <div class="birth-hint">⊹ Leave blank to skip</div>
+
+    <button class="btn-gen" id="genBtn" onclick="generate()">✦ Find My Name</button>
+  </div>
+</div>
+
+<!-- LOADING SCREEN -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="loading-ring"></div>
+  <div class="loading-text">Consulting the cultural archive…<br><span id="loadingLang" style="color:var(--gold);"></span></div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div class="result-screen" id="resultScreen">
+  <button class="back-btn" onclick="resetPage()">← Try Again</button>
+  <div class="result-header">
+    <div class="result-for" id="resultFor"></div>
+    <div class="result-lang" id="resultLang"></div>
+  </div>
+  <div class="names-container" id="namesContainer"></div>
+  <div class="action-bar">
+    <button class="action-btn primary" onclick="saveCard()" id="saveCardBtn">⬇ Save Card</button>
+    <button class="action-btn" onclick="shareTweet()">𝕏 Share</button>
+    <button class="action-btn" onclick="copyText()">⊕ Copy</button>
+  </div>
+  <div class="disclaimer">
+    <span>✦ AI-generated for reference & inspiration · AI 生成仅供参考 · Runae</span>
+  </div>
+</div>
+
+<!-- Off-screen share card for html2canvas capture -->
+<div class="share-capture-zone" id="captureZone">
+  <div class="share-card-el" id="shareCardEl">
+    <div class="sc-logo">RUNAE · SOUL NAME</div>
+    <div class="sc-label">NAME IN</div>
+    <div class="sc-lang" id="scLang">Japanese</div>
+    <div class="sc-name-original" id="scOriginal"></div>
+    <div class="sc-native" id="scNative"></div>
+    <div class="sc-roman" id="scRoman"></div>
+    <div class="sc-meaning" id="scMeaning"></div>
+    <div class="sc-footer">AI-generated · for reference &amp; inspiration · runae.net</div>
+  </div>
+</div>
+
+<script>
+// ── State ──
+var selectedLang = 'Japanese';
+var selectedGender = 'female';
+var lastResult = null;
+
+function pickLang(el) {
+  document.querySelectorAll('.lang-pill').forEach(function(p){ p.classList.remove('active'); });
+  el.classList.add('active');
+  var lang = el.dataset.lang;
+  if (lang === '__other__') {
+    selectedLang = '';
+    document.getElementById('customLangRow').classList.add('show');
+    document.getElementById('customLang').focus();
+  } else {
+    selectedLang = lang;
+    document.getElementById('customLangRow').classList.remove('show');
+  }
+}
+
+function onCustomLangInput() {
+  selectedLang = document.getElementById('customLang').value.trim();
+}
+
+function pickGender(el, g) {
+  selectedGender = g;
+  document.querySelectorAll('.gender-opt').forEach(function(e){ e.classList.remove('active'); });
+  el.classList.add('active');
+}
+
+function generate() {
+  var name = document.getElementById('origName').value.trim();
+  if (!name) { showToast('Please enter your name', 'error'); return; }
+  if (!selectedLang) { showToast('Please enter or select a target language', 'error'); return; }
+
+  var btn = document.getElementById('genBtn');
+  btn.disabled = true;
+
+  document.getElementById('inputScreen').style.display = 'none';
+  document.getElementById('loadingScreen').classList.add('show');
+  document.getElementById('loadingLang').textContent = 'Finding your ' + selectedLang + ' name…';
+
+  var body = {
+    originalName: name,
+    gender: selectedGender,
+    targetLanguage: selectedLang,
+    personality: document.getElementById('personality').value.trim()
+  };
+  var y = parseInt(document.getElementById('birthYear').value);
+  var m = parseInt(document.getElementById('birthMonth').value);
+  var d = parseInt(document.getElementById('birthDay').value);
+  if (y && m && d) { body.birthYear = y; body.birthMonth = m; body.birthDay = d; }
+
+  fetch('/api/soul-name', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  }).then(function(r){ return r.json(); }).then(function(data){
+    btn.disabled = false;
+    document.getElementById('loadingScreen').classList.remove('show');
+    if (data.error) { showToast(data.error, 'error'); resetPage(); return; }
+    lastResult = data;
+    renderResult(data, name, selectedLang);
+  }).catch(function(){
+    btn.disabled = false;
+    document.getElementById('loadingScreen').classList.remove('show');
+    showToast('Connection error — please try again', 'error');
+    resetPage();
+  });
+}
+
+// ── Parse LLM output into 3 cards ──
+function parseNames(text) {
+  // Split on numbered candidates "1." "2." "3." or "**1.**" etc.
+  var sections = text.split(/\n(?=\*{0,2}(?:Name\s*)?[123][\.\)]\s*\*{0,2})/i);
+  if (sections.length < 2) {
+    // fallback: split on blank-line-separated blocks
+    sections = text.split(/\n{2,}/);
+  }
+  // Trim and filter empties
+  return sections.map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 20; }).slice(0, 3);
+}
+
+// Try to extract first meaningful line (the name in native script or romanized)
+function extractTitle(block) {
+  var lines = block.split('\n').map(function(l){ return l.replace(/^\*+|\*+$/g,'').trim(); }).filter(Boolean);
+  // Find first line that looks like a heading or name
+  for (var i = 0; i < Math.min(lines.length, 4); i++) {
+    var l = lines[i];
+    // Skip pure number lines like "1." "Name 1:"
+    if (/^[\d\.\:\)\s]+$/.test(l)) continue;
+    if (/^(name\s*[123]|candidate\s*[123])/i.test(l)) continue;
+    return l;
+  }
+  return lines[0] || '';
+}
+
+function extractRoman(block) {
+  // Look for italicized, pronunciation, or romanized line
+  var m = block.match(/(?:Romanization|Pronunciation|Reading|Roman|Romaji|Pinyin|Romanas|Transliteration)[:\s]+([^\n]+)/i);
+  if (m) return m[1].trim().replace(/^\*+|\*+$/g,'');
+  // Look for something like "/ ... /" or "( ... )"
+  m = block.match(/[\/\(]([a-zA-ZÀ-ÿ\s\-'',\.]+)[\/\)]/);
+  if (m && m[1].length < 40) return m[1].trim();
+  return '';
+}
+
+function renderResult(data, origName, lang) {
+  document.getElementById('resultFor').textContent = origName + ' →';
+  document.getElementById('resultLang').textContent = lang;
+
+  var container = document.getElementById('namesContainer');
+  container.innerHTML = '';
+
+  var blocks = parseNames(data.reading || '');
+  if (!blocks.length) blocks = [data.reading || ''];
+
+  // Populate off-screen share card with the first block
+  populateShareCard(origName, lang, blocks[0]);
+
+  blocks.forEach(function(block, i) {
+    var title = extractTitle(block);
+    var roman = extractRoman(block);
+    // Remove first line from body if it's the title
+    var body = block;
+    var bodyLines = block.split('\n');
+    if (bodyLines[0].replace(/\*+/g,'').trim() === title.replace(/\*+/g,'').trim()) {
+      body = bodyLines.slice(1).join('\n').trim();
+    }
+
+    var card = document.createElement('div');
+    card.className = 'name-card';
+    card.setAttribute('onclick', 'selectCard(' + i + ', this)');
+    card.innerHTML =
+      '<div class="nc-num">0' + (i+1) + '</div>' +
+      '<div class="nc-native">' + escHtml(title) + '</div>' +
+      (roman ? '<div class="nc-roman">' + escHtml(roman) + '</div>' : '') +
+      '<div class="nc-body">' + escHtml(body) + '</div>';
+    container.appendChild(card);
+  });
+
+  document.getElementById('resultScreen').classList.add('show');
+}
+
+function selectCard(idx, el) {
+  document.querySelectorAll('.name-card').forEach(function(c){ c.style.borderColor = ''; });
+  el.style.borderColor = 'rgba(201,168,76,0.5)';
+  var blocks = parseNames(lastResult && lastResult.reading || '');
+  var origName = document.getElementById('scOriginal').textContent;
+  var lang = document.getElementById('scLang').textContent;
+  if (blocks[idx]) populateShareCard(origName, lang, blocks[idx]);
+}
+
+function populateShareCard(origName, lang, block) {
+  var title = extractTitle(block);
+  var roman = extractRoman(block);
+  var body = block;
+  var bodyLines = block.split('\n');
+  if (bodyLines[0].replace(/\*+/g,'').trim() === title.replace(/\*+/g,'').trim()) {
+    body = bodyLines.slice(1).join('\n').trim();
+  }
+  document.getElementById('scLang').textContent = lang;
+  document.getElementById('scOriginal').textContent = origName;
+  document.getElementById('scNative').textContent = title;
+  document.getElementById('scRoman').textContent = roman || '';
+  // Take first ~280 chars of body for card
+  var short = body.slice(0, 280) + (body.length > 280 ? '…' : '');
+  document.getElementById('scMeaning').textContent = short;
+}
+
+function saveCard() {
+  var btn = document.getElementById('saveCardBtn');
+  btn.textContent = '⊙ Capturing…';
+  btn.disabled = true;
+  html2canvas(document.getElementById('shareCardEl'), {
+    backgroundColor: null, scale: 2, useCORS: true, logging: false
+  }).then(function(canvas) {
+    var link = document.createElement('a');
+    link.download = 'my-' + (selectedLang || 'name').toLowerCase() + '-name-runae.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    btn.textContent = '⬇ Save Card';
+    btn.disabled = false;
+  }).catch(function(){
+    showToast('Save failed — try screenshot instead', 'error');
+    btn.textContent = '⬇ Save Card';
+    btn.disabled = false;
+  });
+}
+
+function shareTweet() {
+  var native = document.getElementById('scNative').textContent || '';
+  var lang = selectedLang || 'another language';
+  var text = 'My name in ' + lang + ' is ' + native + ' ✦ Get your soul name at Runae';
+  window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(text) + '&hashtags=SoulName,Runae,' + encodeURIComponent(lang));
+}
+
+function copyText() {
+  var reading = (lastResult && lastResult.reading) || '';
+  navigator.clipboard.writeText('My name in ' + selectedLang + ':\n\n' + reading + '\n\n— Runae · runae.net')
+    .then(function(){ showToast('Copied to clipboard!', ''); })
+    .catch(function(){ showToast('Copy failed — please copy manually', 'error'); });
+}
+
+function resetPage() {
+  document.getElementById('inputScreen').style.display = 'block';
+  document.getElementById('resultScreen').classList.remove('show');
+  document.getElementById('loadingScreen').classList.remove('show');
+  document.getElementById('genBtn').disabled = false;
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;text-align:center;cursor:pointer;color:rgba(255,245,220,0.9);transition:opacity 0.3s';
+  t.style.background = type === 'error' ? 'rgba(160,40,40,0.95)' : 'rgba(23,14,6,0.95)';
+  t.style.border = '1px solid ' + (type === 'error' ? 'rgba(200,80,80,0.4)' : 'rgba(201,168,76,0.2)');
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.style.opacity = '0'; setTimeout(function(){ t.remove(); }, 300); }, 3000);
+}
+</script>
+
+<script>
+(function(){
+  var t = localStorage.getItem('sy_theme');
+  if (t === 'dark') { document.documentElement.classList.add('dark-mode'); }
+})();
+function toggleTheme() {
+  document.documentElement.classList.toggle('dark-mode');
+  var l = document.documentElement.classList.contains('dark-mode');
+  localStorage.setItem('sy_theme', l ? 'dark' : 'light');
+}
+</script>
+<script src="/assets/js/common.js"></script>
+</body>
+</html>
