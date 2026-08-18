@@ -30,7 +30,9 @@ let celestine;
   for (const c of candidates) {
     try { celestine = require(c); return; } catch (_) {}
   }
-  throw new Error("western-astro-engine: could not locate celestine dist — run npm install in vedic-engine/vendor/celestine");
+  // 加载失败不在此 throw —— 否则会拖垮整个后端 boot（本模块被 index.js 顶层 require）。
+  // 保持 celestine=undefined，改由 computeWesternChart 在真正被调用时才报错。
+  console.warn("[western-astro-engine] celestine dist 未找到，西方占星功能不可用（其余功能正常）");
 })();
 
 // Western 12 signs (tropical), index 0 = Aries (0°-30°)
@@ -102,6 +104,7 @@ function toZodiacSign(tropLon) {
  * @returns {Object} { meta, planets[], ascendant, houses[], aspects[], hasFullChart }
  */
 function computeWesternChart(opts) {
+  if (!celestine) throw new Error("western-astro-engine: celestine 天文库不可用（服务器缺 vendor/celestine/dist）");
   if (!opts || typeof opts !== "object") throw new Error("computeWesternChart: opts required");
 
   const year  = +opts.year;
