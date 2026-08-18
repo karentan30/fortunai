@@ -5,7 +5,7 @@
 ## ⚠️ 最要紧：接手第一件事 = 检查工作树里两个 agent 的半成品
 上一会话结束时有 **2 个后台 agent 在改文件**（新会话它们不会自动继续）。先 `cd ~/projects/shenyuan && git status`：
 1. **`server/routes/divination.js`**（agent 在把 8 个薄报告 prompt 补到 10 分：**紫微/西占/奇门/六爻/大六壬 注入真引擎数据** + 地域/供奉/前世加深）→ 若有改动：`node -c server/routes/divination.js` 过 → 审 → commit → 部署。若没改动或半截 → 重新派(见 `docs/审计-报告质量×定价×设计-0818.md` 弱点 + `docs/报告-分层prompt内容设计.md` 维度)。
-2. **`pages/home-runae.html`**（agent 在以 `home-wow-preview.html`(青绿玉色·8分) 为基底做中文首页 + 修被裁坏的图 + 修定价页CTA断链 + 加信任感·**只用现成图不生新图**）→ 审→ commit → 部署。
+2. ~~`pages/home-runae.html` + `pages/pricing.html`~~ **✅ 已完成并 push(`67cef11`)**：中文首页玉色版(home-wow-preview基底·hero带jade-disc圆玉·7方向入口·地图/体系/为什么很准全彩不裁·真实信任信号不造假)+定价$99/$149 CTA修断链(→cross-check.html)。**未部署**——新会话直接部署即可(下方"部署"命令)，别重做。**唯一未定=首页用哪块玉**(现用 jade-disc.png·若换 jade_peaceclasp 平安扣要问 Karen)。
 - **别让多个 agent 同时改 divination.js**（会冲突·必须单 owner 排队）。
 
 ## 玉设计（待 Karen 定·卡着首页）
