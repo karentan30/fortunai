@@ -53,6 +53,37 @@ const { getToken } = require('../lib/store');
 const { rateLimitMiddleware } = require('../middleware');
 const { PRODUCTS, matchProduct } = require('../data/products');
 
+// ── 分层 tier 解析 helper ──
+// 根据前端传入的 tier 参数 + gateMessages 返回的 full 标志，确定实际档位。
+// 规则：
+//   - full=false（未付费）→ 始终 'free'
+//   - full=true + req.body.tier==='standard' → 'standard'（$9.9 档，~2500字·核心3-5维）
+//   - full=true + 其他 → 'full'（$49 完整版）
+// 前端付款完成后应在请求体中传 tier:'standard' 或省略（默认 full）。
+function resolveReportTier(gateFull, reqTier) {
+  if (!gateFull) return 'free';
+  if (reqTier === 'standard') return 'standard';
+  return 'full';
+}
+
+// ── 语言后缀 helper（SYSTEM prompt 末尾追加语言指令）──
+// 八字已有独立语言 handler，此 helper 供其他方法使用。
+// 返回应追加到 SYSTEM prompt 末尾的语言指令字符串。
+function langSuffix(lang) {
+  const MAP = {
+    'en':    'Output the ENTIRE report in fluent English. Keep technical terms (e.g. rune names, Japanese terms, divination terms) in their original language with English explanation in parentheses.',
+    'ko':    '전체 보고서를 유창한 한국어로 출력하세요. 핵심 술어는 원어를 유지하고 괄호 안에 한국어 설명을 추가하세요.',
+    'pt-br': 'Produza o relatório COMPLETO em Português do Brasil fluente.',
+    'th':    'แสดงรายงานทั้งหมดเป็นภาษาไทยที่คล่องแคล่ว',
+    'es':    'Produce el informe COMPLETO en español fluido.',
+  };
+  return MAP[lang] ? '\n\n【语言】' + MAP[lang] : '';
+}
+
+// ── 合规免责尾注（所有报告必须附加）──
+const DISCLAIMER_ZH = '\n\n本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。健康章节均为养生角度，非医疗诊断，如有健康疑虑请咨询专业医生。';
+const DISCLAIMER_EN = '\n\nThis report is AI-assisted and for entertainment/reference only. It does not constitute medical, legal, investment, or life-decision advice. Health sections offer wellness perspectives only — consult a professional for medical concerns.';
+
 // ── VIP/大师档探测（bazi_vip = $199 深度批命）──
 // 三条命中路径：
 //  1) ADMIN_TOKEN(审核绕过)
@@ -673,44 +704,52 @@ ${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及�
     );
 
     var full = gateReportAccess(req, ['bazi', '八字']).full;
+    var baziTier = resolveReportTier(full, req.body.tier);
     var useMessages = messages;
-    if (!full) {
+    if (baziTier === 'free') {
       useMessages = buildReadingPrompt(
         '你是精通八字命理的命理师。为用户生成一份【基础版】命盘概览。请严格按照以下3个章节结构输出，每个章节标题必须以对应的emoji开头（方便客户端解析）:\n📜 四柱八字排盘\n🌊 五行能量分析\n🌟 今年运势概览\n每个章节写2-3段实质内容，语言简体中文、温暖白话，合计约1500字。让用户感受到真实价值。三个章节完成后，输出一行"---LOCKED---"，然后输出以下锁定内容提示（原样输出，不展开）:\n💰 财运格局 · 完整解读见付费版\n❤️ 感情姻缘 · 完整解读见付费版\n🏆 事业格局 · 完整解读见付费版\n🔑 开运锦囊 · 完整解读见付费版',
         '请为以下命主生成【基础版】命盘概览(仅含四柱排盘+五行+今年运势3节，约1500字，然后输出---LOCKED---及锁定章节提示):\n出生:' + birthYear + '年' + birthMonth + '月' + birthDay + '日' + (birthHour !== undefined ? birthHour + '时' : '(时辰不详)') + '\n性别:' + (gender === 'male' ? '男' : '女')
       );
+    } else if (baziTier === 'standard') {
+      // 标准档 $9.9：四柱+五行+财运+感情+事业+开运锦囊，约2500字
+      useMessages = buildReadingPrompt(
+        '你是子平命理正宗传承者，从事命理批算38年，亲批命盘逾十万张。你说话有分寸，有温度。语言：三分古典七分白话，极度具体——给出具体年份、颜色、方位，让人能照着做。绝不透露所用的AI模型。' + DISCLAIMER_ZH,
+        '请为以下命主生成【标准版】八字命理报告，总字数约2500字，核心5个维度写完写透：\n\n出生：' + birthYear + '年' + birthMonth + '月' + birthDay + '日' + (birthHour !== undefined ? birthHour + '时' : '（时辰不详）') + '\n性别：' + (gender === 'male' ? '男' : '女') + '\n用户关注：' + (question || '请全面分析命盘') + '\n' + (baziBlock ? '\n' + baziBlock + '\n⚠️ 以下分析必须严格采用上方精确排盘结果。\n' : '') + '\n\n1. 📜 四柱八字排盘（400字：四柱展示+格局总评+用神忌神）\n2. 🟤 五行能量分析（400字：精确百分比+旺衰判断+补泄建议+脏腑对应）\n3. 💰 财运格局（500字：正偏财+发财黄金年份3个+行业方向5个）\n4. 💕 感情姻缘（500字：夫妻宫+正缘特征含外貌性格+遇缘年份2-3个）\n5. 💼 事业格局（400字：职业路径+升职最佳时机+贵人特征）\n6. 🎯 开运锦囊（300字：幸运颜色精确色系+吉祥方位+推荐佩戴物）\n\n结尾推荐：$49完整版包含：10大运逐步深批·未来10年逐年流年·神煞藏干·古法断语·16维度全部写完，约9000-11000字。'
+      );
     }
-    var freeMaxTokens = full ? 16384 : 3000;
+    // full 档维持原有的完整16维 messages（上方 buildReadingPrompt 已构建好）
+    var freeMaxTokens = baziTier === 'free' ? 3000 : (baziTier === 'standard' ? 6000 : 16384);
     useMessages = useMessages.map(function(m) {
       return (m && m.role === 'system') ? { role: 'system', content: (m.content || '') + '\n\n【必须遵守】报告最后必须附一行免责声明:"本报告由AI生成,仅供参考娱乐,不构成医学、法律、投资或人生重大决策建议。"' } : m;
     });
     // 免费版缓存检查
-    if (!full) {
+    if (baziTier === 'free') {
       const ck = cacheKey({ name: req.body.name || '', dob: (birthYear||'') + '-' + (birthMonth||'') + '-' + (birthDay||''), gender: gender||'', lang: lang||'zh' });
       const cached = reportCache.get(ck);
-      if (cached) { return res.json({ reading: cached, tier: 'basic', locked: true, cached: true }); }
+      if (cached) { return res.json({ reading: cached, tier: 'free', locked: true, cached: true }); }
     }
     let result = await deepseekChat(useMessages, { maxTokens: freeMaxTokens });
     // $199 大师档：真实增量——单独一次 LLM 调用生成4个专属章节并追加（绕开单次16384 token上限，物理上多给内容）
-    if (full && detectBaziVip(req)) {
+    if (baziTier === 'full' && detectBaziVip(req)) {
       try {
         const _vipMsgs = buildReadingPrompt(
           '你是最高档【大师深度批命】命理师。' + (baziBlock ? '\n' + baziBlock + '\n严格采用上方精确排盘，禁止自行推算。\n' : '') + BAZI_VIP_ADDON_ZH,
           '这是同一位命主的大师档专属增量部分。请只输出上述4个专属章节（🗓️逐月流月/🛡️深度化解/🔀择时/👑大师叮嘱），不要重复前面已写过的16个维度。出生:' + birthYear + '年' + birthMonth + '月' + birthDay + '日' + (birthHour !== undefined ? birthHour + '时' : '(时辰不详)') + '，性别:' + (gender === 'male' ? '男' : '女')
         );
-        const _vipPart = await deepseekChat(_vipMsgs, { maxTokens: freeMaxTokens });
+        const _vipPart = await deepseekChat(_vipMsgs, { maxTokens: 16384 });
         if (_vipPart && _vipPart.trim()) result = result + '\n\n' + _vipPart;
       } catch (_ve) { console.warn('[BAZI VIP addon]', _ve && _ve.message); }
     }
     // 免费版结果缓存24h
-    if (!full) {
+    if (baziTier === 'free') {
       const ck = cacheKey({ name: req.body.name || '', dob: (birthYear||'') + '-' + (birthMonth||'') + '-' + (birthDay||''), gender: gender||'', lang: lang||'zh' });
       reportCache.set(ck, result);
       setTimeout(() => reportCache.delete(ck), 24 * 60 * 60 * 1000);
     }
     insertReading.run('bazi', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('bazi', req.body, result);
-    res.json({ reading: result, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId, product: full ? matchProduct(result, 'bazi') : undefined });
+    res.json({ reading: result, tier: baziTier, locked: baziTier === 'free', contextId: ctxId, product: baziTier === 'full' ? matchProduct(result, 'bazi') : undefined });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[BAZI ERR]', err.message);
@@ -724,35 +763,93 @@ ${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及�
 // ══════════════════════════════════════════
 router.post('/tarot', rateLimitMiddleware, async (req, res) => {
   try {
-    const { cards, question, topic } = req.body;
+    const { cards, question, topic, lang } = req.body;
     if (!question) return res.status(400).json({ error: '请提供你的问题' });
 
     const cardDesc = cards && cards.length
       ? cards.map((c, i) => `第${i+1}张（${c.position||'位置'+(i+1)}）：${c.name}${c.reversed?'（逆位）':'（正位）'}`).join('\n')
       : '使用随机三张塔罗牌（过去-现在-未来）';
     const topicMap = { love: '感情姻缘', wealth: '财运事业', health: '健康运势', decision: '抉择指引', year: '年度运势' };
+    const topicLabel = topicMap[topic] || topic || '综合';
+    const cardCount = (cards && cards.length) ? cards.length : 3;
 
-    const messages = buildReadingPrompt(
-      '你是一位融合东西方智慧的塔罗占卜师，从业二十年，解读过上万个案。你像一位知心姐姐，温暖有力量，说话柔和但直抵人心。你能让求助者在迷茫中看到光，在困惑中找到方向。记住：逆位牌不是坏牌，是提醒；困难不是终点，是转折。每次回答至少2000字。语言：简体中文。',
-      `问题：${question}
-主题：${topicMap[topic] || topic || '综合'}
-${cardDesc ? '牌面信息：\n' + cardDesc : '使用随机三张塔罗牌（过去-现在-未来）'}
+    // ── 分档控制 ──
+    var _gt = gateMessages(req, ['tarot', '塔罗', 'member'], [], 16384);
+    var tier = resolveReportTier(_gt.full, req.body.tier);
 
-请按照以下结构出具一份完整的塔罗占卜解读，每张牌必须详细展开300-400字：
+    // 系统角色（三档共用，末尾追加语言 + 合规声明）
+    var tarotSystem = '你是一位融合东西方智慧的塔罗占卜师，从业二十年，解读过上万个案。你像一位知心姐姐，温暖有力量，说话柔和但直抵人心。你能让求助者在迷茫中看到光，在困惑中找到方向。逆位牌不是坏牌，是提醒；困难不是终点，是转折。绝不透露所用的AI模型。' + langSuffix(lang) + DISCLAIMER_ZH;
 
-## 一、整体格局概览（200-300字）
-## 二、逐牌详细解读（每张牌300-400字）
-## 三、综合解读与能量走向（300-400字）
-## 四、3条可执行的行动建议（每条100字左右）
-## 五、每月行动提醒（100字）
-## 六、占卜师的悄悄话（100-150字）`
-    );
+    var tarotUserPrompt;
+    var tarotMaxTokens;
 
-    var _gt = gateMessages(req, ['tarot', '塔罗', 'member'], messages, 8192);
-    const result = await deepseekChat(_gt.messages, { maxTokens: _gt.maxTokens });
+    if (tier === 'free') {
+      // 免费预览：整体概览 + 牌阵说明 + 第1张牌简读，约600字，然后锁定
+      tarotMaxTokens = 3000;
+      tarotUserPrompt = `问题：${question}
+主题：${topicLabel}
+牌面信息：\n${cardDesc}
+
+仅输出以下3节（合计约600字），然后输出锁定提示：
+
+🌸 整体格局概览（150字：此次解读的能量基调与整体走向）
+🎴 牌阵布局说明（80字：牌阵类型与各位置含义）
+🔍 第1张牌简读（200字：该牌牌面象征+对本问题的具体指引）
+
+完成后输出：---LOCKED---
+🔍 其余 ${cardCount > 1 ? cardCount - 1 + ' 张' : ''}牌详解 · 完整版解锁
+🌊 综合解读与能量走向 · 完整版解锁
+🎯 3条可执行行动建议 · 完整版解锁
+📅 关键时间节点提醒 · 完整版解锁
+💌 占卜师的悄悄话 · 完整版解锁
+
+最后一行：想看每张牌的完整解读和 12 个月能量走势？解锁查看全部内容。`;
+    } else if (tier === 'standard') {
+      // 标准档 $9.9：全部逐牌 + 综合解读 + 3条行动建议，约2500字
+      tarotMaxTokens = 6000;
+      tarotUserPrompt = `问题：${question}
+主题：${topicLabel}
+牌面信息：\n${cardDesc}
+
+请出具【标准版塔罗解读报告】，总字数约2500字，按以下6个维度写完：
+
+1. 🌸 整体格局概览（200字：能量基调与整体走向）
+2. 🎴 牌阵布局说明（100字）
+3. 🔍 逐牌详细解读（每张牌350-400字·含：牌面象征→位置含义→正/逆位解读→对本问题具体指引）
+4. 🌊 综合解读与能量走向（300字：各牌合力、核心讯息）
+5. 🎯 3条可执行行动建议（每条100字·具体到什么时候做什么）
+6. 💌 占卜师的悄悄话（150字·只对这个人说的心里话）
+
+结尾推荐：想看12个月能量走势与月相日历？$49完整版包含：逐月解读·备用牌阵追加·深度心理层解析。`;
+    } else {
+      // 完整档 $49：全8维度，约9000-10000字
+      tarotMaxTokens = 16384;
+      tarotUserPrompt = `问题：${question}
+主题：${topicLabel}
+牌面信息：\n${cardDesc}
+
+请出具【完整版塔罗解读报告】，总字数9000-10000字，所有维度写完写透：
+
+1. 🌸 整体格局概览（200-300字）
+2. 🎴 牌阵布局说明（100字）
+3. 🔍 逐牌详细解读（每张牌350-450字·含：牌面象征→位置含义→正/逆位解读→对本问题具体指引）
+4. 🌊 综合解读与能量走向（400字）
+5. 🎯 3条可执行行动建议（每条120字·具体到时间和行动）
+6. 📅 关键时间节点提醒（未来3个月每月一个关键词+一句提醒，200字）
+7. 🌙 下月行动提醒（150字·专门给下个月的具体指导）
+8. 💌 占卜师的悄悄话（150字·温柔有力量）
+
+各节字数不达标不允许省略，全部写完写透。`;
+    }
+
+    const messages = [
+      { role: 'system', content: tarotSystem },
+      { role: 'user', content: tarotUserPrompt }
+    ];
+    const result = await deepseekChat(messages, { maxTokens: tarotMaxTokens });
     insertReading.run('tarot', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('tarot', req.body, result);
-    res.json({ reading: result, contextId: ctxId, tier: _gt.full ? 'full' : 'basic', locked: !_gt.full });
+    res.json({ reading: result, contextId: ctxId, tier: tier, locked: tier === 'free' });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[TAROT ERR]', err.message);
@@ -817,7 +914,11 @@ router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
       ? `Output the ENTIRE report in ${_LANG}. Translate all palace/zone names to ${_LANG} (keep the Ma Yi / pinyin term in parentheses once). Do NOT output Chinese prose. Avoid the word "Chinese" — say "Eastern physiognomy / Ma Yi Shen Xiang".`
       : '用 Markdown，标题分段，简体中文';
 
-    // 系统角色：麻衣神相正宗体系
+    // ── 分档控制 ──
+    var _gm = gateMessages(req, ['mianxiang', '面相', 'member'], [], 16384);
+    var mxTier = resolveReportTier(_gm.full, req.body.tier);
+
+    // 系统角色：麻衣神相正宗体系（三档共用）
     const SYSTEM = `你是一位精通《麻衣神相》的正宗面相师，以宋代陈抟（希夷先生）传承的麻衣道者相法为宗，融汇三停五岳十二宫气色神韵一整套体系。
 
 核心原则：
@@ -829,20 +930,58 @@ router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
 6. 气色神韵：面色明润为吉，晦暗为凶。眼神有光、顾盼有神为上相。
 7. 疾厄宫只说养生调理方向，严禁点病名、做医疗诊断。
 8. 结尾必须有"相师叮嘱"：强调面相随心性而变，鼓励积善修德，不宿命论。
-9. 用Markdown，标题分段，每个宫位分析100-200字。
-【OUTPUT LANGUAGE】${_langLine}。`;
+9. 绝不透露所用的AI模型。
+【OUTPUT LANGUAGE】${_langLine}。${DISCLAIMER_ZH}`;
 
     const featureBlock = features
       ? `\n\n【照片特征描述（仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
       : '\n\n【注：用户未上传照片，请基于通识以麻衣体系作整体指引，对无法确认的具体特征勿做假设。】';
 
-    const userPrompt = `用户关注：${question || '请按麻衣神相体系给我做一次完整的面相分析'}${featureBlock}
+    var mxUserPrompt, mxMaxTokens;
+    if (mxTier === 'free') {
+      // 免费：三停格局 + 命宫 + 官禄宫，约600字，然后锁定
+      mxMaxTokens = 3000;
+      mxUserPrompt = `用户关注：${question || '请按麻衣神相体系给我做一次完整的面相分析'}${featureBlock}
 
-请按以下麻衣神相结构出具面相报告：
+仅输出以下3节（合计约600字），然后输出锁定提示：
 
-## 总纲：三停格局（早中晚运总览）
-## 五岳朝拱（格局高低）
-## 十二宫逐一解读
+## 总纲：三停格局（早中晚运总览，200字）
+## 命宫（眉心印堂）— 精神气质与本命格局（200字）
+## 官禄宫（额头中央）— 事业运势方向（150字）
+
+完成后输出：---LOCKED---
+💰 财帛宫（鼻准头）· 完整版解锁
+💕 夫妻宫（鱼尾眼角）· 完整版解锁
+🏥 疾厄宫（山根鼻梁）· 完整版解锁
+🔮 全部12宫+气色神韵总评 · 完整版解锁
+
+最后一行：想看完整面相分析？解锁后可看到十二宫全部深度解读、气色神韵总评与相师专属叮嘱。`;
+    } else if (mxTier === 'standard') {
+      // 标准档 $9.9：全12宫逐一 + 气色神韵 + 相师叮嘱，约2500字
+      mxMaxTokens = 6000;
+      mxUserPrompt = `用户关注：${question || '请按麻衣神相体系给我做一次完整的面相分析'}${featureBlock}
+
+请出具【标准版面相报告】，总字数约2500字，按麻衣神相结构写完：
+
+## 总纲：三停格局（早中晚运总览，150字）
+## 五岳朝拱（格局高低，100字）
+## 十二宫逐一解读（每宫100-150字）
+### 命宫·财帛宫·夫妻宫·官禄宫（重点宫位各150字）
+### 田宅宫·男女宫·兄弟宫·奴仆宫·疾厄宫·迁移宫·福德宫·父母宫（每宫100字）
+## 气色神韵总评（100字）
+## 相师叮嘱（面相随心性而变·积善修德，150字）
+
+结尾推荐：$49完整版包含：年龄段流年面相变化规律·面相与开运搭配·修相建议（相由心生维度），约8000字深度解读。`;
+    } else {
+      // 完整档 $49：全维度，约8000字
+      mxMaxTokens = 16384;
+      mxUserPrompt = `用户关注：${question || '请按麻衣神相体系给我做一次完整的面相分析'}${featureBlock}
+
+请出具【完整版面相报告】，总字数8000字，所有维度写完写透，每宫不少于200字：
+
+## 总纲：三停格局（早中晚运总览，300字）
+## 五岳朝拱（格局高低，200字）
+## 十二宫逐一深度解读（每宫200-300字）
 ### 命宫（眉心印堂）— 精神气质、本命贵贱
 ### 官禄宫（额头中央）— 事业运、早年运
 ### 财帛宫（鼻准头）— 财运、聚财能力
@@ -855,16 +994,17 @@ router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
 ### 迁移宫（眉梢额角）— 出行、异乡运
 ### 福德宫（天仓太阳穴）— 福气、享受与精神满足
 ### 父母宫（日月角）— 与父母缘分、长辈贵人
+## 气色神韵总评（300字）
+## 年龄段面相变化规律（不同十年段面相重点变化，300字）
+## 面相与开运搭配（颜色/方位/佩戴物，200字）
+## 相师叮嘱（面相随心性而变·积善修德·专属叮嘱，300字）`;
+    }
 
-## 气色神韵总评
-## 相师叮嘱（面相随心性而变·积善修德）`;
+    const messages = buildReadingPrompt(SYSTEM, mxUserPrompt);
 
-    const messages = buildReadingPrompt(SYSTEM, userPrompt);
-
-    var _gm = gateMessages(req, ['mianxiang', '面相', 'member'], messages, 8192);
-    const result = await deepseekChat(_gm.messages, { maxTokens: _gm.maxTokens });
+    const result = await deepseekChat(messages, { maxTokens: mxMaxTokens });
     insertReading.run('mianxiang', JSON.stringify({ question, features: features ? features.slice(0, 200) : null }), result, req.userId);
-    res.json({ reading: result, tier: _gm.full ? 'full' : 'basic', locked: !_gm.full });
+    res.json({ reading: result, tier: mxTier, locked: mxTier === 'free' });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[MIANXIANG ERR]', err.message);
@@ -3866,22 +4006,46 @@ router.post('/omikuji', rateLimitMiddleware, async (req, res) => {
       accumulated += OMIKUJI_GRADES[i].weight;
       if (rand < accumulated) { drawn = OMIKUJI_GRADES[i]; break; }
     }
+
+    // ── 分档控制 ──
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','omikuji','rune','kyusei'], [], 16384);
+    var omkTier = resolveReportTier(_gl.full, req.body.tier);
+
     var isEn = (lang === 'en');
     var systemPrompt = isEn
-      ? 'You are a wise Shinto shrine priest at a sacred Japanese shrine, deeply versed in omikuji (御神籤) tradition. Your voice is calm, gentle, and filled with wabi-sabi wisdom. Each reading is personal and poetic. Never mention which AI model powers this.'
-      : '你是一位精通日本御神签（おみくじ）传统的神社神职，同时深谙汉字与和歌的诗意之美。你用温暖、平静、充满禅意的简体中文为参拜者传达神的旨意。绝不透露所用的AI模型。';
-    var userPrompt = isEn
-      ? `The visitor drew: ${drawn.grade} — ${drawn.en}\nTheir question: ${question || 'General guidance for my life path'}\n\nPlease generate a complete omikuji reading in English:\n1. 🌸 Sacred Waka Poem (5-7-5-7-7 syllable poem, original, in poetic English)\n2. 🏯 Interpretation of ${drawn.en} (300 words)\n3. ❤️ Love & Relationships\n4. 📚 Study & Career\n5. 💰 Wealth & Fortune\n6. 🌿 Health & Vitality\n7. 🧳 Travel\n8. 🔍 Lost Items\n9. 🎋 Shrine Priest's Whisper (closing personal message, 80 words)`
-      : `参拜者所求签文：${drawn.grade}\n所问之事：${question || '请为我指引人生方向'}\n\n请用简体中文出具一份完整的御神签解读。每节务必详尽，不得草草带过。格式如下：\n\n1. 🌸 御神歌\n先给出日文和歌原文一句（五・七・五・七・七，平假名），再附上中文译文，最后用2-3段阐释这首和歌的意境与对参拜者当下处境的寓意（200-250字）。\n\n2. 🏯 ${drawn.grade} 总运详解（300字）\n详述此签所示总体运势——是何天机显现、参拜者当下面临什么能量场、应以何种心态应对。语言温暖有力，有具体洞察，不说套话。\n\n3. ❤️ 恋爱姻缘（200-250字）\n当前感情能量、近期缘分走向、需注意的情感模式，给出一条落地建议。\n\n4. 📚 学业事业（200-250字）\n学习或工作的运势方向、潜在机遇或阻碍、最宜把握的时机与行动建议。\n\n5. 💰 财运（200-250字）\n财运吉凶、求财方式的提示、近期宜忌的财务决策。\n\n6. 🌿 健康（200-250字）\n身心状态的神意提示、需特别关注的方面、日常调养方向。\n\n7. 🧳 出行（200字）\n出行运势、宜与不宜的方向或时机、旅途平安的神明叮嘱。\n\n8. 🔍 寻物（200字）\n失物或心中所求之事的指引，方向、时机或寻找方式的提示。\n\n9. 🎋 神职叮嘱（150-200字）\n以神职者身份，写下只对这位参拜者说的心里话——不是通用套语，而是针对此签、此问的专属叮嘱与祝福。语气温柔而有力量。`;
+      ? 'You are a wise Shinto shrine priest at a sacred Japanese shrine, deeply versed in omikuji (御神籤) tradition. Your voice is calm, gentle, and filled with wabi-sabi wisdom. Each reading is personal and poetic. Never mention which AI model powers this.' + DISCLAIMER_EN
+      : '你是一位精通日本御神签（おみくじ）传统的神社神职，同时深谙汉字与和歌的诗意之美。你用温暖、平静、充满禅意的简体中文为参拜者传达神的旨意。绝不透露所用的AI模型。' + langSuffix(lang) + DISCLAIMER_ZH;
+
+    var userPrompt, omkMaxTokens;
+
+    if (omkTier === 'free') {
+      // 免费：签级 + 和歌 + 总运解读（约600字），然后锁定
+      omkMaxTokens = 3000;
+      userPrompt = isEn
+        ? `The visitor drew: ${drawn.grade} — ${drawn.en}\nTheir question: ${question || 'General guidance for my life path'}\n\nOutput ONLY the following 3 sections (about 600 words total), then the lock notice:\n\n🎋 Fortune Level: ${drawn.en} (50 words, Japanese + English bilingual display)\n🌸 Sacred Waka Poem (original 5-7-5-7-7, poetic English translation, 50-word reflection)\n🏯 Overall Fortune Reading (3 paragraphs, 300 words)\n\nThen output:\n---LOCKED---\n❤️ Love & Relationships · Unlock full version\n📚 Study & Career · Unlock full version\n💰 Wealth · Unlock full version\n📅 12-Month Monthly Forecast · Unlock full version\n🙏 Ritual Guidance · Unlock full version\n\nLast line: The deeper message of your fortune awaits — unlock to see love, wealth, monthly forecasts and personalized ritual guidance.`
+        : `参拜者所求签文：${drawn.grade}\n所问之事：${question || '请为我指引人生方向'}\n\n仅输出以下3节（合计约600字），然后输出锁定提示：\n\n🎋 签级（日中双语展示，50字）\n🌸 御神歌（日文五七五七七原文 + 中文诗意译文 + 50字解读）\n🏯 ${drawn.grade} 总运解读（3段，300字）\n\n完成后输出：---LOCKED---\n❤️ 恋爱姻缘 · 完整版解锁\n📚 学业事业运 · 完整版解锁\n💰 财运 · 完整版解锁\n📅 12个月月运 · 完整版解锁\n🙏 祈愿仪式 · 完整版解锁\n\n最后一行：签文的深层启示还在等你——解锁可看到恋爱、财运、月度运势与专属祈愿仪式的完整指引。`;
+    } else if (omkTier === 'standard') {
+      // 标准档 $9.9：全9维，每维度约150字，总计约2500字
+      omkMaxTokens = 6000;
+      userPrompt = isEn
+        ? `The visitor drew: ${drawn.grade} — ${drawn.en}\nTheir question: ${question || 'General guidance for my life path'}\n\nPlease generate a STANDARD omikuji reading (~2500 words total) covering all 9 sections:\n\n1. 🎋 Fortune Level (${drawn.en}, Japanese + English, 100 words)\n2. 🌸 Sacred Waka Poem (original 5-7-5-7-7 + translation + 200-word reflection)\n3. 🏯 Overall Fortune Reading (500 words)\n4. ❤️ Love & Relationships (250 words)\n5. 📚 Study & Career (250 words)\n6. 💰 Wealth & Fortune (200 words)\n7. 🌿 Health & Vitality (200 words)\n8. 🧳 Travel (150 words)\n9. 🎋 Shrine Priest's Whisper (200 words, personal)\n\nEnd with: For 12-month monthly forecasts, 24-solar-term guidance and detailed ritual instructions, see the full $49 report.`
+        : `参拜者所求签文：${drawn.grade}\n所问之事：${question || '请为我指引人生方向'}\n\n请出具【标准版御神签解读报告】，总字数约2500字，按以下9个维度写完：\n\n1. 🎋 签级与神启（日中双语，100字）\n2. 🌸 御神歌（日文五七五七七原文 + 中文诗意译文 + 200字和歌背景解读）\n3. 🏯 ${drawn.grade} 签文总运详解（500字·语言温暖有力）\n4. ❤️ 恋爱姻缘（250字·感情能量+遇缘指引+落地建议）\n5. 📚 学业事业运（250字·机遇与阻碍+时机建议）\n6. 💰 财运（200字·财运走势+求财建议）\n7. 🌿 健康运（200字·身心养生，不点病名）\n8. 🧳 出行（150字·吉方与时机）\n9. 🎋 神职者叮嘱（200字·专属叮嘱与祝福，非套话）\n\n结尾推荐：$49完整版包含：12个月逐月月运·24节气运势·守护神灵深度解读·寺社参拜具体指引。`;
+    } else {
+      // 完整档 $49：全维度 + 12个月月运 + 祈愿仪式，约8000字
+      omkMaxTokens = 16384;
+      userPrompt = isEn
+        ? `The visitor drew: ${drawn.grade} — ${drawn.en}\nTheir question: ${question || 'General guidance for my life path'}\n\nPlease generate a COMPLETE omikuji reading (8000 words), all sections written fully:\n\n1. 🎋 Fortune Level & Divine Opening (${drawn.en}, Japanese + English bilingual, 100 words)\n2. 🌸 Sacred Waka Poem (original 5-7-5-7-7 in Japanese + poetic English translation + 200-word background interpretation)\n3. 🏯 Overall Fortune Reading (${drawn.en}) — 500 words, energy field, how to approach this period\n4. ❤️ Love & Relationships — 400 words: current energy, near-future guidance, one concrete suggestion\n5. 📚 Study & Career — 400 words: opportunities, obstacles, optimal timing\n6. 💰 Wealth & Fortune — 300 words: wealth trajectory, guidance\n7. 🌿 Health & Vitality — 300 words (wellness angle only, no medical diagnoses)\n8. 🧳 Travel & Movement — 200 words: auspicious directions and timing\n9. 🔍 Lost Items — 200 words: directional and timing guidance\n10. 📅 12-Month Monthly Forecast — one line per month: month + keyword + one most-auspicious action\n11. 🙏 Ritual Guidance — 300 words: specific time of day, offerings, prayer direction, type of o-mamori\n12. 🎋 Shrine Priest's Personal Whisper — 200 words, heartfelt and personal`
+        : `参拜者所求签文：${drawn.grade}\n所问之事：${question || '请为我指引人生方向'}\n\n请出具【完整版御神签解读报告】，总字数8000字，所有维度写完写透：\n\n1. 🎋 签级与神启（日中双语，100字）\n2. 🌸 御神歌（日文五七五七七原文 + 中文诗意译文 + 200字和歌背景解读）\n3. 🏯 ${drawn.grade} 总运详解（500字·天机显现·能量场·应对心态）\n4. ❤️ 恋爱姻缘（400字·感情能量·近期缘分走向·落地建议）\n5. 📚 学业事业运（400字·机遇与阻碍·最佳时机·行动建议）\n6. 💰 财运（300字·走势+求财方式）\n7. 🌿 健康运（300字·身心养生，不点病名）\n8. 🧳 出行（200字·吉方与时机）\n9. 🔍 寻物（200字·方向与时机提示）\n10. 📅 12个月月运短批（每月一行：月份+关键词+最宜做的一件事）\n11. 🙏 祈愿仪式指引（300字·具体到参拜时间段/供奉物/祝词方向/御守类型）\n12. 🎋 神职者的耳语（200字·专属叮嘱与祝福，非套话）`;
+    }
+
     const messages = [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ];
-    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','omikuji','rune','kyusei'], messages, 8192);
-    const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
+    const reading = await deepseekChat(messages, { maxTokens: omkMaxTokens });
     insertReading.run('omikuji', JSON.stringify(req.body), reading, req.userId);
     var ctxId = saveQaContext('omikuji', req.body, reading);
-    res.json({ reading, contextId: ctxId, omikuji: { grade: drawn.grade, gradeEn: drawn.en, cls: drawn.cls }, tier: _gl.full ? 'full' : 'basic', locked: !_gl.full });
+    res.json({ reading, contextId: ctxId, omikuji: { grade: drawn.grade, gradeEn: drawn.en, cls: drawn.cls }, tier: omkTier, locked: omkTier === 'free' });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[OMIKUJI ERR]', err.message);
@@ -3938,21 +4102,45 @@ router.post('/rune', rateLimitMiddleware, async (req, res) => {
           return (isEn ? pos + ': ' : pos + '：') + r.unicode + ' ' + r.name + (r.reversed ? (isEn ? ' (Reversed)' : '（逆位）') : (isEn ? ' (Upright)' : '（正位）'));
         }).join('\n')
       : drawnWithPos[0].unicode + ' ' + drawnWithPos[0].name + (drawnWithPos[0].reversed ? (isEn ? ' (Reversed)' : '（逆位）') : (isEn ? ' (Upright)' : '（正位）'));
+
+    // ── 分档控制 ──
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','omikuji','rune','kyusei'], [], 16384);
+    var runeTier = resolveReportTier(_gl.full, req.body.tier);
+
     var systemPrompt = isEn
-      ? 'You are a Northern European rune reader with deep knowledge of Elder Futhark, Norse mythology, and the Eddas. Your interpretations are poetic, grounded, and empowering. Rune reversal is not doom — it is redirection. Never reveal which AI model powers this reading.'
-      : '你是一位精通 Elder Futhark 古北欧符文的占师，深谙北欧神话与埃达诗歌。你的解读诗意、接地气、赋予力量。逆位符文不是诅咒，而是转向。绝不透露解读所用的 AI 模型。';
-    var userPrompt = isEn
-      ? `Seeker's question: ${question || 'What guidance do the runes offer me now?'}\n\nRunes drawn:\n${runeDesc}\n\nPlease provide a complete rune reading:\n1. ᚠ Opening — the energy this reading carries (80 words)\n2. ${spreadType === 'three' ? '📖 Past Rune Analysis\n3. 🌀 Present Rune Analysis\n4. 🔮 Future Rune Analysis\n5.' : '🔮 Deep Rune Interpretation (400 words)\n3.'} 🌊 Synthesis — how the rune(s) speak to your question (200 words)\n${spreadType === 'three' ? '6.' : '4.'} 🎯 Three Practical Guidance Points\n${spreadType === 'three' ? '7.' : '5.'} 🔥 The Rune Reader's Closing Word (70 words, poetic)`
-      : `问卦者的问题：${question || '请符文为我指引方向'}\n\n抽出的符文：\n${runeDesc}\n\n请出具完整卢恩符文解读：\n1. ᚠ 开场——此次解读的能量基调（80字）\n2. ${spreadType === 'three' ? '📖 过去符文详解\n3. 🌀 现在符文详解\n4. 🔮 未来符文详解\n5.' : '🔮 符文深度解读（400字）\n3.'} 🌊 综合解读——符文如何回应你的问题（200字）\n${spreadType === 'three' ? '6.' : '4.'} 🎯 三条落地行动建议\n${spreadType === 'three' ? '7.' : '5.'} 🔥 占师的结语（70字，诗意收尾）`;
+      ? 'You are a Northern European rune reader with deep knowledge of Elder Futhark, Norse mythology, and the Eddas. Your interpretations are poetic, grounded, and empowering. Rune reversal is not doom — it is redirection. Never reveal which AI model powers this reading.' + DISCLAIMER_EN
+      : '你是一位精通 Elder Futhark 古北欧符文的占师，深谙北欧神话与埃达诗歌。你的解读诗意、接地气、赋予力量。逆位符文不是诅咒，而是转向。绝不透露解读所用的 AI 模型。' + langSuffix(lang) + DISCLAIMER_ZH;
+
+    var userPrompt, runeMaxTokens;
+
+    if (runeTier === 'free') {
+      // 免费：能量基调 + 第1个符文简读，约500字，然后锁定
+      runeMaxTokens = 3000;
+      userPrompt = isEn
+        ? `Seeker's question: ${question || 'What guidance do the runes offer me now?'}\nRunes drawn:\n${runeDesc}\n\nOutput ONLY the following (about 500 words), then the lock notice:\n\nᚠ Opening — the energy this reading carries (100 words)\n🔮 First Rune: ${drawnWithPos[0].unicode} ${drawnWithPos[0].name} — deep reading with Norse myth context and ${drawnWithPos[0].reversed ? 'reversed' : 'upright'} guidance (300 words)\n🌊 One-sentence energy summary (50 words)\n\nThen output:\n---LOCKED---\n🔍 Remaining rune(s) full interpretation · Unlock full version\n🌊 Synthesis & combined guidance · Unlock full version\n🎯 Practical action guidance · Unlock full version\n📖 Norse mythology deep exploration · Unlock full version\n\nLast line: These runes have deeper stories to tell — unlock to see each rune's Norse myth context and your 3-month action guide.`
+        : `问卦者的问题：${question || '请符文为我指引方向'}\n抽出的符文：\n${runeDesc}\n\n仅输出以下内容（约500字），然后输出锁定提示：\n\nᚠ 开场——此次解读的能量基调（100字）\n🔮 第1个符文：${drawnWithPos[0].unicode} ${drawnWithPos[0].name} 深度解读（含北欧神话语境与${drawnWithPos[0].reversed ? '逆位' : '正位'}指引，300字）\n🌊 整体能量一句话（50字）\n\n完成后输出：---LOCKED---\n🔍 其余符文完整解读 · 完整版解锁\n🌊 符文合力综合解读 · 完整版解锁\n🎯 行动建议与三月日历 · 完整版解锁\n📖 北欧神话深探 · 完整版解锁\n\n最后一行：这些符文还有更深的故事——解锁后可看到每个符文背后的诺斯神话语境与三个月行动指引。`;
+    } else if (runeTier === 'standard') {
+      // 标准档 $9.9：全部符文详解 + 综合解读 + 行动建议，约2500字
+      runeMaxTokens = 6000;
+      userPrompt = isEn
+        ? `Seeker's question: ${question || 'What guidance do the runes offer me now?'}\nRunes drawn:\n${runeDesc}\n\nPlease provide a STANDARD rune reading (~2500 words):\n\n1. ᚠ Opening — energy of this reading (100 words)\n2. 🔮 Each Rune Deep Interpretation (600-700 words per rune)\n   - Ancient Norse name + Unicode + meaning\n   - Mythology source (deity/myth)\n   - Upright/reversed core meaning\n   - Specific guidance for the seeker's question\n   - One wisdom quote from the Eddas\n3. 🌊 Synthesis — how the runes answer your question together (300 words)\n4. 🎯 3 Practical Action Points (each 100 words, with timeframe)\n5. 🔥 Reader's Closing Word (70 words, poetic)\n\nEnd with: For Norse myth deep dives, 3-month action calendar and rune meditation guides, see the full $49 report.`
+        : `问卦者的问题：${question || '请符文为我指引方向'}\n抽出的符文：\n${runeDesc}\n\n请出具【标准版卢恩符文解读报告】，总字数约2500字：\n\n1. ᚠ 符文能量开场（100字）\n2. 🔮 逐符文深度解读（每个符文600-700字）\n   - 符文名（古北欧语名 + 中文译名 + Unicode 字符）\n   - 神话来源（对应神灵、神话场景）\n   - 正/逆位核心含义\n   - 对提问者的具体指引\n   - 一句符文智慧金句\n3. 🌊 符文合力综合解读（300字）\n4. 🎯 3条可落地行动建议（每条100字·含时间窗）\n5. 🔥 占师结语（70字·诗意）\n\n结尾推荐：$49完整版包含：北欧神话背景深探·三个月行动日历·符文冥想引导，约8000-9000字。`;
+    } else {
+      // 完整档 $49：全7维度，约8000-9000字
+      runeMaxTokens = 16384;
+      userPrompt = isEn
+        ? `Seeker's question: ${question || 'What guidance do the runes offer me now?'}\nRunes drawn:\n${runeDesc}\n\nPlease provide a COMPLETE rune reading (8000-9000 words), all sections written fully:\n\n1. ᚠ Opening — energy of this reading with Norsemythic framing (150 words)\n2. 🔮 Each Rune Deep Interpretation (600-800 words per rune)\n   - Ancient Norse name + Unicode + meaning\n   - Mythology: associated deity and myth scene\n   - Upright/reversed meaning\n   - Specific guidance for the seeker's question\n   - One wisdom quote from Poetic Edda or Prose Edda\n3. 🌊 Synthesis — how all runes answer together (300 words)\n4. 🎯 3 Practical Action Points (each 100 words)\n5. 📖 Norse Mythology Deep Exploration — myth most relevant to this reading (500 words, literary quality)\n6. 📅 3-Month Action Calendar (each month: core keyword + one concrete action)\n7. 🔥 Reader's Closing Word (70 words, poetic, like a Norse wind across a moor)`
+        : `问卦者的问题：${question || '请符文为我指引方向'}\n抽出的符文：\n${runeDesc}\n\n请出具【完整版卢恩符文解读报告】，总字数8000-9000字，所有维度写完写透：\n\n1. ᚠ 符文能量开场（150字·北欧宇宙观引入）\n2. 🔮 逐符文深度解读（每个符文600-800字）\n   - 符文名（古北欧语名 + 中文译名 + Unicode 字符）\n   - 神话来源（对应神灵、神话场景）\n   - 正/逆位核心含义\n   - 对提问者的具体指引\n   - 一句符文智慧金句（从古北欧诗歌/箴言提炼）\n3. 🌊 符文合力综合解读（300字）\n4. 🎯 3条可落地行动建议（每条100字·含时间窗）\n5. 📖 北欧神话背景深探（与本次符文最相关的神话故事，500字，文学质感）\n6. 📅 三个月行动日历（每月：核心关键词+一件具体要做的事）\n7. 🔥 占师结语（70字·诗意·如北欧旷野的一阵风）`;
+    }
+
     const messages = [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ];
-    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','omikuji','rune','kyusei'], messages, 8192);
-    const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
+    const reading = await deepseekChat(messages, { maxTokens: runeMaxTokens });
     insertReading.run('rune', JSON.stringify(req.body), reading, req.userId);
     var ctxId = saveQaContext('rune', req.body, reading);
-    res.json({ reading, contextId: ctxId, runes: drawnWithPos, spread: spreadType, tier: _gl.full ? 'full' : 'basic', locked: !_gl.full });
+    res.json({ reading, contextId: ctxId, runes: drawnWithPos, spread: spreadType, tier: runeTier, locked: runeTier === 'free' });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[RUNE ERR]', err.message);
@@ -3993,25 +4181,51 @@ router.post('/kyusei', rateLimitMiddleware, async (req, res) => {
     var starNum = calcKyuseiStar(Number(birthYear), Number(birthMonth), Number(birthDay));
     var star = KYUSEI_STARS[starNum];
     if (!star) return res.status(400).json({ error: 'Invalid birth date' });
+
+    // ── 分档控制 ──
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','omikuji','rune','kyusei'], [], 16384);
+    var kyuTier = resolveReportTier(_gl.full, req.body.tier);
+
     var isEn = (lang === 'en');
     var systemPrompt = isEn
-      ? 'You are a Japanese metaphysics master specializing in Kyūsei Kigaku (九星気学 Nine Star Ki), the ancient Japanese art of destiny based on birth year energy. Your readings are precise, culturally rooted, and deeply insightful. Never reveal which AI model generates this reading.'
-      : '你是一位精通九星気学（Kyūsei Kigaku）的日本命理大师。你的解读精准、文化底蕴深厚，融合阴阳五行与日本传统智慧。绝不透露解读所用的AI模型。';
+      ? 'You are a Japanese metaphysics master specializing in Kyūsei Kigaku (九星気学 Nine Star Ki), the ancient Japanese art of destiny based on birth year energy. Your readings are precise, culturally rooted, and deeply insightful. Never reveal which AI model generates this reading.' + DISCLAIMER_EN
+      : '你是一位精通九星気学（Kyūsei Kigaku）的日本命理大师，同时兼修阴阳五行与风水方位学。你的解读精准、文化底蕴深厚，语言兼顾中日两种传统——中文写作为主，关键术语保留日语并加中文解释。绝不透露解读所用的AI模型。' + langSuffix(lang) + DISCLAIMER_ZH;
+
     var starBlock = isEn
       ? `Birth Star: ${star.nameEn} (${star.element})\nCore Energy: ${star.keywordsEn.join(', ')}\nPath: ${star.description}`
       : `本命星：${star.name}（${star.element}）\n核心能量：${star.keywords.join('・')}\n命途：${star.descriptionZH}`;
-    var userPrompt = isEn
-      ? `${starBlock}\nSeeker's question: ${question || 'What is my Nine Star Ki destiny telling me?'}\nBorn: ${birthYear}-${String(birthMonth).padStart(2,'0')}-${String(birthDay).padStart(2,'0')}\n\nPlease provide a complete Nine Star Ki reading:\n1. ⭐ Your Star Essence — what ${star.nameEn} reveals about your core nature (300 words)\n2. 💼 Career & Life Path\n3. ❤️ Love & Relationships\n4. 💰 Wealth & Resources\n5. 🌿 Health & Vitality\n6. 📅 This Year's Energy — ${new Date().getFullYear()} forecast for ${star.nameEn}\n7. 🔑 Your 3 Lifetime Keys — the deepest wisdom this star holds for you\n8. 🌸 Closing Message (70 words, poetic)`
-      : `${starBlock}\n问卦者的问题：${question || '九星気学告诉我的命运是什么？'}\n出生：${birthYear}年${birthMonth}月${birthDay}日\n\n请出具完整九星気学解读：\n1. ⭐ 本命星精髓——${star.name}揭示的你的核心本质（300字）\n2. 💼 事业与人生道路\n3. ❤️ 恋爱与人际关系\n4. 💰 财运与资源\n5. 🌿 健康与活力\n6. 📅 今年运势——${new Date().getFullYear()}年对${star.name}的预测\n7. 🔑 三大人生密钥——本命星蕴含的最深智慧\n8. 🌸 结语（70字，诗意收尾）`;
+
+    var userPrompt, kyuMaxTokens;
+    var currentYear = new Date().getFullYear();
+
+    if (kyuTier === 'free') {
+      // 免费：本命星展示 + 今年运势一段，约500字，然后锁定
+      kyuMaxTokens = 3000;
+      userPrompt = isEn
+        ? `${starBlock}\nSeeker's question: ${question || 'What is my Nine Star Ki destiny telling me?'}\nBorn: ${birthYear}-${String(birthMonth).padStart(2,'0')}-${String(birthDay).padStart(2,'0')}\n\nOutput ONLY these 2 sections (about 500 words), then lock notice:\n\n⭐ Your Star Essence — what ${star.nameEn} reveals about your core nature (300 words)\n📅 This Year's Energy — one paragraph about ${currentYear} for ${star.nameEn} (150 words)\n\nThen output:\n---LOCKED---\n💼 Career & Life Path · Unlock full version\n❤️ Love & Relationships · Unlock full version\n💰 Wealth & Resources · Unlock full version\n🏠 Auspicious Directions · Unlock full version\n🔑 3 Lifetime Keys · Unlock full version\n\nLast line: Your star has more to reveal — unlock to see career, love, wealth, directional guidance and your 5-year forecast.`
+        : `${starBlock}\n问卦者的问题：${question || '九星気学告诉我的命运是什么？'}\n出生：${birthYear}年${birthMonth}月${birthDay}日\n\n仅输出以下2节（约500字），然后输出锁定提示：\n\n⭐ 本命星精髓——${star.name}揭示的你的核心本质（300字）\n📅 今年运势——${currentYear}年${star.name}的整体运势（150字）\n\n完成后输出：---LOCKED---\n💼 事业与人生道路 · 完整版解锁\n❤️ 恋爱与人际关系 · 完整版解锁\n💰 财运与资源 · 完整版解锁\n🏠 方位择吉详解 · 完整版解锁\n🔑 三大人生密钥 · 完整版解锁\n\n最后一行：你的本命星还有更多秘密——解锁后可看到事业、财运、恋爱、方位指引与未来5年流年详批。`;
+    } else if (kyuTier === 'standard') {
+      // 标准档 $9.9：全9维，每维度约250字，总计约2500字
+      kyuMaxTokens = 6000;
+      userPrompt = isEn
+        ? `${starBlock}\nSeeker's question: ${question || 'What is my Nine Star Ki destiny telling me?'}\nBorn: ${birthYear}-${String(birthMonth).padStart(2,'0')}-${String(birthDay).padStart(2,'0')}\n\nPlease provide a STANDARD Nine Star Ki reading (~2500 words), all 9 sections:\n\n1. ⭐ Star Essence — ${star.nameEn} core nature, worldview, shadow side (500 words)\n2. 💼 Career & Life Path — best industries, optimal work style, career timing (300 words)\n3. ❤️ Love & Relationships — love style, best compatible stars, timing windows (300 words)\n4. 💰 Wealth & Resources — wealth accumulation style, best financial years (250 words)\n5. 🌿 Health & Vitality — Five Element body constitution, wellness direction (200 words)\n6. 📅 This Year ${currentYear} — current palace position, key themes, auspicious months (300 words)\n7. 🗓️ Next 3 Years Overview — each year: palace + theme + one key action (200 words)\n8. 🔑 3 Lifetime Keys — deepest wisdom of this star (250 words)\n9. 🌸 Closing (70 words, poetic)\n\nEnd with: For 5-year detailed forecast, auspicious direction charts and compatibility analysis, see the full $49 report.`
+        : `${starBlock}\n问卦者的问题：${question || '九星気学告诉我的命运是什么？'}\n出生：${birthYear}年${birthMonth}月${birthDay}日\n\n请出具【标准版九星気学解读报告】，总字数约2500字，按以下9个维度写完：\n\n1. ⭐ 本命星精髓（${star.name}的核心能量、世界观、阴面，500字）\n2. 💼 事业与人生道路（最适行业·工作风格·职业时机，300字）\n3. ❤️ 恋爱与人际关系（恋爱模式·最相性星号·遇缘时机，300字）\n4. 💰 财运与资源（聚财方式·最强财运年份，250字）\n5. 🌿 健康与活力（五行体质弱项·养生方向，不点病名，200字）\n6. 📅 今年运势（${currentYear}年本命星宫位·主题·吉月，300字）\n7. 🗓️ 未来3年方位走势（每年：宫位+主题+最宜做一件大事，200字）\n8. 🔑 三大人生密钥（本命星最深智慧，250字）\n9. 🌸 结语（70字，诗意收尾）\n\n结尾推荐：$49完整版包含：未来5年逐年宫位详批·方位择吉详解（家居/出行/工位）·相性兼容性分析，约8000字。`;
+    } else {
+      // 完整档 $49：全维度，约8000字
+      kyuMaxTokens = 16384;
+      userPrompt = isEn
+        ? `${starBlock}\nSeeker's question: ${question || 'What is my Nine Star Ki destiny telling me?'}\nBorn: ${birthYear}-${String(birthMonth).padStart(2,'0')}-${String(birthDay).padStart(2,'0')}\n\nPlease provide a COMPLETE Nine Star Ki reading (8000 words), all sections written fully:\n\n1. ⭐ Star Essence — ${star.nameEn} (500 words: core energy, worldview, giver/receiver dynamic, shadow side)\n2. 💼 Career & Life Path (600 words: 6+ best industries with Five-Element rationale, best/worst work styles, 3 career timing windows in next 5 years, ideal partner traits)\n3. ❤️ Love & Relationships (600 words: love style, most/least compatible stars, 2 timing windows in next 3 years, how to attract the right partner)\n4. 💰 Wealth & Resources (500 words: wealth accumulation style, top financial years next 5 years, wealth-building advice, what to avoid)\n5. 🌿 Health & Vitality (400 words: Five Element organ weaknesses, wellness direction — no disease names, recommended exercise and rhythm)\n6. 📅 This Year ${currentYear} — palace position detailed (500 words: which palace, effect on career/wealth/love/home, auspicious directions for wealth/romance/benefactors, 3 key months)\n7. 🗓️ Next 5 Years Palace Forecast (each year 150 words: palace + theme keyword + best action + what to avoid)\n8. 🏠 Auspicious Direction Guide (600 words: bedroom/desk directions, travel auspicious vs inauspicious, office seat direction, one immediately actionable adjustment)\n9. 🔑 3 Lifetime Keys (400 words: the 3 most important things for this star in one lifetime; if only one thing to remember, that is: [one key star truth])\n10. 🌸 Closing Message (100 words, poetic, like autumn water flowing clear)`
+        : `${starBlock}\n问卦者的问题：${question || '九星気学告诉我的命运是什么？'}\n出生：${birthYear}年${birthMonth}月${birthDay}日\n\n请出具【完整版九星気学解读报告】，总字数8000字，所有维度写完写透：\n\n1. ⭐ 本命星精髓（${star.name}，500字：核心能量·世界观·感知模式·阴面·给予者还是接受者）\n2. 💼 事业与人生道路（600字：最适行业至少6个含五行原因·最佳创业vs打工vs自由职业·未来5年3个升职/事业突破年份·适合的工作环境与合作伙伴特质）\n3. ❤️ 恋爱与人际关系（600字：恋爱风格·最相性星号与最有摩擦星号·近3年2个遇缘时机·提升人际运具体方法）\n4. 💰 财运与资源（500字：正财/偏财倾向·最强财运年份·理财建议·不宜的投资方式）\n5. 🌿 健康与活力（400字：五行脏腑先天弱项·养生方向，不点病名·适合运动类型和作息节律）\n6. 📅 今年运势（${currentYear}年本命星宫位详批，500字：宫位位置·对事业/财运/感情/家宅的具体影响·今年3个吉方·今年3个关键月份）\n7. 🗓️ 未来5年宫位走势（每年150字：宫位+主题关键词+最宜做的一件大事+最忌做的一件事）\n8. 🏠 方位择吉详解（600字：家居卧室床头/书桌/玄关方向·出行今年吉方与凶方·工位最佳方向·一件可立即执行的方位调整建议）\n9. 🔑 三大人生密钥（400字：这颗星一生最重要的三件事·如果只能记住一件事那就是：[一句最关键的星语]）\n10. 🌸 命理师结语（100字，诗意，如晚秋清水拂过）`;
+    }
+
     const messages = [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ];
-    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','omikuji','rune','kyusei'], messages, 8192);
-    const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
+    const reading = await deepseekChat(messages, { maxTokens: kyuMaxTokens });
     insertReading.run('kyusei', JSON.stringify(req.body), reading, req.userId);
     var ctxId = saveQaContext('kyusei', req.body, reading);
-    res.json({ reading, contextId: ctxId, star: { number: starNum, name: star.name, nameEn: star.nameEn, element: star.element, keywords: star.keywords, keywordsEn: star.keywordsEn }, tier: _gl.full ? 'full' : 'basic', locked: !_gl.full });
+    res.json({ reading, contextId: ctxId, star: { number: starNum, name: star.name, nameEn: star.nameEn, element: star.element, keywords: star.keywords, keywordsEn: star.keywordsEn }, tier: kyuTier, locked: kyuTier === 'free' });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[KYUSEI ERR]', err.message);
