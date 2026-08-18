@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#1a1208">
-<title>善缘 · Runae｜八字 · 面相 · 西占 东西方命理合断平台</title>
+<title>善缘 · Runae｜八字 · 面相 · 西方占星 东西方命理合断平台</title>
 <meta name="description" content="善缘 Runae — 专业命理引擎精算，20+ 东西方体系，一次看透。八字排盘免费，无需绑卡。仅供参考娱乐。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -73,14 +73,31 @@ a{color:inherit;text-decoration:none}
     radial-gradient(ellipse 60% 40% at 85% 80%,rgba(201,168,76,0.08) 0%,transparent 55%);
 }
 
-.jade-disc-deco{
-  position:absolute;right:-20px;top:50%;transform:translateY(-50%);
-  width:200px;height:200px;
-  border-radius:50%;
-  object-fit:contain;
-  opacity:0.13;
-  pointer-events:none;
+/* 晶莹剔透翡翠玉珠（平安扣·纯CSS绘制·首图主角） */
+.peace-clasp{
+  position:relative;z-index:1;border-radius:50%;width:132px;height:132px;margin:0 auto 30px;
+  background:
+    radial-gradient(circle at 34% 27%,rgba(255,255,255,0.95) 0%,rgba(255,255,255,0.42) 7%,transparent 19%),
+    radial-gradient(circle at 70% 68%,var(--jade-deep) 0%,transparent 40%),
+    radial-gradient(circle at 20% 74%,rgba(0,190,90,0.28) 0%,transparent 36%),
+    radial-gradient(ellipse at 42% 38%,var(--jade-light) 0%,var(--jade) 24%,var(--jade) 54%,var(--jade-deep) 100%);
+  box-shadow:0 0 64px rgba(91,191,160,0.45),0 8px 30px rgba(0,0,0,0.45);
 }
+.peace-clasp::after{
+  content:'';position:absolute;border-radius:50%;background:var(--espresso);
+  width:36px;height:36px;top:50%;left:50%;transform:translate(-50%,-50%);
+  box-shadow:inset 0 2px 8px rgba(0,0,0,0.6);
+}
+
+/* 首图左右背景图案：八字命盘(左)·面相(右)·西方占星(中后)·现成图水印感 */
+.hero-cosmos{position:absolute;top:46%;left:50%;transform:translate(-50%,-50%);width:min(900px,125%);max-width:none;opacity:0.6;z-index:0;pointer-events:none;mix-blend-mode:screen}
+@media (max-width:760px){.hero-cosmos{width:150%;opacity:0.45}}
+.hero-decos{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:0}
+.hero-deco{position:absolute;filter:brightness(1.12) saturate(0.95)}
+.hero-deco.bazi{left:-50px;top:50%;transform:translateY(-50%);width:400px;opacity:0.5;-webkit-mask-image:linear-gradient(90deg,#000 55%,transparent);mask-image:linear-gradient(90deg,#000 55%,transparent)}
+.hero-deco.mianxiang{right:-50px;top:47%;transform:translateY(-50%);width:420px;opacity:0.5;-webkit-mask-image:linear-gradient(270deg,#000 55%,transparent);mask-image:linear-gradient(270deg,#000 55%,transparent)}
+.hero-deco.astro{display:none}
+@media (max-width:760px){.hero-deco.bazi,.hero-deco.mianxiang{width:250px;opacity:0.22}}
 
 .hero-inner{position:relative;z-index:1;max-width:440px;margin:0 auto;width:100%}
 
@@ -157,7 +174,12 @@ a{color:inherit;text-decoration:none}
 /* ═══════════════════════════════════════════════════════════
    §2  七大运势入口
 ══════════════════════════════════════════════════════════════ */
-.fortune-gates{background:var(--cream);padding:72px 0 64px}
+.fortune-gates{background:var(--cream);padding:72px 0 64px;position:relative;overflow:hidden}
+.fortune-tarot{position:absolute;top:54%;width:158px;border-radius:11px;box-shadow:0 14px 44px rgba(0,0,0,0.3);pointer-events:none;z-index:0}
+.fortune-tarot.left{left:4%;transform:translateY(-50%) rotate(-7deg)}
+.fortune-tarot.right{right:4%;transform:translateY(-50%) rotate(7deg)}
+.fortune-gates .inner,.fortune-grid{position:relative;z-index:1}
+@media (max-width:1024px){.fortune-tarot{display:none}}
 
 .fortune-grid{
   display:grid;grid-template-columns:1fr 1fr;gap:10px;
@@ -265,14 +287,17 @@ a{color:inherit;text-decoration:none}
   margin-bottom:28px;
 }
 
-/* 桌面端：样张图铺满 section，不再挤成 440px 一小条 */
+/* 桌面端：世界地图/体系全览 图片横跨整屏(不限框)；为什么很准 保持居中卡片 */
 @media (min-width:768px){
-  .worldmap-inner,.systems-overview-inner,.why-inner{
-    max-width:1040px;padding-left:40px;padding-right:40px;box-sizing:border-box;
-  }
+  .worldmap-inner,.systems-overview-inner{max-width:100%;padding:0}
+  .why-inner{max-width:1040px;padding-left:40px;padding-right:40px;box-sizing:border-box}
   .worldmap .sec-cap,.worldmap .sec-title,.worldmap .sec-sub,
-  .why-accurate .sec-cap,.why-accurate .sec-title,
-  .systems-overview .sec-cap,.systems-overview .sec-title{text-align:center}
+  .systems-overview .sec-cap,.systems-overview .sec-title,.systems-overview .sec-sub,
+  .why-accurate .sec-cap,.why-accurate .sec-title{text-align:center}
+  /* 图铺满整屏·去圆角去左右边框·贴边 */
+  .worldmap-img,.systems-img{border-radius:0;border-left:0;border-right:0;padding:0;max-width:100%}
+  .worldmap>.worldmap-inner>.fade-up:first-child,
+  .systems-overview>.systems-overview-inner>.fade-up:first-child{padding:0 22px}
   .why-accurate .trust-list{max-width:680px;margin-left:auto;margin-right:auto}
 }
 
@@ -391,16 +416,21 @@ footer{
     <div class="star" style="width:2px;height:2px;top:88%;left:33%;--d:4.0s;--delay:1.6s;--lo:.08;--hi:.7"></div>
   </div>
 
-  <img class="jade-disc-deco" src="/samples/caijing/jade-disc.png" alt="" aria-hidden="true">
+  <img class="hero-cosmos" src="/samples/caijing/hero-cosmos-bg.png" alt="" aria-hidden="true">
+  <div class="hero-decos" aria-hidden="true">
+    <img class="hero-deco bazi" src="/samples/caijing/八字命盘-视觉-中文.png" alt="">
+    <img class="hero-deco mianxiang" src="/samples/caijing/mianxiang-face-annotated.png" alt="">
+  </div>
 
   <div class="hero-inner">
+    <div class="peace-clasp"></div>
     <div class="hero-logo">善缘 · Runae</div>
     <div class="hero-eyebrow">
       <span>✦</span>
       <span>东西方命理合断平台</span>
     </div>
     <h1>
-      八字 · 面相 · 西占<br>
+      八字 · 面相 · 西方占星<br>
       <em>一次看透，一生参考</em>
     </h1>
     <p class="hero-sub">
@@ -408,7 +438,6 @@ footer{
     </p>
     <a class="cta-primary" href="/pages/bazi.html">
       免费排盘 →
-      <small>无需绑卡 · 即时排出四柱命盘</small>
     </a>
     <div class="hero-trust">仅供参考娱乐 · 不作效果承诺</div>
   </div>
@@ -420,6 +449,8 @@ footer{
      §2 七大方向入口
 ════════════════════════════════════════════════════════════════ -->
 <section class="fortune-gates">
+  <img class="fortune-tarot left" src="/assets/images/generated/tarot_star_v2_00001_.png" alt="" aria-hidden="true">
+  <img class="fortune-tarot right" src="/assets/images/generated/tarot_wheel_00001_.png" alt="" aria-hidden="true">
   <div class="inner fade-up" style="margin-bottom:32px">
     <div class="sec-cap">按方向入口</div>
     <h2 class="sec-title">七大方向入口</h2>
@@ -468,7 +499,7 @@ footer{
     <a class="fortune-all" href="/pages/pricing.html">
       <div class="fortune-all-label">
         <div class="fortune-all-title">✦ 全套综合入口</div>
-        <div class="fortune-all-sub">一次合断所有方向 · 八字＋面相＋西占</div>
+        <div class="fortune-all-sub">一次合断所有方向 · 八字＋面相＋西方占星</div>
       </div>
       <div class="fortune-all-arrow">→</div>
     </a>
@@ -552,51 +583,14 @@ footer{
   <div class="why-inner">
     <div class="fade-up">
       <div class="sec-cap" style="color:var(--jade)">可信度</div>
-      <h2 class="sec-title" style="color:#fff">为什么比别人准？</h2>
+      <h2 class="sec-title" style="color:#fff">为什么更严谨可信</h2>
     </div>
 
     <div class="fade-up">
-      <img class="why-img" src="/samples/caijing/为什么很准.png" alt="为什么很准 — 多体系交叉印证">
+      <img class="why-img" src="/samples/caijing/为什么很准.png" alt="为什么更严谨可信 — 多体系交叉印证">
     </div>
 
-    <div class="trust-list fade-up">
-      <div class="trust-item">
-        <span class="trust-icon">⚙️</span>
-        <div>
-          <div class="trust-title">专业引擎精算</div>
-          <div class="trust-desc">八字基于天文星历表精准计算，不是关键词套模板。我们的安全AI只负责解读，不负责编造。</div>
-        </div>
-      </div>
-      <div class="trust-item">
-        <span class="trust-icon">🔄</span>
-        <div>
-          <div class="trust-title">多体系交叉印证</div>
-          <div class="trust-desc">八字、面相、西占从不同维度看同一个人。三个体系都指向同一方向时，才是真结论。</div>
-        </div>
-      </div>
-      <div class="trust-item">
-        <span class="trust-icon">📖</span>
-        <div>
-          <div class="trust-title">先免费看方向</div>
-          <div class="trust-desc">无需付费先排盘，看到大方向再决定是否深读。够自信，才敢免费给你看。</div>
-        </div>
-      </div>
-      <div class="trust-item">
-        <span class="trust-icon">📋</span>
-        <div>
-          <div class="trust-title">免责透明</div>
-          <div class="trust-desc">命理为参考娱乐，我们不作效果承诺。报告帮你看方向，决策权始终在你。</div>
-        </div>
-      </div>
-    </div>
 
-    <div class="reviews-section fade-up">
-      <div class="reviews-title">真实用户反馈</div>
-      <div class="reviews-note">（积累中 · 有话说？欢迎联系我们）</div>
-      <div class="review-placeholder">真实评价位 · 开放填写中</div>
-      <div class="review-placeholder">真实评价位 · 开放填写中</div>
-      <div class="review-placeholder">真实评价位 · 开放填写中</div>
-    </div>
   </div>
 </section>
 
@@ -612,7 +606,6 @@ footer{
     <p class="sec-sub" style="color:var(--sub-dark)">无需付费，输入生辰即可看到八字命盘和大方向</p>
     <a class="cta-primary" href="/pages/bazi.html" style="max-width:360px;margin:0 auto">
       立即免费排盘 →
-      <small>无需绑卡 · 即时生成</small>
     </a>
   </div>
 </section>
@@ -629,6 +622,11 @@ footer{
     <a href="/pages/mianxiang.html">面相</a>
     <a href="/pages/pricing.html">定价</a>
     <a href="/pages/about.html">关于</a>
+  </nav>
+  <nav class="footer-nav">
+    <a href="/pages/privacy.html">隐私政策</a>
+    <a href="/pages/legal-CN.html">服务条款</a>
+    <a href="/pages/refund.html">退款政策</a>
   </nav>
   <div class="footer-copy">© 2026 善缘 · Runae · Lumen Studio 出品</div>
   <div class="footer-disclaimer">
