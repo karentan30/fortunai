@@ -13,6 +13,7 @@
 
 const celestine = require("./vendor/celestine/dist/index.cjs");
 const { toJulianDayUT, lahiriAyanamsa, toSidereal, norm360 } = require("./lahiri");
+const { computeVimshottari } = require("./vimshottari");
 
 // 吠陀 12 星座 (Rashi)，索引 0=白羊
 const RASHIS = [
@@ -127,6 +128,20 @@ function computeVedicChart(opts) {
     pl.house = ((pl.signIndex - lagnaSignIndex + 12) % 12) + 1;
   }
 
+  // Vimshottari Mahadasha — 由 Moon 恒星黄经起算 (真实大运, 非随机)
+  let dasha = null;
+  try {
+    const moon = planets.find((p) => p.name === "Moon");
+    if (moon) {
+      dasha = computeVimshottari(moon.sidereal, {
+        year: birth.year, month: birth.month, day: birth.day,
+        hour: birth.hour, minute: birth.minute,
+      });
+    }
+  } catch (e) {
+    dasha = null; // 大运失败不阻断整盘
+  }
+
   return {
     meta: {
       engine: "vedic-engine (celestine + Lahiri)",
@@ -139,6 +154,7 @@ function computeVedicChart(opts) {
     midheaven,
     planets,     // 每颗含 sidereal 经度/rashi/nakshatra/落宫/逆行
     lagnaSign: ascendant ? { index: lagnaSignIndex, sign: RASHIS[lagnaSignIndex], signZh: RASHIS_ZH[lagnaSignIndex] } : null,
+    dasha,       // Vimshottari 大运 (由 Moon nakshatra 起算 · 当前 Maha/Antar + 起止年)
   };
 }
 

@@ -616,7 +616,7 @@ ${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及�
 
 5. 💕 感情姻缘（不少于1000字）
 - 夫妻宫（日支）深度分析
-- 正缘特征：身高范围、外貌特点、性格气质、职业方向、星座或生肖倾向、认识场景（具体描述，如"可能在工作场合或朋友聚会中相识"）
+- 正缘特征：气质类型、性格气场、职业圈层、星座或生肖倾向、相遇场景（具体描述，如"可能在工作场合或朋友聚会中相识"；只谈气质与相处，不作身高长相硬预测）
 - 遇到正缘的最佳年份（给出2-3个具体年份并解释）
 - 桃花分析：命中是正桃花还是烂桃花，有无驿马桃花、墓库桃花等复杂情况
 - 感情模式分析：命主在感情中的表现模式、容易踩的坑
@@ -826,13 +826,13 @@ router.post('/tarot', rateLimitMiddleware, async (req, res) => {
 
 结尾推荐：想看12个月能量走势与月相日历？$49完整版包含：逐月解读·备用牌阵追加·深度心理层解析。`;
     } else {
-      // 完整档 $49：全8维度，约9000-10000字
+      // 完整档 $49：全8维度，约6500字
       tarotMaxTokens = 16384;
       tarotUserPrompt = `问题：${question}
 主题：${topicLabel}
 牌面信息：\n${cardDesc}
 
-请出具【完整版塔罗解读报告】，总字数9000-10000字，所有维度写完写透：
+请出具【完整版塔罗解读报告】，总字数6500字，所有维度写完写透：
 
 1. 🌸 整体格局概览（200-300字）
 2. 🎴 牌阵布局说明（100字）
@@ -930,7 +930,7 @@ ${ziweiBlock ? `【精确命盘（后端注入·禁止 LLM 自行推算）】\n$
 10. 🏥 疾厄宫（体质倾向、养生方向——按中医脏腑角度，不点病名，不少于450字）
 11. 🌈 福德宫（精神享受、宗教缘分、晚年态度，不少于350字）
 12. 👨‍👩 父母宫（父母缘分、长辈贵人，不少于350字）
-13. 🌀 四化飞星（化禄/化权/化科/化忌各自落宫及影响，不少于550字）
+13. 🌀 四化飞星（化禄/化权/化科/化忌各自落宫及影响，不少于700字；必须分析四化星的飞入飞出、穿宫互涉关系，如"命宫化忌入夫妻"这类宫位间的牵动，而非孤立地各说四颗星）
 14. 📅 当前大限深批（起止年份、主题、关键年份，不少于550字）
 15. 🔮 未来10年逐年流年（每年财/情/事评分+一句主题，不少于900字）
 16. 🎯 开运锦囊（幸运色精确色系、吉方、推荐佩戴物、流年避讳，不少于450字）
@@ -1099,7 +1099,8 @@ router.post('/mianxiang/stream', rateLimitMiddleware, async (req, res) => {
 7. 疾厄宫只说养生调理方向，严禁点病名、做医疗诊断。
 8. 结尾必须有"相师叮嘱"：强调面相随心性而变，鼓励积善修德，不宿命论。
 9. 用Markdown，标题分段，每个宫位分析100-200字。
-【OUTPUT LANGUAGE】${_langLine}。`;
+10. 【铁律】只论气运格局与人生领域，绝不评价容貌美丑，绝不使用"丑/难看/缺陷/畸形"等贬损字眼；一切表述温和、尊重、不制造容貌焦虑。
+【OUTPUT LANGUAGE】${_langLine}。${DISCLAIMER_ZH}`;
 
     const featureBlock = features
       ? `\n\n【照片特征描述（仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
@@ -1197,7 +1198,7 @@ router.post('/shouxiang', rateLimitMiddleware, async (req, res) => {
 6. 生命线长短不等于寿命长短——必须在此说明，避免用户恐慌。
 7. 结尾"相师叮嘱"：强调掌纹随人生经历和心态变化，不宿命论。
 8. 用Markdown，标题分段，每部分100-180字。
-【OUTPUT LANGUAGE】${_langLine}。`;
+【OUTPUT LANGUAGE】${_langLine}。${DISCLAIMER_ZH}`;
 
     const featureBlock = features
       ? `\n\n【照片特征描述（${handLabel}，仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
@@ -1260,7 +1261,7 @@ router.post('/shouxiang/stream', rateLimitMiddleware, async (req, res) => {
 6. 生命线长短不等于寿命长短——必须在此说明，避免用户恐慌。
 7. 结尾"相师叮嘱"：强调掌纹随人生经历和心态变化，不宿命论。
 8. 用Markdown，标题分段，每部分100-180字。
-【OUTPUT LANGUAGE】${_langLine}。`;
+【OUTPUT LANGUAGE】${_langLine}。${DISCLAIMER_ZH}`;
 
     const featureBlock = features
       ? `\n\n【照片特征描述（${handLabel}，仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
@@ -1335,7 +1336,7 @@ router.post('/hehun', rateLimitMiddleware, async (req, res) => {
       return res.status(400).json({ error: '仅限18岁以上用户使用' });
     }
     const messages = buildReadingPrompt(
-      '你是一位德高望重的合婚师，从业四十余年，阅人无数，撮合过上千对姻缘。你说话诚恳、直率、不留情面，但句句为对方好。你深知婚姻不是儿戏，合婚分析必须全面深刻、落到实地。每次回答至少3000字。用Markdown格式输出，使用标题、加粗、分隔线让报告清晰易读。语言：简体中文。',
+      '你是一位德高望重的合婚师，从业四十余年，阅人无数，撮合过上千对姻缘。你说话诚恳、直率、不留情面，但句句为对方好。你深知婚姻不是儿戏，合婚分析必须全面深刻、落到实地。每次回答至少3000字。用Markdown格式输出，使用标题、加粗、分隔线让报告清晰易读。语言：简体中文。' + DISCLAIMER_ZH,
       `双方信息：
 A方：${p1Year}年${p1Month}月${p1Day}日${p1Hour !== undefined ? p1Hour+'时' : ''} · ${p1Gender === 'male' ? '男' : '女'}
 B方：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined ? p2Hour+'时' : ''} · ${p2Gender === 'male' ? '男' : '女'}
@@ -1349,7 +1350,7 @@ B方：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined ? p2Hour+'时'
 ## 六、气场合度（满分10分）
 ## 七、生育子女缘分（满分5分）
 ## 八、双方父母家庭兼容性（满分5分）
-## 九、最佳结婚年份与3个推荐吉日（满分5分·必须给出3个具体吉日：年份+月份，每个各附一句理由）
+## 九、最佳结婚年份与3个推荐吉日（满分5分·必须给出3个具体吉日：年份+月份，每个各附一句理由；此为传统择吉文化参考，非婚姻决策建议，请以双方感情与现实为准）
 ## 十、婚后需要注意的3个事项
 ## 十一、合婚古诀引用
 ## 十二、一句话结论`
@@ -1511,7 +1512,7 @@ Analysis sections:
 ## 6. Who Leads, Who Grounds — Energy Dynamics
 ## 7. Family & Children Prospects
 ## 8. Extended Family Compatibility
-## 9. Best Marriage Timing — Auspicious Years & 3 Recommended Dates (you MUST give 3 specific auspicious dates: year + month, each with a one-line reason)
+## 9. Best Marriage Timing — Auspicious Years & 3 Recommended Dates (you MUST give 3 specific auspicious dates: year + month, each with a one-line reason; this is traditional date-selection culture for reference only, not marriage-decision advice — let the couple's feelings and reality lead)
 ## 10. Top 3 Things to Work On After Marriage
 ## 11. Classical BaZi Compatibility Wisdom
 ## 12. Final Verdict — Should You Build a Life Together?
@@ -1544,7 +1545,7 @@ Use the pre-computed compatibility score provided. Give specific year recommenda
 ## 6. 누가 이끌고 누가 안정시키나 — 에너지 역학
 ## 7. 자녀 및 가정운
 ## 8. 양가 가족과의 궁합
-## 9. 최적 결혼 시기와 추천 길일 3개 (반드시 구체적인 길일 3개: 연도+월, 각각 이유 한 줄 포함)
+## 9. 최적 결혼 시기와 추천 길일 3개 (반드시 구체적인 길일 3개: 연도+월, 각각 이유 한 줄 포함; 이는 전통 택일 문화 참고용이며 결혼 결정 조언이 아닙니다 — 두 분의 감정과 현실을 우선하세요)
 ## 10. 결혼 후 꼭 주의해야 할 3가지
 ## 11. 고전 사주 궁합 원리
 ## 12. 최종 결론 — 이 인연, 맺어야 할까요?
@@ -1593,7 +1594,7 @@ Use the pre-computed compatibility score provided. Give specific year recommenda
 ## 六、气场合度（谁带动谁，谁让谁稳定）
 ## 七、生育子女缘分与家庭运
 ## 八、双方原生家庭兼容性
-## 九、最佳结婚年份与3个推荐吉日（必须给出3个具体吉日：年份+月份，每个各附一句理由）
+## 九、最佳结婚年份与3个推荐吉日（必须给出3个具体吉日：年份+月份，每个各附一句理由；此为传统择吉文化参考，非婚姻决策建议，请以双方感情与现实为准）
 ## 十、婚后最需要注意的3件事
 ## 十一、合婚古诀引用与命理依据
 ## 十二、一句话结论——这段婚姻值得进入吗
@@ -1633,7 +1634,7 @@ Use the pre-computed compatibility score provided. Give specific year recommenda
 ## 六、气场合度（谁带动谁，谁让谁稳定）
 ## 七、生育子女缘分与家庭运
 ## 八、双方原生家庭兼容性
-## 九、最佳结婚年份与3个推荐吉日（必须给出3个具体吉日：年份+月份，每个各附一句理由）
+## 九、最佳结婚年份与3个推荐吉日（必须给出3个具体吉日：年份+月份，每个各附一句理由；此为传统择吉文化参考，非婚姻决策建议，请以双方感情与现实为准）
 ## 十、婚后最需要注意的3件事
 ## 十一、合婚古诀引用与命理依据
 ## 十二、一句话结论——这段婚姻值得进入吗
@@ -1641,6 +1642,9 @@ Use the pre-computed compatibility score provided. Give specific year recommenda
 请使用已提供的缘分分数。`;
       }
     }
+
+    // 🔴 合规免责：所有 hehun/stream 分支 systemPrompt 末尾统一附娱乐免责
+    systemPrompt += (hehunLang === 'en' ? DISCLAIMER_EN : DISCLAIMER_ZH);
 
     // ── 双方精确排盘（算法排，不让AI猜）──
     const bazi1 = calcBazi(Number(p1Year), Number(p1Month), Number(p1Day), Number(p1Hour)||0, p1Gender||'female');
@@ -1953,7 +1957,7 @@ router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
 5. 价格用美元（$）标注
 6. 语气：像一位真正懂行的老朋友在帮你看房子，温暖、亲切、不吓唬人，有时可以幽默一两句
 7. 报告最后必须有一段完全个性化的"大师私语"，针对这套房子和这位业主的具体情况，不得使用任何通用套话
-简体中文。`;
+简体中文。${DISCLAIMER_ZH}`;
 
     // 家庭成员命卦段落
     let membersSection = '';
@@ -2141,7 +2145,7 @@ router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
 （根据户型常见问题，逐项给出化解方案：
 - **尖角煞/刀煞**（邻屋屋角正对窗/门）：泰山石敢当石碑，[Amazon购买](https://www.amazon.com/s?k=feng+shui+stone+tablet+taishan&tag=shenyuan-20)，参考价$8-25；或大叶圆形植物（如巴西木/幸福树）阻挡视线
 - **病符星位（二黑）**：铜葫芦（黄铜铸造，口朝下），[Amazon购买](https://www.amazon.com/s?k=brass+feng+shui+gourd+wu+lu&tag=shenyuan-20)，参考价$12-45，挂于该方位墙上；长期点檀香/藏香（每日1支，早晨点）
-- **五黄廉贞（最凶煞）**：${new Date().getFullYear()}年五黄落位的方位禁止动土/维修，放六铜钱串，[Amazon购买](https://www.amazon.com/s?k=feng+shui+six+emperor+coins&tag=shenyuan-20)，参考价$8-20
+- **五黄廉贞（需重点化解的方位）**：${new Date().getFullYear()}年五黄落位的方位禁止动土/维修，放六铜钱串，[Amazon购买](https://www.amazon.com/s?k=feng+shui+six+emperor+coins&tag=shenyuan-20)，参考价$8-20
 - **穿堂风（前后门正对）**：玄关处立1.2米以上屏风，[Amazon搜索](https://www.amazon.com/s?k=room+divider+screen+feng+shui&tag=shenyuan-20)，参考价$60-400；或在正对位置悬挂流苏/珠帘分气
 - **面对楼梯/电梯**：门上方外侧挂凸面八卦镜（直径15cm以上），[Amazon购买](https://www.amazon.com/s?k=bagua+mirror+convex+feng+shui&tag=shenyuan-20)，参考价$12-35
 - **镜子对床**：必须遮盖（可用布帘）或移位，是卧室最大禁忌之一
@@ -2270,7 +2274,7 @@ router.post('/yinzhai/stream', rateLimitMiddleware, async (req, res) => {
 - 穴位吉凶：判断穴场是否藏风聚气、前有案山、后有靠山
 - 砂水配合：四兽（青龙/白虎/朱雀/玄武）格局分析，水口收纳判断
 - 朝向与命卦：逝者关联在世者命卦，判断最利子孙的朝向
-- 子孙运势：阴宅影响后代三代，具体预判财丁贵三个维度
+- 子孙运势：阴宅影响后代三代、子孙运势的说法为传统堪舆象征说法，非确定预言、非科学因果，仅供参考；可从财丁贵三个维度作象征性阐释
 
 【输出铁律】
 1. 字数要求：完整分析8000字以上，每个候选地至少1200字详细分析
@@ -2279,7 +2283,7 @@ router.post('/yinzhai/stream', rateLimitMiddleware, async (req, res) => {
 4. 最终推荐必须斩钉截铁，给出明确答案，不可含糊说"视情况而定"
 5. 安葬日期必须给出具体时间范围（精确到季节或月份）
 6. 报告结尾用一段完全个性化的"大师心语"，真诚地告诉家属：您做了最好的安排
-简体中文。`;
+简体中文。${DISCLAIMER_ZH}`;
 
     const userMsg = `城市/地区：${city || '未提供'}
 逝者与委托人关系：${relation || '长辈'}
@@ -2491,7 +2495,7 @@ router.post('/geo-fortune', rateLimitMiddleware, async (req, res) => {
 你分析不同地域对个人运势的影响时，结合五行方位（东木·南火·中土·西金·北水）、地形地貌（山岳/平原/海滨/高原）、气候节律与城市产业文化氛围综合判断。
 分析要具体、落地、可参考——不说"此地宜居"这种废话，而是从环境适配角度说明什么"类型"的环境更契合命主，以及在当前所在地可调整的开运方位建议。
 
-【输出格式】Markdown，标题分段，简体中文。总字数 7000-8000字，8 个维度全部写完写透，每个维度字数不低于要求，严禁用"略"代替内容。
+【输出格式】Markdown，标题分段，简体中文。总字数 4500字，8 个维度全部写完写透，每个维度字数不低于要求，严禁用"略"代替内容。
 
 【收尾合规】末尾加："本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议；去留是重大人生选择，请结合现实工作、家庭与经济综合判断。"${langSuffix(lang)}`;
 
@@ -2500,7 +2504,7 @@ router.post('/geo-fortune', rateLimitMiddleware, async (req, res) => {
 出生信息：${birthYear ? birthYear + '年' : ''}${birthMonth ? birthMonth + '月' : ''}${birthDay ? birthDay + '日' : ''}${birthElementNote}
 性别：${gender || '未提供'}
 
-请按以下 8 个维度出具完整地域命理分析报告（总字数 7000-8000字）：
+请按以下 8 个维度出具完整地域命理分析报告（总字数 4500字）：
 
 1. 🌍 地域能量全景（不少于800字）
    - 此纬度/气候带的地理五行属性分析（${regionElement}气如何影响居住者的精神状态？）
@@ -2569,7 +2573,7 @@ router.post('/xingming', rateLimitMiddleware, async (req, res) => {
     const { surname, givenName, zodiac, gender } = req.body;
     if (!surname || !givenName) return res.status(400).json({ error: '请提供姓氏和名字' });
     const messages = buildReadingPrompt(
-      '你是一位精通姓名学的命理大师，深谙五格剖象法（天格、人格、地格、外格、总格）与生肖喜忌之道，从业三十余年，为成千上万人改过名。你的分析专业深刻——笔画数理、五行补益、生肖适配，面面俱到。你的语气亲切实在，用大白话解释深奥姓名学原理，不故弄玄虚。每个建议都给出具体的新名字选项，让人能照着做。',
+      '你是一位精通姓名学的命理大师，深谙五格剖象法（天格、人格、地格、外格、总格）与生肖喜忌之道，从业三十余年，为成千上万人改过名。你的分析专业深刻——笔画数理、五行补益、生肖适配，面面俱到。你的语气亲切实在，用大白话解释深奥姓名学原理，不故弄玄虚。每个建议都给出具体的新名字选项，让人能照着做。' + DISCLAIMER_ZH,
       `用户姓名：${surname}${givenName}
 姓氏：${surname}，名字：${givenName}，生肖：${zodiac || '未提供'}，性别：${gender === 'male' ? '男' : gender === 'female' ? '女' : '未提供'}
 
@@ -2579,7 +2583,7 @@ router.post('/xingming', rateLimitMiddleware, async (req, res) => {
 ## 三、🔥 五行补益分析（300-400字）
 ## 四、🎯 姓名综合评分（100-200字）
 ## 五、📈 姓名对各方面运势的影响（500-600字）
-## 六、💡 改名建议（600-800字）
+## 六、💡 改名建议（600-800字·姓名是文化符号，非命运决定因素；改名纯属个人选择，不断言现名不好、不制造焦虑，语气正向温和）
 ## 七、📝 姓名能量提升小技巧（200-300字）
 ## 八、💌 姓名学师的叮嘱（100-200字）`
     );
@@ -2721,7 +2725,7 @@ ${fullChartBlock}
 
 5. 🏠 12宫位简析（每宫位60字，共720字）
 
-6. 📐 主要相位解读（选3-5个最重要相位，每个200字）
+6. 📐 主要相位解读（选3-5个最重要相位，每个200字；必须逐条引用上方注入数据中真实存在的相位——写出对应的行星、度数与容许度(orb)，严禁杜撰盘里不存在的相位）
 
 7. 🌙 月相解读（当前月相+对本命月相的影响，200字）
 
@@ -2781,14 +2785,14 @@ router.post('/liuyao', rateLimitMiddleware, async (req, res) => {
 ${liuyaoBlock || '（引擎暂不可用，请基于通识给出六爻解读框架）'}
 （含：本卦六爻、动爻位置、变卦、六亲、纳甲地支、六神、世应、空亡）
 
-【输出格式】Markdown，标题分段，简体中文。总字数 8000字，7 个维度全部写完写透，严禁简略。
+【输出格式】Markdown，标题分段，简体中文。总字数 4000字，7 个维度全部写完写透（与用神/世应无关的闲爻可从略），严禁重要维度简略。
 
 【收尾合规】末尾加："本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。"${langSuffix(lang)}`;
 
     const liuyaoUser = `用户问题：${question}
 主题类型：${topic || '综合'}（感情/事业/财运/健康/出行）
 
-请基于上方精确卦象数据，按以下 7 个维度出具完整六爻断事报告（总字数 8000字）：
+请基于上方精确卦象数据，按以下 7 个维度出具完整六爻断事报告（总字数 4000字，闲爻可略）：
 
 1. 🔮 本卦解读（卦名+卦象图示+卦辞含义+整体象征。基于引擎排出的本卦名，写卦的内涵与整体象，不少于500字）
 
@@ -2835,8 +2839,8 @@ router.post('/lingqian', rateLimitMiddleware, async (req, res) => {
     var qianNum = Math.floor(Math.random() * 100) + 1;
     var qianType = qianNum <= 15 ? '上上签' : qianNum <= 35 ? '上签' : qianNum <= 65 ? '中签' : qianNum <= 85 ? '下签' : '下下签';
     const messages = [
-      { role: 'system', content: '你是一位在名山古寺修行多年的解签僧人。解签时语气温和、充满智慧，既点明签文深意又给人希望。' },
-      { role: 'user', content: `求签地点：${temple || '善缘灵境'}\n用户问题：${question || '请指点迷津'}\n抽得签号：第${qianNum}签（${qianType}）\n\n请生成：\n1. 📜 签诗（四句七言古诗，原创）\n2. 🏮 解签（签文含义，300字左右）\n3. 🎯 对你的启示\n4. 💡 行动建议\n5. 🙏 祈福方法` }
+      { role: 'system', content: '你是一位在名山古寺修行多年的解签僧人。解签时语气温和、充满智慧，既点明签文深意又给人希望。' + DISCLAIMER_ZH },
+      { role: 'user', content: `求签地点：${temple || '善缘灵境'}\n用户问题：${question || '请指点迷津'}\n抽得签号：第${qianNum}签（${qianType}）\n\n请生成：\n1. 📜 签诗（四句七言古诗，原创）\n2. 🏮 解签（签文含义，300字左右）\n3. 🎯 对你的启示\n4. 💡 行动建议\n5. 🙏 祈福方法\n\n结尾请附一句娱乐参考免责。` }
     ];
     var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 8192);
     const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
@@ -2891,13 +2895,13 @@ router.post('/daliuren', rateLimitMiddleware, async (req, res) => {
 请在报告开头声明："本次大六壬解读为文化参考，引擎精确排盘暂不可用，仅供娱乐参考。"`;
     }
 
-    const daliurenSystem = `你是一位精通大六壬的玄学大师，民间尊称"六壬神断"，从业四十余年。
-你深谙六壬三传四课之精妙，能从课象中洞悉天机。语气平和笃定，引经据典但深入浅出，让求测者信服。
+    const daliurenSystem = `你是一位研习大六壬四十余年的术数研究者，民间称大六壬善断。
+你深谙六壬三传四课之精妙，以三传四课为据推演，语气平和笃定，引经据典但深入浅出，重实证不故弄玄虚。
 
 【大六壬起课数据（后端注入·依此解读，不得自行起课或编造三传四课）】
 ${liurenBlock}
 
-【输出格式】Markdown，标题分段，简体中文。总字数 8000字，6 个维度全部写完写透，严禁简略。
+【输出格式】Markdown，标题分段，简体中文。总字数 4000字，6 个维度全部写完写透，严禁简略。
 
 【收尾合规】末尾加："本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。"${langSuffix(lang)}`;
 
@@ -2905,7 +2909,7 @@ ${liurenBlock}
 出生年份：${birthYear || '未提供'}
 性别：${gender === 'male' ? '男' : gender === 'female' ? '女' : '未提供'}
 
-请基于上方精确起课数据，按以下 6 个维度出具完整大六壬断事报告（总字数 8000字）：
+请基于上方精确起课数据，按以下 6 个维度出具完整大六壬断事报告（总字数 4000字）：
 
 1. 📜 课名解读与课体总评（课名的文化含义、此课的整体气场与类象，不少于700字）
    - 课名出于何种传统文献？含义与形成条件？
@@ -2958,8 +2962,8 @@ router.post('/qimen', rateLimitMiddleware, async (req, res) => {
     // ── 奇门遁甲真实排盘（拆补定局·转盘·时家）──
     const qimenBlock = await buildQimenBlock({ date: new Date(), method: 'zhuanpan', scope: 'hour', juMethod: 'chaibu' });
 
-    const qimenSystem = `你是一位精通奇门遁甲的高人，师承茅山道脉，深研烟波钓叟歌、时家奇门正统口诀，精研奇门数十年。
-你擅长排盘布局，能从八门九星八神中洞察时空能量，为求测者指点迷津。语气沉稳、自信、有道家仙风，每个断语都有理有据。
+    const qimenSystem = `你是一位精研时家奇门正统数十年的奇门遁甲研究者，深研烟波钓叟歌与时家奇门正统口诀，断事重实证、不故弄玄虚。
+你擅长排盘布局，能从八门九星八神中洞察时空能量，为求测者指点迷津。语气沉稳、自信、平实，每个断语都有理有据。
 
 【奇门遁甲精确局盘（后端真实起局·禁止 LLM 自行起局或随机改盘）】
 ${qimenBlock || '（引擎暂不可用，请按奇门遁甲通识框架作文化解读并声明）'}
@@ -3152,7 +3156,7 @@ router.post('/deity-guide', rateLimitMiddleware, async (req, res) => {
     if (!question) return res.status(400).json({ error: '请说明你求什么事' });
     const messages = [
       { role: 'system', content: '你是一位深谙佛道仙三家文化的寺庙住持，为信众介绍传统供奉文化。语气慈悲、智慧、不迷信。【合规铁律】：只做文化介绍与心意寄托，绝不承诺"拜了就灵/有求必应"，绝不制造"不供奉就有灾祸"的恐吓，不替代医疗/投资/法律决策。结尾必须加一句免责："以上为传统文化参考，重在心意，不构成宗教承诺或任何效果保证，仅供参考娱乐。"' },
-      { role: 'user', content: `信众所求：${question}\n出生年份：${birthYear || '未提供'}\n性别：${gender || '未提供'}\n偏好：${preference || '无特定偏好'}\n\n请从传统文化角度详细介绍（3000+字，客观介绍不作效果承诺）：\n1. 🧭 传统上与此类祈愿相关的菩萨/仙家\n2. 📖 每位的文化简介和象征领域\n3. 🙏 传统供奉方式（作为文化习俗介绍）\n4. 💰 供奉心意参考（不承诺回报）\n5. 🏠 在家中何处设供桌\n6. 🕐 传统供奉时辰\n7. 📿 相关经文/咒语文化\n8. 💌 温暖的文化寄语\n\n结尾加免责声明。` }
+      { role: 'user', content: `信众所求：${question}\n出生年份：${birthYear || '未提供'}\n性别：${gender || '未提供'}\n偏好：${preference || '无特定偏好'}\n\n请从传统文化角度详细介绍（约2000字，客观介绍不作效果承诺）：\n1. 🧭 传统上与此类祈愿相关的菩萨/仙家\n2. 📖 每位的文化简介和象征领域\n3. 🙏 传统供奉方式（作为文化习俗介绍）\n4. 💰 供奉心意参考（不承诺回报）\n5. 🏠 在家中何处设供桌\n6. 🕐 传统供奉时辰\n7. 📿 相关经文/咒语文化\n8. 💌 温暖的文化寄语\n\n结尾加免责声明。` }
     ];
     var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 12288);
     const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
@@ -3187,7 +3191,7 @@ router.post('/offering-plan', rateLimitMiddleware, async (req, res) => {
 - 海外信众实情：超市可购的替代品要注明（如：鲜花可用植物花卉替代，写明品种）
 - 禁止模糊说"适量"——写"一斤500克"的梨，3根线香，每支约45分钟燃尽
 
-【输出格式】Markdown，标题分段，简体中文。总字数 7000-8000字，8 个章节全部写完写透，每章字数不低于要求，严禁简略。
+【输出格式】Markdown，标题分段，简体中文。总字数 6000字，8 个章节全部写完写透，每章字数不低于要求，严禁简略。
 
 【收尾合规】末尾加："本方案为文化参考，不构成宗教承诺或医学、投资建议。如有宗教疑问请咨询专业宗教人士。"${langSuffix(lang)}`;
 
@@ -3198,7 +3202,7 @@ router.post('/offering-plan', rateLimitMiddleware, async (req, res) => {
 信众出生年份：${birthYear || '未提供'}
 性别：${gender === 'male' ? '男' : gender === 'female' ? '女' : '未提供'}
 
-请设计一份完整的【${deity}供奉仪轨执行手册】，聚焦于"怎么做"的具体步骤，总字数 7000-8000字：
+请设计一份完整的【${deity}供奉仪轨执行手册】，聚焦于"怎么做"的具体步骤，总字数 6000字：
 
 1. 🏛️ 神位选址与坛台设置（不少于700字）
    - 家中供奉${deity}的最佳方位（东/南/西/北方向，具体到房间）
@@ -3500,10 +3504,10 @@ Begin with the Sanskrit root meaning of ${rashiName}. Paint ${name}'s inner emot
 This is the soul's address in the cosmos. Tell the complete myth of ${nakshatraName}'s ruling deity — what happened, what it means, how this deity's story lives inside ${name}. Explain the Shakti (divine power) of ${nakshatraName} and how it manifests in their life. Describe the Pada (quarter) they were born in and its specific coloring. What does ${nakshatraName} people master in this lifetime? End with a shloka.
 
 ## 🪐 Dasha Timeline — The Cosmic Calendar [800 words]
-Their current Mahadasha and Antardasha — be specific about which planet rules now and until exactly when. What major life themes does this period activate? What's opening, what's closing? When is the next significant Dasha shift and what will it bring? Map out the next 15 years of Dasha periods with specific dates and what each period tends to bring for ${rashiName}/${nakshatraName} natives. This is the section that astonishes people with its precision. End with a shloka on time.
+Describe the energetic themes and life stage of the current Dasha period — which planet's mahadasha broadly colors this chapter of life, what themes it activates, what tends to open and what tends to close. Speak in terms of life-stage energy and themes rather than exact calendar dates. Sketch the general arc of the coming Dasha periods and the kinds of experiences each tends to bring for ${rashiName}/${nakshatraName} natives. End with a shloka on time.
 
 ## 🏠 Full 12-House Analysis — The Architecture of Destiny [1200 words]
-Systematically analyze all 12 houses with their lords and key planetary tenants:
+Note upfront: because of limits on the precision of birth time and place, the house (Lagna-based) placements here are a reference-level layout, not an exact chart. Systematically analyze all 12 houses with their lords and key planetary tenants:
 - 1st House (Lagna): self, body, personality, life direction
 - 2nd House: family, speech, wealth accumulation, food
 - 3rd House: courage, siblings, communication, short journeys
@@ -3537,7 +3541,7 @@ Specific career paths aligned with their chart (name 5-6 specific fields). Finan
 The 7th house lord's placement and what it reveals about their ideal partner — specific qualities, likely background, how they'll meet. Marriage timing based on Dasha and Navamsha analysis (specific year range). Their relationship karma from past lives — what patterns they've brought forward. How to recognize their destined partner. Relationship challenges specific to ${rashiName} natives and how to navigate them. End with a shloka on union.
 
 ## 🏥 Health, Body & Ayurvedic Constitution [600 words]
-Their Ayurvedic constitution (Vata/Pitta/Kapha) based on Lagna and its lord. Specific body areas governed by their Lagna and its weakness indicators. Organs connected to the afflicted planets in their chart. Health periods to be watchful (specific ages/years). Dietary wisdom from Jyotish — specific foods to favor and reduce. Yoga practices aligned with their chart. End with a shloka on vitality.
+Describe their Ayurvedic constitutional tendency (Vata/Pitta/Kapha) based on Lagna and its lord — as a constitutional inclination, not a medical diagnosis; never name specific diseases. Body areas traditionally associated with their Lagna to support proactively. General life phases to pay more attention to wellbeing. Dietary wisdom from Jyotish — foods to favor and reduce. Yoga practices aligned with their chart. Frame all of this as wellness guidance, and advise consulting a qualified professional for any real health concern. End with a shloka on vitality.
 
 ## 📅 5-Year Forecast: ${new Date().getFullYear()}–${new Date().getFullYear()+4} [700 words]
 Year by year, guided by Dasha and annual transits of Jupiter and Saturn:
@@ -3554,7 +3558,7 @@ Primary gemstone: name the specific stone, minimum carat weight (e.g., "natural 
 ## 💌 Jyotishi's Personal Message — A Letter Across the Stars [500 words]
 This is the most personal section — written directly to ${name}, not about them. Begin with a Sanskrit blessing (one line) and its translation. Then speak intimately: what is the single most important insight this chart holds for this person right now? What are they perhaps not seeing about themselves that the stars make clear? What is the gift hidden inside their greatest challenge? Close with a specific, personal blessing — not generic, but rooted in what you see in this unique chart.
 
-语言：${outputLang}。写作风格：命运诗篇——每一章是旅途的一步，每个章节结尾有一句金句（如梵语意境的一行诗）。场景感代替抽象描述。严禁bullet points。直接进入命运叙述，温暖而有文学质感。`
+语言：${outputLang}。写作风格：命运诗篇——每一章是旅途的一步，每个章节结尾有一句金句（如梵语意境的一行诗）。场景感代替抽象描述。严禁bullet points。直接进入命运叙述，温暖而有文学质感。${DISCLAIMER_EN}`
 
       : `你是一位精通吠陀占星（Jyotish）的大师，同时拥有诗人的灵魂。为${name}（生于${dob}，${city}）写一份命运诗篇式的免费吠陀占星解读。月亮星座（Rashi）：${rashiName}；月宿（Nakshatra）：${nakshatraName}。关注重点：${concern || '整体命运'}。
 
@@ -3590,9 +3594,9 @@ ${rashiName} + ${nakshatraName}的组合，赋予了${name}三种深刻的天赋
 
 ---
 
-结尾：写一段温暖而具体的话——"你的吠陀命盘还藏着……"，列出5件完整版才揭晓的事（Dasha大运周期精确日期、全部12宫位分析、5年运势预测、关系业力兼容、具体补救措施），让人真心好奇。
+结尾：写一段温暖而具体的话——"你的吠陀命盘还藏着……"，列出5件完整版才揭晓的事（Dasha大运周期的能量主题与人生阶段、全部12宫位分析、5年运势主题预测、关系业力兼容、具体补救措施），让人真心好奇。
 
-语言：${outputLang}。直接从${name}的命运开始叙述，不要免责声明。`;
+语言：${outputLang}。直接从${name}的命运开始叙述，结尾附一句娱乐参考免责。`;
 
     // 免费版缓存检查（jyotish）
     if (!full) {
@@ -3684,7 +3688,7 @@ As an initiated Ajq'ij (day keeper), describe the specific ceremony for ${tzolki
 ## 💌 The Elder's Whisper — Words Across the Fire [500 words]
 This final section is the day keeper's private message to ${name} — not about the calendar, but from one soul to another across the fire. Begin with a traditional Maya greeting in K'iche' and its translation. Then speak the one truth this chart has shown you about ${name} that they most need to hear right now — perhaps something they already sense but haven't let themselves believe. What is the Maya elder's blessing for this particular soul? Close with a traditional Maya closing prayer or blessing in K'iche', followed by its translation.
 
-语言：${mayaLang}。写作风格：命运诗篇——每一章是旅途的一步，每个章节结尾有一句令人心头一震的金句。场景感代替抽象，严禁bullet points，直接进入命运叙述，神秘而有文学质感。`
+语言：${mayaLang}。写作风格：命运诗篇——每一章是旅途的一步，每个章节结尾有一句令人心头一震的金句。场景感代替抽象，严禁bullet points，直接进入命运叙述，神秘而有文学质感。${DISCLAIMER_EN}`
 
       : `你是一位在玛雅高地传承中受训的卓金历法守护者，同时拥有诗人与说书人的灵魂。为${name}写一份命运诗篇式的免费玛雅历解读。她的神圣印记是Kin ${tzolkinData.kin}：${tzolkinData.tone} ${tzolkinData.daySign}。关注重点：${intention || '生命使命'}。
 
@@ -3725,7 +3729,7 @@ Kin ${tzolkinData.kin}带给${name}的三种天赋——具体的、她自己也
 
 结尾：写一段温暖而具体的话——"你的完整玛雅命运解读还藏着……"，列出5件完整版才揭晓的事（完整神谕Oracle解读、Trecena波浪周期、关系业力兼容、260天循环当前位置、年度仪式日历），让人产生真实的好奇。
 
-语言：${mayaLang}。直接从${name}的命运开始，不要免责声明。`;
+语言：${mayaLang}。直接从${name}的命运开始，结尾附一句娱乐参考免责。`;
 
     // 免费版缓存检查（maya）
     if (!full) {
@@ -3817,7 +3821,7 @@ Year by year, guide ${name} through the next three years using the Tibetan eleme
 End with dharma poetry.
 
 ## 🏔️ Health, Longevity & Tibetan Medicine [600 words]
-Tibetan medicine (Sowa Rigpa) is inseparable from astrology — the nyes pa (humors): Lung (wind/air), Tripa (bile/fire), and Bekan (phlegm/water-earth) map onto the elemental constitution. ${tibetData.element} ${tibetData.zodiac}'s constitutional type and the specific humors most likely to become imbalanced. Health areas to support proactively (specific body systems and organs). The specific foods to favor and reduce per Tibetan dietary wisdom for this constitution. The years of greatest vitality fluctuation. Any longevity practices especially suited to their Mewa and element combination. End with dharma poetry.
+Tibetan medicine (Sowa Rigpa) is inseparable from astrology — the nyes pa (humors): Lung (wind/air), Tripa (bile/fire), and Bekan (phlegm/water-earth) map onto the elemental constitution. Describe ${tibetData.element} ${tibetData.zodiac}'s constitutional tendency as an inclination only — this is a wellness perspective, not a medical diagnosis; never name specific diseases. Body areas to support proactively (general systems). Foods to favor and reduce per Tibetan dietary wisdom for this constitution. General life phases of greater vitality fluctuation. Longevity practices suited to their Mewa and element combination; advise consulting a qualified professional for real health concerns. End with dharma poetry.
 
 ## 🙏 Spiritual Practices, Pujas & Protections [700 words]
 Every element-animal-Mewa combination has specific practices that the tradition recommends. Give ${name}:
@@ -3832,7 +3836,7 @@ End with dharma poetry.
 ## 💌 The Lama's Whisper — A Dharma Letter [500 words]
 This final section is the most intimate — a personal teaching from the Lopon to ${name}, not about the astrology but from one being to another. Begin with a traditional Tibetan blessing formula in Tibetan script and its translation (e.g., "Tashi Delek" expanded into a full blessing). Then offer the single most important insight this chart holds — the thing the dharma is asking ${name} to understand right now in this lifetime. What is the gift hidden inside their greatest difficulty? What does the tradition want them to know about who they truly are, beneath all the karmic patterns? Close with a dedication of merit (a traditional Buddhist practice of offering any good generated by this reading to the benefit of all beings) and a specific personal blessing for ${name}'s journey.
 
-语言：${tibetLang}。写作风格：命运诗篇——每一章是旅途的一步，每个章节结尾有一句金句或禅语。场景感代替抽象描述。文言+现代融合，流动有温度。严禁bullet points。直接进入命运叙述。`
+语言：${tibetLang}。写作风格：命运诗篇——每一章是旅途的一步，每个章节结尾有一句金句或禅语。场景感代替抽象描述。文言+现代融合，流动有温度。严禁bullet points。直接进入命运叙述。${DISCLAIMER_EN}`
 
       : `你是一位精通藏传命理（藏历算术，Kartsi）的算师，兼具文学家的笔触。为${name}（${genderStr}，生于${birthYear}年）写一份命运诗篇式的藏传命理解读。
 
@@ -4190,10 +4194,10 @@ Inner emotional world, how they love, what they fear, what drives them — in vi
 The lunar mansion's mythology, ruling deity, shakti (power), and soul path. 500 words.
 
 ## 🪐 Current Dasha Period
-Mahadasha and Antardasha — what themes dominate now, when the next major shift happens, specific dates. 500 words.
+Mahadasha and Antardasha — the energy themes and life-stage that dominate this chapter now, and the general direction of the next shift. Speak in themes and life stages, not exact calendar dates. 500 words.
 
 ## 🏠 12-House Analysis
-Lagna: ${RASHI_EN[jyotishData.lagna] || 'unknown'}. Key houses 1st/4th/7th/10th with planetary influences. 800 words.
+Lagna: ${RASHI_EN[jyotishData.lagna] || 'unknown'} (note: because of birth time/place precision limits, house placements are a reference-level layout). Key houses 1st/4th/7th/10th with planetary influences. 800 words.
 
 ## 💰 Wealth & Career Destiny
 Career paths, financial patterns, best years for wealth, business vs service. 500 words.
@@ -4202,7 +4206,7 @@ Career paths, financial patterns, best years for wealth, business vs service. 50
 Romantic patterns, ideal partner, marriage timing, relationship karma. 500 words.
 
 ## 🏥 Health & Vitality
-Ayurvedic constitution, organs to watch, lifestyle recommendations. 400 words.
+Ayurvedic constitutional tendency (as an inclination, not a medical diagnosis — never name specific diseases), body areas to support proactively, lifestyle and wellness recommendations; advise consulting a professional for real health concerns. 400 words.
 
 ## 📅 5-Year Forecast (${new Date().getFullYear()}-${new Date().getFullYear()+4})
 Year-by-year: career, love, finances, personal growth. 600 words.
@@ -4213,7 +4217,7 @@ Gemstone with carat and finger, daily mantra with pronunciation, charity, auspic
 ## 🎯 Your Personal Fortune Toolkit
 Make your destiny work in daily modern life: (1) English name energy — what letter/sound vibration resonates with ${rashiName} and ${nakshatraName}? Suggest 2-3 English names that amplify their chart. (2) WeChat/social media avatar strategy — what colors and visual mood should their profile photo carry to attract destined fortune? Base this on their Rashi element. Give specific color guidance. (3) 3 lucky objects to keep nearby. (4) The most powerful morning ritual for ${nakshatraName}. 500 words.
 
-Language: ${outputLangFull}. Writing style: destiny poetry. Scene over abstraction. No bullet points. Warm literary quality.`
+Language: ${outputLangFull}. Writing style: destiny poetry. Scene over abstraction. No bullet points. Warm literary quality.${DISCLAIMER_EN}`
 
       : `你是一位精通吠陀占星（Jyotish）的大师，同时拥有诗人的灵魂。为${name}写一份命运诗篇式的免费吠陀占星解读。月亮星座（Rashi）：${rashiName}；月宿（Nakshatra）：${nakshatraName}。关注重点：${concern || '整体命运'}。
 
@@ -4227,7 +4231,7 @@ Language: ${outputLangFull}. Writing style: destiny poetry. Scene over abstracti
 💎 吠陀蓝图幸运指引（宝石/幸运色/方位/咒语，200字）
 
 结尾：温暖地列出5件完整版才揭晓的事（包含专属英文名能量分析+微信头像颜色方案），让人真心好奇。
-语言：${outputLangFull}。直接进入叙述，不要免责声明。`;
+语言：${outputLangFull}。直接进入叙述，结尾附一句娱乐参考免责。`;
 
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
@@ -4322,7 +4326,7 @@ Career directions aligned with Mewa and animal sign, wealth patterns, fortune sh
 Year-by-year: auspicious vs challenging, specific guidance. 700 words.
 
 ## 🏔️ Health & Longevity
-Tibetan medicine constitution, health areas, dietary wisdom. 500 words.
+Tibetan medicine constitutional tendency (as an inclination, a wellness perspective — not a medical diagnosis; never name specific diseases), general body areas to support, dietary wisdom; advise consulting a professional for real health concerns. 500 words.
 
 ## 🙏 Spiritual Practices & Protections
 Mantras, deity practices, offerings, auspicious days, navigating challenges. 600 words.
@@ -4330,7 +4334,7 @@ Mantras, deity practices, offerings, auspicious days, navigating challenges. 600
 ## 🎯 Your Tibetan Luck Optimization Toolkit
 Make ancient wisdom work in your modern life: (1) English name energy — what sound/letter vibration strengthens ${tibetData.element} ${tibetData.zodiac} Lungta? Suggest 2-3 English names for ${name}. (2) WeChat/social avatar strategy — based on Mewa ${tibetData.mewaNum}'s sacred color and ${tibetData.element} element, what specific colors should dominate their profile photo? Give precise descriptions (not just "red" but the exact warmth and shade). (3) 3 Tibetan lucky symbols or objects to keep in living/work space. (4) The single morning practice that most powerfully activates Wind Horse energy. 500 words.
 
-Language: ${tibetLangFull}. Writing style: destiny poetry — each chapter is a step on a mountain pilgrimage, each section ends with a golden line or Buddhist insight. Scene over abstraction. No bullet points. Warm literary quality.`
+Language: ${tibetLangFull}. Writing style: destiny poetry — each chapter is a step on a mountain pilgrimage, each section ends with a golden line or Buddhist insight. Scene over abstraction. No bullet points. Warm literary quality.${DISCLAIMER_EN}`
 
       : `你是精通藏传命理（Kartsi）的算师，兼具文学家笔触。为${name}（${genderStr}，生于${birthYear}年）写命运诗篇式藏传命理解读。精度要求绝对不能改：${birthYear}年=${tibetData.element}${tibetData.zodiac}（${tibetData.elementCN}${tibetData.zodiacCN}）。密瓦：${tibetData.mewaNum}，帕卡：${tibetData.parkha}，风马：${tibetData.lungta}。
 
@@ -4346,7 +4350,7 @@ Language: ${tibetLangFull}. Writing style: destiny poetry — each chapter is a 
 🙏 日常修行（200字）
 
 结尾：温暖列出5件完整版才揭晓的事（含英文名风马能量+微信头像颜色方案），让人心生好奇。
-语言：${tibetLangFull}。直接进入${name}的命运叙述，不要免责声明。`;
+语言：${tibetLangFull}。直接进入${name}的命运叙述，结尾附一句娱乐参考免责。`;
 
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
@@ -4451,7 +4455,7 @@ Ceremonial practices, sacred days, offerings, daily Kin alignment. 500 words.
 ## 🎯 Your Galactic Fortune Toolkit
 Daily life optimization through Maya wisdom: (1) English name energy — what sound/initial vibration resonates with ${tzolkinData.daySign} energy? Suggest 2-3 English names that would amplify Kin ${tzolkinData.kin}. (2) WeChat/social avatar strategy — what colors and visual mood carry ${tzolkinData.daySign}'s elemental nature? Be specific: not just "green" but the exact shade, temperature, contrast level. (3) 3 Maya lucky symbols or natural objects to keep nearby. (4) The single daily practice that most powerfully activates Kin ${tzolkinData.kin}'s signature. 500 words.
 
-Language: ${mayaLangFull}. Writing style: destiny poetry — each chapter ends with a copper drum resonance moment. Scene over abstraction. No bullet points. Mystical literary quality.`
+Language: ${mayaLangFull}. Writing style: destiny poetry — each chapter ends with a copper drum resonance moment. Scene over abstraction. No bullet points. Mystical literary quality.${DISCLAIMER_EN}`
 
       : `你是玛雅高地传承中受训的卓金历法守护者，兼具诗人灵魂。为${name}写命运诗篇式免费玛雅历解读。神圣印记：Kin ${tzolkinData.kin}，${tzolkinData.tone} ${tzolkinData.daySign}。关注：${intention || '生命使命'}。
 
@@ -4466,7 +4470,7 @@ Language: ${mayaLangFull}. Writing style: destiny poetry — each chapter ends w
 🌺 每日激活仪式（200字）
 
 结尾：温暖列出5件完整版才揭晓的事（含专属英文名银河能量+微信头像色彩方案），让人真心好奇。
-语言：${mayaLangFull}。直接进入${name}的命运叙述，不要免责声明。`;
+语言：${mayaLangFull}。直接进入${name}的命运叙述，结尾附一句娱乐参考免责。`;
 
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
@@ -4533,8 +4537,8 @@ router.post('/duanshi/stream', async (req, res) => {
     const now = new Date();
     const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
 
-    const systemPrompt = `你是精通六爻预测的命理大师，精通《增删卜易》《断易天机》，以六爻卦象断事准确著称。
-你的风格：直接、有力、不绕弯子。给出明确的"宜/不宜/等待"判断，配上卦象解释和具体行动建议。
+    const systemPrompt = `你是精通六爻预测的命理大师，精通《增删卜易》《断易天机》，擅长以六爻卦象断事。
+你的风格：直接、有力、不绕弯子。给出明确的"宜/不宜/等待"判断，配上卦象解释和具体行动建议。所有判断均为传统术数参考，仅供娱乐参考，不构成任何决策建议——请在 summary 或 analysis 中体现这一分寸，不作绝对化承诺。
 你必须返回严格的JSON格式，不要有任何markdown或额外文字。`;
 
     const userMsg = `今日${dateStr}，来问一件事：${question}
@@ -4827,11 +4831,11 @@ router.post('/kyusei', rateLimitMiddleware, async (req, res) => {
         ? `${starBlock}\nSeeker's question: ${question || 'What is my Nine Star Ki destiny telling me?'}\nBorn: ${birthYear}-${String(birthMonth).padStart(2,'0')}-${String(birthDay).padStart(2,'0')}\n\nPlease provide a STANDARD Nine Star Ki reading (~2500 words), all 9 sections:\n\n1. ⭐ Star Essence — ${star.nameEn} core nature, worldview, shadow side (500 words)\n2. 💼 Career & Life Path — best industries, optimal work style, career timing (300 words)\n3. ❤️ Love & Relationships — love style, best compatible stars, timing windows (300 words)\n4. 💰 Wealth & Resources — wealth accumulation style, best financial years (250 words)\n5. 🌿 Health & Vitality — Five Element body constitution, wellness direction (200 words)\n6. 📅 This Year ${currentYear} — current palace position, key themes, auspicious months (300 words)\n7. 🗓️ Next 3 Years Overview — each year: palace + theme + one key action (200 words)\n8. 🔑 3 Lifetime Keys — deepest wisdom of this star (250 words)\n9. 🌸 Closing (70 words, poetic)\n\nEnd with: For 5-year detailed forecast, auspicious direction charts and compatibility analysis, see the full $49 report.`
         : `${starBlock}\n问卦者的问题：${question || '九星気学告诉我的命运是什么？'}\n出生：${birthYear}年${birthMonth}月${birthDay}日\n\n请出具【标准版九星気学解读报告】，总字数约2500字，按以下9个维度写完：\n\n1. ⭐ 本命星精髓（${star.name}的核心能量、世界观、阴面，500字）\n2. 💼 事业与人生道路（最适行业·工作风格·职业时机，300字）\n3. ❤️ 恋爱与人际关系（恋爱模式·最相性星号·遇缘时机，300字）\n4. 💰 财运与资源（聚财方式·最强财运年份，250字）\n5. 🌿 健康与活力（五行体质弱项·养生方向，不点病名，200字）\n6. 📅 今年运势（${currentYear}年本命星宫位·主题·吉月，300字）\n7. 🗓️ 未来3年方位走势（每年：宫位+主题+最宜做一件大事，200字）\n8. 🔑 三大人生密钥（本命星最深智慧，250字）\n9. 🌸 结语（70字，诗意收尾）\n\n结尾推荐：$49完整版包含：未来5年逐年宫位详批·方位择吉详解（家居/出行/工位）·相性兼容性分析，约8000字。`;
     } else {
-      // 完整档 $49：全维度，约8000字
+      // 完整档 $49：全维度，约6500字
       kyuMaxTokens = 16384;
       userPrompt = isEn
-        ? `${starBlock}\nSeeker's question: ${question || 'What is my Nine Star Ki destiny telling me?'}\nBorn: ${birthYear}-${String(birthMonth).padStart(2,'0')}-${String(birthDay).padStart(2,'0')}\n\nPlease provide a COMPLETE Nine Star Ki reading (8000 words), all sections written fully:\n\n1. ⭐ Star Essence — ${star.nameEn} (500 words: core energy, worldview, giver/receiver dynamic, shadow side)\n2. 💼 Career & Life Path (600 words: 6+ best industries with Five-Element rationale, best/worst work styles, 3 career timing windows in next 5 years, ideal partner traits)\n3. ❤️ Love & Relationships (600 words: love style, most/least compatible stars, 2 timing windows in next 3 years, how to attract the right partner)\n4. 💰 Wealth & Resources (500 words: wealth accumulation style, top financial years next 5 years, wealth-building advice, what to avoid)\n5. 🌿 Health & Vitality (400 words: Five Element organ weaknesses, wellness direction — no disease names, recommended exercise and rhythm)\n6. 📅 This Year ${currentYear} — palace position detailed (500 words: which palace, effect on career/wealth/love/home, auspicious directions for wealth/romance/benefactors, 3 key months)\n7. 🗓️ Next 5 Years Palace Forecast (each year 150 words: palace + theme keyword + best action + what to avoid)\n8. 🏠 Auspicious Direction Guide (600 words: bedroom/desk directions, travel auspicious vs inauspicious, office seat direction, one immediately actionable adjustment)\n9. 🔑 3 Lifetime Keys (400 words: the 3 most important things for this star in one lifetime; if only one thing to remember, that is: [one key star truth])\n10. 🌸 Closing Message (100 words, poetic, like autumn water flowing clear)`
-        : `${starBlock}\n问卦者的问题：${question || '九星気学告诉我的命运是什么？'}\n出生：${birthYear}年${birthMonth}月${birthDay}日\n\n请出具【完整版九星気学解读报告】，总字数8000字，所有维度写完写透：\n\n1. ⭐ 本命星精髓（${star.name}，500字：核心能量·世界观·感知模式·阴面·给予者还是接受者）\n2. 💼 事业与人生道路（600字：最适行业至少6个含五行原因·最佳创业vs打工vs自由职业·未来5年3个升职/事业突破年份·适合的工作环境与合作伙伴特质）\n3. ❤️ 恋爱与人际关系（600字：恋爱风格·最相性星号与最有摩擦星号·近3年2个遇缘时机·提升人际运具体方法）\n4. 💰 财运与资源（500字：正财/偏财倾向·最强财运年份·理财建议·不宜的投资方式）\n5. 🌿 健康与活力（400字：五行脏腑先天弱项·养生方向，不点病名·适合运动类型和作息节律）\n6. 📅 今年运势（${currentYear}年本命星宫位详批，500字：宫位位置·对事业/财运/感情/家宅的具体影响·今年3个吉方·今年3个关键月份）\n7. 🗓️ 未来5年宫位走势（每年150字：宫位+主题关键词+最宜做的一件大事+最忌做的一件事）\n8. 🏠 方位择吉详解（600字：家居卧室床头/书桌/玄关方向·出行今年吉方与凶方·工位最佳方向·一件可立即执行的方位调整建议）\n9. 🔑 三大人生密钥（400字：这颗星一生最重要的三件事·如果只能记住一件事那就是：[一句最关键的星语]）\n10. 🌸 命理师结语（100字，诗意，如晚秋清水拂过）`;
+        ? `${starBlock}\nSeeker's question: ${question || 'What is my Nine Star Ki destiny telling me?'}\nBorn: ${birthYear}-${String(birthMonth).padStart(2,'0')}-${String(birthDay).padStart(2,'0')}\n\nPlease provide a COMPLETE Nine Star Ki reading (~6500 words), all sections written fully:\n\n1. ⭐ Star Essence — ${star.nameEn} (500 words: core energy, worldview, giver/receiver dynamic, shadow side)\n2. 💼 Career & Life Path (600 words: 6+ best industries with Five-Element rationale, best/worst work styles, 3 career timing windows in next 5 years, ideal partner traits)\n3. ❤️ Love & Relationships (600 words: love style, most/least compatible stars, 2 timing windows in next 3 years, how to attract the right partner)\n4. 💰 Wealth & Resources (500 words: wealth accumulation style, top financial years next 5 years, wealth-building advice, what to avoid)\n5. 🌿 Health & Vitality (400 words: Five Element organ weaknesses, wellness direction — no disease names, recommended exercise and rhythm)\n6. 📅 This Year ${currentYear} — palace position detailed (500 words: which palace, effect on career/wealth/love/home, auspicious directions for wealth/romance/benefactors, 3 key months)\n7. 🗓️ Next 5 Years Palace Forecast (each year 150 words: palace + theme keyword + best action + what to avoid)\n8. 🏠 Auspicious Direction Guide (600 words: bedroom/desk directions, travel auspicious vs inauspicious, office seat direction, one immediately actionable adjustment)\n9. 🔑 3 Lifetime Keys (400 words: the 3 most important things for this star in one lifetime; if only one thing to remember, that is: [one key star truth])\n10. 🌸 Closing Message (100 words, poetic, like autumn water flowing clear)`
+        : `${starBlock}\n问卦者的问题：${question || '九星気学告诉我的命运是什么？'}\n出生：${birthYear}年${birthMonth}月${birthDay}日\n\n请出具【完整版九星気学解读报告】，总字数6500字，所有维度写完写透：\n\n1. ⭐ 本命星精髓（${star.name}，500字：核心能量·世界观·感知模式·阴面·给予者还是接受者）\n2. 💼 事业与人生道路（600字：最适行业至少6个含五行原因·最佳创业vs打工vs自由职业·未来5年3个升职/事业突破年份·适合的工作环境与合作伙伴特质）\n3. ❤️ 恋爱与人际关系（600字：恋爱风格·最相性星号与最有摩擦星号·近3年2个遇缘时机·提升人际运具体方法）\n4. 💰 财运与资源（500字：正财/偏财倾向·最强财运年份·理财建议·不宜的投资方式）\n5. 🌿 健康与活力（400字：五行脏腑先天弱项·养生方向，不点病名·适合运动类型和作息节律）\n6. 📅 今年运势（${currentYear}年本命星宫位详批，500字：宫位位置·对事业/财运/感情/家宅的具体影响·今年3个吉方·今年3个关键月份）\n7. 🗓️ 未来5年宫位走势（每年150字：宫位+主题关键词+最宜做的一件大事+最忌做的一件事）\n8. 🏠 方位择吉详解（600字：家居卧室床头/书桌/玄关方向·出行今年吉方与凶方·工位最佳方向·一件可立即执行的方位调整建议）\n9. 🔑 三大人生密钥（400字：这颗星一生最重要的三件事·如果只能记住一件事那就是：[一句最关键的星语]）\n10. 🌸 命理师结语（100字，诗意，如晚秋清水拂过）`;
     }
 
     const messages = [
