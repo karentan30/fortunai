@@ -2865,7 +2865,7 @@ router.post('/lingqian', rateLimitMiddleware, async (req, res) => {
     var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 8192);
     const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     var ctxId = saveQaContext('lingqian', req.body, reading);
-    res.json({ reading, contextId: ctxId, qian: { number: qianNum, type: qianType } });
+    res.json({ reading, contextId: ctxId, qian: sign ? { number: sign.no, type: sign.grade, source: signSrc } : null });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[LINGQIAN ERR]', err.message);
@@ -3945,6 +3945,252 @@ ${tibetData.element}${tibetData.zodiac}带来的三个深刻天赋，以及两�
     _refundCreditOnFail(req);
     console.error('[TIBET ERR]', err.message);
     res.status(500).json({ error: '生成藏传报告失败，请重试' });
+  }
+});
+
+// ══════════════════════════════════════════
+// ══════════════════════════════════════════
+// POST /api/bazi/chapter — 八字分章按需生成（SSE·MVP·zh+en）
+// PRD: docs/PRD-报告分章按需生成.md § 1.1
+// 灰度开关：前端 window.__RUNAE_CHAPTERED__ = true 才走此端点；
+// 否则继续走老 /bazi/stream（回滚路径永远保留不动）。
+// ══════════════════════════════════════════
+
+// ── CHAPTERS 配置（单一数据源·与前端枚举同步）──
+// 所有章节的结构定义：id/emoji/free/maxTokens/zh标题/en标题/zh_dims/en_dims
+var BAZI_CHAPTERS = [
+  { id: 'pillars',  emoji: '📜', free: true,  maxTokens: 900,
+    zh: { title: '四柱命盘', dims: '四柱展示（年月日时柱）·日主五行·格局总评·用神喜忌', words: 400 },
+    en: { title: 'Four Pillars Chart', dims: 'Four Pillars display (Year/Month/Day/Hour), Day Master element, chart pattern, favorable elements', words: 400 },
+    lockedTeaser: { zh: '📜 四柱命盘 · 免费章节', en: '📜 Four Pillars Chart · Free chapter' }
+  },
+  { id: 'elements', emoji: '🌊', free: true,  maxTokens: 900,
+    zh: { title: '五行能量', dims: '五行百分比·旺衰判断·补泄建议·脏腑对应·饮食养生', words: 400 },
+    en: { title: 'Five Elements Analysis', dims: 'Five Element percentages, strength analysis, balancing advice, organ correspondence, dietary guidance', words: 400 },
+    lockedTeaser: { zh: '🌊 五行能量 · 免费章节', en: '🌊 Five Elements · Free chapter' }
+  },
+  { id: 'year',    emoji: '🌟', free: true,  maxTokens: 800,
+    zh: { title: '今年运势', dims: '当年流年天干地支·财运事业感情三维概览·关键月份', words: 350 },
+    en: { title: "This Year's Fortune", dims: 'Current year Heavenly Stem/Earthly Branch, wealth/career/love overview, key months', words: 350 },
+    lockedTeaser: { zh: '🌟 今年运势 · 免费章节', en: "🌟 This Year's Fortune · Free chapter" }
+  },
+  { id: 'wealth',  emoji: '💰', free: false, maxTokens: 1200,
+    zh: { title: '财运格局', dims: '正偏财分析·发财黄金年份3个·最适行业5个·投资禁忌', words: 500 },
+    en: { title: 'Wealth & Finance Destiny', dims: 'Wealth stars analysis, 3 peak income years, 5 best industries, investment cautions', words: 500 },
+    lockedTeaser: { zh: '💰 财运格局 · 完整解读见付费版', en: '💰 Wealth & Finance · Unlock in full report' }
+  },
+  { id: 'love',    emoji: '💕', free: false, maxTokens: 1200,
+    zh: { title: '感情姻缘', dims: '夫妻宫·正缘特征·遇缘最佳年份2-3个·桃花类型·感情模式', words: 500 },
+    en: { title: 'Love & Relationships', dims: 'Spouse palace, ideal partner traits, 2-3 best timing years, romance patterns', words: 500 },
+    lockedTeaser: { zh: '💕 感情姻缘 · 完整解读见付费版', en: '💕 Love & Relationships · Unlock in full report' }
+  },
+  { id: 'career',  emoji: '💼', free: false, maxTokens: 1200,
+    zh: { title: '事业格局', dims: '官杀印星·职业路径判断·升职最佳时机精确到年月·贵人特征', words: 500 },
+    en: { title: 'Career & Life Purpose', dims: 'Official/Power stars, best career paths, promotion timing, benefactor characteristics', words: 500 },
+    lockedTeaser: { zh: '💼 事业格局 · 完整解读见付费版', en: '💼 Career & Purpose · Unlock in full report' }
+  },
+  { id: 'luck',    emoji: '📅', free: false, maxTokens: 1600,
+    zh: { title: '大运周期', dims: '全部8步大运干支·起止年份·每步不少于150字深度分析', words: 700 },
+    en: { title: 'Ten-Year Luck Cycles', dims: 'All major Luck Cycles (大运) with years, Heavenly Stem/Earthly Branch analysis, life themes per cycle', words: 700 },
+    lockedTeaser: { zh: '📅 大运周期 · 完整解读见付费版', en: '📅 Luck Cycles · Unlock in full report' }
+  },
+  { id: 'forecast',emoji: '🔮', free: false, maxTokens: 1400,
+    zh: { title: '流年预测', dims: '未来10年逐年详批·每年财运/感情/事业评分·吉凶神', words: 600 },
+    en: { title: 'Year-by-Year Forecast', dims: 'Next 10 years annual forecast, wealth/love/career ratings per year, auspicious and inauspicious indicators', words: 600 },
+    lockedTeaser: { zh: '🔮 流年预测 · 完整解读见付费版', en: '🔮 Year Forecast · Unlock in full report' }
+  },
+  { id: 'remedy',  emoji: '🎯', free: false, maxTokens: 800,
+    zh: { title: '开运锦囊', dims: '幸运颜色精确色系·幸运数字·吉祥方位·推荐佩戴物·家居风水', words: 350 },
+    en: { title: 'Personalized Recommendations', dims: 'Lucky colors (precise palette), lucky numbers, auspicious directions, recommended accessories, home feng shui', words: 350 },
+    lockedTeaser: { zh: '🎯 开运锦囊 · 完整解读见付费版', en: '🎯 Recommendations · Unlock in full report' }
+  },
+  { id: 'message', emoji: '💌', free: false, maxTokens: 700,
+    zh: { title: '命理师寄语', dims: '只对此命主说的心里话·最需听到的一句话·专属祝福', words: 300 },
+    en: { title: 'Personal Message', dims: "Personalized closing message, the one insight this chart most needs to hear, heartfelt blessing", words: 300 },
+    lockedTeaser: { zh: '💌 命理师寄语 · 完整解读见付费版', en: '💌 Personal Message · Unlock in full report' }
+  }
+];
+
+// ── 进程内 LRU 缓存（缓存排盘结果，同一出生信息 10 分钟内不重复算）──
+var _baziEngineCache = new Map();
+var _BAZI_CACHE_TTL = 10 * 60 * 1000; // 10 分钟
+function _getCachedBaziBlock(cacheKey) {
+  var entry = _baziEngineCache.get(cacheKey);
+  if (!entry) return null;
+  if (Date.now() - entry.ts > _BAZI_CACHE_TTL) { _baziEngineCache.delete(cacheKey); return null; }
+  return entry.data;
+}
+function _setCachedBaziBlock(cacheKey, data) {
+  _baziEngineCache.set(cacheKey, { data: data, ts: Date.now() });
+  // 限制最多100条，防内存泄漏
+  if (_baziEngineCache.size > 100) {
+    var firstKey = _baziEngineCache.keys().next().value;
+    _baziEngineCache.delete(firstKey);
+  }
+}
+
+// ── buildChapterPrompt：单章 prompt 组装器（zh + en）──
+// 每章都注入同一份真引擎 baziBlock（防分章丢上下文·章节间不矛盾）
+// 合规话术原样保留：HEALTH_SOFT / 免责 / 避 "Chinese" 字样
+function buildChapterPrompt(chapterId, lang, birth, baziBlock) {
+  var ch = null;
+  for (var i = 0; i < BAZI_CHAPTERS.length; i++) {
+    if (BAZI_CHAPTERS[i].id === chapterId) { ch = BAZI_CHAPTERS[i]; break; }
+  }
+  if (!ch) return null;
+
+  var isEn = (lang === 'en');
+  var t = isEn ? ch.en : ch.zh;
+  var yearNow = new Date().getFullYear();
+
+  if (isEn) {
+    // ── 英文章节 prompt ──
+    var sysEn = 'You are a master BaZi (Four Pillars of Destiny) reader with 30+ years of experience, trained in classical Eastern metaphysics (BaZi / Four Pillars). You write warm, insightful, and practical reports in fluent English. You explain metaphysical concepts clearly without jargon, and always give specific, actionable advice. Never be scary or fatalistic — you help people understand their strengths and navigate challenges. Refer to this tradition as \'BaZi\' or \'Eastern metaphysics\' — avoid the word \'Chinese\' in the reading itself to keep it culturally inclusive.' +
+      HEALTH_SOFT.en +
+      '\n\nThis report is AI-assisted and for entertainment/reference only. It does not constitute medical, legal, investment, or life-decision advice.' +
+      (baziBlock ? (CHART_STRICT.en + baziBlock) : '');
+    var userEn = 'Please generate ONLY the chapter: ' + ch.emoji + ' ' + t.title + '\n' +
+      'Birth: ' + birth.birthYear + '/' + birth.birthMonth + '/' + birth.birthDay +
+      (birth.birthHour !== undefined && birth.birthHour !== null && birth.birthHour !== '' ? ', Hour: ' + birth.birthHour + ':00' : ' (birth hour unknown)') +
+      ', Gender: ' + (birth.gender === 'male' ? 'Male' : 'Female') + '\n' +
+      'Current year: ' + yearNow + '\n' +
+      'This chapter must cover: ' + t.dims + '\n' +
+      'Target approximately ' + t.words + ' words. Output ONLY this chapter. Start the chapter title with: ' + ch.emoji + ' ' + t.title;
+    return { sysPrompt: sysEn, userPrompt: userEn, maxTokens: ch.maxTokens };
+  } else {
+    // ── 中文章节 prompt（默认）──
+    var sysZh = '你是一位精通八字命理的命理师，说话温暖白话，绝不制造焦虑，帮助命主看清格局、找到方向。语言：简体中文，三分古典七分白话，极度具体——给出具体年份、颜色、方位，让人能照着做。' +
+      '\n\n【健康章节软化约束】不点名具体西医病名（如结节/增生/肿瘤），从中医脏腑/体质角度描述（如肝气易郁结·心血管系统建议定期关注），落到食材·习惯·体检方向，绝不制造恐慌。' +
+      '\n\n本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。' +
+      (baziBlock ? ('\n\n⚠️ 以下是精确排盘数据，你必须严格使用，禁止自行推算或修改：\n' + baziBlock) : '');
+    var userZh = '请为以下命主生成【' + t.title + '】章节。\n' +
+      '出生：' + birth.birthYear + '年' + birth.birthMonth + '月' + birth.birthDay + '日' +
+      (birth.birthHour !== undefined && birth.birthHour !== null && birth.birthHour !== '' ? birth.birthHour + '时' : '（时辰不详）') +
+      '，性别：' + (birth.gender === 'male' ? '男' : '女') + '\n' +
+      '当前年份：' + yearNow + '年\n' +
+      '本章须覆盖维度：' + t.dims + '\n' +
+      '目标约 ' + t.words + ' 字。仅输出本章正文，标题以「' + ch.emoji + ' ' + t.title + '」开头。';
+    return { sysPrompt: sysZh, userPrompt: userZh, maxTokens: ch.maxTokens };
+  }
+}
+
+// ── POST /api/bazi/chapter ── SSE 单章按需生成
+router.post('/bazi/chapter', rateLimitMiddleware, async (req, res) => {
+  try {
+    var { birthYear, birthMonth, birthDay, birthHour, gender, lang, chapterId, order_no } = req.body;
+    if (!birthYear || !birthMonth || !birthDay) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: '请提供出生年月日' });
+    }
+    if (!chapterId) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: 'chapterId 必填' });
+    }
+    // 仅支持 zh + en（MVP 阶段）
+    var useLang = (lang === 'en') ? 'en' : 'zh';
+
+    // 查找章节配置
+    var chConfig = null;
+    for (var i = 0; i < BAZI_CHAPTERS.length; i++) {
+      if (BAZI_CHAPTERS[i].id === chapterId) { chConfig = BAZI_CHAPTERS[i]; break; }
+    }
+    if (!chConfig) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(400).json({ error: '未知章节 ID: ' + chapterId });
+    }
+
+    // ── 权限检查 ──
+    var full = gateReportAccess(req, ['bazi', '八字', '사주']).full;
+    // 订单号解锁（沿用 baziEnglishHandler 逻辑）
+    if (!full && order_no) {
+      var _o = _findOrder(order_no);
+      if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
+    }
+
+    // ── 付费章无权限：直接返回 locked 事件，正文一字不产 ──
+    if (!chConfig.free && !full) {
+      res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('Access-Control-Allow-Origin', '*');
+      res.flushHeaders();
+      var teaser = (chConfig.lockedTeaser && chConfig.lockedTeaser[useLang]) || chConfig.lockedTeaser.zh;
+      res.write('data: ' + JSON.stringify({ type: 'locked', chapterId: chapterId, teaser: teaser }) + '\n\n');
+      res.end();
+      return;
+    }
+
+    // ── 真引擎排盘（LRU 缓存防重复计算）──
+    var _cacheKey = [birthYear, birthMonth, birthDay, birthHour || '', gender || 'female', useLang].join('|');
+    var baziBlock = _getCachedBaziBlock(_cacheKey);
+    if (baziBlock === null) {
+      try {
+        baziBlock = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender }) || '';
+      } catch (e) {
+        baziBlock = '';
+      }
+      _setCachedBaziBlock(_cacheKey, baziBlock);
+    }
+
+    // ── 组装 prompt ──
+    var promptResult = buildChapterPrompt(chapterId, useLang, { birthYear, birthMonth, birthDay, birthHour, gender }, baziBlock);
+    if (!promptResult) {
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(500).json({ error: '章节 prompt 组装失败' });
+    }
+
+    // ── 建立 SSE 连接 ──
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.flushHeaders();
+
+    // 发送 meta 事件
+    res.write('data: ' + JSON.stringify({ type: 'meta', chapterId: chapterId, tier: full ? 'paid' : 'free', locked: false, free: chConfig.free }) + '\n\n');
+
+    // ── 流式 LLM 调用 ──
+    var messages = buildReadingPrompt(promptResult.sysPrompt, promptResult.userPrompt);
+    var streamBody = await deepseekStream(messages, { maxTokens: promptResult.maxTokens, timeout: 60000 });
+    var reader = streamBody.getReader();
+    var decoder = new TextDecoder('utf-8');
+    var fullText = '';
+    var buf = '';
+
+    while (true) {
+      var _rv = await reader.read();
+      if (_rv.done) { buf += decoder.decode(); break; }
+      buf += decoder.decode(_rv.value, { stream: true });
+      var _lines = buf.split('\n');
+      buf = _lines.pop();
+      for (var _li = 0; _li < _lines.length; _li++) {
+        var _line = _lines[_li];
+        if (!_line.startsWith('data: ')) continue;
+        var _raw = _line.slice(6).trim();
+        if (_raw === '[DONE]') continue;
+        try {
+          var _j = JSON.parse(_raw);
+          var _c = (_j.choices && _j.choices[0] && _j.choices[0].delta && _j.choices[0].delta.content) || '';
+          if (_c) {
+            fullText += _c;
+            res.write('data: ' + JSON.stringify({ type: 'chunk', content: _c }) + '\n\n');
+          }
+        } catch (e) {}
+      }
+    }
+
+    // done 事件
+    var wordCount = fullText.replace(/\s/g, '').length;
+    res.write('data: ' + JSON.stringify({ type: 'done', chapterId: chapterId, words: wordCount, tier: full ? 'paid' : 'free' }) + '\n\n');
+    res.end();
+
+  } catch (err) {
+    _refundCreditOnFail(req);
+    console.error('[BAZI-CHAPTER ERR]', err.message);
+    try {
+      res.write('data: ' + JSON.stringify({ type: 'error', message: useLang === 'en' ? 'Generation failed, please retry' : '生成失败，请重试' }) + '\n\n');
+      res.end();
+    } catch (e2) {}
   }
 });
 
