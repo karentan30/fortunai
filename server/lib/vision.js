@@ -1,28 +1,30 @@
-// vision.js — Gemini vision 面相/手相特征提取
-// 走 Gemini 的 OpenAI 兼容端点（免费·gemini-2.0-flash）
-// 没有 GEMINI_API_KEY 时返回 null，上层优雅降级，不崩。
+// vision.js — Qwen-VL vision 面相/手相特征提取
+// 走通义千问 DashScope 的 OpenAI 兼容端点（qwen-vl-max）。
+// 原用 Gemini，但 HK 服务器被 Google 免费 API 地理封锁("User location is not supported")，
+// 改用 Qwen-VL：从阿里云 HK 天然可达、DASHSCOPE_API_KEY 已配置、支持 base64 data-URL。
+// 没有 DASHSCOPE_API_KEY 时返回 null，上层优雅降级，不崩。
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env'), override: true });
 
-const GEMINI_VISION_URL = 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
-const GEMINI_MODEL = 'gemini-2.0-flash';
+const VISION_URL = process.env.QWEN_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
+const VISION_MODEL = process.env.VISION_MODEL || 'qwen-vl-max';
 
 /**
- * 内部：调 Gemini vision，返回文字描述；失败返回 null。
+ * 内部：调 Qwen-VL vision，返回文字描述；失败返回 null。
  * @param {string} systemPrompt
  * @param {string} userText
  * @param {string} imageBase64  — 纯 base64，无 data: 前缀
  * @param {string} mimeType     — 默认 image/jpeg
  */
-async function _callGeminiVision(systemPrompt, userText, imageBase64, mimeType) {
-  const key = process.env.GEMINI_API_KEY;
+async function _callVision(systemPrompt, userText, imageBase64, mimeType) {
+  const key = process.env.DASHSCOPE_API_KEY;
   if (!key) {
-    console.info('[vision] GEMINI_API_KEY 未配置，跳过 vision 分析，走降级路径');
+    console.info('[vision] DASHSCOPE_API_KEY 未配置，跳过 vision 分析，走降级路径');
     return null;
   }
 
   const mime = mimeType || 'image/jpeg';
   const body = JSON.stringify({
-    model: GEMINI_MODEL,
+    model: VISION_MODEL,
     messages: [
       { role: 'system', content: systemPrompt },
       {
@@ -38,23 +40,23 @@ async function _callGeminiVision(systemPrompt, userText, imageBase64, mimeType) 
   });
 
   try {
-    const res = await fetch(GEMINI_VISION_URL, {
+    const res = await fetch(VISION_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
       body,
-      signal: AbortSignal.timeout(30000)
+      signal: AbortSignal.timeout(40000)
     });
     if (!res.ok) {
       const err = await res.text().catch(() => '');
-      console.warn('[vision] Gemini vision 请求失败:', res.status, err.slice(0, 120));
+      console.warn('[vision] Qwen-VL vision 请求失败:', res.status, err.slice(0, 120));
       return null;
     }
     const data = await res.json();
     const content = data.choices?.[0]?.message?.content || '';
-    if (!content) { console.warn('[vision] Gemini vision 返回空内容'); return null; }
+    if (!content) { console.warn('[vision] Qwen-VL vision 返回空内容'); return null; }
     return content;
   } catch (e) {
-    console.warn('[vision] Gemini vision 网络/超时错误:', e.message);
+    console.warn('[vision] Qwen-VL vision 网络/超时错误:', e.message);
     return null;
   }
 }
@@ -87,7 +89,7 @@ async function analyzeFace(imageBase64, mimeType) {
 整体气色：面色（红润/偏黄/偏白/偏暗）、皮肤状态（光滑/粗糙）。
 其他可见特征：如痣、疤痕、明显特征（可见才写，无则略去）。`;
 
-  return _callGeminiVision(SYSTEM, USER, imageBase64, mimeType);
+  return _callVision(SYSTEM, USER, imageBase64, mimeType);
 }
 
 /**
@@ -119,7 +121,7 @@ async function analyzePalm(imageBase64, mimeType) {
 八丘饱满度：金星丘（拇指根内侧）饱满/平坦；月丘（小鱼际）饱满/凹陷；木星丘（食指根下）饱满程度。
 特殊掌型：是否有通贯手/断掌（感情线与智慧线合为一条横贯全掌）、川字掌或其他明显特征。`;
 
-  return _callGeminiVision(SYSTEM, USER, imageBase64, mimeType);
+  return _callVision(SYSTEM, USER, imageBase64, mimeType);
 }
 
 module.exports = { analyzeFace, analyzePalm };
