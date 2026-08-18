@@ -228,7 +228,7 @@ async function baziEnglishHandler(req, res) {
 
     const freeSuffix = full ? '' : `\n\nIMPORTANT: This is the free preview. Output ONLY these 3 chapters:\n📜 Four Pillars Chart\n🌊 Five Elements Analysis\n🌟 This Year's Fortune\n\nAfter completing these 3 chapters (around 1000-1500 words total), output exactly:\n---LOCKED---\n\nThen output a brief teaser listing the locked chapters:\n💰 Wealth & Career Destiny — unlocked in full report\n💕 Love & Marriage Timing — unlocked in full report\n💼 Career Path & Peak Years — unlocked in full report\n📅 Ten-Year Luck Cycles (大运) — unlocked in full report\n🔮 Year-by-Year Forecast — unlocked in full report`;
 
-    const sysPrompt = `You are a master BaZi (Four Pillars of Destiny) reader with 30+ years of experience, trained in classical Chinese metaphysics. You write warm, insightful, and practical reports in fluent English. You explain Chinese metaphysical concepts clearly without jargon, and always give specific, actionable advice. Never be scary or fatalistic — you help people understand their strengths and navigate challenges.${HEALTH_SOFT.en}${freeSuffix}`;
+    const sysPrompt = `You are a master BaZi (Four Pillars of Destiny) reader with 30+ years of experience, trained in classical Eastern metaphysics (BaZi / Four Pillars). You write warm, insightful, and practical reports in fluent English. You explain metaphysical concepts clearly without jargon, and always give specific, actionable advice. Never be scary or fatalistic — you help people understand their strengths and navigate challenges. Refer to this tradition as 'BaZi' or 'Eastern metaphysics' — avoid the word 'Chinese' in the reading itself to keep it culturally inclusive.${HEALTH_SOFT.en}${freeSuffix}`;
 
     const userPrompt = `Please analyze my BaZi chart and generate a deep destiny report.
 
@@ -239,13 +239,13 @@ Birth details:
 ${full ? `Generate a comprehensive report with these sections (emoji heading required for each):
 📜 Four Pillars Chart (year/month/day/hour pillars, Day Master analysis, chart pattern — min 600 words)
 🌊 Five Elements Analysis (balance, strengths, what to cultivate — min 500 words)
-🌟 This Year's Fortune (2025-2026 overview — min 400 words)
+🌟 This Year's Fortune (2026-2027 overview — min 400 words)
 💰 Wealth & Finance Destiny (wealth stars, peak income years, best industries — min 600 words)
 💕 Love & Relationships (marriage timing, ideal partner traits, relationship patterns — min 600 words)
 💼 Career & Life Purpose (best career paths, peak career years, mentor directions — min 600 words)
 📅 Ten-Year Luck Cycles (all major 大运 cycles with years and analysis — min 800 words)
 🔮 Year-by-Year Forecast (next 10 years, rating each year — min 600 words)
-🎯 Personalized Recommendations (lucky colors, numbers, directions, crystals, lifestyle — min 400 words)
+🎯 Personalized Recommendations (favorable elements, auspicious directions, supportive colors, lifestyle rhythms aligned with your Day Master element, seasonal rituals — all grounded in Five Element theory — min 400 words)
 💌 A Personal Message (warm, personalized closing note — min 300 words)` : `Generate a free preview with ONLY these 3 sections then the LOCKED separator.`}`;
 
     const _chartEn = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender });
@@ -706,35 +706,119 @@ router.post('/ziwei', rateLimitMiddleware, async (req, res) => {
 });
 
 // ══════════════════════════════════════════
-// POST /api/mianxiang — 面相手相
+// POST /api/mianxiang — 面相（麻衣神相体系）
+// body: { features: string, question: string }
+// features = 视觉端描述的面部特征（用户自述或vision提取），可选
 // ══════════════════════════════════════════
 router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
   try {
-    const { question } = req.body;
-    const messages = buildReadingPrompt(
-      '你是一位民间相面高人，阅人无数，行走江湖四十载，看过十万张面孔。你深知"相由心生，境随心转"的道理——面相不是一成不变的，心善则貌美，心恶则相凶。你的分析一针见血但不忘提醒用户命运掌握在自己手中。每次回答至少2000字。用Markdown格式输出，使用标题、加粗让报告结构清晰。语言：简体中文。',
-      `用户关注：${question || '请综合分析面相与手相'}
+    const { question, features } = req.body;
 
-请按以下结构出具一份详细的面相手相分析报告。每个部位分析不少于200字：
+    // 系统角色：麻衣神相正宗体系
+    const SYSTEM = `你是一位精通《麻衣神相》的正宗面相师，以宋代陈抟（希夷先生）传承的麻衣道者相法为宗，融汇三停五岳十二宫气色神韵一整套体系。
 
-## 一、额头（天庭）— 事业运、早年运（200-300字）
-## 二、眉毛 — 兄弟朋友、性格脾气（200-300字）
-## 三、眼睛 — 内心世界、桃花、诚信（200-300字）
-## 四、鼻子 — 财运、中年运（200-300字）
-## 五、嘴巴 — 表达力、晚年运、食禄（200-300字）
-## 六、下巴（地阁）— 不动产运、晚年（150-200字）
-## 七、整体面相格局评估（200-300字）
-## 八、改善面相的小建议（150-200字）
-## 九、相面师的叮嘱（100字）`
-    );
+核心原则：
+1. 只解读用户实际描述或照片中可见的面部特征——没有看到的绝对不编造，宁缺毋滥。
+2. 采用麻衣正宗十二宫框架逐一分析，每宫对应部位→对应人生领域。
+3. 十二宫：命宫（眉心）·财帛宫（鼻准）·兄弟宫（眉毛）·田宅宫（眼皮）·男女宫（眼下卧蚕）·奴仆宫（地阁两侧）·夫妻宫（鱼尾眼角）·疾厄宫（山根鼻梁）·迁移宫（眉梢额角）·官禄宫（额头中央）·福德宫（天仓太阳穴）·父母宫（日月角）。
+4. 三停判运：上停（发际→眉）论早年/智慧运；中停（眉→鼻尖）论中年/财事运；下停（鼻尖→下巴）论晚年/子嗣运。
+5. 五岳：额（南岳/衡山）·鼻（中岳/嵩山）·左颧（东岳/泰山）·右颧（西岳/华山）·下巴（北岳/恒山）——五岳朝拱则贵，偏塌则损所司之运。
+6. 气色神韵：面色明润为吉，晦暗为凶。眼神有光、顾盼有神为上相。
+7. 疾厄宫只说养生调理方向，严禁点病名、做医疗诊断。
+8. 结尾必须有"相师叮嘱"：强调面相随心性而变，鼓励积善修德，不宿命论。
+9. 用Markdown，标题分段，简体中文，每个宫位分析100-200字。`;
+
+    const featureBlock = features
+      ? `\n\n【照片特征描述（仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
+      : '\n\n【注：用户未上传照片，请基于通识以麻衣体系作整体指引，对无法确认的具体特征勿做假设。】';
+
+    const userPrompt = `用户关注：${question || '请按麻衣神相体系给我做一次完整的面相分析'}${featureBlock}
+
+请按以下麻衣神相结构出具面相报告：
+
+## 总纲：三停格局（早中晚运总览）
+## 五岳朝拱（格局高低）
+## 十二宫逐一解读
+### 命宫（眉心印堂）— 精神气质、本命贵贱
+### 官禄宫（额头中央）— 事业运、早年运
+### 财帛宫（鼻准头）— 财运、聚财能力
+### 夫妻宫（鱼尾眼角）— 婚恋缘分、感情质量
+### 田宅宫（上眼皮）— 不动产、家宅
+### 男女宫（卧蚕）— 子嗣运、桃花
+### 兄弟宫（眉毛）— 兄弟朋友、协作运
+### 奴仆宫（地阁两侧）— 下属、晚年依靠
+### 疾厄宫（山根鼻梁）— 体质倾向（养生方向，非诊断）
+### 迁移宫（眉梢额角）— 出行、异乡运
+### 福德宫（天仓太阳穴）— 福气、享受与精神满足
+### 父母宫（日月角）— 与父母缘分、长辈贵人
+
+## 气色神韵总评
+## 相师叮嘱（面相随心性而变·积善修德）`;
+
+    const messages = buildReadingPrompt(SYSTEM, userPrompt);
 
     var _gm = gateMessages(req, ['mianxiang', '面相', 'member'], messages, 8192);
     const result = await deepseekChat(_gm.messages, { maxTokens: _gm.maxTokens });
-    insertReading.run('mianxiang', JSON.stringify({ question }), result, req.userId);
+    insertReading.run('mianxiang', JSON.stringify({ question, features: features ? features.slice(0, 200) : null }), result, req.userId);
     res.json({ reading: result, tier: _gm.full ? 'full' : 'basic', locked: !_gm.full });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[MIANXIANG ERR]', err.message);
+    res.status(500).json({ error: 'AI暂时不可用', detail: err.message });
+  }
+});
+
+// ══════════════════════════════════════════
+// POST /api/shouxiang — 手相（麻衣神相体系）
+// body: { features: string, question: string, hand: 'left'|'right' }
+// ══════════════════════════════════════════
+router.post('/shouxiang', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { question, features, hand } = req.body;
+    const handLabel = hand === 'left' ? '左手' : '右手（主手）';
+
+    const SYSTEM = `你是一位精通《麻衣神相》手相篇的正宗手相师，以三大主线、八丘、特殊掌纹为核心体系断命。
+
+核心原则：
+1. 只解读用户实际描述或照片中可见的掌纹特征——看到什么说什么，不编造任何照片中没有的纹路。
+2. 三大主线：感情线（心线，起自小指侧横过掌心）·智慧线（头线，起自食指下方斜向小鱼际）·生命线（起自拇指食指间弧绕金星丘）。
+3. 辅助线：事业线（命运线，从手腕中央向中指延伸）·太阳线（无名指下竖纹，主名誉财运）·婚姻线（小指下方横纹）。
+4. 八丘：金星丘（拇指根）·木星丘（食指根）·土星丘（中指根）·太阳丘（无名指根）·水星丘（小指根）·月丘（小鱼际）·上火星丘·下火星丘。
+5. 特殊掌型：川字掌（感情线智慧线合一，主专注执着）·断掌/通贯手（贯穿全掌，主个性鲜明）。
+6. 生命线长短不等于寿命长短——必须在此说明，避免用户恐慌。
+7. 结尾"相师叮嘱"：强调掌纹随人生经历和心态变化，不宿命论。
+8. 用Markdown，标题分段，简体中文，每部分100-180字。`;
+
+    const featureBlock = features
+      ? `\n\n【照片特征描述（${handLabel}，仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
+      : `\n\n【注：用户未上传照片，请以${handLabel}为参照，基于麻衣手相体系作整体指引，对无法确认的具体纹路勿做假设。】`;
+
+    const userPrompt = `用户关注：${question || '请按麻衣神相手相体系给我做完整分析'}${featureBlock}
+
+请按以下麻衣手相结构出具报告：
+
+## 掌型总观（手掌形状、质感、整体格局）
+## 三大主线精析
+### 感情线（心线）— 情感模式、爱情风格
+### 智慧线（头线）— 思维方式、决策风格
+### 生命线 — 体质节律与人生重要节点（注意：线长≠寿长）
+## 辅助线解读
+### 事业线（命运线）— 事业方向与运势
+### 太阳线 — 名誉、财运与贵人
+### 婚姻线 — 婚恋时机与关系质量
+## 八丘分析（重点突出明显的丘位）
+## 特殊掌纹（如有川字掌/断掌/通贯手等）
+## 相师叮嘱（掌纹随心态和经历变化·不宿命论）`;
+
+    const messages = buildReadingPrompt(SYSTEM, userPrompt);
+
+    var _gm = gateMessages(req, ['shouxiang', '手相', 'member'], messages, 8192);
+    const result = await deepseekChat(_gm.messages, { maxTokens: _gm.maxTokens });
+    insertReading.run('shouxiang', JSON.stringify({ question, hand, features: features ? features.slice(0, 200) : null }), result, req.userId);
+    res.json({ reading: result, tier: _gm.full ? 'full' : 'basic', locked: !_gm.full });
+  } catch (err) {
+    _refundCreditOnFail(req);
+    console.error('[SHOUXIANG ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用', detail: err.message });
   }
 });
