@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d0d1a">
+<title>ᚱᚢᚾᛖ · 卢恩符文</title>
+<meta name="description" content="Elder Futhark Norse rune oracle — draw ancient runes and receive AI-powered guidance from the Norse tradition">
+<meta property="og:title" content="ᚱᚢᚾᛖ · 卢恩符文">
+<meta property="og:description" content="Elder Futhark Norse rune oracle">
+<meta property="og:image" content="/og-card.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d1a;--card:#141428;--mid:#1a1a32;
+  --amber:#e8b86a;--amber-light:#f5d98a;--amber-deep:#c98030;
+  --ink:rgba(240,235,220,0.9);--sub:rgba(200,190,170,0.65);
+  --rune-glow:rgba(232,184,106,0.4);
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:120px}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(232,184,106,0.08) 0%,transparent 60%);pointer-events:none;z-index:0}
+
+/* Starfield */
+.starfield{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.starfield span{position:absolute;background:#fff;border-radius:50%;animation:star-twinkle var(--dur,3s) ease-in-out infinite;opacity:0}
+@keyframes star-twinkle{0%,100%{opacity:0}50%{opacity:var(--op,0.6)}}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--amber);cursor:pointer;padding:4px 0;opacity:0.65}
+.back-btn:hover{opacity:1}
+.theme-toggle{position:fixed;top:12px;right:14px;z-index:999;background:none;border:none;font-size:18px;cursor:pointer;padding:4px}
+
+/* Header */
+.header{position:relative;z-index:1;text-align:center;padding:48px 20px 16px}
+.rune-title-glyph{font-size:28px;letter-spacing:.3em;color:var(--amber);text-shadow:0 0 20px var(--rune-glow);margin-bottom:8px;display:block}
+.header-title{font-size:19px;font-weight:400;letter-spacing:.18em;margin-bottom:4px}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:.28em;color:rgba(232,184,106,0.45);margin-bottom:14px}
+.amber-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--amber),transparent);margin:0 auto}
+
+/* Lang tabs */
+.lang-tabs{position:relative;z-index:1;display:flex;gap:0;padding:10px 16px 4px;justify-content:center}
+.ltab{padding:7px 20px;border:1px solid rgba(232,184,106,0.2);background:transparent;font-family:'Noto Serif SC',serif;font-size:12px;letter-spacing:.06em;color:rgba(232,184,106,0.5);cursor:pointer;transition:all .2s}
+.ltab:first-child{border-radius:4px 0 0 4px}
+.ltab:last-child{border-radius:0 4px 4px 0;border-left:none}
+.ltab.active{background:rgba(232,184,106,0.1);border-color:var(--amber);color:var(--amber)}
+
+/* Spread toggle */
+.spread-toggle{position:relative;z-index:1;display:flex;gap:0;padding:6px 16px 4px;justify-content:center}
+.stab{padding:6px 16px;border:1px solid rgba(232,184,106,0.15);background:transparent;font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:.06em;color:rgba(232,184,106,0.4);cursor:pointer;transition:all .2s}
+.stab:first-child{border-radius:4px 0 0 4px}
+.stab:last-child{border-radius:0 4px 4px 0;border-left:none}
+.stab.active{background:rgba(232,184,106,0.08);border-color:var(--amber);color:var(--amber)}
+
+/* Question */
+.q-wrap{position:relative;z-index:1;padding:10px 16px 4px}
+.q-label{font-size:10px;letter-spacing:.2em;color:rgba(232,184,106,0.4);margin-bottom:6px}
+.field-group{background:var(--card);border:1px solid rgba(232,184,106,0.1);border-radius:8px;overflow:hidden}
+.field-row{display:flex;align-items:flex-start;padding:0 14px}
+.field-textarea{flex:1;background:none;border:none;outline:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--ink);padding:12px 8px;letter-spacing:.04em;resize:none;min-height:64px;line-height:1.8}
+.field-textarea::placeholder{color:rgba(232,184,106,0.15)}
+
+/* Draw section */
+.draw-section{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;padding:16px 16px 8px;gap:14px}
+.rune-bag{font-size:52px;cursor:pointer;user-select:none;filter:drop-shadow(0 0 16px rgba(232,184,106,0.3));transition:transform .15s,filter .15s}
+.rune-bag:hover{filter:drop-shadow(0 0 24px rgba(232,184,106,0.5))}
+.rune-bag.pulse{animation:rune-pulse 0.6s ease}
+@keyframes rune-pulse{0%,100%{transform:scale(1)}30%{transform:scale(1.15) rotate(-5deg)}60%{transform:scale(0.9) rotate(3deg)}}
+.draw-hint{font-size:12px;color:var(--sub);letter-spacing:.1em;text-align:center}
+.btn-draw{padding:13px 40px;background:linear-gradient(135deg,#1a0d00,var(--amber-deep),var(--amber),var(--amber-light));border:none;border-radius:4px;color:#0d0d1a;font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:.18em;cursor:pointer;box-shadow:0 0 24px rgba(232,184,106,0.25);animation:btn-glow 3s ease-in-out infinite}
+@keyframes btn-glow{0%,100%{box-shadow:0 0 24px rgba(232,184,106,0.25)}50%{box-shadow:0 0 40px rgba(232,184,106,0.5)}}
+.btn-draw:active{transform:scale(.97)}
+.btn-draw:disabled{opacity:.4;cursor:not-allowed;animation:none}
+
+/* Rune cards display */
+.rune-cards{position:relative;z-index:1;margin:0 16px 12px;display:none;gap:10px}
+.rune-cards.show{display:flex}
+.rune-card{flex:1;background:linear-gradient(160deg,var(--card),rgba(20,20,50,0.9));border:1px solid rgba(232,184,106,0.25);border-radius:8px;padding:16px 10px;text-align:center;position:relative;overflow:hidden;animation:card-appear .4s ease}
+.rune-card::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(232,184,106,0.06),transparent 70%);pointer-events:none}
+@keyframes card-appear{from{opacity:0;transform:translateY(12px) scale(0.95)}to{opacity:1;transform:none}}
+.rune-pos{font-size:9px;letter-spacing:.25em;color:rgba(232,184,106,0.35);margin-bottom:8px}
+.rune-glyph{font-size:38px;line-height:1;color:var(--amber);text-shadow:0 0 20px var(--rune-glow);margin-bottom:6px}
+.rune-name{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;color:var(--amber-light);margin-bottom:4px}
+.rune-orientation{font-size:9px;letter-spacing:.16em;color:rgba(232,184,106,0.4);margin-bottom:6px}
+.rune-keywords{font-size:9px;color:var(--sub);letter-spacing:.04em;line-height:1.6}
+
+/* AI Submit */
+.submit-wrap{position:relative;z-index:1;padding:0 16px 12px;display:none}
+.btn-submit{width:100%;padding:15px 0;background:linear-gradient(90deg,#1a0d00,var(--amber-deep),var(--amber),var(--amber-deep),#1a0d00);background-size:300% auto;border:none;border-radius:4px;color:#0d0d1a;font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:.2em;cursor:pointer;animation:gold-shimmer 3s linear infinite;box-shadow:0 4px 20px rgba(232,184,106,0.25)}
+@keyframes gold-shimmer{0%{background-position:0% center}100%{background-position:300% center}}
+.btn-submit:active{transform:scale(.97)}
+.btn-submit:disabled{opacity:.4;cursor:not-allowed;animation:none}
+
+/* Loading */
+.loading-screen{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;padding:60px 20px;gap:14px}
+.loading-screen.show{display:flex}
+.load-glyph{font-size:44px;color:var(--amber);animation:load-breathe 2s ease-in-out infinite;text-shadow:0 0 20px var(--rune-glow)}
+@keyframes load-breathe{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:1;transform:scale(1.12)}}
+.load-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:rgba(232,184,106,0.5);letter-spacing:.18em}
+
+/* Divider */
+.sec-head{position:relative;z-index:1;display:flex;align-items:center;gap:10px;padding:8px 16px 6px}
+.sec-head span{font-size:10px;letter-spacing:.2em;color:rgba(232,184,106,0.4);white-space:nowrap}
+.sec-head::before,.sec-head::after{content:'';flex:1;height:1px;background:rgba(232,184,106,0.1)}
+
+/* AI interpretation */
+.ai-interp{padding:0 16px;display:flex;flex-direction:column;gap:8px}
+.ai-card{background:var(--card);border:1px solid rgba(232,184,106,0.12);border-radius:10px;overflow:hidden}
+.ai-card.open{border-color:rgba(232,184,106,0.28)}
+.ai-card-head{display:flex;align-items:center;padding:12px 14px;gap:10px;cursor:pointer}
+.ai-card-icon{width:28px;height:28px;border-radius:50%;background:rgba(232,184,106,0.12);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.ai-card-title{font-size:13px;letter-spacing:.06em;flex:1;color:var(--ink)}
+.ai-card-arrow{font-size:10px;color:rgba(232,184,106,0.25);transition:transform .25s}
+.ai-card-arrow.open{transform:rotate(180deg)}
+.ai-card-body{padding:0 14px 14px;display:none}
+.ai-card-body.open{display:block}
+.ai-card-text{font-size:11px;color:var(--sub);letter-spacing:.04em;line-height:1.9;white-space:pre-wrap}
+
+/* CTAs */
+.cta-wrap{position:relative;z-index:1;padding:12px 16px 8px;display:none}
+.cta-wrap.show{display:block}
+.btn-cta{width:100%;padding:14px 0;background:linear-gradient(135deg,#1a0d00,var(--amber-deep),var(--amber),var(--amber-deep));border:none;border-radius:4px;color:#0d0d1a;font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:.16em;cursor:pointer;box-shadow:0 4px 16px rgba(232,184,106,0.25);margin-bottom:8px}
+.btn-redo{width:100%;padding:11px 0;background:transparent;border:1px solid rgba(232,184,106,0.2);border-radius:4px;color:rgba(232,184,106,0.55);font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:.14em;cursor:pointer}
+
+.footer-verse{text-align:center;padding:24px 20px 40px;position:relative;z-index:1}
+.footer-verse-line{width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--amber),transparent);margin:0 auto 12px}
+.footer-verse-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(232,184,106,0.3);letter-spacing:.28em}
+
+.rune-note{position:relative;z-index:1;font-size:10px;color:rgba(232,184,106,0.3);letter-spacing:.06em;text-align:center;padding:4px 16px 8px}
+</style>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/css/common.css">
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+<div class="starfield" id="starfield"></div>
+<button class="back-btn" onclick="history.back()">‹ Back</button>
+
+<div class="header page-enter page-enter-d1">
+  <span class="rune-title-glyph">ᚱᚢᚾᛖ</span>
+  <div class="header-title">卢恩符文 · Rune Oracle</div>
+  <div class="header-sub">ELDER FUTHARK · NORSE ORACLE</div>
+  <div class="amber-line"></div>
+</div>
+
+<!-- Lang tabs -->
+<div class="lang-tabs page-enter page-enter-d2">
+  <button class="ltab active" onclick="setLang('zh',this)">中文</button>
+  <button class="ltab" onclick="setLang('en',this)">English</button>
+</div>
+
+<!-- Spread toggle -->
+<div class="spread-toggle page-enter page-enter-d2">
+  <button class="stab active" onclick="setSpread('single',this)" id="singleTab">单符文</button>
+  <button class="stab" onclick="setSpread('three',this)" id="threeTab">三符文阵</button>
+</div>
+
+<!-- Question -->
+<div class="q-wrap page-enter page-enter-d2">
+  <div class="q-label" id="qLabel">你的问题（选填）</div>
+  <div class="field-group">
+    <div class="field-row">
+      <textarea class="field-textarea" id="qInput" placeholder="例：事业方向、感情走向、当前处境…"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- Draw section -->
+<div class="draw-section page-enter page-enter-d3">
+  <div class="rune-bag" id="runeBag" onclick="drawRunes()">🧿</div>
+  <div class="draw-hint" id="drawHint">点击符文袋，让古老智慧指引你</div>
+  <button class="btn-draw" id="drawBtn" onclick="drawRunes()">抽取符文 · Draw Runes</button>
+</div>
+
+<!-- Rune cards -->
+<div class="rune-cards" id="runeCards"></div>
+
+<!-- AI Submit -->
+<div class="submit-wrap" id="submitWrap">
+  <button class="btn-submit" id="submitBtn" onclick="getReading()">AI符文解读 · Get Reading</button>
+</div>
+
+<!-- Loading -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="load-glyph" id="loadGlyph">ᚱ</div>
+  <div class="load-text" id="loadText">符文正在显现古老的智慧…</div>
+</div>
+
+<!-- Divider -->
+<div class="sec-head" id="resultDivider" style="display:none"><span>符文解读 · Rune Reading</span></div>
+
+<!-- AI Interpretation -->
+<div class="ai-interp" id="aiInterp" style="display:none"></div>
+
+<!-- Note -->
+<div class="rune-note" id="runeNote" style="display:none">Rune readings are for reflection and inspiration · 符文解读仅供参考与启发</div>
+
+<!-- CTAs -->
+<div class="cta-wrap" id="ctaWrap">
+  <button class="btn-cta" onclick="createCheckout(this)">深度解读 · Deeper Reading · $9.90</button>
+  <button class="btn-redo" id="redoBtn" onclick="resetAll()">重新抽取 · Draw Again</button>
+</div>
+
+<div class="footer-verse">
+  <div class="footer-verse-line"></div>
+  <div class="footer-verse-text">The runes speak — wisdom awaits those who listen · 符文言语，静听者得慧</div>
+</div>
+
+<script>
+var currentLang = 'zh';
+var currentSpread = 'single';
+var drawn = false;
+var drawnRuneData = null;
+
+var ELDER_FUTHARK = [
+  {name:'Fehu',unicode:'ᚠ',aett:1,keywords:['wealth','abundance','beginnings'],upright:'A new cycle of abundance opens. Material and spiritual gains await — act on opportunities with confidence, but share what you receive.',reversed:'Wealth may slip away or stagnate. Re-evaluate what you truly value. Avoid greed; loss here is a lesson, not a sentence.'},
+  {name:'Uruz',unicode:'ᚢ',aett:1,keywords:['strength','vitality','change'],upright:'Raw power and primal strength surge through you. A period of major change brings growth — embrace it even if it feels disruptive.',reversed:'Your energy is scattered or blocked. Rest and recover. Resist forcing outcomes; let the storm pass before acting.'},
+  {name:'Thurisaz',unicode:'ᚦ',aett:1,keywords:['protection','conflict','threshold'],upright:'A gateway stands before you. Thor\'s hammer clears the path — face conflict directly rather than avoiding it. Protection is yours.',reversed:'Danger of rash action. Pause before reacting. Hidden enemies or self-sabotage may be at work; reflect carefully.'},
+  {name:'Ansuz',unicode:'ᚨ',aett:1,keywords:['communication','wisdom','divine message'],upright:'Odin\'s breath — a message or revelation comes. Trust your voice; speak with authority. Wisdom flows through you now.',reversed:'Miscommunication or deceit. Check your sources; not all advice is trustworthy. Seek clarity before committing.'},
+  {name:'Raidho',unicode:'ᚱ',aett:1,keywords:['journey','movement','rhythm'],upright:'A journey — physical or inner — is underway. You are on the right road. Trust the rhythm of your progress.',reversed:'Delays, detours, or loss of direction. Stop and reassess your route; the destination is right but the path needs adjustment.'},
+  {name:'Kenaz',unicode:'ᚲ',aett:1,keywords:['creativity','illumination','knowledge'],upright:'The torch of creativity blazes. New knowledge, artistic breakthroughs, or romantic sparks ignite. Illuminate what was hidden.',reversed:'Inspiration dims or a relationship cools. Release what no longer serves you; new light cannot enter a cluttered room.'},
+  {name:'Gebo',unicode:'ᚷ',aett:1,keywords:['gift','partnership','exchange'],upright:'A gift freely given and received. Partnership, generosity, and balance in relationships. Honor the exchange — give as much as you take.',reversed:'Gebo has no reversal — its gift is unconditional. Consider where imbalance exists in a relationship or transaction.'},
+  {name:'Wunjo',unicode:'ᚹ',aett:1,keywords:['joy','harmony','success'],upright:'Joy arrives. Harmony, wish-fulfillment, and a sense of belonging. Celebrate — this is a moment of genuine happiness.',reversed:'Clouds gather over the celebration. Alienation, stubbornness, or misaligned expectations dim the light. Seek common ground.'},
+  {name:'Hagalaz',unicode:'ᚺ',aett:2,keywords:['disruption','hail','transformation'],upright:'The hailstorm strips everything bare — then nourishes the earth. Disruption is the universe clearing space for something better.',reversed:'Hagalaz carries no traditional reversal; the storm comes regardless. Surrender to transformation rather than resisting it.'},
+  {name:'Nauthiz',unicode:'ᚾ',aett:2,keywords:['need','constraint','patience'],upright:'Necessity is the teacher now. Constraint builds character. Endure this period with patience; what you forge in hardship will last.',reversed:'Resist the temptation to take shortcuts or blame others for your circumstances. Inner work is required before outer change.'},
+  {name:'Isa',unicode:'ᛁ',aett:2,keywords:['stillness','freeze','clarity'],upright:'Everything pauses. Use this frozen moment for introspection and clarity. Plans must wait; the ice will melt in its own time.',reversed:'Isa has no conventional reversal. The stillness is complete. Avoid forcing movement — there is wisdom in waiting.'},
+  {name:'Jera',unicode:'ᛃ',aett:2,keywords:['harvest','cycle','reward'],upright:'The harvest arrives. Your patience and effort over a full cycle now yield their fruit. Celebrate — you have earned this.',reversed:'Jera carries no reversal. If the harvest is thin, examine what was planted. Adjust and replant with greater care.'},
+  {name:'Eihwaz',unicode:'ᛇ',aett:2,keywords:['endurance','yew tree','death-rebirth'],upright:'Yggdrasil\'s strength: you stand at the axis of worlds. Endure through seeming endings — death here is transformation, not termination.',reversed:'Weakness or confusion at a crossroads. Gather your inner resources; the way forward requires patience and deeper roots.'},
+  {name:'Perthro',unicode:'ᛈ',aett:2,keywords:['fate','mystery','hidden'],upright:'The mystery unfolds. What was hidden comes to light — a secret revealed, a fate accepted. Embrace the unknown with curiosity.',reversed:'Hidden forces work against you or secrets remain locked. Do not chase what is not ready to be revealed.'},
+  {name:'Algiz',unicode:'ᛉ',aett:2,keywords:['protection','defense','higher self'],upright:'The elk stands guard. Powerful protection surrounds you. Connect with your higher self and intuition — you are shielded.',reversed:'Your defenses are down. Be cautious of those who drain your energy or exploit your vulnerability. Rest and protect yourself.'},
+  {name:'Sowilo',unicode:'ᛊ',aett:2,keywords:['sun','victory','wholeness'],upright:'The sun wheel burns bright. Victory, clarity, and life force are yours. Move forward with confidence — the light is on your side.',reversed:'Sowilo has no traditional reversal. Beware of ego inflation or burning too bright; direct your power wisely.'},
+  {name:'Tiwaz',unicode:'ᛏ',aett:3,keywords:['justice','honor','sacrifice'],upright:'Tyr\'s sword: justice prevails. Commit to your path with honor, even if sacrifice is required. Victory comes through integrity, not cunning.',reversed:'Injustice or stalled legal matters. Someone may lack integrity in the situation. Reassess commitments that no longer align with your values.'},
+  {name:'Berkano',unicode:'ᛒ',aett:3,keywords:['growth','birth','nurturing'],upright:'Birch tree awakens. New beginnings, new life, family blessings. Nurture what is newly born with patience and care.',reversed:'Growth is stunted by anxiety or a stale environment. Release what blocks new life; sometimes the tree must be pruned to bloom.'},
+  {name:'Ehwaz',unicode:'ᛖ',aett:3,keywords:['movement','horse','partnership'],upright:'Horse and rider in perfect harmony. A partnership brings swift movement toward your goal. Trust your allies and your own momentum.',reversed:'Mistrust, restlessness, or reckless haste. Slow down and rebuild the trust between yourself and those you travel with.'},
+  {name:'Mannaz',unicode:'ᛗ',aett:3,keywords:['humanity','self','community'],upright:'The human rune: you are not alone. Cooperation and community strengthen you. Know yourself fully — both light and shadow.',reversed:'Isolation, arrogance, or losing yourself in others\' opinions. Return to your authentic self; seek genuine connection, not approval.'},
+  {name:'Laguz',unicode:'ᛚ',aett:3,keywords:['water','flow','intuition'],upright:'Deep waters speak. Trust your intuition; emotions are data, not drama. Flow with the current rather than fighting it.',reversed:'Emotional overwhelm or self-deception. You may be swimming against the current. Pause and listen to what you have been ignoring.'},
+  {name:'Ingwaz',unicode:'ᛜ',aett:3,keywords:['fertility','potential','completion'],upright:'The seed holds everything it needs. A cycle completes, making space for the next. Your potential is fully charged — prepare to act.',reversed:'Ingwaz rarely reverses. If energy feels blocked, the seed is not yet ready. Trust the timing of your own gestation.'},
+  {name:'Dagaz',unicode:'ᛞ',aett:3,keywords:['dawn','breakthrough','transformation'],upright:'Dawn breaks after the longest night. A breakthrough, an awakening, a fundamental shift in perspective. The old world ends; the new begins.',reversed:'Dagaz rarely reverses. If light feels delayed, the darkness is doing necessary work. Transformation is closer than it appears.'},
+  {name:'Othala',unicode:'ᛟ',aett:3,keywords:['heritage','home','inheritance'],upright:'The ancestral home grounds you. Heritage, inheritance — material or spiritual — is yours. Honor your roots; they give you wings.',reversed:'Cut off from roots, or burdened by legacy. Heal ancestral patterns that no longer serve; claim your inheritance without its wounds.'}
+];
+
+var LABELS = {
+  zh: {
+    qLabel: '你的问题（选填）',
+    qPlaceholder: '例：事业方向、感情走向、当前处境…',
+    drawHint: '点击符文袋，让古老智慧指引你',
+    drawBtn: '抽取符文 · Draw Runes',
+    submitBtn: 'AI符文解读',
+    loadText: '符文正在显现古老的智慧…',
+    redoBtn: '重新抽取',
+    singleTab: '单符文',
+    threeTab: '三符文阵',
+    upright: '正位', reversed: '逆位',
+    past: '过去', present: '现在', future: '未来'
+  },
+  en: {
+    qLabel: 'Your question (optional)',
+    qPlaceholder: 'e.g. Career direction, relationship, current situation…',
+    drawHint: 'Click the rune pouch — let ancient wisdom speak',
+    drawBtn: 'Draw Runes',
+    submitBtn: 'Get AI Reading',
+    loadText: 'The ancient runes reveal their wisdom…',
+    redoBtn: 'Draw Again',
+    singleTab: 'Single Rune',
+    threeTab: 'Three-Rune Spread',
+    upright: 'Upright', reversed: 'Reversed',
+    past: 'Past', present: 'Present', future: 'Future'
+  }
+};
+
+function setLang(lang, el) {
+  currentLang = lang;
+  document.querySelectorAll('.ltab').forEach(function(t){t.classList.remove('active')});
+  el.classList.add('active');
+  applyLabels();
+}
+
+function setSpread(spread, el) {
+  currentSpread = spread;
+  document.querySelectorAll('.stab').forEach(function(t){t.classList.remove('active')});
+  el.classList.add('active');
+  if (drawn) resetAll();
+}
+
+function applyLabels() {
+  var L = LABELS[currentLang];
+  document.getElementById('qLabel').textContent = L.qLabel;
+  document.getElementById('qInput').placeholder = L.qPlaceholder;
+  document.getElementById('drawHint').textContent = L.drawHint;
+  document.getElementById('drawBtn').textContent = L.drawBtn;
+  document.getElementById('submitBtn').textContent = L.submitBtn;
+  document.getElementById('loadText').textContent = L.loadText;
+  document.getElementById('redoBtn').textContent = L.redoBtn;
+  document.getElementById('singleTab').textContent = L.singleTab;
+  document.getElementById('threeTab').textContent = L.threeTab;
+}
+
+function drawRunes() {
+  if (drawn) return;
+  var bag = document.getElementById('runeBag');
+  var btn = document.getElementById('drawBtn');
+  btn.disabled = true;
+  bag.classList.add('pulse');
+  setTimeout(function(){
+    bag.classList.remove('pulse');
+    showRuneCards();
+  }, 650);
+  drawn = true;
+}
+
+function showRuneCards() {
+  var shuffled = ELDER_FUTHARK.slice().sort(function(){return Math.random()-0.5;});
+  var count = currentSpread === 'three' ? 3 : 1;
+  drawnRuneData = shuffled.slice(0,count).map(function(r){
+    var rev = Math.random() < 0.3;
+    return {name:r.name,unicode:r.unicode,keywords:r.keywords,reversed:rev,meaning:rev?r.reversed:r.upright};
+  });
+  var L = LABELS[currentLang];
+  var positions = [L.past, L.present, L.future];
+  var cards = document.getElementById('runeCards');
+  cards.innerHTML = '';
+  drawnRuneData.forEach(function(r, i){
+    var card = document.createElement('div');
+    card.className = 'rune-card';
+    card.style.animationDelay = (i * 0.15) + 's';
+    var posHtml = count === 3 ? '<div class="rune-pos">'+positions[i]+'</div>' : '';
+    var orientHtml = '<div class="rune-orientation">'+(r.reversed ? L.reversed : L.upright)+'</div>';
+    card.innerHTML = posHtml +
+      '<div class="rune-glyph"'+(r.reversed?' style="transform:rotate(180deg)"':'')+'>'+ r.unicode +'</div>' +
+      '<div class="rune-name">'+ r.name +'</div>' +
+      orientHtml +
+      '<div class="rune-keywords">'+ r.keywords.join(' · ') +'</div>';
+    cards.appendChild(card);
+  });
+  cards.classList.add('show');
+  document.getElementById('submitWrap').style.display = 'block';
+}
+
+function getReading() {
+  if (!drawnRuneData) return;
+  var question = document.getElementById('qInput').value.trim();
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  document.querySelector('.q-wrap').style.display = 'none';
+  document.querySelector('.lang-tabs').style.display = 'none';
+  document.querySelector('.spread-toggle').style.display = 'none';
+  document.querySelector('.draw-section').style.display = 'none';
+  document.getElementById('submitWrap').style.display = 'none';
+  document.getElementById('loadingScreen').classList.add('show');
+
+  fetch('/api/rune', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      question: question,
+      spread: currentSpread,
+      lang: currentLang === 'en' ? 'en' : 'zh',
+      token: localStorage.getItem('sy_token') || ''
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    document.getElementById('loadingScreen').classList.remove('show');
+    if (d.error){showToast(d.error,'error');btn.disabled=false;document.getElementById('submitWrap').style.display='block';return;}
+    document.getElementById('resultDivider').style.display = 'flex';
+    renderAIInterpretation(d.reading || '');
+    document.getElementById('runeNote').style.display = 'block';
+    document.getElementById('ctaWrap').classList.add('show');
+  })
+  .catch(function(){
+    document.getElementById('loadingScreen').classList.remove('show');
+    showToast('Network error, please try again','error');
+    btn.disabled = false;
+    document.getElementById('submitWrap').style.display = 'block';
+  });
+}
+
+function parseSections(text) {
+  var known = ['ᚠ','📖','🌀','🔮','🌊','🎯','🔥','💧','🌿','❤️','💰','💼','🌟','⭐','✨','💫','📜','🏆','💡','🎋','🌸'];
+  var lines = text.split('\n');
+  var sections = [], current = null;
+  for (var i=0;i<lines.length;i++) {
+    var line=lines[i], matched=null;
+    for (var k=0;k<known.length;k++){if(line.indexOf(known[k])===0){matched=known[k];break;}}
+    if (matched){
+      if(current&&current.lines.length)sections.push(current);
+      current={emoji:matched,title:line.substring(matched.length).trim(),lines:[]};
+    } else if(current){current.lines.push(line);}
+    else if(line.trim()){current={emoji:'📜',title:'Rune Reading',lines:[line]};}
+  }
+  if(current&&current.lines.length)sections.push(current);
+  return sections;
+}
+
+function renderAIInterpretation(text) {
+  var sections = parseSections(text);
+  var interpEl = document.getElementById('aiInterp');
+  var html = '';
+  if (sections.length > 0) {
+    for (var i=0;i<sections.length;i++) {
+      var sec=sections[i];
+      html += '<div class="ai-card open">';
+      html += '<div class="ai-card-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ai-card-arrow\').classList.toggle(\'open\')">';
+      html += '<div class="ai-card-icon">'+sec.emoji+'</div>';
+      html += '<div class="ai-card-title">'+sec.title+'</div>';
+      html += '<div class="ai-card-arrow">⬇</div>';
+      html += '</div>';
+      html += '<div class="ai-card-body open"><div class="ai-card-text">'+sec.lines.join('\n')+'</div></div>';
+      html += '</div>';
+    }
+  } else {
+    html = '<div style="font-size:11px;color:var(--sub);letter-spacing:.04em;line-height:1.9;white-space:pre-wrap;padding:0 2px">'+text+'</div>';
+  }
+  html += '<div style="height:80px"></div>';
+  interpEl.innerHTML = html;
+  interpEl.style.display = 'flex';
+  interpEl.style.flexDirection = 'column';
+  interpEl.style.gap = '8px';
+  injectDisclaimer('aiInterp');
+}
+
+function resetAll() {
+  drawn = false;
+  drawnRuneData = null;
+  document.getElementById('runeCards').innerHTML = '';
+  document.getElementById('runeCards').classList.remove('show');
+  document.getElementById('submitWrap').style.display = 'none';
+  document.getElementById('aiInterp').style.display = 'none';
+  document.getElementById('aiInterp').innerHTML = '';
+  document.getElementById('resultDivider').style.display = 'none';
+  document.getElementById('runeNote').style.display = 'none';
+  document.getElementById('ctaWrap').classList.remove('show');
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('drawBtn').disabled = false;
+  document.querySelector('.q-wrap').style.display = 'block';
+  document.querySelector('.lang-tabs').style.display = 'flex';
+  document.querySelector('.spread-toggle').style.display = 'flex';
+  document.querySelector('.draw-section').style.display = 'flex';
+}
+
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer';
+  t.style.background = type==='error' ? 'rgba(120,20,20,0.95)' : 'rgba(20,20,40,0.95)';
+  t.style.border = type==='error' ? '1px solid rgba(200,60,60,0.4)' : '1px solid rgba(232,184,106,0.2)';
+  t.style.color = type==='error' ? 'rgba(255,200,200,0.95)' : 'rgba(240,230,200,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(function(){t.remove();},300)};
+  document.body.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(function(){t.remove();},300);},3000);
+}
+
+function createCheckout(btn) {
+  btn.disabled = true;
+  btn.textContent = 'Redirecting…';
+  fetch('/api/create-checkout',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({product:'bazi_basic',token:localStorage.getItem('sy_token')||''})
+  }).then(function(r){return r.json();}).then(function(data){
+    if(data.url)window.location.href=data.url;
+    else{showToast('Redirect failed','error');btn.disabled=false;btn.textContent='深度解读 · Deeper Reading · $9.90';}
+  }).catch(function(){showToast('Network error','error');btn.disabled=false;btn.textContent='深度解读 · Deeper Reading · $9.90';});
+}
+
+// Starfield
+(function(){
+  var c=document.getElementById('starfield');
+  if(!c)return;
+  for(var i=0;i<60;i++){
+    var s=document.createElement('span');
+    var sz=0.5+Math.random()*2;
+    s.style.cssText='left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;width:'+sz+'px;height:'+sz+'px;--dur:'+(2+Math.random()*5)+'s;--op:'+(0.3+Math.random()*0.6)+';animation-delay:'+(Math.random()*6)+'s';
+    c.appendChild(s);
+  }
+})();
+
+function injectDisclaimer(containerId) {
+  var c=document.getElementById(containerId);
+  if(!c||c.querySelector('.sy-disclaimer'))return;
+  var d=document.createElement('div');
+  d.className='sy-disclaimer';
+  d.innerHTML='<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(232,184,106,0.2),transparent);margin:0 auto;width:80%"></div><div style="font-size:10px;color:rgba(232,184,106,0.3);text-align:center;letter-spacing:.06em;padding:10px 20px">For entertainment and reflection only · 仅供娱乐参考，请理性看待</div>';
+  c.appendChild(d);
+}
+</script>
+<script>
+(function(){var t=localStorage.getItem('sy_theme');if(t==='dark'){document.documentElement.classList.add('dark-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='🌙';}})();
+function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'🌙';localStorage.setItem('sy_theme',l?'dark':'dark');}
+</script>
+<script src="/assets/js/common.js"></script>
+</body>
+</html>

@@ -22,6 +22,9 @@
  * GET  /api/context/:id
  * POST /api/ask-followup
  * GET  /api/daily-teaser
+ * POST /api/omikuji
+ * POST /api/rune
+ * POST /api/kyusei
  */
 
 const router = require('express').Router();
@@ -3838,6 +3841,182 @@ router.post('/leads', async (req, res) => {
     fs.writeFileSync(leadsFile, JSON.stringify(leads, null, 2));
     res.json({ ok: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ══════════════════════════════════════════
+// POST /api/omikuji — おみくじ 日本御神签
+// ══════════════════════════════════════════
+router.post('/omikuji', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { question, lang } = req.body;
+    const OMIKUJI_GRADES = [
+      { grade: '大吉', weight: 5, en: 'Dai-kichi (Great Blessing)', cls: 'excellent' },
+      { grade: '吉', weight: 16, en: 'Kichi (Blessing)', cls: 'good' },
+      { grade: '中吉', weight: 15, en: 'Chū-kichi (Middle Blessing)', cls: 'good' },
+      { grade: '小吉', weight: 10, en: 'Shō-kichi (Small Blessing)', cls: 'mid' },
+      { grade: '末吉', weight: 8, en: 'Sue-kichi (Future Blessing)', cls: 'mid' },
+      { grade: '凶', weight: 11, en: 'Kyō (Caution)', cls: 'bad' },
+      { grade: '大凶', weight: 5, en: 'Dai-kyō (Great Caution)', cls: 'worst' }
+    ];
+    var totalWeight = OMIKUJI_GRADES.reduce(function(s, g){ return s + g.weight; }, 0);
+    var rand = Math.floor(Math.random() * totalWeight);
+    var accumulated = 0;
+    var drawn = OMIKUJI_GRADES[0];
+    for (var i = 0; i < OMIKUJI_GRADES.length; i++) {
+      accumulated += OMIKUJI_GRADES[i].weight;
+      if (rand < accumulated) { drawn = OMIKUJI_GRADES[i]; break; }
+    }
+    var isEn = (lang === 'en');
+    var systemPrompt = isEn
+      ? 'You are a wise Shinto shrine priest at a sacred Japanese shrine, deeply versed in omikuji (御神籤) tradition. Your voice is calm, gentle, and filled with wabi-sabi wisdom. Each reading is personal and poetic. Never mention which AI model powers this.'
+      : 'あなたは日本の神社の神職です。おみくじの伝統に深く精通し、穏やかで温かく詩的な言葉で参拝者に神のお告げをお伝えします。使用するAIモデルは絶対に明かさないでください。';
+    var userPrompt = isEn
+      ? `The visitor drew: ${drawn.grade} — ${drawn.en}\nTheir question: ${question || 'General guidance for my life path'}\n\nPlease generate a complete omikuji reading in English:\n1. 🌸 Sacred Waka Poem (5-7-5-7-7 syllable poem, original, in poetic English)\n2. 🏯 Interpretation of ${drawn.en} (300 words)\n3. ❤️ Love & Relationships\n4. 📚 Study & Career\n5. 💰 Wealth & Fortune\n6. 🌿 Health & Vitality\n7. 🧳 Travel\n8. 🔍 Lost Items\n9. 🎋 Shrine Priest's Whisper (closing personal message, 80 words)`
+      : `参拝者が引いたおみくじ：${drawn.grade}\nご質問：${question || '人生の指針をお授けください'}\n\n以下の形式で完全なおみくじ解釈をお書きください：\n1. 🌸 和歌（五・七・五・七・七、オリジナル）\n2. 🏯 ${drawn.grade}の解釈（300字程度）\n3. ❤️ 恋愛・縁談\n4. 📚 学業・仕事\n5. 💰 金運・財運\n6. 🌿 健康\n7. 🧳 旅行\n8. 🔍 失せ物\n9. 🎋 神職からの一言（締めの言葉、80字）`;
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ];
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','omikuji','rune','kyusei'], messages, 8192);
+    const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
+    insertReading.run('omikuji', JSON.stringify(req.body), reading, req.userId);
+    var ctxId = saveQaContext('omikuji', req.body, reading);
+    res.json({ reading, contextId: ctxId, omikuji: { grade: drawn.grade, gradeEn: drawn.en, cls: drawn.cls }, tier: _gl.full ? 'full' : 'basic', locked: !_gl.full });
+  } catch (err) {
+    _refundCreditOnFail(req);
+    console.error('[OMIKUJI ERR]', err.message);
+    res.status(500).json({ error: 'AI temporarily unavailable, please try again' });
+  }
+});
+
+// ══════════════════════════════════════════
+// POST /api/rune — 北欧卢恩符文占卜
+// ══════════════════════════════════════════
+const ELDER_FUTHARK = [
+  { name:'Fehu', unicode:'ᚠ', aett:1, keywords:['wealth','abundance','beginnings'], upright:'A new cycle of abundance opens. Material and spiritual gains await — act on opportunities with confidence, but share what you receive.', reversed:'Wealth may slip away or stagnate. Re-evaluate what you truly value. Avoid greed; loss here is a lesson, not a sentence.' },
+  { name:'Uruz', unicode:'ᚢ', aett:1, keywords:['strength','vitality','change'], upright:'Raw power and primal strength surge through you. A period of major change brings growth — embrace it even if it feels disruptive.', reversed:'Your energy is scattered or blocked. Rest and recover. Resist forcing outcomes; let the storm pass before acting.' },
+  { name:'Thurisaz', unicode:'ᚦ', aett:1, keywords:['protection','conflict','threshold'], upright:'A gateway stands before you. Thor\'s hammer clears the path — face conflict directly rather than avoiding it. Protection is yours.', reversed:'Danger of rash action. Pause before reacting. Hidden enemies or self-sabotage may be at work; reflect carefully.' },
+  { name:'Ansuz', unicode:'ᚨ', aett:1, keywords:['communication','wisdom','divine message'], upright:'Odin\'s breath — a message or revelation comes. Trust your voice; speak with authority. Wisdom flows through you now.', reversed:'Miscommunication or deceit. Check your sources; not all advice is trustworthy. Seek clarity before committing.' },
+  { name:'Raidho', unicode:'ᚱ', aett:1, keywords:['journey','movement','rhythm'], upright:'A journey — physical or inner — is underway. You are on the right road. Trust the rhythm of your progress.', reversed:'Delays, detours, or loss of direction. Stop and reassess your route; the destination is right but the path needs adjustment.' },
+  { name:'Kenaz', unicode:'ᚲ', aett:1, keywords:['creativity','illumination','knowledge'], upright:'The torch of creativity blazes. New knowledge, artistic breakthroughs, or romantic sparks ignite. Illuminate what was hidden.', reversed:'Inspiration dims or a relationship cools. Release what no longer serves you; new light cannot enter a cluttered room.' },
+  { name:'Gebo', unicode:'ᚷ', aett:1, keywords:['gift','partnership','exchange'], upright:'A gift freely given and received. Partnership, generosity, and balance in relationships. Honor the exchange — give as much as you take.', reversed:'Gebo has no reversal — its gift is unconditional. Consider where imbalance exists in a relationship or transaction.' },
+  { name:'Wunjo', unicode:'ᚹ', aett:1, keywords:['joy','harmony','success'], upright:'Joy arrives. Harmony, wish-fulfillment, and a sense of belonging. Celebrate — this is a moment of genuine happiness.', reversed:'Clouds gather over the celebration. Alienation, stubbornness, or misaligned expectations dim the light. Seek common ground.' },
+  { name:'Hagalaz', unicode:'ᚺ', aett:2, keywords:['disruption','hail','transformation'], upright:'The hailstorm strips everything bare — then nourishes the earth. Disruption is the universe clearing space for something better.', reversed:'Hagalaz carries no traditional reversal; the storm comes regardless. Surrender to transformation rather than resisting it.' },
+  { name:'Nauthiz', unicode:'ᚾ', aett:2, keywords:['need','constraint','patience'], upright:'Necessity is the teacher now. Constraint builds character. Endure this period with patience; what you forge in hardship will last.', reversed:'Resist the temptation to take shortcuts or blame others for your circumstances. Inner work is required before outer change.' },
+  { name:'Isa', unicode:'ᛁ', aett:2, keywords:['stillness','freeze','clarity'], upright:'Everything pauses. Use this frozen moment for introspection and clarity. Plans must wait; the ice will melt in its own time.', reversed:'Isa has no conventional reversal. The stillness is complete. Avoid forcing movement — there is wisdom in waiting.' },
+  { name:'Jera', unicode:'ᛃ', aett:2, keywords:['harvest','cycle','reward'], upright:'The harvest arrives. Your patience and effort over a full cycle now yield their fruit. Celebrate — you have earned this.', reversed:'Jera carries no reversal. If the harvest is thin, examine what was planted. Adjust and replant with greater care.' },
+  { name:'Eihwaz', unicode:'ᛇ', aett:2, keywords:['endurance','yew tree','death-rebirth'], upright:'Yggdrasil\'s strength: you stand at the axis of worlds. Endure through seeming endings — death here is transformation, not termination.', reversed:'Weakness or confusion at a crossroads. Gather your inner resources; the way forward requires patience and deeper roots.' },
+  { name:'Perthro', unicode:'ᛈ', aett:2, keywords:['fate','mystery','hidden'], upright:'The mystery unfolds. What was hidden comes to light — a secret revealed, a fate accepted. Embrace the unknown with curiosity.', reversed:'Hidden forces work against you or secrets remain locked. Do not chase what is not ready to be revealed.' },
+  { name:'Algiz', unicode:'ᛉ', aett:2, keywords:['protection','defense','higher self'], upright:'The elk stands guard. Powerful protection surrounds you. Connect with your higher self and intuition — you are shielded.', reversed:'Your defenses are down. Be cautious of those who drain your energy or exploit your vulnerability. Rest and protect yourself.' },
+  { name:'Sowilo', unicode:'ᛊ', aett:2, keywords:['sun','victory','wholeness'], upright:'The sun wheel burns bright. Victory, clarity, and life force are yours. Move forward with confidence — the light is on your side.', reversed:'Sowilo has no traditional reversal. Beware of ego inflation or burning too bright; direct your power wisely.' },
+  { name:'Tiwaz', unicode:'ᛏ', aett:3, keywords:['justice','honor','sacrifice'], upright:'Tyr\'s sword: justice prevails. Commit to your path with honor, even if sacrifice is required. Victory comes through integrity, not cunning.', reversed:'Injustice or stalled legal matters. Someone may lack integrity in the situation. Reassess commitments that no longer align with your values.' },
+  { name:'Berkano', unicode:'ᛒ', aett:3, keywords:['growth','birth','nurturing'], upright:'Birch tree awakens. New beginnings, new life, family blessings. Nurture what is newly born with patience and care.', reversed:'Growth is stunted by anxiety or a stale environment. Release what blocks new life; sometimes the tree must be pruned to bloom.' },
+  { name:'Ehwaz', unicode:'ᛖ', aett:3, keywords:['movement','horse','partnership'], upright:'Horse and rider in perfect harmony. A partnership brings swift movement toward your goal. Trust your allies and your own momentum.', reversed:'Mistrust, restlessness, or reckless haste. Slow down and rebuild the trust between yourself and those you travel with.' },
+  { name:'Mannaz', unicode:'ᛗ', aett:3, keywords:['humanity','self','community'], upright:'The human rune: you are not alone. Cooperation and community strengthen you. Know yourself fully — both light and shadow.', reversed:'Isolation, arrogance, or losing yourself in others\' opinions. Return to your authentic self; seek genuine connection, not approval.' },
+  { name:'Laguz', unicode:'ᛚ', aett:3, keywords:['water','flow','intuition'], upright:'Deep waters speak. Trust your intuition; emotions are data, not drama. Flow with the current rather than fighting it.', reversed:'Emotional overwhelm or self-deception. You may be swimming against the current. Pause and listen to what you have been ignoring.' },
+  { name:'Ingwaz', unicode:'ᛜ', aett:3, keywords:['fertility','potential','completion'], upright:'The seed holds everything it needs. A cycle completes, making space for the next. Your potential is fully charged — prepare to act.', reversed:'Ingwaz rarely reverses. If energy feels blocked, the seed is not yet ready. Trust the timing of your own gestation.' },
+  { name:'Dagaz', unicode:'ᛞ', aett:3, keywords:['dawn','breakthrough','transformation'], upright:'Dawn breaks after the longest night. A breakthrough, an awakening, a fundamental shift in perspective. The old world ends; the new begins.', reversed:'Dagaz rarely reverses. If light feels delayed, the darkness is doing necessary work. Transformation is closer than it appears.' },
+  { name:'Othala', unicode:'ᛟ', aett:3, keywords:['heritage','home','inheritance'], upright:'The ancestral home grounds you. Heritage, inheritance — material or spiritual — is yours. Honor your roots; they give you wings.', reversed:'Cut off from roots, or burdened by legacy. Heal ancestral patterns that no longer serve; claim your inheritance without its wounds.' }
+];
+
+router.post('/rune', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { question, spread, lang } = req.body;
+    // spread: 'single' (default) or 'three' (past/present/future)
+    var spreadType = spread === 'three' ? 'three' : 'single';
+    var shuffled = ELDER_FUTHARK.slice().sort(function(){ return Math.random() - 0.5; });
+    var drawnRunes = spreadType === 'three' ? shuffled.slice(0, 3) : [shuffled[0]];
+    // Each rune has ~30% chance of being reversed
+    var drawnWithPos = drawnRunes.map(function(r) {
+      var reversed = Math.random() < 0.3;
+      return { name: r.name, unicode: r.unicode, aett: r.aett, keywords: r.keywords, reversed: reversed, meaning: reversed ? r.reversed : r.upright };
+    });
+    var isEn = (lang === 'en');
+    var runeDesc = spreadType === 'three'
+      ? drawnWithPos.map(function(r, i) {
+          var pos = isEn ? ['Past','Present','Future'][i] : ['过去','现在','未来'][i];
+          return (isEn ? pos + ': ' : pos + '：') + r.unicode + ' ' + r.name + (r.reversed ? (isEn ? ' (Reversed)' : '（逆位）') : (isEn ? ' (Upright)' : '（正位）'));
+        }).join('\n')
+      : drawnWithPos[0].unicode + ' ' + drawnWithPos[0].name + (drawnWithPos[0].reversed ? (isEn ? ' (Reversed)' : '（逆位）') : (isEn ? ' (Upright)' : '（正位）'));
+    var systemPrompt = isEn
+      ? 'You are a Northern European rune reader with deep knowledge of Elder Futhark, Norse mythology, and the Eddas. Your interpretations are poetic, grounded, and empowering. Rune reversal is not doom — it is redirection. Never reveal which AI model powers this reading.'
+      : '你是一位精通 Elder Futhark 古北欧符文的占师，深谙北欧神话与埃达诗歌。你的解读诗意、接地气、赋予力量。逆位符文不是诅咒，而是转向。绝不透露解读所用的 AI 模型。';
+    var userPrompt = isEn
+      ? `Seeker's question: ${question || 'What guidance do the runes offer me now?'}\n\nRunes drawn:\n${runeDesc}\n\nPlease provide a complete rune reading:\n1. ᚠ Opening — the energy this reading carries (80 words)\n2. ${spreadType === 'three' ? '📖 Past Rune Analysis\n3. 🌀 Present Rune Analysis\n4. 🔮 Future Rune Analysis\n5.' : '🔮 Deep Rune Interpretation (400 words)\n3.'} 🌊 Synthesis — how the rune(s) speak to your question (200 words)\n${spreadType === 'three' ? '6.' : '4.'} 🎯 Three Practical Guidance Points\n${spreadType === 'three' ? '7.' : '5.'} 🔥 The Rune Reader's Closing Word (70 words, poetic)`
+      : `问卦者的问题：${question || '请符文为我指引方向'}\n\n抽出的符文：\n${runeDesc}\n\n请出具完整卢恩符文解读：\n1. ᚠ 开场——此次解读的能量基调（80字）\n2. ${spreadType === 'three' ? '📖 过去符文详解\n3. 🌀 现在符文详解\n4. 🔮 未来符文详解\n5.' : '🔮 符文深度解读（400字）\n3.'} 🌊 综合解读——符文如何回应你的问题（200字）\n${spreadType === 'three' ? '6.' : '4.'} 🎯 三条落地行动建议\n${spreadType === 'three' ? '7.' : '5.'} 🔥 占师的结语（70字，诗意收尾）`;
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ];
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','omikuji','rune','kyusei'], messages, 8192);
+    const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
+    insertReading.run('rune', JSON.stringify(req.body), reading, req.userId);
+    var ctxId = saveQaContext('rune', req.body, reading);
+    res.json({ reading, contextId: ctxId, runes: drawnWithPos, spread: spreadType, tier: _gl.full ? 'full' : 'basic', locked: !_gl.full });
+  } catch (err) {
+    _refundCreditOnFail(req);
+    console.error('[RUNE ERR]', err.message);
+    res.status(500).json({ error: 'AI temporarily unavailable, please try again' });
+  }
+});
+
+// ══════════════════════════════════════════
+// POST /api/kyusei — 九星気学 Nine Star Ki
+// ══════════════════════════════════════════
+const KYUSEI_STARS = {
+  1: { name:'一白水星', nameEn:'1 White Water Star', element:'水 Water', keywords:['智慧','灵活','交流'], keywordsEn:['wisdom','adaptability','communication'], description:'Water flows and adapts. Your life path carries deep intelligence and diplomatic grace. You thrive through connection and intuition.', descriptionZH:'水善利万物而不争。你天生具备深邃的智慧与外交天赋，善于倾听与沟通，以柔克刚。' },
+  2: { name:'二黑土星', nameEn:'2 Black Earth Star', element:'土 Earth', keywords:['勤劳','滋养','耐力'], keywordsEn:['diligence','nurturing','endurance'], description:'Earth absorbs and nourishes all. You are the steady foundation others rely on — devoted, patient, and deeply caring.', descriptionZH:'厚德载物，你是他人的精神支柱。勤勉、包容、脚踏实地，厚积薄发，是值得信赖的守护者。' },
+  3: { name:'三碧木星', nameEn:'3 Jade Wood Star', element:'木 Wood', keywords:['活力','创新','开拓'], keywordsEn:['vitality','innovation','pioneering'], description:'Young spring wood shoots upward with unstoppable energy. You are a trailblazer — innovative, enthusiastic, and always reaching for new horizons.', descriptionZH:'初春之木，生机勃勃。你是天生的开拓者，充满活力与创新精神，勇于突破边界，点燃身边人的热情。' },
+  4: { name:'四绿木星', nameEn:'4 Green Wood Star', element:'木 Wood', keywords:['信用','成长','风'], keywordsEn:['trust','growth','wind'], description:'Mature wood sways with the wind yet stands firm. You build lasting trust through consistency — a natural networker and mediator.', descriptionZH:'如风似木，你以诚信和温和赢得人心。善于积累人脉，沟通协调，长期经营的信用是你最大的财富。' },
+  5: { name:'五黄土星', nameEn:'5 Yellow Earth Star', element:'土 Earth', keywords:['领导','中心','命运'], keywordsEn:['leadership','center','destiny'], description:'The center of all nine stars — the axis around which change revolves. You carry great power and responsibility; your choices ripple far.', descriptionZH:'居中央，统御八方。你生来承担命运的重量，具有领导潜力与影响力，但需以责任驾驭力量。' },
+  6: { name:'六白金星', nameEn:'6 White Metal Star', element:'金 Metal', keywords:['权威','完美','天空'], keywordsEn:['authority','precision','heaven'], description:'Heaven\'s metal — bright, clear, and authoritative. You set high standards and lead by example, commanding respect through excellence.', descriptionZH:'乾金之气，刚健清明。你天生具备领导气质，追求卓越与完美，以身作则，赢得众人的尊重与信赖。' },
+  7: { name:'七赤金星', nameEn:'7 Red Metal Star', element:'金 Metal', keywords:['魅力','表达','享乐'], keywordsEn:['charisma','expression','joy'], description:'The metallic shimmer of autumn — charming, expressive, and magnetic. You are a natural performer who brings joy and beauty wherever you go.', descriptionZH:'秋金华彩，你天生具有魅力与表现力。善于表达、富有创意，在社交场合中总能成为焦点，带给周围人欢乐。' },
+  8: { name:'八白土星', nameEn:'8 White Earth Star', element:'土 Earth', keywords:['变革','山','财富'], keywordsEn:['transformation','mountain','wealth'], description:'The mountain stands through all seasons. You accumulate wealth and wisdom through steadfast effort — your transformation is dramatic but earned.', descriptionZH:'艮山之稳，你蓄势待发，终能厚积薄发。善于积累财富与经验，一旦时机成熟，爆发力惊人。' },
+  9: { name:'九紫火星', nameEn:'9 Purple Fire Star', element:'火 Fire', keywords:['热情','名誉','洞察'], keywordsEn:['passion','fame','insight'], description:'Fire illuminates everything it touches. You burn with passion, intuition, and a desire to be seen — fame and recognition are in your nature.', descriptionZH:'离火燃烧，光照四方。你热情洋溢、洞察力强，渴望被看见。名誉与荣耀是你命中注定的追求与考验。' }
+};
+
+// Nine Star Ki calculation (Sonoda formula, public domain)
+// Adjusted birth year for Setsubun (立春, ~Feb 4): if birthday is Jan 1 - Feb 3, use previous year
+function calcKyuseiStar(year, month, day) {
+  var adjYear = year;
+  if (month === 1 || (month === 2 && day <= 3)) adjYear = year - 1;
+  var star = (10 - ((adjYear - 2) % 9)) % 9;
+  return star === 0 ? 9 : star;
+}
+
+router.post('/kyusei', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { birthYear, birthMonth, birthDay, question, lang } = req.body;
+    if (!birthYear || !birthMonth || !birthDay) {
+      return res.status(400).json({ error: 'Please provide birth year, month, and day' });
+    }
+    var starNum = calcKyuseiStar(Number(birthYear), Number(birthMonth), Number(birthDay));
+    var star = KYUSEI_STARS[starNum];
+    if (!star) return res.status(400).json({ error: 'Invalid birth date' });
+    var isEn = (lang === 'en');
+    var systemPrompt = isEn
+      ? 'You are a Japanese metaphysics master specializing in Kyūsei Kigaku (九星気学 Nine Star Ki), the ancient Japanese art of destiny based on birth year energy. Your readings are precise, culturally rooted, and deeply insightful. Never reveal which AI model generates this reading.'
+      : '你是一位精通九星気学（Kyūsei Kigaku）的日本命理大师。你的解读精准、文化底蕴深厚，融合阴阳五行与日本传统智慧。绝不透露解读所用的AI模型。';
+    var starBlock = isEn
+      ? `Birth Star: ${star.nameEn} (${star.element})\nCore Energy: ${star.keywordsEn.join(', ')}\nPath: ${star.description}`
+      : `本命星：${star.name}（${star.element}）\n核心能量：${star.keywords.join('・')}\n命途：${star.descriptionZH}`;
+    var userPrompt = isEn
+      ? `${starBlock}\nSeeker's question: ${question || 'What is my Nine Star Ki destiny telling me?'}\nBorn: ${birthYear}-${String(birthMonth).padStart(2,'0')}-${String(birthDay).padStart(2,'0')}\n\nPlease provide a complete Nine Star Ki reading:\n1. ⭐ Your Star Essence — what ${star.nameEn} reveals about your core nature (300 words)\n2. 💼 Career & Life Path\n3. ❤️ Love & Relationships\n4. 💰 Wealth & Resources\n5. 🌿 Health & Vitality\n6. 📅 This Year's Energy — ${new Date().getFullYear()} forecast for ${star.nameEn}\n7. 🔑 Your 3 Lifetime Keys — the deepest wisdom this star holds for you\n8. 🌸 Closing Message (70 words, poetic)`
+      : `${starBlock}\n问卦者的问题：${question || '九星気学告诉我的命运是什么？'}\n出生：${birthYear}年${birthMonth}月${birthDay}日\n\n请出具完整九星気学解读：\n1. ⭐ 本命星精髓——${star.name}揭示的你的核心本质（300字）\n2. 💼 事业与人生道路\n3. ❤️ 恋爱与人际关系\n4. 💰 财运与资源\n5. 🌿 健康与活力\n6. 📅 今年运势——${new Date().getFullYear()}年对${star.name}的预测\n7. 🔑 三大人生密钥——本命星蕴含的最深智慧\n8. 🌸 结语（70字，诗意收尾）`;
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ];
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','omikuji','rune','kyusei'], messages, 8192);
+    const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
+    insertReading.run('kyusei', JSON.stringify(req.body), reading, req.userId);
+    var ctxId = saveQaContext('kyusei', req.body, reading);
+    res.json({ reading, contextId: ctxId, star: { number: starNum, name: star.name, nameEn: star.nameEn, element: star.element, keywords: star.keywords, keywordsEn: star.keywordsEn }, tier: _gl.full ? 'full' : 'basic', locked: !_gl.full });
+  } catch (err) {
+    _refundCreditOnFail(req);
+    console.error('[KYUSEI ERR]', err.message);
+    res.status(500).json({ error: 'AI temporarily unavailable, please try again' });
+  }
 });
 
 module.exports = router;
