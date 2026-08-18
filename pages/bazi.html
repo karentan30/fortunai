@@ -423,6 +423,70 @@ input::placeholder,textarea::placeholder { color: rgba(200,196,180,0.25) !import
 .ur-head { color: rgba(240,238,230,0.9) !important; }
 .ur-text { color: rgba(210,206,190,0.88) !important; }
 .zhuanyun-hook { background: linear-gradient(135deg,#111120,#1a1a30) !important; }
+
+/* ══════════ 精装报告阅读体验 (增量增强) ══════════ */
+/* 顶部阅读进度条 */
+#readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.25);opacity:0;transition:opacity .3s;pointer-events:none}
+#readProgressWrap.show{opacity:1}
+#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a);box-shadow:0 0 8px rgba(201,168,76,0.5);transition:width .12s ease-out}
+#readProgressChapter{position:fixed;top:8px;right:12px;z-index:1200;font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:0.12em;color:rgba(232,208,138,0.85);background:rgba(10,8,4,0.72);border:1px solid rgba(201,168,76,0.22);border-radius:20px;padding:3px 11px;opacity:0;transition:opacity .3s;pointer-events:none;backdrop-filter:blur(6px)}
+#readProgressChapter.show{opacity:1}
+
+/* 章节封面卡 */
+.chapter-cover{position:relative;margin:20px 4px 10px;border-radius:14px;overflow:hidden;min-height:168px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 8px 30px rgba(0,0,0,0.4);animation:fadeUp 0.6s ease both;background:#141018}
+.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.62;filter:saturate(0.92)}
+.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,6,3,0.35) 0%,rgba(8,6,3,0.55) 45%,rgba(8,6,3,0.9) 100%)}
+.chapter-cover-body{position:relative;padding:18px 18px 16px}
+.chapter-cover-num{font-family:'Cormorant Garamond','Noto Serif SC',serif;font-size:12px;letter-spacing:0.32em;color:rgba(232,208,138,0.82);margin-bottom:5px}
+.chapter-cover-num::before{content:'';display:inline-block;width:22px;height:1px;background:linear-gradient(90deg,rgba(201,168,76,0.7),transparent);vertical-align:middle;margin-right:8px}
+.chapter-cover-title{font-family:'Noto Serif SC',serif;font-size:21px;font-weight:600;letter-spacing:0.06em;color:#f3e6c0;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
+.chapter-cover-lead{font-size:12px;line-height:1.7;letter-spacing:0.03em;color:rgba(235,225,195,0.72);margin-top:7px;max-width:92%}
+
+/* 首字下沉 */
+.ur-text .drop-cap::first-letter,.drop-cap-first{float:left;font-family:'Noto Serif SC',Georgia,serif;font-size:3.4em;line-height:0.82;font-weight:700;color:var(--gold-light,#e8d08a);margin:0.04em 0.12em 0 0;text-shadow:0 2px 10px rgba(201,168,76,0.28)}
+
+/* 金句 pull quote */
+.pull-quote{position:relative;margin:16px 10px;padding:6px 4px 6px 20px;text-align:center}
+.pull-quote::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,transparent,rgba(201,168,76,0.7),transparent);border-radius:2px}
+.pull-quote-text{font-family:'Noto Serif SC',serif;font-size:16px;font-weight:500;line-height:1.75;letter-spacing:0.04em;color:#e8d08a;text-shadow:0 1px 8px rgba(201,168,76,0.18)}
+.pull-quote-mark{font-family:'Cormorant Garamond',serif;font-size:26px;color:rgba(201,168,76,0.4);line-height:0}
+
+/* 高亮卡 */
+.hl-note{margin:12px 0;padding:13px 15px;background:linear-gradient(135deg,rgba(201,168,76,0.1),rgba(201,168,76,0.03));border:1px solid rgba(201,168,76,0.34);border-left:3px solid var(--gold,#c9a84c);border-radius:10px;font-size:12.5px;line-height:1.9;letter-spacing:0.03em;color:rgba(235,225,195,0.92);box-shadow:0 2px 14px rgba(201,168,76,0.06)}
+.hl-note b,.hl-note strong{color:#e8d08a}
+
+/* 章节目录 */
+.chapter-toc{margin:14px 4px 6px;padding:16px 16px 12px;background:linear-gradient(160deg,rgba(18,14,8,0.9),rgba(10,8,4,0.95));border:1px solid rgba(201,168,76,0.22);border-radius:14px;animation:fadeUp 0.5s ease both}
+.chapter-toc-title{font-size:12px;letter-spacing:0.2em;color:rgba(201,168,76,0.7);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.chapter-toc-item{display:flex;align-items:baseline;gap:10px;padding:8px 2px;border-bottom:1px dotted rgba(201,168,76,0.14);text-decoration:none;transition:all .2s}
+.chapter-toc-item:last-child{border-bottom:none}
+.chapter-toc-item:active{opacity:0.6}
+.chapter-toc-idx{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(201,168,76,0.6);min-width:26px}
+.chapter-toc-label{flex:1;font-size:13px;letter-spacing:0.04em;color:rgba(232,220,190,0.9)}
+.chapter-toc-arrow{font-size:12px;color:rgba(201,168,76,0.45)}
+
+/* 悬浮 TOC 按钮 + 面板 */
+#floatTocBtn{position:fixed;right:16px;bottom:96px;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#8a6420,#c9a84c);border:none;color:rgba(14,10,4,0.95);font-size:18px;cursor:pointer;z-index:1100;box-shadow:0 4px 16px rgba(201,168,76,0.4);display:none;align-items:center;justify-content:center}
+#floatTocBtn.show{display:flex}
+#floatTocPanel{display:none;position:fixed;right:16px;bottom:150px;z-index:1100;background:rgba(14,11,6,0.97);border:1px solid rgba(201,168,76,0.4);border-radius:12px;padding:14px;max-height:56vh;overflow-y:auto;width:min(230px,calc(100vw - 32px));box-shadow:0 10px 30px rgba(0,0,0,0.6);backdrop-filter:blur(8px)}
+#floatTocPanel.show{display:block;animation:fadeUp 0.25s ease both}
+#floatTocPanel .ft-title{font-size:12px;letter-spacing:0.16em;color:rgba(201,168,76,0.75);margin-bottom:10px}
+#floatTocPanel a{display:flex;gap:8px;color:rgba(232,220,190,0.85);text-decoration:none;padding:7px 0;font-size:12.5px;border-bottom:1px solid rgba(201,168,76,0.08);line-height:1.4}
+#floatTocPanel a:last-child{border-bottom:none}
+#floatTocPanel a .ft-idx{color:rgba(201,168,76,0.55);font-family:'Cormorant Garamond',serif}
+
+/* 大运流年时间轴 */
+.dayun-timeline{margin:14px 4px;padding:16px 12px 12px;background:linear-gradient(160deg,rgba(18,12,28,0.95),rgba(10,7,16,0.98));border:1px solid rgba(201,168,76,0.24);border-radius:14px;overflow:hidden;animation:fadeUp 0.5s ease both}
+.dayun-timeline-title{font-size:12px;letter-spacing:0.18em;color:rgba(201,168,76,0.7);margin-bottom:10px;display:flex;align-items:center;gap:7px}
+
+/* 五行雷达卡 */
+.wuxing-radar-card{margin:14px 4px;padding:16px 14px 10px;background:linear-gradient(160deg,rgba(18,12,28,0.95),rgba(10,7,16,0.98));border:1px solid rgba(201,168,76,0.24);border-radius:14px;animation:fadeUp 0.5s ease both}
+.wuxing-radar-card .wr-title{font-size:12px;letter-spacing:0.18em;color:rgba(201,168,76,0.7);margin-bottom:6px;display:flex;align-items:center;gap:7px}
+
+@media print{
+  .chapter-cover{break-inside:avoid}
+  #readProgressWrap,#readProgressChapter,#floatTocBtn,#floatTocPanel{display:none !important}
+}
 </style>
 <link rel="stylesheet" href="/assets/css/common.css">
 </head>
@@ -1540,6 +1604,133 @@ function genSectionDivider(icon) {
     '</div>';
 }
 
+// ══════════ 精装报告：章节封面 / 金句 / 首字下沉 / 时间轴 / 雷达 ══════════
+
+// 中文数序：其一/其二…
+var _CN_ORD = ['其一','其二','其三','其四','其五','其六','其七','其八','其九','其十','其十一','其十二','其十三','其十四'];
+function chineseOrdinal(i){ return _CN_ORD[i] || ('其' + (i + 1)); }
+
+// 维度→氛围图映射（关键词匹配，缺则复用最贴近）
+var _CHAPTER_ART = [
+  { keys: ['感情','姻缘','婚','情感','桃花','爱情','伴侣','恋'], img: 'love' },
+  { keys: ['事业','工作','职','官','贵人','格局定事业'], img: 'career' },
+  { keys: ['财','富','钱','偏财','正财','投资'], img: 'wealth' },
+  { keys: ['健康','身体','疾','养生','病'], img: 'health' },
+  { keys: ['五行','喜用','用神','旺衰','平衡','能量'], img: 'wuxing' },
+  { keys: ['大运','流年','运势','岁运','时运','未来','年运'], img: 'dayun' },
+  { keys: ['格局','命格','日主','命盘','概览','八字','总论','性格','命主'], img: 'mingge' }
+];
+function getChapterArt(title){
+  var t = String(title || '');
+  for (var i = 0; i < _CHAPTER_ART.length; i++) {
+    var g = _CHAPTER_ART[i];
+    for (var j = 0; j < g.keys.length; j++) { if (t.indexOf(g.keys[j]) !== -1) return g.img; }
+  }
+  return 'mingge'; // 兜底：格局图最中性
+}
+
+// 从章节正文抽一句金句：优先含"必/定/最/唯/终/皆/切勿"，否则取一句较短有力的
+function extractPullQuote(contentLines){
+  if (!contentLines || !contentLines.length) return '';
+  var joined = contentLines.join('').replace(/\*\*/g,'').replace(/[#>|]/g,'');
+  // 按中文句号/感叹/分号/换行切句
+  var sentences = joined.split(/[。！；\n]/).map(function(s){ return s.trim(); })
+    .filter(function(s){ return s.length >= 8 && s.length <= 42; });
+  if (!sentences.length) return '';
+  var power = /[必定最唯终皆切勿务要千万注定命中天生成败关键根本] /;
+  var powerRe = /(必|定|最|唯|终|皆|切勿|务必|注定|命中|天生|成败|关键|根本|谨记|铭记)/;
+  var pick = null;
+  for (var i = 0; i < sentences.length; i++) { if (powerRe.test(sentences[i])) { pick = sentences[i]; break; } }
+  if (!pick) {
+    // 取最短的有力句（去掉过于平淡的开头连接词）
+    sentences.sort(function(a,b){ return a.length - b.length; });
+    pick = sentences[Math.floor(sentences.length / 3)] || sentences[0];
+  }
+  return pick || '';
+}
+
+// 判断一段是否应做高亮卡
+function isHighlightLine(line){
+  return /^(\s*)(⚠️|💡|🔑|📌|关键[:：]?|铁律[:：]?|注意[:：]?|提醒[:：]?|切记[:：]?|重点[:：]?)/.test(line);
+}
+
+// 章节封面卡 HTML
+function buildChapterCover(idx, title, leadLine){
+  var art = getChapterArt(title);
+  var lead = leadLine ? escHtml(String(leadLine).replace(/\*\*/g,'').slice(0, 46)) : '';
+  var html = '<div class="chapter-cover">';
+  html += '<img class="chapter-cover-img" loading="lazy" src="/samples/caijing/art-' + art + '.png" alt="" onerror="this.style.display=\'none\'">';
+  html += '<div class="chapter-cover-veil"></div>';
+  html += '<div class="chapter-cover-body">';
+  html += '<div class="chapter-cover-num">' + chineseOrdinal(idx) + '</div>';
+  html += '<div class="chapter-cover-title">' + escHtml(title) + '</div>';
+  if (lead) html += '<div class="chapter-cover-lead">' + lead + '</div>';
+  html += '</div></div>';
+  return html;
+}
+
+// 大运流年水平时间轴 (SVG)。dayun: [{ganZhi,startAge,endAge,ganShiShen,zhiShiShen}]
+function buildDayunTimeline(dayun, currentAge){
+  if (!dayun || !dayun.length) return '';
+  var steps = dayun.filter(function(d){ return d && d.ganZhi; });
+  if (steps.length < 2) return '';
+  var n = steps.length;
+  var W = 360, H = 118, padX = 18, trackY = 46, boxW = (W - padX * 2) / n;
+  var ELEM_GAN = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+  var ELEM_COLOR = { 金:'#d4af52', 木:'#6fae6f', 水:'#6f9fd8', 火:'#d8776f', 土:'#b5926a' };
+  // 当前所处大运
+  var curIdx = -1;
+  if (typeof currentAge === 'number') {
+    for (var k = 0; k < steps.length; k++) {
+      if (currentAge >= (steps[k].startAge||0) && currentAge <= (steps[k].endAge||999)) { curIdx = k; break; }
+    }
+  }
+  var svg = '<svg width="100%" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="xMidYMid meet" style="display:block">';
+  // 主轴线
+  svg += '<line x1="' + padX + '" y1="' + trackY + '" x2="' + (W - padX) + '" y2="' + trackY + '" stroke="rgba(201,168,76,0.28)" stroke-width="1.5"/>';
+  steps.forEach(function(d, i){
+    var cx = padX + boxW * i + boxW / 2;
+    var gan = (d.ganZhi || '').charAt(0);
+    var col = ELEM_COLOR[ELEM_GAN[gan]] || '#c9a84c';
+    var isCur = (i === curIdx);
+    // 吉凶色带底（用十神粗略着色，无则中性）
+    var bandColor = col;
+    svg += '<rect x="' + (padX + boxW * i + 2) + '" y="' + (trackY - 3) + '" width="' + (boxW - 4) + '" height="6" rx="3" fill="' + bandColor + '" opacity="' + (isCur ? '0.55' : '0.2') + '"/>';
+    // 节点圆
+    svg += '<circle cx="' + cx + '" cy="' + trackY + '" r="' + (isCur ? 7 : 4.5) + '" fill="' + (isCur ? col : 'rgba(14,10,4,0.9)') + '" stroke="' + col + '" stroke-width="' + (isCur ? 2.5 : 1.5) + '"/>';
+    if (isCur) svg += '<circle cx="' + cx + '" cy="' + trackY + '" r="11" fill="none" stroke="' + col + '" stroke-width="1" opacity="0.5"><animate attributeName="r" values="8;13;8" dur="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.6;0;0.6" dur="2.4s" repeatCount="indefinite"/></circle>';
+    // 干支
+    svg += '<text x="' + cx + '" y="' + (trackY - 15) + '" text-anchor="middle" font-size="14" font-weight="700" font-family="\'Noto Serif SC\',serif" fill="' + col + '">' + escHtml(d.ganZhi || '') + '</text>';
+    // 起始年龄
+    svg += '<text x="' + cx + '" y="' + (trackY + 22) + '" text-anchor="middle" font-size="9" font-family="\'Cormorant Garamond\',serif" fill="rgba(200,190,160,0.62)">' + (d.startAge != null ? d.startAge + '岁' : '') + '</text>';
+    // 当前标记
+    if (isCur) svg += '<text x="' + cx + '" y="' + (trackY + 40) + '" text-anchor="middle" font-size="9" font-family="\'Noto Serif SC\',serif" fill="' + col + '" letter-spacing="0.1em">当前</text>';
+  });
+  svg += '</svg>';
+  var html = '<div class="dayun-timeline">';
+  html += '<div class="dayun-timeline-title"><span>🧭</span> 大运流年 · 十步大运</div>';
+  html += '<div style="overflow-x:auto">' + svg + '</div>';
+  html += '<div style="font-size:10px;color:rgba(200,190,160,0.4);letter-spacing:0.06em;margin-top:2px;text-align:center">每步大运约十年 · 色带示五行属性 · 光标为当前所处大运</div>';
+  html += '</div>';
+  return html;
+}
+
+// 五行雷达卡（复用 genWuxingRadar，数据来自 meta.chart.wuxing 计数，归一化为百分比）
+function buildWuxingRadarCard(wuxingCounts){
+  if (!wuxingCounts) return '';
+  var order = ['木','火','土','金','水'];
+  var total = 0;
+  order.forEach(function(k){ total += (Number(wuxingCounts[k]) || 0); });
+  if (total <= 0) return '';
+  var pctData = {};
+  order.forEach(function(k){ pctData[k] = Math.round((Number(wuxingCounts[k]) || 0) / total * 100); });
+  var html = '<div class="wuxing-radar-card">';
+  html += '<div class="wr-title"><span>🌿</span> 五行能量雷达</div>';
+  html += '<div style="display:flex;justify-content:center;padding:4px 0 2px">' + genWuxingRadar(pctData, 200) + '</div>';
+  html += '</div>';
+  return html;
+}
+
 // ── 从文本解析八字数据 ──
 function tryParseBaziData(text) {
   var result = { hasDaymaster: text.indexOf('日主') !== -1, pillars: null, elements: null, scores: null, daymaster: null };
@@ -1766,11 +1957,14 @@ function renderUltimateReport(text, containerId, isLocked) {
     if (!trimmed) return;
     // skip markdown table separator rows like | :--- | :--- |
     if (/^\|[\s|:\-]+\|$/.test(trimmed)) return;
-    var sectionMatch = trimmed.match(/^#{1,3}\s*(.+)$/) ||
+    // 高亮标记行（⚠️/💡/关键/铁律…）不当作章节标题，保留为正文→渲染成高亮卡
+    var isHiLine = (typeof isHighlightLine === 'function') && isHighlightLine(trimmed);
+    var sectionMatch = !isHiLine && (
+                       trimmed.match(/^#{1,3}\s*(.+)$/) ||
                        trimmed.match(/^([\u{1F300}-\u{1FAFF}✦✧▪▸▶]\s*)(.*?)$/u) ||
                        trimmed.match(/^\*{2}([^*]+)\*{2}/) ||
                        trimmed.match(/^(\d+[\.、]\s*.*)$/) ||
-                       trimmed.match(/^([①②③④⑤⑥⑦⑧⑨⑩]\s*)(.*?)$/);
+                       trimmed.match(/^([①②③④⑤⑥⑦⑧⑨⑩]\s*)(.*?)$/));
     if (sectionMatch) {
       if (currentSection) sections.push(currentSection);
       var rawTitle = (sectionMatch[1]||sectionMatch[0]||trimmed).replace(/^#{1,3}\s*/,'').trim();
@@ -1789,44 +1983,201 @@ function renderUltimateReport(text, containerId, isLocked) {
   });
   if (currentSection) sections.push(currentSection);
   if (sections.length===0) sections.push({emoji:'📜', title:'命理分析', content:lines});
+
+  // 精装增强：章节目录数据 + 大运/雷达图表锚点（来自引擎精确数据）
+  var chart = window._baziChartData || null;
+  var _tocEntries = [];
+  var _curAge = null;
+  try {
+    if (lastBaziInput && lastBaziInput.year) {
+      _curAge = (new Date().getFullYear()) - parseInt(lastBaziInput.year, 10);
+      if (_curAge < 0 || _curAge > 130) _curAge = null;
+    }
+  } catch(e) {}
+
+  // 内联富文本处理（加粗/年份/分数/金额高亮）
+  function _rich(s){
+    return escHtml(s)
+      .replace(/\*\*(.+?)\*\*/g,'<strong style="color:var(--gold-deep)">$1</strong>')
+      .replace(/(\d{4})年/g,'<span class="hl-year">$1年</span>')
+      .replace(/(\d+)分/g,'<span class="hl-score">$1分</span>')
+      .replace(/\$(\d+\.?\d*)/g,'<span class="hl-money">$$$1</span>');
+  }
+  // 把一章正文渲染成：首字下沉正文 + 高亮卡（⚠️/💡/关键/铁律开头段落）
+  function _renderBody(contentLines){
+    if (!contentLines || !contentLines.length) return '';
+    var out = '';
+    var normalBuf = [];
+    var droppedCap = false;
+    function flushNormal(){
+      if (!normalBuf.length) return;
+      var cls = 'ur-text';
+      // 首个正文段落做首字下沉
+      var body = normalBuf.map(_rich).join('<br>');
+      if (!droppedCap) { cls += ' drop-cap'; droppedCap = true; }
+      out += '<div class="'+cls+'">'+body+'</div>';
+      normalBuf = [];
+    }
+    contentLines.forEach(function(ln){
+      if (isHighlightLine(ln)) {
+        flushNormal();
+        out += '<div class="hl-note">'+_rich(ln)+'</div>';
+      } else {
+        normalBuf.push(ln);
+      }
+    });
+    flushNormal();
+    return out;
+  }
+
   var html = '<div class="ultimate-report">';
   sections.forEach(function(sec, i) {
-    var ct = sec.content.map(escHtml).join('<br>');
-    ct = ct.replace(/\*\*(.+?)\*\*/g,'<strong style="color:var(--gold-deep)">$1</strong>')
-           .replace(/(\d{4})年/g,'<span class="hl-year">$1年</span>')
-           .replace(/(\d+)分/g,'<span class="hl-score">$1分</span>')
-           .replace(/\$(\d+\.?\d*)/g,'<span class="hl-money">$$$1</span>');
     var shouldBlur = isLocked && i >= 2;
+    var anchorId = 'chap-' + i;
+    _tocEntries.push({ id: anchorId, title: sec.title, locked: shouldBlur });
+
     if (shouldBlur) {
-      // 付费内容不放入DOM，只显示锁定占位卡
-      html += '<div class="ur-card" style="animation-delay:'+(i*0.08)+'s;position:relative;min-height:80px">';
+      // 付费内容不放入DOM，只显示锁定占位卡（付费墙逻辑不变）
+      html += '<div class="ur-card" id="'+anchorId+'" style="animation-delay:'+(i*0.08)+'s;position:relative;min-height:80px">';
       html += '<div class="ur-head"><span class="ur-emoji">🔒</span>';
       html += '<span class="ur-title">'+escHtml(sec.title)+'</span></div>';
       html += '<div style="padding:16px;text-align:center">';
       html += '<div class="paywall-overlay" style="position:relative;background:none;padding:0"><div style="font-size:13px;font-weight:500;letter-spacing:0.1em;color:var(--gold);margin-bottom:10px">解锁完整命盘</div><button onclick="createCheckout(this,\'full\',9.9)" style="background:linear-gradient(135deg,var(--gold-deep),var(--gold));border:none;border-radius:10px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;padding:10px 24px;cursor:pointer">立即解锁 · USD $9.90 →</button></div>';
-      html += '</div>';
-    } else {
-      // Add decorative divider every 3 sections
-      if (i > 0 && i % 3 === 0) {
-        html += genSectionDivider(['✦','☯','✧','⟡'][Math.floor(i/3)%4]);
-      }
-      // First 2 sections get gradient highlight style
-      var isHighlight = (i < 2 && sec.content.length > 0);
-      if (isHighlight) {
-        html += '<div class="ur-card" style="animation-delay:'+(i*0.08)+'s;background:linear-gradient(135deg,rgba(14,10,4,0.85),rgba(201,168,76,0.05));border-color:rgba(201,168,76,0.22)">';
-      } else {
-        html += '<div class="ur-card" style="animation-delay:'+(i*0.08)+'s">';
-      }
-      html += '<div class="ur-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ur-arrow\').classList.toggle(\'open\')">';
-      html += '<span class="ur-emoji">'+(sec.emoji||'📜')+'</span>';
-      html += '<span class="ur-title">'+escHtml(sec.title)+'</span>';
-      html += '<span class="ur-arrow open">▾</span></div>';
-      html += '<div class="ur-body open"><div class="ur-text">'+ct+'</div></div>';
+      html += '</div></div>';
+      return;
     }
+
+    // ① 章节封面卡（通栏氛围图 + 中文数序 + 一句核心结论）
+    var leadLine = (sec.content && sec.content.length) ? sec.content[0] : '';
+    html += '<a id="'+anchorId+'" style="display:block;text-decoration:none;color:inherit">' + buildChapterCover(i, sec.title, leadLine) + '</a>';
+
+    // ② 五行雷达 / 大运时间轴：插到最相关章节封面之后（数据缺失优雅跳过）
+    var artType = getChapterArt(sec.title);
+    if (artType === 'wuxing' && chart && chart.wuxing) {
+      try { html += buildWuxingRadarCard(chart.wuxing); } catch(e) {}
+    }
+    if (artType === 'dayun' && chart && chart.dayun) {
+      try { html += buildDayunTimeline(chart.dayun, _curAge); } catch(e) {}
+    }
+
+    // ③ 金句 pull quote（从本章抽一句有力的话）
+    var pq = '';
+    try { pq = extractPullQuote(sec.content); } catch(e) {}
+    if (pq) {
+      html += '<div class="pull-quote"><span class="pull-quote-mark">“</span>'
+        + '<div class="pull-quote-text">'+escHtml(pq)+'</div>'
+        + '<span class="pull-quote-mark">”</span></div>';
+    }
+
+    // ④ 正文卡（首字下沉 + 高亮卡）
+    var isTop = (i < 2 && sec.content.length > 0);
+    var cardStyle = 'animation-delay:'+(i*0.08)+'s';
+    if (isTop) cardStyle += ';background:linear-gradient(135deg,rgba(14,10,4,0.85),rgba(201,168,76,0.05));border-color:rgba(201,168,76,0.22)';
+    html += '<div class="ur-card" style="'+cardStyle+'">';
+    html += '<div class="ur-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ur-arrow\').classList.toggle(\'open\')">';
+    html += '<span class="ur-emoji">'+(sec.emoji||'📜')+'</span>';
+    html += '<span class="ur-title">'+escHtml(sec.title)+'</span>';
+    html += '<span class="ur-arrow open">▾</span></div>';
+    html += '<div class="ur-body open">'+_renderBody(sec.content)+'</div>';
     html += '</div>';
   });
   html += '</div>';
   container.innerHTML = html;
+
+  // 章节目录（报告开头）+ 悬浮TOC + 阅读进度条
+  try { injectChapterTOC(_tocEntries, container); } catch(e) {}
+  try { setupReadingProgress(_tocEntries); } catch(e) {}
+}
+
+// 章节目录（插到 ultimate-report 顶部）+ 悬浮 TOC 面板
+function injectChapterTOC(entries, container){
+  if (!entries || entries.length < 2) return;
+  // 报告开头目录
+  var toc = document.createElement('div');
+  toc.className = 'chapter-toc';
+  var inner = '<div class="chapter-toc-title"><span>📖</span> 本命报告目录 · 共 '+entries.length+' 章</div>';
+  entries.forEach(function(e, i){
+    inner += '<a class="chapter-toc-item" href="#'+e.id+'" onclick="return jumpToChapter(event,\''+e.id+'\')">'
+      + '<span class="chapter-toc-idx">'+chineseOrdinal(i)+'</span>'
+      + '<span class="chapter-toc-label">'+escHtml(e.title)+(e.locked?' 🔒':'')+'</span>'
+      + '<span class="chapter-toc-arrow">›</span></a>';
+  });
+  toc.innerHTML = inner;
+  var ur = container.querySelector('.ultimate-report');
+  if (ur && ur.firstChild) ur.insertBefore(toc, ur.firstChild);
+  else container.insertBefore(toc, container.firstChild);
+
+  // 悬浮 TOC 按钮 + 面板（挂到 reportScreen）
+  var rs = document.getElementById('reportScreen');
+  if (!rs) return;
+  var oldBtn = document.getElementById('floatTocBtn'); if (oldBtn) oldBtn.remove();
+  var oldPanel = document.getElementById('floatTocPanel'); if (oldPanel) oldPanel.remove();
+  var btn = document.createElement('button');
+  btn.id = 'floatTocBtn'; btn.className = 'show'; btn.setAttribute('aria-label','章节导航'); btn.innerHTML = '☰';
+  var panel = document.createElement('div');
+  panel.id = 'floatTocPanel';
+  var pInner = '<div class="ft-title">章节导航</div>';
+  entries.forEach(function(e, i){
+    pInner += '<a href="#'+e.id+'" onclick="return jumpToChapter(event,\''+e.id+'\')"><span class="ft-idx">'+(i+1)+'.</span><span>'+escHtml(e.title)+(e.locked?' 🔒':'')+'</span></a>';
+  });
+  panel.innerHTML = pInner;
+  btn.onclick = function(ev){ ev.stopPropagation(); panel.classList.toggle('show'); };
+  document.addEventListener('click', function(ev){
+    if (panel.classList.contains('show') && !panel.contains(ev.target) && ev.target !== btn) panel.classList.remove('show');
+  });
+  document.body.appendChild(btn);
+  document.body.appendChild(panel);
+}
+
+function jumpToChapter(ev, id){
+  if (ev) ev.preventDefault();
+  var el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+  var panel = document.getElementById('floatTocPanel'); if (panel) panel.classList.remove('show');
+  return false;
+}
+
+// 顶部阅读进度条 + "第X/N章"
+var _readProgressHandler = null;
+function setupReadingProgress(entries){
+  var wrap = document.getElementById('readProgressWrap');
+  if (!wrap) {
+    wrap = document.createElement('div'); wrap.id = 'readProgressWrap';
+    wrap.innerHTML = '<div id="readProgressBar"></div>';
+    document.body.appendChild(wrap);
+  }
+  var chapLbl = document.getElementById('readProgressChapter');
+  if (!chapLbl) {
+    chapLbl = document.createElement('div'); chapLbl.id = 'readProgressChapter';
+    document.body.appendChild(chapLbl);
+  }
+  var bar = document.getElementById('readProgressBar');
+  var total = entries.length;
+  var scroller = document.getElementById('reportScreen') || window;
+  function getScrollMetrics(){
+    var doc = document.documentElement;
+    var st = window.scrollY || doc.scrollTop || 0;
+    var sh = Math.max(doc.scrollHeight, document.body.scrollHeight) - window.innerHeight;
+    return { st: st, sh: sh };
+  }
+  if (_readProgressHandler) window.removeEventListener('scroll', _readProgressHandler);
+  _readProgressHandler = function(){
+    var rs = document.getElementById('reportScreen');
+    if (!rs || !rs.classList.contains('show')) { wrap.classList.remove('show'); chapLbl.classList.remove('show'); return; }
+    var m = getScrollMetrics();
+    var pct = m.sh > 0 ? Math.min(Math.max(m.st / m.sh, 0), 1) : 0;
+    bar.style.width = (pct * 100).toFixed(1) + '%';
+    wrap.classList.add('show'); chapLbl.classList.add('show');
+    // 当前章节：最后一个顶部越过视口上沿 1/3 的锚点
+    var curIdx = 0;
+    for (var i = 0; i < entries.length; i++) {
+      var el = document.getElementById(entries[i].id);
+      if (el && el.getBoundingClientRect().top <= window.innerHeight * 0.35) curIdx = i;
+    }
+    chapLbl.textContent = '第 ' + (curIdx + 1) + ' / ' + total + ' 章';
+  };
+  window.addEventListener('scroll', _readProgressHandler, { passive: true });
+  _readProgressHandler();
 }
 
 // ── 今日最佳行动 (每日更新，增加复访) ──
