@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#faf8f4">
+<title>九星気学 · Nine Star Ki</title>
+<meta name="description" content="Discover your Nine Star Ki birth star — ancient Japanese destiny art powered by AI interpretation">
+<meta property="og:title" content="九星気学 · Nine Star Ki">
+<meta property="og:description" content="Discover your Nine Star Ki birth star — ancient Japanese destiny art">
+<meta property="og:image" content="/og-card.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf8f4;--card:#ffffff;--mid:#f3ede3;
+  --earth:#8b6b3d;--earth-light:#c9a870;--earth-deep:#5c4420;
+  --ink:rgba(40,30,20,0.9);--sub:rgba(80,65,45,0.65);
+  --gold:#c9a84c;--gold-light:#e8d08a;
+}
+html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:120px}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(201,168,76,0.1) 0%,transparent 55%);pointer-events:none;z-index:0}
+
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--earth);cursor:pointer;padding:4px 0;opacity:0.7}
+.back-btn:hover{opacity:1}
+.theme-toggle{position:fixed;top:12px;right:14px;z-index:999;background:none;border:none;font-size:18px;cursor:pointer;padding:4px}
+
+/* Stardust */
+.stardust{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.stardust span{position:absolute;background:rgba(201,168,76,0.4);border-radius:50%;animation:twinkle var(--dur,3s) ease-in-out infinite;opacity:0}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}
+
+/* Header */
+.header{position:relative;z-index:1;text-align:center;padding:48px 20px 16px}
+.star-circle{width:52px;height:52px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,0.25),rgba(201,168,76,0.05));border:1px solid rgba(201,168,76,0.3);display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:24px}
+.header-title{font-size:20px;font-weight:400;letter-spacing:.2em;margin-bottom:4px}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:.28em;color:rgba(201,168,76,0.45);margin-bottom:14px}
+.gold-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto}
+
+/* Lang tabs */
+.lang-tabs{position:relative;z-index:1;display:flex;gap:0;padding:10px 16px 4px;justify-content:center}
+.ltab{padding:6px 16px;border:1px solid rgba(201,168,76,0.2);background:transparent;font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:.06em;color:rgba(201,168,76,0.5);cursor:pointer;transition:all .2s}
+.ltab:first-child{border-radius:4px 0 0 4px}
+.ltab:last-child{border-radius:0 4px 4px 0;border-left:none}
+.ltab:not(:first-child):not(:last-child){border-left:none}
+.ltab.active{background:rgba(201,168,76,0.1);border-color:var(--gold);color:var(--earth)}
+
+/* Form */
+.form-wrap{position:relative;z-index:1;padding:10px 16px 4px}
+.form-label{font-size:10px;letter-spacing:.2em;color:rgba(201,168,76,0.45);margin-bottom:8px}
+.field-group{background:var(--card);border:1px solid rgba(201,168,76,0.12);border-radius:8px;overflow:hidden;margin-bottom:8px}
+.field-row{display:flex;align-items:center;padding:0 14px;border-bottom:1px solid rgba(201,168,76,0.08)}
+.field-row:last-child{border-bottom:none}
+.field-label{font-size:11px;color:var(--sub);letter-spacing:.06em;min-width:52px;flex-shrink:0;padding-top:0}
+.field-input{flex:1;background:none;border:none;outline:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--ink);padding:12px 8px;letter-spacing:.04em}
+.field-input::placeholder{color:rgba(201,168,76,0.2)}
+.field-select{flex:1;background:none;border:none;outline:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--ink);padding:12px 8px;letter-spacing:.04em;cursor:pointer;appearance:none;-webkit-appearance:none}
+.field-select option{color:#333}
+.field-textarea{flex:1;background:none;border:none;outline:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--ink);padding:12px 8px;letter-spacing:.04em;resize:none;min-height:60px;line-height:1.8}
+.field-textarea::placeholder{color:rgba(201,168,76,0.18)}
+
+/* Calculate button */
+.calc-wrap{position:relative;z-index:1;padding:8px 16px 8px}
+.btn-calc{width:100%;padding:14px 0;background:linear-gradient(135deg,var(--earth-deep),var(--earth),var(--earth-light));border:none;border-radius:4px;color:#fff;font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:.2em;cursor:pointer;box-shadow:0 4px 16px rgba(139,107,61,0.3)}
+.btn-calc:active{transform:scale(.97)}
+.btn-calc:disabled{opacity:.4;cursor:not-allowed}
+
+/* Star display card */
+.star-reveal{position:relative;z-index:1;margin:0 16px 12px;background:var(--card);border:1px solid rgba(201,168,76,0.2);border-radius:10px;overflow:hidden;display:none;animation:star-appear .5s ease}
+.star-reveal.show{display:block}
+@keyframes star-appear{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.star-reveal-top{padding:20px 18px 16px;text-align:center;position:relative;overflow:hidden}
+.star-reveal-glow{position:absolute;inset:0;pointer-events:none}
+.star-num-badge{display:inline-block;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:500;margin:0 auto 10px;border:2px solid currentColor}
+.star-reveal-name{font-size:16px;font-weight:400;letter-spacing:.16em;margin-bottom:4px}
+.star-reveal-name-en{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;color:var(--sub);letter-spacing:.12em;margin-bottom:8px}
+.star-reveal-element{font-size:11px;letter-spacing:.16em;margin-bottom:10px}
+.star-reveal-keywords{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+.star-kw{font-size:10px;padding:3px 10px;border-radius:12px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);color:var(--earth);letter-spacing:.06em}
+.star-reveal-desc{font-size:11px;color:var(--sub);letter-spacing:.04em;line-height:1.85;border-top:1px solid rgba(201,168,76,0.1);padding-top:12px;text-align:left}
+
+/* Star colors */
+.star-1{color:#4a90d9;border-color:rgba(74,144,217,0.4);background:rgba(74,144,217,0.08)}
+.star-1-bg{background:linear-gradient(135deg,rgba(74,144,217,0.12),rgba(74,144,217,0.04))}
+.star-2{color:#5a4a3a;border-color:rgba(90,74,58,0.4);background:rgba(90,74,58,0.08)}
+.star-2-bg{background:linear-gradient(135deg,rgba(90,74,58,0.12),rgba(90,74,58,0.04))}
+.star-3{color:#3a9e60;border-color:rgba(58,158,96,0.4);background:rgba(58,158,96,0.08)}
+.star-3-bg{background:linear-gradient(135deg,rgba(58,158,96,0.12),rgba(58,158,96,0.04))}
+.star-4{color:#2e8b57;border-color:rgba(46,139,87,0.4);background:rgba(46,139,87,0.08)}
+.star-4-bg{background:linear-gradient(135deg,rgba(46,139,87,0.12),rgba(46,139,87,0.04))}
+.star-5{color:#c9a84c;border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.1)}
+.star-5-bg{background:linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.05))}
+.star-6{color:#8a8aaa;border-color:rgba(138,138,170,0.4);background:rgba(138,138,170,0.08)}
+.star-6-bg{background:linear-gradient(135deg,rgba(138,138,170,0.12),rgba(138,138,170,0.04))}
+.star-7{color:#c0392b;border-color:rgba(192,57,43,0.4);background:rgba(192,57,43,0.08)}
+.star-7-bg{background:linear-gradient(135deg,rgba(192,57,43,0.12),rgba(192,57,43,0.04))}
+.star-8{color:#888;border-color:rgba(136,136,136,0.4);background:rgba(136,136,136,0.08)}
+.star-8-bg{background:linear-gradient(135deg,rgba(136,136,136,0.1),rgba(136,136,136,0.04))}
+.star-9{color:#8b4fa0;border-color:rgba(139,79,160,0.4);background:rgba(139,79,160,0.08)}
+.star-9-bg{background:linear-gradient(135deg,rgba(139,79,160,0.12),rgba(139,79,160,0.04))}
+
+/* Full reading button */
+.full-wrap{position:relative;z-index:1;padding:0 16px 12px;display:none}
+.btn-full{width:100%;padding:15px 0;background:linear-gradient(90deg,var(--earth-deep),var(--earth),var(--earth-light),var(--earth),var(--earth-deep));background-size:300% auto;border:none;border-radius:4px;color:#fff;font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:.2em;cursor:pointer;animation:earth-shimmer 3s linear infinite;box-shadow:0 4px 20px rgba(139,107,61,0.3)}
+@keyframes earth-shimmer{0%{background-position:0% center}100%{background-position:300% center}}
+.btn-full:active{transform:scale(.97)}
+.btn-full:disabled{opacity:.4;cursor:not-allowed;animation:none}
+
+/* Loading */
+.loading-screen{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;padding:60px 20px;gap:14px}
+.loading-screen.show{display:flex}
+.load-glyph{font-size:44px;animation:load-breathe 2s ease-in-out infinite}
+@keyframes load-breathe{0%,100%{opacity:0.3;transform:scale(1)}50%{opacity:0.8;transform:scale(1.1)}}
+.load-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:rgba(201,168,76,0.5);letter-spacing:.18em}
+
+/* Divider */
+.sec-head{position:relative;z-index:1;display:flex;align-items:center;gap:10px;padding:8px 16px 6px}
+.sec-head span{font-size:10px;letter-spacing:.2em;color:rgba(201,168,76,0.4);white-space:nowrap}
+.sec-head::before,.sec-head::after{content:'';flex:1;height:1px;background:rgba(201,168,76,0.12)}
+
+/* AI interpretation */
+.ai-interp{padding:0 16px;display:flex;flex-direction:column;gap:8px}
+.ai-card{background:var(--card);border:1px solid rgba(201,168,76,0.15);border-radius:10px;overflow:hidden}
+.ai-card.open{border-color:rgba(201,168,76,0.3)}
+.ai-card-head{display:flex;align-items:center;padding:12px 14px;gap:10px;cursor:pointer}
+.ai-card-icon{width:28px;height:28px;border-radius:50%;background:rgba(201,168,76,0.12);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.ai-card-title{font-size:13px;letter-spacing:.06em;flex:1;color:var(--ink)}
+.ai-card-arrow{font-size:10px;color:rgba(201,168,76,0.3);transition:transform .25s}
+.ai-card-arrow.open{transform:rotate(180deg)}
+.ai-card-body{padding:0 14px 14px;display:none}
+.ai-card-body.open{display:block}
+.ai-card-text{font-size:11px;color:var(--sub);letter-spacing:.04em;line-height:1.9;white-space:pre-wrap}
+
+/* CTAs */
+.cta-wrap{position:relative;z-index:1;padding:12px 16px 8px;display:none}
+.cta-wrap.show{display:block}
+.btn-cta{width:100%;padding:14px 0;background:linear-gradient(135deg,var(--earth-deep),var(--earth),var(--earth-light),var(--earth));border:none;border-radius:4px;color:#fff;font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:.16em;cursor:pointer;box-shadow:0 4px 16px rgba(139,107,61,0.3);margin-bottom:8px}
+.btn-redo{width:100%;padding:11px 0;background:transparent;border:1px solid rgba(201,168,76,0.25);border-radius:4px;color:rgba(139,107,61,0.7);font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:.14em;cursor:pointer}
+
+.footer-verse{text-align:center;padding:24px 20px 40px;position:relative;z-index:1}
+.footer-verse-line{width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 12px}
+.footer-verse-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(201,168,76,0.35);letter-spacing:.28em}
+</style>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/assets/css/common.css">
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">🌙</button>
+<div class="stardust" id="stardust"></div>
+<button class="back-btn" onclick="history.back()">‹ Back</button>
+
+<div class="header page-enter page-enter-d1">
+  <div class="star-circle">⭐</div>
+  <div class="header-title">九星気学 · Nine Star Ki</div>
+  <div class="header-sub">JAPANESE DESTINY ART</div>
+  <div class="gold-line"></div>
+</div>
+
+<!-- Lang tabs -->
+<div class="lang-tabs page-enter page-enter-d2">
+  <button class="ltab active" onclick="setLang('ja',this)">日本語</button>
+  <button class="ltab" onclick="setLang('zh',this)">中文</button>
+  <button class="ltab" onclick="setLang('en',this)">English</button>
+</div>
+
+<!-- Birth date form -->
+<div class="form-wrap page-enter page-enter-d2">
+  <div class="form-label" id="formLabel">生年月日を入力してください</div>
+  <div class="field-group">
+    <div class="field-row">
+      <span class="field-label" id="labelYear">年</span>
+      <input class="field-input" type="number" id="birthYear" placeholder="1990" min="1900" max="2025" inputmode="numeric">
+    </div>
+    <div class="field-row">
+      <span class="field-label" id="labelMonth">月</span>
+      <select class="field-select" id="birthMonth">
+        <option value="">-- Month --</option>
+        <option value="1">1月 / Jan</option>
+        <option value="2">2月 / Feb</option>
+        <option value="3">3月 / Mar</option>
+        <option value="4">4月 / Apr</option>
+        <option value="5">5月 / May</option>
+        <option value="6">6月 / Jun</option>
+        <option value="7">7月 / Jul</option>
+        <option value="8">8月 / Aug</option>
+        <option value="9">9月 / Sep</option>
+        <option value="10">10月 / Oct</option>
+        <option value="11">11月 / Nov</option>
+        <option value="12">12月 / Dec</option>
+      </select>
+    </div>
+    <div class="field-row">
+      <span class="field-label" id="labelDay">日</span>
+      <select class="field-select" id="birthDay">
+        <option value="">-- Day --</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-label" id="labelQ" style="margin-top:8px">ご質問（任意）</div>
+  <div class="field-group">
+    <div class="field-row">
+      <textarea class="field-textarea" id="qInput" placeholder="例：仕事、恋愛、今年の運気…"></textarea>
+    </div>
+  </div>
+</div>
+
+<!-- Calculate button -->
+<div class="calc-wrap page-enter page-enter-d3">
+  <button class="btn-calc" id="calcBtn" onclick="calculateStar()">本命星を計算 · Calculate My Star</button>
+</div>
+
+<!-- Star reveal -->
+<div class="star-reveal" id="starReveal">
+  <div class="star-reveal-top" id="starRevealTop">
+    <div class="star-reveal-glow" id="starRevealGlow"></div>
+    <div class="star-num-badge" id="starBadge">⭐</div>
+    <div class="star-reveal-name" id="starName">—</div>
+    <div class="star-reveal-name-en" id="starNameEn">—</div>
+    <div class="star-reveal-element" id="starElement">—</div>
+    <div class="star-reveal-keywords" id="starKeywords"></div>
+    <div class="star-reveal-desc" id="starDesc">—</div>
+  </div>
+</div>
+
+<!-- Full reading button -->
+<div class="full-wrap" id="fullWrap">
+  <button class="btn-full" id="fullBtn" onclick="getFullReading()">完全な解読を取得 · Get Full Reading</button>
+</div>
+
+<!-- Loading -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="load-glyph" id="loadGlyph">⭐</div>
+  <div class="load-text" id="loadText">本命星の運命を解読中…</div>
+</div>
+
+<!-- Divider -->
+<div class="sec-head" id="resultDivider" style="display:none"><span>九星気学解读 · Reading</span></div>
+
+<!-- AI Interpretation -->
+<div class="ai-interp" id="aiInterp" style="display:none"></div>
+
+<!-- CTAs -->
+<div class="cta-wrap" id="ctaWrap">
+  <button class="btn-cta" onclick="createCheckout(this)" id="ctaBtn">深度解読 · Deeper Reading · $9.90</button>
+  <button class="btn-redo" id="redoBtn" onclick="resetAll()">やり直す · Start Over</button>
+</div>
+
+<div class="footer-verse">
+  <div class="footer-verse-line"></div>
+  <div class="footer-verse-text">天地の気運に従い、己の星を知る · Know your star, align with heaven's flow</div>
+</div>
+
+<script>
+var currentLang = 'ja';
+var currentStarNum = null;
+
+var KYUSEI_STARS = {
+  1: {name:'一白水星',nameEn:'1 White Water Star',element:'水 Water',keywords:['智慧','灵活','交流'],keywordsEn:['wisdom','adaptability','communication'],keywordsJa:['智恵','柔軟性','コミュニケーション'],descZH:'水善利万物而不争。你天生具备深邃的智慧与外交天赋，善于倾听与沟通，以柔克刚。',descEN:'Water flows and adapts. Your life path carries deep intelligence and diplomatic grace. You thrive through connection and intuition.',descJA:'水は万物を養い争わず。あなたは深い知恵と外交的な才能を持ち、柔軟に変化に対応します。聞き上手で人との絆を大切にします。',starClass:'star-1',starBg:'star-1-bg',numChar:'一'},
+  2: {name:'二黒土星',nameEn:'2 Black Earth Star',element:'土 Earth',keywords:['勤劳','滋养','耐力'],keywordsEn:['diligence','nurturing','endurance'],keywordsJa:['勤勉','包容力','忍耐'],descZH:'厚德载物，你是他人的精神支柱。勤勉、包容、脚踏实地，厚积薄发，是值得信赖的守护者。',descEN:'Earth absorbs and nourishes all. You are the steady foundation others rely on — devoted, patient, and deeply caring.',descJA:'大地のように万物を育む。あなたは周囲の支えとなる存在。勤勉で包容力があり、信頼される守護者です。',starClass:'star-2',starBg:'star-2-bg',numChar:'二'},
+  3: {name:'三碧木星',nameEn:'3 Jade Wood Star',element:'木 Wood',keywords:['活力','创新','开拓'],keywordsEn:['vitality','innovation','pioneering'],keywordsJa:['活力','革新','開拓'],descZH:'初春之木，生机勃勃。你是天生的开拓者，充满活力与创新精神，勇于突破边界，点燃身边人的热情。',descEN:'Young spring wood shoots upward with unstoppable energy. You are a trailblazer — innovative, enthusiastic, and always reaching for new horizons.',descJA:'春の若木のように勢いよく伸びる。あなたは天性の開拓者。革新的なアイデアと情熱で周囲を鼓舞します。',starClass:'star-3',starBg:'star-3-bg',numChar:'三'},
+  4: {name:'四緑木星',nameEn:'4 Green Wood Star',element:'木 Wood',keywords:['信用','成长','风'],keywordsEn:['trust','growth','wind'],keywordsJa:['信用','成長','風'],descZH:'如风似木，你以诚信和温和赢得人心。善于积累人脉，沟通协调，长期经营的信用是你最大的财富。',descEN:'Mature wood sways with the wind yet stands firm. You build lasting trust through consistency — a natural networker and mediator.',descJA:'風に揺れながらも根を張る成熟した木。誠実さと温和さで人望を集め、豊かな人脈と信用を積み重ねます。',starClass:'star-4',starBg:'star-4-bg',numChar:'四'},
+  5: {name:'五黄土星',nameEn:'5 Yellow Earth Star',element:'土 Earth',keywords:['领导','中心','命运'],keywordsEn:['leadership','center','destiny'],keywordsJa:['リーダーシップ','中心','宿命'],descZH:'居中央，统御八方。你生来承担命运的重量，具有领导潜力与影响力，但需以责任驾驭力量。',descEN:'The center of all nine stars — the axis around which change revolves. You carry great power and responsibility; your choices ripple far.',descJA:'九星の中心に位置する力強い星。あなたは大きな影響力と責任を持ち、周囲の運命にまで関わる存在です。',starClass:'star-5',starBg:'star-5-bg',numChar:'五'},
+  6: {name:'六白金星',nameEn:'6 White Metal Star',element:'金 Metal',keywords:['权威','完美','天空'],keywordsEn:['authority','precision','heaven'],keywordsJa:['権威','完璧主義','天空'],descZH:'乾金之气，刚健清明。你天生具备领导气质，追求卓越与完美，以身作则，赢得众人的尊重与信赖。',descEN:'Heaven\'s metal — bright, clear, and authoritative. You set high standards and lead by example, commanding respect through excellence.',descJA:'天のように高く清廉。高い基準を持ち、完璧主義的なリーダーシップで人々の尊敬を集めます。',starClass:'star-6',starBg:'star-6-bg',numChar:'六'},
+  7: {name:'七赤金星',nameEn:'7 Red Metal Star',element:'金 Metal',keywords:['魅力','表达','享乐'],keywordsEn:['charisma','expression','joy'],keywordsJa:['魅力','表現力','喜び'],descZH:'秋金华彩，你天生具有魅力与表现力。善于表达、富有创意，在社交场合中总能成为焦点，带给周围人欢乐。',descEN:'The metallic shimmer of autumn — charming, expressive, and magnetic. You are a natural performer who brings joy and beauty wherever you go.',descJA:'秋の輝く金属のように魅惑的。あなたは天性の表現者。魅力と創造性で周囲に喜びと美をもたらします。',starClass:'star-7',starBg:'star-7-bg',numChar:'七'},
+  8: {name:'八白土星',nameEn:'8 White Earth Star',element:'土 Earth',keywords:['变革','山','财富'],keywordsEn:['transformation','mountain','wealth'],keywordsJa:['変革','山','財運'],descZH:'艮山之稳，你蓄势待发，终能厚积薄发。善于积累财富与经验，一旦时机成熟，爆发力惊人。',descEN:'The mountain stands through all seasons. You accumulate wealth and wisdom through steadfast effort — your transformation is dramatic but earned.',descJA:'山のように揺るぎなく、しかし変革の力を秘める。努力で着実に財と知恵を積み、時機が来れば大きく飛躍します。',starClass:'star-8',starBg:'star-8-bg',numChar:'八'},
+  9: {name:'九紫火星',nameEn:'9 Purple Fire Star',element:'火 Fire',keywords:['热情','名誉','洞察'],keywordsEn:['passion','fame','insight'],keywordsJa:['情熱','名誉','洞察力'],descZH:'离火燃烧，光照四方。你热情洋溢、洞察力强，渴望被看见。名誉与荣耀是你命中注定的追求与考验。',descEN:'Fire illuminates everything it touches. You burn with passion, intuition, and a desire to be seen — fame and recognition are in your nature.',descJA:'すべてを照らす炎のように。情熱と洞察力に溢れ、名声と認知を求めます。光り輝く運命を持つ星です。',starClass:'star-9',starBg:'star-9-bg',numChar:'九'}
+};
+
+var LABELS = {
+  ja: {
+    formLabel: '生年月日を入力してください',
+    labelYear: '年', labelMonth: '月', labelDay: '日',
+    labelQ: 'ご質問（任意）',
+    qPlaceholder: '例：仕事、恋愛、今年の運気…',
+    calcBtn: '本命星を計算',
+    fullBtn: '完全な解読を取得',
+    loadText: '本命星の運命を解読中…',
+    redoBtn: 'やり直す',
+    ctaBtn: '深度解読 · $9.90'
+  },
+  zh: {
+    formLabel: '请输入出生日期',
+    labelYear: '年', labelMonth: '月', labelDay: '日',
+    labelQ: '你的问题（选填）',
+    qPlaceholder: '例：事业、感情、今年运势…',
+    calcBtn: '计算本命星',
+    fullBtn: '获取完整解读',
+    loadText: '正在解读本命星命运…',
+    redoBtn: '重新开始',
+    ctaBtn: '深度解读 · $9.90'
+  },
+  en: {
+    formLabel: 'Enter your birth date',
+    labelYear: 'Year', labelMonth: 'Month', labelDay: 'Day',
+    labelQ: 'Your question (optional)',
+    qPlaceholder: 'e.g. Career, relationships, this year\'s fortune…',
+    calcBtn: 'Calculate My Star',
+    fullBtn: 'Get Full Reading',
+    loadText: 'Decoding your Nine Star Ki destiny…',
+    redoBtn: 'Start Over',
+    ctaBtn: 'Deeper Reading · $9.90'
+  }
+};
+
+function setLang(lang, el) {
+  currentLang = lang;
+  document.querySelectorAll('.ltab').forEach(function(t){t.classList.remove('active')});
+  el.classList.add('active');
+  applyLabels();
+}
+
+function applyLabels() {
+  var L = LABELS[currentLang];
+  document.getElementById('formLabel').textContent = L.formLabel;
+  document.getElementById('labelYear').textContent = L.labelYear;
+  document.getElementById('labelMonth').textContent = L.labelMonth;
+  document.getElementById('labelDay').textContent = L.labelDay;
+  document.getElementById('labelQ').textContent = L.labelQ;
+  document.getElementById('qInput').placeholder = L.qPlaceholder;
+  document.getElementById('calcBtn').textContent = L.calcBtn;
+  document.getElementById('fullBtn').textContent = L.fullBtn;
+  document.getElementById('loadText').textContent = L.loadText;
+  document.getElementById('redoBtn').textContent = L.redoBtn;
+  document.getElementById('ctaBtn').textContent = L.ctaBtn;
+}
+
+// Populate days 1-31
+(function(){
+  var sel = document.getElementById('birthDay');
+  for (var i=1;i<=31;i++){
+    var opt=document.createElement('option');
+    opt.value=i;opt.textContent=i+'日';
+    sel.appendChild(opt);
+  }
+})();
+
+function calcKyuseiStar(year, month, day) {
+  var adjYear = year;
+  if (month === 1 || (month === 2 && day <= 3)) adjYear = year - 1;
+  var star = (10 - ((adjYear - 2) % 9)) % 9;
+  return star === 0 ? 9 : star;
+}
+
+function calculateStar() {
+  var year = parseInt(document.getElementById('birthYear').value);
+  var month = parseInt(document.getElementById('birthMonth').value);
+  var day = parseInt(document.getElementById('birthDay').value);
+  if (!year || year < 1900 || year > 2025) {showToast(currentLang==='en'?'Please enter a valid birth year':'出生年份を正しく入力してください','error');return;}
+  if (!month) {showToast(currentLang==='en'?'Please select a birth month':'月を選択してください','error');return;}
+  if (!day) {showToast(currentLang==='en'?'Please select a birth day':'日を選択してください','error');return;}
+
+  var starNum = calcKyuseiStar(year, month, day);
+  currentStarNum = starNum;
+  var star = KYUSEI_STARS[starNum];
+
+  // Update star display
+  var badge = document.getElementById('starBadge');
+  badge.textContent = star.numChar;
+  badge.className = 'star-num-badge ' + star.starClass;
+  document.getElementById('starRevealTop').className = 'star-reveal-top ' + star.starBg;
+  document.getElementById('starRevealGlow').style.background = 'radial-gradient(ellipse at center,rgba(201,168,76,0.04),transparent 70%)';
+  document.getElementById('starName').textContent = star.name;
+  document.getElementById('starNameEn').textContent = star.nameEn;
+  document.getElementById('starElement').textContent = star.element;
+  var kwEl = document.getElementById('starKeywords');
+  kwEl.innerHTML = '';
+  var kws = currentLang==='en' ? star.keywordsEn : (currentLang==='zh' ? star.keywords : star.keywordsJa);
+  kws.forEach(function(kw){
+    var span=document.createElement('span');
+    span.className='star-kw';span.textContent=kw;
+    kwEl.appendChild(span);
+  });
+  var desc = currentLang==='en' ? star.descEN : (currentLang==='zh' ? star.descZH : star.descJA);
+  document.getElementById('starDesc').textContent = desc;
+
+  document.getElementById('starReveal').classList.add('show');
+  document.getElementById('fullWrap').style.display = 'block';
+  document.getElementById('calcBtn').disabled = true;
+}
+
+function getFullReading() {
+  if (!currentStarNum) return;
+  var year = document.getElementById('birthYear').value;
+  var month = document.getElementById('birthMonth').value;
+  var day = document.getElementById('birthDay').value;
+  var question = document.getElementById('qInput').value.trim();
+  var btn = document.getElementById('fullBtn');
+  btn.disabled = true;
+  document.querySelector('.form-wrap').style.display = 'none';
+  document.querySelector('.lang-tabs').style.display = 'none';
+  document.querySelector('.calc-wrap').style.display = 'none';
+  document.getElementById('fullWrap').style.display = 'none';
+  document.getElementById('loadingScreen').classList.add('show');
+
+  fetch('/api/kyusei', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      birthYear: year,
+      birthMonth: month,
+      birthDay: day,
+      question: question,
+      lang: currentLang === 'en' ? 'en' : 'ja',
+      token: localStorage.getItem('sy_token') || ''
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(d){
+    document.getElementById('loadingScreen').classList.remove('show');
+    if (d.error){showToast(d.error,'error');btn.disabled=false;document.getElementById('fullWrap').style.display='block';return;}
+    document.getElementById('resultDivider').style.display = 'flex';
+    renderAIInterpretation(d.reading || '');
+    document.getElementById('ctaWrap').classList.add('show');
+  })
+  .catch(function(){
+    document.getElementById('loadingScreen').classList.remove('show');
+    showToast('Network error, please try again','error');
+    btn.disabled = false;
+    document.getElementById('fullWrap').style.display = 'block';
+  });
+}
+
+function parseSections(text) {
+  var known = ['⭐','💼','❤️','💰','🌿','📅','🔑','🌸','📜','🎯','🔮','💡','✨','💫','🌊','🔥','💧','🌟','🏆','💕','📝'];
+  var lines = text.split('\n');
+  var sections = [], current = null;
+  for (var i=0;i<lines.length;i++) {
+    var line=lines[i], matched=null;
+    for (var k=0;k<known.length;k++){if(line.indexOf(known[k])===0){matched=known[k];break;}}
+    if (matched){
+      if(current&&current.lines.length)sections.push(current);
+      current={emoji:matched,title:line.substring(matched.length).trim(),lines:[]};
+    } else if(current){current.lines.push(line);}
+    else if(line.trim()){current={emoji:'⭐',title:'Nine Star Ki Reading',lines:[line]};}
+  }
+  if(current&&current.lines.length)sections.push(current);
+  return sections;
+}
+
+function renderAIInterpretation(text) {
+  var sections = parseSections(text);
+  var interpEl = document.getElementById('aiInterp');
+  var html = '';
+  if (sections.length > 0) {
+    for (var i=0;i<sections.length;i++) {
+      var sec=sections[i];
+      html += '<div class="ai-card open">';
+      html += '<div class="ai-card-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ai-card-arrow\').classList.toggle(\'open\')">';
+      html += '<div class="ai-card-icon">'+sec.emoji+'</div>';
+      html += '<div class="ai-card-title">'+sec.title+'</div>';
+      html += '<div class="ai-card-arrow">⬇</div>';
+      html += '</div>';
+      html += '<div class="ai-card-body open"><div class="ai-card-text">'+sec.lines.join('\n')+'</div></div>';
+      html += '</div>';
+    }
+  } else {
+    html = '<div style="font-size:11px;color:var(--sub);letter-spacing:.04em;line-height:1.9;white-space:pre-wrap;padding:0 2px">'+text+'</div>';
+  }
+  html += '<div style="height:80px"></div>';
+  interpEl.innerHTML = html;
+  interpEl.style.display = 'flex';
+  interpEl.style.flexDirection = 'column';
+  interpEl.style.gap = '8px';
+  injectDisclaimer('aiInterp');
+}
+
+function resetAll() {
+  currentStarNum = null;
+  document.getElementById('starReveal').classList.remove('show');
+  document.getElementById('fullWrap').style.display = 'none';
+  document.getElementById('aiInterp').style.display = 'none';
+  document.getElementById('aiInterp').innerHTML = '';
+  document.getElementById('resultDivider').style.display = 'none';
+  document.getElementById('ctaWrap').classList.remove('show');
+  document.getElementById('fullBtn').disabled = false;
+  document.getElementById('calcBtn').disabled = false;
+  document.querySelector('.form-wrap').style.display = 'block';
+  document.querySelector('.lang-tabs').style.display = 'flex';
+  document.querySelector('.calc-wrap').style.display = 'block';
+}
+
+function showToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer';
+  t.style.background = type==='error' ? 'rgba(150,30,30,0.95)' : 'rgba(30,20,10,0.95)';
+  t.style.border = type==='error' ? '1px solid rgba(200,60,60,0.4)' : '1px solid rgba(201,168,76,0.2)';
+  t.style.color = type==='error' ? 'rgba(255,210,210,0.95)' : 'rgba(255,245,220,0.9)';
+  t.textContent = msg;
+  t.onclick = function(){t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(function(){t.remove();},300)};
+  document.body.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';t.style.transition='opacity 0.3s';setTimeout(function(){t.remove();},300);},3000);
+}
+
+function createCheckout(btn) {
+  btn.disabled = true;
+  btn.textContent = 'Redirecting…';
+  fetch('/api/create-checkout',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({product:'bazi_basic',token:localStorage.getItem('sy_token')||''})
+  }).then(function(r){return r.json();}).then(function(data){
+    if(data.url)window.location.href=data.url;
+    else{showToast('Redirect failed','error');btn.disabled=false;applyLabels();}
+  }).catch(function(){showToast('Network error','error');btn.disabled=false;applyLabels();});
+}
+
+// Stardust
+(function(){
+  var c=document.getElementById('stardust');
+  if(!c)return;
+  for(var i=0;i<28;i++){
+    var s=document.createElement('span');
+    s.style.cssText='left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;width:'+(1.5+Math.random()*2)+'px;height:'+(1.5+Math.random()*2)+'px;--dur:'+(2+Math.random()*4)+'s;animation-delay:'+(Math.random()*5)+'s';
+    c.appendChild(s);
+  }
+  setTimeout(function(){c.querySelectorAll('span').forEach(function(s){s.style.opacity='1';});},100);
+})();
+
+function injectDisclaimer(containerId) {
+  var c=document.getElementById(containerId);
+  if(!c||c.querySelector('.sy-disclaimer'))return;
+  var d=document.createElement('div');
+  d.className='sy-disclaimer';
+  d.innerHTML='<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto;width:80%"></div><div style="font-size:10px;color:rgba(201,168,76,0.35);text-align:center;letter-spacing:.06em;padding:10px 20px">For entertainment and reflection only · 仅供娱乐参考 · エンターテインメント目的のみ</div>';
+  c.appendChild(d);
+}
+</script>
+<script>
+(function(){var t=localStorage.getItem('sy_theme');if(t==='dark'){document.documentElement.classList.add('dark-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='🌙';}})();
+function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'🌙';localStorage.setItem('sy_theme',l?'dark':'dark');}
+</script>
+<script src="/assets/js/common.js"></script>
+</body>
+</html>
