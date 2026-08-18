@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>report-viz · 4基元预览 · 善缘/Runae</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<style>
+  :root{ --gold:#c9a84c; --gold-light:#e8d08a; --jade:#5bbfa0; }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; background:
+      radial-gradient(1200px 700px at 50% -10%, rgba(201,168,76,0.10), transparent 60%),
+      linear-gradient(180deg,#0a0805,#0e0b06 40%,#080604);
+    color:rgba(232,224,200,0.9);
+    font-family:'Noto Serif SC','Songti SC',serif; -webkit-font-smoothing:antialiased; }
+  .wrap{ max-width:760px; margin:0 auto; padding:28px 18px 80px; }
+  .page-head{ text-align:center; margin-bottom:8px; }
+  .page-title{ font-size:22px; letter-spacing:0.16em; color:var(--gold-light); font-weight:500; }
+  .page-sub{ font-size:12px; letter-spacing:0.1em; color:rgba(200,190,160,0.5); margin-top:6px; }
+  .gold-line{ width:64px; height:1px; margin:14px auto 4px;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent); }
+  .sec{ margin-top:34px; }
+  .sec-head{ display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .sec-idx{ font-family:'Cormorant Garamond',serif; font-size:26px; color:rgba(201,168,76,0.55); line-height:1; }
+  .sec-name{ font-size:15px; letter-spacing:0.08em; color:var(--gold-light); }
+  .sec-fn{ margin-left:auto; font-size:10.5px; font-family:ui-monospace,Menlo,monospace;
+    color:rgba(141,217,191,0.65); background:rgba(91,191,160,0.08);
+    border:1px solid rgba(91,191,160,0.2); border-radius:6px; padding:3px 8px; }
+  .sec-use{ font-size:11px; color:rgba(200,190,160,0.5); letter-spacing:0.05em; margin:2px 0 6px; }
+  .demo-note{ font-size:10px; color:rgba(200,190,160,0.35); text-align:center; margin-top:6px; }
+  .grid2{ display:flex; flex-wrap:wrap; gap:16px; justify-content:center; align-items:flex-start; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="page-head">
+    <div class="page-title">报告可视化 · 4 复用基元</div>
+    <div class="gold-line"></div>
+    <div class="page-sub">纯前端 SVG · 无依赖 · 深色金玉主题 · report-viz.js</div>
+    <div class="page-sub" style="margin-top:2px">紫微 · 风水 · 合婚 · 占星 · 塔罗 · 灵签 拼装即用</div>
+  </div>
+
+  <!-- ① 飞星九宫盘 -->
+  <section class="sec">
+    <div class="sec-head">
+      <span class="sec-idx">01</span>
+      <span class="sec-name">飞星九宫盘</span>
+      <span class="sec-fn">renderFlyingStarGrid(data)</span>
+    </div>
+    <div class="sec-use">风水 / 阴宅 / 九星飞星共用 · 洛书定位 · 吉凶色块 · 当前方位高亮</div>
+    <div id="demo-fly"></div>
+  </section>
+
+  <!-- ② 圆环评分 -->
+  <section class="sec">
+    <div class="sec-head">
+      <span class="sec-idx">02</span>
+      <span class="sec-name">圆环评分</span>
+      <span class="sec-fn">renderScoreRing(label, score, max)</span>
+    </div>
+    <div class="sec-use">合婚契合度 / 占星元素 / 面相五官共用 · 可多个并排 · 分值自动配色</div>
+    <div id="demo-ring-big"></div>
+    <div id="demo-ring-group"></div>
+  </section>
+
+  <!-- ③ 卷轴签卡 -->
+  <section class="sec">
+    <div class="sec-head">
+      <span class="sec-idx">03</span>
+      <span class="sec-name">卷轴签卡</span>
+      <span class="sec-fn">renderScrollCard(opts)</span>
+    </div>
+    <div class="sec-use">灵签 / おみくじ / 解签用 · 签号+吉凶印章+四句签诗+解读 · 古卷轴质感</div>
+    <div class="grid2">
+      <div id="demo-scroll-cn" style="flex:1;min-width:300px"></div>
+      <div id="demo-scroll-omi" style="flex:1;min-width:300px"></div>
+    </div>
+  </section>
+
+  <!-- ④ 通用时间轴 -->
+  <section class="sec">
+    <div class="sec-head">
+      <span class="sec-idx">04</span>
+      <span class="sec-name">通用时间轴</span>
+      <span class="sec-fn">renderTimeline(steps, currentIdx)</span>
+    </div>
+    <div class="sec-use">紫微大限 / 合婚流年 / 八字大运共用 · 泛化 bazi dayun 时间轴 · 关键标注</div>
+    <div id="demo-tl-dayun"></div>
+    <div id="demo-tl-hehun"></div>
+  </section>
+
+  <div class="demo-note">— 全部假数据 · 空数据自动降级返空 · 与 bazi 报告同一金玉视觉语言 —</div>
+</div>
+
+<script src="./report-viz.js"></script>
+<script>
+(function(){
+  var RV = window.ReportViz;
+
+  /* ① 飞星九宫盘 — 假：某宅当运飞星（洛书定位） */
+  document.getElementById('demo-fly').innerHTML = RV.renderFlyingStarGrid({
+    title: '八宅飞星 · 当运九宫',
+    subtitle: '八运（2004–2023）· 坐北朝南',
+    cells: [
+      { star:4, dir:'东南', name:'巽', luck:'neutral', label:'文昌' },
+      { star:9, dir:'南',   name:'离', luck:'good',    label:'喜庆' },
+      { star:2, dir:'西南', name:'坤', luck:'bad',     label:'病符·忌卧' },
+      { star:3, dir:'东',   name:'震', luck:'neutral', label:'是非' },
+      { star:5, dir:'中',   name:'中', luck:'bad',     label:'五黄·大凶' },
+      { star:7, dir:'西',   name:'兑', luck:'bad',     label:'破财' },
+      { star:8, dir:'东北', name:'艮', luck:'good', current:true, label:'当旺·旺财' },
+      { star:1, dir:'北',   name:'坎', luck:'good',    label:'桃花·文' },
+      { star:6, dir:'西北', name:'乾', luck:'neutral', label:'贵人' }
+    ]
+  });
+
+  /* ② 圆环评分 — 单大环 + 一排分维度 */
+  document.getElementById('demo-ring-big').innerHTML =
+    '<div class="rv-frame"><div class="rv-frame-title">合婚总契合度</div>' +
+    '<div class="rv-ring-row">' +
+      RV.renderScoreRing({ label:'姻缘契合', score:82, max:100, size:150, sub:'天作之合 · 大吉之配' }) +
+    '</div></div>';
+
+  document.getElementById('demo-ring-group').innerHTML = RV.renderScoreRing.group([
+    { label:'性格', score:9,  max:10, tone:'auto' },
+    { label:'财运', score:7,  max:10, tone:'auto' },
+    { label:'子女', score:8.5,max:10, tone:'auto' },
+    { label:'相处', score:4,  max:10, tone:'auto' },
+    { label:'健康', score:9.5,max:10, tone:'auto' }
+  ], '分维度契合 · 五维');
+
+  /* ③ 卷轴签卡 — 中式灵签 + 和风竖排 omikuji */
+  document.getElementById('demo-scroll-cn').innerHTML = RV.renderScrollCard({
+    title: '观音灵签',
+    number: '第五十一签',
+    level: '上上签',
+    poem: [
+      '天地开泰结良缘',
+      '日吉时良万事全',
+      '若得此签非小可',
+      '人行中正帼相欢'
+    ],
+    reading: '此签为上上之兆。凡事顺遂，谋望有成；婚姻天定，宜结良缘。行事守正持中，则贵人自来、诸事亨通。'
+  });
+
+  document.getElementById('demo-scroll-omi').innerHTML = RV.renderScrollCard({
+    title: 'おみくじ',
+    number: '第七番',
+    level: '大吉',
+    levelTone: 'good',
+    omikuji: true,
+    poem: ['朝日昇天', '万事如意', '心願成就', '待人来吉'],
+    reading: '大吉。願い事は時を待てば必ず叶う。焦らず誠実に進めば、良縁と幸運が訪れる。旅立ちも吉。'
+  });
+
+  /* ④ 通用时间轴 — 八字/紫微大限 + 合婚流年 */
+  document.getElementById('demo-tl-dayun').innerHTML = RV.renderTimeline([
+    { label:'甲子', sub:'3岁',  tone:'jade' },
+    { label:'乙丑', sub:'13岁', tone:'gold' },
+    { label:'丙寅', sub:'23岁', tone:'bad'  },
+    { label:'丁卯', sub:'33岁', tone:'good', current:true },
+    { label:'戊辰', sub:'43岁', tone:'gold' },
+    { label:'己巳', sub:'53岁', tone:'good' },
+    { label:'庚午', sub:'63岁', tone:'bad'  },
+    { label:'辛未', sub:'73岁', tone:'jade' }
+  ], { title:'紫微大限 · 八步流转', subtitle:'每步约十年 · 色带示宫垣属性' });
+
+  document.getElementById('demo-tl-hehun').innerHTML = RV.renderTimeline([
+    { label:'2026', sub:'丙午', tone:'good', tag:'宜婚' },
+    { label:'2027', sub:'丁未', tone:'neutral' },
+    { label:'2028', sub:'戊申', tone:'good', tag:'宜孕', current:true },
+    { label:'2029', sub:'己酉', tone:'bad',  tag:'需磨合' },
+    { label:'2030', sub:'庚戌', tone:'good', tag:'置业吉' }
+  ], { title:'合婚五年流年 · 感情走势', subtitle:'关键年份标注宜忌' });
+})();
+</script>
+</body>
+</html>
