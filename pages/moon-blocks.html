@@ -13,7 +13,8 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -86,6 +87,52 @@ a{color:inherit;text-decoration:none}
 footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.8}
 footer a{color:var(--jade-deep)}
 button{font-family:inherit}
+
+/* ── Luxury Moon Blocks Share Card ── */
+:root{
+  --lux-ink0:#0d0b08;--lux-ink1:#181310;--lux-ink2:#241a12;
+  --lux-gold:#c9a84c;--lux-gold-hi:#f6e6a8;--lux-gold-lo:#8a6420;
+  --lux-line:rgba(201,168,76,0.30);--lux-sub:rgba(232,208,138,0.60);
+}
+.share-card-wrap{display:none;margin:16px 20px 0}
+.share-card-wrap.show{display:block}
+.lux-card{
+  position:relative;overflow:hidden;border-radius:22px;color:#fff;isolation:isolate;
+  aspect-ratio:9/16;padding:34px 26px;display:flex;flex-direction:column;text-align:center;
+  font-family:'Inter',sans-serif;
+  background:
+    radial-gradient(120% 80% at 50% -10%,rgba(201,168,76,0.18) 0%,transparent 55%),
+    radial-gradient(90% 60% at 50% 115%,rgba(201,168,76,0.10) 0%,transparent 60%),
+    linear-gradient(165deg,var(--lux-ink2) 0%,var(--lux-ink1) 42%,var(--lux-ink0) 100%);
+  box-shadow:0 12px 40px rgba(0,0,0,0.4);
+}
+.lux-card::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:
+    repeating-linear-gradient(45deg,rgba(255,255,255,0.020) 0 1px,transparent 1px 6px),
+    repeating-linear-gradient(-45deg,rgba(0,0,0,0.06) 0 1px,transparent 1px 6px);
+  mix-blend-mode:overlay}
+.lux-card::after{content:"";position:absolute;inset:12px;z-index:1;pointer-events:none;border-radius:14px;
+  border:1px solid var(--lux-line);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,0.4),inset 0 0 40px rgba(201,168,76,0.06),inset 0 0 0 6px rgba(0,0,0,0.25)}
+.lux-card > *{position:relative;z-index:2}
+.lux-cap{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--lux-sub);margin-bottom:6px;display:flex;align-items:center;justify-content:center;gap:7px}
+.lux-cap::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--lux-gold);box-shadow:0 0 8px var(--lux-gold);flex-shrink:0}
+.lux-rule{height:1px;width:100%;border:none;margin:16px 0;
+  background:linear-gradient(90deg,transparent,var(--lux-line),var(--lux-gold-hi),var(--lux-line),transparent)}
+.moon-icon{font-size:64px;margin:4px 0 10px;filter:drop-shadow(0 0 22px rgba(201,168,76,0.45))}
+.moon-outcome-label{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--lux-sub);margin-bottom:6px}
+.moon-outcome{font-family:'Playfair Display',serif;font-size:42px;font-weight:800;line-height:1.1;color:#f2e4b8;margin-bottom:4px}
+.moon-meaning{font-size:13px;letter-spacing:.08em;color:var(--lux-gold);margin-bottom:14px}
+.moon-response{font-size:12px;line-height:1.7;color:rgba(255,255,255,0.82);text-align:left;padding:14px;
+  border:1px solid var(--lux-line);border-radius:12px;background:rgba(0,0,0,0.2)}
+.lux-seal{margin-top:auto;padding-top:14px;display:flex;justify-content:space-between;align-items:flex-end}
+.lux-brand{font-family:'Playfair Display',serif;font-size:15px;letter-spacing:.34em;color:var(--lux-gold-hi);text-align:left}
+.lux-brand small{display:block;font-family:'Inter';font-size:7.5px;letter-spacing:.16em;color:var(--lux-sub);margin-top:4px;text-transform:uppercase}
+.lux-ai{font-size:7.5px;line-height:1.4;color:rgba(255,255,255,0.42);text-align:right;max-width:120px}
+.share-card-btn{display:block;width:100%;margin-top:12px;padding:14px;border-radius:24px;font-size:14px;font-weight:700;
+  color:#3a2e0e;background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);border:none;cursor:pointer;
+  box-shadow:0 6px 20px rgba(201,168,76,.34);font-family:inherit}
+.share-card-btn:disabled{opacity:.6;cursor:default}
 </style>
 </head>
 <body>
@@ -119,8 +166,25 @@ button{font-family:inherit}
 
 <div class="reading z1" id="reading"><div class="rhead">Your answer</div><div class="rbody" id="rbody"></div></div>
 
+<!-- Luxury share card -->
+<div class="share-card-wrap z1" id="shareCardWrap">
+  <div class="lux-card" id="luxCard">
+    <div class="lux-cap">Moon Blocks · Runae</div>
+    <div class="moon-icon" id="lcIcon">🌙</div>
+    <div class="moon-outcome-label">The blocks have spoken</div>
+    <div class="moon-outcome" id="lcOutcome">—</div>
+    <div class="moon-meaning" id="lcMeaning">—</div>
+    <hr class="lux-rule">
+    <div class="moon-response" id="lcResponse"></div>
+    <div class="lux-seal">
+      <div class="lux-brand">RUNAE<small>Oracle · Moon Blocks</small></div>
+      <div class="lux-ai">🤖 AI-generated<br>for self-reflection &amp; fun</div>
+    </div>
+  </div>
+  <button class="share-card-btn" id="shareCardBtn">Save &amp; share card</button>
+</div>
+
 <div class="ctarow z1" id="ctarow">
-  <button class="btn ghost" id="shareBtn">Share</button>
   <button class="btn ghost" id="againBtn">Toss again</button>
 </div>
 
@@ -147,6 +211,7 @@ function toss(){
   if(tossing)return;tossing=true;tossBtn.disabled=true;
   blockResult.classList.remove('show','yes','no','laughing');blockResult.textContent='—';
   reading.classList.remove('show');ctarow.classList.remove('show');upsell.classList.remove('show');
+  document.getElementById('shareCardWrap').classList.remove('show');
   b1.classList.add('toss');b2.classList.add('toss');
   setTimeout(function(){
     b1.classList.remove('toss');b2.classList.remove('toss');
@@ -161,17 +226,60 @@ function toss(){
       if(d.upgrade){upsellMsg.textContent=d.message||'Come back tomorrow for a fresh toss.';upsell.classList.add('show');return;}
       if(d.error){rbody.innerHTML='<p>'+d.error+'</p>';reading.classList.add('show');return;}
       lastReading=d.reading||'';rbody.innerHTML=mdToHtml(d.reading);reading.classList.add('show');ctarow.classList.add('show');
+      populateLuxCard(lastToss, d.reading||'');
       if(d.remaining===0&&!d.isMember){upsellMsg.textContent='That was today\'s free toss. Go Yearly to ask as often as you like — Rún remembers your questions.';upsell.classList.add('show');}
     })
     .catch(function(){tossing=false;loading.classList.remove('show');tossBtn.disabled=false;rbody.innerHTML='<p>The oracle is resting — please try again.</p>';reading.classList.add('show');});
   },1000);
 }
 tossBtn.addEventListener('click',toss);
-document.getElementById('againBtn').addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});toss();});
-document.getElementById('shareBtn').addEventListener('click',function(){
-  var txt='My Runae Moon Blocks answer 🌙\n'+(lastToss?lastToss.label:'')+'\n\n'+lastReading.slice(0,240)+'…\n\nToss yours at Runae.';
-  if(navigator.share){navigator.share({title:'Runae Moon Blocks',text:txt}).catch(function(){});}
-  else if(navigator.clipboard){navigator.clipboard.writeText(txt);this.textContent='Copied ✓';}
+document.getElementById('againBtn').addEventListener('click',function(){
+  document.getElementById('shareCardWrap').classList.remove('show');
+  window.scrollTo({top:0,behavior:'smooth'});toss();
+});
+
+var OUTCOME_MAP={
+  sacred:{icon:'🌕',name:'Sacred',meaning:'聖筊 · The Divine Answers: Yes'},
+  no:{icon:'🌑',name:'No',meaning:'陰筊 · The Divine Says: Not Yet'},
+  laughing:{icon:'🌓',name:'Laughing',meaning:'笑筊 · Rephrase &amp; Ask Again'}
+};
+
+function populateLuxCard(tossResult, readingText){
+  var om=OUTCOME_MAP[tossResult.outcome]||{icon:'🌙',name:tossResult.label,meaning:''};
+  document.getElementById('lcIcon').textContent=om.icon;
+  document.getElementById('lcOutcome').textContent=om.name;
+  document.getElementById('lcMeaning').innerHTML=om.meaning;
+  var plain=readingText.replace(/<[^>]+>/g,'').replace(/\n/g,' ').trim().slice(0,180);
+  document.getElementById('lcResponse').textContent=plain+(plain.length>=180?'…':'');
+  document.getElementById('shareCardWrap').classList.add('show');
+}
+
+function renderCardPng(node){
+  return document.fonts.ready.then(function(){
+    return html2canvas(node,{backgroundColor:null,scale:Math.min(3,(window.devicePixelRatio||1)*2),useCORS:true,logging:false});
+  }).then(function(canvas){
+    return new Promise(function(res){canvas.toBlob(function(b){res(b);},'image/png');});
+  });
+}
+
+document.getElementById('shareCardBtn').addEventListener('click',function(){
+  var btn=this; var orig=btn.textContent; btn.disabled=true; btn.textContent='Preparing…';
+  var shareText='My Runae Moon Blocks answer 🌙 · '+(lastToss?lastToss.label:'')+' · Toss yours at '+location.origin+'/pages/moon-blocks.html';
+  renderCardPng(document.getElementById('luxCard')).then(function(blob){
+    btn.disabled=false; btn.textContent=orig;
+    var file=new File([blob],'runae-moon-blocks.png',{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({files:[file],title:'My Moon Blocks Answer',text:shareText}).catch(function(){});
+    } else {
+      var url=URL.createObjectURL(blob); var a=document.createElement('a');
+      a.href=url; a.download='runae-moon-blocks.png'; document.body.appendChild(a); a.click();
+      document.body.removeChild(a); setTimeout(function(){URL.revokeObjectURL(url);},4000);
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(shareText).catch(function(){});
+    }
+  }).catch(function(){
+    btn.disabled=false; btn.textContent=orig;
+    if(navigator.share){navigator.share({title:'My Moon Blocks Answer',text:shareText}).catch(function(){});}
+  });
 });
 </script>
 </body>
