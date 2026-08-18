@@ -25,7 +25,7 @@ const _DATA_FILE = process.env.DATA_FILE || path.join(__dirname, '../data.json')
     if (!fs.existsSync(_DATA_FILE)) return;
     const d = JSON.parse(fs.readFileSync(_DATA_FILE, 'utf8'));
     // 🔴 0817: 加 reportCredits(月会员报告credit,防重启白刷) + dailyUsage(每日运势免费次数) + rewards + streaks 落盘恢复
-    for (const k of ['users','tokens','orders','readings','subs','referrals','feedbacks','chatUsage','abEvents','reportCredits','dailyUsage','rewards','streaks']) {
+    for (const k of ['users','tokens','orders','readings','subs','referrals','feedbacks','chatUsage','abEvents','reportCredits','dailyUsage','rewards','streaks','questionCredits']) {
       if (Array.isArray(d[k])) _M[k] = d[k];
       else if (d[k] && typeof d[k] === 'object' && !Array.isArray(d[k])) _M[k] = d[k];
     }
@@ -289,6 +289,34 @@ function refundMonthlyReportCredit(uid, req) {
   var used = _M.reportCredits[key] || 0;
   if (used <= 0) return false;
   _M.reportCredits[key] = used - 1;
+  _persist();
+  return true;
+}
+
+// ── 按次问事 credit（single_question=1次, question_pack_3=3次）──
+// credit 绑定 user_id + 永不过期(不按月重置)。key: 'qc_<uid>'
+function questionCreditsRemaining(uid) {
+  if (!uid) return 0;
+  if (!_M.questionCredits) _M.questionCredits = {};
+  return Math.max(0, _M.questionCredits['qc_' + uid] || 0);
+}
+
+function grantQuestionCredits(uid, n) {
+  if (!uid || !n) return;
+  if (!_M.questionCredits) _M.questionCredits = {};
+  var key = 'qc_' + uid;
+  _M.questionCredits[key] = (_M.questionCredits[key] || 0) + n;
+  _persist();
+}
+
+// 消费1次问事 credit。成功返回 true; 无额度返回 false。
+function consumeQuestionCredit(uid) {
+  if (!uid) return false;
+  if (!_M.questionCredits) _M.questionCredits = {};
+  var key = 'qc_' + uid;
+  var rem = _M.questionCredits[key] || 0;
+  if (rem <= 0) return false;
+  _M.questionCredits[key] = rem - 1;
   _persist();
   return true;
 }
@@ -654,6 +682,9 @@ const PRODUCTS = {
   joss_basic:      { name: '代烧·基础套餐',     amount: 4990,   amountCny: 19900, desc: '标准纸钱+元宝+祈福' },
   joss_premium:    { name: '代烧·尊享套餐',     amount: 24900,  amountCny: 99900, desc: '豪邸+纸钱+法器+视频' },
   joss_supreme:    { name: '代烧·至尊套餐',     amount: 249900, amountCny: 999900, desc: '全套冥器+法事+直播' },
+  // ── 按次问事 (EN 英文chat按次付费) ──
+  single_question:   { name: 'Single Question',   amount: 290,  amountCny: 1990, desc: '1 question to the AI Destiny Advisor' },
+  question_pack_3:   { name: '3-Question Pack',   amount: 690,  amountCny: 4900, desc: '3 questions to the AI Destiny Advisor' },
 };
 
 // ── AI追问上下文缓存 ──
@@ -696,4 +727,6 @@ module.exports = {
   PRODUCTS,
   // QA 上下文
   qaContext, saveQaContext,
+  // 按次问事 credit
+  questionCreditsRemaining, grantQuestionCredits, consumeQuestionCredit,
 };

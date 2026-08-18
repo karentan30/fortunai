@@ -575,6 +575,7 @@ function fetchBaziReportSSE(input, mode, btn) {
               clearTimeout(guard);
               metaReceived = true;
               window._sseLockedFlag = ev.locked || (ev.tier === 'basic');
+              if (ev.chart) window._baziChartData = ev.chart;
               // Convert backend pillars {year/month/day/hour:{gan,zhi,label}} → array [{tian,di,label,isDay?}]
               if (ev.pillars) {
                 var p = ev.pillars;
@@ -635,6 +636,10 @@ function initSSEReport(isLocked) {
     '<span style="font-size:12px">✨</span>' +
     '<span><b>AI-Generated Content</b> · For entertainment and self-reflection only. Your destiny is in your hands.</span>' +
     '</div>';
+
+  // Visual BaZi chart card — rendered immediately on meta receipt using precise engine data
+  // Graceful degradation: if _baziChartData is absent, silently skips (no white screen)
+  try { html += buildBaziVisualCard(window._baziChartData || null, 'en'); } catch(e) {}
 
   if (lastBaziInput) {
     var n = lastBaziInput.name || 'Your Reading';
@@ -994,6 +999,103 @@ function tryParseBaziData(text) {
   var result = { hasDaymaster: text.indexOf('Day Master') !== -1 || text.indexOf('日主') !== -1, pillars:null, elements:null, scores:null, daymaster:null };
   if (!result.hasDaymaster) return result;
   return result;
+}
+
+// ── Visual BaZi Chart Card (Four Pillars + Five Elements bar chart + pattern tags) ──
+// chartData: from meta event ev.chart; lang: 'en'|'zh'
+// Returns HTML string; returns '' gracefully if chartData is missing.
+function buildBaziVisualCard(chartData, lang) {
+  if (!chartData || !chartData.pillars || !chartData.pillars.length) return '';
+  var isEn = (lang !== 'zh');
+  var ELEM_COLOR = { 金: '#d4af52', 木: '#6fae6f', 水: '#6f9fd8', 火: '#d8776f', 土: '#b5926a' };
+  var ELEM_EN_MAP = { 金: 'Metal', 木: 'Wood', 水: 'Water', 火: 'Fire', 土: 'Earth' };
+  var PILLAR_LABELS_EN = ['Year', 'Month', 'Day', 'Hour'];
+  var GAN_ELEM = {甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'};
+  var ZHI_ELEM = {子:'水',丑:'土',寅:'木',卯:'木',辰:'土',巳:'火',午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水'};
+  var pillars = chartData.pillars;
+  var wuxing = chartData.wuxing || {};
+  var geju = chartData.geju || '';
+  var wangShuai = chartData.wangShuai || '';
+  var yongshen = chartData.yongshen || '';
+  var missing = chartData.missing || [];
+  var dayMaster = chartData.dayMaster || '';
+  var dayMasterElement = chartData.dayMasterElement || '';
+  var dmElemColor = ELEM_COLOR[dayMasterElement] || '#c9a84c';
+
+  var wxMax = 0.1;
+  Object.keys(wuxing).forEach(function(k) { if (wuxing[k] > wxMax) wxMax = wuxing[k]; });
+
+  var html = '';
+  html += '<div id="baziVisualCard" style="margin:14px 12px 4px;border-radius:16px;background:linear-gradient(160deg,rgba(18,12,28,0.97),rgba(10,7,16,0.99));border:1.5px solid rgba(201,168,76,0.3);overflow:hidden;font-family:Georgia,serif">';
+
+  // Title bar
+  html += '<div style="padding:14px 16px 10px;border-bottom:1px solid rgba(201,168,76,0.12);display:flex;align-items:center;gap:10px">';
+  html += '<div style="flex:1"><div style="font-size:13px;font-weight:700;letter-spacing:0.15em;color:#c9a84c">' + (isEn ? 'BAZI DESTINY CHART' : '八字命盘速览') + '</div>';
+  if (dayMaster) {
+    var dmElemLabel = isEn ? (ELEM_EN_MAP[dayMasterElement]||dayMasterElement) : dayMasterElement;
+    html += '<div style="font-size:11px;color:rgba(200,190,160,0.6);margin-top:2px;letter-spacing:0.06em">Day Master · <span style="color:' + dmElemColor + '">' + dayMaster + (dmElemLabel ? ' (' + dmElemLabel + ')' : '') + '</span></div>';
+  }
+  html += '</div>';
+  if (geju) html += '<div style="font-size:11px;color:#c9a84c;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.22);border-radius:8px;padding:4px 10px;letter-spacing:0.06em">' + geju + '</div>';
+  html += '</div>';
+
+  // Four pillars grid
+  html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(201,168,76,0.08);border-bottom:1px solid rgba(201,168,76,0.12)">';
+  pillars.forEach(function(p, i) {
+    var isDay = (i === 2);
+    var borderLeft = i > 0 ? 'border-left:1px solid rgba(201,168,76,0.08);' : '';
+    html += '<div style="text-align:center;padding:12px 4px 10px;background:' + (isDay ? 'rgba(201,168,76,0.08)' : 'transparent') + ';' + borderLeft + '">';
+    html += '<div style="font-size:10px;color:rgba(169,164,136,0.8);letter-spacing:0.1em;margin-bottom:4px">' + (isEn ? PILLAR_LABELS_EN[i] : (p.label + '柱')) + '</div>';
+    if (p.shishen) {
+      html += '<div style="font-size:10px;color:#d8b96a;margin-bottom:2px;letter-spacing:0.04em">' + p.shishen + '</div>';
+    } else {
+      html += '<div style="font-size:10px;color:transparent;margin-bottom:2px">-</div>';
+    }
+    var ganColor = ELEM_COLOR[GAN_ELEM[p.gan]] || '#f0e4b0';
+    html += '<div style="font-size:36px;font-weight:700;line-height:1;color:' + ganColor + '">' + p.gan + '</div>';
+    var zhiColor = ELEM_COLOR[ZHI_ELEM[p.zhi]] || '#e8d08a';
+    html += '<div style="font-size:36px;font-weight:700;line-height:1.1;color:' + zhiColor + '">' + p.zhi + '</div>';
+    if (p.cangGan) html += '<div style="font-size:9px;color:rgba(154,144,120,0.75);margin-top:5px;line-height:1.4">' + p.cangGan.replace(/\(.*?\)/g, '') + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // Five elements bar chart
+  var wxOrder = ['金', '木', '水', '火', '土'];
+  html += '<div style="padding:12px 14px 10px">';
+  var missingLabel = missing.length ? (' · <span style="color:rgba(201,168,76,0.65)">weak: ' + missing.map(function(m){ return ELEM_EN_MAP[m]||m; }).join(' ') + '</span>') : '';
+  html += '<div style="font-size:10px;color:rgba(169,164,136,0.7);letter-spacing:0.1em;margin-bottom:8px">FIVE ELEMENTS' + missingLabel + '</div>';
+  wxOrder.forEach(function(elem) {
+    var val = wuxing[elem] || 0;
+    var pct = Math.min(Math.round(val / wxMax * 100), 100);
+    var col = ELEM_COLOR[elem] || '#c9a84c';
+    var label = ELEM_EN_MAP[elem] || elem;
+    html += '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">';
+    html += '<div style="flex:0 0 38px;font-size:11px;font-weight:700;color:' + col + '">' + label + '</div>';
+    html += '<div style="flex:1;height:7px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:' + col + ';border-radius:4px;transition:width 0.6s ease"></div></div>';
+    html += '<div style="flex:0 0 22px;font-size:10px;color:rgba(200,190,160,0.6);text-align:right">' + val + '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  // Pattern / strength / favorable tags
+  var tags = [];
+  if (geju) tags.push({ icon: '✨', label: 'Pattern', val: geju });
+  if (wangShuai) tags.push({ icon: '⚖️', label: 'Strength', val: wangShuai });
+  if (yongshen) tags.push({ icon: '💧', label: 'Favorable', val: yongshen });
+  if (tags.length) {
+    html += '<div style="display:flex;gap:6px;padding:0 12px 12px;flex-wrap:wrap">';
+    tags.forEach(function(t) {
+      html += '<div style="flex:1;min-width:80px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.18);border-radius:10px;padding:8px 10px">';
+      html += '<div style="font-size:9px;color:rgba(169,164,136,0.7);letter-spacing:0.08em;margin-bottom:2px">' + t.icon + ' ' + t.label + '</div>';
+      html += '<div style="font-size:12px;color:#e8d08a;font-weight:600;letter-spacing:0.04em">' + t.val + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  html += '</div>'; // close card
+  return html;
 }
 
 function buildBaziOverview(parsed) {
