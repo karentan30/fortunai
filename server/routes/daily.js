@@ -14,6 +14,7 @@ const { deepseekChat, buildReadingPrompt } = require('../lib/llm');
 const {
   insertReading, getReadingsByUser, hasFullAccess, memberTier,
   updateStreak, _M, _persist,
+  questionCreditsRemaining, consumeQuestionCredit,
 } = require('../lib/store');
 
 // 聊天每日限量: 免费/月会员 = 30句/天; 全解锁会员 = 无限。差异化靠"报告"不靠chat。
@@ -238,11 +239,17 @@ router.post('/chat', rateLimitMiddleware, async (req, res) => {
       var ckey = (uid || sessionId || getClientIp(req)) + '_' + day;
       var used = _M.chatUsage[ckey] || 0;
       if (used >= CHAT_DAILY_LIMIT) {
-        // 月会员已到每日上限 → 引导升级年费(无限聊天); 免费用户 → 引导开通会员
-        return res.json({ answer: LIMIT_MSGS[chatLang], limited: true, needMember: true, memberTier: tier });
+        // 超出每日限量时: 若用户购买了按次问事 credit, 消费1次放行
+        if (uid && consumeQuestionCredit(uid)) {
+          // credit 消费成功, 继续执行(不计入每日配额)
+        } else {
+          // 月会员已到每日上限 → 引导升级年费(无限聊天); 免费用户 → 引导开通会员
+          return res.json({ answer: LIMIT_MSGS[chatLang], limited: true, needMember: true, memberTier: tier });
+        }
+      } else {
+        _M.chatUsage[ckey] = used + 1;
+        _persist();
       }
-      _M.chatUsage[ckey] = used + 1;
-      _persist();
     }
     const allMessages = [systemMsg].concat(messages.slice(-10));
     const answer = await deepseekChat(allMessages, { maxTokens: 1024 });
@@ -272,7 +279,8 @@ router.get('/chat/quota', (req, res) => {
     var sessionId = req.headers['x-session-id'];
     var ckey = (uid || sessionId || getClientIp(req)) + '_' + day;
     var used = _M.chatUsage[ckey] || 0;
-    res.json({ isMember: tier === 'monthly', tier: tier || 'free', remaining: Math.max(0, CHAT_DAILY_LIMIT - used), used: used, limit: CHAT_DAILY_LIMIT });
+    var qCredits = uid ? questionCreditsRemaining(uid) : 0;
+    res.json({ isMember: tier === 'monthly', tier: tier || 'free', remaining: Math.max(0, CHAT_DAILY_LIMIT - used), used: used, limit: CHAT_DAILY_LIMIT, questionCredits: qCredits });
   } catch (e) {
     res.json({ isMember: false, remaining: 5, error: e.message });
   }

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<!--
+=====================================================================
+  善缘首页精简重设计 · 预览稿
+  作者：Claude Code · 2026-08-18
+  状态：设计稿 / 不覆盖线上 / 等 Karen 拍板后再替换 index.html
+=====================================================================
+
+【设计决策】
+
+① 主 CTA 选：「免费八字排盘 · 开始解读」→ pages/bazi.html
+   理由：
+   · 八字是最强引流钩子（免费·门槛最低·用户能立即得到有名字的结果）
+   · 承接路径最清晰：免费排盘 → 深度报告 $9.90 → 会员 $9.90/月
+   · 原首页 heroCta 和"不知选哪个"的兜底都指向它，证明已有转化验证
+   · 一句话让用户知道"点了能得到什么"：输入生日 → 看命盘五行 + 报告预览
+
+② 34 个入口 → 4 张核心卡片 归纳逻辑：
+
+   卡片 A · 命理报告（核心变现）
+     收纳：bazi.html / ziwei.html / jyotish.html / maya.html / tibet.html /
+           astrology.html / qimen.html / daliuren.html / duanshi.html /
+           report*.html / free-bazi-calculator.html
+     逻辑：都是"算一张命盘·拿一份报告"的付费主线，八字是头部
+
+   卡片 B · 合婚配对（社交裂变）
+     收纳：hehun.html / hepan.html / hehun-KR.html / hehun-en.html /
+           friends.html / cross-check.html
+     逻辑：双人入局·天然社交分享·裂变效率最高·情感决策高付费意愿
+
+   卡片 C · 面相手相（视觉钩子）
+     收纳：mianxiang.html / palm-reading.html / face-reading.html /
+           xingming.html / chinese-name.html / english-name.html /
+           shengxiao.html / numerology.html
+     逻辑：拍照/输入名字·零门槛·视觉冲击·小红书/TikTok 传播友好
+
+   卡片 D · 祈福代烧（季节放大器）
+     收纳：daishao.html / offering.html / talisman.html / gongfeng.html /
+           sutras.html / sutra-diamond.html / sutra-heart.html /
+           shop.html / mingqi.html / wangyun.html / xianjia.html /
+           yinzhai.html / fengshui.html / cemetery-guide.html
+     逻辑：高客单/高毛利·节庆放量·用户愿意为"求"而非"知"花高溢价
+
+   卡片外保留：每日天机（daily.html）作免费留存工具 · 单独一行显示
+   彻底折叠：tarot（归入卡片A探索区）/ chat / video-call / 韩文版（
+             从导航栏入）/ admin / legal 页面
+
+③ 首屏控制：header + 主CTA + 4卡 + daily 脉冲 = 5 个可点元素
+   不再堆：会员Banner（降至卡片下方）/ 社会证明重复组件 / 月度Banner /
+          裂变hint（收进合婚卡说明文字）/ 第二个daily脉冲 / "不知选哪个" CTA
+
+④ 禁框套框：4卡用扁平边框 + 图标，不做卡片里套卡片
+   移动端优先：最大宽 420px / 触控区 ≥ 44px / 单列+双列混排
+
+=====================================================================
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#c9a84c">
+<meta name="description" content="善缘AI命理平台，免费八字排盘、面相手相、合婚配对，深度报告洞见财运姻缘大运。立即免费测算 →">
+<title>善缘 · AI命理解读｜免费八字排盘（设计预览稿）</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+
+<style>
+/* ── 全局重置 ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  /* 品牌色·与线上保持一致 */
+  --jade:#5bbfa0;--jade-deep:#3d9e82;--jade-light:#8dd9bf;
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-dim:rgba(201,168,76,0.18);
+  /* 底色 */
+  --bg:#faf8f5;--card:#ffffff;
+  /* 文字 */
+  --ink:#1a1a18;--ink-mid:#4a4a46;--ink-light:#8a8a84;
+  /* 布局 */
+  --radius:14px;--radius-sm:10px;
+  --shadow:0 2px 14px rgba(0,0,0,0.06);
+}
+
+html,body{
+  background:var(--bg);
+  font-family:'Noto Serif SC',serif;
+  color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+}
+
+body{
+  max-width:420px;
+  margin:0 auto;
+  min-height:100vh;
+  padding:0 16px calc(48px + env(safe-area-inset-bottom,0px));
+}
+
+/* ── 预览水印（上线时删掉这个 style block） ── */
+.preview-badge{
+  position:fixed;top:10px;left:10px;z-index:9999;
+  background:rgba(255,60,60,0.85);color:#fff;
+  font-size:10px;letter-spacing:0.06em;
+  padding:4px 10px;border-radius:8px;
+  font-family:system-ui,sans-serif;pointer-events:none;
+}
+
+/* ── 语言切换 ── */
+.lang-switch{
+  position:fixed;top:14px;right:14px;z-index:999;
+  background:rgba(154,117,41,0.1);
+  border:1px solid rgba(154,117,41,0.25);
+  border-radius:20px;padding:6px 14px;
+  font-size:11px;color:#9a7529;
+  text-decoration:none;letter-spacing:.05em;
+}
+
+/* ── Header ── */
+.header{text-align:center;padding:40px 0 10px}
+
+/* 翡翠祥云球（与线上一致的 peace-clasp） */
+.peace-clasp{
+  position:relative;border-radius:50%;
+  width:90px;height:90px;margin:8px auto 12px;
+  background:
+    radial-gradient(circle at 34% 27%,rgba(255,255,255,0.92) 0%,rgba(255,255,255,0.35) 7%,transparent 18%),
+    radial-gradient(circle at 70% 68%,var(--jade-deep) 0%,transparent 38%),
+    radial-gradient(circle at 20% 72%,rgba(0,180,80,0.25) 0%,transparent 35%),
+    radial-gradient(ellipse at 42% 38%,var(--jade-light) 0%,var(--jade) 22%,var(--jade) 52%,var(--jade-deep) 100%);
+  box-shadow:0 6px 24px rgba(91,191,160,0.3);
+}
+.peace-clasp::after{
+  content:'';position:absolute;border-radius:50%;
+  background:var(--bg);width:26px;height:26px;
+  top:50%;left:50%;transform:translate(-50%,-50%);
+  box-shadow:inset 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.logo{
+  font-family:'Cormorant Garamond',serif;
+  font-size:16px;letter-spacing:0.34em;
+  color:var(--jade);font-weight:400;
+}
+.tagline{
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-size:14px;
+  color:var(--ink-mid);margin:4px 0 1px;font-weight:300;letter-spacing:0.22em;
+}
+.tagline-sub{font-size:10px;color:var(--ink-light);letter-spacing:0.22em}
+.jade-line{width:40px;height:2px;background:var(--jade);margin:10px auto;border-radius:1px}
+
+/* ── H1 大标题 ── */
+.h1-block{text-align:center;padding:0 8px 6px;font-weight:400;line-height:1.55}
+.h1-eyebrow{
+  display:block;font-size:clamp(12px,3.5vw,15px);
+  letter-spacing:0.2em;color:var(--ink-mid);margin-bottom:3px;
+}
+.h1-main{
+  display:block;font-size:clamp(20px,5.5vw,24px);
+  letter-spacing:0.08em;color:var(--gold);
+}
+.h1-sub{
+  font-size:11px;color:var(--ink-light);letter-spacing:0.1em;
+  margin-top:5px;display:block;
+}
+
+/* ── 主 CTA ── */
+.hero-cta{
+  display:block;margin:18px auto 6px;
+  max-width:300px;padding:16px 0;
+  text-align:center;
+  background:linear-gradient(135deg,var(--gold) 0%,#b8963c 100%);
+  border-radius:32px;text-decoration:none;
+  color:#fff;font-size:15px;letter-spacing:0.16em;
+  box-shadow:0 5px 20px rgba(201,168,76,0.38);
+  transition:transform 0.2s,box-shadow 0.2s;
+  -webkit-tap-highlight-color:transparent;
+  min-height:54px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+}
+.hero-cta:active{transform:scale(0.97)}
+.hero-cta:hover{transform:translateY(-2px);box-shadow:0 7px 26px rgba(201,168,76,0.42)}
+.hero-cta-label{font-size:15px;letter-spacing:0.16em}
+.hero-cta-hint{
+  font-size:10px;letter-spacing:0.06em;
+  opacity:0.82;margin-top:3px;
+}
+
+/* ── 信任条 ── */
+.trust-bar{
+  display:flex;justify-content:center;gap:16px;
+  flex-wrap:wrap;padding:10px 0 16px;
+}
+.trust-item{font-size:10px;color:var(--ink-light);letter-spacing:0.06em}
+.trust-item b{color:var(--jade-deep);font-weight:500}
+
+/* ── 4 核心卡片 ── */
+.cards-heading{
+  font-size:10px;color:var(--ink-light);letter-spacing:0.14em;
+  text-align:center;padding:2px 0 12px;
+}
+
+.cards-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-bottom:14px;
+}
+
+/* 每张卡片：扁平·无嵌套框 */
+.mcard{
+  background:var(--card);
+  border:1px solid rgba(91,191,160,0.14);
+  border-radius:var(--radius);
+  padding:18px 12px 14px;
+  text-align:center;
+  text-decoration:none;
+  display:flex;flex-direction:column;align-items:center;
+  box-shadow:var(--shadow);
+  transition:border-color 0.2s,transform 0.2s,box-shadow 0.2s;
+  -webkit-tap-highlight-color:transparent;
+  cursor:pointer;
+  min-height:130px;
+  justify-content:center;
+}
+.mcard:hover{
+  border-color:rgba(91,191,160,0.38);
+  transform:translateY(-2px);
+  box-shadow:0 6px 22px rgba(91,191,160,0.12);
+}
+.mcard:active{transform:scale(0.96)}
+
+/* 卡片左侧色条 — 每类一色 */
+.mcard.report  {border-left:3px solid var(--gold)}
+.mcard.match   {border-left:3px solid #cc2244}
+.mcard.face    {border-left:3px solid #7c6fcd}
+.mcard.ritual  {border-left:3px solid var(--jade)}
+
+.mcard-icon{font-size:30px;margin-bottom:6px;line-height:1}
+.mcard-name{font-size:14px;color:var(--ink);letter-spacing:0.09em;margin-bottom:3px}
+.mcard-sub{font-size:10px;color:var(--ink-light);letter-spacing:0.04em;line-height:1.4}
+.mcard-badge{
+  display:inline-block;margin-top:6px;
+  font-size:9px;padding:2px 9px;border-radius:8px;letter-spacing:0.05em;
+}
+.badge-free{background:rgba(91,191,160,0.12);color:var(--jade-deep)}
+.badge-paid{background:rgba(201,168,76,0.12);color:#8a7a40}
+
+/* ── 每日天机 · 免费留存脉冲 ── */
+.daily-pulse{
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(201,168,76,0.07);
+  border:1px solid rgba(201,168,76,0.22);
+  border-radius:var(--radius-sm);
+  padding:12px 16px;margin-bottom:14px;
+  text-decoration:none;
+  min-height:44px;
+  transition:opacity 0.2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.daily-pulse:active{opacity:0.55}
+.dp-left{display:flex;align-items:center;gap:9px}
+.dp-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--gold);flex-shrink:0;
+  animation:pulse-dot 1.6s ease-in-out infinite;
+}
+@keyframes pulse-dot{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:0.42;transform:scale(0.7)}
+}
+.dp-text{font-size:12px;color:var(--gold-light);letter-spacing:0.06em}
+.dp-text b{color:var(--gold)}
+.dp-arrow{font-size:11px;color:var(--gold);letter-spacing:0.04em;white-space:nowrap}
+
+/* ── 会员 Banner（降至卡片下方·非首位） ── */
+.member-banner{
+  display:block;
+  background:linear-gradient(135deg,var(--jade-deep),var(--jade));
+  border-radius:var(--radius);padding:16px;
+  text-decoration:none;margin-bottom:14px;
+  box-shadow:0 2px 16px rgba(91,191,160,0.2);
+  transition:transform 0.2s,box-shadow 0.2s;
+  -webkit-tap-highlight-color:transparent;
+}
+.member-banner:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(91,191,160,0.26)}
+.mb-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.mb-crown{font-size:22px}
+.mb-info{flex:1}
+.mb-title{font-size:14px;color:#fff;letter-spacing:0.1em;margin-bottom:2px}
+.mb-sub{font-size:10px;color:rgba(255,255,255,0.7);letter-spacing:0.05em}
+.mb-price{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--gold-light)}
+.mb-perks{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.mb-perk{
+  font-size:9px;padding:3px 8px;
+  background:rgba(255,255,255,0.12);
+  border-radius:10px;color:rgba(255,255,255,0.85);
+  letter-spacing:0.04em;
+}
+.mb-btn{
+  display:block;width:100%;padding:9px 0;
+  text-align:center;background:rgba(255,255,255,0.15);
+  border-radius:12px;color:#fff;
+  font-family:'Noto Serif SC',serif;
+  font-size:13px;letter-spacing:0.14em;
+}
+
+/* ── 底部导航 ── */
+.bnav{
+  display:flex;justify-content:center;
+  gap:16px;padding:20px 0 8px;flex-wrap:wrap;
+}
+.bnav a{
+  font-size:11px;color:var(--ink-light);
+  text-decoration:none;letter-spacing:0.06em;
+  min-height:44px;display:inline-flex;align-items:center;
+}
+.bnav a:hover{color:var(--jade)}
+
+.bfooter{
+  text-align:center;
+  font-family:'Cormorant Garamond',serif;
+  font-style:italic;font-size:11px;
+  color:var(--ink-light);padding:4px 0 2px;letter-spacing:0.1em;
+}
+.disclaimer{
+  text-align:center;font-size:9px;color:var(--ink-light);
+  opacity:0.45;letter-spacing:0.04em;padding:2px 0 8px;
+}
+.consent{
+  text-align:center;font-size:10px;color:var(--ink-light);
+  line-height:1.5;padding:12px 8px 0;letter-spacing:0.02em;
+}
+.consent a{color:var(--jade-deep);text-decoration:underline}
+</style>
+</head>
+<body>
+
+<!-- 预览水印（上线时删） -->
+<div class="preview-badge">PREVIEW 设计稿</div>
+
+<!-- 语言切换 -->
+<a class="lang-switch" href="bazi-en.html">English 八字 →</a>
+
+<!-- ══════════ Header ══════════ -->
+<div class="header">
+  <div class="logo">善 缘</div>
+  <div class="peace-clasp"></div>
+  <div class="tagline">S H E N Y U A N</div>
+  <div class="tagline-sub">东方灵性平台</div>
+  <div class="jade-line"></div>
+</div>
+
+<!-- H1 -->
+<div class="h1-block">
+  <span class="h1-eyebrow">AI 东方命理</span>
+  <span class="h1-main">一算知缘分与命运</span>
+  <span class="h1-sub">输入生日 · 即刻看你的命盘与运势</span>
+</div>
+
+<!-- ══════════ 主 CTA ══════════ -->
+<a class="hero-cta" href="bazi.html" id="heroCta">
+  <span class="hero-cta-label">免费八字排盘 · 立即测算</span>
+  <span class="hero-cta-hint">输入生日 → 五行命盘 + 深度报告预览</span>
+</a>
+
+<!-- 信任条 -->
+<div class="trust-bar">
+  <div class="trust-item">覆盖 <b>10+</b> 国家地区</div>
+  <div class="trust-item">成人<b>18+</b> 专享</div>
+  <div class="trust-item">隐私<b>保护</b></div>
+</div>
+
+<!-- ══════════ 4 张核心卡片 ══════════ -->
+<div class="cards-heading">— 选择你想探索的 —</div>
+
+<div class="cards-grid">
+
+  <!-- 卡片 A：命理报告 -->
+  <a class="mcard report" href="bazi.html">
+    <div class="mcard-icon">☯</div>
+    <div class="mcard-name">命理报告</div>
+    <div class="mcard-sub">八字 / 紫微 / 吠陀 / 占星<br>深度命盘解读</div>
+    <span class="mcard-badge badge-paid">$9.90起</span>
+  </a>
+
+  <!-- 卡片 B：合婚配对 -->
+  <a class="mcard match" href="hepan.html">
+    <div class="mcard-icon">💑</div>
+    <div class="mcard-name">合婚配对</div>
+    <div class="mcard-sub">发链接邀TA一起测<br>缘分指数全析</div>
+    <span class="mcard-badge badge-free">免费预览</span>
+  </a>
+
+  <!-- 卡片 C：面相手相 -->
+  <a class="mcard face" href="mianxiang.html">
+    <div class="mcard-icon">🪬</div>
+    <div class="mcard-name">面相手相</div>
+    <div class="mcard-sub">拍照即测 · 姓名数理<br>外貌能量解读</div>
+    <span class="mcard-badge badge-free">免费试</span>
+  </a>
+
+  <!-- 卡片 D：祈福代烧 -->
+  <a class="mcard ritual" href="daishao.html">
+    <div class="mcard-icon">🪔</div>
+    <div class="mcard-name">祈福代烧</div>
+    <div class="mcard-sub">开运符咒 · 供灯祈愿<br>水晶手串</div>
+    <span class="mcard-badge badge-paid">$29起</span>
+  </a>
+
+</div>
+
+<!-- ══════════ 每日天机 · 免费留存脉冲 ══════════ -->
+<a class="daily-pulse" href="daily.html" id="dailyPulse">
+  <div class="dp-left">
+    <span class="dp-dot"></span>
+    <span class="dp-text">每日天机 · <b id="dailyPulseDate"></b>已更新</span>
+  </div>
+  <span class="dp-arrow">查看今日 →</span>
+</a>
+
+<!-- ══════════ 会员 Banner（低于卡片·次要位置） ══════════ -->
+<a class="member-banner" href="member.html">
+  <div class="mb-row">
+    <span class="mb-crown">👑</span>
+    <div class="mb-info">
+      <div class="mb-title">善缘会员 · 全功能解锁</div>
+      <!-- ⚠️ 价格占位：待确认后填入正式价格 -->
+      <div class="mb-sub">单次 $9.90 → 会员 $9.90/月 · 不限次使用</div>
+    </div>
+    <div class="mb-price">$9.90<small style="font-size:11px">/月</small></div>
+  </div>
+  <div class="mb-perks">
+    <span class="mb-perk">无限占算</span>
+    <span class="mb-perk">全品类解锁</span>
+    <span class="mb-perk">专属命盘报告</span>
+  </div>
+  <div class="mb-btn">立即开通 →</div>
+</a>
+
+<!-- 合规同意 -->
+<div class="consent">
+  测算需填写出生日期等信息，即代表你同意我们的
+  <a href="../legal-CN.html#privacy">隐私政策</a>与
+  <a href="../legal-CN.html#terms">服务条款</a>
+</div>
+
+<!-- 底部导航 -->
+<div class="bnav">
+  <a href="../blog/">博客</a>
+  <a href="about.html">关于</a>
+  <a href="contact.html">联系</a>
+  <a href="../legal-CN.html#privacy">隐私</a>
+  <a href="../legal-CN.html#terms">条款</a>
+  <a href="refund.html">退款</a>
+  <a href="member.html">会员</a>
+  <a href="saju-landing-KR.html">한국어</a>
+</div>
+
+<div class="bfooter">每一次相遇，皆有因缘</div>
+<div class="disclaimer">Lumen Studio 出品 · 内容仅供娱乐参考，不代替医学 / 法律 / 投资建议</div>
+
+<script>
+(function(){
+  // 每日天机脉冲日期
+  var now = new Date();
+  var dp = document.getElementById('dailyPulseDate');
+  if(dp) dp.textContent = (now.getMonth()+1)+'月'+now.getDate()+'日';
+
+  // Hero CTA 防重复点击
+  var cta = document.getElementById('heroCta');
+  if(cta){
+    cta.addEventListener('click', function(){
+      this.style.opacity = '0.62';
+      this.style.pointerEvents = 'none';
+    });
+  }
+
+  // 裂变归因：读 ?ref= 参数存入 localStorage
+  try{
+    var params = new URLSearchParams(window.location.search);
+    var ref = params.get('ref');
+    if(ref){ localStorage.setItem('sy_referrer', ref); }
+  }catch(e){}
+})();
+</script>
+</body>
+</html>

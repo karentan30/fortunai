@@ -125,6 +125,95 @@ function baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender }) 
   const _hasHour = birthHour !== undefined && birthHour !== null && birthHour !== '';
   return _hasHour ? (buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour, gender }) || '') : '';
 }
+
+// ── 视觉命盘卡数据 helper ──
+// 返回干净 JSON 供前端渲染四柱图+五行图+格局/十神短卡。
+// 五行算法：天干各算1份；地支按主气+藏干加权(本气1, 中气0.5, 余气0.3)。
+// 失败时返回 null，前端降级到纯文字报告。
+function baziChartData({ birthYear, birthMonth, birthDay, birthHour, gender }) {
+  try {
+    const ch = computeBaziChart({
+      year: Number(birthYear), month: Number(birthMonth),
+      day: Number(birthDay), hour: Number(birthHour) || 0,
+      gender: gender || 'female', includeZiwei: false
+    });
+    const b = ch.bazi;
+    const sz = b.siZhu;          // {year,month,day,hour:{gan,zhi}}
+    const cg = b.cangGan;        // {year,month,day,hour:[{gan,shiShen},...]}
+    const en = b.enrichment;
+    const ss = b.shiShen;        // {year,month,day,hour: 十神名}
+
+    // 四柱数组 (按年月日时)
+    const PILLAR_LABELS_ZH = ['年', '月', '日', '时'];
+    const pillars = ['year', 'month', 'day', 'hour'].map(function(k, i) {
+      var cangArr = (cg && cg[k]) ? cg[k] : [];
+      return {
+        label: PILLAR_LABELS_ZH[i],
+        gan: sz[k].gan,
+        zhi: sz[k].zhi,
+        shishen: (ss && ss[k]) ? ss[k] : '',
+        cangGan: cangArr.map(function(c) { return c.gan + (c.shiShen ? '('+c.shiShen+')' : ''); }).join('·')
+      };
+    });
+
+    // 五行分布（天干各1 + 地支本气1/中气0.5/余气0.3）
+    const WU_XING_GAN_MAP = {甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'};
+    var counts = { 金: 0, 木: 0, 水: 0, 火: 0, 土: 0 };
+    ['year','month','day','hour'].forEach(function(k) {
+      // 天干 +1
+      var ganElem = WU_XING_GAN_MAP[sz[k].gan];
+      if (ganElem) counts[ganElem] = (counts[ganElem] || 0) + 1;
+      // 地支藏干加权
+      var cangArr = (cg && cg[k]) ? cg[k] : [];
+      cangArr.forEach(function(c, idx) {
+        var cElem = WU_XING_GAN_MAP[c.gan];
+        if (!cElem) return;
+        var weight = idx === 0 ? 1 : (idx === 1 ? 0.5 : 0.3);
+        counts[cElem] = (counts[cElem] || 0) + weight;
+      });
+    });
+    // 保留1位小数，归整
+    Object.keys(counts).forEach(function(k) { counts[k] = Math.round(counts[k] * 10) / 10; });
+
+    // 格局 / 旺衰 / 喜用
+    var geju = (en && en['格局'] && en['格局'].primary) ? en['格局'].primary : '';
+    var wangShuai = (en && en['旺衰'] && en['旺衰'].verdict) ? en['旺衰'].verdict : '';
+    var yongshen = (en && en['调候用神'] && Array.isArray(en['调候用神'])) ? en['调候用神'].join('·') : '';
+    var missing = (en && en['五行统计'] && en['五行统计'].missing) ? en['五行统计'].missing : [];
+    var strongest = (en && en['五行统计'] && en['五行统计'].strongest) ? en['五行统计'].strongest : [];
+
+    // 大运简表（前8步）
+    var dayun = [];
+    if (b.dayun && Array.isArray(b.dayun)) {
+      dayun = b.dayun.slice(0, 8).map(function(d) {
+        return {
+          ganZhi: d.ganZhi ? (d.ganZhi.gan + d.ganZhi.zhi) : '',
+          startAge: d.startAge,
+          endAge: d.endAge,
+          ganShiShen: d.ganShiShen || '',
+          zhiShiShen: d.zhiShiShen || ''
+        };
+      });
+    }
+
+    return {
+      pillars: pillars,
+      dayMaster: b.dayMaster,
+      dayMasterElement: (WU_XING_GAN_MAP[b.dayMaster] || ''),
+      wuxing: counts,
+      missing: missing,
+      strongest: strongest,
+      geju: geju,
+      wangShuai: wangShuai,
+      yongshen: yongshen,
+      dayun: dayun
+    };
+  } catch (e) {
+    console.warn('[baziChartData]', e && e.message);
+    return null;
+  }
+}
+
 // 各语言"严格使用上方精确排盘"指令（排盘块本体是中文·万年历术语通用·此句用本地语言强约束 LLM 不自排）
 const CHART_STRICT = {
   en: '\n\n[PRECISE CHART — computed by a professional Chinese perpetual-calendar engine below. You MUST use exactly these Four Pillars, Day Master, Ten Gods, hidden stems, pattern, favorable elements and Luck Cycles (大运). Do NOT recompute, guess, or alter any pillar or Luck Cycle. Interpret only. Render all BaZi terms (Ten Gods 十神, symbolic stars 神煞, chart pattern 格局) using the STANDARD Chinese-English glossary — do NOT transliterate/phoneticize them.]\n',
@@ -781,6 +870,106 @@ router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
 });
 
 // ══════════════════════════════════════════
+// POST /api/mianxiang/stream — 面相流式 SSE
+// ══════════════════════════════════════════
+router.post('/mianxiang/stream', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { question, imageBase64, mimeType, lang } = req.body;
+    let features = req.body.features || null;
+
+    // Phase 1: vision extraction (blocking, must finish before streaming)
+    if (imageBase64 && !features) {
+      features = await analyzeFace(imageBase64, mimeType);
+    }
+
+    const _LANG = { en: 'English', ko: '한국어', 'pt-br': 'Português (Brasil)', th: 'ไทย', es: 'Español' }[lang];
+    const _langLine = _LANG
+      ? `Output the ENTIRE report in ${_LANG}. Translate all palace/zone names to ${_LANG} (keep the Ma Yi / pinyin term in parentheses once). Do NOT output Chinese prose. Avoid the word "Chinese" — say "Eastern physiognomy / Ma Yi Shen Xiang".`
+      : '用 Markdown，标题分段，简体中文';
+
+    const SYSTEM = `你是一位精通《麻衣神相》的正宗面相师，以宋代陈抟（希夷先生）传承的麻衣道者相法为宗，融汇三停五岳十二宫气色神韵一整套体系。
+
+核心原则：
+1. 只解读用户实际描述或照片中可见的面部特征——没有看到的绝对不编造，宁缺毋滥。
+2. 采用麻衣正宗十二宫框架逐一分析，每宫对应部位→对应人生领域。
+3. 十二宫：命宫（眉心）·财帛宫（鼻准）·兄弟宫（眉毛）·田宅宫（眼皮）·男女宫（眼下卧蚕）·奴仆宫（地阁两侧）·夫妻宫（鱼尾眼角）·疾厄宫（山根鼻梁）·迁移宫（眉梢额角）·官禄宫（额头中央）·福德宫（天仓太阳穴）·父母宫（日月角）。
+4. 三停判运：上停（发际→眉）论早年/智慧运；中停（眉→鼻尖）论中年/财事运；下停（鼻尖→下巴）论晚年/子嗣运。
+5. 五岳：额（南岳/衡山）·鼻（中岳/嵩山）·左颧（东岳/泰山）·右颧（西岳/华山）·下巴（北岳/恒山）——五岳朝拱则贵，偏塌则损所司之运。
+6. 气色神韵：面色明润为吉，晦暗为凶。眼神有光、顾盼有神为上相。
+7. 疾厄宫只说养生调理方向，严禁点病名、做医疗诊断。
+8. 结尾必须有"相师叮嘱"：强调面相随心性而变，鼓励积善修德，不宿命论。
+9. 用Markdown，标题分段，每个宫位分析100-200字。
+【OUTPUT LANGUAGE】${_langLine}。`;
+
+    const featureBlock = features
+      ? `\n\n【照片特征描述（仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
+      : '\n\n【注：用户未上传照片，请基于通识以麻衣体系作整体指引，对无法确认的具体特征勿做假设。】';
+
+    const userPrompt = `用户关注：${question || '请按麻衣神相体系给我做一次完整的面相分析'}${featureBlock}
+
+请按以下麻衣神相结构出具面相报告：
+
+## 总纲：三停格局（早中晚运总览）
+## 五岳朝拱（格局高低）
+## 十二宫逐一解读
+### 命宫（眉心印堂）— 精神气质、本命贵贱
+### 官禄宫（额头中央）— 事业运、早年运
+### 财帛宫（鼻准头）— 财运、聚财能力
+### 夫妻宫（鱼尾眼角）— 婚恋缘分、感情质量
+### 田宅宫（上眼皮）— 不动产、家宅
+### 男女宫（卧蚕）— 子嗣运、桃花
+### 兄弟宫（眉毛）— 兄弟朋友、协作运
+### 奴仆宫（地阁两侧）— 下属、晚年依靠
+### 疾厄宫（山根鼻梁）— 体质倾向（养生方向，非诊断）
+### 迁移宫（眉梢额角）— 出行、异乡运
+### 福德宫（天仓太阳穴）— 福气、享受与精神满足
+### 父母宫（日月角）— 与父母缘分、长辈贵人
+
+## 气色神韵总评
+## 相师叮嘱（面相随心性而变·积善修德）`;
+
+    const messages = buildReadingPrompt(SYSTEM, userPrompt);
+    var _gm = gateMessages(req, ['mianxiang', '面相', 'member'], messages, 8192);
+
+    // Open SSE — meta event clears the 30s frontend timeout immediately
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.flushHeaders();
+    res.write(`data: ${JSON.stringify({ type: 'meta', tier: _gm.full ? 'full' : 'basic', locked: !_gm.full })}\n\n`);
+
+    const streamBody = await deepseekStream(_gm.messages, { maxTokens: _gm.maxTokens, timeout: 300000 });
+    const reader = streamBody.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let fullText = '', buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) { buf += decoder.decode(); break; }
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try {
+          const json = JSON.parse(raw);
+          const content = json.choices?.[0]?.delta?.content || '';
+          if (content) { fullText += content; res.write(`data: ${JSON.stringify({ type: 'chunk', content })}\n\n`); }
+        } catch(e) {}
+      }
+    }
+    insertReading.run('mianxiang', JSON.stringify({ question, features: features ? features.slice(0, 200) : null }), fullText, req.userId);
+    res.write(`data: ${JSON.stringify({ type: 'done', tier: _gm.full ? 'full' : 'basic', locked: !_gm.full })}\n\n`);
+    res.end();
+  } catch (err) {
+    _refundCreditOnFail(req);
+    console.error('[MIANXIANG-STREAM ERR]', err.message);
+    try { res.write(`data: ${JSON.stringify({ type: 'error', message: '生成失败，请重试' })}\n\n`); res.end(); } catch(e) {}
+  }
+});
+
+// ══════════════════════════════════════════
 // POST /api/shouxiang — 手相（麻衣神相体系）
 // body: { features: string, question: string, hand: 'left'|'right' }
 // ══════════════════════════════════════════
@@ -841,6 +1030,96 @@ router.post('/shouxiang', rateLimitMiddleware, async (req, res) => {
     _refundCreditOnFail(req);
     console.error('[SHOUXIANG ERR]', err.message);
     res.status(500).json({ error: 'AI暂时不可用', detail: err.message });
+  }
+});
+
+// ══════════════════════════════════════════
+// POST /api/shouxiang/stream — 手相流式 SSE
+// ══════════════════════════════════════════
+router.post('/shouxiang/stream', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { question, hand, imageBase64, mimeType, lang } = req.body;
+    let features = req.body.features || null;
+    if (imageBase64 && !features) {
+      features = await analyzePalm(imageBase64, mimeType);
+    }
+    const handLabel = hand === 'left' ? '左手' : '右手（主手）';
+    const _LANG = { en: 'English', ko: '한국어', 'pt-br': 'Português (Brasil)', th: 'ไทย', es: 'Español' }[lang];
+    const _langLine = _LANG
+      ? `Output the ENTIRE report in ${_LANG}. Translate all line/mount names to ${_LANG} (keep the pinyin term in parentheses once). Do NOT output Chinese prose. Avoid the word "Chinese" — say "Eastern palmistry / Ma Yi".`
+      : '用 Markdown，标题分段，简体中文';
+
+    const SYSTEM = `你是一位精通《麻衣神相》手相篇的正宗手相师，以三大主线、八丘、特殊掌纹为核心体系断命。
+
+核心原则：
+1. 只解读用户实际描述或照片中可见的掌纹特征——看到什么说什么，不编造任何照片中没有的纹路。
+2. 三大主线：感情线（心线，起自小指侧横过掌心）·智慧线（头线，起自食指下方斜向小鱼际）·生命线（起自拇指食指间弧绕金星丘）。
+3. 辅助线：事业线（命运线，从手腕中央向中指延伸）·太阳线（无名指下竖纹，主名誉财运）·婚姻线（小指下方横纹）。
+4. 八丘：金星丘（拇指根）·木星丘（食指根）·土星丘（中指根）·太阳丘（无名指根）·水星丘（小指根）·月丘（小鱼际）·上火星丘·下火星丘。
+5. 特殊掌型：川字掌（感情线智慧线合一，主专注执着）·断掌/通贯手（贯穿全掌，主个性鲜明）。
+6. 生命线长短不等于寿命长短——必须在此说明，避免用户恐慌。
+7. 结尾"相师叮嘱"：强调掌纹随人生经历和心态变化，不宿命论。
+8. 用Markdown，标题分段，每部分100-180字。
+【OUTPUT LANGUAGE】${_langLine}。`;
+
+    const featureBlock = features
+      ? `\n\n【照片特征描述（${handLabel}，仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
+      : `\n\n【注：用户未上传照片，请以${handLabel}为参照，基于麻衣手相体系作整体指引，对无法确认的具体纹路勿做假设。】`;
+
+    const userPrompt = `用户关注：${question || '请按麻衣神相手相体系给我做完整分析'}${featureBlock}
+
+请按以下麻衣手相结构出具报告：
+
+## 掌型总观（手掌形状、质感、整体格局）
+## 三大主线精析
+### 感情线（心线）— 情感模式、爱情风格
+### 智慧线（头线）— 思维方式、决策风格
+### 生命线 — 体质节律与人生重要节点（注意：线长≠寿长）
+## 辅助线解读
+### 事业线（命运线）— 事业方向与运势
+### 太阳线 — 名誉、财运与贵人
+### 婚姻线 — 婚恋时机与关系质量
+## 八丘分析（重点突出明显的丘位）
+## 特殊掌纹（如有川字掌/断掌/通贯手等）
+## 相师叮嘱（掌纹随心态和经历变化·不宿命论）`;
+
+    const messages = buildReadingPrompt(SYSTEM, userPrompt);
+    var _gm = gateMessages(req, ['shouxiang', '手相', 'member'], messages, 8192);
+
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.flushHeaders();
+    res.write(`data: ${JSON.stringify({ type: 'meta', tier: _gm.full ? 'full' : 'basic', locked: !_gm.full })}\n\n`);
+
+    const streamBody = await deepseekStream(_gm.messages, { maxTokens: _gm.maxTokens, timeout: 300000 });
+    const reader = streamBody.getReader();
+    const decoder = new TextDecoder('utf-8');
+    let fullText = '', buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) { buf += decoder.decode(); break; }
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n'); buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6).trim();
+        if (raw === '[DONE]') continue;
+        try {
+          const json = JSON.parse(raw);
+          const content = json.choices?.[0]?.delta?.content || '';
+          if (content) { fullText += content; res.write(`data: ${JSON.stringify({ type: 'chunk', content })}\n\n`); }
+        } catch(e) {}
+      }
+    }
+    insertReading.run('shouxiang', JSON.stringify({ question, hand, features: features ? features.slice(0, 200) : null }), fullText, req.userId);
+    res.write(`data: ${JSON.stringify({ type: 'done', tier: _gm.full ? 'full' : 'basic', locked: !_gm.full })}\n\n`);
+    res.end();
+  } catch (err) {
+    _refundCreditOnFail(req);
+    console.error('[SHOUXIANG-STREAM ERR]', err.message);
+    try { res.write(`data: ${JSON.stringify({ type: 'error', message: '生成失败，请重试' })}\n\n`); res.end(); } catch(e) {}
   }
 });
 
@@ -2944,7 +3223,8 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
         dayMaster: bazi.dayMaster,
         dayMasterElement: bazi.dayMasterElement
       };
-      res.write(`data: ${JSON.stringify({ type: 'meta', pillars: pillarsKo, tier: full ? 'full' : 'basic', locked: !full })}\n\n`);
+      var _chartDataKo = baziChartData({ birthYear, birthMonth, birthDay, birthHour, gender });
+      res.write(`data: ${JSON.stringify({ type: 'meta', pillars: pillarsKo, tier: full ? 'full' : 'basic', locked: !full, chart: _chartDataKo })}\n\n`);
 
       var modeInsKo = (mode === 'gentle')
         ? '\n\n【말투】따뜻하고 부드럽게, 무서운 말을 하지 마세요. 문제가 있어도 먼저 안아주고, 이해시키고, 이끌어 주세요.'
@@ -2998,7 +3278,8 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
         dayMaster: bazi.dayMaster,
         dayMasterElement: bazi.dayMasterElement
       };
-      res.write(`data: ${JSON.stringify({ type: 'meta', pillars: pillarsEn, tier: full ? 'full' : 'basic', locked: !full })}\n\n`);
+      var _chartDataEn = baziChartData({ birthYear, birthMonth, birthDay, birthHour, gender });
+      res.write(`data: ${JSON.stringify({ type: 'meta', pillars: pillarsEn, tier: full ? 'full' : 'basic', locked: !full, chart: _chartDataEn })}\n\n`);
 
       var freeSuffixEn = full ? '' : `\n\nIMPORTANT: This is the free preview. Output ONLY these 3 chapters:\n📜 Four Pillars Chart\n🌊 Five Elements Analysis\n🌟 This Year's Fortune\n\nAfter completing these 3 chapters (around 1000-1500 words total), output exactly:\n---LOCKED---\n\nThen output a brief teaser listing the locked chapters.`;
       var sysEn = `You are a master BaZi (Four Pillars of Destiny) reader with 30+ years of experience, trained in classical Chinese metaphysics. You write warm, insightful, and practical reports in fluent English. Never be scary or fatalistic — you help people understand their strengths and navigate challenges.${HEALTH_SOFT.en}${freeSuffixEn}`;
@@ -3060,8 +3341,9 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
 
     const userPrompt = `请为我批算八字。出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour !== undefined ? birthHour + '时' : ''}，性别：${gender === 'male' ? '男' : '女'}，关注：${question || '请全面分析命盘'}`;
 
-    // 发送元数据
-    res.write(`data: ${JSON.stringify({ type: 'meta', tier: full ? 'full' : 'basic', locked: !full })}\n\n`);
+    // 发送元数据（含视觉命盘卡数据）
+    var _chartDataZh = baziChartData({ birthYear, birthMonth, birthDay, birthHour, gender });
+    res.write(`data: ${JSON.stringify({ type: 'meta', tier: full ? 'full' : 'basic', locked: !full, chart: _chartDataZh })}\n\n`);
 
     const streamBody = await deepseekStream(
       buildReadingPrompt(sysPay, userPrompt),

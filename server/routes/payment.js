@@ -28,7 +28,14 @@ const {
   insertOrder, _updOrder, _updOrderExpiry, _setOrExtendSub, _insSub,
   _findOrder, _insCnOrder, _completeCnOrder, _allOrders, _insJossOrder,
   _M, _persist, memberTier,
+  grantQuestionCredits,
 } = require('../lib/store');
+
+// 按次问事产品 → 授予的 credit 数量
+const QUESTION_CREDIT_MAP = {
+  single_question: 1,
+  question_pack_3: 3,
+};
 
 // 月会员购其他报告(非订阅产品)享5折
 const MONTHLY_MEMBER_REPORT_DISCOUNT = 0.5;
@@ -86,6 +93,9 @@ const STRIPE_PRICE_IDS = {
   'member_monthly':       'price_1U2uouEAXrE2YgcrhD1McCY5',  // $9.90/月
   'member_quarterly':     'price_1U2uouEAXrE2YgcrjtiXb7h6',  // $24.90/3月
   'member_yearly':        'price_1U2uovEAXrE2YgcrwvxdsOUC',  // $69/年
+  // ── 按次问事（Karen 需在 Stripe 后台建，建好后填入 price_xxx） ──
+  // 'single_question':   'price_PLACEHOLDER_290',   // $2.90 · 1次问事 · one_time
+  // 'question_pack_3':   'price_PLACEHOLDER_690',   // $6.90 · 3次问事包 · one_time
   // ⚠️ 旧的错价 price 勿启用：RzUY78Ko($6.90月)/HYurEL8Z($49年)/TU0PFGZm($14.99季) 已被上面新价替代
   // ── KRW prices ──
   // 仅保留与 store.js amountKrw 完全一致的固定 price；不一致的走 price_data 动态（unitAmount=amountKrw，永远与前端展示一致）
@@ -260,6 +270,17 @@ router.post('/stripe-webhook', async (req, res) => {
         if (orderNo) {
           _updOrder('completed', orderNo);
           completeAffiliateOrder(orderNo);
+          // 按次问事: 发放问事 credit
+          const qProd = session.metadata?.product || '';
+          const qCredits = QUESTION_CREDIT_MAP[qProd];
+          if (qCredits) {
+            const qOrder = _findOrder(orderNo);
+            const qUid = qOrder && qOrder.user_id;
+            if (qUid) {
+              grantQuestionCredits(qUid, qCredits);
+              console.log('[QUESTION CREDITS] granted ' + qCredits + ' to uid ' + qUid + ' for ' + qProd);
+            }
+          }
           const subId = session.subscription;
           const mode = session.mode;
           if (subId && stripe) {
@@ -397,6 +418,8 @@ const CONFIGS={
   member_daily:{icon:'☀️',title:'日会员已激活',sub:'今日畅享 · 24小时全开',benefits:['今日全部AI占算无限次','全产品24小时畅用','体验完整会员权益'],btn:'开始使用',url:'/pages/bazi.html?member=1'},
   daily_sub:{icon:'☀️',title:'每日天机已订阅',sub:'日日开运 · 天机指引',benefits:['每日五行运势推送','专属Affirmation冥想词','明日预告提前知'],btn:'查看今日天机',url:'/pages/daily.html?activated=1'},
   saju_kr_full:{icon:'🔮',title:'사주 리포트 잠금 해제',sub:'결제 완료 · 완전한 사주 분석이 열렸어요',benefits:['천간지지 완전 해석','10년 대운 + 올해 유년 분석','행동 가이드 및 개운 조언'],btn:'리포트 확인하기',url:'/pages/saju-KR.html?activated=1'},
+  single_question:{icon:'✨',title:'Question Unlocked',sub:'Payment complete · Your question credit is ready',benefits:['1 question to your AI Destiny Advisor','Ask anything — fate, love, career, timing','Credits never expire'],btn:'Ask Now',url:'/pages/chat-EN.html?credits=1'},
+  question_pack_3:{icon:'🔯',title:'3-Question Pack Unlocked',sub:'Payment complete · 3 credits added to your account',benefits:['3 questions to your AI Destiny Advisor','Use any time — credits never expire','Best value per question ($2.30 each)'],btn:'Start Asking',url:'/pages/chat-EN.html?credits=3'},
   joss_basic:{icon:'🕯️',title:'代烧订单已确认',sub:'法师接单 · 虔诚履约',benefits:['标准纸钱 + 金元宝 + 祈福','48小时内安排法事','仪式视频发送至邮箱'],btn:'查看订单详情',url:'/pages/daishao-en.html?order=1'},
   joss_premium:{icon:'🏮',title:'尊享代烧已确认',sub:'豪华法事 · 诚心供奉',benefits:['豪华纸质别墅 + 法器全套','专属法师 1对1 仪式','高清视频 48小时内发送'],btn:'查看订单详情',url:'/pages/daishao-en.html?order=1'},
   joss_supreme:{icon:'⛩️',title:'至尊法事已受理',sub:'大法事 · 隆重承办',benefits:['全套冥器 + 多位法师联诵','直播仪式 实时观看','专属报告 + 法事证书'],btn:'查看订单详情',url:'/pages/daishao-en.html?order=1'},
@@ -539,7 +562,12 @@ router.post('/pay/wechat/notify', (req, res) => {
   var r = _completeCnOrder(oid, feeCents, d.transaction_id || '');
   if (r === 'notfound') { console.error('[wx/notify] 未知订单 ' + oid); return res.send(pay.wxReplyXml(false, 'order not found')); }
   if (r === 'amount_mismatch') { console.error('[wx/notify] 金额不符 ' + oid + ' paid=' + feeCents); return res.send(pay.wxReplyXml(false, 'amount mismatch')); }
-  if (r === 'paid') { console.log('[wx/notify] PAID ' + oid); completeAffiliateOrder(oid); }
+  if (r === 'paid') {
+    console.log('[wx/notify] PAID ' + oid); completeAffiliateOrder(oid);
+    var wxOrder = _findOrder(oid);
+    var wxCredits = wxOrder && QUESTION_CREDIT_MAP[wxOrder.product];
+    if (wxCredits && wxOrder.user_id) grantQuestionCredits(wxOrder.user_id, wxCredits);
+  }
   return res.send(pay.wxReplyXml(true, 'OK'));
 });
 
@@ -608,7 +636,12 @@ router.post('/pay/alipay/notify', (req, res) => {
   var r = _completeCnOrder(oid, paidCents, d.trade_no || '');
   if (r === 'notfound') { console.error('[alipay/notify] 未知订单 ' + oid); return res.send('fail'); }
   if (r === 'amount_mismatch') { console.error('[alipay/notify] 金额不符 ' + oid + ' paid=' + paidCents); return res.send('fail'); }
-  if (r === 'paid') { console.log('[alipay/notify] PAID ' + oid); completeAffiliateOrder(oid); }
+  if (r === 'paid') {
+    console.log('[alipay/notify] PAID ' + oid); completeAffiliateOrder(oid);
+    var aliOrder = _findOrder(oid);
+    var aliCredits = aliOrder && QUESTION_CREDIT_MAP[aliOrder.product];
+    if (aliCredits && aliOrder.user_id) grantQuestionCredits(aliOrder.user_id, aliCredits);
+  }
   return res.send('success');
 });
 

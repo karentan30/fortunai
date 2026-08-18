@@ -77,9 +77,19 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .paywall-card{text-align:center;padding:20px 16px;margin:12px 0;background:var(--card);border:1px solid rgba(201,168,76,0.2);border-radius:12px;box-shadow:0 2px 12px rgba(0,0,0,0.05)}
 .paywall-card h3{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--gold-deep);letter-spacing:0.06em;font-weight:400;margin:8px 0 6px}
 .paywall-card p{font-size:12px;color:var(--sub);line-height:1.65;margin-bottom:14px}
-.paywall-btn{display:inline-block;padding:11px 28px;background:linear-gradient(135deg,var(--gold-deep),var(--gold));border-radius:22px;color:rgba(14,10,4,0.9);font-size:13px;letter-spacing:0.08em;text-decoration:none;font-weight:500;margin-bottom:4px}
+.paywall-btn{display:inline-block;padding:11px 28px;background:linear-gradient(135deg,var(--gold-deep),var(--gold));border-radius:22px;color:rgba(14,10,4,0.9);font-size:13px;letter-spacing:0.08em;text-decoration:none;font-weight:500;margin-bottom:4px;cursor:pointer;border:none;width:100%;font-family:'Inter',sans-serif}
 .paywall-alt{display:block;margin-top:10px;font-size:12px;color:var(--sub)}
 .paywall-alt a{color:var(--jade);text-decoration:none}
+/* 3-tier pricing grid */
+.pricing-tiers{display:flex;flex-direction:column;gap:8px;margin:12px 0 14px;text-align:left}
+.tier-row{border:1px solid rgba(201,168,76,0.18);border-radius:10px;padding:12px 14px;cursor:pointer;background:#fff;transition:border-color 0.18s,box-shadow 0.18s;position:relative}
+.tier-row:hover{border-color:var(--gold);box-shadow:0 2px 10px rgba(201,168,76,0.15)}
+.tier-row.best{border-color:rgba(201,168,76,0.5);background:rgba(201,168,76,0.04)}
+.tier-badge{position:absolute;top:-8px;right:12px;background:linear-gradient(135deg,var(--gold-deep),var(--gold));color:#fff;font-size:9px;letter-spacing:0.1em;padding:2px 8px;border-radius:10px;font-weight:600}
+.tier-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:2px}
+.tier-desc{font-size:11px;color:var(--light);line-height:1.5}
+.tier-price{font-size:18px;font-weight:700;color:var(--gold-deep);margin-top:4px}
+.tier-price span{font-size:11px;font-weight:400;color:var(--light)}
 </style>
 <link rel="stylesheet" href="/assets/css/common.css">
 </head>
@@ -167,23 +177,70 @@ function decrementQuota(n) {
   updateQuotaUI();
 }
 
+function _startCheckout(product) {
+  var token = localStorage.getItem('sy_token') || '';
+  var btn = document.getElementById('pw_btn_' + product);
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
+  fetch('/api/pay/stripe/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({
+      product: product,
+      currency: 'usd',
+      success_url: location.origin + '/api/success?product=' + product,
+      cancel_url: location.href,
+      token: token
+    })
+  }).then(function(r){ return r.json(); })
+    .then(function(d){
+      if (d.url) { location.href = d.url; }
+      else {
+        if (btn) { btn.disabled = false; btn.textContent = btn.getAttribute('data-label') || 'Buy'; }
+        alert('Payment temporarily unavailable. Please try again.');
+      }
+    }).catch(function(){
+      if (btn) { btn.disabled = false; btn.textContent = btn.getAttribute('data-label') || 'Buy'; }
+      alert('Network error. Please try again.');
+    });
+}
+
 function showPaywall() {
   if (paywallShown) return;
   paywallShown = true;
   var input = document.getElementById('input');
   var btn = document.getElementById('sendBtn');
-  if (input) { input.disabled = true; input.placeholder = 'Unlock membership to continue'; }
+  if (input) { input.disabled = true; input.placeholder = 'Unlock more questions to continue'; }
   if (btn) btn.disabled = true;
 
   var area = document.getElementById('chatArea');
   var div = document.createElement('div');
   div.className = 'paywall-card';
   div.innerHTML =
-    '<div style="font-size:28px;margin-bottom:4px">✨</div>' +
+    '<div style="font-size:28px;margin-bottom:4px">✦</div>' +
     '<h3>You\'ve used today\'s free questions</h3>' +
-    '<p>Upgrade to membership for unlimited daily conversations,<br>plus full access to all destiny reports.</p>' +
-    '<a href="member-en.html" class="paywall-btn">Unlock Membership · $9.90/mo</a>' +
-    '<div class="paywall-alt">Or <a href="bazi-en.html">get a free BaZi reading →</a></div>';
+    '<p>Choose how you\'d like to continue:</p>' +
+    '<div class="pricing-tiers">' +
+      '<div class="tier-row" onclick="_startCheckout(\'single_question\')">' +
+        '<div class="tier-title">Single Question</div>' +
+        '<div class="tier-desc">Ask one specific question — love, career, timing, or any life area</div>' +
+        '<div class="tier-price">$2.90 <span>· 1 question · never expires</span></div>' +
+        '<button id="pw_btn_single_question" data-label="Buy 1 Question" class="paywall-btn" style="margin-top:10px;font-size:12px;padding:9px 0" onclick="event.stopPropagation();_startCheckout(\'single_question\')">Buy 1 Question</button>' +
+      '</div>' +
+      '<div class="tier-row best" onclick="_startCheckout(\'question_pack_3\')">' +
+        '<div class="tier-badge">BEST VALUE</div>' +
+        '<div class="tier-title">3-Question Pack</div>' +
+        '<div class="tier-desc">Three in-depth questions — save $1.80 vs. buying one at a time</div>' +
+        '<div class="tier-price">$6.90 <span>· 3 questions · $2.30 each · never expires</span></div>' +
+        '<button id="pw_btn_question_pack_3" data-label="Buy 3 Questions" class="paywall-btn" style="margin-top:10px;font-size:12px;padding:9px 0" onclick="event.stopPropagation();_startCheckout(\'question_pack_3\')">Buy 3 Questions</button>' +
+      '</div>' +
+      '<div class="tier-row" onclick="location.href=\'member-en.html\'">' +
+        '<div class="tier-title">Unlimited Membership</div>' +
+        '<div class="tier-desc">Unlimited daily conversations + all full destiny reports included</div>' +
+        '<div class="tier-price">$9.90<span>/mo</span> <span style="margin-left:6px">· unlimited questions + reports</span></div>' +
+        '<a href="member-en.html" class="paywall-btn" style="display:block;text-align:center;margin-top:10px;font-size:12px;padding:9px 0;text-decoration:none;color:rgba(14,10,4,0.9)">Get Membership</a>' +
+      '</div>' +
+    '</div>' +
+    '<div class="paywall-alt">Or <a href="bazi-en.html">try a free BaZi reading →</a></div>';
   area.appendChild(div);
   area.scrollTop = area.scrollHeight;
 }

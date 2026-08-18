@@ -400,23 +400,21 @@ function animateSteps(doneCount){
 function startReading(file){
   show('view-analyzing');
   animateSteps(0);
+  document.getElementById('dropzoneLabel').style.pointerEvents = 'none';
+  document.getElementById('ctaBtn').style.pointerEvents = 'none';
 
-  // Phase 1: read photo as base64
   var reader = new FileReader();
   reader.onload = function(e){
-    // Strip the "data:image/jpeg;base64," prefix — send only raw base64
     var dataUrl = e.target.result;
     var base64 = dataUrl.split(',')[1] || '';
     var mimeMatch = dataUrl.match(/^data:([^;]+);/);
     var mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
 
-    // Step 1 done: photo loaded
     animateSteps(1);
     document.getElementById('analyzingTitle').textContent = 'Examining your photo…';
     document.getElementById('analyzingDesc').textContent = 'our secure AI is mapping your facial features.';
 
-    // POST to backend — send imageBase64 + mimeType so server-side vision runs
-    fetch('/api/mianxiang', {
+    fetch('/api/mianxiang/stream', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
@@ -425,31 +423,61 @@ function startReading(file){
         mimeType: mimeType
       })
     })
-    .then(function(r){ return r.json(); })
-    .then(function(data){
+    .then(function(response){
+      if(!response.ok || !response.body){ throw new Error('stream unavailable'); }
+
+      // Switch to result view immediately — content streams in
       animateSteps(4);
       show('view-result');
+      var out = document.getElementById('readingOutput');
+      out.innerHTML = '';
+      out.style.display = 'block';
 
-      if(data.reading){
-        var out = document.getElementById('readingOutput');
-        out.innerHTML = renderMarkdown(data.reading);
-        out.style.display = 'block';
-        if(data.locked){
-          document.getElementById('paywallBox').style.display = 'block';
-        }
-      } else if(data.error){
-        showFallbackCard();
-        var errEl = document.getElementById('errBox');
-        errEl.textContent = 'Note: ' + (data.error || 'Could not reach AI. Showing a sample reading.');
-        errEl.style.display = 'block';
+      var sseReader = response.body.getReader();
+      var sseDecoder = new TextDecoder('utf-8');
+      var _fullText = '';
+      var sseBuf = '';
+
+      function pump(){
+        return sseReader.read().then(function(rv){
+          if(rv.done){ return; }
+          sseBuf += sseDecoder.decode(rv.value, { stream: true });
+          var lines = sseBuf.split('\n'); sseBuf = lines.pop();
+          for(var i=0;i<lines.length;i++){
+            var line = lines[i];
+            if(!line.startsWith('data: ')) continue;
+            var raw = line.slice(6).trim();
+            if(raw === '[DONE]') continue;
+            try{
+              var evt = JSON.parse(raw);
+              if(evt.type === 'chunk' && evt.content){
+                _fullText += evt.content;
+                out.innerHTML = renderMarkdown(_fullText);
+              } else if(evt.type === 'done'){
+                if(evt.locked){ document.getElementById('paywallBox').style.display = 'block'; }
+              } else if(evt.type === 'error'){
+                if(!_fullText){ showFallbackCard(); }
+                var errEl = document.getElementById('errBox');
+                errEl.textContent = 'Note: ' + (evt.message || 'Could not reach AI.');
+                errEl.style.display = 'block';
+              }
+            }catch(e){}
+          }
+          return pump();
+        });
       }
+
+      return pump();
     })
-    .catch(function(e){
+    .catch(function(){
       show('view-result');
       showFallbackCard();
-      var errEl = document.getElementById('errBox');
-      errEl.textContent = 'Could not connect to the reading service. Showing a sample below.';
-      errEl.style.display = 'block';
+      document.getElementById('errBox').textContent = 'Could not connect to the reading service. Showing a sample below.';
+      document.getElementById('errBox').style.display = 'block';
+    })
+    .finally(function(){
+      document.getElementById('dropzoneLabel').style.pointerEvents = '';
+      document.getElementById('ctaBtn').style.pointerEvents = '';
     });
   };
   reader.onerror = function(){
@@ -457,6 +485,8 @@ function startReading(file){
     showFallbackCard();
     document.getElementById('errBox').textContent = 'Could not read the photo. Please try a different image.';
     document.getElementById('errBox').style.display = 'block';
+    document.getElementById('dropzoneLabel').style.pointerEvents = '';
+    document.getElementById('ctaBtn').style.pointerEvents = '';
   };
   reader.readAsDataURL(file);
 }
