@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a1208">
+<title>解签 · 我在庙里抽了签｜Runae 善缘</title>
+<meta name="description" content="在观音庙、黄大仙祠、日本神社抽到了签？输入签号，善缘用真谱库给你白话专业解读。真谱兜底，一字不改，结合你所问之事。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+
+:root{
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
+  --gold-pale:rgba(201,168,76,0.08);--gold-glow:rgba(201,168,76,0.28);
+  --gold-border:rgba(201,168,76,0.30);
+  --jade:#5bbfa0;--jade-deep:#3a9678;
+  --jade-pale:rgba(91,191,160,0.10);--jade-border:rgba(91,191,160,0.22);
+  --espresso:#1a1208;--espresso-2:#221a0a;--espresso-card:#2a1f0e;
+  --cream:#faf8f5;--ink:#1a1a18;--sub:rgba(60,75,65,0.72);
+  --ink-dark:#e8e0d0;--sub-dark:rgba(220,210,190,0.65);--muted-dark:rgba(180,160,120,0.45);
+  --radius:14px;--radius-lg:20px;
+  --shadow:0 2px 16px rgba(0,0,0,0.07);
+}
+
+body{
+  font-family:'Inter',sans-serif;
+  color:var(--ink);
+  background:var(--espresso);
+  min-height:100vh;
+  overflow-x:hidden;
+  padding-bottom:env(safe-area-inset-bottom,20px);
+}
+
+.zh{font-family:'Noto Serif SC',serif}
+.serif{font-family:'Playfair Display',serif}
+a{color:inherit;text-decoration:none}
+.inner{max-width:440px;margin:0 auto;padding:0 22px}
+.gold-rule{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0}
+
+/* ─── HERO ─── */
+.hero{
+  background:var(--espresso);
+  padding:56px 22px 44px;
+  text-align:center;
+  position:relative;overflow:hidden;
+}
+.hero::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 40% at 30% 10%,rgba(91,191,160,0.06) 0%,transparent 60%),
+    radial-gradient(ellipse 50% 35% at 80% 70%,rgba(201,168,76,0.09) 0%,transparent 55%);
+}
+
+/* 香炉符文装饰 */
+.incense-icon{
+  font-size:48px;margin:0 auto 18px;display:block;
+  filter:drop-shadow(0 0 12px rgba(201,168,76,0.4));
+  position:relative;z-index:1;
+}
+.hero-eyebrow{
+  font-size:11px;letter-spacing:.25em;text-transform:uppercase;
+  color:var(--gold);font-weight:600;margin-bottom:12px;
+  position:relative;z-index:1;
+}
+.hero-title{
+  font-family:'Noto Serif SC',serif;
+  font-size:clamp(26px,7vw,34px);font-weight:700;
+  color:var(--ink-dark);line-height:1.25;
+  margin-bottom:10px;position:relative;z-index:1;
+}
+.hero-title span{color:var(--gold-light)}
+.hero-sub{
+  font-size:14px;line-height:1.7;color:var(--sub-dark);
+  max-width:320px;margin:0 auto 28px;
+  position:relative;z-index:1;
+}
+
+/* 签系特色标签 */
+.system-badges{
+  display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
+  margin-bottom:32px;position:relative;z-index:1;
+}
+.sys-badge{
+  font-size:12px;padding:5px 12px;border-radius:20px;
+  border:1px solid var(--gold-border);color:var(--gold-light);
+  background:rgba(201,168,76,0.06);font-family:'Noto Serif SC',serif;
+}
+
+/* ─── CARD ─── */
+.card{
+  background:var(--espresso-card);
+  border:1px solid var(--gold-border);
+  border-radius:var(--radius-lg);
+  padding:28px 24px;margin-bottom:16px;
+}
+.card-title{
+  font-family:'Noto Serif SC',serif;font-size:15px;font-weight:600;
+  color:var(--gold-light);margin-bottom:18px;display:flex;align-items:center;gap:8px;
+}
+.card-title .dot{
+  width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0;
+}
+
+/* ─── FORM ELEMENTS ─── */
+label{display:block;font-size:13px;color:var(--sub-dark);margin-bottom:6px;font-weight:500}
+.field{margin-bottom:18px}
+
+select,input[type=number],input[type=text],textarea{
+  width:100%;background:#1d1509;border:1px solid var(--gold-border);
+  border-radius:10px;color:var(--ink-dark);font-size:15px;
+  padding:13px 15px;font-family:'Noto Serif SC',serif;
+  outline:none;transition:border-color .2s;
+  -webkit-appearance:none;appearance:none;
+}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23c9a84c' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px;cursor:pointer;}
+select:focus,input:focus,textarea:focus{border-color:var(--gold)}
+select option{background:#1d1509;color:var(--ink-dark)}
+textarea{resize:vertical;min-height:80px;line-height:1.6}
+input[type=number]::-webkit-inner-spin-button{opacity:.5}
+
+/* 签号特大显示 */
+.sign-no-wrap{display:flex;align-items:center;gap:10px}
+.sign-no-wrap input{font-size:22px;text-align:center;font-weight:600;flex:1}
+.sign-no-hint{font-size:12px;color:var(--muted-dark);margin-top:4px}
+
+/* 话题选择网格 */
+.topic-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+.topic-btn{
+  padding:10px 4px;border-radius:10px;border:1px solid var(--gold-border);
+  background:rgba(201,168,76,0.04);color:var(--sub-dark);
+  font-size:12px;font-family:'Noto Serif SC',serif;
+  cursor:pointer;text-align:center;transition:all .18s;
+  -webkit-tap-highlight-color:transparent;
+}
+.topic-btn.active{
+  background:rgba(201,168,76,0.16);border-color:var(--gold);
+  color:var(--gold-light);font-weight:600;
+}
+
+/* 语言切换 */
+.lang-row{display:flex;gap:8px;margin-bottom:18px}
+.lang-btn{
+  flex:1;padding:9px 4px;border-radius:9px;border:1px solid var(--gold-border);
+  background:transparent;color:var(--sub-dark);font-size:13px;
+  cursor:pointer;text-align:center;transition:all .18s;
+  -webkit-tap-highlight-color:transparent;
+}
+.lang-btn.active{background:rgba(201,168,76,0.14);border-color:var(--gold);color:var(--gold-light)}
+
+/* ─── SUBMIT BTN ─── */
+.btn-submit{
+  width:100%;padding:17px;border-radius:12px;
+  background:linear-gradient(135deg,var(--gold) 0%,#a87a28 100%);
+  border:none;color:#1a1208;font-size:16px;font-weight:700;
+  font-family:'Noto Serif SC',serif;cursor:pointer;
+  transition:opacity .2s,transform .15s;
+  -webkit-tap-highlight-color:transparent;
+  letter-spacing:.05em;
+}
+.btn-submit:hover{opacity:.92}
+.btn-submit:active{transform:scale(.98)}
+.btn-submit:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* 加载态 */
+.loading{display:none;flex-direction:column;align-items:center;padding:36px 0;gap:14px}
+.loading.show{display:flex}
+.spinner{
+  width:40px;height:40px;border-radius:50%;
+  border:3px solid rgba(201,168,76,0.2);
+  border-top-color:var(--gold);
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:var(--sub-dark);font-size:14px;font-family:'Noto Serif SC',serif}
+
+/* ─── RESULT ─── */
+.result{display:none}
+.result.show{display:block}
+
+.sign-header{
+  background:rgba(201,168,76,0.06);border:1px solid var(--gold-border);
+  border-radius:var(--radius-lg);padding:20px 20px 16px;
+  margin-bottom:20px;text-align:center;
+}
+.sign-no-badge{
+  display:inline-block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--gold);border:1px solid var(--gold-border);border-radius:20px;
+  padding:3px 12px;margin-bottom:10px;
+}
+.sign-grade{
+  font-family:'Noto Serif SC',serif;font-size:20px;font-weight:700;
+  color:var(--gold-light);margin-bottom:4px;
+}
+.sign-gong{font-size:13px;color:var(--sub-dark);margin-bottom:14px}
+.sign-poem{
+  font-family:'Noto Serif SC',serif;font-size:15px;line-height:2;
+  color:var(--ink-dark);border-top:1px solid var(--gold-border);
+  padding-top:14px;text-align:center;
+}
+.sign-poem p{margin-bottom:2px}
+
+.reading-box{
+  background:var(--espresso-card);border:1px solid var(--gold-border);
+  border-radius:var(--radius-lg);padding:24px 20px;
+  color:var(--ink-dark);font-size:15px;line-height:1.85;
+  font-family:'Noto Serif SC',serif;white-space:pre-wrap;
+  word-break:break-word;
+}
+.reading-box h1,
+.reading-box h2,
+.reading-box h3{font-size:15px;font-weight:700;color:var(--gold-light);margin:16px 0 6px}
+.reading-box strong{color:var(--gold-light)}
+.reading-box em{color:var(--jade)}
+.reading-box hr{border:none;border-top:1px solid var(--gold-border);margin:14px 0}
+
+/* 付费锁定提示 */
+.locked-notice{
+  background:rgba(201,168,76,0.06);border:1px solid var(--gold-border);
+  border-radius:var(--radius);padding:18px 20px;margin-top:16px;
+  text-align:center;
+}
+.locked-notice .lock-title{
+  font-family:'Noto Serif SC',serif;font-size:15px;font-weight:600;
+  color:var(--gold-light);margin-bottom:8px;
+}
+.locked-notice .lock-sub{font-size:13px;color:var(--sub-dark);line-height:1.6;margin-bottom:14px}
+.btn-unlock{
+  display:inline-block;padding:12px 28px;border-radius:10px;
+  background:linear-gradient(135deg,var(--gold) 0%,#a87a28 100%);
+  color:#1a1208;font-weight:700;font-size:14px;font-family:'Noto Serif SC',serif;
+  cursor:pointer;border:none;letter-spacing:.05em;
+}
+
+/* 追问 */
+.followup-section{margin-top:20px}
+.followup-section .ft{
+  font-size:13px;color:var(--sub-dark);margin-bottom:8px;font-family:'Noto Serif SC',serif;
+}
+.followup-row{display:flex;gap:10px}
+.followup-row input{
+  flex:1;font-family:'Noto Serif SC',serif;font-size:14px;
+  padding:11px 14px;border-radius:10px;
+  background:#1d1509;border:1px solid var(--gold-border);
+  color:var(--ink-dark);outline:none;
+}
+.followup-row input:focus{border-color:var(--gold)}
+.btn-followup{
+  padding:11px 16px;border-radius:10px;border:1px solid var(--gold-border);
+  background:rgba(201,168,76,0.1);color:var(--gold-light);font-size:14px;
+  cursor:pointer;white-space:nowrap;font-family:'Noto Serif SC',serif;
+}
+
+/* 新签按钮 */
+.btn-reset{
+  display:block;width:100%;padding:13px;margin-top:14px;border-radius:10px;
+  border:1px solid var(--gold-border);background:transparent;
+  color:var(--sub-dark);font-size:14px;cursor:pointer;
+  font-family:'Noto Serif SC',serif;
+}
+
+/* 占位签提示 */
+.placeholder-notice{
+  background:rgba(91,191,160,0.06);border:1px solid var(--jade-border);
+  border-radius:var(--radius);padding:18px 20px;
+  color:var(--sub-dark);font-size:14px;line-height:1.7;
+  font-family:'Noto Serif SC',serif;
+}
+
+/* 错误 */
+.err-box{
+  background:rgba(220,50,50,0.08);border:1px solid rgba(220,50,50,0.25);
+  border-radius:10px;padding:14px 18px;color:#e8a0a0;
+  font-size:14px;font-family:'Noto Serif SC',serif;display:none;
+}
+.err-box.show{display:block}
+
+/* ─── 底部合规 ─── */
+.disclaimer{
+  text-align:center;font-size:11px;color:var(--muted-dark);
+  line-height:1.6;padding:28px 22px;
+  font-family:'Noto Serif SC',serif;max-width:380px;margin:0 auto;
+}
+.disclaimer a{color:var(--gold-border)}
+
+/* ─── 已验证签数提示 ─── */
+.verified-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;color:var(--jade);margin-bottom:18px;
+}
+.verified-badge .v-dot{width:6px;height:6px;border-radius:50%;background:var(--jade);flex-shrink:0}
+
+/* ─── omikuji grade picker ─── */
+.grade-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:4px}
+.grade-btn{
+  padding:10px 2px;border-radius:10px;border:1px solid var(--gold-border);
+  background:rgba(201,168,76,0.04);color:var(--sub-dark);
+  font-size:13px;font-family:'Noto Serif SC',serif;
+  cursor:pointer;text-align:center;transition:all .18s;
+  -webkit-tap-highlight-color:transparent;
+}
+.grade-btn.active{
+  background:rgba(201,168,76,0.16);border-color:var(--gold);
+  color:var(--gold-light);font-weight:600;
+}
+.grade-btn.caution{border-color:rgba(200,100,80,0.35);color:rgba(220,160,140,0.8)}
+.grade-btn.caution.active{background:rgba(200,100,80,0.14);border-color:rgba(200,100,80,0.6);color:#e8b0a0}
+
+@media(max-width:360px){
+  .topic-grid{grid-template-columns:repeat(2,1fr)}
+  .grade-grid{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<!-- ── HERO ── -->
+<section class="hero">
+  <span class="incense-icon">🏮</span>
+  <p class="hero-eyebrow">Temple Sign Interpretation · 解签服务</p>
+  <h1 class="hero-title">在庙里<span>抽了签</span>？</h1>
+  <p class="hero-sub">输入签号，我们用真谱库逐字对照——签诗一字不改，结合你所问之事给出白话专业解读。</p>
+  <div class="system-badges">
+    <span class="sys-badge">🕊️ 观音灵签</span>
+    <span class="sys-badge">🦁 黄大仙灵签</span>
+    <span class="sys-badge">⛩️ 日本御神签</span>
+  </div>
+</section>
+
+<div class="gold-rule"></div>
+
+<!-- ── MAIN FORM ── -->
+<div class="inner" style="padding-top:24px">
+
+  <!-- 错误提示 -->
+  <div class="err-box" id="errBox"></div>
+
+  <!-- STEP 1: 选签系 -->
+  <div class="card" id="formCard">
+    <p class="card-title"><span class="dot"></span>选签系</p>
+
+    <div class="field">
+      <label for="sysSelect">你抽签的地方</label>
+      <select id="sysSelect">
+        <option value="guanyin">🕊️ 观音灵签（100签·73支已收录真谱）</option>
+        <option value="huangdaxian">🦁 黄大仙灵签（100签·全部已收录）</option>
+        <option value="omikuji">⛩️ 日本御神签（おみくじ·等级制）</option>
+      </select>
+    </div>
+
+    <!-- 签号输入（观音/黄大仙用） -->
+    <div class="field" id="signNoField">
+      <label>签号（1–100）</label>
+      <div class="sign-no-wrap">
+        <input type="number" id="signNo" min="1" max="100" placeholder="47" inputmode="numeric">
+      </div>
+      <p class="sign-no-hint">签纸上印有"第XX签"的数字</p>
+      <div class="verified-badge" id="verifiedBadge">
+        <span class="v-dot"></span>
+        <span id="verifiedText">73/100 签已收录真谱</span>
+      </div>
+    </div>
+
+    <!-- 吉凶等级选择（omikuji 用） -->
+    <div class="field" id="gradeField" style="display:none">
+      <label>签纸上的吉凶等级</label>
+      <div class="grade-grid" id="gradeGrid">
+        <button class="grade-btn active" data-grade="大吉">大吉</button>
+        <button class="grade-btn" data-grade="吉">吉</button>
+        <button class="grade-btn" data-grade="中吉">中吉</button>
+        <button class="grade-btn" data-grade="小吉">小吉</button>
+        <button class="grade-btn" data-grade="末吉">末吉</button>
+        <button class="grade-btn caution" data-grade="凶">凶</button>
+        <button class="grade-btn caution" data-grade="大凶">大凶</button>
+      </div>
+    </div>
+
+    <!-- 语言 -->
+    <div class="field">
+      <label>解读语言</label>
+      <div class="lang-row" id="langRow">
+        <button class="lang-btn active" data-lang="zh">中文</button>
+        <button class="lang-btn" data-lang="en">English</button>
+        <button class="lang-btn" data-lang="ja">日本語</button>
+      </div>
+    </div>
+
+    <!-- 所问之事 -->
+    <div class="field">
+      <label>这次求的是？<span style="color:var(--muted-dark);font-weight:400">（可跳过）</span></label>
+      <div class="topic-grid" id="topicGrid">
+        <button class="topic-btn" data-topic="career">事业工作</button>
+        <button class="topic-btn" data-topic="love">感情姻缘</button>
+        <button class="topic-btn" data-topic="wealth">求财财运</button>
+        <button class="topic-btn" data-topic="health">健康疾病</button>
+        <button class="topic-btn" data-topic="travel">出行行程</button>
+        <button class="topic-btn" data-topic="lost">寻物失物</button>
+        <button class="topic-btn" data-topic="study">学业考试</button>
+        <button class="topic-btn" data-topic="move">搬迁置业</button>
+        <button class="topic-btn" data-topic="other">其他</button>
+      </div>
+    </div>
+
+    <!-- 问题补充 -->
+    <div class="field">
+      <label for="question">想问的事（选填，说多一点解读更准）</label>
+      <textarea id="question" placeholder="例如：我在清水寺抽到这支签，正在考虑要不要换工作，想知道时机合不合适……"></textarea>
+    </div>
+
+    <button class="btn-submit" id="submitBtn">🏮 解签</button>
+  </div>
+
+  <!-- 加载 -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <p class="loading-text">正在查阅真谱·结合所问之事解读……</p>
+  </div>
+
+  <!-- 结果 -->
+  <div class="result" id="resultSection">
+
+    <!-- 签文展示（仅真谱签才显示） -->
+    <div class="sign-header" id="signHeader" style="display:none">
+      <span class="sign-no-badge" id="signNoBadge">第47签</span>
+      <p class="sign-grade" id="signGrade">中平</p>
+      <p class="sign-gong" id="signGong">鲁肃取荆州</p>
+      <div class="sign-poem" id="signPoem"></div>
+    </div>
+
+    <!-- 占位签提示（verified=false） -->
+    <div class="placeholder-notice" id="placeholderNotice" style="display:none">
+      <p id="placeholderText"></p>
+    </div>
+
+    <!-- 解读正文 -->
+    <div class="reading-box" id="readingBox"></div>
+
+    <!-- 付费解锁（free 档有 LOCKED 标记时显示） -->
+    <div class="locked-notice" id="lockedNotice" style="display:none">
+      <p class="lock-title">🔓 解锁完整解读</p>
+      <p class="lock-sub" id="lockSubText">完整版包含：逐句白话翻译·典故背景·结合你所问之事的定向解读·行动建议·祈福方法</p>
+      <button class="btn-unlock" id="btnUnlock">¥9.9 解锁完整解读</button>
+      <p style="font-size:11px;color:var(--muted-dark);margin-top:8px">海外用户 $6.9 · 会员无限次解读</p>
+    </div>
+
+    <!-- 追问 -->
+    <div class="followup-section" id="followupSection" style="display:none">
+      <p class="ft">还有疑问？可以追问：</p>
+      <div class="followup-row">
+        <input type="text" id="followupInput" placeholder="例如：这支签对我换工作具体意味着什么？">
+        <button class="btn-followup" id="followupBtn">追问</button>
+      </div>
+    </div>
+
+    <button class="btn-reset" id="resetBtn">← 解另一支签</button>
+  </div>
+
+</div>
+
+<!-- ── 底部合规 ── -->
+<p class="disclaimer">
+  本服务为传统文化参考与娱乐，不承诺灵验，不构成医学、法律、投资建议。<br>
+  化解建议为传统习俗，可选非必需，不借凶签制造恐慌。<br>
+  健康类解读不作医疗诊断，如有疑虑请咨询专业医生。<br>
+  <a href="/pages/about.html">关于善缘</a>
+</p>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── 状态 ──
+  var state = {
+    system: 'guanyin',
+    lang:   'zh',
+    topic:  '',
+    grade:  '大吉',
+    contextId: null,
+  };
+
+  // ── DOM ──
+  var sysSelect     = document.getElementById('sysSelect');
+  var signNoField   = document.getElementById('signNoField');
+  var gradeField    = document.getElementById('gradeField');
+  var signNoInput   = document.getElementById('signNo');
+  var langRow       = document.getElementById('langRow');
+  var topicGrid     = document.getElementById('topicGrid');
+  var gradeGrid     = document.getElementById('gradeGrid');
+  var questionInput = document.getElementById('question');
+  var submitBtn     = document.getElementById('submitBtn');
+  var errBox        = document.getElementById('errBox');
+  var loading       = document.getElementById('loading');
+  var resultSection = document.getElementById('resultSection');
+  var formCard      = document.getElementById('formCard');
+  var signHeader    = document.getElementById('signHeader');
+  var signNoBadge   = document.getElementById('signNoBadge');
+  var signGrade     = document.getElementById('signGrade');
+  var signGong      = document.getElementById('signGong');
+  var signPoem      = document.getElementById('signPoem');
+  var placeholderNotice = document.getElementById('placeholderNotice');
+  var placeholderText   = document.getElementById('placeholderText');
+  var readingBox        = document.getElementById('readingBox');
+  var lockedNotice      = document.getElementById('lockedNotice');
+  var lockSubText       = document.getElementById('lockSubText');
+  var btnUnlock         = document.getElementById('btnUnlock');
+  var followupSection   = document.getElementById('followupSection');
+  var followupInput     = document.getElementById('followupInput');
+  var followupBtn       = document.getElementById('followupBtn');
+  var resetBtn          = document.getElementById('resetBtn');
+  var verifiedText      = document.getElementById('verifiedText');
+
+  var VERIFIED_COUNTS = { guanyin: '73/100', huangdaxian: '100/100', omikuji: '—' };
+
+  // ── 签系切换 ──
+  sysSelect.addEventListener('change', function() {
+    state.system = sysSelect.value;
+    if (state.system === 'omikuji') {
+      signNoField.style.display = 'none';
+      gradeField.style.display  = 'block';
+    } else {
+      signNoField.style.display = 'block';
+      gradeField.style.display  = 'none';
+      verifiedText.textContent = VERIFIED_COUNTS[state.system] + ' 签已收录真谱';
+    }
+  });
+
+  // ── 语言切换 ──
+  langRow.addEventListener('click', function(e) {
+    var btn = e.target.closest('.lang-btn');
+    if (!btn) return;
+    langRow.querySelectorAll('.lang-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    state.lang = btn.dataset.lang;
+  });
+
+  // ── 话题选择 ──
+  topicGrid.addEventListener('click', function(e) {
+    var btn = e.target.closest('.topic-btn');
+    if (!btn) return;
+    var wasActive = btn.classList.contains('active');
+    topicGrid.querySelectorAll('.topic-btn').forEach(function(b){ b.classList.remove('active'); });
+    if (!wasActive) { btn.classList.add('active'); state.topic = btn.dataset.topic; }
+    else { state.topic = ''; }
+  });
+
+  // ── 御神签等级选择 ──
+  gradeGrid.addEventListener('click', function(e) {
+    var btn = e.target.closest('.grade-btn');
+    if (!btn) return;
+    gradeGrid.querySelectorAll('.grade-btn').forEach(function(b){ b.classList.remove('active'); });
+    btn.classList.add('active');
+    state.grade = btn.dataset.grade;
+  });
+
+  // ── 提交 ──
+  submitBtn.addEventListener('click', function() { doSubmit(); });
+
+  function showErr(msg) {
+    errBox.textContent = msg;
+    errBox.classList.add('show');
+    setTimeout(function(){ errBox.classList.remove('show'); }, 6000);
+  }
+
+  function doSubmit() {
+    errBox.classList.remove('show');
+
+    // 校验
+    if (state.system !== 'omikuji') {
+      var no = parseInt(signNoInput.value, 10);
+      if (isNaN(no) || no < 1 || no > 100) {
+        showErr('请输入有效签号（1–100）'); return;
+      }
+    }
+
+    var body = {
+      system:   state.system,
+      lang:     state.lang,
+      topic:    state.topic,
+      question: questionInput.value.trim(),
+      tier:     'free',
+    };
+    if (state.system === 'omikuji') {
+      body.grade = state.grade;
+    } else {
+      body.signNo = parseInt(signNoInput.value, 10);
+    }
+
+    // UI 状态
+    submitBtn.disabled = true;
+    loading.classList.add('show');
+    formCard.style.display  = 'none';
+    resultSection.classList.remove('show');
+
+    fetch('/api/jieqian', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+    .then(function(r) {
+      return r.json().then(function(d){ return { ok: r.ok, data: d }; });
+    })
+    .then(function(res) {
+      loading.classList.remove('show');
+      submitBtn.disabled = false;
+
+      if (!res.ok) {
+        formCard.style.display = 'block';
+        showErr(res.data.error || '请稍后重试');
+        return;
+      }
+
+      renderResult(res.data, body);
+    })
+    .catch(function(err) {
+      loading.classList.remove('show');
+      submitBtn.disabled = false;
+      formCard.style.display = 'block';
+      showErr('网络错误，请检查连接后重试');
+    });
+  }
+
+  function renderResult(data, body) {
+    // 重置展示
+    signHeader.style.display        = 'none';
+    placeholderNotice.style.display = 'none';
+    lockedNotice.style.display      = 'none';
+    followupSection.style.display   = 'none';
+
+    state.contextId = data.contextId || null;
+
+    // A. 真谱签（有 poem 字段且 verified） ──
+    if (data.sign && Array.isArray(data.sign.poem) && data.meta && data.meta.verified !== false) {
+      var s = data.sign;
+      var sysMap = { guanyin: '观音灵签', huangdaxian: '黄大仙灵签', omikuji: '御神签' };
+      signNoBadge.textContent = (sysMap[body.system] || '') + (s.no ? ' · 第' + s.no + '签' : '');
+      signGrade.textContent   = s.grade || '';
+      signGong.textContent    = s.gong  || '';
+      signPoem.innerHTML = s.poem.map(function(line){ return '<p>' + _esc(line) + '</p>'; }).join('');
+      signHeader.style.display = 'block';
+    }
+
+    // B. 占位签（verified=false） ──
+    if (data.verified === false) {
+      placeholderText.textContent = data.reading || '该签暂未收录真谱，请换其他签号。';
+      placeholderNotice.style.display = 'block';
+      readingBox.textContent = '';
+      resultSection.classList.add('show');
+      resetBtn.style.display = 'block';
+      return;
+    }
+
+    // C. 解读正文 ──
+    var rawReading = data.reading || '';
+    var lockedIdx  = rawReading.indexOf('---LOCKED---');
+    var visibleText = lockedIdx >= 0 ? rawReading.slice(0, lockedIdx).trim() : rawReading;
+    readingBox.innerHTML = _mdToHtml(visibleText);
+
+    // D. 付费锁定 ──
+    if (data.locked && lockedIdx >= 0) {
+      var lockedContent = rawReading.slice(lockedIdx + 12).trim();
+      if (lockedContent) {
+        lockSubText.textContent = lockedContent.replace(/---LOCKED---/g,'').trim();
+      }
+      lockedNotice.style.display = 'block';
+      btnUnlock.onclick = function() {
+        // TODO P1: 接入支付流程
+        alert('支付功能即将上线，感谢你的耐心！');
+      };
+    }
+
+    // E. 追问（有 contextId 时显示） ──
+    if (state.contextId) {
+      followupSection.style.display = 'block';
+    }
+
+    resultSection.classList.add('show');
+  }
+
+  // ── 追问 ──
+  followupBtn.addEventListener('click', function() {
+    var q = followupInput.value.trim();
+    if (!q || !state.contextId) return;
+    followupBtn.disabled = true;
+    followupInput.disabled = true;
+
+    fetch('/api/ask-followup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contextId: state.contextId, question: q, lang: state.lang }),
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(d) {
+      followupBtn.disabled   = false;
+      followupInput.disabled = false;
+      if (d.answer) {
+        var extra = document.createElement('div');
+        extra.style.cssText = 'margin-top:18px;padding-top:14px;border-top:1px solid var(--gold-border)';
+        extra.innerHTML = '<p style="font-size:12px;color:var(--muted-dark);margin-bottom:8px">你问：' + _esc(q) + '</p>' + _mdToHtml(d.answer);
+        readingBox.appendChild(extra);
+        followupInput.value = '';
+      }
+    })
+    .catch(function(){
+      followupBtn.disabled   = false;
+      followupInput.disabled = false;
+    });
+  });
+
+  // ── 重置 ──
+  resetBtn.addEventListener('click', function() {
+    resultSection.classList.remove('show');
+    formCard.style.display = 'block';
+    state.contextId = null;
+    signNoInput.value    = '';
+    questionInput.value  = '';
+    topicGrid.querySelectorAll('.topic-btn').forEach(function(b){ b.classList.remove('active'); });
+    state.topic = '';
+  });
+
+  // ── Markdown 极简渲染 ──
+  function _mdToHtml(text) {
+    if (!text) return '';
+    return text
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/^#{1,3}\s+(.+)$/gm, '<h3>$1</h3>')
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/^---+$/gm, '<hr>')
+      .replace(/\n{2,}/g, '</p><p>')
+      .replace(/\n/g,'<br>');
+  }
+
+  function _esc(s) {
+    return String(s||'')
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;');
+  }
+
+})();
+</script>
+</body>
+</html>
