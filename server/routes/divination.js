@@ -962,6 +962,7 @@ router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
     const { question, imageBase64, mimeType, lang } = req.body;
     // If front-end sent a photo, run vision extraction first; otherwise use caller-provided features (or none)
     let features = req.body.features || null;
+    if (features && typeof features !== 'string') features = JSON.stringify(features);
     if (imageBase64 && !features) {
       features = await analyzeFace(imageBase64, mimeType);
       // analyzeFace returns null on no-key or error → graceful fallback (features stays null)
@@ -1076,6 +1077,7 @@ router.post('/mianxiang/stream', rateLimitMiddleware, async (req, res) => {
   try {
     const { question, imageBase64, mimeType, lang } = req.body;
     let features = req.body.features || null;
+    if (features && typeof features !== 'string') features = JSON.stringify(features);
 
     // Phase 1: vision extraction (blocking, must finish before streaming)
     if (imageBase64 && !features) {
@@ -1178,6 +1180,7 @@ router.post('/shouxiang', rateLimitMiddleware, async (req, res) => {
   try {
     const { question, hand, imageBase64, mimeType, lang } = req.body;
     let features = req.body.features || null;
+    if (features && typeof features !== 'string') features = JSON.stringify(features);
     if (imageBase64 && !features) {
       features = await analyzePalm(imageBase64, mimeType);
     }
@@ -1241,6 +1244,7 @@ router.post('/shouxiang/stream', rateLimitMiddleware, async (req, res) => {
   try {
     const { question, hand, imageBase64, mimeType, lang } = req.body;
     let features = req.body.features || null;
+    if (features && typeof features !== 'string') features = JSON.stringify(features);
     if (imageBase64 && !features) {
       features = await analyzePalm(imageBase64, mimeType);
     }
