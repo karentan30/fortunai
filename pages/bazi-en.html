@@ -134,6 +134,14 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .load-shimmer-bar { width:160px; height:3px; background:rgba(201,168,76,0.08); border-radius:2px; margin:12px auto 0; overflow:hidden; position:relative; }
 .load-shimmer-bar-inner { position:absolute; top:0; left:0; height:100%; width:40%; border-radius:2px; background:linear-gradient(90deg,transparent,var(--gold),transparent); animation:shimmer-slide 1.3s ease-in-out infinite; }
 @keyframes shimmer-slide { 0% { left:-40%; } 100% { left:100%; } }
+.load-progress-wrap { width:200px; margin:12px auto 0; }
+.load-progress-bg { height:4px; background:rgba(201,168,76,0.1); border-radius:2px; overflow:hidden; }
+.load-progress-fill { height:100%; border-radius:2px; background:linear-gradient(90deg,var(--gold-deep),var(--gold-light)); width:0%; transition:width 0.8s ease; }
+.load-progress-pct { font-size:11px; color:rgba(201,168,76,0.55); text-align:center; margin-top:6px; letter-spacing:0.08em; }
+.load-wisdom { font-size:11px; color:rgba(80,70,55,0.5); text-align:center; margin-top:8px; letter-spacing:0.05em; font-style:italic; min-height:1.5em; transition:opacity 0.5s; max-width:260px; line-height:1.6; }
+.load-eta { font-size:10px; color:rgba(201,168,76,0.3); text-align:center; margin-top:4px; letter-spacing:0.06em; }
+@keyframes pulse-sk { 0%,100%{opacity:0.6} 50%{opacity:1} }
+@media (max-width:380px) { .mode-opt { padding:10px 12px; font-size:10px; } }
 
 /* AI Report cards */
 .ai-section { background:var(--card); border:1px solid rgba(201,168,76,0.1); border-radius:10px; margin:0 16px 10px; overflow:hidden; }
@@ -183,7 +191,7 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 .ur-arrow.open { transform:rotate(180deg); }
 .ur-body { display:none; }
 .ur-body.open { display:block; }
-.ur-text { font-size:12.5px; line-height:2; color:rgba(50,44,34,0.86); letter-spacing:0.02em; white-space:pre-wrap; padding:0 14px 14px; }
+.ur-text { font-size:13px; line-height:2.1; color:rgba(50,44,34,0.86); letter-spacing:0.02em; white-space:pre-wrap; padding:0 14px 14px; }
 
 /* Ring charts */
 .elem-ring-wrap { display:flex; justify-content:space-around; align-items:flex-start; padding:4px 0; }
@@ -361,6 +369,12 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
   <div class="load-text">Calculating your destiny chart…</div>
   <div class="load-steps" id="loadSteps"></div>
   <div class="load-shimmer-bar"><div class="load-shimmer-bar-inner"></div></div>
+  <div class="load-progress-wrap">
+    <div class="load-progress-bg"><div class="load-progress-fill" id="loadProgressFill"></div></div>
+    <div class="load-progress-pct" id="loadProgressPct">0%</div>
+  </div>
+  <div class="load-wisdom" id="loadWisdom"></div>
+  <div class="load-eta" id="loadEta">~40 seconds · Reading your Four Pillars</div>
 </div>
 
 <!-- Report screen -->
@@ -466,6 +480,7 @@ function generateReport(btn) {
   document.getElementById('inputScreen').style.display = 'none';
   document.getElementById('loadingScreen').classList.add('show');
   runLoadingSteps();
+  startLoadProgress();
 
   fetchBaziReportSSE(lastBaziInput, currentMode, btn);
 }
@@ -494,6 +509,7 @@ function fetchBaziReportSSE(input, mode, btn) {
     if (usedFallback) return;
     usedFallback = true;
     fetchBaziReport(input, mode).then(function(data){
+      completeLoadProgress();
       document.getElementById('loadingScreen').classList.remove('show');
       if (btn) { btn.disabled=false; btn.textContent = btn._label||'Free Preview · Generate My BaZi Chart'; }
       if (data && data.reading) {
@@ -503,6 +519,7 @@ function fetchBaziReportSSE(input, mode, btn) {
         showToast('Failed to generate report, please try again', 'error');
       }
     }).catch(function(){
+      completeLoadProgress();
       document.getElementById('loadingScreen').classList.remove('show');
       document.getElementById('inputScreen').style.display='block';
       if (btn) { btn.disabled=false; btn.textContent = btn._label||'Free Preview · Generate My BaZi Chart'; }
@@ -570,6 +587,7 @@ function fetchBaziReportSSE(input, mode, btn) {
                 window._backendPillars = arr;
               }
               // Transition: hide loading, initialize report skeleton immediately
+              completeLoadProgress();
               document.getElementById('loadingScreen').classList.remove('show');
               if (btn) { btn.disabled=false; btn.textContent = btn._label||'Free Preview · Generate My BaZi Chart'; }
               initSSEReport(ev.locked || (ev.tier === 'basic'));
@@ -578,11 +596,19 @@ function fetchBaziReportSSE(input, mode, btn) {
             } else if (ev.type === 'chunk') {
               if (!reportInitialized) return; // guard: shouldn't happen but skip safely
               accumulated += ev.content;
-              // Progressive reveal into reportContent
               var rc = document.getElementById('reportContent');
-              if (rc) {
-                rc.style.whiteSpace = 'pre-wrap';
-                rc.textContent = accumulated;
+              if (rc && !rc.dataset.finalizing) {
+                var wc = accumulated.split(/\s+/).filter(Boolean).length;
+                rc.innerHTML = '<div style="padding:0 4px">' +
+                  '<div style="background:var(--card);border:1px solid rgba(201,168,76,0.1);border-radius:10px;padding:14px;margin-bottom:8px;animation:pulse-sk 1.5s ease infinite">' +
+                  '<div style="height:10px;background:rgba(201,168,76,0.08);border-radius:4px;margin-bottom:8px;width:70%"></div>' +
+                  '<div style="height:8px;background:rgba(201,168,76,0.05);border-radius:4px;margin-bottom:6px"></div>' +
+                  '<div style="height:8px;background:rgba(201,168,76,0.05);border-radius:4px;width:85%"></div></div>' +
+                  '<div style="background:var(--card);border:1px solid rgba(201,168,76,0.08);border-radius:10px;padding:14px;margin-bottom:8px;animation:pulse-sk 1.5s ease 0.2s infinite">' +
+                  '<div style="height:10px;background:rgba(201,168,76,0.08);border-radius:4px;margin-bottom:8px;width:55%"></div>' +
+                  '<div style="height:8px;background:rgba(201,168,76,0.05);border-radius:4px;margin-bottom:6px"></div>' +
+                  '<div style="height:8px;background:rgba(201,168,76,0.05);border-radius:4px;width:90%"></div></div>' +
+                  '<div style="text-align:center;font-size:11px;color:rgba(201,168,76,0.5);letter-spacing:0.08em;margin-top:10px">Composing your destiny reading… ' + wc + ' words</div></div>';
               }
 
             } else if (ev.type === 'done') {
@@ -667,6 +693,8 @@ function finalizeSSEReport(fullText, contextId, isLocked) {
   if (contextId) reportEl.dataset.contextId = contextId;
 
   // Replace streaming pre-wrap text with renderUltimateReport's rich HTML
+  var _rcFin = document.getElementById('reportContent');
+  if (_rcFin) _rcFin.dataset.finalizing = '1';
   renderUltimateReport(fullText, 'reportContent');
 
   document.getElementById('qaSection').style.display = isLocked ? 'none' : 'block';
@@ -682,7 +710,10 @@ function finalizeSSEReport(fullText, contextId, isLocked) {
     cta.className = 'sticky-cta';
     cta.id = 'stickyCta';
     cta.innerHTML =
-      '<div class="cta-row"><div class="cta-desc">Unlock: 5,000+ word full reading · Wealth, Romance &amp; Career in depth · 8 Major Life Cycles · Next 10 Years forecast</div></div>' +
+      '<div style="margin-bottom:10px;padding:10px 12px;background:rgba(201,168,76,0.06);border-radius:8px">' +
+      '<div style="font-size:12px;color:rgba(232,208,138,0.9);font-weight:500;letter-spacing:0.04em;margin-bottom:4px">Your free preview showed just the surface.</div>' +
+      '<div style="font-size:11px;color:rgba(130,115,90,0.85);line-height:1.75">The full report reveals: <b style="color:var(--gold)">when your wealth peaks</b> · <b style="color:var(--gold)">who you\'re destined to meet</b> · the exact years that change everything · 8 major life cycles mapped.</div>' +
+      '</div>' +
       '<div style="text-align:center;font-size:11px;color:var(--gold-light);letter-spacing:0.02em;line-height:1.6;margin-bottom:10px">A traditional BaZi consultation costs $120+.<br>Your full AI reading: <b style="color:#e8d08a;font-size:14px">$9.90</b></div>' +
       '<div style="background:rgba(201,168,76,0.05);border-radius:6px;padding:10px;margin-bottom:10px;font-size:11px">' +
       '<div style="display:grid;grid-template-columns:1fr 34px 34px;gap:1px;letter-spacing:0.02em">' +
@@ -709,13 +740,14 @@ function finalizeSSEReport(fullText, contextId, isLocked) {
       '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
       '</div></div>' +
       '<button class="btn-unlock" onclick="createCheckout(this,\'full\',9.9)">Unlock Full Report · $9.90</button>' +
-      '<button class="btn-member" onclick="createCheckout(this,\'member\',9.9)">👑 Unlimited Membership · <b style="font-size:16px;color:#8dd9bf">$9.90</b>/mo <span style="text-decoration:line-through;font-size:12px;opacity:0.6">$19.90/reading</span></button>';
+      '<button class="btn-member" onclick="createCheckout(this,\'member\',9.9)">👑 Members read everything · <b style="font-size:16px;color:#8dd9bf">$9.90</b>/mo <span style="opacity:0.55;font-size:11px">save 50%+</span></button>';
     document.body.appendChild(cta);
   }
 
   var rc = document.getElementById('reportContent');
   if (rc) rc.appendChild(buildDailyActionBlockEN(fullText));
 
+  // Share Card CTA first, then Compatibility CTA (Defect 4 fix: share card before hehun)
   var shareCardWrap = document.createElement('div');
   shareCardWrap.style.cssText = 'padding:16px 16px 0';
   shareCardWrap.innerHTML =
@@ -761,10 +793,70 @@ function runLoadingSteps() {
   });
 }
 
+var _loadProgressTimer = null;
+var _loadWisdomTimer = null;
+var _wisdomPhrases = [
+  '"The wise man does not fight the river — he studies its bends."',
+  'Mapping your Ten Gods across 12 earthly branches…',
+  '"Destiny is not chance — it is a map waiting to be read."',
+  'Calculating your major luck cycles (大运)…',
+  '"The day stem reveals the self; the pillars reveal the world."',
+  'Analyzing hidden stems and chart pattern (格局)…',
+  '"Know your element, know your season."'
+];
+var _wisdomIdx = 0;
+
+function startLoadProgress() {
+  var fill = document.getElementById('loadProgressFill');
+  var pct = document.getElementById('loadProgressPct');
+  var wisdom = document.getElementById('loadWisdom');
+  if (!fill) return;
+  var startTime = Date.now();
+  var targetDuration = 35000;
+  clearInterval(_loadProgressTimer);
+  _loadProgressTimer = setInterval(function() {
+    if (!document.getElementById('loadingScreen').classList.contains('show')) {
+      clearInterval(_loadProgressTimer); return;
+    }
+    var elapsed = Date.now() - startTime;
+    var t = Math.min(elapsed / targetDuration, 1);
+    var p = Math.round(90 * (1 - Math.pow(1 - t, 2)));
+    fill.style.width = p + '%';
+    if (pct) pct.textContent = p + '%';
+  }, 400);
+  _wisdomIdx = 0;
+  if (wisdom) wisdom.textContent = '';
+  setTimeout(function() {
+    function showWisdom() {
+      if (!document.getElementById('loadingScreen').classList.contains('show')) return;
+      if (wisdom) {
+        wisdom.style.opacity = '0';
+        setTimeout(function() {
+          wisdom.textContent = _wisdomPhrases[_wisdomIdx % _wisdomPhrases.length];
+          _wisdomIdx++;
+          wisdom.style.opacity = '1';
+        }, 300);
+      }
+      _loadWisdomTimer = setTimeout(showWisdom, 4200);
+    }
+    showWisdom();
+  }, 2800);
+}
+
+function completeLoadProgress() {
+  clearInterval(_loadProgressTimer);
+  if (_loadWisdomTimer) clearTimeout(_loadWisdomTimer);
+  var fill = document.getElementById('loadProgressFill');
+  var pct = document.getElementById('loadProgressPct');
+  if (fill) { fill.style.transition = 'width 0.4s ease'; fill.style.width = '100%'; }
+  if (pct) pct.textContent = '100%';
+}
+
 function showReport(aiText, contextId, tier, locked, backendPillars) {
   if (backendPillars && Array.isArray(backendPillars) && backendPillars.length === 4) {
     window._backendPillars = backendPillars;
   }
+  completeLoadProgress();
   document.getElementById('loadingScreen').classList.remove('show');
   if (!aiText || typeof aiText !== 'string') {
     document.getElementById('inputScreen').style.display='block';
@@ -784,7 +876,10 @@ function showReport(aiText, contextId, tier, locked, backendPillars) {
     cta.className = 'sticky-cta';
     cta.id = 'stickyCta';
     cta.innerHTML =
-      '<div class="cta-row"><div class="cta-desc">Unlock: 5,000+ word full reading · Wealth, Romance &amp; Career in depth · 8 Major Life Cycles · Next 10 Years forecast</div></div>' +
+      '<div style="margin-bottom:10px;padding:10px 12px;background:rgba(201,168,76,0.06);border-radius:8px">' +
+      '<div style="font-size:12px;color:rgba(232,208,138,0.9);font-weight:500;letter-spacing:0.04em;margin-bottom:4px">Your free preview showed just the surface.</div>' +
+      '<div style="font-size:11px;color:rgba(130,115,90,0.85);line-height:1.75">The full report reveals: <b style="color:var(--gold)">when your wealth peaks</b> · <b style="color:var(--gold)">who you\'re destined to meet</b> · the exact years that change everything · 8 major life cycles mapped.</div>' +
+      '</div>' +
       '<div style="text-align:center;font-size:11px;color:var(--gold-light);letter-spacing:0.02em;line-height:1.6;margin-bottom:10px">A traditional BaZi consultation costs $120+.<br>Your full AI reading: <b style="color:#e8d08a;font-size:14px">$9.90</b></div>' +
       '<div style="background:rgba(201,168,76,0.05);border-radius:6px;padding:10px;margin-bottom:10px;font-size:11px">' +
       '<div style="display:grid;grid-template-columns:1fr 34px 34px;gap:1px;letter-spacing:0.02em">' +
@@ -811,7 +906,7 @@ function showReport(aiText, contextId, tier, locked, backendPillars) {
       '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
       '</div></div>' +
       '<button class="btn-unlock" onclick="createCheckout(this,\'full\',9.9)">Unlock Full Report · $9.90</button>' +
-      '<button class="btn-member" onclick="createCheckout(this,\'member\',9.9)">👑 Unlimited Membership · <b style="font-size:16px;color:#8dd9bf">$9.90</b>/mo <span style="text-decoration:line-through;font-size:12px;opacity:0.6">$19.90/reading</span></button>';
+      '<button class="btn-member" onclick="createCheckout(this,\'member\',9.9)">👑 Members read everything · <b style="font-size:16px;color:#8dd9bf">$9.90</b>/mo <span style="opacity:0.55;font-size:11px">save 50%+</span></button>';
     document.body.appendChild(cta);
   }
 }
@@ -1193,6 +1288,9 @@ function askQuestion() {
 function renderUltimateReport(text, containerId) {
   var container = document.getElementById(containerId);
   if (!container) return;
+  // Strip locked content from free preview (frontend only — backend sentinel remains)
+  var lockedIdx = text.indexOf('---LOCKED---');
+  if (lockedIdx !== -1) text = text.slice(0, lockedIdx);
   var sections = [];
   var lines = text.split('\n');
   var currentSection = null;
@@ -1209,6 +1307,14 @@ function renderUltimateReport(text, containerId) {
   });
   if (currentSection) sections.push(currentSection);
   if (sections.length===0) sections.push({emoji:'📜', title:'Destiny Analysis', content:lines});
+
+  // Build Table of Contents strip
+  var tocHtml = '<div style="padding:0 4px 10px;display:flex;flex-wrap:wrap;gap:6px;">';
+  sections.forEach(function(sec, i) {
+    tocHtml += '<button onclick="scrollToSection('+i+')" style="padding:5px 10px;background:var(--card);border:1px solid rgba(201,168,76,'+(i===0?'0.3':'0.1')+');border-radius:20px;font-size:11px;color:'+(i===0?'var(--gold)':'var(--sub-text)')+';font-family:Inter,sans-serif;cursor:pointer;letter-spacing:0.02em;white-space:nowrap;-webkit-tap-highlight-color:transparent;min-height:44px;display:inline-flex;align-items:center;">'+(sec.emoji||'')+(i+1)+'</button>';
+  });
+  tocHtml += '</div>';
+
   var html = '<div class="ultimate-report">';
   sections.forEach(function(sec, i) {
     var ct = sec.content.join('<br>');
@@ -1220,11 +1326,23 @@ function renderUltimateReport(text, containerId) {
     html += '<div class="ur-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ur-arrow\').classList.toggle(\'open\')">';
     html += '<span class="ur-emoji">'+(sec.emoji||'📜')+'</span>';
     html += '<span class="ur-title">'+sec.title+'</span>';
-    html += '<span class="ur-arrow open">▾</span></div>';
-    html += '<div class="ur-body open"><div class="ur-text">'+ct+'</div></div></div>';
+    html += '<span class="ur-arrow'+(i===0?' open':'')+'">▾</span></div>';
+    html += '<div class="ur-body'+(i===0?' open':'')+'"><div class="ur-text">'+ct+'</div></div></div>';
   });
   html += '</div>';
-  container.innerHTML = html;
+  container.innerHTML = tocHtml + html;
+}
+
+function scrollToSection(idx) {
+  var cards = document.querySelectorAll('#reportContent .ur-card');
+  if (!cards || !cards[idx]) return;
+  cards[idx].scrollIntoView({ behavior:'smooth', block:'start' });
+  var body = cards[idx].querySelector('.ur-body');
+  var arrow = cards[idx].querySelector('.ur-arrow');
+  if (body && !body.classList.contains('open')) {
+    body.classList.add('open');
+    if (arrow) arrow.classList.add('open');
+  }
 }
 
 // ── Share functions ──

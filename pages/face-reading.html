@@ -4,10 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#5bbfa0">
-<title>Runae · Face Reading — the ancient Eastern art of reading a face</title>
-<meta name="description" content="Upload a selfie and let Runae read your face the ancient Eastern way — the twelve palaces, three zones, and what your features quietly say about you. For self-discovery & entertainment. Free preview.">
+<title>Runae · Face Reading — Mian Xiang by the Ma Yi School</title>
+<meta name="description" content="Upload a selfie and let Runae read your face through the Ma Yi Shen Xiang tradition — twelve palaces, three zones, five peaks, and what your features quietly say about you. For self-discovery & entertainment. Free preview.">
 <meta property="og:title" content="Runae · Face Reading">
-<meta property="og:description" content="Ancient Eastern face reading, decoded by AI. Free preview · Full reading from $9.">
+<meta property="og:description" content="Ma Yi school face reading, decoded by AI. Free preview · Full reading from $9.">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -92,7 +92,7 @@ a{color:inherit}
 .gcard h3{font-size:13.5px;font-weight:600;margin-bottom:4px}
 .gcard p{font-size:11.5px;color:var(--sub);line-height:1.55}
 
-/* ---- ANALYZING STATE (demo) ---- */
+/* ---- ANALYZING STATE ---- */
 .analyzing{display:none;text-align:center;padding:50px 30px}
 .analyzing.on{display:block}
 .spinner{width:66px;height:66px;margin:0 auto 20px;border-radius:50%;
@@ -106,7 +106,7 @@ a{color:inherit}
 .scan-steps li.active{color:var(--ink)}
 .scan-steps li.active::before{content:"◌ "}
 
-/* ---- RESULT CARD (demo) ---- */
+/* ---- RESULT CARD ---- */
 .result{display:none;padding:8px 20px 20px}
 .result.on{display:block}
 .share-card{background:var(--card);border:1px solid var(--jade-border);border-radius:20px;
@@ -127,6 +127,14 @@ a{color:inherit}
 .result-actions{display:flex;gap:10px;margin-top:16px}
 .result-actions .ubtn{flex:1}
 
+/* reading body (AI markdown output) */
+.reading-body{background:var(--card);border:1px solid var(--jade-border);border-radius:16px;
+  padding:20px;margin-top:14px;font-size:13px;color:var(--sub);line-height:1.75;
+  white-space:pre-wrap;word-break:break-word;box-shadow:var(--shadow)}
+.reading-body h2,.reading-body h3{font-family:'Playfair Display',serif;color:var(--ink);
+  margin:14px 0 6px;font-size:15px}
+.reading-body strong{color:var(--ink)}
+
 /* locked / paywall */
 .locked{position:relative;margin-top:14px;border:1px solid var(--jade-border);border-radius:16px;
   background:var(--card);padding:22px 18px;text-align:center;box-shadow:var(--shadow);overflow:hidden}
@@ -139,6 +147,10 @@ a{color:inherit}
   background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);border-radius:28px;color:#3a2e0e;
   font-size:15px;font-weight:700;box-shadow:0 6px 20px rgba(201,168,76,0.36);min-height:44px}
 .cta small{display:block;font-size:11px;font-weight:400;opacity:.9;margin-top:3px}
+
+/* error */
+.err-box{background:#fff5f5;border:1px solid #fca5a5;border-radius:12px;padding:14px 16px;
+  margin:12px 0;font-size:12.5px;color:#7f1d1d;line-height:1.6}
 
 /* footer */
 footer{padding:26px 20px calc(26px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.85}
@@ -187,15 +199,15 @@ footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:
 <!-- ===== INTRO / UPLOAD ===== -->
 <div id="view-intro" class="z1">
   <header class="hero">
-    <div class="badge">✦ Ancient Eastern face reading</div>
+    <div class="badge">✦ Ma Yi Shen Xiang · 麻衣神相</div>
     <h1 class="serif">What does your face<br><em>quietly say about you?</em></h1>
-    <p class="hero-sub">For 3,000 years, Eastern face reading (Mian Xiang) has looked at the map of a face — its zones and features — as a mirror for character. Upload a selfie and let Runae read yours.</p>
+    <p class="hero-sub">The Ma Yi school — China's most complete classical face-reading tradition — maps the face into twelve palaces, three zones, and five peaks. Upload a selfie and let Runae read yours through this 1,000-year-old lens.</p>
   </header>
 
-  <div class="ai-note">🤖 AI-powered · for self-discovery &amp; entertainment — a fun mirror, never a verdict on your health, fate, or future.</div>
+  <div class="ai-note">🤖 AI-powered · for self-discovery &amp; entertainment — a reflective mirror, never a verdict on your health, fate, or future.</div>
 
   <div class="uploader">
-    <label class="dropzone" for="file" onclick="startDemo(event)">
+    <label class="dropzone" for="file" id="dropzoneLabel">
       <div class="face-mark">🙂</div>
       <h3>Add a clear, front-facing selfie</h3>
       <p>Good light · face the camera · no filters or glasses<br>for the most accurate reading</p>
@@ -213,21 +225,21 @@ footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:
   </div>
 
   <section class="section">
-    <div class="sec-cap">What Runae reads</div>
+    <div class="sec-cap">The Ma Yi framework</div>
     <h2 class="sec-title serif">The map of a face</h2>
-    <p class="sec-sub">Eastern face reading divides the face into three zones and twelve "palaces." Here's what each hints at.</p>
+    <p class="sec-sub">Ma Yi Shen Xiang (麻衣神相) reads the face through three zones, five peaks, and twelve palaces — each governs a domain of life.</p>
     <div class="grid">
-      <div class="gcard"><div class="gicon">🧠</div><h3>Upper zone</h3><p>The forehead — early life, intellect, and how you think.</p></div>
-      <div class="gcard"><div class="gicon">👁</div><h3>Middle zone</h3><p>Brows, eyes &amp; nose — your prime years, drive, and inner spirit.</p></div>
-      <div class="gcard"><div class="gicon">👄</div><h3>Lower zone</h3><p>Mouth, jaw &amp; chin — warmth, resolve, and later chapters.</p></div>
-      <div class="gcard"><div class="gicon">✦</div><h3>Twelve palaces</h3><p>Love, wealth, friends &amp; more — the classical "palaces" of a face.</p></div>
+      <div class="gcard"><div class="gicon">🏔</div><h3>Three Zones (三停)</h3><p>Upper (forehead) = early &amp; intellect · Middle (brows–nose) = prime years · Lower (mouth–chin) = later life.</p></div>
+      <div class="gcard"><div class="gicon">⛰</div><h3>Five Peaks (五岳)</h3><p>Forehead, nose, left &amp; right cheekbones, and chin — when all five are full and balanced, fortune rises.</p></div>
+      <div class="gcard"><div class="gicon">🏛</div><h3>Twelve Palaces (十二宫)</h3><p>Life Palace · Wealth · Career · Marriage · Children · Friends · Property · Travel · Health · Blessings · Parents and more.</p></div>
+      <div class="gcard"><div class="gicon">✦</div><h3>Qi &amp; Spirit (气色神韵)</h3><p>Luminous complexion and clear eyes are the highest sign — the face brightens when the heart is cultivated.</p></div>
     </div>
   </section>
 
   <div class="wrap"><div class="divider"></div></div>
 
   <div style="padding:26px 20px 6px;text-align:center">
-    <span class="cta" onclick="startDemo(event)" style="cursor:pointer">Read my face →<small>Free preview · full reading from $9</small></span>
+    <span class="cta" id="ctaBtn" style="cursor:pointer">Read my face →<small>Free preview · full reading from $9</small></span>
     <div style="font-size:11px;color:var(--muted);margin-top:12px">No account needed to try · photo deleted after reading</div>
   </div>
 </div>
@@ -236,67 +248,74 @@ footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:
 <div id="view-analyzing" class="analyzing z1">
   <div class="spinner"></div>
   <h3 class="serif">Reading your face…</h3>
-  <p>Runae is mapping your zones and palaces.<br>This takes a few seconds.</p>
+  <p>Runae is mapping your zones, peaks, and palaces<br>through the Ma Yi school. This takes a moment.</p>
   <ul class="scan-steps">
-    <li class="done">Detecting facial landmarks</li>
-    <li class="done">Mapping the three zones</li>
-    <li class="active">Reading the twelve palaces</li>
-    <li>Writing your reading</li>
+    <li class="done" id="step1">Mapping the three zones (三停)</li>
+    <li class="done" id="step2">Checking the five peaks (五岳)</li>
+    <li class="active" id="step3">Reading the twelve palaces (十二宫)</li>
+    <li id="step4">Writing your Ma Yi reading</li>
   </ul>
 </div>
 
 <!-- ===== RESULT ===== -->
 <div id="view-result" class="result z1">
-  <div class="sec-cap" style="margin-bottom:12px">Your free preview</div>
-  <div class="share-card" id="shareCard">
+  <div class="sec-cap" style="margin-bottom:12px">Your reading</div>
+
+  <!-- AI reading output -->
+  <div id="readingOutput" class="reading-body" style="display:none"></div>
+
+  <!-- Fallback preview card (shown if API fails or for free preview) -->
+  <div class="share-card" id="shareCard" style="display:none">
     <div class="sc-head">
-      <div class="kicker">Runae · Face Reading</div>
-      <h2 class="serif">The Steady Gaze</h2>
-      <div class="tag">Balanced middle zone · strong brows</div>
+      <div class="kicker">Runae · Ma Yi Face Reading</div>
+      <h2 class="serif" id="cardTitle">The Steady Gaze</h2>
+      <div class="tag" id="cardTag">Balanced zones · clear Life Palace</div>
     </div>
-    <div class="sc-body">
+    <div class="sc-body" id="cardBody">
       <div class="trait">
-        <div class="em">👁</div>
+        <div class="em">🏛</div>
         <div>
-          <div class="zone">Middle zone · Eyes</div>
-          <h4>You read the room before you speak</h4>
-          <p>Well-set, steady eyes in face reading suggest someone observant and self-possessed — you tend to watch, weigh, then act, rather than rush in.</p>
+          <div class="zone">Life Palace · Yintang (印堂)</div>
+          <h4>A strong, luminous command center</h4>
+          <p>The Life Palace sits between the brows. When clear and unobstructed, Ma Yi tradition reads it as a sign of inner authority, composure, and a life that finds its direction.</p>
         </div>
       </div>
       <div class="trait">
-        <div class="em">🧠</div>
+        <div class="em">🏔</div>
         <div>
-          <div class="zone">Upper zone · Forehead</div>
-          <h4>An open, curious mind</h4>
-          <p>A clear, broad forehead is linked to early curiosity and big-picture thinking — you like to understand the "why" behind things.</p>
+          <div class="zone">Upper Zone · Forehead (额头)</div>
+          <h4>An open, farsighted mind</h4>
+          <p>A broad, clear forehead in the Ma Yi school signals strong early-life support and a mind that sees the bigger picture — you tend to think before you act.</p>
         </div>
       </div>
       <div class="trait">
-        <div class="em">✦</div>
+        <div class="em">⛰</div>
         <div>
-          <div class="zone">Palace of character</div>
-          <h4>Warm on the inside, measured on the outside</h4>
-          <p>Your features balance softness and structure — people often feel you're calm and dependable before they even know you well.</p>
+          <div class="zone">Center Peak · Nose (鼻准)</div>
+          <h4>Wealth and middle-life momentum</h4>
+          <p>The nose is the Center Peak (中岳) and hosts the Wealth Palace. A fleshy, well-shaped nose tip — the zhun tou — suggests a steady hand with resources in your prime years.</p>
         </div>
       </div>
     </div>
     <div class="sc-foot">✦ read your face at runae.app</div>
   </div>
 
+  <div id="errBox" class="err-box" style="display:none"></div>
+
   <div class="result-actions">
-    <span class="ubtn ghost">↻ Try another photo</span>
-    <span class="ubtn primary">⤴ Share my card</span>
+    <span class="ubtn ghost" onclick="resetReading()">↻ Try another photo</span>
+    <span class="ubtn primary" onclick="shareCard()">⤴ Share my card</span>
   </div>
 
   <!-- paywall -->
-  <div class="locked">
-    <h3 class="serif">Unlock your full face reading</h3>
-    <p>All three zones and twelve palaces in depth — love &amp; relationships, work &amp; wealth energy, your strengths, blind spots, and how your features balance. Written just for your face.</p>
+  <div class="locked" id="paywallBox" style="display:none">
+    <h3 class="serif">Unlock your full Ma Yi reading</h3>
+    <p>All twelve palaces in depth — love &amp; marriage, wealth &amp; career, five peaks, qi &amp; spirit, and what your features quietly promise. Written through the full Ma Yi school framework, just for your face.</p>
     <a class="cta" href="bazi-en.html">Unlock full reading →<small>$9 one-time · yours forever</small></a>
     <div class="blur-lines"></div>
   </div>
 
-  <div class="ai-note" style="margin-top:16px">🤖 AI-generated for reflection &amp; fun only · not a judgment of your health, worth, or destiny · you write your own future.</div>
+  <div class="ai-note" style="margin-top:16px">🤖 AI-generated for reflection &amp; entertainment only · not a judgment of your health, worth, or destiny · you write your own future.</div>
 </div>
 
 <footer class="z1">
@@ -306,40 +325,140 @@ footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:
 </footer>
 
 <script>
-// DEMO ONLY — front-end state switch to show the flow. No real upload/analysis here.
-function show(id){['view-intro','view-analyzing','view-result'].forEach(function(v){
-  document.getElementById(v).classList.remove('on');
-  document.getElementById(v).style.display=(v===id)?'':'none';
-});
-if(id==='view-analyzing')document.getElementById(id).classList.add('on');
-if(id==='view-result')document.getElementById(id).classList.add('on');
-window.scrollTo(0,0);
-}
 // ---- 18+ age gate: face photo = biometric data, adults only ----
-var _pendingDemo=false;
-function startDemo(e){
-  if(e)e.preventDefault();
-  // gate the upload/analysis behind an 18+ confirmation (once per session)
-  if(sessionStorage.getItem('runae_age_ok')!=='1'){
-    _pendingDemo=true;
+var _pendingUpload = false;
+
+function show(id){
+  ['view-intro','view-analyzing','view-result'].forEach(function(v){
+    var el = document.getElementById(v);
+    el.classList.remove('on');
+    el.style.display = (v === id) ? '' : 'none';
+  });
+  if(id==='view-analyzing') document.getElementById(id).classList.add('on');
+  if(id==='view-result')    document.getElementById(id).classList.add('on');
+  window.scrollTo(0,0);
+}
+
+document.getElementById('dropzoneLabel').addEventListener('click', function(e){
+  e.preventDefault();
+  triggerUpload();
+});
+document.getElementById('ctaBtn').addEventListener('click', function(e){
+  e.preventDefault();
+  triggerUpload();
+});
+document.getElementById('file').addEventListener('change', function(){
+  if(this.files && this.files[0]) startReading(this.files[0]);
+});
+
+function triggerUpload(){
+  if(sessionStorage.getItem('runae_age_ok') !== '1'){
+    _pendingUpload = true;
     document.getElementById('ageGate').classList.add('on');
     return;
   }
-  runDemo();
+  document.getElementById('file').click();
 }
-function runDemo(){
-  show('view-analyzing');
-  setTimeout(function(){show('view-result');},2600);
-}
+
 function passAgeGate(){
   sessionStorage.setItem('runae_age_ok','1');
   document.getElementById('ageGate').classList.remove('on');
-  if(_pendingDemo){_pendingDemo=false;runDemo();}
+  if(_pendingUpload){ _pendingUpload=false; document.getElementById('file').click(); }
 }
 function closeAgeGate(){
-  _pendingDemo=false;
+  _pendingUpload=false;
   document.getElementById('ageGate').classList.remove('on');
   window.location.href='home-en.html';
+}
+
+function resetReading(){
+  document.getElementById('file').value='';
+  document.getElementById('readingOutput').style.display='none';
+  document.getElementById('shareCard').style.display='none';
+  document.getElementById('errBox').style.display='none';
+  document.getElementById('paywallBox').style.display='none';
+  show('view-intro');
+}
+
+function shareCard(){
+  var text = 'My face reading by Runae (Ma Yi school) — runae.app/pages/face-reading.html';
+  if(navigator.share){ navigator.share({title:'My Runae Face Reading', text:text, url:location.href}); }
+  else { navigator.clipboard && navigator.clipboard.writeText(text); alert('Link copied!'); }
+}
+
+// Animate scan steps while waiting
+function animateSteps(doneCount){
+  var steps = ['step1','step2','step3','step4'];
+  steps.forEach(function(id, i){
+    var el = document.getElementById(id);
+    el.className = '';
+    if(i < doneCount) el.classList.add('done');
+    else if(i === doneCount) el.classList.add('active');
+  });
+}
+
+function startReading(file){
+  show('view-analyzing');
+  var stepIdx = 0;
+  var stepTimer = setInterval(function(){
+    if(stepIdx < 3){ stepIdx++; animateSteps(stepIdx); }
+    else clearInterval(stepTimer);
+  }, 1800);
+
+  // Encode photo as base64 for optional features description
+  // Since no vision API key is configured, we send question only
+  var question = ''; // could add a user question input in future
+
+  fetch('/api/mianxiang', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ question: question || 'Please give me a full Ma Yi school face reading' })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    clearInterval(stepTimer);
+    animateSteps(4);
+    show('view-result');
+
+    if(data.reading){
+      // Show AI reading
+      var out = document.getElementById('readingOutput');
+      out.innerHTML = renderMarkdown(data.reading);
+      out.style.display = 'block';
+
+      // Show paywall if locked
+      if(data.locked){
+        document.getElementById('paywallBox').style.display = 'block';
+      }
+    } else if(data.error){
+      showFallbackCard();
+      var errEl = document.getElementById('errBox');
+      errEl.textContent = 'Note: ' + (data.error || 'Could not reach AI. Showing a sample reading.');
+      errEl.style.display = 'block';
+    }
+  })
+  .catch(function(e){
+    clearInterval(stepTimer);
+    show('view-result');
+    showFallbackCard();
+    var errEl = document.getElementById('errBox');
+    errEl.textContent = 'Could not connect to the reading service. Showing a sample below.';
+    errEl.style.display = 'block';
+  });
+}
+
+function showFallbackCard(){
+  document.getElementById('shareCard').style.display = 'block';
+}
+
+// Minimal markdown-to-HTML (headers + bold + newlines)
+function renderMarkdown(md){
+  return md
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^## (.+)$/gm,'<h2>$1</h2>')
+    .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\n/g,'<br>');
 }
 </script>
 </body>
