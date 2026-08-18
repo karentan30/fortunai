@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5bbfa0">
+<title>Runae · Zi Wei Dou Shu — Purple Star Astrology</title>
+<meta name="description" content="The most detailed Eastern birth chart system — 12 life palaces, each governed by stars that reveal your destiny's architecture. Computed by a real engine, read by AI.">
+<meta property="og:title" content="Runae · Purple Star Astrology — Zi Wei Dou Shu">
+<meta property="og:description" content="12 life palaces, major stars in each, AI-interpreted. Computed by a real Eastern astrology engine. Free reading.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://runae.net/ziwei-en">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Runae">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --jade:#5bbfa0;--jade-deep:#3d9e82;--jade-light:#8dd9bf;
+  --jade-pale:rgba(91,191,160,0.08);--jade-border:rgba(91,191,160,0.22);
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;--gold-pale:rgba(201,168,76,0.08);
+  --bg:#faf8f5;--card:#ffffff;--surface:#f2f5f2;
+  --ink:#1a1a18;--sub:rgba(60,75,65,0.72);--muted:rgba(80,95,85,0.45);
+  --radius:14px;--shadow:0 2px 12px rgba(0,0,0,0.06);
+  --lux-ink0:#0d0b08;--lux-ink1:#181310;--lux-ink2:#241a12;
+  --lux-gold:#c9a84c;--lux-gold-hi:#f6e6a8;--lux-gold-lo:#8a6420;
+  --lux-line:rgba(201,168,76,0.30);--lux-line-soft:rgba(201,168,76,0.14);
+  --lux-sub:rgba(232,208,138,0.60);
+}
+html{background:var(--bg);-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;color:var(--ink);max-width:440px;margin:0 auto;
+  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(91,191,160,0.09) 0%,transparent 60%),var(--bg);
+  min-height:100vh;padding-bottom:40px}
+.serif{font-family:'Playfair Display',serif}
+.jade-line{width:48px;height:2px;background:linear-gradient(90deg,transparent,var(--jade),transparent);margin:14px auto}
+a{color:inherit;text-decoration:none}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:center;gap:9px;padding:20px 20px 4px}
+.clasp{width:20px;height:20px;border-radius:50%;flex-shrink:0;
+  background:radial-gradient(circle at 34% 27%,rgba(255,255,255,0.92) 0%,rgba(255,255,255,0.35) 7%,transparent 18%),
+    radial-gradient(circle at 70% 68%,var(--jade-deep) 0%,transparent 38%),
+    radial-gradient(ellipse at 42% 38%,var(--jade-light) 0%,var(--jade) 22%,var(--jade) 52%,var(--jade-deep) 100%)}
+.logo{font-family:'Playfair Display',serif;font-size:14px;letter-spacing:0.42em;color:var(--jade-deep)}
+
+.hero{text-align:center;padding:14px 22px 6px}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--jade-pale);border:1px solid var(--jade-border);
+  border-radius:20px;padding:6px 14px;font-size:10px;color:var(--jade-deep);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px}
+.hero h1{font-family:'Playfair Display',serif;font-size:27px;font-weight:700;line-height:1.28;margin-bottom:12px}
+.hero h1 em{font-style:italic;color:var(--jade-deep)}
+.hero-sub{font-size:13.5px;color:var(--sub);line-height:1.7;margin-bottom:6px}
+.hero-sub b{color:var(--ink);font-weight:600}
+
+.ai-note{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--jade-pale);
+  border:1px solid var(--jade-border);border-radius:12px;padding:11px 14px;margin:14px 20px 0;
+  font-size:11.5px;color:var(--jade-deep);letter-spacing:.02em;line-height:1.5;text-align:center}
+
+/* form */
+.form-card{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);
+  box-shadow:var(--shadow);margin:18px 20px;padding:20px 18px}
+.form-card h2{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;margin-bottom:4px}
+.form-card .cap{font-size:11.5px;color:var(--sub);margin-bottom:16px}
+label{display:block;font-size:11px;font-weight:600;color:var(--sub);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+.row{display:flex;gap:10px}
+.row .fld{flex:1}
+.fld{margin-bottom:14px}
+input,select{width:100%;border:1px solid var(--jade-border);border-radius:10px;padding:12px 12px;font-size:15px;
+  font-family:inherit;color:var(--ink);background:#fff;min-height:46px;-webkit-appearance:none;appearance:none}
+select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%233d9e82' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:34px}
+input:focus,select:focus{outline:none;border-color:var(--jade);box-shadow:0 0 0 3px var(--jade-pale)}
+.err-msg{font-size:11px;color:#c0392b;margin-top:-8px;margin-bottom:10px;display:none}
+.err-msg.show{display:block}
+.cta{display:block;width:100%;text-align:center;background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);
+  color:#3a2e0e;font-size:15px;font-weight:700;border:none;border-radius:30px;padding:15px;min-height:52px;
+  cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(201,168,76,0.28);font-family:inherit}
+.cta:disabled{opacity:.6;cursor:default}
+.cta-note{font-size:11px;color:var(--muted);margin-top:10px;text-align:center}
+
+/* spinner */
+.spin{display:none;text-align:center;padding:40px 20px;color:var(--jade-deep)}
+.spin.on{display:block}
+.spin .dot{display:inline-block;width:9px;height:9px;margin:0 3px;border-radius:50%;background:var(--jade);animation:b 1.2s infinite ease-in-out}
+.spin .dot:nth-child(2){animation-delay:.15s}.spin .dot:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.spin p{font-size:12.5px;color:var(--sub);margin-top:14px}
+
+/* result panel */
+#result{display:none;padding:0 20px}
+
+/* palace grid */
+.palaces-wrap{margin:14px 0}
+.palaces-wrap h3{font-family:'Playfair Display',serif;font-size:15px;color:var(--jade-deep);margin-bottom:12px}
+.palaces-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.palace{background:var(--card);border:1px solid var(--jade-border);border-radius:12px;padding:11px 12px;
+  position:relative;min-height:70px}
+.palace.is-life{border-color:var(--gold);background:linear-gradient(135deg,rgba(201,168,76,0.06),#fff)}
+.palace.is-body{border-color:var(--jade)}
+.palace-name{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--sub);margin-bottom:4px}
+.palace.is-life .palace-name{color:var(--gold-deep)}
+.palace-stars{font-size:12.5px;color:var(--ink);line-height:1.45;font-weight:500}
+.palace-stars.empty{color:var(--muted);font-style:italic;font-weight:400}
+.palace-aux{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.3}
+.palace-tag{position:absolute;top:6px;right:7px;font-size:8px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;padding:2px 6px;border-radius:6px}
+.palace-tag.life{background:rgba(201,168,76,0.14);color:var(--gold-deep)}
+.palace-tag.body{background:var(--jade-pale);color:var(--jade-deep)}
+
+/* reading */
+.reading{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:20px 18px;margin:14px 0;font-size:13.5px;line-height:1.75;color:var(--ink)}
+.reading h3{font-family:'Playfair Display',serif;font-size:15px;color:var(--jade-deep);margin-bottom:10px}
+.reading p{margin-bottom:12px}
+.reading p:last-child{margin-bottom:0}
+
+/* luxury dark-gold share card */
+.shareCard{position:relative;overflow:hidden;border-radius:22px;color:#fff;isolation:isolate;
+  padding:28px 22px 22px;margin:14px 0;font-family:'Inter',sans-serif;
+  background:
+    radial-gradient(120% 70% at 50% -10%,rgba(201,168,76,0.18) 0%,transparent 55%),
+    radial-gradient(90% 55% at 50% 115%,rgba(201,168,76,0.10) 0%,transparent 60%),
+    linear-gradient(165deg,var(--lux-ink2) 0%,var(--lux-ink1) 42%,var(--lux-ink0) 100%);
+  box-shadow:0 12px 40px rgba(0,0,0,0.4)}
+.shareCard::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,0.020) 0 1px,transparent 1px 6px),
+    repeating-linear-gradient(-45deg,rgba(0,0,0,0.06) 0 1px,transparent 1px 6px);mix-blend-mode:overlay}
+.shareCard::after{content:"";position:absolute;inset:11px;z-index:1;pointer-events:none;border-radius:14px;
+  border:1px solid var(--lux-line);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,0.4),inset 0 0 40px rgba(201,168,76,0.06),inset 0 0 0 6px rgba(0,0,0,0.25)}
+.shareCard > *{position:relative;z-index:2}
+.foil{background:linear-gradient(100deg,var(--lux-gold-lo) 0%,var(--lux-gold) 24%,var(--lux-gold-hi) 44%,#fffbe8 50%,var(--lux-gold-hi) 56%,var(--lux-gold) 76%,var(--lux-gold-lo) 100%);
+  background-size:250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  animation:foilSweep 5.5s linear infinite}
+@keyframes foilSweep{0%{background-position:180% 0}100%{background-position:-80% 0}}
+.card-head{text-align:center;margin-bottom:16px}
+.card-eyebrow{font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--lux-sub);margin-bottom:10px}
+.card-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:800;line-height:1.25;margin-bottom:6px}
+.card-star{font-size:26px;font-family:'Playfair Display',serif;font-weight:700;margin:6px 0}
+.card-divider{height:1px;background:linear-gradient(90deg,transparent,var(--lux-line),transparent);margin:14px 0}
+.card-palaces{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.card-palace-row{display:flex;align-items:baseline;gap:8px}
+.card-palace-label{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--lux-sub);min-width:96px;flex-shrink:0}
+.card-palace-stars{font-size:11.5px;color:var(--lux-gold-hi);font-weight:500;line-height:1.3}
+.card-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--lux-line-soft)}
+.card-brand{font-family:'Playfair Display',serif;font-size:14px;letter-spacing:.32em;color:var(--lux-gold-hi)}
+.card-brand small{display:block;font-family:'Inter';font-size:7.5px;letter-spacing:.16em;color:var(--lux-sub);margin-top:4px;text-transform:uppercase}
+.card-ai{font-size:7.5px;line-height:1.4;color:rgba(255,255,255,0.42);text-align:right;max-width:130px}
+
+/* share buttons */
+.share{display:flex;gap:10px;margin:14px 0 6px}
+.share button{flex:1;background:var(--jade-pale);border:1px solid var(--jade-border);color:var(--jade-deep);
+  font-size:12.5px;font-weight:600;border-radius:24px;padding:12px;min-height:46px;cursor:pointer;font-family:inherit}
+.share button:active{background:var(--jade-border)}
+#saveBtn{background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);color:#3a2e0e;border:none;box-shadow:0 4px 14px rgba(201,168,76,0.34);}
+#saveBtn:active{background:linear-gradient(135deg,#c9a84c,#b8923a,#a07828);}
+
+.disc{font-size:10.5px;color:var(--muted);line-height:1.65;text-align:center;margin:16px 6px 4px}
+footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.85}
+</style>
+</head>
+<body>
+
+<!-- header -->
+<div class="top">
+  <div class="clasp"></div>
+  <span class="logo">RUNAE</span>
+</div>
+
+<!-- hero -->
+<div class="hero">
+  <div class="badge">◆ Zi Wei Dou Shu · Purple Star Astrology</div>
+  <h1>Your <em>Purple Star</em> birth chart</h1>
+  <p class="hero-sub">The most detailed Eastern birth chart system — <b>12 life palaces</b>, each governed by stars that reveal your destiny's architecture. More precise than a zodiac sign.</p>
+</div>
+
+<!-- AI label -->
+<div class="ai-note">
+  ✦ AI-generated · computed by a real Eastern astrology engine · for reflection and entertainment
+</div>
+
+<!-- form -->
+<div class="form-card">
+  <h2>Enter your birth details</h2>
+  <p class="cap">Solar calendar date · all fields required</p>
+
+  <div class="row">
+    <div class="fld">
+      <label for="year">Year</label>
+      <input type="number" id="year" name="year" placeholder="e.g. 1990" min="1900" max="2010" inputmode="numeric">
+    </div>
+    <div class="fld">
+      <label for="month">Month</label>
+      <input type="number" id="month" name="month" placeholder="1–12" min="1" max="12" inputmode="numeric">
+    </div>
+    <div class="fld">
+      <label for="day">Day</label>
+      <input type="number" id="day" name="day" placeholder="1–31" min="1" max="31" inputmode="numeric">
+    </div>
+  </div>
+
+  <div class="fld">
+    <label for="hour">Birth hour (approximate is fine)</label>
+    <select id="hour">
+      <option value="" disabled selected>Select birth hour period</option>
+      <option value="23">子時 Zi · 11 pm – 1 am</option>
+      <option value="1">丑時 Chou · 1 am – 3 am</option>
+      <option value="3">寅時 Yin · 3 am – 5 am</option>
+      <option value="5">卯時 Mao · 5 am – 7 am</option>
+      <option value="7">辰時 Chen · 7 am – 9 am</option>
+      <option value="9">巳時 Si · 9 am – 11 am</option>
+      <option value="11">午時 Wu · 11 am – 1 pm</option>
+      <option value="13">未時 Wei · 1 pm – 3 pm</option>
+      <option value="15">申時 Shen · 3 pm – 5 pm</option>
+      <option value="17">酉時 You · 5 pm – 7 pm</option>
+      <option value="19">戌時 Xu · 7 pm – 9 pm</option>
+      <option value="21">亥時 Hai · 9 pm – 11 pm</option>
+    </select>
+  </div>
+
+  <div class="fld">
+    <label for="gender">Gender (affects palace direction in this system)</label>
+    <select id="gender">
+      <option value="" disabled selected>Select gender</option>
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+    </select>
+  </div>
+
+  <div class="err-msg" id="errMsg"></div>
+
+  <button class="cta" id="submitBtn" onclick="submitForm()">Reveal My Purple Star Chart ✦</button>
+  <p class="cta-note">Free · 1 reading per day · AI-generated for reflection only</p>
+</div>
+
+<!-- spinner -->
+<div class="spin" id="spin">
+  <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  <p>Charting your 12 palaces…</p>
+</div>
+
+<!-- result -->
+<div id="result">
+
+  <!-- palace grid -->
+  <div class="palaces-wrap">
+    <h3>Your 12 Life Palaces</h3>
+    <div class="palaces-grid" id="palacesGrid"></div>
+  </div>
+
+  <!-- reading -->
+  <div class="reading">
+    <h3>Your Purple Star Reading</h3>
+    <div id="readingText"></div>
+  </div>
+
+  <!-- share card -->
+  <div class="shareCard" id="shareCard">
+    <div class="card-head">
+      <div class="card-eyebrow">Runae · Purple Star Astrology</div>
+      <div class="card-title foil" id="cardTitle">Zi Wei Dou Shu</div>
+      <div class="card-star foil" id="cardStar"></div>
+    </div>
+    <div class="card-divider"></div>
+    <div class="card-palaces" id="cardPalaces"></div>
+    <div class="card-foot">
+      <div class="card-brand">RUNAE<small>Purple Star · Eastern Astrology</small></div>
+      <div class="card-ai">AI-generated · for reflection &amp; entertainment only</div>
+    </div>
+  </div>
+
+  <!-- share buttons -->
+  <div class="share">
+    <button onclick="copyReading()">Copy Reading</button>
+    <button id="saveBtn" onclick="saveCard()">Save Chart Card ✦</button>
+  </div>
+
+  <p class="disc">For entertainment and reflection only. AI-generated reading. Zi Wei Dou Shu is an ancient Eastern art — results reflect archetypal patterns, not guaranteed outcomes. Not a substitute for professional advice.</p>
+</div>
+
+<footer>
+  Runae · Eastern Astrology · runae.net<br>
+  <a href="/pages/about-en.html" style="color:var(--jade-deep)">About</a> · <a href="/pages/bazi-en.html" style="color:var(--jade-deep)">Four Pillars (Bazi)</a>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  var lastResult = null;
+
+  // ── Helpers ──────────────────────────────────────────────────────
+  function showErr(msg) {
+    var el = document.getElementById('errMsg');
+    el.textContent = msg;
+    el.classList.add('show');
+  }
+  function clearErr() {
+    var el = document.getElementById('errMsg');
+    el.textContent = '';
+    el.classList.remove('show');
+  }
+  function setSpinner(on) {
+    document.getElementById('spin').className = 'spin' + (on ? ' on' : '');
+  }
+  function setSubmitDisabled(dis) {
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = dis;
+  }
+
+  // ── Palace grid renderer ─────────────────────────────────────────
+  function renderPalaces(palaces, shenGongIndex) {
+    var grid = document.getElementById('palacesGrid');
+    grid.innerHTML = '';
+    palaces.forEach(function (p) {
+      var div = document.createElement('div');
+      var classes = 'palace';
+      if (p.isLife) classes += ' is-life';
+      if (p.isBody) classes += ' is-body';
+      div.className = classes;
+
+      var stars = p.mainStars.length ? p.mainStars.join(' · ') : '';
+      var starsClass = p.mainStars.length ? 'palace-stars' : 'palace-stars empty';
+      var starsText = p.mainStars.length ? stars : 'empty';
+
+      var aux = '';
+      if (p.auxStars && p.auxStars.length) {
+        aux = '<div class="palace-aux">' + p.auxStars.slice(0, 3).join(' ') + '</div>';
+      }
+
+      var tag = '';
+      if (p.isLife) tag = '<span class="palace-tag life">Life</span>';
+      else if (p.isBody) tag = '<span class="palace-tag body">Body</span>';
+
+      div.innerHTML =
+        tag +
+        '<div class="palace-name">' + p.nameEn + '</div>' +
+        '<div class="' + starsClass + '">' + starsText + '</div>' +
+        aux;
+      grid.appendChild(div);
+    });
+  }
+
+  // ── Reading renderer ─────────────────────────────────────────────
+  function renderReading(text) {
+    var el = document.getElementById('readingText');
+    var paras = text.trim().split(/\n\n+/);
+    el.innerHTML = paras.map(function (p) {
+      return '<p>' + p.replace(/\n/g, '<br>') + '</p>';
+    }).join('');
+  }
+
+  // ── Share card renderer ──────────────────────────────────────────
+  function renderShareCard(palaces, lifePalace) {
+    var cardStar = document.getElementById('cardStar');
+    var lifeStars = lifePalace.mainStars.length ? lifePalace.mainStars.join(' · ') : 'Void Position';
+    cardStar.textContent = lifeStars;
+
+    var cardTitle = document.getElementById('cardTitle');
+    cardTitle.textContent = 'Life Palace · ' + lifePalace.nameEn;
+
+    var featured = ['Career', 'Wealth', 'Relationships', 'Fortune & Spirit'];
+    var cardPalaces = document.getElementById('cardPalaces');
+    cardPalaces.innerHTML = '';
+
+    featured.forEach(function (name) {
+      var p = palaces.find(function (x) { return x.nameEn === name; });
+      if (!p) return;
+      var stars = p.mainStars.length ? p.mainStars.join(' · ') : '—';
+      var row = document.createElement('div');
+      row.className = 'card-palace-row';
+      row.innerHTML =
+        '<span class="card-palace-label">' + p.nameEn + '</span>' +
+        '<span class="card-palace-stars">' + stars + '</span>';
+      cardPalaces.appendChild(row);
+    });
+  }
+
+  // ── Submit ───────────────────────────────────────────────────────
+  window.submitForm = function () {
+    clearErr();
+
+    var year = parseInt(document.getElementById('year').value, 10);
+    var month = parseInt(document.getElementById('month').value, 10);
+    var day = parseInt(document.getElementById('day').value, 10);
+    var hourVal = document.getElementById('hour').value;
+    var gender = document.getElementById('gender').value;
+
+    if (!year || year < 1900 || year > 2010) { showErr('Please enter a valid birth year (1900–2010).'); return; }
+    if (!month || month < 1 || month > 12) { showErr('Please enter a valid birth month (1–12).'); return; }
+    if (!day || day < 1 || day > 31) { showErr('Please enter a valid birth day (1–31).'); return; }
+    if (hourVal === '' || hourVal === null || hourVal === undefined) { showErr('Please select a birth hour period.'); return; }
+    if (!gender) { showErr('Please select a gender.'); return; }
+
+    var currentYear = new Date().getFullYear();
+    if (currentYear - year < 14) {
+      showErr('This reading is for ages 14 and above.');
+      return;
+    }
+
+    var hour = parseInt(hourVal, 10);
+
+    document.getElementById('result').style.display = 'none';
+    setSpinner(true);
+    setSubmitDisabled(true);
+
+    fetch('/api/ziwei-en', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ year: year, month: month, day: day, hour: hour, gender: gender })
+    })
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+      setSpinner(false);
+      setSubmitDisabled(false);
+
+      if (data.error) {
+        showErr(data.error);
+        return;
+      }
+      if (data.upgrade) {
+        showErr(data.message || 'Daily free reading used. Come back tomorrow.');
+        return;
+      }
+
+      lastResult = data;
+      renderPalaces(data.palaces, data.shenGongIndex);
+      renderReading(data.reading);
+      renderShareCard(data.palaces, data.lifePalace);
+
+      document.getElementById('result').style.display = 'block';
+      document.getElementById('result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    })
+    .catch(function (err) {
+      setSpinner(false);
+      setSubmitDisabled(false);
+      showErr('Network error — please check your connection and try again.');
+    });
+  };
+
+  // ── Copy reading ─────────────────────────────────────────────────
+  window.copyReading = function () {
+    if (!lastResult) return;
+    var lifeStars = lastResult.lifePalace.mainStars.length ? lastResult.lifePalace.mainStars.join(', ') : 'empty palace';
+    var text = 'My Purple Star (Zi Wei Dou Shu) Life Palace: ' + lifeStars + '\n\n' + lastResult.reading +
+      '\n\n— Runae · Eastern Astrology · runae.net';
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(function () { alert('Reading copied to clipboard!'); });
+    } else {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      alert('Reading copied!');
+    }
+  };
+
+  // ── Save card (html2canvas) ──────────────────────────────────────
+  window.saveCard = function () {
+    var card = document.getElementById('shareCard');
+    if (!card || typeof html2canvas === 'undefined') { alert('Save not available — please try again.'); return; }
+    var btn = document.getElementById('saveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    html2canvas(card, { scale: 2, useCORS: true, backgroundColor: null }).then(function (canvas) {
+      var link = document.createElement('a');
+      link.download = 'runae-purple-star-chart.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      btn.disabled = false;
+      btn.textContent = 'Save Chart Card ✦';
+    }).catch(function () {
+      btn.disabled = false;
+      btn.textContent = 'Save Chart Card ✦';
+      alert('Could not save image — please try a screenshot instead.');
+    });
+  };
+
+  // Allow Enter key to submit
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !document.getElementById('submitBtn').disabled) {
+      submitForm();
+    }
+  });
+}());
+</script>
+</body>
+</html>
