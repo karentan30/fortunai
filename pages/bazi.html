@@ -1361,11 +1361,22 @@ function renderAITextReport(text, contextId, isLocked) {
     '</a>';
   if (rc) rc.appendChild(hehunCTA);
 
-  // 快赢3: 订阅入口 (所有用户)
+  // 快赢3: 报告存邮箱 + 订阅一体化入口 (所有用户)
   var subHook = document.createElement('div');
   subHook.className = 'subscribe-hook';
-  subHook.style.cssText = 'text-align:center;padding:24px;background:rgba(14,14,14,0.6);border:1px solid rgba(201,168,76,0.1);border-radius:12px;margin:16px 0 0';
-  subHook.innerHTML = '<div style="font-size:15px;font-weight:500;margin-bottom:4px;color:rgba(232,208,138,0.9);letter-spacing:0.08em">每日天机 · 专属运势推送</div><div style="font-size:13px;color:rgba(200,196,180,0.55);margin-bottom:16px">每天早8点，收到今日五行能量与宜忌</div><div style="display:flex;gap:8px;max-width:320px;margin:0 auto"><input type="email" id="subscribeEmail" placeholder="输入邮箱" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.15);border-radius:8px;font-size:14px;color:rgba(240,238,230,0.8);font-family:inherit"><button onclick="submitSubscribe()" style="background:rgba(91,191,160,0.15);border:1px solid rgba(91,191,160,0.35);color:#5bbfa0;padding:10px 16px;border-radius:8px;font-size:14px;cursor:pointer;white-space:nowrap;font-family:inherit">订阅</button></div><div id="subscribeMsg" style="font-size:12px;color:#5bbfa0;margin-top:8px;display:none">✓ 已订阅，明天早8点见</div>';
+  subHook.id = 'reportEmailHook';
+  subHook.style.cssText = 'text-align:center;padding:24px;background:linear-gradient(135deg,rgba(14,14,14,0.7),rgba(91,191,160,0.04));border:1px solid rgba(91,191,160,0.2);border-radius:12px;margin:16px 0 0';
+  subHook.innerHTML =
+    '<div style="font-size:22px;margin-bottom:8px">📬</div>' +
+    '<div style="font-size:15px;font-weight:500;margin-bottom:4px;color:rgba(232,208,138,0.95);letter-spacing:0.08em">把这份报告存到邮箱</div>' +
+    '<div style="font-size:13px;color:rgba(200,196,180,0.55);margin-bottom:16px">顺便解锁每日专属运势推送，每天早8点到达</div>' +
+    '<div style="display:flex;gap:8px;max-width:340px;margin:0 auto">' +
+    '<input type="email" id="subscribeEmail" placeholder="输入邮箱" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.04);border:1px solid rgba(201,168,76,0.15);border-radius:8px;font-size:14px;color:rgba(240,238,230,0.8);font-family:inherit">' +
+    '<button onclick="submitSubscribeAndSendReport()" style="background:rgba(91,191,160,0.2);border:1px solid rgba(91,191,160,0.4);color:#5bbfa0;padding:10px 18px;border-radius:8px;font-size:14px;cursor:pointer;white-space:nowrap;font-family:inherit;font-weight:600">发送 →</button>' +
+    '</div>' +
+    '<div id="subscribeMsg" style="font-size:12px;color:#5bbfa0;margin-top:10px;display:none">✅ 报告已发送，明天早8点第一份天机见！</div>' +
+    '<div id="subscribeSending" style="font-size:12px;color:rgba(91,191,160,0.6);margin-top:10px;display:none">发送中…</div>' +
+    '<div style="font-size:11px;color:rgba(200,196,180,0.3);margin-top:10px">AI生成·仅供参考·随时可退订</div>';
   if (rc) rc.appendChild(subHook);
 }
 
@@ -2031,22 +2042,74 @@ function generateShareCard() {
   });
 }
 
-// ── 快赢3: 邮件订阅 ──
-async function submitSubscribe() {
+// ── 快赢3: 邮件订阅 + 报告发送 ──
+async function submitSubscribeAndSendReport() {
   var emailEl = document.getElementById('subscribeEmail');
   if (!emailEl) return;
   var email = emailEl.value.trim();
-  if (!email || !email.includes('@')) return;
+  if (!email || !email.includes('@')) { showToast('请输入有效邮箱', 'error'); return; }
+
+  var sendingEl = document.getElementById('subscribeSending');
+  var msgEl = document.getElementById('subscribeMsg');
+  if (sendingEl) sendingEl.style.display = 'block';
+
+  // 1. 订阅（带出生信息+功能来源，供个性化日报用）
+  var birthInfo = lastBaziInput ? {
+    birthYear: lastBaziInput.year,
+    birthMonth: lastBaziInput.month,
+    birthDay: lastBaziInput.day,
+    birthHour: lastBaziInput.hour,
+    gender: lastBaziInput.gender,
+    name: lastBaziInput.name || ''
+  } : {};
   try {
-    await fetch('/api/subscribe', {
+    await fetch('/api/email/subscribe', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ email: email, source: 'bazi-report' })
+      body: JSON.stringify({
+        email: email,
+        name: birthInfo.name || '',
+        birthYear: birthInfo.birthYear || null,
+        birthMonth: birthInfo.birthMonth || null,
+        birthDay: birthInfo.birthDay || null,
+        birthHour: birthInfo.birthHour || null,
+        gender: birthInfo.gender || '',
+        lang: document.documentElement.lang || 'zh',
+        features: ['bazi'],
+        source: 'bazi-report-send'
+      })
     });
-  } catch(e) {}
-  var msg = document.getElementById('subscribeMsg');
-  if (msg) msg.style.display = 'block';
+  } catch(e) { console.warn('[subscribe] failed:', e.message); }
+
+  // 2. 发报告邮件（把摘要+链接发到邮箱，稳健方案b：链接回看+摘要片段）
+  var reportSummary = '';
+  var streamEl = document.getElementById('streamText');
+  if (streamEl && streamEl.textContent) {
+    reportSummary = streamEl.textContent.slice(0, 600);
+  }
+  try {
+    await fetch('/api/email/send-report', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        email: email,
+        name: birthInfo.name || '',
+        birthYear: birthInfo.birthYear || null,
+        gender: birthInfo.gender || '',
+        reportSummary: reportSummary,
+        lang: document.documentElement.lang || 'zh'
+      })
+    });
+  } catch(e) { console.warn('[send-report] failed:', e.message); }
+
+  if (sendingEl) sendingEl.style.display = 'none';
+  if (msgEl) msgEl.style.display = 'block';
   localStorage.setItem('sy_subscribed_email', email);
+}
+
+// 旧 submitSubscribe 保留兼容（其他页面可能调用）
+async function submitSubscribe() {
+  return submitSubscribeAndSendReport();
 }
 
 // ── Share functions (带 ref_code 裂变追踪) ──
