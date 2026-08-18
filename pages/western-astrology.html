@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5bbfa0">
+<title>Runae · Western Astrology — Your Sun, Moon &amp; Rising Chart</title>
+<meta name="description" content="Discover your Sun sign, Moon sign, and Rising sign. Real astronomical positions, interpreted by AI. Modern Western astrology for self-discovery. Free.">
+<meta property="og:title" content="Runae · Your Western Astrology Chart">
+<meta property="og:description" content="Real planetary positions, interpreted by AI. Find your Sun, Moon, and Rising sign — and what they say about you.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://runae.app/western-astrology">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Runae">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Noto+Serif+SC:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --jade:#5bbfa0;--jade-deep:#3d9e82;--jade-light:#8dd9bf;
+  --jade-pale:rgba(91,191,160,0.08);--jade-border:rgba(91,191,160,0.22);
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;--gold-pale:rgba(201,168,76,0.08);
+  --bg:#faf8f5;--card:#ffffff;--surface:#f2f5f2;
+  --ink:#1a1a18;--sub:rgba(60,75,65,0.72);--muted:rgba(80,95,85,0.45);
+  --radius:14px;--shadow:0 2px 12px rgba(0,0,0,0.06);
+  /* luxury dark card */
+  --lux-ink0:#0d0b08;--lux-ink1:#181310;--lux-ink2:#241a12;
+  --lux-gold:#c9a84c;--lux-gold-hi:#f6e6a8;--lux-gold-lo:#8a6420;
+  --lux-line:rgba(201,168,76,0.30);--lux-line-soft:rgba(201,168,76,0.14);
+  --lux-sub:rgba(232,208,138,0.60);
+}
+html{background:var(--bg);-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;color:var(--ink);max-width:440px;margin:0 auto;
+  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(91,191,160,0.09) 0%,transparent 60%),var(--bg);
+  min-height:100vh;padding-bottom:40px}
+.serif{font-family:'Playfair Display',serif}
+.jade-line{width:48px;height:2px;background:linear-gradient(90deg,transparent,var(--jade),transparent);margin:14px auto}
+a{color:inherit;text-decoration:none}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:center;gap:9px;padding:20px 20px 4px}
+.clasp{width:20px;height:20px;border-radius:50%;flex-shrink:0;
+  background:radial-gradient(circle at 34% 27%,rgba(255,255,255,0.92) 0%,rgba(255,255,255,0.35) 7%,transparent 18%),
+    radial-gradient(circle at 70% 68%,var(--jade-deep) 0%,transparent 38%),
+    radial-gradient(ellipse at 42% 38%,var(--jade-light) 0%,var(--jade) 22%,var(--jade) 52%,var(--jade-deep) 100%)}
+.logo{font-family:'Playfair Display',serif;font-size:14px;letter-spacing:0.42em;color:var(--jade-deep)}
+
+.hero{text-align:center;padding:14px 22px 6px}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--jade-pale);border:1px solid var(--jade-border);
+  border-radius:20px;padding:6px 14px;font-size:10px;color:var(--jade-deep);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px}
+.hero h1{font-family:'Playfair Display',serif;font-size:27px;font-weight:700;line-height:1.28;margin-bottom:12px}
+.hero h1 em{font-style:italic;color:var(--jade-deep)}
+.hero-sub{font-size:13.5px;color:var(--sub);line-height:1.7;margin-bottom:6px}
+.hero-sub b{color:var(--ink);font-weight:600}
+
+.ai-note{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--jade-pale);
+  border:1px solid var(--jade-border);border-radius:12px;padding:11px 14px;margin:14px 20px 0;
+  font-size:11.5px;color:var(--jade-deep);letter-spacing:.02em;line-height:1.5;text-align:center}
+
+/* form */
+.form-card{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);
+  box-shadow:var(--shadow);margin:18px 20px;padding:20px 18px}
+.form-card h2{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;margin-bottom:4px}
+.form-card .cap{font-size:11.5px;color:var(--sub);margin-bottom:16px}
+label{display:block;font-size:11px;font-weight:600;color:var(--sub);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+.row{display:flex;gap:10px}
+.row .fld{flex:1}
+.fld{margin-bottom:14px}
+input,select{width:100%;border:1px solid var(--jade-border);border-radius:10px;padding:12px;font-size:15px;
+  font-family:inherit;color:var(--ink);background:#fff;min-height:46px;-webkit-appearance:none}
+input:focus,select:focus{outline:none;border-color:var(--jade);box-shadow:0 0 0 3px var(--jade-pale)}
+.hint{font-size:10.5px;color:var(--muted);margin-top:-8px;margin-bottom:14px}
+.cta{display:block;width:100%;text-align:center;background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);
+  color:#3a2e0e;font-size:15px;font-weight:700;border:none;border-radius:30px;padding:15px;min-height:52px;
+  cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(201,168,76,0.28);font-family:inherit}
+.cta:disabled{opacity:.6;cursor:default}
+.cta-note{font-size:11px;color:var(--muted);margin-top:10px;text-align:center}
+
+/* age gate */
+.age-gate{display:flex;align-items:center;gap:10px;margin-bottom:16px;padding:12px;
+  background:var(--jade-pale);border:1px solid var(--jade-border);border-radius:10px;cursor:pointer}
+.age-gate input[type=checkbox]{width:20px;min-height:20px;height:20px;flex-shrink:0;cursor:pointer;accent-color:var(--jade-deep)}
+.age-gate span{font-size:12px;color:var(--sub);line-height:1.4}
+
+/* spinning loader */
+#result{display:none;padding:0 20px}
+.spin{display:none;text-align:center;padding:40px 20px;color:var(--jade-deep)}
+.spin.on{display:block}
+.spin .dot{display:inline-block;width:9px;height:9px;margin:0 3px;border-radius:50%;background:var(--jade);animation:b 1.2s infinite ease-in-out}
+.spin .dot:nth-child(2){animation-delay:.15s}.spin .dot:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.spin p{font-size:12.5px;color:var(--sub);margin-top:14px}
+
+/* sign trio badges */
+.trio{display:flex;gap:8px;margin:0 0 16px;justify-content:center;flex-wrap:wrap}
+.trio-badge{display:flex;flex-direction:column;align-items:center;background:var(--card);
+  border:1px solid var(--jade-border);border-radius:14px;padding:12px 10px;min-width:90px;flex:1;
+  box-shadow:var(--shadow)}
+.trio-badge .glyph{font-size:22px;margin-bottom:4px}
+.trio-badge .label{font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px}
+.trio-badge .sign{font-family:'Playfair Display',serif;font-size:14px;font-weight:700;color:var(--ink)}
+
+/* reading card */
+.reading{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:20px 18px;margin:14px 0;font-size:13.5px;line-height:1.75;color:var(--ink)}
+.reading h3{font-family:'Playfair Display',serif;font-size:15px;color:var(--jade-deep);margin-bottom:10px}
+.reading p{margin-bottom:12px}
+.reading p:last-child{margin-bottom:0}
+
+/* share / download */
+.share{display:flex;gap:10px;margin:14px 0 6px}
+.share button{flex:1;background:var(--jade-pale);border:1px solid var(--jade-border);color:var(--jade-deep);
+  font-size:12.5px;font-weight:600;border-radius:24px;padding:12px;min-height:46px;cursor:pointer;font-family:inherit}
+.share button:active{background:var(--jade-border)}
+
+/* ═══ LUXURY DARK-GOLD SHARE CARD ═══ */
+#shareCard{position:relative;overflow:hidden;border-radius:22px;color:#fff;isolation:isolate;
+  padding:28px 22px 22px;margin:14px 0;font-family:'Inter',sans-serif;
+  background:
+    radial-gradient(120% 80% at 50% -10%,rgba(201,168,76,0.18) 0%,transparent 55%),
+    radial-gradient(90% 60% at 50% 115%,rgba(201,168,76,0.10) 0%,transparent 60%),
+    linear-gradient(165deg,var(--lux-ink2) 0%,var(--lux-ink1) 42%,var(--lux-ink0) 100%);
+  box-shadow:0 12px 40px rgba(0,0,0,0.4);
+  display:none}
+#shareCard::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:
+    repeating-linear-gradient(45deg,rgba(255,255,255,0.020) 0 1px,transparent 1px 6px),
+    repeating-linear-gradient(-45deg,rgba(0,0,0,0.06) 0 1px,transparent 1px 6px);
+  mix-blend-mode:overlay}
+#shareCard::after{content:"";position:absolute;inset:11px;z-index:1;pointer-events:none;border-radius:14px;
+  border:1px solid var(--lux-line);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,0.4),inset 0 0 40px rgba(201,168,76,0.06),inset 0 0 0 6px rgba(0,0,0,0.25)}
+#shareCard > *{position:relative;z-index:2}
+
+.foil{background:linear-gradient(100deg,var(--lux-gold-lo) 0%,var(--lux-gold) 24%,var(--lux-gold-hi) 44%,
+  #fffbe8 50%,var(--lux-gold-hi) 56%,var(--lux-gold) 76%,var(--lux-gold-lo) 100%);
+  background-size:250% 100%;-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;animation:foilSweep 5.5s linear infinite}
+@keyframes foilSweep{0%{background-position:180% 0}100%{background-position:-80% 0}}
+
+.card-head{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--lux-sub);margin-bottom:10px}
+.card-head .dot{width:4px;height:4px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold);flex-shrink:0}
+.foil-rule{height:1px;width:100%;border:none;margin:14px 0;
+  background:linear-gradient(90deg,transparent,var(--lux-line),var(--gold-light),var(--lux-line),transparent)}
+
+.card-name{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;line-height:1.2;
+  color:var(--gold-light);margin-bottom:6px}
+.card-trio-wrap{display:flex;gap:10px;margin:14px 0}
+.card-trio-item{flex:1;background:rgba(201,168,76,0.06);border:1px solid var(--lux-line-soft);
+  border-radius:12px;padding:12px 8px;text-align:center}
+.card-trio-item .ct-glyph{font-size:20px;margin-bottom:4px}
+.card-trio-item .ct-label{font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:var(--lux-sub);margin-bottom:2px}
+.card-trio-item .ct-sign{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:var(--gold-light)}
+
+.card-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px;padding-top:10px;
+  border-top:1px solid var(--lux-line-soft)}
+.card-foot .brand{font-family:'Playfair Display',serif;font-size:14px;letter-spacing:.32em;color:var(--gold-light)}
+.card-foot .brand small{display:block;font-family:'Inter';font-size:7.5px;letter-spacing:.16em;color:var(--lux-sub);margin-top:4px;text-transform:uppercase}
+.card-foot .ai{font-size:7.5px;line-height:1.4;color:rgba(255,255,255,0.42);text-align:right;max-width:130px}
+
+/* disc & footer */
+.disc{font-size:10.5px;color:var(--muted);line-height:1.65;text-align:center;margin:16px 6px 4px}
+footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.85}
+footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:var(--jade-deep);letter-spacing:.06em;margin-bottom:8px}
+footer a{color:var(--jade-deep)}
+
+/* planet table */
+.planet-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:8px}
+.planet-table th{text-align:left;font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);padding-bottom:6px;border-bottom:1px solid var(--jade-border);font-weight:600}
+.planet-table td{padding:7px 4px;border-bottom:1px solid rgba(0,0,0,0.04);color:var(--sub)}
+.planet-table td:first-child{font-weight:600;color:var(--ink);white-space:nowrap}
+.planet-table .retro{font-size:10px;color:var(--gold-deep);margin-left:3px}
+.planet-table .house-num{font-size:10px;color:var(--muted)}
+
+/* aspects list */
+.aspects-list{margin-top:10px;display:flex;flex-direction:column;gap:6px}
+.asp-row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sub);padding:6px 8px;
+  background:var(--jade-pale);border-radius:8px}
+.asp-row .asp-sym{font-size:14px;width:18px;flex-shrink:0;text-align:center}
+.asp-row .asp-text{flex:1}
+.asp-row .asp-orb{font-size:10px;color:var(--muted);white-space:nowrap}
+
+/* collapsible section */
+.collap-toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;
+  padding:12px 0;font-size:12px;font-weight:600;color:var(--jade-deep);letter-spacing:.04em;
+  border-bottom:1px solid var(--jade-border);user-select:none}
+.collap-toggle .chevron{transition:transform .2s;font-style:normal}
+.collap-toggle.open .chevron{transform:rotate(180deg)}
+.collap-body{overflow:hidden;max-height:0;transition:max-height .3s ease}
+.collap-body.open{max-height:800px}
+</style>
+</head>
+<body>
+
+<!-- header -->
+<div class="top">
+  <div class="clasp"></div>
+  <div class="logo">RUNAE</div>
+</div>
+
+<!-- hero -->
+<div class="hero">
+  <div class="badge">✦ Western Astrology ✦</div>
+  <h1>Your <em>Sun, Moon &amp; Rising</em><br>Chart</h1>
+  <p class="hero-sub">Real planetary positions, interpreted by AI.<br><b>Modern Western astrology</b> for self-discovery and reflection.</p>
+</div>
+
+<div class="jade-line"></div>
+
+<div class="ai-note">
+  🤖 AI-generated reading · For entertainment &amp; self-exploration only<br>
+  Not predictive · Not a substitute for professional guidance
+</div>
+
+<!-- form -->
+<div class="form-card">
+  <h2 class="serif">Enter Your Birth Details</h2>
+  <p class="cap">Birth time and location unlock your Rising sign and full chart. Without them, we compute your Sun sign only.</p>
+
+  <div class="fld">
+    <label for="fname">Your Name <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+    <input type="text" id="fname" placeholder="e.g. Alex" autocomplete="name" maxlength="60">
+  </div>
+
+  <div class="fld">
+    <label for="fbdate">Date of Birth <span style="color:#c0392b">*</span></label>
+    <input type="date" id="fbdate" required autocomplete="bday">
+  </div>
+
+  <div class="fld">
+    <label for="fbtime">Birth Time <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+    <input type="time" id="fbtime" placeholder="HH:MM" autocomplete="off">
+    <p class="hint">Without birth time, Rising sign and houses won't be available.</p>
+  </div>
+
+  <div class="fld">
+    <label for="fcity">Birth City <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+    <input type="text" id="fcity" placeholder="e.g. New York, London, Tokyo" autocomplete="off" maxlength="100">
+    <p class="hint">Used to calculate your Rising sign. We geocode this via Open-Meteo (no personal data stored).</p>
+  </div>
+  <!-- hidden lat/lng/tz populated by geocoder -->
+  <input type="hidden" id="flat">
+  <input type="hidden" id="flng">
+  <input type="hidden" id="ftz">
+
+  <div class="fld">
+    <label for="flang">Reading Language</label>
+    <select id="flang">
+      <option value="en">English</option>
+      <option value="zh">中文</option>
+      <option value="ko">한국어</option>
+    </select>
+  </div>
+
+  <!-- age gate -->
+  <label class="age-gate" id="ageGateLabel">
+    <input type="checkbox" id="fage">
+    <span>I confirm I am <strong>14 or older</strong> and I understand this is for entertainment and self-exploration, not professional advice.</span>
+  </label>
+
+  <button class="cta" id="btnSubmit" onclick="submitChart()" disabled>
+    ✦ Read My Chart
+  </button>
+  <p class="cta-note">Free · AI-powered · Results in seconds</p>
+</div>
+
+<!-- result area -->
+<div id="result">
+  <div class="spin" id="spin">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    <p id="spinMsg">Calculating your chart…</p>
+  </div>
+
+  <!-- sign trio badges -->
+  <div class="trio" id="trio" style="display:none;padding:0 20px"></div>
+
+  <!-- AI reading -->
+  <div class="reading" id="readingCard" style="display:none">
+    <h3 class="serif">✦ Your Reading</h3>
+    <div id="readingText"></div>
+  </div>
+
+  <!-- planet table (collapsible) -->
+  <div style="margin:0 0 4px;padding:0 0;" id="chartSection" style="display:none">
+    <div class="collap-toggle" id="chartToggle" onclick="toggleSection('chartBody','chartToggle')">
+      <span>☿ Full Planet Positions</span>
+      <em class="chevron">▼</em>
+    </div>
+    <div class="collap-body" id="chartBody">
+      <table class="planet-table" id="planetTable">
+        <thead><tr><th>Planet</th><th>Sign</th><th>House</th></tr></thead>
+        <tbody id="planetRows"></tbody>
+      </table>
+      <div id="aspectsSection" style="margin-top:14px">
+        <p style="font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px">Major Aspects</p>
+        <div class="aspects-list" id="aspectsList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- luxury share card (rendered off-screen for html2canvas) -->
+  <div id="shareCard">
+    <div class="card-head"><div class="dot"></div>RUNAE · WESTERN ASTROLOGY<div class="dot" style="margin-left:auto"></div></div>
+    <div class="card-name foil" id="cardName">Your Chart</div>
+    <hr class="foil-rule">
+    <div class="card-trio-wrap">
+      <div class="card-trio-item">
+        <div class="ct-glyph">☀️</div>
+        <div class="ct-label">Sun</div>
+        <div class="ct-sign" id="cardSun">—</div>
+      </div>
+      <div class="card-trio-item">
+        <div class="ct-glyph">🌙</div>
+        <div class="ct-label">Moon</div>
+        <div class="ct-sign" id="cardMoon">—</div>
+      </div>
+      <div class="card-trio-item">
+        <div class="ct-glyph">⬆️</div>
+        <div class="ct-label">Rising</div>
+        <div class="ct-sign" id="cardRising">—</div>
+      </div>
+    </div>
+    <hr class="foil-rule">
+    <div class="card-foot">
+      <div class="brand foil">Runae<small>runae.app</small></div>
+      <div class="ai">AI reading · For entertainment &amp; self-exploration · Not predictive</div>
+    </div>
+  </div>
+
+  <div class="share" id="shareRow" style="display:none">
+    <button onclick="downloadCard()" id="btnDownload">⬇ Save Chart Card</button>
+    <button onclick="shareChart()">↑ Share</button>
+  </div>
+
+  <p class="disc">Western/modern astrology · AI-generated interpretation · For entertainment and self-reflection only.
+  Planetary positions describe tendencies, not fixed destiny — your free will shapes your path.
+  Not predictive. Not medical, legal, or financial advice. Suitable for readers 14+. Powered by <a href="https://runae.app">Runae</a>.</p>
+</div>
+
+<footer>
+  <div class="fbrand">Runae</div>
+  <a href="/home-en.html">Home</a> · <a href="/life-kline.html">Life K-Line</a> · <a href="/legal-en.html">Legal</a><br>
+  © 2026 Runae · For entertainment &amp; self-exploration only
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════════════════════════
+let geocodeCache = {};
+let lastChart = null;
+let geocodeTimer = null;
+
+// ═══════════════════════════════════════════════════════════════
+// Age gate — enable submit button
+// ═══════════════════════════════════════════════════════════════
+document.getElementById('fage').addEventListener('change', function() {
+  document.getElementById('btnSubmit').disabled = !this.checked;
+});
+
+// ═══════════════════════════════════════════════════════════════
+// Geocoding via Open-Meteo geocoding API (free, no key)
+// ═══════════════════════════════════════════════════════════════
+async function geocodeCity(city) {
+  if (!city || !city.trim()) return null;
+  const key = city.trim().toLowerCase();
+  if (geocodeCache[key]) return geocodeCache[key];
+  try {
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
+    const r = await fetch(url);
+    const d = await r.json();
+    if (d.results && d.results.length > 0) {
+      const loc = d.results[0];
+      // Timezone offset: Open-Meteo returns timezone name; we use their utc_offset_seconds
+      const tzOffset = (loc.utc_offset_seconds || 0) / 3600;
+      const result = { lat: loc.latitude, lng: loc.longitude, tz: tzOffset, name: loc.name };
+      geocodeCache[key] = result;
+      return result;
+    }
+  } catch (e) { console.warn('geocode failed:', e.message); }
+  return null;
+}
+
+// Auto-geocode on city input (debounced)
+document.getElementById('fcity').addEventListener('input', function() {
+  clearTimeout(geocodeTimer);
+  const city = this.value.trim();
+  document.getElementById('flat').value = '';
+  document.getElementById('flng').value = '';
+  document.getElementById('ftz').value = '';
+  if (city.length < 3) return;
+  geocodeTimer = setTimeout(async () => {
+    const geo = await geocodeCity(city);
+    if (geo) {
+      document.getElementById('flat').value = geo.lat;
+      document.getElementById('flng').value = geo.lng;
+      document.getElementById('ftz').value = geo.tz;
+    }
+  }, 600);
+});
+
+// ═══════════════════════════════════════════════════════════════
+// Trio badges
+// ═══════════════════════════════════════════════════════════════
+function renderTrio(chart) {
+  const sun    = chart.planets.find(p => p.name === 'Sun');
+  const moon   = chart.planets.find(p => p.name === 'Moon');
+  const rising = chart.ascendant;
+
+  const items = [
+    { glyph: '☀️', label: 'Sun',    sign: sun    ? sun.sign    : '—' },
+    { glyph: '🌙', label: 'Moon',   sign: moon   ? moon.sign   : '—' },
+    { glyph: '⬆️', label: 'Rising', sign: rising ? rising.sign : 'Unknown*' },
+  ];
+
+  const trio = document.getElementById('trio');
+  trio.innerHTML = items.map(it => `
+    <div class="trio-badge">
+      <div class="glyph">${it.glyph}</div>
+      <div class="label">${it.label}</div>
+      <div class="sign">${it.sign}</div>
+    </div>
+  `).join('');
+  trio.style.display = 'flex';
+
+  // Populate share card
+  document.getElementById('cardSun').textContent    = sun    ? sun.sign    : '—';
+  document.getElementById('cardMoon').textContent   = moon   ? moon.sign   : '—';
+  document.getElementById('cardRising').textContent = rising ? rising.sign : 'Unknown';
+  const nameEl = document.getElementById('cardName');
+  const fname = document.getElementById('fname').value.trim();
+  nameEl.textContent = fname ? fname + "'s Chart" : 'My Western Chart';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Planet table
+// ═══════════════════════════════════════════════════════════════
+function renderPlanets(chart) {
+  const tbody = document.getElementById('planetRows');
+  tbody.innerHTML = chart.planets.map(p => {
+    const retro = p.retrograde ? '<span class="retro">℞</span>' : '';
+    const house = p.house ? `<span class="house-num">H${p.house}</span>` : '—';
+    return `<tr><td>${p.symbol || ''} ${p.name}${retro}</td><td>${p.formatted}</td><td>${house}</td></tr>`;
+  }).join('');
+
+  // Ascendant row
+  if (chart.ascendant) {
+    tbody.innerHTML += `<tr style="border-top:1px solid var(--jade-border)"><td>⬆️ Rising</td><td>${chart.ascendant.formatted}</td><td>—</td></tr>`;
+  }
+  if (chart.midheaven) {
+    tbody.innerHTML += `<tr><td>⬆ MC</td><td>${chart.midheaven.formatted}</td><td>—</td></tr>`;
+  }
+
+  // Aspects
+  const aspList = document.getElementById('aspectsList');
+  if (chart.aspects && chart.aspects.length) {
+    const aspSymbols = { conjunct:'☌', opposition:'☍', square:'□', trine:'△', sextile:'⚹' };
+    aspList.innerHTML = chart.aspects.slice(0, 10).map(a => `
+      <div class="asp-row">
+        <span class="asp-sym">${aspSymbols[a.type] || ''}</span>
+        <span class="asp-text">${a.planet1} <b>${a.type}</b> ${a.planet2}</span>
+        <span class="asp-orb">${a.orb}°</span>
+      </div>
+    `).join('');
+  } else {
+    aspList.innerHTML = '<p style="font-size:12px;color:var(--muted)">Aspects unavailable without birth time.</p>';
+  }
+
+  document.getElementById('chartSection').style.display = 'block';
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Collapsible
+// ═══════════════════════════════════════════════════════════════
+function toggleSection(bodyId, toggleId) {
+  const body = document.getElementById(bodyId);
+  const toggle = document.getElementById(toggleId);
+  const open = body.classList.toggle('open');
+  toggle.classList.toggle('open', open);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Streaming reading render
+// ═══════════════════════════════════════════════════════════════
+function renderReadingText(text) {
+  // Convert line-breaks to paragraphs
+  const paras = text.split(/\n{2,}/).filter(Boolean);
+  return paras.map(p => `<p>${p.replace(/\n/g,'<br>')}</p>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Submit
+// ═══════════════════════════════════════════════════════════════
+async function submitChart() {
+  // Validate age gate
+  if (!document.getElementById('fage').checked) {
+    alert('Please confirm you are 14 or older.');
+    return;
+  }
+
+  const dateVal = document.getElementById('fbdate').value;
+  if (!dateVal) { alert('Please enter your birth date.'); return; }
+  const [year, month, day] = dateVal.split('-').map(Number);
+
+  const timeVal = document.getElementById('fbtime').value;
+  let birthHour = null, birthMinute = null;
+  if (timeVal) {
+    [birthHour, birthMinute] = timeVal.split(':').map(Number);
+  }
+
+  // Geocode city if entered but lat not yet resolved
+  const cityVal = document.getElementById('fcity').value.trim();
+  if (cityVal && !document.getElementById('flat').value) {
+    const geo = await geocodeCity(cityVal);
+    if (geo) {
+      document.getElementById('flat').value = geo.lat;
+      document.getElementById('flng').value = geo.lng;
+      document.getElementById('ftz').value = geo.tz;
+    }
+  }
+
+  const lat  = document.getElementById('flat').value  ? +document.getElementById('flat').value  : null;
+  const lng  = document.getElementById('flng').value  ? +document.getElementById('flng').value  : null;
+  const tz   = document.getElementById('ftz').value   !== '' ? +document.getElementById('ftz').value   : null;
+
+  const payload = {
+    birthYear: year, birthMonth: month, birthDay: day,
+    birthHour, birthMinute,
+    lat, lng, tz,
+    lang: document.getElementById('flang').value,
+    name: document.getElementById('fname').value.trim() || null,
+  };
+
+  // UI reset
+  document.getElementById('result').style.display = 'block';
+  document.getElementById('spin').classList.add('on');
+  document.getElementById('trio').style.display = 'none';
+  document.getElementById('readingCard').style.display = 'none';
+  document.getElementById('chartSection').style.display = 'none';
+  document.getElementById('shareCard').style.display = 'none';
+  document.getElementById('shareRow').style.display = 'none';
+  document.getElementById('spinMsg').textContent = 'Calculating your chart…';
+  document.getElementById('btnSubmit').disabled = true;
+
+  let fullText = '';
+  let chartReceived = false;
+
+  try {
+    const resp = await fetch('/api/western-astrology', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error || `Server error ${resp.status}`);
+    }
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+
+    document.getElementById('spinMsg').textContent = 'Reading your stars…';
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
+        const raw = trimmed.slice(5).trim();
+        let msg;
+        try { msg = JSON.parse(raw); } catch (_) { continue; }
+
+        if (msg.type === 'chart') {
+          lastChart = msg.chart;
+          renderTrio(msg.chart);
+          renderPlanets(msg.chart);
+          chartReceived = true;
+          document.getElementById('spin').classList.remove('on');
+          document.getElementById('readingCard').style.display = 'block';
+          document.getElementById('spinMsg').textContent = 'Reading your stars…';
+        } else if (msg.type === 'delta') {
+          fullText += msg.text;
+          document.getElementById('readingText').innerHTML = renderReadingText(fullText);
+        } else if (msg.type === 'text') {
+          fullText = msg.text;
+          document.getElementById('readingText').innerHTML = renderReadingText(fullText);
+          document.getElementById('spin').classList.remove('on');
+          document.getElementById('readingCard').style.display = 'block';
+        } else if (msg.type === 'done') {
+          document.getElementById('spin').classList.remove('on');
+          document.getElementById('shareCard').style.display = 'block';
+          document.getElementById('shareRow').style.display = 'flex';
+          result.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else if (msg.type === 'error') {
+          throw new Error(msg.error || 'Reading failed');
+        }
+      }
+    }
+  } catch (err) {
+    document.getElementById('spin').classList.remove('on');
+    document.getElementById('readingCard').style.display = 'block';
+    document.getElementById('readingText').innerHTML = `<p style="color:#c0392b">Something went wrong: ${err.message}. Please try again.</p>`;
+  } finally {
+    document.getElementById('btnSubmit').disabled = false;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Share card — html2canvas export
+// ═══════════════════════════════════════════════════════════════
+async function downloadCard() {
+  const card = document.getElementById('shareCard');
+  const btn = document.getElementById('btnDownload');
+  btn.textContent = 'Preparing…';
+  btn.disabled = true;
+  try {
+    const canvas = await html2canvas(card, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: null,
+      logging: false,
+    });
+    const link = document.createElement('a');
+    link.download = 'runae-western-chart.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  } catch (e) {
+    alert('Could not export image. Please take a screenshot instead.');
+    console.error('html2canvas error:', e);
+  } finally {
+    btn.textContent = '⬇ Save Chart Card';
+    btn.disabled = false;
+  }
+}
+
+async function shareChart() {
+  if (navigator.share) {
+    try {
+      await navigator.share({
+        title: 'My Western Astrology Chart — Runae',
+        text: 'I just read my Sun, Moon & Rising chart on Runae.',
+        url: 'https://runae.app/western-astrology',
+      });
+    } catch (_) {}
+  } else {
+    // Fallback: copy link
+    try {
+      await navigator.clipboard.writeText('https://runae.app/western-astrology');
+      alert('Link copied! Share it with your friends.');
+    } catch (_) {}
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// Enter key on form
+// ═══════════════════════════════════════════════════════════════
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && document.activeElement.tagName === 'INPUT' &&
+      !document.getElementById('btnSubmit').disabled) {
+    submitChart();
+  }
+});
+</script>
+</body>
+</html>
