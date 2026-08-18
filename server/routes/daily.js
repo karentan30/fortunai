@@ -16,8 +16,8 @@ const {
   updateStreak, _M, _persist,
 } = require('../lib/store');
 
-// 聊天每日免费/月会员限量(与 store.MONTHLY_CHAT_DAILY_LIMIT 对齐)
-const CHAT_DAILY_LIMIT = 5;
+// 聊天每日限量: 免费/月会员 = 30句/天; 全解锁会员 = 无限。差异化靠"报告"不靠chat。
+const CHAT_DAILY_LIMIT = 30;
 const { getToken } = require('../lib/store');
 const { getClientIp, resolveUserFromToken } = require('../lib/utils');
 const { rateLimitMiddleware, authMiddleware } = require('../middleware');
@@ -217,18 +217,18 @@ router.post('/chat', rateLimitMiddleware, async (req, res) => {
         + '\n\n每次回答200-400字，不要太长。要具体但诚实，不确定就说"这个我拿不准"。'
     };
 
-    // 到每日 5 句上限的提示。年会员($99/年)=无限畅聊; 月会员($9.9/月)含每天5句+每月1份完整报告。
+    // 到每日 30 句上限的提示。年会员=无限畅聊; 月会员/免费用户=每天30句+按报告付费。
     const LIMIT_MSGS = {
-      en: 'You\'ve reached today\'s 5 chats with Rún. Go Yearly ($99/yr) for unlimited chat — she remembers your chart — plus unlimited full reports. Or come back tomorrow for 5 more.',
-      ko: '오늘 루니와의 상담 5회를 모두 사용하셨어요. 연간 멤버십($99/년)이면 루니와 무제한으로 이야기하고 — 루니가 당신의 사주를 기억해요 — 모든 리포트도 무제한이에요. 아니면 내일 다시 5회 이용하실 수 있어요.',
-      zh: '今天和 Rún 的畅聊 5 句用完啦～升级年会员($99/年)就能无限畅聊（她记得你的盘）+全部报告无限。或明天再来还有 5 句。'
+      en: 'You\'ve reached today\'s 30 chats with Rún. Go Yearly ($99/yr) for unlimited chat — she remembers your chart — plus unlimited full reports. Or come back tomorrow for 30 more.',
+      ko: '오늘 루니와의 상담 30회를 모두 사용하셨어요. 연간 멤버십($99/년)이면 루니와 무제한으로 이야기하고 — 루니가 당신의 사주를 기억해요 — 모든 리포트도 무제한이에요. 아니면 내일 다시 30회 이용하실 수 있어요.',
+      zh: '今天和 Rún 的畅聊 30 句用完啦～升级年会员($99/年)就能无限畅聊（她记得你的盘）+全部报告无限。或明天再来还有 30 句。'
     };
 
     const chatLang = (lang === 'en' || lang === 'ko') ? lang : 'zh';
     const systemMsg = { role: 'system', content: SYSTEM_PROMPTS[chatLang] };
 
-    // 🔴 0817 聊天配额: 全解锁会员(年/季/3年/终身/日)=无限; 月会员=每天5句(限量); 免费/游客=每天5句。
-    //   memberTier 返回 'unlimited'|'monthly'|null。仅 'unlimited' 免限量。
+    // 聊天配额: 全解锁会员(年/季/3年/终身/日)=无限; 月会员=每天30句; 免费/游客=每天30句。
+    //   差异化靠"报告"不靠chat。memberTier 返回 'unlimited'|'monthly'|null。仅 'unlimited' 免限量。
     var tier = memberTier(req);
     var isUnlimited = tier === 'unlimited';
     if (!isUnlimited) {
@@ -258,7 +258,7 @@ router.post('/chat', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.get('/chat/quota', (req, res) => {
   try {
-    // 0817: 只有全解锁会员(unlimited)才是无限; 月会员和免费用户都每天5句限量。
+    // 只有全解锁会员(unlimited)才是无限; 月会员和免费用户都每天30句限量。
     var tier = memberTier(req);
     if (tier === 'unlimited') return res.json({ isMember: true, tier: 'unlimited', remaining: -1 });
     var uid = null;

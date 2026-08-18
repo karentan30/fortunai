@@ -27,8 +27,11 @@ const {
   getToken, getUserOrders,
   insertOrder, _updOrder, _updOrderExpiry, _setOrExtendSub, _insSub,
   _findOrder, _insCnOrder, _completeCnOrder, _allOrders, _insJossOrder,
-  _M, _persist,
+  _M, _persist, memberTier,
 } = require('../lib/store');
+
+// 月会员购其他报告(非订阅产品)享5折
+const MONTHLY_MEMBER_REPORT_DISCOUNT = 0.5;
 const { sendEmail, getClientIp, resolveUserFromToken } = require('../lib/utils');
 const { rateLimitMiddleware, simpleRateLimitMiddleware, authMiddleware } = require('../middleware');
 const { recordAffiliateOrder, completeAffiliateOrder } = require('./affiliate');
@@ -185,8 +188,16 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
     }
 
     const isSubscription = ['daily_sub','member_monthly','member_yearly','member_quarterly','member_3year','member_daily'].includes(product);
+
+    // 月会员购报告(非订阅产品、非代烧)享5折。折后取整到分(Stripe 要求整数)。
+    // 打折时强制走 price_data(不用固定 priceId), 确保折后金额生效。
+    const isMonthlyDiscount = !isSubscription && !isJoss && memberTier(req) === 'monthly';
+    if (isMonthlyDiscount) {
+      unitAmount = Math.round(unitAmount * MONTHLY_MEMBER_REPORT_DISCOUNT);
+    }
+
     const currKey = isKR ? product + '_krw' : isCNY ? product + '_cny' : product;
-    const priceId = STRIPE_PRICE_IDS[currKey] || STRIPE_PRICE_IDS[product] || null;
+    const priceId = (!isMonthlyDiscount && (STRIPE_PRICE_IDS[currKey] || STRIPE_PRICE_IDS[product])) || null;
 
     const lineItem = priceId
       ? { price: priceId, quantity: 1 }
@@ -451,7 +462,13 @@ router.post('/pay/wechat/create', rateLimitMiddleware, async (req, res) => {
     var method = (req.body && (req.body.method || req.body.channel) || 'wechat').toLowerCase();
     if (!['wechat', 'alipay', 'stripe'].includes(method)) method = 'wechat';
     var oid = pay.genOutTradeNo(method === 'alipay' ? 'ali' : method === 'stripe' ? 'st' : 'wx');
+    var isSubscriptionCN = SUBSCRIBE_PRODUCTS.includes(product);
+    var isJossCN = product.startsWith('joss_');
     var cnyAmt = prod.amountCny || prod.amount;
+    // 月会员购报告(非订阅、非代烧)享5折
+    if (!isSubscriptionCN && !isJossCN && memberTier(req) === 'monthly') {
+      cnyAmt = Math.round(cnyAmt * MONTHLY_MEMBER_REPORT_DISCOUNT);
+    }
     _insCnOrder(oid, product, cnyAmt, uid, method);
 
     var r;
