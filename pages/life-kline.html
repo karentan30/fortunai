@@ -112,13 +112,13 @@ input:focus,select:focus{outline:none;border-color:var(--jade);box-shadow:0 0 0 
   box-shadow:inset 0 0 0 1px rgba(0,0,0,0.4),inset 0 0 40px rgba(201,168,76,0.06),inset 0 0 0 6px rgba(0,0,0,0.25)}
 .klineCard > *{position:relative;z-index:2}
 .foil{background:linear-gradient(100deg,var(--lux-gold-lo) 0%,var(--lux-gold) 24%,var(--lux-gold-hi) 44%,#fffbe8 50%,var(--lux-gold-hi) 56%,var(--lux-gold) 76%,var(--lux-gold-lo) 100%);
-  background-size:250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+  background-size:250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--gold-light);
   animation:foilSweep 5.5s linear infinite}
 @keyframes foilSweep{0%{background-position:180% 0}100%{background-position:-80% 0}}
 
 .result-head{text-align:center;margin:0 0 4px}
 .result-head .k{font-family:'Playfair Display',serif;font-size:24px;font-weight:800;color:#fff}
-.result-head .k em{font-style:italic;color:var(--gold-light)}
+.result-head .k em{font-style:italic;color:var(--gold-light)}.result-head .k em.foil{color:transparent}
 .result-head .meta{font-size:11px;color:var(--lux-sub);margin-top:6px;line-height:1.6}
 .result-head .meta b{color:var(--gold-light)}
 .tag{display:inline-block;background:rgba(201,168,76,0.08);border:1px solid var(--lux-line-soft);border-radius:20px;
@@ -172,6 +172,8 @@ input:focus,select:focus{outline:none;border-color:var(--jade);box-shadow:0 0 0 
 .share button{flex:1;background:var(--jade-pale);border:1px solid var(--jade-border);color:var(--jade-deep);
   font-size:12.5px;font-weight:600;border-radius:24px;padding:12px;min-height:46px;cursor:pointer;font-family:inherit}
 .share button:active{background:var(--jade-border)}
+#shareBtn{background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);color:#3a2e0e;border:none;box-shadow:0 4px 14px rgba(201,168,76,0.34);}
+#shareBtn:active{background:linear-gradient(135deg,#c9a84c,#b8923a,#a07828);}
 
 .disc{font-size:10.5px;color:var(--muted);line-height:1.65;text-align:center;margin:16px 6px 4px}
 footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.85}
@@ -188,7 +190,7 @@ footer a{color:var(--jade-deep)}
 <div class="hero">
   <span class="badge">◆ Life K-Line · Four Pillars</span>
   <h1>See your <em>whole life</em> as a stock chart</h1>
-  <p class="hero-sub">Your <b>bull seasons</b>, your <b>bear seasons</b>, the turning-point years — drawn from an ancient <b>Eastern Four Pillars</b> reading. Screenshot-worthy.</p>
+  <p class="hero-sub">Your <b>bull seasons</b>, your <b>bear seasons</b>, the turning-point years — drawn from an ancient <b>Eastern Four Pillars</b> reading. The chart that makes you go: <em>that explains everything.</em></p>
 </div>
 <div class="ai-note">🤖 This isn't fortune-telling — it's your life's K-line, scored by a real Four Pillars engine and read by AI.</div>
 
@@ -224,7 +226,7 @@ footer a{color:var(--jade-deep)}
 <div id="result">
   <div class="klineCard" id="klineCard">
     <div class="result-head">
-      <div class="k serif">Your <em>Life K-Line</em></div>
+      <div class="k serif">Your <em class="foil">Life K-Line</em></div>
       <div class="meta" id="meta"></div>
     </div>
 
@@ -406,7 +408,7 @@ function renderCardPng(node){
     .then(canvas=>new Promise(res=>canvas.toBlob(b=>res(b),'image/png')));
 }
 $('#shareBtn').addEventListener('click', async ()=>{
-  const btn=$('#shareBtn'); const orig=btn.textContent; btn.disabled=true;
+  const btn=$('#shareBtn'); const orig=btn.textContent; btn.disabled=true; btn.textContent='Saving…';
   const text = 'I turned my whole life into a stock K-line chart 📈 — my bull years, my bear years. This isn\'t fortune-telling, it\'s my Life K-Line. Try yours:';
   const url = location.origin + '/life-kline';
   try{

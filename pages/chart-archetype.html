@@ -140,7 +140,10 @@ a{color:inherit}
 
 .arch-cap{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--lux-sub);margin-bottom:auto}
 .arch-cap::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold)}
-.arch-name{font-family:'Noto Serif SC','Playfair Display',serif;font-size:44px;font-weight:700;line-height:1.06;letter-spacing:.01em;margin-top:8px;color:#fff}
+.arch-name{font-family:'Noto Serif SC','Playfair Display',serif;font-size:44px;font-weight:700;line-height:1.06;letter-spacing:.01em;margin-top:8px;
+  background:linear-gradient(100deg,var(--lux-gold-lo) 0%,var(--lux-gold) 24%,var(--lux-gold-hi) 44%,#fffbe8 50%,var(--lux-gold-hi) 56%,var(--lux-gold) 76%,var(--lux-gold-lo) 100%);
+  background-size:250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;
+  animation:foilSweep 5.5s linear infinite}
 .arch-name em{font-style:normal}
 .arch-tag{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:17px;line-height:1.45;color:var(--gold-light);margin-top:10px}
 .arch-el{font-size:10.5px;letter-spacing:.14em;color:var(--lux-sub);text-transform:uppercase;margin-top:10px}
@@ -170,14 +173,14 @@ a{color:inherit}
 /* actions */
 .actions{display:flex;gap:10px;margin-top:16px}
 .actions button{flex:1;padding:13px;border-radius:24px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;border:none}
-.share-btn{background:var(--jade);color:#fff;box-shadow:0 4px 14px rgba(91,191,160,0.34)}
+.share-btn{background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);color:#3a2e0e;box-shadow:0 4px 14px rgba(201,168,76,0.36)}
 .again-btn{background:#fff;border:1px solid var(--jade-border)!important;color:var(--jade-deep)}
 .share-hint{text-align:center;font-size:11.5px;color:var(--muted);margin-top:10px}
 
 /* disclaimer */
 .disclaimer{text-align:center;font-size:11px;color:var(--muted);line-height:1.7;padding:26px 24px 10px}
 .disclaimer b{color:var(--sub)}
-.footer-cta{text-align:center;padding:6px 20px 20px}
+.footer-cta{text-align:center;padding:6px 20px 20px;display:none}
 .footer-cta a{display:inline-block;font-size:13px;color:var(--jade-deep);font-weight:600;text-decoration:none;
   border-bottom:1px solid var(--jade-border);padding-bottom:2px}
 </style>
@@ -187,8 +190,8 @@ a{color:inherit}
 <div class="hero z1">
   <div class="logo">Runae</div>
   <div class="badge">✦ Chart Archetype</div>
-  <h1 data-i18n="h1">What's your <em>chart archetype</em>?</h1>
-  <p class="hero-sub" data-i18n="sub">Everyone's Four Pillars are built around one core pattern. Find yours — and see how rare it is.</p>
+  <h1 data-i18n="h1">Most charts follow 3 patterns. Which are <em>you</em> — and how rare?</h1>
+  <p class="hero-sub" data-i18n="sub">Every Four Pillars chart hides one core pattern. Some are common. A few are rare. Yours might surprise you.</p>
 </div>
 
 <div class="lang z1">
@@ -269,7 +272,7 @@ a{color:inherit}
 <script>
 // ── i18n ──
 var I18N = {
-  en:{h1:"What's your <em>chart archetype</em>?",sub:"Everyone's Four Pillars are built around one core pattern. Find yours — and see how rare it is.",
+  en:{h1:"Most charts follow 3 patterns. Which are <em>you</em> — and how rare?",sub:"Every Four Pillars chart hides one core pattern. Some are common. A few are rare. Yours might surprise you.",
     formTitle:"Enter your birth details",formHint:"Solar (Gregorian) calendar · read from a precise Eastern engine",
     lYear:"Year",lMonth:"Month",lDay:"Day",lHour:"Birth hour (0–23)",hourUnknown:"Not sure",
     gF:"Female",gM:"Male",reveal:"Reveal my archetype",loadingTxt:"Reading your Four Pillars…",
@@ -279,7 +282,7 @@ var I18N = {
     footerCta:"Go deeper → your full life reading",aiLabel:"AI-generated",
     disc:"from a precise Four Pillars engine — an ancient Eastern system. Your archetype is a neutral personality pattern, not a ranking or a promise of success. For self-reflection & entertainment only — not medical, legal, or life-decision advice.",
     errDate:"Please enter a valid birth date.",errNet:"Rún is resting — please try again."},
-  zh:{h1:"你的<em>命格原型</em>是什么？",sub:"每个人的四柱都围绕一种核心模式构建。找到你的——看看它有多稀有。",
+  zh:{h1:"大多数命格都遵循 3 种模式。你是<em>哪种</em>——有多稀有？",sub:"每张四柱命盘背后都藏着一种核心模式。有些很常见，有些极为稀有。你的可能会让你意外。",
     formTitle:"输入你的出生信息",formHint:"公历（阳历）· 由精准东方引擎排定",
     lYear:"年",lMonth:"月",lDay:"日",lHour:"出生时辰（0–23）",hourUnknown:"不确定",
     gF:"女",gM:"男",reveal:"揭晓我的命格原型",loadingTxt:"正在读你的四柱…",
@@ -289,15 +292,15 @@ var I18N = {
     footerCta:"更深入 → 你的完整人生解读",aiLabel:"AI 生成",
     disc:"由精准四柱引擎排定——一套古老的东方体系。你的原型是中性的人格模式，不是排名，也不是成功的承诺。仅供自我探索与娱乐参考——不构成医疗、法律或人生决策建议。",
     errDate:"请输入有效的出生日期。",errNet:"Rún 暂时休息，请稍后再试。"},
-  ko:{h1:"당신의 <em>명식 원형</em>은?",sub:"모든 사람의 사주는 하나의 핵심 패턴을 중심으로 짜여요. 당신의 원형을 찾고, 얼마나 드문지 보세요.",
-    formTitle:"생년월일을 입력하세요",formHint:"양력 · 정밀 동양 엔진으로 배반",
+  ko:{h1:"대부분의 사주는 3가지 패턴을 따라요. <em>당신</em>은 어느 쪽 — 그리고 얼마나 드문가요?",sub:"모든 사주에는 하나의 핵심 패턴이 숨어 있어요. 흔한 것도 있고, 아주 드문 것도 있죠. 당신의 것은 놀라울지 몰라요.",
+    formTitle:"생년월일을 입력하세요",formHint:"양력 · 정밀 동양 엔진으로 배치",
     lYear:"년",lMonth:"월",lDay:"일",lHour:"태어난 시 (0–23)",hourUnknown:"모름",
     gF:"여성",gM:"남성",reveal:"내 명식 원형 보기",loadingTxt:"당신의 사주를 읽는 중…",
     youAre:"당신은",rarityCap:"희귀도",engineTag:"동양 명식 엔진",cardAi:"AI 생성 · 엔진 데이터 · 자기 이해",
     shareBtn:"카드 저장 & 공유",againBtn:"다시 하기",
     shareHint:"카드를 단톡방에 보내보세요 — 누가 같은지 확인해요.",
     footerCta:"더 깊이 → 전체 인생 리딩",aiLabel:"AI 생성",
-    disc:"정밀 사주 엔진으로 배반한 오래된 동양 체계예요. 원형은 중립적 성격 패턴이며 순위나 성공의 약속이 아니에요. 자기 이해·오락 참고용이며 의료·법률·인생 결정 조언이 아니에요.",
+    disc:"정밀 사주 엔진으로 배치된 오래된 동양 체계예요. 원형은 중립적 성격 패턴이며 순위나 성공의 약속이 아니에요. 자기 이해·오락 참고용이며 의료·법률·인생 결정 조언이 아니에요.",
     errDate:"올바른 생년월일을 입력해주세요.",errNet:"루니가 쉬고 있어요 — 다시 시도해주세요."}
 };
 var lang='en', gender='female';
@@ -353,6 +356,7 @@ function reveal(data){
   card.classList.remove('grade-UR','grade-SSR','grade-SR','grade-R');
   card.classList.add(gr.cls);
   document.getElementById('gradeG').textContent=gr.g;
+  document.getElementById('gradeSub').textContent=t('rarityCap');
   document.getElementById('rarityLabel').textContent=data.rarity.label;
   document.getElementById('rarityFill').style.width=gr.w+'%';
   document.getElementById('rarityNote').textContent=data.rarity.note;
@@ -362,6 +366,7 @@ function reveal(data){
   document.getElementById('formCard').style.display='none';
   document.getElementById('loading').classList.remove('on');
   document.getElementById('result').classList.add('on');
+  document.querySelector('.footer-cta').style.display='block';
   window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -405,8 +410,15 @@ function renderCardPng(node){
 }
 document.getElementById('shareBtn').addEventListener('click',function(){
   var btn=this; var orig=btn.textContent; btn.disabled=true;
+  btn.textContent=(lang==='zh'?'保存中…':lang==='ko'?'저장 중…':'Saving…');
   var name=document.getElementById('archName').textContent;
-  var text="I'm "+name+" on Runae — what's your chart archetype? "+location.origin+"/pages/chart-archetype.html";
+  var grade=document.getElementById('gradeG').textContent;
+  var shareUrl=location.origin+'/pages/chart-archetype.html';
+  var text=(lang==='zh'?
+    '我的命格原型是「'+name+'」，稀有度 '+grade+'。你的是什么？'+shareUrl :
+    lang==='ko'?
+    '내 명식 원형은 「'+name+'」이고 희귀도는 '+grade+'예요. 당신 건 뭐예요? '+shareUrl :
+    'My chart archetype is "'+name+'" — '+grade+' rarity. What\'s yours? '+shareUrl);
   renderCardPng(document.getElementById('archcard')).then(function(blob){
     btn.disabled=false; btn.textContent=orig;
     var file=new File([blob],'runae-archetype.png',{type:'image/png'});
@@ -420,9 +432,7 @@ document.getElementById('shareBtn').addEventListener('click',function(){
     }
   }).catch(function(){
     btn.disabled=false; btn.textContent=orig;
-    var name2=document.getElementById('archName').textContent;
-    var text2="I'm "+name2+" on Runae — what's your chart archetype? "+location.origin+"/pages/chart-archetype.html";
-    if(navigator.share){ navigator.share({title:'My Chart Archetype',text:text2}).catch(function(){}); return; }
+    if(navigator.share){ navigator.share({title:'My Chart Archetype',text:text}).catch(function(){}); return; }
     fallbackAlert();
   });
 });
