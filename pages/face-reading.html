@@ -221,7 +221,7 @@ footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:
 
   <div class="privacy">
     <span class="lock">🔐</span>
-    <div><b>Your photo stays on your device — used in the moment, then discarded.</b> A face photo is personal (biometric) data, so we treat it that way: it's analyzed instantly and dropped right after — we keep the reading, not your face. Never stored, never used to train AI, never shared with anyone. <a href="privacy.html" style="color:var(--gold-deep);font-weight:600">How we handle photos ›</a></div>
+    <div><b>Privacy: your photo is sent to Google Gemini AI Vision for feature analysis, then immediately discarded — never stored, never used for training, never shared.</b> We keep only the text reading, not your image. A face photo is biometric data; we use it only for this one session. <a href="privacy.html" style="color:var(--gold-deep);font-weight:600">How we handle photos ›</a></div>
   </div>
 
   <section class="section">
@@ -247,12 +247,12 @@ footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:
 <!-- ===== ANALYZING ===== -->
 <div id="view-analyzing" class="analyzing z1">
   <div class="spinner"></div>
-  <h3 class="serif">Reading your face…</h3>
-  <p>Runae is mapping your zones, peaks, and palaces<br>through the Ma Yi school. This takes a moment.</p>
+  <h3 class="serif" id="analyzingTitle">Examining your photo…</h3>
+  <p id="analyzingDesc">Google Gemini AI Vision is reading your facial features.<br>This only takes a moment.</p>
   <ul class="scan-steps">
-    <li class="done" id="step1">Mapping the three zones (三停)</li>
-    <li class="done" id="step2">Checking the five peaks (五岳)</li>
-    <li class="active" id="step3">Reading the twelve palaces (十二宫)</li>
+    <li id="step1">Analyzing photo with AI Vision</li>
+    <li id="step2">Mapping the three zones (三停)</li>
+    <li id="step3">Reading the twelve palaces (十二宫)</li>
     <li id="step4">Writing your Ma Yi reading</li>
   </ul>
 </div>
@@ -399,52 +399,66 @@ function animateSteps(doneCount){
 
 function startReading(file){
   show('view-analyzing');
-  var stepIdx = 0;
-  var stepTimer = setInterval(function(){
-    if(stepIdx < 3){ stepIdx++; animateSteps(stepIdx); }
-    else clearInterval(stepTimer);
-  }, 1800);
+  animateSteps(0);
 
-  // Encode photo as base64 for optional features description
-  // Since no vision API key is configured, we send question only
-  var question = ''; // could add a user question input in future
+  // Phase 1: read photo as base64
+  var reader = new FileReader();
+  reader.onload = function(e){
+    // Strip the "data:image/jpeg;base64," prefix — send only raw base64
+    var dataUrl = e.target.result;
+    var base64 = dataUrl.split(',')[1] || '';
+    var mimeMatch = dataUrl.match(/^data:([^;]+);/);
+    var mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
 
-  fetch('/api/mianxiang', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({ question: question || 'Please give me a full Ma Yi school face reading' })
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data){
-    clearInterval(stepTimer);
-    animateSteps(4);
-    show('view-result');
+    // Step 1 done: photo loaded
+    animateSteps(1);
+    document.getElementById('analyzingTitle').textContent = 'Examining your photo…';
+    document.getElementById('analyzingDesc').textContent = 'Google Gemini AI Vision is mapping your facial features.';
 
-    if(data.reading){
-      // Show AI reading
-      var out = document.getElementById('readingOutput');
-      out.innerHTML = renderMarkdown(data.reading);
-      out.style.display = 'block';
+    // POST to backend — send imageBase64 + mimeType so server-side vision runs
+    fetch('/api/mianxiang', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        question: 'Please give me a full Ma Yi school face reading',
+        imageBase64: base64,
+        mimeType: mimeType
+      })
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(data){
+      animateSteps(4);
+      show('view-result');
 
-      // Show paywall if locked
-      if(data.locked){
-        document.getElementById('paywallBox').style.display = 'block';
+      if(data.reading){
+        var out = document.getElementById('readingOutput');
+        out.innerHTML = renderMarkdown(data.reading);
+        out.style.display = 'block';
+        if(data.locked){
+          document.getElementById('paywallBox').style.display = 'block';
+        }
+      } else if(data.error){
+        showFallbackCard();
+        var errEl = document.getElementById('errBox');
+        errEl.textContent = 'Note: ' + (data.error || 'Could not reach AI. Showing a sample reading.');
+        errEl.style.display = 'block';
       }
-    } else if(data.error){
+    })
+    .catch(function(e){
+      show('view-result');
       showFallbackCard();
       var errEl = document.getElementById('errBox');
-      errEl.textContent = 'Note: ' + (data.error || 'Could not reach AI. Showing a sample reading.');
+      errEl.textContent = 'Could not connect to the reading service. Showing a sample below.';
       errEl.style.display = 'block';
-    }
-  })
-  .catch(function(e){
-    clearInterval(stepTimer);
+    });
+  };
+  reader.onerror = function(){
     show('view-result');
     showFallbackCard();
-    var errEl = document.getElementById('errBox');
-    errEl.textContent = 'Could not connect to the reading service. Showing a sample below.';
-    errEl.style.display = 'block';
-  });
+    document.getElementById('errBox').textContent = 'Could not read the photo. Please try a different image.';
+    document.getElementById('errBox').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
 }
 
 function showFallbackCard(){
