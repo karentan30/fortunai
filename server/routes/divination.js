@@ -3234,7 +3234,7 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
         : '\n\n【말투】담백하고 따뜻하게, 꾸짖지 않고 솔직하게. 무서운 예언은 하지 마세요.';
       var freePartKo = full
         ? ''
-        : ' [무료 기본판] 아래 항목만 간단히(200-300자씩): 사주판, 오행 균형, 올해 운세 한 단락. 마지막에 "더 깊은 풀이(재물·애정·직업·건강·대운·10년 유년)는 심층 리포트에서 확인하세요"라고 안내하세요. 겁주지 말고 4-5문장으로 부드럽게 마무리.';
+        : ' [무료 미리보기] 아래 두 가지만 출력하세요:\n① 사주판 요약 — 일주·오행 핵심 특징 1~2가지를 따뜻하게 2-3문장으로 (명반 그래프는 이미 표시됨)\n② 오늘의 핵심 메시지 — 이 사주가 품은 가장 빛나는 자질 하나를 200-300자로.\n두 항목이 끝나면 정확히 한 줄: ---LOCKED---\n그 아래에 잠긴 항목만 나열 (내용 없이):\n💰 재물·사업 운세 · 심층 리포트에서 확인\n💕 연애·결혼 운세 · 심층 리포트에서 확인\n💼 직업·대운 상세 · 심층 리포트에서 확인\n🏥 건강 예보 · 심층 리포트에서 확인\n절대 잠긴 항목을 전개하지 마세요.';
       var sysKo = '당신은 정통 사주명리를 바탕으로 AI로 심층 운세 리포트를 쓰는 명리 연구원입니다. 독자를 무섭게 하지 않고, 따뜻하게 곁을 지키는 말투로 씁니다. 불안을 부추기는 예언은 절대 하지 않습니다.'
         + '\n\n【전문 용어】십성(정관/편관/정인/편인/비견/겁재/상관/식신/정재/편재), 신살, 용신, 일간 등 한국 명리 용어를 정확히 사용하세요. 한문을 병기하지 말고 순수 한국어로 쓰세요.'
         + '\n\n【글쓰기 톤】다정하고 잔잔하게. "좋은 사주다/나쁜 사주다"라는 이분법을 쓰지 않고, "강점과 약점, 그리고 잘 살리는 법"으로 풀어냅니다. 구체적인 조언(색·방위·습관)을 반드시 포함하세요.'
@@ -3284,7 +3284,7 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
       var _chartDataEn = baziChartData({ birthYear, birthMonth, birthDay, birthHour, gender });
       res.write(`data: ${JSON.stringify({ type: 'meta', pillars: pillarsEn, tier: full ? 'full' : 'basic', locked: !full, chart: _chartDataEn })}\n\n`);
 
-      var freeSuffixEn = full ? '' : `\n\nIMPORTANT: This is the free preview. Output ONLY these 3 chapters:\n📜 Four Pillars Chart\n🌊 Five Elements Analysis\n🌟 This Year's Fortune\n\nAfter completing these 3 chapters (around 1000-1500 words total), output exactly:\n---LOCKED---\n\nThen output a brief teaser listing the locked chapters.`;
+      var freeSuffixEn = full ? '' : `\n\nIMPORTANT: Free preview mode. Output ONLY two things:\n① Chart summary — 2-3 warm sentences on the Day Master and 1-2 standout Five-Element traits (the visual chart card is already rendered for the user)\n② Core insight — the single most luminous quality of this chart, 200-300 words\n\nWhen done, output exactly one line:\n---LOCKED---\n\nThen list locked sections WITHOUT content:\n💰 Wealth & Finance · unlock in full report\n💕 Love & Marriage · unlock in full report\n💼 Career & Luck Cycles · unlock in full report\n🏥 Health Forecast · unlock in full report\n\nDo NOT expand any locked section.`;
       var sysEn = `You are a master BaZi (Four Pillars of Destiny) reader with 30+ years of experience, trained in classical Chinese metaphysics. You write warm, insightful, and practical reports in fluent English. Never be scary or fatalistic — you help people understand their strengths and navigate challenges.${HEALTH_SOFT.en}${freeSuffixEn}`;
       var _chartEnS = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender });
       var userEn = `Please analyze my BaZi chart and generate a deep destiny report.\nBirth details:\n- Date: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', Hour: ' + birthHour + ':00' : ' (birth hour unknown)'}\n- Gender: ${gender === 'male' ? 'Male' : 'Female'}${_chartEnS ? CHART_STRICT.en + _chartEnS + '\n' : ''}\n\n${full ? 'Generate a comprehensive report covering: Four Pillars Chart, Five Elements Analysis, This Year Fortune, Wealth & Career, Love & Relationships, Ten-Year Luck Cycles, Year-by-Year Forecast, Personalized Recommendations, and a Personal Message.' : 'Generate a free preview with ONLY 3 sections then the LOCKED separator.'}`;
@@ -3340,7 +3340,7 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
 
     const sysPay = full
       ? `你是一位精通八字命理的实力派命理师，既有正统传承，又懂现代人语言。\n\n${baziChart}\n\n你必须严格按照15个维度展开，总字数控制在9000-11000字，字数均衡分配，务必保证收尾维度（大运/流年/命理师叮嘱）完整写完不被截断。维度用emoji开头：\n1.📜四柱八字排盘 2.🔥十神分析 3.🟤五行分析 4.💰财运格局 5.💕感情姻缘 6.💼事业格局 7.🏥健康预警 8.📅全部8步大运（使用上方精确大运数据） 9.🔮未来10年逐年流年（每年评分，从当前年份算起） 10.✨神煞分析 11.🌿藏干 12.👨‍👩‍👧‍👦父母/子女/夫妻宫 13.🎯开运锦囊 14.📖古法断语 15.💌命理师叮嘱\n每个维度必须基于上方排盘数据展开，给出具体年份/数字/颜色/物品。所有涉及年份的内容必须以当前年份为基准向未来推算。${modeInstruction}`
-      : `你是一位八字命理师。\n\n${baziChart}\n\n【免费预览版】只写3个部分：📜四柱排盘简介、🟤五行能量分析、🌟今年（${new Date().getFullYear()}年）运势概览（各200-300字）。最后说明完整报告含15个维度，可付费解锁。${modeInstruction}`;
+      : `你是一位八字命理师。\n\n${baziChart}\n\n【免费预览版·极简模式】只输出以下两项：\n① 命盘简述 — 用2-3句温暖白话点出日主特质与1-2个五行亮点（视觉命盘卡已由前端展示，无需重复铺排）\n② 核心亮点 — 这张命盘最闪光的一个特质，200-300字，让命主感到被看见\n\n两项结束后输出恰好一行：---LOCKED---\n\n其后仅列出锁定章节名称（不展开内容）：\n💰 财运格局 · 完整解读见付费版\n❤️ 感情姻缘 · 完整解读见付费版\n💼 事业大运 · 完整解读见付费版\n🏥 健康预警 · 完整解读见付费版\n\n禁止展开任何锁定章节内容。${modeInstruction}`;
 
     const userPrompt = `请为我批算八字。出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour !== undefined ? birthHour + '时' : ''}，性别：${gender === 'male' ? '男' : '女'}，关注：${question || '请全面分析命盘'}`;
 
@@ -3869,10 +3869,10 @@ router.post('/omikuji', rateLimitMiddleware, async (req, res) => {
     var isEn = (lang === 'en');
     var systemPrompt = isEn
       ? 'You are a wise Shinto shrine priest at a sacred Japanese shrine, deeply versed in omikuji (御神籤) tradition. Your voice is calm, gentle, and filled with wabi-sabi wisdom. Each reading is personal and poetic. Never mention which AI model powers this.'
-      : 'あなたは日本の神社の神職です。おみくじの伝統に深く精通し、穏やかで温かく詩的な言葉で参拝者に神のお告げをお伝えします。使用するAIモデルは絶対に明かさないでください。';
+      : '你是一位精通日本御神签（おみくじ）传统的神社神职，同时深谙汉字与和歌的诗意之美。你用温暖、平静、充满禅意的简体中文为参拜者传达神的旨意。绝不透露所用的AI模型。';
     var userPrompt = isEn
       ? `The visitor drew: ${drawn.grade} — ${drawn.en}\nTheir question: ${question || 'General guidance for my life path'}\n\nPlease generate a complete omikuji reading in English:\n1. 🌸 Sacred Waka Poem (5-7-5-7-7 syllable poem, original, in poetic English)\n2. 🏯 Interpretation of ${drawn.en} (300 words)\n3. ❤️ Love & Relationships\n4. 📚 Study & Career\n5. 💰 Wealth & Fortune\n6. 🌿 Health & Vitality\n7. 🧳 Travel\n8. 🔍 Lost Items\n9. 🎋 Shrine Priest's Whisper (closing personal message, 80 words)`
-      : `参拝者が引いたおみくじ：${drawn.grade}\nご質問：${question || '人生の指針をお授けください'}\n\n以下の形式で完全なおみくじ解釈をお書きください：\n1. 🌸 和歌（五・七・五・七・七、オリジナル）\n2. 🏯 ${drawn.grade}の解釈（300字程度）\n3. ❤️ 恋愛・縁談\n4. 📚 学業・仕事\n5. 💰 金運・財運\n6. 🌿 健康\n7. 🧳 旅行\n8. 🔍 失せ物\n9. 🎋 神職からの一言（締めの言葉、80字）`;
+      : `参拜者所求签文：${drawn.grade}\n所问之事：${question || '请为我指引人生方向'}\n\n请用简体中文出具一份完整的御神签解读。每节务必详尽，不得草草带过。格式如下：\n\n1. 🌸 御神歌\n先给出日文和歌原文一句（五・七・五・七・七，平假名），再附上中文译文，最后用2-3段阐释这首和歌的意境与对参拜者当下处境的寓意（200-250字）。\n\n2. 🏯 ${drawn.grade} 总运详解（300字）\n详述此签所示总体运势——是何天机显现、参拜者当下面临什么能量场、应以何种心态应对。语言温暖有力，有具体洞察，不说套话。\n\n3. ❤️ 恋爱姻缘（200-250字）\n当前感情能量、近期缘分走向、需注意的情感模式，给出一条落地建议。\n\n4. 📚 学业事业（200-250字）\n学习或工作的运势方向、潜在机遇或阻碍、最宜把握的时机与行动建议。\n\n5. 💰 财运（200-250字）\n财运吉凶、求财方式的提示、近期宜忌的财务决策。\n\n6. 🌿 健康（200-250字）\n身心状态的神意提示、需特别关注的方面、日常调养方向。\n\n7. 🧳 出行（200字）\n出行运势、宜与不宜的方向或时机、旅途平安的神明叮嘱。\n\n8. 🔍 寻物（200字）\n失物或心中所求之事的指引，方向、时机或寻找方式的提示。\n\n9. 🎋 神职叮嘱（150-200字）\n以神职者身份，写下只对这位参拜者说的心里话——不是通用套语，而是针对此签、此问的专属叮嘱与祝福。语气温柔而有力量。`;
     const messages = [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
