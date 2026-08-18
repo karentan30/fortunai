@@ -36,6 +36,10 @@ const { calcBazi } = require('../bazi');
 const { buildBaziBlock } = require('../lib/bazi-engine/prompt-block');
 const { computeBaziChart } = require('../lib/bazi-engine');
 const astrology = require('../astrology.js');
+const { buildWesternBlock } = require('../lib/western-astro-engine/prompt-block');
+const { buildLiuyaoBlock } = require('../lib/liuyao-engine/prompt-block');
+const { buildQimenBlock } = require('../lib/qimen-engine/prompt-block');
+const { computeDaLiuRen } = require('../lib/daliuren-engine');
 const { insertReading, hasFullAccess, hasVipAccess, hehunTier, hehunTierReadonly, gateMessages, gateReportAccess, memberTier, monthlyReportCreditRemaining, refundMonthlyReportCredit, saveQaContext, qaContext, _findOrder } = require('../lib/store');
 
 // 🔴 P0-C helper(专家复审): 报告端点若本请求消费了月会员 credit(gateReportAccess/hehunTier 会在
@@ -862,29 +866,78 @@ router.post('/tarot', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.post('/ziwei', rateLimitMiddleware, async (req, res) => {
   try {
-    const { birthYear, birthMonth, birthDay, birthHour, gender } = req.body;
+    const { birthYear, birthMonth, birthDay, birthHour, gender, question, lang } = req.body;
     if (!birthYear || !birthMonth || !birthDay || birthHour === undefined) {
       return res.status(400).json({ error: '紫微斗数需要出生年月日时' });
     }
-    const messages = buildReadingPrompt(
-      '你是一位精通紫微斗数的命理师，师承中州派，从业30年，批过上万张命盘。你深谙紫微斗数精髓，能从命盘中看透一个人的一生轨迹。你的语言通俗易懂，不用晦涩术语唬人——要用大白话让从没学过紫微的人也能听懂。你的分析必须专业、深刻、具体。每次回答至少4000字。用Markdown格式输出，使用标题、加粗让报告结构清晰。语言：简体中文。',
-      `出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour}时
+
+    // ── 紫微引擎注入（从 bazi-engine 中提取 ziwei 数据，禁 LLM 自排）──
+    let ziweiBlock = '';
+    try {
+      const ch = computeBaziChart({
+        year: Number(birthYear), month: Number(birthMonth),
+        day: Number(birthDay), hour: Number(birthHour) || 0,
+        gender: gender || 'female', includeZiwei: true
+      });
+      const zw = ch.ziwei;
+      if (zw) {
+        const palaceLines = zw.palaces ? zw.palaces.map(p =>
+          `  ${p.name}宫(${p.heavenlyStem||''}${p.earthlyBranch||''})：主星${(p.mainStars||[]).join('·')||'无'} 辅星${(p.minorStars||[]).join('·')||'无'}`
+        ).join('\n') : '（宫位数据不可用）';
+        const sihua = zw.fourTransformations || zw.sihua || {};
+        const sihuaStr = Object.entries(sihua).map(([k,v]) => `${k}：${v}`).join(' ');
+        ziweiBlock = `【紫微斗数精确命盘（后端引擎排盘·禁止 LLM 自行推算或修改任何星曜宫位）】
+命主：${birthYear}年${birthMonth}月${birthDay}日${birthHour}时 ${gender === 'male' ? '男' : '女'}命
+命宫主星：${(zw.mingGongMainStars || zw.lifeMainStars || []).join('·') || '引擎计算中'}
+十二宫星曜分布：
+${palaceLines}
+四化飞星：${sihuaStr || '（无四化数据）'}`;
+      }
+    } catch (e) {
+      console.warn('[ZIWEI] 引擎注入失败，降级 LLM 自解：', e && e.message);
+    }
+
+    const ziweiSystemPrompt = `你是一位精通紫微斗数的命理师，师承中州派与飞星派双脉，从业30年，批过上万张命盘。
+你深谙紫微精髓，能从命盘中看透一个人的一生轨迹。语言通俗易懂，绝不用晦涩术语唬人——大白话让完全不懂紫微的人也能听懂。
+
+【输出格式】用 Markdown，标题分段，简体中文。总字数 9000-11000字，全部 17 个维度写完写透，每个维度字数不低于要求，严禁用"略"或"详见下文"代替内容。
+
+${ziweiBlock ? `【精确命盘（后端注入·禁止 LLM 自行推算）】\n${ziweiBlock}\n` : ''}
+【健康维度】只说脏腑养生方向，严禁点名具体西医病名，不制造恐慌。
+
+【收尾合规】报告最后附一行：
+"本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。"${langSuffix(lang)}`;
+
+    const ziweiUserPrompt = `出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour}时
 性别：${gender === 'male' ? '男' : '女'}
+用户关注：${question || '请给我全面的紫微斗数命盘解读'}
 
-请按以下结构出具一份完整的紫微斗数命理报告。每个宫位的分析必须不少于200字，总字数不少于4000字：
+请严格按以下 17 个维度展开，每个维度标题用对应 emoji 开头：
 
-## 一、命盘基本格局（200-300字）
-## 二、命宫主星深度解读（400-500字）
-## 三、主要宫位逐个分析（每个宫位200-300字，至少8个宫位）
-## 四、四化飞星分析（200-300字）
-## 五、当前大运详批（400-500字）
-## 六、流年关键点（300-400字）
-## 七、开运建议（200-300字）
-## 八、一句话点睛（50-100字）`
-    );
+1. 🌟 命盘格局总览（星曜格局、三方四正、格局定性，不少于600字）
+2. ☀️ 命宫主星深度解读（主星特质、辅星配置、性格命运底色，不少于800字）
+3. 💰 财帛宫（财星力量、聚财方式、最佳求财年份3个，不少于500字）
+4. 💕 夫妻宫（正缘星位、配偶特征含外貌性格、遇缘年份、感情模式，不少于500字）
+5. 👨‍👩‍👧‍👦 子女宫（子女缘分、亲子关系模式，不少于350字）
+6. 🏠 田宅宫（不动产运、家宅风水方向，不少于350字）
+7. 💼 官禄宫（事业星、职业路径、升职最佳年份，不少于500字）
+8. 👥 奴仆宫（下属贵人、合作模式，不少于350字）
+9. 🚀 迁移宫（异乡运、出行利弊、海外机遇，不少于350字）
+10. 🏥 疾厄宫（体质倾向、养生方向——按中医脏腑角度，不点病名，不少于450字）
+11. 🌈 福德宫（精神享受、宗教缘分、晚年态度，不少于350字）
+12. 👨‍👩 父母宫（父母缘分、长辈贵人，不少于350字）
+13. 🌀 四化飞星（化禄/化权/化科/化忌各自落宫及影响，不少于550字）
+14. 📅 当前大限深批（起止年份、主题、关键年份，不少于550字）
+15. 🔮 未来10年逐年流年（每年财/情/事评分+一句主题，不少于900字）
+16. 🎯 开运锦囊（幸运色精确色系、吉方、推荐佩戴物、流年避讳，不少于450字）
+17. 💌 命理师私语（只对此命盘说的心里话，不少于350字）`;
 
+    const messages = [
+      { role: 'system', content: ziweiSystemPrompt },
+      { role: 'user', content: ziweiUserPrompt }
+    ];
     var _g = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','八字','合婚','紫微','姓名','占星','星盘'], messages);
-    const result = await deepseekChat(_g.messages, { maxTokens: _g.maxTokens });
+    const result = await deepseekChat(_g.messages, { maxTokens: Math.max(_g.maxTokens || 0, 16384) });
     insertReading.run('ziwei', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('ziwei', req.body, result);
     res.json({ analysis: result, contextId: ctxId });
@@ -1791,12 +1844,48 @@ router.post('/ziwei/stream', rateLimitMiddleware, async (req, res) => {
     // 🔴 P1修复(专家复审): 原为硬 402 全锁死, 违背"所有报告统一免费预览段"。
     //   改为: 全解锁会员/单买/月会员(消费credit)→完整版; 未付费→免费预览段(命盘格局+命宫主星2节+锁定引导)。
     const ziweiAccess = gateReportAccess(req, ['ziwei_full', 'ziwei']).full;
-    const ziweiSystemFull = '你是一位精通紫微斗数的命理师，师承中州派，从业30年，批过上万张命盘。你深谙紫微斗数精髓，能从命盘中看透一个人的一生轨迹。你的语言通俗易懂，不用晦涩术语唬人——要用大白话让从没学过紫微的人也能听懂。你的分析必须专业、深刻、具体。每次回答至少4000字。用Markdown格式输出，使用标题、加粗让报告结构清晰。语言：简体中文。';
-    const ziweiSystemPreview = '你是一位精通紫微斗数的命理师，师承中州派，从业30年。这是【免费预览版】，只输出前2个章节让用户感受真实价值，然后停止并引导解锁完整版。语言通俗易懂、用大白话。用Markdown格式。语言：简体中文。';
+    const { question: zwQuestion, lang: zwLang } = req.body;
+
+    // ── 紫微引擎注入（无论免费/完整版都注入，让免费预览也有真实排盘数据）──
+    let zwEngineBlock = '';
+    try {
+      const ch = computeBaziChart({
+        year: Number(birthYear), month: Number(birthMonth),
+        day: Number(birthDay), hour: Number(birthHour) || 0,
+        gender: gender || 'female', includeZiwei: true
+      });
+      const zw = ch.ziwei;
+      if (zw) {
+        const palaceLines = zw.palaces ? zw.palaces.map(p =>
+          `  ${p.name}宫(${p.heavenlyStem||''}${p.earthlyBranch||''})：主星${(p.mainStars||[]).join('·')||'无'} 辅星${(p.minorStars||[]).join('·')||'无'}`
+        ).join('\n') : '（宫位数据不可用）';
+        const sihua = zw.fourTransformations || zw.sihua || {};
+        const sihuaStr = Object.entries(sihua).map(([k,v]) => `${k}：${v}`).join(' ');
+        zwEngineBlock = `【紫微斗数精确命盘（后端引擎排盘·禁止 LLM 自行推算或修改任何星曜宫位）】
+命主：${birthYear}年${birthMonth}月${birthDay}日${birthHour}时 ${gender === 'male' ? '男' : '女'}命
+命宫主星：${(zw.mingGongMainStars || zw.lifeMainStars || []).join('·') || '引擎计算中'}
+十二宫星曜分布：
+${palaceLines}
+四化飞星：${sihuaStr || '（无四化数据）'}`;
+      }
+    } catch (e) {
+      console.warn('[ZIWEI-STREAM] 引擎注入失败，降级 LLM 自解：', e && e.message);
+    }
+
+    const zwEngineSection = zwEngineBlock ? `\n${zwEngineBlock}\n` : '';
+    const ziweiSystemFull = `你是一位精通紫微斗数的命理师，师承中州派与飞星派双脉，从业30年，批过上万张命盘。你深谙紫微精髓，能从命盘中看透一个人的一生轨迹。语言通俗易懂，大白话让完全不懂紫微的人也能听懂。分析必须专业、深刻、具体。
+
+【输出格式】用 Markdown，标题分段，简体中文。总字数 9000-11000字，全部 17 个维度写完写透，每个维度字数不低于要求，严禁用"略"或"详见下文"代替内容。
+${zwEngineSection}【健康维度】只说脏腑养生方向，严禁点名具体西医病名，不制造恐慌。
+
+【收尾合规】报告最后附一行："本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。"${langSuffix(zwLang)}`;
+
+    const ziweiSystemPreview = `你是一位精通紫微斗数的命理师，师承中州派，从业30年。这是【免费预览版】，只输出前3节让用户感受真实价值，然后停止并引导解锁完整版。语言通俗易懂、用大白话。用Markdown格式。语言：简体中文。${zwEngineSection}`;
+
     const systemPrompt = ziweiAccess ? ziweiSystemFull : ziweiSystemPreview;
     const userMsg = ziweiAccess
-      ? `出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour}时\n性别：${gender === 'male' ? '男' : '女'}\n\n请按以下结构出具完整紫微斗数命理报告（总字数不少于4000字）：\n## 一、命盘基本格局（200-300字）\n## 二、命宫主星深度解读（400-500字）\n## 三、主要宫位逐个分析（每个宫位200-300字，至少8个宫位）\n## 四、四化飞星分析（200-300字）\n## 五、当前大运详批（400-500字）\n## 六、流年关键点（300-400字）\n## 七、开运建议（200-300字）\n## 八、一句话点睛（50-100字）`
-      : `出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour}时\n性别：${gender === 'male' ? '男' : '女'}\n\n这是【免费预览版】，只输出以下2个章节（合计约1200字，内容真实有用）：\n## 一、命盘基本格局（300-400字）\n## 二、命宫主星深度解读（500-600字）\n\n完成这2节后，输出一行"---LOCKED---"，然后原样输出以下锁定提示（不要展开）：\n🔒 主要宫位逐宫分析（12宫）· 完整版解锁\n🔒 四化飞星 · 完整版解锁\n🔒 当前大运详批 · 完整版解锁\n🔒 流年关键点 · 完整版解锁\n🔒 开运建议 · 完整版解锁`;
+      ? `出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour}时\n性别：${gender === 'male' ? '男' : '女'}\n用户关注：${zwQuestion || '请给我全面的紫微斗数命盘解读'}\n\n请严格按以下 17 个维度展开，每个维度标题用对应 emoji 开头：\n\n1. 🌟 命盘格局总览（不少于600字）\n2. ☀️ 命宫主星深度解读（不少于800字）\n3. 💰 财帛宫（财星力量、聚财方式、最佳求财年份3个，不少于500字）\n4. 💕 夫妻宫（正缘星位、配偶特征、遇缘年份、感情模式，不少于500字）\n5. 👨‍👩‍👧‍👦 子女宫（不少于350字）\n6. 🏠 田宅宫（不少于350字）\n7. 💼 官禄宫（事业星、职业路径、升职最佳年份，不少于500字）\n8. 👥 奴仆宫（不少于350字）\n9. 🚀 迁移宫（不少于350字）\n10. 🏥 疾厄宫（养生方向，中医脏腑角度，不点病名，不少于450字）\n11. 🌈 福德宫（不少于350字）\n12. 👨‍👩 父母宫（不少于350字）\n13. 🌀 四化飞星（化禄/化权/化科/化忌各自落宫及影响，不少于550字）\n14. 📅 当前大限深批（起止年份、主题、关键年份，不少于550字）\n15. 🔮 未来10年逐年流年（每年财/情/事评分+一句主题，不少于900字）\n16. 🎯 开运锦囊（幸运色、吉方、推荐佩戴物、流年避讳，不少于450字）\n17. 💌 命理师私语（只对此命盘说的心里话，不少于350字）`
+      : `出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour}时\n性别：${gender === 'male' ? '男' : '女'}\n\n这是【免费预览版】，只输出以下3节（合计约700字，内容真实有用）：\n\n🌟 命盘格局总览（2-3段，200字）\n☀️ 命宫主星（2段，200字）\n🌙 今年大限流年（1段，200字）\n\n完成后输出：---LOCKED---\n💰 财帛宫深度解读 · 完整版解锁\n💕 夫妻宫 · 完整版解锁\n💼 官禄宫 · 完整版解锁\n🌀 四化飞星 · 完整版解锁\n🔮 未来10年流年 · 完整版解锁\n\n最后一行：想看完整紫微斗数报告？解锁后可看到 17 个维度全部深度批算，含精准婚期、事业贵人年份与开运锦囊。`;
 
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
@@ -1805,7 +1894,7 @@ router.post('/ziwei/stream', rateLimitMiddleware, async (req, res) => {
     res.flushHeaders();
     res.write(`data: ${JSON.stringify({ type: 'meta', tier: ziweiAccess ? 'full' : 'basic', locked: !ziweiAccess })}\n\n`);
 
-    const streamBody = await deepseekStream([{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }], { maxTokens: ziweiAccess ? 8192 : 3000, timeout: 300000 });
+    const streamBody = await deepseekStream([{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }], { maxTokens: ziweiAccess ? 16384 : 3000, timeout: 300000 });
     const reader = streamBody.getReader();
     const decoder = new TextDecoder('utf-8');
     let fullText = '', buf = '';
@@ -2344,25 +2433,118 @@ router.post('/fengshui', rateLimitMiddleware, async (req, res) => {
 router.get('/geo-fortune', (req, res) => res.status(405).json({ error: 'Method Not Allowed', hint: 'Use POST' }));
 router.post('/geo-fortune', rateLimitMiddleware, async (req, res) => {
   try {
-    const { latitude, longitude, birthYear, birthMonth, birthDay, gender } = req.body;
+    const { latitude, longitude, birthYear, birthMonth, birthDay, gender, lang } = req.body;
     if (latitude === undefined || longitude === undefined) return res.status(400).json({ error: '请提供经纬度' });
-    var latDir = latitude >= 0 ? '北半球' : '南半球';
-    var longDir = longitude >= 0 ? '东经' : '西经';
-    var regionElement = '土';
-    if (longitude > 0 && longitude < 60) regionElement = '土';
-    else if (longitude >= 60 && longitude < 120) regionElement = '木';
-    else if (longitude >= -60 && longitude < 0) regionElement = '金';
-    else regionElement = '水';
-    if (Math.abs(latitude) > 45) regionElement = '水';
-    else if (Math.abs(latitude) < 15) regionElement = '火';
+
+    const lat = parseFloat(latitude);
+    const lng = parseFloat(longitude);
+    const latDir = lat >= 0 ? '北半球' : '南半球';
+    const lngDir = lng >= 0 ? '东经' : '西经';
+
+    // ── 多维五行映射（经度+纬度综合判断，比原来单一区间精确）──
+    // 传统地理五行：东方木·南方火·中央土·西方金·北方水（以东经120°为参照）
+    let regionElement = '土';
+    let regionNotes = '';
+    if (lat > 60) {
+      regionElement = '水'; regionNotes = '极北寒带·水气盛';
+    } else if (lat > 35) {
+      // 中高纬度：偏金水
+      if (lng >= 100 && lng <= 135) { regionElement = '木'; regionNotes = '东亚温带·木气旺（生发之地）'; }
+      else if (lng > 135 || (lng >= -180 && lng < -100)) { regionElement = '水'; regionNotes = '北太平洋区域·水木交汇'; }
+      else if (lng >= 60 && lng < 100) { regionElement = '金'; regionNotes = '中亚高原·金气收敛'; }
+      else if (lng >= -100 && lng < -60) { regionElement = '金'; regionNotes = '北美大陆·金水之气'; }
+      else if (lng >= 0 && lng < 60) { regionElement = '土'; regionNotes = '欧亚大陆中心·土气稳重'; }
+      else { regionElement = '金'; regionNotes = '西欧·金水之气'; }
+    } else if (lat > 15) {
+      // 中低纬度：偏火土
+      if (lng >= 100 && lng <= 125) { regionElement = '木'; regionNotes = '东南亚·木火交汇，生机旺盛'; }
+      else if (lng >= 65 && lng < 100) { regionElement = '火'; regionNotes = '南亚次大陆·火气炎烈（创造力旺）'; }
+      else if (lng >= 125 || (lng >= -180 && lng < -65)) { regionElement = '水'; regionNotes = '太平洋区域·水气通达'; }
+      else { regionElement = '火'; regionNotes = '热带近赤道·火土之气'; }
+    } else if (lat >= -15) {
+      regionElement = '火'; regionNotes = '赤道区域·纯火极旺（热情·能量·变化快）';
+    } else if (lat >= -35) {
+      regionElement = '火'; regionNotes = '南半球热带·火气余韵';
+    } else {
+      regionElement = '水'; regionNotes = '南半球高纬度·水寒之气';
+    }
+
+    // 若有出生信息，推算命主日主（简化：用生年五行）
+    let birthElementNote = '';
+    if (birthYear) {
+      const yearMod10 = ((parseInt(birthYear) - 4) % 10 + 10) % 10;
+      const tianGan = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'][yearMod10];
+      const tianGanElem = {甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'}[tianGan] || '土';
+      birthElementNote = `\n命主生年天干：${tianGan}（五行属${tianGanElem}）`;
+    }
+
+    const geoSystemPrompt = `你是一位深谙地理风水命理的大师，贯通古今中西——融合中国风水地理、西方地理风水（Feng Shui of Nations）、奥义书地理神学与现代地磁能量学研究，从业三十余年，走访五大洲三十余国。
+你分析不同地域对个人运势的影响时，不仅考虑五行地理（东木·南火·中土·西金·北水），还结合地形地貌（山岳/平原/海滨/高原）、气候节律（季节变化对气场的影响）、城市能量（开发程度/移民融合度）进行综合判断。
+分析必须具体、落地、可执行——不说"此地宜居"这种废话，说"在这个纬度/气候带，以下5件事会影响你的运势走向……"
+
+【输出格式】Markdown，标题分段，简体中文。总字数 7000-8000字，8 个维度全部写完写透，每个维度字数不低于要求，严禁用"略"代替内容。
+
+【收尾合规】末尾加："本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。"${langSuffix(lang)}`;
+
+    const geoUserPrompt = `用户位置：纬度 ${lat}（${latDir}），经度 ${lng}（${lngDir}）
+地域五行分析：${regionElement} · ${regionNotes}
+出生信息：${birthYear ? birthYear + '年' : ''}${birthMonth ? birthMonth + '月' : ''}${birthDay ? birthDay + '日' : ''}${birthElementNote}
+性别：${gender || '未提供'}
+
+请按以下 8 个维度出具完整地域命理分析报告（总字数 7000-8000字）：
+
+1. 🌍 地域能量全景（不少于800字）
+   - 此纬度/气候带的地理五行属性分析（${regionElement}气如何影响居住者的精神状态？）
+   - 地形地貌特征（平原/山地/沿海/内陆）的命理解读
+   - 此地的历史与文化能量积淀（人杰地灵的成因分析）
+   - 气候节律（四季变化节奏）对气场的周期性影响
+
+2. 🧭 与命主的五行匹配（不少于700字）
+   ${birthYear ? `- 命主的天干五行（${birthElementNote.replace(/\n/,'')}）与此地${regionElement}气的生克关系` : '- 基于一般五行原理分析此地对命主的匹配度'}
+   - 此地的五行对命主日常状态（精力/心情/睡眠质量）的具体影响
+   - 若五行相克：化解的生活方式调整建议（室内装饰/颜色选择/日常习惯）
+
+3. 💰 财运地理分析（不少于700字）
+   - 此地产业结构的五行属性（适合哪类行业发展？）
+   - 城市经济能量场：处于快速发展期（木）/成熟稳定期（土）/转型期（金）/扩张期（火）/积累期（水）？
+   - 具体职业方向建议（5个与此地能量场最匹配的行业）
+   - 财运最旺的城区方位与时间节点
+
+4. ❤️ 感情与人际地理（不少于600字）
+   - 此地文化对感情关系的影响（开放/保守/多元/传统）
+   - 移民聚居地的"气场混合"对感情的特殊影响
+   - 此地人际关系的主要特征（直接/含蓄/社群感强/个人主义）
+   - 在此地结识正缘的最佳方式与时间窗
+
+5. 🏃 健康与体质地理（不少于600字，只说养生方向，禁止点病名）
+   - 此气候带对身体五脏六腑的影响（中医角度）
+   - 高纬度/低纬度/沿海/高原对体质的具体影响
+   - 在此地应强化的养生方向（饮食/作息/运动类型）
+   - 节气转换时期的特别注意（哪些月份最需要调整？）
+
+6. 🎯 在此地发展的3年规划建议（不少于700字）
+   - 第一年：在此地站稳脚跟的关键策略（具体到行动）
+   - 第二年：深耕此地资源的路径
+   - 第三年：评估是否继续留守的命理信号
+   - 此地最适合在哪个年龄段（20s/30s/40s/50s+）深扎？
+
+7. 📍 与此地对应的更优方位（不少于600字）
+   - 基于命主五行，给出3个更旺的推荐城市/地区（具体到国家+城市名）
+   - 推荐理由：五行匹配度+产业机遇+文化适配
+   - 若暂时无法移动：在当前城市内可选择的旺运方位（城区方向+社区类型）
+
+8. 💌 地理命理师的叮嘱（不少于300字）
+   - 只对这个具体地理位置+这个命主说的心里话
+   - 有没有什么命理上值得特别注意的"地域业力"？
+   - 在此地最重要的一件事是什么？`;
 
     const messages = [
-      { role: 'system', content: '你是一位结合传统风水与现代地理学的命理师。擅长分析不同地域对个人运势的影响。' },
-      { role: 'user', content: '用户位置：纬度 ' + latitude + '（' + latDir + '），经度 ' + longitude + '（' + longDir + '）\n地域五行属性：' + regionElement + '\n出生信息：' + (birthYear ? birthYear + '年' : '') + (birthMonth ? birthMonth + '月' : '') + (birthDay ? birthDay + '日' : '') + '\n性别：' + (gender || '未提供') + '\n\n请分析：\n1. 🌍 此地的地理能量特点\n2. 🧭 在此地居住/工作的五行影响\n3. 💰 此地财运分析\n4. ❤️ 此地感情/人际运势\n5. 🏃 此地健康提醒\n6. 🎯 在此地发展的建议\n7. 📍 更适合此人的其他方位建议' }
+      { role: 'system', content: geoSystemPrompt },
+      { role: 'user', content: geoUserPrompt }
     ];
-    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 8192);
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 16384);
     const analysis = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
-    res.json({ analysis, location: { lat: latitude, lng: longitude, regionElement: regionElement } });
+    res.json({ analysis, location: { lat, lng, regionElement, regionNotes } });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[GEO ERR]', err.message);
@@ -2409,9 +2591,10 @@ router.post('/xingming', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.post('/astrology', rateLimitMiddleware, async (req, res) => {
   try {
-    const { birthYear, birthMonth, birthDay, birthHour, birthMinute, latitude, longitude, gender } = req.body;
+    const { birthYear, birthMonth, birthDay, birthHour, birthMinute, latitude, longitude, gender, question, lang } = req.body;
     if (!birthYear || !birthMonth || !birthDay) return res.status(400).json({ error: '请提供出生日期' });
 
+    // ── 旧版 astrology.calcAstrology 引擎（提供三大星座/宫位等基础数据）──
     const chart = astrology.calcAstrology(
       parseInt(birthYear), parseInt(birthMonth), parseInt(birthDay),
       birthHour !== undefined ? parseInt(birthHour) : undefined,
@@ -2420,43 +2603,138 @@ router.post('/astrology', rateLimitMiddleware, async (req, res) => {
       longitude !== undefined ? parseFloat(longitude) : 116.0
     );
 
-    const chartSummary = `【星盘基本数据】
-出生时间：${birthYear}/${birthMonth}/${birthDay} ${birthHour !== undefined ? birthHour + ':' + (birthMinute || '00') : '时间不详'}
-性别：${gender === 'male' ? '男 Male' : gender === 'female' ? '女 Female' : '未知'}
-经纬度：${latitude || '40°N'}, ${longitude || '116°E'}
-
-【三大重要星座】
+    // ── 新版 western-astro-engine 精确排盘（VSOP87天文算法，含相位）──
+    // 两块注入：旧引擎的中文数据 + 新引擎的精确行星经度/宫位/相位
+    const chartSummaryOld = `【三大重要星座（旧引擎）】
 太阳 Sun：${chart.sun.signZh}(${chart.sun.signEn}) ${chart.sun.degree}°
 月亮 Moon：${chart.moon.signZh}(${chart.moon.signEn}) ${chart.moon.degree}°
 上升 Ascendant：${chart.rising.signZh}(${chart.rising.signEn}) ${chart.rising.degree}°
 
-【行星落座】
-水星 Mercury：${chart.planets.mercury.signZh}(${chart.planets.mercury.signEn}) ${chart.planets.mercury.degree}°
-金星 Venus：${chart.planets.venus.signZh}(${chart.planets.venus.signEn}) ${chart.planets.venus.degree}°
-火星 Mars：${chart.planets.mars.signZh}(${chart.planets.mars.signEn}) ${chart.planets.mars.degree}°
-木星 Jupiter：${chart.planets.jupiter.signZh}(${chart.planets.jupiter.signEn}) ${chart.planets.jupiter.degree}°
-土星 Saturn：${chart.planets.saturn.signZh}(${chart.planets.saturn.signEn}) ${chart.planets.saturn.degree}°
-
-【元素分布】
-${chart.elements.map(e => e.name + ': ' + e.percentage + '% (' + e.count + '个)').join('\n')}
-
-【模式分布】
-${chart.modalities.map(m => m.name + ': ' + m.percentage + '% (' + m.count + '个)').join('\n')}
-
+【元素分布】${chart.elements.map(e => e.name + ': ' + e.percentage + '% (' + e.count + '个)').join(' · ')}
+【模式分布】${chart.modalities.map(m => m.name + ': ' + m.percentage + '% (' + m.count + '个)').join(' · ')}
 【月亮相位】${chart.moonPhase.phase} (照明度 ${chart.moonPhase.illumination})
+【宫位系统（等宫制）】${chart.houses.map(h => '第' + h.number + '宫:' + h.signZh).join(' ')}`;
 
-【宫位系统】（基于上升点的等宫制）
-${chart.houses.map(h => '第' + h.number + '宫: ' + h.signZh + '(' + h.signEn + ')').join('\n')}
+    // 精确天文引擎注入（含相位）
+    const westernEngineBlock = buildWesternBlock({
+      birthYear: parseInt(birthYear), birthMonth: parseInt(birthMonth), birthDay: parseInt(birthDay),
+      birthHour: birthHour !== undefined ? parseInt(birthHour) : undefined,
+      birthMinute: birthMinute !== undefined ? parseInt(birthMinute) : 0,
+      lat: latitude !== undefined ? parseFloat(latitude) : undefined,
+      lng: longitude !== undefined ? parseFloat(longitude) : undefined,
+      tz: latitude !== undefined ? Math.round(parseFloat(longitude || 116) / 15) : undefined,
+    });
 
-【星盘概要】${chart.summary.bigThree} · 主导元素: ${chart.summary.dominantElement} · 主导模式: ${chart.summary.dominantModality}`;
+    const fullChartBlock = `【西方占星精确星盘数据（后端注入·禁 LLM 自算或修改任何行星位置）】
+出生：${birthYear}/${birthMonth}/${birthDay} ${birthHour !== undefined ? birthHour + ':' + (birthMinute || '00') : '时间不详（精确月亮/上升不可用）'}
+性别：${gender === 'male' ? '男 Male' : gender === 'female' ? '女 Female' : '未知'}
+出生地经纬度：${latitude !== undefined ? latitude + '°N/S' : '未提供'}，${longitude !== undefined ? longitude + '°E/W' : '未提供'}
+
+${chartSummaryOld}
+
+${westernEngineBlock || '（精确天文引擎数据不可用，请仅基于上方基础星盘数据解读）'}`;
+
+    // ── 分档控制 ──
+    var _gm = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','八字','合婚','紫微','姓名','占星','星盘'], [], 16384);
+    const astroTier = resolveReportTier(_gm.full, req.body.tier);
+
+    const astroSystemPrompt = `你是一位精通西方占星学的资深占星师，融合古典占星与现代心理占星，从业20年，为上千人解读过本命星盘。
+你的语言：70%中文 + 30%英文关键术语（星座名/行星名用英文，其余中文解释），让用户既能看懂又能学到占星知识。
+解读深刻、温暖、具体——不说"你可能比较有创意"，说"当你的金星在双子与火星射手形成对分时，你的创意来自于……"。
+
+【精确星盘数据（后端注入·禁 LLM 自算）】
+${fullChartBlock}
+
+【健康章节】只说中医/西医体质养生倾向，严禁做医疗诊断，不点具体病名，不制造恐慌。
+【收尾合规】报告最后附一行免责声明："本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。"${langSuffix(lang)}`;
+
+    let astroUserPrompt, astroMaxTokens;
+    if (astroTier === 'free') {
+      astroMaxTokens = 3000;
+      astroUserPrompt = `出生：${birthYear}/${birthMonth}/${birthDay}
+用户关注：${question || '请给我完整的星盘解读'}
+
+请仅输出以下3节（合计约700字），然后输出锁定提示：
+
+## 🌟 星盘格局总览（三大支柱概述、主导元素，约200字）
+## ☀️🌙⬆️ 三大支柱简读（太阳/月亮/上升各60字，合计约200字）
+## 📅 今年木星/土星运行对你的影响（约200字）
+
+完成后输出：---LOCKED---
+🪐 行星落座详析（10颗行星）· 完整版解锁
+🏠 12宫位深度解读 · 完整版解锁
+📐 主要相位详解 · 完整版解锁
+💰💕💼🏥 人生领域深度分析 · 完整版解锁
+📅 未来3年行运 · 完整版解锁
+
+最后一行：解锁完整版可看到10颗行星落座、12宫位全析、主要相位与未来3年行运详解。`;
+    } else if (astroTier === 'standard') {
+      astroMaxTokens = 8000;
+      astroUserPrompt = `出生：${birthYear}/${birthMonth}/${birthDay}
+性别：${gender === 'male' ? '男 Male' : '女 Female'}
+用户关注：${question || '请给我完整的星盘解读'}
+
+请按以下结构出具标准版西方占星报告（总字数约2500字）：
+
+1. 🌟 星盘格局总览（三大支柱/主导元素/模式，300字）
+2. ☀️🌙⬆️ 三大支柱详解（太阳/月亮/上升各200字，合计600字）
+3. 🪐 行星落座摘要（选最关键的5颗行星，各100字）
+4. 🏠 宫位简析（12宫各30字，合计360字）
+5. 💰💕💼 人生核心领域（财/情/事各100字）
+6. 📅 今年木星/土星关键过境
+7. 💌 占星师寄语（100字）
+
+结尾：想看完整版？$49完整版包含：10颗行星精确解析、主要相位详解、未来3年逐年行运与月相日历。`;
+    } else {
+      astroMaxTokens = 16384;
+      astroUserPrompt = `出生：${birthYear}/${birthMonth}/${birthDay} ${birthHour !== undefined ? birthHour + ':' + (birthMinute || '00') : '时间不详'}
+出生地：${latitude !== undefined ? '纬度' + latitude + '° 经度' + longitude + '°' : '未提供（宫位/上升不可用）'}
+性别：${gender === 'male' ? '男 Male' : '女 Female'}
+用户关注：${question || '请给我完整的星盘解读'}
+
+请根据上方精确星盘数据，按以下 10 个维度出具完整西方占星解读报告（总字数 9000字）：
+
+1. 🌟 星盘格局总览（三大支柱概述、主导元素与模式、格局定性，400字）
+
+2. ☀️🌙⬆️ 三大支柱深度解读（每个至少400字）
+   - 太阳（Sun）：核心自我/生命目标/身份认同
+   - 月亮（Moon）：情感需求/内在安全感/本能反应
+   - 上升（Rising）：外在形象/第一印象/处世方式
+
+3. 🪐 行星落座详析（共10颗行星，每颗至少150字）
+   - 各行星所在星座+宫位的具体意义
+   - 与太阳/月亮的主要相位说明
+
+4. 🔥🌍💨💧 元素与模式分析（400字）
+   - 四元素（火/土/风/水）分布与偏重
+   - 三模式（本位/固定/变动）分布与含义
+   - 元素缺乏者的补偿方式
+
+5. 🏠 12宫位简析（每宫位60字，共720字）
+
+6. 📐 主要相位解读（选3-5个最重要相位，每个200字）
+
+7. 🌙 月相解读（当前月相+对本命月相的影响，200字）
+
+8. 💰💕💼🏥 人生领域深度分析（每领域300字）
+   - 财运：2宫/8宫/木星/金星综合
+   - 感情：5宫/7宫/金星/火星综合，给出遇缘时机窗口
+   - 事业：6宫/10宫/土星/木星综合，给出最佳发展阶段
+   - 健康：1宫/6宫与先天体质倾向（中医体质角度补充，养生方向）
+
+9. 📅 未来3年行运提醒（每年200字）
+   - 木星过境哪宫+土星过境哪宫+核心主题
+
+10. 💌 占星师寄语（只对这张星盘说的话，150字）`;
+    }
 
     const messages = [
-      { role: 'system', content: '你是一位精通西方占星学的资深占星师，从业20年，为上千人解读过本命星盘。你融合古典占星与现代心理占星，分析深刻且温暖。你的语言：70%中文 + 30%英文关键术语（星座名、行星名用英文给出，其余用中文解释），让用户既能看懂又能学到占星知识。每次解读详细、具体、有深度。' },
-      { role: 'user', content: `请根据以下星盘数据，为用户出具一份详细的西方占星解读报告。\n\n${chartSummary}\n\n请按以下结构展开详细的星盘解读（总字数4000-6000字）：\n## 一、星盘格局总览（300-400字）\n## 二、三大支柱详解（500-700字）\n## 三、行星落座详析（800-1000字）\n## 四、元素与模式分析（300-400字）\n## 五、宫位简析（400-500字）\n## 六、月亮相位（200-300字）\n## 七、主要人生领域分析（600-800字）\n## 八、成长方向与年度提醒（300-400字）\n## 九、占星师的寄语（100-200字）` }
+      { role: 'system', content: astroSystemPrompt },
+      { role: 'user', content: astroUserPrompt }
     ];
 
     var _g = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','八字','合婚','紫微','姓名','占星','星盘'], messages);
-    const result = await deepseekChat(_g.messages, { maxTokens: _g.maxTokens });
+    const result = await deepseekChat(_g.messages, { maxTokens: astroMaxTokens || _g.maxTokens });
     insertReading.run('astrology', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('astrology', req.body, result);
 
@@ -2481,22 +2759,57 @@ ${chart.houses.map(h => '第' + h.number + '宫: ' + h.signZh + '(' + h.signEn +
 // ══════════════════════════════════════════
 router.post('/liuyao', rateLimitMiddleware, async (req, res) => {
   try {
-    const { question, topic } = req.body;
+    const { question, topic, lang } = req.body;
     if (!question) return res.status(400).json({ error: '请提供你要问的事情' });
-    var coins = [];
-    for (var i = 0; i < 6; i++) {
-      var val = Math.floor(Math.random() * 2) + Math.floor(Math.random() * 2) + Math.floor(Math.random() * 2);
-      coins.push(val);
-    }
-    var guaYao = coins.map(c => c >= 2 ? '---' : '- -');
+
+    // ── 真实六爻引擎排盘（京房八宫法·纳甲装卦）──
+    const liuyaoBlock = await buildLiuyaoBlock({ date: new Date() });
+
+    const liuyaoSystem = `你是一位精通《周易》六爻纳甲的民间大师，京房八宫嫡传，从业四十余年。
+你擅长用通俗语言解读卦象——让求问者立刻明白"能不能做、什么时候做、怎么做"。语气：亲切、直接、实用，不绕弯子。
+
+【卦象数据（后端精确排盘·禁止 LLM 自行起卦或修改任何爻/亲/神数据）】
+${liuyaoBlock || '（引擎暂不可用，请基于通识给出六爻解读框架）'}
+（含：本卦六爻、动爻位置、变卦、六亲、纳甲地支、六神、世应、空亡）
+
+【输出格式】Markdown，标题分段，简体中文。总字数 8000字，7 个维度全部写完写透，严禁简略。
+
+【收尾合规】末尾加："本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。"${langSuffix(lang)}`;
+
+    const liuyaoUser = `用户问题：${question}
+主题类型：${topic || '综合'}（感情/事业/财运/健康/出行）
+
+请基于上方精确卦象数据，按以下 7 个维度出具完整六爻断事报告（总字数 8000字）：
+
+1. 🔮 本卦解读（卦名+卦象图示+卦辞含义+整体象征。基于引擎排出的本卦名，写卦的内涵与整体象，不少于500字）
+
+2. 📖 六爻逐爻详解（每爻含：爻位/纳甲地支/六亲/六神/对问题的具体指向。共6爻×约200字，合计约1200字）
+   - 初爻（初六/初九）：地支${'{'}初爻地支{'}'}，六亲${'{'}初爻六亲{'}'}，六神${'{'}初爻六神{'}'}
+   - 依此类推至上爻
+
+3. 🔄 变卦分析（动爻化出的变卦+本变卦对比分析。若为静卦则说明静卦意义，不少于400字）
+
+4. 🎯 针对问题的具体指引（直接回答"能/不能""什么时候""怎么做"，不含废话，不少于500字）
+   - 用神是哪个六亲？用神地支旺衰状态如何？
+   - 忌神是否克用神？克力强弱？
+   - 世爻与用神的生克关系对问题有何启示？
+
+5. ⏰ 应期判断（用爻象推算结果出现的时间窗口，精确到月份或季节，不少于300字）
+   - 动爻化出的地支对应哪个月份？
+   - 空亡地支对冲时为应期的逻辑
+
+6. 💡 行动建议（3条，每条约120字，含：做什么/不做什么/注意什么）
+
+7. ⚠️ 忌神化解（忌神克制用神时的化解思路，不少于200字）`;
+
     const messages = [
-      { role: 'system', content: '你是一位精通《周易》六爻占卜的民间大师，擅长用通俗语言解读卦象。语气亲切、具体、实用。' },
-      { role: 'user', content: `用户问题：${question}\n主题：${topic || '综合'}\n起卦结果（由系统六爻生成）：\n${guaYao[5]}  (上九)\n${guaYao[4]}  (九五)\n${guaYao[3]}  (九四)\n${guaYao[2]}  (九三)\n${guaYao[1]}  (九二)\n${guaYao[0]}  (初九)\n\n请按结构详细解读（3000+字）：\n1. 🔮 本卦解读\n2. 📖 爻辞详解\n3. 🎯 针对问题的具体指引\n4. ⏰ 应期判断\n5. 💡 行动建议（3条）\n6. ⚠️ 注意事项` }
+      { role: 'system', content: liuyaoSystem },
+      { role: 'user', content: liuyaoUser }
     ];
-    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 12288);
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 16384);
     const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     var ctxId = saveQaContext('liuyao', req.body, reading);
-    res.json({ reading, contextId: ctxId, hexagram: guaYao });
+    res.json({ reading, contextId: ctxId, liuyaoData: liuyaoBlock ? liuyaoBlock.slice(0, 400) : null });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[LIUYAO ERR]', err.message);
@@ -2532,21 +2845,82 @@ router.post('/lingqian', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.post('/daliuren', rateLimitMiddleware, async (req, res) => {
   try {
-    const { question, birthYear, gender } = req.body;
+    const { question, birthYear, gender, lang } = req.body;
     if (!question) return res.status(400).json({ error: '请提供你要问的事情' });
-    var lessonNames = ['元首课','重审课','涉害课','遥克课','昴星课','伏吟课','返吟课','别责课','八专课','三光课','三阳课','三奇课','六仪课','天赦课','铸印课'];
-    var deities = ['贵人','螣蛇','朱雀','六合','勾陈','青龙','天空','白虎','太常','玄武','太阴','天后'];
-    var lesson = lessonNames[Math.floor(Math.random() * lessonNames.length)];
-    var randomDeities = [];
-    for (var i = 0; i < 4; i++) randomDeities.push(deities[Math.floor(Math.random() * deities.length)]);
+
+    // ── 大六壬真实排盘引擎（三传四课·天干地支·神将）──
+    let liurenBlock = '';
+    let liurenData = null;
+    try {
+      liurenData = await computeDaLiuRen({ date: new Date() });
+      // 从引擎返回中提取关键结构
+      const courseStr = liurenData.course ? JSON.stringify(liurenData.course).slice(0, 600) : '（课名待引擎返回）';
+      const transmissionStr = liurenData.transmission ? JSON.stringify(liurenData.transmission).slice(0, 400) : '（三传待引擎返回）';
+      const godsStr = liurenData.gods ? JSON.stringify(liurenData.gods).slice(0, 400) : '（神将待引擎返回）';
+      const ganzhi = liurenData.ganzhi || {};
+      liurenBlock = `【大六壬精确起课（真实三传四课·禁止 LLM 自行起课或修改课象）】
+干支：年${ganzhi.year||''} 月${ganzhi.month||''} 日${ganzhi.day||''} 时${ganzhi.hour||''}
+课名/课体：${courseStr}
+三传（初传→中传→末传）：${transmissionStr}
+十二神将：${godsStr}`;
+    } catch (e) {
+      console.warn('[DALIUREN] 引擎排盘失败，改用诚实框架：', e && e.message);
+      // 引擎不可用时，不随机编造，而是用诚实框架
+      const nowDate = new Date();
+      const ymd = `${nowDate.getFullYear()}年${nowDate.getMonth()+1}月${nowDate.getDate()}日`;
+      liurenBlock = `【注：大六壬引擎当前不可用。以下按传统大六壬框架进行文化解读，不代表精确排盘结果。起测时间：${ymd}】
+请在报告开头声明："本次大六壬解读为文化参考，引擎精确排盘暂不可用，仅供娱乐参考。"`;
+    }
+
+    const daliurenSystem = `你是一位精通大六壬的玄学大师，民间尊称"六壬神断"，从业四十余年。
+你深谙六壬三传四课之精妙，能从课象中洞悉天机。语气平和笃定，引经据典但深入浅出，让求测者信服。
+
+【大六壬起课数据（后端注入·依此解读，不得自行起课或编造三传四课）】
+${liurenBlock}
+
+【输出格式】Markdown，标题分段，简体中文。总字数 8000字，6 个维度全部写完写透，严禁简略。
+
+【收尾合规】末尾加："本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。"${langSuffix(lang)}`;
+
+    const daliurenUser = `用户问题：${question}
+出生年份：${birthYear || '未提供'}
+性别：${gender === 'male' ? '男' : gender === 'female' ? '女' : '未提供'}
+
+请基于上方精确起课数据，按以下 6 个维度出具完整大六壬断事报告（总字数 8000字）：
+
+1. 📜 课名解读与课体总评（课名的文化含义、此课的整体气场与类象，不少于700字）
+   - 课名出于何种传统文献？含义与形成条件？
+   - 此课适合问哪类事？对本次问题的整体指示
+
+2. 🏮 三传四课精析（不少于1200字）
+   - 四课：第一课到第四课各干支的上下神关系与类象
+   - 初传（发用）：发用神是什么？如何克应到问题的初期阶段？
+   - 中传（引就）：中传神如何引导事情发展方向？
+   - 末传（归结）：末传神预示最终结果是什么？
+
+3. 🎯 针对问题的具体断语（不少于800字）
+   - 直接回答：此事"能/不能""何时成/何时败""注意什么"
+   - 三传所示的吉凶与用神力量分析
+   - 神将吉凶对事情的辅助判断
+
+4. ⏰ 应期判断（不少于400字）
+   - 末传地支对应哪个月份？用神旺相时为应期？
+   - 给出最可能的应期月份和季节
+
+5. 💡 行动建议（3条，每条约150字）
+   - 每条包含：做什么 / 不做什么 / 具体时机
+
+6. ⚠️ 注意事项与化解（不少于350字）
+   - 凶神落何处？如何化解凶星影响？`;
+
     const messages = [
-      { role: 'system', content: '你是一位精通大六壬的玄学大师，民间尊称"六壬神断"，从业四十余年。你深谙六壬三传四课之精妙，能从课象中洞悉天机。你的语气平和笃定，引经据典但深入浅出，让求测者信服。' },
-      { role: 'user', content: `用户问题：${question}\n出生年份：${birthYear || '未提供'}\n性别：${gender === 'male' ? '男' : gender === 'female' ? '女' : '未提供'}\n\n起课结果（系统随机）：\n课名：${lesson}\n课将：${randomDeities.join('、')}\n\n请按以下结构详细解读（3000+字）：\n1. 📜 课名解读\n2. 🏮 课体传象（三传四课分析）\n3. 🎯 针对问题的具体断语\n4. ⏰ 应期判断\n5. 💡 行动建议（3条）\n6. ⚠️ 注意事项与化解方法` }
+      { role: 'system', content: daliurenSystem },
+      { role: 'user', content: daliurenUser }
     ];
-    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 12288);
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 16384);
     const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     var ctxId = saveQaContext('daliuren', req.body, reading);
-    res.json({ reading, contextId: ctxId, lesson: { name: lesson, gods: randomDeities } });
+    res.json({ reading, contextId: ctxId, liurenData: liurenData ? { ganzhi: liurenData.ganzhi } : null });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[DALIUREN ERR]', err.message);
@@ -2559,21 +2933,70 @@ router.post('/daliuren', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.post('/qimen', rateLimitMiddleware, async (req, res) => {
   try {
-    const { question, direction, birthYear, gender } = req.body;
+    const { question, direction, birthYear, gender, lang } = req.body;
     if (!question) return res.status(400).json({ error: '请提供你要问的事情' });
-    var eightDoors = ['休门','生门','伤门','杜门','景门','死门','惊门','开门'];
-    var nineStars = ['天蓬星','天任星','天冲星','天辅星','天英星','天芮星','天柱星','天心星','天禽星'];
-    var shuffledDoors = [...eightDoors].sort(() => Math.random() - 0.5);
-    var shuffledStars = [...nineStars].sort(() => Math.random() - 0.5);
-    var currentDoor = shuffledDoors[0], currentStar = shuffledStars[0];
+
+    // ── 奇门遁甲真实排盘（拆补定局·转盘·时家）──
+    const qimenBlock = await buildQimenBlock({ date: new Date(), method: 'zhuanpan', scope: 'hour', juMethod: 'chaibu' });
+
+    const qimenSystem = `你是一位精通奇门遁甲的高人，师承茅山道脉，深研烟波钓叟歌、时家奇门正统口诀，精研奇门数十年。
+你擅长排盘布局，能从八门九星八神中洞察时空能量，为求测者指点迷津。语气沉稳、自信、有道家仙风，每个断语都有理有据。
+
+【奇门遁甲精确局盘（后端真实起局·禁止 LLM 自行起局或随机改盘）】
+${qimenBlock || '（引擎暂不可用，请按奇门遁甲通识框架作文化解读并声明）'}
+
+【输出格式】Markdown，标题分段，简体中文。总字数 8000字，7 个维度全部写完写透，严禁简略。
+
+【收尾合规】末尾加："本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。"${langSuffix(lang)}`;
+
+    const qimenUser = `用户问题：${question}
+出生年份：${birthYear || '未提供'}
+性别：${gender === 'male' ? '男' : gender === 'female' ? '女' : '未提供'}
+求测方位：${direction || '未提供'}
+
+请基于上方精确局盘数据，按以下 7 个维度出具完整奇门遁甲断事报告（总字数 8000字）：
+
+1. 🌐 奇门局象总评（阴/阳遁、局数、整体能量气场，不少于600字）
+   - 此时家奇门局的阴阳遁与局数意味着什么？
+   - 整体时空能量对求测者的问题有何基础指向？
+   - 值符星与值使门的组合类象总评
+
+2. 🚪 八门深析（不少于800字）
+   - 值使门（主门）：对应哪个宫位？八门五行属性？对求测者有何具体指引？
+   - 其余各门落宫分布：开门/休门/生门在哪方？对应事业/财运/健康的具体信息
+   - 格局说明（若有奇门特殊格局如三奇入墓、天地人三奇等，详细解读）
+
+3. ⭐ 九星深析（不少于800字）
+   - 值符星：五行属性与对应领域，对问题的主要指向
+   - 天蓬/天任/天冲等关键宫星的落宫与含义
+   - 九星对财运、情感、事业各领域的分宫指示
+
+4. 🎯 针对问题的具体局象指引（不少于800字）
+   - 直接回答"能/不能""何时成""注意什么"
+   - 用神宫位与生克关系如何回应此问题？
+   - 驿马宫和空亡宫对问题时机的影响
+
+5. ⏰ 时间窗口判断（不少于500字）
+   - 起局时间的干支与当前局数如何指向应期？
+   - 空亡冲破时为应期的推断依据
+   - 给出最可能的应验月份和季节
+
+6. 📍 方位择吉（不少于500字）
+   - 基于此局的生门/开门方位，给出具体吉方
+   - 求测者的具体行动应朝哪个方向？
+   - 此时宜去的城市/区域方向
+
+7. 💡 行动建议（3条，每条约150字）
+   - 每条包含：做什么/不做什么/最佳时机`;
+
     const messages = [
-      { role: 'system', content: '你是一位精通奇门遁甲的高人，师承茅山道脉，精研奇门数十年。你擅长排盘布局，能从八门九星中洞察时空能量，为求测者指点迷津。你的语气沉稳、自信、有道家仙风，每个断语都有理有据。' },
-      { role: 'user', content: `用户问题：${question}\n出生年份：${birthYear || '未提供'}\n性别：${gender === 'male' ? '男' : gender === 'female' ? '女' : '未提供'}\n求测方位：${direction || '未提供'}\n\n起局结果（系统随机）：\n值使门（八门）：${currentDoor}\n值符星（九星）：${currentStar}\n其余八门：${shuffledDoors.slice(1).join('、')}\n其余九星：${shuffledStars.slice(1).join('、')}\n\n请按以下结构详细解读（3000+字）：\n1. 🌐 奇门局象总评\n2. 🚪 八门分析\n3. ⭐ 九星分析\n4. 🎯 针对问题的具体局象指引\n5. ⏰ 时间窗口判断\n6. 📍 方位建议\n7. 💡 行动建议（3条）` }
+      { role: 'system', content: qimenSystem },
+      { role: 'user', content: qimenUser }
     ];
-    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 12288);
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 16384);
     const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     var ctxId = saveQaContext('qimen', req.body, reading);
-    res.json({ reading, contextId: ctxId, door: currentDoor, star: currentStar });
+    res.json({ reading, contextId: ctxId, qimenSummary: qimenBlock ? qimenBlock.slice(0, 300) : null });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[QIMEN ERR]', err.message);
@@ -2586,21 +3009,111 @@ router.post('/qimen', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.post('/pastlife', rateLimitMiddleware, async (req, res) => {
   try {
-    const { birthYear, birthMonth, birthDay, birthHour, gender, birthPlace } = req.body;
+    const { birthYear, birthMonth, birthDay, birthHour, gender, birthPlace, lang } = req.body;
     if (!birthYear) return res.status(400).json({ error: '请提供出生信息' });
-    const lan = req.headers['accept-language'] || 'zh';
-    const isEn = lan.startsWith('en');
+    // 语言判断：优先用 req.body.lang，降级到 Accept-Language 头
+    const _effectiveLang = lang || (req.headers['accept-language'] || 'zh').split(',')[0].split('-')[0];
+    const isEn = _effectiveLang.startsWith('en');
     const zi = ['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪'];
     const zodiacs = ['Rat','Ox','Tiger','Rabbit','Dragon','Snake','Horse','Goat','Monkey','Rooster','Dog','Pig'];
     const currZodiac = zi[(birthYear - 4) % 12];
+    const currZodiacEn = zodiacs[(birthYear - 4) % 12];
+
+    // 基于出生信息推算一些叙事锚点
+    const birthMonth12 = birthMonth ? parseInt(birthMonth) : 6;
+    const seasonHints = ['冬末','初春','仲春','暮春','初夏','盛夏','盛夏','初秋','仲秋','暮秋','初冬','深冬'];
+    const seasonEn = ['late winter','early spring','mid-spring','late spring','early summer','midsummer','midsummer','early autumn','mid-autumn','late autumn','early winter','deep winter'];
+    const season = seasonHints[birthMonth12 - 1] || '春';
+    const seasonE = seasonEn[birthMonth12 - 1] || 'spring';
+
     const sysPrompt = isEn
-      ? 'You are a mystical past-life regression guide. Generate a vivid, detailed past-life story based on the person birth data. Write in English. Be specific: time period, location, occupation, personality, appearance, key life events, and how it connects to their current life. 2000-3000 words.'
-      : '你是一位通晓三世因果的灵性导师。根据用户的出生信息，回溯其前世的身份、经历和因果。语言生动、细节丰富，像在讲一个真实的故事。给出具体的前世身份（年代+地点+职业）、外貌特征、关键人生事件、以及今生与此的关联。2000-3000字。';
+      ? `You are a mystical past-life regression guide with deep knowledge of world history and karmic cycles.
+
+IMPORTANT: This is spiritual entertainment content. Always include a clear disclaimer at the start:
+"✨ Past-Life Story (Spiritual Entertainment) — Not a factual historical claim. Created for reflection and entertainment."
+
+Your storytelling is cinematic, emotionally resonant, and deeply personal. You are NOT a fortune-teller — you are a storytelling guide helping people explore the poetic mirror of their soul's journey.
+
+STRUCTURE: Write in 8 narrative chapters. Total: 4000-5000 words in vivid, literary English.
+
+DISCLAIMER at end: "This story is a creative spiritual narrative for entertainment and reflection only. It makes no claims about actual historical events or real past-life experiences."${langSuffix(lang)}`
+      : `你是一位通晓三世因果的灵性叙事师，善用电影感语言讲述灵魂旅程。
+
+【重要说明（必须在报告开头输出）】
+✨《前世灵性故事》· 娱乐参考性质，非历史事实陈述，供灵性探索与娱乐参考。
+
+你的叙述：电影镜头感强、情感共鸣深、细节丰富——像在讲一部真实的人物传记，让读者感受到"被看见"的共鸣。你不是算命师，你是灵魂旅程的说书人。
+
+【输出格式】Markdown，标题分段，简体中文。总字数 5000-6000字，8 个章节全部写完写透，语言文学化而非列表化。
+
+【收尾合规】末尾加："本故事为灵性娱乐叙事，非历史事实陈述，不构成任何人生重大决策建议，仅供探索与娱乐参考。"`;
+
     const userPrompt = isEn
-      ? 'Birth: ' + birthYear + '/' + (birthMonth || '?') + '/' + (birthDay || '?') + (birthHour !== undefined ? ' at ' + birthHour + ':00' : '') + ' Gender: ' + (gender || 'unknown') + ' Birthplace: ' + (birthPlace || 'unknown') + ' Chinese zodiac: ' + zodiacs[(birthYear - 4) % 12] + '\n\nTell me my past life in vivid detail.'
-      : '出生：' + (birthYear || '?') + '年' + (birthMonth || '?') + '月' + (birthDay || '?') + '日' + (birthHour !== undefined ? ' ' + birthHour + '时' : '') + '\n性别：' + (gender === 'male' ? '男' : '女') + '\n出生地：' + (birthPlace || '未知') + '\n生肖：' + currZodiac + '\n\n请详细描述我的前世：我是什么人？生活在什么年代和地方？做过什么？和今生的关联是什么？';
+      ? `Birth data: ${birthYear}/${birthMonth || '?'}/${birthDay || '?'}${birthHour !== undefined ? ' at ' + birthHour + ':00' : ''}
+Gender: ${gender || 'unknown'}
+Birthplace: ${birthPlace || 'unknown'}
+Chinese zodiac: ${currZodiacEn}
+Birth season energy: ${seasonE}
+
+Write a vivid, detailed past-life story in 8 chapters (4000-5000 words total):
+
+**Chapter 1: Who You Were** (600 words)
+Specific time period (century + location + social status + name). Describe physical appearance in detail — face, hands, how they moved, what they wore. What language did they speak? What was the first thing they did each morning?
+
+**Chapter 2: The World They Lived In** (500 words)
+The sights, sounds, smells of their daily life. The political climate, what people feared, what they celebrated. One vivid scene from an ordinary Tuesday in their life.
+
+**Chapter 3: Their Greatest Love** (600 words)
+The most significant relationship of that life. How they met. What drew them together. How love shaped their decisions. What was left unfinished.
+
+**Chapter 4: Their Greatest Wound** (500 words)
+The hardest thing they faced. A betrayal, a loss, a burden they carried alone. How this shaped their soul's learning.
+
+**Chapter 5: What They Built and Left Behind** (400 words)
+Their life's work. What they created, protected, or destroyed. What they were proud of. What they regretted.
+
+**Chapter 6: Their Final Hours** (400 words)
+How did that life end? What were the last thoughts? What was unresolved? What was the soul's final emotion — regret, peace, longing, gratitude?
+
+**Chapter 7: The Karmic Thread** (500 words)
+How does that past life connect to THIS life? What echoes forward — a recurring pattern, a fear that has no logical source, a skill that came unnaturally easily, a type of person they're magnetically drawn to or repelled by?
+
+**Chapter 8: The Soul's Message** (300 words)
+If that past-life self could send one message across time to who you are now — what would they say? Not advice. A whisper. Make it land like poetry.`
+      : `出生：${birthYear}年${birthMonth || '?'}月${birthDay || '?'}日${birthHour !== undefined ? birthHour + '时' : ''}
+性别：${gender === 'male' ? '男' : '女'}
+出生地：${birthPlace || '未知'}
+生肖：${currZodiac}
+出生时节能量：${season}
+
+请用电影化语言写一个完整的前世灵性故事，共 8 个章节（总字数 5000-6000字）：
+
+**第一章：你是谁**（不少于600字）
+具体的时代背景（世纪+地区+社会阶层+姓名）。细致描述外貌——面容、双手、走路姿态、穿着。说什么语言？每天早晨第一件事是什么？
+
+**第二章：你生活的世界**（不少于500字）
+日常生活中的气味、声音、色彩。政治气候、人们恐惧什么、庆祝什么。用一个平凡的"星期三下午"场景来让时代感跃然纸上。
+
+**第三章：你最深的爱**（不少于600字）
+那一生中最重要的关系。如何相遇？什么吸引了彼此？爱如何塑造了那个人的命运？有什么遗憾没有说出口？
+
+**第四章：你最深的伤**（不少于500字）
+那一生最难的时刻。背叛、失去、或独自承担的重量。这个伤口如何塑造了灵魂的学习功课？
+
+**第五章：你留下了什么**（不少于400字）
+那一生的工作与创造。建立了什么、守护了什么、毁掉了什么？引以为傲的事，未竟的事。
+
+**第六章：最后的时刻**（不少于400字）
+那一生是如何结束的？最后的念头是什么？灵魂最后的情绪——遗憾、平静、牵挂、还是释然？
+
+**第七章：因果的线索**（不少于500字）
+那一生如何连接到今生？哪些模式在重复——一种没有来源的恐惧、一种不需要学习就会的技能、一类总是被吸引或总是回避的人？
+
+**第八章：灵魂跨越时间的悄悄话**（不少于300字）
+如果那个前世的自己能向今天的你发出一句跨越时间的低语——那会是什么？不是建议，是心声。写得像诗一样落地。`;
+
     const messages = [{ role: 'system', content: sysPrompt }, { role: 'user', content: userPrompt }];
-    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 8192);
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 16384);
     const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     var ctxId = saveQaContext('pastlife', req.body, reading);
     res.json({ reading, contextId: ctxId });
@@ -2637,13 +3150,96 @@ router.post('/deity-guide', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.post('/offering-plan', rateLimitMiddleware, async (req, res) => {
   try {
-    const { deity, purpose, budget, duration } = req.body;
+    const { deity, purpose, budget, duration, birthYear, gender, lang } = req.body;
     if (!deity || !purpose) return res.status(400).json({ error: '请提供供奉对象和所求事项' });
+
+    // ── 供奉方案 vs 求神指引 的差异化定位：
+    // 求神指引(deity-guide)：回答"拜哪位神/为什么"
+    // 供奉方案(offering-plan)：回答"具体怎么拜/用什么/按什么仪轨/花多少钱/设在哪里"
+    // 本端点聚焦于【仪轨落地执行手册】，而非神灵知识科普。
+
+    const offeringSystem = `你是一位在闽南和台湾传统宫庙供奉文化中深耕三十年的资深供奉师，通晓佛道仙三家供奉仪轨，也了解海外华人在家中设坛的实操难题。
+你的工作是给信众设计一份【可立即执行的供奉仪轨手册】——不是科普神灵知识（那是求神指引的工作），而是给具体的行动方案：
+供什么品？怎么摆？什么时辰？念什么咒？烧什么纸？香怎么插？如何回向？出现什么象征视为感应？
+
+【核心差异化原则】
+- 本端点只聚焦于"怎么做"的仪轨执行细节，不重复"为什么拜这位神"的背景（由 deity-guide 负责）
+- 每一步都给出具体数字（香的根数/水果的数量/日程的时分/回向文的字数）
+- 海外信众实情：超市可购的替代品要注明（如：鲜花可用植物花卉替代，写明品种）
+- 禁止模糊说"适量"——写"一斤500克"的梨，3根线香，每支约45分钟燃尽
+
+【输出格式】Markdown，标题分段，简体中文。总字数 7000-8000字，8 个章节全部写完写透，每章字数不低于要求，严禁简略。
+
+【收尾合规】末尾加："本方案为文化参考，不构成宗教承诺或医学、投资建议。如有宗教疑问请咨询专业宗教人士。"${langSuffix(lang)}`;
+
+    const offeringUser = `供奉对象：${deity}
+所求事项：${purpose}
+可用预算：${budget || '未提供（请按低/中/高三档各给方案）'}
+供奉时长：${duration || '7天（常见参考时长）'}
+信众出生年份：${birthYear || '未提供'}
+性别：${gender === 'male' ? '男' : gender === 'female' ? '女' : '未提供'}
+
+请设计一份完整的【${deity}供奉仪轨执行手册】，聚焦于"怎么做"的具体步骤，总字数 7000-8000字：
+
+1. 🏛️ 神位选址与坛台设置（不少于700字）
+   - 家中供奉${deity}的最佳方位（东/南/西/北方向，具体到房间）
+   - 坛台高度要求（距地面多少厘米？）
+   - 神像/神牌的材质建议与尺寸规范
+   - 坛台上物品的摆放顺序（从中心到两侧的精确布局）
+   - 忌讳的摆放位置（哪里绝对不能放？）
+   - 海外信众的简化坛台方案（公寓族如何处理？）
+
+2. 🍎 供品详单（不少于800字）
+   分低预算（$20以内）/ 中预算（$20-80）/ 高预算（$80+）三档各列完整清单：
+   - 水果：品种+数量+摆放数量（单数/双数？）
+   - 鲜花：品种+颜色+瓶数（禁忌花种写明）
+   - 食品供物：具体品类+分量（如：红豆汤一碗，约200ml）
+   - 香烛：线香品种/根数/燃香时长；蜡烛颜色/高度/燃放方式
+   - 特殊供品：${deity}独有的特殊喜好供品（如观音的莲花/财神的元宝等）
+   - 海外替代品：每类供品在当地超市/Amazon可购的具体替代选项
+
+3. 📅 ${duration || '7天'}完整日程（不少于700字）
+   - 第1天：开坛启请仪式（步骤1-步骤N，每步说清楚）
+   - 第2-6天：日常供奉节律（具体到早晨几点上香/换水/换花）
+   - 第7天：圆满回向仪式（结坛步骤）
+   - 每日最佳供奉时辰（子/寅/巳/午/酉时各对应哪个时段？）
+
+4. 🕯️ 线香与香烛仪轨（不少于500字）
+   - 上香的正确手法（三指捏香/九十度鞠躬/插香深度）
+   - 根数规定（三根/七根/十二根各代表什么？${deity}通常用几根？）
+   - 燃香顺序（从哪一边先点？）
+   - 香灰处理（满了怎么清？清的时间选在哪天？）
+   - 海外无法点明火时的替代方案（电子香/香薰的使用规则）
+
+5. 📿 持诵仪轨（不少于600字）
+   - ${deity}对应的核心咒语/心咒（附拼音或原文）
+   - 每日持诵遍数建议（基础版/进阶版/圆满版各几遍？）
+   - 持诵时的手印或身体姿势要求
+   - 持诵前的净心准备动作
+   - 无法记全咒语时的简化替代（念名号的正确方式）
+
+6. 🔥 烧化与回向（不少于500字）
+   - 何时烧化供纸/元宝（几天一次？在哪个时辰？）
+   - 烧化时需要说的回向文（给出完整示例文，约200字）
+   - 在没有户外条件的城市/公寓如何替代（电子烧化的正确意念引导方式）
+   - 回向给谁：先回向${deity}，再回向所求之事，最后普回向给众生的顺序与文辞
+
+7. 🌟 感应辨识与调整（不少于500字）
+   - 哪些现象代表${deity}已纳受供奉（正向感应信号，列举8-10个）
+   - 哪些现象代表方法需调整（非灵验信号，列举5-6个）
+   - 出现梦境或梦见${deity}时如何解读
+   - 供品出现发霉/蜡烛异常燃烧时的正确处理
+
+8. 💌 供奉师叮嘱（不少于400字）
+   - 只对"求${purpose}之事"的信众说的心里话
+   - 供奉之外，心态上最重要的一件事
+   - 什么情况下应该停止供奉或换方式？`;
+
     const messages = [
-      { role: 'system', content: '你是一位寺庙供奉管理师，为信众设计最合适的供奉方案。包含实体供奉（花篮/水果/香油灯）和电子供奉。' },
-      { role: 'user', content: `供奉对象：${deity}\n所求事项：${purpose}\n预算：${budget || '不限'}\n供奉时长：${duration || '7天'}\n\n请设计详细的供奉方案（3000+字）：\n一、🍎 实体供品推荐\n二、🕯️ 电子供奉方案\n三、📅 供奉日程安排\n四、💰 费用预算\n五、🙏 祈福回向文` }
+      { role: 'system', content: offeringSystem },
+      { role: 'user', content: offeringUser }
     ];
-    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 12288);
+    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 16384);
     const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     res.json({ reading });
   } catch (err) {
