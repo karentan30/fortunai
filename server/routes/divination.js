@@ -28,6 +28,7 @@ const router = require('express').Router();
 const path = require('path');
 const fs = require('fs');
 const { deepseekChat, deepseekStream, buildReadingPrompt } = require('../lib/llm');
+const { analyzeFace, analyzePalm } = require('../lib/vision');
 const { calcBazi } = require('../bazi');
 const { buildBaziBlock } = require('../lib/bazi-engine/prompt-block');
 const { computeBaziChart } = require('../lib/bazi-engine');
@@ -712,7 +713,13 @@ router.post('/ziwei', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
   try {
-    const { question, features } = req.body;
+    const { question, imageBase64, mimeType } = req.body;
+    // If front-end sent a photo, run vision extraction first; otherwise use caller-provided features (or none)
+    let features = req.body.features || null;
+    if (imageBase64 && !features) {
+      features = await analyzeFace(imageBase64, mimeType);
+      // analyzeFace returns null on no-key or error → graceful fallback (features stays null)
+    }
 
     // 系统角色：麻衣神相正宗体系
     const SYSTEM = `你是一位精通《麻衣神相》的正宗面相师，以宋代陈抟（希夷先生）传承的麻衣道者相法为宗，融汇三停五岳十二宫气色神韵一整套体系。
@@ -774,7 +781,11 @@ router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.post('/shouxiang', rateLimitMiddleware, async (req, res) => {
   try {
-    const { question, features, hand } = req.body;
+    const { question, hand, imageBase64, mimeType } = req.body;
+    let features = req.body.features || null;
+    if (imageBase64 && !features) {
+      features = await analyzePalm(imageBase64, mimeType);
+    }
     const handLabel = hand === 'left' ? '左手' : '右手（主手）';
 
     const SYSTEM = `你是一位精通《麻衣神相》手相篇的正宗手相师，以三大主线、八丘、特殊掌纹为核心体系断命。

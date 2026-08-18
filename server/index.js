@@ -71,6 +71,9 @@ app.use('/api/pay/alipay/notify', express.urlencoded({ extended: false, limit: '
 // 通用 JSON（风水/阴宅路由含多图 base64，需要更大 limit）
 app.use('/api/fengshui', express.json({ limit: '50mb' }));
 app.use('/api/yinzhai', express.json({ limit: '50mb' }));
+// 面相/手相照片 base64（单张 ≤ 10MB，15mb 留余量）
+app.use('/api/mianxiang', express.json({ limit: '15mb' }));
+app.use('/api/shouxiang', express.json({ limit: '15mb' }));
 app.use(express.json({ limit: '10mb' }));
 
 // ── AI路由速率限制（在路由注册前挂载）──
