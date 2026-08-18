@@ -143,6 +143,9 @@ app.use('/api', paymentRouter);
 // 占算引擎（AI reading）
 app.use('/api', divinationRouter);
 
+// 解签服务（寺庙实体签解读·真谱库兜底·POST /api/jieqian）
+app.use('/api', require('./routes/jieqian'));
+
 // 问事三系统（Tarot / Fortune Sticks / Moon Blocks — 随机抽 + AI 解读）
 app.use('/api', require('./routes/oracle'));
 
