@@ -155,6 +155,11 @@ app.use('/api', require('./routes/identity-triad'));
 app.use('/api', require('./routes/best-timing')); // 求复合最佳联系时机·真引擎排盘不客户端编date
 app.use('/api', require('./routes/western-astrology')); // 西方占星·tropical真星盘·太阳月亮上升+相位
 app.use('/api', require('./routes/soul-name')); // 多语言起名·任何语言/文化里的名字
+// 4个东方系统英文页(此前只有中文·hub显coming soon)
+app.use('/api', require('./routes/qimen-en'));    // 奇门遁甲
+app.use('/api', require('./routes/iching-en'));   // 易经/六爻
+app.use('/api', require('./routes/ziwei-en'));    // 紫微斗数
+app.use('/api', require('./routes/daliuren-en')); // 大六壬
 app.use('/api/cross-check', require('./routes/cross-check')); // 交叉验证·默认deny待预算
 
 // 每日运势 / AI 对话 / 用户反馈

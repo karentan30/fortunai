@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5bbfa0">
+<title>Runae · I Ching · Six Lines — The Book of Changes Oracle</title>
+<meta name="description" content="Cast a real I Ching / Six Lines hexagram and receive an AI interpretation. An ancient Eastern divination method — the coins are cast by a real algorithm, not invented by AI.">
+<meta property="og:title" content="Runae · I Ching · Six Lines Oracle">
+<meta property="og:description" content="Cast your hexagram. The coins are cast by a real algorithm. An ancient Eastern oracle, read by AI.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://runae.app/iching-en">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Runae">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --jade:#5bbfa0;--jade-deep:#3d9e82;--jade-light:#8dd9bf;
+  --jade-pale:rgba(91,191,160,0.08);--jade-border:rgba(91,191,160,0.22);
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;--gold-pale:rgba(201,168,76,0.08);
+  --bg:#faf8f5;--card:#ffffff;--surface:#f2f5f2;
+  --ink:#1a1a18;--sub:rgba(60,75,65,0.72);--muted:rgba(80,95,85,0.45);
+  --bull:#3d9e82;--bull-soft:rgba(61,158,130,0.14);
+  --bear:#c67a4e;--bear-soft:rgba(198,122,78,0.14);
+  --radius:14px;--shadow:0 2px 12px rgba(0,0,0,0.06);
+  --lux-ink0:#0d0b08;--lux-ink1:#181310;--lux-ink2:#241a12;
+  --lux-gold:#c9a84c;--lux-gold-hi:#f6e6a8;--lux-gold-lo:#8a6420;
+  --lux-line:rgba(201,168,76,0.30);--lux-line-soft:rgba(201,168,76,0.14);
+  --lux-sub:rgba(232,208,138,0.60);
+}
+html{background:var(--bg);-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;color:var(--ink);max-width:440px;margin:0 auto;
+  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(91,191,160,0.09) 0%,transparent 60%),var(--bg);
+  min-height:100vh;padding-bottom:40px}
+.serif{font-family:'Playfair Display',serif}
+.jade-line{width:48px;height:2px;background:linear-gradient(90deg,transparent,var(--jade),transparent);margin:14px auto}
+a{color:inherit;text-decoration:none}
+
+/* header */
+.top{display:flex;align-items:center;justify-content:center;gap:9px;padding:20px 20px 4px}
+.clasp{width:20px;height:20px;border-radius:50%;flex-shrink:0;
+  background:radial-gradient(circle at 34% 27%,rgba(255,255,255,0.92) 0%,rgba(255,255,255,0.35) 7%,transparent 18%),
+    radial-gradient(circle at 70% 68%,var(--jade-deep) 0%,transparent 38%),
+    radial-gradient(ellipse at 42% 38%,var(--jade-light) 0%,var(--jade) 22%,var(--jade) 52%,var(--jade-deep) 100%)}
+.logo{font-family:'Playfair Display',serif;font-size:14px;letter-spacing:0.42em;color:var(--jade-deep)}
+
+.hero{text-align:center;padding:14px 22px 6px}
+.badge{display:inline-flex;align-items:center;gap:6px;background:var(--jade-pale);border:1px solid var(--jade-border);
+  border-radius:20px;padding:6px 14px;font-size:10px;color:var(--jade-deep);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px}
+.hero h1{font-family:'Playfair Display',serif;font-size:27px;font-weight:700;line-height:1.28;margin-bottom:12px}
+.hero h1 em{font-style:italic;color:var(--jade-deep)}
+.hero-sub{font-size:13.5px;color:var(--sub);line-height:1.7;margin-bottom:6px}
+.hero-sub b{color:var(--ink);font-weight:600}
+
+.ai-note{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--jade-pale);
+  border:1px solid var(--jade-border);border-radius:12px;padding:11px 14px;margin:14px 20px 0;
+  font-size:11.5px;color:var(--jade-deep);letter-spacing:.02em;line-height:1.5;text-align:center}
+
+/* form */
+.form-card{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);
+  box-shadow:var(--shadow);margin:18px 20px;padding:20px 18px}
+.form-card h2{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;margin-bottom:4px}
+.form-card .cap{font-size:11.5px;color:var(--sub);margin-bottom:16px}
+label{display:block;font-size:11px;font-weight:600;color:var(--sub);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
+.fld{margin-bottom:14px}
+textarea{width:100%;border:1px solid var(--jade-border);border-radius:10px;padding:12px;font-size:14px;
+  font-family:inherit;color:var(--ink);background:#fff;min-height:80px;resize:vertical;line-height:1.5;
+  -webkit-appearance:none}
+textarea:focus{outline:none;border-color:var(--jade);box-shadow:0 0 0 3px var(--jade-pale)}
+.hint{font-size:10.5px;color:var(--muted);margin-top:-8px;margin-bottom:14px}
+.cta{display:block;width:100%;text-align:center;background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);
+  color:#3a2e0e;font-size:15px;font-weight:700;border:none;border-radius:30px;padding:15px;min-height:52px;
+  cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(201,168,76,0.28)}
+.cta:disabled{opacity:.6;cursor:default}
+.cta-note{font-size:11px;color:var(--muted);margin-top:10px;text-align:center}
+.cta-ghost{display:block;width:100%;text-align:center;background:var(--jade-pale);border:1.5px solid var(--jade-border);
+  color:var(--jade-deep);font-size:14px;font-weight:600;border-radius:30px;padding:13px;min-height:48px;
+  cursor:pointer;letter-spacing:.01em;margin-top:10px}
+.cta-ghost:disabled{opacity:.5;cursor:default}
+
+/* spinner */
+.spin{display:none;text-align:center;padding:40px 20px;color:var(--jade-deep)}
+.spin.on{display:block}
+.spin .dot{display:inline-block;width:9px;height:9px;margin:0 3px;border-radius:50%;background:var(--jade);animation:b 1.2s infinite ease-in-out}
+.spin .dot:nth-child(2){animation-delay:.15s}.spin .dot:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.spin p{font-size:12.5px;color:var(--sub);margin-top:14px}
+
+/* coin ritual */
+.ritual{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);
+  box-shadow:var(--shadow);margin:0 0 14px;padding:20px 18px}
+.ritual h3{font-family:'Playfair Display',serif;font-size:16px;margin-bottom:6px}
+.ritual .cap{font-size:11.5px;color:var(--sub);margin-bottom:18px;line-height:1.6}
+.toss-progress{display:flex;gap:8px;justify-content:center;margin-bottom:16px}
+.toss-progress .tp{width:28px;height:28px;border-radius:50%;border:2px solid var(--jade-border);
+  display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--muted);
+  transition:all .25s}
+.toss-progress .tp.done{border-color:var(--gold);background:var(--gold-pale);color:var(--gold-deep)}
+.toss-progress .tp.current{border-color:var(--jade);background:var(--jade-pale);color:var(--jade-deep)}
+
+.coins-row{display:flex;gap:14px;justify-content:center;margin-bottom:18px}
+.coin{width:56px;height:56px;border-radius:50%;background:linear-gradient(145deg,#e8c86a,#c9a84c,#a07828);
+  box-shadow:0 3px 10px rgba(201,168,76,0.38),inset 0 1px 0 rgba(255,255,255,0.22);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  cursor:default;transition:transform .1s;user-select:none;position:relative;overflow:hidden}
+.coin.flipping{animation:coinFlip 0.55s ease-out forwards}
+@keyframes coinFlip{
+  0%{transform:rotateY(0deg)}
+  50%{transform:rotateY(540deg) scale(1.1)}
+  100%{transform:rotateY(1080deg) scale(1)}
+}
+.coin .side{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:20px;backface-visibility:hidden}
+
+.toss-result{min-height:32px;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;
+  font-size:12.5px;color:var(--jade-deep);font-weight:600;letter-spacing:.03em}
+.toss-result .val-badge{background:var(--gold-pale);border:1px solid rgba(201,168,76,0.3);border-radius:8px;padding:3px 10px;font-size:11.5px;color:var(--gold-deep)}
+
+.toss-btn{display:block;width:100%;text-align:center;background:linear-gradient(135deg,var(--jade-deep),var(--jade));
+  color:#fff;font-size:14px;font-weight:600;border:none;border-radius:26px;padding:13px;min-height:46px;cursor:pointer}
+.toss-btn:disabled{opacity:.5;cursor:default}
+
+/* yao preview strip (bottom to top) */
+.hex-preview{display:flex;flex-direction:column-reverse;gap:4px;align-items:center;margin:14px 0 6px}
+.hex-line-wrap{display:flex;align-items:center;gap:8px;width:100%}
+.hex-line-wrap .ln-num{font-size:9.5px;color:var(--muted);min-width:20px;text-align:right}
+.hex-line-wrap .ln-arrow{font-size:11px;color:var(--gold);min-width:16px}
+.yao-line{display:flex;gap:5px;justify-content:center;flex:1}
+.yao-line .seg{height:6px;border-radius:3px;background:var(--jade-deep);transition:all .2s}
+.yao-line .seg.yang{width:56px}
+.yao-line .seg.yin-l{width:22px}
+.yao-line .seg.yin-r{width:22px}
+.yao-line.moving .seg{background:var(--gold)}
+
+/* divider */
+.divider{display:flex;align-items:center;gap:10px;margin:4px 0 14px;color:var(--muted);font-size:11.5px}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--jade-border)}
+
+/* result */
+#result{display:none;padding:0 20px}
+
+/* luxury share card */
+.ichingCard{position:relative;overflow:hidden;border-radius:22px;color:#fff;isolation:isolate;
+  padding:28px 22px 22px;margin:14px 0;font-family:'Inter',sans-serif;
+  background:
+    radial-gradient(120% 70% at 50% -10%,rgba(201,168,76,0.18) 0%,transparent 55%),
+    radial-gradient(90% 55% at 50% 115%,rgba(201,168,76,0.10) 0%,transparent 60%),
+    linear-gradient(165deg,var(--lux-ink2) 0%,var(--lux-ink1) 42%,var(--lux-ink0) 100%);
+  box-shadow:0 12px 40px rgba(0,0,0,0.4)}
+.ichingCard::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:
+    repeating-linear-gradient(45deg,rgba(255,255,255,0.020) 0 1px,transparent 1px 6px),
+    repeating-linear-gradient(-45deg,rgba(0,0,0,0.06) 0 1px,transparent 1px 6px);
+  mix-blend-mode:overlay}
+.ichingCard::after{content:"";position:absolute;inset:11px;z-index:1;pointer-events:none;border-radius:14px;
+  border:1px solid var(--lux-line);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,0.4),inset 0 0 40px rgba(201,168,76,0.06),inset 0 0 0 6px rgba(0,0,0,0.25)}
+.ichingCard > *{position:relative;z-index:2}
+.foil{background:linear-gradient(100deg,var(--lux-gold-lo) 0%,var(--lux-gold) 24%,var(--lux-gold-hi) 44%,#fffbe8 50%,var(--lux-gold-hi) 56%,var(--lux-gold) 76%,var(--lux-gold-lo) 100%);
+  background-size:250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--gold-light);
+  animation:foilSweep 5.5s linear infinite}
+@keyframes foilSweep{0%{background-position:180% 0}100%{background-position:-80% 0}}
+
+.card-head{text-align:center;margin-bottom:16px}
+.card-head .hex-title{font-family:'Playfair Display',serif;font-size:23px;font-weight:800;line-height:1.2;margin-bottom:4px}
+.card-head .hex-sub{font-size:11px;color:var(--lux-sub);line-height:1.6;letter-spacing:.04em}
+.tag{display:inline-block;background:rgba(201,168,76,0.08);border:1px solid var(--lux-line-soft);border-radius:20px;
+  padding:3px 10px;font-size:10px;color:var(--gold-light);margin:5px 3px 0}
+
+/* hexagram lines inside card */
+.hex-visual{display:flex;flex-direction:column-reverse;gap:5px;align-items:center;margin:14px 0}
+.hex-visual .hv-row{display:flex;align-items:center;gap:10px;width:100%;justify-content:center}
+.hex-visual .hv-num{font-size:9px;color:var(--lux-sub);min-width:16px;text-align:right}
+.hex-visual .hv-arrow{font-size:10px;color:var(--gold-light);min-width:14px}
+.hv-line{display:flex;gap:6px;justify-content:center}
+.hv-line .s{height:5px;border-radius:2px;background:rgba(232,208,138,0.72)}
+.hv-line .s.yang{width:52px}
+.hv-line .s.yin-l{width:20px}
+.hv-line .s.yin-r{width:20px}
+.hv-line.moving .s{background:var(--gold-light)}
+
+.card-insight{font-size:12px;line-height:1.65;color:rgba(255,255,255,0.82);margin:14px 0;padding:12px 14px;
+  background:rgba(0,0,0,0.22);border-left:2px solid var(--lux-gold);border-radius:0 8px 8px 0}
+.card-foot{margin-top:14px;padding-top:12px;border-top:1px solid var(--lux-line-soft);display:flex;justify-content:space-between;align-items:flex-end}
+.card-foot .brand{font-family:'Playfair Display',serif;font-size:14px;letter-spacing:.32em;color:var(--gold-light)}
+.card-foot .brand small{display:block;font-family:'Inter';font-size:7.5px;letter-spacing:.16em;color:var(--lux-sub);margin-top:4px;text-transform:uppercase}
+.card-foot .ai{font-size:7.5px;line-height:1.4;color:rgba(255,255,255,0.42);text-align:right;max-width:120px}
+
+/* reading card */
+.reading{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:20px 18px;margin:14px 0;font-size:13.5px;line-height:1.75;color:var(--ink)}
+.reading h3{font-family:'Playfair Display',serif;font-size:15px;color:var(--jade-deep);margin-bottom:10px}
+.reading p{margin-bottom:12px}
+.reading p:last-child{margin-bottom:0}
+
+/* meta tags row */
+.meta-row{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.meta-tag{background:var(--jade-pale);border:1px solid var(--jade-border);border-radius:20px;
+  padding:4px 12px;font-size:11px;color:var(--jade-deep);letter-spacing:.03em}
+.meta-tag b{font-weight:700}
+
+/* share / retry buttons */
+.share{display:flex;gap:10px;margin:14px 0 6px}
+.share button{flex:1;background:var(--jade-pale);border:1px solid var(--jade-border);color:var(--jade-deep);
+  font-size:12.5px;font-weight:600;border-radius:24px;padding:12px;min-height:46px;cursor:pointer;font-family:inherit}
+.share button:active{background:var(--jade-border)}
+#shareBtn{background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);color:#3a2e0e;border:none;box-shadow:0 4px 14px rgba(201,168,76,0.34);}
+#shareBtn:active{background:linear-gradient(135deg,#c9a84c,#b8923a,#a07828);}
+
+.disc{font-size:10.5px;color:var(--muted);line-height:1.65;text-align:center;margin:16px 6px 4px}
+footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.85}
+footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:var(--jade-deep);letter-spacing:.06em;margin-bottom:8px}
+footer a{color:var(--jade-deep)}
+.err{display:none;background:var(--bear-soft);border:1px solid rgba(198,122,78,0.3);color:#8a4a24;
+  border-radius:10px;padding:12px 14px;font-size:12.5px;margin:12px 20px;text-align:center}
+</style>
+</head>
+<body>
+
+<div class="top"><span class="clasp"></span><span class="logo">RUNAE</span></div>
+
+<div class="hero">
+  <span class="badge">◆ I Ching · Six Lines · Book of Changes</span>
+  <h1>Ask the oracle of <em>change and timing</em></h1>
+  <p class="hero-sub">An ancient Eastern divination method using hexagrams — <b>six lines</b> that reveal the hidden momentum of your situation. The coins are cast by a real algorithm.</p>
+</div>
+<div class="ai-note">🤖 The hexagram is cast by a real Six Lines engine — not invented by AI. The reading is AI-generated interpretation for self-reflection.</div>
+
+<!-- INPUT FORM -->
+<div class="form-card" id="formCard">
+  <h2>Your question</h2>
+  <p class="cap">Ask one clear question or describe your situation. The oracle speaks to the present moment.</p>
+  <div class="fld">
+    <label>Question / situation</label>
+    <textarea id="question" placeholder="e.g. Should I take this opportunity? / What is the state of this relationship? / What do I need to know about this decision?"></textarea>
+  </div>
+  <p class="hint">Be specific. The oracle reads what is, not what you want to hear.</p>
+
+  <!-- Coin Ritual -->
+  <div class="ritual">
+    <h3>Cast your hexagram</h3>
+    <p class="cap">Toss the three coins six times to build your hexagram from the ground up — or let the current moment cast it for you.</p>
+
+    <div class="toss-progress" id="tossProgress">
+      <div class="tp" id="tp1">1</div><div class="tp" id="tp2">2</div><div class="tp" id="tp3">3</div>
+      <div class="tp" id="tp4">4</div><div class="tp" id="tp5">5</div><div class="tp" id="tp6">6</div>
+    </div>
+
+    <div class="coins-row">
+      <div class="coin" id="coin0"><span class="side">☯</span></div>
+      <div class="coin" id="coin1"><span class="side">☯</span></div>
+      <div class="coin" id="coin2"><span class="side">☯</span></div>
+    </div>
+
+    <div class="toss-result" id="tossResult"><span style="color:var(--muted);font-weight:400">Press "Toss the coins" to begin</span></div>
+
+    <div class="hex-preview" id="hexPreview"></div>
+
+    <button class="toss-btn" id="tossBtn">Toss the coins (1 of 6)</button>
+  </div>
+
+  <div class="divider">or skip the ritual</div>
+
+  <button class="cta-ghost" id="timeBtn">Cast by current moment →</button>
+  <p class="cta-note">Both methods use the same real engine — different ways to seed the cast.</p>
+</div>
+
+<div class="err" id="err"></div>
+
+<div class="spin" id="spin">
+  <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+  <p>The oracle is reading the lines…</p>
+</div>
+
+<!-- RESULT -->
+<div id="result">
+
+  <!-- Luxury share card -->
+  <div class="ichingCard" id="ichingCard">
+    <div class="card-head">
+      <div class="hex-title serif" id="cardHexName"><em class="foil">—</em></div>
+      <div class="hex-sub" id="cardHexSub"></div>
+    </div>
+
+    <div class="hex-visual" id="cardHexLines"></div>
+
+    <div class="card-insight" id="cardInsight"></div>
+
+    <div class="card-foot">
+      <div class="brand">RUNAE<small>I Ching · Six Lines</small></div>
+      <div class="ai">🤖 AI-interpreted · real engine cast · for self-reflection</div>
+    </div>
+  </div>
+
+  <!-- Meta tags -->
+  <div class="meta-row" id="metaRow"></div>
+
+  <!-- Reading -->
+  <div class="reading" id="reading">
+    <h3>Oracle reading</h3>
+    <div id="readingText"></div>
+  </div>
+
+  <!-- Share / again -->
+  <div class="share">
+    <button id="shareBtn">Save &amp; share</button>
+    <button id="againBtn">Ask again</button>
+  </div>
+
+  <p class="disc">The oracle describes tendencies, not certainties — the path you walk is yours. For self-reflection and entertainment only. Not professional advice of any kind.</p>
+</div>
+
+<footer>
+  <div class="fbrand">Runae</div>
+  Ancient Eastern wisdom, decoded by AI · <a href="/index.html">Home</a> · <a href="/legal-en.html">Terms</a>
+</footer>
+
+<script>
+(function() {
+'use strict';
+
+var $ = function(s){ return document.querySelector(s); };
+
+// ── State ──
+var state = {
+  yaoArray: [],        // collected yao values [line1 … line6]
+  tossDone: false,     // all 6 tosses completed
+  method: null         // 'coins' or 'time'
+};
+
+var COIN_FACES = ['H','H','H','T','T','T']; // balanced 3 coins for display
+
+// ── Helpers ──
+function showErr(msg) {
+  var e = $('#err'); e.textContent = msg; e.style.display = 'block';
+  setTimeout(function(){ e.style.display = 'none'; }, 6000);
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, function(c) {
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+  });
+}
+
+// ── Coin toss engine ──
+// Sum of 3 coins: H=3 (heads/yang face), T=2 (tails/yin face)
+// Total 9 = 3H = old yang (moving yang), 8 = 2H1T = young yin,
+//       7 = 1H2T = young yang, 6 = 3T = old yin (moving yin)
+function tossThreeCoins() {
+  var total = 0;
+  var results = [];
+  for (var i = 0; i < 3; i++) {
+    var v = Math.random() < 0.5 ? 3 : 2; // H=3 (yang, weighted 3), T=2 (yin, weighted 2)
+    total += v;
+    results.push(v === 3 ? 'H' : 'T');
+  }
+  return { total: total, results: results };
+}
+
+function yaoLabel(v) {
+  if (v === 9) return 'Old Yang ● (moving)';
+  if (v === 6) return 'Old Yin ✕ (moving)';
+  if (v === 7) return 'Young Yang ⚊';
+  if (v === 8) return 'Young Yin ⚋';
+  return '?';
+}
+
+function yaoToLineInfo(v) {
+  return {
+    yang: (v === 9 || v === 7),
+    moving: (v === 9 || v === 6)
+  };
+}
+
+// ── Build a yao line DOM ──
+function buildYaoLine(yang, moving, forCard) {
+  var wrap = document.createElement('div');
+  wrap.className = (forCard ? 'hv-line' : 'yao-line') + (moving ? ' moving' : '');
+  if (yang) {
+    var s = document.createElement('div');
+    s.className = 'seg yang' + (forCard ? '' : '');
+    if (forCard) { s.className = 's yang'; }
+    wrap.appendChild(s);
+  } else {
+    var sl = document.createElement('div');
+    var sr = document.createElement('div');
+    if (forCard) { sl.className = 's yin-l'; sr.className = 's yin-r'; }
+    else { sl.className = 'seg yin-l'; sr.className = 'seg yin-r'; }
+    wrap.appendChild(sl);
+    wrap.appendChild(sr);
+  }
+  return wrap;
+}
+
+// ── Render progress dots ──
+function updateProgress(count) {
+  for (var i = 1; i <= 6; i++) {
+    var el = document.getElementById('tp' + i);
+    if (i < count) { el.className = 'tp done'; }
+    else if (i === count) { el.className = 'tp current'; }
+    else { el.className = 'tp'; }
+  }
+}
+
+// ── Render preview hex ──
+function renderPreview() {
+  var container = $('#hexPreview');
+  container.innerHTML = '';
+  for (var i = 0; i < 6; i++) {
+    var wrap = document.createElement('div');
+    wrap.className = 'hex-line-wrap';
+    var num = document.createElement('span');
+    num.className = 'ln-num';
+    num.textContent = i + 1;
+    var arrow = document.createElement('span');
+    arrow.className = 'ln-arrow';
+
+    if (i < state.yaoArray.length) {
+      var v = state.yaoArray[i];
+      var info = yaoToLineInfo(v);
+      arrow.textContent = info.moving ? '→' : '';
+      var line = buildYaoLine(info.yang, info.moving, false);
+      wrap.appendChild(num);
+      wrap.appendChild(line);
+      wrap.appendChild(arrow);
+    } else {
+      arrow.textContent = '';
+      var placeholder = document.createElement('div');
+      placeholder.className = 'yao-line';
+      placeholder.style.cssText = 'height:6px;border-radius:3px;background:rgba(91,191,160,0.12);flex:1;margin:0 8px';
+      wrap.appendChild(num);
+      wrap.appendChild(placeholder);
+      wrap.appendChild(arrow);
+    }
+    container.appendChild(wrap);
+  }
+}
+
+// ── Animate coins ──
+function animateCoins(results, callback) {
+  var coins = [document.getElementById('coin0'), document.getElementById('coin1'), document.getElementById('coin2')];
+  var faces = ['☰','☷','⚌']; // decorative faces while spinning
+  coins.forEach(function(c, idx) {
+    c.classList.add('flipping');
+    c.querySelector('.side').textContent = faces[idx % faces.length];
+  });
+  setTimeout(function() {
+    coins.forEach(function(c, idx) {
+      c.classList.remove('flipping');
+      c.querySelector('.side').textContent = results[idx] === 'H' ? '阳' : '阴';
+    });
+    if (callback) callback();
+  }, 580);
+}
+
+// ── Toss handler ──
+$('#tossBtn').addEventListener('click', function() {
+  if (state.tossDone) return;
+  var btn = $('#tossBtn');
+  btn.disabled = true;
+
+  var toss = tossThreeCoins();
+  var lineNum = state.yaoArray.length + 1;
+
+  animateCoins(toss.results, function() {
+    state.yaoArray.push(toss.total);
+
+    var hCount = toss.results.filter(function(r){ return r === 'H'; }).length;
+    var tCount = 3 - hCount;
+    var coinsStr = hCount + 'H ' + tCount + 'T';
+
+    var resultEl = $('#tossResult');
+    resultEl.innerHTML = 'Line ' + lineNum + ': <span class="val-badge">' +
+      coinsStr + ' · ' + escapeHtml(yaoLabel(toss.total)) + '</span>';
+
+    updateProgress(lineNum < 6 ? lineNum + 1 : 6);
+    renderPreview();
+
+    if (state.yaoArray.length < 6) {
+      btn.textContent = 'Toss the coins (' + (lineNum + 1) + ' of 6)';
+      btn.disabled = false;
+    } else {
+      // All 6 done
+      state.tossDone = true;
+      btn.textContent = 'All 6 lines cast — ask the oracle ↓';
+      btn.disabled = false;
+      btn.style.background = 'linear-gradient(135deg,#d8b65a,var(--gold),#b8923a)';
+      btn.style.color = '#3a2e0e';
+      btn.addEventListener('click', function() { submitReading('coins'); }, { once: true });
+      $('#tossResult').innerHTML = '<span style="color:var(--jade-deep)">Hexagram complete. Scroll down and ask your question.</span>';
+    }
+  });
+});
+
+// ── Time-based cast ──
+$('#timeBtn').addEventListener('click', function() { submitReading('time'); });
+
+// ── Validate & submit ──
+function submitReading(method) {
+  var q = String(($('#question').value) || '').trim();
+  if (!q) { showErr('Please enter your question or situation first.'); $('#question').focus(); return; }
+  if (method === 'coins' && state.yaoArray.length < 6) {
+    showErr('Please complete all 6 coin tosses first.'); return;
+  }
+  state.method = method;
+  doSubmit(q, method === 'coins' ? state.yaoArray : null);
+}
+
+// ── API call ──
+async function doSubmit(question, yaoArray) {
+  var go = $('#tossBtn'), timeBtn = $('#timeBtn');
+  go.disabled = true; timeBtn.disabled = true;
+  $('#formCard').style.display = 'none';
+  $('#spin').classList.add('on');
+
+  var sid = localStorage.getItem('runae_sid');
+  if (!sid) { sid = 's' + Math.random().toString(36).slice(2) + Date.now(); localStorage.setItem('runae_sid', sid); }
+  var token = localStorage.getItem('runae_token') || '';
+
+  var body = { question: question };
+  if (yaoArray) { body.yaoArray = yaoArray; }
+  else { body.useTime = true; }
+
+  try {
+    var res = await fetch('/api/iching-en', {
+      method: 'POST',
+      headers: Object.assign(
+        { 'Content-Type': 'application/json', 'x-session-id': sid },
+        token ? { 'Authorization': token } : {}
+      ),
+      body: JSON.stringify(body)
+    });
+    var data = await res.json();
+    $('#spin').classList.remove('on');
+    go.disabled = false; timeBtn.disabled = false;
+
+    if (data.upgrade) {
+      $('#formCard').style.display = 'block';
+      showErr(data.message || 'Free readings used for today — come back tomorrow.');
+      return;
+    }
+    if (data.error) {
+      $('#formCard').style.display = 'block';
+      showErr(data.error);
+      return;
+    }
+    renderResult(data);
+  } catch (e) {
+    $('#spin').classList.remove('on');
+    go.disabled = false; timeBtn.disabled = false;
+    $('#formCard').style.display = 'block';
+    showErr('The oracle is resting — please try again in a moment.');
+  }
+}
+
+// ── Render result ──
+function renderResult(data) {
+  var h = data.hexagram;
+  var reading = data.reading || '';
+
+  // Card hex name
+  var nameHtml = escapeHtml(h.originalName || 'Hexagram');
+  if (h.changedName) { nameHtml += ' <span style="color:var(--lux-sub);font-size:14px">→ ' + escapeHtml(h.changedName) + '</span>'; }
+  $('#cardHexName').innerHTML = '<em class="foil">' + nameHtml + '</em>';
+
+  var subParts = [];
+  if (h.palace) subParts.push(h.palace + ' Palace');
+  if (h.changingYaos && h.changingYaos.length > 0) {
+    subParts.push('Moving lines: ' + h.changingYaos.map(function(y){ return y + 1; }).join(', '));
+  }
+  if (h.voidBranches && h.voidBranches.length > 0) {
+    subParts.push('Void: ' + h.voidBranches.join(', '));
+  }
+  $('#cardHexSub').innerHTML = subParts.map(function(s){ return '<span class="tag">' + escapeHtml(s) + '</span>'; }).join(' ');
+
+  // Render hex lines in card (lines 1–6, displayed bottom to top)
+  renderCardLines(h);
+
+  // Card insight: first meaningful paragraph of reading
+  var firstPara = reading.trim().split(/\n\n+/)[0] || '';
+  if (firstPara.length > 200) firstPara = firstPara.slice(0, 197) + '…';
+  $('#cardInsight').textContent = firstPara;
+
+  // Meta row below card
+  var metas = [];
+  if (h.originalName) metas.push('<span class="meta-tag"><b>Hexagram:</b> ' + escapeHtml(h.originalName) + '</span>');
+  if (h.palace) metas.push('<span class="meta-tag"><b>Palace:</b> ' + escapeHtml(h.palace) + '</span>');
+  if (h.changedName) metas.push('<span class="meta-tag"><b>Derived:</b> ' + escapeHtml(h.changedName) + '</span>');
+  if (h.ganzhi) metas.push('<span class="meta-tag"><b>Ganzhi:</b> ' + escapeHtml(h.ganzhi) + '</span>');
+  if (h.voidBranches && h.voidBranches.length) metas.push('<span class="meta-tag"><b>Void branches:</b> ' + escapeHtml(h.voidBranches.join(', ')) + '</span>');
+  $('#metaRow').innerHTML = metas.join('');
+
+  // Reading text
+  var paragraphs = reading.trim().split(/\n\n+/);
+  $('#readingText').innerHTML = paragraphs.map(function(p) {
+    return '<p>' + escapeHtml(p) + '</p>';
+  }).join('');
+
+  $('#result').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderCardLines(h) {
+  var container = $('#cardHexLines');
+  container.innerHTML = '';
+  // We try to reconstruct line types from changingYaos + sixRelatives
+  // We know yang/yin from the original hexagram structure
+  // Attempt to infer: we use yaos array if present, otherwise show placeholders with moving marks
+  for (var i = 0; i < 6; i++) {
+    var row = document.createElement('div');
+    row.className = 'hv-row';
+
+    var num = document.createElement('span');
+    num.className = 'hv-num';
+    num.textContent = i + 1;
+
+    // Determine yang/yin: if engine gave yaos, use it; else try from state
+    var yang = true; // default
+    var moving = false;
+
+    if (h.yaos && h.yaos[i]) {
+      yang = h.yaos[i].type !== 'yin';
+      moving = h.yaos[i].moving === true;
+    } else if (state.method === 'coins' && state.yaoArray[i] !== undefined) {
+      var info = yaoToLineInfo(state.yaoArray[i]);
+      yang = info.yang;
+      moving = info.moving;
+    } else if (h.changingYaos) {
+      moving = h.changingYaos.indexOf(i) !== -1;
+    }
+
+    var line = buildYaoLine(yang, moving, true);
+    var arrow = document.createElement('span');
+    arrow.className = 'hv-arrow';
+    arrow.textContent = moving ? '→' : '';
+
+    row.appendChild(num);
+    row.appendChild(line);
+    row.appendChild(arrow);
+    container.appendChild(row);
+  }
+}
+
+// ── Again button ──
+$('#againBtn').addEventListener('click', function() {
+  // Reset state
+  state.yaoArray = [];
+  state.tossDone = false;
+  state.method = null;
+
+  // Reset UI
+  $('#result').style.display = 'none';
+  $('#formCard').style.display = 'block';
+  $('#question').value = '';
+  $('#hexPreview').innerHTML = '';
+  $('#tossResult').innerHTML = '<span style="color:var(--muted);font-weight:400">Press "Toss the coins" to begin</span>';
+  $('#tossBtn').textContent = 'Toss the coins (1 of 6)';
+  $('#tossBtn').style.background = '';
+  $('#tossBtn').style.color = '';
+  $('#tossBtn').disabled = false;
+  updateProgress(1);
+  [document.getElementById('coin0'), document.getElementById('coin1'), document.getElementById('coin2')].forEach(function(c) {
+    c.querySelector('.side').textContent = '☯';
+  });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ── Share card (html2canvas → save / share) ──
+$('#shareBtn').addEventListener('click', async function() {
+  var btn = $('#shareBtn');
+  var orig = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  var hexName = ($('#cardHexName').textContent || 'Hexagram').replace(/[→]/g, '→').trim();
+  var shareText = 'I cast an I Ching hexagram: ' + hexName + ' — an Eastern oracle from Runae. Try yours:';
+  var url = location.origin + '/iching-en';
+
+  try {
+    var node = $('#ichingCard');
+    var blob = await document.fonts.ready.then(function() {
+      return html2canvas(node, {
+        backgroundColor: null,
+        scale: Math.min(3, (window.devicePixelRatio || 1) * 2),
+        useCORS: true,
+        logging: false
+      });
+    }).then(function(canvas) {
+      return new Promise(function(res) {
+        canvas.toBlob(function(b) { res(b); }, 'image/png');
+      });
+    });
+
+    btn.disabled = false;
+    btn.textContent = orig;
+
+    var file = new File([blob], 'runae-iching.png', { type: 'image/png' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: 'My I Ching Reading · Runae', text: shareText });
+    } else {
+      var u = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = u; a.download = 'runae-iching.png';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(u); }, 4000);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        try { await navigator.clipboard.writeText(shareText + ' ' + url); } catch (e) {}
+      }
+      showErr('Card saved — share it anywhere.');
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = orig;
+    try {
+      if (navigator.share) { await navigator.share({ title: 'My I Ching Reading · Runae', text: shareText, url: url }); return; }
+    } catch (_) {}
+    showErr('Screenshot the card above to share.');
+  }
+});
+
+// Init
+updateProgress(1);
+renderPreview();
+
+})();
+</script>
+</body>
+</html>
