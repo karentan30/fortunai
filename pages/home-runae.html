@@ -2,369 +2,655 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0d0904">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<title>Runae · 一个问题，多体系合断｜汇聚全球占卜智慧</title>
-<meta name="description" content="Runae 汇聚全球占卜智慧于一处 — 八字·紫微·奇门·六壬·塔罗·卢恩·吠陀·西占，一个问题多体系交叉合断。免费排盘，先测再说。仅供娱乐参考。">
-<meta property="og:title" content="Runae · 一个问题，多体系合断">
-<meta property="og:description" content="汇聚全球占卜智慧于一处，AI 用多体系为你合断。免费排盘。">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1a1208">
+<title>善缘 · Runae｜八字 · 面相 · 西占 东西方命理合断平台</title>
+<meta name="description" content="善缘 Runae — 专业命理引擎精算，20+ 东西方体系，一次看透。八字排盘免费，无需绑卡。仅供参考娱乐。">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Noto+Serif+SC:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
+
 :root{
-  --bg:#0d0904;--bg-2:#1c1408;--bg-3:#2e2010;
-  --card:rgba(217,163,76,.06);--card-line:rgba(217,163,76,.22);
-  --ink:#f0e2c8;--ink-mid:#c2a878;--ink-dim:#8f7a52;
-  --gold:#d9a34c;--gold-light:#f5e2a8;--gold-deep:#8a6420;
-  --jade:#5bbfa0;
-  --radius:16px;--radius-sm:12px;--radius-btn:50px;
-  --ease:cubic-bezier(.22,1,.36,1);
+  --jade:#5bbfa0;--jade-deep:#3a9678;--jade-light:#8dd9bf;
+  --jade-pale:rgba(91,191,160,0.10);--jade-border:rgba(91,191,160,0.22);
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
+  --gold-pale:rgba(201,168,76,0.08);--gold-glow:rgba(201,168,76,0.28);
+  --gold-border:rgba(201,168,76,0.30);
+  --espresso:#1a1208;--espresso-2:#221a0a;--espresso-card:#2a1f0e;
+  --cream:#faf8f5;--card:#fff;--gray-section:#f5f3f0;
+  --ink:#1a1a18;--sub:rgba(60,75,65,0.72);--muted:rgba(80,95,85,0.45);
+  --ink-dark:#e8e0d0;--sub-dark:rgba(220,210,190,0.65);--muted-dark:rgba(180,160,120,0.45);
+  --radius:14px;--radius-lg:20px;--shadow:0 2px 16px rgba(0,0,0,0.07);
 }
-html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink);-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
-body{max-width:440px;margin:0 auto;min-height:100vh;overflow-x:hidden;position:relative}
-.starfield{position:fixed;inset:0;max-width:440px;margin:0 auto;pointer-events:none;z-index:0;
-  background-image:radial-gradient(1.4px 1.4px at 18% 8%,rgba(255,207,138,.5),transparent),
-   radial-gradient(1.1px 1.1px at 80% 6%,rgba(255,233,176,.45),transparent),
-   radial-gradient(1.2px 1.2px at 62% 14%,rgba(255,207,138,.4),transparent),
-   radial-gradient(1px 1px at 33% 20%,rgba(245,226,168,.35),transparent),
-   radial-gradient(1.3px 1.3px at 90% 24%,rgba(255,207,138,.35),transparent);
-  opacity:.55}
-.wrap{position:relative;z-index:1;padding:0 18px 60px}
-.i{font-family:'Cormorant Garamond',serif;font-style:italic}
 
-/* ── hero ── */
-.hero{position:relative;padding:26px 0 8px;text-align:center;
-  background:radial-gradient(120% 60% at 50% -6%,var(--bg-3),var(--bg-2) 48%,var(--bg) 82%);
-  margin:0 -18px;padding-left:18px;padding-right:18px}
-.brand{font-size:12px;letter-spacing:.42em;color:var(--gold);margin-bottom:14px}
-.brand b{font-weight:600}
-.hero-portrait{width:100%;max-width:300px;margin:0 auto 20px;border-radius:var(--radius);overflow:hidden;
-  border:1.5px solid var(--card-line);box-shadow:0 10px 40px rgba(0,0,0,.5),0 0 60px rgba(217,163,76,.08);position:relative;aspect-ratio:3/4;background:#120c05}
-.hero-portrait img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .6s var(--ease)}
-.hero-portrait img.loaded{opacity:1}
-.hero-portrait .ph-skel{position:absolute;inset:0;background:linear-gradient(110deg,#1a1206 30%,#241809 50%,#1a1206 70%);background-size:200% 100%;animation:shim 1.4s infinite}
-.hero-portrait .ph-cap{position:absolute;left:0;right:0;bottom:0;padding:22px 16px 12px;font-size:13px;color:var(--gold-light);letter-spacing:.1em;text-align:left;
-  background:linear-gradient(to top,rgba(8,5,2,.92),transparent)}
-@keyframes shim{0%{background-position:200% 0}100%{background-position:-200% 0}}
-.hero-title{font-size:26px;font-weight:700;line-height:1.35;letter-spacing:.04em;
-  background:linear-gradient(135deg,var(--gold-light),var(--gold),var(--gold-light));
-  -webkit-background-clip:text;background-clip:text;color:transparent}
-.hero-sub{font-size:14px;color:var(--ink-mid);margin-top:8px;letter-spacing:.06em}
-.hero-en{font-size:13px;color:var(--ink-dim);margin-top:4px;letter-spacing:.14em}
+body{
+  font-family:'Inter',sans-serif;
+  color:var(--ink);
+  background:var(--cream);
+  overflow-x:hidden;
+  padding-bottom:calc(80px + env(safe-area-inset-bottom,0px));
+}
+.serif{font-family:'Playfair Display',serif}
+.zh{font-family:'Noto Serif SC',serif}
+a{color:inherit;text-decoration:none}
 
-/* ── section ── */
-.sec{padding:34px 0 6px}
-.sec-h{text-align:center;margin-bottom:20px}
-.sec-t{font-size:19px;font-weight:600;letter-spacing:.1em;color:var(--ink)}
-.sec-s{font-size:12px;color:var(--ink-dim);margin-top:5px;letter-spacing:.08em}
-.gold-line{width:52px;height:1.5px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:12px auto 0}
+.inner{max-width:440px;margin:0 auto;padding:0 22px}
+.gold-rule{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);width:100%}
 
-/* ── ask grid ── */
-.ask-lead{text-align:center;font-size:12px;color:var(--ink-dim);margin-bottom:16px;letter-spacing:.06em}
-.ask-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px}
-.ask{display:flex;align-items:center;gap:11px;padding:16px 14px;background:var(--card);border:1.5px solid var(--card-line);border-radius:var(--radius-sm);color:var(--ink);text-decoration:none;transition:all .18s var(--ease);position:relative;overflow:hidden}
-.ask:active{transform:scale(.98)}
-.ask:hover{border-color:rgba(217,163,76,.5);background:rgba(217,163,76,.1)}
-.ask .em{font-size:22px;flex-shrink:0}
-.ask .tx b{display:block;font-size:14px;font-weight:500;letter-spacing:.04em}
-.ask .tx span{display:block;font-size:10px;color:var(--ink-dim);margin-top:2px;letter-spacing:.04em}
-.ask.wide{grid-column:1 / -1}
+.sec-cap{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--jade-deep);font-weight:600;margin-bottom:10px;text-align:center}
+.sec-title{font-family:'Noto Serif SC',serif;font-size:clamp(22px,6vw,28px);font-weight:700;line-height:1.35;text-align:center;margin-bottom:8px}
+.sec-sub{font-size:13px;line-height:1.7;color:var(--sub);text-align:center;max-width:340px;margin:0 auto 32px}
 
-/* ── flagship ── */
-.flagship{margin-top:12px;display:block;text-decoration:none;color:var(--ink);
-  background:linear-gradient(135deg,rgba(138,100,32,.28),rgba(217,163,76,.12));
-  border:1.5px solid rgba(217,163,76,.5);border-radius:var(--radius);padding:20px 18px;
-  box-shadow:0 6px 30px rgba(217,163,76,.14);position:relative;overflow:hidden;transition:all .18s var(--ease)}
-.flagship:active{transform:scale(.99)}
-.flag-badge{position:absolute;top:0;right:0;background:linear-gradient(135deg,var(--gold-deep),var(--gold));color:#1c1408;font-size:9px;font-weight:600;letter-spacing:.12em;padding:5px 14px;border-radius:0 var(--radius) 0 12px}
-.flag-t{font-size:17px;font-weight:600;letter-spacing:.06em;display:flex;align-items:center;gap:8px}
-.flag-d{font-size:11px;color:var(--ink-mid);margin-top:8px;line-height:1.7;letter-spacing:.03em}
-.flag-cta{display:inline-block;margin-top:14px;font-size:12px;color:var(--gold-light);letter-spacing:.1em}
+/* ═══════════════════════════════════════════════════════════
+   §1  HERO
+══════════════════════════════════════════════════════════════ */
+.hero{
+  position:relative;
+  background:var(--espresso);
+  min-height:100svh;
+  display:flex;flex-direction:column;justify-content:center;
+  padding:60px 22px 90px;
+  overflow:hidden;
+}
 
-/* ── primary CTA ── */
-.cta-wrap{text-align:center;margin:26px 0 6px}
-.cta-primary{display:inline-flex;align-items:center;gap:8px;padding:16px 40px;border-radius:var(--radius-btn);
-  background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light));color:#1c1408;
-  font-family:'Noto Serif SC',serif;font-size:15px;font-weight:600;letter-spacing:.1em;text-decoration:none;
-  box-shadow:0 8px 30px rgba(217,163,76,.35);transition:all .18s var(--ease)}
-.cta-primary:active{transform:scale(.97)}
-.cta-note{font-size:11px;color:var(--ink-dim);margin-top:10px;letter-spacing:.06em}
+.stars{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+.star{
+  position:absolute;border-radius:50%;background:#fff;
+  animation:twinkle var(--d,3s) ease-in-out infinite var(--delay,0s);
+}
+@keyframes twinkle{
+  0%,100%{opacity:var(--lo,.1);transform:scale(1)}
+  50%{opacity:var(--hi,.7);transform:scale(1.4)}
+}
 
-/* ── world map ── */
-.map-card{border-radius:var(--radius);overflow:hidden;border:1.5px solid var(--card-line);background:#0a0713;position:relative;aspect-ratio:600/390}
-.map-card img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .6s var(--ease)}
-.map-card img.loaded{opacity:1}
-.map-card .ph-skel{position:absolute;inset:0;background:linear-gradient(110deg,#0a0713 30%,#141026 50%,#0a0713 70%);background-size:200% 100%;animation:shim 1.4s infinite}
-.map-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
-.chip{font-size:11px;color:var(--ink-mid);border:1px solid var(--card-line);border-radius:var(--radius-btn);padding:6px 14px;letter-spacing:.06em;background:var(--card)}
+.hero::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 70% 50% at 20% 10%,rgba(91,191,160,0.06) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 40% at 85% 80%,rgba(201,168,76,0.08) 0%,transparent 55%);
+}
 
-/* ── systems list ── */
-.sys-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.sys{display:flex;flex-direction:column;gap:4px;padding:15px 14px;background:var(--card);border:1px solid var(--card-line);border-radius:var(--radius-sm);text-decoration:none;color:var(--ink);transition:all .18s var(--ease)}
-.sys:active{transform:scale(.98)}
-.sys:hover{border-color:rgba(217,163,76,.45)}
-.sys .st{font-size:14px;font-weight:500;letter-spacing:.05em;display:flex;align-items:center;gap:7px}
-.sys .sd{font-size:10px;color:var(--ink-dim);letter-spacing:.03em;line-height:1.5}
-.sys .region{font-size:9px;color:var(--gold);letter-spacing:.1em;text-transform:uppercase}
+.jade-disc-deco{
+  position:absolute;right:-20px;top:50%;transform:translateY(-50%);
+  width:200px;height:200px;
+  border-radius:50%;
+  object-fit:contain;
+  opacity:0.13;
+  pointer-events:none;
+}
 
-/* ── why accurate ── */
-.why-card{border-radius:var(--radius);overflow:hidden;border:1.5px solid var(--card-line);background:#0a0713;position:relative;aspect-ratio:1/1;max-width:340px;margin:0 auto}
-.why-card img{width:100%;height:100%;object-fit:cover;display:block;opacity:0;transition:opacity .6s var(--ease)}
-.why-card img.loaded{opacity:1}
-.why-card .ph-skel{position:absolute;inset:0;background:linear-gradient(110deg,#0a0713 30%,#141026 50%,#0a0713 70%);background-size:200% 100%;animation:shim 1.4s infinite}
+.hero-inner{position:relative;z-index:1;max-width:440px;margin:0 auto;width:100%}
 
-/* ── blessing teaser ── */
-.bless{margin-top:8px;display:block;text-decoration:none;color:var(--ink);background:var(--card);border:1.5px solid var(--card-line);border-radius:var(--radius);overflow:hidden;transition:all .18s var(--ease)}
-.bless:active{transform:scale(.99)}
-.bless-img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;opacity:0;transition:opacity .6s var(--ease);background:#0a0713}
-.bless-img.loaded{opacity:1}
-.bless-body{padding:16px 16px 18px}
-.bless-t{font-size:15px;font-weight:600;letter-spacing:.05em}
-.bless-d{font-size:11px;color:var(--ink-mid);margin-top:6px;line-height:1.7}
-.bless-cta{display:inline-block;margin-top:12px;font-size:12px;color:var(--gold-light);letter-spacing:.08em}
+.hero-logo{
+  font-family:'Noto Serif SC',serif;
+  font-size:14px;letter-spacing:0.3em;
+  color:var(--jade);
+  margin-bottom:44px;
+}
 
-/* ── final CTA + footer ── */
-.final{text-align:center;padding:40px 0 8px}
-.final-t{font-size:20px;font-weight:600;letter-spacing:.06em;color:var(--gold-light)}
-.final-s{font-size:12px;color:var(--ink-dim);margin:8px 0 20px;letter-spacing:.06em}
-.foot-nav{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin:30px 0 16px}
-.foot-nav a{font-size:11px;color:var(--ink-mid);text-decoration:none;letter-spacing:.06em}
-.disclaimer{text-align:center;font-size:10px;color:var(--ink-dim);line-height:1.7;padding:0 10px}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:7px;
+  background:rgba(201,168,76,0.10);
+  border:1px solid var(--gold-border);
+  border-radius:30px;padding:6px 16px;
+  font-size:10px;letter-spacing:.16em;
+  font-family:'Noto Serif SC',serif;
+  color:var(--gold-light);margin-bottom:20px;
+}
 
-/* reveal on scroll */
-.rv{opacity:0;transform:translateY(14px);transition:opacity .6s var(--ease),transform .6s var(--ease)}
-.rv.in{opacity:1;transform:none}
-@media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none;transition:none}}
+.hero h1{
+  font-family:'Noto Serif SC',serif;
+  font-size:clamp(28px,8vw,38px);
+  line-height:1.35;
+  margin-bottom:20px;
+  color:#fff;
+}
+.hero h1 em{
+  font-style:italic;
+  font-family:'Playfair Display',serif;
+  background:linear-gradient(135deg,#e8d08a 0%,#c9a84c 50%,#b8923a 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  display:block;font-size:0.88em;
+}
+
+.hero-sub{
+  font-size:13.5px;line-height:1.85;
+  color:var(--sub-dark);
+  margin-bottom:32px;
+  max-width:360px;
+  font-family:'Noto Serif SC',serif;
+}
+
+.cta-primary{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#d8b65a,#c9a84c,#b8923a);
+  color:#1a0e00;
+  font-size:16px;font-weight:700;
+  font-family:'Noto Serif SC',serif;
+  padding:17px 28px;
+  border-radius:50px;
+  text-align:center;
+  box-shadow:0 8px 32px rgba(201,168,76,0.38);
+  transition:transform .2s,box-shadow .2s;
+  min-height:54px;
+  letter-spacing:.04em;
+}
+.cta-primary small{font-size:11px;font-weight:400;opacity:.75;letter-spacing:.02em;margin-top:3px;font-family:'Inter',sans-serif}
+.cta-primary:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(201,168,76,0.48)}
+.cta-primary:active{transform:translateY(0)}
+
+.hero-trust{
+  margin-top:16px;font-size:11px;letter-spacing:.05em;
+  color:var(--muted-dark);text-align:center;
+  font-family:'Noto Serif SC',serif;
+}
+
+.hero-bottom-rule{
+  position:absolute;bottom:0;left:0;right:0;
+  height:1px;
+  background:linear-gradient(90deg,transparent 0%,var(--gold) 50%,transparent 100%);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §2  七大运势入口
+══════════════════════════════════════════════════════════════ */
+.fortune-gates{background:var(--cream);padding:72px 0 64px}
+
+.fortune-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:10px;
+  max-width:440px;margin:0 auto;padding:0 22px;
+}
+.fortune-card{
+  background:var(--card);
+  border:1px solid var(--jade-border);
+  border-radius:var(--radius);
+  padding:16px 14px;
+  box-shadow:var(--shadow);
+  transition:transform .2s,border-color .2s,box-shadow .2s;
+  display:block;
+  cursor:pointer;
+}
+.fortune-card:hover{transform:translateY(-2px);border-color:var(--jade);box-shadow:0 6px 20px rgba(91,191,160,0.15)}
+.fortune-icon{font-size:22px;margin-bottom:8px;display:block}
+.fortune-name{font-family:'Noto Serif SC',serif;font-size:14px;font-weight:600;color:var(--ink);margin-bottom:4px;letter-spacing:.03em}
+.fortune-desc{font-size:10.5px;color:var(--sub);line-height:1.6;font-family:'Noto Serif SC',serif}
+
+.fortune-travel{
+  grid-column:1/-1;
+  display:grid;grid-template-columns:auto 1fr;align-items:center;gap:14px;
+  padding:16px 18px;
+}
+
+.fortune-all{
+  grid-column:1/-1;
+  background:linear-gradient(135deg,#d8b65a,#c9a84c,#b8923a);
+  border:none;
+  border-radius:var(--radius-lg);
+  padding:20px 22px;
+  display:flex;align-items:center;justify-content:space-between;
+  box-shadow:0 8px 32px rgba(201,168,76,0.35);
+  transition:transform .2s,box-shadow .2s;
+  margin-top:4px;
+}
+.fortune-all:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(201,168,76,0.45)}
+.fortune-all-label{color:#1a0e00}
+.fortune-all-title{font-family:'Noto Serif SC',serif;font-size:16px;font-weight:700;letter-spacing:.04em;margin-bottom:3px}
+.fortune-all-sub{font-size:11px;opacity:.75;font-family:'Noto Serif SC',serif}
+.fortune-all-arrow{font-size:22px;color:#1a0e00;opacity:.8;font-weight:700;flex-shrink:0}
+
+/* ═══════════════════════════════════════════════════════════
+   §3  WORLD MAP
+══════════════════════════════════════════════════════════════ */
+.worldmap{background:var(--espresso);padding:72px 0}
+.worldmap-inner{max-width:440px;margin:0 auto;padding:0 22px}
+.worldmap .sec-cap{color:var(--jade)}
+.worldmap .sec-title{color:#fff;margin-bottom:8px}
+.worldmap .sec-sub{color:var(--sub-dark);margin-bottom:28px}
+.worldmap-img{
+  width:100%;height:auto;
+  border-radius:var(--radius-lg);
+  border:1px solid rgba(201,168,76,0.20);
+  display:block;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §4  占卜体系全览
+══════════════════════════════════════════════════════════════ */
+.systems-overview{background:var(--gray-section);padding:72px 0 64px}
+.systems-overview-inner{max-width:440px;margin:0 auto}
+
+.ticker-wrap{
+  overflow:hidden;position:relative;padding:16px 0;
+  background:linear-gradient(180deg,rgba(201,168,76,0.04),rgba(201,168,76,0.08),rgba(201,168,76,0.04));
+  border-top:1px solid var(--gold-border);border-bottom:1px solid var(--gold-border);
+  margin-bottom:28px;
+}
+.ticker-wrap::before,.ticker-wrap::after{
+  content:'';position:absolute;top:0;bottom:0;width:50px;z-index:2;pointer-events:none;
+}
+.ticker-wrap::before{left:0;background:linear-gradient(90deg,var(--gray-section),transparent)}
+.ticker-wrap::after{right:0;background:linear-gradient(-90deg,var(--gray-section),transparent)}
+.ticker-track{display:flex;gap:0;width:max-content;animation:ticker 28s linear infinite}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.ticker-item{
+  font-family:'Noto Serif SC',serif;font-size:15px;font-weight:400;
+  color:var(--gold-deep);white-space:nowrap;padding:0 18px;letter-spacing:.04em;
+}
+.ticker-item .dot{color:var(--gold);opacity:.5}
+
+.systems-img{
+  width:100%;height:auto;
+  border-radius:var(--radius-lg);
+  display:block;
+  padding:0 22px;
+  box-sizing:border-box;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §5  为什么很准
+══════════════════════════════════════════════════════════════ */
+.why-accurate{background:var(--espresso);padding:72px 0}
+.why-inner{max-width:440px;margin:0 auto;padding:0 22px}
+.why-accurate .sec-cap{color:var(--jade)}
+.why-accurate .sec-title{color:#fff;margin-bottom:22px}
+
+.why-img{
+  width:100%;height:auto;
+  border-radius:var(--radius-lg);
+  border:1px solid rgba(201,168,76,0.20);
+  display:block;
+  margin-bottom:28px;
+}
+
+.trust-list{display:flex;flex-direction:column;gap:14px;margin-bottom:40px}
+.trust-item{
+  display:flex;align-items:flex-start;gap:14px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(201,168,76,0.15);
+  border-radius:var(--radius);
+  padding:16px 15px;
+}
+.trust-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.trust-title{font-family:'Noto Serif SC',serif;font-size:14px;font-weight:600;color:var(--ink-dark);margin-bottom:5px;letter-spacing:.02em}
+.trust-desc{font-size:12px;color:var(--sub-dark);line-height:1.7;font-family:'Noto Serif SC',serif}
+
+.reviews-section{margin-top:40px}
+.reviews-title{font-family:'Noto Serif SC',serif;font-size:15px;font-weight:600;color:var(--gold-light);text-align:center;margin-bottom:6px;letter-spacing:.04em}
+.reviews-note{font-size:11px;color:var(--muted-dark);text-align:center;margin-bottom:18px;font-family:'Noto Serif SC',serif}
+.review-placeholder{
+  border:1.5px dashed rgba(201,168,76,0.25);
+  border-radius:var(--radius);
+  padding:20px 18px;
+  text-align:center;
+  font-size:11px;
+  color:var(--muted-dark);
+  margin-bottom:10px;
+  font-family:'Noto Serif SC',serif;
+  letter-spacing:.04em;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   §6  Final CTA
+══════════════════════════════════════════════════════════════ */
+.final-cta{background:var(--espresso-card);padding:72px 22px}
+.final-cta-inner{max-width:440px;margin:0 auto;text-align:center}
+
+/* ═══════════════════════════════════════════════════════════
+   AI Banner + Footer
+══════════════════════════════════════════════════════════════ */
+.ai-banner{
+  background:var(--jade-pale);
+  border-top:1px solid var(--jade-border);border-bottom:1px solid var(--jade-border);
+  padding:14px 22px;font-size:11px;color:var(--jade-deep);
+  text-align:center;line-height:1.7;font-family:'Noto Serif SC',serif;
+}
+
+footer{
+  background:var(--espresso);
+  padding:32px 22px calc(32px + env(safe-area-inset-bottom,0px));
+  text-align:center;
+}
+.footer-logo{font-family:'Noto Serif SC',serif;font-size:15px;letter-spacing:.12em;color:var(--jade);margin-bottom:16px}
+.footer-nav{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:14px}
+.footer-nav a{font-size:11px;color:var(--sub-dark);letter-spacing:.04em;font-family:'Noto Serif SC',serif}
+.footer-nav a:hover{color:var(--jade)}
+.footer-copy{font-size:10.5px;color:var(--muted-dark);line-height:1.8;font-family:'Noto Serif SC',serif}
+.footer-disclaimer{
+  margin-top:12px;padding:12px 16px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.06);border-radius:8px;
+  font-size:10px;color:var(--muted-dark);line-height:1.7;font-family:'Noto Serif SC',serif;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Sticky CTA
+══════════════════════════════════════════════════════════════ */
+#sticky-cta{
+  position:fixed;bottom:0;left:0;right:0;
+  background:linear-gradient(135deg,#d8b65a,#c9a84c,#b8923a);
+  padding:12px 22px calc(12px + env(safe-area-inset-bottom,0px));
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  box-shadow:0 -4px 24px rgba(201,168,76,0.30);z-index:200;
+  transform:translateY(110%);transition:transform .38s cubic-bezier(.22,1,.36,1);
+}
+#sticky-cta.show{transform:translateY(0)}
+.sticky-label{font-size:13px;font-weight:600;color:#1a0e00;line-height:1.3;font-family:'Noto Serif SC',serif}
+.sticky-label small{display:block;font-size:10px;font-weight:400;opacity:.7}
+.sticky-btn{
+  background:#1a0e00;color:var(--gold-light);
+  font-size:13.5px;font-weight:700;font-family:'Noto Serif SC',serif;
+  padding:11px 20px;border-radius:30px;
+  white-space:nowrap;min-height:44px;display:flex;align-items:center;
+  flex-shrink:0;letter-spacing:.04em;
+}
+
+.fade-up{opacity:0;transform:translateY(28px);transition:opacity .6s .1s,transform .6s .1s}
+.fade-up.visible{opacity:1;transform:translateY(0)}
 </style>
 </head>
 <body>
-<div class="starfield"></div>
-<div class="wrap">
 
-  <!-- ══ HERO ══ -->
-  <header class="hero">
-    <div class="brand"><b>RUNAE</b> &nbsp;·&nbsp; 汇聚全球占卜智慧</div>
-    <div class="hero-portrait">
-      <div class="ph-skel"></div>
-      <img src="/assets/images/runae/master.png" alt="命理宗师" onload="this.classList.add('loaded')" loading="eager">
-      <div class="ph-cap">命理宗师 · 为你解读</div>
+<!-- ═══════════════════════════════════════════════════════════
+     §1 HERO
+════════════════════════════════════════════════════════════════ -->
+<header class="hero">
+  <div class="stars" aria-hidden="true">
+    <div class="star" style="width:2px;height:2px;top:8%;left:12%;--d:4.2s;--delay:.3s;--lo:.08;--hi:.8"></div>
+    <div class="star" style="width:1px;height:1px;top:15%;left:72%;--d:3.1s;--delay:1.1s;--lo:.05;--hi:.6"></div>
+    <div class="star" style="width:2px;height:2px;top:22%;left:35%;--d:5s;--delay:.6s;--lo:.1;--hi:.7"></div>
+    <div class="star" style="width:1px;height:1px;top:31%;left:88%;--d:3.7s;--delay:2s;--lo:.06;--hi:.55"></div>
+    <div class="star" style="width:2px;height:2px;top:40%;left:18%;--d:4.8s;--delay:.9s;--lo:.08;--hi:.75"></div>
+    <div class="star" style="width:1px;height:1px;top:48%;left:55%;--d:3.4s;--delay:.1s;--lo:.04;--hi:.5"></div>
+    <div class="star" style="width:2px;height:2px;top:55%;left:80%;--d:4.1s;--delay:1.5s;--lo:.07;--hi:.68"></div>
+    <div class="star" style="width:1px;height:1px;top:62%;left:27%;--d:5.2s;--delay:.4s;--lo:.05;--hi:.6"></div>
+    <div class="star" style="width:2px;height:2px;top:70%;left:63%;--d:3.9s;--delay:1.8s;--lo:.09;--hi:.72"></div>
+    <div class="star" style="width:1px;height:1px;top:78%;left:42%;--d:4.5s;--delay:.7s;--lo:.04;--hi:.52"></div>
+    <div class="star" style="width:2px;height:2px;top:85%;left:90%;--d:3.6s;--delay:2.3s;--lo:.07;--hi:.65"></div>
+    <div class="star" style="width:1px;height:1px;top:92%;left:8%;--d:4.9s;--delay:1.2s;--lo:.05;--hi:.58"></div>
+    <div class="star" style="width:2px;height:2px;top:5%;left:52%;--d:3.8s;--delay:.5s;--lo:.08;--hi:.7"></div>
+    <div class="star" style="width:1px;height:1px;top:25%;left:5%;--d:4.6s;--delay:1.9s;--lo:.06;--hi:.62"></div>
+    <div class="star" style="width:1px;height:1px;top:38%;left:95%;--d:3.3s;--delay:.2s;--lo:.04;--hi:.48"></div>
+    <div class="star" style="width:2px;height:2px;top:60%;left:3%;--d:5.1s;--delay:1.4s;--lo:.09;--hi:.74"></div>
+    <div class="star" style="width:1px;height:1px;top:75%;left:75%;--d:4.3s;--delay:.8s;--lo:.05;--hi:.56"></div>
+    <div class="star" style="width:2px;height:2px;top:18%;left:48%;--d:3.5s;--delay:2.1s;--lo:.07;--hi:.66"></div>
+    <div class="star" style="width:1px;height:1px;top:44%;left:66%;--d:4.7s;--delay:0s;--lo:.06;--hi:.6"></div>
+    <div class="star" style="width:2px;height:2px;top:88%;left:33%;--d:4.0s;--delay:1.6s;--lo:.08;--hi:.7"></div>
+  </div>
+
+  <img class="jade-disc-deco" src="/samples/caijing/jade-disc.png" alt="" aria-hidden="true">
+
+  <div class="hero-inner">
+    <div class="hero-logo">善缘 · Runae</div>
+    <div class="hero-eyebrow">
+      <span>✦</span>
+      <span>东西方命理合断平台</span>
     </div>
-    <h1 class="hero-title">一个问题，多体系合断</h1>
-    <p class="hero-sub">选一个方向，AI 用多体系为你合断</p>
-    <p class="hero-en i">One question · Many systems · One verdict</p>
-  </header>
-
-  <!-- ══ 你想问什么 ══ -->
-  <section class="sec">
-    <div class="sec-h">
-      <div class="sec-t">你想问什么？</div>
-      <div class="sec-s i">Choose a direction · 免费开测</div>
-      <div class="gold-line"></div>
-    </div>
-
-    <div class="ask-grid">
-      <a class="ask" href="/pages/bazi.html?topic=love">
-        <span class="em">💞</span><span class="tx"><b>姻缘婚恋</b><span>正缘·桃花·合婚</span></span>
-      </a>
-      <a class="ask" href="/pages/bazi.html?topic=career">
-        <span class="em">🏛️</span><span class="tx"><b>事业前程</b><span>职业·发展·抉择</span></span>
-      </a>
-      <a class="ask" href="/pages/bazi.html?topic=wealth">
-        <span class="em">💰</span><span class="tx"><b>财运机遇</b><span>正财·偏财·时机</span></span>
-      </a>
-      <a class="ask" href="/pages/bazi.html?topic=health">
-        <span class="em">🌿</span><span class="tx"><b>健康养生</b><span>体质·调养·平安</span></span>
-      </a>
-      <a class="ask" href="/pages/bazi.html?topic=study">
-        <span class="em">🎓</span><span class="tx"><b>学业考运</b><span>升学·考试·文昌</span></span>
-      </a>
-      <a class="ask" href="/pages/bazi.html?topic=children">
-        <span class="em">👶</span><span class="tx"><b>子女缘分</b><span>子嗣·亲子·教养</span></span>
-      </a>
-      <a class="ask wide" href="/pages/bazi.html?topic=relocation">
-        <span class="em">🧭</span><span class="tx"><b>去留 · 贵人</b><span>回国或留外·何处得贵人相助</span></span>
-      </a>
-    </div>
-
-    <!-- flagship -->
-    <a class="flagship" href="/pages/pricing.html">
-      <div class="flag-badge">旗舰</div>
-      <div class="flag-t">✦ 全套综合评价</div>
-      <div class="flag-d">上传生辰 · 出生地 · 面相 · 手相 —— 八字＋面相＋西占 一次合断，多体系交叉印证的旗舰报告。</div>
-      <span class="flag-cta">查看包含什么 →</span>
+    <h1>
+      八字 · 面相 · 西占<br>
+      <em>一次看透，一生参考</em>
+    </h1>
+    <p class="hero-sub">
+      专业命理引擎精算，不是关键词查找。20+ 体系，一个平台。先免费排盘，再决定是否深读。
+    </p>
+    <a class="cta-primary" href="/pages/bazi.html">
+      免费排盘 →
+      <small>无需绑卡 · 即时排出四柱命盘</small>
     </a>
+    <div class="hero-trust">仅供参考娱乐 · 不作效果承诺</div>
+  </div>
 
-    <div class="cta-wrap">
-      <a class="cta-primary" href="/pages/bazi.html">免费开始 · 输入你的问题</a>
-      <div class="cta-note">先免费排盘 · 看到方向再决定要不要深读</div>
-    </div>
-  </section>
+  <div class="hero-bottom-rule"></div>
+</header>
 
-  <!-- ══ 世界地图 ══ -->
-  <section class="sec rv">
-    <div class="sec-h">
-      <div class="sec-t">汇聚全球占卜智慧于一处</div>
-      <div class="sec-s i">Eastern &amp; Western Divination · One Platform</div>
-      <div class="gold-line"></div>
-    </div>
-    <div class="map-card">
-      <div class="ph-skel"></div>
-      <img src="/assets/images/runae/world-map.png" alt="全球占卜体系分布地图" onload="this.classList.add('loaded')" loading="lazy">
-    </div>
-    <div class="map-chips">
-      <span class="chip">🇨🇳 中国 · 八字/紫微/奇门/六壬</span>
-      <span class="chip">🏔️ 西藏 · 藏历奇门</span>
-      <span class="chip">🇮🇳 印度 · 吠陀占星</span>
-      <span class="chip">🏛️ 希腊/西方 · 西占</span>
-      <span class="chip">🌎 中美洲 · 玛雅历法</span>
-    </div>
-  </section>
+<!-- ═══════════════════════════════════════════════════════════
+     §2 七大方向入口
+════════════════════════════════════════════════════════════════ -->
+<section class="fortune-gates">
+  <div class="inner fade-up" style="margin-bottom:32px">
+    <div class="sec-cap">按方向入口</div>
+    <h2 class="sec-title">七大方向入口</h2>
+    <p class="sec-sub">从姻缘到事业，从健康到去留 — 选你最想知道的那个</p>
+  </div>
 
-  <!-- ══ 占卜体系全览 ══ -->
-  <section class="sec rv">
-    <div class="sec-h">
-      <div class="sec-t">占卜体系全览</div>
-      <div class="sec-s i">Explore every system</div>
-      <div class="gold-line"></div>
-    </div>
-    <div class="sys-grid">
-      <a class="sys" href="/pages/bazi.html">
-        <span class="region">China · 东方</span>
-        <span class="st">📜 八字命理</span>
-        <span class="sd">生辰四柱 · 一生格局与大运</span>
-      </a>
-      <a class="sys" href="/pages/ziwei.html">
-        <span class="region">China · 东方</span>
-        <span class="st">✨ 紫微斗数</span>
-        <span class="sd">星盘十二宫 · 细论各宫吉凶</span>
-      </a>
-      <a class="sys" href="/pages/hehun.html">
-        <span class="region">China · 合婚</span>
-        <span class="st">💞 八字合婚</span>
-        <span class="sd">两人相合 · 姻缘契合度合断</span>
-      </a>
-      <a class="sys" href="/pages/mianxiang.html">
-        <span class="region">China · 相术</span>
-        <span class="st">👤 面相解读</span>
-        <span class="sd">十二宫 · 五官气色一图看命</span>
-      </a>
-      <a class="sys" href="/pages/palm-reading.html">
-        <span class="region">China · 相术</span>
-        <span class="st">🖐️ 手相解读</span>
-        <span class="sd">掌纹三线 · 感情事业健康</span>
-      </a>
-      <a class="sys" href="/pages/liuyao.html">
-        <span class="region">China · 卜卦</span>
-        <span class="st">☯️ 六爻断事</span>
-        <span class="sd">一事一卦 · 具体问题问吉凶</span>
-      </a>
-      <a class="sys" href="/pages/tarot.html">
-        <span class="region">West · 西方</span>
-        <span class="st">🃏 塔罗占卜</span>
-        <span class="sd">牌阵指引 · 当下处境与选择</span>
-      </a>
-      <a class="sys" href="/pages/rune.html">
-        <span class="region">North · 北欧</span>
-        <span class="st">ᚱ 卢恩符文</span>
-        <span class="sd">古北欧符文 · 命运指引</span>
-      </a>
-      <a class="sys" href="/pages/astrology.html">
-        <span class="region">West · 西占</span>
-        <span class="st">🌌 西方占星</span>
-        <span class="sd">星座本命盘 · 行星相位解读</span>
-      </a>
-      <a class="sys" href="/pages/numerology.html">
-        <span class="region">West · 数字</span>
-        <span class="st">🔢 生命灵数</span>
-        <span class="sd">生日数字 · 天赋与人生课题</span>
-      </a>
-      <a class="sys" href="/pages/kyusei.html">
-        <span class="region">Japan · 日本</span>
-        <span class="st">🎐 九星气学</span>
-        <span class="sd">本命星 · 方位运势与择时</span>
-      </a>
-      <a class="sys" href="/pages/omikuji.html">
-        <span class="region">Japan · 日本</span>
-        <span class="st">🎋 御神签</span>
-        <span class="sd">日式抽签 · 今日运势指引</span>
-      </a>
-      <a class="sys" href="/pages/maya.html">
-        <span class="region">Maya · 玛雅</span>
-        <span class="st">🌞 玛雅历法</span>
-        <span class="sd">卓尔金历 · 天赋图腾与能量</span>
-      </a>
-      <a class="sys" href="/pages/fengshui.html">
-        <span class="region">China · 堪舆</span>
-        <span class="st">🏠 风水堪舆</span>
-        <span class="sd">居家方位 · 布局趋吉避凶</span>
-      </a>
-    </div>
-  </section>
-
-  <!-- ══ 为什么很准 ══ -->
-  <section class="sec rv">
-    <div class="sec-h">
-      <div class="sec-t">为什么多体系合断更准</div>
-      <div class="sec-s i">Cross-verified across systems</div>
-      <div class="gold-line"></div>
-    </div>
-    <div class="why-card">
-      <div class="ph-skel"></div>
-      <img src="/assets/images/runae/why-accurate.png" alt="多体系交叉印证" onload="this.classList.add('loaded')" loading="lazy">
-    </div>
-  </section>
-
-  <!-- ══ 全球祈福代办 ══ -->
-  <section class="sec rv">
-    <div class="sec-h">
-      <div class="sec-t">全球祈福代办</div>
-      <div class="sec-s i">Blessings at sacred sites worldwide</div>
-      <div class="gold-line"></div>
-    </div>
-    <a class="bless" href="/pages/pricing.html#blessing">
-      <img class="bless-img" src="/assets/images/runae/blessing-sites.png" alt="全球祈福圣地网络" onload="this.classList.add('loaded')" loading="lazy">
-      <div class="bless-body">
-        <div class="bless-t">🙏 真人代上香 · 连麦直播为证</div>
-        <div class="bless-d">全球圣地 · 真人代办 · 实地录像＋大师连麦＋书面回向凭证。为逝去的亲人超度，为自己求学求福。</div>
-        <span class="bless-cta">查看祈福价目 →</span>
+  <div class="fortune-grid fade-up">
+    <a class="fortune-card" href="/pages/bazi.html?focus=love">
+      <span class="fortune-icon">💑</span>
+      <div class="fortune-name">姻缘感情</div>
+      <div class="fortune-desc">桃花时机 / 另一半方向 / 合盘相容</div>
+    </a>
+    <a class="fortune-card" href="/pages/bazi.html?focus=career">
+      <span class="fortune-icon">💼</span>
+      <div class="fortune-name">事业仕途</div>
+      <div class="fortune-desc">贵人方位 / 行业选择 / 晋升时机</div>
+    </a>
+    <a class="fortune-card" href="/pages/bazi.html?focus=wealth">
+      <span class="fortune-icon">💰</span>
+      <div class="fortune-name">财运财库</div>
+      <div class="fortune-desc">偏财正财 / 旺财时段 / 投资方向</div>
+    </a>
+    <a class="fortune-card" href="/pages/bazi.html?focus=health">
+      <span class="fortune-icon">🌿</span>
+      <div class="fortune-name">健康状态</div>
+      <div class="fortune-desc">五行偏弱 / 需注意方向 / 调养建议</div>
+    </a>
+    <a class="fortune-card" href="/pages/bazi.html?focus=study">
+      <span class="fortune-icon">📚</span>
+      <div class="fortune-name">学业考运</div>
+      <div class="fortune-desc">考试时机 / 学科优势 / 贵人老师</div>
+    </a>
+    <a class="fortune-card" href="/pages/bazi.html?focus=children">
+      <span class="fortune-icon">👶</span>
+      <div class="fortune-name">子嗣缘分</div>
+      <div class="fortune-desc">子女星位 / 生育时机 / 教育方向</div>
+    </a>
+    <a class="fortune-card fortune-travel" href="/pages/bazi.html?focus=travel">
+      <span class="fortune-icon" style="font-size:26px;margin-bottom:0">✈️</span>
+      <div>
+        <div class="fortune-name">去留贵人</div>
+        <div class="fortune-desc">出行方位 / 海外贵人 / 留守抉择</div>
       </div>
     </a>
-  </section>
 
-  <!-- ══ FINAL CTA ══ -->
-  <section class="final rv">
-    <div class="final-t">你的问题，值得一次认真的合断</div>
-    <div class="final-s">免费排盘 · 先看到方向</div>
-    <a class="cta-primary" href="/pages/bazi.html">免费开始 · 输入你的问题</a>
-  </section>
+    <a class="fortune-all" href="/pages/pricing.html">
+      <div class="fortune-all-label">
+        <div class="fortune-all-title">✦ 全套综合入口</div>
+        <div class="fortune-all-sub">一次合断所有方向 · 八字＋面相＋西占</div>
+      </div>
+      <div class="fortune-all-arrow">→</div>
+    </a>
+  </div>
+</section>
 
-  <nav class="foot-nav">
-    <a href="/pages/pricing.html">定价方案</a>
+<div class="gold-rule"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     §3 世界地图
+════════════════════════════════════════════════════════════════ -->
+<section class="worldmap">
+  <div class="worldmap-inner">
+    <div class="fade-up">
+      <div class="sec-cap" style="color:var(--jade)">全球命理体系</div>
+      <h2 class="sec-title" style="color:#fff">东西方命理 · 全球一家</h2>
+      <p class="sec-sub" style="color:var(--sub-dark)">华人八字 · 印度吠陀 · 西方星盘 · 北欧卢恩 · 马雅历法 — 多体系交叉印证，结论更立体</p>
+    </div>
+    <div class="fade-up">
+      <img class="worldmap-img" src="/samples/caijing/世界地图-多体系.png" alt="东西方命理体系世界地图">
+    </div>
+  </div>
+</section>
+
+<div class="gold-rule"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     §4 占卜体系全览
+════════════════════════════════════════════════════════════════ -->
+<section class="systems-overview">
+  <div class="systems-overview-inner">
+    <div class="fade-up" style="padding:0 22px;margin-bottom:28px">
+      <div class="sec-cap">体系全览</div>
+      <h2 class="sec-title">20+ 占卜体系，全覆盖</h2>
+      <p class="sec-sub">一个平台，东西方传统体系齐备</p>
+    </div>
+
+    <div class="ticker-wrap" aria-hidden="true">
+      <div class="ticker-track">
+        <span class="ticker-item">八字命理 <span class="dot">·</span></span>
+        <span class="ticker-item">紫微斗数 <span class="dot">·</span></span>
+        <span class="ticker-item">西方星盘 <span class="dot">·</span></span>
+        <span class="ticker-item">吠陀占星 <span class="dot">·</span></span>
+        <span class="ticker-item">塔罗 <span class="dot">·</span></span>
+        <span class="ticker-item">易经 <span class="dot">·</span></span>
+        <span class="ticker-item">奇门遁甲 <span class="dot">·</span></span>
+        <span class="ticker-item">面相 <span class="dot">·</span></span>
+        <span class="ticker-item">手相 <span class="dot">·</span></span>
+        <span class="ticker-item">北欧卢恩 <span class="dot">·</span></span>
+        <span class="ticker-item">马雅历法 <span class="dot">·</span></span>
+        <span class="ticker-item">九星气学 <span class="dot">·</span></span>
+        <span class="ticker-item">风水 <span class="dot">·</span></span>
+        <span class="ticker-item">八字命理 <span class="dot">·</span></span>
+        <span class="ticker-item">紫微斗数 <span class="dot">·</span></span>
+        <span class="ticker-item">西方星盘 <span class="dot">·</span></span>
+        <span class="ticker-item">吠陀占星 <span class="dot">·</span></span>
+        <span class="ticker-item">塔罗 <span class="dot">·</span></span>
+        <span class="ticker-item">易经 <span class="dot">·</span></span>
+        <span class="ticker-item">奇门遁甲 <span class="dot">·</span></span>
+        <span class="ticker-item">面相 <span class="dot">·</span></span>
+        <span class="ticker-item">手相 <span class="dot">·</span></span>
+        <span class="ticker-item">北欧卢恩 <span class="dot">·</span></span>
+        <span class="ticker-item">马雅历法 <span class="dot">·</span></span>
+        <span class="ticker-item">九星气学 <span class="dot">·</span></span>
+        <span class="ticker-item">风水 <span class="dot">·</span></span>
+      </div>
+    </div>
+
+    <div class="fade-up">
+      <img class="systems-img" src="/samples/caijing/占卜体系全览.png" alt="占卜体系全览">
+    </div>
+  </div>
+</section>
+
+<div class="gold-rule"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     §5 为什么很准
+════════════════════════════════════════════════════════════════ -->
+<section class="why-accurate">
+  <div class="why-inner">
+    <div class="fade-up">
+      <div class="sec-cap" style="color:var(--jade)">可信度</div>
+      <h2 class="sec-title" style="color:#fff">为什么比别人准？</h2>
+    </div>
+
+    <div class="fade-up">
+      <img class="why-img" src="/samples/caijing/为什么很准.png" alt="为什么很准 — 多体系交叉印证">
+    </div>
+
+    <div class="trust-list fade-up">
+      <div class="trust-item">
+        <span class="trust-icon">⚙️</span>
+        <div>
+          <div class="trust-title">专业引擎精算</div>
+          <div class="trust-desc">八字基于天文星历表精准计算，不是关键词套模板。我们的安全AI只负责解读，不负责编造。</div>
+        </div>
+      </div>
+      <div class="trust-item">
+        <span class="trust-icon">🔄</span>
+        <div>
+          <div class="trust-title">多体系交叉印证</div>
+          <div class="trust-desc">八字、面相、西占从不同维度看同一个人。三个体系都指向同一方向时，才是真结论。</div>
+        </div>
+      </div>
+      <div class="trust-item">
+        <span class="trust-icon">📖</span>
+        <div>
+          <div class="trust-title">先免费看方向</div>
+          <div class="trust-desc">无需付费先排盘，看到大方向再决定是否深读。够自信，才敢免费给你看。</div>
+        </div>
+      </div>
+      <div class="trust-item">
+        <span class="trust-icon">📋</span>
+        <div>
+          <div class="trust-title">免责透明</div>
+          <div class="trust-desc">命理为参考娱乐，我们不作效果承诺。报告帮你看方向，决策权始终在你。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="reviews-section fade-up">
+      <div class="reviews-title">真实用户反馈</div>
+      <div class="reviews-note">（积累中 · 有话说？欢迎联系我们）</div>
+      <div class="review-placeholder">真实评价位 · 开放填写中</div>
+      <div class="review-placeholder">真实评价位 · 开放填写中</div>
+      <div class="review-placeholder">真实评价位 · 开放填写中</div>
+    </div>
+  </div>
+</section>
+
+<div class="gold-rule"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     §6 Final CTA
+════════════════════════════════════════════════════════════════ -->
+<section class="final-cta">
+  <div class="final-cta-inner fade-up">
+    <div class="sec-cap" style="color:var(--jade)">开始</div>
+    <h2 class="sec-title" style="color:#fff">免费排盘，先看方向</h2>
+    <p class="sec-sub" style="color:var(--sub-dark)">无需付费，输入生辰即可看到八字命盘和大方向</p>
+    <a class="cta-primary" href="/pages/bazi.html" style="max-width:360px;margin:0 auto">
+      立即免费排盘 →
+      <small>无需绑卡 · 即时生成</small>
+    </a>
+  </div>
+</section>
+
+<div class="ai-banner">
+  🔮 AI 辅助解读 · 所有命盘基于真实命理算法计算 · 仅供娱乐参考 · 不作效果承诺
+</div>
+
+<footer>
+  <div class="footer-logo">善缘 · Runae</div>
+  <nav class="footer-nav">
     <a href="/pages/bazi.html">八字排盘</a>
-    <a href="/pages/hehun.html">八字合婚</a>
-    <a href="/pages/tarot.html">塔罗占卜</a>
-    <a href="/pages/pricing.html#blessing">祈福代办</a>
+    <a href="/pages/tarot.html">塔罗</a>
+    <a href="/pages/mianxiang.html">面相</a>
+    <a href="/pages/pricing.html">定价</a>
+    <a href="/pages/about.html">关于</a>
   </nav>
-
-  <p class="disclaimer">
-    Runae · 八字·紫微·奇门·六壬·塔罗·卢恩·藏历·玛雅·西占 —— 一个问题，多体系合断<br>
+  <div class="footer-copy">© 2026 善缘 · Runae · Lumen Studio 出品</div>
+  <div class="footer-disclaimer">
     内容仅供娱乐参考 · 不代替医学 / 法律 / 投资专业建议<br>
-    © 2025 Runae · Lumen Studio 出品
-  </p>
+    命理为传统文化参考，不作效果承诺。个人决策请自行判断。
+  </div>
+</footer>
 
+<div id="sticky-cta" role="complementary" aria-label="免费排盘">
+  <div class="sticky-label">
+    准备好了？
+    <small>免费排盘 · 无需绑卡</small>
+  </div>
+  <a class="sticky-btn" href="/pages/bazi.html">免费排盘 →</a>
 </div>
 
 <script>
-// scroll reveal
 (function(){
-  var io=new IntersectionObserver(function(es){
-    es.forEach(function(e){ if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target);} });
-  },{rootMargin:'0px 0px -8% 0px',threshold:.08});
-  document.querySelectorAll('.rv').forEach(function(el){io.observe(el);});
+  var obs = new IntersectionObserver(function(entries){
+    entries.forEach(function(e){
+      if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}
+    });
+  },{threshold:.1});
+  document.querySelectorAll('.fade-up').forEach(function(el){obs.observe(el)});
+
+  var hero = document.querySelector('.hero');
+  var sticky = document.getElementById('sticky-cta');
+  var sObs = new IntersectionObserver(function(entries){
+    sticky.classList.toggle('show', !entries[0].isIntersecting);
+  },{threshold:0.05});
+  sObs.observe(hero);
 })();
 </script>
+
 </body>
 </html>
