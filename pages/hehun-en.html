@@ -194,6 +194,49 @@ body::before{content:'';position:fixed;inset:0;
 
 /* Stardust */
 .stardust span{position:absolute;width:3px;height:3px;background:rgba(208,120,145,0.5);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
+
+/* ══════════ Premium book-style reading (aligned with bazi · light rose-gold) ══════════ */
+@keyframes heFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+#readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.08);opacity:0;transition:opacity .3s;pointer-events:none}
+#readProgressWrap.show{opacity:1}
+#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,var(--rose-dark),var(--rose),var(--gold));box-shadow:0 0 8px rgba(201,96,122,0.4);transition:width .12s ease-out}
+/* Chapter cover */
+.chapter-cover{position:relative;margin:18px 0 10px;border-radius:14px;overflow:hidden;min-height:150px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 8px 26px rgba(120,60,70,0.2);animation:heFadeUp 0.6s ease both;background:#2a1018}
+.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.72;filter:saturate(0.95)}
+.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,8,12,0.25) 0%,rgba(20,8,12,0.5) 45%,rgba(20,8,12,0.88) 100%)}
+.chapter-cover-body{position:relative;padding:16px 16px 15px}
+.chapter-cover-num{font-family:'Cormorant Garamond','Georgia',serif;font-size:11px;letter-spacing:0.3em;color:rgba(240,215,150,0.9);margin-bottom:5px;text-transform:uppercase}
+.chapter-cover-num::before{content:'';display:inline-block;width:20px;height:1px;background:linear-gradient(90deg,rgba(232,68,102,0.8),transparent);vertical-align:middle;margin-right:8px}
+.chapter-cover-title{font-family:'Cormorant Garamond','Georgia',serif;font-size:20px;font-weight:600;letter-spacing:0.02em;color:#fbeede;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.5)}
+.chapter-cover-lead{font-size:11px;line-height:1.6;letter-spacing:0.01em;color:rgba(245,225,215,0.8);margin-top:6px;max-width:94%}
+/* Drop cap */
+.he-body{font-size:13px;line-height:1.95;color:var(--text);letter-spacing:0.005em;padding:0 2px}
+.he-body.drop-cap::first-letter{float:left;font-family:'Cormorant Garamond','Georgia',serif;font-size:3.4em;line-height:0.78;font-weight:700;color:var(--rose);margin:0.02em 0.1em 0 0}
+.he-body strong{color:var(--rose-light)}
+/* Pull quote */
+.pull-quote{position:relative;margin:14px 6px;padding:6px 4px 6px 18px;text-align:center}
+.pull-quote::before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,transparent,rgba(201,96,122,0.6),transparent);border-radius:2px}
+.pull-quote-text{font-family:'Cormorant Garamond','Georgia',serif;font-size:17px;font-style:italic;font-weight:500;line-height:1.6;letter-spacing:0.01em;color:var(--rose)}
+.pull-quote-mark{font-family:'Cormorant Garamond',serif;font-size:24px;color:rgba(201,96,122,0.35);line-height:0}
+/* Highlight note */
+.hl-note{margin:12px 0;padding:12px 14px;background:linear-gradient(135deg,rgba(201,96,122,0.08),rgba(201,168,76,0.04));border:1px solid rgba(201,96,122,0.2);border-left:3px solid var(--rose);border-radius:10px;font-size:12.5px;line-height:1.85;color:var(--text)}
+.hl-note b,.hl-note strong{color:var(--rose-light)}
+/* TOC */
+.chapter-toc{margin:14px 0 6px;padding:16px 16px 12px;background:linear-gradient(160deg,rgba(255,255,255,0.9),rgba(245,240,232,0.95));border:1px solid rgba(201,96,122,0.18);border-radius:14px;animation:heFadeUp 0.5s ease both}
+.chapter-toc-title{font-size:11px;letter-spacing:0.14em;color:var(--rose);margin-bottom:12px;display:flex;align-items:center;gap:7px;text-transform:uppercase}
+.chapter-toc-item{display:flex;align-items:baseline;gap:10px;padding:8px 2px;border-bottom:1px dotted rgba(201,96,122,0.16);cursor:pointer;transition:all .2s}
+.chapter-toc-item:last-child{border-bottom:none}
+.chapter-toc-item:active{opacity:0.6}
+.chapter-toc-idx{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(201,96,122,0.7);min-width:26px}
+.chapter-toc-label{flex:1;font-size:13px;color:var(--text)}
+.chapter-toc-arrow{font-size:12px;color:rgba(201,96,122,0.5)}
+/* report-viz light-theme override for this page */
+.rv-frame{background:linear-gradient(160deg,rgba(255,255,255,0.94),rgba(245,240,232,0.96)) !important;border-color:rgba(201,96,122,0.2) !important;box-shadow:0 6px 24px rgba(120,60,70,0.1) !important;color:var(--text) !important}
+.rv-frame-title{color:var(--rose) !important}
+.rv-frame-sub,.rv-frame-foot{color:var(--sub) !important}
+.rv-ring-label{color:var(--text) !important}
+.rv-ring-sub{color:var(--sub) !important}
+@media print{.chapter-cover{break-inside:avoid}#readProgressWrap{display:none !important}}
 </style>
 </head>
 <body>
@@ -804,6 +847,8 @@ function _applyDimsToUI(dims) {
     dims.future,          // index 4 (career/future)
     dims.wuxing           // index 5 (elemental)
   ];
+  var ringData = [];
+  var RING_LABELS = ['Emotional','Values','Lifestyle','Communication','Career','Elemental'];
   cards.forEach(function(card, i) {
     var raw = order[i];
     if (typeof raw !== 'number' || raw <= 0) return;
@@ -822,7 +867,21 @@ function _applyDimsToUI(dims) {
     } else if (barEl) {
       barEl.style.width = sc+'%'; barEl.style.background = color;
     }
+    ringData.push({ label: RING_LABELS[i], score: sc, max: 100, tone: 'auto' });
   });
+  // Compatibility score rings (report-viz renderScoreRing) — shown when real per-dimension scores arrive
+  if (window.ReportViz && ringData.length && !document.getElementById('heDimRings')) {
+    try {
+      var ringsHtml = ReportViz.renderScoreRing.group(ringData, 'Compatibility Scores');
+      if (ringsHtml) {
+        var host = document.createElement('div');
+        host.id = 'heDimRings';
+        host.innerHTML = ringsHtml;
+        var dl = document.getElementById('dimsList');
+        if (dl && dl.parentNode) dl.parentNode.insertBefore(host, dl);
+      }
+    } catch(e){}
+  }
 }
 
 function injectDisclaimer(containerId) {
@@ -900,6 +959,112 @@ function handlePaidReturn() {
   });
 }
 
+// ─── Premium book-style rendering helpers (English) ───
+var _HE_ORD = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
+function heOrd(i){ return _HE_ORD[i] || (i+1); }
+function heEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+var _HE_ART = [
+  { keys:['marriage','wedding','date','timing','engage','tie the knot'], img:'marriage' },
+  { keys:['emotion','love','intimacy','romance','affection','resonance','bond'], img:'love' },
+  { keys:['family','child','home','lifestyle','daily','harmony of life'], img:'family' },
+  { keys:['financ','money','career','ambition','wealth','synergy'], img:'wealth' },
+  { keys:['element','five element','day-master','bazi','chart','elemental'], img:'wuxing' },
+  { keys:['year','future','timing','luck','cycle','stage'], img:'dayun' },
+  { keys:['advice','communicat','resolve','bridge','conflict','blessing'], img:'blessing' }
+];
+function heArt(title){
+  var t=String(title||'').toLowerCase();
+  for(var i=0;i<_HE_ART.length;i++){ var g=_HE_ART[i]; for(var j=0;j<g.keys.length;j++){ if(t.indexOf(g.keys[j])!==-1) return g.img; } }
+  return 'marriage';
+}
+function heInline(s){ return heEsc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>'); }
+function heIsHighlight(line){ return /^(\s*)(⚠️|💡|🔑|📌|Note[:：]|Tip[:：]|Key[:：]|Advice[:：]|Remember[:：])/i.test(line); }
+function hePullQuote(lines){
+  var joined=lines.join(' ').replace(/\*\*/g,'').replace(/[#>|]/g,'');
+  var s=joined.split(/(?<=[.!?;])\s+/).map(function(x){return x.trim();}).filter(function(x){return x.length>=24&&x.length<=110;});
+  if(!s.length) return '';
+  var re=/(support|nourish|complement|patience|honest|communication|attunement|balance|foundation|precious|rare|conscious)/i;
+  for(var i=0;i<s.length;i++){ if(re.test(s[i])) return s[i]; }
+  return s[0];
+}
+function renderHeReport(txt){
+  if(!txt) return '';
+  var lines=txt.split('\n');
+  var sections=[], cur=null;
+  lines.forEach(function(ln){
+    var m=ln.match(/^#{1,4}\s*(.+)$/);
+    if(m){ cur={title:m[1].replace(/\*\*/g,'').trim(),content:[]}; sections.push(cur); }
+    else { if(!cur){cur={title:'',content:[]};sections.push(cur);} if(ln.trim()!=='') cur.content.push(ln); }
+  });
+  if(!sections.length) return heInline(txt).replace(/\n/g,'<br/>');
+  var idx=0, html='<div class="he-ultimate">';
+  sections.forEach(function(sec){
+    if(sec.title){
+      var art=heArt(sec.title);
+      var lead=sec.content.length?sec.content[0].replace(/\*\*/g,'').slice(0,64):'';
+      html+='<div id="he-chap-'+idx+'">'
+        +'<div class="chapter-cover"><img class="chapter-cover-img" loading="lazy" src="/samples/caijing/art-'+art+'.png" alt="" onerror="this.style.display=\'none\'">'
+        +'<div class="chapter-cover-veil"></div><div class="chapter-cover-body">'
+        +'<div class="chapter-cover-num">Chapter '+heOrd(idx)+'</div>'
+        +'<div class="chapter-cover-title">'+heEsc(sec.title)+'</div>'
+        +(lead?'<div class="chapter-cover-lead">'+heEsc(lead)+'</div>':'')
+        +'</div></div></div>';
+      idx++;
+      var pq=hePullQuote(sec.content);
+      if(pq) html+='<div class="pull-quote"><span class="pull-quote-mark">“</span><div class="pull-quote-text">'+heEsc(pq)+'</div><span class="pull-quote-mark">”</span></div>';
+    }
+    var normal=[], dropped=false;
+    function flush(){ if(!normal.length) return; var cls='he-body'+(dropped?'':' drop-cap'); dropped=true; html+='<div class="'+cls+'">'+normal.map(heInline).join('<br/>')+'</div>'; normal=[]; }
+    sec.content.forEach(function(ln){ if(heIsHighlight(ln)){ flush(); html+='<div class="hl-note">'+heInline(ln)+'</div>'; } else normal.push(ln); });
+    flush();
+  });
+  html+='</div>';
+  return html;
+}
+function heBuildLoveTimeline(){
+  if(!window.ReportViz) return '';
+  var y=new Date().getFullYear();
+  var tones=['good','neutral','gold','good','neutral'];
+  var tags=['Nurture','Communicate','Steady','Align','Cherish'];
+  var steps=[];
+  for(var i=0;i<5;i++){ steps.push({ label:(y+i)+'', sub:'Year '+(i+1), tone:tones[i], tag:tags[i], current:i===0 }); }
+  try{ return ReportViz.renderTimeline(steps,{currentIdx:0,title:'Five-Year Relationship Outlook',subtitle:'Each node is that year\'s relational tone (for reflection, not marriage advice)',foot:'Band shows the year\'s tone · marker is the current year · for reference only, not marriage advice'}); }catch(e){ return ''; }
+}
+function heInjectReportChrome(){
+  var wrap=document.getElementById('fullReportContent');
+  if(!wrap) return;
+  var covers=wrap.querySelectorAll('.chapter-cover-title');
+  if(covers.length>=2 && !document.getElementById('heReportToc')){
+    var toc=document.createElement('div'); toc.id='heReportToc'; toc.className='chapter-toc';
+    var inner='<div class="chapter-toc-title"><span>📖</span> Report Contents · '+covers.length+' chapters</div>';
+    covers.forEach(function(c,i){ inner+='<div class="chapter-toc-item" onclick="heJump(\'he-chap-'+i+'\')"><span class="chapter-toc-idx">'+heOrd(i)+'</span><span class="chapter-toc-label">'+heEsc(c.textContent)+'</span><span class="chapter-toc-arrow">›</span></div>'; });
+    toc.innerHTML=inner; wrap.insertBefore(toc,wrap.firstChild);
+  }
+  if(!document.getElementById('heReportDisclaimer')){
+    var d=document.createElement('div'); d.id='heReportDisclaimer';
+    d.innerHTML='<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,96,122,0.25),transparent);margin:20px auto 0;width:80%"></div>'
+      +'<div style="font-size:10px;color:var(--sub);text-align:center;letter-spacing:0.02em;padding:12px 20px;line-height:1.8">🤖 AI-generated, for entertainment only. Any years, dates or yearly tones mentioned are <strong style="color:var(--rose)">not marriage advice</strong> and do not replace medical, legal or financial guidance. Whether to marry is your decision, grounded in real life and true feelings.</div>';
+    wrap.appendChild(d);
+  }
+  heSetupProgress();
+}
+function heJump(id){ var el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
+var _heProgHandler=null;
+function heSetupProgress(){
+  var w=document.getElementById('readProgressWrap');
+  if(!w){ w=document.createElement('div'); w.id='readProgressWrap'; w.innerHTML='<div id="readProgressBar"></div>'; document.body.appendChild(w); }
+  var bar=document.getElementById('readProgressBar');
+  if(_heProgHandler) window.removeEventListener('scroll',_heProgHandler);
+  _heProgHandler=function(){
+    var fw=document.getElementById('fullReportWrap');
+    if(!fw||fw.style.display==='none'){ w.classList.remove('show'); return; }
+    var doc=document.documentElement, st=window.scrollY||doc.scrollTop||0;
+    var sh=Math.max(doc.scrollHeight,document.body.scrollHeight)-window.innerHeight;
+    bar.style.width=((sh>0?Math.min(Math.max(st/sh,0),1):0)*100).toFixed(1)+'%'; w.classList.add('show');
+  };
+  window.addEventListener('scroll',_heProgHandler,{passive:true}); _heProgHandler();
+}
+
 function renderPaidReport(saved) {
   document.getElementById('lockedCard').style.display='none';
   document.getElementById('stickyBar').style.display='none';
@@ -907,7 +1072,7 @@ function renderPaidReport(saved) {
   var wrap = document.getElementById('fullReportWrap');
   wrap.style.display='block';
   var contentEl = document.getElementById('fullReportContent');
-  contentEl.style.whiteSpace = 'pre-wrap';
+  contentEl.style.whiteSpace = 'normal';
   contentEl.textContent = 'Your full compatibility report is being generated by AI (about 30 seconds)…';
   var accumulated = '';
   fetch('/api/hehun/stream', {
@@ -933,6 +1098,9 @@ function renderPaidReport(saved) {
     function read() {
       reader.read().then(function(r) {
         if (r.done) {
+          // Five-Year Relationship Outlook timeline + report contents/progress
+          try { var tl=heBuildLoveTimeline(); if(tl){ var tlBox=document.createElement('div'); tlBox.innerHTML=tl; document.getElementById('fullReportContent').appendChild(tlBox); } } catch(e){}
+          try { heInjectReportChrome(); } catch(e){}
           // Stream ended — append cross-sell block
           var nextStep = document.createElement('div');
           nextStep.style.cssText = 'margin:24px 0 8px;padding:16px;background:linear-gradient(135deg,rgba(91,191,160,0.08),rgba(201,168,76,0.06));border:1px solid rgba(91,191,160,0.2);border-radius:14px;text-align:center;';
@@ -967,7 +1135,7 @@ function renderPaidReport(saved) {
             } else if (ev.type === 'chunk') {
               if (accumulated === '') contentEl.textContent = '';
               accumulated += ev.content;
-              contentEl.textContent = accumulated;
+              contentEl.innerHTML = renderHeReport(accumulated);
             } else if (ev.type === 'done') {
               // contextId available as ev.contextId if needed
             }
@@ -1240,6 +1408,7 @@ function handleInviteParam() {
   </div>
 </div>
 
+<script src="/pages/report-viz.js"></script>
 <script src="/assets/js/common.js"></script>
 <script>if(window.SY&&SY.initMembership)SY.initMembership();</script>
 </body>

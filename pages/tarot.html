@@ -201,11 +201,55 @@ html.light-mode .q-chip:active, html.light-mode .q-chip.selected { background: r
 .daily-limit-hint { font-size: 10px; color: rgba(155,111,196,0.45); text-align: center; letter-spacing: 0.08em; padding: 8px 16px 0; position: relative; z-index: 1; }
 .paywall-blurred { filter: blur(5px); pointer-events: none; user-select: none; position: relative; }
 .paywall-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(transparent 0%, rgba(13,8,32,0.97) 40%); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 40px; z-index: 10; }
+
+/* ══ 精装阅读体验 ══ */
+#readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.25);opacity:0;transition:opacity .3s;pointer-events:none}
+#readProgressWrap.show{opacity:1}
+#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,#3a1870,var(--violet),var(--violet-light));box-shadow:0 0 8px rgba(107,63,160,0.5);transition:width .12s ease-out}
+#readProgressChapter{position:fixed;top:8px;right:12px;z-index:1200;font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:0.12em;color:rgba(196,160,224,0.85);background:rgba(10,5,25,0.72);border:1px solid rgba(107,63,160,0.3);border-radius:20px;padding:3px 11px;opacity:0;transition:opacity .3s;pointer-events:none;backdrop-filter:blur(6px)}
+#readProgressChapter.show{opacity:1}
+.chapter-cover{position:relative;margin:20px 4px 10px;border-radius:14px;overflow:hidden;min-height:168px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 8px 30px rgba(0,0,0,0.5);animation:fadeUp 0.6s ease both;background:#100c28}
+.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.55;filter:saturate(0.85)}
+.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,2,18,0.35) 0%,rgba(5,2,18,0.6) 45%,rgba(5,2,18,0.92) 100%)}
+.chapter-cover-body{position:relative;padding:18px 18px 16px}
+.chapter-cover-num{font-family:'Cormorant Garamond','Noto Serif SC',serif;font-size:12px;letter-spacing:0.32em;color:rgba(196,160,224,0.82);margin-bottom:5px}
+.chapter-cover-num::before{content:'';display:inline-block;width:22px;height:1px;background:linear-gradient(90deg,rgba(107,63,160,0.7),transparent);vertical-align:middle;margin-right:8px}
+.chapter-cover-title{font-family:'Noto Serif SC',serif;font-size:21px;font-weight:600;letter-spacing:0.06em;color:#f0eaff;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
+.chapter-cover-lead{font-size:12px;line-height:1.7;letter-spacing:0.03em;color:rgba(220,210,255,0.72);margin-top:7px;max-width:92%}
+.drop-cap-first{float:left;font-family:'Noto Serif SC',Georgia,serif;font-size:3.4em;line-height:0.82;font-weight:700;color:var(--violet-light);margin:0.04em 0.12em 0 0;text-shadow:0 2px 10px rgba(107,63,160,0.28)}
+.pull-quote{position:relative;margin:16px 10px;padding:6px 4px 6px 20px;text-align:center}
+.pull-quote::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,transparent,rgba(107,63,160,0.7),transparent);border-radius:2px}
+.pull-quote-text{font-family:'Noto Serif SC',serif;font-size:16px;font-weight:500;line-height:1.75;letter-spacing:0.04em;color:var(--violet-light);text-shadow:0 1px 8px rgba(107,63,160,0.18)}
+.pull-quote-mark{font-family:'Cormorant Garamond',serif;font-size:26px;color:rgba(107,63,160,0.4);line-height:0}
+.hl-note{margin:12px 0;padding:13px 15px;background:linear-gradient(135deg,rgba(107,63,160,0.1),rgba(107,63,160,0.03));border:1px solid rgba(107,63,160,0.34);border-left:3px solid var(--violet);border-radius:10px;font-size:12.5px;line-height:1.9;letter-spacing:0.03em;color:rgba(220,210,255,0.92);box-shadow:0 2px 14px rgba(107,63,160,0.06)}
+.hl-note b,.hl-note strong{color:var(--violet-light)}
+.chapter-toc{margin:14px 4px 6px;padding:16px 16px 12px;background:linear-gradient(160deg,rgba(10,5,25,0.9),rgba(5,2,18,0.95));border:1px solid rgba(107,63,160,0.22);border-radius:14px;animation:fadeUp 0.5s ease both}
+.chapter-toc-title{font-size:12px;letter-spacing:0.2em;color:rgba(107,63,160,0.7);margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.chapter-toc-item{display:flex;align-items:baseline;gap:10px;padding:8px 2px;border-bottom:1px dotted rgba(107,63,160,0.14);text-decoration:none;transition:all .2s}
+.chapter-toc-item:last-child{border-bottom:none}
+.chapter-toc-idx{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(107,63,160,0.6);min-width:26px}
+.chapter-toc-label{flex:1;font-size:13px;letter-spacing:0.04em;color:rgba(220,210,255,0.9)}
+.chapter-toc-arrow{font-size:12px;color:rgba(107,63,160,0.45)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+/* Tarot card image support */
+.tarot-card-img{width:100%;height:100%;object-fit:cover;border-radius:6px;position:absolute;inset:0;opacity:0.85}
+.tarot-card-overlay{position:absolute;bottom:0;left:0;right:0;padding:6px 4px 4px;background:linear-gradient(transparent,rgba(10,5,25,0.9));border-radius:0 0 6px 6px;z-index:2}
+.card-glyph{position:relative;z-index:1}
+.card-num{position:relative;z-index:1}
+.card-name-sm{position:relative;z-index:2}
+/* rv-frame styles for report-viz integration */
+.rv-frame{background:linear-gradient(160deg,rgba(10,5,25,0.95),rgba(5,2,18,0.98));border:1px solid rgba(107,63,160,0.28);border-radius:14px;padding:16px;margin:12px 0;overflow:hidden}
+.rv-frame-title{font-size:12px;letter-spacing:0.18em;color:rgba(107,63,160,0.75);margin-bottom:8px}
+.rv-frame-sub{font-size:11px;color:rgba(220,210,255,0.5);letter-spacing:0.06em;margin-bottom:10px}
+.rv-frame-foot{font-size:10px;color:rgba(107,63,160,0.4);margin-top:10px;letter-spacing:0.06em;text-align:center}
 </style>
 <link rel="stylesheet" href="/assets/css/common.css">
+<script src="/pages/report-viz.js"></script>
 <script src="/assets/js/common.js"></script>
 </head>
 <body>
+<div id="readProgressWrap"><div id="readProgressBar"></div></div>
+<div id="readProgressChapter"></div>
 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题">🌙</button>
 
 
@@ -316,6 +360,20 @@ html.light-mode .q-chip:active, html.light-mode .q-chip.selected { background: r
 
 <script>
 function showToast(msg,type){if(window.SY&&SY.showToast)return SY.showToast(msg,type);var t=document.createElement('div');t.textContent=msg;t.style.cssText='position:fixed;top:20px;left:50%;transform:translateX(-50%);background:rgba(13,11,8,0.9);color:#e8d08a;padding:10px 18px;border-radius:20px;z-index:9999;font-size:13px;letter-spacing:0.06em';document.body.appendChild(t);setTimeout(function(){t.remove()},2200);}
+// ── Tarot card image map ──
+var TAROT_IMAGES = {
+  '愚者': '/assets/images/generated/tarot_fool_00001_.png',
+  '命运之轮': '/assets/images/generated/tarot_wheel_00001_.png',
+  '正义': '/assets/images/generated/tarot_justice_00001_.png',
+  '隐者': '/assets/images/generated/tarot_hermit_00001_.png',
+  '死神': '/assets/images/generated/tarot_death_00001_.png',
+  '塔': '/assets/images/generated/tarot_tower_00001_.png',
+  '星星': '/assets/images/generated/tarot_star_v2_00001_.png',
+  '月亮': '/assets/images/generated/tarot_moon_v2_00001_.png',
+  '太阳': '/assets/images/generated/tarot_sun_00002_.png',
+  '皇后': '/assets/images/generated/tarot_empress_00001_.png'
+};
+
 var CARDS = [
   {name:'愚者', roman:'0', glyph:'零', energy:'新开始·冒险·天真', desc:'象征全新旅程的开始，带着纯粹的心上路，无所畏惧。'},
   {name:'魔术师', roman:'I', glyph:'一', energy:'意志·创造·主导', desc:'你拥有实现目标所需的一切工具，关键在于能否善加利用。'},
@@ -457,14 +515,51 @@ function showResult(question, drawn) {
   trio.innerHTML = '';
   trio.className = 'card-trio' + (n === 5 ? ' five-spread' : '');
   drawn.forEach(function(d, i) {
+    var imgPath = TAROT_IMAGES[d.card.name] || null;
+    var imgHtml = imgPath
+      ? '<img class="tarot-card-img" src="'+imgPath+'" alt="'+d.card.name+'" onerror="this.style.display=\'none\'">'
+      : '';
     trio.innerHTML += '<div class="tarot-slot">' +
       '<div class="tarot-card" style="transform:rotate('+(d.reversed?180:0)+'deg)">' +
+        imgHtml +
         '<div class="card-glyph">'+d.card.glyph+'</div>' +
         '<div class="card-num">'+d.card.roman+'</div>' +
         '<div class="card-name-sm">'+d.card.name+(d.reversed?' 逆位':'')+'</div>' +
       '</div>' +
       '<div class="slot-label">'+positions[i]+'</div></div>';
   });
+
+  // ── Chapter cover above card trio ──
+  var spreadLabel = n === 1 ? '单张启示' : n === 3 ? '三牌牌阵' : '五芒星牌阵';
+  var coverEl = document.createElement('div');
+  coverEl.className = 'chapter-cover';
+  coverEl.innerHTML =
+    '<img class="chapter-cover-img" src="/samples/caijing/art-tarot.png" alt="" onerror="this.style.display=\'none\'">' +
+    '<div class="chapter-cover-veil"></div>' +
+    '<div class="chapter-cover-body">' +
+      '<div class="chapter-cover-num">TAROT · '+spreadLabel.toUpperCase()+'</div>' +
+      '<div class="chapter-cover-title">'+spreadLabel+'解读</div>' +
+      '<div class="chapter-cover-lead">'+question.slice(0,36)+(question.length>36?'…':'')+'</div>' +
+    '</div>';
+  trio.parentNode.insertBefore(coverEl, trio);
+
+  // ── Chapter TOC (only for multi-card spreads) ──
+  var oldToc = document.getElementById('chapterToc');
+  if (oldToc) oldToc.remove();
+  if (n > 1) {
+    var tocEl = document.createElement('div');
+    tocEl.className = 'chapter-toc';
+    tocEl.id = 'chapterToc';
+    var tocItems = positions.map(function(pos, i) {
+      return '<div class="chapter-toc-item">' +
+        '<span class="chapter-toc-idx">0'+(i+1)+'</span>' +
+        '<span class="chapter-toc-label">'+pos+'</span>' +
+        '<span class="chapter-toc-arrow">›</span>' +
+        '</div>';
+    }).join('');
+    tocEl.innerHTML = '<div class="chapter-toc-title">✦ 牌阵结构</div>' + tocItems;
+    trio.parentNode.insertBefore(tocEl, trio);
+  }
 
   // Generate interpretation
   var mainCard = drawn[Math.floor(drawn.length/2)].card;
@@ -483,15 +578,54 @@ function showResult(question, drawn) {
   // Add question keyword echo for personalisation
   var qSnippet = question.length > 10 ? question.slice(0, 10) + '…' : question;
 
-  document.getElementById('interpTitle').textContent = im.title;
-  document.getElementById('interpText').innerHTML = '关于你问的「' + qSnippet + '」，' + im.prefix +
-    (rev ? '「<span class="interp-highlight">'+mainCard.name+'</span> 逆位」提醒你：'+mainCard.desc.replace('你','此刻的你') + ' 逆位时能量受阻，建议放慢脚步，重新审视内心真正的渴望。'
-         : '「<span class="interp-highlight">'+mainCard.name+'</span>」正位的能量是：'+mainCard.desc + ' ' + mainCard.energy + '是此刻最需要关注的核心能量。') +
-    (drawn.length > 1 ? '<br><br>从整体牌阵来看，'+drawn[0].card.name+'（'+positions[0]+'）与'+drawn[drawn.length-1].card.name+'（'+positions[drawn.length-1]+'）形成了呼应——过去的积累正在为未来的结果铺路。' : '');
+  // Build interp body text
+  var interpBody = im.prefix +
+    (rev ? '「'+mainCard.name+'」逆位提醒你：'+mainCard.desc.replace('你','此刻的你') + ' 逆位时能量受阻，建议放慢脚步，重新审视内心真正的渴望。'
+         : '「'+mainCard.name+'」正位的能量是：'+mainCard.desc + ' ' + mainCard.energy + '是此刻最需要关注的核心能量。') +
+    (drawn.length > 1 ? '\n\n从整体牌阵来看，'+drawn[0].card.name+'（'+positions[0]+'）与'+drawn[drawn.length-1].card.name+'（'+positions[drawn.length-1]+'）形成了呼应——过去的积累正在为未来的结果铺路。' : '');
 
-  document.getElementById('adviceText').textContent = rev
+  // Drop-cap: wrap first character
+  var firstChar = interpBody.charAt(0);
+  var rest = interpBody.slice(1);
+  // Split at newline for second paragraph
+  var paraBreak = rest.indexOf('\n\n');
+  var interpHtml;
+  if (paraBreak >= 0) {
+    interpHtml = '<span class="drop-cap-first">'+firstChar+'</span>' +
+      rest.slice(0, paraBreak) +
+      '<br><br>' + rest.slice(paraBreak+2);
+  } else {
+    interpHtml = '<span class="drop-cap-first">'+firstChar+'</span>' + rest;
+  }
+
+  document.getElementById('interpTitle').textContent = im.title;
+  document.getElementById('interpText').innerHTML = '关于你问的「<span class="interp-highlight">' + qSnippet + '</span>」，' + interpHtml;
+
+  // Advice text + pull-quote + hl-note wrapping
+  var adviceRaw = rev
     ? '此刻不宜强行推进，给自己一段沉淀的时间。观察自己对这个问题最深层的情绪，那里有你需要的答案。'
     : '顺势而为，相信自己的判断。'+mainCard.energy.split('·')[0]+'是你现在最强大的资源，用好它。';
+
+  // Pull-quote (excerpt from advice)
+  var pullQuoteText = adviceRaw.split('。')[0]+'。';
+  var pullQuoteHtml = '<div class="pull-quote">' +
+    '<div class="pull-quote-mark">"</div>' +
+    '<div class="pull-quote-text">'+pullQuoteText+'</div>' +
+    '<div class="pull-quote-mark">"</div>' +
+    '</div>';
+
+  // Remove old pull-quote if any
+  var oldPQ = document.getElementById('interpPullQuote');
+  if (oldPQ) oldPQ.remove();
+  var pqEl = document.createElement('div');
+  pqEl.id = 'interpPullQuote';
+  pqEl.innerHTML = pullQuoteHtml;
+  document.getElementById('interpText').parentNode.insertBefore(pqEl, document.querySelector('.advice-box'));
+
+  // Wrap advice-box with hl-note style
+  var adviceBox = document.querySelector('.advice-box');
+  adviceBox.classList.add('hl-note');
+  document.getElementById('adviceText').textContent = adviceRaw;
 
   document.getElementById('resultWrap').classList.add('show');
   document.querySelector('.btn-draw').style.display = 'none';
@@ -577,7 +711,11 @@ function handlePaidReturn() {
   trio.innerHTML = '';
   drawn.forEach(function(d, i) {
     var c = d.card;
-    trio.innerHTML += '<div class="tarot-slot"><div class="tarot-card" style="transform:rotate('+(d.reversed?180:0)+'deg)"><div class="card-glyph">'+c.glyph+'</div><div class="card-num">'+c.roman+'</div><div class="card-name-sm">'+c.name+(d.reversed?' 逆位':'')+'</div></div><div class="slot-label">'+positions[i]+'</div></div>';
+    var imgPath = TAROT_IMAGES[c.name] || null;
+    var imgHtml = imgPath
+      ? '<img class="tarot-card-img" src="'+imgPath+'" alt="'+c.name+'" onerror="this.style.display=\'none\'">'
+      : '';
+    trio.innerHTML += '<div class="tarot-slot"><div class="tarot-card" style="transform:rotate('+(d.reversed?180:0)+'deg)">'+imgHtml+'<div class="card-glyph">'+c.glyph+'</div><div class="card-num">'+c.roman+'</div><div class="card-name-sm">'+c.name+(d.reversed?' 逆位':'')+'</div></div><div class="slot-label">'+positions[i]+'</div></div>';
   });
 
   document.getElementById('resultWrap').classList.add('show');
@@ -668,6 +806,15 @@ function handlePaidReturn() {
 function resetDraw() {
   document.getElementById('resultWrap').classList.remove('show');
   document.querySelector('.advice-box').style.display = '';  // restore advice-box visibility
+  // Remove luxury elements injected by showResult
+  var oldCover = document.querySelector('.chapter-cover');
+  if (oldCover) oldCover.remove();
+  var oldToc = document.getElementById('chapterToc');
+  if (oldToc) oldToc.remove();
+  var oldPQ = document.getElementById('interpPullQuote');
+  if (oldPQ) oldPQ.remove();
+  var adviceBox = document.querySelector('.advice-box');
+  if (adviceBox) adviceBox.classList.remove('hl-note');
   var shareBtn = document.getElementById('shareBtn');
   if (shareBtn) shareBtn.style.display = 'none';
   var btn = document.querySelector('.btn-draw');
@@ -734,6 +881,26 @@ function injectDisclaimer(containerId) {
   d.innerHTML = '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto;width:80%"></div><div style="font-size:10px;color:rgba(201,168,76,0.4);text-align:center;letter-spacing:0.06em;padding:10px 20px">🤖 本内容由AI生成，仅供娱乐参考，不代替医学、法律或投资建议。命理是可能性的艺术，不是定数。</div>';
   c.appendChild(d);
 }
+
+// ── 阅读进度条 ──
+(function(){
+  var wrap = document.getElementById('readProgressWrap');
+  var bar = document.getElementById('readProgressBar');
+  var chap = document.getElementById('readProgressChapter');
+  function update(){
+    var rw = document.getElementById('resultWrap');
+    if(!rw || !rw.classList.contains('show')){wrap.classList.remove('show');return;}
+    wrap.classList.add('show');
+    var h = document.documentElement;
+    var pct = Math.min(100, (h.scrollTop / (h.scrollHeight - h.clientHeight || 1)) * 100);
+    bar.style.width = pct + '%';
+    // Chapter label from spread type
+    var label = currentSpread === 1 ? '单张解读' : currentSpread === 3 ? '三牌牌阵' : '五芒星牌阵';
+    chap.textContent = label;
+    chap.classList.toggle('show', pct > 3);
+  }
+  document.addEventListener('scroll', update, {passive:true});
+})();
 </script>
 
 <!-- Brand tagline -->
