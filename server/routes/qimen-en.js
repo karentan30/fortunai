@@ -147,7 +147,12 @@ router.post('/qimen-en', rateLimitMiddleware, async (req, res) => {
 
     // Build structured summary for LLM
     const patternTop = Array.isArray(plate.patternTags) ? plate.patternTags.slice(0, 5) : [];
-    const voidList = Array.isArray(plate.voidPalaces) ? plate.voidPalaces.join(', ') : 'None';
+    // voidPalaces entries are objects { branch, palace, name } — flatten to readable text
+    const voidList = Array.isArray(plate.voidPalaces) && plate.voidPalaces.length
+      ? plate.voidPalaces.map(v => (v && typeof v === 'object')
+          ? ((v.name || ('Palace ' + v.palace)) + (v.branch ? ' (' + v.branch + ')' : ''))
+          : String(v)).join(', ')
+      : 'None';
     const auspiciousDirs = formatDirections(plate.directions);
     const gridText = serializeGrid(plate.jiuGongGe);
 
