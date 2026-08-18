@@ -881,14 +881,18 @@ router.post('/ziwei', rateLimitMiddleware, async (req, res) => {
       });
       const zw = ch.ziwei;
       if (zw) {
-        const palaceLines = zw.palaces ? zw.palaces.map(p =>
-          `  ${p.name}宫(${p.heavenlyStem||''}${p.earthlyBranch||''})：主星${(p.mainStars||[]).join('·')||'无'} 辅星${(p.minorStars||[]).join('·')||'无'}`
-        ).join('\n') : '（宫位数据不可用）';
-        const sihua = zw.fourTransformations || zw.sihua || {};
-        const sihuaStr = Object.entries(sihua).map(([k,v]) => `${k}：${v}`).join(' ');
+        const palaceLines = (zw.gongs || []).map(g =>
+          `  ${g.gong}(${g.tiangan||''}${g.dizhi||''})：主星${(g.mainStars||[]).join('·')||'无'} 辅星${(g.auxStars||[]).join('·')||'无'}`
+        ).join('\n') || '（宫位数据不可用）';
+        const mingGong = (zw.gongs || []).find(g => g.gong === '命宫');
+        const mingStars = mingGong ? (mingGong.mainStars||[]).join('·') : '';
+        const sihuaStr = (zw.gongs || []).flatMap(g =>
+          (g.sihua || []).map(s => `${s.star}${s.hua}(${g.gong})`)
+        ).join(' ');
         ziweiBlock = `【紫微斗数精确命盘（后端引擎排盘·禁止 LLM 自行推算或修改任何星曜宫位）】
 命主：${birthYear}年${birthMonth}月${birthDay}日${birthHour}时 ${gender === 'male' ? '男' : '女'}命
-命宫主星：${(zw.mingGongMainStars || zw.lifeMainStars || []).join('·') || '引擎计算中'}
+五行局：${(zw.wuXingJu && zw.wuXingJu.name) || zw.wuXingJu || ''}　命宫：${mingGong ? (mingGong.tiangan||'')+(mingGong.dizhi||'') : ''}
+命宫主星：${mingStars || '（命宫无主星·需借对宫）'}
 十二宫星曜分布：
 ${palaceLines}
 四化飞星：${sihuaStr || '（无四化数据）'}`;
@@ -1856,14 +1860,18 @@ router.post('/ziwei/stream', rateLimitMiddleware, async (req, res) => {
       });
       const zw = ch.ziwei;
       if (zw) {
-        const palaceLines = zw.palaces ? zw.palaces.map(p =>
-          `  ${p.name}宫(${p.heavenlyStem||''}${p.earthlyBranch||''})：主星${(p.mainStars||[]).join('·')||'无'} 辅星${(p.minorStars||[]).join('·')||'无'}`
-        ).join('\n') : '（宫位数据不可用）';
-        const sihua = zw.fourTransformations || zw.sihua || {};
-        const sihuaStr = Object.entries(sihua).map(([k,v]) => `${k}：${v}`).join(' ');
+        const palaceLines = (zw.gongs || []).map(g =>
+          `  ${g.gong}(${g.tiangan||''}${g.dizhi||''})：主星${(g.mainStars||[]).join('·')||'无'} 辅星${(g.auxStars||[]).join('·')||'无'}`
+        ).join('\n') || '（宫位数据不可用）';
+        const mingGong = (zw.gongs || []).find(g => g.gong === '命宫');
+        const mingStars = mingGong ? (mingGong.mainStars||[]).join('·') : '';
+        const sihuaStr = (zw.gongs || []).flatMap(g =>
+          (g.sihua || []).map(s => `${s.star}${s.hua}(${g.gong})`)
+        ).join(' ');
         zwEngineBlock = `【紫微斗数精确命盘（后端引擎排盘·禁止 LLM 自行推算或修改任何星曜宫位）】
 命主：${birthYear}年${birthMonth}月${birthDay}日${birthHour}时 ${gender === 'male' ? '男' : '女'}命
-命宫主星：${(zw.mingGongMainStars || zw.lifeMainStars || []).join('·') || '引擎计算中'}
+五行局：${(zw.wuXingJu && zw.wuXingJu.name) || zw.wuXingJu || ''}　命宫：${mingGong ? (mingGong.tiangan||'')+(mingGong.dizhi||'') : ''}
+命宫主星：${mingStars || '（命宫无主星·需借对宫）'}
 十二宫星曜分布：
 ${palaceLines}
 四化飞星：${sihuaStr || '（无四化数据）'}`;
@@ -2784,8 +2792,8 @@ ${liuyaoBlock || '（引擎暂不可用，请基于通识给出六爻解读框�
 1. 🔮 本卦解读（卦名+卦象图示+卦辞含义+整体象征。基于引擎排出的本卦名，写卦的内涵与整体象，不少于500字）
 
 2. 📖 六爻逐爻详解（每爻含：爻位/纳甲地支/六亲/六神/对问题的具体指向。共6爻×约200字，合计约1200字）
-   - 初爻（初六/初九）：地支${'{'}初爻地支{'}'}，六亲${'{'}初爻六亲{'}'}，六神${'{'}初爻六神{'}'}
-   - 依此类推至上爻
+   - 严格依据上方【卦象数据】里排出的每一爻纳甲地支、六亲、六神逐爻分析，从初爻到上爻，不得自行虚构爻的地支或六亲
+   - 逐爻结合所问之事说明该爻的具体指向
 
 3. 🔄 变卦分析（动爻化出的变卦+本变卦对比分析。若为静卦则说明静卦意义，不少于400字）
 
@@ -2853,16 +2861,26 @@ router.post('/daliuren', rateLimitMiddleware, async (req, res) => {
     let liurenData = null;
     try {
       liurenData = await computeDaLiuRen({ date: new Date() });
-      // 从引擎返回中提取关键结构
-      const courseStr = liurenData.course ? JSON.stringify(liurenData.course).slice(0, 600) : '（课名待引擎返回）';
-      const transmissionStr = liurenData.transmission ? JSON.stringify(liurenData.transmission).slice(0, 400) : '（三传待引擎返回）';
-      const godsStr = liurenData.gods ? JSON.stringify(liurenData.gods).slice(0, 400) : '（神将待引擎返回）';
+      // 从引擎返回中提取关键结构（真实字段：fourLessons/threeTransmissions/lessonSummary…）
       const ganzhi = liurenData.ganzhi || {};
+      const fourLessonsStr = (liurenData.fourLessons || []).map(l =>
+        `${l.name}[上${l.upper}下${l.lower}·${l.god}·${l.relation}]`
+      ).join('　') || '（四课数据不可用）';
+      const transStr = (liurenData.threeTransmissions || []).map(t =>
+        `${t.stage}${t.branch}(${t.god}·${t.wuxing}·${t.seasonState}${t.isVoid ? '·旬空' : ''})`
+      ).join(' → ') || '（三传数据不可用）';
+      const guaTi = Array.isArray(liurenData.guaTi) ? liurenData.guaTi.join('·') : (liurenData.guaTi || '');
+      const patternTags = Array.isArray(liurenData.patternTags) ? liurenData.patternTags.join('·') : (liurenData.patternTags || '');
+      const shenSha = liurenData.shenShaSummary || '';
+      const xunKong = Array.isArray(liurenData.xunKong) ? liurenData.xunKong.join('·') : (liurenData.xunKong || '');
       liurenBlock = `【大六壬精确起课（真实三传四课·禁止 LLM 自行起课或修改课象）】
 干支：年${ganzhi.year||''} 月${ganzhi.month||''} 日${ganzhi.day||''} 时${ganzhi.hour||''}
-课名/课体：${courseStr}
-三传（初传→中传→末传）：${transmissionStr}
-十二神将：${godsStr}`;
+课体：${guaTi}${patternTags ? `（${patternTags}）` : ''}
+四课：${fourLessonsStr}
+三传（初→中→末）：${transStr}
+课体断语：${liurenData.lessonSummary || ''}
+三传断语：${liurenData.transmissionSummary || ''}
+神煞：${shenSha}　旬空：${xunKong}`;
     } catch (e) {
       console.warn('[DALIUREN] 引擎排盘失败，改用诚实框架：', e && e.message);
       // 引擎不可用时，不随机编造，而是用诚实框架
