@@ -194,14 +194,14 @@ const UNLOCK_BY_CATEGORY = {
 const SUBSCRIBE_PRODUCTS = ['member_monthly','member_yearly','member_quarterly','member_3year','member_daily','daily_sub'];
 
 // ── 会员分级(0817 最终阶梯) ──
-// 全解锁会员(报告无限+无限聊天+每月1次大师深度credit): 年/季/3年/终身/日
+// 全解锁会员(报告无限+无限聊天): 年/季/3年/终身/日。不设月度credit; 直接 hasFullAccess 全通。
 const FULL_MEMBER_PRODUCTS = ['member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'];
-// 月会员(限量聊天5句/天 + 每月1份完整报告credit + 每日运势·不含大师深度·非全报告无限)
+// 月会员(限量聊天30句/天 + 每月1份完整报告credit + 每日运势·不含大师深度·非全报告无限·其他报告5折)
 const MONTHLY_MEMBER_PRODUCTS = ['member_monthly'];
 // 月会员每月完整报告 credit 额度
 const MONTHLY_REPORT_CREDIT = 1;
-// 月会员聊天每日限量
-const MONTHLY_CHAT_DAILY_LIMIT = 5;
+// 月会员聊天每日限量(免费用户同额度; 全解锁会员=无限)
+const MONTHLY_CHAT_DAILY_LIMIT = 30;
 
 // 🔴 0817: 保证「全解锁会员」能无限解锁所有报告类目 —— 把 FULL_MEMBER_PRODUCTS 注入
 //   UNLOCK_BY_CATEGORY 每个类目(去重)。月会员(member_monthly)仍走 credit 机制,不在此注入。
@@ -636,8 +636,8 @@ const PRODUCTS = {
   hehun_master:    { name: '合婚·大师批婚',     amount: 4990,   amountCny: 19900, desc: '完整+5年感情流年+择日+化解+命理师私语+真人连麦', amountKrw: 24900 },
   hehun_full:      { name: 'Compatibility Reading', amount: 1990, amountCny: 3990, desc: 'Full BaZi compatibility analysis', amountKrw: 19900 },
   hehun_kr_full:   { name: '궁합 완전 분석',    amount: 1500,   amountCny: 3990,  desc: '궁합 완전 분석 보고서', amountKrw: 19900 },
-  member_monthly:  { name: '月度会员',          amount: 990,    amountCny: 1990,  desc: 'Rún每日5句·每月1份完整报告·每日运势', amountKrw: 9900 },
-  member_yearly:   { name: '年度会员',          amount: 9900,   amountCny: 9900,  desc: '无限畅聊+全报告无限+每月1次大师深度' },
+  member_monthly:  { name: '月度会员',          amount: 990,    amountCny: 1990,  desc: 'Rún每日30句·每月1份完整报告·其他报告5折·每日运势', amountKrw: 9900 },
+  member_yearly:   { name: '年度会员',          amount: 9900,   amountCny: 9900,  desc: '无限畅聊+全报告无限解锁' },
   member_lifetime: { name: '终身会员',          amount: 18800,  amountCny: 68800, desc: '永久畅享·全部报告·专属档案' },
   member_daily:    { name: '日会员',            amount: 299,    amountCny: 990,   desc: '24小时无限使用' },
   member_quarterly:{ name: '季会员',            amount: 2490,   amountCny: 6900,  desc: '三个月畅享' },
