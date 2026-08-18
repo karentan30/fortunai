@@ -290,6 +290,7 @@ router.post('/best-timing', rateLimitMiddleware, async (req, res) => {
 
     // 付费门（照 love-destiny：全解锁会员 / 月会员 / 单买 → 完整；免费/游客 → 只给下一个真窗口）
     const full = memberTier(req) !== null || hasFullAccess(req, ['bazi', 'love_destiny']);
+    if (process.env.BT_DEBUG) console.error('[BT_DEBUG] full=', full, 'mt=', memberTier(req), 'bodytoken=', req.body && req.body.token, 'env=', !!process.env.ADMIN_TOKEN);
 
     let youPf, themPf;
     try {
