@@ -13,7 +13,8 @@
 <link rel="apple-touch-icon" href="/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Noto+Serif+SC:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,600;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -98,6 +99,57 @@ a{color:inherit;text-decoration:none}
 footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.8}
 footer a{color:var(--jade-deep)}
 button{font-family:inherit}
+
+/* ── Luxury Tarot Share Card ── */
+:root{
+  --lux-ink0:#0d0b08;--lux-ink1:#181310;--lux-ink2:#1a1028;
+  --lux-gold:#c9a84c;--lux-gold-hi:#f6e6a8;--lux-gold-lo:#8a6420;
+  --lux-line:rgba(201,168,76,0.30);--lux-sub:rgba(232,208,138,0.60);
+  --lux-purple:rgba(120,80,180,0.22);
+}
+.share-card-wrap{display:none;margin:16px 20px 0}
+.share-card-wrap.show{display:block}
+.lux-card{
+  position:relative;overflow:hidden;border-radius:22px;color:#fff;isolation:isolate;
+  aspect-ratio:9/16;padding:34px 26px;display:flex;flex-direction:column;text-align:left;
+  font-family:'Inter',sans-serif;
+  background:
+    radial-gradient(120% 80% at 50% -10%,rgba(201,168,76,0.18) 0%,transparent 55%),
+    radial-gradient(80% 60% at 80% 110%,rgba(120,80,180,0.18) 0%,transparent 55%),
+    radial-gradient(90% 60% at 50% 115%,rgba(201,168,76,0.08) 0%,transparent 60%),
+    linear-gradient(165deg,var(--lux-ink2) 0%,var(--lux-ink1) 42%,var(--lux-ink0) 100%);
+  box-shadow:0 12px 40px rgba(0,0,0,0.4);
+}
+.lux-card::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:
+    repeating-linear-gradient(45deg,rgba(255,255,255,0.020) 0 1px,transparent 1px 6px),
+    repeating-linear-gradient(-45deg,rgba(0,0,0,0.06) 0 1px,transparent 1px 6px);
+  mix-blend-mode:overlay}
+.lux-card::after{content:"";position:absolute;inset:12px;z-index:1;pointer-events:none;border-radius:14px;
+  border:1px solid var(--lux-line);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,0.4),inset 0 0 40px rgba(201,168,76,0.06),inset 0 0 0 6px rgba(0,0,0,0.25)}
+.lux-card > *{position:relative;z-index:2}
+.lux-cap{font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--lux-sub);margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.lux-cap::before{content:"";width:4px;height:4px;border-radius:50%;background:var(--lux-gold);box-shadow:0 0 8px var(--lux-gold);flex-shrink:0}
+.lux-rule{height:1px;width:100%;border:none;margin:14px 0;
+  background:linear-gradient(90deg,transparent,var(--lux-line),var(--lux-gold-hi),var(--lux-line),transparent)}
+.tarot-glyph{font-size:48px;margin-bottom:8px;filter:drop-shadow(0 0 18px rgba(201,168,76,0.4))}
+.tarot-card-name{font-family:'Playfair Display',serif;font-size:32px;font-weight:800;line-height:1.1;color:#f2e4b8;margin-bottom:6px}
+.tarot-pos{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--lux-gold);margin-bottom:6px}
+.tarot-spread{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.tarot-slot{display:grid;grid-template-columns:56px 1fr;gap:8px;align-items:start}
+.tarot-slot .sk{font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--lux-gold);padding-top:2px;font-weight:600;text-align:right;opacity:.85}
+.tarot-slot .sv{font-size:11.5px;line-height:1.45;color:rgba(255,255,255,0.88);font-weight:600}
+.tarot-slot .sv small{font-weight:400;color:rgba(255,255,255,0.55);font-size:10px}
+.tarot-guidance{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:15px;line-height:1.55;color:rgba(255,255,255,0.82);margin-top:4px}
+.lux-seal{margin-top:auto;padding-top:14px;display:flex;justify-content:space-between;align-items:flex-end}
+.lux-brand{font-family:'Playfair Display',serif;font-size:15px;letter-spacing:.34em;color:var(--lux-gold-hi)}
+.lux-brand small{display:block;font-family:'Inter';font-size:7.5px;letter-spacing:.16em;color:var(--lux-sub);margin-top:4px;text-transform:uppercase}
+.lux-ai{font-size:7.5px;line-height:1.4;color:rgba(255,255,255,0.42);text-align:right;max-width:120px}
+.share-card-btn{display:block;width:100%;margin-top:12px;padding:14px;border-radius:24px;font-size:14px;font-weight:700;
+  color:#3a2e0e;background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);border:none;cursor:pointer;
+  box-shadow:0 6px 20px rgba(201,168,76,.34);font-family:inherit}
+.share-card-btn:disabled{opacity:.6;cursor:default}
 </style>
 </head>
 <body>
@@ -136,8 +188,26 @@ button{font-family:inherit}
   <div class="rbody" id="rbody"></div>
 </div>
 
+<!-- Luxury share card -->
+<div class="share-card-wrap z1" id="shareCardWrap">
+  <div class="lux-card" id="luxCard">
+    <div class="lux-cap">Tarot · Runae</div>
+    <div class="tarot-glyph" id="lcGlyph">🃏</div>
+    <div class="tarot-card-name" id="lcCardName">—</div>
+    <div class="tarot-pos" id="lcPos">—</div>
+    <hr class="lux-rule">
+    <div class="tarot-spread" id="lcSpread"></div>
+    <hr class="lux-rule">
+    <div class="tarot-guidance" id="lcGuidance"></div>
+    <div class="lux-seal">
+      <div class="lux-brand">RUNAE<small>Oracle · Tarot</small></div>
+      <div class="lux-ai">🤖 AI-generated<br>for self-reflection &amp; fun</div>
+    </div>
+  </div>
+  <button class="share-card-btn" id="shareCardBtn">Save &amp; share card</button>
+</div>
+
 <div class="ctarow z1" id="ctarow">
-  <button class="btn ghost" id="shareBtn">Share</button>
   <button class="btn ghost" id="againBtn">Pull again</button>
 </div>
 
@@ -186,6 +256,7 @@ function renderCards(cards){
 }
 function doDraw(){
   drawBtn.disabled=true;reading.classList.remove('show');ctarow.classList.remove('show');upsell.classList.remove('show');
+  document.getElementById('shareCardWrap').classList.remove('show');
   var cards=localDraw();lastCards=cards;renderCards(cards);
   var question=(document.getElementById('q').value||'').trim();
   setTimeout(function(){
@@ -200,17 +271,69 @@ function doDraw(){
       rbody.innerHTML=mdToHtml(d.reading);
       reading.classList.add('show');ctarow.classList.add('show');
       drawBtn.textContent='✦ Pull again';
+      populateLuxCard(lastCards, d.reading||'');
       if(d.remaining===0&&!d.isMember){upsellMsg.textContent='That was today\'s free reading. Go Yearly to draw as often as you like — Rún remembers your questions.';upsell.classList.add('show');}
     })
     .catch(function(){loading.classList.remove('show');drawBtn.disabled=false;rbody.innerHTML='<p>The oracle is resting — please try again.</p>';reading.classList.add('show');});
   },260*3+500);
 }
 drawBtn.addEventListener('click',doDraw);
-document.getElementById('againBtn').addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});doDraw();});
-document.getElementById('shareBtn').addEventListener('click',function(){
-  var txt='My Runae Tarot reading 🃏\n'+(lastCards?lastCards.map(function(c){return c.slot+': '+c.card+(c.reversed?' (rev)':'');}).join(' · '):'')+'\n\n'+lastReading.slice(0,240)+'…\n\nPull yours at Runae.';
-  if(navigator.share){navigator.share({title:'Runae Tarot',text:txt}).catch(function(){});}
-  else if(navigator.clipboard){navigator.clipboard.writeText(txt);this.textContent='Copied ✓';}
+document.getElementById('againBtn').addEventListener('click',function(){
+  document.getElementById('shareCardWrap').classList.remove('show');
+  window.scrollTo({top:0,behavior:'smooth'});doDraw();
+});
+
+var TAROT_GLYPHS={'The Fool':'🌀','The Magician':'✨','The High Priestess':'🌙','The Empress':'🌸','The Emperor':'⚔️',
+  'The Hierophant':'🏛️','The Lovers':'❤️','The Chariot':'🏆','Strength':'🦁','The Hermit':'🕯️',
+  'Wheel of Fortune':'⚙️','Justice':'⚖️','The Hanged Man':'🌿','Death':'🦋','Temperance':'💧',
+  'The Devil':'🔗','The Tower':'⚡','The Star':'⭐','The Moon':'🌕','The Sun':'☀️',
+  'Judgement':'📯','The World':'🌍'};
+
+function populateLuxCard(cards, readingText){
+  var primary=cards[2]||cards[1]||cards[0];
+  document.getElementById('lcGlyph').textContent=TAROT_GLYPHS[primary.card]||'🃏';
+  document.getElementById('lcCardName').textContent=primary.card;
+  document.getElementById('lcPos').textContent=(primary.reversed?'Reversed · ':'Upright · ')+primary.slot;
+  var spread=document.getElementById('lcSpread');
+  spread.innerHTML='';
+  cards.forEach(function(c){
+    var row=document.createElement('div');
+    row.className='tarot-slot';
+    row.innerHTML='<span class="sk">'+c.slot+'</span><span class="sv">'+c.card+'<small>'+(c.reversed?' · reversed':'')+'</small></span>';
+    spread.appendChild(row);
+  });
+  var plain=readingText.replace(/<[^>]+>/g,'').replace(/\n/g,' ').trim();
+  var sentence=plain.match(/[^.!?]+[.!?]/);
+  document.getElementById('lcGuidance').textContent=sentence?sentence[0].trim():plain.slice(0,120)+(plain.length>120?'…':'');
+  document.getElementById('shareCardWrap').classList.add('show');
+}
+
+function renderCardPng(node){
+  return document.fonts.ready.then(function(){
+    return html2canvas(node,{backgroundColor:null,scale:Math.min(3,(window.devicePixelRatio||1)*2),useCORS:true,logging:false});
+  }).then(function(canvas){
+    return new Promise(function(res){canvas.toBlob(function(b){res(b);},'image/png');});
+  });
+}
+
+document.getElementById('shareCardBtn').addEventListener('click',function(){
+  var btn=this; var orig=btn.textContent; btn.disabled=true; btn.textContent='Preparing…';
+  var shareText='My Runae Tarot pull 🃏 · '+(lastCards?lastCards.map(function(c){return c.slot+': '+c.card+(c.reversed?' (rev)':'');}).join(' · '):'')+' · Pull yours at '+location.origin+'/pages/tarot-runae.html';
+  renderCardPng(document.getElementById('luxCard')).then(function(blob){
+    btn.disabled=false; btn.textContent=orig;
+    var file=new File([blob],'runae-tarot.png',{type:'image/png'});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({files:[file],title:'My Tarot Reading',text:shareText}).catch(function(){});
+    } else {
+      var url=URL.createObjectURL(blob); var a=document.createElement('a');
+      a.href=url; a.download='runae-tarot.png'; document.body.appendChild(a); a.click();
+      document.body.removeChild(a); setTimeout(function(){URL.revokeObjectURL(url);},4000);
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(shareText).catch(function(){});
+    }
+  }).catch(function(){
+    btn.disabled=false; btn.textContent=orig;
+    if(navigator.share){navigator.share({title:'My Tarot Reading',text:shareText}).catch(function(){});}
+  });
 });
 </script>
 </body>
