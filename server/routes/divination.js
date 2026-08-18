@@ -2836,12 +2836,28 @@ ${liuyaoBlock || '（引擎暂不可用，请基于通识给出六爻解读框�
 router.post('/lingqian', rateLimitMiddleware, async (req, res) => {
   try {
     const { question, temple } = req.body;
-    var qianNum = Math.floor(Math.random() * 100) + 1;
-    var qianType = qianNum <= 15 ? '上上签' : qianNum <= 35 ? '上签' : qianNum <= 65 ? '中签' : qianNum <= 85 ? '下签' : '下下签';
-    const messages = [
-      { role: 'system', content: '你是一位在名山古寺修行多年的解签僧人。解签时语气温和、充满智慧，既点明签文深意又给人希望。' + DISCLAIMER_ZH },
-      { role: 'user', content: `求签地点：${temple || '善缘灵境'}\n用户问题：${question || '请指点迷津'}\n抽得签号：第${qianNum}签（${qianType}）\n\n请生成：\n1. 📜 签诗（四句七言古诗，原创）\n2. 🏮 解签（签文含义，300字左右）\n3. 🎯 对你的启示\n4. 💡 行动建议\n5. 🙏 祈福方法\n\n结尾请附一句娱乐参考免责。` }
-    ];
+    // 真签库：只抽 verified 真谱（禁 LLM 编签诗）·黄大仙庙用黄大仙谱，否则观音谱
+    let sign = null, signSrc = '观音灵签';
+    try {
+      const isHDX = /黄大仙|wong\s*tai\s*sin|huangdaxian|啬色园/i.test(temple || '');
+      const lib = require('../data/' + (isHDX ? 'lingqian-huangdaxian.json' : 'lingqian-guanyin.json'));
+      signSrc = isHDX ? '黄大仙灵签' : '观音灵签';
+      const verified = (lib.signs || []).filter(s => s && s.verified && Array.isArray(s.poem) && s.poem.length === 4);
+      if (verified.length) sign = verified[Math.floor(Math.random() * verified.length)];
+    } catch (e) { console.warn('[LINGQIAN] 签库不可用，降级:', e && e.message); }
+
+    let messages;
+    if (sign) {
+      messages = [
+        { role: 'system', content: `你是一位在庙宇解签多年的解签师。【铁律】下方签诗是${signSrc}的固定庙谱真文，一字不能改写、不得自行创作或替换签诗，你只负责"解签"——结合求签者所问之事把这支固定签的含义讲透、给方向与安慰。语气温和、有智慧、给希望，不恐吓、不承诺灵验。` + DISCLAIMER_ZH },
+        { role: 'user', content: `求签地点：${temple || signSrc}\n用户问题：${question || '请指点迷津'}\n\n【${signSrc} · 第${sign.no}签 · ${sign.grade}】（固定庙谱真文·禁改写）\n签诗：\n${sign.poem.join('\n')}\n典故：${sign.gong || ''}\n解曰：${sign.explain || ''}\n圣意：${sign.meaning || ''}\n\n请只做"解签"（不要改写或重编签诗），生成：\n1. 🏮 这支签对你所问之事的含义（结合签诗与所问，300字左右）\n2. 🎯 对你的启示\n3. 💡 行动建议\n4. 🙏 祈福/调心方法\n\n开头先原样引用上方签诗，再解。结尾附一句娱乐参考免责。` }
+      ];
+    } else {
+      messages = [
+        { role: 'system', content: '你是一位解签师。语气温和、有智慧、给希望，不恐吓、不承诺灵验。' + DISCLAIMER_ZH },
+        { role: 'user', content: `求签地点：${temple || '善缘灵境'}\n用户问题：${question || '请指点迷津'}\n\n（签谱库暂不可用）请就求签者所问，从传统解签文化角度给予温和的方向指引与安慰，明确说明这是文化参考、非抽到具体庙签，不编造签诗。结尾附娱乐免责。` }
+      ];
+    }
     var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 8192);
     const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     var ctxId = saveQaContext('lingqian', req.body, reading);
