@@ -30,6 +30,9 @@
 const router = require('express').Router();
 const path = require('path');
 const fs = require('fs');
+
+// ── 动态年份基准（防 AI 写过去年份）──
+const NOW_Y = new Date().getFullYear();
 const { deepseekChat, deepseekStream, buildReadingPrompt } = require('../lib/llm');
 const { analyzeFace, analyzePalm } = require('../lib/vision');
 const { calcBazi } = require('../bazi');
@@ -310,7 +313,8 @@ async function baziKoreanHandler(req, res) {
       + '\n\n【전문 용어】십성(정관/편관/정인/편인/비견/겁재/상관/식신/정재/편재), 신살, 용신, 일간 등 한국 명리 용어를 정확히 사용하세요. 한문을 병기하지 말고 순수 한국어로 쓰세요.'
       + '\n\n【글쓰기 톤】다정하고 잔잔하게. "좋은 사주다/나쁜 사주다"라는 이분법을 쓰지 않고, "강점과 약점, 그리고 잘 살리는 법"으로 풀어냅니다. 구체적인 조언(색·방위·습관)을 반드시 포함하세요.'
       + '\n\n【구성】만세력 사주판(년월일시柱), 일간과 용신, 오행 균형과 보완법, 그리고 핵심 운세. 장르는 리포트보다 위로와 통찰.'
-      + HEALTH_SOFT.ko + modeIns + freePart;
+      + HEALTH_SOFT.ko + modeIns + freePart
+      + `\n\n[현재 시간 기준] 현재 연도는 ${NOW_Y}년입니다. 모든 대운·유년·운세 분석은 반드시 ${NOW_Y}년을 "올해/현재"로 기준해야 하며, 과거 연도(예: 2024년, 2025년)를 현재 연도로 사용하지 마세요.`;
 
     const _chartKo = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender });
     const userPrompt = `내 사주를 봐주세요.
@@ -356,7 +360,9 @@ async function baziEnglishHandler(req, res) {
 
     const freeSuffix = full ? '' : `\n\nIMPORTANT: This is the free preview. Output ONLY these 3 chapters:\n📜 Four Pillars Chart\n🌊 Five Elements Analysis\n🌟 This Year's Fortune\n\nAfter completing these 3 chapters (around 1000-1500 words total), output exactly:\n---LOCKED---\n\nThen output a brief teaser listing the locked chapters:\n💰 Wealth & Career Destiny — unlocked in full report\n💕 Love & Marriage Timing — unlocked in full report\n💼 Career Path & Peak Years — unlocked in full report\n📅 Ten-Year Luck Cycles (大运) — unlocked in full report\n🔮 Year-by-Year Forecast — unlocked in full report`;
 
-    const sysPrompt = `You are a master BaZi (Four Pillars of Destiny) reader with 30+ years of experience, trained in classical Eastern metaphysics (BaZi / Four Pillars). You write warm, insightful, and practical reports in fluent English. You explain metaphysical concepts clearly without jargon, and always give specific, actionable advice. Never be scary or fatalistic — you help people understand their strengths and navigate challenges. Refer to this tradition as 'BaZi' or 'Eastern metaphysics' — avoid the word 'Chinese' in the reading itself to keep it culturally inclusive.${HEALTH_SOFT.en}${freeSuffix}`;
+    const sysPrompt = `You are a master BaZi (Four Pillars of Destiny) reader with 30+ years of experience, trained in classical Eastern metaphysics (BaZi / Four Pillars). You write warm, insightful, and practical reports in fluent English. You explain metaphysical concepts clearly without jargon, and always give specific, actionable advice. Never be scary or fatalistic — you help people understand their strengths and navigate challenges. Refer to this tradition as 'BaZi' or 'Eastern metaphysics' — avoid the word 'Chinese' in the reading itself to keep it culturally inclusive.${HEALTH_SOFT.en}${freeSuffix}
+
+[CURRENT TIME BASELINE] The current year is ${NOW_Y}. All Luck Cycle (大运), annual fortune, and year-by-year forecasts MUST treat ${NOW_Y} as "this year / current year". Do NOT use past years (e.g. 2024 or 2025) as the current reference year.`;
 
     const userPrompt = `Please analyze my BaZi chart and generate a deep destiny report.
 
@@ -367,7 +373,7 @@ Birth details:
 ${full ? `Generate a comprehensive report with these sections (emoji heading required for each):
 📜 Four Pillars Chart (year/month/day/hour pillars, Day Master analysis, chart pattern — min 600 words)
 🌊 Five Elements Analysis (balance, strengths, what to cultivate — min 500 words)
-🌟 This Year's Fortune (2026-2027 overview — min 400 words)
+🌟 This Year's Fortune (${NOW_Y}-${NOW_Y+1} overview — min 400 words)
 💰 Wealth & Finance Destiny (wealth stars, peak income years, best industries — min 600 words)
 💕 Love & Relationships (marriage timing, ideal partner traits, relationship patterns — min 600 words)
 💼 Career & Life Purpose (best career paths, peak career years, mentor directions — min 600 words)
@@ -422,8 +428,10 @@ async function baziPtBrHandler(req, res) {
       if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
     }
     const freeSuffix = full ? '' : `\n\nIMPORTANTE: Esta é a prévia gratuita. Gere APENAS estes 3 capítulos:\n📜 Mapa dos Quatro Pilares\n🌊 Análise dos Cinco Elementos\n🌟 Fortuna deste Ano\n\nApós completar os 3 capítulos (~1000-1500 palavras), escreva exatamente:\n---LOCKED---\n\nDepois liste os capítulos bloqueados:\n💰 Destino Financeiro e Profissional — disponível no relatório completo\n💕 Amor e Relacionamentos — disponível no relatório completo\n💼 Carreira e Propósito de Vida — disponível no relatório completo\n📅 Ciclos de Sorte de 10 Anos — disponível no relatório completo\n🔮 Previsão Ano a Ano — disponível no relatório completo`;
-    const sysPrompt = `Você é um mestre em BaZi (Quatro Pilares do Destino) com mais de 30 anos de experiência na metafísica clássica chinesa. Você escreve relatórios calorosos, perspicazes e práticos em português brasileiro fluente. Explique os conceitos metafísicos chineses claramente, sem jargões, e sempre dê conselhos específicos e acionáveis. Nunca seja assustador ou fatalista — ajude as pessoas a entender seus pontos fortes e navegar pelos desafios.${HEALTH_SOFT['pt-br']}${freeSuffix}`;
-    const userPrompt = `Por favor, analise meu mapa BaZi e gere um relatório de destino.\n\nDados de nascimento:\n- Data: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', Hora: ' + birthHour + ':00' : ' (hora de nascimento desconhecida)'}\n- Gênero: ${gender === 'male' ? 'Masculino' : 'Feminino'}\n\n${full ? `Gere um relatório completo com estas seções (título com emoji obrigatório):\n📜 Mapa dos Quatro Pilares (mín. 600 palavras)\n🌊 Análise dos Cinco Elementos (mín. 500 palavras)\n🌟 Fortuna deste Ano 2025-2026 (mín. 400 palavras)\n💰 Destino Financeiro (mín. 600 palavras)\n💕 Amor e Relacionamentos (mín. 600 palavras)\n💼 Carreira e Propósito (mín. 600 palavras)\n📅 Ciclos de Sorte de 10 Anos (mín. 800 palavras)\n🔮 Previsão Ano a Ano próximos 10 anos (mín. 600 palavras)\n🎯 Recomendações Personalizadas (mín. 400 palavras)\n💌 Mensagem Pessoal (mín. 300 palavras)` : `Gere apenas a prévia gratuita com os 3 capítulos e o separador LOCKED.`}`;
+    const sysPrompt = `Você é um mestre em BaZi (Quatro Pilares do Destino) com mais de 30 anos de experiência na metafísica clássica chinesa. Você escreve relatórios calorosos, perspicazes e práticos em português brasileiro fluente. Explique os conceitos metafísicos chineses claramente, sem jargões, e sempre dê conselhos específicos e acionáveis. Nunca seja assustador ou fatalista — ajude as pessoas a entender seus pontos fortes e navegar pelos desafios.${HEALTH_SOFT['pt-br']}${freeSuffix}
+
+[BASE TEMPORAL ATUAL] O ano atual é ${NOW_Y}. Todas as análises de Ciclos de Sorte, fortuna anual e previsões ano a ano DEVEM tratar ${NOW_Y} como "este ano / ano atual". Não use anos passados (ex.: 2024 ou 2025) como referência atual.`;
+    const userPrompt = `Por favor, analise meu mapa BaZi e gere um relatório de destino.\n\nDados de nascimento:\n- Data: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', Hora: ' + birthHour + ':00' : ' (hora de nascimento desconhecida)'}\n- Gênero: ${gender === 'male' ? 'Masculino' : 'Feminino'}\n\n${full ? `Gere um relatório completo com estas seções (título com emoji obrigatório):\n📜 Mapa dos Quatro Pilares (mín. 600 palavras)\n🌊 Análise dos Cinco Elementos (mín. 500 palavras)\n🌟 Fortuna deste Ano ${NOW_Y}-${NOW_Y+1} (mín. 400 palavras)\n💰 Destino Financeiro (mín. 600 palavras)\n💕 Amor e Relacionamentos (mín. 600 palavras)\n💼 Carreira e Propósito (mín. 600 palavras)\n📅 Ciclos de Sorte de 10 Anos (mín. 800 palavras)\n🔮 Previsão Ano a Ano próximos 10 anos (mín. 600 palavras)\n🎯 Recomendações Personalizadas (mín. 400 palavras)\n💌 Mensagem Pessoal (mín. 300 palavras)` : `Gere apenas a prévia gratuita com os 3 capítulos e o separador LOCKED.`}`;
     const _chartPt = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender });
     const messages = buildReadingPrompt(sysPrompt, userPrompt + (_chartPt ? CHART_STRICT['pt-br'] + _chartPt + '\n' : ''));
     const result = await deepseekChat(messages, { maxTokens: full ? 16384 : 3500 });
@@ -449,8 +457,10 @@ async function baziThHandler(req, res) {
       if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
     }
     const freeSuffix = full ? '' : `\n\nสำคัญ: นี่คือตัวอย่างฟรี กรุณาสร้างเฉพาะ 3 บทนี้:\n📜 แผนภูมิสี่เสา\n🌊 การวิเคราะห์ธาตุทั้งห้า\n🌟 โชคลาภปีนี้\n\nหลังจากเสร็จ 3 บท (ประมาณ 1000-1500 คำ) ให้เขียน:\n---LOCKED---\n\nจากนั้นระบุบทที่ล็อก:\n💰 โชคลาภและการเงิน — ปลดล็อกในรายงานฉบับเต็ม\n💕 ความรักและความสัมพันธ์ — ปลดล็อกในรายงานฉบับเต็ม\n💼 อาชีพและเส้นทางชีวิต — ปลดล็อกในรายงานฉบับเต็ม\n📅 วัฏจักรโชคชะตา 10 ปี — ปลดล็อกในรายงานฉบับเต็ม\n🔮 พยากรณ์รายปี — ปลดล็อกในรายงานฉบับเต็ม`;
-    const sysPrompt = `คุณเป็นปรมาจารย์ด้านปาจี (สี่เสาแห่งโชคชะตา) ที่มีประสบการณ์มากกว่า 30 ปีในอภิปรัชญาจีนคลาสสิก คุณเขียนรายงานที่อบอุ่น เข้าถึงได้ และปฏิบัติได้จริงในภาษาไทยที่คล่องแคล่ว อธิบายแนวคิดจีนโบราณอย่างชัดเจน และให้คำแนะนำที่เป็นรูปธรรม ไม่มีการทำนายที่น่ากลัว — ช่วยให้ผู้คนเข้าใจจุดแข็งของตนเอง${HEALTH_SOFT.th}${freeSuffix}`;
-    const userPrompt = `กรุณาวิเคราะห์แผนภูมิปาจีของฉันและสร้างรายงานโชคชะตา\n\nข้อมูลการเกิด:\n- วันที่: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', เวลา: ' + birthHour + ':00' : ' (ไม่ทราบเวลาเกิด)'}\n- เพศ: ${gender === 'male' ? 'ชาย' : 'หญิง'}\n\n${full ? `สร้างรายงานฉบับเต็มพร้อมหัวข้อ emoji:\n📜 แผนภูมิสี่เสา (อย่างน้อย 600 คำ)\n🌊 การวิเคราะห์ธาตุทั้งห้า (อย่างน้อย 500 คำ)\n🌟 โชคลาภปีนี้ 2025-2026 (อย่างน้อย 400 คำ)\n💰 โชคลาภการเงิน (อย่างน้อย 600 คำ)\n💕 ความรักและความสัมพันธ์ (อย่างน้อย 600 คำ)\n💼 อาชีพและเส้นทางชีวิต (อย่างน้อย 600 คำ)\n📅 วัฏจักรโชคชะตา 10 ปี (อย่างน้อย 800 คำ)\n🔮 พยากรณ์รายปี 10 ปีข้างหน้า (อย่างน้อย 600 คำ)\n🎯 คำแนะนำส่วนตัว (อย่างน้อย 400 คำ)\n💌 ข้อความส่วนตัว (อย่างน้อย 300 คำ)` : `สร้างเฉพาะตัวอย่างฟรี 3 บทและตัวคั่น LOCKED`}`;
+    const sysPrompt = `คุณเป็นปรมาจารย์ด้านปาจี (สี่เสาแห่งโชคชะตา) ที่มีประสบการณ์มากกว่า 30 ปีในอภิปรัชญาจีนคลาสสิก คุณเขียนรายงานที่อบอุ่น เข้าถึงได้ และปฏิบัติได้จริงในภาษาไทยที่คล่องแคล่ว อธิบายแนวคิดจีนโบราณอย่างชัดเจน และให้คำแนะนำที่เป็นรูปธรรม ไม่มีการทำนายที่น่ากลัว — ช่วยให้ผู้คนเข้าใจจุดแข็งของตนเอง${HEALTH_SOFT.th}${freeSuffix}
+
+[ฐานเวลาปัจจุบัน] ปีปัจจุบันคือ ${NOW_Y} การวิเคราะห์วัฏจักรโชคชะตา โชคลาภรายปี และการพยากรณ์ทุกรายการ ต้องใช้ ${NOW_Y} เป็น "ปีนี้/ปีปัจจุบัน" ห้ามใช้ปีที่ผ่านมา (เช่น 2024 หรือ 2025) เป็นอ้างอิงปัจจุบัน`;
+    const userPrompt = `กรุณาวิเคราะห์แผนภูมิปาจีของฉันและสร้างรายงานโชคชะตา\n\nข้อมูลการเกิด:\n- วันที่: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', เวลา: ' + birthHour + ':00' : ' (ไม่ทราบเวลาเกิด)'}\n- เพศ: ${gender === 'male' ? 'ชาย' : 'หญิง'}\n\n${full ? `สร้างรายงานฉบับเต็มพร้อมหัวข้อ emoji:\n📜 แผนภูมิสี่เสา (อย่างน้อย 600 คำ)\n🌊 การวิเคราะห์ธาตุทั้งห้า (อย่างน้อย 500 คำ)\n🌟 โชคลาภปีนี้ ${NOW_Y}-${NOW_Y+1} (อย่างน้อย 400 คำ)\n💰 โชคลาภการเงิน (อย่างน้อย 600 คำ)\n💕 ความรักและความสัมพันธ์ (อย่างน้อย 600 คำ)\n💼 อาชีพและเส้นทางชีวิต (อย่างน้อย 600 คำ)\n📅 วัฏจักรโชคชะตา 10 ปี (อย่างน้อย 800 คำ)\n🔮 พยากรณ์รายปี 10 ปีข้างหน้า (อย่างน้อย 600 คำ)\n🎯 คำแนะนำส่วนตัว (อย่างน้อย 400 คำ)\n💌 ข้อความส่วนตัว (อย่างน้อย 300 คำ)` : `สร้างเฉพาะตัวอย่างฟรี 3 บทและตัวคั่น LOCKED`}`;
     const _chartTh = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender });
     const messages = buildReadingPrompt(sysPrompt, userPrompt + (_chartTh ? CHART_STRICT.th + _chartTh + '\n' : ''));
     const result = await deepseekChat(messages, { maxTokens: full ? 16384 : 3500 });
@@ -476,8 +486,10 @@ async function baziEsHandler(req, res) {
       if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
     }
     const freeSuffix = full ? '' : `\n\nIMPORTANTE: Esta es la vista previa gratuita. Genera SOLO estos 3 capítulos:\n📜 Mapa de los Cuatro Pilares\n🌊 Análisis de los Cinco Elementos\n🌟 Fortuna de este Año\n\nTras completar los 3 capítulos (~1000-1500 palabras), escribe exactamente:\n---LOCKED---\n\nLuego lista los capítulos bloqueados:\n💰 Destino Financiero y Profesional — disponible en el reporte completo\n💕 Amor y Relaciones — disponible en el reporte completo\n💼 Carrera y Propósito de Vida — disponible en el reporte completo\n📅 Ciclos de Suerte de 10 Años — disponible en el reporte completo\n🔮 Pronóstico Año a Año — disponible en el reporte completo`;
-    const sysPrompt = `Eres un maestro en BaZi (Cuatro Pilares del Destino) con más de 30 años de experiencia en metafísica clásica china. Escribes reportes cálidos, perspicaces y prácticos en español latinoamericano fluido. Explicas los conceptos metafísicos chinos con claridad, sin jergas, y siempre das consejos específicos y accionables. Nunca seas aterrador ni fatalista — ayuda a las personas a entender sus fortalezas y navegar los desafíos.${HEALTH_SOFT.es}${freeSuffix}`;
-    const userPrompt = `Por favor analiza mi mapa BaZi y genera un reporte de destino profundo.\n\nDatos de nacimiento:\n- Fecha: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', Hora: ' + birthHour + ':00' : ' (hora de nacimiento desconocida)'}\n- Género: ${gender === 'male' ? 'Masculino' : 'Femenino'}\n\n${full ? `Genera un reporte completo con estas secciones (título con emoji obligatorio):\n📜 Mapa de los Cuatro Pilares (mín. 600 palabras)\n🌊 Análisis de los Cinco Elementos (mín. 500 palabras)\n🌟 Fortuna de este Año 2025-2026 (mín. 400 palabras)\n💰 Destino Financiero (mín. 600 palabras)\n💕 Amor y Relaciones (mín. 600 palabras)\n💼 Carrera y Propósito (mín. 600 palabras)\n📅 Ciclos de Suerte de 10 Años (mín. 800 palabras)\n🔮 Pronóstico Año a Año próximos 10 años (mín. 600 palabras)\n🎯 Recomendaciones Personalizadas (mín. 400 palabras)\n💌 Mensaje Personal (mín. 300 palabras)` : `Genera solo la vista previa gratuita con los 3 capítulos y el separador LOCKED.`}`;
+    const sysPrompt = `Eres un maestro en BaZi (Cuatro Pilares del Destino) con más de 30 años de experiencia en metafísica clásica china. Escribes reportes cálidos, perspicaces y prácticos en español latinoamericano fluido. Explicas los conceptos metafísicos chinos con claridad, sin jergas, y siempre das consejos específicos y accionables. Nunca seas aterrador ni fatalista — ayuda a las personas a entender sus fortalezas y navegar los desafíos.${HEALTH_SOFT.es}${freeSuffix}
+
+[BASE TEMPORAL ACTUAL] El año actual es ${NOW_Y}. Todos los Ciclos de Suerte, fortuna anual y pronósticos año a año DEBEN tratar ${NOW_Y} como "este año / año actual". No uses años pasados (ej. 2024 o 2025) como referencia actual.`;
+    const userPrompt = `Por favor analiza mi mapa BaZi y genera un reporte de destino profundo.\n\nDatos de nacimiento:\n- Fecha: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', Hora: ' + birthHour + ':00' : ' (hora de nacimiento desconocida)'}\n- Género: ${gender === 'male' ? 'Masculino' : 'Femenino'}\n\n${full ? `Genera un reporte completo con estas secciones (título con emoji obligatorio):\n📜 Mapa de los Cuatro Pilares (mín. 600 palabras)\n🌊 Análisis de los Cinco Elementos (mín. 500 palabras)\n🌟 Fortuna de este Año ${NOW_Y}-${NOW_Y+1} (mín. 400 palabras)\n💰 Destino Financiero (mín. 600 palabras)\n💕 Amor y Relaciones (mín. 600 palabras)\n💼 Carrera y Propósito (mín. 600 palabras)\n📅 Ciclos de Suerte de 10 Años (mín. 800 palabras)\n🔮 Pronóstico Año a Año próximos 10 años (mín. 600 palabras)\n🎯 Recomendaciones Personalizadas (mín. 400 palabras)\n💌 Mensaje Personal (mín. 300 palabras)` : `Genera solo la vista previa gratuita con los 3 capítulos y el separador LOCKED.`}`;
     const _chartEs = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender });
     const messages = buildReadingPrompt(sysPrompt, userPrompt + (_chartEs ? CHART_STRICT.es + _chartEs + '\n' : ''));
     const result = await deepseekChat(messages, { maxTokens: full ? 16384 : 3500 });
@@ -503,8 +515,10 @@ async function baziInHandler(req, res) {
       if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
     }
     const freeSuffix = full ? '' : `\n\nIMPORTANT: This is the free preview. Output ONLY these 3 chapters:\n📜 Four Pillars Chart\n🌊 Five Elements Analysis\n🌟 This Year's Fortune\n\nAfter completing these 3 chapters (around 1000-1500 words total), output exactly:\n---LOCKED---\n\nThen list the locked chapters:\n💰 Wealth & Finance Destiny — unlocked in full report\n💕 Love & Marriage Timing — unlocked in full report\n💼 Career & Life Purpose — unlocked in full report\n📅 Ten-Year Luck Cycles — unlocked in full report\n🔮 Year-by-Year Forecast — unlocked in full report`;
-    const sysPrompt = `You are a master BaZi (Four Pillars of Destiny) reader with 30+ years of experience. You blend Chinese BaZi wisdom with insights that resonate deeply with Indian users — drawing parallels to Jyotish concepts like Rashi, Dasha, and Karma where helpful, while keeping the analysis rooted in BaZi. You write warm, insightful, and practical reports in fluent Indian English. Never be scary or fatalistic. Give specific, actionable guidance.${HEALTH_SOFT['en-in']}${freeSuffix}`;
-    const userPrompt = `Please analyse my BaZi chart and generate a deep destiny report.\n\nBirth details:\n- Date: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', Time: ' + birthHour + ':00' : ' (birth time unknown)'}\n- Gender: ${gender === 'male' ? 'Male' : 'Female'}\n\n${full ? `Generate a comprehensive report with these sections (emoji heading required for each):\n📜 Four Pillars Chart (Day Master, chart pattern, parallels with Vedic concepts — min 600 words)\n🌊 Five Elements Analysis (balance, what to strengthen — min 500 words)\n🌟 This Year's Fortune 2025-2026 (min 400 words)\n💰 Wealth & Finance Destiny (peak income years, best fields, investment timing — min 600 words)\n💕 Love & Marriage (marriage timing, ideal partner, relationship karma — min 600 words)\n💼 Career & Life Purpose (best career paths, peak years, mentor directions — min 600 words)\n📅 Ten-Year Luck Cycles (all major cycles with years and analysis — min 800 words)\n🔮 Year-by-Year Forecast (next 10 years — min 600 words)\n🎯 Personalised Recommendations (lucky colours, numbers, gemstones, directions — min 400 words)\n💌 A Personal Message (warm, personalised closing — min 300 words)` : `Generate a free preview with ONLY these 3 sections then the LOCKED separator.`}`;
+    const sysPrompt = `You are a master BaZi (Four Pillars of Destiny) reader with 30+ years of experience. You blend Chinese BaZi wisdom with insights that resonate deeply with Indian users — drawing parallels to Jyotish concepts like Rashi, Dasha, and Karma where helpful, while keeping the analysis rooted in BaZi. You write warm, insightful, and practical reports in fluent Indian English. Never be scary or fatalistic. Give specific, actionable guidance.${HEALTH_SOFT['en-in']}${freeSuffix}
+
+[CURRENT TIME BASELINE] The current year is ${NOW_Y}. All Luck Cycle (大运), Dasha period, annual fortune, and year-by-year forecasts MUST treat ${NOW_Y} as "this year / current year". Do NOT reference past years (e.g. 2024 or 2025) as the current year.`;
+    const userPrompt = `Please analyse my BaZi chart and generate a deep destiny report.\n\nBirth details:\n- Date: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', Time: ' + birthHour + ':00' : ' (birth time unknown)'}\n- Gender: ${gender === 'male' ? 'Male' : 'Female'}\n\n${full ? `Generate a comprehensive report with these sections (emoji heading required for each):\n📜 Four Pillars Chart (Day Master, chart pattern, parallels with Vedic concepts — min 600 words)\n🌊 Five Elements Analysis (balance, what to strengthen — min 500 words)\n🌟 This Year's Fortune ${NOW_Y}-${NOW_Y+1} (min 400 words)\n💰 Wealth & Finance Destiny (peak income years, best fields, investment timing — min 600 words)\n💕 Love & Marriage (marriage timing, ideal partner, relationship karma — min 600 words)\n💼 Career & Life Purpose (best career paths, peak years, mentor directions — min 600 words)\n📅 Ten-Year Luck Cycles (all major cycles with years and analysis — min 800 words)\n🔮 Year-by-Year Forecast (next 10 years — min 600 words)\n🎯 Personalised Recommendations (lucky colours, numbers, gemstones, directions — min 400 words)\n💌 A Personal Message (warm, personalised closing — min 300 words)` : `Generate a free preview with ONLY these 3 sections then the LOCKED separator.`}`;
     const _chartIn = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender });
     const messages = buildReadingPrompt(sysPrompt, userPrompt + (_chartIn ? CHART_STRICT['en-in'] + _chartIn + '\n' : ''));
     const result = await deepseekChat(messages, { maxTokens: full ? 16384 : 3500 });
@@ -574,7 +588,11 @@ router.post('/bazi', rateLimitMiddleware, async (req, res) => {
 15. 🔑 英文名与事业签名（从命主五行用神出发，推荐3个适合的英文名，解释每个名字的音韵五行属性；另推荐一个适合商务场合使用的中文签名风格，不少于300字）
 16. 💌 命理师私语（这是最后一节，完全个性化——不是套话，是只对这个命主说的心里话。像一位看透一切却依然温柔的老朋友，说出命主最需要听到的那句话，以及一句发自内心的祝福，不少于400字）
 
-语言：简体中文。用朋友聊天的语气写，不要文言腔。重要信息加粗。引用古文时必须附白话解释。多用量化数据（百分比、分数、年份）增强说服力。每个维度字数不达标则补写，绝不允许以"略"或省略号代替。${modeInstruction}`,
+语言：简体中文。用朋友聊天的语气写，不要文言腔。重要信息加粗。引用古文时必须附白话解释。多用量化数据（百分比、分数、年份）增强说服力。每个维度字数不达标则补写，绝不允许以"略"或省略号代替。${modeInstruction}
+
+【当前时间基准】今年是 ${NOW_Y} 年。所有流年/大运/运势分析必须以 ${NOW_Y} 年为"当前/今年"，禁止把过去年份（如2024/2025）当作今年。
+
+【五行生克铁律】生克方向：木生火·火生土·土生金·金生水·水生木。"壬水生乙木"=水生木，壬水是生者（母），乙木是被生者（子）；绝对不能写成"壬水被乙木生"——这是方向写反的严重错误。`,
       `请为我批算八字命盘，生成一份完整的深度命理报告。总字数控制在9000-11000字，16个维度全部写完写透，字数均衡分配，务必保证收尾维度（大运/流年/命理师私语）完整不被截断。
 
 【基本信息】
@@ -609,7 +627,7 @@ ${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及�
 - 正财分析：稳定收入/工资性收入的格局，命主适合的财富积累方式
 - 偏财分析：投资/副业/意外之财的格局，有无偏财命局特征
 - 财库分析：命中有无财库（辰戌丑未），财库是否被冲开
-- 发财黄金时间窗：给出3个最可能突破财运的具体年份（如2026年、2028年）并解释大运流年配合原因
+- 发财黄金时间窗：给出3个最可能突破财运的具体年份（如${NOW_Y}年、${NOW_Y+2}年）并解释大运流年配合原因
 - 最适合的求财行业方向（具体行业名称，至少5个）
 - 投资禁忌：哪些投资方式会亏损（具体说明五行原因）
 - 未来10年财运走势概览
@@ -712,7 +730,7 @@ ${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及�
     var useMessages = messages;
     if (baziTier === 'free') {
       useMessages = buildReadingPrompt(
-        '你是精通八字命理的命理师。为用户生成一份【基础版】命盘概览。请严格按照以下3个章节结构输出，每个章节标题必须以对应的emoji开头（方便客户端解析）:\n📜 四柱八字排盘\n🌊 五行能量分析\n🌟 今年运势概览\n每个章节写2-3段实质内容，语言简体中文、温暖白话，合计约1500字。让用户感受到真实价值。三个章节完成后，输出一行"---LOCKED---"，然后输出以下锁定内容提示（原样输出，不展开）:\n💰 财运格局 · 完整解读见付费版\n❤️ 感情姻缘 · 完整解读见付费版\n🏆 事业格局 · 完整解读见付费版\n🔑 开运锦囊 · 完整解读见付费版',
+        '你是精通八字命理的命理师。为用户生成一份【基础版】命盘概览。请严格按照以下3个章节结构输出，每个章节标题必须以对应的emoji开头（方便客户端解析）:\n📜 四柱八字排盘\n🌊 五行能量分析\n🌟 今年运势概览\n每个章节写2-3段实质内容，语言简体中文、温暖白话，合计约1500字。让用户感受到真实价值。三个章节完成后，输出一行"---LOCKED---"，然后输出以下锁定内容提示（原样输出，不展开）:\n💰 财运格局 · 完整解读见付费版\n❤️ 感情姻缘 · 完整解读见付费版\n🏆 事业格局 · 完整解读见付费版\n🔑 开运锦囊 · 完整解读见付费版\n【合规】今年运势章节最后必须附一句：「本报告由AI辅助生成，仅供参考娱乐，不构成任何决策建议。」' + `【当前时间基准】今年是 ${NOW_Y} 年，所有运势分析以 ${NOW_Y} 年为"今年"。`,
         '请为以下命主生成【基础版】命盘概览(仅含四柱排盘+五行+今年运势3节，约1500字，然后输出---LOCKED---及锁定章节提示):\n出生:' + birthYear + '年' + birthMonth + '月' + birthDay + '日' + (birthHour !== undefined ? birthHour + '时' : '(时辰不详)') + '\n性别:' + (gender === 'male' ? '男' : '女')
       );
     } else if (baziTier === 'standard') {
@@ -1649,6 +1667,11 @@ Use the pre-computed compatibility score provided. Give specific year recommenda
 
     // 🔴 合规免责：所有 hehun/stream 分支 systemPrompt 末尾统一附娱乐免责
     systemPrompt += (hehunLang === 'en' ? DISCLAIMER_EN : DISCLAIMER_ZH);
+    // 年份基准注入（防 AI 写过去年份为"今年"）
+    const _hehunYearBase = hehunLang === 'en'
+      ? `\n\n[CURRENT TIME BASELINE] The current year is ${NOW_Y}. All annual fortune and year-by-year forecasts MUST treat ${NOW_Y} as "this year / current year". Do NOT use past years (e.g. 2024 or 2025) as the current year.`
+      : `\n\n【当前时间基准】今年是 ${NOW_Y} 年。所有流年/感情运势分析必须以 ${NOW_Y} 年为"当前/今年"，禁止把过去年份（如2024/2025）当作今年。`;
+    systemPrompt += _hehunYearBase;
 
     // ── 双方精确排盘（算法排，不让AI猜）──
     const bazi1 = calcBazi(Number(p1Year), Number(p1Month), Number(p1Day), Number(p1Hour)||0, p1Gender||'female');
@@ -1894,9 +1917,15 @@ ${palaceLines}
 【输出格式】用 Markdown，标题分段，简体中文。总字数 9000-11000字，全部 17 个维度写完写透，每个维度字数不低于要求，严禁用"略"或"详见下文"代替内容。
 ${zwEngineSection}【健康维度】只说脏腑养生方向，严禁点名具体西医病名，不制造恐慌。
 
+【当前时间基准】今年是 ${NOW_Y} 年。所有大限/流年/运势分析必须以 ${NOW_Y} 年为"当前/今年"，禁止把过去年份（如2024/2025）当作今年。
+
+【绝对铁律】命宫/十二宫主星、四化必须与上方注入命盘逐字一致，禁止自填星曜或凭空推算。若注入数据显示某宫无主星，必须如实说明"无主星，借对宫"，绝不捏造。
+
 【收尾合规】报告最后附一行："本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。"${langSuffix(zwLang)}`;
 
-    const ziweiSystemPreview = `你是一位精通紫微斗数的命理师，师承中州派，从业30年。这是【免费预览版】，只输出前3节让用户感受真实价值，然后停止并引导解锁完整版。语言通俗易懂、用大白话。用Markdown格式。语言：简体中文。${zwEngineSection}`;
+    const ziweiSystemPreview = `你是一位精通紫微斗数的命理师，师承中州派，从业30年。这是【免费预览版】，只输出前3节让用户感受真实价值，然后停止并引导解锁完整版。语言通俗易懂、用大白话。用Markdown格式。语言：简体中文。${zwEngineSection}
+【当前时间基准】今年是 ${NOW_Y} 年。所有大限/流年分析以 ${NOW_Y} 年为"当前/今年"，禁止写2024/2025年为今年。
+【绝对铁律】命宫/十二宫主星、四化必须与上方注入命盘逐字一致，禁止自填星曜或凭空推算。`;
 
     const systemPrompt = ziweiAccess ? ziweiSystemFull : ziweiSystemPreview;
     const userMsg = ziweiAccess
@@ -2661,6 +2690,10 @@ ${westernEngineBlock || '（精确天文引擎数据不可用，请仅基于上�
 
 【精确星盘数据（后端注入·禁 LLM 自算）】
 ${fullChartBlock}
+
+【绝对铁律】必须逐字采用上方注入的精确星盘数据（行星星座+度数+宫位+相位），禁止自行推算或改动任何行星落座；若某数据缺失（如无出生时间→上升不可用）必须明说"因缺出生时间暂不可定"，绝不编造。
+
+【当前时间基准】今年是 ${NOW_Y} 年。所有行运/过境/流年分析必须以 ${NOW_Y} 年为"当前/今年"，禁止把过去年份（如2024/2025）当作今年。
 
 【健康章节】只说中医/西医体质养生倾向，严禁做医疗诊断，不点具体病名，不制造恐慌。
 【收尾合规】报告最后附一行免责声明："本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。"${langSuffix(lang)}`;
@@ -3636,8 +3669,9 @@ ${rashiName} + ${nakshatraName}的组合，赋予了${name}三种深刻的天赋
       const cached = reportCache.get(ck + '|jyotish');
       if (cached) { return res.json({ reading: cached, tier: 'basic', data: jyotishData, unlockUrl: '/pages/jyotish.html#unlock', cached: true }); }
     }
+    const _jyotishYearBase = `\n\n[CURRENT TIME BASELINE] The current year is ${NOW_Y}. All Dasha periods, annual transits, and year-by-year forecasts MUST treat ${NOW_Y} as "this year / current year". Do NOT use past years (e.g. 2024 or 2025) as the current reference year.`;
     const reading = await deepseekChat([
-      { role: 'system', content: systemPrompt + vedicInject },
+      { role: 'system', content: systemPrompt + vedicInject + _jyotishYearBase },
       { role: 'user', content: `Please generate the Vedic Jyotish report for ${name}.` }
     ], { maxTokens: full ? 16384 : 4000 });
 
