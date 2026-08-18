@@ -3486,6 +3486,18 @@ router.post('/jyotish', rateLimitMiddleware, async (req, res) => {
     const jyotishData = calculateJyotish(dob, tob);
     const full = gateReportAccess(req, ['jyotish_full', 'jyotish']).full;
 
+    // 吠陀真引擎注入（VSOP87+Lahiri·真Lagna/月亮Rashi/Nakshatra/九曜/Vimshottari大运·替代随机近似·禁LLM自算）
+    let vedicInject = '';
+    try {
+      const { buildVedicBlock } = require('../lib/vedic-engine/prompt-block');
+      const { lookupCity } = require('../lib/geo-lookup');
+      const co = lookupCity(city, country) || { lat: 28.6139, lng: 77.2090, tz: 5.5 };
+      const dp = String(dob).split(/[-/.]/).map(Number);
+      const tp = String(tob).split(/[:：]/).map(Number);
+      const vb = buildVedicBlock({ year: dp[0], month: dp[1], day: dp[2], hour: tp[0] || 0, minute: tp[1] || 0, latitude: co.lat, longitude: co.lng, timezone: co.tz });
+      if (vb) vedicInject = `\n\n【AUTHORITATIVE PRECISE VEDIC CHART — computed by a real astronomical engine (VSOP87 + Lahiri ayanamsa). Use ONLY these values for Lagna/Ascendant, Moon Rashi, Nakshatra, planetary positions and the current Vimshottari Dasha. Do NOT self-calculate or contradict this data; ignore any other Rashi/Nakshatra/Lagna mentioned above.】\n${vb}\n`;
+    } catch (e) { console.warn('[JYOTISH] vedic-engine 不可用，降级:', e && e.message); }
+
     const RASHI_EN = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
     const NAKSHATRA_EN = ['Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha','Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishtha','Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati'];
     const rashiName = RASHI_EN[jyotishData.rashi] || 'Sagittarius';
@@ -3605,7 +3617,7 @@ ${rashiName} + ${nakshatraName}的组合，赋予了${name}三种深刻的天赋
       if (cached) { return res.json({ reading: cached, tier: 'basic', data: jyotishData, unlockUrl: '/pages/jyotish.html#unlock', cached: true }); }
     }
     const reading = await deepseekChat([
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: systemPrompt + vedicInject },
       { role: 'user', content: `Please generate the Vedic Jyotish report for ${name}.` }
     ], { maxTokens: full ? 16384 : 4000 });
 
@@ -4175,6 +4187,18 @@ router.post('/jyotish/stream', rateLimitMiddleware, async (req, res) => {
     const tobStr = tob || '12:00';
     const jyotishData = calculateJyotish(dob, tobStr);
     const full = gateReportAccess(req, ['jyotish_full', 'jyotish']).full;
+
+    // 吠陀真引擎注入（stream·同 non-stream）
+    let vedicInject = '';
+    try {
+      const { buildVedicBlock } = require('../lib/vedic-engine/prompt-block');
+      const { lookupCity } = require('../lib/geo-lookup');
+      const co = lookupCity(city, country) || { lat: 28.6139, lng: 77.2090, tz: 5.5 };
+      const dp = String(dob).split(/[-/.]/).map(Number);
+      const tp = String(tob).split(/[:：]/).map(Number);
+      const vb = buildVedicBlock({ year: dp[0], month: dp[1], day: dp[2], hour: tp[0] || 0, minute: tp[1] || 0, latitude: co.lat, longitude: co.lng, timezone: co.tz });
+      if (vb) vedicInject = `\n\n【AUTHORITATIVE PRECISE VEDIC CHART — real astronomical engine (VSOP87 + Lahiri). Use ONLY these values for Lagna/Moon Rashi/Nakshatra/planets/current Vimshottari Dasha; ignore any other astrological values mentioned above.】\n${vb}\n`;
+    } catch (e) { console.warn('[JYOTISH-STREAM] vedic-engine 不可用，降级:', e && e.message); }
     const RASHI_EN = ['Aries','Taurus','Gemini','Cancer','Leo','Virgo','Libra','Scorpio','Sagittarius','Capricorn','Aquarius','Pisces'];
     const NAKSHATRA_EN = ['Ashwini','Bharani','Krittika','Rohini','Mrigashira','Ardra','Punarvasu','Pushya','Ashlesha','Magha','Purva Phalguni','Uttara Phalguni','Hasta','Chitra','Swati','Vishakha','Anuradha','Jyeshtha','Mula','Purva Ashadha','Uttara Ashadha','Shravana','Dhanishtha','Shatabhisha','Purva Bhadrapada','Uttara Bhadrapada','Revati'];
     const rashiName = RASHI_EN[jyotishData.rashi] || 'Sagittarius';
@@ -4242,7 +4266,7 @@ Language: ${outputLangFull}. Writing style: destiny poetry. Scene over abstracti
     res.write(`data: ${JSON.stringify({ type: 'meta', tier: full ? 'full' : 'basic', locked: !full, data: jyotishData })}\n\n`);
 
     const streamBody = await deepseekStream(
-      [{ role: 'system', content: systemPrompt }, { role: 'user', content: `Please generate the Vedic Jyotish report for ${name}.` }],
+      [{ role: 'system', content: systemPrompt + vedicInject }, { role: 'user', content: `Please generate the Vedic Jyotish report for ${name}.` }],
       { maxTokens: full ? 16384 : 4000, timeout: 300000 }
     );
 
@@ -4526,25 +4550,24 @@ router.post('/duanshi/stream', async (req, res) => {
     const { question, topic, method } = req.body;
     if (!question || question.length < 5) return res.status(400).json({ error: 'question required' });
 
-    // 随机生成六爻卦象（模拟摇钱起卦）
-    const hexLines = Array.from({length:6}, () => Math.floor(Math.random()*4)+6); // 6老阴 7少阳 8少阴 9老阳
-    const guaNames = ['乾','兑','离','震','巽','坎','艮','坤'];
-    function linesToGua(lines){ let b=lines.map(l=>l%2===0?0:1); let n=b[0]*4+b[1]*2+b[2]; return guaNames[n]||'坤'; }
-    const lowerGua = linesToGua(hexLines.slice(0,3));
-    const upperGua = linesToGua(hexLines.slice(3,6));
-    const guaStr = upperGua+'卦上'+ lowerGua +'卦下';
+    // 六爻真实起卦（与 /liuyao 同款引擎·纳甲/六亲/六神/世应/空亡·禁 LLM 自编卦象）
+    let liuyaoBlock = '';
+    try { liuyaoBlock = await buildLiuyaoBlock({ date: new Date() }); }
+    catch (e) { console.warn('[DUANSHI] 六爻引擎不可用，降级:', e && e.message); }
 
     const now = new Date();
     const dateStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日`;
 
     const systemPrompt = `你是精通六爻预测的命理大师，精通《增删卜易》《断易天机》，擅长以六爻卦象断事。
 你的风格：直接、有力、不绕弯子。给出明确的"宜/不宜/等待"判断，配上卦象解释和具体行动建议。所有判断均为传统术数参考，仅供娱乐参考，不构成任何决策建议——请在 summary 或 analysis 中体现这一分寸，不作绝对化承诺。
+【铁律】必须严格依据下方【六爻真实卦象】里排出的本卦/变卦/纳甲/六亲/六神/世应/空亡断事，禁止自行编造或改动任何爻象。
 你必须返回严格的JSON格式，不要有任何markdown或额外文字。`;
 
     const userMsg = `今日${dateStr}，来问一件事：${question}
 
-起卦方法：${method==='liuyao'?'六爻摇钱卦':'梅花易数'}
-卦象：${guaStr}（六爻爻辞：${hexLines.join('-')}）
+起卦方法：六爻摇钱卦
+【六爻真实卦象】
+${liuyaoBlock || '（六爻引擎暂不可用，请就所问事项审慎给出参考判断，并在analysis中说明卦象暂缺）'}
 事项类别：${topic||'综合'}
 
 请以六爻断事，返回如下JSON（不要任何markdown代码块，直接返回JSON对象）：
@@ -4574,7 +4597,7 @@ router.post('/duanshi/stream', async (req, res) => {
       parsed = {
         verdict: 'deng',
         summary: '卦象复杂，宜静待，勿仓促行事。',
-        analysis: `${guaStr}，世爻持守，应爻动而不发。此卦主静不主动，当下时机尚未成熟，急进则失，缓图则得。`,
+        analysis: `世爻持守，应爻动而不发，此卦主静不主动。当下时机尚未成熟，急进则失，缓图则得。`,
         timing_desc: '建议观望一个月，待局势明朗再做决定。',
         timing_val: '50分',
         actions: ['暂缓最终决定，给自己留出观察期', '做充分调查和准备工作', '一个月后重新评估']
