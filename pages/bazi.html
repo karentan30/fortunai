@@ -387,7 +387,7 @@ html[data-page='bazi'] .hl-score{color:#7ad3a8;font-weight:600;padding:0 4px;bor
 /* ═══ BAZI 黑白星盘 THEME ═══ */
 html[data-page='bazi'], html[data-page='bazi'] body {
   --bg: #0e0e0e; --card: #181818; --mid: #222;
-  --gold: #c8b87a; --gold-light: #e2d49a; --gold-deep: #8a7a40;
+  --gold: #c8b87a; --gold-light: #e2d49a; --gold-deep: #d4a840;
   --jade: #9ab;
   --ink-text: rgba(240,238,230,0.93);
   --sub-text: rgba(200,196,180,0.7);
@@ -520,6 +520,30 @@ input::placeholder,textarea::placeholder { color: rgba(210,206,190,0.62) !import
 /* 五行雷达卡 */
 .wuxing-radar-card{margin:14px 4px;padding:16px 14px 10px;background:linear-gradient(160deg,rgba(18,12,28,0.95),rgba(10,7,16,0.98));border:1px solid rgba(201,168,76,0.24);border-radius:14px;animation:fadeUp 0.5s ease both}
 .wuxing-radar-card .wr-title{font-size:12px;letter-spacing:0.18em;color:rgba(201,168,76,0.7);margin-bottom:6px;display:flex;align-items:center;gap:7px}
+
+/* ── 报告顶部信任条 (P4 — 真实、不夸大) ── */
+.rpt-trust-strip{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 10px;padding:10px 14px;margin:4px 4px 12px;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.14);border-radius:10px;animation:fadeUp 0.4s ease both}
+.rpt-trust-item{display:inline-flex;align-items:center;gap:5px;font-size:11px;letter-spacing:0.08em;color:rgba(201,168,76,0.75);white-space:nowrap}
+.rpt-trust-icon{font-size:12px;line-height:1;opacity:0.85}
+.rpt-trust-sep{color:rgba(201,168,76,0.25);font-size:10px;flex-shrink:0}
+
+/* ── 付费墙过渡感 — 加柔和渐隐蒙版 ── */
+.sticky-cta::before{content:'';display:block;height:40px;margin:-18px -16px 12px;background:linear-gradient(0deg,rgba(10,10,10,0) 0%,rgba(10,10,10,0.6) 100%);pointer-events:none}
+
+/* ── ur-body padding 统一，避免紧贴边缘 ── */
+.ur-body.open{padding:4px 0 8px}
+/* ur-head 分隔线加强视觉节奏 */
+.ur-head{border-bottom:1px solid rgba(201,168,76,0.12)}
+
+/* ── pull-quote 上下留白加大，增加阅读停顿节奏 ── */
+.pull-quote{margin:20px 10px 18px;padding:10px 8px 10px 22px}
+.pull-quote-text{font-size:15.5px;line-height:1.8}
+
+/* ── chapter-cover lead 字号稍小，视觉层次更清晰 ── */
+.chapter-cover-lead{font-size:12px;color:rgba(235,224,195,0.72)}
+
+/* ── 消除 ur-text 的 white-space:pre-wrap 造成的内联 ** 裸漏 ── */
+.ur-text{white-space:normal}
 
 @media print{
   .chapter-cover{break-inside:avoid}
@@ -2034,40 +2058,62 @@ var _CN_ORD = ['其一','其二','其三','其四','其五','其六','其七','�
 function chineseOrdinal(i){ return _CN_ORD[i] || ('其' + (i + 1)); }
 
 // 维度→氛围图映射（关键词匹配，缺则复用最贴近）
+// NOTE: 与章节标题匹配顺序重要——wuxing/dayun 须在 mingge 之前，否则"能量""路线图"落到兜底。
+// 章节名含 emoji 故用 indexOf 直接匹配中文关键词即可。
 var _CHAPTER_ART = [
   { keys: ['感情','姻缘','婚','情感','桃花','爱情','伴侣','恋'], img: 'love' },
-  { keys: ['事业','工作','职','官','贵人','格局定事业'], img: 'career' },
-  { keys: ['财','富','钱','偏财','正财','投资'], img: 'wealth' },
-  { keys: ['健康','身体','疾','养生','病'], img: 'health' },
-  { keys: ['五行','喜用','用神','旺衰','平衡','能量'], img: 'wuxing' },
-  { keys: ['大运','流年','运势','岁运','时运','未来','年运'], img: 'dayun' },
-  { keys: ['格局','命格','日主','命盘','概览','八字','总论','性格','命主'], img: 'mingge' }
+  // 💼事业赛道 → career
+  { keys: ['事业','工作','职','官','贵人','赛道'], img: 'career' },
+  { keys: ['财','富','钱','偏财','正财','投资','密码'], img: 'wealth' },
+  { keys: ['健康','身体','疾','养生','病','信号'], img: 'health' },
+  // 🌊你的能量地图 → wuxing（含"能量"/"地图"/"五行"/"用神"）
+  { keys: ['五行','喜用','用神','旺衰','平衡','能量','地图'], img: 'wuxing' },
+  // 🔮未来十年路线图 / 💼事业赛道 / 大运 → dayun（"路线图"/"十年"/"大运"/"流年"/"运势"/"岁运"）
+  { keys: ['大运','流年','运势','岁运','时运','未来','年运','路线图','十年'], img: 'dayun' },
+  { keys: ['格局','命格','日主','命盘','概览','八字','总论','性格','命主','什么样'], img: 'mingge' },
+  // 🌟2026你会怎样 → dayun（年运类）
+  { keys: ['2026','2027','2028','流年','年运','今年','明年'], img: 'dayun' }
 ];
-function getChapterArt(title){
+// idx: chapter index (0-based), used to vary the fallback image across chapters
+var _CHAPTER_ART_FALLBACKS = ['mingge','wuxing','dayun','career','wealth'];
+function getChapterArt(title, idx){
   var t = String(title || '');
   for (var i = 0; i < _CHAPTER_ART.length; i++) {
     var g = _CHAPTER_ART[i];
     for (var j = 0; j < g.keys.length; j++) { if (t.indexOf(g.keys[j]) !== -1) return g.img; }
   }
-  return 'mingge'; // 兜底：格局图最中性
+  // 兜底：按章节序号轮换，避免多章重复用同一张图
+  return _CHAPTER_ART_FALLBACKS[(idx || 0) % _CHAPTER_ART_FALLBACKS.length];
 }
 
-// 从章节正文抽一句金句：优先含"必/定/最/唯/终/皆/切勿"，否则取一句较短有力的
-function extractPullQuote(contentLines){
+// 从章节正文抽一句金句：优先含"必/定/最/唯/终/皆/切勿"，否则取一句较短有力的。
+// Fix P1: 返回的金句不能与正文第一句（drop-cap 段首句）重复——
+// 传入 firstBodySentence 做排除对比；若所有候选句都与之相同则不渲染 pull-quote。
+function extractPullQuote(contentLines, firstBodySentence){
   if (!contentLines || !contentLines.length) return '';
   var joined = contentLines.join('').replace(/\*\*/g,'').replace(/[#>|]/g,'');
   // 按中文句号/感叹/分号/换行切句
   var sentences = joined.split(/[。！；\n]/).map(function(s){ return s.trim(); })
     .filter(function(s){ return s.length >= 8 && s.length <= 42; });
   if (!sentences.length) return '';
-  var power = /[必定最唯终皆切勿务要千万注定命中天生成败关键根本] /;
   var powerRe = /(必|定|最|唯|终|皆|切勿|务必|注定|命中|天生|成败|关键|根本|谨记|铭记)/;
+  // 排除与正文首句重叠的句子（避免读者读到一模一样的话两次）
+  var fbFirst = (firstBodySentence || '').replace(/\*\*/g,'').trim();
+  var fbFirstShort = fbFirst.slice(0, 20); // 前20字作为去重指纹
+  function isBodyDupe(s){
+    return fbFirstShort.length >= 6 && s.indexOf(fbFirstShort) !== -1;
+  }
+  // 优先选有力句中不重复的
   var pick = null;
-  for (var i = 0; i < sentences.length; i++) { if (powerRe.test(sentences[i])) { pick = sentences[i]; break; } }
+  for (var i = 0; i < sentences.length; i++) {
+    if (powerRe.test(sentences[i]) && !isBodyDupe(sentences[i])) { pick = sentences[i]; break; }
+  }
   if (!pick) {
-    // 取最短的有力句（去掉过于平淡的开头连接词）
-    sentences.sort(function(a,b){ return a.length - b.length; });
-    pick = sentences[Math.floor(sentences.length / 3)] || sentences[0];
+    // 取中段有力句（跳过首句），避免首字下沉段被复读
+    var filtered = sentences.filter(function(s){ return !isBodyDupe(s); });
+    if (!filtered.length) return ''; // 全部重复，不渲染
+    filtered.sort(function(a,b){ return a.length - b.length; });
+    pick = filtered[Math.floor(filtered.length / 3)] || filtered[0];
   }
   return pick || '';
 }
@@ -2085,8 +2131,11 @@ function highlightKind(line){
 }
 
 // 章节封面卡 HTML
+// Fix P2: 不再用 content[0] 做封面副标题，那会让封面与正文首字下沉段完全重复。
+// 改为：不传 leadLine（由调用方负责传入非首句内容），若无则不渲染 lead。
+// Fix P3 (art variety): 用 idx 做 salt 避免多章落到同一图。
 function buildChapterCover(idx, title, leadLine){
-  var art = getChapterArt(title);
+  var art = getChapterArt(title, idx);
   var lead = leadLine ? escHtml(String(leadLine).replace(/\*\*/g,'').slice(0, 46)) : '';
   var html = '<div class="chapter-cover">';
   html += '<img class="chapter-cover-img" loading="lazy" src="/samples/caijing/art-' + art + '.png" alt="" onerror="this.style.display=\'none\'">';
@@ -2529,6 +2578,16 @@ function renderUltimateReport(text, containerId, isLocked) {
   }
 
   var html = '<div class="ultimate-report">';
+  // Trust strip — honest signals, no fabricated user counts (P4)
+  html += '<div class="rpt-trust-strip">'
+    + '<span class="rpt-trust-item"><span class="rpt-trust-icon">⚙️</span>真·四柱引擎精算</span>'
+    + '<span class="rpt-trust-sep">·</span>'
+    + '<span class="rpt-trust-item"><span class="rpt-trust-icon">🌐</span>东西方多体系融合</span>'
+    + '<span class="rpt-trust-sep">·</span>'
+    + '<span class="rpt-trust-item"><span class="rpt-trust-icon">🔄</span>72小时不满意全额退款</span>'
+    + '<span class="rpt-trust-sep">·</span>'
+    + '<span class="rpt-trust-item" style="opacity:0.55"><span class="rpt-trust-icon">🤖</span>AI生成·仅供娱乐</span>'
+    + '</div>';
   sections.forEach(function(sec, i) {
     // 已按 ---LOCKED--- 截断, 展示的均为免费正文章, 不再逐章盖付费墙; 付费转化由底部 sticky-cta 承载。
     var shouldBlur = false;
@@ -2547,21 +2606,33 @@ function renderUltimateReport(text, containerId, isLocked) {
     }
 
     // ① 章节封面卡（通栏氛围图 + 中文数序 + 一句核心结论）
-    var leadLine = (sec.content && sec.content.length) ? sec.content[0] : '';
-    html += '<a id="'+anchorId+'" style="display:block;text-decoration:none;color:inherit">' + buildChapterCover(i, sec.title, leadLine) + '</a>';
+    // Fix P2: 封面副标题用中段句子（非首句），避免与正文 drop-cap 首段重复。
+    // 取 content 中段（约 1/3 处）的第一个普通句作为 lead；高亮卡行不做 lead。
+    var _bodyLines = (sec.content || []).filter(function(ln){ return !isHighlightLine(ln) && ln.trim().length > 6; });
+    var _midIdx = Math.max(1, Math.floor(_bodyLines.length / 3));
+    var leadLine = _bodyLines.length > 1 ? (_bodyLines[_midIdx] || '') : '';
+    // 从 leadLine 截取第一句（中文句号前）做封面副标题
+    var _leadSent = leadLine.split(/[。！；]/)[0].replace(/\*\*/g,'').trim().slice(0, 44);
+    html += '<a id="'+anchorId+'" style="display:block;text-decoration:none;color:inherit">' + buildChapterCover(i, sec.title, _leadSent) + '</a>';
 
-    // ② 五行雷达 / 大运时间轴：插到最相关章节封面之后（数据缺失优雅跳过）
-    var artType = getChapterArt(sec.title);
-    if (artType === 'wuxing' && chart && chart.wuxing) {
+    // ② 五行雷达 / 大运时间轴：用独立关键词判断，与封面 art 图解耦，
+    //    确保新章节名（🌊能量地图 / 🔮未来十年路线图 / 💼事业赛道）均能触发对应图表。
+    var _t = String(sec.title || '');
+    var _wuxingKeys = ['能量','地图','五行','喜用','用神','旺衰'];
+    var _dayunKeys  = ['大运','流年','未来','路线图','十年','运势','岁运','事业赛道','赛道'];
+    var _needWuxing = _wuxingKeys.some(function(k){ return _t.indexOf(k) !== -1; });
+    var _needDayun  = _dayunKeys.some(function(k){ return _t.indexOf(k) !== -1; });
+    if (_needWuxing && chart && chart.wuxing) {
       try { html += buildWuxingRadarCard(chart.wuxing); } catch(e) {}
     }
-    if (artType === 'dayun' && chart && chart.dayun) {
+    if (_needDayun && chart && chart.dayun) {
       try { html += buildDayunTimeline(chart.dayun, _curAge); } catch(e) {}
     }
 
-    // ③ 金句 pull quote（从本章抽一句有力的话）
+    // ③ 金句 pull quote（从本章抽一句有力的话，排除正文首句以防重复 — Fix P1）
+    var _firstBodySent = (_bodyLines[0] || '').split(/[。！；]/)[0];
     var pq = '';
-    try { pq = extractPullQuote(sec.content); } catch(e) {}
+    try { pq = extractPullQuote(sec.content, _firstBodySent); } catch(e) {}
     if (pq) {
       html += '<div class="pull-quote"><span class="pull-quote-mark">“</span>'
         + '<div class="pull-quote-text">'+escHtml(pq)+'</div>'
