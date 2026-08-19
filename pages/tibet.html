@@ -537,7 +537,11 @@ function streamTibetReport(input, btn) {
                 rs.classList.add('show');
                 streamEl = document.getElementById('streamText');
               }
-              if (streamEl) streamEl.textContent = accumulated;
+              if (streamEl) {
+                // Never show the `---LOCKED---` marker or paid teaser lines during streaming
+                var mi = accumulated.indexOf('---LOCKED---');
+                streamEl.textContent = mi >= 0 ? accumulated.slice(0, mi).trim() : accumulated;
+              }
             } else if (ev.type === 'done') {
               if (btn) { btn.disabled = false; btn.textContent = btn._label || '🏔️ Free Preview · Reveal My Tibetan Chart'; }
               showReport(accumulated, ev.contextId, metaTier, metaLocked);
@@ -646,6 +650,15 @@ function extractCosmosData(text) {
 function renderReport(text, contextId, isLocked) {
   if (contextId) document.getElementById('reportScreen').dataset.contextId = contextId;
 
+  // Free preview leak fix: backend appends a `---LOCKED---` marker followed by
+  // paid-chapter teaser lines. Cut everything from the marker onward BEFORE the
+  // heading split so the raw marker + teaser titles never render in the free body.
+  // The paywall/unlock CTA (buildPaywallCta) and lock-overlay already cover the
+  // locked chapters, so the post-marker teaser is intentionally dropped from the DOM.
+  // Paid (unlocked) reports have no marker, so the full text renders unchanged.
+  var lockedMarkerIdx = text.indexOf('---LOCKED---');
+  if (lockedMarkerIdx >= 0) text = text.slice(0, lockedMarkerIdx).trim();
+
   // Populate name
   document.getElementById('reportName').textContent = (lastInput && lastInput.name) ? lastInput.name : 'Your Chart';
 
@@ -726,6 +739,16 @@ function renderReport(text, contextId, isLocked) {
       }
     }
   });
+
+  // Locked teaser block — in-body paywall CTA for free users (post-marker
+  // teaser is NOT rendered; only a locked placeholder + unlock prompt).
+  if (isLocked) {
+    html += '<div class="section-block locked-section">' +
+      '<div class="section-heading">🔒 完整藏历命盘</div>' +
+      '<div class="section-content"><p>Your full reading continues below — unlock to reveal it.</p></div>' +
+      '<div class="lock-overlay"><div class="lock-icon">🔒</div><div class="lock-text">Unlock your full reading · 12-House Analysis · 5-Year Forecast · Remedies &amp; Mantras</div></div>' +
+      '</div>';
+  }
 
   // Mewa cycle timeline — before paywall / at end of unlocked content
   if (window.ReportViz) {

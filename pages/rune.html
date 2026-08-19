@@ -406,7 +406,7 @@ function getReading() {
     if (d.error){showToast(d.error,'error');btn.disabled=false;document.getElementById('submitWrap').style.display='block';return;}
     document.getElementById('resultDivider').style.display = 'flex';
     addRuneChapterCover();
-    renderAIInterpretation(d.reading || '');
+    renderAIInterpretation(d.reading || '', d);
     document.getElementById('runeNote').style.display = 'block';
     document.getElementById('ctaWrap').classList.add('show');
     addRuneScrollCards();
@@ -436,8 +436,16 @@ function parseSections(text) {
   return sections;
 }
 
-function renderAIInterpretation(text) {
-  var sections = parseSections(text);
+function renderAIInterpretation(text, data) {
+  data = data || {};
+  // Truncate at the paywall marker: only free content before ---LOCKED--- is real.
+  var rawReading  = text || '';
+  var lockedIdx   = rawReading.indexOf('---LOCKED---');
+  var isLocked    = (data.locked === true) || (data.tier === 'free') || lockedIdx >= 0;
+  var visibleText = lockedIdx >= 0 ? rawReading.slice(0, lockedIdx).trim() : rawReading;
+  var teaserText  = lockedIdx >= 0 ? rawReading.slice(lockedIdx + 12).replace(/---LOCKED---/g, '').trim() : '';
+
+  var sections = parseSections(visibleText);
   var interpEl = document.getElementById('aiInterp');
   var html = '';
   if (sections.length > 0) {
@@ -453,7 +461,17 @@ function renderAIInterpretation(text) {
       html += '</div>';
     }
   } else {
-    html = '<div style="font-size:11px;color:var(--sub);letter-spacing:.04em;line-height:1.9;white-space:pre-wrap;padding:0 2px">'+text+'</div>';
+    html = '<div style="font-size:11px;color:var(--sub);letter-spacing:.04em;line-height:1.9;white-space:pre-wrap;padding:0 2px">'+visibleText+'</div>';
+  }
+  // Paywall: on free/locked previews, show an unlock CTA + teaser (never real cards).
+  if (isLocked) {
+    html += '<div class="rune-lock" style="margin-top:16px;padding:20px;border:1px solid rgba(232,184,106,0.25);border-radius:12px;background:rgba(20,20,40,0.4);text-align:center">';
+    html += '<div style="font-size:15px;color:rgba(240,230,200,0.95);letter-spacing:.06em;margin-bottom:8px">🔓 解锁完整解读 · Unlock Full Reading</div>';
+    if (teaserText) {
+      html += '<div style="font-size:11px;color:var(--sub);letter-spacing:.04em;line-height:1.8;white-space:pre-wrap;margin-bottom:14px;opacity:.8">'+teaserText+'</div>';
+    }
+    html += '<button class="btn-cta" onclick="createCheckout(this)">¥9.9 解锁完整解读 · Deeper Reading</button>';
+    html += '</div>';
   }
   html += '<div style="height:80px"></div>';
   interpEl.innerHTML = html;

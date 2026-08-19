@@ -643,8 +643,13 @@ function renderReport(text, contextId, isLocked, chartData) {
     if (cosmos.dasha) document.getElementById('pillDasha').textContent = cosmos.dasha;
   }
 
+  // Cut AI text at the ---LOCKED--- marker: only the free preview above it
+  // is parsed/rendered. Post-marker teaser lines are shown via buildPaywallCta().
+  var lockedIdx = text.indexOf('---LOCKED---');
+  var visibleText = lockedIdx >= 0 ? text.slice(0, lockedIdx).trim() : text;
+
   // Split AI text into sections by markdown headings
-  var sections = text.split(/\n(?=#{1,3}\s)/);
+  var sections = visibleText.split(/\n(?=#{1,3}\s)/);
   var sectionHeadings = [];
   var sectionCount = 0;
   var PAYWALL_AT = 4; // lock from section 5+
