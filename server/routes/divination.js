@@ -3758,6 +3758,8 @@ This is the most personal section — written directly to ${name}, not about the
 
       : `你是一位精通吠陀占星（Jyotish）的大师，同时拥有诗人的灵魂。为${name}（生于${dob}，${city}）写一份命运诗篇式的免费吠陀占星解读。月亮星座（Rashi）：${rashiName}；月宿（Nakshatra）：${nakshatraName}。关注重点：${concern || '整体命运'}。
 
+IMPORTANT — FREE PREVIEW ONLY: Output ONLY the following 3 chapters. Do NOT write any other sections beyond these 3. Stop completely after chapter 3 and output the separator.
+
 ═══ 写作风格要求（最重要） ═══
 
 这份报告是一部命运诗篇，不是星座简介，不是自我帮助文章。它是有人牵着${name}的手，走过星辰映照下的命运山水。
@@ -3771,7 +3773,7 @@ This is the most personal section — written directly to ${name}, not about the
 - 严禁使用bullet points（·或•），禁止大段列举；用连贯的叙述段落
 - 直接进入${name}的命运叙述，无需解释吠陀占星是什么
 
-═══ 内容章节 ═══
+═══ 免费预览章节（仅输出以下3章，合计约1300字） ═══
 
 ### 🌙 你的月亮星座：${rashiName}
 ${rashiName}不是一个标签，它是${name}情感世界的底色。她如何爱，如何害怕，什么让她感到安全，什么让她感到窒息——用具体的场景和意象来描绘，不是心理学测试题。引用${rashiName}的梵文含义。以金句结尾。500字。
@@ -3782,15 +3784,15 @@ ${nakshatraName}的神话原型是谁？那位神灵经历了什么，又如何�
 ### 🌟 灵魂的天赋与业力
 ${rashiName} + ${nakshatraName}的组合，赋予了${name}三种深刻的天赋——不是抽象词汇，而是具体的、她自己也会认出的能力。以及两个此生要面对的业力功课——不是批判，而是通往自由的门。以金句结尾。400字。
 
-### 📅 ${new Date().getFullYear()}年的宇宙能量
-今年的星辰为${rashiName}带来了什么主题？什么在打开，什么在收合？有什么机遇在向她招手，有什么旧模式需要放下？写得有时间质感，像预言，也像提醒。400字。
+完成以上3章后，输出以下分隔符和锁定章节预告（原样输出，绝对不展开内容）：
 
-### 💎 你的吠陀蓝图（幸运指引）
-为${name}量身的宝石推荐、幸运色彩、吉祥方位、最好的日子，以及一句每日可持诵的曼陀罗（附发音）。200字。
-
----
-
-结尾：写一段温暖而具体的话——"你的吠陀命盘还藏着……"，列出5件完整版才揭晓的事（Dasha大运周期的能量主题与人生阶段、全部12宫位分析、5年运势主题预测、关系业力兼容、具体补救措施），让人真心好奇。
+---LOCKED---
+📅 ${new Date().getFullYear()}年宇宙能量 · 完整版解锁
+💎 吠陀蓝图幸运指引（宝石/曼陀罗/吉方） · 完整版解锁
+🪐 Dasha大运周期能量与人生阶段 · 完整版解锁
+🏠 全部12宫位深度分析 · 完整版解锁
+📅 五年运势主题预测 · 完整版解锁
+💕 关系业力兼容分析 · 完整版解锁
 
 语言：${outputLang}。直接从${name}的命运开始叙述，结尾附一句娱乐参考免责。`;
 
@@ -4039,6 +4041,8 @@ This final section is the most intimate — a personal teaching from the Lopon t
 
 精度要求（绝对不允许更改）：${birthYear}年 = ${tibetData.element} ${tibetData.zodiac}（${tibetData.elementCN}${tibetData.zodiacCN}）。元素必须是${tibetData.element}。密瓦数：${tibetData.mewaNum}，帕卡卦：${tibetData.parkha}，风马（Lungta）：${tibetData.lungta}。
 
+IMPORTANT — FREE PREVIEW ONLY: Output ONLY the following 3 chapters (about 1200 words total). Do NOT write any other sections beyond these 3.
+
 ═══ 写作风格要求（最重要，优先于一切） ═══
 
 这份报告必须像一部命运诗篇，而非百科全书词条。每一章都是旅途中的一步，每一段都带着${name}走得更深。
@@ -4052,7 +4056,7 @@ This final section is the most intimate — a personal teaching from the Lopon t
 - 严禁使用bullet points（·或•）或大段列举
 - 不要从解释定义开始，直接进入${name}的命运叙述
 
-═══ 内容章节（每章都是旅途的一步） ═══
+═══ 免费预览章节（仅输出以下3章） ═══
 
 ### 🐑 你的生肖：${tibetData.zodiac}（${tibetData.zodiacCN}）
 不是介绍这个属相，而是描绘${name}内心世界的底色——她如何感知世界、如何爱、如何在受伤时退回内心的山谷。引用藏传佛教对这种动物的看法。以诗意金句结尾。500字。
@@ -4063,21 +4067,16 @@ ${tibetData.element}元素（${tibetData.element === 'Metal' ? '金——精准�
 ### 🛡️ 你的松瓦（守护元素）
 松瓦是藏传命理独有的概念——汉地八字和西方占星都没有。为${name}解读她的守护元素：哪些颜色、方向、环境会激活她的好运，哪些会消耗她的生命能量。写成守护神话，不是列表。以诗意金句结尾。300字。
 
-### 🐴 你的风马（Lungta）：${tibetData.lungta}
-风马是藏人心中载着命运的神马，它的力量决定一个人一生的气运高低。${name}的风马强度是"${tibetData.lungta}"——这意味着什么？她的风马如何在人生际遇中显现？给她三个提升风马的具体修行。以诗意金句结尾。400字。
+完成以上3章后，输出以下分隔符和锁定章节预告（原样输出，绝对不展开内容）：
 
-### 🌟 天赋与业力
-${tibetData.element}${tibetData.zodiac}带来的三个深刻天赋，以及两个此生要转化的业力模式——不是抽象说教，而是像一面镜子，让${name}在其中认出自己。以诗意金句结尾。400字。
-
-### 📅 ${new Date().getFullYear()}年运势
-今年对${tibetData.zodiac}来说，哪些门是开的，哪些门要小心。写得具体，有时间感，有质感。300字。
-
-### 🙏 你的日常修行
-为${tibetData.element}${tibetData.zodiac}量身定制的一个具体修行——咒语、观想、供品，或一个有方向感的生活姿势。200字。
-
----
-
-结尾：写一段温暖而具体的话——"你的完整藏传命盘还藏着……"，列出5件完整版才能揭晓的事（密瓦九宫分析、帕卡卦关系图谱、三年详运吉凶、婚姻兼容性、健康长寿分析），让人产生真实的好奇。
+---LOCKED---
+🐴 风马（Lungta）${tibetData.lungta}详解 · 完整版解锁
+🌟 天赋与业力镜像 · 完整版解锁
+📅 ${new Date().getFullYear()}年运势详批 · 完整版解锁
+🔢 密瓦${tibetData.mewaNum}九宫深度解读 · 完整版解锁
+☯️ 帕卡卦${tibetData.parkha}关系图谱 · 完整版解锁
+💕 婚姻兼容性分析 · 完整版解锁
+🏔️ 健康长寿分析 · 完整版解锁
 
 语言：${tibetLang}。直接开始${name}的命运叙述，不要任何免责声明。`;
 
@@ -4676,16 +4675,24 @@ Language: ${outputLangFull}. Writing style: destiny poetry. Scene over abstracti
 
       : `你是一位精通吠陀占星（Jyotish）的大师，同时拥有诗人的灵魂。为${name}写一份命运诗篇式的免费吠陀占星解读。月亮星座（Rashi）：${rashiName}；月宿（Nakshatra）：${nakshatraName}。关注重点：${concern || '整体命运'}。
 
+IMPORTANT — FREE PREVIEW ONLY: Output ONLY the following 3 chapters (about 1300 words total). Do NOT write any other sections.
+
 写作风格：命运诗篇，沉浸式第二人称叙述，场景感代替抽象，严禁bullet points。每章结尾一句金句。
 
-内容章节：
-🌙 你的月亮星座：${rashiName}（500字，以金句结尾）
-✨ 你的月宿：${nakshatraName}（400字，以金句结尾）
-🌟 灵魂天赋与业力（400字，以金句结尾）
-📅 ${new Date().getFullYear()}年宇宙能量（400字）
-💎 吠陀蓝图幸运指引（宝石/幸运色/方位/咒语，200字）
+免费预览章节（仅输出以下3章）：
+### 🌙 你的月亮星座：${rashiName}（500字，以金句结尾）
+### ✨ 你的月宿：${nakshatraName}（400字，以金句结尾）
+### 🌟 灵魂天赋与业力（400字，以金句结尾）
 
-结尾：温暖地列出5件完整版才揭晓的事（包含专属英文名能量分析+微信头像颜色方案），让人真心好奇。
+完成以上3章后，输出以下内容（原样输出，不展开）：
+
+---LOCKED---
+📅 ${new Date().getFullYear()}年宇宙能量 · 完整版解锁
+💎 吠陀蓝图幸运指引（宝石/曼陀罗/吉方） · 完整版解锁
+🪐 Dasha大运周期能量与人生阶段 · 完整版解锁
+🏠 全部12宫位深度分析 · 完整版解锁
+📅 五年运势主题预测（含专属英文名能量分析+微信头像颜色方案） · 完整版解锁
+
 语言：${outputLangFull}。直接进入叙述，结尾附一句娱乐参考免责。`;
 
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
@@ -4793,18 +4800,26 @@ Language: ${tibetLangFull}. Writing style: destiny poetry — each chapter is a 
 
       : `你是精通藏传命理（Kartsi）的算师，兼具文学家笔触。为${name}（${genderStr}，生于${birthYear}年）写命运诗篇式藏传命理解读。精度要求绝对不能改：${birthYear}年=${tibetData.element}${tibetData.zodiac}（${tibetData.elementCN}${tibetData.zodiacCN}）。密瓦：${tibetData.mewaNum}，帕卡：${tibetData.parkha}，风马：${tibetData.lungta}。
 
+IMPORTANT — FREE PREVIEW ONLY: Output ONLY the following 3 chapters (about 1200 words total). Do NOT write any other sections.
+
 写作要求：沉浸式第二人称，场景感代替抽象，严禁bullet points，每章结尾一句诗意金句。
 
-章节：
-🐑 生肖${tibetData.zodiac}（500字，以诗意金句结尾）
-⚙️ ${tibetData.element}${tibetData.zodiac}元素灵魂（400字，以金句结尾）
-🛡️ 守护元素（300字，以金句结尾）
-🐴 风马${tibetData.lungta}（400字，以金句结尾）
-🌟 天赋与业力（400字，以金句结尾）
-📅 ${new Date().getFullYear()}年运势（300字）
-🙏 日常修行（200字）
+免费预览章节（仅输出以下3章）：
+### 🐑 生肖${tibetData.zodiac}（500字，以诗意金句结尾）
+### ⚙️ ${tibetData.element}${tibetData.zodiac}元素灵魂（400字，以金句结尾）
+### 🛡️ 守护元素（300字，以金句结尾）
 
-结尾：温暖列出5件完整版才揭晓的事（含英文名风马能量+微信头像颜色方案），让人心生好奇。
+完成以上3章后，输出以下内容（原样输出，不展开）：
+
+---LOCKED---
+🐴 风马${tibetData.lungta}详解 · 完整版解锁
+🌟 天赋与业力 · 完整版解锁
+📅 ${new Date().getFullYear()}年运势详批 · 完整版解锁
+🔢 密瓦${tibetData.mewaNum}九宫深度解读 · 完整版解锁
+☯️ 帕卡卦${tibetData.parkha}关系图谱 · 完整版解锁
+💕 婚姻兼容性 · 完整版解锁
+🎯 藏传开运锦囊（含英文名风马能量+微信头像颜色方案） · 完整版解锁
+
 语言：${tibetLangFull}。直接进入${name}的命运叙述，结尾附一句娱乐参考免责。`;
 
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
