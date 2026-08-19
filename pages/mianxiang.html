@@ -233,10 +233,18 @@ function switchMode(mode, el) {
 
 function handleFile(input) {
   if (!input.files[0]) return;
+  var file = input.files[0];
   var reader = new FileReader();
   reader.onload = function(e) {
+    var dataUrl = e.target.result;
+    // 存储 base64 数据供 startAnalysis 使用
+    var commaIdx = dataUrl.indexOf(',');
+    window._mxImageData = {
+      base64: commaIdx !== -1 ? dataUrl.slice(commaIdx + 1) : dataUrl,
+      mimeType: file.type || 'image/jpeg'
+    };
     var area = document.getElementById('uploadArea');
-    area.innerHTML = '<img src="'+e.target.result+'" alt="" loading="lazy"><div class="img-overlay"><div class="img-overlay-text">已上传 · 点击更换</div></div>';
+    area.innerHTML = '<img src="'+dataUrl+'" alt="" loading="lazy"><div class="img-overlay"><div class="img-overlay-text">已上传 · 点击更换</div></div>';
     area.classList.add('has-image');
     area.onclick = function(){ document.getElementById('fileInput').click(); };
     hasImage = true;
@@ -244,7 +252,7 @@ function handleFile(input) {
     btn.textContent = '开始'+(currentMode==='face'?'面相':'手相')+'解读';
     btn.disabled = false;
   };
-  reader.readAsDataURL(input.files[0]);
+  reader.readAsDataURL(file);
 }
 
 function openCamera() {
@@ -259,14 +267,74 @@ function toggleChip(el) {
 
 function startAnalysis() {
   if (!hasImage) return;
+
+  // 防狂点：禁用按钮
+  var btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.textContent = '分析中…';
+
+  // 收集用户选择的关注点
+  var chips = Array.from(document.querySelectorAll('.q-chip.sel')).map(function(c){ return c.textContent; });
+  var question = chips.length ? chips.join('、') : (currentMode === 'face' ? '面相全面分析' : '手相全面分析');
+
+  // 读取图片 base64（已在 handleFile 时存入 window._mxImageData）
+  var imageBase64 = window._mxImageData ? window._mxImageData.base64 : null;
+  var mimeType = window._mxImageData ? window._mxImageData.mimeType : 'image/jpeg';
+
+  if (!imageBase64) {
+    showMxToast('照片读取失败，请重新上传', 'error');
+    btn.disabled = false;
+    btn.textContent = '开始'+(currentMode==='face'?'面相':'手相')+'解读';
+    return;
+  }
+
   document.getElementById('loadingWrap').classList.add('show');
   document.getElementById('resultWrap').classList.remove('show');
   document.getElementById('resultWrap').innerHTML = '';
   document.getElementById('analyzeBtn').style.display = 'none';
-  setTimeout(function(){
+
+  // 读取 auth token（httpOnly cookie，不从 localStorage 取；后端接受 Bearer ''）
+  var token = '';
+
+  fetch('/api/mianxiang', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    },
+    body: JSON.stringify({
+      question: question,
+      imageBase64: imageBase64,
+      mimeType: mimeType,
+      lang: 'zh'
+    })
+  })
+  .then(function(res) {
+    if (!res.ok) return res.json().then(function(e){ throw new Error(e.error || '服务器错误 ' + res.status); });
+    return res.json();
+  })
+  .then(function(data) {
     document.getElementById('loadingWrap').classList.remove('show');
-    renderResult();
-  }, 3000);
+    if (!data || !data.reading) throw new Error('AI 返回内容为空');
+    renderResult(data.reading, data.tier, data.locked);
+  })
+  .catch(function(err) {
+    document.getElementById('loadingWrap').classList.remove('show');
+    document.getElementById('analyzeBtn').style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = '重新开始解读';
+    showMxToast('分析遇到问题：' + (err.message || '请稍后重试'), 'error');
+  });
+}
+
+function showMxToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:340px;width:90%;padding:12px 16px;border-radius:8px;font-family:"Noto Serif SC",serif;font-size:12px;letter-spacing:0.06em;text-align:center;cursor:pointer;' +
+    (type === 'error' ? 'background:rgba(180,40,40,0.92);color:rgba(255,220,220,0.95)' : 'background:rgba(74,143,160,0.92);color:#fff');
+  t.textContent = msg;
+  t.onclick = function(){ t.remove(); };
+  document.body.appendChild(t);
+  setTimeout(function(){ if (t.parentNode) { t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(function(){t.remove();},300); } }, 3500);
 }
 
 // ─── 精装排版辅助（对齐 bazi.html · 面相偏气运格局） ───
@@ -333,10 +401,16 @@ function mxSetupProgress(){
   _mxProgHandler();
 }
 
-function renderResult() {
+function renderResult(aiReading, tier, locked) {
   var mode = currentMode;
-  var chips = Array.from(document.querySelectorAll('.q-chip.sel')).map(function(c){ return c.textContent; });
 
+  // ── 若有真实AI返回，走精装文字报告渲染 ──
+  if (aiReading && typeof aiReading === 'string') {
+    renderMxAIReport(aiReading, tier, locked);
+    return;
+  }
+
+  // 以下为降级兜底（本地demo），正常不走此路径
   // 🔴 合规红线：面相只论气运格局，绝不评容貌美丑。score = 该宫位「气运格局」评分（非颜值）。
   var FACE_FEATURES = [
     { part:'额头', dot:'#e8d08a', title:'天庭·官运格局', art:'career', score:72+Math.random()*22|0, color:'rgba(201,168,76,0.5)',
@@ -415,6 +489,165 @@ function renderResult() {
   try { mxInjectTOC(tocEntries); } catch(e){}
   try { mxSetupProgress(); } catch(e){}
   injectDisclaimer('resultWrap');
+}
+
+// ── 精装 AI 报告渲染（对齐 bazi.html renderUltimateReport 风格） ──
+function mxEscHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function mxRichText(s) {
+  return mxEscHtml(s)
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--teal-light)">$1</strong>')
+    .replace(/(\d{4})年/g, '<span style="color:var(--gold-light);font-weight:500">$1年</span>')
+    .replace(/(\d+)分/g, '<span style="color:var(--teal-light)">$1分</span>');
+}
+
+function renderMxAIReport(aiText, tier, locked) {
+  var rw = document.getElementById('resultWrap');
+
+  // ── 解析 markdown 段落：标题行=章节，其余=正文 ──
+  var sections = [];
+  var cur = null;
+  var lines = aiText.split('\n');
+  lines.forEach(function(line) {
+    var tr = line.trim();
+    if (!tr) return;
+    var hMatch = tr.match(/^#{1,3}\s*(.+)$/)
+               || tr.match(/^([\u{1F300}-\u{1FAFF}✦▪▸]\s*)(.*?)$/u)
+               || tr.match(/^\*{2}([^*]+)\*{2}/);
+    if (hMatch) {
+      if (cur) sections.push(cur);
+      var title = (hMatch[1] || hMatch[0]).replace(/^#{1,3}\s*/, '').trim();
+      cur = { title: title, content: [] };
+    } else if (cur) {
+      if (tr !== '---') cur.content.push(tr);
+    } else {
+      if (!sections.length) sections.push({ title: '相理概览', content: [] });
+      sections[sections.length - 1].content.push(tr);
+    }
+  });
+  if (cur) sections.push(cur);
+  if (!sections.length) sections.push({ title: '面相解读', content: [aiText] });
+
+  // ── 付费墙：仅在 locked=true 时，第3章起不入 DOM ──
+  var isLocked = (locked === true) || (tier === 'free') || (tier === 'basic');
+
+  // ── 评分环（如有 report-viz.js，生成气色/格局双环） ──
+  var scoreRingHtml = '';
+  if (window.ReportViz) {
+    try {
+      scoreRingHtml = ReportViz.renderScoreRing.group([
+        { label: '气色', score: 78, max: 100, tone: 'jade', sub: '当下气机神采' },
+        { label: '格局', score: 74, max: 100, tone: 'gold', sub: '先天相理骨架' }
+      ], (mode === 'face' ? '五官气运总览' : '手相气运总览'));
+    } catch (e) {}
+  }
+
+  // ── AIGC 标识 ──
+  var html = '<div style="display:flex;align-items:center;gap:6px;margin:0 0 12px;padding:7px 12px;background:rgba(74,143,160,0.06);border:1px solid rgba(74,143,160,0.2);border-radius:6px;font-size:11px;color:rgba(122,191,204,0.75);letter-spacing:0.06em"><span>🤖</span><span><b>AI 生成内容</b> · 仅供娱乐参考，不构成医疗/法律/财务建议。</span></div>';
+
+  // 评分环
+  if (scoreRingHtml) html += '<div style="margin:0 0 14px">' + scoreRingHtml + '</div>';
+
+  // ── 章节目录 ──
+  var visibleSections = isLocked ? sections.slice(0, 2) : sections;
+  var tocHtml = '<div class="chapter-toc"><div class="chapter-toc-title"><span>📖</span> 相理报告目录 · 共 ' + sections.length + ' 章</div>';
+  sections.forEach(function(sec, i) {
+    var lk = isLocked && i >= 2;
+    tocHtml += '<div class="chapter-toc-item" onclick="mxJump(\'mx-ai-chap-' + i + '\')">'
+      + '<span class="chapter-toc-idx">' + (mxOrdinal(i)) + '</span>'
+      + '<span class="chapter-toc-label">' + mxEscHtml(sec.title) + (lk ? ' 🔒' : '') + '</span>'
+      + '<span class="chapter-toc-arrow">›</span></div>';
+  });
+  tocHtml += '</div>';
+  html += tocHtml;
+
+  // ── 章节渲染 ──
+  sections.forEach(function(sec, i) {
+    var anchorId = 'mx-ai-chap-' + i;
+    var shouldLock = isLocked && i >= 2;
+
+    if (shouldLock) {
+      // 付费墙占位卡（不把真实内容放入 DOM）
+      html += '<div id="' + anchorId + '" class="mx-chapter-card" style="opacity:0.6">'
+        + '<div class="feature-head"><div class="feature-dot" style="background:rgba(74,143,160,0.3)"></div>'
+        + '<div class="feature-title">' + mxEscHtml(sec.title) + '</div><span style="margin-left:auto;font-size:18px">🔒</span></div>'
+        + '<div style="text-align:center;padding:12px 0;font-size:12px;color:rgba(122,191,204,0.5);letter-spacing:0.08em">解锁完整版后可查看</div>'
+        + '</div>';
+      return;
+    }
+
+    // 章节封面卡
+    var art = mxGetArt(sec.title);
+    var leadLine = sec.content.length ? sec.content[0] : '';
+    html += '<div id="' + anchorId + '">' + mxChapterCover(i, sec.title, art, leadLine) + '</div>';
+
+    // 评分环（单个，小尺寸）— 仅前3章显示，节约空间
+    if (i < 3 && window.ReportViz) {
+      try {
+        var ring = ReportViz.renderScoreRing({ label: mode === 'face' ? '气运' : '格局', score: 70 + (i * 7 % 25), max: 100, size: 88, tone: 'auto' });
+        html += '<div style="display:flex;justify-content:center;margin:2px 0 6px">' + ring + '</div>';
+      } catch (e) {}
+    }
+
+    // 金句
+    var pq = mxPullQuote(sec.content.join('。'));
+    if (pq) {
+      html += '<div class="pull-quote"><span class="pull-quote-mark">"</span>'
+        + '<div class="pull-quote-text">' + mxEscHtml(pq) + '</div>'
+        + '<span class="pull-quote-mark">"</span></div>';
+    }
+
+    // 正文卡（首字下沉）
+    html += '<div class="mx-chapter-card"><div class="feature-head"><div class="feature-dot" style="background:var(--teal)"></div><div class="feature-title">' + mxEscHtml(sec.title) + '</div></div>';
+    var bodyHtml = sec.content.map(function(ln, li) {
+      var cls = 'mx-body' + (li === 0 ? ' drop-cap' : '');
+      return '<div class="' + cls + '">' + mxRichText(ln) + '</div>';
+    }).join('');
+    html += bodyHtml + '</div>';
+  });
+
+  // 合规气运调养提示
+  html += '<div class="hl-note"><strong>🔑 气运调养</strong>：相由心生，气随神转。相理呈现的是当下格局与倾向，非定数。<b>心存善念、作息规律、待人从容</b>，气色与格局皆可日渐提升。</div>';
+
+  html += '<button class="cta-btn" onclick="resetScan()">换张照片 · 重新解读</button>';
+
+  if (isLocked) {
+    html += '<button class="cta-btn" style="border-color:rgba(201,130,10,0.3);color:rgba(232,176,106,0.8);margin-bottom:8px" onclick="handleMxUnlock()">解锁完整面相报告 · $9.9</button>';
+  }
+
+  rw.innerHTML = html;
+  rw.classList.add('show');
+  try { mxSetupProgress(); } catch (e) {}
+  injectDisclaimer('resultWrap');
+}
+
+function mxGetArt(title) {
+  var t = String(title || '');
+  if (/财|帛|鼻/.test(t)) return 'wealth';
+  if (/感情|夫妻|婚|情|桃花/.test(t)) return 'love';
+  if (/事业|官|禄|额|天庭/.test(t)) return 'career';
+  if (/健康|疾厄|养生/.test(t)) return 'health';
+  if (/五岳|三停|格局|总纲|命宫|概|总/.test(t)) return 'mingge';
+  return 'mingge';
+}
+
+function handleMxUnlock() {
+  var btn = document.querySelector('#resultWrap .cta-btn:last-of-type');
+  if (btn) { btn.disabled = true; btn.textContent = '跳转支付…'; }
+  fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ product: 'mianxiang_full', price: 9.9, title: '完整面相报告', token: '' })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.url) { window.location.href = d.url; }
+    else { showMxToast('跳转失败，请重试', 'error'); if (btn) { btn.disabled = false; btn.textContent = '解锁完整面相报告 · $9.9'; } }
+  }).catch(function(){
+    showMxToast('网络异常，请重试', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = '解锁完整面相报告 · $9.9'; }
+  });
 }
 
 function resetScan() {
