@@ -98,8 +98,13 @@ async function deepseekChat(messages, opts = {}) {
 
 // 流式：逐 provider 尝试，返回首个成功的 res.body
 async function deepseekStream(messages, opts = {}) {
-  const providers = activeProviders();
+  let providers = activeProviders();
   if (!providers.length) throw new Error('无可用 LLM provider（.env 缺 DS_KEY / GROQ_API_KEY / GEMINI_API_KEY）');
+  // opts.priority: 指定优先 provider（如付费八字报告强制走 deepseek 提升文笔），其余保持原兜底顺序
+  if (opts.priority) {
+    const pref = providers.filter(p => p.name === opts.priority);
+    if (pref.length) providers = pref.concat(providers.filter(p => p.name !== opts.priority));
+  }
   let lastErr;
   for (const p of providers) {
     try {

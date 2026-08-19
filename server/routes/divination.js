@@ -4552,7 +4552,7 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
 
     const streamBody = await deepseekStream(
       buildReadingPrompt(sysPay, userPrompt),
-      { maxTokens: full ? 16384 : 4200, timeout: 300000 }
+      { maxTokens: full ? 16384 : 4200, timeout: 300000, priority: 'deepseek' }
     );
 
     const reader = streamBody.getReader();
