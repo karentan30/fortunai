@@ -438,12 +438,11 @@ function renderZiweiReport(text, containerId, isLocked){
     if (!trimmed) return;
     if (/^\|[\s|:\-]+\|$/.test(trimmed)) return;
     var isHiLine = isHighlightLine(trimmed);
+    // 只把「大标题 emoji + ≤24字」或 markdown # 标题当章节，正文里的 **加粗**小标题/数字/圈数字一律留作正文，
+    // 防止把正文小标题切成空白卡（对齐八字金标准的白名单+长度上限）。
     var sectionMatch = !isHiLine && (
       trimmed.match(/^#{1,3}\s*(.+)$/) ||
-      trimmed.match(/^([\u{1F300}-\u{1FAFF}✦✧▪▸▶]\s*)(.*?)$/u) ||
-      trimmed.match(/^\*{2}([^*]+)\*{2}/) ||
-      trimmed.match(/^(\d+[\.、]\s*.*)$/) ||
-      trimmed.match(/^([①②③④⑤⑥⑦⑧⑨⑩]\s*)(.*?)$/));
+      trimmed.match(/^([\u{1F300}-\u{1FAFF}☀✦✧▪▸▶]️?\s*)(.{0,24})$/u));
     if (sectionMatch) {
       if (currentSection) sections.push(currentSection);
       var rawTitle = (sectionMatch[1]||sectionMatch[0]||trimmed).replace(/^#{1,3}\s*/,'').trim();
@@ -1027,9 +1026,18 @@ function renderZiweiDeepReport(text, locked) {
   if (!resultEl) return;
   // 付费墙：免费预览时后端在 ---LOCKED--- 后附带付费诱饵标题，绝不渲染进 DOM
   var rawText = String(text || '');
-  var lockedIdx = rawText.indexOf('---LOCKED---');
-  var freeText = lockedIdx >= 0 ? rawText.slice(0, lockedIdx).trim() : rawText;
   var isLocked = !!locked;
+  var lockedIdx = rawText.indexOf('---LOCKED---');
+  var freeText;
+  if (lockedIdx >= 0) {
+    freeText = rawText.slice(0, lockedIdx).trim();
+  } else if (isLocked) {
+    // P1 兜底：模型漏输出 ---LOCKED--- 时，截到首个付费章 emoji 前，绝不白送付费正文
+    var _pm = rawText.match(/\n\s*(💰|💕|💼|🌀|🔮)/u);
+    freeText = _pm ? rawText.slice(0, _pm.index).trim() : rawText;
+  } else {
+    freeText = rawText;
+  }
   // 由已保存的出生信息推导大限时间轴数据（无数据则时间轴优雅跳过）
   try {
     var s = JSON.parse(localStorage.getItem('sy_last_ziwei') || 'null');
