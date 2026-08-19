@@ -37,7 +37,11 @@ var ALLOWED_ORIGINS = [
   'https://shenyuan-fabulousslim.vercel.app',
   'https://shenyuan-karentan30-fabulousslim.vercel.app',
   'https://fortunai.vercel.app',
-  'https://myfortuneai.vercel.app'
+  'https://myfortuneai.vercel.app',
+  'https://runae.app',
+  'https://www.runae.app',
+  'https://runae.net',
+  'https://www.runae.net'
 ];
 app.use(cors({
   origin: function(origin, callback) {
