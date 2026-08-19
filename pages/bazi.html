@@ -10,18 +10,18 @@
 <meta property="og:title" content="善缘 · 八字命理">
 <meta property="og:description" content="善缘八字命理 — AI深度解读八字命盘，5000-8000字完整命理报告，含五行分析、财运格局、大运流年">
 <meta property="og:image" content="/og-card.png">
-<meta property="og:url" content="https://shenyuan.mylumee.cn/pages/bazi.html">
+<meta property="og:url" content="https://runae.app/pages/bazi.html">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="善缘 · 八字命理">
 <meta name="twitter:description" content="善缘八字命理 — AI深度解读八字命盘，5000-8000字完整命理报告，含五行分析、财运格局、大运流年">
-<link rel="canonical" href="https://shenyuan.mylumee.cn/pages/bazi.html">
-<link rel="alternate" hreflang="zh" href="https://shenyuan.mylumee.cn/pages/bazi.html">
-<link rel="alternate" hreflang="en" href="https://shenyuan.mylumee.cn/pages/bazi-en.html">
-<link rel="alternate" hreflang="ko" href="https://shenyuan.mylumee.cn/pages/saju-KR.html">
-<link rel="alternate" hreflang="x-default" href="https://shenyuan.mylumee.cn/">
+<link rel="canonical" href="https://runae.app/pages/bazi.html">
+<link rel="alternate" hreflang="zh" href="https://runae.app/pages/bazi.html">
+<link rel="alternate" hreflang="en" href="https://runae.app/pages/bazi-en.html">
+<link rel="alternate" hreflang="ko" href="https://runae.app/pages/saju-KR.html">
+<link rel="alternate" hreflang="x-default" href="https://runae.app/">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebPage","name":"善缘 · 八字命理","url":"https://shenyuan.mylumee.cn/pages/bazi.html","description":"AI深度解读八字命盘，5000-8000字完整命理报告，含五行分析、财运格局、大运流年","inLanguage":"zh-CN","isPartOf":{"@type":"WebSite","name":"善缘 ShenYuan","url":"https://shenyuan.mylumee.cn"},"breadcrumb":{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"善缘","item":"https://shenyuan.mylumee.cn"},{"@type":"ListItem","position":2,"name":"八字命理","item":"https://shenyuan.mylumee.cn/pages/bazi.html"}]}}
+{"@context":"https://schema.org","@type":"WebPage","name":"善缘 · 八字命理","url":"https://runae.app/pages/bazi.html","description":"AI深度解读八字命盘，5000-8000字完整命理报告，含五行分析、财运格局、大运流年","inLanguage":"zh-CN","isPartOf":{"@type":"WebSite","name":"善缘 ShenYuan","url":"https://runae.app"},"breadcrumb":{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"善缘","item":"https://runae.app"},{"@type":"ListItem","position":2,"name":"八字命理","item":"https://runae.app/pages/bazi.html"}]}}
 </script>
 <script>document.documentElement.setAttribute('data-page','bazi');</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -2484,7 +2484,13 @@ function renderUltimateReport(text, containerId, isLocked) {
   var sections = [];
   // 按 ---LOCKED--- 干净切分: 免费预览只解析分隔符之前的正文(全是免费章·全展示), 之后的锁定预告丢弃(转化由底部付费墙 sticky-cta 承载)。修 bug: 原按章节 index 硬锁, 但模型常只出2章, 导致 ---LOCKED---/付费预告串进免费章。
   var _lockPos = isLocked ? text.indexOf('---LOCKED---') : -1;
-  var _freeText = _lockPos >= 0 ? text.slice(0, _lockPos) : text;
+  var _freeText;
+  if (_lockPos >= 0) { _freeText = text.slice(0, _lockPos); }
+  else if (isLocked) {
+    // 兜底：模型漏了 ---LOCKED--- 时，绝不把付费内容当免费白送——截到第一个付费章 emoji 之前
+    var _payM = text.match(/\n\s*(💰|❤️|💕|💼|🏥|🔮)/u);
+    _freeText = _payM ? text.slice(0, _payM.index) : text;
+  } else { _freeText = text; }
   var lines = _freeText.split('\n');
   var currentSection = null;
   lines.forEach(function(line) {
@@ -3097,7 +3103,7 @@ function generateShareCard() {
     ctx.fillText('☯', W/2, Math.min(infoY + 80, H - 240));
 
     // ── 底部 CTA / 裂变区（品牌 + 引导 + URL + 二维码）──
-    var shareUrl = (typeof _shareUrl === 'function') ? _shareUrl() : 'https://shenyuan.app/pages/bazi.html';
+    var shareUrl = (typeof _shareUrl === 'function') ? _shareUrl() : 'https://runae.app/pages/bazi.html';
     var ctaTop = H - 226;            // CTA 面板顶
     // 面板底
     var panelGrad = ctx.createLinearGradient(0, ctaTop, 0, H - 34);
@@ -3121,7 +3127,7 @@ function generateShareCard() {
     ctx.fillText('扫码免费测你的命盘 →', textX, ctaTop + 138);
     // URL 高亮
     ctx.fillStyle = 'rgba(201,168,76,0.85)'; ctx.font = '26px "Cormorant Garamond","Noto Serif SC",serif';
-    ctx.fillText('shenyuan.app', textX, ctaTop + 174);
+    ctx.fillText('runae.app', textX, ctaTop + 174);
 
     // 二维码底板（先画占位框，图加载成功后覆盖；失败则保留 URL 文案，绝不破图）
     ctx.fillStyle = 'rgba(255,255,255,0.92)';
@@ -3143,7 +3149,7 @@ function generateShareCard() {
             if (ctx.roundRect){ ctx.beginPath(); ctx.roundRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16, 12); ctx.fill(); }
             else { ctx.fillRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16); }
             ctx.fillStyle = 'rgba(120,110,80,0.6)'; ctx.font = '18px "Noto Serif SC",serif'; ctx.textAlign = 'center';
-            ctx.fillText('shenyuan.app', qrX + qrSize/2, qrY + qrSize/2 + 6);
+            ctx.fillText('runae.app', qrX + qrSize/2, qrY + qrSize/2 + 6);
             ctx.textAlign = 'left';
           } catch (e) {}
           finalizeCard(false); return;
@@ -3446,7 +3452,7 @@ function generateBaziCard(){
   [280,220,160].forEach(function(r){ctx.strokeStyle='rgba(201,168,76,0.06)';ctx.lineWidth=1;ctx.beginPath();ctx.arc(W/2,yyY,r,0,Math.PI*2);ctx.stroke();});
   ctx.fillStyle='rgba(201,168,76,0.5)';ctx.font='100px serif';ctx.textAlign='center';ctx.fillText('☯',W/2,yyY+36);
   hline(H-150);
-  ctx.fillStyle='rgba(201,168,76,0.55)';ctx.font='28px "Noto Serif SC",serif';ctx.textAlign='center';ctx.fillText('善缘命理  ·  shenyuan.app',W/2,H-110);
+  ctx.fillStyle='rgba(201,168,76,0.55)';ctx.font='28px "Noto Serif SC",serif';ctx.textAlign='center';ctx.fillText('善缘命理  ·  runae.app',W/2,H-110);
   ctx.fillStyle='rgba(200,196,180,0.3)';ctx.font='22px "Noto Serif SC",serif';ctx.fillText('你求什么 · 自有天机',W/2,H-68);
   ctx.fillStyle='rgba(201,168,76,0.38)';ctx.font='22px "Noto Serif SC",serif';ctx.fillText('扫码算你的命盘 · 看我们合不合 →',W/2,H-32);
   cv.toBlob(function(blob){
