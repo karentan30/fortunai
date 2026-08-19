@@ -91,6 +91,115 @@ function langSuffix(lang) {
 const DISCLAIMER_ZH = '\n\n本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。健康章节均为养生角度，非医疗诊断，如有健康疑虑请咨询专业医生。';
 const DISCLAIMER_EN = '\n\nThis report is AI-assisted and for entertainment/reference only. It does not constitute medical, legal, investment, or life-decision advice. Health sections offer wellness perspectives only — consult a professional for medical concerns.';
 
+// ══════════════════════════════════════════════════════════════════════════
+// 【内容一致性校验层 · 方案A】后端代码渲染"命盘/星盘事实卡"
+//
+// 核心思路：核心命盘事实由后端代码直接格式化成文本块，作为报告的"开头"
+// 拼入 reading 返回给前端。LLM 的 system prompt 改为"事实卡已在报告开头
+// 且100%准确，你只做解读，禁止复述或改动任何星座/度数/主星"。
+// 这样前端展示的星座/宫位永远来自引擎，LLM 飘写只影响解读文字不影响硬数据。
+// ══════════════════════════════════════════════════════════════════════════
+
+/**
+ * 西方占星事实卡
+ * @param {object} chart  astrology.calcAstrology() 返回值
+ * @param {object} [westernChartExtra]  computeWesternChart() 返回值（可选，供追加精确行星表）
+ * @returns {string}  Markdown 格式的事实卡文本块
+ */
+function buildWesternFactCard(chart) {
+  if (!chart) return '';
+  const lines = [
+    '---',
+    '## 📊 命盘事实卡（后端引擎生成 · 100% 准确 · 禁止 AI 修改）',
+    '',
+    `| 项目 | 星座 | 度数 |`,
+    `|------|------|------|`,
+    `| ☀️ 太阳 Sun | ${chart.sun.signZh}（${chart.sun.signEn}）| ${chart.sun.degree}° |`,
+    `| 🌙 月亮 Moon | ${chart.moon.signZh}（${chart.moon.signEn}）| ${chart.moon.degree}° |`,
+    `| ⬆️ 上升 Rising | ${chart.rising.signZh}（${chart.rising.signEn}）| ${chart.rising.degree}° |`,
+  ];
+
+  // 五大行星
+  const planetMap = [
+    ['☿ 水星 Mercury', chart.planets.mercury],
+    ['♀ 金星 Venus',   chart.planets.venus],
+    ['♂ 火星 Mars',    chart.planets.mars],
+    ['♃ 木星 Jupiter', chart.planets.jupiter],
+    ['♄ 土星 Saturn',  chart.planets.saturn],
+  ];
+  for (const [label, p] of planetMap) {
+    if (p) lines.push(`| ${label} | ${p.signZh}（${p.signEn}）| ${p.degree}° |`);
+  }
+
+  // 元素与模式
+  if (chart.elements && chart.elements.length) {
+    lines.push('');
+    lines.push('**元素分布：**' + chart.elements.map(e => `${e.name} ${e.percentage}%`).join(' · '));
+  }
+  if (chart.modalities && chart.modalities.length) {
+    lines.push('**模式分布：**' + chart.modalities.map(m => `${m.name} ${m.percentage}%`).join(' · '));
+  }
+
+  // 宫位
+  if (chart.houses && chart.houses.length) {
+    lines.push('');
+    lines.push('**宫位（等宫制）：**');
+    lines.push(chart.houses.map(h => `第${h.number}宫:${h.signZh}`).join(' | '));
+  }
+
+  lines.push('');
+  lines.push('> ⚠️ 以上数据由后端天文引擎计算，AI 解读内容须与本事实卡完全一致。');
+  lines.push('---');
+  lines.push('');
+  return lines.join('\n');
+}
+
+/**
+ * 紫微斗数事实卡
+ * @param {object} zw  computeBaziChart().ziwei 返回值
+ * @param {object} meta  { birthYear, birthMonth, birthDay, birthHour, gender }
+ * @returns {string}  Markdown 格式的事实卡文本块
+ */
+function buildZiweiFactCard(zw, meta) {
+  if (!zw) return '';
+  const { birthYear, birthMonth, birthDay, birthHour, gender } = meta || {};
+  const mingGong = (zw.gongs || []).find(g => g.gong === '命宫');
+  const mingStars = mingGong ? (mingGong.mainStars || []).join('·') : '（无主星·借对宫）';
+
+  const lines = [
+    '---',
+    '## 📊 紫微命盘事实卡（后端引擎排盘 · 100% 准确 · 禁止 AI 修改）',
+    '',
+    `**命主：** ${birthYear}年${birthMonth}月${birthDay}日${birthHour}时 ${gender === 'male' ? '男' : '女'}命`,
+    `**五行局：** ${(zw.wuXingJu && zw.wuXingJu.name) || zw.wuXingJu || '（暂无）'}`,
+    `**命宫干支：** ${mingGong ? (mingGong.tiangan || '') + (mingGong.dizhi || '') : '（暂无）'}`,
+    `**命宫主星：** ${mingStars}`,
+    '',
+    '**十二宫星曜分布：**',
+    '',
+    '| 宫位 | 干支 | 主星 | 辅星 |',
+    '|------|------|------|------|',
+  ];
+
+  for (const g of (zw.gongs || [])) {
+    const main = (g.mainStars || []).join('·') || '无';
+    const aux  = (g.auxStars  || []).join('·') || '无';
+    lines.push(`| ${g.gong} | ${(g.tiangan || '') + (g.dizhi || '')} | ${main} | ${aux} |`);
+  }
+
+  // 四化
+  const sihuaStr = (zw.gongs || []).flatMap(g =>
+    (g.sihua || []).map(s => `${s.star}${s.hua}(${g.gong})`)
+  ).join(' · ');
+  lines.push('');
+  lines.push(`**四化飞星：** ${sihuaStr || '（无四化数据）'}`);
+  lines.push('');
+  lines.push('> ⚠️ 以上数据由后端引擎排盘，AI 解读须与本事实卡完全一致，禁止凭空推算或改动任何星曜宫位。');
+  lines.push('---');
+  lines.push('');
+  return lines.join('\n');
+}
+
 // ── VIP/大师档探测（bazi_vip = $199 深度批命）──
 // 三条命中路径：
 //  1) ADMIN_TOKEN(审核绕过)
@@ -891,6 +1000,7 @@ router.post('/ziwei', rateLimitMiddleware, async (req, res) => {
 
     // ── 紫微引擎注入（从 bazi-engine 中提取 ziwei 数据，禁 LLM 自排）──
     let ziweiBlock = '';
+    let _ziweiFactCard = '';   // 【方案A】后端生成的事实卡，直接拼入 reading
     try {
       const ch = computeBaziChart({
         year: Number(birthYear), month: Number(birthMonth),
@@ -914,6 +1024,8 @@ router.post('/ziwei', rateLimitMiddleware, async (req, res) => {
 十二宫星曜分布：
 ${palaceLines}
 四化飞星：${sihuaStr || '（无四化数据）'}`;
+        // 【方案A】同步生成事实卡（代码渲染，不经 LLM）
+        _ziweiFactCard = buildZiweiFactCard(zw, { birthYear, birthMonth, birthDay, birthHour, gender });
       }
     } catch (e) {
       console.warn('[ZIWEI] 引擎注入失败，降级 LLM 自解：', e && e.message);
@@ -925,6 +1037,8 @@ ${palaceLines}
 【输出格式】用 Markdown，标题分段，简体中文。总字数 9000-11000字，全部 17 个维度写完写透，每个维度字数不低于要求，严禁用"略"或"详见下文"代替内容。
 
 ${ziweiBlock ? `【精确命盘（后端注入·禁止 LLM 自行推算）】\n${ziweiBlock}\n` : ''}
+【内容一致性铁律·方案A】报告正文开头已由后端代码自动插入"命盘事实卡"（Markdown 表格），该事实卡100%准确。你的解读从事实卡之后开始，禁止在正文中重新列出或改动任何宫位/主星/四化数据，只做解读分析。若事实卡显示某宫无主星，你的解读必须如实说"无主星借对宫"，不得捏造主星。
+
 【健康维度】只说脏腑养生方向，严禁点名具体西医病名，不制造恐慌。
 
 【收尾合规】报告最后附一行：
@@ -959,7 +1073,9 @@ ${ziweiBlock ? `【精确命盘（后端注入·禁止 LLM 自行推算）】\n$
       { role: 'user', content: ziweiUserPrompt }
     ];
     var _g = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','八字','合婚','紫微','姓名','占星','星盘'], messages);
-    const result = await deepseekChat(_g.messages, { maxTokens: Math.max(_g.maxTokens || 0, 16384) });
+    const llmResult = await deepseekChat(_g.messages, { maxTokens: Math.max(_g.maxTokens || 0, 16384) });
+    // 【方案A】事实卡由后端生成并拼在 LLM 解读之前，前端展示永远对
+    const result = _ziweiFactCard ? _ziweiFactCard + llmResult : llmResult;
     insertReading.run('ziwei', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('ziwei', req.body, result);
     res.json({ analysis: result, contextId: ctxId });
@@ -1883,6 +1999,7 @@ router.post('/ziwei/stream', rateLimitMiddleware, async (req, res) => {
 
     // ── 紫微引擎注入（无论免费/完整版都注入，让免费预览也有真实排盘数据）──
     let zwEngineBlock = '';
+    let _zwStreamFactCard = '';   // 【方案A】流式版事实卡，在 LLM chunk 开始前推送给前端
     try {
       const ch = computeBaziChart({
         year: Number(birthYear), month: Number(birthMonth),
@@ -1906,6 +2023,8 @@ router.post('/ziwei/stream', rateLimitMiddleware, async (req, res) => {
 十二宫星曜分布：
 ${palaceLines}
 四化飞星：${sihuaStr || '（无四化数据）'}`;
+        // 【方案A】生成流式版事实卡（代码渲染，不经 LLM）
+        _zwStreamFactCard = buildZiweiFactCard(zw, { birthYear, birthMonth, birthDay, birthHour, gender });
       }
     } catch (e) {
       console.warn('[ZIWEI-STREAM] 引擎注入失败，降级 LLM 自解：', e && e.message);
@@ -1915,17 +2034,17 @@ ${palaceLines}
     const ziweiSystemFull = `你是一位精通紫微斗数的命理师，师承中州派与飞星派双脉，从业30年，批过上万张命盘。你深谙紫微精髓，能从命盘中看透一个人的一生轨迹。语言通俗易懂，大白话让完全不懂紫微的人也能听懂。分析必须专业、深刻、具体。
 
 【输出格式】用 Markdown，标题分段，简体中文。总字数 9000-11000字，全部 17 个维度写完写透，每个维度字数不低于要求，严禁用"略"或"详见下文"代替内容。
-${zwEngineSection}【健康维度】只说脏腑养生方向，严禁点名具体西医病名，不制造恐慌。
+${zwEngineSection}【内容一致性铁律·方案A】报告正文开头已由后端代码自动插入"命盘事实卡"（Markdown 表格），该事实卡100%准确。你的解读从事实卡之后开始，禁止在正文中重新列出或改动任何宫位/主星/四化数据，只做解读分析。若事实卡显示某宫无主星，你的解读必须如实说"无主星借对宫"，不得捏造主星。
+
+【健康维度】只说脏腑养生方向，严禁点名具体西医病名，不制造恐慌。
 
 【当前时间基准】今年是 ${NOW_Y} 年。所有大限/流年/运势分析必须以 ${NOW_Y} 年为"当前/今年"，禁止把过去年份（如2024/2025）当作今年。
-
-【绝对铁律】命宫/十二宫主星、四化必须与上方注入命盘逐字一致，禁止自填星曜或凭空推算。若注入数据显示某宫无主星，必须如实说明"无主星，借对宫"，绝不捏造。
 
 【收尾合规】报告最后附一行："本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。"${langSuffix(zwLang)}`;
 
     const ziweiSystemPreview = `你是一位精通紫微斗数的命理师，师承中州派，从业30年。这是【免费预览版】，只输出前3节让用户感受真实价值，然后停止并引导解锁完整版。语言通俗易懂、用大白话。用Markdown格式。语言：简体中文。${zwEngineSection}
-【当前时间基准】今年是 ${NOW_Y} 年。所有大限/流年分析以 ${NOW_Y} 年为"当前/今年"，禁止写2024/2025年为今年。
-【绝对铁律】命宫/十二宫主星、四化必须与上方注入命盘逐字一致，禁止自填星曜或凭空推算。`;
+【内容一致性铁律·方案A】报告正文开头已由后端代码自动插入"命盘事实卡"，该事实卡100%准确。你的解读从事实卡之后开始，禁止改动任何宫位/主星数据。
+【当前时间基准】今年是 ${NOW_Y} 年。所有大限/流年分析以 ${NOW_Y} 年为"当前/今年"，禁止写2024/2025年为今年。`;
 
     const systemPrompt = ziweiAccess ? ziweiSystemFull : ziweiSystemPreview;
     const userMsg = ziweiAccess
@@ -1939,10 +2058,17 @@ ${zwEngineSection}【健康维度】只说脏腑养生方向，严禁点名具�
     res.flushHeaders();
     res.write(`data: ${JSON.stringify({ type: 'meta', tier: ziweiAccess ? 'full' : 'basic', locked: !ziweiAccess })}\n\n`);
 
+    // 【方案A】先推送事实卡 chunk（代码生成，100%准确），前端直接渲染
+    let fullText = '';
+    if (_zwStreamFactCard) {
+      res.write(`data: ${JSON.stringify({ type: 'chunk', content: _zwStreamFactCard })}\n\n`);
+      fullText += _zwStreamFactCard;
+    }
+
     const streamBody = await deepseekStream([{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }], { maxTokens: ziweiAccess ? 16384 : 3000, timeout: 300000 });
     const reader = streamBody.getReader();
     const decoder = new TextDecoder('utf-8');
-    let fullText = '', buf = '';
+    let buf = '';
     while (true) {
       const { done, value } = await reader.read();
       if (done) { buf += decoder.decode(); break; }
@@ -2684,6 +2810,9 @@ ${westernEngineBlock || '（精确天文引擎数据不可用，请仅基于上�
     var _gm = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','八字','合婚','紫微','姓名','占星','星盘'], [], 16384);
     const astroTier = resolveReportTier(_gm.full, req.body.tier);
 
+    // 【方案A】西占事实卡：从 chart 对象直接格式化，不经 LLM
+    const _astroFactCard = buildWesternFactCard(chart);
+
     const astroSystemPrompt = `你是一位精通西方占星学的资深占星师，融合古典占星与现代心理占星，从业20年，为上千人解读过本命星盘。
 你的语言：70%中文 + 30%英文关键术语（星座名/行星名用英文，其余中文解释），让用户既能看懂又能学到占星知识。
 解读深刻、温暖、具体——不说"你可能比较有创意"，说"当你的金星在双子与火星射手形成对分时，你的创意来自于……"。
@@ -2691,7 +2820,7 @@ ${westernEngineBlock || '（精确天文引擎数据不可用，请仅基于上�
 【精确星盘数据（后端注入·禁 LLM 自算）】
 ${fullChartBlock}
 
-【绝对铁律】必须逐字采用上方注入的精确星盘数据（行星星座+度数+宫位+相位），禁止自行推算或改动任何行星落座；若某数据缺失（如无出生时间→上升不可用）必须明说"因缺出生时间暂不可定"，绝不编造。
+【内容一致性铁律·方案A】报告正文开头已由后端代码自动插入"星盘事实卡"（Markdown 表格，含太阳/月亮/上升/五大行星星座+度数+元素+宫位），该事实卡100%准确。你的解读从事实卡之后开始，禁止在正文中重新列出或改动任何行星星座/度数，只做解读分析。若某数据缺失（如无出生时间→上升不可用），事实卡已标注，你解读时必须与之一致说"因缺出生时间暂不可定"，绝不编造。
 
 【当前时间基准】今年是 ${NOW_Y} 年。所有行运/过境/流年分析必须以 ${NOW_Y} 年为"当前/今年"，禁止把过去年份（如2024/2025）当作今年。
 
@@ -2784,7 +2913,9 @@ ${fullChartBlock}
     ];
 
     var _g = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','八字','合婚','紫微','姓名','占星','星盘'], messages);
-    const result = await deepseekChat(_g.messages, { maxTokens: astroMaxTokens || _g.maxTokens });
+    const llmResult = await deepseekChat(_g.messages, { maxTokens: astroMaxTokens || _g.maxTokens });
+    // 【方案A】事实卡由后端生成并拼在 LLM 解读之前，前端展示永远对
+    const result = _astroFactCard ? _astroFactCard + llmResult : llmResult;
     insertReading.run('astrology', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('astrology', req.body, result);
 
