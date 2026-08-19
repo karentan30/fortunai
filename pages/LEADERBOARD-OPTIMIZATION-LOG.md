@@ -379,7 +379,7 @@
 
 ### 域名CORS配置
 ```
-Access-Control-Allow-Origin: https://shenyuan.mylumee.cn, https://shenyuan.app
+Access-Control-Allow-Origin: https://runae.app, https://runae.app
 Access-Control-Allow-Credentials: true
 Access-Control-Allow-Methods: GET, POST, OPTIONS
 ```
