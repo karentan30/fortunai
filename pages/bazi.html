@@ -2392,14 +2392,19 @@ function renderUltimateReport(text, containerId, isLocked) {
     if (/^\|[\s|:\-]+\|$/.test(trimmed)) return;
     // 高亮标记行（⚠️/💡/关键/铁律…）不当作章节标题，保留为正文→渲染成高亮卡
     var isHiLine = (typeof isHighlightLine === 'function') && isHighlightLine(trimmed);
-    var sectionMatch = !isHiLine && (
-                       trimmed.match(/^#{1,3}\s*(.+)$/) ||
-                       // 只认真正的章节标题 emoji(白名单)——防止正文里的 🔧/①/**加粗小标题**/数字编号被误当成新章节，产生空白卡片
-                       trimmed.match(/^((?:📜|🌊|🌟|💰|❤️|💕|💼|🏥|🎯|💌|🔮|📅|🟤|🔥|✨|🌿|📖|🕯️)\s*)(.*?)$/u));
+    // 章节标题识别：markdown #/## 标题，或 正式大章 emoji + 短标题(≤24字)。
+    // 免费版(isLocked)只认 📜🌊🌟——付费章 emoji(💰❤️💼🏥)在免费正文里是小标题，不切章；付费版认全部大章 emoji。
+    // 白名单不含 🔥✨🌿🟤 等正文常用符号，避免正文 emoji 小标题被误切成空白碎卡。
+    var _mdHead = trimmed.match(/^#{1,3}\s*(.+)$/);
+    var _emojiHead = isLocked
+      ? trimmed.match(/^(📜|🌊|🌟)️?\s*(.{0,24})$/u)
+      : trimmed.match(/^(📜|🌊|🌟|💰|❤️|💕|💼|🏥|🎯|💌)️?\s*(.{0,24})$/u);
+    var _emTitle = _emojiHead ? _emojiHead[2].replace(/\*\*/g,'').trim() : '';
+    var sectionMatch = !isHiLine && (_mdHead || (_emojiHead && _emTitle.length >= 2));
     if (sectionMatch) {
       if (currentSection) sections.push(currentSection);
-      var rawTitle = (sectionMatch[1]||sectionMatch[0]||trimmed).replace(/^#{1,3}\s*/,'').trim();
-      currentSection = { emoji: '', title: rawTitle, content: [] };
+      var rawTitle = (_mdHead ? _mdHead[1] : _emTitle).replace(/\*\*/g,'').replace(/^#{1,3}\s*/,'').replace(/[#>]/g,'').trim();
+      currentSection = { emoji: (_emojiHead ? _emojiHead[1] : ''), title: rawTitle, content: [] };
     } else if (currentSection) {
       // skip markdown table row delimiters inside content too
       if (!trimmed.startsWith('| :') && trimmed !== '---') currentSection.content.push(trimmed);
