@@ -21,14 +21,14 @@ html{-webkit-font-smoothing:antialiased;scroll-behavior:smooth}
   --jade-pale:rgba(91,191,160,0.10);--jade-border:rgba(91,191,160,0.22);
   --espresso:#1a1208;--espresso-2:#221a0a;--espresso-card:#2a1f0e;
   --cream:#faf8f5;--ink:#1a1a18;--sub:rgba(60,75,65,0.72);
-  --ink-dark:#e8e0d0;--sub-dark:rgba(220,210,190,0.65);--muted-dark:rgba(180,160,120,0.45);
+  --ink-dark:#e8e0d0;--sub-dark:rgba(224,214,194,0.82);--muted-dark:rgba(198,180,142,0.68);
   --radius:14px;--radius-lg:20px;
   --shadow:0 2px 16px rgba(0,0,0,0.07);
 }
 
 body{
   font-family:'Inter',sans-serif;
-  color:var(--ink);
+  color:var(--ink-dark);
   background:var(--espresso);
   min-height:100vh;
   overflow-x:hidden;
@@ -79,15 +79,22 @@ a{color:inherit;text-decoration:none}
   position:relative;z-index:1;
 }
 
-/* 签系特色标签 */
+/* 签系特色标签 / 3-way 切换 */
 .system-badges{
   display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
   margin-bottom:32px;position:relative;z-index:1;
 }
 .sys-badge{
-  font-size:12px;padding:5px 12px;border-radius:20px;
+  font-size:12px;padding:6px 13px;border-radius:20px;
   border:1px solid var(--gold-border);color:var(--gold-light);
   background:rgba(201,168,76,0.06);font-family:'Noto Serif SC',serif;
+  cursor:pointer;transition:all .18s;-webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+.sys-badge.active{
+  background:rgba(201,168,76,0.20);border-color:var(--gold);
+  color:var(--gold-light);font-weight:600;
+  box-shadow:0 0 0 1px var(--gold) inset;
 }
 
 /* ─── CARD ─── */
@@ -284,7 +291,7 @@ input[type=number]::-webkit-inner-spin-button{opacity:.5}
   line-height:1.6;padding:28px 22px;
   font-family:'Noto Serif SC',serif;max-width:380px;margin:0 auto;
 }
-.disclaimer a{color:var(--gold-border)}
+.disclaimer a{color:var(--gold-light);text-decoration:underline;text-underline-offset:2px}
 
 /* ─── 已验证签数提示 ─── */
 .verified-badge{
@@ -323,10 +330,10 @@ input[type=number]::-webkit-inner-spin-button{opacity:.5}
   <p class="hero-eyebrow">Temple Sign Interpretation · 解签服务</p>
   <h1 class="hero-title">在庙里<span>抽了签</span>？</h1>
   <p class="hero-sub">输入签号，我们用真谱库逐字对照——签诗一字不改，结合你所问之事给出白话专业解读。</p>
-  <div class="system-badges">
-    <span class="sys-badge">🕊️ 观音灵签</span>
-    <span class="sys-badge">🦁 黄大仙灵签</span>
-    <span class="sys-badge">⛩️ 日本御神签</span>
+  <div class="system-badges" id="systemBadges" role="tablist" aria-label="选择签系">
+    <span class="sys-badge active" data-system="guanyin" role="tab" aria-selected="true" tabindex="0">🕊️ 观音灵签</span>
+    <span class="sys-badge" data-system="huangdaxian" role="tab" aria-selected="false" tabindex="0">🦁 黄大仙灵签</span>
+    <span class="sys-badge" data-system="omikuji" role="tab" aria-selected="false" tabindex="0">⛩️ 日本御神签</span>
   </div>
 </section>
 
@@ -518,21 +525,58 @@ input[type=number]::-webkit-inner-spin-button{opacity:.5}
   var followupBtn       = document.getElementById('followupBtn');
   var resetBtn          = document.getElementById('resetBtn');
   var verifiedText      = document.getElementById('verifiedText');
+  var systemBadges      = document.getElementById('systemBadges');
 
   var VERIFIED_COUNTS = { guanyin: '73/100', huangdaxian: '100/100', omikuji: '—' };
 
-  // ── 签系切换 ──
-  sysSelect.addEventListener('change', function() {
-    state.system = sysSelect.value;
-    if (state.system === 'omikuji') {
+  // ── 签系切换（统一入口：徽章 + 下拉框都走这里，互斥）──
+  function setSystem(sys) {
+    if (!sys || !VERIFIED_COUNTS.hasOwnProperty(sys)) return;
+    state.system = sys;
+
+    // 同步下拉框
+    if (sysSelect.value !== sys) sysSelect.value = sys;
+
+    // 同步顶部 3-way 徽章的 active 状态
+    if (systemBadges) {
+      systemBadges.querySelectorAll('.sys-badge').forEach(function(b) {
+        var on = b.dataset.system === sys;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-selected', on ? 'true' : 'false');
+      });
+    }
+
+    // 切换签号 / 等级字段
+    if (sys === 'omikuji') {
       signNoField.style.display = 'none';
       gradeField.style.display  = 'block';
     } else {
       signNoField.style.display = 'block';
       gradeField.style.display  = 'none';
-      verifiedText.textContent = VERIFIED_COUNTS[state.system] + ' 签已收录真谱';
+      verifiedText.textContent = VERIFIED_COUNTS[sys] + ' 签已收录真谱';
     }
+  }
+
+  sysSelect.addEventListener('change', function() {
+    setSystem(sysSelect.value);
   });
+
+  // 顶部 3-way 徽章：点击互斥切换
+  if (systemBadges) {
+    systemBadges.addEventListener('click', function(e) {
+      var badge = e.target.closest('.sys-badge');
+      if (!badge) return;
+      setSystem(badge.dataset.system);
+    });
+    // 键盘可达（Enter / Space）
+    systemBadges.addEventListener('keydown', function(e) {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      var badge = e.target.closest('.sys-badge');
+      if (!badge) return;
+      e.preventDefault();
+      setSystem(badge.dataset.system);
+    });
+  }
 
   // ── 语言切换 ──
   langRow.addEventListener('click', function(e) {
