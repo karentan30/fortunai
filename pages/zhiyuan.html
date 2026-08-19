@@ -376,7 +376,12 @@ function getElemStrength(y,m,d) {
 
 function rng(seed, max) { return (Math.abs(Math.sin(seed*9.5+128)*10000)|0)%max; }
 
-// ── Generate content ──
+// ── Bazi helpers（保留用于副标题展示日主信息） ──
+function _getElemMapLocal() {
+  return {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+}
+
+// ── Generate content ── 真调 /api/zhiyuan
 function generateReport() {
   var y = parseInt(document.getElementById('year').value);
   var m = parseInt(document.getElementById('month').value);
@@ -388,7 +393,7 @@ function generateReport() {
   var rank = parseInt(document.getElementById('rank').value) || 0;
 
   if (!y || !m || !d || !score) {
-    showToast('请填写出生年月日和高分数', 'error');
+    showToast('请填写出生年月日和高考分数', 'error');
     return;
   }
   if (score < 0 || score > 750) {
@@ -396,87 +401,20 @@ function generateReport() {
     return;
   }
 
-  var seed = y*10000+m*100+d;
-  var dm = getDaymaster(y,m,d,h);
-  var elem = getElemStrength(y,m,d);
-  var elemStrong = Object.keys(elem).sort(function(a,b){return elem[b]-elem[a];})[0];
+  // 防狂点
+  var genBtn = document.querySelector('.btn-gen');
+  if (genBtn) { genBtn.disabled = true; }
 
-  // Industry suggestions by daymaster element
-  var industryMap = {
-    '甲':['林业/农业','教育行业','出版传媒','建筑设计','中医中药'],
-    '乙':['园林设计','文秘行政','纺织服装','文化创意','教育培训'],
-    '丙':['互联网/IT','能源行业','影视传媒','市场营销','教育培训'],
-    '丁':['心理咨询','文化传播','餐饮美食','美容护肤','文学创作'],
-    '戊':['房地产','建筑工程','农业种植','地质矿产','物业管理'],
-    '己':['酒店管理','食品行业','农业种养','房地产','社区服务'],
-    '庚':['金融投资','法律行业','机械制造','军警消防','体育竞技'],
-    '辛':['珠宝鉴定','精密制造','会计审计','科研开发','医疗美容'],
-    '壬':['航运物流','通信行业','水产渔业','IT技术','旅游行业'],
-    '癸':['心理咨询','文化创意','水利环保','医疗护理','灵性教育']
-  };
+  var dm = getDaymaster(y, m, d, h);
+  var elem = getElemStrength(y, m, d);
+  var elemStrong = Object.keys(elem).sort(function(a,b){ return elem[b]-elem[a]; })[0];
+  var ELEM_MAP_LOCAL = _getElemMapLocal();
 
-  var majorMap = {
-    '甲':['林学','农学','教育学','建筑学','新闻传播'],
-    '乙':['园艺','纺织工程','艺术设计','学前教育','文化产业管理'],
-    '丙':['计算机科学','能源动力','广播电视','广告学','电子商务'],
-    '丁':['心理学','汉语言文学','食品科学','护理学','艺术学'],
-    '戊':['土木工程','地质学','农业工程','管理科学','土地资源管理'],
-    '己':['食品科学','旅游管理','物业管理','酒店管理','公共事业管理'],
-    '庚':['金融学','法学','机械工程','安全工程','体育教育'],
-    '辛':['宝石材料','精算学','会计学','统计学','药学'],
-    '壬':['航海技术','通信工程','水利工程','软件工程','物流管理'],
-    '癸':['心理学','汉语言文学','环境工程','护理学','哲学']
-  };
+  // 更新副标题
+  var subEl = document.getElementById('rptSub');
+  if (subEl) subEl.textContent = province + ' · ' + score + '分' + (rank ? ' · 排名#' + rank : '') + ' · ' + genderText() + ' · ' + (ELEM_MAP_LOCAL[dm] || '?') + '行日主';
 
-  var cityMap = {
-    '木':['杭州（木旺）','苏州（园林）','成都（文创）','南京（文教）','昆明（春城）'],
-    '火':['深圳（科技）','广州（商贸）','长沙（传媒）','武汉（教育）','重庆（火锅）'],
-    '土':['郑州（中原）','西安（古都）','成都（天府）','北京（中都）','沈阳（重镇）'],
-    '金':['上海（金融）','深圳（金融）','广州（外贸）','北京（经济）','青岛（港口）'],
-    '水':['上海（海运）','杭州（西湖）','广州（珠三角）','武汉（长江）','南京（秦淮）']
-  };
-
-  // Generate report data
-  var industries = industryMap[dm] || ['互联网','教育','金融','文化传媒','咨询服务'];
-  var majors = majorMap[dm] || ['计算机','金融学','教育学','文学','管理学'];
-  var cities = cityMap[elemStrong] || ['北京','上海','深圳','杭州','成都'];
-
-  var scoreSegment = score >= 650 ? '高分段' : (score >= 550 ? '中高分段' : (score >= 450 ? '中分段' : '基础分段'));
-
-  generatedData = {
-    year: y, month: m, day: d, hour: h,
-    score: score, province: province, subject: subject, rank: rank,
-    dm: dm, elemStrong: elemStrong,
-    industries: industries,
-    majors: majors,
-    cities: cities,
-    scoreSegment: scoreSegment
-  };
-
-  // Build preview sections
-  var preview = [];
-  preview.push({emoji:'📜', title:'八字命格适合行业',
-    text:'日主为「'+dm+'」('+ELEM_MAP[dm]+'行)，五行'+elemStrong+'最旺。\n\n根据八字命理分析，你天生适合的行业方向包括：\n• '+industries.slice(0,3).join('\n• ')+'\n\n（付费解锁完整分析）'});
-  preview.push({emoji:'🔥', title:'适合的专业方向',
-    text:'结合命格五行与高考分数（'+score+'分/'+scoreSegment+'），推荐报考专业：\n• '+majors.slice(0,3).join('\n• ')+'\n\n（付费解锁完整推荐+分院校匹配）'});
-
-  var html = '';
-  preview.forEach(function(sec, i) {
-    html += '<div class="ur-card animate" style="animation-delay:'+(i*0.1)+'s">';
-    html += '<div class="ur-head" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.ur-arrow\').classList.toggle(\'open\')">';
-    html += '<span class="ur-emoji">'+sec.emoji+'</span>';
-    html += '<span class="ur-title">'+sec.title+'</span>';
-    html += '<span class="ur-arrow open">▾</span></div>';
-    html += '<div class="ur-body open"><div class="ur-text">'+sec.text.replace(/\n/g,'<br>')+'</div></div></div>';
-  });
-
-  // Locked sections
-  ['🌆 旺你的城市','🏫 可报考的学校建议','💰 毕业薪资展望','🎯 总结建议'].forEach(function(t) {
-    html += '<div class="locked-section animate" style="animation-delay:0.2s">';
-    html += '<div class="locked-left"><div class="locked-title">'+t+'</div><div class="locked-hint">付费解锁完整报告</div></div>';
-    html += '<div class="locked-icon">🔒</div></div>';
-  });
-
+  // 切换到加载界面 + 打字步骤动画
   document.getElementById('inputScreen').style.display = 'none';
   document.getElementById('loadingScreen').classList.add('show');
 
@@ -504,40 +442,169 @@ function generateReport() {
     }, i * 500);
   });
 
-  var subEl = document.getElementById('rptSub');
-  subEl.textContent = province+' · '+score+'分'+(rank?' · 排名#'+rank:'')+' · '+genderText()+' · '+ELEM_MAP[dm]+'行日主';
-
-  setTimeout(function() {
-    // Prepend luxury header
-    var luxuryHeader = '';
-    luxuryHeader += '<div style="display:flex;align-items:center;gap:6px;margin:12px 16px 0;padding:7px 12px;background:rgba(91,191,160,0.06);border:1px solid rgba(91,191,160,0.15);border-radius:6px;font-size:11px;color:rgba(91,191,160,0.75);letter-spacing:0.06em"><span>🤖</span><span><b>AI 生成内容</b> · 仅供参考，不代表录取概率。</span></div>';
-    luxuryHeader += '<div id="readProgressWrap"><div id="readProgressBar"></div></div>';
-    luxuryHeader += '<div class="chapter-cover">';
-    luxuryHeader += '<img class="chapter-cover-img" src="/samples/caijing/art-study.png" alt="" loading="lazy" onerror="this.style.display=\'none\'">';
-    luxuryHeader += '<div class="chapter-cover-veil"></div>';
-    luxuryHeader += '<div class="chapter-cover-body">';
-    luxuryHeader += '<div class="chapter-cover-num">LIFE PLANNING · MAJOR SELECTION</div>';
-    luxuryHeader += '<div class="chapter-cover-title">人生规划报告</div>';
-    luxuryHeader += '<div class="chapter-cover-lead">高考志愿 · 专业适配 · AI 命理分析</div>';
-    luxuryHeader += '</div></div>';
-    // Score rings
-    if (window.ReportViz) {
-      luxuryHeader += '<div style="margin:0 4px">' + window.ReportViz.renderScoreRing.group([
-        {label:'理工适配',score:72,max:100,sub:'STEM专业'},
-        {label:'人文适配',score:68,max:100,sub:'文科方向'},
-        {label:'艺术适配',score:55,max:100,sub:'艺术类别'}
-      ], '专业方向匹配度') + '</div>';
-    }
-    html = luxuryHeader + html;
-    // Append compliance note
-    html += '<div class="hl-note" style="margin:12px 16px"><b>重要提示</b>：本报告基于命理学参考分析，不代表实际录取概率。升学决策请以教育部数据及专业指导老师建议为准。未成年学生请与家长共同参考。</div>';
-
+  // ── 真调后端 /api/zhiyuan ──
+  fetch('/api/zhiyuan', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' },
+    body: JSON.stringify({
+      birthYear: y,
+      birthMonth: m,
+      birthDay: d,
+      birthHour: h,
+      gender: gender,
+      score: score,
+      province: province,
+      subjectType: subject,
+      ranking: rank || undefined
+    })
+  })
+  .then(function(res) {
+    if (!res.ok) return res.json().then(function(e){ throw new Error(e.error || '服务器错误 ' + res.status); });
+    return res.json();
+  })
+  .then(function(data) {
+    if (!data || !data.reading) throw new Error('AI 返回内容为空');
+    renderZhiyuanReport(data.reading, y, score, province, rank, dm, elemStrong, ELEM_MAP_LOCAL);
+  })
+  .catch(function(err) {
     document.getElementById('loadingScreen').classList.remove('show');
-    document.getElementById('reportContent').innerHTML = html;
-    document.getElementById('reportScreen').classList.add('show');
-    document.getElementById('stickyCta').style.display = 'block';
-    initReadProgress();
-  }, steps.length * 500 + 500);
+    document.getElementById('inputScreen').style.display = 'block';
+    if (genBtn) { genBtn.disabled = false; }
+    showToast('生成失败：' + (err.message || '请稍后重试'), 'error');
+  });
+}
+
+// ── 渲染真实 AI 返回的报告 ──
+function renderZhiyuanReport(aiText, y, score, province, rank, dm, elemStrong, ELEM_MAP_LOCAL) {
+  document.getElementById('loadingScreen').classList.remove('show');
+
+  // 解析 markdown 段落
+  var sections = [];
+  var cur = null;
+  var lines = aiText.split('\n');
+  var lockedMarkerFound = false;
+  lines.forEach(function(line) {
+    var tr = line.trim();
+    if (!tr || tr === '---') return;
+    // 检测 ---LOCKED--- 标记（兜底，正常zhiyuan不会有，但防御性处理）
+    if (tr.indexOf('---LOCKED---') !== -1) { lockedMarkerFound = true; return; }
+    var hMatch = tr.match(/^#{1,3}\s*(.+)$/)
+               || tr.match(/^([\u{1F300}-\u{1FAFF}✦▪▸]\s*)(.*?)$/u)
+               || tr.match(/^\*{2}([^*]+)\*{2}/);
+    if (hMatch) {
+      if (cur) sections.push(cur);
+      var title = (hMatch[1] || hMatch[0]).replace(/^#{1,3}\s*/, '').trim();
+      cur = { title: title, content: [] };
+    } else if (cur) {
+      cur.content.push(tr);
+    } else {
+      if (!sections.length) sections.push({ title: '志愿分析概述', content: [] });
+      sections[sections.length - 1].content.push(tr);
+    }
+  });
+  if (cur) sections.push(cur);
+  if (!sections.length) sections.push({ title: '高考志愿分析', content: [aiText] });
+
+  // 精装报告头部
+  var html = '';
+  html += '<div style="display:flex;align-items:center;gap:6px;margin:12px 16px 0;padding:7px 12px;background:rgba(91,191,160,0.06);border:1px solid rgba(91,191,160,0.15);border-radius:6px;font-size:11px;color:rgba(91,191,160,0.75);letter-spacing:0.06em"><span>🤖</span><span><b>AI 生成内容</b> · 仅供参考，不代表录取概率。</span></div>';
+
+  // 阅读进度条（重新插入，因为之前的在 DOM 里还未 show）
+  html += '<div id="readProgressWrap"><div id="readProgressBar"></div></div>';
+
+  // 封面卡
+  html += '<div class="chapter-cover">';
+  html += '<img class="chapter-cover-img" src="/samples/caijing/art-study.png" alt="" loading="lazy" onerror="this.style.display=\'none\'">';
+  html += '<div class="chapter-cover-veil"></div>';
+  html += '<div class="chapter-cover-body">';
+  html += '<div class="chapter-cover-num">LIFE PLANNING · MAJOR SELECTION</div>';
+  html += '<div class="chapter-cover-title">人生规划报告</div>';
+  html += '<div class="chapter-cover-lead">高考志愿 · 专业适配 · AI 命理分析 · ' + province + ' ' + score + '分</div>';
+  html += '</div></div>';
+
+  // 评分环（report-viz.js）
+  if (window.ReportViz) {
+    try {
+      html += '<div style="margin:0 4px">' + window.ReportViz.renderScoreRing.group([
+        { label: '理工适配', score: 72, max: 100, sub: 'STEM专业' },
+        { label: '人文适配', score: 68, max: 100, sub: '文科方向' },
+        { label: '艺术适配', score: 55, max: 100, sub: '艺术类别' }
+      ], '专业方向匹配度') + '</div>';
+    } catch(e) {}
+  }
+
+  // 章节目录
+  html += '<div class="chapter-toc">';
+  html += '<div class="chapter-toc-title"><span>📖</span> 志愿分析目录 · 共 ' + sections.length + ' 章</div>';
+  sections.forEach(function(sec, i) {
+    html += '<div class="chapter-toc-item" onclick="zyJump(\'zy-chap-' + i + '\')">'
+      + '<span class="chapter-toc-idx">其' + ['一','二','三','四','五','六','七','八','九'][i] + '</span>'
+      + '<span class="chapter-toc-label">' + sec.title.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;') + '</span>'
+      + '<span class="chapter-toc-arrow">›</span></div>';
+  });
+  html += '</div>';
+
+  // 渲染各章节
+  sections.forEach(function(sec, i) {
+    var anchorId = 'zy-chap-' + i;
+    var esc = function(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); };
+    var rich = function(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong style="color:var(--jade-deep)">$1</strong>').replace(/(\d{4})年/g,'<span style="color:var(--jade)">$1年</span>'); };
+
+    // 封面卡（简版）
+    html += '<div id="' + anchorId + '" class="chapter-cover" style="min-height:110px;margin:14px 4px 8px">';
+    html += '<img class="chapter-cover-img" src="/samples/caijing/art-' + zyGetArt(sec.title) + '.png" alt="" loading="lazy" onerror="this.style.display=\'none\'">';
+    html += '<div class="chapter-cover-veil"></div>';
+    html += '<div class="chapter-cover-body" style="padding:10px 14px 12px">';
+    html += '<div class="chapter-cover-num" style="font-size:10px">第 ' + (i + 1) + ' 章</div>';
+    html += '<div class="chapter-cover-title" style="font-size:17px">' + esc(sec.title) + '</div>';
+    if (sec.content.length) html += '<div class="chapter-cover-lead" style="font-size:10px">' + esc(sec.content[0].slice(0, 40)) + '</div>';
+    html += '</div></div>';
+
+    // 内容卡
+    html += '<div class="ur-card animate" style="margin:0 16px 10px">';
+    html += '<div class="ur-head" onclick="this.nextElementSibling.classList.toggle(\'open\');this.querySelector(\'.ur-arrow\').classList.toggle(\'open\')">';
+    html += '<span class="ur-emoji">' + zyGetEmoji(sec.title) + '</span>';
+    html += '<span class="ur-title">' + esc(sec.title) + '</span>';
+    html += '<span class="ur-arrow open">▾</span></div>';
+    var bodyLines = sec.content.map(function(ln, li) {
+      var cls = 'ur-text' + (li === 0 ? ' drop-cap' : '');
+      return '<div class="' + cls + '">' + rich(ln) + '</div>';
+    }).join('');
+    html += '<div class="ur-body open">' + bodyLines + '</div>';
+    html += '</div>';
+  });
+
+  // 合规提示
+  html += '<div class="hl-note" style="margin:12px 16px"><b>重要提示</b>：本报告基于命理学参考分析，不代表实际录取概率。升学决策请以教育部数据及专业指导老师建议为准。未成年学生请与家长共同参考。</div>';
+
+  document.getElementById('reportContent').innerHTML = html;
+  document.getElementById('reportScreen').classList.add('show');
+  document.getElementById('stickyCta').style.display = 'block';
+  initReadProgress();
+}
+
+function zyGetArt(title) {
+  var t = String(title || '');
+  if (/行业|职业/.test(t)) return 'career';
+  if (/专业/.test(t)) return 'mingge';
+  if (/城市/.test(t)) return 'wuxing';
+  if (/学校|院校/.test(t)) return 'dayun';
+  if (/薪资|收入|工资/.test(t)) return 'wealth';
+  return 'study';
+}
+
+function zyGetEmoji(title) {
+  var t = String(title || '');
+  if (/行业/.test(t)) return '📜';
+  if (/专业/.test(t)) return '🔥';
+  if (/城市/.test(t)) return '🌆';
+  if (/学校|院校/.test(t)) return '🏫';
+  if (/薪资|收入/.test(t)) return '💰';
+  if (/总结|建议/.test(t)) return '🎯';
+  return '📋';
+}
+
+function zyJump(id) { var el = document.getElementById(id); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 
 function initReadProgress() {
   var bar = document.getElementById('readProgressBar');
@@ -550,9 +617,8 @@ function initReadProgress() {
     var pct = docH > 0 ? Math.min(100, (scrollTop / docH) * 100) : 0;
     bar.style.width = pct + '%';
   }
-  window.addEventListener('scroll', updateProgress, {passive: true});
+  window.addEventListener('scroll', updateProgress, { passive: true });
   updateProgress();
-}
 }
 
 function genderText() { return gender === 'male' ? '男' : '女'; }
