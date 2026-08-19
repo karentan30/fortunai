@@ -2286,6 +2286,59 @@ function buildBaziVisualCard(chartData, lang) {
     html += '</div>';
   }
 
+  // ── 大运 strip（八步大运 · 当前高亮）──────────────────
+  // 用真实引擎数据 chartData.dayun；缺失则优雅跳过（不渲染，不报错）
+  var dayun = (chartData.dayun && chartData.dayun.length) ? chartData.dayun.filter(function(d){ return d && d.ganZhi; }) : [];
+  if (dayun.length >= 2) {
+    var GAN_ELEM = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+    // 当前年龄（今年 - 出生年，与付费报告 buildDayunTimeline 口径一致），从全局 lastBaziInput.year 推导
+    var curAge = null;
+    try {
+      if (typeof lastBaziInput !== 'undefined' && lastBaziInput && lastBaziInput.year) {
+        var _a = (new Date().getFullYear()) - parseInt(lastBaziInput.year, 10);
+        if (_a >= 0 && _a <= 130) curAge = _a;
+      }
+    } catch (e) {}
+    var curIdx = -1;
+    if (curAge != null) {
+      for (var di = 0; di < dayun.length; di++) {
+        var sA = (dayun[di].startAge != null) ? dayun[di].startAge : 0;
+        var eA = (dayun[di].endAge != null) ? dayun[di].endAge : (sA + 9);
+        if (curAge >= sA && curAge <= eA) { curIdx = di; break; }
+      }
+    }
+
+    html += '<div style="padding:2px 12px 12px">';
+    html += '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+    html += '<div style="font-size:10px;color:rgba(169,164,136,0.7);letter-spacing:0.1em">' + (isEn ? 'LUCK CYCLES · DA YUN' : '大运 · 每步十年') + '</div>';
+    html += '<div style="font-size:9px;color:rgba(201,168,76,0.5);letter-spacing:0.06em">' + (isEn ? (curIdx >= 0 ? 'now highlighted' : '') : (curIdx >= 0 ? '● 当前大运' : '')) + '</div>';
+    html += '</div>';
+    // 横向可滚动的 8 步大运
+    html += '<div style="display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px">';
+    dayun.forEach(function(d, i) {
+      var gan = (d.ganZhi || '').charAt(0);
+      var col = ELEM_COLOR[GAN_ELEM[gan]] || '#c9a84c';
+      var isCur = (i === curIdx);
+      var ageLabel = (d.startAge != null)
+        ? (d.startAge + (d.endAge != null ? '–' + d.endAge : '') + (isEn ? '' : '岁'))
+        : '';
+      var bg = isCur ? 'linear-gradient(160deg,rgba(201,168,76,0.22),rgba(201,168,76,0.08))' : 'rgba(255,255,255,0.025)';
+      var bd = isCur ? col : 'rgba(201,168,76,0.14)';
+      html += '<div style="flex:0 0 auto;min-width:52px;text-align:center;padding:8px 6px 7px;border-radius:10px;background:' + bg + ';border:1px solid ' + bd + ';box-shadow:' + (isCur ? '0 2px 10px rgba(201,168,76,0.18)' : 'none') + '">';
+      if (isCur) html += '<div style="font-size:8px;color:' + col + ';letter-spacing:0.08em;margin-bottom:2px;font-weight:600">' + (isEn ? 'NOW' : '当前') + '</div>';
+      else html += '<div style="font-size:8px;color:transparent;margin-bottom:2px">·</div>';
+      html += '<div style="font-size:20px;font-weight:700;line-height:1.1;color:' + col + '">' + escHtml(d.ganZhi) + '</div>';
+      // 干支十神（若引擎提供）
+      var ss = (d.ganShiShen || '') + (d.zhiShiShen ? ' ' + d.zhiShiShen : '');
+      if (ss.trim()) html += '<div style="font-size:8px;color:rgba(216,185,106,0.75);margin-top:2px;letter-spacing:0.02em;white-space:nowrap">' + escHtml(ss.trim()) + '</div>';
+      html += '<div style="font-size:9px;color:rgba(200,190,160,0.55);margin-top:3px;font-family:\'Cormorant Garamond\',serif">' + ageLabel + '</div>';
+      html += '</div>';
+    });
+    html += '</div>';
+    html += '<div style="font-size:9px;color:rgba(200,190,160,0.38);letter-spacing:0.05em;margin-top:6px;text-align:center">' + (isEn ? 'Each step spans ~10 years · color = element' : '每步大运约十年 · 颜色示五行 · 左右滑动查看全程') + '</div>';
+    html += '</div>';
+  }
+
   html += '</div>'; // close card
   return html;
 }
@@ -2692,6 +2745,36 @@ function generateShareCard() {
     cv.width = W; cv.height = H;
     var ctx = cv.getContext('2d');
 
+    // ── 精确引擎数据（window._baziChartData）优先；缺失时降级到文本解析，绝不编造 ──
+    var _cd = window._baziChartData || null;
+    var GAN_EL = {'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+    var ELEM_HUE = {'木':'#5bbfa0','火':'#e8603a','土':'#c9a84c','金':'#b8c8d4','水':'#4a9fd4'};
+
+    // 一句命理钩子（由 日主+五行+格局/十神 派生，非全文解读，只做勾人的标签）
+    function buildHookLabel(cd) {
+      if (!cd || !cd.dayMaster) return '';
+      var dm = cd.dayMaster;
+      var el = cd.dayMasterElement || GAN_EL[dm] || '';
+      var geju = (cd.geju || '').replace(/格$/, '');
+      // 主体：日主五行 + 格局（如「庚金 · 七杀格」）
+      var head = dm + (el ? el : '') + (geju ? ('　' + geju + '格') : '');
+      // 人格标签：优先按格局，其次按日主五行
+      var GEJU_TAG = {
+        '正官':'天生的秩序缔造者','七杀':'披荆斩棘的破局者','正财':'脚踏实地的聚财者','偏财':'八方来财的机遇家',
+        '正印':'厚德载物的智慧体','偏印':'独辟蹊径的思想者','食神':'享福有道的创造者','伤官':'才华横溢的叛逆者',
+        '比肩':'意志如铁的独行侠','劫财':'敢拼敢闯的行动派','建禄':'自立门户的实干家','阳刃':'锋芒毕露的猛将',
+        '从':'顺势而为的借力者','化':'灵活善变的转化者'
+      };
+      var ELEM_TAG = {
+        '木':'向阳而生的成长者','火':'照亮四方的热忱者','土':'稳如泰山的承载者','金':'刚柔并济的锋锐者','水':'智谋深远的通达者'
+      };
+      var tag = '';
+      Object.keys(GEJU_TAG).forEach(function(k){ if (!tag && geju.indexOf(k) !== -1) tag = GEJU_TAG[k]; });
+      if (!tag && el) tag = ELEM_TAG[el] || '';
+      return { head: head, tag: tag };
+    }
+    var _hook = buildHookLabel(_cd);
+
     // ── Background: deep navy gradient ──
     var bgGrad = ctx.createLinearGradient(0, 0, W, H);
     bgGrad.addColorStop(0, '#0a0d1a');
@@ -2764,10 +2847,17 @@ function generateShareCard() {
     ctx.fillText(gLabel + ' · ' + bStr, W/2, infoY); infoY += 46;
     hline(infoY); infoY += 44;
 
-    // ── 四柱 Pillars ──
+    // ── 四柱 Pillars（优先用引擎精确数据 _cd.pillars，带十神）──
     ctx.fillStyle = 'rgba(201,168,76,0.45)'; ctx.font = '24px "Noto Serif SC",serif';
     ctx.fillText('四  柱  八  字', W/2, infoY); infoY += 38;
-    var pillars = parsePillarsFromText(lastAiText) || [];
+    var pillars = [];
+    if (_cd && _cd.pillars && _cd.pillars.length === 4) {
+      pillars = _cd.pillars.map(function(p){
+        return { label: (p.label||'') + '柱', tian: p.gan, di: p.zhi, shishen: p.shishen || '', isDay: (p.label === '日') };
+      });
+    } else {
+      pillars = parsePillarsFromText(lastAiText) || [];
+    }
     if (pillars.length === 4) {
       var pW = 130, pGap = 20, pSX = (W - 4*pW - 3*pGap) / 2;
       pillars.forEach(function(p, i) {
@@ -2779,17 +2869,26 @@ function generateShareCard() {
         ctx.strokeStyle = p.isDay ? 'rgba(201,168,76,0.55)' : 'rgba(201,168,76,0.15)';
         ctx.lineWidth = p.isDay ? 2 : 1;
         ctx.beginPath(); ctx.roundRect ? ctx.roundRect(px,py,pW,pH,12) : ctx.rect(px,py,pW,pH); ctx.stroke();
-        // label
-        ctx.fillStyle = 'rgba(180,168,128,0.5)'; ctx.font = '20px "Noto Serif SC",serif'; ctx.textAlign = 'center';
-        ctx.fillText(p.label, px+pW/2, py+32);
-        // tian gan
-        ctx.fillStyle = p.isDay ? 'rgba(232,208,138,0.95)' : 'rgba(220,208,160,0.85)';
-        ctx.font = 'bold 72px "Noto Serif SC",serif';
-        ctx.fillText(p.tian, px+pW/2, py+128);
+        // label + 十神
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'rgba(180,168,128,0.5)'; ctx.font = '20px "Noto Serif SC",serif';
+        ctx.fillText(p.label, px+pW/2, py+30);
+        if (p.shishen) {
+          ctx.fillStyle = 'rgba(216,185,106,0.85)'; ctx.font = '18px "Noto Serif SC",serif';
+          ctx.fillText(p.shishen, px+pW/2, py+56);
+        } else if (p.isDay) {
+          ctx.fillStyle = 'rgba(216,185,106,0.85)'; ctx.font = '18px "Noto Serif SC",serif';
+          ctx.fillText('日主', px+pW/2, py+56);
+        }
+        // tian gan（按五行着色）
+        var ganEl = GAN_EL[p.tian];
+        ctx.fillStyle = p.isDay ? 'rgba(232,208,138,0.98)' : (ELEM_HUE[ganEl] ? ELEM_HUE[ganEl] : 'rgba(220,208,160,0.85)');
+        ctx.font = 'bold 68px "Noto Serif SC",serif';
+        ctx.fillText(p.tian, px+pW/2, py+134);
         // di zhi
         ctx.fillStyle = p.isDay ? 'rgba(141,217,191,0.95)' : 'rgba(141,217,191,0.7)';
-        ctx.font = '56px "Noto Serif SC",serif';
-        ctx.fillText(p.di, px+pW/2, py+196);
+        ctx.font = '54px "Noto Serif SC",serif';
+        ctx.fillText(p.di, px+pW/2, py+198);
         ctx.textAlign = 'center';
       });
       infoY += 220 + 40;
@@ -2798,34 +2897,51 @@ function generateShareCard() {
     }
     hline(infoY, 0.25); infoY += 40;
 
-    // ── Day master + key insight ──
-    var dmMatch = lastAiText && lastAiText.match(/日主[：:]\s*([甲乙丙丁戊己庚辛壬癸])([木火土金水])/);
-    if (dmMatch) {
-      ctx.fillStyle = 'rgba(201,168,76,0.9)'; ctx.font = '30px "Noto Serif SC",serif'; ctx.textAlign = 'center';
-      ctx.fillText('日主 ' + dmMatch[1] + dmMatch[2] + ' · 以' + dmMatch[2] + '论命', W/2, infoY);
-      infoY += 46;
+    // ── 命理钩子标签（由引擎的 日主/五行/格局 派生，勾人的一句话）──
+    // 优先用引擎 _hook；无引擎数据时降级到文本正则拿日主
+    var hookHead = _hook ? _hook.head : '';
+    var hookTag = _hook ? _hook.tag : '';
+    if (!hookHead) {
+      var dmMatch = lastAiText && lastAiText.match(/日主[：:]\s*([甲乙丙丁戊己庚辛壬癸])([木火土金水])/);
+      if (dmMatch) hookHead = '日主 ' + dmMatch[1] + dmMatch[2];
     }
-    // Core sentence
-    if (lastAiText) {
-      var sents = lastAiText.split(/[。！？]/).map(function(s){return s.replace(/[#\*\[\]（）\(\)「」]/g,'').trim();})
-        .filter(function(s){return s.length >= 18 && s.length <= 50;});
-      var insight = sents[2] || sents[1] || sents[0] || '';
-      if (insight) {
-        ctx.fillStyle = 'rgba(201,168,76,0.18)'; ctx.font = 'italic 56px Georgia,serif'; ctx.textAlign = 'left';
-        ctx.fillText('"', W*0.08, infoY + 10);
-        ctx.fillStyle = 'rgba(232,222,185,0.88)'; ctx.font = '28px "Noto Serif SC",serif'; ctx.textAlign = 'center';
-        var maxTW = W * 0.76, chs = insight.split(''), curL = '', wrL = [];
-        chs.forEach(function(c){if(ctx.measureText(curL+c).width>maxTW){wrL.push(curL);curL=c;}else curL+=c;});
-        if(curL) wrL.push(curL);
-        wrL.slice(0,3).forEach(function(l,li){ctx.fillText(l,W/2,infoY+li*40);});
-        infoY += wrL.slice(0,3).length*40 + 30;
-      }
+    if (hookHead) {
+      // 主标签（如「庚金　七杀格」）
+      ctx.fillStyle = 'rgba(232,208,138,0.95)'; ctx.font = 'bold 40px "Noto Serif SC",serif'; ctx.textAlign = 'center';
+      ctx.fillText(hookHead, W/2, infoY); infoY += 54;
+    }
+    if (hookTag) {
+      // 人格金句（「· 天生的破局者 ·」，带描边高亮，最抓眼球）
+      var tagText = '· ' + hookTag + ' ·';
+      ctx.font = '34px "Noto Serif SC",serif'; ctx.textAlign = 'center';
+      var tw = ctx.measureText(tagText).width;
+      var chipX = (W - tw) / 2 - 22, chipY = infoY - 34, chipW = tw + 44, chipH = 52;
+      var chipGrad = ctx.createLinearGradient(chipX, 0, chipX + chipW, 0);
+      chipGrad.addColorStop(0, 'rgba(201,168,76,0.05)');
+      chipGrad.addColorStop(0.5, 'rgba(201,168,76,0.18)');
+      chipGrad.addColorStop(1, 'rgba(201,168,76,0.05)');
+      ctx.fillStyle = chipGrad;
+      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(chipX, chipY, chipW, chipH, 26) : ctx.rect(chipX, chipY, chipW, chipH); ctx.fill();
+      ctx.strokeStyle = 'rgba(201,168,76,0.45)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.roundRect ? ctx.roundRect(chipX, chipY, chipW, chipH, 26) : ctx.rect(chipX, chipY, chipW, chipH); ctx.stroke();
+      ctx.fillStyle = 'rgba(240,225,175,0.96)'; ctx.font = '34px "Noto Serif SC",serif';
+      ctx.fillText(tagText, W/2, infoY + 2);
+      infoY += 46;
     }
     hline(infoY, 0.2); infoY += 36;
 
-    // ── Five elements: radar pentagon + bars ──
+    // ── Five elements: radar pentagon + bars（优先引擎 _cd.wuxing 归一化为百分比）──
     var elemData = {};
-    if (lastAiText) {
+    if (_cd && _cd.wuxing) {
+      var _wxTotal = 0;
+      ['木','火','土','金','水'].forEach(function(el){ _wxTotal += (Number(_cd.wuxing[el]) || 0); });
+      if (_wxTotal > 0) {
+        ['木','火','土','金','水'].forEach(function(el){
+          elemData[el] = Math.round((Number(_cd.wuxing[el]) || 0) / _wxTotal * 100);
+        });
+      }
+    }
+    if (Object.keys(elemData).length === 0 && lastAiText) {
       ['木','火','土','金','水'].forEach(function(el){
         var m = lastAiText.match(new RegExp(el+'[\\s]*[：:]\\s*(\\d+)[\\s]*%'));
         if(m) elemData[el] = parseInt(m[1]);
@@ -2905,27 +3021,70 @@ function generateShareCard() {
       infoY += 10;
     }
 
-    // ── Yin-yang watermark ──
-    ctx.fillStyle = 'rgba(201,168,76,0.08)'; ctx.font = '160px serif'; ctx.textAlign = 'center';
-    ctx.fillText('☯', W/2, Math.min(infoY + 90, H - 140));
+    // ── Yin-yang watermark（收窄，给底部 CTA 让位）──
+    ctx.fillStyle = 'rgba(201,168,76,0.06)'; ctx.font = '150px serif'; ctx.textAlign = 'center';
+    ctx.fillText('☯', W/2, Math.min(infoY + 80, H - 240));
 
-    // ── Footer ──
-    hline(H - 120, 0.3);
-    ctx.fillStyle = 'rgba(201,168,76,0.6)'; ctx.font = '26px "Noto Serif SC",serif'; ctx.textAlign = 'center';
-    ctx.fillText('善缘命理  ·  shenyuan.app', W/2, H - 88);
-    ctx.fillStyle = 'rgba(200,196,180,0.35)'; ctx.font = '22px "Noto Serif SC",serif';
-    ctx.fillText('你求什么 · 自有天机', W/2, H - 58);
-    ctx.fillStyle = 'rgba(201,168,76,0.4)'; ctx.font = '20px "Noto Serif SC",serif';
-    ctx.fillText('扫码看你的命盘 · 合婚配对 →', W/2, H - 28);
+    // ── 底部 CTA / 裂变区（品牌 + 引导 + URL + 二维码）──
+    var shareUrl = (typeof _shareUrl === 'function') ? _shareUrl() : 'https://shenyuan.app/pages/bazi.html';
+    var ctaTop = H - 226;            // CTA 面板顶
+    // 面板底
+    var panelGrad = ctx.createLinearGradient(0, ctaTop, 0, H - 34);
+    panelGrad.addColorStop(0, 'rgba(201,168,76,0.10)');
+    panelGrad.addColorStop(1, 'rgba(201,168,76,0.03)');
+    ctx.fillStyle = panelGrad;
+    if (ctx.roundRect){ ctx.beginPath(); ctx.roundRect(44, ctaTop, W - 88, H - 34 - ctaTop, 18); ctx.fill(); }
+    else { ctx.fillRect(44, ctaTop, W - 88, H - 34 - ctaTop); }
+    ctx.strokeStyle = 'rgba(201,168,76,0.32)'; ctx.lineWidth = 1;
+    if (ctx.roundRect){ ctx.beginPath(); ctx.roundRect(44, ctaTop, W - 88, H - 34 - ctaTop, 18); ctx.stroke(); }
 
+    // 品牌行
+    ctx.textAlign = 'left';
+    var textX = 76, qrSize = 132, qrX = W - 76 - qrSize, qrY = ctaTop + 30;
+    ctx.fillStyle = 'rgba(232,208,138,0.95)'; ctx.font = 'bold 40px "Noto Serif SC",serif';
+    ctx.fillText('善缘命理', textX, ctaTop + 56);
+    ctx.fillStyle = 'rgba(200,196,180,0.6)'; ctx.font = '23px "Noto Serif SC",serif';
+    ctx.fillText('AI 四柱八字 · 深度命理解读', textX, ctaTop + 92);
+    // 强 CTA 主标语
+    ctx.fillStyle = 'rgba(240,225,175,0.96)'; ctx.font = 'bold 30px "Noto Serif SC",serif';
+    ctx.fillText('扫码免费测你的命盘 →', textX, ctaTop + 138);
+    // URL 高亮
+    ctx.fillStyle = 'rgba(201,168,76,0.85)'; ctx.font = '26px "Cormorant Garamond","Noto Serif SC",serif';
+    ctx.fillText('shenyuan.app', textX, ctaTop + 174);
+
+    // 二维码底板（先画占位框，图加载成功后覆盖；失败则保留 URL 文案，绝不破图）
+    ctx.fillStyle = 'rgba(255,255,255,0.92)';
+    if (ctx.roundRect){ ctx.beginPath(); ctx.roundRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16, 12); ctx.fill(); }
+    else { ctx.fillRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16); }
+    ctx.strokeStyle = 'rgba(201,168,76,0.5)'; ctx.lineWidth = 1.5;
+    if (ctx.roundRect){ ctx.beginPath(); ctx.roundRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16, 12); ctx.stroke(); }
+    ctx.fillStyle = 'rgba(120,110,80,0.5)'; ctx.font = '20px "Noto Serif SC",serif'; ctx.textAlign = 'center';
+    ctx.fillText('扫码', qrX + qrSize/2, qrY + qrSize/2 + 7);
+    ctx.textAlign = 'left';
+
+    function finalizeCard(qrDrawn) {
     cv.toBlob(function(blob) {
-      if (!blob) { showToast('生成失败，请重试', 'error'); return; }
+      // blob 为 null 常见于二维码跨域污染 canvas；此时清掉二维码重绘一次（保留 URL 文案）
+      if (!blob) {
+        if (qrDrawn) {
+          try {
+            ctx.fillStyle = 'rgba(255,255,255,0.92)';
+            if (ctx.roundRect){ ctx.beginPath(); ctx.roundRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16, 12); ctx.fill(); }
+            else { ctx.fillRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16); }
+            ctx.fillStyle = 'rgba(120,110,80,0.6)'; ctx.font = '18px "Noto Serif SC",serif'; ctx.textAlign = 'center';
+            ctx.fillText('shenyuan.app', qrX + qrSize/2, qrY + qrSize/2 + 6);
+            ctx.textAlign = 'left';
+          } catch (e) {}
+          finalizeCard(false); return;
+        }
+        showToast('生成失败，请重试', 'error'); return;
+      }
       var url = URL.createObjectURL(blob);
       // Try Web Share API first (mobile)
       if (navigator.share && navigator.canShare) {
         var file = new File([blob], '善缘命盘_'+(lastBaziInput.name||'八字')+'.png', {type:'image/png'});
         if (navigator.canShare({files:[file]})) {
-          navigator.share({files:[file], title:'我的八字命盘', text:'用善缘算了八字，太准了！'})
+          navigator.share({files:[file], title:'我的八字命盘', text:(_hook && _hook.tag ? ('我的命格：'+_hook.head+' · '+_hook.tag+'——用善缘 AI 测的，太准了！你也来测：'+shareUrl) : '用善缘算了八字，太准了！你也来测：'+shareUrl)})
             .then(function(){ URL.revokeObjectURL(url); showToast('分享成功 ✨'); })
             .catch(function(){ fallbackDownload(url); });
           return;
@@ -2940,6 +3099,33 @@ function generateShareCard() {
       document.body.appendChild(a); a.click(); document.body.removeChild(a);
       setTimeout(function(){ URL.revokeObjectURL(url); }, 1500);
       showToast('命盘卡已保存！长按图片发朋友圈 ✨');
+    }
+    } // end finalizeCard
+
+    // 二维码：CORS 拉取，成功则绘制覆盖占位框，失败/超时则降级（保留 URL 文案），绝不阻塞或破图
+    var _done = false;
+    function _finishOnce(qrDrawn) { if (_done) return; _done = true; finalizeCard(!!qrDrawn); }
+    try {
+      var qrImg = new Image();
+      qrImg.crossOrigin = 'anonymous';
+      qrImg.onload = function() {
+        var drew = false;
+        try {
+          ctx.save();
+          if (ctx.roundRect){ ctx.beginPath(); ctx.roundRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16, 12); ctx.clip(); }
+          ctx.fillStyle = '#ffffff'; ctx.fillRect(qrX - 8, qrY - 8, qrSize + 16, qrSize + 16);
+          ctx.drawImage(qrImg, qrX, qrY, qrSize, qrSize);
+          ctx.restore();
+          drew = true;
+        } catch (e) {}
+        _finishOnce(drew);
+      };
+      qrImg.onerror = function() { _finishOnce(false); };
+      // 3 秒兜底：网络慢也能出图（占位框上带「扫码」，且左侧 URL 文案已在）
+      setTimeout(function(){ _finishOnce(false); }, 3000);
+      qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=' + encodeURIComponent(shareUrl);
+    } catch (e) {
+      _finishOnce(false);
     }
   });
 }
