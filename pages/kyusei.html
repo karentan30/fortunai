@@ -346,7 +346,8 @@ function applyLabels() {
   document.getElementById('fullBtn').textContent = L.fullBtn;
   document.getElementById('loadText').textContent = L.loadText;
   document.getElementById('redoBtn').textContent = L.redoBtn;
-  document.getElementById('ctaBtn').textContent = L.ctaBtn;
+  var _cta = document.getElementById('ctaBtn');
+  if (_cta.dataset.locked === '1') renderPaywall(true); else _cta.textContent = L.ctaBtn;
 }
 
 // Populate days 1-31
@@ -434,7 +435,11 @@ function getFullReading() {
     document.getElementById('loadingScreen').classList.remove('show');
     if (d.error){showToast(d.error,'error');btn.disabled=false;document.getElementById('fullWrap').style.display='block';return;}
     document.getElementById('resultDivider').style.display = 'flex';
-    renderAIInterpretation(d.reading || '');
+    var rawReading = d.reading || '';
+    var lockedIdx = rawReading.indexOf('---LOCKED---');
+    var visibleText = lockedIdx >= 0 ? rawReading.slice(0, lockedIdx).trim() : rawReading;
+    renderAIInterpretation(visibleText);
+    renderPaywall(d.locked);
     document.getElementById('ctaWrap').classList.add('show');
   })
   .catch(function(){
@@ -490,6 +495,22 @@ function renderAIInterpretation(text) {
   if (currentStarNum) injectKyuseiCovers(currentStarNum);
 }
 
+// Free/locked preview → show unlock CTA; paid (full) result → keep upsell CTA as-is.
+function renderPaywall(locked) {
+  var ctaBtn = document.getElementById('ctaBtn');
+  if (!ctaBtn) return;
+  if (locked) {
+    var unlockLabel = currentLang === 'ja'
+      ? '🔓 ¥9.9 完全な解読を解除'
+      : (currentLang === 'en' ? '🔓 Unlock Full Reading · ¥9.9' : '🔓 ¥9.9 解锁完整解读');
+    ctaBtn.textContent = unlockLabel;
+    ctaBtn.dataset.locked = '1';
+  } else {
+    delete ctaBtn.dataset.locked;
+    applyLabels();
+  }
+}
+
 function resetAll() {
   currentStarNum = null;
   var injected = document.querySelector('.kyusei-cover-injected');
@@ -502,6 +523,7 @@ function resetAll() {
   document.getElementById('aiInterp').innerHTML = '';
   document.getElementById('resultDivider').style.display = 'none';
   document.getElementById('ctaWrap').classList.remove('show');
+  var _ctaR = document.getElementById('ctaBtn'); if (_ctaR) { delete _ctaR.dataset.locked; }
   document.getElementById('fullBtn').disabled = false;
   document.getElementById('calcBtn').disabled = false;
   document.querySelector('.form-wrap').style.display = 'block';

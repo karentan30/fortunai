@@ -963,13 +963,13 @@ function handlePaidReturn() {
     if (!res.ok) throw new Error('stream error');
     var reader = res.body.getReader();
     var decoder = new TextDecoder('utf-8');
-    var buf = '', accumulated = '';
+    var buf = '', accumulated = '', isLocked = false;
     var box = document.getElementById('zwStreamBox');
     function read() {
       reader.read().then(function(r) {
         if (r.done) {
           clearTimeout(streamTimeout); streamDone = true;
-          renderZiweiDeepReport(accumulated);
+          renderZiweiDeepReport(accumulated, isLocked);
           return;
         }
         buf += decoder.decode(r.value, {stream: true});
@@ -978,10 +978,15 @@ function handlePaidReturn() {
           if (!line.startsWith('data: ')) return;
           try {
             var ev = JSON.parse(line.slice(6));
-            if (ev.type === 'chunk') { accumulated += ev.content; if (box) box.textContent = accumulated; }
+            if (ev.type === 'meta') { isLocked = !!ev.locked; }
+            else if (ev.type === 'chunk') {
+              accumulated += ev.content;
+              // 免费预览：流式过程中隐藏 ---LOCKED--- 及其后的付费诱饵文本
+              if (box) { var _cut = accumulated.indexOf('---LOCKED---'); box.textContent = _cut >= 0 ? accumulated.slice(0, _cut).trim() : accumulated; }
+            }
             else if (ev.type === 'done') {
               clearTimeout(streamTimeout); streamDone = true;
-              renderZiweiDeepReport(accumulated);
+              renderZiweiDeepReport(accumulated, isLocked);
             }
           } catch(e) {}
         });
@@ -1017,9 +1022,14 @@ function handlePaidReturn() {
   });
 }
 // 付费深度报告：把流式文本渲染成精装章节（章节封面/首字下沉/金句/高亮卡/目录/进度条/大限时间轴）
-function renderZiweiDeepReport(text) {
+function renderZiweiDeepReport(text, locked) {
   var resultEl = document.getElementById('resultWrap');
   if (!resultEl) return;
+  // 付费墙：免费预览时后端在 ---LOCKED--- 后附带付费诱饵标题，绝不渲染进 DOM
+  var rawText = String(text || '');
+  var lockedIdx = rawText.indexOf('---LOCKED---');
+  var freeText = lockedIdx >= 0 ? rawText.slice(0, lockedIdx).trim() : rawText;
+  var isLocked = !!locked;
   // 由已保存的出生信息推导大限时间轴数据（无数据则时间轴优雅跳过）
   try {
     var s = JSON.parse(localStorage.getItem('sy_last_ziwei') || 'null');
@@ -1032,11 +1042,25 @@ function renderZiweiDeepReport(text) {
   resultEl.innerHTML = '<div style="text-align:center;font-size:10px;color:rgba(201,168,76,0.55);letter-spacing:0.06em;padding:6px 16px 4px;">本深度报告由AI基于紫微斗数理论生成，仅供娱乐参考</div>' +
     '<div id="zwDeepReport" style="padding:4px 16px 8px"></div>';
   try {
-    renderZiweiReport(text, 'zwDeepReport', false); // 已付费，全部解锁，不锁定
+    // 只渲染 ---LOCKED--- 之前的免费章节；付费诱饵标题不进 DOM
+    renderZiweiReport(freeText, 'zwDeepReport', false);
   } catch(e) {
-    // 兜底：纯文本
+    // 兜底：纯文本（同样只显示免费段）
     var box = document.getElementById('zwDeepReport');
-    if (box) box.innerHTML = '<div style="white-space:pre-wrap;font-size:12px;line-height:1.9;color:rgba(232,240,255,0.8)">'+escHtml(text)+'</div>';
+    if (box) box.innerHTML = '<div style="white-space:pre-wrap;font-size:12px;line-height:1.9;color:rgba(232,240,255,0.8)">'+escHtml(freeText)+'</div>';
+  }
+  // 免费预览：在免费内容之后追加付费墙 CTA（不含任何付费正文）
+  if (isLocked) {
+    var deepBox = document.getElementById('zwDeepReport');
+    if (deepBox) {
+      var cta = document.createElement('div');
+      cta.className = 'zw-ur-card';
+      cta.style.cssText = 'position:relative;margin-top:16px;text-align:center;padding:24px 16px';
+      cta.innerHTML = '<div class="zw-ur-head" style="justify-content:center"><span class="zw-ur-emoji">🔒</span><span class="zw-ur-title">解锁完整深度解读</span></div>'
+        + '<div style="font-size:12px;line-height:1.9;color:rgba(232,240,255,0.65);margin:10px 0 14px">完整版含 17 个维度深度批算：财帛宫 · 夫妻宫（含精准婚期）· 官禄宫 · 四化飞星 · 未来10年逐年流年 · 开运锦囊。</div>'
+        + '<button onclick="unlockZiwei(this)" style="background:linear-gradient(135deg,rgba(107,63,160,0.6),rgba(74,159,212,0.7));border:1px solid rgba(74,159,212,0.4);border-radius:10px;color:rgba(232,240,255,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;padding:10px 24px;cursor:pointer">立即解锁 · $19.90 →</button>';
+      deepBox.appendChild(cta);
+    }
   }
   injectDisclaimer('resultWrap');
   setTimeout(function(){ resultEl.scrollIntoView({behavior:'smooth', block:'start'}); }, 60);

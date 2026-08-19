@@ -507,10 +507,19 @@ function mxRichText(s) {
 function renderMxAIReport(aiText, tier, locked) {
   var rw = document.getElementById('resultWrap');
 
+  // ── 付费墙判定 ──
+  var isLocked = (locked === true) || (tier === 'free') || (tier === 'basic');
+
+  // ── 按 ---LOCKED--- 干净切分：免费预览只解析分隔符之前的正文(全是免费章·全展示)，
+  //    之后的锁定预告丢弃(转化由底部付费墙 CTA 承载)。修 bug: 原按章节 index 硬锁 (i>=2)，
+  //    把第3个免费章(官禄宫)误当付费占位卡渲染。──
+  var _lockPos = isLocked ? aiText.indexOf('---LOCKED---') : -1;
+  var _freeText = _lockPos >= 0 ? aiText.slice(0, _lockPos) : aiText;
+
   // ── 解析 markdown 段落：标题行=章节，其余=正文 ──
   var sections = [];
   var cur = null;
-  var lines = aiText.split('\n');
+  var lines = _freeText.split('\n');
   lines.forEach(function(line) {
     var tr = line.trim();
     if (!tr) return;
@@ -529,10 +538,7 @@ function renderMxAIReport(aiText, tier, locked) {
     }
   });
   if (cur) sections.push(cur);
-  if (!sections.length) sections.push({ title: '面相解读', content: [aiText] });
-
-  // ── 付费墙：仅在 locked=true 时，第3章起不入 DOM ──
-  var isLocked = (locked === true) || (tier === 'free') || (tier === 'basic');
+  if (!sections.length) sections.push({ title: '面相解读', content: [_freeText] });
 
   // ── 评分环（如有 report-viz.js，生成气色/格局双环） ──
   var scoreRingHtml = '';
@@ -551,33 +557,20 @@ function renderMxAIReport(aiText, tier, locked) {
   // 评分环
   if (scoreRingHtml) html += '<div style="margin:0 0 14px">' + scoreRingHtml + '</div>';
 
-  // ── 章节目录 ──
-  var visibleSections = isLocked ? sections.slice(0, 2) : sections;
+  // ── 章节目录 ──（已按 ---LOCKED--- 截断，展示的均为免费正文章，全部展示）
   var tocHtml = '<div class="chapter-toc"><div class="chapter-toc-title"><span>📖</span> 相理报告目录 · 共 ' + sections.length + ' 章</div>';
   sections.forEach(function(sec, i) {
-    var lk = isLocked && i >= 2;
     tocHtml += '<div class="chapter-toc-item" onclick="mxJump(\'mx-ai-chap-' + i + '\')">'
       + '<span class="chapter-toc-idx">' + (mxOrdinal(i)) + '</span>'
-      + '<span class="chapter-toc-label">' + mxEscHtml(sec.title) + (lk ? ' 🔒' : '') + '</span>'
+      + '<span class="chapter-toc-label">' + mxEscHtml(sec.title) + '</span>'
       + '<span class="chapter-toc-arrow">›</span></div>';
   });
   tocHtml += '</div>';
   html += tocHtml;
 
-  // ── 章节渲染 ──
+  // ── 章节渲染 ──（已按 ---LOCKED--- 截断，均为免费正文章，全展示；付费转化由底部 CTA 承载）
   sections.forEach(function(sec, i) {
     var anchorId = 'mx-ai-chap-' + i;
-    var shouldLock = isLocked && i >= 2;
-
-    if (shouldLock) {
-      // 付费墙占位卡（不把真实内容放入 DOM）
-      html += '<div id="' + anchorId + '" class="mx-chapter-card" style="opacity:0.6">'
-        + '<div class="feature-head"><div class="feature-dot" style="background:rgba(74,143,160,0.3)"></div>'
-        + '<div class="feature-title">' + mxEscHtml(sec.title) + '</div><span style="margin-left:auto;font-size:18px">🔒</span></div>'
-        + '<div style="text-align:center;padding:12px 0;font-size:12px;color:rgba(122,191,204,0.5);letter-spacing:0.08em">解锁完整版后可查看</div>'
-        + '</div>';
-      return;
-    }
 
     // 章节封面卡
     var art = mxGetArt(sec.title);
