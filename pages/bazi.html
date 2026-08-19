@@ -2438,7 +2438,9 @@ function renderUltimateReport(text, containerId, isLocked) {
 
   var html = '<div class="ultimate-report">';
   sections.forEach(function(sec, i) {
-    var shouldBlur = isLocked && i >= 2;
+    // 后端免费预览生成 3 章（四柱/五行/本年流年），故免费展示前 3 章(i<3)，从第 4 章起锁。
+    // 修 bug: 原为 i>=2 会把后端当免费送的第 3 章(本年流年)也盖成付费墙，用户只看到 2 章就撞墙。
+    var shouldBlur = isLocked && i >= 3;
     var anchorId = 'chap-' + i;
     _tocEntries.push({ id: anchorId, title: sec.title, locked: shouldBlur });
 
