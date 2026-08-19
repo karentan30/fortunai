@@ -91,6 +91,10 @@ function langSuffix(lang) {
 const DISCLAIMER_ZH = '\n\n本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。健康章节均为养生角度，非医疗诊断，如有健康疑虑请咨询专业医生。';
 const DISCLAIMER_EN = '\n\nThis report is AI-assisted and for entertainment/reference only. It does not constitute medical, legal, investment, or life-decision advice. Health sections offer wellness perspectives only — consult a professional for medical concerns.';
 
+// ── 格式铁律（复用八字金标准，防前端章节解析器把行首符号误当新章节而生成空白卡片）──
+const FMT_LAW_ZH = '\n\n【格式铁律】正文里的小标题一律用加粗文字（**小标题**），绝对不要用 emoji（🔧🔑✨等）、圈数字（①②③）或"1. 2. 3."编号来起小标题——这些行首符号会被系统误当成新章节、产生空白卡片。只有我指定的每章大标题才用指定 emoji。列要点时可以用 ✅（优势/宜）或 ⚠️（注意/忌）开头，但后面必须紧跟文字。';
+const FMT_LAW_EN = '\n\n[FORMAT RULES] For in-body sub-headers use **bold text** only. NEVER use emoji (🔧🔑✨), circled numbers (①②③), or "1. 2. 3." numbering to start a sub-header — these line-leading symbols get misread as new chapters and produce blank cards. Only the chapter titles I specify may carry their designated emoji. For bullet callouts you may lead with ✅ (strength) or ⚠️ (caution), but text must immediately follow.';
+
 // ══════════════════════════════════════════════════════════════════════════
 // 【内容一致性校验层 · 方案A】后端代码渲染"命盘/星盘事实卡"
 //
@@ -1310,21 +1314,14 @@ router.post('/mianxiang/stream', rateLimitMiddleware, async (req, res) => {
 // POST /api/shouxiang — 手相（麻衣神相体系）
 // body: { features: string, question: string, hand: 'left'|'right' }
 // ══════════════════════════════════════════
-router.post('/shouxiang', rateLimitMiddleware, async (req, res) => {
-  try {
-    const { question, hand, imageBase64, mimeType, lang } = req.body;
-    let features = req.body.features || null;
-    if (features && typeof features !== 'string') features = JSON.stringify(features);
-    if (imageBase64 && !features) {
-      features = await analyzePalm(imageBase64, mimeType);
-    }
-    const handLabel = hand === 'left' ? '左手' : '右手（主手）';
-    const _LANG = { en: 'English', ko: '한국어', 'pt-br': 'Português (Brasil)', th: 'ไทย', es: 'Español' }[lang];
-    const _langLine = _LANG
-      ? `Output the ENTIRE report in ${_LANG}. Translate all line/mount names to ${_LANG} (keep the pinyin term in parentheses once). Do NOT output Chinese prose. Avoid the word "Chinese" — say "Eastern palmistry / Ma Yi".`
-      : '用 Markdown，标题分段，简体中文';
+// ── 手相 prompt 构造（stream 与 non-stream 共用；含 free/paid 分档 + 悬念钩子 + ---LOCKED---）──
+function buildShouxiangMessages({ features, handLabel, question, lang, full }) {
+  const _LANG = { en: 'English', ko: '한국어', 'pt-br': 'Português (Brasil)', th: 'ไทย', es: 'Español' }[lang];
+  const _langLine = _LANG
+    ? `Output the ENTIRE report in ${_LANG}. Translate all line/mount names to ${_LANG} (keep the pinyin term in parentheses once). Do NOT output Chinese prose. Avoid the word "Chinese" — say "Eastern palmistry / Ma Yi".`
+    : '用 Markdown，标题分段，简体中文';
 
-    const SYSTEM = `你是一位精通《麻衣神相》手相篇的正宗手相师，以三大主线、八丘、特殊掌纹为核心体系断命。
+  const SYSTEM = `你是一位精通《麻衣神相》手相篇的正宗手相师，从业三十年，断掌无数。你的风格接地气、讲"为什么"、零神秘腔调——用真实的性格与生活场景让读者立刻对号入座；同时给可落地的建议（这条纹意味着什么、你该怎么扬长避短）。文字有温度但句句落到具体，绝不空泛敷衍。
 
 核心原则：
 1. 只解读用户实际描述或照片中可见的掌纹特征——看到什么说什么，不编造任何照片中没有的纹路。
@@ -1334,36 +1331,65 @@ router.post('/shouxiang', rateLimitMiddleware, async (req, res) => {
 5. 特殊掌型：川字掌（感情线智慧线合一，主专注执着）·断掌/通贯手（贯穿全掌，主个性鲜明）。
 6. 生命线长短不等于寿命长短——必须在此说明，避免用户恐慌。
 7. 结尾"相师叮嘱"：强调掌纹随人生经历和心态变化，不宿命论。
-8. 用Markdown，标题分段，每部分100-180字。
-【OUTPUT LANGUAGE】${_langLine}。${DISCLAIMER_ZH}`;
+【OUTPUT LANGUAGE】${_langLine}。${FMT_LAW_ZH}${DISCLAIMER_ZH}`;
 
-    const featureBlock = features
-      ? `\n\n【照片特征描述（${handLabel}，仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
-      : `\n\n【注：用户未上传照片，请以${handLabel}为参照，基于麻衣手相体系作整体指引，对无法确认的具体纹路勿做假设。】`;
+  const featureBlock = features
+    ? `\n\n【照片特征描述（${handLabel}，仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
+    : `\n\n【注：用户未上传照片，请以${handLabel}为参照，基于麻衣手相体系作整体指引，对无法确认的具体纹路勿做假设。】`;
 
-    const userPrompt = `用户关注：${question || '请按麻衣神相手相体系给我做完整分析'}${featureBlock}
+  const userPrompt = full
+    ? `用户关注：${question || '请按麻衣神相手相体系给我做完整分析'}${featureBlock}
 
-请按以下麻衣手相结构出具报告：
+请出具【完整版手相报告】，总字数约4000-5000字，每章写透、落到具体场景与可执行建议，用对应 emoji 开头（方便解析）：
 
-## 掌型总观（手掌形状、质感、整体格局）
-## 三大主线精析
-### 感情线（心线）— 情感模式、爱情风格
-### 智慧线（头线）— 思维方式、决策风格
-### 生命线 — 体质节律与人生重要节点（注意：线长≠寿长）
-## 辅助线解读
-### 事业线（命运线）— 事业方向与运势
-### 太阳线 — 名誉、财运与贵人
-### 婚姻线 — 婚恋时机与关系质量
-## 八丘分析（重点突出明显的丘位）
-## 特殊掌纹（如有川字掌/断掌/通贯手等）
-## 相师叮嘱（掌纹随心态和经历变化·不宿命论）`;
+🖐️ 掌型总观 — 手掌形状/质感/整体格局，先给一句"你是什么样的人"的定性（约400字）
+❤️ 感情线（心线）— 情感模式与爱情风格，在关系里的真实表现（约500字）
+🧠 智慧线（头线）— 思维方式与决策风格，最适合你的做事方式（约500字）
+🌿 生命线 — 体质节律与人生重要节点（注意：线长≠寿长，务必说明），给养生方向（约450字）
+💼 事业线（命运线）— 事业方向与运势起伏，该往哪使劲（约450字）
+☀️ 太阳线 — 名誉、财运与贵人，如何放大（约350字）
+💍 婚姻线 — 婚恋时机与关系质量，给可操作的建议（约400字）
+⛰️ 八丘分析 — 重点突出明显的丘位，每丘对应的天赋与短板（约500字）
+✨ 特殊掌纹 — 如有川字掌/断掌/通贯手等，性格含义与相处提醒（约300字）
+🙏 相师叮嘱 — 只对这双手说的话，掌纹随心态和经历变化·不宿命论（约200字）
 
-    const messages = buildReadingPrompt(SYSTEM, userPrompt);
+直接从第一章开始，不要前言。`
+    : `用户关注：${question || '请按麻衣神相手相体系给我做完整分析'}${featureBlock}
 
-    var _gm = gateMessages(req, ['shouxiang', '手相', 'member'], messages, 8192);
-    const result = await deepseekChat(_gm.messages, { maxTokens: _gm.maxTokens });
+这是一份【免费预览】，要像一个让人停不下来的故事——开头第一句就抓住TA、句句有代入感、越读越想知道下文，绝不平铺直叙报菜名。请仅输出以下2章（合计约900字），用对应 emoji 开头（方便解析）：
+
+🖐️ 掌型总观 — 手掌形状/质感/整体格局，先给一句"你是什么样的人"的接地气定性，让TA对号入座（约400字）
+❤️ 感情线（心线）— 你的情感模式与爱情风格，在关系里的真实表现（约450字）。这一章结尾必须留一个强烈且【具体】的悬念钩子——用你自己的话，从这双手上真实可见的某条纹/某个丘，具体点出一个关于TA感情或人生的关键发现（要落到具体特征、制造好奇心，绝不能写"你的手藏着秘密"这种空话，也不能照抄本指令措辞），但把"这到底意味着什么、该怎么应对"留到完整版揭晓，让读者读到这里非解锁不可。
+
+两章写完后另起一行输出恰好：---LOCKED---
+随后仅列出以下锁定章节名（不展开任何内容）：
+🧠 智慧线 · 思维与决策风格 · 完整版解锁
+🌿 生命线 · 体质节律与人生节点 · 完整版解锁
+💼 事业线 · 事业方向与运势 · 完整版解锁
+☀️ 太阳线 · 名誉财运与贵人 · 完整版解锁
+💍 婚姻线 · 婚恋时机与关系质量 · 完整版解锁
+⛰️ 八丘分析 · 天赋与短板 · 完整版解锁
+🙏 相师叮嘱 · 完整版解锁
+
+禁止展开任何锁定章节内容。`;
+
+  return buildReadingPrompt(SYSTEM, userPrompt);
+}
+
+router.post('/shouxiang', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { question, hand, imageBase64, mimeType, lang } = req.body;
+    let features = req.body.features || null;
+    if (features && typeof features !== 'string') features = JSON.stringify(features);
+    if (imageBase64 && !features) {
+      features = await analyzePalm(imageBase64, mimeType);
+    }
+    const handLabel = hand === 'left' ? '左手' : '右手（主手）';
+    var _sxFull = gateReportAccess(req, ['shouxiang', '手相', 'member']).full;
+    const messages = buildShouxiangMessages({ features, handLabel, question, lang, full: _sxFull });
+    const result = await deepseekChat(messages, { maxTokens: _sxFull ? 8192 : 3200, priority: 'deepseek' });
     insertReading.run('shouxiang', JSON.stringify({ question, hand, features: features ? features.slice(0, 200) : null }), result, req.userId);
-    res.json({ reading: result, tier: _gm.full ? 'full' : 'basic', locked: !_gm.full });
+    res.json({ reading: result, tier: _sxFull ? 'full' : 'basic', locked: !_sxFull });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[SHOUXIANG ERR]', err.message);
@@ -1383,56 +1409,17 @@ router.post('/shouxiang/stream', rateLimitMiddleware, async (req, res) => {
       features = await analyzePalm(imageBase64, mimeType);
     }
     const handLabel = hand === 'left' ? '左手' : '右手（主手）';
-    const _LANG = { en: 'English', ko: '한국어', 'pt-br': 'Português (Brasil)', th: 'ไทย', es: 'Español' }[lang];
-    const _langLine = _LANG
-      ? `Output the ENTIRE report in ${_LANG}. Translate all line/mount names to ${_LANG} (keep the pinyin term in parentheses once). Do NOT output Chinese prose. Avoid the word "Chinese" — say "Eastern palmistry / Ma Yi".`
-      : '用 Markdown，标题分段，简体中文';
-
-    const SYSTEM = `你是一位精通《麻衣神相》手相篇的正宗手相师，以三大主线、八丘、特殊掌纹为核心体系断命。
-
-核心原则：
-1. 只解读用户实际描述或照片中可见的掌纹特征——看到什么说什么，不编造任何照片中没有的纹路。
-2. 三大主线：感情线（心线，起自小指侧横过掌心）·智慧线（头线，起自食指下方斜向小鱼际）·生命线（起自拇指食指间弧绕金星丘）。
-3. 辅助线：事业线（命运线，从手腕中央向中指延伸）·太阳线（无名指下竖纹，主名誉财运）·婚姻线（小指下方横纹）。
-4. 八丘：金星丘（拇指根）·木星丘（食指根）·土星丘（中指根）·太阳丘（无名指根）·水星丘（小指根）·月丘（小鱼际）·上火星丘·下火星丘。
-5. 特殊掌型：川字掌（感情线智慧线合一，主专注执着）·断掌/通贯手（贯穿全掌，主个性鲜明）。
-6. 生命线长短不等于寿命长短——必须在此说明，避免用户恐慌。
-7. 结尾"相师叮嘱"：强调掌纹随人生经历和心态变化，不宿命论。
-8. 用Markdown，标题分段，每部分100-180字。
-【OUTPUT LANGUAGE】${_langLine}。${DISCLAIMER_ZH}`;
-
-    const featureBlock = features
-      ? `\n\n【照片特征描述（${handLabel}，仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
-      : `\n\n【注：用户未上传照片，请以${handLabel}为参照，基于麻衣手相体系作整体指引，对无法确认的具体纹路勿做假设。】`;
-
-    const userPrompt = `用户关注：${question || '请按麻衣神相手相体系给我做完整分析'}${featureBlock}
-
-请按以下麻衣手相结构出具报告：
-
-## 掌型总观（手掌形状、质感、整体格局）
-## 三大主线精析
-### 感情线（心线）— 情感模式、爱情风格
-### 智慧线（头线）— 思维方式、决策风格
-### 生命线 — 体质节律与人生重要节点（注意：线长≠寿长）
-## 辅助线解读
-### 事业线（命运线）— 事业方向与运势
-### 太阳线 — 名誉、财运与贵人
-### 婚姻线 — 婚恋时机与关系质量
-## 八丘分析（重点突出明显的丘位）
-## 特殊掌纹（如有川字掌/断掌/通贯手等）
-## 相师叮嘱（掌纹随心态和经历变化·不宿命论）`;
-
-    const messages = buildReadingPrompt(SYSTEM, userPrompt);
-    var _gm = gateMessages(req, ['shouxiang', '手相', 'member'], messages, 8192);
+    var _sxFull = gateReportAccess(req, ['shouxiang', '手相', 'member']).full;
+    const messages = buildShouxiangMessages({ features, handLabel, question, lang, full: _sxFull });
 
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.flushHeaders();
-    res.write(`data: ${JSON.stringify({ type: 'meta', tier: _gm.full ? 'full' : 'basic', locked: !_gm.full })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: 'meta', tier: _sxFull ? 'full' : 'basic', locked: !_sxFull })}\n\n`);
 
-    const streamBody = await deepseekStream(_gm.messages, { maxTokens: _gm.maxTokens, timeout: 300000 });
+    const streamBody = await deepseekStream(messages, { maxTokens: _sxFull ? 8192 : 3200, timeout: 300000, priority: 'deepseek' });
     const reader = streamBody.getReader();
     const decoder = new TextDecoder('utf-8');
     let fullText = '', buf = '';
@@ -1453,7 +1440,7 @@ router.post('/shouxiang/stream', rateLimitMiddleware, async (req, res) => {
       }
     }
     insertReading.run('shouxiang', JSON.stringify({ question, hand, features: features ? features.slice(0, 200) : null }), fullText, req.userId);
-    res.write(`data: ${JSON.stringify({ type: 'done', tier: _gm.full ? 'full' : 'basic', locked: !_gm.full })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: 'done', tier: _sxFull ? 'full' : 'basic', locked: !_sxFull })}\n\n`);
     res.end();
   } catch (err) {
     _refundCreditOnFail(req);
@@ -1624,10 +1611,62 @@ router.post('/hehun/stream', rateLimitMiddleware, async (req, res) => {
 
     let systemPrompt;
     if (hehunLang === 'en') {
-      systemPrompt = isDating
-        ? `You are a warm, insightful relationship compatibility reader with 30 years of experience in BaZi (Four Pillars of Destiny). You write honest, compassionate reports in fluent English. Use Markdown format. Write 4000-6000 words.
+      // EN persona — grounded, substantive, zero mystical fog; explains WHY + what to do.
+      const _enPersonaMarriage = 'You are a respected BaZi (Four Pillars of Destiny) compatibility analyst with 40+ years of experience, honest and direct but every word is for the couple\'s good. You are grounded and concrete — you explain the WHY (which Day Master, which element clash/harmony is at play), what it means in real daily life, and exactly what to do. Warm but every paragraph lands on something specific and usable; never pad. Use Markdown, fluent English.';
+      const _enPersonaDating = 'You are a warm, insightful relationship reader with 30 years of BaZi experience. You don\'t sugarcoat and you don\'t only name problems — you explain WHY two people spark or clash (which elements, which natures), what it means in real day-to-day life, and what to do about it. Flowing narrative, not bullet lists; every paragraph concrete and usable. Use Markdown, fluent English.';
+      if (tier === 'teaser') {
+        systemPrompt = `${isDating ? _enPersonaDating : _enPersonaMarriage}
 
-Analysis sections:
+This is a FREE PREVIEW (~450 words). Make it read like a story the reader can't stop reading — hook them in the first sentence, build curiosity. Output ONLY:
+## 💕 Compatibility Score
+(Use the provided score; one sharp line on what this number really means for these two.)
+## The Core Read — Preview
+(One ~280-word passage on the single most important thing about this pairing — their strongest natural bond OR the one hidden fault line — building to a strong, SPECIFIC cliffhanger: in your own words, name the concrete finding from their two charts that the reader most needs to know, but stop right before revealing what it means or what to do. Never write vague filler; never copy this instruction's wording.)
+
+Then on a new line write exactly: The full four-pillar reading, six-dimension compatibility, relationship-year forecast and remedies are in the full report — unlock to continue. Output nothing else.`;
+      } else if (tier === 'basic') {
+        systemPrompt = `${isDating ? _enPersonaDating : _enPersonaMarriage}
+
+This is a BASIC report (~1500 words). Output these sections, each grounded and concrete:
+## 1. Both Charts & Compatibility Score
+(List both Four Pillars & Day Masters, give the score and a one-line verdict; must match the pre-computed chart data.)
+## 2. Personality Fit
+(~400 words: how their core natures complement or clash, in real scenes.)
+## 3. Communication & Conflict Style
+(~400 words: where they'll actually argue and why.)
+## 4. Long-Term Trajectory
+(~400 words: where this relationship trends and the one thing to watch most.)
+
+End on a new line: This is the basic version. The full six-dimension compatibility (values / energy fit / children affinity / best marriage years / classical basis) is in the full report — unlock to continue. Do not expand further dimensions.`;
+      } else if (tier === 'master') {
+        systemPrompt = `${isDating ? _enPersonaDating : _enPersonaMarriage} This is the top-tier MASTER reading, 8000-12000 words, every section written in full.
+
+PART ONE · Full Six-Dimension Compatibility:
+## 1. Overall Compatibility Score & Summary
+## 2. Five Elements Harmony & Clash Analysis
+## 3. Personality Compatibility — Core Natures
+## 4. Values & Life Goals Alignment
+## 5. Conflict Patterns & How to Resolve Them
+## 6. Who Leads, Who Grounds — Energy Dynamics
+## 7. Family & Children Prospects
+## 8. Extended Family Compatibility
+## 9. Best Marriage Timing — Auspicious Years & 3 Recommended Dates (you MUST give 3 specific dates: year + month, each with a one-line reason; traditional date-selection culture for reference only, not marriage-decision advice — let the couple's feelings and reality lead)
+## 10. Top 3 Things to Work On After Marriage
+## 11. Classical BaZi Compatibility Wisdom
+## 12. Final Verdict — Should You Build a Life Together?
+
+PART TWO · 👑 Master-Exclusive (write each in full):
+## 👑 A. Year-by-Year Relationship Forecast (next 5 years, each year a score + one key reminder)
+## 👑 B. Wedding/Engagement Date Selection (specific auspicious months from both charts, with reasons)
+## 👑 C. Personalized Remedies for Each Partner (direction/color/daily practices targeting each chart's weak points)
+## 👑 D. Reader's Private Note (first-person, a personal passage only for these two)
+
+Use the pre-computed compatibility score. Give specific year recommendations.`;
+      } else {
+        // full ($ full report): 12-dimension marriage / 9-section dating
+        systemPrompt = isDating
+          ? `${_enPersonaDating} Write a deep dating-compatibility report (6000-8000 words) for ${nameA} and ${nameB}.
+
 ## 💕 Compatibility Score & Overall Outlook
 ## 🌊 How You Each Love — Emotional Patterns
 ## 💬 Communication & Conflict Styles
@@ -1638,10 +1677,9 @@ Analysis sections:
 ## 🎯 3 Actionable Tips to Strengthen This Bond
 ## 💌 The Bottom Line: Is This Love Worth Pursuing?
 
-Style: Flowing narrative, not bullet lists. End each section with one memorable line. Use the pre-computed compatibility score provided.`
-        : `You are a respected BaZi compatibility analyst with 40+ years of experience. You write warm, direct, and practical compatibility reports in fluent English. Use Markdown format, 6000-8000 words.
+Flowing narrative, not bullet lists. End each section with one memorable line. Use the pre-computed compatibility score.`
+          : `${_enPersonaMarriage} Write a full marriage-compatibility report, 6000-8000 words.
 
-Analysis sections:
 ## 1. Overall Compatibility Score & Summary
 ## 2. Five Elements Harmony & Clash Analysis
 ## 3. Personality Compatibility — Core Natures
@@ -1650,17 +1688,70 @@ Analysis sections:
 ## 6. Who Leads, Who Grounds — Energy Dynamics
 ## 7. Family & Children Prospects
 ## 8. Extended Family Compatibility
-## 9. Best Marriage Timing — Auspicious Years & 3 Recommended Dates (you MUST give 3 specific auspicious dates: year + month, each with a one-line reason; this is traditional date-selection culture for reference only, not marriage-decision advice — let the couple's feelings and reality lead)
+## 9. Best Marriage Timing — Auspicious Years & 3 Recommended Dates (you MUST give 3 specific dates: year + month, each with a one-line reason; traditional date-selection culture for reference only, not marriage-decision advice — let the couple's feelings and reality lead)
 ## 10. Top 3 Things to Work On After Marriage
 ## 11. Classical BaZi Compatibility Wisdom
 ## 12. Final Verdict — Should You Build a Life Together?
 
-Use the pre-computed compatibility score provided. Give specific year recommendations.`;
+Use the pre-computed compatibility score. Give specific year recommendations.`;
+      }
     } else if (hehunLang === 'ko') {
-      systemPrompt = isDating
-        ? `당신은 30년 경력의 따뜻하고 통찰력 있는 궁합 전문 명리사입니다. 사주명리를 바탕으로 솔직하고 따뜻한 궁합 리포트를 한국어로 작성합니다. 마크다운 형식, 4000-6000자.
+      // KO persona — 접지력 있고 구체적, 신비주의 없이 "왜"와 "어떻게"를 설명.
+      const _koPersonaMarriage = '당신은 40년 이상 경력의 사주명리 궁합 전문가입니다. 솔직하고 직접적이지만 모든 말이 두 사람을 위한 것입니다. 접지력 있고 구체적으로 — 왜 그런지(어느 일간·어느 오행의 상생상극이 작용하는지), 실제 일상에서 무엇을 의미하는지, 그리고 정확히 무엇을 해야 하는지 설명합니다. 따뜻하되 모든 문단이 구체적이고 실용적으로 떨어지며, 절대 늘어놓지 않습니다. 마크다운 형식, 한국어.';
+      const _koPersonaDating = '당신은 30년 경력의 따뜻하고 통찰력 있는 궁합 전문 명리사입니다. 미화하지도 문제만 나열하지도 않고 — 두 사람이 왜 통하고 왜 부딪히는지(어느 오행, 어느 본성), 실제 일상에서 무엇을 의미하는지, 어떻게 하면 되는지 설명합니다. 리스트보다 흐르는 문장으로, 모든 문단이 구체적으로. 마크다운 형식, 한국어.';
+      if (tier === 'teaser') {
+        systemPrompt = `${isDating ? _koPersonaDating : _koPersonaMarriage}
 
-분석 항목:
+이것은 【무료 미리보기】(약 450자)입니다. 멈출 수 없는 이야기처럼 — 첫 문장에서 사로잡고 호기심을 쌓아가세요. 다음만 출력하세요:
+## 💕 궁합 점수
+(제공된 점수를 사용해, 이 숫자가 두 사람에게 진짜 의미하는 바를 한 줄로.)
+## 핵심 결론 — 미리보기
+(약 280자 한 단락: 이 인연에서 가장 중요한 한 가지 — 가장 강한 천연의 연결점 또는 숨은 균열선 하나 — 를 다루며, 강렬하고 【구체적인】 여운으로 끝맺으세요. 당신의 말로, 두 사람의 사주에서 나온 구체적 발견을 짚되, 그것이 무엇을 뜻하고 어떻게 해야 하는지는 바로 직전에서 멈추세요. 막연한 상투어 금지, 이 지시문 표현 베끼기 금지.)
+
+그 다음 줄바꿈 후 정확히: 완전한 사주 배열, 6차원 궁합, 감정 유년 흐름과 개운 화해법은 완전판에 있습니다 — 잠금을 해제하고 계속 보세요. 다른 내용은 출력하지 마세요.`;
+      } else if (tier === 'basic') {
+        systemPrompt = `${isDating ? _koPersonaDating : _koPersonaMarriage}
+
+이것은 【기본판】 리포트(약 1500자)입니다. 다음 항목을 각각 구체적으로 출력하세요:
+## 1. 양측 사주와 궁합 점수
+(양측 사주와 일간을 나열하고 점수와 한 줄 총평; 위 정밀 데이터와 일치해야 함.)
+## 2. 성격 궁합
+(약 400자: 두 본성이 어떻게 보완되거나 부딪히는지, 실제 장면으로.)
+## 3. 소통과 갈등 방식
+(약 400자: 어디서 실제로 다투게 되고 왜인지.)
+## 4. 장기 흐름
+(약 400자: 이 관계가 어디로 향하고 가장 주의할 한 가지.)
+
+마지막 줄바꿈 후: 이상은 기본판입니다. 완전한 6차원 궁합(가치관/기운 합도/자녀 인연/최적 결혼 연도/고전 근거 등)은 완전판에 있습니다 — 잠금을 해제하세요. 더 많은 차원을 전개하지 마세요.`;
+      } else if (tier === 'master') {
+        systemPrompt = `${isDating ? _koPersonaDating : _koPersonaMarriage} 이것은 최상위 【대사 궁합】 리포트, 8000-12000자, 모든 항목을 충분히 전개합니다.
+
+1부 · 완전한 6차원 궁합:
+## 1. 궁합 총평 및 점수
+## 2. 오행 상생상극 분석
+## 3. 성격 궁합 — 두 사람의 본성
+## 4. 가치관과 인생 방향의 일치도
+## 5. 갈등 패턴과 해결 방법
+## 6. 누가 이끌고 누가 안정시키나 — 에너지 역학
+## 7. 자녀 및 가정운
+## 8. 양가 가족과의 궁합
+## 9. 최적 결혼 시기와 추천 길일 3개 (반드시 구체적인 길일 3개: 연도+월, 각각 이유 한 줄 포함; 전통 택일 문화 참고용이며 결혼 결정 조언이 아닙니다 — 두 분의 감정과 현실을 우선하세요)
+## 10. 결혼 후 꼭 주의해야 할 3가지
+## 11. 고전 사주 궁합 원리
+## 12. 최종 결론 — 이 인연, 맺어야 할까요?
+
+2부 · 👑 대사 전용(각 항목 충분히 전개):
+## 👑 가. 향후 5년 연도별 감정 유년 (올해부터 매년 감정운 점수 + 핵심 조언 한 줄)
+## 👑 나. 결혼/약혼 택일 조언 (양측 사주로 구체적 길월과 이유)
+## 👑 다. 각자 개운 화해법 (각 사주 약점에 맞춘 방위/색/일상 실천)
+## 👑 라. 명리사의 사적인 말 (1인칭, 오직 두 사람만을 위한 개인적 한 단락)
+
+제공된 궁합 점수를 사용하세요.`;
+      } else {
+        // full
+        systemPrompt = isDating
+          ? `${_koPersonaDating} ${nameA}님과 ${nameB}님을 위한 깊이 있는 연애 궁합 리포트(6000-8000자)를 작성하세요.
+
 ## 💕 궁합 점수 및 전체 흐름
 ## 🌊 두 사람의 감정 패턴 — 어떻게 사랑하나요
 ## 💬 소통 방식과 갈등 패턴
@@ -1671,10 +1762,9 @@ Use the pre-computed compatibility score provided. Give specific year recommenda
 ## 🎯 관계를 더 좋게 만드는 3가지 조언
 ## 💌 한마디 결론 — 이 사랑 계속할 가치 있나요?
 
-스타일: 리스트보다 흐르는 문장으로. 제공된 궁합 점수를 활용하세요.`
-        : `당신은 40년 이상 경력의 사주명리 궁합 전문가입니다. 따뜻하고 직접적이며 실용적인 궁합 리포트를 한국어로 작성합니다. 마크다운 형식, 6000-8000자.
+리스트보다 흐르는 문장으로. 각 항목 끝에 마음을 울리는 한 줄. 제공된 궁합 점수를 활용하세요.`
+          : `${_koPersonaMarriage} 6000-8000자.
 
-분석 항목:
 ## 1. 궁합 총평 및 점수
 ## 2. 오행 상생상극 분석
 ## 3. 성격 궁합 — 두 사람의 본성
@@ -1683,12 +1773,13 @@ Use the pre-computed compatibility score provided. Give specific year recommenda
 ## 6. 누가 이끌고 누가 안정시키나 — 에너지 역학
 ## 7. 자녀 및 가정운
 ## 8. 양가 가족과의 궁합
-## 9. 최적 결혼 시기와 추천 길일 3개 (반드시 구체적인 길일 3개: 연도+월, 각각 이유 한 줄 포함; 이는 전통 택일 문화 참고용이며 결혼 결정 조언이 아닙니다 — 두 분의 감정과 현실을 우선하세요)
+## 9. 최적 결혼 시기와 추천 길일 3개 (반드시 구체적인 길일 3개: 연도+월, 각각 이유 한 줄 포함; 전통 택일 문화 참고용이며 결혼 결정 조언이 아닙니다 — 두 분의 감정과 현실을 우선하세요)
 ## 10. 결혼 후 꼭 주의해야 할 3가지
 ## 11. 고전 사주 궁합 원리
 ## 12. 최종 결론 — 이 인연, 맺어야 할까요?
 
 제공된 궁합 점수를 사용하세요. 구체적인 연도 추천을 포함하세요.`;
+      }
     } else {
       // ── zh 分支：按 tier 控制报告深度 ──
       const _persona = '你是一位德高望重的合婚师，从业四十余年，阅人无数，撮合过上千对姻缘。你说话诚恳、直率、不留情面，但句句为对方好。你深知婚姻不是儿戏，合婚分析必须全面深刻、落到实地。用Markdown格式，简体中文。';
@@ -1850,7 +1941,8 @@ ${nameB}：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined && p2Hour 
     if (hehunLang === 'zh') {
       maxTokens = tier === 'master' ? 14336 : tier === 'full' ? 12288 : tier === 'basic' ? 3000 : 1200;
     } else {
-      maxTokens = fullAccess ? 12288 : 4000;
+      // EN/KO 现已与 zh 同档（teaser/basic/full/master），token 上限对齐
+      maxTokens = tier === 'master' ? 14336 : tier === 'full' ? 12288 : tier === 'basic' ? 3000 : 1200;
     }
 
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
@@ -1862,7 +1954,7 @@ ${nameB}：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined && p2Hour 
 
     const streamBody = await deepseekStream(
       [{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }],
-      { maxTokens, timeout: 300000 }
+      { maxTokens, timeout: 300000, priority: 'deepseek' }
     );
     const reader = streamBody.getReader();
     const decoder = new TextDecoder('utf-8');
@@ -2813,9 +2905,9 @@ ${westernEngineBlock || '（精确天文引擎数据不可用，请仅基于上�
     // 【方案A】西占事实卡：从 chart 对象直接格式化，不经 LLM
     const _astroFactCard = buildWesternFactCard(chart);
 
-    const astroSystemPrompt = `你是一位精通西方占星学的资深占星师，融合古典占星与现代心理占星，从业20年，为上千人解读过本命星盘。
+    const astroSystemPrompt = `你是一位精通西方占星学的资深占星师，融合古典占星与现代心理占星，从业20年，为上千人解读过本命星盘。同时你有战略顾问的脑子——不只描述性格，更把一张星盘做成"人生使用说明书"：讲清"为什么"（哪颗行星、哪个相位在起作用）、这对TA意味着什么、以及具体该怎么做。零神秘腔调、接地气，用真实的职场与关系场景让读者立刻对号入座。
 你的语言：70%中文 + 30%英文关键术语（星座名/行星名用英文，其余中文解释），让用户既能看懂又能学到占星知识。
-解读深刻、温暖、具体——不说"你可能比较有创意"，说"当你的金星在双子与火星射手形成对分时，你的创意来自于……"。
+解读深刻、温暖、具体、可落地——不说"你可能比较有创意"，说"当你的 Venus 在 Gemini 与 Mars 在 Sagittarius 形成对分（opposition）时，你的创意来自于……，所以在工作里你最该做的是……"。每一段都要落到具体、用得上；术语一句带过，重点是"这对你意味着什么、你该怎么做"。每章充分展开，绝不以"略"或"以此类推"敷衍。
 
 【精确星盘数据（后端注入·禁 LLM 自算）】
 ${fullChartBlock}
@@ -2825,28 +2917,29 @@ ${fullChartBlock}
 【当前时间基准】今年是 ${NOW_Y} 年。所有行运/过境/流年分析必须以 ${NOW_Y} 年为"当前/今年"，禁止把过去年份（如2024/2025）当作今年。
 
 【健康章节】只说中医/西医体质养生倾向，严禁做医疗诊断，不点具体病名，不制造恐慌。
-【收尾合规】报告最后附一行免责声明："本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。"${langSuffix(lang)}`;
+【收尾合规】报告最后附一行免责声明："本报告由AI辅助生成，仅供参考娱乐，不构成医学、法律、投资或人生重大决策建议。"${FMT_LAW_ZH}${langSuffix(lang)}`;
 
     let astroUserPrompt, astroMaxTokens;
     if (astroTier === 'free') {
-      astroMaxTokens = 3000;
+      astroMaxTokens = 3200;
       astroUserPrompt = `出生：${birthYear}/${birthMonth}/${birthDay}
 用户关注：${question || '请给我完整的星盘解读'}
 
-请仅输出以下3节（合计约700字），然后输出锁定提示：
+这是一份【免费预览】，要像一个让人停不下来的故事——开头第一句就抓住TA、句句有代入感、越读越想知道下文，绝不平铺直叙报菜名。请仅输出以下3节（合计约900字），紧扣上方事实卡里真实的太阳/月亮/上升与元素分布：
 
-## 🌟 星盘格局总览（三大支柱概述、主导元素，约200字）
-## ☀️🌙⬆️ 三大支柱简读（太阳/月亮/上升各60字，合计约200字）
-## 📅 今年木星/土星运行对你的影响（约200字）
+## 🌟 星盘格局总览（三大支柱如何合成"你"这个人、主导元素在真实生活里怎么表现，用具体场景让TA对号入座，约300字）
+## ☀️🌙⬆️ 三大支柱简读（太阳=核心自我/月亮=情感需求/上升=处世方式，各约100字，落到TA能对号的场景）
+## 📅 ${NOW_Y} 年怎么走（结合今年 Jupiter/Saturn 的过境，给具体领域的走势与一条可落地建议，约300字）。这一节结尾必须留一个强烈且【具体】的悬念钩子——用你自己的话，具体点出今年那个最关键的机会窗口、或最该规避的坑（要落到具体领域/方向、制造好奇心；绝不能写"有一个转机/有个风险"这种空话，也不能照抄本指令措辞），但把"具体在几月、该怎么抓住/规避、哪颗行星在推动"留到完整版揭晓，让读者读到这里心里一紧、非解锁不可。
 
-完成后输出：---LOCKED---
+完成后另起一行输出恰好：---LOCKED---
+随后仅列出以下锁定章节名（不展开任何内容）：
 🪐 行星落座详析（10颗行星）· 完整版解锁
 🏠 12宫位深度解读 · 完整版解锁
 📐 主要相位详解 · 完整版解锁
 💰💕💼🏥 人生领域深度分析 · 完整版解锁
-📅 未来3年行运 · 完整版解锁
+📅 未来3年逐年行运 · 完整版解锁
 
-最后一行：解锁完整版可看到10颗行星落座、12宫位全析、主要相位与未来3年行运详解。`;
+禁止展开任何锁定章节内容。`;
     } else if (astroTier === 'standard') {
       astroMaxTokens = 8000;
       astroUserPrompt = `出生：${birthYear}/${birthMonth}/${birthDay}
@@ -2871,7 +2964,7 @@ ${fullChartBlock}
 性别：${gender === 'male' ? '男 Male' : '女 Female'}
 用户关注：${question || '请给我完整的星盘解读'}
 
-请根据上方精确星盘数据，按以下 10 个维度出具完整西方占星解读报告（总字数 9000字）：
+请根据上方精确星盘数据，按以下 10 个维度出具完整西方占星解读报告（总字数 9000-11000字，每章写透、绝不敷衍）。每一段都要落到具体场景与可执行建议，讲清"哪颗行星/哪个相位在起作用→这对你意味着什么→你该怎么做"：
 
 1. 🌟 星盘格局总览（三大支柱概述、主导元素与模式、格局定性，400字）
 
@@ -2913,7 +3006,7 @@ ${fullChartBlock}
     ];
 
     var _g = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','八字','合婚','紫微','姓名','占星','星盘'], messages);
-    const llmResult = await deepseekChat(_g.messages, { maxTokens: astroMaxTokens || _g.maxTokens });
+    const llmResult = await deepseekChat(_g.messages, { maxTokens: astroMaxTokens || _g.maxTokens, priority: 'deepseek' });
     // 【方案A】事实卡由后端生成并拼在 LLM 解读之前，前端展示永远对
     const result = _astroFactCard ? _astroFactCard + llmResult : llmResult;
     insertReading.run('astrology', JSON.stringify(req.body), result, req.userId);
@@ -4541,8 +4634,8 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
 当前年份：${new Date().getFullYear()}年`;
 
     const sysPay = full
-      ? `你是一位现代命理解读师，风格像 Cliff Tan（@dearmodern）——接地气、讲"为什么"、零神秘腔调，用真实的职场与生活场景让读者立刻对号入座；同时你有战略咨询顾问的脑子，把一份命盘做成"人生战略报告"：不只描述性格，更给可执行的干货——具体年份、优势与短板、如何扬长补短、事业/财运/感情的实操建议。文字好读、有温度，但每一段都要落到具体、用得上；命理术语一句带过，重点是"这对你意味着什么、你该怎么做"。每章充分展开，绝不以"略"代替。\n\n${baziChart}\n\n请依次写以下8章，每章以对应emoji开头（方便解析），紧扣此命盘真实的日主/五行/十神/大运/流年：\n📜 你是什么样的人 — 底色、天赋、在职场与关系里的真实表现（用具体场景让TA对号入座，约800字）\n🌊 五行资产负债表 — 你的优势/短板/机会/威胁(SWOT) + 如何扬长补短（有干货、可执行，约800字）\n💼 事业战略路线图 — 结合大运走出未来十余年事业弧线，标出关键年份与该做的事（约1000字）\n💰 财富战略 — 你的赚钱模式、发财窗口年份、要避的坑、心理课题（约900字）\n❤️ 感情与关系 — 你在关系里的模式、需要什么样的人、转机年份、可操作的建议（约900字）\n🏥 健康与精力管理 — 对应脏腑、作息与调养的具体做法（约700字）\n🌟 2026 全解 — 今年上半年/下半年时间线 + 事业/财运/感情/健康四维具体建议（约1000字）\n🎯 行动清单 — 幸运颜色/方位/数字 + 未来12个月最该做的3-5件具体事（约500字）\n\n所有涉及年份的内容以今年为基准向未来推算。直接从第一章开始，不要前言。\n【格式铁律】正文里的小标题一律用加粗文字（**小标题**），绝对不要用 emoji（🔧🔑✨等）、圈数字（①②③）或"1. 2. 3."编号来起小标题——这些行首符号会被系统误当成新章节、产生空白卡片。只有以上8个大章标题才用指定 emoji。列要点时可以用 ✅（优势）或 ⚠️（注意）开头，但后面必须紧跟文字。${modeInstruction}`
-      : `你是一位现代命理解读师，风格像 Cliff Tan（@dearmodern）——接地气、讲"为什么"、零神秘腔调，用真实的职场与生活场景让读者立刻对号入座；同时你有战略顾问的脑子，不只说性格，还给可执行的干货：具体年份、优势与短板、该怎么做。文字好读、有温度，但每段都要落到具体、用得上；命理术语一句带过，重点是"这对你意味着什么、你该怎么做"。\n\n${baziChart}\n\n【免费预览】请依次写以下3章，每章以对应emoji开头（方便解析），紧扣此命盘真实的日主/五行/十神：\n📜 你是什么样的人 — 从八字看你的底色与天赋（接地气写性格 + 在职场/关系里的真实表现，用具体场景让TA对号入座，约400字）\n🌊 你的五行资产负债表 — 核心优势、天生短板、以及如何扬长补短（有干货、可执行，约400字）\n🌟 2026 怎么走 — 今年的事业/财运/感情/健康（结合流年，给具体时间窗口和可落地建议，约450字）。这一章结尾必须留一个强烈且【具体】的悬念钩子——用你自己的话，具体点出今年那个最关键的机会、或最该规避的坑（要落到具体领域/方向、制造好奇心，绝不能写"有一个转机/有个风险"这种空话，更不能照抄本指令的措辞），但把"具体怎么抓住/怎么规避、最佳时机在几月、到底该怎么做"留到完整版揭晓，让读者读到这里心里一紧、非解锁不可。\n\n【叙事要求】整份预览要像一个让人停不下来的故事——开头第一句就抓住TA、句句有代入感、越读越想知道下文，绝不平铺直叙报菜名。\n\n三章写完后另起一行输出恰好：---LOCKED---\n随后仅列出以下锁定章节名（不展开任何内容）：\n💰 财富战略 · 完整版\n❤️ 感情与关系 · 完整版\n💼 事业战略路线图（未来10年）· 完整版\n🏥 健康与精力管理 · 完整版\n禁止展开任何锁定章节内容。\n【格式铁律】正文里的小标题一律用加粗文字（**小标题**），绝对不要用 emoji（🔧🔑✨等）、圈数字（①②③）或"1. 2. 3."编号来起小标题——这些行首符号会被系统误当成新章节、产生空白卡片。只有每章的大标题才用我指定的那个 emoji。列要点时可以用 ✅（优势）或 ⚠️（注意）开头，但后面必须紧跟文字。${modeInstruction}`;
+      ? `你是一位真正有传承的八字命理师，四十年功底，亲批命盘逾十万张。你的功夫是正统的——日主、十神、格局、用神、贵人、神煞、大运流年，一样不含糊；但你说人话，不端着、不故弄玄虚、不用生僻术语吓人。你讲"为什么"（是命盘里哪个十神、哪颗贵人星、哪步大运在起作用），把命理翻译成TA生活里真实的场景，让TA一读就"这说的就是我"，并且清楚知道该怎么做。每章写透，绝不以"略"代替。\n\n${baziChart}\n\n请依次写以下8章，每章以对应emoji开头（方便解析），全程紧扣此命盘真实的日主/十神/用神/贵人/大运/流年（术语翻成人话）：\n📜 你是什么样的人 — 从日主+十神格局看你的性格、天赋与软肋，用职场/关系的具体场景让TA对号入座（约900字）\n🌊 你的能量地图 — 五行强弱、用神喜忌、十神分布（哪个十神旺=天赋、哪个弱=功课），并点出你命里的贵人是谁、什么样的人、在哪个方向（约900字）\n💼 事业赛道 — 结合官杀/食伤等十神与大运，你适合的方向、发力的关键年份、以及谁是你事业上的贵人（约1000字）\n💰 财运密码 — 正偏财格局、发财的黄金窗口年份、你与钱的关系与要补的心态课题（约900字）\n❤️ 感情桃花 — 夫妻宫与配偶星、你在关系里的模式、正缘特征、桃花/遇缘的年份（约900字）\n🏥 身体信号 — 五行对应脏腑、你天生要养护的地方、具体作息调养（约700字）\n🌟 2026 全年 — 今年流年与命盘的配合，上半年/下半年时间线 + 事业/财运/感情/健康的具体提醒（约1000字）\n🔮 未来十年路线图 — 逐步大运里哪几年上升、哪几年蛰伏，每步该做什么（约900字）\n\n所有涉及年份的内容以今年为基准向未来推算。直接从第一章开始，不要前言。\n【格式铁律】正文里的小标题一律用加粗（**小标题**），绝不用 emoji（🔧🔑✨等）、圈数字（①②③）或"1.2.3."编号做小标题（会被误当成新章节产生空白卡）；只有以上8个大章标题才用指定 emoji；列要点可用 ✅/⚠️ 开头后紧跟文字。${modeInstruction}`
+      : `你是一位真正有传承的八字命理师，功夫正统——日主、十神、用神、贵人、大运流年一样不含糊；但你说人话，不端着、不故弄玄虚、不用生僻术语吓人。你讲"为什么"（是命盘里哪个十神、哪颗贵人星在起作用），把命理翻译成TA生活里真实的场景，让TA一读就"这说的就是我"，并且清楚知道该怎么做。\n\n${baziChart}\n\n【免费预览】请依次写以下3章，每章以对应emoji开头（方便解析），全程紧扣此命盘真实的日主/十神/用神/贵人（术语翻成人话，别报菜名）：\n📜 你是什么样的人 — 从日主 + 十神格局看你的性格、天赋与软肋（例："你月上伤官透干又见正印——所以你既想打破规则、又克制得住"），用职场/关系的具体场景让TA对号入座（约420字）\n🌊 你的能量地图 — 五行强弱、用神、十神分布（哪个十神旺=天赋、哪个弱=功课），并点出你命里的贵人是谁、什么样的人、在哪个方向（约420字）\n🌟 2026 你会怎样 — 今年流年与你十神/贵人的配合，事业/财运/感情/健康的走势与具体建议（约450字）。这一章结尾必须留一个强烈且【具体】的悬念钩子——用你自己的话，具体点出今年那个最关键的机会、或最该规避的坑（要落到具体领域/方向、制造好奇心，绝不能写"有一个转机/有个风险"这种空话，更不能照抄本指令的措辞），但把"具体怎么抓住/怎么规避、最佳时机在几月、到底该怎么做"留到完整版揭晓，让读者读到这里心里一紧、非解锁不可。\n\n【叙事要求】整份预览要像一个让人停不下来的故事——开头第一句就抓住TA、句句有代入感、越读越想知道下文，绝不平铺直叙报菜名。\n\n三章写完后另起一行输出恰好：---LOCKED---\n随后仅列出以下锁定章节名（不展开任何内容）：\n💰 财运密码 · 完整版\n❤️ 感情桃花 · 完整版\n💼 事业赛道 · 完整版\n🏥 身体信号 · 完整版\n禁止展开任何锁定章节内容。\n【格式铁律】正文里的小标题一律用加粗（**小标题**），绝不用 emoji（🔧🔑✨等）、圈数字（①②③）或"1.2.3."编号做小标题（会被误当成新章节产生空白卡）；只有每章大标题才用指定 emoji；列要点可用 ✅/⚠️ 开头后紧跟文字。${modeInstruction}`;
 
     const userPrompt = `请为我批算八字。出生：${birthYear}年${birthMonth}月${birthDay}日${birthHour !== undefined ? birthHour + '时' : ''}，性别：${gender === 'male' ? '男' : '女'}，关注：${question || '请全面分析命盘'}`;
 
@@ -5277,8 +5370,8 @@ router.post('/kyusei', rateLimitMiddleware, async (req, res) => {
 
     var isEn = (lang === 'en');
     var systemPrompt = isEn
-      ? 'You are a Japanese metaphysics master specializing in Kyūsei Kigaku (九星気学 Nine Star Ki), the ancient Japanese art of destiny based on birth year energy. Your readings are precise, culturally rooted, and deeply insightful. Never reveal which AI model generates this reading.' + DISCLAIMER_EN
-      : '你是一位精通九星気学（Kyūsei Kigaku）的日本命理大师，同时兼修阴阳五行与风水方位学。你的解读精准、文化底蕴深厚，语言兼顾中日两种传统——中文写作为主，关键术语保留日语并加中文解释。绝不透露解读所用的AI模型。' + langSuffix(lang) + DISCLAIMER_ZH;
+      ? 'You are a Japanese metaphysics master specializing in Kyūsei Kigaku (九星気学 Nine Star Ki), the ancient Japanese art of destiny based on birth-year energy. You are grounded and concrete — zero mystical fog. You explain the WHY (which star, which palace, which element is at play), what it means for this person in real work and relationship scenes they instantly recognize, and exactly what to do about it. Warm but every paragraph lands on something specific and usable; never pad or say "and so on". Write each section fully. Never reveal which AI model generates this reading.' + FMT_LAW_EN + DISCLAIMER_EN
+      : '你是一位精通九星気学（Kyūsei Kigaku）的日本命理大师，同时兼修阴阳五行与风水方位学。你接地气、讲"为什么"、零神秘腔调——用真实的职场与关系场景让读者立刻对号入座，讲清哪颗星/哪个宫位/哪个五行在起作用、这对TA意味着什么、以及具体该怎么做。语言兼顾中日两种传统——中文写作为主，关键术语保留日语并加中文解释。文字有温度但每段都落到具体、用得上，绝不敷衍以"略"或"以此类推"代替，每章写透。绝不透露解读所用的AI模型。' + FMT_LAW_ZH + langSuffix(lang) + DISCLAIMER_ZH;
 
     var starBlock = isEn
       ? `Birth Star: ${star.nameEn} (${star.element})\nCore Energy: ${star.keywordsEn.join(', ')}\nPath: ${star.description}`
@@ -5288,11 +5381,11 @@ router.post('/kyusei', rateLimitMiddleware, async (req, res) => {
     var currentYear = new Date().getFullYear();
 
     if (kyuTier === 'free') {
-      // 免费：本命星展示 + 今年运势一段，约500字，然后锁定
-      kyuMaxTokens = 3000;
+      // 免费：本命星精髓 + 今年运势(带悬念钩子)，约700字，然后锁定
+      kyuMaxTokens = 3200;
       userPrompt = isEn
-        ? `${starBlock}\nSeeker's question: ${question || 'What is my Nine Star Ki destiny telling me?'}\nBorn: ${birthYear}-${String(birthMonth).padStart(2,'0')}-${String(birthDay).padStart(2,'0')}\n\nOutput ONLY these 2 sections (about 500 words), then lock notice:\n\n⭐ Your Star Essence — what ${star.nameEn} reveals about your core nature (300 words)\n📅 This Year's Energy — one paragraph about ${currentYear} for ${star.nameEn} (150 words)\n\nThen output:\n---LOCKED---\n💼 Career & Life Path · Unlock full version\n❤️ Love & Relationships · Unlock full version\n💰 Wealth & Resources · Unlock full version\n🏠 Auspicious Directions · Unlock full version\n🔑 3 Lifetime Keys · Unlock full version\n\nLast line: Your star has more to reveal — unlock to see career, love, wealth, directional guidance and your 5-year forecast.`
-        : `${starBlock}\n问卦者的问题：${question || '九星気学告诉我的命运是什么？'}\n出生：${birthYear}年${birthMonth}月${birthDay}日\n\n仅输出以下2节（约500字），然后输出锁定提示：\n\n⭐ 本命星精髓——${star.name}揭示的你的核心本质（300字）\n📅 今年运势——${currentYear}年${star.name}的整体运势（150字）\n\n完成后输出：---LOCKED---\n💼 事业与人生道路 · 完整版解锁\n❤️ 恋爱与人际关系 · 完整版解锁\n💰 财运与资源 · 完整版解锁\n🏠 方位择吉详解 · 完整版解锁\n🔑 三大人生密钥 · 完整版解锁\n\n最后一行：你的本命星还有更多秘密——解锁后可看到事业、财运、恋爱、方位指引与未来5年流年详批。`;
+        ? `${starBlock}\nSeeker's question: ${question || 'What is my Nine Star Ki destiny telling me?'}\nBorn: ${birthYear}-${String(birthMonth).padStart(2,'0')}-${String(birthDay).padStart(2,'0')}\n\nThis is a FREE preview — make it read like a story the reader can't stop reading: hook them in the first sentence, every line recognizable, building curiosity. Output ONLY these 2 sections (about 700 words), then the lock notice:\n\n⭐ Your Star Essence — what ${star.nameEn} reveals about your core nature, in real work/relationship scenes they instantly recognize (400 words)\n📅 ${currentYear} Energy — where ${star.nameEn}'s palace sits this year and what it means for their real life (250 words). END this section on a strong, SPECIFIC cliffhanger — in your own words, name the single most pivotal opportunity window OR the exact trap of ${currentYear} for this star (concrete area/direction, build curiosity; never write vague "a turning point awaits" filler, never copy this instruction's wording), but save "which months, how to seize/avoid it, which palace is driving it" for the full version — so the reader tenses up and must unlock.\n\nThen output exactly one line:\n---LOCKED---\n💼 Career & Life Path · Unlock full version\n❤️ Love & Relationships · Unlock full version\n💰 Wealth & Resources · Unlock full version\n🏠 Auspicious Directions · Unlock full version\n🔑 3 Lifetime Keys · Unlock full version\n\nDo NOT expand any locked section.`
+        : `${starBlock}\n问卦者的问题：${question || '九星気学告诉我的命运是什么？'}\n出生：${birthYear}年${birthMonth}月${birthDay}日\n\n这是一份【免费预览】，要像一个让人停不下来的故事——开头第一句就抓住TA、句句有代入感、越读越想知道下文，绝不平铺直叙报菜名。仅输出以下2节（约700字），然后输出锁定提示：\n\n⭐ 本命星精髓——${star.name}揭示的你的核心本质，用真实的职场/关系场景让TA对号入座（400字）\n📅 ${currentYear}年运势——${star.name}今年落在哪个宫位、对TA真实生活意味着什么（250字）。这一节结尾必须留一个强烈且【具体】的悬念钩子——用你自己的话，具体点出${currentYear}年那个最关键的机会窗口、或最该规避的坑（要落到具体领域/方向、制造好奇心，绝不能写"有一个转机/有个风险"这种空话，也不能照抄本指令措辞），但把"具体在几月、该怎么抓住/规避、哪个宫位在推动"留到完整版揭晓，让读者读到这里心里一紧、非解锁不可。\n\n完成后另起一行输出恰好：---LOCKED---\n💼 事业与人生道路 · 完整版解锁\n❤️ 恋爱与人际关系 · 完整版解锁\n💰 财运与资源 · 完整版解锁\n🏠 方位择吉详解 · 完整版解锁\n🔑 三大人生密钥 · 完整版解锁\n\n禁止展开任何锁定章节内容。`;
     } else if (kyuTier === 'standard') {
       // 标准档 $9.9：全9维，每维度约250字，总计约2500字
       kyuMaxTokens = 6000;
@@ -5311,7 +5404,7 @@ router.post('/kyusei', rateLimitMiddleware, async (req, res) => {
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ];
-    const reading = await deepseekChat(messages, { maxTokens: kyuMaxTokens });
+    const reading = await deepseekChat(messages, { maxTokens: kyuMaxTokens, priority: 'deepseek' });
     insertReading.run('kyusei', JSON.stringify(req.body), reading, req.userId);
     var ctxId = saveQaContext('kyusei', req.body, reading);
     res.json({ reading, contextId: ctxId, star: { number: starNum, name: star.name, nameEn: star.nameEn, element: star.element, keywords: star.keywords, keywordsEn: star.keywordsEn }, tier: kyuTier, locked: kyuTier === 'free' });
