@@ -1286,11 +1286,12 @@ function streamChapterMeta(input, btn, onReady) {
   // chart 数据：单独调一次 /api/bazi（非流式）取 pillars 数据
   // 最实用 MVP：直接复用现有 /bazi/stream 只读 meta 事件然后 abort，再进分章模式
 
-  if (btn) { if (btn.disabled) return; btn.disabled = true; btn._label = btn.textContent; btn.innerHTML = '<span class="btn-gen-spinner"></span>排盘中…'; }
+  // btn may already be disabled+spinner by generateReport — only set up if not yet done
+  if (btn && !btn.disabled) { btn.disabled = true; btn._label = btn.textContent; btn.innerHTML = '<span class="btn-gen-spinner"></span>排盘中…'; }
 
   document.getElementById('inputScreen').style.display = 'none';
   document.getElementById('loadingScreen').classList.add('show');
-  runLoadingSteps();
+  if (!document.getElementById('loadSteps').children.length) runLoadingSteps();
 
   var ctrl = new AbortController();
   var gotMeta = false;
