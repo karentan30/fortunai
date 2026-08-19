@@ -1,6 +1,15 @@
-# Runae 通宵战报 + 交接（0818夜→0819晨·给Karen）
+# Runae 通宵战报 + 交接（0818夜→0819·给Karen）
 
-> 一句话：今晚把 **26方法报告全部精装化 + content内容bug修复 + 解签服务 + 分章按需MVP + 5个线上500修复** 全部 commit+push+**部署上线**了。线上 = `e47178c`。
+## 🔴🔴 0819白天最重要更新（先看这段）
+1. **"网络异常"根治了（今天最大的修复）**：根因=LLM_PRIORITY虽=`qwen,deepseek`但进程一直没加载到DASHSCOPE key→qwen被跳过→只用DeepSeek单打→**DeepSeek一没钱就"网络异常"**（这两天smoke/QA/审烧干了¥19）。修法=`/opt/shenyuan/server/.env`里DASHSCOPE已有·`pm2 restart --update-env`重载→**qwen百炼激活为主力·DeepSeek+groq兜底**。验证八字用qwen出真报告(戊土申金·内容质量好)。**红线：改LLM_PRIORITY/加key后必须restart让进程reload .env·并curl确认主力真激活(node -e打印activeProviders)·否则白配。** 现在=qwen省钱+多provider兜底·网络异常永不再犯。
+2. **QA挡下2个会砸口碑的bug并修复上线**：①mianxiang/zhiyuan页原来给用户看**假demo数据**(从不调真API)→已接真API ②jyotish/tibet付费内容**在DOM可白嫖**→后端改free只出3章+LOCKED。+5页裂图/9页废按钮已修。
+3. **content西占/紫微加命盘事实卡**(方案A·代码渲染太阳月亮上升/宫位主星100%准·LLM写错也有硬数据对照)·八字年份漂移根治(写2026不写2025)。
+4. **分章按需**：前端btn.disabled bug已修+部署·但**真机点按钮仍不出章节·还有第二个bug没抓完·别启用**(灰度默认关·不影响正常模式)。
+5. 新文档：`功能介绍-26功能`·`PRD-每日运势日活`(/api/daily已建·3-5天可Phase1)·`PRD-分章按需`·`硅谷CEO审查`(生成中)。
+
+---
+
+> 0818夜一句话：把 **26方法报告全部精装化 + content内容bug修复 + 解签服务 + 分章按需MVP + 5个线上500修复** 全部 commit+push+**部署上线**了。
 
 ## ✅ 今晚做完（都已上线验证）
 | 事 | commit | 验证 |
