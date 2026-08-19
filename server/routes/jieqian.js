@@ -227,7 +227,7 @@ router.post('/jieqian', rateLimitMiddleware, async (req, res) => {
     ];
 
     const maxTokens = jqTier === 'free' ? 3000 : 8192;
-    const reading = await deepseekChat(messages, { maxTokens });
+    const reading = await deepseekChat(messages, { maxTokens, priority: 'deepseek' });
 
     // 存上下文支持追问
     const ctxId = saveQaContext('jieqian', req.body, reading);
