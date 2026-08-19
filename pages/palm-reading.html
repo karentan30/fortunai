@@ -310,7 +310,7 @@ footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:
   <div class="locked" id="paywallBox" style="display:none">
     <h3 class="serif">Unlock your full Ma Yi palm reading</h3>
     <p>Every line and mount in depth — heart, head, life, fate, and Sun lines; all eight mounts; special patterns like the Chuan (川) palm or through-palm; plus your Master's note on what to cultivate. Written through the full Ma Yi framework, just for your hand.</p>
-    <a class="cta" href="bazi-en.html">Unlock full reading →<small>$9 one-time · yours forever</small></a>
+    <a class="cta" href="#" onclick="unlockPalm(this);return false;">Unlock full reading →<small>$9.90 one-time · yours forever</small></a>
     <div class="blur-lines"></div>
   </div>
 
@@ -449,7 +449,7 @@ function startReading(file){
               var evt = JSON.parse(raw);
               if(evt.type === 'chunk' && evt.content){
                 _fullText += evt.content;
-                out.innerHTML = renderMarkdown(_fullText);
+                out.innerHTML = renderMarkdown(freePortion(_fullText));
               } else if(evt.type === 'done'){
                 if(evt.locked){ document.getElementById('paywallBox').style.display = 'block'; }
               } else if(evt.type === 'error'){
@@ -490,6 +490,30 @@ function showFallbackCard(){
   document.getElementById('shareCard').style.display = 'block';
 }
 
+function unlockPalm(el){
+  var label = el.innerHTML;
+  el.style.pointerEvents='none'; el.textContent='Redirecting…';
+  fetch('/api/create-checkout', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      product:'shouxiang_full',
+      token: localStorage.getItem('sy_token')||'',
+      successUrl: location.origin+'/pages/palm-reading.html?paid=1'
+    })
+  }).then(function(r){return r.json();}).then(function(d){
+    if(d.url){ location.href=d.url; }
+    else if(d.channel==='cn'){ el.innerHTML=label; el.style.pointerEvents=''; alert('国内用户请用微信/支付宝'); }
+    else { el.innerHTML=label; el.style.pointerEvents=''; }
+  }).catch(function(){ el.innerHTML=label; el.style.pointerEvents=''; });
+}
+function freePortion(t){
+  // 红线:免费预览不得白送付费内容。截到 ---LOCKED--- 前;
+  // 模型漏分隔符时 P1 兜底=截到首个付费章 emoji 前(付费章:🧠🌿💼☀️💍⛰️🙏)
+  var i = t.indexOf('---LOCKED---');
+  if(i >= 0){ return t.slice(0, i); }
+  var m = t.match(/\n\s*(🧠|🌿|💼|☀️|💍|⛰️|🙏)/u);
+  return m ? t.slice(0, m.index) : t;
+}
 function renderMarkdown(md){
   return md
     .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
