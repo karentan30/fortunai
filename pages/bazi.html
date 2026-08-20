@@ -572,7 +572,7 @@ input::placeholder,textarea::placeholder { color: rgba(210,206,190,0.62) !import
     <div class="bazi-hero-sub">四柱 · 五行 · 大运 · 流年</div>
     <div class="bazi-hero-divider"></div>
     <div class="bazi-hero-desc">天干地支，阴阳五行，一生运势尽在八字之中。AI细批命盘，洞见财运、姻缘、事业、大运走向。</div>
-    <div style="margin-top:10px;font-size:12px;color:#c9a84c;letter-spacing:0.1em;opacity:0.9">免费预览 · 付费解锁5000字完整命盘 · 大运流年 · 财运姻缘全解析</div>
+    <div style="margin-top:10px;font-size:12px;color:#c9a84c;letter-spacing:0.1em;opacity:0.9">命格总览免费 · 专项 Session 每个 $3.99 · 一键全买 6 个 $11.99（五折）</div>
   </div>
   <script>
   (function(){
@@ -712,7 +712,7 @@ input::placeholder,textarea::placeholder { color: rgba(210,206,190,0.62) !import
     <div>✦ 5000+ 字逐段深度撰写，非模板话术</div>
   </div>
 </div>
-    <div style="text-align:center;font-size:12px;color:rgba(201,168,76,0.75);margin-bottom:8px;letter-spacing:0.06em;padding:6px 12px;background:rgba(201,168,76,0.06);border-radius:8px;border:1px solid rgba(201,168,76,0.15)">免费预览 → 完整报告 $9.90（一次性）</div>
+    <div style="text-align:center;font-size:12px;color:rgba(201,168,76,0.75);margin-bottom:8px;letter-spacing:0.06em;padding:6px 12px;background:rgba(201,168,76,0.06);border-radius:8px;border:1px solid rgba(201,168,76,0.15)">命格总览免费 → 专项 Session $3.99/个 · 一键全买 $11.99</div>
     <div style="margin:12px 0;padding:16px;background:rgba(200,184,122,0.04);border:1px solid rgba(200,184,122,0.12);border-radius:12px">
   <div style="font-size:12px;color:rgba(200,184,122,0.85);font-family:'Noto Serif SC',serif;letter-spacing:0.12em;margin-bottom:10px;display:flex;align-items:center;gap:6px">
     <span style="font-size:14px">☯</span> 善缘命理研究团队
@@ -1544,7 +1544,28 @@ var BAZI_TOPICS = [
   { topic: 'health', emoji: '🌿', label: '健康养生' },
   { topic: 'luck',   emoji: '🎯', label: '开运贵人' }
 ];
-function bzEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,'<b style="color:#f5e98a">$1</b>'); }
+function bzEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,'<b style="color:#f5e98a">$1</b>').replace(/(20\d\d\s*年?)/g,'<span style="color:#7fc4e8;font-weight:600">$1</span>'); }
+// 可读性渲染：一句话结论高亮 + 元素条形图 + ✅/⚠️卡片
+var BZ_ELEM_COL={ '火':'#e0673a','土':'#c8a24a','金':'#d9d2b0','水':'#4a9fd4','木':'#5fae6a','风':'#8ab4d8','开创':'#e0673a','固定':'#c8a24a','变动':'#5fae6a' };
+function bzBars(label,parts){
+  var rows=parts.map(function(p){var c=BZ_ELEM_COL[p[0]]||'#8aa0c0';
+    return '<div style="display:flex;align-items:center;gap:8px;margin:6px 0"><span style="width:56px;font-size:12px;color:#cbd4e4;text-align:right">'+p[0]+'</span><span style="flex:1;height:11px;background:rgba(255,255,255,.06);border-radius:6px;overflow:hidden"><span style="display:block;height:100%;width:'+p[1]+'%;background:'+c+'"></span></span><span style="width:34px;font-size:11px;color:#9fb0cc">'+p[1]+'%</span></div>';}).join('');
+  return '<div style="margin:12px 0;padding:12px 16px;background:rgba(10,16,34,.5);border-radius:8px;border:1px solid rgba(212,180,110,.15)"><div style="font-size:12px;color:#c8b98a;margin-bottom:6px;letter-spacing:1px">'+bzEsc(label)+'</div>'+rows+'</div>';
+}
+function bzRenderBody(text){
+  var lines=String(text||'').split('\n'), out=[], leadDone=false;
+  for(var i=0;i<lines.length;i++){
+    var s=lines[i].trim();
+    if(!s||s.indexOf('---')===0) continue;
+    var bm=(s.indexOf('：')>0&&s.indexOf('%')>0)?s.split('：'):null;
+    if(bm){var parts=[];var re=/([A-Za-z一-龥]+)\s*[A-Za-z]*\s*(\d+)%/g,m;while(m=re.exec(bm[1])){if(+m[2]<=100)parts.push([m[1],+m[2]]);}if(parts.length>=2){out.push(bzBars(bm[0].replace(/\*/g,''),parts));continue;}}
+    var cm=s.match(/^(✅|⚠️|🔑|💡|📌)\s*(.+)/);
+    if(cm){var warn=cm[1]!=='✅';out.push('<div style="display:flex;gap:8px;font-size:14px;line-height:1.7;padding:10px 14px;margin:8px 0;border-radius:8px;background:'+(warn?'rgba(224,150,60,.1)':'rgba(95,174,106,.1)')+';border:1px solid '+(warn?'rgba(224,150,60,.32)':'rgba(95,174,106,.3)')+';color:'+(warn?'#f0dcc0':'#cfe8d2')+'"><span>'+cm[1]+'</span><span>'+bzEsc(cm[2])+'</span></div>');continue;}
+    if(!leadDone&&s.length>12){var mm=s.match(/^[^。！？]*[。！？]/);var lead=mm?mm[0]:s;var rest=mm?s.slice(mm[0].length):'';out.push('<div style="font-size:16px;line-height:1.7;color:#fff3cf;font-weight:600;padding:11px 15px;margin:2px 0 12px;border-left:4px solid #e6c874;background:linear-gradient(90deg,rgba(230,200,116,.14),transparent);border-radius:0 8px 8px 0">'+bzEsc(lead)+'</div>');leadDone=true;if(rest.trim())out.push('<p style="margin:0 0 11px;line-height:1.9">'+bzEsc(rest.trim())+'</p>');continue;}
+    out.push('<p style="margin:0 0 11px;line-height:1.9">'+bzEsc(s)+'</p>');
+  }
+  return out.join('');
+}
 // session 制主入口：不再出巨型报告，改为「命主头 + 免费总览 + 6 session + 一键全买」
 function startBaziSessions(input, btn){
   try { isStreaming = false; } catch(e){}
@@ -1595,7 +1616,7 @@ function loadBaziOverview() {
   fetchBaziSession('overview').then(function(d){
     if (!d || !d.reading) { p.innerHTML=''; return; }
     p.innerHTML = '<div style="font-size:13px;color:#f5e98a;letter-spacing:.1em;margin-bottom:8px">📜 命格总览 · 免费</div>'+
-      '<div style="background:rgba(8,16,26,0.6);border:1px solid rgba(74,159,212,0.15);border-radius:14px;padding:18px 20px;line-height:1.9;color:#e8f0ff;font-size:15px;white-space:pre-wrap">'+bzEsc(d.reading)+'</div>';
+      '<div style="background:rgba(8,16,26,0.6);border:1px solid rgba(74,159,212,0.15);border-radius:14px;padding:18px 20px;color:#e8f0ff;font-size:15px">'+bzRenderBody(d.reading)+'</div>';
   }).catch(function(){ p.innerHTML=''; });
 }
 function fetchBaziSession(topic){
@@ -1615,7 +1636,7 @@ function openBaziTopic(btn) {
     var raw = String(d.reading || '');
     var lockIdx = raw.indexOf('---LOCKED---');
     var freeText = lockIdx >= 0 ? raw.slice(0, lockIdx) : raw;
-    var html = '<div style="background:rgba(8,16,26,0.6);border:1px solid rgba(74,159,212,0.15);border-radius:14px;padding:20px 22px;line-height:1.9;color:#e8f0ff;font-size:15px;white-space:pre-wrap">'+bzEsc(freeText)+'</div>';
+    var html = '<div style="background:rgba(8,16,26,0.6);border:1px solid rgba(74,159,212,0.15);border-radius:14px;padding:20px 22px;color:#e8f0ff;font-size:15px">'+bzRenderBody(freeText)+'</div>';
     if (d.locked) {
       html += '<div style="text-align:center;margin-top:14px">'+
         '<div style="color:rgba(245,233,138,0.75);font-size:13px;margin-bottom:10px">🔒 完整「'+(d.title||'专项')+'」Session 已锁定</div>'+
