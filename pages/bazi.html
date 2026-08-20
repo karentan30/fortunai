@@ -1531,6 +1531,61 @@ function showReport(aiText, contextId, tier, locked) {
     var rs = document.getElementById('reportScreen'); if (rs) rs.appendChild(cta); else document.body.appendChild(cta);
     // 转运提醒钩子已移除：固定"下下个月转运"与命盘无关，属虚假个性化，合规风险，已删除。
   }
+  try { renderBaziTopicTabs(isLocked); } catch (e) { console.warn('topic tabs', e); }
+}
+
+// ── 八字专项切片 tab（同一份真排盘换解读焦点，感知"内容好全"·成本≈0）──
+var BAZI_TOPICS = [
+  { topic: 'wealth', emoji: '💰', label: '财运专精' },
+  { topic: 'love',   emoji: '💕', label: '感情姻缘' },
+  { topic: 'career', emoji: '💼', label: '事业专精' }
+];
+function renderBaziTopicTabs(isLocked) {
+  if (!lastBaziInput || !lastBaziInput.year) return;
+  var rs = document.getElementById('reportScreen'); if (!rs) return;
+  if (document.getElementById('baziTopicTabs')) return;
+  var grid = BAZI_TOPICS.map(function(t){
+    return '<button class="bz-topic-btn" data-topic="'+t.topic+'" onclick="openBaziTopic(this)" '+
+      'style="flex:1;min-width:96px;background:rgba(107,63,160,0.12);border:1px solid rgba(155,111,196,0.35);'+
+      'border-radius:12px;padding:14px 8px;color:#e8e0ff;font-size:13px;cursor:pointer;transition:.2s;text-align:center">'+
+      '<div style="font-size:22px;margin-bottom:4px">'+t.emoji+'</div>'+t.label+'</button>';
+  }).join('');
+  var wrap = document.createElement('div');
+  wrap.id = 'baziTopicTabs';
+  wrap.style.cssText = 'margin:28px auto 8px;max-width:720px;padding:0 4px';
+  wrap.innerHTML = '<div style="font-size:13px;color:rgba(74,159,212,0.7);letter-spacing:.12em;margin-bottom:12px;text-align:center">— 专项精解 · 点开深挖某一面 —</div>'+
+    '<div style="display:flex;gap:10px;flex-wrap:wrap">'+grid+'</div>'+
+    '<div id="baziTopicPanel" style="margin-top:16px"></div>';
+  rs.appendChild(wrap);
+}
+function openBaziTopic(btn) {
+  var topic = btn.getAttribute('data-topic');
+  var panel = document.getElementById('baziTopicPanel'); if (!panel) return;
+  document.querySelectorAll('.bz-topic-btn').forEach(function(b){ b.style.background = 'rgba(107,63,160,0.12)'; });
+  btn.style.background = 'rgba(107,63,160,0.32)';
+  panel.innerHTML = '<div style="text-align:center;padding:24px;color:rgba(232,224,255,0.7)">✦ 正在为你深挖…</div>';
+  var token = localStorage.getItem('sy_token') || '';
+  fetch('/api/bazi/topic', {
+    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({
+      birthYear: lastBaziInput.year, birthMonth: lastBaziInput.month, birthDay: lastBaziInput.day,
+      birthHour: lastBaziInput.hour, gender: lastBaziInput.gender, topic: topic, token: token
+    })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (!d || !d.reading) { panel.innerHTML = '<div style="text-align:center;padding:20px;color:#e88">加载失败，请重试</div>'; return; }
+    var raw = String(d.reading || '');
+    var lockIdx = raw.indexOf('---LOCKED---');
+    var freeText = lockIdx >= 0 ? raw.slice(0, lockIdx) : raw;
+    var esc = freeText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,'<b style="color:#f5e98a">$1</b>');
+    var html = '<div style="background:rgba(8,16,26,0.6);border:1px solid rgba(74,159,212,0.15);border-radius:14px;padding:20px 22px;line-height:1.9;color:#e8f0ff;font-size:15px;white-space:pre-wrap">'+esc+'</div>';
+    if (d.locked) {
+      html += '<div style="text-align:center;margin-top:14px">'+
+        '<div style="color:rgba(245,233,138,0.75);font-size:13px;margin-bottom:10px">🔒 完整「'+(d.title||'专项')+'」深解已锁定</div>'+
+        '<button onclick="createCheckout(this,\'full\',9.9)" style="background:linear-gradient(135deg,#9b6fc4,#6b3fa0);border:none;border-radius:10px;padding:13px 30px;color:#fff;font-size:15px;font-weight:600;cursor:pointer">解锁完整报告 · $9.9</button></div>';
+    }
+    panel.innerHTML = html;
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }).catch(function(){ panel.innerHTML = '<div style="text-align:center;padding:20px;color:#e88">网络错误，请重试</div>'; });
 }
 
 function injectDisclaimer(containerId) {
