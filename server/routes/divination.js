@@ -988,7 +988,7 @@ function buildSessionEngineBlock(method, o) {
   var hasHour = o.birthHour !== undefined && o.birthHour !== null && o.birthHour !== '';
   try {
     if (method === 'ziwei') {
-      var ch = computeBaziChart({ birthYear: +o.birthYear, birthMonth: +o.birthMonth, birthDay: +o.birthDay, birthHour: hasHour ? +o.birthHour : 0, gender: o.gender || 'female', includeZiwei: true });
+      var ch = computeBaziChart({ year: +o.birthYear, month: +o.birthMonth, day: +o.birthDay, hour: hasHour ? +o.birthHour : 0, gender: o.gender || 'female', includeZiwei: true });
       return buildZiweiFactCard(ch.ziwei, { birthYear: o.birthYear, birthMonth: o.birthMonth, birthDay: o.birthDay, birthHour: hasHour ? o.birthHour : '（时辰不详）', gender: o.gender });
     }
     if (method === 'astrology') {
