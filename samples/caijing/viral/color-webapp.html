@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>彩镜 · 个人色彩诊断</title>
+<script src="./vendor/html2canvas.min.js"></script>
+<script src="./vendor/qrcode.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"PingFang SC","Hiragino Sans GB",sans-serif;background:#f3ece0;color:#3a332a;-webkit-tap-highlight-color:transparent}
+.app{max-width:520px;margin:0 auto;min-height:100vh}
+.landing{padding:64px 32px;text-align:center;min-height:100vh;display:flex;flex-direction:column;justify-content:center;background:linear-gradient(170deg,#f6efe3,#e9dcc2)}
+.badge{font-size:14px;letter-spacing:4px;color:#a5502f;font-weight:700}
+.landing h1{font-size:40px;font-weight:800;color:#8a4b28;margin:14px 0 6px;letter-spacing:2px}
+.landing .en{font-family:Georgia,serif;font-style:italic;color:#b08a5a;font-size:18px;margin-bottom:22px}
+.landing p{font-size:16px;color:#7a6a52;line-height:1.7;margin-bottom:8px}
+.tips{background:#fff8;border-radius:16px;padding:18px 20px;margin:24px 0;text-align:left;font-size:14px;color:#6a5a42;line-height:1.9}
+.tips b{color:#a5502f}
+.btn{background:linear-gradient(90deg,#a5502f,#c47a3a);color:#fff;border:none;border-radius:40px;padding:18px 0;width:100%;font-size:19px;font-weight:700;box-shadow:0 8px 22px rgba(150,70,30,.3);cursor:pointer;letter-spacing:2px;display:block}
+.btn:active{transform:scale(.98)}
+.free{margin-top:14px;font-size:13px;color:#a08a6a}
+input[type=file]{display:none}
+.load{position:fixed;inset:0;background:#f3ece0ee;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9}
+.spin{width:56px;height:56px;border:5px solid #e0cfa8;border-top-color:#a5502f;border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.load p{margin-top:20px;color:#8a6a42;font-size:15px}
+.report{display:none;background:linear-gradient(170deg,#f6efe3,#efe2c8)}
+.rwrap{padding:28px 22px 40px}
+.rtop{display:flex;justify-content:space-between;align-items:center;color:#9a6b3f;font-size:13px;letter-spacing:3px;font-weight:700}
+.hero{display:flex;gap:16px;margin-top:20px;align-items:stretch}
+.hero img{width:150px;height:190px;object-fit:cover;border-radius:16px;border:4px solid #fff;box-shadow:0 10px 26px rgba(120,80,40,.22)}
+.hbox{flex:1;display:flex;flex-direction:column;justify-content:center}
+.hbox .eb{font-size:13px;letter-spacing:2px;color:#9a6b3f;font-weight:700}
+.season{font-size:52px;font-weight:800;color:#8a4b28;line-height:1;margin:6px 0 2px}
+.sen{font-family:Georgia,serif;font-style:italic;font-size:22px;color:#a5502f}
+.tags{margin-top:12px;display:flex;gap:8px;flex-wrap:wrap}
+.tag{border:1.5px solid #a5502f55;color:#a5502f;border-radius:20px;padding:5px 13px;font-size:13px;font-weight:600;background:#fff8}
+.card{background:#fffdf7;border:1.5px solid #e7d3ab;border-radius:16px;padding:20px 20px;margin-top:18px;box-shadow:0 6px 16px rgba(120,90,40,.07)}
+.h{font-size:18px;font-weight:800;color:#5a3a1f;margin-bottom:16px;display:flex;align-items:center;gap:9px}
+.h::before{content:"";width:6px;height:20px;background:#a5502f;border-radius:3px}
+.h small{font-size:12px;color:#b0a080;font-weight:500}
+.canvwrap{text-align:center}
+.canvwrap canvas{width:100%;max-width:280px;border-radius:12px}
+.cmp{display:flex;gap:8px}
+.cc{flex:1;text-align:center}
+.cc canvas,.cc img{width:100%;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,.15);display:block}
+.ccn{font-size:12px;margin-top:6px;font-weight:700;border-top:3px solid;padding-top:4px;display:inline-block;color:#5a3a1f}
+.colors{display:flex;gap:12px;margin-top:14px;justify-content:center}
+.co{text-align:center}
+.co .c{width:56px;height:56px;border-radius:12px;border:3px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.14)}
+.co .n{font-size:12px;margin-top:6px;color:#6a4f38}
+.co .x{font-size:10px;color:#aa9}
+.sliders{margin-top:16px}
+.sl{margin-bottom:13px}
+.sl .lab{display:flex;justify-content:space-between;font-size:13px;margin-bottom:6px;color:#6a4f38}
+.bar{height:10px;border-radius:6px;background:#eaddc6;position:relative}
+.bar i{position:absolute;top:-4px;width:18px;height:18px;border-radius:50%;background:#a5502f;box-shadow:0 2px 6px rgba(120,60,20,.4)}
+.pal{display:flex;flex-wrap:wrap;gap:10px 0}
+.pc{width:20%;text-align:center;margin-bottom:12px}
+.pc .c{width:48px;height:36px;border-radius:9px;margin:0 auto;border:2px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.12)}
+.pc .n{font-size:11px;margin-top:5px;color:#6a4f38}
+.avo .c{filter:grayscale(.12)}
+.subh{font-size:14px;font-weight:700;color:#8a4b28;margin:2px 0 12px}
+.lips{display:flex;gap:14px;flex-wrap:wrap}
+.lip{width:48px;height:48px;border-radius:50%;border:3px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.18)}
+.mkrow{display:flex;gap:26px;flex-wrap:wrap}
+.mk .t{font-size:13px;color:#6a4f38;margin-bottom:9px;font-weight:600}
+.wx{display:flex;gap:8px}
+.wxc{flex:1;background:#fff;border-radius:12px;padding:12px 6px;border:1.5px solid #eee0c4;text-align:center}
+.wxc .dot{width:34px;height:34px;border-radius:50%;margin:0 auto 7px;border:2px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.16)}
+.wxc .e{font-size:16px;font-weight:800;color:#5a3a1f}
+.wxc .d{font-size:11px;color:#7a6a52;margin-top:4px;line-height:1.3}
+.buy{background:linear-gradient(180deg,#fff,#fdf6e8);border:1.5px solid #e7d3ab;border-radius:14px;padding:14px;margin-top:12px;display:flex;align-items:center;gap:12px}
+.buy .sw2{width:44px;height:44px;border-radius:10px;flex:none;border:2px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.2)}
+.tiers{flex:1;display:flex;gap:8px}
+.tier{flex:1;border:1.5px dashed #d8b98a;border-radius:9px;padding:8px 4px;text-align:center;text-decoration:none}
+.tier .lv{font-size:11px;color:#a5502f;font-weight:700}
+.tier .pr{font-size:17px;font-weight:800;color:#5a3a1f;margin:2px 0}
+.tier .bt{font-size:10px;color:#fff;background:#a5502f;border-radius:12px;padding:3px 0;margin-top:4px}
+.prod{display:flex;align-items:center;gap:12px;background:linear-gradient(180deg,#fff,#fdf6e8);border:1.5px solid #e7d3ab;border-radius:12px;padding:10px 12px;margin-top:8px;text-decoration:none}
+.prod.best{border-color:#a5502f;box-shadow:0 4px 12px rgba(165,80,47,.18)}
+.prod .psw{width:40px;height:40px;border-radius:10px;flex:none;border:2px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.2)}
+.prod .pinfo{flex:1;min-width:0}
+.prod .pn{font-size:14px;font-weight:700;color:#5a3a1f}
+.prod .bestb{background:#a5502f;color:#fff;font-size:10px;padding:2px 7px;border-radius:8px;margin-left:6px;white-space:nowrap}
+.prod .pt{font-size:11px;color:#9a8a70;margin-top:2px}
+.prod .pbuy{font-size:12px;color:#fff;background:#a5502f;border-radius:16px;padding:7px 14px;font-weight:700;flex:none}
+.demo{font-size:11px;color:#b0a58c;font-style:italic;margin-top:8px}
+.sum{background:#8a4b28;color:#fbeede;border-radius:14px;padding:18px 20px;margin-top:18px;font-size:14px;line-height:1.7}
+.sum b{color:#ffd9a0}
+.foot{text-align:center;margin-top:26px}
+.foot .hk{font-size:18px;font-weight:800;color:#5a3a1f}
+.foot .hk span{color:#a5502f}
+.foot .s{font-size:12px;color:#9a8a70;margin-top:6px}
+.qrbox{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px}
+.qrbox .qr{width:88px;height:88px;background:#fff;border:2px solid #a5502f44;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#a5502f;font-size:14px;text-align:center;line-height:1.3;font-weight:700}
+.actions{position:sticky;bottom:0;background:#f3ece0f5;padding:14px 22px;display:none;gap:10px;max-width:520px;margin:0 auto;box-shadow:0 -4px 16px rgba(0,0,0,.08)}
+.actions button{flex:1;border:none;border-radius:30px;padding:14px 0;font-size:15px;font-weight:700;cursor:pointer}
+.save{background:linear-gradient(90deg,#a5502f,#c47a3a);color:#fff}
+.again{background:#fff;border:1.5px solid #a5502f!important;color:#a5502f}
+.err{color:#a5502f;font-size:14px;margin-top:14px;display:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="landing" id="landing">
+    <div class="badge">彩镜 · STYLEMIRROR</div>
+    <h1>韩国色彩测试</h1>
+    <div class="en">Personal Color Analysis</div>
+    <p>拍一张脸,30 秒出你的春夏秋冬季型</p>
+    <p>+ 专属色盘 · 口红色号 · 五行开运色</p>
+    <div class="tips">
+      📸 <b>测得准的小窍门</b><br>
+      · 靠近窗边自然光,别在暖黄灯下<br>
+      · 素颜或淡妆,头发别遮脸<br>
+      · 正脸、表情放松就好
+    </div>
+    <label class="btn" for="file">📷 上传照片,开始测</label>
+    <input type="file" id="file" accept="image/*">
+    <div class="free">完全免费 · 想测几次测几次 · 照片只在你手机本地处理,不上传</div>
+    <div class="err" id="err"></div>
+  </div>
+  <div class="load" id="load">
+    <div class="spin"></div>
+    <p id="loadtxt">正在加载 AI 模型…</p>
+  </div>
+  <div class="report" id="report"><div class="rwrap" id="rwrap"></div></div>
+  <div class="actions" id="actions">
+    <button class="again" onclick="location.reload()">↺ 重新测</button>
+    <button class="save" id="savebtn">⬇ 保存卡片去晒</button>
+  </div>
+</div>
+
+<script type="module">
+import { FaceLandmarker, ImageSegmenter, FilesetResolver } from "./vendor/vision_bundle.mjs";
+
+const $ = id => document.getElementById(id);
+let landmarker = null, segmenter = null;
+const REF = new URLSearchParams(location.search).get('ref') || 'direct';
+function track(ev, props){ try{ if(window.posthog) window.posthog.capture(ev, props); }catch(e){} console.log('[track]', ev, {ref:REF, ...props}); }
+track('page_view', {});
+
+// ---------- 季型数据 ----------
+const SEASONS = {
+  cool_summer:{zh:"冷夏",en:"Cool Summer",tags:["清冷","柔和","低对比"],
+    rec:[["烟粉","#C9A6B3"],["雾霾蓝","#A9C0D6"],["薰衣草","#B7A9CE"],["鼠尾草","#A9C0B0"],["珍珠灰","#B9BCC4"],["藕荷","#9E7E90"],["雾蓝紫","#8390B0"],["冰粉","#E3C9D4"],["浅灰蓝","#B7C4D2"],["柔玫","#C99BAA"]],
+    avo:[["暖橙","#E58A3C"],["芥末黄","#C99A3F"],["砖红","#A5502F"],["驼","#C69A6B"],["深棕","#6E4A34"]],
+    swap:[["烟粉","#C9A6B3"],["雾霾蓝","#A9C0D6"],["薰衣草","#B7A9CE"]],swapA:[["暖橙","#E58A3C"],["芥末黄","#C99A3F"],["深棕","#6E4A34"]],
+    lips:[["冷玫粉","#C97F97"],["冷豆沙","#B56B72"],["梅子","#8E5A6E"]],eye:[["冷灰粉","#B090A0"],["烟紫","#7E6A82"],["冷棕","#8A6E68"]],blush:[["雾玫","#C98FA0"],["冷粉","#D2A0B0"]],
+    wx:[["水","#2B3A55","冷黑蓝 · 你的旺色"],["金","#D8D2C4","白/银灰 · 提气"],["木","#6E8A5A","雾绿 · 点缀"],["火","#B5482E","暖红 · 忌多"]],
+    mainlip:["冷玫粉","#C97F97"],sum:"你是<b>冷夏型</b>:冷调、柔和、低对比。低饱和的雾感色最衬你的清透气质,银色配饰更提亮。避开暖橙、砖红等高饱和暖色,易显暗沉。"},
+  cool_winter:{zh:"冷冬",en:"Cool Winter",tags:["清冷","高对比","浓郁"],
+    rec:[["纯白","#FFFFFF"],["墨黑","#141414"],["正红","#D9122B"],["宝蓝","#1E3FD6"],["品红","#C41E8A"],["祖母绿","#0E8A5A"],["冰粉","#E6B7C6"],["紫罗兰","#5A1E8A"],["冰蓝","#A9C8E0"],["酒红","#7A1030"]],
+    avo:[["驼","#C69A6B"],["暖橙","#E58A3C"],["芥末","#C99A3F"],["奶油","#E8D2A8"]],
+    swap:[["正红","#D9122B"],["宝蓝","#1E3FD6"],["纯白","#F2F2F2"]],swapA:[["驼","#C69A6B"],["暖橙","#E58A3C"],["奶油","#E8D2A8"]],
+    lips:[["正红","#D9122B"],["玫红","#C41E6A"],["梅子","#7E2A50"]],eye:[["冷灰","#8A8A94"],["黑棕","#3A2E30"],["酒紫","#5A2A48"]],blush:[["冷玫","#C8446A"],["莓粉","#D0507A"]],
+    wx:[["水","#1E2A44","黑/藏蓝 · 你的旺色"],["金","#F0F0F0","纯白银 · 提气"],["火","#D9122B","正红 · 点睛"],["土","#C69A6B","驼黄 · 忌"]],
+    mainlip:["正红","#D9122B"],sum:"你是<b>冷冬型</b>:冷调、高对比、浓郁。纯正饱和的冷色(正红/宝蓝/纯黑白)最能撑住你的气场。避开柔和的大地色,会显得脏。"},
+  warm_spring:{zh:"暖春",en:"Warm Spring",tags:["明亮","温暖","清透"],
+    rec:[["珊瑚","#FF7F5A"],["鹅黄","#F5D046"],["草绿","#8FC04A"],["蜜桃","#FFB48A"],["暖橙","#FF9E4A"],["象牙","#F5E6C8"],["浅金","#E8C86A"],["嫩绿","#A8D06A"],["暖粉","#FF9EA0"],["浅蓝绿","#6EC0B0"]],
+    avo:[["纯黑","#141414"],["冷灰","#8A8A94"],["冰蓝","#A9C0D6"],["酒红","#7A1030"]],
+    swap:[["珊瑚","#FF7F5A"],["草绿","#8FC04A"],["蜜桃","#FFB48A"]],swapA:[["纯黑","#141414"],["冷灰","#8A8A94"],["冰蓝","#A9C0D6"]],
+    lips:[["珊瑚","#FF6F52"],["蜜桃","#FF9E7A"],["暖橘","#F0743C"]],eye:[["蜜金","#D2A24A"],["暖棕","#B07A44"],["杏橘","#E0996A"]],blush:[["珊瑚橘","#FF8A5A"],["蜜桃粉","#FFA080"]],
+    wx:[["木","#6EA83C","嫩绿 · 你的旺色"],["火","#FF7F3A","暖橙 · 提气"],["水","#3A6EA5","蓝 · 点缀"],["金","#E8E8E8","冷白 · 忌"]],
+    mainlip:["珊瑚","#FF6F52"],sum:"你是<b>暖春型</b>:明亮、温暖、清透。明快鲜活的暖色(珊瑚/鹅黄/草绿)让你气色发光,金色配饰更配。避开沉闷的纯黑冷灰,会压气色。"},
+  warm_autumn:{zh:"暖秋",en:"Warm Autumn",tags:["温暖","浓郁","中对比"],
+    rec:[["赤陶","#C06B4A"],["芥末黄","#C99A3F"],["橄榄绿","#7E7A3C"],["铁锈红","#A5502F"],["驼色","#C69A6B"],["森林绿","#4E6B45"],["暖棕","#6E4A34"],["奶油白","#E8D2A8"],["南瓜","#C86A3C"],["苔绿","#8A8A4A"]],
+    avo:[["冰蓝","#A9C0D6"],["荧光粉","#EC4FA0"],["纯黑","#141414"],["玫红","#D0347A"],["亮紫","#7A45C8"]],
+    swap:[["赤陶","#C06B4A"],["橄榄绿","#7E7A3C"],["驼色","#C69A6B"]],swapA:[["冰蓝","#A9C0D6"],["荧光粉","#EC4FA0"],["纯黑","#141414"]],
+    lips:[["砖红","#B5482E"],["南瓜橘","#C86A3C"],["焦糖棕","#9E5A3A"]],eye:[["大地棕","#7A5238"],["古铜","#9A6A3A"],["暖橄榄","#6E6438"]],blush:[["珊瑚","#D98A6A"],["砖橘","#C56A44"]],
+    wx:[["土","#C9A24B","黄棕大地色 · 你的旺色"],["金","#D8C9A0","米金/驼 · 提气"],["火","#B5482E","砖红 · 点睛"],["水","#2B3A55","冷黑蓝 · 忌"]],
+    mainlip:["砖红","#B5482E"],sum:"你是<b>暖秋型</b>:暖调、中低明度、中对比。温暖浓郁的大地色系(赤陶/橄榄/驼)最能提亮你的气色,金色配饰更衬肤。避开冷调高饱和(荧光粉/冰蓝),易显暗沉。"}
+};
+
+// ---------- 口红商品库(按季型·标真实色号hex·待接真实推广链接) ----------
+// url 为空时用商品名搜索兜底;填入淘宝联盟 s.click 推广链接后即可结佣金
+const LIP_PRODUCTS = {
+  warm_autumn:[
+    {name:"完美日记 小细跟 砖红",tier:"平价国货",price:69,hex:"#B5482E",url:""},
+    {name:"MAC 子弹头 Chili 辣椒色",tier:"中端热门",price:189,hex:"#B14A38",url:""},
+    {name:"Armani 红管 405 番茄砖红",tier:"大牌经典",price:320,hex:"#C0533A",url:""}],
+  cool_summer:[
+    {name:"完美日记 丝绒 冷豆沙",tier:"平价国货",price:69,hex:"#B56B72",url:""},
+    {name:"3CE 唇泥 冷玫粉",tier:"中端热门",price:139,hex:"#C47F97",url:""},
+    {name:"YSL 圆管 冷调玫粉",tier:"大牌经典",price:300,hex:"#C56B80",url:""}],
+  cool_winter:[
+    {name:"colorkey 空气唇釉 正红",tier:"平价国货",price:69,hex:"#D9122B",url:""},
+    {name:"MAC 子弹头 Ruby Woo 正红",tier:"中端热门",price:189,hex:"#C71533",url:""},
+    {name:"Dior 烈艳蓝金 999 正红",tier:"大牌经典",price:340,hex:"#C8102E",url:""}],
+  warm_spring:[
+    {name:"橘朵 哑光 珊瑚橘",tier:"平价国货",price:69,hex:"#FF6F52",url:""},
+    {name:"3CE 云朵唇泥 珊瑚色",tier:"中端热门",price:139,hex:"#FA7452",url:""},
+    {name:"YSL 小金条 珊瑚橘",tier:"大牌经典",price:300,hex:"#F4603C",url:""}]
+};
+function hexToRgb(h){return[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+function colorDist(a,b){const A=hexToRgb(a),B=hexToRgb(b);return Math.hypot(A[0]-B[0],A[1]-B[1],A[2]-B[2]);}
+function prodLink(p){return p.url||`https://s.taobao.com/search?q=${encodeURIComponent(p.name)}&ref=${encodeURIComponent(REF)}`;}
+const EYE_PRODUCTS={
+  warm_autumn:[{name:"完美日记 动物眼影盘 大地棕",tier:"平价",price:69,hex:"#7A5238",url:""},{name:"Judydoll 九色 焦糖盘",tier:"中端",price:99,hex:"#9A6A3A",url:""}],
+  cool_summer:[{name:"完美日记 烟灰紫盘",tier:"平价",price:69,hex:"#7E6A82",url:""},{name:"3CE 玫瑰灰盘",tier:"中端",price:139,hex:"#8A6E68",url:""}],
+  cool_winter:[{name:"colorkey 冷灰盘",tier:"平价",price:69,hex:"#8A8A94",url:""},{name:"MAC 冷调眼影",tier:"中端",price:180,hex:"#3A2E30",url:""}],
+  warm_spring:[{name:"橘朵 蜜金盘",tier:"平价",price:69,hex:"#D2A24A",url:""},{name:"Canmake 暖橘盘",tier:"中端",price:99,hex:"#E0996A",url:""}]};
+const BLUSH_PRODUCTS={
+  warm_autumn:[{name:"colorkey 腮红 珊瑚",tier:"平价",price:49,hex:"#D98A6A",url:""},{name:"Canmake 棉花糖 砖橘",tier:"中端",price:90,hex:"#C56A44",url:""}],
+  cool_summer:[{name:"完美日记 雾玫腮红",tier:"平价",price:49,hex:"#C98FA0",url:""},{name:"Canmake 冷粉腮红",tier:"中端",price:90,hex:"#D2A0B0",url:""}],
+  cool_winter:[{name:"colorkey 冷玫腮红",tier:"平价",price:49,hex:"#C8446A",url:""},{name:"NARS 莓粉腮红",tier:"大牌",price:280,hex:"#D0507A",url:""}],
+  warm_spring:[{name:"Canmake 珊瑚橘腮红",tier:"平价",price:69,hex:"#FF8A5A",url:""},{name:"橘朵 蜜桃粉腮红",tier:"中端",price:59,hex:"#FFA080",url:""}]};
+function pickProducts(lib,key,userHex){const arr=lib[key]||[];let bestI=0,bestD=1e9;arr.forEach((p,i)=>{const dd=colorDist(p.hex,userHex);if(dd<bestD){bestD=dd;bestI=i;}});const html=arr.map((p,i)=>`<a class="prod ${i===bestI?'best':''}" target="_blank" data-tier="${p.tier}" href="${prodLink(p)}"><div class="psw" style="background:${p.hex}"></div><div class="pinfo"><div class="pn">${p.name}${i===bestI?'<span class="bestb">★最适合你</span>':''}</div><div class="pt">${p.tier} · 参考¥${p.price}</div></div><div class="pbuy">去买 ›</div></a>`).join("");return{arr,bestI,html};}
+
+// ---------- 联盟带货链接 ----------
+const TAOBAO_PID = "mm_4977728889_3345700413_116134000380"; // Karen淘宝联盟推广位
+// 真实推广链接(从淘宝联盟后台"立即推广"复制的 s.click.taobao.com 短链,PID已焊入)
+// 填法:PRODUCTS[季型key][档位] = "推广短链"。档位:cheap/mid/premium
+const PRODUCTS = {
+  // warm_autumn:{cheap:"https://s.click.taobao.com/xxx", mid:"...", premium:"..."},
+};
+function buildAff(tier, color, seasonKey){
+  const real = (PRODUCTS[seasonKey]||{})[tier];
+  if(real) return real; // 有真链接优先(能结佣金)
+  // 未填时的占位(仅跳转,不结佣金)——上线前必须换成真推广链接
+  return `https://s.taobao.com/search?q=${encodeURIComponent(color+" 口红")}&ref=${encodeURIComponent(REF)}`;
+}
+
+// ---------- 取色 & 分类 ----------
+function medianColor(data,w,pts,r){const R=[],G=[],B=[];for(const[px,py]of pts){for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const x=Math.round(px)+dx,y=Math.round(py)+dy;const i=(y*w+x)*4;if(i<0||i>=data.length)continue;R.push(data[i]);G.push(data[i+1]);B.push(data[i+2]);}}const med=a=>{a.sort((p,q)=>p-q);return a[Math.floor(a.length/2)]||0};return[med(R),med(G),med(B)];}
+function grayWorld(data){let sr=0,sg=0,sb=0,n=data.length/4;for(let i=0;i<data.length;i+=4){sr+=data[i];sg+=data[i+1];sb+=data[i+2];}sr/=n;sg/=n;sb/=n;const g=(sr+sg+sb)/3,kr=g/sr,kg=g/sg,kb=g/sb;const out=new Uint8ClampedArray(data.length);for(let i=0;i<data.length;i+=4){out[i]=Math.min(255,data[i]*kr);out[i+1]=Math.min(255,data[i+1]*kg);out[i+2]=Math.min(255,data[i+2]*kb);out[i+3]=255;}return out;}
+// 眼白白平衡:用巩膜(眼白·已知中性)当基准校色,治暖光偏色
+function scleraWB(data,w,h,lm){
+  const eyes=[[33,133,159,145,157,154,160,144],[362,263,386,374,384,381,387,373]];
+  let sr=0,sg=0,sb=0,cnt=0;
+  for(const idxs of eyes){
+    const xs=idxs.map(i=>lm[i][0]),ys=idxs.map(i=>lm[i][1]);
+    const x0=Math.floor(Math.min(...xs)),x1=Math.ceil(Math.max(...xs)),y0=Math.floor(Math.min(...ys)),y1=Math.ceil(Math.max(...ys));
+    for(let y=y0;y<=y1;y++)for(let x=x0;x<=x1;x++){const i=(y*w+x)*4;if(i<0||i>=data.length)continue;const r=data[i],g=data[i+1],b=data[i+2];const mx=Math.max(r,g,b),mn=Math.min(r,g,b);const v=mx/255,s=mx?(mx-mn)/mx:0;if(v>0.5&&s<0.20){sr+=r;sg+=g;sb+=b;cnt++;}}
+  }
+  if(cnt<10) return grayWorld(data);
+  sr/=cnt;sg/=cnt;sb/=cnt;const g=(sr+sg+sb)/3,kr=g/sr,kg=g/sg,kb=g/sb;
+  const out=new Uint8ClampedArray(data.length);
+  for(let i=0;i<data.length;i+=4){out[i]=Math.min(255,data[i]*kr);out[i+1]=Math.min(255,data[i+1]*kg);out[i+2]=Math.min(255,data[i+2]*kb);out[i+3]=255;}
+  return out;
+}
+function rgb2hsv([r,g,b]){r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b),d=mx-mn;let h=0;if(d){if(mx===r)h=((g-b)/d)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;}return[h*60,mx?d/mx:0,mx];}
+function hex([r,g,b]){return"#"+[r,g,b].map(v=>Math.round(v).toString(16).padStart(2,"0")).join("").toUpperCase();}
+function classify(skin,hair){const warmth=skin[0]-skin[2];const[,,sv]=rgb2hsv(skin);const[,,hv]=rgb2hsv(hair);const contrast=sv-hv;const warm=warmth>6,light=sv>0.62,hi=contrast>0.42;let key;if(!warm&&light&&!hi)key="cool_summer";else if(!warm)key="cool_winter";else if(warm&&light)key="warm_spring";else key="warm_autumn";return{key,warmth,sv,contrast,warm,light};}
+
+async function ensureModels(){
+  const fileset=await FilesetResolver.forVisionTasks("./vendor/wasm");
+  if(!landmarker) landmarker=await FaceLandmarker.createFromOptions(fileset,{baseOptions:{modelAssetPath:"./vendor/face_landmarker.task"},runningMode:"IMAGE",numFaces:1});
+  if(!segmenter){try{segmenter=await ImageSegmenter.createFromOptions(fileset,{baseOptions:{modelAssetPath:"./vendor/selfie_multiclass.tflite"},runningMode:"IMAGE",outputCategoryMask:true,outputConfidenceMasks:false});}catch(e){segmenter=null;}}
+}
+
+$("file").addEventListener("change",async e=>{
+  const f=e.target.files[0];if(!f)return;
+  track('upload',{});
+  $("err").style.display="none";$("load").style.display="flex";
+  try{
+    $("loadtxt").textContent="正在加载 AI 模型…";
+    await ensureModels();
+    $("loadtxt").textContent="正在分析你的脸…";
+    const img=await loadImg(f);
+    const scale=Math.min(1,900/Math.max(img.width,img.height));
+    const w=Math.round(img.width*scale),h=Math.round(img.height*scale);
+    const cv=document.createElement("canvas");cv.width=w;cv.height=h;
+    const ctx=cv.getContext("2d",{willReadFrequently:true});ctx.drawImage(img,0,0,w,h);
+    const res=landmarker.detect(cv);
+    if(!res.faceLandmarks||!res.faceLandmarks.length)throw new Error("没检测到人脸,换一张正脸清晰的照片试试~");
+    const lm=res.faceLandmarks[0].map(p=>[p.x*w,p.y*h]);
+    const raw=ctx.getImageData(0,0,w,h).data;
+    const wb=scleraWB(raw,w,h,lm);
+    const skin=medianColor(wb,w,[50,280,205,425,10,151,116,345].map(i=>lm[i]),5);
+    const hairY=lm[10][1]-(lm[152][1]-lm[10][1])*0.28;
+    const hair=medianColor(wb,w,[[lm[10][0],hairY]],12);
+    const irisPts=(lm.length>473)?[468,469,470,471,472,473].map(i=>lm[i]):[159,145,386,374].map(i=>lm[i]);
+    const eye=medianColor(wb,w,irisPts,2);
+    const lipC=medianColor(wb,w,[13,14,0,17,84,314].map(i=>lm[i]),3);
+    const cls=classify(skin,hair);
+    // 上身换色素材
+    const S=SEASONS[cls.key];
+    const seg=await makeSeg(img,cv,w,h,lm);
+    const cutout=seg?seg.cutout:null;
+    const swapImgs={};
+    if(seg){[...S.swap,...S.swapA].forEach(([n,c])=>{try{const r=recolorGarment(seg,c);swapImgs[c]=(r.ok?r.cv:onColor(cutout,c)).toDataURL('image/jpeg',0.85);}catch(e){}});}
+    render(cls,{skin,hair,eye,lipC},img,lm,w,h,cutout,swapImgs);
+    $("load").style.display="none";$("landing").style.display="none";$("report").style.display="block";$("actions").style.display="flex";
+    track('view_report',{season:cls.key});
+    window.scrollTo(0,0);
+  }catch(err){$("load").style.display="none";$("err").textContent="⚠ "+err.message;$("err").style.display="block";track('error',{msg:err.message});}
+});
+
+function loadImg(f){return new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=URL.createObjectURL(f);});}
+
+// 多类别分割 → {cutout人像抠图, cat类别掩码, 裁剪框} (0背景/1头发/2身体皮肤/3脸/4衣服/5其他)
+async function makeSeg(img,cv,w,h,lm){
+  if(!segmenter)return null;
+  try{
+    const seg=segmenter.segment(cv);
+    const cat=new Uint8Array(seg.categoryMask.getAsUint8Array());
+    try{seg.categoryMask.close();}catch(e){}
+    const xs=lm.map(p=>p[0]),ys=lm.map(p=>p[1]);
+    const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+    const fw=x1-x0,fh=y1-y0;
+    const L=Math.max(0,Math.round(x0-fw*0.7)),T=Math.max(0,Math.round(y0-fh*0.5)),Rr=Math.min(w,Math.round(x1+fw*0.7)),Bt=Math.min(h,Math.round(y1+fh*1.35));
+    const cw=Rr-L,ch=Bt-T;
+    const cut=document.createElement("canvas");cut.width=cw;cut.height=ch;
+    const cx=cut.getContext("2d",{willReadFrequently:true});
+    cx.drawImage(img,L*img.width/w,T*img.height/h,cw*img.width/w,ch*img.height/h,0,0,cw,ch);
+    const id=cx.getImageData(0,0,cw,ch);
+    for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){if(cat[(T+y)*w+(L+x)]===0)id.data[(y*cw+x)*4+3]=0;}
+    cx.putImageData(id,0,0);
+    return {cutout:cut,cat,L,T,cw,ch,w,h,img};
+  }catch(e){return null;}
+}
+// 只给"衣服"(类别4)换色,保留明暗褶皱 → 像真穿这个颜色
+function recolorGarment(seg,hex){
+  const {cat,L,T,cw,ch,w,h,img}=seg;
+  const cv=document.createElement("canvas");cv.width=cw;cv.height=ch;
+  const ctx=cv.getContext("2d",{willReadFrequently:true});
+  ctx.drawImage(img,L*img.width/w,T*img.height/h,cw*img.width/w,ch*img.height/h,0,0,cw,ch);
+  const id=ctx.getImageData(0,0,cw,ch),d=id.data;
+  const tr=parseInt(hex.slice(1,3),16),tg=parseInt(hex.slice(3,5),16),tb=parseInt(hex.slice(5,7),16);let n=0;
+  for(let y=0;y<ch;y++)for(let x=0;x<cw;x++){if(cat[(T+y)*w+(L+x)]===4){const i=(y*cw+x)*4;const lum=(d[i]*0.299+d[i+1]*0.587+d[i+2]*0.114)/255;const f=0.4+lum*0.8;d[i]=Math.min(255,tr*f);d[i+1]=Math.min(255,tg*f);d[i+2]=Math.min(255,tb*f);n++;}}
+  ctx.putImageData(id,0,0);
+  return {cv,ok:n>cw*ch*0.02};
+}
+function onColor(cutout,color){const W=150,H=Math.round(cutout.height*W/cutout.width);const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");x.fillStyle=color;x.fillRect(0,0,W,H);x.drawImage(cutout,0,0,W,H);return c;}
+// 真二维码(扫了打开工具·带博主ref)
+const SITE_URL="https://mylumee.cn/caijing";
+function makeQR(size){try{const q=qrcode(0,'M');q.addData(SITE_URL+"?ref="+encodeURIComponent(REF));q.make();const n=q.getModuleCount();const cell=Math.max(2,Math.floor(size/(n+2)));const s=cell*(n+2);const cv=document.createElement("canvas");cv.width=s;cv.height=s;const ctx=cv.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,s,s);ctx.fillStyle="#3a2f26";for(let r=0;r<n;r++)for(let c=0;c<n;c++)if(q.isDark(r,c))ctx.fillRect((c+1)*cell,(r+1)*cell,cell,cell);return cv.toDataURL("image/png");}catch(e){return "";}}
+
+function annotate(img,lm,w,h){const cv=document.createElement("canvas");const xs=lm.map(p=>p[0]),ys=lm.map(p=>p[1]);const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);const fw=x1-x0,fh=y1-y0;const L=Math.max(0,x0-fw*0.4),T=Math.max(0,y0-fh*0.5),Rr=Math.min(w,x1+fw*0.4),Bt=Math.min(h,y1+fh*0.35);const cw=Rr-L,ch=Bt-T;cv.width=cw;cv.height=ch;const ctx=cv.getContext("2d");ctx.drawImage(img,L*img.width/w,T*img.height/h,cw*img.width/w,ch*img.height/h,0,0,cw,ch);const oval=[10,338,297,332,284,251,389,356,454,323,361,288,397,365,379,378,400,377,152,148,176,149,150,136,172,58,132,93,234,127,162,21,54,103,67,109];ctx.strokeStyle="rgba(255,255,255,.9)";ctx.lineWidth=2;ctx.setLineDash([7,5]);ctx.beginPath();oval.forEach((i,k)=>{const x=lm[i][0]-L,y=lm[i][1]-T;k?ctx.lineTo(x,y):ctx.moveTo(x,y);});ctx.closePath();ctx.stroke();ctx.setLineDash([]);ctx.fillStyle="#fff";[33,133,362,263,1,168,61,291,0,17,50,280].forEach(i=>{const x=lm[i][0]-L,y=lm[i][1]-T;ctx.beginPath();ctx.arc(x,y,3,0,7);ctx.fill();});return cv;}
+
+function render(cls,cols,img,lm,w,h,cutout,swapImgs){
+  const S=SEASONS[cls.key];
+  const warmV=Math.min(95,Math.max(50,50+cls.warmth)),lightV=Math.round(cls.sv*100),contV=Math.min(90,Math.round(cls.contrast*100)+30),pureV=Math.round(rgb2hsv(cols.skin)[1]*100)+30;
+  const co=(n,c)=>`<div class="co"><div class="c" style="background:${hex(c)}"></div><div class="n">${n}</div><div class="x">${hex(c)}</div></div>`;
+  const pcs=(arr,c2="")=>arr.map(([n,c])=>`<div class="pc ${c2}"><div class="c" style="background:${c}"></div><div class="n">${n}</div></div>`).join("");
+  const lipEls=arr=>arr.map(([n,c])=>`<div class="lip" style="background:${c}" title="${n}"></div>`).join("");
+  const eyeEls=arr=>arr.map(([n,c])=>`<div class="lip" style="background:${c};width:40px;height:40px" title="${n}"></div>`).join("");
+  const wxEls=S.wx.map(([e,c,d])=>`<div class="wxc"><div class="dot" style="background:${c}"></div><div class="e">${e}</div><div class="d">${d}</div></div>`).join("");
+  // personal shopper:彩妆三件套按实测颜色匹配
+  const lipPick=pickProducts(LIP_PRODUCTS,cls.key,hex(cols.lipC));
+  const eyePick=pickProducts(EYE_PRODUCTS,cls.key,hex(cols.eye));
+  const blushPick=pickProducts(BLUSH_PRODUCTS,cls.key,hex(cols.lipC));
+  const html=`
+  <div class="rtop"><div>彩镜 · STYLEMIRROR</div><div>个人色彩诊断报告</div></div>
+  <div class="hero"><img id="faceimg">
+    <div class="hbox"><div class="eb">最适合你的色彩季型</div><div class="season">${S.zh}</div><div class="sen">${S.en}</div>
+    <div class="tags">${S.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</div></div></div>
+  <div class="card"><div class="h">① 肤发瞳唇分析 <small>AI 478 关键点·眼白校色</small></div>
+    <div class="canvwrap" id="annwrap"></div>
+    <div class="colors">${co("肤",cols.skin)}${co("发",cols.hair)}${co("瞳",cols.eye)}${co("唇",cols.lipC)}</div>
+    <div class="sliders">
+      <div class="sl"><div class="lab"><span>冷 ← 冷暖 → 暖</span><span>${cls.warm?"偏暖":"偏冷"}</span></div><div class="bar"><i style="left:${warmV}%"></i></div></div>
+      <div class="sl"><div class="lab"><span>深 ← 明度 → 浅</span><span>${cls.light?"偏浅":"中低"}</span></div><div class="bar"><i style="left:${Math.min(92,lightV)}%"></i></div></div>
+      <div class="sl"><div class="lab"><span>柔 ← 纯度 → 艳</span><span>中</span></div><div class="bar"><i style="left:${Math.min(92,pureV)}%"></i></div></div>
+      <div class="sl"><div class="lab"><span>低 ← 对比度 → 高</span><span>${cls.contrast>0.42?"高":"中"}</span></div><div class="bar"><i style="left:${contV}%"></i></div></div>
+    </div></div>
+  <div class="card" id="swapcard"><div class="h">② 上身换色实测 <small>同一个你 · 真实换色</small></div>
+    <div class="subh">✓ 推荐色(显气色·提亮)</div><div class="cmp" id="swapok"></div>
+    <div class="subh" style="margin-top:14px;color:#8a5a2a">✕ 避免色(显暗沉·疲惫)</div><div class="cmp" id="swapno"></div></div>
+  <div class="card"><div class="h">③ 你的专属色盘</div>
+    <div class="subh">推荐色盘(显气色·提亮·高级)</div><div class="pal">${pcs(S.rec)}</div>
+    <div class="subh avo" style="margin-top:14px">避免色盘(易显暗沉·疲惫)</div><div class="pal avo">${pcs(S.avo,"avo")}</div></div>
+  <div class="card"><div class="h">④ 五行开运色</div><div class="wx">${wxEls}</div>
+    <div class="demo">＊接入 Runae 八字后按你的喜用神精准定制(此为季型通用版)</div></div>
+  <div class="card"><div class="h">⑤ 你的妆容色号</div>
+    <div class="mkrow"><div class="mk"><div class="t">口红</div><div class="lips">${lipEls(S.lips)}</div></div>
+      <div class="mk"><div class="t">眼影</div><div class="lips">${eyeEls(S.eye)}</div></div>
+      <div class="mk"><div class="t">腮红</div><div class="lips">${eyeEls(S.blush)}</div></div></div>
+    <div class="subh" style="margin-top:16px">💄 口红 <small style="font-weight:500;color:#b0a080">· 按实测唇色匹配</small></div>
+    ${lipPick.html}
+    <div class="subh" style="margin-top:14px">👁 眼影 <small style="font-weight:500;color:#b0a080">· 按瞳色 / 季型</small></div>
+    ${eyePick.html}
+    <div class="subh" style="margin-top:14px">🌸 腮红 <small style="font-weight:500;color:#b0a080">· 按气色匹配</small></div>
+    ${blushPick.html}
+    <div class="demo">＊★ 为按你实测颜色算出的最匹配色号;链接接淘宝联盟,点击直接买</div></div>
+  <div class="sum">${S.sum}</div>
+  <div class="foot"><div class="hk">◎ <span>把这张卡发给闺蜜</span></div>
+    <div class="s">让她也测测是什么季型 · 彩镜 · 拍脸30秒 · 想测几次测几次</div>
+    <div class="qrbox"><div class="qr">扫码<br>测同款</div></div></div>`;
+  $("rwrap").innerHTML=html;
+  $("faceimg").src=img.src;
+  const annCanvas=annotate(img,lm,w,h);$("annwrap").appendChild(annCanvas);
+  // 上身换色
+  if(swapImgs&&Object.keys(swapImgs).length){
+    const mk=(box,arr,ok)=>{arr.forEach(([n,c])=>{const d=document.createElement("div");d.className="cc";const im=document.createElement("img");im.src=swapImgs[c]||"";d.appendChild(im);const t=document.createElement("div");t.className="ccn";t.style.borderColor=c;t.textContent=(ok?"✓ ":"✕ ")+n;d.appendChild(t);$(box).appendChild(d);});};
+    mk("swapok",S.swap,true);mk("swapno",S.swapA,false);
+  }else{$("swapcard").style.display="none";}
+  // 带货点击追踪
+  document.querySelectorAll(".prod").forEach(a=>a.addEventListener("click",()=>track('click_buy',{tier:a.dataset.tier,season:cls.key})));
+  let faceCv=cutout;
+  if(!faceCv){const xs=lm.map(p=>p[0]),ys=lm.map(p=>p[1]);const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);const fw=x1-x0,fh=y1-y0;const L=Math.max(0,x0-fw*0.3),T=Math.max(0,y0-fh*0.4),Rr=Math.min(w,x1+fw*0.3),Bt=Math.min(h,y1+fh*0.55);const cw=Rr-L,ch=Bt-T;faceCv=document.createElement("canvas");faceCv.width=cw;faceCv.height=ch;faceCv.getContext("2d").drawImage(img,L*img.width/w,T*img.height/h,cw*img.width/w,ch*img.height/h,0,0,cw,ch);}
+  try{SHARE=buildShareCard(cls,cols,img,S,faceCv);}catch(e){SHARE=null;console.warn('share card',e);}
+  try{SHARE2=buildReportCard(cls,cols,img,S,faceCv,annCanvas,swapImgs);}catch(e){SHARE2=null;console.warn('report card',e);}
+}
+
+// 画四季色彩扇形:脸放在该季型色扇背景上(小红书病毒格式)
+function drawSunburst(faceCv,colors,W,H){
+  const cv=document.createElement("canvas");cv.width=W;cv.height=H;const ctx=cv.getContext("2d");
+  const cx=W/2,cy=H*0.5,R=Math.hypot(W,H),N=Math.max(18,colors.length*2);
+  for(let i=0;i<N;i++){const p=colors[i%colors.length];ctx.fillStyle=Array.isArray(p)?p[1]:p;ctx.beginPath();ctx.moveTo(cx,cy);ctx.arc(cx,cy,R,(i/N)*6.2832-1.5708,((i+1)/N)*6.2832-1.5708);ctx.closePath();ctx.fill();}
+  if(faceCv&&faceCv.width>0&&faceCv.height>0){const fw=W*0.6,fh=faceCv.height*fw/faceCv.width;try{ctx.drawImage(faceCv,cx-fw/2,cy-fh*0.44,fw,fh);}catch(e){}}
+  return cv;
+}
+let SHARE=null,SHARE2=null;
+function buildShareCard(cls,cols,img,S,cutout){
+  const u=c=>c.toDataURL("image/jpeg",0.86);
+  const qr=makeQR(300);
+  const order=[["warm_spring","春"],["cool_summer","夏"],["warm_autumn","秋"],["cool_winter","冬"]];
+  const quad=order.map(([k,zh])=>{const sb=drawSunburst(cutout,SEASONS[k].rec,460,560);const me=k===cls.key;return `<div style="position:relative"><img src="${u(sb)}" style="width:100%;border-radius:12px;display:block"><div style="position:absolute;top:12px;left:16px;font-size:36px;font-weight:800;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,.55);font-family:'Songti SC',serif">《${zh}》</div>${me?`<div style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:#a5502f;color:#fff;font-size:24px;font-weight:800;padding:8px 22px;border-radius:30px;white-space:nowrap">★ 你是这型</div>`:``}</div>`;}).join("");
+  const sw=(arr,gray)=>arr.map(([n,c])=>`<div style="width:44px;height:44px;border-radius:9px;background:${c};border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.12);${gray?'filter:grayscale(.12)':''}" title="${n}"></div>`).join("");
+  const mk=(n,arr)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px"><div style="width:54px;font-size:19px;color:#6a4f38;font-weight:600">${n}</div>${arr.map(([nm,c])=>`<div style="display:flex;align-items:center;gap:5px"><div style="width:30px;height:30px;border-radius:50%;background:${c};border:2px solid #fff;box-shadow:0 2px 5px rgba(0,0,0,.15)"></div><span style="font-size:17px;color:#7a6a52">${nm}</span></div>`).join("")}</div>`;
+  const el=document.createElement("div");
+  el.style.cssText="position:fixed;left:-9999px;top:0;width:1080px;box-sizing:border-box;padding:44px 44px 40px;font-family:'PingFang SC',sans-serif;background:linear-gradient(170deg,#f7f0e4,#ecdfc6);color:#3a332a";
+  el.innerHTML=`
+    <div style="text-align:center"><div style="font-size:48px;font-weight:800;color:#3a2f26;letter-spacing:5px">个人色彩分析</div><div style="font-family:Georgia,serif;font-style:italic;color:#a08a6a;font-size:22px;letter-spacing:3px">PERSONAL COLOR ANALYSIS</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px">${quad}</div>
+    <div style="text-align:center;background:#fffdf7;border:2px solid #e7d3ab;border-radius:16px;padding:20px;margin-top:22px">
+      <span style="font-size:24px;color:#9a6b3f">最适合你的色彩季型</span>
+      <div style="font-size:58px;font-weight:800;color:#8a4b28;margin:4px 0">${S.zh} <span style="font-family:Georgia,serif;font-style:italic;font-size:34px;color:#a5502f">${S.en}</span></div>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap">${S.tags.map(t=>`<span style="border:2px solid #a5502f55;color:#a5502f;border-radius:24px;padding:6px 18px;font-size:21px;font-weight:600">${t}</span>`).join("")}</div>
+    </div>
+    <div style="display:flex;gap:14px;margin-top:18px">${[["肤色",cols.skin],["发色",cols.hair],["瞳色",cols.eye],["唇色",cols.lipC]].map(([n,c])=>`<div style="flex:1;text-align:center;background:#fff;border:1.5px solid #eee0c4;border-radius:14px;padding:14px 4px"><div style="width:64px;height:64px;border-radius:14px;margin:0 auto;border:3px solid #fff;box-shadow:0 4px 10px rgba(0,0,0,.15);background:${hex(c)}"></div><div style="font-size:21px;margin-top:9px;color:#5a3a1f;font-weight:600">${n}</div><div style="font-size:15px;color:#aa9">${hex(c)}</div></div>`).join("")}</div>
+    <div style="display:flex;gap:14px;margin-top:18px">
+      <div style="flex:1;background:#fff;border:1.5px solid #eee0c4;border-radius:14px;padding:16px"><div style="font-size:22px;font-weight:800;color:#2f7a4a;margin-bottom:12px">✓ 推荐色盘</div><div style="display:flex;flex-wrap:wrap;gap:8px">${sw(S.rec.slice(0,10))}</div></div>
+      <div style="flex:1;background:#fff;border:1.5px solid #eee0c4;border-radius:14px;padding:16px"><div style="font-size:22px;font-weight:800;color:#a5502f;margin-bottom:12px">✕ 避免色盘</div><div style="display:flex;flex-wrap:wrap;gap:8px">${sw(S.avo,1)}</div></div>
+    </div>
+    <div style="background:#fff;border:1.5px solid #eee0c4;border-radius:14px;padding:16px;margin-top:14px"><div style="font-size:22px;font-weight:800;color:#8a4b28;margin-bottom:12px">推荐妆容色号</div>${mk("口红",S.lips)}${mk("眼影",S.eye)}${mk("腮红",S.blush)}</div>
+    <div style="background:#8a4b28;color:#fbeede;border-radius:16px;padding:20px 24px;margin-top:14px;font-size:23px;line-height:1.6">${S.sum}</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:22px;padding-top:18px;border-top:2px solid #e0cfa8">
+      <div><div style="font-size:30px;font-weight:800;color:#5a3a1f">◎ 拍一张脸 · 30秒测你的同款</div><div style="font-size:19px;color:#9a8a70;margin-top:6px">彩镜 · 想测几次测几次 · 不挑光不挑妆</div></div>
+      <div style="width:108px;height:108px;background:#fff;border:3px solid #a5502f44;border-radius:14px;padding:5px">${qr?`<img src="${qr}" style="width:100%;height:100%">`:`<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#a5502f;font-size:19px;text-align:center;line-height:1.3;font-weight:700">扫码<br>测同款</div>`}</div>
+    </div>`;
+  document.body.appendChild(el);
+  return el;
+}
+
+// 图2:综合报告①-⑥(含金量·磁排海报)
+function buildReportCard(cls,cols,img,S,faceCv,annCanvas,swapImgs){
+  const qr=makeQR(300);
+  const warmV=Math.min(95,Math.max(50,50+cls.warmth)),lightV=Math.round(cls.sv*100),contV=Math.min(90,Math.round(cls.contrast*100)+30),pureV=Math.min(92,Math.round(rgb2hsv(cols.skin)[1]*100)+30);
+  const bar=(lab,rt,v)=>`<div style="margin-bottom:13px"><div style="display:flex;justify-content:space-between;font-size:19px;color:#6a4f38;margin-bottom:5px"><span>${lab}</span><span style="color:#a5502f;font-weight:700">${rt}</span></div><div style="height:12px;border-radius:7px;background:#eaddc6;position:relative"><i style="position:absolute;top:-4px;left:${v}%;width:20px;height:20px;border-radius:50%;background:#a5502f"></i></div></div>`;
+  const sw=(arr,g)=>arr.map(([n,c])=>`<div style="text-align:center"><div style="width:50px;height:50px;border-radius:10px;background:${c};border:2px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.12);${g?'filter:grayscale(.12)':''}"></div><div style="font-size:14px;margin-top:5px;color:#6a4f38">${n}</div></div>`).join("");
+  const recolor=(arr,ok)=>arr.map(([n,c])=>{const src=swapImgs&&swapImgs[c];const im=src?`<img src="${src}" style="width:100%;border-radius:8px;display:block">`:`<div style="width:100%;height:150px;background:${c};border-radius:8px"></div>`;return `<div style="flex:1;text-align:center">${im}<div style="font-size:17px;margin-top:6px;color:#5a3a1f;font-weight:600;border-top:3px solid ${c};padding-top:4px;display:inline-block">${ok?'✓':'✕'} ${n}</div></div>`;}).join("");
+  const mk=(n,arr)=>`<div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:50px;font-size:18px;color:#6a4f38;font-weight:600">${n}</div>${arr.map(([nm,c])=>`<div style="display:flex;align-items:center;gap:5px"><div style="width:28px;height:28px;border-radius:50%;background:${c};border:2px solid #fff"></div><span style="font-size:16px;color:#7a6a52">${nm}</span></div>`).join("")}</div>`;
+  const el=document.createElement("div");
+  el.style.cssText="position:fixed;left:-9999px;top:0;width:1080px;box-sizing:border-box;padding:44px;font-family:'PingFang SC',sans-serif;background:#f3ece0;color:#3a332a";
+  el.innerHTML=`
+    <div style="text-align:center;margin-bottom:8px"><div style="font-size:46px;font-weight:800;letter-spacing:4px;color:#3a2f26">个人色彩分析</div><div style="font-family:Georgia,serif;font-style:italic;color:#a08a6a;font-size:20px;letter-spacing:3px">PERSONAL COLOR ANALYSIS</div></div>
+    <div style="display:flex;gap:20px;background:#fffdf7;border-radius:16px;padding:22px;margin-top:16px">
+      <img src="${img.src}" style="width:250px;height:320px;object-fit:cover;border-radius:14px">
+      <div style="flex:1">
+        <div style="font-size:21px;color:#8a4b28;font-weight:700">① 最适合你的色彩季型</div>
+        <div style="font-size:52px;font-weight:800;color:#8a4b28;margin:6px 0">${S.zh} <span style="font-family:Georgia,serif;font-style:italic;font-size:30px;color:#a5502f">${S.en}</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">${S.tags.map(t=>`<span style="border:2px solid #a5502f55;color:#a5502f;border-radius:20px;padding:5px 15px;font-size:17px;font-weight:600">${t}</span>`).join("")}</div>
+        ${bar('冷 ← 冷暖 → 暖',cls.warm?'偏暖':'偏冷',warmV)}${bar('深 ← 明度 → 浅',cls.light?'偏浅':'中低',Math.min(92,lightV))}${bar('柔 ← 纯度 → 艳','中',pureV)}${bar('低 ← 对比 → 高',cls.contrast>0.42?'高':'中',contV)}
+      </div>
+    </div>
+    <div style="background:#fffdf7;border-radius:16px;padding:22px;margin-top:14px">
+      <div style="font-size:21px;color:#8a4b28;font-weight:700;margin-bottom:14px">② 肤发瞳 + 五官分析</div>
+      <div style="display:flex;gap:18px;align-items:center">
+        <img src="${annCanvas.toDataURL('image/jpeg',0.9)}" style="width:210px;border-radius:12px">
+        <div style="flex:1;display:flex;gap:12px">${[['肤色',cols.skin],['发色',cols.hair],['瞳色',cols.eye],['唇色',cols.lipC]].map(([n,c])=>`<div style="flex:1;text-align:center"><div style="width:58px;height:58px;border-radius:12px;margin:0 auto;background:${hex(c)};border:3px solid #fff;box-shadow:0 3px 8px rgba(0,0,0,.14)"></div><div style="font-size:17px;margin-top:7px;color:#5a3a1f;font-weight:600">${n}</div><div style="font-size:13px;color:#aa9">${hex(c)}</div></div>`).join('')}</div>
+      </div>
+    </div>
+    <div style="background:#fffdf7;border-radius:16px;padding:22px;margin-top:14px">
+      <div style="font-size:21px;color:#8a4b28;font-weight:700">③ 上身颜色实测对比 <span style="font-size:14px;color:#b0a080;font-weight:500">同一个你·真实换色</span></div>
+      <div style="font-size:16px;color:#2f7a4a;font-weight:700;margin:10px 0 8px">✓ 推荐色(显气色·提亮)</div>
+      <div style="display:flex;gap:12px">${recolor(S.swap,true)}</div>
+      <div style="font-size:16px;color:#a5502f;font-weight:700;margin:14px 0 8px">✕ 避免色(显暗沉·疲惫)</div>
+      <div style="display:flex;gap:12px">${recolor(S.swapA,false)}</div>
+    </div>
+    <div style="display:flex;gap:14px;margin-top:14px">
+      <div style="flex:1;background:#fffdf7;border-radius:16px;padding:20px"><div style="font-size:20px;color:#2f7a4a;font-weight:800;margin-bottom:14px">④ 推荐色盘</div><div style="display:flex;flex-wrap:wrap;gap:12px">${sw(S.rec.slice(0,10))}</div></div>
+      <div style="flex:0 0 320px;background:#fffdf7;border-radius:16px;padding:20px"><div style="font-size:20px;color:#a5502f;font-weight:800;margin-bottom:14px">避免色盘</div><div style="display:flex;flex-wrap:wrap;gap:12px">${sw(S.avo,1)}</div></div>
+    </div>
+    <div style="background:#fffdf7;border-radius:16px;padding:20px;margin-top:14px"><div style="font-size:20px;color:#8a4b28;font-weight:800;margin-bottom:12px">⑤ 推荐妆容色号</div>${mk('口红',S.lips)}${mk('眼影',S.eye)}${mk('腮红',S.blush)}</div>
+    <div style="background:#8a4b28;color:#fbeede;border-radius:16px;padding:20px 24px;margin-top:14px;font-size:22px;line-height:1.6"><b style="color:#ffd9a0">⑥ 总结　</b>${S.sum}</div>
+    <div style="display:flex;justify-content:center;align-items:center;gap:18px;margin-top:18px;padding-top:16px;border-top:2px solid #e0cfa8">
+      <div style="text-align:right"><div style="font-size:24px;font-weight:800;color:#5a3a1f">◎ 拍一张脸 · 30秒测你的同款</div><div style="font-size:17px;color:#9a8a70;margin-top:4px">彩镜 · 想测几次测几次 · 不挑光不挑妆</div></div>
+      ${qr?`<img src="${qr}" style="width:100px;height:100px;border:2px solid #a5502f44;border-radius:10px">`:``}
+    </div>`;
+  document.body.appendChild(el);return el;
+}
+
+// 一键存图(紧凑3:4卡)
+$("savebtn").addEventListener("click",async()=>{
+  track('save_card',{});
+  const btn=$("savebtn");btn.textContent="生成中…";
+  const items=[["四季扇形",SHARE]].filter(t=>t[1]);
+  if(!items.length)items.push(["报告",$("rwrap")]);
+  try{
+    for(const [name,el] of items){
+      const canvas=await html2canvas(el,{backgroundColor:"#f3ece0",scale:2,useCORS:true,logging:false,width:el.offsetWidth||1080,height:el.offsetHeight});
+      const a=document.createElement("a");a.href=canvas.toDataURL("image/png");a.download=`彩镜-${name}.png`;a.click();
+      await new Promise(r=>setTimeout(r,700));
+    }
+  }catch(e){alert("保存失败,可长按卡片截图保存~");}
+  btn.textContent="⬇ 保存两张卡去晒";
+});
+</script>
+</body>
+</html>
