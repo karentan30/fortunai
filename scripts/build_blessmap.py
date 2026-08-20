@@ -30,6 +30,14 @@ for name,sub,lat,lon,ax,ay,al in REG:
     tx = "translate(0,-50%)" if al=="left" else "translate(-100%,-50%)"
     labels+=(f'<div class="lab" style="left:{ax}%;top:{ay}%;transform:{tx};text-align:{al}">'
              f'<div class="ln">{name}</div><div class="ls">{sub}</div></div>')
+# 大洲分色（按 ISO 国家码·参考旧彩色图：北美绿/南美橄榄/欧亚北蓝/非洲中东印澳金）
+GREEN="#3a6b48";OLIVE="#6f6a34";BLUE="#35536e";GOLD="#7a6532"
+CONT={
+ GREEN:"us ca mx gl gt bz hn sv ni cr pa cu do ht jm bs pr tt".split(),
+ OLIVE:"br ar cl pe co ve ec bo py uy gy sr gf fk".split(),
+ BLUE:"gb ie fr de it es pt nl be lu ch at pl cz sk hu si hr ba rs me mk al bg ro md ua by ee lv lt fi se no dk is ru kz kg tj tm uz mn cn kp kr jp gr cy".split(),
+}
+colorcss="".join(f"#{c}{{fill:{col} !important}}" for col,codes in CONT.items() for c in codes)
 SKU=["Incense & Prayer $12+","Red Ribbon Blessing $9+","Eternal Lamp $28+/yr","Consecrated Charm $23+",
      "Release of Life $14+","Temple Restoration","Blessing Ritual $96+","Memorial Rite (for the departed) $124+"]
 skuhtml="".join(f'<span class="sku">{s}</span>' for s in SKU)
@@ -45,7 +53,8 @@ h1{{font-size:54px;font-weight:700;margin:6px 0 2px;background:linear-gradient(1
 .scene{{font-size:20px;color:#e8b060;margin-top:8px}}
 .mapwrap{{position:absolute;left:50%;top:176px;transform:translateX(-50%);width:1160px;height:{1160*VH/VW:.0f}px}}
 .mapwrap svg{{width:100%;height:100%}}
-.mapwrap svg path{{fill:#3a2a18 !important;stroke:#d9a34c !important;stroke-width:.4 !important;stroke-opacity:.45}}
+.mapwrap svg path{{fill:{GOLD} !important;stroke:#e8c878 !important;stroke-width:.3 !important;stroke-opacity:.3}}
+{colorcss}
 .layer{{position:absolute;inset:0}}
 .sp{{position:absolute;width:11px;height:11px;border-radius:50%;background:#ffcf7a;box-shadow:0 0 0 4px rgba(255,207,122,.25),0 0 14px 3px rgba(255,207,122,.7);transform:translate(-50%,-50%)}}
 .lab{{position:absolute;max-width:270px}}
