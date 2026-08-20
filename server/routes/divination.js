@@ -981,6 +981,79 @@ router.post('/bazi/topic', rateLimitMiddleware, async (req, res) => {
 });
 
 // ══════════════════════════════════════════
+// POST /api/session — 通用 session 制（紫微/西占…复用 /bazi/topic 同款：首个免费+其余$3.99+一键全买）
+// config 驱动·每个方法复用自己的真排盘引擎·短聚焦不飘
+// ══════════════════════════════════════════
+function buildSessionEngineBlock(method, o) {
+  var hasHour = o.birthHour !== undefined && o.birthHour !== null && o.birthHour !== '';
+  try {
+    if (method === 'ziwei') {
+      var ch = computeBaziChart({ birthYear: +o.birthYear, birthMonth: +o.birthMonth, birthDay: +o.birthDay, birthHour: hasHour ? +o.birthHour : 0, gender: o.gender || 'female', includeZiwei: true });
+      return buildZiweiFactCard(ch.ziwei, { birthYear: o.birthYear, birthMonth: o.birthMonth, birthDay: o.birthDay, birthHour: hasHour ? o.birthHour : '（时辰不详）', gender: o.gender });
+    }
+    if (method === 'astrology') {
+      var wc = computeWesternChart({ year: +o.birthYear, month: +o.birthMonth, day: +o.birthDay, hour: hasHour ? +o.birthHour : undefined, minute: 0 });
+      return buildPreciseFactCard(wc);
+    }
+  } catch (e) { console.warn('[SESSION engine ' + method + ']', e.message); }
+  return '';
+}
+const SESSION_CFG = {
+  ziwei: {
+    label: '紫微斗数',
+    persona: '你是一位真正有传承的紫微斗数命理师，从业30年、亲批命盘逾十万张。你说人话不掉书袋、极度具体（落到宫位/星曜/年份/场景），只聚焦本 session 一个主题往深里写透，不泛泛而谈、不以"略"敷衍。',
+    topics: {
+      overview: { free: true, title: '命盘总览', focus: '命宫主星与格局、命主性格天赋与软肋(用真实职场/关系场景对号入座)、命盘最突出的1-2个亮点与要留意处、今年大限一句话概览', lockTitles: [] },
+      career:   { title: '事业官禄', focus: '官禄宫主星、事业格局与最适方向、发力与升迁的关键年份、贵人在哪个方向', lockTitles: ['💼 官禄宫详批', '⏰ 事业关键年份', '🤝 贵人方向'] },
+      wealth:   { title: '财帛财运', focus: '财帛宫主星、正财偏财倾向、聚财方式、财运高峰年份与要避的坑', lockTitles: ['💰 财帛宫详批', '📈 财运高峰年份', '🚫 破财预警'] },
+      love:     { title: '夫妻姻缘', focus: '夫妻宫主星、正缘气质与相处模式、遇缘与桃花的年份、经营建议', lockTitles: ['💕 夫妻宫详批', '📅 遇缘年份', '💗 经营之道'] },
+      dayun:    { title: '大限流年', focus: '当前大限主题、近三年流年各宫走势与吉凶、关键转折年', lockTitles: ['📅 逐年流年', '⏳ 关键转折年', '🌗 大限走势'] },
+    },
+  },
+  astrology: {
+    label: '西方占星',
+    persona: '你是一位有正统功底的资深占星师，从业20年、亲解星盘逾千张。你说人话、讲"为什么"(是哪颗行星/哪个相位在起作用)，70%中文+30%英文关键术语，只聚焦本 session 一个主题写透，落到TA能对号的真实场景。全文严格采用事实卡的行星星座，禁止另算或写出与事实卡不同的星座；缺出生地时上升/宫位说"需出生地精算"绝不杜撰。',
+    topics: {
+      overview: { free: true, title: '三大支柱', focus: '太阳(核心自我)/月亮(情感需求)/上升(处世方式，若缺出生地则说明不可精算)三大支柱，各落到真实场景让TA对号入座，以及元素/模式分布揭示的底层气质', lockTitles: [] },
+      career:   { title: '事业财富', focus: '与事业财富相关的行星(太阳/土星/木星/MC若有)、最适方向、发力的过境年份', lockTitles: ['💼 事业行星详解', '📈 发力过境年份', '💰 财富倾向'] },
+      love:     { title: '爱情关系', focus: '金星/月亮/火星与第7宫(若有)、你在关系里的模式、吸引的类型、亲密课题', lockTitles: ['💕 金星火星详解', '💗 关系模式', '📅 感情过境时机'] },
+      growth:   { title: '性格天赋', focus: '水星(思维)/主要相位揭示的天赋与盲点、如何扬长避短', lockTitles: ['🧠 思维天赋', '⚡ 关键相位', '🌱 成长课题'] },
+    },
+  },
+};
+router.post('/session', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { method, topic, birthYear, birthMonth, birthDay, birthHour, gender } = req.body;
+    if (!birthYear || !birthMonth || !birthDay) return res.status(400).json({ error: '请提供出生年月日' });
+    if (Number(birthYear) > new Date().getFullYear() - 14) return res.status(400).json({ error: '仅限14岁以上用户使用' });
+    const mc = SESSION_CFG[method]; if (!mc) return res.status(400).json({ error: '未知方法' });
+    const cfg = mc.topics[topic]; if (!cfg) return res.status(400).json({ error: '未知 session' });
+
+    const engineBlock = buildSessionEngineBlock(method, req.body);
+    const full = cfg.free ? true : gateReportAccess(req, [method + '_s_' + topic, method]).full;
+
+    const system = `${mc.persona}
+【当前时间基准】今年是 ${NOW_Y} 年，所有流年/大限/过境必须以 ${NOW_Y} 年为"今年"，禁止把过去年份当今年。
+【引擎铁律】${engineBlock ? '报告开头已由后端注入精确排盘事实卡，全文星曜/宫位/行星/度数必须与之逐字一致，禁止另算或改动、禁止保留任何"等等/需修正/以数据为准"之类思考过程文字。' : '（本次排盘数据有限，仅就已知信息稳健解读，不编造具体星曜/宫位。）'}
+【真实性铁律】命主只提供了出生时间与性别，你完全不知道TA是否已婚/怀孕/创业/要办证。严禁编造TA的具体人生事件或人物剧情，严禁伪造"临床数据/XX%"，严禁荒诞仪式，择日只对TA明确说过要做的事。${FMT_LAW_ZH}`;
+    const info = `出生：${birthYear}年${birthMonth}月${birthDay}日${(birthHour !== undefined && birthHour !== null && birthHour !== '') ? birthHour + '时' : '（时辰不详）'}\n性别：${gender === 'male' ? '男' : '女'}\n${engineBlock ? '\n' + engineBlock + '\n' : ''}`;
+    let userPrompt;
+    if (full) {
+      userPrompt = `${info}\n请出具一份【${mc.label} · ${cfg.title}】专项深度解读，只写这一个主题，1000-1500字，写满写透。必须覆盖：${cfg.focus}。用朋友聊天语气、关键处加粗、多用量化(年份/评分)增强代入感。结尾一句温暖寄语。`;
+    } else {
+      userPrompt = `${info}\n这是【${mc.label} · ${cfg.title}】的【免费预览】，第一句就抓住TA、句句有代入感。仅写约350字，点出这个主题上TA最核心的一个亮点或一个要留意的坎，落到具体、制造强烈好奇，但把"具体哪年/怎么做/哪个宫位或行星在推动"留到完整版。结尾另起一行输出恰好：\n---LOCKED---\n${cfg.lockTitles.join('\n')}\n禁止展开任何锁定章节。`;
+    }
+    const result = await deepseekChat(buildReadingPrompt(system, userPrompt), { maxTokens: full ? 4096 : 1400, priority: 'deepseek' });
+    insertReading.run(method + '_topic_' + topic, JSON.stringify({ birthYear, birthMonth, birthDay, birthHour, gender, method, topic }), result, req.userId);
+    res.json({ reading: result, method, topic, title: cfg.title, tier: full ? 'full' : 'preview', locked: !full, product: cfg.free ? null : method + '_s_' + topic, price: 3.99, bundleProduct: method + '_full', bundlePrice: 11.99 });
+  } catch (err) {
+    _refundCreditOnFail(req);
+    console.error('[SESSION ERR]', err.message);
+    res.status(500).json({ error: 'AI暂时不可用，请稍后重试', detail: err.message });
+  }
+});
+
+// ══════════════════════════════════════════
 // POST /api/tarot — 塔罗占卜
 // ══════════════════════════════════════════
 router.post('/tarot', rateLimitMiddleware, async (req, res) => {

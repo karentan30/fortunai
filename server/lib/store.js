@@ -168,6 +168,9 @@ const UNLOCK_BY_CATEGORY = {
   // 八字 session：买对应单 session 或买全套 bazi_full/vip 都解锁该 session
   'bazi_s_wealth': ['bazi_s_wealth','bazi_full','bazi_vip'], 'bazi_s_love': ['bazi_s_love','bazi_full','bazi_vip'], 'bazi_s_career': ['bazi_s_career','bazi_full','bazi_vip'],
   'bazi_s_dayun': ['bazi_s_dayun','bazi_full','bazi_vip'], 'bazi_s_health': ['bazi_s_health','bazi_full','bazi_vip'], 'bazi_s_luck': ['bazi_s_luck','bazi_full','bazi_vip'],
+  // 紫微/西占 session：单买或买对应 _full 全套解锁
+  'ziwei_s_career': ['ziwei_s_career','ziwei_full'], 'ziwei_s_wealth': ['ziwei_s_wealth','ziwei_full'], 'ziwei_s_love': ['ziwei_s_love','ziwei_full'], 'ziwei_s_dayun': ['ziwei_s_dayun','ziwei_full'],
+  'astrology_s_career': ['astrology_s_career','astrology_full'], 'astrology_s_love': ['astrology_s_love','astrology_full'], 'astrology_s_growth': ['astrology_s_growth','astrology_full'],
   'hehun': ['hehun','hehun_basic','hehun_master'], '合婚': ['hehun','hehun_basic','hehun_master'], '궁합': ['hehun','hehun_basic','hehun_master'], 'hehun_kr': ['hehun','hehun_basic','hehun_master'], 'hehun_full': ['hehun','hehun_basic','hehun_master'], 'hehun_kr_full': ['hehun','hehun_basic','hehun_master'],
   'ziwei': ['ziwei','ziwei_full'], '紫微': ['ziwei','ziwei_full'], 'ziwei_full': ['ziwei','ziwei_full'],
   'shouxiang': ['shouxiang_full'], '手相': ['shouxiang_full'], 'shouxiang_full': ['shouxiang_full'],
@@ -662,10 +665,10 @@ const PRODUCTS = {
   tarot:           { name: '塔罗占卜',          amount: 390,    amountCny: 990,   desc: 'AI塔罗解读' },
   tarot_3:         { name: '塔罗三张牌阵',      amount: 900,    amountCny: 990,   desc: 'AI深度三张牌解读（过去·现在·未来）' },
   tarot_5:         { name: '塔罗五芒星牌阵',    amount: 1990,   amountCny: 1990,  desc: 'AI五芒星深度解读·五维度全析' },
-  ziwei_full:      { name: '紫微斗数深度解读',  amount: 990,    amountCny: 5900,  desc: '十二宫位+大运+流年完整批命' },
+  ziwei_full:      { name: '紫微 · 一键全解锁（session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部紫微 session：事业/财帛/夫妻/大限' },
   shouxiang_full:  { name: '手相·麻衣神相完整解读', amount: 990, amountCny: 5900, desc: '掌纹三大主线+八大丘+特殊纹+化解建议' },
   duanshi_full:    { name: '断事问卦完整解读',  amount: 2900,   amountCny: 5900,  desc: '六爻起卦·吉凶断事·行动建议' },
-  astrology_full:  { name: '西方占星深度解读',  amount: 990,    amountCny: 5900,  desc: '本命盘10行星+12宫位+主要相位+未来3年行运完整解读' },
+  astrology_full:  { name: '西占 · 一键全解锁（session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部西占 session：事业/爱情/性格天赋' },
   kyusei_full:     { name: '九星気学深度解読',  amount: 990,    amountCny: 5900,  desc: '本命星+月命星+方位择吉+未来5年宫位走势完整解读' },
   // ── 八字 session 制（0820·每个 session $3.99·首个总览免费）──
   bazi_s_wealth:   { name: '八字 · 财运专精',   amount: 399,    amountCny: 1490,  desc: '正偏财格局+发财黄金年份+适合行业' },
@@ -674,6 +677,15 @@ const PRODUCTS = {
   bazi_s_dayun:    { name: '八字 · 大运流年',   amount: 399,    amountCny: 1490,  desc: '逐步大运+近年流年吉凶' },
   bazi_s_health:   { name: '八字 · 健康养生',   amount: 399,    amountCny: 1490,  desc: '五行脏腑+先天弱项+养生方向' },
   bazi_s_luck:     { name: '八字 · 开运贵人',   amount: 399,    amountCny: 1490,  desc: '幸运颜色方位+贵人特征+化解' },
+  // 紫微 session
+  ziwei_s_career:  { name: '紫微 · 事业官禄',   amount: 399,    amountCny: 1490,  desc: '官禄宫+事业方向+关键年份+贵人' },
+  ziwei_s_wealth:  { name: '紫微 · 财帛财运',   amount: 399,    amountCny: 1490,  desc: '财帛宫+聚财方式+财运高峰年' },
+  ziwei_s_love:    { name: '紫微 · 夫妻姻缘',   amount: 399,    amountCny: 1490,  desc: '夫妻宫+正缘+遇缘年份' },
+  ziwei_s_dayun:   { name: '紫微 · 大限流年',   amount: 399,    amountCny: 1490,  desc: '当前大限+近年流年+转折年' },
+  // 西占 session
+  astrology_s_career: { name: '西占 · 事业财富', amount: 399,   amountCny: 1490,  desc: '事业行星+方向+过境年份' },
+  astrology_s_love:   { name: '西占 · 爱情关系', amount: 399,   amountCny: 1490,  desc: '金星火星+关系模式+时机' },
+  astrology_s_growth: { name: '西占 · 性格天赋', amount: 399,   amountCny: 1490,  desc: '水星+关键相位+成长课题' },
   hehun_basic:     { name: '合婚·基础版',       amount: 490,    amountCny: 990,   desc: '四柱+合婚总分+核心结论预览', amountKrw: 1900 },
   hehun:           { name: '合婚配对',          amount: 990,    amountCny: 5900,  desc: '双方八字合婚分析', amountKrw: 4900 },
   hehun_master:    { name: '合婚·大师批婚',     amount: 9900,   amountCny: 29900, desc: '完整+5年感情流年+择日+化解+命理师私语+真人连麦', amountKrw: 24900 },
