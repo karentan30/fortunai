@@ -171,6 +171,8 @@ const UNLOCK_BY_CATEGORY = {
   // 紫微/西占 session：单买或买对应 _full 全套解锁
   'ziwei_s_career': ['ziwei_s_career','ziwei_full'], 'ziwei_s_wealth': ['ziwei_s_wealth','ziwei_full'], 'ziwei_s_love': ['ziwei_s_love','ziwei_full'], 'ziwei_s_dayun': ['ziwei_s_dayun','ziwei_full'],
   'astrology_s_career': ['astrology_s_career','astrology_full'], 'astrology_s_love': ['astrology_s_love','astrology_full'], 'astrology_s_growth': ['astrology_s_growth','astrology_full'],
+  'kyusei_s_career': ['kyusei_s_career','kyusei_full'], 'kyusei_s_love': ['kyusei_s_love','kyusei_full'], 'kyusei_s_direction': ['kyusei_s_direction','kyusei_full'],
+  'hehun_s_personality': ['hehun_s_personality','hehun_full','hehun'], 'hehun_s_emotion': ['hehun_s_emotion','hehun_full','hehun'], 'hehun_s_timing': ['hehun_s_timing','hehun_full','hehun'],
   'hehun': ['hehun','hehun_basic','hehun_master'], '合婚': ['hehun','hehun_basic','hehun_master'], '궁합': ['hehun','hehun_basic','hehun_master'], 'hehun_kr': ['hehun','hehun_basic','hehun_master'], 'hehun_full': ['hehun','hehun_basic','hehun_master'], 'hehun_kr_full': ['hehun','hehun_basic','hehun_master'],
   'ziwei': ['ziwei','ziwei_full'], '紫微': ['ziwei','ziwei_full'], 'ziwei_full': ['ziwei','ziwei_full'],
   'shouxiang': ['shouxiang_full'], '手相': ['shouxiang_full'], 'shouxiang_full': ['shouxiang_full'],
@@ -669,7 +671,7 @@ const PRODUCTS = {
   shouxiang_full:  { name: '手相·麻衣神相完整解读', amount: 990, amountCny: 5900, desc: '掌纹三大主线+八大丘+特殊纹+化解建议' },
   duanshi_full:    { name: '断事问卦完整解读',  amount: 2900,   amountCny: 5900,  desc: '六爻起卦·吉凶断事·行动建议' },
   astrology_full:  { name: '西占 · 一键全解锁（session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部西占 session：事业/爱情/性格天赋' },
-  kyusei_full:     { name: '九星気学深度解読',  amount: 990,    amountCny: 5900,  desc: '本命星+月命星+方位择吉+未来5年宫位走势完整解读' },
+  kyusei_full:     { name: '九星 · 一键全解锁（session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部九星 session：事业/恋爱/方位' },
   // ── 八字 session 制（0820·每个 session $3.99·首个总览免费）──
   bazi_s_wealth:   { name: '八字 · 财运专精',   amount: 399,    amountCny: 1490,  desc: '正偏财格局+发财黄金年份+适合行业' },
   bazi_s_love:     { name: '八字 · 感情姻缘',   amount: 399,    amountCny: 1490,  desc: '夫妻宫+正缘特征+遇缘年份' },
@@ -686,10 +688,18 @@ const PRODUCTS = {
   astrology_s_career: { name: '西占 · 事业财富', amount: 399,   amountCny: 1490,  desc: '事业行星+方向+过境年份' },
   astrology_s_love:   { name: '西占 · 爱情关系', amount: 399,   amountCny: 1490,  desc: '金星火星+关系模式+时机' },
   astrology_s_growth: { name: '西占 · 性格天赋', amount: 399,   amountCny: 1490,  desc: '水星+关键相位+成长课题' },
+  // 九星 session
+  kyusei_s_career:    { name: '九星 · 事业方向', amount: 399,   amountCny: 1490,  desc: '最适行业+发力时机+合作特质' },
+  kyusei_s_love:      { name: '九星 · 恋爱人际', amount: 399,   amountCny: 1490,  desc: '恋爱模式+相性星号+人际提升' },
+  kyusei_s_direction: { name: '九星 · 方位择吉', amount: 399,   amountCny: 1490,  desc: '今年吉凶方+家居/出行方位' },
+  // 合婚 session
+  hehun_s_personality:{ name: '合婚 · 性格相处', amount: 399,   amountCny: 1490,  desc: '性格互补+摩擦雷区+相处之道' },
+  hehun_s_emotion:    { name: '合婚 · 感情经营', amount: 399,   amountCny: 1490,  desc: '感情课题+吵架模式+经营长久' },
+  hehun_s_timing:     { name: '合婚 · 婚期择吉', amount: 399,   amountCny: 1490,  desc: '适婚年份+择吉参考' },
   hehun_basic:     { name: '合婚·基础版',       amount: 490,    amountCny: 990,   desc: '四柱+合婚总分+核心结论预览', amountKrw: 1900 },
   hehun:           { name: '合婚配对',          amount: 990,    amountCny: 5900,  desc: '双方八字合婚分析', amountKrw: 4900 },
   hehun_master:    { name: '合婚·大师批婚',     amount: 9900,   amountCny: 29900, desc: '完整+5年感情流年+择日+化解+命理师私语+真人连麦', amountKrw: 24900 },
-  hehun_full:      { name: 'Compatibility Reading', amount: 2900, amountCny: 5900, desc: 'Full BaZi compatibility analysis', amountKrw: 19900 },
+  hehun_full:      { name: '合婚 · 一键全解锁（session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部合婚 session：性格/感情/婚期', amountKrw: 15900 },
   hehun_kr_full:   { name: '궁합 완전 분석',    amount: 1500,   amountCny: 3990,  desc: '궁합 완전 분석 보고서', amountKrw: 19900 },
   member_monthly:  { name: '月度会员',          amount: 1290,   amountCny: 3900,  desc: 'Rún每日30句·每月1份完整报告·其他报告5折·每日运势', amountKrw: 9900 },
   member_yearly:   { name: '年度会员',          amount: 9900,   amountCny: 29900, desc: '无限畅聊+全报告无限解锁' },
