@@ -2956,7 +2956,7 @@ ${fullChartBlock}
 6. 📅 今年木星/土星关键过境
 7. 💌 占星师寄语（100字）
 
-结尾：想看完整版？$49完整版包含：10颗行星精确解析、主要相位详解、未来3年逐年行运与月相日历。`;
+结尾：想看完整版？$9.9完整版包含：10颗行星精确解析、主要相位详解、未来3年逐年行运与月相日历。`;
     } else {
       astroMaxTokens = 16384;
       astroUserPrompt = `出生：${birthYear}/${birthMonth}/${birthDay} ${birthHour !== undefined ? birthHour + ':' + (birthMinute || '00') : '时间不详'}
@@ -5390,8 +5390,8 @@ router.post('/kyusei', rateLimitMiddleware, async (req, res) => {
       // 标准档 $9.9：全9维，每维度约250字，总计约2500字
       kyuMaxTokens = 6000;
       userPrompt = isEn
-        ? `${starBlock}\nSeeker's question: ${question || 'What is my Nine Star Ki destiny telling me?'}\nBorn: ${birthYear}-${String(birthMonth).padStart(2,'0')}-${String(birthDay).padStart(2,'0')}\n\nPlease provide a STANDARD Nine Star Ki reading (~2500 words), all 9 sections:\n\n1. ⭐ Star Essence — ${star.nameEn} core nature, worldview, shadow side (500 words)\n2. 💼 Career & Life Path — best industries, optimal work style, career timing (300 words)\n3. ❤️ Love & Relationships — love style, best compatible stars, timing windows (300 words)\n4. 💰 Wealth & Resources — wealth accumulation style, best financial years (250 words)\n5. 🌿 Health & Vitality — Five Element body constitution, wellness direction (200 words)\n6. 📅 This Year ${currentYear} — current palace position, key themes, auspicious months (300 words)\n7. 🗓️ Next 3 Years Overview — each year: palace + theme + one key action (200 words)\n8. 🔑 3 Lifetime Keys — deepest wisdom of this star (250 words)\n9. 🌸 Closing (70 words, poetic)\n\nEnd with: For 5-year detailed forecast, auspicious direction charts and compatibility analysis, see the full $49 report.`
-        : `${starBlock}\n问卦者的问题：${question || '九星気学告诉我的命运是什么？'}\n出生：${birthYear}年${birthMonth}月${birthDay}日\n\n请出具【标准版九星気学解读报告】，总字数约2500字，按以下9个维度写完：\n\n1. ⭐ 本命星精髓（${star.name}的核心能量、世界观、阴面，500字）\n2. 💼 事业与人生道路（最适行业·工作风格·职业时机，300字）\n3. ❤️ 恋爱与人际关系（恋爱模式·最相性星号·遇缘时机，300字）\n4. 💰 财运与资源（聚财方式·最强财运年份，250字）\n5. 🌿 健康与活力（五行体质弱项·养生方向，不点病名，200字）\n6. 📅 今年运势（${currentYear}年本命星宫位·主题·吉月，300字）\n7. 🗓️ 未来3年方位走势（每年：宫位+主题+最宜做一件大事，200字）\n8. 🔑 三大人生密钥（本命星最深智慧，250字）\n9. 🌸 结语（70字，诗意收尾）\n\n结尾推荐：$49完整版包含：未来5年逐年宫位详批·方位择吉详解（家居/出行/工位）·相性兼容性分析，约8000字。`;
+        ? `${starBlock}\nSeeker's question: ${question || 'What is my Nine Star Ki destiny telling me?'}\nBorn: ${birthYear}-${String(birthMonth).padStart(2,'0')}-${String(birthDay).padStart(2,'0')}\n\nPlease provide a STANDARD Nine Star Ki reading (~2500 words), all 9 sections:\n\n1. ⭐ Star Essence — ${star.nameEn} core nature, worldview, shadow side (500 words)\n2. 💼 Career & Life Path — best industries, optimal work style, career timing (300 words)\n3. ❤️ Love & Relationships — love style, best compatible stars, timing windows (300 words)\n4. 💰 Wealth & Resources — wealth accumulation style, best financial years (250 words)\n5. 🌿 Health & Vitality — Five Element body constitution, wellness direction (200 words)\n6. 📅 This Year ${currentYear} — current palace position, key themes, auspicious months (300 words)\n7. 🗓️ Next 3 Years Overview — each year: palace + theme + one key action (200 words)\n8. 🔑 3 Lifetime Keys — deepest wisdom of this star (250 words)\n9. 🌸 Closing (70 words, poetic)\n\nEnd with: For 5-year detailed forecast, auspicious direction charts and compatibility analysis, see the full $9.9 report.`
+        : `${starBlock}\n问卦者的问题：${question || '九星気学告诉我的命运是什么？'}\n出生：${birthYear}年${birthMonth}月${birthDay}日\n\n请出具【标准版九星気学解读报告】，总字数约2500字，按以下9个维度写完：\n\n1. ⭐ 本命星精髓（${star.name}的核心能量、世界观、阴面，500字）\n2. 💼 事业与人生道路（最适行业·工作风格·职业时机，300字）\n3. ❤️ 恋爱与人际关系（恋爱模式·最相性星号·遇缘时机，300字）\n4. 💰 财运与资源（聚财方式·最强财运年份，250字）\n5. 🌿 健康与活力（五行体质弱项·养生方向，不点病名，200字）\n6. 📅 今年运势（${currentYear}年本命星宫位·主题·吉月，300字）\n7. 🗓️ 未来3年方位走势（每年：宫位+主题+最宜做一件大事，200字）\n8. 🔑 三大人生密钥（本命星最深智慧，250字）\n9. 🌸 结语（70字，诗意收尾）\n\n结尾推荐：$9.9完整版包含：未来5年逐年宫位详批·方位择吉详解（家居/出行/工位）·相性兼容性分析，约8000字。`;
     } else {
       // 完整档 $49：全维度，约6500字
       kyuMaxTokens = 16384;

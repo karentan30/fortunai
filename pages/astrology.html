@@ -835,7 +835,15 @@ function showResult(data) {
 }
 
 function unlockFullAstro(){
-  showError('付费功能即将上线，敬请期待');
+  var btns = document.querySelectorAll('.al-btn');
+  btns.forEach(function(b){ b.disabled = true; b.textContent = '跳转中…'; });
+  fetch('/api/create-checkout',{
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ product:'astrology_full', token: localStorage.getItem('sy_token')||'' })
+  }).then(function(r){return r.json();}).then(function(data){
+    if(data.url){ window.location.href = data.url; }
+    else { showError('跳转失败，请重试'); btns.forEach(function(b){ b.disabled=false; b.textContent='立即解锁完整版 →'; }); }
+  }).catch(function(){ showError('网络错误，请重试'); btns.forEach(function(b){ b.disabled=false; b.textContent='立即解锁完整版 →'; }); });
 }
 
 function injectAstroDisclaimer(){
