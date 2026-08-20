@@ -410,6 +410,8 @@ const CONFIGS={
   hehun_full:{icon:'💕',title:'Compatibility Report Unlocked',sub:'Payment complete · Your reading is ready',benefits:['Full BaZi compatibility analysis','Best marriage timing','Five Elements harmony'],btn:'View Report',url:'/pages/hehun.html?unlocked=1'},
   hehun_kr_full:{icon:'💕',title:'궁합 리포트 잠금 해제',sub:'결제 완료 · 궁합 분석이 열렸어요',benefits:['오행 상생상극 완전 분석','최적 결혼 시기','궁합 개선 가이드'],btn:'리포트 확인하기',url:'/pages/saju-KR.html?unlocked=1&type=hehun'},
   tarot:{icon:'🃏',title:'塔罗已揭示',sub:'牌面已开 · 天意已显',benefits:['AI深度塔罗解读','当下处境与建议','行动指引'],btn:'查看塔罗',url:'/pages/tarot.html?unlocked=1'},
+  astrology_full:{icon:'⭐',title:'星盘已解锁',sub:'完整西方占星 · 即刻查阅',benefits:['10行星落座 + 12宫位深度解读','主要相位详解','未来3年行运时间轴'],btn:'查看完整星盘',url:'/pages/astrology.html?unlocked=1'},
+  kyusei_full:{icon:'🌸',title:'九星已解锁',sub:'完整九星気学 · 即刻查阅',benefits:['本命星 + 月命星深析','方位择吉详解','未来5年宫位走势'],btn:'查看完整九星',url:'/pages/kyusei.html?unlocked=1'},
   member_monthly:{icon:'✨',title:'月度会员已激活',sub:'月度畅享 · 全功能开放',benefits:['全部AI占算无限次','八字/合婚/塔罗/紫微全通','每日天机会员专属版'],btn:'开始使用',url:'/pages/bazi.html?member=1'},
   member_yearly:{icon:'🌟',title:'年度会员已激活',sub:'全年畅享 · 至尊体验',benefits:['全部AI占算无限次 · 365天','比月费省41%','合婚配对报告 + 水晶挂件权益'],btn:'开始使用',url:'/pages/bazi.html?member=1'},
   member_quarterly:{icon:'✨',title:'季度会员已激活',sub:'三月畅享 · 全功能开放',benefits:['全部AI占算无限次 · 3个月','八字/合婚/塔罗全通','每日天机专属版'],btn:'开始使用',url:'/pages/bazi.html?member=1'},
