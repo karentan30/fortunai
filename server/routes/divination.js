@@ -894,6 +894,64 @@ ${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及�
 });
 
 // ══════════════════════════════════════════
+// POST /api/bazi/topic — 八字专项切片（复用同一份真排盘数据，只换解读焦点）
+// 感知"内容好全"，成本≈0：不重排，只对 buildBaziBlock 的真数据换 prompt 角度。
+// ══════════════════════════════════════════
+const BAZI_TOPIC_CFG = {
+  wealth: {
+    key: '财运', emoji: '💰', title: '财运专精',
+    focus: '正财与偏财格局、财库(辰戌丑未)开合、3个发财黄金年份(精确到年·并说明大运流年配合原因)、最适合求财的5个行业方向、投资禁忌(含五行原因)、未来10年财运曲线',
+    lockTitles: ['💰 十年财运曲线逐年批', '🏦 财库开合与偏财爆发时机', '🚫 破财预警年与投资禁忌'],
+  },
+  love: {
+    key: '感情', emoji: '💕', title: '感情姻缘专精',
+    focus: '夫妻宫(日支)详析、正缘的气质/性格/职业圈层/相遇场景(只谈气质相处不硬测长相)、桃花类型、2-3个遇缘最佳年份、婚姻经营与化解建议',
+    lockTitles: ['💕 正缘画像详解(气质·性格·圈层)', '📅 遇缘黄金年份逐年', '💔 感情波动年与化解之道'],
+  },
+  career: {
+    key: '事业', emoji: '💼', title: '事业专精',
+    focus: '官杀印星格局、职业路径判断、升职/跳槽/创业最佳时机(精确到年月)、贵人特征与出现时间、最适合的3-5个行业、未来10年事业走势',
+    lockTitles: ['💼 十年事业走势逐年', '⏰ 升职跳槽创业最佳时机', '🤝 贵人特征与出现时间'],
+  },
+};
+
+router.post('/bazi/topic', rateLimitMiddleware, async (req, res) => {
+  try {
+    const { birthYear, birthMonth, birthDay, birthHour, gender, topic } = req.body;
+    if (!birthYear || !birthMonth || !birthDay) return res.status(400).json({ error: '请提供出生年月日' });
+    if (Number(birthYear) > new Date().getFullYear() - 14) return res.status(400).json({ error: '仅限14岁以上用户使用' });
+    const cfg = BAZI_TOPIC_CFG[topic];
+    if (!cfg) return res.status(400).json({ error: '未知的专项' });
+
+    const _hasHour = birthHour !== undefined && birthHour !== null && birthHour !== '';
+    const baziBlock = _hasHour ? buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour, gender }) : '';
+    const full = gateReportAccess(req, ['bazi', '八字']).full;
+
+    const system = `你是一位子平命理正宗传承者，师承盲派铁口直断与《三命通会》学术双脉，从业38年、亲批命盘逾十万张。你说人话不掉书袋，三分古典七分白话，极度具体——给到具体年份/月份/数字/颜色/行业/方位，让人当天就能落地。这一份是【${cfg.title}】专项深解，只聚焦${cfg.key}这一个领域，往深里写透，不泛泛而谈、不以"略"或省略号代替。
+【当前时间基准】今年是 ${NOW_Y} 年，所有流年/大运必须以 ${NOW_Y} 年为"今年"，禁止把过去年份当今年。
+【五行生克铁律】木生火·火生土·土生金·金生水·水生木；"壬水生乙木"=水生木，绝不能写反方向。${FMT_LAW_ZH}`;
+
+    const info = `出生：${birthYear}年${birthMonth}月${birthDay}日${_hasHour ? birthHour + '时' : '（时辰不详）'}\n性别：${gender === 'male' ? '男' : '女'}\n${baziBlock ? '\n' + baziBlock + '\n⚠️ 全文的四柱/十神/藏干/格局/旺衰/用神/大运必须严格采用上方【精确排盘结果】，不得自行推算或改动。\n' : ''}`;
+
+    let userPrompt;
+    if (full) {
+      userPrompt = `${info}\n请出具一份【${cfg.title}】专项深度解读，只写${cfg.key}这一个领域，1200-1600字，写满写透。必须覆盖：${cfg.focus}。用朋友聊天的语气、重点加粗、多用量化(年份/百分比/评分)增强说服力。结尾一句温暖的${cfg.key}寄语。`;
+    } else {
+      userPrompt = `${info}\n这是一份【${cfg.title}】的【免费预览】，要像让人停不下来的开头——第一句就抓住TA、句句有代入感。仅写约350字：点出TA${cfg.key}上最核心的一个天赋或一个要留意的坎，落到具体、制造强烈好奇，但把"具体哪年、怎么做、哪个宫位在推动"留到完整版。结尾另起一行输出恰好：\n---LOCKED---\n${cfg.lockTitles.join('\n')}\n禁止展开任何锁定章节内容。`;
+    }
+
+    const messages = buildReadingPrompt(system, userPrompt);
+    const result = await deepseekChat(messages, { maxTokens: full ? 4096 : 1400, priority: 'deepseek' });
+    insertReading.run('bazi_topic_' + topic, JSON.stringify({ birthYear, birthMonth, birthDay, birthHour, gender, topic }), result, req.userId);
+    res.json({ reading: result, topic, title: cfg.title, tier: full ? 'full' : 'preview', locked: !full });
+  } catch (err) {
+    _refundCreditOnFail(req);
+    console.error('[BAZI TOPIC ERR]', err.message);
+    res.status(500).json({ error: 'AI暂时不可用，请稍后重试', detail: err.message });
+  }
+});
+
+// ══════════════════════════════════════════
 // POST /api/tarot — 塔罗占卜
 // ══════════════════════════════════════════
 router.post('/tarot', rateLimitMiddleware, async (req, res) => {
