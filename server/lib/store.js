@@ -165,6 +165,9 @@ const getReadingsByUser = {
 // 🔴 P1-1 付费墙修复: 精确白名单，bazi_trial 不解锁完整报告
 const UNLOCK_BY_CATEGORY = {
   'bazi': ['bazi_full','bazi_vip'], '八字': ['bazi_full','bazi_vip'], '사주': ['bazi_full','bazi_vip'],
+  // 八字 session：买对应单 session 或买全套 bazi_full/vip 都解锁该 session
+  'bazi_s_wealth': ['bazi_s_wealth','bazi_full','bazi_vip'], 'bazi_s_love': ['bazi_s_love','bazi_full','bazi_vip'], 'bazi_s_career': ['bazi_s_career','bazi_full','bazi_vip'],
+  'bazi_s_dayun': ['bazi_s_dayun','bazi_full','bazi_vip'], 'bazi_s_health': ['bazi_s_health','bazi_full','bazi_vip'], 'bazi_s_luck': ['bazi_s_luck','bazi_full','bazi_vip'],
   'hehun': ['hehun','hehun_basic','hehun_master'], '合婚': ['hehun','hehun_basic','hehun_master'], '궁합': ['hehun','hehun_basic','hehun_master'], 'hehun_kr': ['hehun','hehun_basic','hehun_master'], 'hehun_full': ['hehun','hehun_basic','hehun_master'], 'hehun_kr_full': ['hehun','hehun_basic','hehun_master'],
   'ziwei': ['ziwei','ziwei_full'], '紫微': ['ziwei','ziwei_full'], 'ziwei_full': ['ziwei','ziwei_full'],
   'shouxiang': ['shouxiang_full'], '手相': ['shouxiang_full'], 'shouxiang_full': ['shouxiang_full'],
@@ -652,7 +655,7 @@ function updateStreak(userId) {
 // ── Product prices ──
 const PRODUCTS = {
   bazi_basic:      { name: '基础命盘',         amount: 990,    amountCny: 1990,  desc: '日主+五行+今年运势' },
-  bazi_full:       { name: '完整命盘',          amount: 2900,   amountCny: 5900,  desc: '六维+十年大运+流月', amountKrw: 9900 },
+  bazi_full:       { name: '八字 · 一键全解锁（6 session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部 session：财运/感情/事业/大运/健康/开运，约六折省一半', amountKrw: 15900 },
   bazi_vip:        { name: '深度批命',          amount: 5900,   amountCny: 14900, desc: '八字×紫微双体系交叉印证旗舰', amountKrw: 19900 },
   saju_kr_full:    { name: '사주팔자 완전 분석', amount: 750,    amountKrw: 9900, desc: '사주 완전 분석 보고서 (천간지지 + 대운 + 유년)' },
   daily_sub:       { name: '每日天机订阅',      amount: 490,    amountCny: 1990,  desc: '每日天机·单功能订阅' },
@@ -664,6 +667,13 @@ const PRODUCTS = {
   duanshi_full:    { name: '断事问卦完整解读',  amount: 2900,   amountCny: 5900,  desc: '六爻起卦·吉凶断事·行动建议' },
   astrology_full:  { name: '西方占星深度解读',  amount: 990,    amountCny: 5900,  desc: '本命盘10行星+12宫位+主要相位+未来3年行运完整解读' },
   kyusei_full:     { name: '九星気学深度解読',  amount: 990,    amountCny: 5900,  desc: '本命星+月命星+方位择吉+未来5年宫位走势完整解读' },
+  // ── 八字 session 制（0820·每个 session $3.99·首个总览免费）──
+  bazi_s_wealth:   { name: '八字 · 财运专精',   amount: 399,    amountCny: 1490,  desc: '正偏财格局+发财黄金年份+适合行业' },
+  bazi_s_love:     { name: '八字 · 感情姻缘',   amount: 399,    amountCny: 1490,  desc: '夫妻宫+正缘特征+遇缘年份' },
+  bazi_s_career:   { name: '八字 · 事业专精',   amount: 399,    amountCny: 1490,  desc: '官杀印星+升职时机+贵人特征' },
+  bazi_s_dayun:    { name: '八字 · 大运流年',   amount: 399,    amountCny: 1490,  desc: '逐步大运+近年流年吉凶' },
+  bazi_s_health:   { name: '八字 · 健康养生',   amount: 399,    amountCny: 1490,  desc: '五行脏腑+先天弱项+养生方向' },
+  bazi_s_luck:     { name: '八字 · 开运贵人',   amount: 399,    amountCny: 1490,  desc: '幸运颜色方位+贵人特征+化解' },
   hehun_basic:     { name: '合婚·基础版',       amount: 490,    amountCny: 990,   desc: '四柱+合婚总分+核心结论预览', amountKrw: 1900 },
   hehun:           { name: '合婚配对',          amount: 990,    amountCny: 5900,  desc: '双方八字合婚分析', amountKrw: 4900 },
   hehun_master:    { name: '合婚·大师批婚',     amount: 9900,   amountCny: 29900, desc: '完整+5年感情流年+择日+化解+命理师私语+真人连麦', amountKrw: 24900 },
