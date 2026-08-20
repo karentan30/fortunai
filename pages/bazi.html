@@ -926,7 +926,7 @@ function generateReport(btn) {
     streamChapterMeta(lastBaziInput, btn, null);
     return;
   }
-  streamBaziReport(lastBaziInput, currentMode, btn);
+  startBaziSessions(lastBaziInput, btn);
 }
 
 // 流式生成：边生成边显示，首字出现即切换到报告页
@@ -1535,28 +1535,74 @@ function showReport(aiText, contextId, tier, locked) {
 }
 
 // ── 八字专项切片 tab（同一份真排盘换解读焦点，感知"内容好全"·成本≈0）──
+// ── 八字 session 制：首个总览免费 + 其余每个 $3.99 + 一键全买 $11.99（五折）──
 var BAZI_TOPICS = [
   { topic: 'wealth', emoji: '💰', label: '财运专精' },
   { topic: 'love',   emoji: '💕', label: '感情姻缘' },
-  { topic: 'career', emoji: '💼', label: '事业专精' }
+  { topic: 'career', emoji: '💼', label: '事业专精' },
+  { topic: 'dayun',  emoji: '📅', label: '大运流年' },
+  { topic: 'health', emoji: '🌿', label: '健康养生' },
+  { topic: 'luck',   emoji: '🎯', label: '开运贵人' }
 ];
-function renderBaziTopicTabs(isLocked) {
+function bzEsc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,'<b style="color:#f5e98a">$1</b>'); }
+// session 制主入口：不再出巨型报告，改为「命主头 + 免费总览 + 6 session + 一键全买」
+function startBaziSessions(input, btn){
+  try { isStreaming = false; } catch(e){}
+  var ls=document.getElementById('loadingScreen'); if(ls) ls.classList.remove('show');
+  var is=document.getElementById('inputScreen'); if(is) is.style.display='none';
+  var rs=document.getElementById('reportScreen'); if(!rs) return;
+  rs.style.display='block'; rs.classList.add('show');
+  var g=(input&&input.gender==='male')?'男':'女';
+  var info=input?(input.year+'.'+input.month+'.'+input.day+(input.hour!=null&&input.hour!==''?' '+input.hour+'时':'（时辰不详）')+' · '+g):'';
+  rs.innerHTML='<div style="text-align:center;padding:26px 0 6px">'+
+    '<div style="font-size:33px;font-weight:800;letter-spacing:6px;background:linear-gradient(180deg,#fff3cf,#e0be6e);-webkit-background-clip:text;background-clip:text;color:transparent">八字命盤</div>'+
+    '<div style="font-size:13px;color:#c8b98a;margin-top:8px;letter-spacing:2px">'+info+'</div></div>';
+  if(btn){ btn.disabled=false; if(btn._label) btn.textContent=btn._label; }
+  try { localStorage.setItem('sy_last_bazi', JSON.stringify(input)); } catch(e){}
+  renderBaziTopicTabs();
+  var sb=document.getElementById('shareBar'); if(sb) sb.classList.add('show');
+}
+function renderBaziTopicTabs() {
   if (!lastBaziInput || !lastBaziInput.year) return;
   var rs = document.getElementById('reportScreen'); if (!rs) return;
   if (document.getElementById('baziTopicTabs')) return;
   var grid = BAZI_TOPICS.map(function(t){
     return '<button class="bz-topic-btn" data-topic="'+t.topic+'" onclick="openBaziTopic(this)" '+
       'style="flex:1;min-width:96px;background:rgba(107,63,160,0.12);border:1px solid rgba(155,111,196,0.35);'+
-      'border-radius:12px;padding:14px 8px;color:#e8e0ff;font-size:13px;cursor:pointer;transition:.2s;text-align:center">'+
-      '<div style="font-size:22px;margin-bottom:4px">'+t.emoji+'</div>'+t.label+'</button>';
+      'border-radius:12px;padding:14px 8px;color:#e8e0ff;font-size:13px;cursor:pointer;transition:.2s;text-align:center;position:relative">'+
+      '<div style="font-size:22px;margin-bottom:4px">'+t.emoji+'</div>'+t.label+
+      '<div style="font-size:11px;color:rgba(245,233,138,0.7);margin-top:3px">$3.99</div></button>';
   }).join('');
   var wrap = document.createElement('div');
   wrap.id = 'baziTopicTabs';
   wrap.style.cssText = 'margin:28px auto 8px;max-width:720px;padding:0 4px';
-  wrap.innerHTML = '<div style="font-size:13px;color:rgba(74,159,212,0.7);letter-spacing:.12em;margin-bottom:12px;text-align:center">— 专项精解 · 点开深挖某一面 —</div>'+
+  wrap.innerHTML =
+    '<div style="font-size:13px;color:rgba(74,159,212,0.7);letter-spacing:.1em;margin-bottom:6px;text-align:center">— 命理 Session · 命格总览免费，其余每个 $3.99 —</div>'+
+    '<div id="baziOverviewPanel" style="margin:12px 0 18px"></div>'+
     '<div style="display:flex;gap:10px;flex-wrap:wrap">'+grid+'</div>'+
-    '<div id="baziTopicPanel" style="margin-top:16px"></div>';
+    '<div id="baziTopicPanel" style="margin-top:16px"></div>'+
+    '<div style="text-align:center;margin-top:18px;padding:16px;background:rgba(107,63,160,0.1);border:1px solid rgba(245,233,138,0.28);border-radius:14px">'+
+      '<div style="color:#f5e98a;font-size:14px;margin-bottom:4px">✨ 一键全买 6 个 Session</div>'+
+      '<div style="color:rgba(232,224,255,0.6);font-size:12px;margin-bottom:10px">单买共 $23.94，一键 <b style="color:#f5e98a">$11.99</b>（五折）</div>'+
+      '<button onclick="sessionCheckout(\'bazi_full\',this)" style="background:linear-gradient(135deg,#f0d98a,#c8a24a);border:none;border-radius:10px;padding:13px 34px;color:#2a1e08;font-size:15px;font-weight:700;cursor:pointer">一键全解锁 · $11.99</button>'+
+    '</div>';
   rs.appendChild(wrap);
+  loadBaziOverview();
+}
+function loadBaziOverview() {
+  var p = document.getElementById('baziOverviewPanel'); if (!p) return;
+  p.innerHTML = '<div style="text-align:center;padding:16px;color:rgba(232,224,255,0.6)">✦ 命格总览生成中…</div>';
+  fetchBaziSession('overview').then(function(d){
+    if (!d || !d.reading) { p.innerHTML=''; return; }
+    p.innerHTML = '<div style="font-size:13px;color:#f5e98a;letter-spacing:.1em;margin-bottom:8px">📜 命格总览 · 免费</div>'+
+      '<div style="background:rgba(8,16,26,0.6);border:1px solid rgba(74,159,212,0.15);border-radius:14px;padding:18px 20px;line-height:1.9;color:#e8f0ff;font-size:15px;white-space:pre-wrap">'+bzEsc(d.reading)+'</div>';
+  }).catch(function(){ p.innerHTML=''; });
+}
+function fetchBaziSession(topic){
+  var token = localStorage.getItem('sy_token') || '';
+  return fetch('/api/bazi/topic', { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body: JSON.stringify({ birthYear:lastBaziInput.year, birthMonth:lastBaziInput.month, birthDay:lastBaziInput.day, birthHour:lastBaziInput.hour, gender:lastBaziInput.gender, topic:topic, token:token })
+  }).then(function(r){ return r.json(); });
 }
 function openBaziTopic(btn) {
   var topic = btn.getAttribute('data-topic');
@@ -1564,28 +1610,33 @@ function openBaziTopic(btn) {
   document.querySelectorAll('.bz-topic-btn').forEach(function(b){ b.style.background = 'rgba(107,63,160,0.12)'; });
   btn.style.background = 'rgba(107,63,160,0.32)';
   panel.innerHTML = '<div style="text-align:center;padding:24px;color:rgba(232,224,255,0.7)">✦ 正在为你深挖…</div>';
-  var token = localStorage.getItem('sy_token') || '';
-  fetch('/api/bazi/topic', {
-    method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-    body: JSON.stringify({
-      birthYear: lastBaziInput.year, birthMonth: lastBaziInput.month, birthDay: lastBaziInput.day,
-      birthHour: lastBaziInput.hour, gender: lastBaziInput.gender, topic: topic, token: token
-    })
-  }).then(function(r){ return r.json(); }).then(function(d){
+  fetchBaziSession(topic).then(function(d){
     if (!d || !d.reading) { panel.innerHTML = '<div style="text-align:center;padding:20px;color:#e88">加载失败，请重试</div>'; return; }
     var raw = String(d.reading || '');
     var lockIdx = raw.indexOf('---LOCKED---');
     var freeText = lockIdx >= 0 ? raw.slice(0, lockIdx) : raw;
-    var esc = freeText.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\*\*(.+?)\*\*/g,'<b style="color:#f5e98a">$1</b>');
-    var html = '<div style="background:rgba(8,16,26,0.6);border:1px solid rgba(74,159,212,0.15);border-radius:14px;padding:20px 22px;line-height:1.9;color:#e8f0ff;font-size:15px;white-space:pre-wrap">'+esc+'</div>';
+    var html = '<div style="background:rgba(8,16,26,0.6);border:1px solid rgba(74,159,212,0.15);border-radius:14px;padding:20px 22px;line-height:1.9;color:#e8f0ff;font-size:15px;white-space:pre-wrap">'+bzEsc(freeText)+'</div>';
     if (d.locked) {
       html += '<div style="text-align:center;margin-top:14px">'+
-        '<div style="color:rgba(245,233,138,0.75);font-size:13px;margin-bottom:10px">🔒 完整「'+(d.title||'专项')+'」深解已锁定</div>'+
-        '<button onclick="createCheckout(this,\'full\',9.9)" style="background:linear-gradient(135deg,#9b6fc4,#6b3fa0);border:none;border-radius:10px;padding:13px 30px;color:#fff;font-size:15px;font-weight:600;cursor:pointer">解锁完整报告 · $9.9</button></div>';
+        '<div style="color:rgba(245,233,138,0.75);font-size:13px;margin-bottom:10px">🔒 完整「'+(d.title||'专项')+'」Session 已锁定</div>'+
+        '<button onclick="sessionCheckout(\''+(d.product||'')+'\',this)" style="background:linear-gradient(135deg,#9b6fc4,#6b3fa0);border:none;border-radius:10px;padding:13px 30px;color:#fff;font-size:15px;font-weight:600;cursor:pointer">解锁本 Session · $3.99</button>'+
+        '<div style="margin-top:10px"><a onclick="sessionCheckout(\'bazi_full\',this)" style="color:rgba(245,233,138,0.85);font-size:13px;cursor:pointer;text-decoration:underline">或一键全买 6 个 · $11.99（五折）→</a></div></div>';
     }
     panel.innerHTML = html;
     panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }).catch(function(){ panel.innerHTML = '<div style="text-align:center;padding:20px;color:#e88">网络错误，请重试</div>'; });
+}
+function sessionCheckout(product, btn) {
+  if (!product) return;
+  if (btn) { btn.disabled = true; btn.textContent = '跳转支付…'; }
+  if (lastBaziInput) { try { localStorage.setItem('sy_last_bazi', JSON.stringify(lastBaziInput)); } catch(e){} }
+  var token = localStorage.getItem('sy_token') || '';
+  fetch('/api/create-checkout', { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+    body: JSON.stringify({ product: product, token: token })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.url) window.location.href = d.url;
+    else { showToast('跳转失败，请重试','error'); if(btn){ btn.disabled=false; btn.textContent='重试'; } }
+  }).catch(function(){ showToast('网络错误，请重试','error'); if(btn){ btn.disabled=false; btn.textContent='重试'; } });
 }
 
 function injectDisclaimer(containerId) {
@@ -1765,24 +1816,9 @@ function handlePaidReturn() {
 
   function proceedWithPaidReport(input) {
     lastBaziInput = input;
-    document.getElementById('inputScreen').style.display = 'none';
-    document.getElementById('loadingScreen').classList.add('show');
-    runLoadingSteps();
-    fetchBaziReport(input, currentMode).then(function(d){
-      document.getElementById('loadingScreen').classList.remove('show');
-      if (d && d.reading) {
-        showReport(d.reading, d.contextId, d.tier, d.locked);
-        if (d.product) renderProductCard(d.product);
-        showToast('支付成功，已为您解锁完整命盘');
-      } else {
-        document.getElementById('inputScreen').style.display = 'block';
-        showToast('报告加载失败，请重新排盘', 'error');
-      }
-    }).catch(function(){
-      document.getElementById('loadingScreen').classList.remove('show');
-      document.getElementById('inputScreen').style.display = 'block';
-      showToast('网络异常，请重新排盘', 'error');
-    });
+    // session 制：支付成功回到 session 视图，已购 session 点开即为完整版
+    startBaziSessions(input, null);
+    showToast('支付成功，已为您解锁');
   }
 
   // 先从localStorage尝试
