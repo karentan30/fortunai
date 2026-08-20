@@ -40,6 +40,7 @@ const { buildBaziBlock } = require('../lib/bazi-engine/prompt-block');
 const { computeBaziChart } = require('../lib/bazi-engine');
 const astrology = require('../astrology.js');
 const { buildWesternBlock } = require('../lib/western-astro-engine/prompt-block');
+const { computeWesternChart } = require('../lib/western-astro-engine/index.js');
 const { buildLiuyaoBlock } = require('../lib/liuyao-engine/prompt-block');
 const { buildQimenBlock } = require('../lib/qimen-engine/prompt-block');
 const { computeDaLiuRen } = require('../lib/daliuren-engine');
@@ -2936,6 +2937,34 @@ router.post('/xingming', rateLimitMiddleware, async (req, res) => {
   }
 });
 
+// 事实卡（精确天文引擎版·单一数据源·杜绝旧引擎冲突）
+const _WEST_ZH_SIGNS = ['白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手','摩羯','水瓶','双鱼'];
+const _WEST_PLANET_ZH = { Sun:'☀️ 太阳 Sun', Moon:'🌙 月亮 Moon', Mercury:'☿ 水星 Mercury', Venus:'♀ 金星 Venus', Mars:'♂ 火星 Mars', Jupiter:'♃ 木星 Jupiter', Saturn:'♄ 土星 Saturn', Uranus:'♅ 天王星 Uranus', Neptune:'♆ 海王星 Neptune', Pluto:'♇ 冥王星 Pluto' };
+function buildPreciseFactCard(wc) {
+  if (!wc || !wc.planets || !wc.planets.length) return '';
+  var lines = ['---', '## 📊 命盘事实卡（后端精确天文引擎 VSOP87 · 禁止 AI 修改）', '', '| 行星 | 星座 | 度数 |', '|------|------|------|'];
+  var elem = { '火':0,'土':0,'风':0,'水':0 }, mode = { '开创':0,'固定':0,'变动':0 };
+  wc.planets.forEach(function(p){
+    var zh = _WEST_ZH_SIGNS[p.signIndex] || p.sign;
+    lines.push('| ' + (_WEST_PLANET_ZH[p.name] || p.name) + ' | ' + zh + '（' + p.sign + '）| ' + (p.degreeInSign != null ? Math.floor(p.degreeInSign) + '°' : '') + (p.retrograde ? ' ℞' : '') + ' |');
+    elem[['火','土','风','水'][p.signIndex % 4]]++;
+    mode[['开创','固定','变动'][p.signIndex % 3]]++;
+  });
+  var tot = wc.planets.length;
+  lines.push('');
+  lines.push('**元素分布：**' + Object.keys(elem).map(function(k){ return k + ' ' + Math.round(elem[k]/tot*100) + '%'; }).join(' · '));
+  lines.push('**模式分布：**' + Object.keys(mode).map(function(k){ return k + ' ' + Math.round(mode[k]/tot*100) + '%'; }).join(' · '));
+  if (wc.meta && wc.meta.hasFullChart && wc.ascendant) {
+    lines.push('**⬆️ 上升 Ascendant：**' + (_WEST_ZH_SIGNS[wc.ascendant.signIndex] || wc.ascendant.sign) + '（' + wc.ascendant.sign + '）' + Math.floor(wc.ascendant.degreeInSign || 0) + '°');
+  } else {
+    lines.push('**⬆️ 上升与十二宫：**需提供精确出生时间与出生地方可精算（本报告基于太阳/月亮/行星星座解读，不含上升与宫位；请勿在正文杜撰上升或宫位）');
+  }
+  lines.push('');
+  lines.push('> ⚠️ 以上为后端精确天文引擎计算，AI 解读须与本事实卡完全一致，禁止另算或改动任何行星星座/度数，禁止写出与上表不同的星座。');
+  lines.push('---');
+  return lines.join('\n');
+}
+
 // ══════════════════════════════════════════
 // POST /api/astrology — 西方占星
 // ══════════════════════════════════════════
@@ -2980,16 +3009,27 @@ router.post('/astrology', rateLimitMiddleware, async (req, res) => {
 性别：${gender === 'male' ? '男 Male' : gender === 'female' ? '女 Female' : '未知'}
 出生地经纬度：${latitude !== undefined ? latitude + '°N/S' : '未提供'}，${longitude !== undefined ? longitude + '°E/W' : '未提供'}
 
-${chartSummaryOld}
+${westernEngineBlock || '（精确天文引擎数据不可用，请仅基于报告开头的事实卡解读）'}
 
-${westernEngineBlock || '（精确天文引擎数据不可用，请仅基于上方基础星盘数据解读）'}`;
+【铁律】以上及报告开头「事实卡」为唯一权威数据源。全文任何行星星座/度数/相位/上升/宫位，必须与之逐字一致；严禁写出与事实卡不同的星座，严禁自行推算，严禁保留任何"等等、需修正、以数据为准"之类的思考过程文字。若缺出生时间地点，上升与宫位一律说"需精确出生时间与出生地方可精算"，绝不杜撰。`;
 
     // ── 分档控制 ──
     var _gm = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','八字','合婚','紫微','姓名','占星','星盘'], [], 16384);
     const astroTier = resolveReportTier(_gm.full, req.body.tier);
 
-    // 【方案A】西占事实卡：从 chart 对象直接格式化，不经 LLM
-    const _astroFactCard = buildWesternFactCard(chart);
+    // 【方案A】西占事实卡：统一用精确天文引擎(VSOP87)一套数据，杜绝旧引擎冲突导致的事实卡vs正文对不上
+    let _wcPrecise = null;
+    try {
+      _wcPrecise = computeWesternChart({
+        year: parseInt(birthYear), month: parseInt(birthMonth), day: parseInt(birthDay),
+        hour: (birthHour !== undefined && birthHour !== null && birthHour !== '') ? parseInt(birthHour) : undefined,
+        minute: birthMinute != null ? parseInt(birthMinute) : 0,
+        latitude: latitude != null ? parseFloat(latitude) : undefined,
+        longitude: longitude != null ? parseFloat(longitude) : undefined,
+        timezone: (latitude != null && longitude != null) ? Math.round(parseFloat(longitude) / 15) : undefined,
+      });
+    } catch (e) { console.warn('[ASTRO] computeWesternChart 不可用，回退旧事实卡:', e.message); }
+    const _astroFactCard = _wcPrecise ? buildPreciseFactCard(_wcPrecise) : buildWesternFactCard(chart);
 
     const astroSystemPrompt = `你是一位真正有功底的资深占星师，从业20年，为上千人亲手解过本命星盘，融古典占星与现代心理占星于一炉。你的功夫是正统的——太阳/月亮/上升三巨头（the big three）、关键相位（合 conjunction／冲 opposition／刑 square／拱 trine）、十二宫位（houses）、行运与过境（transits）一样不含糊；但你说人话，不端着、不故弄玄虚、不用生僻术语吓人。你讲"为什么"（是盘里哪颗行星、哪个相位、走到哪个宫位在起作用），把星盘翻译成TA生活里真实的职场与关系场景，让TA一读就"这说的就是我"，并且清楚知道该怎么做。每章写透，绝不以"略"或"以此类推"敷衍。
 你的语言：70%中文 + 30%英文关键术语（星座名/行星名用英文，其余中文解释），让用户既能看懂又能学到占星知识。
