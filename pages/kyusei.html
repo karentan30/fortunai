@@ -363,8 +363,11 @@ function applyLabels() {
 function calcKyuseiStar(year, month, day) {
   var adjYear = year;
   if (month === 1 || (month === 2 && day <= 3)) adjYear = year - 1;
-  var star = (10 - ((adjYear - 2) % 9)) % 9;
-  return star === 0 ? 9 : star;
+  var s = adjYear;
+  while (s > 9) s = String(s).split('').reduce(function(a, c){ return a + (+c); }, 0);
+  var star = 11 - s;
+  if (star > 9) star -= 9;
+  return star;
 }
 
 function calculateStar() {
@@ -406,48 +409,15 @@ function calculateStar() {
 
 function getFullReading() {
   if (!currentStarNum) return;
-  var year = document.getElementById('birthYear').value;
-  var month = document.getElementById('birthMonth').value;
-  var day = document.getElementById('birthDay').value;
-  var question = document.getElementById('qInput').value.trim();
-  var btn = document.getElementById('fullBtn');
-  btn.disabled = true;
-  document.querySelector('.form-wrap').style.display = 'none';
-  document.querySelector('.lang-tabs').style.display = 'none';
-  document.querySelector('.calc-wrap').style.display = 'none';
+  var input = { year: parseInt(document.getElementById('birthYear').value), month: parseInt(document.getElementById('birthMonth').value), day: parseInt(document.getElementById('birthDay').value), hour: null, gender: 'female' };
+  var btn = document.getElementById('fullBtn'); if (btn) { btn.disabled = true; btn.textContent = '…'; }
   document.getElementById('fullWrap').style.display = 'none';
-  document.getElementById('loadingScreen').classList.add('show');
-
-  fetch('/api/kyusei', {
-    method: 'POST',
-    headers: {'Content-Type':'application/json'},
-    body: JSON.stringify({
-      birthYear: year,
-      birthMonth: month,
-      birthDay: day,
-      question: question,
-      lang: currentLang === 'en' ? 'en' : 'ja',
-      token: localStorage.getItem('sy_token') || ''
-    })
-  })
-  .then(function(r){return r.json();})
-  .then(function(d){
-    document.getElementById('loadingScreen').classList.remove('show');
-    if (d.error){showToast(d.error,'error');btn.disabled=false;document.getElementById('fullWrap').style.display='block';return;}
-    document.getElementById('resultDivider').style.display = 'flex';
-    var rawReading = d.reading || '';
-    var lockedIdx = rawReading.indexOf('---LOCKED---');
-    var visibleText = lockedIdx >= 0 ? rawReading.slice(0, lockedIdx).trim() : rawReading;
-    renderAIInterpretation(visibleText);
-    renderPaywall(d.locked);
-    document.getElementById('ctaWrap').classList.add('show');
-  })
-  .catch(function(){
-    document.getElementById('loadingScreen').classList.remove('show');
-    showToast('Network error, please try again','error');
-    btn.disabled = false;
-    document.getElementById('fullWrap').style.display = 'block';
-  });
+  // session 制：本命星总览免费 + 事业/恋爱/方位 session $3.99 + 一键全买 $11.99
+  document.getElementById('resultDivider').style.display = 'flex';
+  var ai = document.getElementById('aiInterp'); ai.style.display = 'block'; ai.innerHTML = '<div id="kyMount"></div>';
+  document.getElementById('ctaWrap').style.display = 'none';
+  if (window.RunaeSessions) RunaeSessions.render({ method: 'kyusei', input: input, mount: document.getElementById('kyMount'), methodLabel: '九星気学' });
+  document.getElementById('resultDivider').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function parseSections(text) {
@@ -613,6 +583,7 @@ function injectKyuseiCovers(starNum) {
 (function(){var t=localStorage.getItem('sy_theme');if(t==='dark'){document.documentElement.classList.add('dark-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='🌙';}})();
 function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'🌙';localStorage.setItem('sy_theme',l?'dark':'dark');}
 </script>
+<script src="/assets/js/sessions.js"></script>
 <script src="/assets/js/common.js"></script>
 <script>
 (function(){

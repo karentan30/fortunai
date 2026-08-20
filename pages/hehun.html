@@ -776,31 +776,19 @@ async function startCalc(){
   document.getElementById('inputScreen').style.display='none';
   document.getElementById('loadingWrap').classList.add('show');
 
-  const body = {
-    p1Year: ay, p1Month: +am, p1Day: +ad, p1Gender: gA,
-    p2Year: by, p2Month: +bm, p2Day: +bd, p2Gender: gB
-  };
   const ah = document.getElementById('aHour') && document.getElementById('aHour').value;
   const bh = document.getElementById('bHour') && document.getElementById('bHour').value;
-  if (ah !== '' && ah != null) body.p1Hour = ah;
-  if (bh !== '' && bh != null) body.p2Hour = bh;
-
-  try {
-    const res = await fetch('/api/hehun/preview', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(body)
-    });
-    const data = await res.json();
-    if (!data || !data.ok) throw new Error('bad');
-    showResults(data);
-  } catch (e) {
-    // 绝不回退到假数字：接口失败让用户重试
+  var hhInput = { p1Year: ay, p1Month: +am, p1Day: +ad, p1Hour: (ah !== '' && ah != null) ? ah : null, p1Gender: gA, p2Year: by, p2Month: +bm, p2Day: +bd, p2Hour: (bh !== '' && bh != null) ? bh : null, p2Gender: gB };
+  // session 制：双方真八字契合总览免费 + 性格/感情/婚期 session $3.99 + 一键全买 $11.99
+  setTimeout(function(){
     document.getElementById('loadingWrap').classList.remove('show');
-    document.getElementById('inputScreen').style.display='';
-    if(btn){ btn.disabled=false; btn.textContent='测算我们的缘分'; }
-    showToast('推演暂时未完成，请稍后重试 ✦', 'error');
-  }
+    if (btn) { btn.disabled = false; btn.textContent = '测算我们的缘分'; }
+    var rw = document.getElementById('results'); rw.classList.add('show'); rw.style.display = 'block';
+    rw.innerHTML = '<div style="text-align:center;padding:16px 0 4px"><div style="font-size:28px;font-weight:800;letter-spacing:4px;background:linear-gradient(180deg,#fff3cf,#e0be6e);-webkit-background-clip:text;background-clip:text;color:transparent">八字合婚</div><div style="font-size:12px;color:#9fb0cc;margin-top:6px">' + ay + ' × ' + by + '</div></div><div id="hhMount"></div>';
+    if (window.RunaeSessions) RunaeSessions.render({ method: 'hehun', input: hhInput, mount: document.getElementById('hhMount'), methodLabel: '八字合婚' });
+    rw.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 600);
+  return;
 }
 
 // data: { ok, a:{dayMaster,element}, b:{dayMaster,element}, relationship:'相生'|'比和'|'相克', baseScore, note }
@@ -1975,6 +1963,7 @@ function injectDisclaimer(containerId) {
 function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'☀️';localStorage.setItem('sy_theme',l?'dark':'light');}
 </script>
 <script src="/pages/report-viz.js"></script>
+<script src="/assets/js/sessions.js"></script>
 <script src="/assets/js/common.js"></script>
 <script>if(window.SY&&SY.initMembership)SY.initMembership();</script>
 </body>
