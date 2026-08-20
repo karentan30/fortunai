@@ -673,16 +673,21 @@ function calcZiwei() {
   var d = parseInt(document.getElementById('birthDay').value);
   var h = parseInt(document.getElementById('birthHour').value);
   if (!y || !m || !d || isNaN(h)) { showToast('请填写完整的出生信息', 'error'); return; }
-  var seed = y * 10000 + m * 100 + d + h * 0.1;
-
+  var input = { year: y, month: m, day: d, hour: h, gender: gender };
   var btn = document.getElementById('btnCalc');
   btn.disabled = true;
   btn.textContent = '星盘排布中…';
-
   document.getElementById('loadingWrap').classList.add('show');
   document.getElementById('resultWrap').classList.remove('show');
-
-  setTimeout(function(){ renderResult(seed, y, m, d, h); }, 2500);
+  // session 制：真引擎命盘总览免费 + 4 个 session $3.99 + 一键全买 $11.99（去掉旧的随机假命盘）
+  setTimeout(function(){
+    document.getElementById('loadingWrap').classList.remove('show');
+    btn.disabled = false; btn.textContent = '重新排盘';
+    var rw = document.getElementById('resultWrap'); rw.classList.add('show');
+    rw.innerHTML = '<div style="text-align:center;padding:16px 0 4px"><div style="font-size:30px;font-weight:800;letter-spacing:6px;background:linear-gradient(180deg,#fff3cf,#e0be6e);-webkit-background-clip:text;background-clip:text;color:transparent">紫微斗數</div><div style="font-size:12px;color:#9fb0cc;margin-top:6px">' + y + '.' + m + '.' + d + ' · ' + (gender === 'male' ? '男' : '女') + '命</div></div><div id="zwMount"></div>';
+    if (window.RunaeSessions) RunaeSessions.render({ method: 'ziwei', input: input, mount: document.getElementById('zwMount'), methodLabel: '紫微斗数' });
+    rw.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 600);
 }
 
 function renderResult(seed, y, m, d, h) {
@@ -1095,6 +1100,7 @@ function injectDisclaimer(containerId) {
 (function(){var t=localStorage.getItem('sy_theme');if(t==='light'){document.documentElement.classList.add('light-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='☀️';}handlePaidReturn();})();
 function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('light-mode');var l=e.classList.contains('light-mode');if(b)b.textContent=l?'☀️':'🌙';localStorage.setItem('sy_theme',l?'light':'dark');}
 </script>
+<script src="/assets/js/sessions.js"></script>
 <script src="/assets/js/common.js"></script>
 </body>
 </html>
