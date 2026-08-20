@@ -88,7 +88,8 @@ function _payResolveUser(token) {
 // ── Stripe Price IDs (Capstone account) ──
 const STRIPE_PRICE_IDS = {
   // ── USD prices (created 2026-08-10 via Stripe API, metadata[sku] 对齐) ──
-  'bazi_full':            'price_1U2uotEAXrE2YgcrdOvtLSB6',  // $9.90 一次性
+  // 'bazi_full':         'price_1U2uotEAXrE2YgcrdOvtLSB6',  // 旧$9.90固定价·已停用→走动态price_data收$11.99(session五折一键全买)
+
   'hehun_full':           'price_1U2uotEAXrE2YgcrnW5iYdrj',  // $19.90 一次性
   'member_monthly':       'price_1U2uouEAXrE2YgcrhD1McCY5',  // $9.90/月
   'member_quarterly':     'price_1U2uouEAXrE2YgcrjtiXb7h6',  // $24.90/3月

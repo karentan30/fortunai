@@ -232,6 +232,12 @@ const BAZI_VIP_ADDON_ZH = `
 ━━━━━━━━━━━━━━━━━━━━━━
 【以下为「大师深度批命」专属增量内容，必须在上述16维度全部写完后，另起以下4个专属章节，每章写实写透，不得省略】
 
+【🔴 真实性铁律·贯穿以下全部章节，违反即为废稿】
+1. **绝不编造命主的人生处境或具体事件**：命主只提供了出生时间与性别，你完全不知道TA是否已婚/是否怀孕待产/是否有孩子/是否在创业/是否要办证。严禁出现"预定月子中心""待产包""产前焦虑""申请护照""注册商标""签署某协议"这类凭空假设的具体私人事件。逐月"宜/忌"只能写**通用的行为方向**（如：宜主动推进重要事务、宜沉稳守成、宜梳理人际、宜复盘学习；忌冲动决策、忌过度承诺），不得写成具体到某件私事的剧本。
+2. **绝不编造数据**：禁止出现"临床验证""XX%情绪提升""见效率90%"等任何伪科学/伪临床统计数字。见效只能定性描述（如"通常需持续数周才有体感"）。
+3. **绝不荒诞微操**：开运提醒给通用可信的（颜色/方位/作息/心态），不写"矿泉水贴癸字标签""钢笔灌深蓝墨""东墙贴竹简纹壁纸"这类啼笑皆非的伪仪式。
+4. **择日只对命主明确说过要做的事**；没说过就用"这段时间宜动/宜静"的通用节奏表达，不给凭空事件安排具体吉日。
+
 17. 🗓️ 未来24个月逐月流月批（不少于1200字）
 - 从当前月份起，逐月批算未来24个月（不止逐年，精确到每个月）
 - 每月格式：**[年]年[月]月**：财/情/事三维吉凶+该月最宜做与最忌做的1件事+开运小提醒
@@ -240,10 +246,11 @@ const BAZI_VIP_ADDON_ZH = `
 18. 🛡️ 深度化解与开运方案（不少于900字）
 - 针对命局忌神/凶煞，给出分层化解方案：日常习惯层、风水布局层、择吉行事层
 - 每项化解需说明"化解什么、为什么有效、具体怎么做、多久见效"
-- 给出一份可执行的90天开运行动清单（按周排布）
+- 给出一份可执行的90天开运行动清单（按周排布）——⚠️只写**任何人都能照做的通用开运习惯**（作息节律/心态调适/运动/饮食/幸运方位与颜色/该主动推进 vs 该静守的时段节奏）。严禁编造命主没提供过的具体人生事件（如结婚、生子、坐月子、买房、办护照、更新学历、注册商标、签约等），更不得为这类凭空假设的事件安排具体择吉日期。择日只有在命主明确说过要做某件事时才可给出，否则一律用"这段时间宜主动/宜沉稳"的通用节奏表达。
 
 19. 🔀 关键人生决策择时（不少于700字）
 - 针对结婚/置业/创业/跳槽/大额投资等重大决策，分别给出未来3年内的最佳时间窗与应回避时段
+- ⚠️全部用条件式表达（"若你正考虑…则…"），绝不预设命主一定会做某事、绝不编造其人生处境（如默认其已婚/怀孕/正在开公司/要办某证）；命主没提过的私人情节一律不写
 - 每个决策附一句"若必须提前，如何用化解降低风险"
 
 20. 👑 大师叮嘱与终身命理档案说明（不少于500字）
@@ -913,6 +920,26 @@ const BAZI_TOPIC_CFG = {
     focus: '官杀印星格局、职业路径判断、升职/跳槽/创业最佳时机(精确到年月)、贵人特征与出现时间、最适合的3-5个行业、未来10年事业走势',
     lockTitles: ['💼 十年事业走势逐年', '⏰ 升职跳槽创业最佳时机', '🤝 贵人特征与出现时间'],
   },
+  overview: {
+    key: '命格', emoji: '📜', title: '命格总览', free: true,
+    focus: '日主与格局、五行强弱与用神喜忌、整体性格天赋与软肋(用职场/关系的具体场景让TA对号入座)、今年运势一句话概览',
+    lockTitles: [],
+  },
+  dayun: {
+    key: '大运流年', emoji: '📅', title: '大运流年',
+    focus: '逐步大运(每步干支+起止年份+一句主题)、近三年流年吉凶与该做/该避的事',
+    lockTitles: ['📅 逐步大运详批', '🔮 近三年流年逐年', '⏳ 关键转折年份'],
+  },
+  health: {
+    key: '健康', emoji: '🌿', title: '健康养生',
+    focus: '五行对应脏腑、先天体质弱项、养生作息与饮食方向(按中医体质角度、不点具体病名、不做诊断)',
+    lockTitles: ['🌿 先天体质弱项', '🍵 养生饮食方向', '🧘 作息调养建议'],
+  },
+  luck: {
+    key: '开运', emoji: '🎯', title: '开运贵人',
+    focus: '幸运颜色/方位/数字(含五行原因)、贵人特征与出现方向、命局忌神的通用化解习惯(不搞荒诞仪式)',
+    lockTitles: ['🎯 开运颜色方位', '🤝 贵人特征方向', '🛡️ 命局化解习惯'],
+  },
 };
 
 router.post('/bazi/topic', rateLimitMiddleware, async (req, res) => {
@@ -925,7 +952,8 @@ router.post('/bazi/topic', rateLimitMiddleware, async (req, res) => {
 
     const _hasHour = birthHour !== undefined && birthHour !== null && birthHour !== '';
     const baziBlock = _hasHour ? buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour, gender }) : '';
-    const full = gateReportAccess(req, ['bazi', '八字']).full;
+    // session 制：总览(overview)永远免费出全本(钩子)；其余 session 按「单买该 session 或买全套 bazi_full/vip」解锁
+    const full = cfg.free ? true : gateReportAccess(req, ['bazi_s_' + topic, 'bazi', '八字']).full;
 
     const system = `你是一位子平命理正宗传承者，师承盲派铁口直断与《三命通会》学术双脉，从业38年、亲批命盘逾十万张。你说人话不掉书袋，三分古典七分白话，极度具体——给到具体年份/月份/数字/颜色/行业/方位，让人当天就能落地。这一份是【${cfg.title}】专项深解，只聚焦${cfg.key}这一个领域，往深里写透，不泛泛而谈、不以"略"或省略号代替。
 【当前时间基准】今年是 ${NOW_Y} 年，所有流年/大运必须以 ${NOW_Y} 年为"今年"，禁止把过去年份当今年。
@@ -943,7 +971,7 @@ router.post('/bazi/topic', rateLimitMiddleware, async (req, res) => {
     const messages = buildReadingPrompt(system, userPrompt);
     const result = await deepseekChat(messages, { maxTokens: full ? 4096 : 1400, priority: 'deepseek' });
     insertReading.run('bazi_topic_' + topic, JSON.stringify({ birthYear, birthMonth, birthDay, birthHour, gender, topic }), result, req.userId);
-    res.json({ reading: result, topic, title: cfg.title, tier: full ? 'full' : 'preview', locked: !full });
+    res.json({ reading: result, topic, title: cfg.title, tier: full ? 'full' : 'preview', locked: !full, product: cfg.free ? null : 'bazi_s_' + topic, price: 3.99, bundleProduct: 'bazi_full', bundlePrice: 11.99 });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[BAZI TOPIC ERR]', err.message);
@@ -5408,8 +5436,12 @@ const KYUSEI_STARS = {
 function calcKyuseiStar(year, month, day) {
   var adjYear = year;
   if (month === 1 || (month === 2 && day <= 3)) adjYear = year - 1;
-  var star = (10 - ((adjYear - 2) % 9)) % 9;
-  return star === 0 ? 9 : star;
+  // 九星年家本命星：年份数字反复降位到个位 s，本命星 = 11 - s（>9 则减9，形成9→8→…→1→9的降序）
+  var s = adjYear;
+  while (s > 9) s = String(s).split('').reduce(function(a, c) { return a + (+c); }, 0);
+  var star = 11 - s;
+  if (star > 9) star -= 9;
+  return star;
 }
 
 router.post('/kyusei', rateLimitMiddleware, async (req, res) => {
