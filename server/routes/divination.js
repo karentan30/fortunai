@@ -974,7 +974,7 @@ router.post('/bazi/topic', rateLimitMiddleware, async (req, res) => {
     const messages = buildReadingPrompt(system, userPrompt);
     const result = await deepseekChat(messages, { maxTokens: full ? 4096 : 1400, priority: 'deepseek' });
     insertReading.run('bazi_topic_' + topic, JSON.stringify({ birthYear, birthMonth, birthDay, birthHour, gender, topic }), result, req.userId);
-    res.json({ reading: result, topic, title: cfg.title, tier: full ? 'full' : 'preview', locked: !full, product: cfg.free ? null : 'bazi_s_' + topic, price: 3.99, bundleProduct: 'bazi_full', bundlePrice: 11.99 });
+    res.json({ reading: _dropFakeStats(result), topic, title: cfg.title, tier: full ? 'full' : 'preview', locked: !full, product: cfg.free ? null : 'bazi_s_' + topic, price: 3.99, bundleProduct: 'bazi_full', bundlePrice: 11.99 });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[BAZI TOPIC ERR]', err.message);
@@ -986,6 +986,17 @@ router.post('/bazi/topic', rateLimitMiddleware, async (req, res) => {
 // POST /api/session — 通用 session 制（紫微/西占…复用 /bazi/topic 同款：首个免费+其余$3.99+一键全买）
 // config 驱动·每个方法复用自己的真排盘引擎·短聚焦不飘
 // ══════════════════════════════════════════
+// 确定性后处理：LLM 对"禁百分比"不100%听话，用代码兜底把正文里的伪造统计神经掉（事实卡表格不受影响，此函数只作用于 LLM 正文）
+function _dropFakeStats(t) {
+  return String(t || '')
+    .replace(/\d+\s*%\s*以上/g, '多数')
+    .replace(/\d+\s*%\s*左右/g, '相当比例')
+    .replace(/\d+\s*%\s*的\s*(人|命格|女性|男性|同龄人|概率)/g, '不少$1')
+    .replace(/(前)\s*\d+\s*%/g, '$1列')
+    .replace(/\d+\s*%/g, '相当比例')
+    .replace(/相当于正常值\s*\d+\s*\/\s*\d+\s*强度/g, '明显偏弱')
+    .replace(/比同龄人多\s*\d+(-\d+)?\s*年/g, '比同龄人更早起步');
+}
 function buildSessionEngineBlock(method, o) {
   var hasHour = o.birthHour !== undefined && o.birthHour !== null && o.birthHour !== '';
   try {
@@ -1090,7 +1101,7 @@ router.post('/session', rateLimitMiddleware, async (req, res) => {
     }
     const result = await deepseekChat(buildReadingPrompt(system, userPrompt), { maxTokens: full ? 4096 : 1400, priority: 'deepseek' });
     insertReading.run(method + '_topic_' + topic, JSON.stringify({ birthYear, birthMonth, birthDay, birthHour, gender, method, topic }), result, req.userId);
-    res.json({ reading: result, method, topic, title: cfg.title, tier: full ? 'full' : 'preview', locked: !full, product: cfg.free ? null : method + '_s_' + topic, price: 3.99, bundleProduct: method + '_full', bundlePrice: 11.99 });
+    res.json({ reading: _dropFakeStats(result), method, topic, title: cfg.title, tier: full ? 'full' : 'preview', locked: !full, product: cfg.free ? null : method + '_s_' + topic, price: 3.99, bundleProduct: method + '_full', bundlePrice: 11.99 });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[SESSION ERR]', err.message);
