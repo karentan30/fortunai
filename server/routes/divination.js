@@ -958,7 +958,7 @@ router.post('/bazi/topic', rateLimitMiddleware, async (req, res) => {
 
     const system = `你是一位子平命理正宗传承者，师承盲派铁口直断与《三命通会》学术双脉，从业38年、亲批命盘逾十万张。你说人话不掉书袋，三分古典七分白话，落地可执行。这一份是【${cfg.title}】专项深解，只聚焦${cfg.key}这一个领域，往深里写透，不泛泛而谈、不以"略"或省略号代替。
 【日主铁律】命主日主 = 上方事实卡「四柱」中【日柱】的天干（例如日柱为"戊申"则日主为戊土）；绝不可把年柱/月柱/时柱的天干误当日主。全文日主必须与事实卡日柱一致。
-【真实性铁律·违反即废稿】命主只提供了出生时间与性别。①绝不把假设写成"发生过的事实"——禁止出现"2024年你换了办公室""上个月你失眠""过去三年你接手过某项目"这类杜撰的既往经历或具体人物剧情；要谈倾向请用"你很可能/你这类人往往/你倾向于"。②绝不编造任何百分比、评分、"XX%的人"、临床/大数据统计（如"8.7分""前15%""绩效提升40%"）——除非数字直接来自事实卡。③不写荒诞开运仪式（如"喝蜂蜜水补癸水""某号做小额理财"）。
+【真实性铁律·违反即废稿】命主只提供了出生时间与性别。①绝不把假设写成"发生过的事实"——禁止出现"2024年你换了办公室""上个月你失眠""过去三年你接手过某项目"这类杜撰的既往经历或具体人物剧情；要谈倾向请用"你很可能/你这类人往往/你倾向于"。②绝不编造任何百分比、评分、"XX%的人"、临床/大数据统计（如"8.7分""前15%""绩效提升40%"）——除非数字直接来自事实卡。③不写荒诞开运仪式（如"喝蜂蜜水补癸水""某号做小额理财"）。④【绝对格式禁令】全文一个百分号(%)都不许出现，也禁止"X分/X.X分/X/10"评分、"前X%""X倍"等一切伪造量化数字。
 【当前时间基准】今年是 ${NOW_Y} 年，所有流年/大运必须以 ${NOW_Y} 年为"今年"，禁止把过去年份当今年。
 【五行生克铁律】木生火·火生土·土生金·金生水·水生木；"壬水生乙木"=水生木，绝不能写反方向。${FMT_LAW_ZH}`;
 
@@ -997,6 +997,18 @@ function buildSessionEngineBlock(method, o) {
       var wc = computeWesternChart({ year: +o.birthYear, month: +o.birthMonth, day: +o.birthDay, hour: hasHour ? +o.birthHour : undefined, minute: 0 });
       return buildPreciseFactCard(wc);
     }
+    if (method === 'kyusei') {
+      var star = calcKyuseiStar(+o.birthYear, +o.birthMonth, +o.birthDay);
+      var sd = (typeof KYUSEI_STARS !== 'undefined' && KYUSEI_STARS) ? KYUSEI_STARS[star] : null;
+      return '【九星本命星（后端引擎·立春换年·仅此为准）】\n本命星：' + (sd ? sd.name : ('第' + star + '星')) + (sd && sd.element ? ' · 五行' + sd.element : '') + (sd && sd.keywords ? ' · 核心：' + (Array.isArray(sd.keywords) ? sd.keywords.join('/') : sd.keywords) : '');
+    }
+    if (method === 'hehun') {
+      var pA = (o.p1Hour != null && o.p1Hour !== '') ? +o.p1Hour : 12;
+      var pB = (o.p2Hour != null && o.p2Hour !== '') ? +o.p2Hour : 12;
+      var A = buildBaziBlock({ birthYear: +o.p1Year, birthMonth: +o.p1Month, birthDay: +o.p1Day, birthHour: pA, gender: o.p1Gender || 'male' }) || '';
+      var B = buildBaziBlock({ birthYear: +o.p2Year, birthMonth: +o.p2Month, birthDay: +o.p2Day, birthHour: pB, gender: o.p2Gender || 'female' }) || '';
+      return '【A方八字（后端精确排盘·仅此为准·禁 LLM 自排）】\n' + A + '\n\n【B方八字（后端精确排盘·仅此为准·禁 LLM 自排）】\n' + B + '\n（合婚以双方日主五行生克为核心：判断相生相克、互补或消耗）';
+    }
   } catch (e) { console.warn('[SESSION engine ' + method + ']', e.message); }
   return '';
 }
@@ -1022,14 +1034,40 @@ const SESSION_CFG = {
       growth:   { title: '性格天赋', focus: '水星(思维)/主要相位揭示的天赋与盲点、如何扬长避短', lockTitles: ['🧠 思维天赋', '⚡ 关键相位', '🌱 成长课题'] },
     },
   },
+  kyusei: {
+    label: '九星気学',
+    persona: '你是一位有传承的九星気学師，承正统日本気学一脉。你说人话、讲"为什么"(哪颗星在起作用)，只聚焦本 session 一个主题，落到TA真实的职场/关系场景。中文为主，关键术语保留日语并加中文解释。九星只提供本命星，其余请稳健推演不硬编具体宫位数字。',
+    topics: {
+      overview: { free: true, title: '本命星精髓', focus: '本命星揭示的核心本质、世界观与阴面，用真实职场/关系场景对号入座，以及今年主题一句话', lockTitles: [] },
+      career:   { title: '事业方向', focus: '最适行业与工作风格、发力时机倾向、适合的合作伙伴特质', lockTitles: ['💼 最适行业', '⏰ 发力时机', '🤝 合作特质'] },
+      love:     { title: '恋爱人际', focus: '恋爱模式、最相性与最有摩擦的星号、提升人际运的方法', lockTitles: ['💕 恋爱模式', '💫 相性星号', '🌱 人际提升'] },
+      direction:{ title: '方位择吉', focus: '今年吉方与凶方的倾向、家居/出行/工位的通用方位建议(可执行·不搞荒诞仪式)', lockTitles: ['🧭 今年吉凶方', '🏠 家居方位', '✈️ 出行方位'] },
+    },
+  },
+  hehun: {
+    label: '八字合婚',
+    twoPerson: true,
+    persona: '你是一位德高望重的合婚师，从业四十余年、撮合上千对姻缘。你诚恳直率、句句为对方好，以双方真实日主五行生克为核心分析（相生/相克/互补/消耗），只聚焦本 session 一个主题，落到实处。合婚是缘分参考非婚姻决策，语气温暖不制造焦虑。',
+    topics: {
+      overview: { free: true, title: '契合总评', focus: '双方日主五行的生克关系、整体契合最大的亮点与最需留意处、一句话总评', lockTitles: [] },
+      personality: { title: '性格相处', focus: '双方性格如何互补或摩擦、日常相处的舒服点与雷区、如何理解对方', lockTitles: ['🧩 性格互补', '⚡ 摩擦雷区', '🤝 相处之道'] },
+      emotion:  { title: '感情经营', focus: '两人感情的核心课题、如何经营长久、吵架模式与化解', lockTitles: ['💕 感情课题', '🔥 吵架模式', '💗 经营长久'] },
+      timing:   { title: '婚期择吉', focus: '适合推进关系/结婚的年份区间(传统择吉文化参考·非决策建议·以双方感情现实为准)', lockTitles: ['📅 适婚年份', '💍 择吉参考', '🌸 关系推进'] },
+    },
+  },
 };
 router.post('/session', rateLimitMiddleware, async (req, res) => {
   try {
     const { method, topic, birthYear, birthMonth, birthDay, birthHour, gender } = req.body;
-    if (!birthYear || !birthMonth || !birthDay) return res.status(400).json({ error: '请提供出生年月日' });
-    if (Number(birthYear) > new Date().getFullYear() - 14) return res.status(400).json({ error: '仅限14岁以上用户使用' });
     const mc = SESSION_CFG[method]; if (!mc) return res.status(400).json({ error: '未知方法' });
     const cfg = mc.topics[topic]; if (!cfg) return res.status(400).json({ error: '未知 session' });
+    if (mc.twoPerson) {
+      if (!req.body.p1Year || !req.body.p2Year) return res.status(400).json({ error: '请提供双方出生信息' });
+      if (Number(req.body.p1Year) > new Date().getFullYear() - 18 || Number(req.body.p2Year) > new Date().getFullYear() - 18) return res.status(400).json({ error: '仅限18岁以上用户使用' });
+    } else {
+      if (!birthYear || !birthMonth || !birthDay) return res.status(400).json({ error: '请提供出生年月日' });
+      if (Number(birthYear) > new Date().getFullYear() - 14) return res.status(400).json({ error: '仅限14岁以上用户使用' });
+    }
 
     const engineBlock = buildSessionEngineBlock(method, req.body);
     const full = cfg.free ? true : gateReportAccess(req, [method + '_s_' + topic, method]).full;
@@ -1037,8 +1075,10 @@ router.post('/session', rateLimitMiddleware, async (req, res) => {
     const system = `${mc.persona}
 【当前时间基准】今年是 ${NOW_Y} 年，所有流年/大限/过境必须以 ${NOW_Y} 年为"今年"，禁止把过去年份当今年。
 【引擎铁律】${engineBlock ? '报告开头已由后端注入精确排盘事实卡，全文星曜/宫位/行星/度数必须与之逐字一致，禁止另算或改动、禁止保留任何"等等/需修正/以数据为准"之类思考过程文字。' : '（本次排盘数据有限，仅就已知信息稳健解读，不编造具体星曜/宫位。）'}
-【真实性铁律·违反即废稿】命主只提供了出生时间与性别。①绝不把假设写成"发生过的事实"——禁止"2024年你换了办公室""上个月你失眠""过去三年你接手过某项目""你妈发17条语音"这类杜撰的既往经历或人物剧情；谈倾向一律用"你很可能/你这类人往往/你倾向于"。②绝不编造任何百分比/评分/"XX%的人"/临床或大数据统计（如"绩效前15%""稳定性提升40%""4.7/5"），除非数字直接来自事实卡。③不写荒诞仪式，择日只对TA明确说过要做的事。${FMT_LAW_ZH}`;
-    const info = `出生：${birthYear}年${birthMonth}月${birthDay}日${(birthHour !== undefined && birthHour !== null && birthHour !== '') ? birthHour + '时' : '（时辰不详）'}\n性别：${gender === 'male' ? '男' : '女'}\n${engineBlock ? '\n' + engineBlock + '\n' : ''}`;
+【真实性铁律·违反即废稿】命主只提供了出生时间与性别。①绝不把假设写成"发生过的事实"——禁止"2024年你换了办公室""上个月你失眠""过去三年你接手过某项目""你妈发17条语音"这类杜撰的既往经历或人物剧情；谈倾向一律用"你很可能/你这类人往往/你倾向于"。②绝不编造任何百分比/评分/"XX%的人"/临床或大数据统计（如"绩效前15%""稳定性提升40%""4.7/5"），除非数字直接来自事实卡。③不写荒诞仪式，择日只对TA明确说过要做的事。④【绝对格式禁令】除非照抄事实卡里的元素分布数值，全文一个百分号(%)都不许出现，也禁止"X分/X.X分/X/10"评分、"前X%""X倍"等一切伪造量化。${FMT_LAW_ZH}`;
+    const info = mc.twoPerson
+      ? `A方：${req.body.p1Year}年${req.body.p1Month}月${req.body.p1Day}日 · ${req.body.p1Gender === 'male' ? '男' : '女'}\nB方：${req.body.p2Year}年${req.body.p2Month}月${req.body.p2Day}日 · ${req.body.p2Gender === 'male' ? '男' : '女'}\n${engineBlock ? '\n' + engineBlock + '\n' : ''}`
+      : `出生：${birthYear}年${birthMonth}月${birthDay}日${(birthHour !== undefined && birthHour !== null && birthHour !== '') ? birthHour + '时' : '（时辰不详）'}\n性别：${gender === 'male' ? '男' : '女'}\n${engineBlock ? '\n' + engineBlock + '\n' : ''}`;
     let userPrompt;
     if (full) {
       userPrompt = `${info}\n请出具一份【${mc.label} · ${cfg.title}】专项深度解读，只写这一个主题，1000-1500字，写满写透。必须覆盖：${cfg.focus}。用朋友聊天语气、关键处加粗、多用量化(年份/评分)增强代入感。结尾一句温暖寄语。`;

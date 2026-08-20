@@ -12,6 +12,16 @@
       { topic:'career', emoji:'💼', label:'事业财富' },
       { topic:'love',   emoji:'💕', label:'爱情关系' },
       { topic:'growth', emoji:'🧠', label:'性格天赋' }
+    ],
+    kyusei: [
+      { topic:'career',    emoji:'💼', label:'事业方向' },
+      { topic:'love',      emoji:'💕', label:'恋爱人际' },
+      { topic:'direction', emoji:'🧭', label:'方位择吉' }
+    ],
+    hehun: [
+      { topic:'personality', emoji:'🧩', label:'性格相处' },
+      { topic:'emotion',     emoji:'💕', label:'感情经营' },
+      { topic:'timing',      emoji:'📅', label:'婚期择吉' }
     ]
   };
   var ELEM = { '火':'#e0673a','土':'#c8a24a','金':'#d9d2b0','水':'#4a9fd4','木':'#5fae6a','风':'#8ab4d8','开创':'#e0673a','固定':'#c8a24a','变动':'#5fae6a' };
@@ -19,7 +29,7 @@
   function bars(label,parts){ var rows=parts.map(function(p){var c=ELEM[p[0]]||'#8aa0c0';return '<div style="display:flex;align-items:center;gap:8px;margin:6px 0"><span style="width:56px;font-size:12px;color:#cbd4e4;text-align:right">'+p[0]+'</span><span style="flex:1;height:11px;background:rgba(255,255,255,.06);border-radius:6px;overflow:hidden"><span style="display:block;height:100%;width:'+p[1]+'%;background:'+c+'"></span></span><span style="width:34px;font-size:11px;color:#9fb0cc">'+p[1]+'%</span></div>';}).join('');return '<div style="margin:12px 0;padding:12px 16px;background:rgba(10,16,34,.5);border-radius:8px;border:1px solid rgba(212,180,110,.15)"><div style="font-size:12px;color:#c8b98a;margin-bottom:6px">'+esc(label)+'</div>'+rows+'</div>'; }
   function renderBody(text){ var lines=String(text||'').split('\n'),out=[],lead=false; for(var i=0;i<lines.length;i++){var s=lines[i].trim();if(!s||s.indexOf('---')===0)continue; if(s.indexOf('：')>0&&s.indexOf('%')>0){var seg=s.split('：'),parts=[],re=/([A-Za-z一-龥]+)\s*[A-Za-z]*\s*(\d+)%/g,m;while(m=re.exec(seg[1])){if(+m[2]<=100)parts.push([m[1],+m[2]]);}if(parts.length>=2){out.push(bars(seg[0].replace(/\*/g,''),parts));continue;}} var cm=s.match(/^(✅|⚠️|🔑|💡|📌)\s*(.+)/);if(cm){var w=cm[1]!=='✅';out.push('<div style="display:flex;gap:8px;font-size:14px;line-height:1.7;padding:10px 14px;margin:8px 0;border-radius:8px;background:'+(w?'rgba(224,150,60,.1)':'rgba(95,174,106,.1)')+';border:1px solid '+(w?'rgba(224,150,60,.32)':'rgba(95,174,106,.3)')+';color:'+(w?'#f0dcc0':'#cfe8d2')+'"><span>'+cm[1]+'</span><span>'+esc(cm[2])+'</span></div>');continue;} if(!lead&&s.length>12){var mm=s.match(/^[^。！？]*[。！？]/);var ld=mm?mm[0]:s,rest=mm?s.slice(mm[0].length):'';out.push('<div style="font-size:16px;line-height:1.7;color:#fff3cf;font-weight:600;padding:11px 15px;margin:2px 0 12px;border-left:4px solid #e6c874;background:linear-gradient(90deg,rgba(230,200,116,.14),transparent);border-radius:0 8px 8px 0">'+esc(ld)+'</div>');lead=true;if(rest.trim())out.push('<p style="margin:0 0 11px;line-height:1.9">'+esc(rest.trim())+'</p>');continue;} out.push('<p style="margin:0 0 11px;line-height:1.9">'+esc(s)+'</p>');} return out.join(''); }
   function tok(){ try{return localStorage.getItem('sy_token')||'';}catch(e){return '';} }
-  function fetchSession(method,topic,input){ return fetch('/api/session',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok()},body:JSON.stringify({method:method,topic:topic,birthYear:input.year,birthMonth:input.month,birthDay:input.day,birthHour:input.hour,gender:input.gender,token:tok()})}).then(function(r){return r.json();}); }
+  function fetchSession(method,topic,input){ var body={method:method,topic:topic,token:tok()}; if(input&&input.p1Year){ body.p1Year=input.p1Year;body.p1Month=input.p1Month;body.p1Day=input.p1Day;body.p1Hour=input.p1Hour;body.p1Gender=input.p1Gender; body.p2Year=input.p2Year;body.p2Month=input.p2Month;body.p2Day=input.p2Day;body.p2Hour=input.p2Hour;body.p2Gender=input.p2Gender; } else { body.birthYear=input.year;body.birthMonth=input.month;body.birthDay=input.day;body.birthHour=input.hour;body.gender=input.gender; } return fetch('/api/session',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok()},body:JSON.stringify(body)}).then(function(r){return r.json();}); }
   function checkout(product,btn){ if(!product)return; if(btn){btn.disabled=true;btn.textContent='跳转支付…';} fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+tok()},body:JSON.stringify({product:product,token:tok()})}).then(function(r){return r.json();}).then(function(d){if(d.url)location.href=d.url;else if(btn){btn.disabled=false;btn.textContent='重试';}}).catch(function(){if(btn){btn.disabled=false;btn.textContent='重试';}}); }
   window.RunaeSessions = {
     render: function(opts){
