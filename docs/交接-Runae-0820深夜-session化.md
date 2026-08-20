@@ -32,5 +32,11 @@
 4. 各页仍有旧巨型报告流程的**死代码**（unlockZiwei/streamZiwei 等），不显示但可清理。
 5. `_dropFakeStats` 是兜底，长期更该在 prompt 层根治（deepseek 对紫微较顽固）。
 
+## 首页(home-runae.html)本轮改动 + 遗留
+- ✅ 去掉玉珠后面的星云（"一团火/一团云"=`hero-cosmos` 已隐藏）；右侧面相人脸调亮露出（`.hero-deco.mianxiang` opacity 0.5→0.9·遮罩软化）。已部署验证。
+- 🔴 **代祈福圣地地图待重做**：现状=彩色 PNG(`samples/caijing/全球祈福圣地网络.png`) 但**中文标签被 overflow 裁掉("字都不全")且亚洲标签挤成一团**。Karen 要：**彩色 + 英文 + 地址 + 标签分散不重叠不截断**。
+  - `scripts/build_blessmap.py` 已改成英文+地址+引线布局(REG 带 ax/ay 锚点+SVG 引线)，但**它渲染的是暗色版**(`.mapwrap svg path{fill:#3a2a18}`)——Karen 要彩色。**下一步**：把 svg path 改成按大洲分色填充(绿/蓝/棕/金，参考旧彩色图 image #21) + 跑脚本生成 HTML → Chrome 截图覆盖 PNG。别 ship 暗色版。
+- ⚠️ 首页非我这轮原创(git 确认)，是早前提交(303b8c0/5d469f2)做的；本轮按 Karen 要求调整。
+
 ## 北极星没变
 产品又厚了一截，真缺口仍是 **distribution（≈0 用户）**。小红书 AI 掌纹图方案在 `docs/获客-AI掌纹图-小红书-0820.md`。
