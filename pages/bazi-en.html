@@ -673,6 +673,8 @@ function initSSEReport(isLocked) {
 
   html += buildBaziOverview(parsed);
   if (isLocked) html += buildDayMasterInsight(parsed);
+  // Five-Element shop — free layer even for the un-paid preview (isLocked).
+  try { if (window.RunaeShop) html += RunaeShop.buildWuxingShop(parsed, { premium: !isLocked }); } catch(e) {}
   html += getModeToggleHTML();
   // Streaming text area — starts empty, filled by chunk events
   html += '<div id="reportContent" style="padding:0 16px;font-size:14px;line-height:1.8;color:rgba(50,44,34,0.9);white-space:pre-wrap"></div>';
@@ -1127,6 +1129,8 @@ function renderAITextReport(text, contextId, isLocked) {
 
   html += buildBaziOverview(parsed);
   if (isLocked) html += buildDayMasterInsight(parsed);
+  // Five-Element shop — shown to everyone; richer set once unlocked (!isLocked).
+  try { if (window.RunaeShop) html += RunaeShop.buildWuxingShop(parsed, { premium: !isLocked }); } catch(e) {}
   html += getModeToggleHTML();
   html += '<div id="reportContent"></div>';
 
@@ -1578,6 +1582,7 @@ setTimeout(initZhuanyunMonth, 800);
 })();
 </script>
 <script src="/assets/js/common.js"></script>
+<script src="/assets/js/wuxing-shop.js"></script>
 <script>if(window.SY&&SY.initMembership)SY.initMembership();</script>
 </body>
 </html>
