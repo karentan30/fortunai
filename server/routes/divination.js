@@ -943,18 +943,80 @@ const BAZI_TOPIC_CFG = {
   },
 };
 
+// ── English mirror of BAZI_TOPIC_CFG（同一份真排盘·只换语言与解读焦点）──
+// 同 lockTitles 数量与 free 标记，保持前后端锁定契约一致；输出英文。
+const BAZI_TOPIC_CFG_EN = {
+  wealth: {
+    key: 'Wealth', emoji: '💰', title: 'Wealth & Finance',
+    focus: 'the Wealth-star structure (Direct vs Indirect Wealth), the opening/closing of the Wealth Vault (辰戌丑未 Earthly Branches), 3 golden wealth years (name the exact years and explain how the Luck Pillar and annual flow line up), the 5 most suitable industries for building wealth, investment cautions (with the Five-Element reason), and the wealth curve over the next 10 years',
+    lockTitles: ['💰 Year-by-year wealth curve (10 yrs)', '🏦 Wealth-vault timing & windfall years', '🚫 Money-loss warning years & investment taboos'],
+  },
+  love: {
+    key: 'Love & Relationships', emoji: '💕', title: 'Love & Relationships',
+    focus: 'a detailed read of the Spouse Palace (Day branch), the temperament / personality / professional circle / meeting-scene of your destined partner (describe temperament and how you relate — never predict physical looks), your romance-star (Peach Blossom) type, 2-3 best years to meet someone, and how to nurture and safeguard the relationship',
+    lockTitles: ['💕 Portrait of your destined partner (temperament · personality · circle)', '📅 Golden years to meet love, year by year', '💔 Relationship turbulence years & how to defuse them'],
+  },
+  career: {
+    key: 'Career', emoji: '💼', title: 'Career',
+    focus: 'the Officer/Power and Seal star structure, your career-path judgment, best timing for promotion / job change / starting a business (down to the year and month), the traits and appearance-timing of your benefactors (贵人), the 3-5 most suitable industries, and your 10-year career trajectory',
+    lockTitles: ['💼 10-year career trajectory, year by year', '⏰ Best timing to promote, switch, or launch', '🤝 Benefactor traits & when they appear'],
+  },
+  overview: {
+    key: 'Destiny Overview', emoji: '📜', title: 'Destiny Overview', free: true,
+    focus: 'the Day Master and chart pattern, Five-Element strength and the favorable/unfavorable elements (Useful God), overall personality, gifts and blind spots (use concrete workplace / relationship scenes so the reader recognizes themselves), and a one-line take on this year',
+    lockTitles: [],
+  },
+  dayun: {
+    key: 'Luck Cycles', emoji: '📅', title: 'Luck Cycles & Annual Flow',
+    focus: 'each 10-year Luck Pillar in order (Heavenly Stem + Earthly Branch + start/end years + a one-line theme), and the auspicious/inauspicious reading for the last three annual flows plus what to do / avoid',
+    lockTitles: ['📅 Every Luck Pillar, decoded', '🔮 The last three annual flows, year by year', '⏳ Pivotal turning-point years'],
+  },
+  health: {
+    key: 'Health & Wellness', emoji: '🌿', title: 'Health & Wellness',
+    focus: 'the Five-Element to organ-system correspondence, innate constitutional weak spots, and wellness routine / dietary direction (from the TCM-constitution angle — never name a specific disease, never diagnose)',
+    lockTitles: ['🌿 Innate constitutional weak spots', '🍵 Dietary & wellness direction', '🧘 Routine & recovery advice'],
+  },
+  luck: {
+    key: 'Fortune-Boosting', emoji: '🎯', title: 'Fortune-Boosting & Benefactors',
+    focus: 'lucky colors / directions / numbers (with the Five-Element reason), the traits and direction from which benefactors appear, and everyday, sensible ways to balance the chart\'s unfavorable elements (no absurd rituals)',
+    lockTitles: ['🎯 Lucky colors & directions', '🤝 Benefactor traits & direction', '🛡️ Everyday chart-balancing habits'],
+  },
+};
+
 router.post('/bazi/topic', rateLimitMiddleware, async (req, res) => {
   try {
-    const { birthYear, birthMonth, birthDay, birthHour, gender, topic } = req.body;
-    if (!birthYear || !birthMonth || !birthDay) return res.status(400).json({ error: '请提供出生年月日' });
-    if (Number(birthYear) > new Date().getFullYear() - 14) return res.status(400).json({ error: '仅限14岁以上用户使用' });
-    const cfg = BAZI_TOPIC_CFG[topic];
-    if (!cfg) return res.status(400).json({ error: '未知的专项' });
+    const { birthYear, birthMonth, birthDay, birthHour, gender, topic, lang } = req.body;
+    const isEn = lang === 'en';
+    if (!birthYear || !birthMonth || !birthDay) return res.status(400).json({ error: isEn ? 'Please provide your birth date' : '请提供出生年月日' });
+    if (Number(birthYear) > new Date().getFullYear() - 14) return res.status(400).json({ error: isEn ? 'Users must be 14 or older' : '仅限14岁以上用户使用' });
+    const cfg = (isEn ? BAZI_TOPIC_CFG_EN : BAZI_TOPIC_CFG)[topic];
+    if (!cfg) return res.status(400).json({ error: isEn ? 'Unknown topic' : '未知的专项' });
 
     const _hasHour = birthHour !== undefined && birthHour !== null && birthHour !== '';
     const baziBlock = _hasHour ? buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour, gender }) : '';
     // session 制：总览(overview)永远免费出全本(钩子)；其余 session 按「单买该 session 或买全套 bazi_full/vip」解锁
     const full = cfg.free ? true : gateReportAccess(req, ['bazi_s_' + topic, 'bazi', '八字']).full;
+
+    // ── English branch: same real chart, same locked contract, English prompts ──
+    if (isEn) {
+      const systemEn = `You are an orthodox Zi Ping BaZi master, lineage-trained in both the blind-school "iron-mouth direct reading" and the academic tradition of the San Ming Tong Hui, with 38 years of practice and over 100,000 charts read. You speak like a human, not a textbook — three parts classical, seven parts plain English, always practical and actionable. This is a deep-dive on ONE domain only: **${cfg.title}**. Go deep on ${cfg.key} alone; never go broad, never abbreviate with "etc." or ellipses.
+[DAY MASTER RULE] The Day Master = the Heavenly Stem of the DAY pillar in the fact card above (e.g. if the Day pillar is 戊申, the Day Master is 戊 Earth); never mistake the Year/Month/Hour stem for the Day Master.
+[TRUTH RULE · violating this voids the draft] The person gave you ONLY their birth time and gender. ①Never write assumptions as facts that "happened" — no fabricated past events, specific people, or storylines ("in 2024 you changed offices", "last month you couldn't sleep", "over the past three years you took over a project"). Speak in tendencies: "you're likely to / people with your chart often / you tend to". ②Never fabricate quantified numbers — no percentages, scores, "X% of people", clinical stats ("8.7/10", "top 15%", "40% improvement"), nor invented multiples/seconds/days/versions/"most-ever" comparisons. Unless a number is verbatim from the fact card (Five-Element decimals, Luck Pillar start/end years), use qualitative words (stronger / weaker / clearly / a rare few). ③No absurd fortune rituals. ④Not a single percent sign (%) anywhere; express Five-Element strength with tiers ("stronger / balanced / weaker / heavier / lighter"), never as a percentage or share. ⑤Never invent research, papers, data sources or authorities; a metaphysics reading must not masquerade as a scientific conclusion.
+[TIME BASE] This year is ${NOW_Y}; every annual-flow / Luck-Pillar reference must treat ${NOW_Y} as "this year" and never treat a past year as now.${HEALTH_SOFT.en}${FMT_LAW_EN}`;
+
+      const infoEn = `Birth: ${birthYear}/${birthMonth}/${birthDay}${_hasHour ? ' hour ' + birthHour : ' (birth hour unknown)'}\nGender: ${gender === 'male' ? 'Male' : 'Female'}\n${baziBlock ? '\n' + baziBlock + '\n⚠️ Every Pillar / Ten-God / Hidden-Stem / pattern / strength / Useful-God / Luck-Pillar in your writing MUST strictly follow the precise chart above — do not recompute or alter it. Reference the real stems/branches by their pinyin or element in English.\n' : ''}`;
+
+      let userPromptEn;
+      if (full) {
+        userPromptEn = `${infoEn}\nWrite a deep, single-domain **${cfg.title}** reading covering ONLY ${cfg.key}, 900-1200 words, rich and complete. Must cover: ${cfg.focus}. Warm, conversational tone; bold the key points; build conviction through **concrete scenes and imagery** (you may cite the real stems/branches and Luck-Pillar years from the fact card), but never fabricate percentages, scores, multiples, day-counts, second-counts, "version N", or any statistic, and never write an assumption as a past event. End with one warm line of ${cfg.key} encouragement.`;
+      } else {
+        userPromptEn = `${infoEn}\nThis is a FREE PREVIEW of the **${cfg.title}** reading — write an opening no one can stop reading: the first sentence grabs them, every line lands. Write only ~250 words: surface the single most important gift or the one hurdle to watch in ${cfg.key}, land it on something concrete, spark strong curiosity — but save "which exact year, how to act, which palace is driving it" for the full version. Then on a new line output exactly:\n---LOCKED---\n${cfg.lockTitles.join('\n')}\nDo NOT expand any locked section.`;
+      }
+
+      const resultEn = await deepseekChat(buildReadingPrompt(systemEn, userPromptEn), { maxTokens: full ? 4096 : 1200, priority: 'deepseek' });
+      insertReading.run('bazi_topic_en_' + topic, JSON.stringify({ birthYear, birthMonth, birthDay, birthHour, gender, topic, lang: 'en' }), resultEn, req.userId);
+      return res.json({ reading: _dropFakeStatsEn(resultEn), topic, title: cfg.title, tier: full ? 'full' : 'preview', locked: !full, product: cfg.free ? null : 'bazi_s_' + topic, price: 3.99, bundleProduct: 'bazi_full', bundlePrice: 11.99 });
+    }
 
     const system = `你是一位子平命理正宗传承者，师承盲派铁口直断与《三命通会》学术双脉，从业38年、亲批命盘逾十万张。你说人话不掉书袋，三分古典七分白话，落地可执行。这一份是【${cfg.title}】专项深解，只聚焦${cfg.key}这一个领域，往深里写透，不泛泛而谈、不以"略"或省略号代替。
 【日主铁律】命主日主 = 上方事实卡「四柱」中【日柱】的天干（例如日柱为"戊申"则日主为戊土）；绝不可把年柱/月柱/时柱的天干误当日主。全文日主必须与事实卡日柱一致。
@@ -987,6 +1049,17 @@ router.post('/bazi/topic', rateLimitMiddleware, async (req, res) => {
 // config 驱动·每个方法复用自己的真排盘引擎·短聚焦不飘
 // ══════════════════════════════════════════
 // 确定性后处理：LLM 对"禁百分比"不100%听话，用代码兜底把正文里的伪造统计神经掉（事实卡表格不受影响，此函数只作用于 LLM 正文）
+function _dropFakeStatsEn(t) {
+  // English-safe stat scrubber: strip fabricated percentages so a stray "40%" never survives,
+  // but replace with English tier words (never the Chinese fallbacks used below).
+  return String(t || '')
+    .replace(/\btop\s*\d+\s*%/gi, 'among the top')
+    .replace(/(over|about|around|roughly|nearly|up to|more than|less than|higher than|lower than)\s*\d+\s*%/gi, 'a large share')
+    .replace(/\d+\s*%\s*of\s*(people|men|women|charts|peers)/gi, 'many $1')
+    .replace(/[（(]\s*\d+\s*%\s*[)）]/g, '')
+    .replace(/\d+\s*%/g, 'a notable degree')
+    .replace(/\b\d+(\.\d+)?\s*\/\s*10\b/g, 'a high mark');
+}
 function _dropFakeStats(t) {
   return String(t || '')
     .replace(/\d+\s*%\s*以上/g, '多数')
@@ -4846,15 +4919,18 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
         dayMasterElement: bazi.dayMasterElement
       };
       var _chartDataEn = baziChartData({ birthYear, birthMonth, birthDay, birthHour, gender });
+      // Narrative is ALWAYS a short preview hook. The deep, sellable reading is delivered
+      // by the hardened per-topic sessions (/api/bazi/topic?lang=en) — so we never emit the
+      // old monolithic "一眼假" report here. meta stays honest so the chart card renders right.
       res.write(`data: ${JSON.stringify({ type: 'meta', pillars: pillarsEn, tier: full ? 'full' : 'basic', locked: !full, chart: _chartDataEn })}\n\n`);
 
-      var freeSuffixEn = full ? '' : `\n\nIMPORTANT: Free preview mode. Output ONLY two things:\n① Chart summary — 2-3 warm sentences on the Day Master and 1-2 standout Five-Element traits (the visual chart card is already rendered for the user)\n② Core insight — the single most luminous quality of this chart, 200-300 words\n\nWhen done, output exactly one line:\n---LOCKED---\n\nThen list locked sections WITHOUT content:\n💰 Wealth & Finance · unlock in full report\n💕 Love & Marriage · unlock in full report\n💼 Career & Luck Cycles · unlock in full report\n🏥 Health Forecast · unlock in full report\n\nDo NOT expand any locked section.`;
+      var freeSuffixEn = `\n\nIMPORTANT: Preview mode. Output ONLY two things:\n① Chart summary — 2-3 warm sentences on the Day Master and 1-2 standout Five-Element traits (the visual chart card is already rendered for the user)\n② Core insight — the single most luminous quality of this chart, 200-300 words\n\n[TRUTH RULE] Never fabricate past events, specific people, percentages, scores, or any statistic; speak in tendencies. Not a single percent sign anywhere. Never claim a research/data source.\n\nWhen done, output exactly one line:\n---LOCKED---\n\nThen list locked sections WITHOUT content:\n💰 Wealth & Finance · unlock in full report\n💕 Love & Marriage · unlock in full report\n💼 Career & Luck Cycles · unlock in full report\n🏥 Health Forecast · unlock in full report\n\nDo NOT expand any locked section.`;
       var sysEn = `You are a master BaZi (Four Pillars of Destiny) reader with 30+ years of experience, trained in classical Chinese metaphysics. You write warm, insightful, and practical reports in fluent English. Never be scary or fatalistic — you help people understand their strengths and navigate challenges.${HEALTH_SOFT.en}${freeSuffixEn}`;
       var _chartEnS = baziChartBlock({ birthYear, birthMonth, birthDay, birthHour, gender });
-      var userEn = `Please analyze my BaZi chart and generate a deep destiny report.\nBirth details:\n- Date: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', Hour: ' + birthHour + ':00' : ' (birth hour unknown)'}\n- Gender: ${gender === 'male' ? 'Male' : 'Female'}${_chartEnS ? CHART_STRICT.en + _chartEnS + '\n' : ''}\n\n${full ? 'Generate a comprehensive report covering: Four Pillars Chart, Five Elements Analysis, This Year Fortune, Wealth & Career, Love & Relationships, Ten-Year Luck Cycles, Year-by-Year Forecast, Personalized Recommendations, and a Personal Message.' : 'Generate a free preview with ONLY 3 sections then the LOCKED separator.'}`;
+      var userEn = `Please analyze my BaZi chart and generate a warm preview.\nBirth details:\n- Date: ${birthYear}/${birthMonth}/${birthDay}${birthHour !== undefined && birthHour !== '' ? ', Hour: ' + birthHour + ':00' : ' (birth hour unknown)'}\n- Gender: ${gender === 'male' ? 'Male' : 'Female'}${_chartEnS ? CHART_STRICT.en + _chartEnS + '\n' : ''}\n\nGenerate a free preview with ONLY the 2 sections above then the LOCKED separator.`;
 
       var messagesEn = buildReadingPrompt(sysEn, userEn);
-      var streamBodyEn = await deepseekStream(messagesEn, { maxTokens: full ? 16384 : 3500, timeout: 300000 });
+      var streamBodyEn = await deepseekStream(messagesEn, { maxTokens: 3500, timeout: 300000 });
       var readerEn = streamBodyEn.getReader();
       var decoderEn = new TextDecoder('utf-8');
       var fullTextEn = '';
@@ -4872,14 +4948,8 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
           try { var _jEn = JSON.parse(_rawEn); var _cEn = (_jEn.choices && _jEn.choices[0] && _jEn.choices[0].delta && _jEn.choices[0].delta.content) || ''; if (_cEn) { fullTextEn += _cEn; res.write(`data: ${JSON.stringify({ type: 'chunk', content: _cEn })}\n\n`); } } catch(e) {}
         }
       }
-      // ── $199 大师档增量（英文·主体流完后追加4个专属章节·带兜底）──
-      if (full && detectBaziVip(req)) {
-        var _addonEn = await streamBaziVipAddon(res, {
-          sysAddon: 'You are a master-tier BaZi reader.' + (_chartEnS ? CHART_STRICT.en + _chartEnS + '\n' : '') + BAZI_VIP_ADDON_EN,
-          userAddon: 'This is the exclusive add-on for the same person. Output ONLY the 4 exclusive chapters (24-month monthly forecast / deep remedies / decision timing / master charge). Do not repeat earlier chapters. Birth: ' + birthYear + '/' + birthMonth + '/' + birthDay + (birthHour !== undefined && birthHour !== '' ? ' ' + birthHour + ':00' : '') + ', ' + (gender === 'male' ? 'Male' : 'Female')
-        });
-        if (_addonEn) fullTextEn = fullTextEn + '\n\n' + _addonEn;
-      }
+      // English deep content is delivered by the hardened topic sessions, so the old
+      // monolith + $199 master-addon path is intentionally not run here (EN narrative = preview hook only).
       insertReading.run('bazi', JSON.stringify(req.body), fullTextEn, req.userId);
       var ctxIdEn = saveQaContext('bazi', req.body, fullTextEn);
       res.write(`data: ${JSON.stringify({ type: 'done', contextId: ctxIdEn })}\n\n`);
