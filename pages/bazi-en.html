@@ -707,49 +707,14 @@ function finalizeSSEReport(fullText, contextId, isLocked) {
   var rb = document.getElementById('referralBanner');
   if (rb) rb.style.display='block';
 
-  // Paywall sticky CTA
+  // Paywall: the clean topic-session flow replaces the old monolithic locked report.
   var oldCta = document.getElementById('stickyCta');
   if (oldCta) oldCta.remove();
-  if (isLocked) {
-    var cta = document.createElement('div');
-    cta.className = 'sticky-cta';
-    cta.id = 'stickyCta';
-    cta.innerHTML =
-      '<div style="margin-bottom:10px;padding:10px 12px;background:rgba(201,168,76,0.06);border-radius:8px">' +
-      '<div style="font-size:12px;color:rgba(232,208,138,0.9);font-weight:500;letter-spacing:0.04em;margin-bottom:4px">Your free preview showed just the surface.</div>' +
-      '<div style="font-size:11px;color:rgba(130,115,90,0.85);line-height:1.75">The full report reveals: <b style="color:var(--gold)">when your wealth peaks</b> · <b style="color:var(--gold)">who you\'re destined to meet</b> · the exact years that change everything · 8 major life cycles mapped.</div>' +
-      '</div>' +
-      '<div style="text-align:center;font-size:11px;color:var(--gold-light);letter-spacing:0.02em;line-height:1.6;margin-bottom:10px">A traditional BaZi consultation costs $120+.<br>Your full AI reading: <b style="color:#e8d08a;font-size:14px">$9.90</b></div>' +
-      '<div style="background:rgba(201,168,76,0.05);border-radius:6px;padding:10px;margin-bottom:10px;font-size:11px">' +
-      '<div style="display:grid;grid-template-columns:1fr 34px 34px;gap:1px;letter-spacing:0.02em">' +
-      '<div style="padding:5px 0;color:var(--sub-text)"></div>' +
-      '<div style="padding:5px 0;text-align:center;color:var(--sub-text)"><span style="font-size:11px">🔓</span><br>Free</div>' +
-      '<div style="padding:5px 0;text-align:center;color:var(--gold-light)"><span style="font-size:11px">💎</span><br>Full</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">Four Pillars Chart</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">Five Elements Analysis</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">Wealth Fortune</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:var(--gold)">🔒</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">Romance &amp; Career</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:var(--gold)">🔒</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">8 Major Life Cycles</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:var(--gold)">🔒</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">Next 10 Years Forecast</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:var(--gold)">🔒</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
-      '</div></div>' +
-      '<button class="btn-unlock" onclick="createCheckout(this,\'full\',9.9)">Unlock Full Report · $9.90</button>' +
-      '<button class="btn-member" onclick="createCheckout(this,\'member\',9.9)">👑 Members read everything · <b style="font-size:16px;color:#8dd9bf">$9.90</b>/mo <span style="opacity:0.55;font-size:11px">save 50%+</span></button>';
-    document.body.appendChild(cta);
-  }
 
   var rc = document.getElementById('reportContent');
+  // Deep readings are delivered as hardened per-topic sessions (/api/bazi/topic?lang=en).
+  // Shown to everyone: overview is free; the other 6 are $3.99 each or $9.90 bundled.
+  if (rc) injectBaziTopicsEN(rc);
   if (rc) rc.appendChild(buildDailyActionBlockEN(fullText));
 
   // Share Card CTA first, then Compatibility CTA (Defect 4 fix: share card before hehun)
@@ -874,46 +839,10 @@ function showReport(aiText, contextId, tier, locked, backendPillars) {
   document.getElementById('shareBar').classList.add('show');
   var rb = document.getElementById('referralBanner');
   if (rb) rb.style.display='block';
+  // Old monolithic locked paywall removed. Deep readings now come from the clean,
+  // hardened per-topic sessions injected by renderAITextReport → injectBaziTopicsEN.
   var oldCta = document.getElementById('stickyCta');
   if (oldCta) oldCta.remove();
-  if (isLocked) {
-    var cta = document.createElement('div');
-    cta.className = 'sticky-cta';
-    cta.id = 'stickyCta';
-    cta.innerHTML =
-      '<div style="margin-bottom:10px;padding:10px 12px;background:rgba(201,168,76,0.06);border-radius:8px">' +
-      '<div style="font-size:12px;color:rgba(232,208,138,0.9);font-weight:500;letter-spacing:0.04em;margin-bottom:4px">Your free preview showed just the surface.</div>' +
-      '<div style="font-size:11px;color:rgba(130,115,90,0.85);line-height:1.75">The full report reveals: <b style="color:var(--gold)">when your wealth peaks</b> · <b style="color:var(--gold)">who you\'re destined to meet</b> · the exact years that change everything · 8 major life cycles mapped.</div>' +
-      '</div>' +
-      '<div style="text-align:center;font-size:11px;color:var(--gold-light);letter-spacing:0.02em;line-height:1.6;margin-bottom:10px">A traditional BaZi consultation costs $120+.<br>Your full AI reading: <b style="color:#e8d08a;font-size:14px">$9.90</b></div>' +
-      '<div style="background:rgba(201,168,76,0.05);border-radius:6px;padding:10px;margin-bottom:10px;font-size:11px">' +
-      '<div style="display:grid;grid-template-columns:1fr 34px 34px;gap:1px;letter-spacing:0.02em">' +
-      '<div style="padding:5px 0;color:var(--sub-text)"></div>' +
-      '<div style="padding:5px 0;text-align:center;color:var(--sub-text)"><span style="font-size:11px">🔓</span><br>Free</div>' +
-      '<div style="padding:5px 0;text-align:center;color:var(--gold-light)"><span style="font-size:11px">💎</span><br>Full</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">Four Pillars Chart</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">Five Elements Analysis</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">Wealth Fortune</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:var(--gold)">🔒</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">Romance &amp; Career</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:var(--gold)">🔒</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">8 Major Life Cycles</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:var(--gold)">🔒</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08)">Next 10 Years Forecast</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:var(--gold)">🔒</div>' +
-      '<div style="padding:5px 0;border-top:1px solid rgba(201,168,76,0.08);text-align:center;color:#3d9e82">✓</div>' +
-      '</div></div>' +
-      '<button class="btn-unlock" onclick="createCheckout(this,\'full\',9.9)">Unlock Full Report · $9.90</button>' +
-      '<button class="btn-member" onclick="createCheckout(this,\'member\',9.9)">👑 Members read everything · <b style="font-size:16px;color:#8dd9bf">$9.90</b>/mo <span style="opacity:0.55;font-size:11px">save 50%+</span></button>';
-    document.body.appendChild(cta);
-  }
 }
 
 function injectDisclaimer(containerId) {
@@ -1218,6 +1147,8 @@ function renderAITextReport(text, contextId, isLocked) {
 
   // Today's Best Action block
   var rc = document.getElementById('reportContent');
+  // Clean hardened per-topic sessions (paywall). Overview free; others $3.99 / $9.90 bundle.
+  if (rc) injectBaziTopicsEN(rc);
   if (rc) rc.appendChild(buildDailyActionBlockEN(text));
 
   // Share Card CTA (all users)
@@ -1385,6 +1316,120 @@ function askQuestion() {
     h.innerHTML += '<div style="margin-bottom:10px;font-size:12px;color:rgba(200,80,80,0.75)">Network error, please retry</div>';
     q.disabled=false;
   });
+}
+
+// ══════════════════════════════════════════════════════════════
+// BaZi Topic Sessions (EN) — the clean, hardened, sellable report flow.
+// Mirrors the Chinese bazi.html topic UI: overview auto-loads free, the other
+// 6 topics each call /api/bazi/topic?lang=en. Locked full content is NEVER sent
+// by the server unless paid, and the free preview is truncated at ---LOCKED---.
+// ══════════════════════════════════════════════════════════════
+var BAZI_TOPICS_EN = [
+  { topic: 'wealth', emoji: '💰', label: 'Wealth' },
+  { topic: 'love',   emoji: '💕', label: 'Love' },
+  { topic: 'career', emoji: '💼', label: 'Career' },
+  { topic: 'dayun',  emoji: '📅', label: 'Luck Cycles' },
+  { topic: 'health', emoji: '🌿', label: 'Health' },
+  { topic: 'luck',   emoji: '🎯', label: 'Fortune Boost' }
+];
+
+// Minimal markdown → HTML for topic body (bold + line breaks). Escapes HTML first.
+function bzRenderBodyEN(text) {
+  var esc = String(text || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return esc
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e8d08a">$1</strong>')
+    .replace(/\n{2,}/g, '</p><p style="margin:10px 0">')
+    .replace(/\n/g, '<br>');
+}
+
+function fetchBaziTopicEN(topic) {
+  var token = localStorage.getItem('sy_token') || '';
+  return fetch('/api/bazi/topic', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({
+      birthYear: lastBaziInput.year, birthMonth: lastBaziInput.month, birthDay: lastBaziInput.day,
+      birthHour: lastBaziInput.hour, gender: lastBaziInput.gender, topic: topic, lang: 'en', token: token
+    })
+  }).then(function(r){ return r.json(); });
+}
+
+// Renders the whole topic module into #baziTopicsEN (overview panel + 6 tabs + bundle CTA).
+function injectBaziTopicsEN(rc) {
+  if (!rc || document.getElementById('baziTopicsEN')) return;
+  var wrap = document.createElement('div');
+  wrap.id = 'baziTopicsEN';
+  wrap.style.cssText = 'padding:20px 16px 0';
+  var grid = BAZI_TOPICS_EN.map(function(t){
+    return '<button class="bz-topic-btn-en" data-topic="'+t.topic+'" onclick="openBaziTopicEN(this)" '+
+      'style="flex:1;min-width:96px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);'+
+      'border-radius:12px;padding:14px 8px;color:var(--ink-text);font-size:13px;cursor:pointer;transition:.2s;text-align:center;font-family:Inter,sans-serif">'+
+      '<div style="font-size:22px;margin-bottom:4px">'+t.emoji+'</div>'+t.label+
+      '<div style="font-size:11px;color:var(--gold-light);margin-top:3px">$3.99</div></button>';
+  }).join('');
+  wrap.innerHTML =
+    '<div style="text-align:center;font-size:13px;color:var(--gold-light);letter-spacing:0.06em;margin-bottom:6px">— Destiny Sessions —</div>' +
+    '<div style="text-align:center;font-size:11px;color:var(--sub-text);margin-bottom:14px">Overview free · each deep session $3.99 · unlock all 6 for $9.90</div>' +
+    '<div id="baziOverviewPanelEN" style="margin-bottom:16px"></div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px">' + grid + '</div>' +
+    '<div id="baziTopicResultEN" style="margin-top:16px"></div>' +
+    '<div style="text-align:center;margin-top:18px;padding:16px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.28);border-radius:14px">' +
+      '<div style="color:var(--gold-light);font-size:14px;margin-bottom:4px">✨ Unlock all 6 sessions</div>' +
+      '<div style="color:var(--sub-text);font-size:12px;margin-bottom:10px">$23.94 separately · <b style="color:#e8d08a">$9.90</b> bundled (save 50%+)</div>' +
+      '<button onclick="sessionCheckoutEN(\'bazi_full\',this)" style="background:linear-gradient(135deg,#f0d98a,#c8a24a);border:none;border-radius:10px;padding:13px 34px;color:#2a1e08;font-size:15px;font-weight:700;cursor:pointer">Unlock Everything · $9.90</button>' +
+    '</div>';
+  rc.appendChild(wrap);
+  loadBaziOverviewEN();
+}
+
+function loadBaziOverviewEN() {
+  var p = document.getElementById('baziOverviewPanelEN'); if (!p) return;
+  p.innerHTML = '<div style="text-align:center;padding:16px;color:var(--sub-text)">✦ Composing your destiny overview…</div>';
+  fetchBaziTopicEN('overview').then(function(d){
+    if (!d || !d.reading) { p.innerHTML=''; return; }
+    p.innerHTML = '<div style="font-size:13px;color:var(--gold-light);letter-spacing:.1em;margin-bottom:8px">📜 Destiny Overview · Free</div>' +
+      '<div style="background:var(--card);border:1px solid rgba(201,168,76,0.15);border-radius:14px;padding:18px 20px;color:var(--ink-text);font-size:15px;line-height:1.9"><p style="margin:0">'+bzRenderBodyEN(d.reading)+'</p></div>';
+  }).catch(function(){ p.innerHTML=''; });
+}
+
+function openBaziTopicEN(btn) {
+  var topic = btn.getAttribute('data-topic');
+  var box = document.getElementById('baziTopicResultEN'); if (!box) return;
+  document.querySelectorAll('.bz-topic-btn-en').forEach(function(b){ b.style.borderColor='rgba(201,168,76,0.3)'; });
+  btn.style.borderColor = 'var(--gold)';
+  box.innerHTML = '<div style="text-align:center;padding:16px;color:var(--sub-text)">✦ Reading your ' + topic + ' session…</div>';
+  fetchBaziTopicEN(topic).then(function(d){
+    if (!d || !d.reading) { box.innerHTML = '<div style="text-align:center;color:rgba(200,80,80,0.75);font-size:13px">Failed to load — please retry</div>'; return; }
+    var raw = String(d.reading || '');
+    var lockIdx = raw.indexOf('---LOCKED---');
+    var freeText = lockIdx >= 0 ? raw.slice(0, lockIdx) : raw;
+    var html = '<div style="font-size:13px;color:var(--gold-light);letter-spacing:.08em;margin-bottom:8px">'+((d.title||'')+(d.locked?' · Preview':''))+'</div>' +
+      '<div style="background:var(--card);border:1px solid rgba(201,168,76,0.15);border-radius:14px;padding:18px 20px;color:var(--ink-text);font-size:15px;line-height:1.9"><p style="margin:0">'+bzRenderBodyEN(freeText)+'</p></div>';
+    if (d.locked) {
+      html += '<div style="text-align:center;margin-top:14px">' +
+        '<div style="color:var(--gold-light);font-size:13px;margin-bottom:10px">🔒 The full "'+(d.title||'session')+'" is locked</div>' +
+        '<button onclick="sessionCheckoutEN(\''+(d.product||'')+'\',this)" style="background:linear-gradient(135deg,#c9a84c,#8a6420);border:none;border-radius:10px;padding:13px 30px;color:#fff;font-size:15px;font-weight:600;cursor:pointer">Unlock this session · $3.99</button>' +
+        '<div style="margin-top:10px"><a onclick="sessionCheckoutEN(\'bazi_full\',this)" style="color:var(--gold-light);font-size:13px;cursor:pointer;text-decoration:underline">or unlock all 6 · $9.90 (50% off) →</a></div></div>';
+    }
+    box.innerHTML = html;
+    box.scrollIntoView({ behavior:'smooth', block:'start' });
+  }).catch(function(){ box.innerHTML = '<div style="text-align:center;color:rgba(200,80,80,0.75);font-size:13px">Network error — please retry</div>'; });
+}
+
+function sessionCheckoutEN(product, btn) {
+  if (!product) return;
+  var label = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Redirecting…'; }
+  if (lastBaziInput) { try { localStorage.setItem('sy_last_bazi', JSON.stringify(lastBaziInput)); } catch(e){} }
+  var token = localStorage.getItem('sy_token') || '';
+  fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    body: JSON.stringify({ product: product, token: token, successUrl: location.origin + '/pages/bazi-en.html?paid=1' })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.url) window.location.href = d.url;
+    else { showToast('Redirect failed, please retry', 'error'); if(btn){ btn.disabled=false; btn.textContent=label; } }
+  }).catch(function(){ showToast('Network error, please retry', 'error'); if(btn){ btn.disabled=false; btn.textContent=label; } });
 }
 
 function renderUltimateReport(text, containerId) {
