@@ -740,7 +740,7 @@ const PRODUCTS = {
   daliuren:        { name: '大六壬预测',        amount: 2900,   amountCny: 5900,  desc: '三传四课' },
   qimen:           { name: '奇门遁甲',          amount: 2900,   amountCny: 5900,  desc: '八门九星' },
   bazi_trial:      { name: '体验命盘',          amount: 690,    amountCny: 1990,  desc: '快速简批（并入基础档）' },
-  report_unlock_a: { name: '解锁深度报告（第3-6章）', amount: 790, amountCny: 1990, desc: '感情+事业+财运+大运，共4章' },
+  report_unlock_a: { name: '解锁深度报告（第3-6章）', amount: 990, amountCny: 1990, desc: '感情+事业+财运+大运，共4章' },
   report_unlock_b: { name: '解锁完整报告（第7-10章）', amount: 499, amountCny: 3990, desc: '流年+健康+开运+大师寄语，共4章' },
   report_annual:   { name: '年度订阅·全报告无限查', amount: 1490, amountCny: 9900, desc: '全部报告+每季度更新+开运日历' },
   joss_basic:      { name: '代烧·基础套餐',     amount: 4990,   amountCny: 19900, desc: '标准纸钱+元宝+祈福' },
