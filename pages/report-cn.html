@@ -38,6 +38,12 @@ a{color:#c9a84c;text-decoration:none}
 .rp-date{color:rgba(255,255,255,.4);font-size:13px;letter-spacing:2px;margin-bottom:24px}
 .rp-pillars{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px}
 .pillar{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:8px 16px;font-size:14px;color:rgba(201,168,76,.8);letter-spacing:2px}
+.pillar.cell{padding:10px 16px;text-align:center;min-width:58px}
+.pillar .pl{display:block;font-size:10px;color:#9a8a6a;letter-spacing:1px;margin-bottom:5px}
+.pillar .pg{display:block;font-size:22px;color:#e8d8b0;line-height:1.15}
+.pillar .pz{display:block;font-size:18px;color:#c9b890;line-height:1.2}
+.pillar.day{border-color:#c9a84c;background:rgba(201,168,76,.16);box-shadow:0 0 18px rgba(201,168,76,.18)}
+.pillar.day .pg{color:#e8d08a}
 
 .rp-section{margin-top:56px}
 .rp-section h2{color:#c9a84c;font-size:20px;letter-spacing:3px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid rgba(201,168,76,.12)}
@@ -259,10 +265,23 @@ function md2html(text){
 }
 
 // ── 渲染免费/锁定内容 ──
-function renderReport(reading, name, dateStr, timeStr){
+function renderReport(reading, name, dateStr, timeStr, pillars){
   // 填封面
   document.getElementById('rp-name').textContent = name || '命盘';
   document.getElementById('rp-date').textContent = dateStr + (timeStr ? ' · ' + timeStr : '');
+
+  // 四柱可视化（用后端返回的 pillars，日柱高亮=日主）·防御式，无数据即留空
+  try{
+    if(pillars){
+      var _cols=[['年',pillars.year],['月',pillars.month],['日',pillars.day],['时',pillars.hour]];
+      var _h=_cols.map(function(c,i){
+        var p=c[1]||{}, isDay=(i===2), gan=p.gan||'', zhi=p.zhi||'';
+        if(!gan && !zhi) return '';
+        return '<div class="pillar cell'+(isDay?' day':'')+'"><span class="pl">'+c[0]+'柱'+(isDay?'·日主':'')+'</span><span class="pg">'+(gan||'—')+'</span><span class="pz">'+(zhi||'—')+'</span></div>';
+      }).join('');
+      var _host=document.getElementById('rp-pillars'); if(_host && _h) _host.innerHTML=_h;
+    }
+  }catch(e){}
 
   var parts = reading.split(/---LOCKED---/i);
   var freeText = parts[0] || '';
@@ -412,7 +431,7 @@ function copyLink(){
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('report').classList.add('show');
     // 渲染报告
-    renderReport(data.reading, name, dateStr.replace(/-/g,'年').replace('-','月')+'日', timeStr);
+    renderReport(data.reading, name, dateStr.replace(/-/g,'年').replace('-','月')+'日', timeStr, data.pillars);
   })
   .catch(function(err){
     stopAnim();
