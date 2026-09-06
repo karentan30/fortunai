@@ -838,9 +838,9 @@ var _wisdomPhrases = [
   '"The wise man does not fight the river — he studies its bends."',
   'Mapping your Ten Gods across 12 earthly branches…',
   '"Destiny is not chance — it is a map waiting to be read."',
-  'Calculating your major 10-year luck cycles…',
+  'Calculating your major luck cycles (大运)…',
   '"The day stem reveals the self; the pillars reveal the world."',
-  'Analyzing your hidden stems and chart pattern…',
+  'Analyzing hidden stems and chart pattern (格局)…',
   '"Know your element, know your season."'
 ];
 var _wisdomIdx = 0;
@@ -1011,68 +1011,11 @@ function buildBaziVisualCard(chartData, lang) {
   var PILLAR_LABELS_EN = ['Year', 'Month', 'Day', 'Hour'];
   var GAN_ELEM = {甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'};
   var ZHI_ELEM = {子:'水',丑:'土',寅:'木',卯:'木',辰:'土',巳:'火',午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水'};
-  // ── Chinese → plain-English lookups so an American reader never sees an untranslated character ──
-  // Heavenly Stems (天干) → pinyin + yin/yang element
-  var GAN_EN = {甲:'Jiǎ · Yang Wood',乙:'Yǐ · Yin Wood',丙:'Bǐng · Yang Fire',丁:'Dīng · Yin Fire',戊:'Wù · Yang Earth',己:'Jǐ · Yin Earth',庚:'Gēng · Yang Metal',辛:'Xīn · Yin Metal',壬:'Rén · Yang Water',癸:'Guǐ · Yin Water'};
-  // Earthly Branches (地支) → pinyin + zodiac animal + element
-  var ZHI_EN = {子:'Zǐ · Rat / Water',丑:'Chǒu · Ox / Earth',寅:'Yín · Tiger / Wood',卯:'Mǎo · Rabbit / Wood',辰:'Chén · Dragon / Earth',巳:'Sì · Snake / Fire',午:'Wǔ · Horse / Fire',未:'Wèi · Goat / Earth',申:'Shēn · Monkey / Metal',酉:'Yǒu · Rooster / Metal',戌:'Xū · Dog / Earth',亥:'Hài · Pig / Water'};
-  // Ten Gods (十神) — the role each other pillar plays relative to you, plus a plain-English gloss
-  var SHISHEN_EN = {
-    '比肩':'Friend', '劫财':'Rival', '食神':'Creator', '伤官':'Free Spirit',
-    '偏财':'Windfall Wealth', '正财':'Steady Wealth', '七杀':'Challenger', '正官':'Authority',
-    '偏印':'Unconventional Mentor', '正印':'Mentor', '枭神':'Unconventional Mentor', '日主':'You (Day Master)', '日元':'You (Day Master)'
-  };
-  // Chart pattern (格局) → plain-English archetype
-  var GEJU_EN = {
-    '正官格':'The Achiever', '七杀格':'The Trailblazer', '偏官格':'The Trailblazer',
-    '正财格':'The Provider', '偏财格':'The Dealmaker', '正印格':'The Scholar', '偏印格':'The Original',
-    '食神格':'The Creator', '伤官格':'The Maverick', '比肩格':'The Self-Reliant', '劫财格':'The Competitor',
-    '建禄格':'The Self-Made', '月刃格':'The Powerhouse', '羊刃格':'The Powerhouse',
-    '从财格':'The Wealth-Follower', '从杀格':'The Power-Follower', '从儿格':'The Creator-Follower',
-    '从势格':'The Go-With-the-Flow', '从强格':'The Dominant', '专旺格':'The Dominant',
-    '从格':'The Follower', '杂气格':'The Mixed Chart', '化气格':'The Transformer'
-  };
-  // Strength verdict (旺衰)
-  // Kept non-judgmental — a "weak" Day Master isn't a flaw, it just means you thrive with support.
-  var WANGSHUAI_EN = {
-    '身强':'Self-Driven', '身弱':'Support-Fueled', '偏强':'Mostly Self-Driven', '偏弱':'Mostly Support-Fueled',
-    '中和':'Well-Balanced', '极强':'Highly Self-Driven', '极弱':'Deeply Support-Fueled', '从强':'Dominant', '从弱':'Flowing'
-  };
-  var ELEM_ONLY = {金:'Metal',木:'Wood',水:'Water',火:'Fire',土:'Earth'};
-  // Translate a possibly-Chinese label; keep as-is if already English
-  function _tr(map, v) { if (!v) return ''; return map[v] || v; }
-  // Translate a shishen string that may contain a Chinese ten-god name
-  function _trShishen(v) {
-    if (!v) return '';
-    var m = SHISHEN_EN[v]; if (m) return m;
-    // strip any pinyin the engine already produced; fall through to raw if unknown
-    return v;
-  }
-  // Translate hidden-stem string like "癸(正印)·辛(正财)" → "Guǐ Water (Mentor) · Xīn Metal (Steady Wealth)"
-  function _trCangGan(s) {
-    if (!s) return '';
-    return s.split('·').map(function(chunk) {
-      var c = chunk.trim();
-      // First char is the hidden Heavenly Stem; the rest may be "(十神)"
-      var gan = c.charAt(0);
-      if (!GAN_ELEM[gan]) return c; // not a recognized stem — leave as-is
-      var mm = c.match(/\(([^)]+)\)/);
-      var elemEn = ELEM_ONLY[GAN_ELEM[gan]] || '';
-      var ss = mm ? _trShishen(mm[1]) : '';
-      return gan + (elemEn ? ' ' + elemEn : '') + (ss ? ' (' + ss + ')' : '');
-    }).join(' · ');
-  }
   var pillars = chartData.pillars;
   var wuxing = chartData.wuxing || {};
-  var gejuRaw = chartData.geju || '';
-  var geju = isEn ? _tr(GEJU_EN, gejuRaw) : gejuRaw;
-  var wangShuaiRaw = chartData.wangShuai || '';
-  var wangShuai = isEn ? _tr(WANGSHUAI_EN, wangShuaiRaw) : wangShuaiRaw;
-  var yongshenRaw = chartData.yongshen || '';
-  // yongshen is Chinese element chars joined by · (e.g. "壬·癸" or "水·木")
-  var yongshen = isEn ? yongshenRaw.split('·').map(function(x){
-    var g = x.trim(); return ELEM_ONLY[g] || ELEM_ONLY[GAN_ELEM[g]] || g;
-  }).filter(Boolean).join(' · ') : yongshenRaw;
+  var geju = chartData.geju || '';
+  var wangShuai = chartData.wangShuai || '';
+  var yongshen = chartData.yongshen || '';
   var missing = chartData.missing || [];
   var dayMaster = chartData.dayMaster || '';
   var dayMasterElement = chartData.dayMasterElement || '';
@@ -1088,16 +1031,12 @@ function buildBaziVisualCard(chartData, lang) {
   html += '<div style="padding:14px 16px 10px;border-bottom:1px solid rgba(201,168,76,0.12);display:flex;align-items:center;gap:10px">';
   html += '<div style="flex:1"><div style="font-size:13px;font-weight:700;letter-spacing:0.15em;color:#c9a84c">' + (isEn ? 'BAZI DESTINY CHART' : '八字命盘速览') + '</div>';
   if (dayMaster) {
-    // Day Master gets the full pinyin + yin/yang element gloss so the reader knows what the single character means.
-    var dmGloss = isEn ? (GAN_EN[dayMaster] || (ELEM_EN_MAP[dayMasterElement]||dayMasterElement)) : dayMasterElement;
-    html += '<div style="font-size:11px;color:rgba(200,190,160,0.6);margin-top:2px;letter-spacing:0.06em">Day Master (this is <b style="color:rgba(232,208,138,0.85)">you</b>) · <span style="color:' + dmElemColor + '">' + dayMaster + (dmGloss ? ' (' + dmGloss + ')' : '') + '</span></div>';
+    var dmElemLabel = isEn ? (ELEM_EN_MAP[dayMasterElement]||dayMasterElement) : dayMasterElement;
+    html += '<div style="font-size:11px;color:rgba(200,190,160,0.6);margin-top:2px;letter-spacing:0.06em">Day Master · <span style="color:' + dmElemColor + '">' + dayMaster + (dmElemLabel ? ' (' + dmElemLabel + ')' : '') + '</span></div>';
   }
   html += '</div>';
   if (geju) html += '<div style="font-size:11px;color:#c9a84c;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.22);border-radius:8px;padding:4px 10px;letter-spacing:0.06em">' + geju + '</div>';
   html += '</div>';
-
-  // Plain-English "what am I looking at" line, full width under the title bar
-  if (isEn) html += '<div style="font-size:11px;color:rgba(169,164,136,0.75);padding:8px 16px 2px;line-height:1.55;letter-spacing:0.02em">Think of this as a snapshot of your "energy DNA" — four pairs of symbols from the moment you were born. The highlighted <b style="color:rgba(232,208,138,0.85)">Day</b> pillar is <b style="color:rgba(232,208,138,0.85)">you</b>; the other three describe the people, drives and timing around you.</div>';
 
   // Four pillars grid
   html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(201,168,76,0.08);border-bottom:1px solid rgba(201,168,76,0.12)">';
@@ -1105,24 +1044,17 @@ function buildBaziVisualCard(chartData, lang) {
     var isDay = (i === 2);
     var borderLeft = i > 0 ? 'border-left:1px solid rgba(201,168,76,0.08);' : '';
     html += '<div style="text-align:center;padding:12px 4px 10px;background:' + (isDay ? 'rgba(201,168,76,0.08)' : 'transparent') + ';' + borderLeft + '">';
-    var pillarLbl = isEn ? (PILLAR_LABELS_EN[i] + ' Pillar') : (p.label + '柱');
-    html += '<div style="font-size:9px;color:rgba(169,164,136,0.8);letter-spacing:0.08em;margin-bottom:4px;text-transform:uppercase">' + pillarLbl + '</div>';
-    var shishenTxt = isEn ? (isDay ? 'You' : _trShishen(p.shishen)) : p.shishen;
-    if (shishenTxt) {
-      html += '<div style="font-size:10px;color:#d8b96a;margin-bottom:3px;letter-spacing:0.02em">' + shishenTxt + '</div>';
+    html += '<div style="font-size:10px;color:rgba(169,164,136,0.8);letter-spacing:0.1em;margin-bottom:4px">' + (isEn ? PILLAR_LABELS_EN[i] : (p.label + '柱')) + '</div>';
+    if (p.shishen) {
+      html += '<div style="font-size:10px;color:#d8b96a;margin-bottom:2px;letter-spacing:0.04em">' + p.shishen + '</div>';
     } else {
-      html += '<div style="font-size:10px;color:transparent;margin-bottom:3px">-</div>';
+      html += '<div style="font-size:10px;color:transparent;margin-bottom:2px">-</div>';
     }
     var ganColor = ELEM_COLOR[GAN_ELEM[p.gan]] || '#f0e4b0';
-    html += '<div style="font-size:34px;font-weight:700;line-height:1;color:' + ganColor + '">' + p.gan + '</div>';
-    if (isEn) html += '<div style="font-size:8px;color:rgba(200,190,160,0.55);line-height:1.2;margin:1px 0 3px">' + (GAN_EN[p.gan]||'') + '</div>';
+    html += '<div style="font-size:36px;font-weight:700;line-height:1;color:' + ganColor + '">' + p.gan + '</div>';
     var zhiColor = ELEM_COLOR[ZHI_ELEM[p.zhi]] || '#e8d08a';
-    html += '<div style="font-size:34px;font-weight:700;line-height:1.05;color:' + zhiColor + '">' + p.zhi + '</div>';
-    if (isEn) html += '<div style="font-size:8px;color:rgba(200,190,160,0.55);line-height:1.2;margin-top:1px">' + (ZHI_EN[p.zhi]||'') + '</div>';
-    if (p.cangGan) {
-      var cgTxt = isEn ? _trCangGan(p.cangGan) : p.cangGan.replace(/\(.*?\)/g, '');
-      html += '<div style="font-size:8px;color:rgba(154,144,120,0.7);margin-top:5px;line-height:1.4">' + (isEn ? '<span style="color:rgba(169,164,136,0.55)">hidden: </span>' : '') + cgTxt + '</div>';
-    }
+    html += '<div style="font-size:36px;font-weight:700;line-height:1.1;color:' + zhiColor + '">' + p.zhi + '</div>';
+    if (p.cangGan) html += '<div style="font-size:9px;color:rgba(154,144,120,0.75);margin-top:5px;line-height:1.4">' + p.cangGan.replace(/\(.*?\)/g, '') + '</div>';
     html += '</div>';
   });
   html += '</div>';
@@ -1145,18 +1077,17 @@ function buildBaziVisualCard(chartData, lang) {
   });
   html += '</div>';
 
-  // Pattern / strength / favorable tags — each with a plain-English one-liner so the term isn't cryptic
+  // Pattern / strength / favorable tags
   var tags = [];
-  if (geju) tags.push({ icon: '✨', label: 'Your Type', val: geju, hint: isEn ? 'your core personality pattern' : '' });
-  if (wangShuai) tags.push({ icon: '⚖️', label: 'Energy Style', val: wangShuai, hint: isEn ? 'do you run on your own fuel or thrive with support' : '' });
-  if (yongshen) tags.push({ icon: '💧', label: 'Lucky Elements', val: yongshen, hint: isEn ? 'the elements that balance & boost you' : '' });
+  if (geju) tags.push({ icon: '✨', label: 'Pattern', val: geju });
+  if (wangShuai) tags.push({ icon: '⚖️', label: 'Strength', val: wangShuai });
+  if (yongshen) tags.push({ icon: '💧', label: 'Favorable', val: yongshen });
   if (tags.length) {
     html += '<div style="display:flex;gap:6px;padding:0 12px 12px;flex-wrap:wrap">';
     tags.forEach(function(t) {
-      html += '<div style="flex:1;min-width:96px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.18);border-radius:10px;padding:8px 10px">';
+      html += '<div style="flex:1;min-width:80px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.18);border-radius:10px;padding:8px 10px">';
       html += '<div style="font-size:9px;color:rgba(169,164,136,0.7);letter-spacing:0.08em;margin-bottom:2px">' + t.icon + ' ' + t.label + '</div>';
       html += '<div style="font-size:12px;color:#e8d08a;font-weight:600;letter-spacing:0.04em">' + t.val + '</div>';
-      if (t.hint) html += '<div style="font-size:8px;color:rgba(169,164,136,0.6);margin-top:2px;line-height:1.3">' + t.hint + '</div>';
       html += '</div>';
     });
     html += '</div>';
@@ -1170,11 +1101,7 @@ function buildBaziOverview(parsed) {
   if (!parsed || !parsed.hasDaymaster) return '';
   var ec = ELEM_COLORS;
   var html = '';
-  // The rich visual chart card (buildBaziVisualCard) already renders a fully-annotated Four Pillars
-  // grid whenever the backend chart is present. Only fall back to this bare grid if that card is absent,
-  // so an American reader never sees a second grid of un-annotated Chinese characters.
-  var _hasRichCard = !!(window._baziChartData && window._baziChartData.pillars && window._baziChartData.pillars.length);
-  if (parsed.pillars && !_hasRichCard) {
+  if (parsed.pillars) {
     html += '<div class="overview-section"><div class="sizhu-label" style="padding:0">Chart Overview</div>';
     html += '<div class="sizhu-grid" style="padding:0">';
     parsed.pillars.forEach(function(z, i) {
@@ -1481,13 +1408,10 @@ var BAZI_TOPICS_EN = [
 // Minimal markdown → HTML for topic body (bold + line breaks). Escapes HTML first.
 function bzRenderBodyEN(text) {
   var esc = String(text || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  var out = esc
+  return esc
     .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#e8d08a">$1</strong>')
     .replace(/\n{2,}/g, '</p><p style="margin:10px 0">')
     .replace(/\n/g, '<br>');
-  // First-use plain-English gloss on BaZi jargon within this session block
-  try { if (typeof annotateBaziGlossary === 'function') out = annotateBaziGlossary(out, {}); } catch(e) {}
-  return out;
 }
 
 function fetchBaziTopicEN(topic) {
@@ -1581,51 +1505,12 @@ function sessionCheckoutEN(product, btn) {
   }).catch(function(){ showToast('Network error, please retry', 'error'); if(btn){ btn.disabled=false; btn.textContent=label; } });
 }
 
-// ── Plain-English glossary for BaZi jargon the AI report may use ──
-// Each entry: the standard-glossary term the backend LLM emits → a one-line, no-mysticism explanation.
-// We inject the explanation in parentheses the FIRST time a term appears in the whole report, so an
-// American reader never hits an opaque phrase like "Hurting Officer" or "Seven Killings" cold.
-var BAZI_GLOSSARY_EN = [
-  ['Hurting Officer', 'your bold, rule-bending creative streak'],
-  ['Injury Officer', 'your bold, rule-bending creative streak'],
-  ['Eating God', 'your easygoing, expressive, enjoy-life side'],
-  ['Seven Killings', 'raw drive and pressure that pushes you to achieve'],
-  ['Direct Officer', 'your sense of duty, structure and self-discipline'],
-  ['Indirect Wealth', 'money from bold moves, deals and side ventures'],
-  ['Direct Wealth', 'money from steady, reliable work'],
-  ['Rob Wealth', 'competitive energy — friends and rivals who affect your money'],
-  ['Indirect Resource', 'unconventional learning, intuition and mentors'],
-  ['Direct Resource', 'support, learning and nurturing figures in your life'],
-  ['Peach Blossom Star', 'natural charm and romantic magnetism'],
-  ['Traveling Horse Star', 'a pull toward movement, travel and change'],
-  ['Academic Star', 'a gift for study, writing and ideas'],
-  ['Heavenly Noble Star', 'lucky helpers who show up when you need them'],
-  ['Day Master', 'the symbol that represents YOU at the center of the chart'],
-  ['Useful God', 'the element that best balances and supports you'],
-  ['Luck Cycle', 'a ~10-year chapter of your life with its own theme'],
-  ['Luck Pillar', 'a ~10-year chapter of your life with its own theme']
-];
-function annotateBaziGlossary(html, seen) {
-  BAZI_GLOSSARY_EN.forEach(function(pair){
-    var term = pair[0], gloss = pair[1];
-    if (seen[term]) return;
-    // Match the term as a whole phrase, not already inside a tag/gloss. Case-insensitive, first hit only.
-    var re = new RegExp('(^|[^A-Za-z(])(' + term.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')(?![A-Za-z])');
-    if (re.test(html)) {
-      seen[term] = true;
-      html = html.replace(re, '$1<span style="border-bottom:1px dotted rgba(201,168,76,0.5)">$2</span> <span style="color:rgba(122,110,88,0.9);font-style:italic;font-size:0.92em">(' + gloss + ')</span>');
-    }
-  });
-  return html;
-}
-
 function renderUltimateReport(text, containerId) {
   var container = document.getElementById(containerId);
   if (!container) return;
   // Strip locked content from free preview (frontend only — backend sentinel remains)
   var lockedIdx = text.indexOf('---LOCKED---');
   if (lockedIdx !== -1) text = text.slice(0, lockedIdx);
-  var _glossarySeen = {};
   var sections = [];
   var lines = text.split('\n');
   var currentSection = null;
@@ -1657,7 +1542,6 @@ function renderUltimateReport(text, containerId) {
            .replace(/(\d{4})/g,'<span class="hl-year">$1</span>')
            .replace(/(\d+)\/100/g,'<span class="hl-score">$1/100</span>')
            .replace(/\$(\d+\.?\d*)/g,'<span class="hl-money">$$$1</span>');
-    ct = annotateBaziGlossary(ct, _glossarySeen);
     html += '<div class="ur-card" style="animation-delay:'+(i*0.08)+'s">';
     html += '<div class="ur-head" onclick="var b=this.nextElementSibling;b.classList.toggle(\'open\');this.querySelector(\'.ur-arrow\').classList.toggle(\'open\')">';
     html += '<span class="ur-emoji">'+(sec.emoji||'📜')+'</span>';
@@ -1775,5 +1659,43 @@ setTimeout(initZhuanyunMonth, 800);
 <script src="/assets/js/common.js"></script>
 <script src="/assets/js/wuxing-shop.js"></script>
 <script>if(window.SY&&SY.initMembership)SY.initMembership();</script>
+<script>
+// ===== MOCK REPORT HARNESS (test only) =====
+window.addEventListener('load', function(){
+  document.getElementById('inputScreen').style.display='none';
+  var rs = document.getElementById('reportScreen');
+  var para = 'Born under a Yang Water Day Master, your chart flows with the quiet persistence of a great river. The Wealth star sits in your Month pillar, reinforced by the Shen hidden stem, which suggests income arrives through networks and negotiation rather than raw labor. In 2026 the Fire element strengthens, warming your prospects — a favorable window for launching ventures that depend on visibility and reputation.';
+  var cards = '';
+  var titles = [['📜','Destiny Overview'],['🌊','Five-Element Energy Map'],['🌟','Personality & Core Nature'],['💼','Career Track'],['💕','Love & Relationships'],['🔮','Ten-Year Luck Roadmap']];
+  titles.forEach(function(t,i){
+    cards += '<div class="ur-card"><div class="ur-head"><span class="ur-emoji">'+t[0]+'</span><span class="ur-title">'+t[1]+'</span><span class="ur-arrow'+(i===0?' open':'')+'">▾</span></div><div class="ur-body'+(i===0?' open':'')+'"><div class="ur-text">'+para+' '+para+'</div></div></div>';
+  });
+  var toc='<div style="padding:0 4px 10px;display:flex;flex-wrap:wrap;gap:6px;">';
+  titles.forEach(function(t,i){ toc+='<button style="padding:5px 10px;background:var(--card);border:1px solid rgba(201,168,76,0.1);border-radius:20px;font-size:11px;color:var(--sub-text);font-family:Inter,sans-serif;min-height:44px;display:inline-flex;align-items:center;">'+t[0]+(i+1)+'</button>'; });
+  toc+='</div>';
+  var html='';
+  html+='<div style="display:flex;align-items:center;gap:6px;margin:12px 16px 0;padding:7px 12px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:6px;font-size:12px;color:rgba(201,168,76,0.8)"><span>✨</span><span><b>AI-Generated Content</b> · For entertainment only.</span></div>';
+  html+='<div class="chart-header"><div class="name-row"><div class="report-name">Karen</div><div class="report-tag">AI Destiny Analysis · AIGC</div></div><div class="birth-info">Sep 6, 1990 · Female</div><div class="divider"></div></div>';
+  html+='<div class="sizhu-label">Four Pillars</div><div class="sizhu-grid">'+
+    ['Year','Month','Day','Hour'].map(function(l,i){return '<div class="zhu'+(i===2?' daymaster':'')+'"><div class="zhu-label">'+l+'</div><div class="zhu-tian">壬</div><div class="zhu-di">午</div><div class="zhu-elem">Water</div></div>';}).join('')+'</div>';
+  html+='<div class="elements-section"><div class="elements-title">Five Elements</div>'+
+    [['Wood',60,'#5bbfa0'],['Fire',80,'#c9820a'],['Earth',40,'#c9a84c'],['Metal',30,'#9aa'],['Water',70,'#5b8fbf']].map(function(e){return '<div class="elem-row"><div class="elem-name">'+e[0]+'</div><div class="elem-bar-bg"><div class="elem-fill" style="width:'+e[1]+'%;background:'+e[2]+'"></div></div><div class="elem-score">'+e[1]+'</div></div>';}).join('')+'</div>';
+  html+='<div id="reportContent" style="padding:0 16px">'+toc+'<div class="ultimate-report">'+cards+'</div>';
+  // topic sessions module (paywall)
+  html+='<div id="baziTopicsEN" style="padding:20px 16px 0">'+
+    '<div style="text-align:center;font-size:13px;color:var(--gold-light);letter-spacing:0.06em;margin-bottom:6px">— Destiny Sessions —</div>'+
+    '<div style="text-align:center;font-size:11px;color:var(--sub-text);margin-bottom:14px">Overview free · each deep session $3.99 · unlock all 6 for $9.90</div>'+
+    '<div id="baziOverviewPanelEN" style="margin-bottom:16px"><div style="font-size:13px;color:var(--gold-light);margin-bottom:8px">📜 Destiny Overview · Free</div><div style="background:var(--card);border:1px solid rgba(201,168,76,0.15);border-radius:14px;padding:18px 20px;font-size:15px;line-height:1.9">'+para+'</div></div>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px">'+
+    [['💰','Wealth'],['💕','Love'],['💼','Career'],['📅','Luck Cycles'],['🌿','Health'],['🎯','Fortune Boost']].map(function(t){return '<button class="bz-topic-btn-en" style="flex:1;min-width:96px;background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.3);border-radius:12px;padding:14px 8px;font-size:13px;text-align:center;font-family:Inter,sans-serif"><div style="font-size:22px;margin-bottom:4px">'+t[0]+'</div>'+t[1]+'<div style="font-size:11px;color:var(--gold-light);margin-top:3px">$3.99</div></button>';}).join('')+'</div>'+
+    '<div id="baziTopicResultEN" style="margin-top:16px"></div>'+
+    '<div style="text-align:center;margin-top:18px;padding:16px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.28);border-radius:14px"><div style="color:var(--gold-light);font-size:14px;margin-bottom:4px">✨ Unlock all 6 sessions</div><div style="color:var(--sub-text);font-size:12px;margin-bottom:10px">$23.94 separately · <b style="color:#e8d08a">$9.90</b> bundled</div><button style="background:linear-gradient(135deg,#f0d98a,#c8a24a);border:none;border-radius:10px;padding:13px 34px;color:#2a1e08;font-size:15px;font-weight:700">Unlock Everything · $9.90</button></div>'+
+    '</div>';
+  html+='</div>';
+  rs.innerHTML = html;
+  rs.classList.add('show');
+  rs.style.display='block';
+});
+</script>
 </body>
 </html>
