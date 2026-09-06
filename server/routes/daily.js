@@ -180,8 +180,11 @@ One warm, powerful closing message — the "energy key" for today.`
 
     const result = await deepseekChat(messages, { maxTokens: 8192 });
     insertReading.run('daily', JSON.stringify(req.body), result, req.userId);
-    const streakData = updateStreak(req.userId || req.ip);
-    res.json({ reading: result, streak: streakData.streak, lang: dailyLang });
+    // Only track server-side streak for logged-in users; anonymous users would collide
+    // on a shared reverse-proxy IP (polluting each other's streak). Anonymous streaks
+    // are handled client-side (localStorage) instead.
+    const streakData = req.userId ? updateStreak(req.userId) : null;
+    res.json({ reading: result, streak: streakData ? streakData.streak : 0, lang: dailyLang });
   } catch (err) {
     console.error('[DAILY ERR]', err.message);
     if (mon && mon.captureException) mon.captureException(err, { tags: { api: 'daily' } });
