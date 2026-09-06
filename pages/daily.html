@@ -650,6 +650,8 @@ function getDailyReading() {
   var hour = document.getElementById('hour').value;
   var body = { birthYear: year, birthMonth: month, birthDay: day, gender: gender };
   if (hour) body.birthHour = parseInt(hour);
+  // 记住生辰，回访免重输（提升次日留存）
+  try{ localStorage.setItem('sy_birth', JSON.stringify({y:year,m:month,d:day,h:hour||'',g:gender})); }catch(e){}
 
   fetch('/api/daily', {
     method: 'POST',
@@ -1155,5 +1157,20 @@ function urlBase64ToUint8Array(b64) {
 })();
 </script>
 <script src="/assets/js/common.js"></script>
+<script>
+// 回访预填生辰（提升留存）：读 localStorage.sy_birth，全防御，无数据即 no-op
+window.addEventListener('load', function(){
+  try{
+    var raw = localStorage.getItem('sy_birth'); if(!raw) return;
+    var b = JSON.parse(raw); if(!b || !b.y || !b.m || !b.d) return;
+    function setSel(id,val){ var s=document.getElementById(id); if(s && val!=null && val!=='') s.value=String(val); }
+    setSel('year', b.y); setSel('month', b.m); setSel('day', b.d);
+    if(b.h!=null && b.h!=='') setSel('hour', b.h);
+    if(b.g){ var opts=document.querySelectorAll('.gender-opt'); if(opts.length>=2){ (b.g==='female'?opts[1]:opts[0]).click(); } }
+    var btn=document.querySelector('[onclick*="getDailyReading"]');
+    if(btn && btn.parentNode){ var hint=document.createElement('div'); hint.textContent='已记住你的生辰 · 点击查看今日天机 ☀️'; hint.style.cssText='text-align:center;font-size:11px;color:#3d9e82;margin:8px 0 2px;letter-spacing:.04em'; btn.parentNode.insertBefore(hint, btn); }
+  }catch(e){}
+});
+</script>
 </body>
 </html>
