@@ -4,7 +4,7 @@
  * rateLimitMiddleware, authMiddleware, optionalAuthMiddleware
  */
 
-const { getToken } = require('../lib/store');
+const { getToken, _tokenFromReq } = require('../lib/store');
 
 // ── IP 速率限制（滑动窗口，无需 Redis）──
 const _rateLimitMap = new Map(); // key: ip|token → { timestamps: [] }
@@ -43,8 +43,7 @@ function rateLimitMiddleware(req, res, next) {
   if (!isRateLimited(req.path)) return next();
 
   var now = Date.now();
-  var authHeader = req.headers['authorization'] || '';
-  var token = authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : '';
+  var token = _tokenFromReq(req);
   var key = token ? 'token:' + token : 'ip:' + (req.ip || 'unknown');
   var limit = token ? RATE_LIMIT_AUTH : RATE_LIMIT_ANON;
 
@@ -94,11 +93,11 @@ function simpleRateLimitMiddleware(req, res, next) {
 
 /**
  * authMiddleware — 提取 token，绑定 req.user（未登录为 null）
+ * 读取顺序: Authorization header > req.body.token > sy_token httpOnly cookie
  */
 function authMiddleware(req, res, next) {
-  const token = req.headers['authorization'] || '';
-  if (!token) { req.user = null; return next(); }
-  const t = token.replace('Bearer ', '');
+  const t = _tokenFromReq(req);
+  if (!t) { req.user = null; return next(); }
   const row = getToken.get(t);
   req.user = row ? { id: row.user_id, email: row.email, name: row.name } : null;
   next();
@@ -120,9 +119,8 @@ function optionalAuthMiddleware(req, res, next) {
     !req.path.startsWith('/api/create-checkout') &&
     !req.path.startsWith('/api/inspiration')
   ) {
-    const token = req.headers['authorization'] || '';
-    if (token) {
-      const t = token.replace('Bearer ', '');
+    const t = _tokenFromReq(req);
+    if (t) {
       const row = getToken.get(t);
       if (row) req.userId = row.user_id;
     }

@@ -44,7 +44,7 @@ const { computeWesternChart } = require('../lib/western-astro-engine/index.js');
 const { buildLiuyaoBlock } = require('../lib/liuyao-engine/prompt-block');
 const { buildQimenBlock } = require('../lib/qimen-engine/prompt-block');
 const { computeDaLiuRen } = require('../lib/daliuren-engine');
-const { insertReading, hasFullAccess, hasVipAccess, hehunTier, hehunTierReadonly, gateMessages, gateReportAccess, memberTier, monthlyReportCreditRemaining, refundMonthlyReportCredit, saveQaContext, qaContext, _findOrder } = require('../lib/store');
+const { insertReading, hasFullAccess, hasVipAccess, hehunTier, hehunTierReadonly, gateMessages, gateReportAccess, memberTier, monthlyReportCreditRemaining, refundMonthlyReportCredit, saveQaContext, qaContext, _findOrder, _tokenFromReq } = require('../lib/store');
 
 // 🔴 P0-C helper(专家复审): 报告端点若本请求消费了月会员 credit(gateReportAccess/hehunTier 会在
 //   req._syCreditUid 打标记), 而后续 LLM 生成抛错, 回补一次 credit, 防"扣了额度没拿到报告"。
@@ -60,6 +60,32 @@ function _refundCreditOnFail(req) {
 const { getToken } = require('../lib/store');
 const { rateLimitMiddleware } = require('../middleware');
 const { PRODUCTS, matchProduct } = require('../data/products');
+
+// ── SSE CORS helper ──
+// credentials 模式下浏览器拒绝 Access-Control-Allow-Origin: * 。
+// 改为反射白名单 origin，防 SSE 路由覆盖全局 CORS 中间件。
+var _SSE_ALLOWED_ORIGINS = [
+  'http://localhost:3021', 'http://localhost:3000',
+  'http://47.242.80.65:3021',
+  'https://shenyuan.mylumee.cn',
+  'https://shenyuan.vercel.app',
+  'https://shenyuan-fabulousslim.vercel.app',
+  'https://shenyuan-karentan30-fabulousslim.vercel.app',
+  'https://fortunai.vercel.app',
+  'https://myfortuneai.vercel.app',
+  'https://runae.app', 'https://www.runae.app',
+  'https://runae.net', 'https://www.runae.net'
+];
+function _setSseCors(req, res) {
+  var origin = (req.headers && req.headers['origin']) || '';
+  var allowed = _SSE_ALLOWED_ORIGINS.indexOf(origin) !== -1 ||
+    (origin && origin.startsWith('http://localhost'));
+  if (allowed && origin) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
+  // no header set for unknown origins (safe default — browser blocks it)
+}
 
 // ── 分层 tier 解析 helper ──
 // 根据前端传入的 tier 参数 + gateMessages 返回的 full 标志，确定实际档位。
@@ -378,12 +404,12 @@ function baziChartData({ birthYear, birthMonth, birthDay, birthHour, gender }) {
 
 // 各语言"严格使用上方精确排盘"指令（排盘块本体是中文·万年历术语通用·此句用本地语言强约束 LLM 不自排）
 const CHART_STRICT = {
-  en: '\n\n[PRECISE CHART — computed by a professional Chinese perpetual-calendar engine below. You MUST use exactly these Four Pillars, Day Master, Ten Gods, hidden stems, pattern, favorable elements and Luck Cycles (大运). Do NOT recompute, guess, or alter any pillar or Luck Cycle. Interpret only. Render all BaZi terms (Ten Gods 十神, symbolic stars 神煞, chart pattern 格局) using the STANDARD Chinese-English glossary — do NOT transliterate/phoneticize them.]\n',
+  en: '\n\n[PRECISE CHART — computed by a professional Chinese perpetual-calendar engine below. You MUST use exactly these Four Pillars, Day Master, Ten Gods, hidden stems, pattern, favorable elements and Luck Cycles (大运). Do NOT recompute, guess, or alter any pillar or Luck Cycle. Interpret only. Render all BaZi terms using the STANDARD English glossary below — do NOT transliterate or phonetically render them (no romanized Chinese like "Zheng Guan").\nTen Gods (十神) standard English names: 比肩=Friend/Parallel; 劫财=Rob Wealth; 食神=Eating God; 伤官=Hurting Officer; 偏财=Indirect Wealth; 正财=Direct Wealth; 七杀=Seven Killings (also: Direct Power); 正官=Direct Officer; 偏印=Indirect Resource (also: Indirect Seal); 正印=Direct Resource (Direct Seal). Symbolic stars: 桃花=Peach Blossom Star; 驿马=Traveling Horse Star; 华盖=Scholar/Canopy Star; 文昌=Academic Star; 天乙贵人=Heavenly Noble Star. Chart patterns (格局): 身强=Strong Chart; 身弱=Weak Chart; 从旺=Dominant Chart; 从强=Following Strength.\nALWAYS use these English terms; introduce the Chinese character in parentheses only on first use per section.]\n',
   ko: '\n\n[정밀 만세력 사주판 — 아래는 전문 만세력 엔진이 계산한 결과입니다. 사주(년월일시柱)·일간·십성·지장간·용신·대운을 반드시 그대로 사용하고, 절대 스스로 다시 계산하거나 바꾸지 마세요. 해석만 하세요. 십성·신살·격국 등 명리 용어는 표준 한국 명리 역어로 쓰고, 음역(음차)하지 마세요.]\n',
   'pt-br': '\n\n[MAPA PRECISO — calculado por um motor profissional de calendário chinês abaixo. Use EXATAMENTE estes Quatro Pilares, Mestre do Dia, Dez Deuses, elementos e Ciclos de Sorte (大运). NÃO recalcule nem altere. Apenas interprete. Traduza os termos de BaZi (Dez Deuses 十神, estrelas simbólicas 神煞, padrão 格局) pelo glossário chinês-inglês PADRÃO — NÃO transliteie foneticamente.]\n',
   th: '\n\n[แผนภูมิที่แม่นยำ — คำนวณโดยเครื่องมือปฏิทินจีนมืออาชีพด้านล่าง โปรดใช้สี่เสา ธาตุประจำวัน สิบเทพ ธาตุ และวัฏจักรโชคชะตา (大运) ตามนี้ทุกประการ ห้ามคำนวณใหม่หรือแก้ไข ให้ตีความเท่านั้น คำศัพท์โหราศาสตร์ปาจี (สิบเทพ 十神, ดาวสัญลักษณ์ 神煞, รูปแบบดวง 格局) ให้ใช้คำแปลมาตรฐานจีน-อังกฤษ ห้ามทับศัพท์ตามเสียง]\n',
   es: '\n\n[MAPA PRECISO — calculado por un motor profesional de calendario chino abajo. Usa EXACTAMENTE estos Cuatro Pilares, Maestro del Día, Diez Dioses, elementos y Ciclos de Suerte (大运). NO recalcules ni modifiques. Solo interpreta. Traduce los términos de BaZi (Diez Dioses 十神, estrellas simbólicas 神煞, patrón 格局) con el glosario chino-inglés ESTÁNDAR — NO los transliteres fonéticamente.]\n',
-  'en-in': '\n\n[PRECISE CHART — computed by a professional Chinese perpetual-calendar engine below. You MUST use exactly these Four Pillars, Day Master, Ten Gods, hidden stems, favorable elements and Luck Cycles (大运). Do NOT recompute or alter any pillar or cycle. Interpret only. Render all BaZi terms (Ten Gods 十神, symbolic stars 神煞, chart pattern 格局) using the STANDARD Chinese-English glossary — do NOT transliterate/phoneticize them.]\n'
+  'en-in': '\n\n[PRECISE CHART — computed by a professional Chinese perpetual-calendar engine below. You MUST use exactly these Four Pillars, Day Master, Ten Gods, hidden stems, favorable elements and Luck Cycles (大运). Do NOT recompute or alter any pillar or cycle. Interpret only. Render all BaZi terms using the STANDARD English glossary: 比肩=Friend/Parallel; 劫财=Rob Wealth; 食神=Eating God; 伤官=Hurting Officer; 偏财=Indirect Wealth; 正财=Direct Wealth; 七杀=Seven Killings; 正官=Direct Officer; 偏印=Indirect Resource; 正印=Direct Resource. 桃花=Peach Blossom Star; 驿马=Traveling Horse Star. Do NOT transliterate/phoneticize these terms.]\n'
 };
 
 // 各语言"健康章节软化"约束（与中文一致：不点名西医病名·改中医脏腑角度）
@@ -659,8 +685,8 @@ async function baziInHandler(req, res) {
 router.post('/bazi', rateLimitMiddleware, async (req, res) => {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, question, mode, lang } = req.body;
-    if (!birthYear || !birthMonth || !birthDay) return res.status(400).json({ error: '请提供出生年月日' });
-    if (Number(birthYear) > new Date().getFullYear() - 14) return res.status(400).json({ error: "仅限14岁以上用户使用" });
+    if (!birthYear || !birthMonth || !birthDay) return res.status(400).json({ error: (lang === 'en' || lang === 'en-in' || lang === 'pt-br' || lang === 'th' || lang === 'es') ? 'Please provide your complete birth date' : (lang === 'ko' ? '생년월일을 입력해 주세요' : '请提供出生年月日') });
+    if (Number(birthYear) > new Date().getFullYear() - 14) return res.status(400).json({ error: (lang === 'en' || lang === 'en-in' || lang === 'pt-br' || lang === 'th' || lang === 'es') ? 'Users must be 14 or older' : (lang === 'ko' ? '만 14세 이상만 이용 가능합니다' : '仅限14岁以上用户使用') });
     if (lang === 'ko') return baziKoreanHandler(req, res);
     if (lang === 'en') return baziEnglishHandler(req, res);
     if (lang === 'pt-br') return baziPtBrHandler(req, res);
@@ -1579,7 +1605,7 @@ router.post('/mianxiang/stream', rateLimitMiddleware, async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    _setSseCors(req, res);
     res.flushHeaders();
     res.write(`data: ${JSON.stringify({ type: 'meta', tier: _gm.full ? 'full' : 'basic', locked: !_gm.full })}\n\n`);
 
@@ -1718,7 +1744,7 @@ router.post('/shouxiang/stream', rateLimitMiddleware, async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    _setSseCors(req, res);
     res.flushHeaders();
     res.write(`data: ${JSON.stringify({ type: 'meta', tier: _sxFull ? 'full' : 'basic', locked: !_sxFull })}\n\n`);
 
@@ -2251,7 +2277,7 @@ ${nameB}：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined && p2Hour 
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    _setSseCors(req, res);
     res.flushHeaders();
     res.write(`data: ${JSON.stringify({ type: 'meta', mode: isDating ? 'dating' : 'marriage', score: compatScore, dims, lang: hehunLang, tier, locked: !isFullTier })}\n\n`);
 
@@ -2297,8 +2323,7 @@ ${nameB}：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined && p2Hour 
 router.post('/hehun/book-consult', rateLimitMiddleware, async (req, res) => {
   try {
     // 需登录
-    const auth = req.headers['authorization'] || '';
-    const token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
+    const token = _tokenFromReq(req);
     const t = token ? getToken.get(token) : null;
     if (!t) return res.status(401).json({ error: '请先登录' });
     // 仅大师档可约。🔴 P0-B: 用只读版, 避免误消费月会员本月报告 credit(空扣漏账)。
@@ -2347,7 +2372,7 @@ router.post('/tarot/stream', rateLimitMiddleware, async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    _setSseCors(req, res);
     res.flushHeaders();
     res.write(`data: ${JSON.stringify({ type: 'meta' })}\n\n`);
 
@@ -2449,7 +2474,7 @@ ${zwEngineSection}【内容一致性铁律·方案A】报告正文开头已由�
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    _setSseCors(req, res);
     res.flushHeaders();
     res.write(`data: ${JSON.stringify({ type: 'meta', tier: ziweiAccess ? 'full' : 'basic', locked: !ziweiAccess })}\n\n`);
 
@@ -2746,7 +2771,7 @@ router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    _setSseCors(req, res);
     res.flushHeaders();
     res.write(`data: ${JSON.stringify({ type: 'meta' })}\n\n`);
 
@@ -2916,7 +2941,7 @@ ${candidates.map((c, i) => `
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    _setSseCors(req, res);
     res.flushHeaders();
     res.write(`data: ${JSON.stringify({ type: 'meta' })}\n\n`);
 
@@ -3925,9 +3950,8 @@ router.post('/zhiyuan', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.post('/bazi/recent-input', (req, res) => {
   try {
-    var auth = req.headers['authorization'] || '';
-    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : (req.body && req.body.token || '');
-    var t = getToken ? getToken.get(token) : null;
+    var token = _tokenFromReq(req);
+    var t = token ? getToken.get(token) : null;
     var userId = t ? t.user_id : null;
     if (!userId) return res.json({ input: null });
     const { _M } = require('../lib/store');
@@ -3948,9 +3972,10 @@ router.post('/bazi/recent-input', (req, res) => {
 // ══════════════════════════════════════════
 router.get('/hehun/recent-input', (req, res) => {
   try {
-    var auth = req.headers['authorization'] || '';
-    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : (req.query.token || '');
-    var t = getToken ? getToken.get(token) : null;
+    var token = _tokenFromReq(req);
+    // also accept query param for legacy callers
+    if (!token && req.query && req.query.token) token = String(req.query.token).trim();
+    var t = token ? getToken.get(token) : null;
     var userId = t ? t.user_id : null;
     if (!userId) return res.json({ input: null });
     const { _M: _hM } = require('../lib/store');
@@ -4711,7 +4736,7 @@ router.post('/bazi/chapter', rateLimitMiddleware, async (req, res) => {
       res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
-      res.setHeader('Access-Control-Allow-Origin', '*');
+      _setSseCors(req, res);
       res.flushHeaders();
       var teaser = (chConfig.lockedTeaser && chConfig.lockedTeaser[useLang]) || chConfig.lockedTeaser.zh;
       res.write('data: ' + JSON.stringify({ type: 'locked', chapterId: chapterId, teaser: teaser }) + '\n\n');
@@ -4742,7 +4767,7 @@ router.post('/bazi/chapter', rateLimitMiddleware, async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    _setSseCors(req, res);
     res.flushHeaders();
 
     // 发送 meta 事件
@@ -4850,7 +4875,7 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    _setSseCors(req, res);
     res.flushHeaders();
 
     // ── 韩文 사주 流式分支 ──
@@ -5130,7 +5155,7 @@ IMPORTANT — FREE PREVIEW ONLY: Output ONLY the following 3 chapters (about 130
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    _setSseCors(req, res);
     res.flushHeaders();
 
     res.write(`data: ${JSON.stringify({ type: 'meta', tier: full ? 'full' : 'basic', locked: !full, data: jyotishData })}\n\n`);
@@ -5257,7 +5282,7 @@ IMPORTANT — FREE PREVIEW ONLY: Output ONLY the following 3 chapters (about 120
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    _setSseCors(req, res);
     res.flushHeaders();
 
     res.write(`data: ${JSON.stringify({ type: 'meta', tier: full ? 'full' : 'basic', locked: !full, data: tibetData })}\n\n`);
@@ -5377,7 +5402,7 @@ Language: ${mayaLangFull}. Writing style: destiny poetry — each chapter ends w
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    _setSseCors(req, res);
     res.flushHeaders();
 
     res.write(`data: ${JSON.stringify({ type: 'meta', tier: full ? 'full' : 'basic', locked: !full, data: tzolkinData })}\n\n`);

@@ -1369,7 +1369,7 @@ function streamChapterMeta(input, btn, onReady) {
             if (ev.type === 'meta' && !gotMeta) {
               gotMeta = true;
               if (ev.chart) window._baziChartData = ev.chart;
-              var hasFull = (ev.tier === 'full' || ev.tier === 'paid' || !ev.locked);
+              var hasFull = (ev.tier === 'full' || ev.tier === 'paid' || ev.locked === false);
               ctrl.abort(); // 拿到 meta 即中止 stream，不再烧 LLM token
               if (btn) { btn.disabled = false; btn.innerHTML = btn._label || '免费排盘 · 生成命理预览'; }
               document.getElementById('loadingScreen').classList.remove('show');
@@ -1620,9 +1620,12 @@ function loadBaziOverview() {
   }).catch(function(){ p.innerHTML=''; });
 }
 function fetchBaziSession(topic){
-  var token = localStorage.getItem('sy_token') || '';
-  return fetch('/api/bazi/topic', { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-    body: JSON.stringify({ birthYear:lastBaziInput.year, birthMonth:lastBaziInput.month, birthDay:lastBaziInput.day, birthHour:lastBaziInput.hour, gender:lastBaziInput.gender, topic:topic, token:token })
+  var refCode = localStorage.getItem('sy_ref_code') || '';
+  return fetch('/api/bazi/topic', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    credentials: 'include',  // send httpOnly sy_token cookie
+    body: JSON.stringify({ birthYear:lastBaziInput.year, birthMonth:lastBaziInput.month, birthDay:lastBaziInput.day, birthHour:lastBaziInput.hour, gender:lastBaziInput.gender, topic:topic, ref_code: refCode || undefined })
   }).then(function(r){ return r.json(); });
 }
 function openBaziTopic(btn) {
@@ -1651,9 +1654,12 @@ function sessionCheckout(product, btn) {
   if (!product) return;
   if (btn) { btn.disabled = true; btn.textContent = '跳转支付…'; }
   if (lastBaziInput) { try { localStorage.setItem('sy_last_bazi', JSON.stringify(lastBaziInput)); } catch(e){} }
-  var token = localStorage.getItem('sy_token') || '';
-  fetch('/api/create-checkout', { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-    body: JSON.stringify({ product: product, token: token })
+  var refCode = localStorage.getItem('sy_ref_code') || '';
+  fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    credentials: 'include',  // send httpOnly sy_token cookie
+    body: JSON.stringify({ product: product, ref_code: refCode || undefined })
   }).then(function(r){ return r.json(); }).then(function(d){
     if (d.url) window.location.href = d.url;
     else { showToast('跳转失败，请重试','error'); if(btn){ btn.disabled=false; btn.textContent='重试'; } }
@@ -1702,6 +1708,7 @@ function createCheckout(btn, tier, price) {
       product: tier === 'member' ? 'member_monthly' : 'bazi_full',
       tier: tier,
       price: price,
+      ref_code: localStorage.getItem('sy_ref_code') || undefined,
       // DO NOT send token in body - it's in httpOnly cookie now
       // P0-2③ 支付成功后带 ?paid=1 回本页触发付费回流
       successUrl: location.origin + '/pages/bazi.html?paid=1'
@@ -3579,6 +3586,12 @@ function generateBaziCard(){
 </div>
 <script>
 (function(){
+  // Capture ?ref= param for affiliate attribution
+  try {
+    var _r = new URLSearchParams(location.search).get('ref');
+    if (_r) localStorage.setItem('sy_ref_code', _r);
+  } catch(e) {}
+
   var p=new URLSearchParams(location.search);
   if(p.get('unlocked')==='1'||p.get('member')==='1'){
     var msg=p.get('member')==='1'?'会员已激活！全部功能已开放 ✨':'命盘已解锁！下滑查看完整报告 ↓';

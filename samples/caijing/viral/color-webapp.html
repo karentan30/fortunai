@@ -3,7 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<title>彩镜 · 个人色彩诊断</title>
+<meta name="theme-color" content="#f3ece0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="description" content="拍一张脸，30秒测出你的春夏秋冬季型 + 专属色盘 + 口红色号，完全免费">
+<title>彩镜 · 个人色彩诊断 · 拍脸测季型</title>
 <script src="./vendor/html2canvas.min.js"></script>
 <script src="./vendor/qrcode.js"></script>
 <!-- PostHog 埋点（复用 Slim 现有项目 key；零成本分发实验，2 周看数据） -->
@@ -35,11 +39,16 @@ body{font-family:"PingFang SC","Hiragino Sans GB",sans-serif;background:#f3ece0;
 .btn:active{transform:scale(.98)}
 .free{margin-top:14px;font-size:13px;color:#a08a6a}
 input[type=file]{display:none}
+/* 直拍 / 相册两按钮布局 */
+.btn-row{display:flex;gap:10px;width:100%}
+.btn-row .btn{flex:1;font-size:16px;padding:16px 0}
+.btn-cam{background:linear-gradient(90deg,#5a8fae,#7ab0cc);color:#fff;border:none;border-radius:40px;padding:16px 0;flex:1;font-size:16px;font-weight:700;box-shadow:0 8px 22px rgba(60,100,140,.25);cursor:pointer;letter-spacing:1px;display:block}
+.btn-cam:active{transform:scale(.98)}
 .load{position:fixed;inset:0;background:#f3ece0ee;display:none;flex-direction:column;align-items:center;justify-content:center;z-index:9}
 .spin{width:56px;height:56px;border:5px solid #e0cfa8;border-top-color:#a5502f;border-radius:50%;animation:sp 1s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .load p{margin-top:20px;color:#8a6a42;font-size:15px}
-.report{display:none;background:linear-gradient(170deg,#f6efe3,#efe2c8)}
+.report{display:none;background:linear-gradient(170deg,#f6efe3,#efe2c8);padding-bottom:90px}
 .rwrap{padding:28px 22px 40px}
 .rtop{display:flex;justify-content:space-between;align-items:center;color:#9a6b3f;font-size:13px;letter-spacing:3px;font-weight:700}
 .hero{display:flex;gap:16px;margin-top:20px;align-items:stretch}
@@ -58,7 +67,7 @@ input[type=file]{display:none}
 .canvwrap canvas{width:100%;max-width:280px;border-radius:12px}
 .cmp{display:flex;gap:8px}
 .cc{flex:1;text-align:center}
-.cc canvas,.cc img{width:100%;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,.15);display:block}
+.cc canvas,.cc img{width:100%;max-height:220px;object-fit:cover;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,.15);display:block}
 .ccn{font-size:12px;margin-top:6px;font-weight:700;border-top:3px solid;padding-top:4px;display:inline-block;color:#5a3a1f}
 .colors{display:flex;gap:12px;margin-top:14px;justify-content:center}
 .co{text-align:center}
@@ -109,7 +118,7 @@ input[type=file]{display:none}
 .foot .s{font-size:12px;color:#9a8a70;margin-top:6px}
 .qrbox{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px}
 .qrbox .qr{width:88px;height:88px;background:#fff;border:2px solid #a5502f44;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#a5502f;font-size:14px;text-align:center;line-height:1.3;font-weight:700}
-.actions{position:sticky;bottom:0;background:#f3ece0f5;padding:14px 22px;display:none;gap:10px;max-width:520px;margin:0 auto;box-shadow:0 -4px 16px rgba(0,0,0,.08)}
+.actions{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:520px;background:#f3ece0f5;padding:14px 22px;display:none;gap:10px;box-shadow:0 -4px 16px rgba(0,0,0,.08);z-index:8}
 .actions button{flex:1;border:none;border-radius:30px;padding:14px 0;font-size:15px;font-weight:700;cursor:pointer}
 .save{background:linear-gradient(90deg,#a5502f,#c47a3a);color:#fff}
 .again{background:#fff;border:1.5px solid #a5502f!important;color:#a5502f}
@@ -130,9 +139,14 @@ input[type=file]{display:none}
       · 素颜或淡妆,头发别遮脸<br>
       · 正脸、表情放松就好
     </div>
-    <label class="btn" for="file">📷 上传照片,开始测</label>
+    <div class="btn-row">
+      <label class="btn-cam" for="file-cam">📷 直接拍照</label>
+      <label class="btn" for="file">🖼 从相册选</label>
+    </div>
+    <input type="file" id="file-cam" accept="image/*" capture="user">
     <input type="file" id="file" accept="image/*">
-    <div class="free">完全免费 · 想测几次测几次 · 照片只在你手机本地处理,不上传</div>
+    <div class="free">完全免费 · 想测几次测几次 · 照片仅在你的手机本地处理,不上传任何服务器</div>
+    <div style="font-size:12px;color:#b0a080;margin-top:10px;line-height:1.6">＊本测试为娱乐风格参考,结果受光线、妆容、照片质量影响,非专业色彩鉴定。</div>
     <div class="err" id="err"></div>
   </div>
   <div class="load" id="load">
@@ -220,7 +234,7 @@ const BLUSH_PRODUCTS={
   cool_summer:[{name:"完美日记 雾玫腮红",tier:"平价",price:49,hex:"#C98FA0",url:""},{name:"Canmake 冷粉腮红",tier:"中端",price:90,hex:"#D2A0B0",url:""}],
   cool_winter:[{name:"colorkey 冷玫腮红",tier:"平价",price:49,hex:"#C8446A",url:""},{name:"NARS 莓粉腮红",tier:"大牌",price:280,hex:"#D0507A",url:""}],
   warm_spring:[{name:"Canmake 珊瑚橘腮红",tier:"平价",price:69,hex:"#FF8A5A",url:""},{name:"橘朵 蜜桃粉腮红",tier:"中端",price:59,hex:"#FFA080",url:""}]};
-function pickProducts(lib,key,userHex){const arr=lib[key]||[];let bestI=0,bestD=1e9;arr.forEach((p,i)=>{const dd=colorDist(p.hex,userHex);if(dd<bestD){bestD=dd;bestI=i;}});const html=arr.map((p,i)=>`<a class="prod ${i===bestI?'best':''}" target="_blank" data-tier="${p.tier}" href="${prodLink(p)}"><div class="psw" style="background:${p.hex}"></div><div class="pinfo"><div class="pn">${p.name}${i===bestI?'<span class="bestb">★最适合你</span>':''}</div><div class="pt">${p.tier} · 参考¥${p.price}</div></div><div class="pbuy">去买 ›</div></a>`).join("");return{arr,bestI,html};}
+function pickProducts(lib,key,userHex){const arr=lib[key]||[];let bestI=0,bestD=1e9;arr.forEach((p,i)=>{const dd=colorDist(p.hex,userHex);if(dd<bestD){bestD=dd;bestI=i;}});const html=arr.map((p,i)=>`<a class="prod ${i===bestI?'best':''}" target="_blank" rel="noopener" data-tier="${p.tier}" href="${prodLink(p)}"><div class="psw" style="background:${p.hex}"></div><div class="pinfo"><div class="pn">${p.name}${i===bestI?'<span class="bestb">★最适合你</span>':''}</div><div class="pt">${p.tier} · 参考¥${p.price}</div></div><div class="pbuy">去买 ›</div></a>`).join("");return{arr,bestI,html};}
 
 // ---------- 联盟带货链接 ----------
 const TAOBAO_PID = "mm_4977728889_3345700413_116134000380"; // Karen淘宝联盟推广位
@@ -264,21 +278,23 @@ async function ensureModels(){
   if(!segmenter){try{segmenter=await ImageSegmenter.createFromOptions(fileset,{baseOptions:{modelAssetPath:"./vendor/selfie_multiclass.tflite"},runningMode:"IMAGE",outputCategoryMask:true,outputConfidenceMasks:false});}catch(e){segmenter=null;}}
 }
 
-$("file").addEventListener("change",async e=>{
-  const f=e.target.files[0];if(!f)return;
+async function analyzeFile(f){
+  if(!f)return;
   track('upload',{});
   $("err").style.display="none";$("load").style.display="flex";
+  // reset input values so same photo can be re-selected
+  try{$("file").value="";}catch(e){}try{$("file-cam").value="";}catch(e){}
   try{
-    $("loadtxt").textContent="正在加载 AI 模型…";
+    $("loadtxt").textContent="正在加载 AI 模型，首次约 5-10 秒…";
     await ensureModels();
-    $("loadtxt").textContent="正在分析你的脸…";
+    $("loadtxt").textContent="正在分析你的五官与肤色…";
     const img=await loadImg(f);
     const scale=Math.min(1,900/Math.max(img.width,img.height));
     const w=Math.round(img.width*scale),h=Math.round(img.height*scale);
     const cv=document.createElement("canvas");cv.width=w;cv.height=h;
     const ctx=cv.getContext("2d",{willReadFrequently:true});ctx.drawImage(img,0,0,w,h);
     const res=landmarker.detect(cv);
-    if(!res.faceLandmarks||!res.faceLandmarks.length)throw new Error("没检测到人脸,换一张正脸清晰的照片试试~");
+    if(!res.faceLandmarks||!res.faceLandmarks.length)throw new Error("没检测到人脸 😅 换一张正脸清晰的照片试试,记得自然光素颜哦~");
     const lm=res.faceLandmarks[0].map(p=>[p.x*w,p.y*h]);
     const raw=ctx.getImageData(0,0,w,h).data;
     const wb=scleraWB(raw,w,h,lm);
@@ -291,6 +307,7 @@ $("file").addEventListener("change",async e=>{
     const cls=classify(skin,hair);
     // 上身换色素材
     const S=SEASONS[cls.key];
+    $("loadtxt").textContent="正在生成你的换色对比图…";
     const seg=await makeSeg(img,cv,w,h,lm);
     const cutout=seg?seg.cutout:null;
     const swapImgs={};
@@ -300,7 +317,9 @@ $("file").addEventListener("change",async e=>{
     track('view_report',{season:cls.key});
     window.scrollTo(0,0);
   }catch(err){$("load").style.display="none";$("err").textContent="⚠ "+err.message;$("err").style.display="block";track('error',{msg:err.message});}
-});
+}
+$("file").addEventListener("change",e=>analyzeFile(e.target.files[0]));
+$("file-cam").addEventListener("change",e=>analyzeFile(e.target.files[0]));
 
 function loadImg(f){return new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=no;i.src=URL.createObjectURL(f);});}
 
@@ -390,11 +409,17 @@ function render(cls,cols,img,lm,w,h,cutout,swapImgs){
     ${blushPick.html}
     <div class="demo">＊★ 为按你实测颜色算出的最匹配色号;链接接淘宝联盟,点击直接买</div></div>
   <div class="sum">${S.sum}</div>
-  <div class="foot"><div class="hk">◎ <span>把这张卡发给闺蜜</span></div>
-    <div class="s">让她也测测是什么季型 · 彩镜 · 拍脸30秒 · 想测几次测几次</div>
-    <div class="qrbox"><div class="qr">扫码<br>测同款</div></div></div>`;
+  <div class="foot">
+    <div class="hk">◎ <span>发给闺蜜,看她是什么型</span></div>
+    <div class="s">彩镜 · 拍脸30秒 · 完全免费 · 想测几次测几次</div>
+    <div class="s" style="margin-top:6px;font-size:13px;color:#a5502f;font-weight:600">📌 在小红书搜「彩镜测色」找到我们</div>
+    <div class="qrbox" id="qrbox_page"></div>
+    <div style="font-size:11px;color:#c0b090;margin-top:16px;line-height:1.6;text-align:center">＊本测试为娱乐性风格参考,结果受光线、妆容、照片质量影响,非专业色彩鉴定<br>照片仅在你的设备本地处理,不上传任何服务器</div>
+  </div>`;
   $("rwrap").innerHTML=html;
   $("faceimg").src=img.src;
+  // 注入真实 QR 到结果页底部
+  try{const qrDataUrl=makeQR(300);if(qrDataUrl){const qb=$("qrbox_page");const qimg=document.createElement("img");qimg.src=qrDataUrl;qimg.style.cssText="width:88px;height:88px;border-radius:12px;border:2px solid #a5502f44";qb.appendChild(qimg);const qt=document.createElement("div");qt.innerHTML='<span style="font-size:13px;color:#8a6a42;line-height:1.5">扫码<br>测同款</span>';qb.appendChild(qt);}}catch(e){}
   const annCanvas=annotate(img,lm,w,h);$("annwrap").appendChild(annCanvas);
   // 上身换色
   if(swapImgs&&Object.keys(swapImgs).length){
@@ -405,6 +430,10 @@ function render(cls,cols,img,lm,w,h,cutout,swapImgs){
   document.querySelectorAll(".prod").forEach(a=>a.addEventListener("click",()=>track('click_buy',{tier:a.dataset.tier,season:cls.key})));
   let faceCv=cutout;
   if(!faceCv){const xs=lm.map(p=>p[0]),ys=lm.map(p=>p[1]);const x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);const fw=x1-x0,fh=y1-y0;const L=Math.max(0,x0-fw*0.3),T=Math.max(0,y0-fh*0.4),Rr=Math.min(w,x1+fw*0.3),Bt=Math.min(h,y1+fh*0.55);const cw=Rr-L,ch=Bt-T;faceCv=document.createElement("canvas");faceCv.width=cw;faceCv.height=ch;faceCv.getContext("2d").drawImage(img,L*img.width/w,T*img.height/h,cw*img.width/w,ch*img.height/h,0,0,cw,ch);}
+  // 清除上次分析留下的离屏 DOM 节点，防止内存累积
+  if(SHARE&&SHARE.parentNode)SHARE.parentNode.removeChild(SHARE);
+  if(SHARE2&&SHARE2.parentNode)SHARE2.parentNode.removeChild(SHARE2);
+  SHARE=null;SHARE2=null;
   try{SHARE=buildShareCard(cls,cols,img,S,faceCv);}catch(e){SHARE=null;console.warn('share card',e);}
   try{SHARE2=buildReportCard(cls,cols,img,S,faceCv,annCanvas,swapImgs);}catch(e){SHARE2=null;console.warn('report card',e);}
   // 二维码曝光埋点:分享卡(含带 ?ref 的二维码)成功生成即算 QR 曝光
@@ -503,7 +532,9 @@ function buildReportCard(cls,cols,img,S,faceCv,annCanvas,swapImgs){
 // 一键存图(紧凑3:4卡)
 $("savebtn").addEventListener("click",async()=>{
   track('save_card',{});
-  const btn=$("savebtn");btn.textContent="生成中…";
+  const btn=$("savebtn");
+  if(btn.disabled)return;
+  btn.disabled=true;btn.textContent="生成中…";
   const items=[["四季扇形",SHARE]].filter(t=>t[1]);
   if(!items.length)items.push(["报告",$("rwrap")]);
   try{
@@ -512,8 +543,13 @@ $("savebtn").addEventListener("click",async()=>{
       const a=document.createElement("a");a.href=canvas.toDataURL("image/png");a.download=`彩镜-${name}.png`;a.click();
       await new Promise(r=>setTimeout(r,700));
     }
-  }catch(e){alert("保存失败,可长按卡片截图保存~");}
-  btn.textContent="⬇ 保存两张卡去晒";
+    btn.textContent="✓ 已保存·去小红书晒";
+  }catch(e){
+    alert("保存失败,可长按结果页截图保存哦~");
+    btn.textContent="⬇ 保存卡片去晒";
+  }finally{
+    btn.disabled=false;
+  }
 });
 </script>
 </body>

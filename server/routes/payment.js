@@ -29,6 +29,7 @@ const {
   _findOrder, _insCnOrder, _completeCnOrder, _allOrders, _insJossOrder,
   _M, _persist, memberTier,
   grantQuestionCredits,
+  _tokenFromReq,
 } = require('../lib/store');
 
 // 按次问事产品 → 授予的 credit 数量
@@ -77,12 +78,20 @@ try {
   console.log('ℹ Stripe not available (stripe package not installed)');
 }
 
-// ── Helper: resolve userId from token ──
-function _payResolveUser(token) {
+// ── Helper: resolve userId from token or request (header/body/cookie) ──
+function _payResolveUser(token, req) {
+  // If a req object is provided, use the shared token extractor (header > body > cookie)
+  if (req) {
+    var t = _tokenFromReq(req);
+    if (t) {
+      var row = getToken.get(t);
+      return row ? row.user_id : null;
+    }
+  }
   if (!token) return null;
-  var t = String(token).replace('Bearer ', '');
-  var row = getToken.get(t);
-  return row ? row.user_id : null;
+  var t2 = String(token).replace('Bearer ', '');
+  var row2 = getToken.get(t2);
+  return row2 ? row2.user_id : null;
 }
 
 // ── Stripe Price IDs (Capstone account) ──
@@ -156,12 +165,8 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
     const prod = PRODUCTS[product];
     if (!prod) return res.status(400).json({ error: '无效的产品 ID', valid: Object.keys(PRODUCTS) });
 
-    let userId = null;
-    if (token) {
-      const t = token.replace('Bearer ', '');
-      const row = getToken.get(t);
-      if (row) userId = row.user_id;
-    }
+    // Resolve userId: prefer cookie (httpOnly migration) over body token
+    let userId = _payResolveUser(token, req);
 
     const orderNo = 'SY-' + Date.now() + '-' + crypto.randomBytes(3).toString('hex');
 
@@ -285,15 +290,23 @@ router.post('/stripe-webhook', async (req, res) => {
           }
           const subId = session.subscription;
           const mode = session.mode;
-          if (subId && stripe) {
-            try {
-              stripe.subscriptions.retrieve(subId).then(function(sub) {
-                const prod = session.metadata?.product || '';
-                if (SUBSCRIBE_PRODUCTS.indexOf(prod) >= 0 && sub.current_period_end) {
-                  _updOrderExpiry(orderNo, new Date(sub.current_period_end * 1000).toISOString());
-                }
-              }).catch(function(e) { console.error('[WEBHOOK sub retrieve]', e.message); });
-            } catch (e) { console.error('[WEBHOOK sub]', e.message); }
+          if (subId) {
+            // Write stripe_subscription_id to order so subscription.deleted can revoke access
+            const completedOrder = _findOrder(orderNo);
+            if (completedOrder) {
+              completedOrder.stripe_subscription_id = subId;
+              _persist();
+            }
+            if (stripe) {
+              try {
+                stripe.subscriptions.retrieve(subId).then(function(sub) {
+                  const prod = session.metadata?.product || '';
+                  if (SUBSCRIBE_PRODUCTS.indexOf(prod) >= 0 && sub.current_period_end) {
+                    _updOrderExpiry(orderNo, new Date(sub.current_period_end * 1000).toISOString());
+                  }
+                }).catch(function(e) { console.error('[WEBHOOK sub retrieve]', e.message); });
+              } catch (e) { console.error('[WEBHOOK sub]', e.message); }
+            }
           } else if (mode === 'subscription') {
             console.log('[PAYMENT] subscription checkout without sub id, order ' + orderNo);
           }
@@ -485,7 +498,7 @@ router.post('/pay/wechat/create', rateLimitMiddleware, async (req, res) => {
     if (!prod) return res.status(400).json({ error: '无效的产品 ID', valid: Object.keys(PRODUCTS) });
     if (!hub.HUB_SECRET) return res.status(400).json({ error: '支付服务暂不可用' });
 
-    var uid = _payResolveUser(req.body && (req.body.token || req.headers['authorization']));
+    var uid = _payResolveUser(req.body && (req.body.token || req.headers['authorization']), req);
     var method = (req.body && (req.body.method || req.body.channel) || 'wechat').toLowerCase();
     if (!['wechat', 'alipay', 'stripe'].includes(method)) method = 'wechat';
     var oid = pay.genOutTradeNo(method === 'alipay' ? 'ali' : method === 'stripe' ? 'st' : 'wx');
@@ -583,7 +596,7 @@ router.post('/pay/alipay/qr', rateLimitMiddleware, async (req, res) => {
     if (!prod) return res.status(400).json({ error: '无效的产品 ID', valid: Object.keys(PRODUCTS) });
     if (!hub.HUB_SECRET) return res.status(400).json({ error: '支付服务暂不可用' });
 
-    var uid = _payResolveUser(req.body && (req.body.token || req.headers['authorization']));
+    var uid = _payResolveUser(req.body && (req.body.token || req.headers['authorization']), req);
     var oid = pay.genOutTradeNo('ali');
     var cnyAmtAli = prod.amountCny || prod.amount;
     _insCnOrder(oid, product, cnyAmtAli, uid, 'alipay');

@@ -869,13 +869,15 @@ function createCheckout(btn, tier, price) {
   if (lastBaziInput) {
     try { localStorage.setItem('sy_last_bazi', JSON.stringify(lastBaziInput)); } catch(e){}
   }
+  var refCode = localStorage.getItem('sy_ref_code') || undefined;
   fetch('/api/create-checkout', {
     method: 'POST',
+    credentials: 'include',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
       product: tier==='member' ? 'member_monthly' : 'bazi_full',
       tier: tier, price: price,
-      token: localStorage.getItem('sy_token')||'',
+      ref_code: refCode || undefined,
       successUrl: location.origin+'/pages/bazi-en.html?paid=1'
     })
   }).then(function(r){ return r.json(); }).then(function(data){
@@ -900,10 +902,9 @@ function handlePaidReturn() {
   var saved = null;
   try { saved = JSON.parse(localStorage.getItem('sy_last_bazi')||'null'); } catch(e){}
   if (saved && saved.year) { proceedWithPaidReport(saved); return; }
-  var token = localStorage.getItem('sy_token')||'';
   fetch('/api/bazi/recent-input', {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({token:token})
+    method:'POST', credentials:'include', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({})
   }).then(function(r){ return r.json(); }).then(function(d){
     if (d && d.input && d.input.birthYear) {
       proceedWithPaidReport(d.input);
@@ -1217,7 +1218,7 @@ function generateShareCardEN() {
     });
     function hline(y,op){var g=ctx.createLinearGradient(W*0.08,0,W*0.92,0);g.addColorStop(0,'rgba(201,168,76,0)');g.addColorStop(0.5,'rgba(201,168,76,'+(op||0.4)+')');g.addColorStop(1,'rgba(201,168,76,0)');ctx.strokeStyle=g;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(W*0.08,y);ctx.lineTo(W*0.92,y);ctx.stroke();}
     ctx.textAlign='center';
-    ctx.fillStyle='rgba(201,168,76,0.35)';ctx.font='24px serif';ctx.fillText('✦  S H E N Y U A N  ✦',W/2,78);
+    ctx.fillStyle='rgba(201,168,76,0.35)';ctx.font='24px serif';ctx.fillText('✦  R U N A E  ✦',W/2,78);
     ctx.fillStyle='rgba(232,208,138,0.95)';ctx.font='bold 70px serif';ctx.fillText('Runae',W/2,162);
     ctx.fillStyle='rgba(201,168,76,0.55)';ctx.font='26px serif';ctx.fillText('Destiny · Four Pillars BaZi Chart',W/2,200);
     hline(228,0.35);
@@ -1351,13 +1352,13 @@ function bzRenderBodyEN(text) {
 }
 
 function fetchBaziTopicEN(topic) {
-  var token = localStorage.getItem('sy_token') || '';
   return fetch('/api/bazi/topic', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       birthYear: lastBaziInput.year, birthMonth: lastBaziInput.month, birthDay: lastBaziInput.day,
-      birthHour: lastBaziInput.hour, gender: lastBaziInput.gender, topic: topic, lang: 'en', token: token
+      birthHour: lastBaziInput.hour, gender: lastBaziInput.gender, topic: topic, lang: 'en'
     })
   }).then(function(r){ return r.json(); });
 }
@@ -1429,11 +1430,12 @@ function sessionCheckoutEN(product, btn) {
   var label = btn ? btn.textContent : '';
   if (btn) { btn.disabled = true; btn.textContent = 'Redirecting…'; }
   if (lastBaziInput) { try { localStorage.setItem('sy_last_bazi', JSON.stringify(lastBaziInput)); } catch(e){} }
-  var token = localStorage.getItem('sy_token') || '';
+  var refCode = localStorage.getItem('sy_ref_code') || undefined;
   fetch('/api/create-checkout', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-    body: JSON.stringify({ product: product, token: token, successUrl: location.origin + '/pages/bazi-en.html?paid=1' })
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ product: product, ref_code: refCode || undefined, successUrl: location.origin + '/pages/bazi-en.html?paid=1' })
   }).then(function(r){ return r.json(); }).then(function(d){
     if (d.url) window.location.href = d.url;
     else { showToast('Redirect failed, please retry', 'error'); if(btn){ btn.disabled=false; btn.textContent=label; } }
@@ -1574,6 +1576,12 @@ setTimeout(initZhuanyunMonth, 800);
 
 <script>
 (function(){
+  // Capture ?ref= param for affiliate attribution
+  try {
+    var _r = new URLSearchParams(location.search).get('ref');
+    if (_r) localStorage.setItem('sy_ref_code', _r);
+  } catch(e) {}
+
   var p = new URLSearchParams(location.search);
   if (p.get('unlocked')==='1'||p.get('member')==='1') {
     var msg = p.get('member')==='1' ? 'Membership activated — all readings unlocked ✨' : 'Report unlocked — scroll down to read your full destiny ↓';
