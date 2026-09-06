@@ -551,9 +551,10 @@ ${full ? `Generate a comprehensive report with these sections (emoji heading req
       year:  { gan: _bze.year.gan,  zhi: _bze.year.zhi,  label: 'Year Pillar' },
       month: { gan: _bze.month.gan, zhi: _bze.month.zhi, label: 'Month Pillar' },
       day:   { gan: _bze.day.gan,   zhi: _bze.day.zhi,   label: 'Day Pillar' },
-      hour:  { gan: _bze.hour.gan,  zhi: _bze.hour.zhi,  label: 'Hour Pillar' },
+      hour:  (birthHour !== undefined && _bze.hour) ? { gan: _bze.hour.gan, zhi: _bze.hour.zhi, label: 'Hour Pillar' } : null,
       dayMaster: _bze.dayMaster,
-      dayMasterElement: _bze.dayMasterElement
+      dayMasterElement: _bze.dayMasterElement,
+      wuxing: _bze.wuxing, daYun: _bze.daYun, isStrong: _bze.isStrong
     } : null;
     res.json({ reading: resultEn2, tier: full ? 'full' : 'basic', locked: !full, contextId: ctxId, pillars: pillarsEn });
   } catch (err) {
