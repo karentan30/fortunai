@@ -1775,5 +1775,19 @@ setTimeout(initZhuanyunMonth, 800);
 <script src="/assets/js/common.js"></script>
 <script src="/assets/js/wuxing-shop.js"></script>
 <script>if(window.SY&&SY.initMembership)SY.initMembership();</script>
+<script>
+// Prefill birth data passed from the free calculator (?y&m&d&h&g) so users don't re-enter it.
+// Fully defensive: no-op if params absent or fields missing; never blocks the normal flow.
+window.addEventListener('load', function(){
+  try{
+    var p = new URLSearchParams(location.search || '');
+    if(!p.get('y') || !p.get('m') || !p.get('d')) return;
+    function setSel(id,val){ var s=document.getElementById(id); if(s && val!=null && val!=='') s.value=String(val); }
+    setSel('year', p.get('y')); setSel('month', p.get('m')); setSel('day', p.get('d'));
+    var h=p.get('h'); if(h!=null && h!=='') setSel('hour', h);
+    var g=p.get('g'); if(g){ var opts=document.querySelectorAll('.gender-opt'); if(opts.length>=2){ (g==='female'?opts[1]:opts[0]).click(); } }
+  }catch(e){}
+});
+</script>
 </body>
 </html>
