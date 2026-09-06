@@ -972,19 +972,17 @@ function generateReport(btn) {
 function streamBaziReport(input, mode, btn, onDone) {
   if (isStreaming) return;
   isStreaming = true;
-  // SECURITY FIX: Token is now in httpOnly cookie, automatically sent by browser
-  // DO NOT read from localStorage - use backend authentication via cookie
-  var token = '';
   var accumulated = '';
   var reportStarted = false;
   var streamEl = null;
 
   fetch('/api/bazi/stream', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({
       birthYear: input.year, birthMonth: input.month, birthDay: input.day, birthHour: input.hour,
-      gender: input.gender, mode: mode || 'truth', question: '请全面分析我的命盘', token: token
+      gender: input.gender, mode: mode || 'truth', question: '请全面分析我的命盘'
     })
   }).then(function(res) {
     if (!res.ok || !res.body) throw new Error('stream failed');
@@ -1439,15 +1437,13 @@ function streamChapterMeta(input, btn, onReady) {
 
 // 非流式回退（付费完成后重新加载用）
 function fetchBaziReport(input, mode) {
-  // SECURITY FIX: Token is now in httpOnly cookie, automatically sent by browser
-  // DO NOT read from localStorage - use backend authentication via cookie
-  var token = '';
   return fetch('/api/bazi', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({
       birthYear: input.year, birthMonth: input.month, birthDay: input.day, birthHour: input.hour,
-      gender: input.gender, mode: mode || 'truth', question: '请全面分析我的命盘', token: token
+      gender: input.gender, mode: mode || 'truth', question: '请全面分析我的命盘'
     })
   }).then(function(r){ return r.text(); }).then(function(txt){
     if (!txt || txt.trim() === '') throw new Error('空响应');

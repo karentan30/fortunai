@@ -429,7 +429,7 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
       <input class="name-input" id="nameA" type="text" maxlength="8" placeholder="你的名字（选填）">
       <select class="mini-select" id="aYear">
         <option value="">年份</option>
-        <script>for(let y=2008;y>=1950;y--) document.write(`<option value="${y}">${y}</option>`)</script>
+        <script>(function(){var maxY=new Date().getFullYear()-18;for(var y=maxY;y>=1920;y--) document.write('<option value="'+y+'">'+y+'</option>');})();</script>
       </select>
       <select class="mini-select" id="aMonth">
         <option value="">月份</option>
@@ -459,7 +459,7 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
       <input class="name-input" id="nameB" type="text" maxlength="8" placeholder="TA的名字（选填）">
       <select class="mini-select" id="bYear">
         <option value="">年份</option>
-        <script>for(let y=2008;y>=1950;y--) document.write(`<option value="${y}">${y}</option>`)</script>
+        <script>(function(){var maxY=new Date().getFullYear()-18;for(var y=maxY;y>=1920;y--) document.write('<option value="'+y+'">'+y+'</option>');})();</script>
       </select>
       <select class="mini-select" id="bMonth">
         <option value="">月份</option>
@@ -515,6 +515,10 @@ input::placeholder,textarea::placeholder { color: rgba(210,180,168,0.3) !importa
   </div>
 
   <div class="submit-wrap page-enter page-enter-d5">
+    <label style="display:flex;align-items:flex-start;gap:8px;padding:0 0 12px;font-size:11px;color:rgba(215,211,196,0.85);line-height:1.7;letter-spacing:0.04em;cursor:pointer">
+      <input type="checkbox" id="hhConsentCheck" style="margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:#c9607a">
+      <span>我已年满 18 周岁，同意将出生日期/性别用于命理分析，并了解信息将传输至境外服务器处理（<a href="/legal-CN.html#privacy" style="color:#e08090">隐私政策</a>）。</span>
+    </label>
     <button class="btn-calc" onclick="startCalc()">推算合婚 →</button>
     <div style="text-align:center;font-size:10px;color:rgba(200,184,122,0.55);margin-top:10px;letter-spacing:0.08em">先看配对预览，满意再解锁完整合婚报告</div>
   </div>
@@ -779,6 +783,11 @@ async function startCalc(){
   if(!ay||!by){ showToast('请选择两人的出生年份 ✦'); return; }
   if(!am||!bm){ showToast('请选择两人的出生月份 ✦'); return; }
   if(!ad||!bd){ showToast('请选择两人的出生日期 ✦'); return; }
+  var hhConsent = document.getElementById('hhConsentCheck');
+  if(hhConsent && !hhConsent.checked){ showToast('请先勾选同意隐私条款 ✦', 'error'); return; }
+  var curYear = new Date().getFullYear();
+  if(ay > curYear - 18){ showToast('本平台仅限18岁以上用户使用 ✦', 'error'); return; }
+  if(by > curYear - 18){ showToast('本平台仅限18岁以上用户使用 ✦', 'error'); return; }
   const btn = document.querySelector('.btn-calc');
   if(btn){ btn.disabled=true; btn.textContent='正在推演缘分…'; }
   document.getElementById('inputScreen').style.display='none';
@@ -932,9 +941,9 @@ function createCheckout(btn) {
   fetch('/api/create-checkout', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
+    credentials: 'include',
     body: JSON.stringify({
       product: product,
-      token: localStorage.getItem('sy_token') || '',
       successUrl: location.origin + '/pages/hehun.html?paid=1'
     })
   }).then(function(r){ return r.json(); }).then(function(data){
@@ -944,7 +953,8 @@ function createCheckout(btn) {
       fetch('/api/pay/wechat/create', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ product: product, method: 'wechat', token: localStorage.getItem('sy_token') || '' })
+        credentials: 'include',
+        body: JSON.stringify({ product: product, method: 'wechat' })
       }).then(function(r){ return r.json(); }).then(function(pd){
         btn.disabled = false; btn.innerHTML = originalLabel;
         if (pd.code_url) { showCnPayModal(pd.code_url, pd.out_trade_no, pd.amount); }
@@ -1129,7 +1139,8 @@ function openConsultForm() {
     submitBtn.disabled = true; submitBtn.textContent = '提交中…';
     fetch('/api/hehun/book-consult', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('sy_token') || '')},
+      headers: {'Content-Type': 'application/json'},
+      credentials: 'include',
       body: JSON.stringify({ contact: contact, preferredTime: tSelect.value, note: nInput.value.trim() })
     }).then(function(r){ return r.json().catch(function(){ return {}; }).then(function(d){ return { ok: r.ok, d: d }; }); })
       .then(function(res){
@@ -1204,18 +1215,23 @@ async function handlePaidReturn() {
   var mode = window._hehunMode || 'marriage';
   var accumulated = '';
   var streamStarted = false;
+  var _hh1Ctrl = new AbortController();
+  var _hh1Timeout = setTimeout(function(){ _hh1Ctrl.abort(); }, 120000);
   fetch('/api/hehun/stream', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('sy_token') || '')},
+    headers: {'Content-Type': 'application/json'},
+    credentials: 'include',
+    signal: _hh1Ctrl.signal,
     body: JSON.stringify({
       p1Year: saved.p1Year, p1Month: saved.p1Month, p1Day: saved.p1Day,
       p1Hour: saved.p1Hour || '', p1Gender: saved.p1Gender,
       p1Name: saved.p1Name || '', p2Name: saved.p2Name || '',
       p2Year: saved.p2Year, p2Month: saved.p2Month, p2Day: saved.p2Day,
       p2Hour: saved.p2Hour || '', p2Gender: saved.p2Gender,
-      mode: mode, token: localStorage.getItem('sy_token') || ''
+      mode: mode
     })
   }).then(function(res) {
+    clearTimeout(_hh1Timeout);
     if (!res.ok || !res.body) { contentEl.textContent = '生成失败，请重试'; return; }
     var reader = res.body.getReader();
     var decoder = new TextDecoder('utf-8');
@@ -1261,7 +1277,7 @@ async function handlePaidReturn() {
       }).catch(function() { contentEl.textContent = '网络异常，请刷新重试'; });
     }
     read();
-  }).catch(function() { contentEl.textContent = '网络异常，请刷新重试'; });
+  }).catch(function() { clearTimeout(_hh1Timeout); contentEl.textContent = '网络异常，请刷新重试'; });
 }
 // ── Share functions (拼 ref 邀请码 → 分享可归因) ──
 function unlockByShare(btn) {
@@ -1306,18 +1322,23 @@ function _doShareUnlock() {
   if (!saved) { contentEl.textContent = '请重新输入信息后计算'; return; }
   var mode = window._hehunMode || saved.mode || 'marriage';
   var accumulated = '';
+  var _hh2Ctrl = new AbortController();
+  var _hh2Timeout = setTimeout(function(){ _hh2Ctrl.abort(); }, 120000);
   fetch('/api/hehun/stream', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('sy_token') || '')},
+    headers: {'Content-Type': 'application/json'},
+    credentials: 'include',
+    signal: _hh2Ctrl.signal,
     body: JSON.stringify({
       p1Year: saved.p1Year, p1Month: saved.p1Month, p1Day: saved.p1Day,
       p1Hour: saved.p1Hour || '', p1Gender: saved.p1Gender,
       p1Name: saved.p1Name || '', p2Name: saved.p2Name || '',
       p2Year: saved.p2Year, p2Month: saved.p2Month, p2Day: saved.p2Day,
       p2Hour: saved.p2Hour || '', p2Gender: saved.p2Gender,
-      mode: mode, token: localStorage.getItem('sy_token') || ''
+      mode: mode
     })
   }).then(function(res) {
+    clearTimeout(_hh2Timeout);
     if (!res.ok || !res.body) { contentEl.textContent = '生成失败，请重试'; return; }
     var reader = res.body.getReader();
     var decoder = new TextDecoder('utf-8');
@@ -1341,7 +1362,7 @@ function _doShareUnlock() {
       }).catch(function() { contentEl.textContent = '网络异常，请刷新重试'; });
     }
     read();
-  }).catch(function() { contentEl.textContent = '网络异常，请刷新重试'; });
+  }).catch(function() { clearTimeout(_hh2Timeout); contentEl.textContent = '网络异常，请刷新重试'; });
 }
 
 function getShareUrl(base) {
