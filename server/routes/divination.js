@@ -900,7 +900,8 @@ ${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及�
       month: { gan:_bzCn.month.gan, zhi:_bzCn.month.zhi },
       day:   { gan:_bzCn.day.gan,   zhi:_bzCn.day.zhi },
       hour:  (birthHour !== undefined && _bzCn.hour) ? { gan:_bzCn.hour.gan, zhi:_bzCn.hour.zhi } : null,
-      dayMaster:_bzCn.dayMaster, dayMasterElement:_bzCn.dayMasterElement
+      dayMaster:_bzCn.dayMaster, dayMasterElement:_bzCn.dayMasterElement,
+      wuxing:_bzCn.wuxing, daYun:_bzCn.daYun, isStrong:_bzCn.isStrong
     } : null;
     // 免费版缓存检查
     if (baziTier === 'free') {
