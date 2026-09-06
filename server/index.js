@@ -50,7 +50,8 @@ app.use(cors({
     } else {
       callback(new Error('Not allowed by CORS'));
     }
-  }
+  },
+  credentials: true  // required for httpOnly cookie to be sent cross-origin
 }));
 
 // ── Request logging ──

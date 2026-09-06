@@ -269,7 +269,7 @@ body::before{content:'';position:fixed;inset:0;
     </div>
   </div>
   <div class="header-title">BaZi Compatibility Reading</div>
-  <div class="header-sub">合婚配对 · Eight Pillars Soul Match</div>
+  <div class="header-sub">合婚配对 · Four Pillars Soul Match</div>
   <div class="header-desc">Discover your soul connection — AI analyzes the harmony between two birth charts</div>
   <div class="rose-line"></div>
 </div>
@@ -920,10 +920,12 @@ function createCheckout(btn, tier, price) {
   fetch('/api/create-checkout', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
+    credentials: 'include',  // send httpOnly sy_token cookie
     body: JSON.stringify({
       product: tier==='member' ? 'member_monthly' : 'hehun_full',
       tier: tier, price: price,
-      token: localStorage.getItem('sy_token')||'',
+      ref_code: localStorage.getItem('sy_ref_code') || undefined,
+      // token removed: now served via httpOnly cookie
       successUrl: location.origin+'/pages/hehun-en.html?paid=1'
     })
   }).then(function(r){ return r.json(); }).then(function(d){

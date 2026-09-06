@@ -230,11 +230,31 @@ function _isExpired(o) {
   return Date.parse(o.expires_at) < Date.now();
 }
 
+// 从请求中提取 token 字符串 (Authorization header > body.token > sy_token cookie)
+function _tokenFromReq(req) {
+  var auth = (req.headers && req.headers['authorization']) || '';
+  if (auth.indexOf('Bearer ') === 0) return auth.slice(7).trim();
+  if (req.body && req.body.token) return String(req.body.token).trim();
+  // httpOnly cookie fallback — parse raw Cookie header without cookie-parser
+  try {
+    var cookieHeader = (req.headers && req.headers['cookie']) || '';
+    if (cookieHeader) {
+      var cookies = cookieHeader.split(';');
+      for (var i = 0; i < cookies.length; i++) {
+        var parts = cookies[i].trim().split('=');
+        if (parts[0].trim() === 'sy_token' && parts[1]) {
+          return decodeURIComponent(parts.slice(1).join('=').trim());
+        }
+      }
+    }
+  } catch (e) {}
+  return '';
+}
+
 // 取登录 token → user_id。无 token / 无效返回 null。
 function _uidFromReq(req) {
   try {
-    var auth = req.headers['authorization'] || '';
-    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
+    var token = _tokenFromReq(req);
     if (!token) return null;
     var t = getToken.get(token);
     return t ? t.user_id : null;
@@ -245,8 +265,7 @@ function _uidFromReq(req) {
 // unlimited = 全解锁会员(FULL_MEMBER_PRODUCTS); monthly = 仅月会员。ADMIN_TOKEN → unlimited。
 function memberTier(req) {
   try {
-    var auth = req.headers['authorization'] || '';
-    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
+    var token = _tokenFromReq(req);
     if (process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN) return 'unlimited';
     if (!token) return null;
     var t = getToken.get(token);
@@ -333,8 +352,7 @@ function consumeQuestionCredit(uid) {
 
 function hasFullAccess(req, productKeys) {
   try {
-    var auth = req.headers['authorization'] || '';
-    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
+    var token = _tokenFromReq(req);
     if (!token) return false;
     // 管理员绕过：CEOtoken直接全访问（开发/审核用）
     if (process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN) return true;
@@ -350,9 +368,14 @@ function hasFullAccess(req, productKeys) {
       });
     });
     if (paidAccess) return true;
-    // 裂变奖励: 未使用的 referral_basic 奖励也能解锁一次 basic 报告
+    // 裂变奖励: referral_premium/standard 每个未使用奖励解锁1次报告;
+    // referral_basic 同样解锁1次(等级越高奖励越多但单次消费量一样)
     if (!_M.rewards) return false;
-    var reward = _M.rewards.find(function(r) { return r.user_id === t.user_id && r.type === 'referral_basic' && !r.used; });
+    var reward = _M.rewards.find(function(r) {
+      return r.user_id === t.user_id &&
+        (r.type === 'referral_basic' || r.type === 'referral_standard' || r.type === 'referral_premium') &&
+        !r.used;
+    });
     if (reward) { reward.used = true; _persist(); return true; }
     return false;
   } catch (e) { return false; }
@@ -398,8 +421,7 @@ function gateReportAccess(req, productKeys) {
 // 参照 hasFullAccess 取 token→user orders→过滤未过期订单
 function hehunTier(req) {
   try {
-    var auth = req.headers['authorization'] || '';
-    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
+    var token = _tokenFromReq(req);
     if (!token) return null;
     // 管理员绕过 → 最高档
     if (process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN) return 'master';
@@ -423,9 +445,13 @@ function hehunTier(req) {
     }
     // basic: 拥有 hehun_basic
     if (owned['hehun_basic']) return 'basic';
-    // 裂变奖励: 未使用的 referral_basic 消费一次 → basic
+    // 裂变奖励: 任意等级的未使用奖励消费一次 → basic (premium/standard 也能用)
     if (_M.rewards) {
-      var reward = _M.rewards.find(function(r) { return r.user_id === t.user_id && r.type === 'referral_basic' && !r.used; });
+      var reward = _M.rewards.find(function(r) {
+        return r.user_id === t.user_id &&
+          (r.type === 'referral_basic' || r.type === 'referral_standard' || r.type === 'referral_premium') &&
+          !r.used;
+      });
       if (reward) { reward.used = true; _persist(); return 'basic'; }
     }
     return null;
@@ -437,8 +463,7 @@ function hehunTier(req) {
 //   返回 'master' | 'full' | 'basic' | null。
 function hehunTierReadonly(req) {
   try {
-    var auth = req.headers['authorization'] || '';
-    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
+    var token = _tokenFromReq(req);
     if (!token) return null;
     if (process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN) return 'master';
     var t = getToken.get(token);
@@ -461,8 +486,7 @@ function hehunTierReadonly(req) {
 // 不走 UNLOCK_BY_CATEGORY 展开，故普通 full 用户(bazi_full)不会被误判成 vip。
 function hasVipAccess(req, product) {
   try {
-    var auth = req.headers['authorization'] || '';
-    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
+    var token = _tokenFromReq(req);
     if (!token) return false;
     // ADMIN_TOKEN 审核绕过
     if (process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN) return true;
@@ -577,11 +601,13 @@ function _insJossOrder(oNo, p, amt, cur, dN, c, wT, ps) {
   _persist();
 }
 
-// ── 奖励分层（前100倍数机制）──
+// ── 奖励分层（邀请越多等级越高）──
+// min: 达到该等级所需的最低邀请数; max: -1 表示无上限
+// 梯度: 1-10 basic → 11-50 standard → 51+ premium
 const REWARD_TIERS = [
-  { min: 1, max: 100, level: 'premium', bonus_type: 'referral_premium', amount: 50 },
-  { min: 101, max: 200, level: 'standard', bonus_type: 'referral_standard', amount: 30 },
-  { min: 201, max: -1, level: 'basic', bonus_type: 'referral_basic', amount: 10 }
+  { min: 51, max: -1,  level: 'premium',  bonus_type: 'referral_premium',  amount: 50 },
+  { min: 11, max: 50,  level: 'standard', bonus_type: 'referral_standard', amount: 30 },
+  { min: 1,  max: 10,  level: 'basic',    bonus_type: 'referral_basic',    amount: 10 }
 ];
 
 // ── Referral helpers ──
@@ -608,11 +634,12 @@ function grantReferralReward(inviterId) {
   const tier = REWARD_TIERS.find(t => count >= t.min && (t.max < 0 || count <= t.max));
   if (!tier) return; // 不符合任何等级
 
-  // 检查该等级是否已发过奖励，防重复发放
+  // 检查该等级是否已发过奖励，防重复发放。
+  // 注意: 去掉 !r.used 条件——该 level 只要发过（不论是否已消费）就不重发，
+  // 避免用户用掉奖励后同档再邀请触发重复发放漏洞。
   const alreadyGivenTier = _M.rewards.find(r =>
     r.user_id === inviterId &&
-    r.type === tier.bonus_type &&
-    !r.used
+    r.type === tier.bonus_type
   );
   if (alreadyGivenTier) return;
 
@@ -741,6 +768,8 @@ module.exports = {
   _M,
   _persist,
   _flushStore,
+  // token 提取辅助（header > body > cookie）
+  _tokenFromReq,
   // 数据访问对象
   insertUser, getUserByEmail, getUserById, getUserByRefCode,
   insertToken, getToken,

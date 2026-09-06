@@ -194,15 +194,16 @@ function handleLogin() {
   fetch(BASE + '/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',  // send/receive httpOnly cookie
     body: JSON.stringify({ email: email, password: password })
   })
   .then(function(r) {
     return r.json().then(function(data) { return { status: r.status, data: data }; });
   })
   .then(function(res) {
-    if (res.status >= 200 && res.status < 300 && res.data.token) {
-      localStorage.setItem('sy_token', res.data.token);
-      // 存自己的邀请码供分享页用（用于裂变归因）
+    if (res.status >= 200 && res.status < 300 && res.data.user) {
+      // Token is now in httpOnly cookie — no localStorage storage needed
+      // Store ref_code for share/affiliate flows only
       if (res.data.user && res.data.user.ref_code) localStorage.setItem('sy_my_ref_code', res.data.user.ref_code);
       showToast('登录成功，正在跳转…', 'success');
       setTimeout(function(){ window.location.href = REDIRECT_URL; }, 600);
@@ -235,15 +236,16 @@ function handleRegister() {
   fetch(BASE + '/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',  // send/receive httpOnly cookie
     body: JSON.stringify({ email: email, password: password, ref: localStorage.getItem('sy_ref_code') || undefined })
   })
   .then(function(r) {
     return r.json().then(function(data) { return { status: r.status, data: data }; });
   })
   .then(function(res) {
-    if (res.status >= 200 && res.status < 300 && res.data.token) {
-      localStorage.setItem('sy_token', res.data.token);
-      // 存自己的邀请码供分享页用（register 响应顶层 ref_code）
+    if (res.status >= 200 && res.status < 300 && res.data.user) {
+      // Token is now in httpOnly cookie — no localStorage storage needed
+      // Store ref_code for share/affiliate flows only
       if (res.data.ref_code) localStorage.setItem('sy_my_ref_code', res.data.ref_code);
       showToast('注册成功，正在跳转…', 'success');
       setTimeout(function(){ window.location.href = REDIRECT_URL; }, 600);
@@ -263,13 +265,17 @@ function logoutAndBack() {
   window.location.href = '../index.html';
 }
 
-// Redirect if already logged in
+// Redirect if already logged in — check via /api/auth/me (cookie-based)
 (function(){
-  var token = localStorage.getItem('sy_token');
-  if (token) {
-    showToast('您已登录，正在跳转', '');
-    setTimeout(function(){ window.location.href = REDIRECT_URL; }, 400);
-  }
+  fetch(BASE + '/api/auth/me', { credentials: 'include' })
+    .then(function(r) { return r.ok ? r.json() : null; })
+    .then(function(d) {
+      if (d && d.user) {
+        showToast('您已登录，正在跳转', '');
+        setTimeout(function(){ window.location.href = REDIRECT_URL; }, 400);
+      }
+    })
+    .catch(function(){});
 })();
 </script>
 
