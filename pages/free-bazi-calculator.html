@@ -387,6 +387,11 @@ function calc(){
     .then(function(data){
       if(!data||!data.pillars){throw new Error('no-pillars');}
       render(data.pillars,hv==='');
+      // carry birth data to the full report so users don't re-type it (defensive)
+      // NOTE: this page's hour select uses a different encoding than the reading pages'
+      // shichen-index selects, so we intentionally do NOT carry the hour across (user re-picks it).
+      try{var fc=document.getElementById('fullCta');if(fc){fc.href='bazi-en.html?y='+y+'&m='+m+'&d='+d+'&g='+encodeURIComponent(gender);}}catch(e){}
+      try{localStorage.setItem('sy_birth',JSON.stringify({y:y,m:m,d:d,h:'',g:gender}));}catch(e){}
     })
     .catch(function(){
       err.textContent='Our chart engine is busy — please try again in a moment.';
