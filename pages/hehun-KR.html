@@ -501,6 +501,7 @@ function startCalc() {
 
   fetch('/api/hehun/stream', {
     method: 'POST',
+    credentials: 'include',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
       p1Year:aY, p1Month:aM, p1Day:aD,
@@ -711,15 +712,15 @@ function startFullReport() {
   var accumulated = '';
   fetch('/api/hehun/stream', {
     method: 'POST',
-    headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ' + (localStorage.getItem('sy_token') || '')},
+    credentials: 'include',
+    headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
       p1Year: saved.p1Year, p1Month: saved.p1Month, p1Day: saved.p1Day,
       p1Hour: saved.p1Hour || '', p1Gender: saved.p1Gender,
       p1Name: saved.p1Name || '', p2Name: saved.p2Name || '',
       p2Year: saved.p2Year, p2Month: saved.p2Month, p2Day: saved.p2Day,
       p2Hour: saved.p2Hour || '', p2Gender: saved.p2Gender,
-      mode: saved.mode || _mode, lang: 'ko',
-      token: localStorage.getItem('sy_token') || ''
+      mode: saved.mode || _mode, lang: 'ko'
     })
   }).then(function(res) {
     if (!res.ok || !res.body) { contentEl.textContent = '생성 실패, 다시 시도해 주세요'; return; }
