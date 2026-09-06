@@ -892,11 +892,21 @@ ${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及�
     useMessages = useMessages.map(function(m) {
       return (m && m.role === 'system') ? { role: 'system', content: (m.content || '') + '\n\n【必须遵守】报告最后必须附一行免责声明:"本报告由AI生成,仅供参考娱乐,不构成医学、法律、投资或人生重大决策建议。"' } : m;
     });
+    // 结构化四柱（供前端命盘可视化，与 EN 一致）·计算失败不影响报告
+    var _bzCn = null;
+    try { _bzCn = calcBazi(Number(birthYear), Number(birthMonth), Number(birthDay), Number(birthHour)||0, gender||'male'); } catch(e) {}
+    var pillarsCn = _bzCn ? {
+      year:  { gan:_bzCn.year.gan,  zhi:_bzCn.year.zhi },
+      month: { gan:_bzCn.month.gan, zhi:_bzCn.month.zhi },
+      day:   { gan:_bzCn.day.gan,   zhi:_bzCn.day.zhi },
+      hour:  (birthHour !== undefined && _bzCn.hour) ? { gan:_bzCn.hour.gan, zhi:_bzCn.hour.zhi } : null,
+      dayMaster:_bzCn.dayMaster, dayMasterElement:_bzCn.dayMasterElement
+    } : null;
     // 免费版缓存检查
     if (baziTier === 'free') {
       const ck = cacheKey({ name: req.body.name || '', dob: (birthYear||'') + '-' + (birthMonth||'') + '-' + (birthDay||''), gender: gender||'', lang: lang||'zh' });
       const cached = reportCache.get(ck);
-      if (cached) { return res.json({ reading: cached, tier: 'free', locked: true, cached: true }); }
+      if (cached) { return res.json({ reading: cached, tier: 'free', locked: true, cached: true, pillars: pillarsCn }); }
     }
     let result = await deepseekChat(useMessages, { maxTokens: freeMaxTokens });
     // $199 大师档：真实增量——单独一次 LLM 调用生成4个专属章节并追加（绕开单次16384 token上限，物理上多给内容）
@@ -918,7 +928,7 @@ ${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及�
     }
     insertReading.run('bazi', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('bazi', req.body, result);
-    res.json({ reading: result, tier: baziTier, locked: baziTier === 'free', contextId: ctxId, product: baziTier === 'full' ? matchProduct(result, 'bazi') : undefined });
+    res.json({ reading: result, tier: baziTier, locked: baziTier === 'free', contextId: ctxId, pillars: pillarsCn, product: baziTier === 'full' ? matchProduct(result, 'bazi') : undefined });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[BAZI ERR]', err.message);
