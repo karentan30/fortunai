@@ -205,7 +205,11 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
       unitAmount = prod.amount;
     }
 
-    const isSubscription = ['daily_sub','member_monthly','member_yearly','member_quarterly','member_3year','member_daily'].includes(product);
+    // 🔴 0907 真自动续订(recurring): 周期包 daily_companion_*/monthly_report_year 走 Stripe subscription。
+    //   仅 Stripe 路径(海外为主)接自动续扣; CN(微信/支付宝)仍走手动周期包(无代扣资质),
+    //   由上面 isCN 分支拦截返回 channel:'cn', 不进此处。透明合规: 前端明示"自动续费·可随时取消"。
+    const isSubscription = ['daily_sub','member_monthly','member_yearly','member_quarterly','member_3year','member_daily',
+                            'daily_companion_month','daily_companion_year','monthly_report_year'].includes(product);
 
     // 月会员购报告(非订阅产品、非代烧)享5折。折后取整到分(Stripe 要求整数)。
     // 打折时强制走 price_data(不用固定 priceId), 确保折后金额生效。
@@ -224,10 +228,13 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
             product_data: { name: prod.name, description: prod.desc },
             unit_amount: unitAmount,
             recurring: isSubscription ? (
-              product === 'member_yearly'    ? { interval: 'year' } :
-              product === 'member_quarterly' ? { interval: 'month', interval_count: 3 } :
-              product === 'member_3year'     ? { interval: 'year',  interval_count: 3 } :
-                                               { interval: 'month' }
+              product === 'member_yearly'        ? { interval: 'year' } :
+              product === 'member_quarterly'     ? { interval: 'month', interval_count: 3 } :
+              product === 'member_3year'         ? { interval: 'year',  interval_count: 3 } :
+              product === 'daily_companion_year' ? { interval: 'year' } :
+              product === 'monthly_report_year'  ? { interval: 'year' } :
+              product === 'daily_companion_month'? { interval: 'month' } :
+                                                   { interval: 'month' }
             ) : undefined,
           }, quantity: 1 };
 
@@ -338,7 +345,17 @@ router.post('/stripe-webhook', async (req, res) => {
             const pending = _M.orders.filter(function(o) {
               return o.stripe_subscription_id === subId || (o.metadata && o.metadata.sub_id === subId);
             });
-            if (!pending.length) {
+            if (pending.length) {
+              // 🔴 0907 续期修复: 该订阅在库(首期或续期)。invoice.payment_succeeded 每期成功
+              //   都把 expires_at 推到本期 current_period_end。首期(与 checkout.session.completed
+              //   同一 periodEnd)= 幂等; 续期 = 真正延长访问, 覆盖会员 SKU + 周期包(daily_companion_*/monthly_report_year)。
+              pending.forEach(function(o) {
+                if (o.payment_status === 'completed') {
+                  o.expires_at = new Date(periodEnd).toISOString();
+                }
+              });
+              _persist();
+            } else {
               stripe.invoices.retrieve(invoiceId, { expand: ['lines.data.price.product'] }).then(function(inv) {
                 const line = inv.lines && inv.lines.data && inv.lines.data[0];
                 const prodName = line && line.price && line.price.product && (line.price.product.name || '');
