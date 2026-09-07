@@ -373,7 +373,7 @@ function syInitUnlock(){
 
 function syPay(tier, method){
   _syMethod = method || 'wechat';
-  var ep = _syMethod==='alipay' ? SY_API+'/pay/alipay/qr' : SY_API+'/pay/wechat/create';
+  var ep = _syMethod==='alipay' ? SY_API+'/api/pay/alipay/qr' : SY_API+'/api/pay/wechat/create';
   document.getElementById('pay-title').textContent = _syMethod==='alipay' ? '支付宝扫码' : '微信扫码支付';
   document.getElementById('pay-amount').textContent = '¥19.9';
   document.getElementById('pay-status').textContent = '正在生成二维码...';
@@ -392,7 +392,7 @@ function syPay(tier, method){
 
 function syStartPoll(orderNo, tier){
   if(_syPoll) clearInterval(_syPoll);
-  var qep = _syMethod==='alipay' ? SY_API+'/pay/alipay/query' : SY_API+'/pay/wechat/query';
+  var qep = _syMethod==='alipay' ? SY_API+'/api/pay/alipay/query' : SY_API+'/api/pay/wechat/query';
   _syPoll = setInterval(function(){
     fetch(qep+'?out_trade_no='+encodeURIComponent(orderNo))
     .then(function(r){return r.json();}).then(function(d){
