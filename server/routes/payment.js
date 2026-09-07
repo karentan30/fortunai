@@ -30,6 +30,7 @@ const {
   _M, _persist, memberTier,
   grantQuestionCredits,
   _tokenFromReq,
+  _grantPeriodicPackExpiry, PERIODIC_PACK_DAYS,
 } = require('../lib/store');
 
 // 按次问事产品 → 授予的 credit 数量
@@ -277,6 +278,10 @@ router.post('/stripe-webhook', async (req, res) => {
         if (orderNo) {
           _updOrder('completed', orderNo);
           completeAffiliateOrder(orderNo);
+          // 手动周期包(0907): 直连 Stripe 一次性支付完成 → 授予访问期(付一期给一期·非自动续扣)
+          if (PERIODIC_PACK_DAYS && PERIODIC_PACK_DAYS[session.metadata?.product || '']) {
+            _grantPeriodicPackExpiry(_findOrder(orderNo));
+          }
           // 按次问事: 发放问事 credit
           const qProd = session.metadata?.product || '';
           const qCredits = QUESTION_CREDIT_MAP[qProd];

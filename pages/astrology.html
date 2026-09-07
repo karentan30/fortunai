@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#060d1a">
+<meta name="theme-color" content="#03100f">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>善缘 · 占星星盘 · Western Astrology</title>
 <meta name="description" content="善缘西方占星 — AI星盘解读，太阳星座/月亮星座/上升星座/行星落座/宫位分析">
@@ -16,260 +16,253 @@
 <meta name="twitter:title" content="善缘 · 占星星盘">
 <meta name="twitter:description" content="善缘西方占星 — AI星盘解读，太阳星座/月亮星座/上升星座/行星落座/宫位分析">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@200;300;400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 :root {
-  --deep: #060d1a; --deep-mid: #0c1a30; --deep-card: #0a1428;
-  --blue: #2a5c8a; --blue-mid: #4a8cc4; --blue-light: #7ab8e8;
-  --gold: #c9a84c; --gold-light: #e8d08a;
-  --star: #f0f4ff; --star-dim: rgba(200,215,240,0.5);
+  /* ── peacock / petrol-teal midnight (西占 = 墨绿蓝, distinct from navy紫微/墨黑面相) ── */
+  --night-0:#03100f; --night:#051614; --night-2:#0a2321; --night-3:#0e2e2b; --night-4:#14413c;
+  /* legacy aliases (kept for preserved dead-code report classes) */
+  --deep:#03100f; --deep-mid:#0a2321; --deep-card:#0e2e2b;
+  /* ── gold family ── */
+  --gold-hi:#f0dda6; --gold:#cba85f; --gold-deep:#9c7c38; --gold-soft:#e0c689; --gold-light:#e0c689;
+  --gold-line:rgba(203,168,95,.30); --gold-line-2:rgba(203,168,95,.5); --gold-glow:rgba(203,168,95,.5);
+  /* ── celestial accents — peacock starlight ── */
+  --peacock:#4fb3a6; --peacock-hi:#6fd4c4; --azure:#5fc2b4; --azure-soft:rgba(79,179,166,.42);
+  --blue:#2f7a6f; --blue-mid:#4fb3a6; --blue-light:#6fd4c4;
+  /* ── text ── */
+  --star:#f1efe0; --star-dim:rgba(147,168,162,0.6);
+  --text-cream:#e8e7dd; --text-mute:#93a8a2; --text-faint:#68807a; --text-ghost:#4e615c;
+  --hair:rgba(224,238,232,.07); --hair-2:rgba(224,238,232,.13);
+  --shadow-card:0 30px 60px -30px rgba(0,0,0,.9); --shadow-lift:0 20px 44px -24px rgba(0,0,0,.78);
+  --serif:"Noto Serif SC",serif; --sans:"Noto Sans SC",-apple-system,BlinkMacSystemFont,sans-serif; --lat:"Cormorant Garamond",serif;
+  --gut:22px; --radius:20px; --radius-lg:24px;
 }
-html, body { background: var(--deep); font-family: 'Noto Serif SC', serif; color: var(--star); -webkit-font-smoothing: antialiased; }
-body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 100px; }
+/* 西占 dark-only canvas — wins over shared style.css light default (both themes) */
+html { background: #020c0b !important; color-scheme: dark; }
+html, body { font-family: var(--sans); color: var(--text-cream); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+body, html.light-mode body, html.dark-mode body { max-width: 402px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 100px; background: radial-gradient(130% 82% at 50% -8%, #0c433d 0%, #072421 46%, var(--night-0) 100%) no-repeat fixed !important; background-color: var(--night-0) !important; color: var(--text-cream) !important; }
 
-/* Starfield background */
+/* Starfield background — petrol teal depth */
 body::before {
   content: ''; position: fixed; inset: 0;
   background:
-    radial-gradient(ellipse at 20% 30%, rgba(42,92,138,0.25) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 60%, rgba(74,140,196,0.12) 0%, transparent 40%),
-    radial-gradient(ellipse at 50% 80%, rgba(201,168,76,0.05) 0%, transparent 50%);
+    radial-gradient(ellipse at 80% 55%, rgba(79,179,166,0.10) 0%, transparent 42%),
+    radial-gradient(ellipse at 50% 82%, rgba(203,168,95,0.05) 0%, transparent 50%);
   pointer-events: none; z-index: 0;
 }
-
 /* Stars decoration */
 body::after {
   content: ''; position: fixed; inset: 0;
   background-image:
-    radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.6), transparent),
-    radial-gradient(1px 1px at 30% 60%, rgba(255,255,255,0.5), transparent),
-    radial-gradient(1.5px 1.5px at 50% 15%, rgba(255,255,255,0.7), transparent),
-    radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,0.4), transparent),
-    radial-gradient(1px 1px at 85% 35%, rgba(255,255,255,0.5), transparent),
-    radial-gradient(1.5px 1.5px at 15% 85%, rgba(255,255,255,0.6), transparent),
-    radial-gradient(1px 1px at 60% 45%, rgba(255,255,255,0.3), transparent),
-    radial-gradient(1px 1px at 90% 10%, rgba(255,255,255,0.4), transparent),
-    radial-gradient(1px 1px at 40% 90%, rgba(255,255,255,0.5), transparent),
-    radial-gradient(1.5px 1.5px at 5% 50%, rgba(255,255,255,0.35), transparent),
-    radial-gradient(1px 1px at 95% 70%, rgba(255,255,255,0.45), transparent),
-    radial-gradient(1px 1px at 25% 5%, rgba(255,255,255,0.3), transparent),
-    radial-gradient(1px 1px at 75% 25%, rgba(255,255,255,0.4), transparent),
-    radial-gradient(1px 1px at 45% 40%, rgba(255,255,255,0.3), transparent),
-    radial-gradient(1px 1px at 55% 55%, rgba(255,255,255,0.35), transparent);
+    radial-gradient(1px 1px at 20% 14%, rgba(241,239,224,0.9), transparent),
+    radial-gradient(1px 1px at 68% 8%, rgba(241,239,224,0.7), transparent),
+    radial-gradient(1.4px 1.4px at 82% 22%, rgba(224,198,137,0.8), transparent),
+    radial-gradient(1px 1px at 34% 30%, rgba(241,239,224,0.55), transparent),
+    radial-gradient(1px 1px at 12% 44%, rgba(241,239,224,0.5), transparent),
+    radial-gradient(1.2px 1.2px at 90% 52%, rgba(79,179,166,0.75), transparent),
+    radial-gradient(1px 1px at 54% 62%, rgba(241,239,224,0.6), transparent),
+    radial-gradient(1px 1px at 26% 74%, rgba(224,198,137,0.55), transparent),
+    radial-gradient(1.1px 1.1px at 40% 20%, rgba(111,212,196,0.6), transparent),
+    radial-gradient(1px 1px at 76% 80%, rgba(241,239,224,0.5), transparent),
+    radial-gradient(1.3px 1.3px at 44% 90%, rgba(241,239,224,0.6), transparent),
+    radial-gradient(1px 1px at 8% 66%, rgba(241,239,224,0.4), transparent),
+    radial-gradient(1px 1px at 94% 34%, rgba(224,198,137,0.5), transparent);
   pointer-events: none; z-index: 0;
 }
 
-.back-btn { position: fixed; top: 16px; left: 16px; z-index: 99; background: none; border: none; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(74,140,196,0.7); cursor: pointer; padding: 4px 0; text-decoration: none; }
+.back-btn { position: fixed; top: 16px; left: 12px; z-index: 99; background: none; border: none; font-family: var(--serif); font-size: 24px; color: var(--text-mute); cursor: pointer; padding: 4px 10px; line-height: 1; text-decoration: none; }
 
 /* ── Header ── */
-.header { position: relative; z-index: 1; text-align: center; padding: 44px 20px 18px; }
-.header-icon { font-size: 36px; margin-bottom: 8px; display: block; }
-.header-title { font-size: 18px; font-weight: 400; letter-spacing: 0.22em; margin-bottom: 4px; color: var(--star); }
-.header-sub { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 11px; letter-spacing: 0.26em; color: rgba(74,140,196,0.6); margin-bottom: 12px; }
-.blue-line { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, var(--blue-mid), transparent); margin: 0 auto; }
-.header-desc { font-size: 10px; color: rgba(200,215,240,0.4); letter-spacing: 0.08em; margin-top: 12px; line-height: 1.6; }
+.header { position: relative; z-index: 1; text-align: center; padding: 52px 20px 8px; }
+.header-icon { font-family: var(--lat); font-style: italic; font-size: 13px; letter-spacing: 0.24em; color: var(--gold); opacity: 0.94; margin-bottom: 12px; display: block; }
+.header-title { font-family: var(--serif); font-size: 26px; font-weight: 600; letter-spacing: 0.10em; margin-bottom: 10px; color: var(--star); line-height: 1.3; }
+.header-sub { font-family: var(--lat); font-style: italic; font-size: 15px; letter-spacing: 0.12em; color: var(--gold-soft); margin-bottom: 16px; }
+.blue-line { width: 44px; height: 1px; background: var(--gold-line-2); margin: 0 auto; }
+.header-desc { font-size: 12.5px; color: var(--text-mute); letter-spacing: 0.02em; margin-top: 16px; line-height: 1.9; }
+
+/* gilded surface — primary gold CTA */
+.gilt{background:linear-gradient(155deg,var(--gold-hi) 0%,var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep) 100%);box-shadow:0 16px 30px -14px var(--gold-glow),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(110,80,26,.4);}
 
 /* ── Form ── */
-.form-wrap { position: relative; z-index: 1; padding: 12px 16px 8px; }
-.field-group { margin-bottom: 14px; }
-.field-label { font-size: 10px; letter-spacing: 0.18em; color: rgba(74,140,196,0.5); margin-bottom: 8px; }
-.field-label .en { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 9px; color: rgba(74,140,196,0.35); margin-left: 6px; }
+.form-wrap { position: relative; z-index: 1; padding: 20px 22px 8px; }
+.field-group { margin-bottom: 16px; }
+.field-label { display: flex; align-items: center; gap: 10px; font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 10px; }
+.field-label .en { font-family: var(--lat); font-style: italic; text-transform: none; letter-spacing: 0.08em; font-size: 11px; color: var(--gold); opacity: 0.8; margin-left: 0; }
 
-.field-box { background: var(--deep-card); border: 1px solid rgba(42,92,138,0.2); border-radius: 8px; padding: 10px 14px; }
-.field-row { display: flex; gap: 8px; }
+.field-box { background: var(--night-2); border: 1px solid var(--hair-2); border-radius: 14px; padding: 0 16px; height: 54px; display: flex; align-items: center; transition: border-color .2s, box-shadow .2s, background .2s; }
+.field-box:focus-within { border-color: var(--gold-line-2); box-shadow: 0 0 0 1px var(--gold-line-2), 0 0 24px -9px var(--gold-glow), 0 0 30px -14px rgba(79,179,166,.6); background: var(--night-3); }
+.field-row { display: flex; gap: 10px; }
 .field-row .field-box { flex: 1; }
 
-input, select { width: 100%; background: none; border: none; outline: none; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(240,244,255,0.82); letter-spacing: 0.04em; }
-input::placeholder { color: rgba(240,244,255,0.2); }
+input, select { width: 100%; background: none; border: none; outline: none; font-family: var(--serif); font-size: 16px; color: var(--text-cream); letter-spacing: 0.04em; }
+input::placeholder { color: var(--text-ghost); }
 select { appearance: none; -webkit-appearance: none; cursor: pointer; }
-select option { background: var(--deep-mid); color: var(--star); }
+select option { background: var(--night-3); color: var(--star); }
 
 /* ── Submit button ── */
-.submit-wrap { position: relative; z-index: 1; padding: 4px 16px 0; }
-.btn-submit { width: 100%; padding: 15px 0; background: linear-gradient(135deg, #1a3a5c, var(--blue), var(--blue-mid), var(--blue)); border: none; border-radius: 4px; color: rgba(240,244,255,0.95); font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 500; letter-spacing: 0.22em; cursor: pointer; box-shadow: 0 4px 20px rgba(42,92,138,0.4); transition: all 0.25s; }
+.submit-wrap { position: relative; z-index: 1; padding: 20px 22px 8px; }
+.btn-submit { width: 100%; height: 56px; background: linear-gradient(155deg,var(--gold-hi) 0%,var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep) 100%); border: none; border-radius: 16px; color: #241a08; font-family: var(--serif); font-size: 17px; font-weight: 600; letter-spacing: 0.16em; text-indent: 0.16em; cursor: pointer; box-shadow: 0 16px 30px -14px var(--gold-glow), inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 0 rgba(110,80,26,.4); transition: all 0.25s; }
 .btn-submit:active { transform: scale(0.97); }
-.btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-submit:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
 
-/* ── Loading ── */
-.loading-wrap { position: relative; z-index: 1; display: none; flex-direction: column; align-items: center; padding: 28px 16px; }
+/* ── Loading — chart casting ritual ── */
+.loading-wrap { position: relative; z-index: 1; display: none; flex-direction: column; align-items: center; padding: 40px 22px; }
 .loading-wrap.show { display: flex; }
-.astro-orb { width: 56px; height: 56px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, rgba(122,184,232,0.6), rgba(42,92,138,0.6) 50%, rgba(6,13,26,1)); animation: orb-pulse 2.5s ease-in-out infinite; box-shadow: 0 0 30px rgba(42,92,138,0.5); margin-bottom: 16px; display: flex; align-items: center; justify-content: center; }
-.astro-orb .orb-sym { font-size: 22px; color: rgba(240,244,255,0.8); }
-@keyframes orb-pulse { 0%,100% { box-shadow: 0 0 20px rgba(42,92,138,0.5); } 50% { box-shadow: 0 0 40px rgba(122,184,232,0.6); } }
-.loading-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 14px; letter-spacing: 0.18em; color: rgba(122,184,232,0.6); animation: pulse-text 1.5s ease-in-out infinite; }
-@keyframes pulse-text { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
+.astro-orb { width: 64px; height: 64px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, rgba(224,198,137,.5), rgba(79,179,166,.28) 55%, var(--night-0)); animation: orb-pulse 2.5s ease-in-out infinite; box-shadow: 0 0 30px -6px var(--gold-glow), 0 0 34px -10px rgba(79,179,166,.6); margin-bottom: 22px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--gold-line-2); }
+.astro-orb .orb-sym { font-family: var(--serif); font-size: 24px; color: var(--gold-soft); }
+@keyframes orb-pulse { 0%,100% { box-shadow: 0 0 22px -8px var(--gold-glow), 0 0 26px -12px rgba(79,179,166,.5); } 50% { box-shadow: 0 0 44px -6px var(--gold-glow), 0 0 40px -8px rgba(79,179,166,.7); } }
+.loading-text { font-family: var(--lat); font-style: italic; font-size: 15px; letter-spacing: 0.16em; color: var(--gold-soft); animation: pulse-text 1.6s ease-in-out infinite; text-align: center; }
+@keyframes pulse-text { 0%,100% { opacity: 0.55; } 50% { opacity: 1; } }
 
 /* ── Result area ── */
-.result-wrap { position: relative; z-index: 1; padding: 0 16px; display: none; }
+.result-wrap { position: relative; z-index: 1; padding: 0 22px; display: none; }
 .result-wrap.show { display: block; }
 
 /* Big Three Cards */
-.big-three { display: flex; gap: 8px; margin-bottom: 18px; justify-content: center; }
-.bt-card { flex: 1; background: var(--deep-card); border: 1px solid rgba(42,92,138,0.25); border-radius: 10px; padding: 14px 8px 12px; text-align: center; animation: card-in 0.5s ease-out both; }
+.big-three { display: flex; gap: 10px; margin-bottom: 18px; justify-content: center; }
+.bt-card { flex: 1; background: linear-gradient(180deg,var(--night-3),#092623); border: 1px solid var(--hair); border-radius: 16px; padding: 16px 8px 14px; text-align: center; animation: card-in 0.5s ease-out both; }
 .bt-card:nth-child(1) { animation-delay: 0.1s; }
 .bt-card:nth-child(2) { animation-delay: 0.25s; }
 .bt-card:nth-child(3) { animation-delay: 0.4s; }
 @keyframes card-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
-.bt-label { font-size: 9px; letter-spacing: 0.12em; color: rgba(74,140,196,0.5); margin-bottom: 4px; }
-.bt-sym { font-size: 22px; margin-bottom: 3px; display: block; }
-.bt-sign-zh { font-size: 16px; font-weight: 500; color: rgba(240,244,255,0.9); letter-spacing: 0.04em; }
-.bt-sign-en { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 11px; color: rgba(122,184,232,0.6); }
+.bt-label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 6px; }
+.bt-sym { font-family: var(--serif); font-size: 24px; margin-bottom: 5px; display: block; color: var(--gold-hi); line-height: 1; }
+.bt-sign-zh { font-family: var(--serif); font-size: 15px; font-weight: 500; color: var(--star); letter-spacing: 0.04em; }
+.bt-sign-en { font-family: var(--lat); font-style: italic; font-size: 11px; color: var(--gold-soft); }
 .bt-deg { font-size: 9px; color: var(--gold); margin-top: 2px; }
 
 /* Summary bar */
-.summary-bar { background: rgba(10,20,40,0.6); border: 1px solid rgba(42,92,138,0.15); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; text-align: center; animation: fadeUp 0.5s 0.5s ease both; }
-.summary-bar .sb-text { font-size: 11px; color: rgba(200,215,240,0.7); letter-spacing: 0.04em; line-height: 1.6; }
+.summary-bar { background: var(--night-2); border: 1px solid var(--hair); border-radius: 16px; padding: 16px 18px; margin-bottom: 16px; text-align: center; animation: fadeUp 0.5s 0.5s ease both; }
+.summary-bar .sb-text { font-size: 12.5px; color: var(--text-mute); letter-spacing: 0.02em; line-height: 1.9; }
 
 /* Reading content */
-.reading-content { background: rgba(10,20,40,0.5); border: 1px solid rgba(42,92,138,0.12); border-radius: 10px; padding: 18px 16px; margin-bottom: 16px; animation: fadeUp 0.5s 0.6s ease both; }
-.reading-content h1, .reading-content h2, .reading-content h3 { color: var(--blue-light); font-weight: 400; letter-spacing: 0.08em; margin-top: 20px; margin-bottom: 8px; font-size: 14px; }
-.reading-content h1 { font-size: 16px; color: var(--gold); text-align: center; }
-.reading-content h2 { font-size: 14px; border-bottom: 1px solid rgba(42,92,138,0.2); padding-bottom: 6px; }
-.reading-content h3 { font-size: 13px; }
-.reading-content p { font-size: 12px; line-height: 1.8; color: rgba(200,215,240,0.8); margin-bottom: 10px; letter-spacing: 0.04em; }
-.reading-content strong { color: rgba(240,244,255,0.95); }
-.reading-content em { color: var(--blue-light); font-style: italic; }
-.reading-content ul, .reading-content ol { padding-left: 18px; margin-bottom: 10px; }
-.reading-content li { font-size: 12px; line-height: 1.7; color: rgba(200,215,240,0.8); margin-bottom: 4px; }
-.reading-content blockquote { border-left: 2px solid var(--blue); padding-left: 12px; margin: 10px 0; color: rgba(122,184,232,0.6); font-style: italic; font-size: 11px; }
-.reading-content hr { border: none; height: 1px; background: linear-gradient(90deg, transparent, rgba(42,92,138,0.3), transparent); margin: 16px 0; }
+.reading-content { background: var(--night-2); border: 1px solid var(--hair); border-radius: 18px; padding: 20px 18px; margin-bottom: 16px; animation: fadeUp 0.5s 0.6s ease both; }
+.reading-content h1, .reading-content h2, .reading-content h3 { font-family: var(--serif); color: var(--star); font-weight: 600; letter-spacing: 0.06em; margin-top: 20px; margin-bottom: 8px; font-size: 15px; }
+.reading-content h1 { font-size: 17px; color: var(--gold-soft); text-align: center; }
+.reading-content h2 { font-size: 15px; border-bottom: 1px solid var(--hair-2); padding-bottom: 6px; }
+.reading-content h3 { font-size: 14px; }
+.reading-content p { font-size: 14px; line-height: 2.0; color: #cbd2ce; margin-bottom: 12px; letter-spacing: 0.01em; }
+.reading-content strong { color: var(--gold-soft); font-weight: 500; }
+.reading-content em { color: var(--gold-soft); font-style: italic; }
+.reading-content ul, .reading-content ol { padding-left: 18px; margin-bottom: 12px; }
+.reading-content li { font-size: 14px; line-height: 1.9; color: #cbd2ce; margin-bottom: 5px; }
+.reading-content blockquote { border-left: 1.5px solid var(--gold-line-2); padding-left: 16px; margin: 14px 0; color: var(--gold-soft); font-family: var(--serif); font-weight: 500; font-style: normal; font-size: 15px; line-height: 1.95; }
+.reading-content hr { border: none; height: 1px; background: var(--gold-line-2); width: 40px; margin: 22px auto; }
 
 /* ── Follow-up ── */
-.followup-wrap { position: relative; z-index: 1; padding: 0 16px 60px; display: none; }
+.followup-wrap { position: relative; z-index: 1; padding: 0 22px 60px; display: none; }
 .followup-wrap.show { display: block; }
-.followup-input { width: 100%; background: var(--deep-card); border: 1px solid rgba(42,92,138,0.2); border-radius: 8px; padding: 12px 14px; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(240,244,255,0.82); outline: none; resize: none; min-height: 50px; }
-.followup-input::placeholder { color: rgba(240,244,255,0.2); }
-.followup-btn { width: 100%; margin-top: 8px; padding: 12px 0; background: linear-gradient(135deg, #1a3a5c, var(--blue)); border: none; border-radius: 4px; color: rgba(240,244,255,0.9); font-family: 'Noto Serif SC', serif; font-size: 13px; letter-spacing: 0.16em; cursor: pointer; transition: all 0.2s; }
+.followup-input { width: 100%; background: var(--night-2); border: 1px solid var(--hair-2); border-radius: 14px; padding: 14px 16px; font-family: var(--serif); font-size: 15px; color: var(--text-cream); outline: none; resize: none; min-height: 54px; transition: border-color .2s, box-shadow .2s; }
+.followup-input:focus { border-color: var(--gold-line-2); box-shadow: 0 0 0 1px var(--gold-line-2), 0 0 24px -12px var(--gold-glow); background: var(--night-3); }
+.followup-input::placeholder { color: var(--text-ghost); }
+.followup-btn { width: 100%; margin-top: 10px; height: 48px; background: linear-gradient(155deg,var(--gold-hi),var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep)); border: none; border-radius: 14px; color: #241a08; font-family: var(--serif); font-size: 15px; font-weight: 600; letter-spacing: 0.12em; cursor: pointer; transition: all 0.2s; box-shadow: 0 12px 24px -16px var(--gold-glow); }
 .followup-btn:active { transform: scale(0.97); }
-.followup-answer { margin-top: 12px; padding: 14px; background: rgba(10,20,40,0.6); border: 1px solid rgba(42,92,138,0.12); border-radius: 8px; display: none; }
+.followup-answer { margin-top: 14px; padding: 16px; background: var(--night-2); border: 1px solid var(--hair); border-radius: 14px; display: none; }
 .followup-answer.show { display: block; }
-.followup-answer .fa-text { font-size: 12px; line-height: 1.7; color: rgba(200,215,240,0.8); letter-spacing: 0.04em; }
+.followup-answer .fa-text { font-size: 14px; line-height: 1.9; color: #cbd2ce; letter-spacing: 0.01em; }
 
 @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
 /* ── Error ── */
-.error-msg { position: relative; z-index: 1; margin: 12px 16px; padding: 12px 14px; background: rgba(180,40,40,0.15); border: 1px solid rgba(180,40,40,0.3); border-radius: 8px; color: rgba(255,200,200,0.8); font-size: 12px; letter-spacing: 0.04em; display: none; text-align: center; }
+.error-msg { position: relative; z-index: 1; margin: 12px 22px; padding: 12px 14px; background: rgba(176,90,60,0.15); border: 1px solid rgba(176,90,60,0.4); border-radius: 12px; color: #f0dcc0; font-size: 13px; letter-spacing: 0.02em; display: none; text-align: center; }
 .error-msg.show { display: block; }
 
 /* ── City presets ── */
-.city-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
-.city-btn { padding: 5px 12px; border: 1px solid rgba(42,92,138,0.2); border-radius: 14px; background: var(--deep-card); color: rgba(200,215,240,0.5); font-family: 'Noto Serif SC', serif; font-size: 10px; letter-spacing: 0.04em; cursor: pointer; transition: all 0.2s; }
-.city-btn:hover { border-color: rgba(42,92,138,0.5); color: rgba(200,215,240,0.8); }
+.city-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+.city-btn { padding: 6px 14px; border: 1px solid var(--hair-2); border-radius: 999px; background: var(--night-2); color: var(--text-mute); font-family: var(--serif); font-size: 11px; letter-spacing: 0.04em; cursor: pointer; transition: all 0.2s; }
+.city-btn:hover { border-color: var(--gold-line-2); color: var(--gold-soft); }
 
 /* ── Astrolabe SVG chart ── */
-.chart-wrap {
-  width: 100%;
-  max-width: 340px;
-  margin: 0 auto 18px;
-  aspect-ratio: 1;
-}
-.chart-svg {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-.chart-segment {
-  transition: opacity 0.3s;
-  cursor: pointer;
-}
-.chart-segment:hover {
-  opacity: 0.5;
-}
-.chart-center-circle {
-  filter: drop-shadow(0 0 10px rgba(42,92,138,0.35));
-}
-.chart-sym {
-  pointer-events: none;
-}
-.chart-name {
-  animation: chart-name-glow 3s ease-in-out infinite;
-}
-@keyframes chart-name-glow {
-  0%, 100% { opacity: 0.85; }
-  50% { opacity: 1; }
-}
+.chart-wrap { width: 100%; max-width: 340px; margin: 0 auto 18px; aspect-ratio: 1; }
+.chart-svg { width: 100%; height: auto; display: block; }
+.chart-segment { transition: opacity 0.3s; cursor: pointer; }
+.chart-segment:hover { opacity: 0.5; }
+.chart-center-circle { filter: drop-shadow(0 0 10px rgba(79,179,166,0.35)); }
+.chart-sym { pointer-events: none; }
+.chart-name { animation: chart-name-glow 3s ease-in-out infinite; }
+@keyframes chart-name-glow { 0%, 100% { opacity: 0.85; } 50% { opacity: 1; } }
 
-/* ══════════ 精装报告阅读体验（对齐 bazi.html·深色星空变体） ══════════ */
+/* ══════════ 精装报告阅读体验（西占 · 墨绿蓝金变体） ══════════ */
 /* 顶部阅读进度条 */
 #readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.3);opacity:0;transition:opacity .3s;pointer-events:none}
 #readProgressWrap.show{opacity:1}
-#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,#2a5c8a,#4a8cc4,#7ab8e8);box-shadow:0 0 8px rgba(74,140,196,0.5);transition:width .12s ease-out}
-#readProgressChapter{position:fixed;top:8px;right:12px;z-index:1200;font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:0.12em;color:rgba(122,184,232,0.9);background:rgba(6,13,26,0.78);border:1px solid rgba(74,140,196,0.28);border-radius:20px;padding:3px 11px;opacity:0;transition:opacity .3s;pointer-events:none;backdrop-filter:blur(6px)}
+#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,var(--gold-deep),var(--gold),var(--peacock-hi));box-shadow:0 0 8px var(--gold-glow);transition:width .12s ease-out}
+#readProgressChapter{position:fixed;top:8px;right:12px;z-index:1200;font-family:var(--lat);font-size:11px;letter-spacing:0.12em;color:var(--gold-soft);background:rgba(3,16,15,0.82);border:1px solid var(--gold-line);border-radius:20px;padding:3px 11px;opacity:0;transition:opacity .3s;pointer-events:none;backdrop-filter:blur(6px)}
 #readProgressChapter.show{opacity:1}
 
-/* 章节封面卡 */
-.chapter-cover{position:relative;margin:18px 0 10px;border-radius:14px;overflow:hidden;min-height:160px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 8px 30px rgba(0,0,0,0.5);animation:fadeUp 0.6s ease both;background:#0a1428}
-.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.55;filter:saturate(0.95)}
-.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,13,26,0.35) 0%,rgba(6,13,26,0.6) 45%,rgba(6,13,26,0.92) 100%)}
-.chapter-cover-body{position:relative;padding:18px 18px 16px}
-.chapter-cover-num{font-family:'Cormorant Garamond','Noto Serif SC',serif;font-size:12px;letter-spacing:0.32em;color:rgba(122,184,232,0.9);margin-bottom:5px}
-.chapter-cover-num::before{content:'';display:inline-block;width:22px;height:1px;background:linear-gradient(90deg,rgba(74,140,196,0.8),transparent);vertical-align:middle;margin-right:8px}
-.chapter-cover-title{font-family:'Noto Serif SC',serif;font-size:20px;font-weight:600;letter-spacing:0.06em;color:#eaf2ff;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
-.chapter-cover-lead{font-size:12px;line-height:1.7;letter-spacing:0.03em;color:rgba(210,225,250,0.75);margin-top:7px;max-width:92%}
+/* 章节封面卡 — celestial */
+.chapter-cover{position:relative;margin:22px 0 10px;border-radius:var(--radius);overflow:hidden;min-height:160px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:var(--shadow-lift);animation:fadeUp 0.6s ease both;background:linear-gradient(180deg,#0d2e2a,#071c1a);border:1px solid var(--hair-2)}
+.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.5;filter:saturate(0.95)}
+.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,28,26,0.35) 0%,rgba(7,28,26,0.6) 45%,rgba(7,28,26,0.94) 100%)}
+.chapter-cover-body{position:relative;padding:18px 20px 18px}
+.chapter-cover-num{font-family:var(--lat);font-style:italic;font-size:12px;letter-spacing:0.2em;color:var(--gold-soft);margin-bottom:6px}
+.chapter-cover-num::before{content:'';display:inline-block;width:22px;height:1px;background:linear-gradient(90deg,var(--gold-line-2),transparent);vertical-align:middle;margin-right:8px}
+.chapter-cover-title{font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:0.03em;color:var(--star);line-height:1.3;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
+.chapter-cover-lead{font-family:var(--lat);font-style:italic;font-weight:500;font-size:13.5px;line-height:1.7;letter-spacing:0.04em;color:var(--gold-soft);margin-top:8px;max-width:92%}
 
 /* 首字下沉 */
-.ur-text .drop-cap::first-letter,.drop-cap-first{float:left;font-family:'Noto Serif SC',Georgia,serif;font-size:3.4em;line-height:0.82;font-weight:700;color:#7ab8e8;margin:0.04em 0.12em 0 0;text-shadow:0 2px 10px rgba(74,140,196,0.3)}
+.ur-text .drop-cap::first-letter,.drop-cap-first{float:left;font-family:var(--serif),Georgia,serif;font-size:3.4em;line-height:0.82;font-weight:700;color:var(--gold-hi);margin:0.04em 0.12em 0 0;text-shadow:0 2px 10px var(--gold-glow)}
 
 /* 金句 pull quote */
-.pull-quote{position:relative;margin:16px 6px;padding:6px 4px 6px 20px;text-align:center}
-.pull-quote::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,transparent,rgba(74,140,196,0.7),transparent);border-radius:2px}
-.pull-quote-text{font-family:'Noto Serif SC',serif;font-size:15px;font-weight:500;line-height:1.75;letter-spacing:0.04em;color:#7ab8e8;text-shadow:0 1px 8px rgba(74,140,196,0.16)}
-.pull-quote-mark{font-family:'Cormorant Garamond',serif;font-size:24px;color:rgba(74,140,196,0.4);line-height:0}
+.pull-quote{position:relative;margin:18px 6px;padding:2px 4px 2px 18px;text-align:left;border-left:1.5px solid var(--gold-line-2)}
+.pull-quote-text{font-family:var(--serif);font-size:17px;font-weight:500;line-height:1.95;letter-spacing:0.02em;color:var(--gold-soft)}
+.pull-quote-mark{font-family:var(--lat);font-size:24px;color:var(--gold-line-2);line-height:0}
 
-/* 高亮卡 */
-.hl-note{margin:12px 0;padding:13px 15px;background:linear-gradient(135deg,rgba(74,140,196,0.12),rgba(74,140,196,0.03));border:1px solid rgba(74,140,196,0.34);border-left:3px solid #4a8cc4;border-radius:10px;font-size:12.5px;line-height:1.9;letter-spacing:0.03em;color:rgba(215,228,250,0.92);box-shadow:0 2px 14px rgba(74,140,196,0.06)}
-.hl-note b,.hl-note strong{color:#7ab8e8}
+/* 高亮卡 — wisdom note */
+.hl-note{margin:14px 0;padding:16px 18px;background:linear-gradient(180deg,rgba(203,168,95,.07),rgba(203,168,95,.015));border:1px solid var(--gold-line);border-radius:16px;font-size:13px;line-height:1.95;letter-spacing:0.02em;color:var(--text-mute)}
+.hl-note b,.hl-note strong{color:var(--gold-soft)}
 
 /* 章节目录 */
-.chapter-toc{margin:14px 0 6px;padding:16px 16px 12px;background:linear-gradient(160deg,rgba(10,20,40,0.92),rgba(6,13,26,0.96));border:1px solid rgba(74,140,196,0.22);border-radius:14px;animation:fadeUp 0.5s ease both}
-.chapter-toc-title{font-size:12px;letter-spacing:0.2em;color:rgba(122,184,232,0.8);margin-bottom:12px;display:flex;align-items:center;gap:7px}
-.chapter-toc-item{display:flex;align-items:baseline;gap:10px;padding:8px 2px;border-bottom:1px dotted rgba(74,140,196,0.16);text-decoration:none;transition:all .2s}
+.chapter-toc{margin:18px 0 6px;padding:0;background:var(--night-2);border:1px solid var(--hair);border-radius:18px;overflow:hidden;animation:fadeUp 0.5s ease both}
+.chapter-toc-title{padding:14px 18px;font-size:10.5px;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-faint);border-bottom:1px solid var(--hair);display:flex;align-items:center;gap:9px}
+.chapter-toc-item{display:flex;align-items:center;gap:14px;padding:15px 18px;border-bottom:1px solid var(--hair);text-decoration:none;transition:all .2s;min-height:56px}
 .chapter-toc-item:last-child{border-bottom:none}
 .chapter-toc-item:active{opacity:0.6}
-.chapter-toc-idx{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(122,184,232,0.65);min-width:26px}
-.chapter-toc-label{flex:1;font-size:13px;letter-spacing:0.04em;color:rgba(220,232,252,0.9)}
-.chapter-toc-arrow{font-size:12px;color:rgba(74,140,196,0.5)}
+.chapter-toc-idx{font-family:var(--serif);font-size:18px;color:var(--gold-hi);min-width:26px;text-align:center}
+.chapter-toc-label{flex:1;font-family:var(--serif);font-size:14.5px;letter-spacing:0.03em;color:var(--text-cream)}
+.chapter-toc-arrow{font-size:16px;color:var(--text-faint)}
 
 /* 悬浮 TOC 按钮 + 面板 */
-#floatTocBtn{position:fixed;right:16px;bottom:80px;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#1a3a5c,#4a8cc4);border:none;color:#eaf2ff;font-size:18px;cursor:pointer;z-index:1100;box-shadow:0 4px 16px rgba(74,140,196,0.4);display:none;align-items:center;justify-content:center}
+#floatTocBtn{position:fixed;right:16px;bottom:80px;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#14413c,var(--peacock));border:1px solid var(--gold-line);color:var(--gold-hi);font-size:18px;cursor:pointer;z-index:1100;box-shadow:0 4px 16px -4px var(--gold-glow),0 4px 16px -6px rgba(79,179,166,.5);display:none;align-items:center;justify-content:center}
 #floatTocBtn.show{display:flex}
-#floatTocPanel{display:none;position:fixed;right:16px;bottom:134px;z-index:1100;background:rgba(6,13,26,0.97);border:1px solid rgba(74,140,196,0.4);border-radius:12px;padding:14px;max-height:56vh;overflow-y:auto;width:min(230px,calc(100vw - 32px));box-shadow:0 10px 30px rgba(0,0,0,0.6);backdrop-filter:blur(8px)}
+#floatTocPanel{display:none;position:fixed;right:16px;bottom:134px;z-index:1100;background:rgba(3,16,15,0.97);border:1px solid var(--gold-line-2);border-radius:14px;padding:14px;max-height:56vh;overflow-y:auto;width:min(230px,calc(100vw - 32px));box-shadow:0 10px 30px rgba(0,0,0,0.6);backdrop-filter:blur(8px)}
 #floatTocPanel.show{display:block;animation:fadeUp 0.25s ease both}
-#floatTocPanel .ft-title{font-size:12px;letter-spacing:0.16em;color:rgba(122,184,232,0.8);margin-bottom:10px}
-#floatTocPanel a{display:flex;gap:8px;color:rgba(220,232,252,0.85);text-decoration:none;padding:7px 0;font-size:12.5px;border-bottom:1px solid rgba(74,140,196,0.1);line-height:1.4}
+#floatTocPanel .ft-title{font-size:12px;letter-spacing:0.16em;color:var(--gold-soft);margin-bottom:10px}
+#floatTocPanel a{display:flex;gap:8px;color:var(--text-cream);text-decoration:none;padding:8px 0;font-size:12.5px;border-bottom:1px solid var(--hair);line-height:1.4}
 #floatTocPanel a:last-child{border-bottom:none}
-#floatTocPanel a .ft-idx{color:rgba(122,184,232,0.6);font-family:'Cormorant Garamond',serif}
+#floatTocPanel a .ft-idx{color:var(--gold-soft);font-family:var(--lat)}
 
 /* Ultimate report cards */
-.ultimate-report{display:flex;flex-direction:column;gap:8px}
-.ur-card{background:var(--deep-card);border:1px solid rgba(74,140,196,0.16);border-radius:10px;overflow:hidden;animation:fadeUp 0.5s ease both;transition:all 0.3s}
-.ur-card:hover{border-color:rgba(74,140,196,0.28);box-shadow:0 4px 20px rgba(74,140,196,0.08)}
-.ur-head{display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer;user-select:none}
-.ur-emoji{font-size:18px;width:28px;text-align:center;flex-shrink:0}
-.ur-title{flex:1;font-size:13px;letter-spacing:0.08em;color:rgba(230,240,255,0.92)}
-.ur-arrow{font-size:13px;color:rgba(74,140,196,0.5);transition:transform 0.3s;flex-shrink:0}
+.ultimate-report{display:flex;flex-direction:column;gap:10px}
+.ur-card{background:linear-gradient(180deg,#0d2e2a,#071c1a);border:1px solid var(--hair-2);border-radius:var(--radius);overflow:hidden;animation:fadeUp 0.5s ease both;transition:all 0.3s;box-shadow:var(--shadow-lift)}
+.ur-card:hover{border-color:var(--gold-line);box-shadow:0 8px 26px -18px var(--gold-glow)}
+.ur-head{display:flex;align-items:center;gap:12px;padding:16px 18px;cursor:pointer;user-select:none}
+.ur-emoji{font-family:var(--serif);font-size:20px;width:28px;text-align:center;flex-shrink:0;color:var(--gold-hi)}
+.ur-title{flex:1;font-family:var(--serif);font-size:15px;font-weight:600;letter-spacing:0.03em;color:var(--star)}
+.ur-arrow{font-size:14px;color:var(--text-faint);transition:transform 0.3s;flex-shrink:0}
 .ur-arrow.open{transform:rotate(180deg)}
 .ur-body{display:none}
 .ur-body.open{display:block}
-.ur-text{font-size:12.5px;line-height:2;color:rgba(205,220,245,0.86);letter-spacing:0.04em;white-space:pre-wrap;padding:0 14px 14px}
-.hl-year{color:#e8d08a;font-weight:500}
-.hl-score{color:#7ab8e8;font-weight:500}
+.ur-text{font-size:14px;line-height:2.0;color:#cbd2ce;letter-spacing:0.01em;white-space:pre-wrap;padding:0 18px 18px}
+.hl-year{color:var(--peacock-hi);font-weight:500}
+.hl-score{color:var(--gold-soft);font-weight:500}
 
 /* 行星落座表 */
 .planet-placements{margin:2px 0 0}
-.pp-row{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid rgba(74,140,196,0.1)}
+.pp-row{display:flex;align-items:center;gap:10px;padding:11px 4px;border-bottom:1px solid var(--hair)}
 .pp-row:last-child{border-bottom:none}
-.pp-sym{font-size:17px;width:24px;text-align:center;flex-shrink:0}
-.pp-name{font-size:12px;color:rgba(205,220,245,0.75);min-width:52px;flex-shrink:0}
-.pp-sign{flex:1;font-size:13px;color:#eaf2ff;letter-spacing:0.04em}
-.pp-sign .en{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(122,184,232,0.6);margin-left:5px}
+.pp-sym{font-family:var(--serif);font-size:18px;width:24px;text-align:center;flex-shrink:0;color:var(--gold-hi)}
+.pp-name{font-size:12px;color:var(--text-mute);min-width:52px;flex-shrink:0}
+.pp-sign{flex:1;font-family:var(--serif);font-size:14px;color:var(--star);letter-spacing:0.04em}
+.pp-sign .en{font-family:var(--lat);font-style:italic;font-size:11px;color:var(--gold-soft);margin-left:5px}
 .pp-deg{font-size:11px;color:var(--gold);flex-shrink:0}
 
 /* Paywall lock overlay for astrology */
-.astro-lock{position:relative;padding:16px;text-align:center}
-.astro-lock .al-title{font-size:13px;font-weight:500;letter-spacing:0.1em;color:#7ab8e8;margin-bottom:10px}
-.astro-lock .al-btn{background:linear-gradient(135deg,#1a3a5c,#4a8cc4);border:none;border-radius:10px;color:#eaf2ff;font-family:'Noto Serif SC',serif;font-size:13px;padding:10px 24px;cursor:pointer}
+.astro-lock{position:relative;padding:18px;text-align:center}
+.astro-lock .al-title{font-family:var(--serif);font-size:14px;font-weight:500;letter-spacing:0.08em;color:var(--gold-soft);margin-bottom:12px}
+.astro-lock .al-btn{background:linear-gradient(155deg,var(--gold-hi),var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep));border:none;border-radius:14px;color:#241a08;font-family:var(--serif);font-size:14px;font-weight:600;letter-spacing:0.08em;padding:12px 28px;cursor:pointer;box-shadow:0 12px 24px -16px var(--gold-glow)}
 
 @media print{
   .chapter-cover{break-inside:avoid}
@@ -282,15 +275,15 @@ select option { background: var(--deep-mid); color: var(--star); }
 <body>
 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题" style="z-index:999">🌙</button>
 
-<div class="back-btn" onclick="history.back()">&larr; 返回</div>
+<div class="back-btn" onclick="history.back()">&lsaquo;</div>
 
 <div class="header">
-  <span class="header-icon">&#10025;</span>
-  <div class="header-title">占星星盘</div>
-  <div class="header-sub">Western Astrology &mdash; Natal Chart</div>
+  <div class="header-icon">Your natal chart, read by the stars</div>
+  <div class="header-title">出生的那一刻<br>天空为你写下星图</div>
+  <div class="header-sub">The sky drew your chart the moment you were born</div>
   <div class="blue-line"></div>
-  <div class="header-desc">输入你的出生信息，AI占星师将为你解读本命星盘<br>
-  太阳星座 &bull; 月亮星座 &bull; 上升星座 &bull; 行星落座 &bull; 宫位分析</div>
+  <div class="header-desc">太阳、月亮、上升——十二宫的行星落点，<br>是你性格与命运的第一份底稿。<br>
+  <span style="font-family:var(--lat);font-style:italic;color:var(--text-ghost);letter-spacing:0.06em">One sky. One moment. One chart that is only yours.</span></div>
 </div>
 
 <!-- Form -->
@@ -432,13 +425,14 @@ select option { background: var(--deep-mid); color: var(--star); }
 </div>
 
 <div class="submit-wrap">
-  <button class="btn-submit" id="submitBtn">&#10025; 解读我的星盘</button>
+  <button class="btn-submit" id="submitBtn">起我的星盘 &middot; Draw my chart</button>
+  <div style="text-align:center;font-size:10.5px;color:var(--text-faint);letter-spacing:0.04em;line-height:1.75;padding:14px 12px 4px">出生信息仅用于本次起盘计算 · 不作它用。<br>AI 生成内容 · 仅供娱乐参考，不构成医疗、法律或财务建议 · For entertainment only.</div>
 </div>
 
 <!-- Loading -->
 <div class="loading-wrap" id="loadingWrap">
-  <div class="astro-orb"><span class="orb-sym">&#10025;</span></div>
-  <div class="loading-text">Calculating your celestial blueprint...</div>
+  <div class="astro-orb"><span class="orb-sym">&#9790;</span></div>
+  <div class="loading-text">正在连结你的星辰<br>Placing planets &middot; aspecting the houses&hellip;</div>
 </div>
 
 <!-- Error -->
@@ -453,16 +447,16 @@ select option { background: var(--deep-mid); color: var(--star); }
 </div>
 
 <!-- Member upsell -->
-<div style="margin:0 0 14px">
-  <a href="/pages/member.html" style="display:block;background:linear-gradient(135deg,rgba(74,140,196,0.07),rgba(74,140,196,0.03));border:1px solid rgba(74,140,196,0.2);border-radius:12px;padding:14px 16px;text-decoration:none;text-align:center">
-    <div style="font-size:13px;color:rgba(30,50,80,0.85);letter-spacing:0.06em;margin-bottom:4px">👑 开通会员 · 解锁八字命盘深度报告</div>
-    <div style="font-size:11px;color:rgba(74,140,196,0.7)">东方命理 + 西方星盘双维度 · $6.90/月起</div>
+<div style="margin:0 22px 14px">
+  <a href="/pages/member.html" style="display:block;background:linear-gradient(180deg,rgba(203,168,95,0.07),rgba(203,168,95,0.015));border:1px solid var(--gold-line);border-radius:16px;padding:16px 18px;text-decoration:none;text-align:center">
+    <div style="font-family:var(--serif);font-size:14px;font-weight:500;color:var(--gold-soft);letter-spacing:0.08em;margin-bottom:5px">开通会员 · 解锁八字命盘深度报告</div>
+    <div style="font-size:11.5px;color:var(--text-mute);letter-spacing:0.02em">东方命理 + 西方星盘双维度 · $6.90/月起</div>
   </a>
 </div>
 
 <!-- Follow-up -->
 <div class="followup-wrap" id="followupWrap">
-  <div class="field-label" style="padding:0 0 8px;font-size:10px;letter-spacing:0.18em;color:rgba(74,140,196,0.5);">
+  <div class="field-label" style="padding:0 0 10px;">
     追问占星师 <span class="en">Ask the Astrologer</span>
   </div>
   <textarea class="followup-input" id="followupInput" placeholder="对您的星盘解读还有什么疑问？比如「我的感情运势如何」「哪方面事业最适合我」..." rows="2" maxlength="500"></textarea>
@@ -561,7 +555,7 @@ async function doReading() {
   var _astInput = { year: birthYear, month: birthMonth, day: birthDay, hour: birthHour !== '' ? parseInt(birthHour) : null, gender: gender };
   setTimeout(function(){
     document.getElementById('loadingWrap').classList.remove('show');
-    btn.disabled = false; btn.textContent = '✥ 解读我的星盘';
+    btn.disabled = false; btn.textContent = '起我的星盘 · Draw my chart';
     var rw = document.getElementById('resultWrap'); rw.classList.add('show');
     rw.innerHTML = '<div style="text-align:center;padding:16px 0 4px"><div style="font-size:30px;font-weight:800;letter-spacing:4px;background:linear-gradient(180deg,#fff3cf,#e0be6e);-webkit-background-clip:text;background-clip:text;color:transparent">西方占星</div><div style="font-size:12px;color:#9fb0cc;margin-top:6px">' + birthYear + '.' + birthMonth + '.' + birthDay + '</div></div><div id="astMount"></div>';
     if (window.RunaeSessions) RunaeSessions.render({ method: 'astrology', input: _astInput, mount: document.getElementById('astMount'), methodLabel: '西方占星' });
@@ -607,7 +601,7 @@ async function doReading() {
   } catch (err) {
     document.getElementById('loadingWrap').classList.remove('show');
     btn.disabled = false;
-    btn.textContent = '&#10025; 解读我的星盘';
+    btn.textContent = '起我的星盘 · Draw my chart';
     showError(err.message);
   }
 }
@@ -840,7 +834,7 @@ function showResult(data) {
   window._astrologyContextId = data.contextId;
 
   btn.disabled = false;
-  btn.textContent = '&#10025; 解读我的星盘';
+  btn.textContent = '起我的星盘 · Draw my chart';
 
   // Scroll to result
   document.getElementById('resultWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });

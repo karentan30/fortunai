@@ -151,6 +151,8 @@ const insertReading = {
   run(t, i, r, u) {
     _M.readings.push({ id: _M._id.r++, type: t, input: i, result: r, user_id: u || null, created_at: new Date().toISOString() });
     _persist();
+    // 防刷: 被邀请人首次真实测算落库后,才给邀请人发裂变奖励(onInviteeFirstReading 幂等)。
+    if (u) { try { onInviteeFirstReading(u); } catch (e) {} }
   }
 };
 const getReadingsByUser = {
@@ -192,16 +194,32 @@ const UNLOCK_BY_CATEGORY = {
   'tibet_full': ['tibet_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'], 'tibet': ['tibet_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'],
   // 🔴 0817: 'member'/面相 只映射「全解锁会员」。月会员(member_monthly)走 credit 机制,
   //   由 hasFullAccess/gateMessages 里的 monthly 分支单独放行,不在这里直接解锁。
-  'mianxiang': ['member_yearly','member_lifetime','member_daily','member_quarterly','member_3year'],
-  '面相': ['member_yearly','member_lifetime','member_daily','member_quarterly','member_3year'],
+  'mianxiang': ['mianxiang_full','member_yearly','member_lifetime','member_daily','member_quarterly','member_3year'],
+  '面相': ['mianxiang_full','member_yearly','member_lifetime','member_daily','member_quarterly','member_3year'],
+  'mianxiang_full': ['mianxiang_full'],
   'member': ['member_yearly','member_lifetime','member_daily','member_quarterly','member_3year'],
   'zhiyuan_full': ['zhiyuan_full', 'member_yearly', 'member_quarterly', 'member_3year','member_lifetime','member_daily'],
   // daily_sub(每日运势): 月会员也含每日运势, 故保留 member_monthly(每日运势不属"完整报告", 不消耗 credit)
-  'daily_sub': ['daily_sub', 'member_monthly', 'member_yearly', 'member_quarterly', 'member_3year', 'member_daily','member_lifetime'],
+  // daily_companion_month/year(每日运势·常伴): 手动周期包, 到期(_isExpired)自动失效需再买。
+  'daily_sub': ['daily_sub', 'daily_companion_month', 'daily_companion_year', 'member_monthly', 'member_yearly', 'member_quarterly', 'member_3year', 'member_daily','member_lifetime'],
+  'daily_companion': ['daily_companion_month', 'daily_companion_year', 'daily_sub', 'member_monthly', 'member_yearly', 'member_quarterly', 'member_3year', 'member_daily','member_lifetime'],
+  // monthly_report(月度报告): monthly_report_year=年包(主推)也解锁单月; 全解锁会员一并放行。
+  'monthly_report': ['monthly_report', 'monthly_report_year', 'member_yearly', 'member_quarterly', 'member_3year', 'member_daily','member_lifetime'],
 };
 
 // 🔴 续费修复(0731): 订阅类产品加 expires_at 到期判断
-const SUBSCRIBE_PRODUCTS = ['member_monthly','member_yearly','member_quarterly','member_3year','member_daily','daily_sub'];
+// 手动周期包(0907): daily_companion_*/monthly_report* 也需到期判断; 它们是"付一期给一期"的
+//   一次性支付(Stripe mode=payment, 非 recurring), 完成后由 _grantPeriodicPackExpiry 写 expires_at,
+//   到期由 _isExpired 自动失效, 用户需手动再买。⚠️真自动续扣(recurring)未接, 待代扣资质。
+const SUBSCRIBE_PRODUCTS = ['member_monthly','member_yearly','member_quarterly','member_3year','member_daily','daily_sub','daily_companion_month','daily_companion_year','monthly_report','monthly_report_year'];
+
+// 手动周期包 SKU → 授予的访问天数(付一期给一期·到期需手动再买·非自动续扣)
+const PERIODIC_PACK_DAYS = {
+  daily_companion_month: 31,
+  daily_companion_year:  366,
+  monthly_report:        31,
+  monthly_report_year:   366,
+};
 
 // ── 会员分级(0817 最终阶梯) ──
 // 全解锁会员(报告无限+无限聊天): 年/季/3年/终身/日。不设月度credit; 直接 hasFullAccess 全通。
@@ -373,7 +391,7 @@ function hasFullAccess(req, productKeys) {
     if (!_M.rewards) return false;
     var reward = _M.rewards.find(function(r) {
       return r.user_id === t.user_id &&
-        (r.type === 'referral_basic' || r.type === 'referral_standard' || r.type === 'referral_premium') &&
+        (r.type === 'referral_basic' || r.type === 'referral_standard' || r.type === 'referral_premium' || r.type === 'referral_invitee_welcome') &&
         !r.used;
     });
     if (reward) { reward.used = true; _persist(); return true; }
@@ -449,7 +467,7 @@ function hehunTier(req) {
     if (_M.rewards) {
       var reward = _M.rewards.find(function(r) {
         return r.user_id === t.user_id &&
-          (r.type === 'referral_basic' || r.type === 'referral_standard' || r.type === 'referral_premium') &&
+          (r.type === 'referral_basic' || r.type === 'referral_standard' || r.type === 'referral_premium' || r.type === 'referral_invitee_welcome') &&
           !r.used;
       });
       if (reward) { reward.used = true; _persist(); return 'basic'; }
@@ -559,6 +577,23 @@ function _setOrExtendSub(pid, email, expIso, stripeSessionId) {
 
 function _findOrder(oNo) { return _M.orders.find(x => x.order_no === oNo); }
 
+// 手动周期包(0907): 若订单产品在 PERIODIC_PACK_DAYS 内, 从"付款成功时刻"起授予对应天数的访问期,
+//   写 expires_at。到期后 _isExpired 自动失效, 用户需手动再买(非自动续扣)。
+//   在所有付款完成路径(_completeCnOrder / Stripe webhook checkout.session.completed)调用。
+function _grantPeriodicPackExpiry(order) {
+  if (!order) return;
+  var days = PERIODIC_PACK_DAYS[String(order.product || '')];
+  if (!days) return;
+  // 若用户对同类周期包已有未过期访问期, 从"较晚的到期日"续期(叠加), 否则从现在起算。
+  var base = Date.now();
+  if (order.expires_at) {
+    var prev = Date.parse(order.expires_at);
+    if (!isNaN(prev) && prev > base) base = prev;
+  }
+  order.expires_at = new Date(base + days * 24 * 60 * 60 * 1000).toISOString();
+  _persist();
+}
+
 function _insCnOrder(oNo, product, amountCents, uid, channel) {
   _M.orders.push({
     id: _M._id.o++, order_no: oNo, product: product, amount: amountCents,
@@ -578,6 +613,7 @@ function _completeCnOrder(oNo, paidFeeCents, tradeNo) {
   o.payment_status = 'completed';
   o.trade_no = tradeNo || o.trade_no || '';
   o.paid_at = new Date().toISOString();
+  _grantPeriodicPackExpiry(o);  // 手动周期包: 授予访问期(付一期给一期)
   _persist();
   return 'paid';
 }
@@ -655,6 +691,51 @@ function grantReferralReward(inviterId) {
   _persist();
 }
 
+// ── 被邀请人欢迎奖励(双方各得1次的"被邀请人"侧)──
+// 被邀请人首次被归因即得 1 次「完整报告」解锁额度。防重复: 每人只发一次 welcome。
+function grantInviteeReward(inviteeId) {
+  if (!inviteeId) return;
+  if (!_M.rewards) _M.rewards = [];
+  const exists = _M.rewards.find(r =>
+    r.user_id === inviteeId && r.type === 'referral_invitee_welcome');
+  if (exists) return;
+  _M.rewards.push({
+    user_id: inviteeId,
+    type: 'referral_invitee_welcome',   // gateReportAccess/hehunTier 已登记该 type
+    amount: 10,
+    level: 'invitee',
+    used: false,
+    created_at: new Date().toISOString()
+  });
+  _persist();
+}
+
+// ── 防刷: 邀请人奖励延迟到"被邀请人首次落 reading"后才发 ──
+// 在 insertReading.run 里对每个有 user_id 的 reading 调一次(幂等)。
+// 找到该 user 作为被邀请人、且尚未给邀请人发过奖的 referral 记录 → 发邀请人奖励 → 打标记。
+function onInviteeFirstReading(userId) {
+  if (!userId) return;
+  if (!Array.isArray(_M.referrals)) return;
+  var ref = _M.referrals.find(function(r) {
+    return r.invitee_id === userId && !r.inviter_rewarded;
+  });
+  if (!ref) return;
+  grantReferralReward(ref.inviter_id);   // 此刻(被邀请人真实激活)才给邀请人发
+  ref.inviter_rewarded = true;           // referral 记录加标记防重复发
+  _persist();
+}
+
+// ── 软护栏: 同一 ref 24h 归因数上限,超限只记录归因不发被邀请人奖励 ──
+var REFERRAL_DAILY_CAP = 20;
+function referralAttributionsInLast24h(inviterId) {
+  if (!Array.isArray(_M.referrals)) return 0;
+  var cutoff = Date.now() - 24 * 3600 * 1000;
+  return _M.referrals.filter(function(r) {
+    return r.inviter_id === inviterId &&
+      r.created_at && new Date(r.created_at).getTime() >= cutoff;
+  }).length;
+}
+
 function tryApplyReferral(refCode, inviteeId, channel) {
   // P1修复: 支持渠道参数(来自?ref_channel查询参数)
   if (!refCode) return false;
@@ -662,8 +743,13 @@ function tryApplyReferral(refCode, inviteeId, channel) {
   if (!inviter) return false;
   if (inviter.id === inviteeId) return false;
   if (wasInvited(inviteeId)) return false;
+  // 软护栏: 同一邀请人 24h 归因上限。超限仍记录归因(便于统计/防重复邀请),但不发被邀请人欢迎奖励。
+  var overCap = referralAttributionsInLast24h(inviter.id) >= REFERRAL_DAILY_CAP;
   createReferral(inviter.id, inviteeId, channel || 'organic');
-  grantReferralReward(inviter.id);
+  if (!overCap) {
+    grantInviteeReward(inviteeId);   // 给被邀请人发 1 次解锁额度
+  }
+  // 邀请人奖励不在此发放 —— 已移到 onInviteeFirstReading(防批量空号刷解锁)。见 insertReading.run。
   return true;
 }
 
@@ -691,11 +777,18 @@ const PRODUCTS = {
   bazi_vip:        { name: '深度批命',          amount: 5900,   amountCny: 14900, desc: '八字×紫微双体系交叉印证旗舰', amountKrw: 19900 },
   saju_kr_full:    { name: '사주팔자 완전 분석', amount: 750,    amountKrw: 9900, desc: '사주 완전 분석 보고서 (천간지지 + 대운 + 유년)' },
   daily_sub:       { name: '每日天机订阅',      amount: 490,    amountCny: 1990,  desc: '每日天机·单功能订阅' },
+  // ── 每日运势·常伴 (手动周期包·付一期给一期·到期需手动再买·非自动续扣) ──
+  daily_companion_month: { name: '每日运势 · 常伴（月）', amount: 290, amountCny: 1900, desc: '每日专属运势与开运指引·1个月（到期手动续购）' },
+  daily_companion_year:  { name: '每日运势 · 常伴（年）', amount: 1900, amountCny: 13800, desc: '每日专属运势与开运指引·12个月（到期手动续购，比月付省）' },
+  // ── 月度报告 (手动周期包·付一期给一期·到期需手动再买·非自动续扣) ──
+  monthly_report:      { name: '月度报告 · 单月', amount: 990, amountCny: 3900, desc: '本月专属流月运势完整报告·1个月（到期手动续购）' },
+  monthly_report_year: { name: '月度报告 · 年包（12期）', amount: 9900, amountCny: 39800, desc: '连续12个月每月一份完整月度报告·主推（到期手动续购，比单月省）' },
   tarot:           { name: '塔罗占卜',          amount: 390,    amountCny: 990,   desc: 'AI塔罗解读' },
   tarot_3:         { name: '塔罗三张牌阵',      amount: 900,    amountCny: 990,   desc: 'AI深度三张牌解读（过去·现在·未来）' },
   tarot_5:         { name: '塔罗五芒星牌阵',    amount: 1990,   amountCny: 1990,  desc: 'AI五芒星深度解读·五维度全析' },
   ziwei_full:      { name: '紫微 · 一键全解锁（session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部紫微 session：事业/财帛/夫妻/大限' },
   shouxiang_full:  { name: '手相·麻衣神相完整解读', amount: 990, amountCny: 5900, desc: '掌纹三大主线+八大丘+特殊纹+化解建议' },
+  mianxiang_full:  { name: '面相·麻衣神相完整解读', amount: 990, amountCny: 5900, desc: '三停五岳+十二宫+流年气色+化解建议' },
   duanshi_full:    { name: '断事问卦完整解读',  amount: 2900,   amountCny: 5900,  desc: '六爻起卦·吉凶断事·行动建议' },
   astrology_full:  { name: '西占 · 一键全解锁（session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部西占 session：事业/爱情/性格天赋' },
   kyusei_full:     { name: '九星 · 一键全解锁（session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部九星 session：事业/恋爱/方位' },
@@ -775,7 +868,7 @@ module.exports = {
   insertToken, getToken,
   getUserOrders, insertOrder, insertReading, getReadingsByUser,
   // 付费墙
-  UNLOCK_BY_CATEGORY, SUBSCRIBE_PRODUCTS, hasFullAccess, hasVipAccess, hehunTier, gateMessages,
+  UNLOCK_BY_CATEGORY, SUBSCRIBE_PRODUCTS, PERIODIC_PACK_DAYS, hasFullAccess, hasVipAccess, hehunTier, gateMessages,
   _isExpired,
   // 会员分级(0817)
   FULL_MEMBER_PRODUCTS, MONTHLY_MEMBER_PRODUCTS, MONTHLY_REPORT_CREDIT, MONTHLY_CHAT_DAILY_LIMIT,
@@ -783,10 +876,10 @@ module.exports = {
   monthlyReportCreditRemaining, consumeMonthlyReportCredit, refundMonthlyReportCredit,
   // 订单操作
   _updOrder, _updOrderExpiry, _setOrExtendSub,
-  _findOrder, _insCnOrder, _completeCnOrder, _insSub, _allOrders, _insJossOrder,
+  _findOrder, _insCnOrder, _completeCnOrder, _insSub, _allOrders, _insJossOrder, _grantPeriodicPackExpiry,
   // Referral
   CHANNELS, REWARD_TIERS, genRefCodesForUser,
-  invitedCount, wasInvited, createReferral, grantReferralReward, tryApplyReferral,
+  invitedCount, wasInvited, createReferral, grantReferralReward, grantInviteeReward, onInviteeFirstReading, tryApplyReferral,
   // Streak
   updateStreak,
   // 常量

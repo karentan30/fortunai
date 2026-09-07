@@ -27,16 +27,30 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&display=swap">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@200;300;400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&family=Ma+Shan+Zheng&display=swap" rel="stylesheet">
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 :root {
-  --bg: #faf8f5; --card: #ffffff; --mid: #f5f0e8;
-  --gold: #c9a84c; --gold-light: #e8d08a; --gold-deep: #8a6420;
-  --jade: #5bbfa0; --jade-mid: #8dd9bf;
-  --amber: #c9820a; --amber-light: #e8b86a;
-  --ink-text: rgba(40,35,30,0.92);
-  --sub-text: rgba(80,70,55,0.72);
+  /* ── Runae 八字 redesign — warm rice-paper base with jade-green primary brand ── */
+  --paper-0:#e4e6d6; --paper:#eef0e2; --paper-2:#f4f5ea; --paper-3:#f9faf1; --paper-edge:#d6ddc9;
+  --bg: var(--paper); --card: var(--paper-3); --mid: var(--paper-2);
+  /* five elements (data colours) */
+  --wood:#4f7a4a; --wood-soft:#7fa074; --fire:#c0472e; --fire-soft:#d3684c;
+  --earth:#c8a35a; --earth-deep:#a07d38; --metal:#8f9384; --metal-soft:#b0b3a3;
+  --water:#3a5566; --water-soft:#5a7686;
+  /* jade — THE primary brand colour */
+  --jade-hi:#8fc2a5; --jade:#2f8f6b; --jade-deep:#1f6b4e; --jade-soft:#5aa886; --jade-ink:#184e39; --jade-mid:#8fc2a5;
+  --jade-line:rgba(31,107,78,.30); --jade-line-2:rgba(31,107,78,.52); --jade-glow:rgba(47,143,107,.40); --jade-wash:rgba(47,143,107,.09);
+  /* legacy gold aliases → remapped to jade so any stray use stays on-brand */
+  --gold:#2f8f6b; --gold-light:#5aa886; --gold-deep:#1f6b4e;
+  /* real gilt — kept ONLY for tiny metallic seal / day-master accents */
+  --gilt-hi:#e7d3a0; --gilt:#c8a35a; --gilt-deep:#a07d38;
+  --seal:#a8402c; --seal-deep:#8a3020;
+  --amber:#c8a35a; --amber-light:#e7d3a0;
+  --ink-text: #232a22; --sub-text: #68705f;
+  --hair:rgba(40,66,44,.12); --hair-2:rgba(40,66,44,.20);
+  --shadow-card:0 30px 60px -30px rgba(28,60,42,.40); --shadow-lift:0 20px 40px -26px rgba(28,60,42,.34);
+  --serif:'Noto Serif SC',serif; --sans:'Noto Sans SC',-apple-system,BlinkMacSystemFont,sans-serif; --lat:'Cormorant Garamond',serif;
 }
 html, body { background: var(--bg); font-family: 'Noto Serif SC', serif; color: var(--ink-text); -webkit-font-smoothing: antialiased; }
 .paywall-blurred { filter: blur(5px); pointer-events: none; user-select: none; position: relative; }
@@ -44,7 +58,7 @@ html, body { background: var(--bg); font-family: 'Noto Serif SC', serif; color: 
    (Was position:absolute over blurred content; changed to in-flow so free content stays fully readable.) */
 .paywall-overlay { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding: 24px 16px max(28px, env(safe-area-inset-bottom)); }
 /* Soft teaser fade above the paywall so it reads as "there's more below", not a hard cut */
-.paywall-overlay::before { content: ''; position: absolute; left: 0; right: 0; top: -48px; height: 48px; background: linear-gradient(to bottom, rgba(14,12,8,0) 0%, rgba(14,12,8,0.55) 100%); pointer-events: none; }
+.paywall-overlay::before { content: ''; position: absolute; left: 0; right: 0; top: -48px; height: 48px; background: linear-gradient(to bottom, rgba(233,225,207,0) 0%, rgba(233,225,207,0.85) 100%); pointer-events: none; }
 body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: max(24px, env(safe-area-inset-bottom)); }
 body::before { content:''; position:fixed; inset:0; background:radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.1) 0%, transparent 50%); pointer-events:none; z-index:0; }
 
@@ -227,9 +241,9 @@ body::before { content:''; position:fixed; inset:0; background:radial-gradient(e
 /* Report screen show state */
 #reportScreen.show { display: block !important; }
 
-/* Dark report background — stays dark end-to-end so report content never fades to white */
+/* Report background — warm rice-paper sheet, stays light end-to-end */
 #reportScreen {
-  background: linear-gradient(180deg, #0e0b07 0%, #121016 40%, #14121a 100%);
+  background: linear-gradient(180deg, var(--paper-2) 0%, var(--paper) 40%, var(--paper-0) 100%);
   padding-bottom: 40px;
 }
 
@@ -423,52 +437,214 @@ html[data-page='bazi'] .hl-score{color:#7ad3a8;font-weight:600;padding:0 4px;bor
 
 @media (max-width: 400px) { .bazi-dial-wrap { transform: scale(0.82); transform-origin: center top; } }
 
-/* ═══ BAZI 黑白星盘 THEME ═══ */
+/* ═══ BAZI 皇历宣纸·青玉 THEME (redesign v1) ═══ */
 html[data-page='bazi'], html[data-page='bazi'] body {
-  --bg: #0e0e0e; --card: #181818; --mid: #222;
-  --gold: #c8b87a; --gold-light: #e2d49a; --gold-deep: #d4a840;
-  --jade: #9ab;
-  --ink-text: rgba(240,238,230,0.93);
-  --sub-text: rgba(200,196,180,0.7);
+  --bg: var(--paper); --card: var(--paper-3); --mid: var(--paper-2);
+  --gold: #2f8f6b; --gold-light: #5aa886; --gold-deep: #1f6b4e;
+  --jade: #2f8f6b;
+  --ink-text: #232a22;
+  --sub-text: #68705f;
 }
-html[data-page='bazi'], html[data-page='bazi'] body { background: #0e0e0e; }
-html[data-page='bazi'] body::before { background: radial-gradient(ellipse at 50% 0%, rgba(200,184,122,0.06) 0%, transparent 65%); }
+html[data-page='bazi'], html[data-page='bazi'] body {
+  background:
+    linear-gradient(rgba(31,107,78,.045) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(31,107,78,.045) 1px,transparent 1px),
+    radial-gradient(130% 72% at 50% -8%,#fdf8ec 0%,var(--paper) 46%,var(--paper-0) 100%);
+  background-size:26px 26px,26px 26px,auto;
+  background-attachment:fixed;
+}
+html[data-page='bazi'] body::before { background: radial-gradient(ellipse at 50% 0%, rgba(47,143,107,.08) 0%, transparent 62%); }
 
-/* 星盘 hero */
+/* 罗盘 hero — jade compass rings on paper */
 .bazi-hero { text-align:center; padding:40px 20px 28px; position:relative; }
 .bazi-dial-wrap { position:relative; width:200px; height:200px; margin:0 auto 20px; }
-.bazi-dial-outer { position:absolute; inset:0; border-radius:50%; border:1px solid rgba(200,184,122,0.2); animation:dialSpin 80s linear infinite; }
-.bazi-dial-inner { position:absolute; inset:22px; border-radius:50%; border:1px solid rgba(200,184,122,0.12); animation:dialSpin 50s linear infinite reverse; }
-.bazi-dial-core { position:absolute; inset:46px; border-radius:50%; border:1px solid rgba(200,184,122,0.28); display:flex; align-items:center; justify-content:center; background:rgba(200,184,122,0.03); }
-.bazi-dial-yinyang { font-size:62px; color:rgba(235,225,185,0.92); filter:drop-shadow(0 0 18px rgba(200,184,122,0.45)) drop-shadow(0 0 40px rgba(200,184,122,0.2)); animation:yinYangPulse 4s ease-in-out infinite; }
-@keyframes yinYangPulse { 0%,100%{filter:drop-shadow(0 0 12px rgba(200,184,122,0.4)) drop-shadow(0 0 35px rgba(200,184,122,0.15))} 50%{filter:drop-shadow(0 0 24px rgba(200,184,122,0.7)) drop-shadow(0 0 60px rgba(200,184,122,0.3))} }
+.bazi-dial-outer { position:absolute; inset:0; border-radius:50%; border:1px solid var(--jade-line); animation:dialSpin 80s linear infinite; }
+.bazi-dial-inner { position:absolute; inset:22px; border-radius:50%; border:1px solid rgba(31,107,78,.18); animation:dialSpin 50s linear infinite reverse; }
+.bazi-dial-core { position:absolute; inset:46px; border-radius:50%; border:1px solid var(--jade-line-2); display:flex; align-items:center; justify-content:center; background:radial-gradient(circle at 40% 34%,rgba(47,143,107,.10),rgba(47,143,107,.02)); }
+.bazi-dial-yinyang { font-size:62px; color:var(--jade-deep); filter:drop-shadow(0 0 14px rgba(47,143,107,.32)); animation:yinYangPulse 4s ease-in-out infinite; }
+@keyframes yinYangPulse { 0%,100%{filter:drop-shadow(0 0 10px rgba(47,143,107,.28))} 50%{filter:drop-shadow(0 0 20px rgba(47,143,107,.5))} }
 @keyframes dialSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
-/* 爆炸光线 */
-.bazi-dial-wrap::before { content:''; position:absolute; inset:-20px; border-radius:50%; background:radial-gradient(ellipse at center, rgba(200,184,122,0.12) 0%, rgba(200,184,122,0.04) 40%, transparent 70%); pointer-events:none; animation:glowPulse 4s ease-in-out infinite; }
+.bazi-dial-wrap::before { content:''; position:absolute; inset:-20px; border-radius:50%; background:radial-gradient(ellipse at center, rgba(47,143,107,.10) 0%, rgba(47,143,107,.03) 40%, transparent 70%); pointer-events:none; animation:glowPulse 4s ease-in-out infinite; }
 @keyframes glowPulse { 0%,100%{opacity:0.6} 50%{opacity:1} }
 
-.bazi-hero-title { font-family:'Noto Serif SC',serif; font-size:22px; font-weight:300; letter-spacing:0.35em; color:rgba(240,238,230,0.95); margin-bottom:4px; }
-.bazi-hero-sub { font-size:12px; letter-spacing:0.25em; color:rgba(200,184,122,0.55); margin-bottom:14px; }
-.bazi-hero-divider { width:60px; height:1px; background:linear-gradient(90deg,transparent,rgba(200,184,122,0.4),transparent); margin:0 auto 14px; }
-.bazi-hero-desc { font-size:13px; color:rgba(200,196,180,0.55); line-height:1.85; padding:0 16px; }
+.bazi-hero-title { font-family:'Noto Serif SC',serif; font-size:26px; font-weight:600; letter-spacing:0.14em; text-indent:.14em; color:var(--ink-text); margin-bottom:6px; }
+.bazi-hero-sub { font-family:'Cormorant Garamond',serif; font-style:italic; font-size:13px; letter-spacing:0.22em; color:var(--jade-deep); opacity:.9; margin-bottom:14px; }
+.bazi-hero-divider { width:60px; height:1px; background:var(--jade-line-2); margin:0 auto 14px; }
+.bazi-hero-desc { font-size:13px; color:var(--sub-text); line-height:1.9; padding:0 16px; }
+
+/* 罗盘 stem/branch glyphs (injected spans) → jade ink on paper */
+html[data-page='bazi'] .bazi-dial-wrap span { color: var(--jade-deep) !important; }
 
 .mode-toggle-wrap,.chart-header { background: transparent; }
-.field-hint { color: rgba(210,206,190,0.62) !important; }
-input::placeholder,textarea::placeholder { color: rgba(210,206,190,0.62) !important; }
-.consent-row label { color: rgba(215,211,196,0.85) !important; }
-.load-spinner { border-color: rgba(200,184,122,0.12) !important; border-top-color: #c8b87a !important; }
-.report-name { color: rgba(240,238,230,0.95) !important; }
-.daymaster-card { background: linear-gradient(135deg,rgba(24,24,24,0.9),rgba(200,184,122,0.05)) !important; border-color: rgba(200,184,122,0.18) !important; }
-.sticky-cta { background: rgba(10,10,10,0.98) !important; border-color: rgba(200,184,122,0.18) !important; position: static !important; left: auto !important; transform: none !important; max-width: none !important; z-index: auto !important; backdrop-filter: none !important; }
-.btn-unlock { background: linear-gradient(135deg,#2a2a2a,#3a3a2a,#c8b87a) !important; color: #0e0e0e !important; }
-.btn-member { background: rgba(200,184,122,0.06) !important; border-color: rgba(200,184,122,0.22) !important; color: #c8b87a !important; }
-.sy-toast { background: rgba(24,24,24,0.97) !important; }
-.mode-opt { background: rgba(24,24,24,0.8) !important; color: rgba(200,196,180,0.6) !important; border-color: rgba(200,184,122,0.12) !important; }
-.mode-opt.active { background: rgba(200,184,122,0.1) !important; color: #c8b87a !important; border-color: rgba(200,184,122,0.35) !important; }
-.ur-card { background: rgba(20,20,20,0.9) !important; border-color: rgba(200,184,122,0.1) !important; }
-.ur-head { color: rgba(240,238,230,0.9) !important; }
-.ur-text { color: rgba(210,206,190,0.88) !important; }
-.zhuanyun-hook { background: linear-gradient(135deg,#111120,#1a1a30) !important; }
+.field-hint { color: var(--sub-text) !important; }
+input::placeholder,textarea::placeholder,.field-input::placeholder { color: var(--ink-faint,#8f9584) !important; }
+.consent-row label { color: var(--ink-2,#3d453a) !important; }
+.load-spinner { border-color: var(--jade-line) !important; border-top-color: var(--jade) !important; }
+.report-name { color: var(--ink-text) !important; }
+
+/* ── card / surface re-theme on light paper ── */
+html[data-page='bazi'] .field-group,
+html[data-page='bazi'] .field-select,
+html[data-page='bazi'] .zhu,
+html[data-page='bazi'] .fortune-sec,
+html[data-page='bazi'] .ai-section,
+html[data-page='bazi'] .dayun-item,
+html[data-page='bazi'] .locked-section,
+html[data-page='bazi'] .qa-input,
+html[data-page='bazi'] .share-btn { background: var(--card) !important; border-color: var(--paper-edge) !important; }
+html[data-page='bazi'] .field-group { border:1px solid var(--paper-edge) !important; box-shadow:var(--shadow-lift); }
+html[data-page='bazi'] .field-row { border-bottom-color: var(--hair) !important; }
+html[data-page='bazi'] .field-input,html[data-page='bazi'] .field-select,html[data-page='bazi'] .field-label { color: var(--ink-text) !important; }
+html[data-page='bazi'] .field-select option { background:var(--card); color:var(--ink-text); }
+html[data-page='bazi'] .gender-opt { background:var(--paper-2) !important; border-color:var(--paper-edge) !important; color:var(--sub-text) !important; }
+html[data-page='bazi'] .gender-opt.selected { background:linear-gradient(180deg,#eafaf1,#dcf0e5) !important; border-color:var(--jade-line-2) !important; color:var(--jade-deep) !important; box-shadow:0 8px 18px -12px var(--jade-glow); }
+html[data-page='bazi'] .zhu-tian { -webkit-text-fill-color: var(--jade-deep); background:none; color:var(--jade-deep); animation:none; }
+html[data-page='bazi'] .zhu-di { color:var(--wood); }
+html[data-page='bazi'] .zhu.daymaster { border-color:var(--jade-line-2) !important; background:linear-gradient(180deg,#eafaf1,#dcf0e5) !important; }
+
+.daymaster-card { background: linear-gradient(180deg,var(--paper-3),var(--paper-2)) !important; border-color: var(--jade-line) !important; }
+
+/* CTA / primary buttons → jade lacquer */
+html[data-page='bazi'] .btn-gen,
+html[data-page='bazi'] .btn-unlock,
+html[data-page='bazi'] .qa-btn {
+  background:linear-gradient(155deg,var(--jade-hi) 0%,var(--jade-soft) 32%,var(--jade) 64%,var(--jade-deep) 100%) !important;
+  background-size:auto !important; animation:none !important;
+  color:#f4faf2 !important; text-shadow:0 1px 2px rgba(12,44,30,.4);
+  box-shadow:0 16px 30px -14px var(--jade-glow),inset 0 1px 0 rgba(255,255,255,.42);
+}
+.sticky-cta { background: linear-gradient(180deg,var(--paper-3),var(--paper-2)) !important; border-color: var(--jade-line) !important; position: static !important; left: auto !important; transform: none !important; max-width: none !important; z-index: auto !important; backdrop-filter: none !important; box-shadow:var(--shadow-card) !important; }
+.sticky-cta::before { display:none !important; }
+.btn-member { background: rgba(47,143,107,.08) !important; border-color: var(--jade-line-2) !important; color: var(--jade-deep) !important; }
+.sy-toast { background: var(--paper-3) !important; color:var(--ink-text) !important; }
+.mode-opt { background: var(--paper-2) !important; color: var(--sub-text) !important; border-color: var(--paper-edge) !important; }
+.mode-opt.active { background: linear-gradient(155deg,var(--jade-hi),var(--jade-soft) 34%,var(--jade) 62%,var(--jade-deep)) !important; color: #f4faf2 !important; border-color: var(--jade-line-2) !important; }
+
+/* Report container: light paper sheet, not dark */
+html[data-page='bazi'] #reportScreen,
+html[data-page='bazi'] .report-screen { background: linear-gradient(180deg,var(--paper-2),var(--paper) 40%,var(--paper-0)) !important; }
+html[data-page='bazi'] .ur-card { background: var(--paper-3) !important; border-color: var(--paper-edge) !important; box-shadow:var(--shadow-lift); }
+html[data-page='bazi'] .ur-head { color: var(--ink-text) !important; border-bottom-color: var(--hair) !important; }
+html[data-page='bazi'] .ur-title { color: var(--ink-text) !important; }
+html[data-page='bazi'] .ur-text { color: var(--ink-2,#3d453a) !important; }
+html[data-page='bazi'] .back-btn { color: var(--sub-text); }
+
+/* highlight-number chips re-theme (was dark-page overrides) */
+html[data-page='bazi'] .hl-year,html[data-page='bazi'] .hl-money{color:var(--jade-deep);background:rgba(47,143,107,.12);box-shadow:inset 0 0 0 1px var(--jade-line)}
+html[data-page='bazi'] .hl-score{color:var(--jade-deep);background:rgba(47,143,107,.12);box-shadow:inset 0 0 0 1px var(--jade-line)}
+
+/* pull quote / chapter cover / TOC on paper */
+html[data-page='bazi'] .pull-quote-text{color:var(--jade-deep);text-shadow:none}
+html[data-page='bazi'] .pull-quote-mark{color:var(--jade-line-2)}
+html[data-page='bazi'] .chapter-cover{background:var(--paper-3)}
+html[data-page='bazi'] .chapter-cover-veil{background:linear-gradient(180deg,rgba(230,236,220,.15) 0%,rgba(230,236,220,.45) 45%,rgba(233,225,207,.86) 100%)}
+html[data-page='bazi'] .chapter-cover-num{color:var(--jade-deep)}
+html[data-page='bazi'] .chapter-cover-num::before{background:linear-gradient(90deg,var(--jade-line-2),transparent)}
+html[data-page='bazi'] .chapter-cover-title{color:var(--jade-ink);text-shadow:none}
+html[data-page='bazi'] .chapter-cover-lead{color:var(--ink-2,#3d453a);border-top-color:var(--jade-line)}
+html[data-page='bazi'] .chapter-toc{background:linear-gradient(160deg,var(--paper-3),var(--paper-2));border-color:var(--jade-line)}
+html[data-page='bazi'] .chapter-toc-title{color:var(--jade-deep)}
+html[data-page='bazi'] .chapter-toc-label{color:var(--ink-text)}
+html[data-page='bazi'] .chapter-toc-idx,html[data-page='bazi'] .chapter-toc-arrow{color:var(--jade-soft)}
+html[data-page='bazi'] .chapter-toc-item{border-bottom-color:var(--hair)}
+html[data-page='bazi'] .rpt-trust-strip{background:var(--jade-wash);border-color:var(--jade-line)}
+html[data-page='bazi'] .rpt-trust-item{color:var(--jade-deep)}
+html[data-page='bazi'] .rpt-trust-sep{color:var(--jade-line-2)}
+html[data-page='bazi'] .drop-cap::first-letter,html[data-page='bazi'] .drop-cap-first{color:var(--jade-deep);text-shadow:none}
+html[data-page='bazi'] #readProgressBar{background:linear-gradient(90deg,var(--jade-soft),var(--jade),var(--jade-deep));box-shadow:0 0 8px var(--jade-glow)}
+html[data-page='bazi'] #readProgressChapter{color:var(--jade-deep);background:rgba(249,250,241,.85);border-color:var(--jade-line)}
+html[data-page='bazi'] #floatTocBtn{background:linear-gradient(155deg,var(--jade-soft),var(--jade),var(--jade-deep));color:#f4faf2;box-shadow:0 4px 16px var(--jade-glow)}
+html[data-page='bazi'] #floatTocPanel{background:var(--paper-3);border-color:var(--jade-line);box-shadow:var(--shadow-card)}
+html[data-page='bazi'] #floatTocPanel .ft-title{color:var(--jade-deep)}
+html[data-page='bazi'] #floatTocPanel a{color:var(--ink-text);border-bottom-color:var(--hair)}
+html[data-page='bazi'] #floatTocPanel a .ft-idx{color:var(--jade-soft)}
+
+/* dayun / radar aux cards on paper */
+html[data-page='bazi'] .dayun-timeline,html[data-page='bazi'] .wuxing-radar-card{background:linear-gradient(160deg,var(--paper-3),var(--paper-2)) !important;border-color:var(--jade-line) !important}
+html[data-page='bazi'] .dayun-timeline-title,html[data-page='bazi'] .wuxing-radar-card .wr-title{color:var(--jade-deep)}
+.zhuanyun-hook { background: linear-gradient(135deg,var(--paper-3),#eafaf1) !important; }
+
+/* ── neutralize hard-coded DARK inline gradients from JS-injected cards ──
+   (JS builds cards with inline dark backgrounds; these attribute-selectors
+   repaint them on paper without touching the JS strings' logic) */
+html[data-page='bazi'] #baziVisualCard,
+html[data-page='bazi'] [style*="rgba(18,12,28"],
+html[data-page='bazi'] [style*="rgba(10,7,16"],
+html[data-page='bazi'] [style*="rgba(14,10,4"],
+html[data-page='bazi'] [style*="rgba(24,18,8"],
+html[data-page='bazi'] [style*="rgba(30,22,8"],
+html[data-page='bazi'] [style*="rgba(40,30,10"],
+html[data-page='bazi'] [style*="rgba(16,14,10"] {
+  background: linear-gradient(160deg,var(--paper-3),var(--paper-2)) !important;
+  border-color: var(--jade-line) !important;
+}
+/* text/track surfaces inside injected cards */
+html[data-page='bazi'] #baziVisualCard [style*="rgba(255,255,255,0.05)"],
+html[data-page='bazi'] #baziVisualCard [style*="rgba(255,255,255,.06)"],
+html[data-page='bazi'] [style*="rgba(10,16,34"] { background: rgba(31,107,78,.10) !important; }
+
+/* ── repaint legacy gold-on-dark inline surfaces → jade-on-paper ──
+   (static input screen + share/referral/modal cards used --gold washes
+   like rgba(200,184,122,.0x) with pale text; on paper they must flip) */
+html[data-page='bazi'] [style*="rgba(200,184,122,0.04)"],
+html[data-page='bazi'] [style*="rgba(200,184,122,0.06)"],
+html[data-page='bazi'] [style*="rgba(201,168,76,0.05)"],
+html[data-page='bazi'] [style*="rgba(201,168,76,0.06)"] { background: var(--jade-wash) !important; }
+html[data-page='bazi'] [style*="rgba(200,184,122,0.08)"],
+html[data-page='bazi'] [style*="rgba(200,184,122,0.12)"],
+html[data-page='bazi'] [style*="rgba(200,184,122,0.15)"],
+html[data-page='bazi'] [style*="rgba(201,168,76,0.12)"],
+html[data-page='bazi'] [style*="rgba(201,168,76,0.15)"] { border-color: var(--jade-line) !important; }
+/* pale text colours meant for dark bg → readable ink/jade on paper */
+html[data-page='bazi'] [style*="rgba(200,196,180"],
+html[data-page='bazi'] [style*="rgba(220,210,175"],
+html[data-page='bazi'] [style*="rgba(235,220,180"],
+html[data-page='bazi'] [style*="rgba(200,196,170"],
+html[data-page='bazi'] [style*="rgba(240,238,230"] { color: var(--ink-2,#3d453a) !important; }
+html[data-page='bazi'] [style*="rgba(200,184,122"][style*="color"],
+html[data-page='bazi'] [style*="#e2d49a"],
+html[data-page='bazi'] [style*="#c9a84c"],
+html[data-page='bazi'] [style*="#e8d08a"] { color: var(--jade-deep) !important; }
+/* the "5000+ / 子平 / 18+" stat divider bars */
+html[data-page='bazi'] [style*="background:rgba(200,184,122,0.1)"] { background: var(--jade-line) !important; }
+
+/* ── loading screen (罗盘仪式) on paper ── */
+html[data-page='bazi'] .hexagram-ring{border-color:var(--jade-line)}
+html[data-page='bazi'] .hexagram-ring2{border-color:rgba(31,107,78,.14)}
+html[data-page='bazi'] .hex-line{background:var(--jade)}
+html[data-page='bazi'] .load-text{color:var(--jade-deep)}
+html[data-page='bazi'] .load-step{color:var(--sub-text)}
+html[data-page='bazi'] .load-step.active{color:var(--jade-deep);font-weight:600}
+html[data-page='bazi'] .load-step.done{color:var(--jade-soft)}
+html[data-page='bazi'] .load-shimmer-bar{background:rgba(31,107,78,.10)}
+html[data-page='bazi'] .load-shimmer-bar-inner{background:linear-gradient(90deg,transparent,var(--jade),transparent)}
+
+/* value-anchor (比价) card on paper */
+html[data-page='bazi'] .value-anchor{background:linear-gradient(135deg,rgba(47,143,107,.10),rgba(47,143,107,.04)) !important;border-color:var(--jade-line) !important}
+html[data-page='bazi'] .anchor-title{color:var(--jade-deep)}
+html[data-page='bazi'] .anchor-name{color:var(--ink-2,#3d453a)}
+html[data-page='bazi'] .anchor-row{border-bottom-color:var(--hair)}
+html[data-page='bazi'] .anchor-note{color:var(--ink-faint,#8f9584)}
+html[data-page='bazi'] .crossed{color:var(--ink-faint,#8f9584)}
+html[data-page='bazi'] .anchor-row.ours{background:rgba(47,143,107,.10)}
+html[data-page='bazi'] .anchor-row.ours .anchor-name,html[data-page='bazi'] .ours-price{color:var(--jade-deep)}
+html[data-page='bazi'] .anchor-tagline{color:var(--jade-deep)}
+
+/* QA chat bubbles on paper */
+html[data-page='bazi'] .qa-label{color:var(--jade-deep)}
+html[data-page='bazi'] .qa-my-msg span{background:rgba(47,143,107,.10);border-color:var(--jade-line);color:var(--ink-text)}
+html[data-page='bazi'] .qa-ai-msg span{background:var(--card);border-color:var(--paper-edge);color:var(--ink-2,#3d453a)}
+html[data-page='bazi'] .qa-btn{color:#f4faf2 !important}
+html[data-page='bazi'] .btn-gen{color:#f4faf2 !important}
+html[data-page='bazi'] .btn-unlock{color:#f4faf2 !important}
+html[data-page='bazi'] .btn-unlock::after{background:linear-gradient(100deg,transparent,rgba(255,255,255,0.5),transparent)}
+
+/* fortune sections + locked sections text on paper */
+html[data-page='bazi'] .fortune-title,html[data-page='bazi'] .locked-title{color:var(--ink-text)}
+html[data-page='bazi'] .fortune-text{color:var(--ink-2,#3d453a)}
+html[data-page='bazi'] .fortune-tip{background:var(--jade-wash);border-color:var(--jade-line);color:var(--jade-deep)}
+html[data-page='bazi'] .ai-section-title{color:var(--ink-text)}
+html[data-page='bazi'] .ai-section-text,html[data-page='bazi'] .ai-plain-text{color:var(--ink-2,#3d453a)}
 
 /* ══════════ 精装报告阅读体验 (增量增强) ══════════ */
 /* 顶部阅读进度条 */
@@ -611,7 +787,7 @@ input::placeholder,textarea::placeholder { color: rgba(210,206,190,0.62) !import
     <div class="bazi-hero-sub">四柱 · 五行 · 大运 · 流年</div>
     <div class="bazi-hero-divider"></div>
     <div class="bazi-hero-desc">天干地支，阴阳五行，一生运势尽在八字之中。AI细批命盘，洞见财运、姻缘、事业、大运走向。</div>
-    <div style="margin-top:10px;font-size:12px;color:#c9a84c;letter-spacing:0.1em;opacity:0.9">命格总览免费 · 专项 Session 每个 $3.99 · 一键全买 6 个 $11.99（五折）</div>
+    <div style="margin-top:10px;font-size:12px;color:var(--jade-deep);letter-spacing:0.1em;opacity:0.95">命格总览免费 · 专项 Session 每个 $3.99 · 一键全买 6 个 $11.99（五折）</div>
   </div>
   <script>
   (function(){
@@ -948,6 +1124,7 @@ function generateReport(btn) {
   var d = parseInt(document.getElementById('day').value);
   if (!y || !m || !d) { showToast('请填写完整的出生年月日', 'error'); return; }
   if (y < 1900 || y > new Date().getFullYear()) { showToast('请输入1900年至今的年份', 'error'); return; }
+  if (y > new Date().getFullYear() - 14) { showToast('仅限 14 岁以上使用', 'error'); return; }
   var consent = document.getElementById('consentCheck');
   if (consent && !consent.checked) { showToast('请先勾选同意隐私条款', 'error'); return; }
   // P1-1 防重复点烧token：禁用按钮 + 转圈

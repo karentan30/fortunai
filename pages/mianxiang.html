@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0f1218">
+<meta name="theme-color" content="#0a0b08">
 <title>善缘 · 面相手相</title>
 <meta name="description" content="善缘面相手相 — AI面相分析，从额头到下巴全面解读">
 <meta property="og:title" content="善缘 · 面相手相">
@@ -15,143 +15,239 @@
 <meta name="twitter:title" content="善缘 · 面相手相">
 <meta name="twitter:description" content="善缘面相手相 — AI面相分析，从额头到下巴全面解读">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@200;300;400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color:transparent; }
 :root {
-  --ink-deep: #0f1218; --ink-mid: #171c25; --ink-card: #131820;
-  --teal: #4a8fa0; --teal-light: #7abfcc; --teal-mid: #a8d8e0;
-  --gold: #c9a84c; --gold-light: #e8d08a;
-  --rose: #c96a6a; --rose-light: #e8a0a0;
+  /* ── ink, layered (never flat black) ── */
+  --ink-0:#0a0b08; --ink:#101209; --ink-2:#171a10; --ink-3:#1e2216; --ink-4:#262a1c;
+  --ink-card:#1e2216;
+  /* ── paper / cream ── */
+  --cream:#f4efe4; --cream-2:#e9e1cf; --paper:#f7f2e8;
+  /* ── gold family ── */
+  --gold-hi:#e7d3a0; --gold:#c8a35a; --gold-deep:#a07d38; --gold-soft:#d8bd85;
+  --gold-light:#e7d3a0;
+  --gold-line:rgba(200,163,90,.32); --gold-line-2:rgba(200,163,90,.5); --gold-glow:rgba(200,163,90,.5);
+  --jade:#7fa08a;
+  /* legacy aliases so injected report keeps compiling (remapped to gold/ink palette) */
+  --teal:#c8a35a; --teal-light:#d8bd85; --teal-mid:#e7d3a0;
+  --rose:#b07a4a; --rose-light:#d8bd85;
+  /* ── text ── */
+  --text-cream:#ece6d8; --text-mute:#a49f90; --text-faint:#7d7a6e; --text-ghost:#5c5a51;
+  /* ── hairlines ── */
+  --hair:rgba(236,230,216,.08); --hair-2:rgba(236,230,216,.14);
+  --shadow-card:0 30px 60px -30px rgba(0,0,0,.85); --shadow-lift:0 20px 40px -24px rgba(0,0,0,.7);
+  --serif:"Noto Serif SC",serif; --sans:"Noto Sans SC",-apple-system,BlinkMacSystemFont,sans-serif; --lat:"Cormorant Garamond",serif;
+  --gut:18px; --radius:20px; --radius-lg:24px;
 }
-html, body { background: var(--ink-deep); font-family: 'Noto Serif SC', serif; color: #e0ecf0; -webkit-font-smoothing: antialiased; }
-body { max-width: 390px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 52px; }
-body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(74,143,160,0.15) 0%, transparent 45%); pointer-events: none; z-index: 0; }
-.back-btn { position: fixed; top: 16px; left: 16px; z-index: 99; background: none; border: none; font-family: 'Noto Serif SC', serif; font-size: 13px; color: rgba(122,191,204,0.7); cursor: pointer; padding: 4px 0; }
+html, body { background:#08090a; font-family: var(--sans); color: var(--text-cream); -webkit-font-smoothing: antialiased; text-rendering:optimizeLegibility; }
+body { max-width: 402px; margin: 0 auto; min-height: 100vh; overflow-x:hidden; padding-bottom: 60px; position:relative; }
+/* paper grain */
+body::after { content:''; position:fixed; inset:0; pointer-events:none; opacity:.32; mix-blend-mode:soft-light; z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E"); }
+body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(130% 60% at 50% -8%, #252a1e 0%, #161810 42%, var(--ink-0) 100%); pointer-events: none; z-index: 0; }
+.back-btn { position: fixed; top: 14px; left: 12px; z-index: 99; background: none; border: none; font-family: var(--serif); font-size: 22px; color: var(--text-mute); cursor: pointer; padding: 6px 10px; line-height:1; }
 
-.header { position: relative; z-index: 1; text-align: center; padding: 44px 20px 20px; }
-.header-title { font-size: 20px; font-weight: 400; letter-spacing: 0.22em; margin-bottom: 6px; }
-.header-sub { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 11px; letter-spacing: 0.26em; color: rgba(74,143,160,0.55); margin-bottom: 14px; }
-.teal-line { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, var(--teal), transparent); margin: 0 auto; }
+/* wordmark / header */
+.header { position: relative; z-index: 1; text-align: center; padding: 46px 20px 6px; }
+.brandmark{display:flex;flex-direction:column;align-items:center;line-height:1;margin-bottom:18px}
+.brandmark .cn{font-family:var(--serif);font-weight:500;font-size:19px;letter-spacing:.36em;color:var(--cream);text-indent:.36em}
+.brandmark .en{font-family:var(--lat);font-size:10px;letter-spacing:.44em;color:var(--gold);margin-top:6px;text-transform:uppercase;text-indent:.44em}
+.header-title { font-family:var(--serif); font-size: 21px; font-weight: 600; letter-spacing: 0.14em; text-indent:.14em; color:var(--cream); margin-bottom: 10px; }
+.header-sub { font-family: var(--lat); font-style: italic; font-size: 12px; letter-spacing: 0.24em; color: var(--gold); opacity:.9; margin-bottom: 16px; }
+.teal-line { width: 40px; height: 1px; background: var(--gold-line-2); margin: 0 auto; }
 
-/* ── Mode tabs ── */
-.mode-tabs { position: relative; z-index: 1; display: flex; gap: 0; margin: 16px 16px 0; background: var(--ink-card); border: 1px solid rgba(74,143,160,0.15); border-radius: 6px; overflow: hidden; }
-.mode-tab { flex: 1; padding: 11px 0; text-align: center; font-size: 13px; letter-spacing: 0.1em; color: rgba(224,236,240,0.45); cursor: pointer; transition: all 0.2s; border-right: 1px solid rgba(74,143,160,0.1); }
-.mode-tab:last-child { border-right: none; }
-.mode-tab.active { background: rgba(74,143,160,0.18); color: var(--teal-light); }
+.eyebrow{font-family:var(--lat);font-size:12px;font-style:italic;letter-spacing:.22em;color:var(--gold);opacity:.92}
 
-/* ── Upload area ── */
-.upload-wrap { position: relative; z-index: 1; padding: 14px 16px; }
-.upload-area { background: var(--ink-card); border: 1.5px dashed rgba(74,143,160,0.25); border-radius: 10px; min-height: 180px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; cursor: pointer; transition: all 0.2s; position: relative; overflow: hidden; }
-.upload-area:active { border-color: var(--teal); background: rgba(74,143,160,0.06); }
-.upload-area.has-image { border-style: solid; border-color: rgba(74,143,160,0.3); }
-.upload-icon { width: 52px; height: 52px; border-radius: 50%; border: 1px solid rgba(74,143,160,0.25); display: flex; align-items: center; justify-content: center; font-size: 22px; color: rgba(74,143,160,0.4); font-weight: 300; }
-.upload-text { font-size: 13px; color: rgba(224,236,240,0.5); letter-spacing: 0.08em; }
-.upload-hint { font-size: 9px; color: rgba(224,236,240,0.2); letter-spacing: 0.06em; }
-.upload-area img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
-.upload-area .img-overlay { position: absolute; inset: 0; background: rgba(15,18,24,0.4); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-.img-overlay-text { font-size: 12px; color: rgba(224,236,240,0.8); letter-spacing: 0.1em; background: rgba(15,18,24,0.6); padding: 6px 16px; border-radius: 3px; }
+/* gilded surface */
+.gilt{background:linear-gradient(155deg,var(--gold-hi) 0%,var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep) 100%);
+  box-shadow:0 16px 30px -14px var(--gold-glow),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(120,90,30,.4);}
+
+/* ── Mode tabs (segmented, gilt thumb) ── */
+.mode-tabs { position: relative; z-index: 1; display: flex; gap: 0; margin: 14px var(--gut) 0; background: var(--ink-2); border: 1px solid var(--hair); border-radius: 14px; padding:5px; overflow: hidden; }
+.mode-tab { flex: 1; height:40px; display:flex; align-items:center; justify-content:center; text-align: center; font-family:var(--serif); font-weight:500; font-size: 14px; letter-spacing: 0.12em; text-indent:.12em; color: var(--text-mute); cursor: pointer; transition: all 0.3s cubic-bezier(.65,0,.2,1); border-radius:10px; }
+.mode-tab.active { background:linear-gradient(155deg,var(--gold-hi),var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep)); color: #2a1f0c; box-shadow:0 10px 22px -12px var(--gold-glow),inset 0 1px 0 rgba(255,255,255,.5); }
+
+/* hook hero */
+.hook-hero{position:relative;z-index:1;padding:20px 26px 0;text-align:center}
+.hook-title{font-family:var(--serif);font-weight:600;font-size:29px;line-height:1.34;letter-spacing:.05em;color:var(--cream);margin-top:14px}
+.hook-title em{font-style:normal;color:var(--gold-soft);position:relative;white-space:nowrap}
+.hook-title em:after{content:"";position:absolute;left:2%;right:2%;bottom:-4px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-line-2),transparent)}
+.hook-sub{font-size:13px;line-height:1.9;color:var(--text-mute);margin-top:16px;letter-spacing:.02em}
+
+/* taste-of-report card */
+.taste{position:relative;z-index:1;margin:22px var(--gut) 0;border-radius:var(--radius);overflow:hidden;
+  background:linear-gradient(180deg,#1c2016,#121408);border:1px solid var(--hair-2);box-shadow:var(--shadow-lift)}
+.taste .tImg{height:120px;position:relative;overflow:hidden;
+  background:radial-gradient(90% 130% at 82% 0%,rgba(200,163,90,.12),transparent 55%),linear-gradient(160deg,#3a3f30,#20241b 60%,#151810);}
+.taste .tImg .watermark{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-family:var(--serif);font-weight:900;
+  font-size:104px;line-height:1;color:transparent;-webkit-text-stroke:1px rgba(244,239,228,.12);opacity:.7}
+.taste .tImg .tag{position:absolute;left:14px;top:14px;font-size:10.5px;letter-spacing:.18em;color:var(--gold-soft);
+  border:1px solid var(--gold-line);border-radius:999px;padding:5px 12px;background:rgba(14,16,10,.45);backdrop-filter:blur(6px)}
+.taste .tBody{padding:16px 18px 18px}
+.taste .tChap{font-family:var(--serif);font-weight:600;font-size:16px;color:var(--cream);letter-spacing:.03em}
+.taste .tQuote{font-family:var(--serif);font-size:14.5px;line-height:1.85;color:var(--gold-soft);
+  margin-top:10px;padding-left:14px;border-left:1.5px solid var(--gold-line-2);font-weight:500}
+.taste .tFade{margin-top:10px;font-size:12.5px;line-height:1.85;color:var(--text-faint);
+  -webkit-mask-image:linear-gradient(180deg,#000 15%,transparent 96%);mask-image:linear-gradient(180deg,#000 15%,transparent 96%)}
+
+/* ── Upload area (gold dropzone) ── */
+.upload-wrap { position: relative; z-index: 1; padding: 20px var(--gut) 4px; }
+.zone-label{display:flex;align-items:center;gap:12px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--text-faint);margin-bottom:14px}
+.zone-label:before,.zone-label:after{content:"";height:1px;flex:1;background:var(--hair)}
+.upload-area { background: radial-gradient(120% 100% at 50% 0%,rgba(200,163,90,.06),rgba(200,163,90,.01)); border: 1px dashed var(--gold-line); border-radius: 18px; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden; }
+.upload-area:active { border-color: var(--gold-line-2); background: rgba(200,163,90,.09); }
+.upload-area.has-image { border-style: solid; border-color: var(--gold-line-2); }
+.upload-icon { width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--gold-line); display: flex; align-items: center; justify-content: center; font-family:var(--serif); font-size: 22px; color: var(--gold-soft); background:radial-gradient(circle at 40% 32%,rgba(200,163,90,.14),transparent); }
+.upload-text { font-family:var(--serif); font-size: 14px; color: var(--text-cream); letter-spacing: 0.04em; }
+.upload-hint { font-size: 11px; color: var(--text-faint); letter-spacing: 0.1em; }
+.upload-area img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 17px; }
+.upload-area .img-overlay { position: absolute; inset: 0; background: rgba(10,11,8,0.42); border-radius: 17px; display: flex; align-items: center; justify-content: center; }
+.img-overlay-text { font-size: 12px; color: var(--cream); letter-spacing: 0.1em; background: rgba(10,11,8,0.62); padding: 7px 16px; border-radius: 999px; border:1px solid var(--gold-line); }
 input[type=file] { display: none; }
 
 /* Camera option */
-.camera-row { display: flex; gap: 8px; margin-top: 8px; }
-.cam-btn { flex: 1; background: var(--ink-card); border: 1px solid rgba(74,143,160,0.15); border-radius: 6px; padding: 10px 0; text-align: center; font-size: 11px; color: rgba(224,236,240,0.5); letter-spacing: 0.08em; cursor: pointer; transition: all 0.2s; }
-.cam-btn:active { border-color: var(--teal); color: var(--teal-light); }
+.camera-row { display: flex; gap: 12px; margin-top: 12px; }
+.cam-btn { flex: 1; background: var(--ink-3); border: 1px solid var(--hair-2); border-radius: 13px; height:46px; display:flex; align-items:center; justify-content:center; font-size: 13px; color: var(--text-cream); letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; }
+.cam-btn:active { border-color: var(--gold-line-2); color: var(--gold-soft); }
+
+/* trust row */
+.trust{display:flex;justify-content:center;align-items:center;gap:14px;margin:18px var(--gut) 0;color:var(--text-faint);font-size:11px;letter-spacing:.05em;position:relative;z-index:1}
+.trust span{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.trust .d{width:3px;height:3px;border-radius:50%;background:var(--gold);opacity:.55}
 
 /* ── Question ── */
-.q-wrap { position: relative; z-index: 1; padding: 0 16px 14px; }
-.q-label { font-size: 10px; letter-spacing: 0.18em; color: rgba(74,143,160,0.45); margin-bottom: 8px; }
-.q-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-.q-chip { padding: 6px 12px; border-radius: 20px; border: 1px solid rgba(74,143,160,0.18); background: transparent; font-size: 10px; color: rgba(224,236,240,0.5); cursor: pointer; letter-spacing: 0.06em; transition: all 0.2s; }
-.q-chip.sel { border-color: var(--teal); background: rgba(74,143,160,0.15); color: var(--teal-light); }
+.q-wrap { position: relative; z-index: 1; padding: 20px var(--gut) 4px; }
+.q-label { font-family:var(--lat); font-style:italic; font-size: 12px; letter-spacing: 0.14em; color: var(--gold); margin-bottom: 12px; text-align:center; }
+.q-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content:center; margin-bottom: 4px; }
+.q-chip { padding: 8px 15px; border-radius: 999px; border: 1px solid var(--hair-2); background: var(--ink-2); font-family:var(--serif); font-size: 12px; color: var(--text-mute); cursor: pointer; letter-spacing: 0.06em; transition: all 0.25s; }
+.q-chip.sel { border-color: var(--gold-line-2); background: linear-gradient(180deg,#2c2b1c,#1c1c11); color: var(--gold-soft); box-shadow:0 0 0 1px var(--gold-line-2),0 14px 26px -18px var(--gold-glow); }
 
 /* ── Submit ── */
-.submit-wrap { position: relative; z-index: 1; padding: 0 16px; }
-.btn-analyze { width: 100%; padding: 15px 0; background: linear-gradient(135deg, #1a3a45, var(--teal), var(--teal-light), var(--teal)); border: none; border-radius: 4px; color: rgba(15,18,24,0.95); font-family: 'Noto Serif SC', serif; font-size: 14px; font-weight: 500; letter-spacing: 0.22em; cursor: pointer; box-shadow: 0 4px 18px rgba(74,143,160,0.3); }
-.btn-analyze:disabled { opacity: 0.4; cursor: not-allowed; }
+.submit-wrap { position: relative; z-index: 1; padding: 20px var(--gut) 6px; }
+.btn-analyze { width: 100%; height:56px; background:linear-gradient(155deg,var(--gold-hi) 0%,var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep) 100%); border: none; border-radius: 16px; color: #2a1f0c; font-family: var(--serif); font-size: 17px; font-weight: 600; letter-spacing: 0.16em; text-indent:.16em; cursor: pointer; box-shadow: 0 16px 30px -14px var(--gold-glow),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(120,90,30,.4); transition:opacity .2s; }
+.btn-analyze:disabled { opacity: 0.35; cursor: not-allowed; }
+.hook-disc{text-align:center;font-size:10.5px;color:var(--text-faint);letter-spacing:.04em;line-height:1.75;padding:12px 30px 6px;position:relative;z-index:1}
 
-/* ── Loading ── */
-.loading-wrap { position: relative; z-index: 1; display: none; flex-direction: column; align-items: center; padding: 30px 16px; gap: 14px; }
+/* ── Loading — face-scan ritual ── */
+.loading-wrap { position: relative; z-index: 1; display: none; flex-direction: column; align-items: center; padding: 22px var(--gut) 30px; gap: 0; }
 .loading-wrap.show { display: flex; }
-.scan-anim { width: 120px; height: 120px; border-radius: 50%; border: 1px solid rgba(74,143,160,0.3); position: relative; animation: scan-spin 4s linear infinite; }
-.scan-line { position: absolute; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, var(--teal), transparent); top: 30%; animation: scan-move 1.5s ease-in-out infinite; }
-@keyframes scan-spin { to { border-color: rgba(74,143,160,0.8); box-shadow: 0 0 20px rgba(74,143,160,0.2); } }
-@keyframes scan-move { 0%,100% { top: 20%; opacity: 0.3; } 50% { top: 80%; opacity: 1; } }
-.loading-text { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 13px; color: rgba(122,191,204,0.6); letter-spacing: 0.16em; animation: pulse 1.5s ease-in-out infinite; }
-@keyframes pulse { 0%,100%{opacity:0.5} 50%{opacity:1} }
+.scan-stage{position:relative;width:100%;height:360px;border-radius:var(--radius-lg);overflow:hidden;
+  background:radial-gradient(80% 60% at 50% 38%,#3a3428,#241f16 58%,#100e08);border:1px solid var(--hair-2)}
+.scan-stage .portrait{position:absolute;inset:0}
+.scan-stage .portrait:before{content:"";position:absolute;left:50%;top:34%;width:150px;height:190px;transform:translate(-50%,-50%);
+  border-radius:50% 50% 46% 46%;background:radial-gradient(circle at 50% 40%,rgba(128,116,88,.5),rgba(60,54,40,.16) 68%,transparent);filter:blur(3px)}
+.mesh{position:absolute;left:50%;top:37%;transform:translate(-50%,-50%);width:190px;height:238px;opacity:.9}
+.mesh svg{width:100%;height:100%;overflow:visible}
+.mesh .node{fill:var(--gold-hi)}
+.mesh .node2{fill:var(--gold-soft);opacity:.65}
+.mesh .edge{stroke:rgba(216,189,133,.28);stroke-width:.5;fill:none}
+.mesh .edge-key{stroke:rgba(216,189,133,.55);stroke-width:.7;fill:none}
+.scanline{position:absolute;left:0;right:0;height:120px;pointer-events:none;z-index:3;
+  background:linear-gradient(180deg,transparent,rgba(216,189,133,.12) 42%,rgba(231,211,160,.42) 50%,rgba(216,189,133,.12) 58%,transparent);
+  animation:sweep 3.6s cubic-bezier(.55,0,.45,1) infinite}
+@keyframes sweep{0%{top:-120px;opacity:0}12%{opacity:1}88%{opacity:1}100%{top:360px;opacity:0}}
+.guides{position:absolute;inset:0;pointer-events:none;z-index:2}
+.guides .g{position:absolute;left:16px;right:16px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-line),transparent)}
+.guides .g:after{content:attr(data-l);position:absolute;right:0;top:-9px;font-family:var(--serif);font-size:10px;letter-spacing:.14em;color:var(--gold-soft);
+  background:rgba(14,14,9,.55);padding:2px 8px;border-radius:4px}
+.guides .g1{top:27%}.guides .g2{top:48%}.guides .g3{top:70%}
+.retic{position:absolute;width:20px;height:20px;border:1px solid var(--gold-line);z-index:2}
+.retic.tl{left:14px;top:14px;border-right:0;border-bottom:0}
+.retic.tr{right:14px;top:14px;border-left:0;border-bottom:0}
+.retic.bl{left:14px;bottom:14px;border-right:0;border-top:0}
+.retic.br{right:14px;bottom:14px;border-left:0;border-top:0}
+.scan-meta{padding:30px 20px 0;text-align:center;position:relative}
+.scan-ring{width:58px;height:58px;margin:0 auto 20px;position:relative}
+.scan-ring svg{transform:rotate(-90deg)}
+.scan-ring .bg{stroke:var(--hair-2);fill:none;stroke-width:1.5}
+.scan-ring .fg{stroke:var(--gold);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-dasharray:182;stroke-dashoffset:60;
+  animation:fill 25s linear forwards;filter:drop-shadow(0 0 4px var(--gold-glow))}
+@keyframes fill{to{stroke-dashoffset:16}}
+.scan-ring .pct{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--lat);font-size:15px;font-weight:500;color:var(--gold-soft)}
+/* loading-text is the rotating micro-copy line */
+.loading-text{font-family:var(--serif);font-size:17px;color:var(--cream);letter-spacing:.1em;text-indent:.1em;min-height:24px;transition:opacity .3s}
+.loading-text .cursor{color:var(--gold);animation:blink 1s steps(1) infinite;margin-left:2px}
+@keyframes blink{50%{opacity:0}}
+.scan-steps{font-family:var(--lat);font-style:italic;font-size:11.5px;color:var(--text-faint);margin-top:12px;letter-spacing:.16em}
+.scan-note{font-family:var(--serif);font-size:12.5px;color:var(--text-faint);margin-top:24px;line-height:1.9;text-align:center;letter-spacing:.03em}
 
 /* ── Results ── */
-.result-wrap { position: relative; z-index: 1; padding: 16px 16px 0; display: none; }
+.result-wrap { position: relative; z-index: 1; padding: 8px var(--gut) 0; display: none; }
 .result-wrap.show { display: block; }
 
-/* Feature map */
-.face-map { width: 100%; max-width: 280px; margin: 0 auto 18px; display: block; position: relative; }
-.feature-card { background: var(--ink-card); border: 1px solid rgba(74,143,160,0.12); border-radius: 10px; padding: 14px; margin-bottom: 10px; }
+/* legacy feature classes (injected fallback) — restyled to ink-wash gold */
+.feature-card { background: linear-gradient(180deg,#181b12,#101109); border: 1px solid var(--hair-2); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
 .feature-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .feature-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.feature-title { font-size: 13px; letter-spacing: 0.1em; }
-.feature-score { margin-left: auto; font-family: 'Cormorant Garamond', serif; font-size: 18px; }
-.feature-bar { height: 3px; background: rgba(74,143,160,0.1); border-radius: 2px; margin-bottom: 8px; overflow: hidden; }
+.feature-title { font-family:var(--serif); font-weight:600; font-size: 15px; letter-spacing: 0.03em; color:var(--cream); }
+.feature-score { margin-left: auto; font-family: var(--lat); font-size: 18px; color:var(--gold-soft); }
+.feature-bar { height: 3px; background: var(--hair); border-radius: 2px; margin-bottom: 8px; overflow: hidden; }
 .feature-fill { height: 100%; border-radius: 2px; }
-.feature-text { font-size: 11px; color: rgba(224,236,240,0.5); letter-spacing: 0.04em; line-height: 1.85; }
+.feature-text { font-size: 12px; color: rgba(201,197,183,.9); letter-spacing: 0.01em; line-height: 2; }
 
-.overall-box { background: rgba(74,143,160,0.07); border: 1px solid rgba(74,143,160,0.2); border-radius: 10px; padding: 14px; margin-bottom: 14px; text-align: center; }
-.overall-label { font-size: 9px; letter-spacing: 0.2em; color: rgba(74,143,160,0.5); margin-bottom: 8px; }
-.overall-quote { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 15px; color: rgba(224,236,240,0.8); letter-spacing: 0.08em; line-height: 1.6; }
+.overall-box { background: linear-gradient(180deg,rgba(200,163,90,.07),rgba(200,163,90,.015)); border: 1px solid var(--gold-line); border-radius: var(--radius); padding: 20px 18px; margin-bottom: 16px; text-align: center; }
+.overall-label { font-family:var(--lat); font-style:italic; font-size: 12px; letter-spacing: 0.2em; color: var(--gold); margin-bottom: 10px; }
+.overall-quote { font-family: var(--serif); font-weight:500; font-size: 15px; color: var(--gold-soft); letter-spacing: 0.02em; line-height: 1.95; }
 
-.cta-btn { width: 100%; padding: 13px 0; background: transparent; border: 1px solid rgba(74,143,160,0.3); border-radius: 4px; color: var(--teal-light); font-family: 'Noto Serif SC', serif; font-size: 13px; letter-spacing: 0.18em; cursor: pointer; margin-bottom: 16px; }
+.cta-btn { width: 100%; padding: 15px 0; background: transparent; border: 1px solid var(--hair-2); border-radius: 14px; color: var(--text-mute); font-family: var(--serif); font-size: 13px; letter-spacing: 0.1em; cursor: pointer; margin-bottom: 14px; transition:all .2s; }
 
-/* ══════════ 精装报告阅读体验（对齐 bazi.html · 面相偏气运格局） ══════════ */
+/* ══════════ 精装报告阅读体验（对齐 mockup · 深墨+金） ══════════ */
 @keyframes mxFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 /* 顶部阅读进度条 */
-#readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.25);opacity:0;transition:opacity .3s;pointer-events:none}
+#readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.3);opacity:0;transition:opacity .3s;pointer-events:none}
 #readProgressWrap.show{opacity:1}
-#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,#2a6070,var(--teal),var(--teal-light));box-shadow:0 0 8px rgba(74,143,160,0.5);transition:width .12s ease-out}
-#readProgressChapter{position:fixed;top:8px;right:12px;z-index:1200;font-family:'Cormorant Garamond',serif;font-size:11px;letter-spacing:0.12em;color:rgba(168,216,224,0.9);background:rgba(8,12,18,0.72);border:1px solid rgba(74,143,160,0.28);border-radius:20px;padding:3px 11px;opacity:0;transition:opacity .3s;pointer-events:none;backdrop-filter:blur(6px)}
+#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,var(--gold-deep),var(--gold),var(--gold-hi));box-shadow:0 0 8px var(--gold-glow);transition:width .12s ease-out}
+#readProgressChapter{position:fixed;top:8px;right:12px;z-index:1200;font-family:var(--lat);font-size:11px;letter-spacing:0.12em;color:var(--gold-soft);background:rgba(10,11,8,0.75);border:1px solid var(--gold-line);border-radius:20px;padding:3px 11px;opacity:0;transition:opacity .3s;pointer-events:none;backdrop-filter:blur(6px)}
 #readProgressChapter.show{opacity:1}
 
-/* 章节封面卡 */
-.chapter-cover{position:relative;margin:20px 0 10px;border-radius:14px;overflow:hidden;min-height:158px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:0 8px 30px rgba(0,0,0,0.45);animation:mxFadeUp 0.6s ease both;background:#0d141c}
-.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.6;filter:saturate(0.9)}
-.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,10,15,0.35) 0%,rgba(6,10,15,0.55) 45%,rgba(6,10,15,0.92) 100%)}
-.chapter-cover-body{position:relative;padding:16px 16px 15px}
-.chapter-cover-num{font-family:'Cormorant Garamond','Noto Serif SC',serif;font-size:11px;letter-spacing:0.3em;color:rgba(168,216,224,0.85);margin-bottom:5px}
-.chapter-cover-num::before{content:'';display:inline-block;width:20px;height:1px;background:linear-gradient(90deg,rgba(122,191,204,0.7),transparent);vertical-align:middle;margin-right:8px}
-.chapter-cover-title{font-family:'Noto Serif SC',serif;font-size:19px;font-weight:500;letter-spacing:0.06em;color:#e6f2f6;line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
-.chapter-cover-lead{font-size:11px;line-height:1.7;letter-spacing:0.03em;color:rgba(214,232,238,0.72);margin-top:6px;max-width:94%}
+/* 章节封面卡 — ink-wash banner */
+.chapter-cover{position:relative;margin:20px 0 10px;border-radius:var(--radius);overflow:hidden;min-height:150px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:var(--shadow-lift);animation:mxFadeUp 0.6s ease both;background:linear-gradient(180deg,#181b12,#101109);border:1px solid var(--hair-2)}
+.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.42;filter:saturate(0.85) sepia(.2)}
+.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,17,9,0.3) 0%,rgba(16,17,9,0.55) 45%,rgba(16,17,9,0.94) 100%)}
+.chapter-cover-body{position:relative;padding:16px 18px 16px}
+.chapter-cover-num{font-family:var(--serif);font-size:11px;letter-spacing:0.28em;color:var(--gold-soft);margin-bottom:6px}
+.chapter-cover-num::before{content:'';display:inline-block;width:20px;height:1px;background:linear-gradient(90deg,var(--gold-line-2),transparent);vertical-align:middle;margin-right:8px}
+.chapter-cover-title{font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:0.03em;color:var(--cream);line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
+.chapter-cover-lead{font-family:var(--lat);font-style:italic;font-size:12px;line-height:1.6;letter-spacing:0.06em;color:var(--gold-soft);opacity:.85;margin-top:6px;max-width:94%}
 
 /* 首字下沉 */
-.mx-body{font-size:12.5px;line-height:2;color:rgba(214,232,238,0.82);letter-spacing:0.03em}
-.mx-body.drop-cap::first-letter{float:left;font-family:'Noto Serif SC',Georgia,serif;font-size:3.2em;line-height:0.82;font-weight:700;color:var(--teal-light);margin:0.04em 0.12em 0 0;text-shadow:0 2px 10px rgba(74,143,160,0.3)}
+.mx-body{font-size:13px;line-height:2;color:#c9c5b7;letter-spacing:0.01em}
+.mx-body.drop-cap::first-letter{float:left;font-family:var(--serif);font-size:3.2em;line-height:0.82;font-weight:700;color:var(--gold-soft);margin:0.04em 0.12em 0 0;text-shadow:0 2px 10px var(--gold-glow)}
 
 /* 金句 pull quote */
-.pull-quote{position:relative;margin:14px 6px;padding:6px 4px 6px 18px;text-align:center}
-.pull-quote::before{content:'';position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,transparent,rgba(122,191,204,0.7),transparent);border-radius:2px}
-.pull-quote-text{font-family:'Noto Serif SC',serif;font-size:15px;font-weight:500;line-height:1.75;letter-spacing:0.04em;color:var(--teal-light);text-shadow:0 1px 8px rgba(74,143,160,0.18)}
-.pull-quote-mark{font-family:'Cormorant Garamond',serif;font-size:24px;color:rgba(122,191,204,0.4);line-height:0}
+.pull-quote{position:relative;margin:16px 4px;padding:2px 4px 2px 18px;text-align:left}
+.pull-quote::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:1.5px;background:var(--gold-line-2);border-radius:2px}
+.pull-quote-text{font-family:var(--serif);font-size:16px;font-weight:500;line-height:1.95;letter-spacing:0.02em;color:var(--gold-soft)}
+.pull-quote-mark{display:none}
 
-/* 高亮卡 */
-.hl-note{margin:12px 0;padding:12px 14px;background:linear-gradient(135deg,rgba(74,143,160,0.12),rgba(74,143,160,0.03));border:1px solid rgba(74,143,160,0.3);border-left:3px solid var(--teal);border-radius:10px;font-size:12px;line-height:1.9;letter-spacing:0.02em;color:rgba(224,236,240,0.9)}
-.hl-note b,.hl-note strong{color:var(--teal-light)}
+/* 高亮卡 — 气运调养 wisdom */
+.hl-note{margin:16px 0;padding:20px 18px;background:linear-gradient(180deg,rgba(200,163,90,.07),rgba(200,163,90,.015));border:1px solid var(--gold-line);border-radius:18px;font-size:12.5px;line-height:1.95;letter-spacing:0.02em;color:var(--text-mute);text-align:center}
+.hl-note b,.hl-note strong{color:var(--gold-soft);font-weight:500}
 
 /* 章节目录 */
-.chapter-toc{margin:14px 0 6px;padding:16px 16px 12px;background:linear-gradient(160deg,rgba(13,20,28,0.92),rgba(8,12,18,0.96));border:1px solid rgba(74,143,160,0.24);border-radius:14px;animation:mxFadeUp 0.5s ease both}
-.chapter-toc-title{font-size:11px;letter-spacing:0.2em;color:rgba(122,191,204,0.75);margin-bottom:12px;display:flex;align-items:center;gap:7px}
-.chapter-toc-item{display:flex;align-items:baseline;gap:10px;padding:8px 2px;border-bottom:1px dotted rgba(74,143,160,0.16);text-decoration:none;transition:all .2s;cursor:pointer}
+.chapter-toc{margin:6px 0;padding:6px 0;background:var(--ink-2);border:1px solid var(--hair);border-radius:18px;overflow:hidden;animation:mxFadeUp 0.5s ease both}
+.chapter-toc-title{font-size:10.5px;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-faint);padding:14px 18px;border-bottom:1px solid var(--hair);display:flex;align-items:center;gap:7px}
+.chapter-toc-item{display:flex;align-items:center;gap:14px;padding:15px 18px;border-bottom:1px solid var(--hair);text-decoration:none;transition:all .2s;cursor:pointer;min-height:56px}
 .chapter-toc-item:last-child{border-bottom:none}
 .chapter-toc-item:active{opacity:0.6}
-.chapter-toc-idx{font-family:'Cormorant Garamond',serif;font-size:13px;color:rgba(122,191,204,0.65);min-width:26px}
-.chapter-toc-label{flex:1;font-size:13px;letter-spacing:0.04em;color:rgba(224,236,240,0.9)}
-.chapter-toc-arrow{font-size:12px;color:rgba(122,191,204,0.5)}
+.chapter-toc-idx{font-family:var(--serif);font-size:16px;color:var(--gold);min-width:24px;text-align:center}
+.chapter-toc-label{flex:1;font-family:var(--serif);font-size:14.5px;letter-spacing:0.03em;color:var(--text-cream)}
+.chapter-toc-arrow{font-size:16px;color:var(--text-faint)}
 
-/* 精装章卡 */
-.mx-chapter-card{background:var(--ink-card);border:1px solid rgba(74,143,160,0.12);border-radius:12px;padding:14px;margin-bottom:12px;animation:mxFadeUp 0.5s ease both}
-.mx-chapter-card .feature-head{margin-bottom:10px}
+/* 精装章卡 — ink-wash chapter body */
+.mx-chapter-card{background:linear-gradient(180deg,#181b12,#101109);border:1px solid var(--hair-2);border-radius:var(--radius);padding:20px 20px 22px;margin-bottom:14px;box-shadow:var(--shadow-lift);animation:mxFadeUp 0.5s ease both}
+.mx-chapter-card .feature-head{margin-bottom:12px}
+.mx-chapter-card .feature-title{font-family:var(--serif);font-weight:600;font-size:17px;color:var(--cream)}
 
-/* report-viz 主题微调（面相青绿）：评分环标签 */
-.rv-frame{background:linear-gradient(160deg,rgba(13,20,28,0.96),rgba(8,12,18,0.98)) !important;border-color:rgba(74,143,160,0.24) !important}
-.rv-frame-title{color:var(--teal-light) !important}
-.rv-ring-label{color:rgba(224,236,240,0.85) !important}
+/* report-viz 主题微调（深墨金）：评分环 */
+.rv-frame{background:linear-gradient(180deg,#181b12,#101109) !important;border-color:var(--hair-2) !important}
+.rv-frame-title{color:var(--gold-soft) !important}
+.rv-ring-label{color:var(--text-cream) !important}
+
+/* AIGC / disclaimer injected badges */
+.sy-disclaimer{margin-top:8px}
 
 @media print{
   .chapter-cover{break-inside:avoid}
@@ -166,24 +262,51 @@ input[type=file] { display: none; }
 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题" style="z-index:999">🌙</button>
 
 
-<button class="back-btn" onclick="history.back()">‹ 返回</button>
+<button class="back-btn" onclick="history.back()">‹</button>
 
 <div class="header">
-  <div class="header-title">面相 · 手相解读</div>
-  <div class="header-sub">FACE & PALM READING · PHYSIOGNOMY</div>
+  <div class="brandmark"><div class="cn">善缘</div><div class="en">Runae</div></div>
+  <div class="eyebrow">Ancient physiognomy, re-read by AI</div>
+  <div class="header-title" style="margin-top:12px">面相 · 手相解读</div>
+  <div class="header-sub">FACE &amp; PALM READING · PHYSIOGNOMY</div>
   <div class="teal-line"></div>
 </div>
 
 <div class="mode-tabs">
-  <div class="mode-tab active" onclick="switchMode('face',this)">面相</div>
-  <div class="mode-tab" onclick="switchMode('palm',this)">手相</div>
+  <div class="mode-tab active" onclick="switchMode('face',this)">面相 · Face</div>
+  <div class="mode-tab" onclick="switchMode('palm',this)">手相 · Palm</div>
+</div>
+
+<div class="hook-hero">
+  <div class="hook-title" id="hookTitle">一张正脸<br>读出你的<em>三停格局</em></div>
+  <div class="hook-sub" id="hookSub">上停主早运、中停主财帛、下停主晚福。<br>三分钟，得一份可珍藏的相理长卷。</div>
+</div>
+
+<!-- taste of report -->
+<div class="taste">
+  <div class="tImg">
+    <svg viewBox="0 0 400 120" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%;display:block">
+      <defs><linearGradient id="mg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a4a38"/><stop offset="1" stop-color="#20241a"/></linearGradient></defs>
+      <path d="M0 120 L0 80 C60 48 90 70 140 50 C185 34 220 64 270 44 C320 26 360 54 400 40 L400 120Z" fill="url(#mg1)" opacity=".8"/>
+      <path d="M0 120 L0 96 C70 80 120 94 180 80 C245 66 300 90 360 78 L400 84 L400 120Z" fill="#151810" opacity=".92"/>
+      <circle cx="332" cy="28" r="14" fill="#d8bd85" opacity=".2"/>
+    </svg>
+    <div class="watermark">相</div>
+    <div class="tag">节选 · 你的报告首章</div>
+  </div>
+  <div class="tBody">
+    <div class="tChap">三停格局 · 总纲</div>
+    <div class="tQuote">「三停均等，乃『天地人和』之贵格。」</div>
+    <div class="tFade">主一生运势平稳有序，无大起大落之虞。上停饱满宽广，昭示早年聪慧过人、家学有基；中停鼻准圆润挺直，为财星得地之象，中年为财运发力黄金期……</div>
+  </div>
 </div>
 
 <div class="upload-wrap">
+  <div class="zone-label">上传一张正面照片</div>
   <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
     <div class="upload-icon" id="uploadIcon">面</div>
-    <div class="upload-text" id="uploadText">上传正面照片</div>
-    <div class="upload-hint" id="uploadHint">光线均匀·正面·无遮挡</div>
+    <div class="upload-text" id="uploadText">轻触上传，或直接拍照</div>
+    <div class="upload-hint" id="uploadHint">光线均匀 · 正面 · 无遮挡</div>
   </div>
   <input type="file" id="fileInput" accept="image/*" capture="user" onchange="handleFile(this)">
   <div class="camera-row">
@@ -192,8 +315,14 @@ input[type=file] { display: none; }
   </div>
 </div>
 
+<div class="trust">
+  <span>相理十二宫</span><span class="d"></span>
+  <span>三停 · 五官逐读</span><span class="d"></span>
+  <span>照片不留存</span>
+</div>
+
 <div class="q-wrap">
-  <div class="q-label">你最想了解</div>
+  <div class="q-label">此刻，你最想窥见什么？</div>
   <div class="q-chips" id="qChips">
     <div class="q-chip sel" onclick="toggleChip(this)">财运格局</div>
     <div class="q-chip" onclick="toggleChip(this)">感情婚姻</div>
@@ -207,10 +336,29 @@ input[type=file] { display: none; }
 <div class="submit-wrap">
   <button class="btn-analyze" id="analyzeBtn" onclick="startAnalysis()" disabled>上传照片后开始解读</button>
 </div>
+<div class="hook-disc">AI 生成内容 · 仅供娱乐参考，不构成医疗、法律或财务建议。</div>
 
 <div class="loading-wrap" id="loadingWrap">
-  <div class="scan-anim"><div class="scan-line"></div></div>
-  <div class="loading-text" id="loadingText">面相扫描中…</div>
+  <div class="scan-stage">
+    <div class="portrait"></div>
+    <div class="mesh"><svg viewBox="0 0 200 250" id="meshSvg"></svg></div>
+    <div class="guides">
+      <div class="g g1" data-l="上停 · 天"></div>
+      <div class="g g2" data-l="中停 · 人"></div>
+      <div class="g g3" data-l="下停 · 地"></div>
+    </div>
+    <div class="scanline"></div>
+    <div class="retic tl"></div><div class="retic tr"></div><div class="retic bl"></div><div class="retic br"></div>
+  </div>
+  <div class="scan-meta">
+    <div class="scan-ring">
+      <svg width="58" height="58" viewBox="0 0 60 60"><circle class="bg" cx="30" cy="30" r="29"/><circle class="fg" cx="30" cy="30" r="29"/></svg>
+      <div class="pct">观</div>
+    </div>
+    <div class="loading-text" id="loadingText">测量三停比例<span class="cursor">·</span></div>
+    <div class="scan-steps">measuring · reading qi · mapping palaces</div>
+    <div class="scan-note">静一静，气随神转。<br>正在以相理十二宫为你通读格局……</div>
+  </div>
 </div>
 
 <div class="result-wrap" id="resultWrap">
@@ -226,9 +374,21 @@ function switchMode(mode, el) {
   el.classList.add('active');
   currentMode = mode;
   document.getElementById('uploadIcon').textContent = mode === 'face' ? '面' : '手';
-  document.getElementById('uploadText').textContent = mode === 'face' ? '上传正面照片' : '上传手掌照片';
-  document.getElementById('uploadHint').textContent = mode === 'face' ? '光线均匀·正面·无遮挡' : '手掌朝上·五指舒展·清晰';
-  document.getElementById('loadingText').textContent = mode === 'face' ? '面相扫描中…' : '手相解析中…';
+  document.getElementById('uploadText').textContent = mode === 'face' ? '轻触上传，或直接拍照' : '轻触上传，或直接拍照';
+  document.getElementById('uploadHint').textContent = mode === 'face' ? '光线均匀 · 正面 · 无遮挡' : '手掌朝上 · 五指舒展 · 清晰';
+  // 更新首屏钩子文案（不改动 loadingText —— 由扫描仪式轮播接管）
+  var ht = document.getElementById('hookTitle'), hs = document.getElementById('hookSub'), zl = document.querySelector('.zone-label'), ql = document.querySelector('.q-label');
+  if (mode === 'face') {
+    if (ht) ht.innerHTML = '一张正脸<br>读出你的<em>三停格局</em>';
+    if (hs) hs.innerHTML = '上停主早运、中停主财帛、下停主晚福。<br>三分钟，得一份可珍藏的相理长卷。';
+    if (zl) zl.textContent = '上传一张正面照片';
+  } else {
+    if (ht) ht.innerHTML = '一只手掌<br>读出你的<em>掌纹格局</em>';
+    if (hs) hs.innerHTML = '生命线主根基、感情线主缘分、事业线主进取。<br>三分钟，得一份可珍藏的掌相长卷。';
+    if (zl) zl.textContent = '上传一张手掌照片';
+  }
+  // 切换扫描仪式的轮播词库（面相/手相各一套）
+  window._mxScanMode = mode;
 }
 
 function handleFile(input) {
@@ -292,6 +452,7 @@ function startAnalysis() {
   document.getElementById('resultWrap').classList.remove('show');
   document.getElementById('resultWrap').innerHTML = '';
   document.getElementById('analyzeBtn').style.display = 'none';
+  try { startScanRitual(); } catch(e) {}
 
   // 读取 auth token（httpOnly cookie，不从 localStorage 取；后端接受 Bearer ''）
   var token = '';
@@ -663,6 +824,69 @@ function injectDisclaimer(containerId) {
   d.className = 'sy-disclaimer';
   d.innerHTML = '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto;width:80%"></div><div style="font-size:10px;color:rgba(201,168,76,0.4);text-align:center;letter-spacing:0.06em;padding:10px 20px">仅供娱乐参考，切勿沉迷。命理是可能性的艺术，不是定数。</div>';
   c.appendChild(d);
+}
+</script>
+
+<script>
+// ══════════ 观相扫描仪式（面相 mesh + 扫描线 + 轮播文案 + 进度环）══════════
+// build a dense, credible physiognomy mesh (not a low-poly polygon)
+(function(){
+  var svg=document.getElementById('meshSvg'); if(!svg) return;
+  var NS='http://www.w3.org/2000/svg';
+  var outline=[[100,18],[72,30],[54,52],[44,86],[42,118],[46,150],[58,182],[78,208],[100,222],[122,208],[142,182],[154,150],[158,118],[156,86],[146,52],[128,30]];
+  var inner=[
+    [100,66],[74,74],[126,74],[60,80],[140,80],[78,94],[122,94],[64,98],[136,98],
+    [100,110],[100,128],[100,146],[86,150],[114,150],[100,170],[84,168],[116,168],
+    [70,120],[130,120],[100,196]
+  ];
+  function edge(a,b,cls){var l=document.createElementNS(NS,'line');l.setAttribute('x1',a[0]);l.setAttribute('y1',a[1]);l.setAttribute('x2',b[0]);l.setAttribute('y2',b[1]);l.setAttribute('class',cls||'edge');svg.appendChild(l);}
+  for(var i=0;i<outline.length;i++) edge(outline[i],outline[(i+1)%outline.length],'edge-key');
+  edge([100,18],[100,222],'edge-key');
+  var links=[[0,1],[0,2],[1,3],[2,4],[1,5],[2,6],[3,7],[4,8],[5,7],[6,8],[9,0],[9,10],[10,11],[11,12],[11,13],[12,14],[13,14],[14,15],[14,16],[17,5],[17,7],[18,6],[18,8],[9,17],[9,18],[10,17],[10,18],[19,12],[19,13]];
+  links.forEach(function(k){ if(inner[k[0]]&&inner[k[1]]) edge(inner[k[0]],inner[k[1]],'edge'); });
+  edge(inner[3],outline[2],'edge');edge(inner[4],outline[14],'edge');
+  edge(inner[17],outline[3],'edge');edge(inner[18],outline[13],'edge');
+  edge(inner[12],outline[6],'edge');edge(inner[13],outline[10],'edge');
+  edge(inner[19],outline[7],'edge');
+  for(var s=0;s<38;s++){
+    var a=Math.random()*Math.PI*2, r=20+Math.random()*70;
+    var x=100+Math.cos(a)*r*0.8, y=120+Math.sin(a)*r*1.05;
+    if(x<44||x>156||y<26||y>216) continue;
+    var c=document.createElementNS(NS,'circle');c.setAttribute('cx',x.toFixed(1));c.setAttribute('cy',y.toFixed(1));c.setAttribute('r',(Math.random()<.3?1:0.7).toFixed(1));c.setAttribute('class','node2');svg.appendChild(c);
+  }
+  function dot(p,r,cls){var c=document.createElementNS(NS,'circle');c.setAttribute('cx',p[0]);c.setAttribute('cy',p[1]);c.setAttribute('r',r);c.setAttribute('class',cls||'node');svg.appendChild(c);}
+  outline.forEach(function(p){dot(p,1.4,'node');});
+  inner.forEach(function(p){dot(p,p[0]===100&&(p[1]===66||p[1]===128)?2.1:1.5,'node');});
+})();
+
+// scan-state rotating micro-copy + progress ring — (re)started on each analysis
+var _mxScanTimers=[];
+function startScanRitual(){
+  // clear previous run
+  _mxScanTimers.forEach(function(t){ clearInterval(t); });
+  _mxScanTimers=[];
+  var faceLines=['测量三停比例','观印堂气色','读命宫神韵','察官禄宫开阔','审鼻准财星','归纳本命格局','落笔成卷……'];
+  var palmLines=['勘掌形五行','循生命线走势','读感情线深浅','察事业线起落','审智慧线纹理','归纳掌相格局','落笔成卷……'];
+  var lines = (window._mxScanMode==='palm') ? palmLines : faceLines;
+  var el=document.getElementById('loadingText');
+  if(el){
+    el.innerHTML=lines[0]+'<span class="cursor">·</span>';
+    var i=0;
+    _mxScanTimers.push(setInterval(function(){
+      i=(i+1)%lines.length; el.style.opacity=0;
+      setTimeout(function(){ el.innerHTML=lines[i]+'<span class="cursor">·</span>'; el.style.opacity=1; },240);
+    },2600));
+  }
+  // restart the 25s fill ring animation
+  var fg=document.querySelector('.scan-ring .fg');
+  if(fg){ fg.style.animation='none'; void fg.offsetWidth; fg.style.animation='fill 25s linear forwards'; }
+  // pct counter into the 观 seal
+  var pct=document.querySelector('.scan-ring .pct');
+  if(pct){
+    pct.textContent='观'; var v=0;
+    var t=setInterval(function(){ v+=Math.max(1,Math.round((100-v)/22)); if(v>=99){v=99;clearInterval(t);} pct.textContent=v+'%'; },260);
+    _mxScanTimers.push(t);
+  }
 }
 </script>
 

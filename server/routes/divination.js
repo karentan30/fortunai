@@ -883,6 +883,388 @@ ${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及�
 });
 
 // ══════════════════════════════════════════
+// POST /api/daily/card — 每日运势卡（新粘性产品·Co-Star 风·结构化 JSON）
+// 因人因日不同：用生辰真排盘(命盘) × date 当天流日(真排) 一起喂 LLM，
+// 严格返回结构化 JSON（score/mood/yi/ji/luckyColor/luckyDir/insight/qian）。
+// 注意：路径用 /daily/card 而非 /daily —— /api/daily 已被 routes/daily.js 的
+// 长文 markdown 每日运势占用(daily.html/daily-en.html/saju-KR.html 在用)，
+// 若直接注册 /daily 会因 divinationRouter 先挂载而 shadow 掉老产品。
+// ══════════════════════════════════════════
+const DAILY_DEFAULT = {
+  zh: {
+    score: 68, mood: '蓄势',
+    yi: ['整理旧事', '主动联系一位旧友', '早点休息'],
+    ji: ['冲动决定', '与人争执'],
+    luckyColor: { name: '藏青', hex: '#2E4057' }, luckyDir: '东南',
+    insight: '今天适合把没说完的话说完，风会替你送到。',
+    qian: { title: '静水流深', text: '不急不躁，缓处自明。今日守常即是进。' },
+  },
+  en: {
+    score: 68, mood: 'Gathering',
+    yi: ['Tidy up loose ends', 'Reach out to an old friend', 'Rest early'],
+    ji: ['Impulsive decisions', 'Arguments'],
+    luckyColor: { name: 'Deep Navy', hex: '#2E4057' }, luckyDir: 'Southeast',
+    insight: 'Say the thing left unsaid today — the wind will carry it for you.',
+    qian: { title: 'Still Water Runs Deep', text: 'No rush, no fret. To hold steady today is itself to advance.' },
+  },
+};
+
+function _dailyDayPillar(dateStr) {
+  // 用真排盘引擎算 date 当天的流日干支（八字日柱），因日不同的硬锚
+  try {
+    var m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(String(dateStr || '').trim());
+    if (!m) return null;
+    var y = Number(m[1]), mo = Number(m[2]), d = Number(m[3]);
+    var bz = calcBazi(y, mo, d, 12, 'male'); // 时辰对日柱无影响，取正午占位
+    return { gan: bz.day.gan, zhi: bz.day.zhi, ganzhi: bz.day.gan + bz.day.zhi };
+  } catch (e) { return null; }
+}
+
+router.post('/daily/card', rateLimitMiddleware, async (req, res) => {
+  const lang = (req.body && req.body.lang === 'en') ? 'en' : 'zh';
+  const fallback = DAILY_DEFAULT[lang];
+  try {
+    const { birthYear, birthMonth, birthDay, birthHour, gender, date } = req.body || {};
+    if (!birthYear || !birthMonth || !birthDay) {
+      return res.status(400).json({ error: lang === 'en' ? 'Please provide your complete birth date' : '请提供出生年月日' });
+    }
+    // date 缺省=今天（服务器本地日）
+    const dateStr = (date && /^\d{4}-\d{1,2}-\d{1,2}$/.test(String(date)))
+      ? String(date)
+      : new Date().toISOString().slice(0, 10);
+
+    // ① 命盘真排（时辰不详则不注入时柱，避免编造）
+    const _hasHour = birthHour !== undefined && birthHour !== null && birthHour !== '';
+    const baziBlock = _hasHour ? (buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour, gender }) || '') : '';
+    // 命盘核心（日主/五行/身强弱）——即使无时辰也能算出，供个性化锚点
+    let chartCore = '';
+    try {
+      const _bz = calcBazi(Number(birthYear), Number(birthMonth), Number(birthDay), _hasHour ? Number(birthHour) : 12, gender || 'male');
+      const wx = _bz.wuxing || {};
+      chartCore = '日主：' + _bz.dayMaster + '（' + _bz.dayMasterElement + '）｜身' + (_bz.isStrong ? '强' : '弱')
+        + '｜五行分布 木' + (wx['木'] || 0) + ' 火' + (wx['火'] || 0) + ' 土' + (wx['土'] || 0) + ' 金' + (wx['金'] || 0) + ' 水' + (wx['水'] || 0);
+    } catch (e) {}
+
+    // ② 当天流日真排（因日不同）
+    const dayPillar = _dailyDayPillar(dateStr);
+    const liuriLine = dayPillar ? ('当日流日干支：' + dayPillar.ganzhi + '（' + dateStr + '）') : ('当日日期：' + dateStr);
+
+    const system = (lang === 'en')
+      ? 'You are a precise, slightly mystical daily-fortune reader who blends BaZi (Chinese Four Pillars) with a Co-Star-like intimate voice. Given a person\'s natal chart and the specific day\'s day-pillar, you produce ONE day\'s reading that is personal to THIS person on THIS day — never generic, never random. You reason from the interaction between the day-master / chart elements and the day-pillar\'s stem-branch element. Output STRICT JSON only, no markdown, no code fences, no commentary. Keep every string tight and evocative.'
+      : '你是一位精准又略带神秘感的每日运势命理师，融合八字命盘与 Co-Star 式私密、点睛的语气。给你此人的命盘与当天流日干支，你要产出「只属于此人在此日」的一日运势——因人因日不同，绝不套模板、绝不随机。你的判断必须来自命盘日主/五行与当日流日干支五行的生克关系。只输出严格 JSON，禁止 markdown、禁止代码围栏、禁止任何多余说明。每条字段简短有力、有画面感。';
+
+    const schemaHint = (lang === 'en')
+      ? `Return EXACTLY this JSON shape (no extra keys):
+{
+  "score": <integer 0-100, today's overall fortune>,
+  "mood": "<one evocative word, e.g. 'Gathering' / 'Open'>",
+  "yi": ["<do 1>", "<do 2>", "<do 3>"],
+  "ji": ["<avoid 1>", "<avoid 2>"],
+  "luckyColor": {"name": "<color name>", "hex": "#RRGGBB"},
+  "luckyDir": "<a compass direction, e.g. 'Southeast'>",
+  "insight": "<one intimate, slightly mysterious line, <= 40 chars, specific to this person today>",
+  "qian": {"title": "<name of today's oracle stick>", "text": "<1-2 line oracle verse>"}
+}`
+      : `严格返回如下 JSON 结构（不得多加字段）：
+{
+  "score": <0-100 整数，今日整体运势分>,
+  "mood": "<一个有画面感的词，如'蓄势'/'开阔'>",
+  "yi": ["<今日宜1>", "<宜2>", "<宜3>"],
+  "ji": ["<今日忌1>", "<忌2>"],
+  "luckyColor": {"name": "<颜色名>", "hex": "#RRGGBB"},
+  "luckyDir": "<方位，如'东南'>",
+  "insight": "<一句既私人又略神秘的点拨，≤40字，当天专属于此人>",
+  "qian": {"title": "<今日一签名>", "text": "<签文一两句>"}
+}`;
+
+    const userPrompt = (lang === 'en')
+      ? `Person: born ${birthYear}-${birthMonth}-${birthDay}${_hasHour ? ' hour ' + birthHour : ' (hour unknown)'}, ${gender === 'male' ? 'male' : 'female'}.
+${chartCore ? 'Natal chart core: ' + chartCore + '\n' : ''}${baziBlock ? baziBlock + '\n' : ''}${liuriLine}
+
+Read THIS day for THIS person, reasoning from how today's day-pillar element interacts (生克) with their day-master and chart elements. Make the score, mood, yi/ji, lucky color/direction and insight all trace back to that interaction — so a different person or a different day would get a different card.
+${schemaHint}`
+      : `命主：${birthYear}年${birthMonth}月${birthDay}日${_hasHour ? birthHour + '时' : '（时辰不详）'}生，${gender === 'male' ? '男' : '女'}。
+${chartCore ? '命盘核心：' + chartCore + '\n' : ''}${baziBlock ? baziBlock + '\n' : ''}${liuriLine}
+
+请为「此人在此日」批一张每日运势卡：从当日流日干支的五行与命主日主/命局五行的生克关系出发推断。score、mood、宜忌、幸运色/方位、insight 都要能追溯到这层生克——换个人或换一天，卡就应该不同。insight 要像 Co-Star 那样既私人又略神秘、当天专属。
+${schemaHint}`;
+
+    const raw = await deepseekChat(buildReadingPrompt(system, userPrompt), { maxTokens: 700 });
+
+    // ③ 稳妥解析：取首个 {...}，坏了给合理默认，绝不 500
+    let parsed;
+    try {
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
+    } catch (e) {
+      parsed = null;
+    }
+
+    // 逐字段兜底 + 归一化，保证契约字段齐全且类型正确
+    const p = parsed && typeof parsed === 'object' ? parsed : {};
+    let score = Number(p.score);
+    if (!isFinite(score)) score = fallback.score;
+    score = Math.max(0, Math.min(100, Math.round(score)));
+
+    const arr = (v, def) => (Array.isArray(v) && v.length ? v.map(String).map(s => s.trim()).filter(Boolean) : def);
+    const lc = (p.luckyColor && typeof p.luckyColor === 'object') ? p.luckyColor : {};
+    const hexOk = typeof lc.hex === 'string' && /^#?[0-9a-fA-F]{6}$/.test(lc.hex.trim());
+    const qn = (p.qian && typeof p.qian === 'object') ? p.qian : {};
+
+    const out = {
+      score,
+      mood: (typeof p.mood === 'string' && p.mood.trim()) ? p.mood.trim() : fallback.mood,
+      yi: arr(p.yi, fallback.yi).slice(0, 3),
+      ji: arr(p.ji, fallback.ji).slice(0, 2),
+      luckyColor: {
+        name: (typeof lc.name === 'string' && lc.name.trim()) ? lc.name.trim() : fallback.luckyColor.name,
+        hex: hexOk ? (lc.hex.trim().startsWith('#') ? lc.hex.trim() : '#' + lc.hex.trim()) : fallback.luckyColor.hex,
+      },
+      luckyDir: (typeof p.luckyDir === 'string' && p.luckyDir.trim()) ? p.luckyDir.trim() : fallback.luckyDir,
+      insight: (typeof p.insight === 'string' && p.insight.trim()) ? p.insight.trim() : fallback.insight,
+      qian: {
+        title: (typeof qn.title === 'string' && qn.title.trim()) ? qn.title.trim() : fallback.qian.title,
+        text: (typeof qn.text === 'string' && qn.text.trim()) ? qn.text.trim() : fallback.qian.text,
+      },
+      date: dateStr,
+    };
+
+    try { insertReading.run('daily', JSON.stringify(req.body), JSON.stringify(out), req.userId); } catch (e) {}
+    res.json(out);
+  } catch (err) {
+    console.error('[DAILY CARD ERR]', err && err.message);
+    if (mon && mon.captureException) mon.captureException(err, { tags: { api: 'daily/card' } });
+    // 坏了也不 500：给合理默认卡（仍是当天日期），保证前端不空屏
+    const dateStr = (req.body && req.body.date && /^\d{4}-\d{1,2}-\d{1,2}$/.test(String(req.body.date)))
+      ? String(req.body.date) : new Date().toISOString().slice(0, 10);
+    res.json(Object.assign({}, fallback, { date: dateStr, degraded: true }));
+  }
+});
+
+// ══════════════════════════════════════════
+// POST /api/monthly — 月度运势报告（复购核心：命盘 × 该月流月干支）
+// 因人因月不同：命盘真排 × 目标月流月(月干支,真排) 一起喂 LLM，
+// 结构化 JSON（本月总运/事业财运/感情/健康/每周重点/开运/宜忌），
+// 坏了逐字段兜底、绝不 500。这是年包/续费的每月专属价值锚点。
+// ══════════════════════════════════════════
+const MONTHLY_DEFAULT = {
+  zh: {
+    theme: '沉潜蓄力',
+    overallScore: 70,
+    overall: '本月整体平稳中带转机，宜守成、理旧账，不宜盲目扩张。把节奏放慢，反而更容易看清方向。',
+    career: '工作上适合收尾与复盘，旧项目会有回响；不急于跳槽或重大决策，机会在下半月渐显。',
+    wealth: '正财稳、偏财缓，量入为出为上。避免冲动投资与大额借贷，把钱花在能增值自己的地方。',
+    love: '感情宜真诚沟通，把没说完的话说完。有伴者忌翻旧账，单身者社交中会遇到气场相合之人。',
+    health: '注意作息与脾胃，别熬夜、少生冷。适度运动、早睡，情绪上给自己留出口。',
+    weekly: [
+      { week: '第一周', focus: '整理与收尾，别开新战线。' },
+      { week: '第二周', focus: '主动沟通，修复一段关系。' },
+      { week: '第三周', focus: '机会显现，稳步推进要事。' },
+      { week: '第四周', focus: '复盘总结，为下月蓄势。' },
+    ],
+    lucky: { color: { name: '藏青', hex: '#2E4057' }, direction: '东南', numbers: [3, 8], tip: '本月多穿沉稳色系，重要事宜选在上午处理。' },
+    yi: ['复盘旧事', '真诚沟通', '规律作息'],
+    ji: ['冲动投资', '意气用事'],
+    disclaimer: '本报告由AI辅助生成，仅供参考娱乐，不构成任何决策建议。',
+  },
+  en: {
+    theme: 'Quiet Consolidation',
+    overallScore: 70,
+    overall: 'A steady month with a turning point hidden inside. Favor consolidation and closing old loops over bold expansion. Slowing down helps you see the path more clearly.',
+    career: 'A good month to wrap up and review; old projects echo back. Hold off on job-hopping or big moves — opportunity surfaces in the second half.',
+    wealth: 'Regular income is stable, windfalls are slow. Spend within means, avoid impulsive investments and large loans; invest in yourself instead.',
+    love: 'Speak honestly and finish the words left unsaid. Partnered: avoid rehashing old grievances. Single: you may meet someone whose energy matches yours.',
+    health: 'Mind your sleep and digestion — no late nights, go easy on cold food. Move gently, sleep early, and give your emotions an outlet.',
+    weekly: [
+      { week: 'Week 1', focus: 'Tidy up and close loops — no new fronts.' },
+      { week: 'Week 2', focus: 'Reach out and repair a relationship.' },
+      { week: 'Week 3', focus: 'Opportunity appears — advance key matters steadily.' },
+      { week: 'Week 4', focus: 'Review and reflect, gather energy for next month.' },
+    ],
+    lucky: { color: { name: 'Deep Navy', hex: '#2E4057' }, direction: 'Southeast', numbers: [3, 8], tip: 'Wear grounded tones this month; handle key matters in the morning.' },
+    yi: ['Review the past', 'Communicate honestly', 'Keep a regular routine'],
+    ji: ['Impulsive investing', 'Acting on temper'],
+    disclaimer: 'This report is AI-assisted and for reference and entertainment only; it is not decision-making advice.',
+  },
+};
+
+// 取目标月 "YYYY-MM" 的流月(月干支)：用该月 15 号真排(稳过节气边界)，读 .month
+function _monthlyFlowPillar(monthStr) {
+  try {
+    var m = /^(\d{4})-(\d{1,2})$/.exec(String(monthStr || '').trim());
+    if (!m) return null;
+    var y = Number(m[1]), mo = Number(m[2]);
+    if (mo < 1 || mo > 12) return null;
+    var bz = calcBazi(y, mo, 15, 12, 'male'); // 15号避开节气换月边界；时/性别不影响月柱
+    return { gan: bz.month.gan, zhi: bz.month.zhi, ganzhi: bz.month.gan + bz.month.zhi, year: y, month: mo };
+  } catch (e) { return null; }
+}
+
+router.post('/monthly', rateLimitMiddleware, async (req, res) => {
+  const lang = (req.body && req.body.lang === 'en') ? 'en' : 'zh';
+  const fallback = MONTHLY_DEFAULT[lang];
+  try {
+    const { birthYear, birthMonth, birthDay, birthHour, gender, month } = req.body || {};
+    if (!birthYear || !birthMonth || !birthDay) {
+      return res.status(400).json({ error: lang === 'en' ? 'Please provide your complete birth date' : '请提供出生年月日' });
+    }
+    if (Number(birthYear) > new Date().getFullYear() - 14) {
+      return res.status(400).json({ error: lang === 'en' ? 'Users must be 14 or older' : '仅限14岁以上用户使用' });
+    }
+    // month 缺省=当前月（服务器本地月）
+    const monthStr = (month && /^\d{4}-\d{1,2}$/.test(String(month)))
+      ? String(month)
+      : new Date().toISOString().slice(0, 7);
+
+    // ① 命盘真排（时辰不详则不注入时柱，避免编造）
+    const _hasHour = birthHour !== undefined && birthHour !== null && birthHour !== '';
+    const baziBlock = _hasHour ? (buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour, gender }) || '') : '';
+    // 命盘核心（日主/五行/身强弱）——无时辰也能算，供个性化锚点
+    let chartCore = '';
+    try {
+      const _bz = calcBazi(Number(birthYear), Number(birthMonth), Number(birthDay), _hasHour ? Number(birthHour) : 12, gender || 'male');
+      const wx = _bz.wuxing || {};
+      chartCore = '日主：' + _bz.dayMaster + '（' + _bz.dayMasterElement + '）｜身' + (_bz.isStrong ? '强' : '弱')
+        + '｜五行分布 木' + (wx['木'] || 0) + ' 火' + (wx['火'] || 0) + ' 土' + (wx['土'] || 0) + ' 金' + (wx['金'] || 0) + ' 水' + (wx['水'] || 0);
+    } catch (e) {}
+
+    // ② 目标月流月真排（因月不同的硬锚）
+    const flow = _monthlyFlowPillar(monthStr);
+    const liuyueLine = flow
+      ? ('目标月流月干支：' + flow.ganzhi + '（' + monthStr + '）')
+      : ('目标月份：' + monthStr);
+
+    const system = (lang === 'en')
+      ? 'You are a seasoned BaZi (Chinese Four Pillars) master writing ONE person\'s MONTHLY fortune report. You are given their natal chart and the target month\'s flow-month pillar (月干支). Reason from how that month-pillar element interacts (生克) with the day-master and chart elements — so a different person or a different month yields a different report, never generic. Warm, specific, and actionable. Output STRICT JSON only: no markdown, no code fences, no commentary.'
+      : '你是一位资深子平命理师，为「此人在此月」写一份月度运势报告。给你此人的命盘与目标月的流月干支（月干支）。你的判断必须来自流月干支五行与命主日主/命局五行的生克关系——换个人或换一个月，报告都应不同，绝不套模板。语气温暖、极度具体、可落地。只输出严格 JSON，禁止 markdown、禁止代码围栏、禁止任何多余说明。';
+
+    const schemaHint = (lang === 'en')
+      ? `Return EXACTLY this JSON shape (no extra keys):
+{
+  "theme": "<2-4 word theme for the month>",
+  "overallScore": <integer 0-100>,
+  "overall": "<this month's overall fortune, 60-120 words>",
+  "career": "<career & wealth momentum, 50-100 words>",
+  "wealth": "<money outlook, 40-80 words>",
+  "love": "<relationships, 40-80 words>",
+  "health": "<health & wellbeing, 40-80 words>",
+  "weekly": [
+    {"week": "Week 1", "focus": "<one concrete focus>"},
+    {"week": "Week 2", "focus": "<one concrete focus>"},
+    {"week": "Week 3", "focus": "<one concrete focus>"},
+    {"week": "Week 4", "focus": "<one concrete focus>"}
+  ],
+  "lucky": {"color": {"name": "<color>", "hex": "#RRGGBB"}, "direction": "<compass dir>", "numbers": [<int>, <int>], "tip": "<one actionable luck tip>"},
+  "yi": ["<do 1>", "<do 2>", "<do 3>"],
+  "ji": ["<avoid 1>", "<avoid 2>"],
+  "disclaimer": "This report is AI-assisted and for reference and entertainment only; it is not decision-making advice."
+}`
+      : `严格返回如下 JSON 结构（不得多加字段）：
+{
+  "theme": "<本月主题，2-4字>",
+  "overallScore": <0-100 整数>,
+  "overall": "<本月总运，80-160字>",
+  "career": "<事业动向，60-120字>",
+  "wealth": "<财运，50-100字>",
+  "love": "<感情，50-100字>",
+  "health": "<健康，50-100字>",
+  "weekly": [
+    {"week": "第一周", "focus": "<一句具体重点>"},
+    {"week": "第二周", "focus": "<一句具体重点>"},
+    {"week": "第三周", "focus": "<一句具体重点>"},
+    {"week": "第四周", "focus": "<一句具体重点>"}
+  ],
+  "lucky": {"color": {"name": "<颜色名>", "hex": "#RRGGBB"}, "direction": "<方位>", "numbers": [<整数>, <整数>], "tip": "<一句可落地的开运建议>"},
+  "yi": ["<本月宜1>", "<宜2>", "<宜3>"],
+  "ji": ["<本月忌1>", "<忌2>"],
+  "disclaimer": "本报告由AI辅助生成，仅供参考娱乐，不构成任何决策建议。"
+}`;
+
+    const userPrompt = (lang === 'en')
+      ? `Person: born ${birthYear}-${birthMonth}-${birthDay}${_hasHour ? ' hour ' + birthHour : ' (hour unknown)'}, ${gender === 'male' ? 'male' : 'female'}.
+${chartCore ? 'Natal chart core: ' + chartCore + '\n' : ''}${baziBlock ? baziBlock + '\n' : ''}${liuyueLine}
+
+Write THIS month's fortune for THIS person, reasoning from how the target month's flow-month pillar element interacts (生克) with their day-master and chart elements. Make theme, score, each life area, the four weekly focuses, lucky color/direction/numbers and yi/ji all trace back to that interaction. Treat ${monthStr} as the month in question.
+${schemaHint}`
+      : `命主：${birthYear}年${birthMonth}月${birthDay}日${_hasHour ? birthHour + '时' : '（时辰不详）'}生，${gender === 'male' ? '男' : '女'}。
+${chartCore ? '命盘核心：' + chartCore + '\n' : ''}${baziBlock ? baziBlock + '\n' : ''}${liuyueLine}
+
+请为「此人在此月」批一份月度运势报告：从目标月流月干支的五行与命主日主/命局五行的生克关系出发推断。主题、总运分、各领域、每周重点（4周）、幸运色/方位/数字、宜忌都要能追溯到这层生克——换个人或换一个月，报告就应不同。以 ${monthStr} 为所批月份。
+${schemaHint}`;
+
+    const raw = await deepseekChat(buildReadingPrompt(system, userPrompt), { maxTokens: 1500 });
+
+    // ③ 稳妥解析：取首个 {...}，坏了给合理默认，绝不 500
+    let parsed;
+    try {
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      parsed = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
+    } catch (e) {
+      parsed = null;
+    }
+
+    // 逐字段兜底 + 归一化，保证契约字段齐全且类型正确
+    const p = parsed && typeof parsed === 'object' ? parsed : {};
+    const str = (v, def) => (typeof v === 'string' && v.trim()) ? v.trim() : def;
+    const arr = (v, def) => (Array.isArray(v) && v.length ? v.map(String).map(s => s.trim()).filter(Boolean) : def);
+
+    let overallScore = Number(p.overallScore);
+    if (!isFinite(overallScore)) overallScore = fallback.overallScore;
+    overallScore = Math.max(0, Math.min(100, Math.round(overallScore)));
+
+    // weekly：归一化为 4 项 {week,focus}，缺则用兜底
+    let weekly = Array.isArray(p.weekly) ? p.weekly : [];
+    weekly = fallback.weekly.map((fw, i) => {
+      const w = (weekly[i] && typeof weekly[i] === 'object') ? weekly[i] : {};
+      return { week: str(w.week, fw.week), focus: str(w.focus, fw.focus) };
+    });
+
+    // lucky：逐字段归一化
+    const lk = (p.lucky && typeof p.lucky === 'object') ? p.lucky : {};
+    const lc = (lk.color && typeof lk.color === 'object') ? lk.color : {};
+    const hexOk = typeof lc.hex === 'string' && /^#?[0-9a-fA-F]{6}$/.test(lc.hex.trim());
+    let nums = Array.isArray(lk.numbers) ? lk.numbers.map(n => Number(n)).filter(n => isFinite(n)).map(n => Math.round(n)) : [];
+    if (!nums.length) nums = fallback.lucky.numbers.slice();
+    nums = nums.slice(0, 3);
+
+    const out = {
+      month: monthStr,
+      flowPillar: flow ? flow.ganzhi : null,
+      theme: str(p.theme, fallback.theme),
+      overallScore,
+      overall: str(p.overall, fallback.overall),
+      career: str(p.career, fallback.career),
+      wealth: str(p.wealth, fallback.wealth),
+      love: str(p.love, fallback.love),
+      health: str(p.health, fallback.health),
+      weekly,
+      lucky: {
+        color: {
+          name: str(lc.name, fallback.lucky.color.name),
+          hex: hexOk ? (lc.hex.trim().startsWith('#') ? lc.hex.trim() : '#' + lc.hex.trim()) : fallback.lucky.color.hex,
+        },
+        direction: str(lk.direction, fallback.lucky.direction),
+        numbers: nums,
+        tip: str(lk.tip, fallback.lucky.tip),
+      },
+      yi: arr(p.yi, fallback.yi).slice(0, 3),
+      ji: arr(p.ji, fallback.ji).slice(0, 2),
+      disclaimer: fallback.disclaimer,
+    };
+
+    try { insertReading.run('monthly', JSON.stringify(req.body), JSON.stringify(out), req.userId); } catch (e) {}
+    res.json(out);
+  } catch (err) {
+    console.error('[MONTHLY ERR]', err && err.message);
+    if (mon && mon.captureException) mon.captureException(err, { tags: { api: 'monthly' } });
+    // 坏了也不 500：给合理默认月报（仍带目标月份），保证前端不空屏
+    const monthStr = (req.body && req.body.month && /^\d{4}-\d{1,2}$/.test(String(req.body.month)))
+      ? String(req.body.month) : new Date().toISOString().slice(0, 7);
+    res.json(Object.assign({}, fallback, { month: monthStr, flowPillar: null, degraded: true }));
+  }
+});
+
+// ══════════════════════════════════════════
 // POST /api/bazi/topic — 八字专项切片（复用同一份真排盘数据，只换解读焦点）
 // 感知"内容好全"，成本≈0：不重排，只对 buildBaziBlock 的真数据换 prompt 角度。
 // ══════════════════════════════════════════

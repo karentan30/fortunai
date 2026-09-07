@@ -217,7 +217,7 @@ if (!process.env.VERCEL) {
   if (mon.setupExpressErrorHandler) mon.setupExpressErrorHandler(app);
 
   // Push 通知路由（仅非 Vercel 环境）
-  const { pushRouter, vapidRouter } = require('./routes/push');
+  const { pushRouter, vapidRouter, sendDailyPush } = require('./routes/push');
   app.use('/api/push', pushRouter);      // POST /api/push/subscribe, /api/push/send-daily
   app.use('/api', vapidRouter);          // GET  /api/vapid-public-key
 
@@ -239,6 +239,17 @@ if (!process.env.VERCEL) {
     });
   }, { timezone: 'UTC' });
   console.log('[cron] 每日邮件推送已注册 (08:00 HKT)');
+
+  // 每日运势 Web Push cron：每天 08:30 HKT (UTC 00:30)。补留存，与邮件 cron 独立不重复。
+  cron.schedule('30 0 * * *', function() {
+    console.log('[cron] 每日 Push 推送开始...');
+    sendDailyPush().then(function(r) {
+      console.log('[cron] 每日 Push 完成:', r);
+    }).catch(function(e) {
+      console.error('[cron] 每日 Push 失败:', e.message);
+    });
+  }, { timezone: 'UTC' });
+  console.log('[cron] 每日 Push 推送已注册 (08:30 HKT)');
 
   app.listen(PORT, () => {
     console.log(`\n╔═══════════════════════════════════╗`);

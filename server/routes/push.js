@@ -39,14 +39,16 @@ router.post('/subscribe', (req, res) => {
   res.json({ ok: true, total: subs.length });
 });
 
-// POST /api/push/send-daily
-router.post('/send-daily', async (req, res) => {
-  var adminToken = req.headers['x-admin-token'] || (req.body && req.body.token);
-  if (adminToken !== process.env.ADMIN_TOKEN) return res.status(403).json({ error: 'forbidden' });
+// 每日运势 push 内部发送逻辑（HTTP 端点与 cron 共用，避免自请求）。
+// 返回 { sent, total }。VAPID 未配置或无订阅时安全空跑。
+async function sendDailyPush(customBody) {
+  if (!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY)) {
+    return { sent: 0, total: 0, skipped: 'no-vapid' };
+  }
   var subs = loadPushSubs();
   var payload = JSON.stringify({
     title: '선연 · 善缘 🔮',
-    body: req.body && req.body.body ? req.body.body : '오늘의 오행 천기가 도착했어요 · 今日五行天机已更新',
+    body: customBody || '오늘의 오행 천기가 도착했어요 · 今日五行天机已更新',
     url: '/pages/daily.html'
   });
   var results = await Promise.allSettled(subs.map(function(sub) {
@@ -59,7 +61,15 @@ router.post('/send-daily', async (req, res) => {
     });
   }));
   var sent = results.filter(r => r.status === 'fulfilled').length;
-  res.json({ sent: sent, total: subs.length });
+  return { sent: sent, total: subs.length };
+}
+
+// POST /api/push/send-daily
+router.post('/send-daily', async (req, res) => {
+  var adminToken = req.headers['x-admin-token'] || (req.body && req.body.token);
+  if (adminToken !== process.env.ADMIN_TOKEN) return res.status(403).json({ error: 'forbidden' });
+  var r = await sendDailyPush(req.body && req.body.body);
+  res.json({ sent: r.sent, total: r.total });
 });
 
 // GET /api/vapid-public-key — 单独的 router，挂在 /api 下
@@ -68,4 +78,4 @@ vapidRouter.get('/vapid-public-key', (req, res) => {
   res.json({ publicKey: process.env.VAPID_PUBLIC_KEY || '' });
 });
 
-module.exports = { pushRouter: router, vapidRouter };
+module.exports = { pushRouter: router, vapidRouter, sendDailyPush };

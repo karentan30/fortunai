@@ -1,1176 +1,730 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#5bbfa0">
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<title>善缘 · 每日天机</title>
-<meta name="description" content="善缘每日天机 — 每日五行能量、幸运色、黄历宜忌">
-<meta property="og:title" content="善缘 · 每日天机">
-<meta property="og:description" content="善缘每日天机 — 每日五行能量、幸运色、黄历宜忌">
-<meta property="og:image" content="/og-card.png">
-<meta property="og:url" content="https://runae.app/">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<title>善缘 Runae · 每日运势</title>
+<meta name="description" content="善缘每日运势 — 依你八字命盘 × 当天流日，每日为你推演运势、宜忌、幸运色与今日一签">
+<meta property="og:title" content="善缘 Runae · 每日运势">
+<meta property="og:description" content="依你八字命盘 × 当天流日，每日为你推演运势、宜忌、幸运色与今日一签">
+<meta property="og:url" content="https://runae.net/daily">
 <meta property="og:type" content="website">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="善缘 · 每日天机">
-<meta name="twitter:description" content="善缘每日天机 — 每日五行能量、幸运色、黄历宜忌">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@200;300;400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root{
+  --dawn-0:#f7ede0;--dawn-1:#f2e3d0;--dawn-2:#ecd8c2;--peach:#f4c9a8;--rose:#e9b1a3;--lilac:#d8bcd0;
+  --dusk-0:#3a2f4a;--dusk-1:#4a3a5e;--dusk-2:#6a4f66;--dusk-glow:#c99b78;
+  --ink:#3a3022;--ink-soft:#6a5c46;--ink-mute:#938770;--ink-faint:#b3a78f;
+  --gold-hi:#e7d3a0;--gold:#c8a35a;--gold-deep:#a07d38;--gold-soft:#cda968;
+  --gold-line:rgba(160,125,56,.30);--gold-line-2:rgba(160,125,56,.5);--gold-glow:rgba(200,163,90,.5);
+  --jade:#6f9078;--paper:#faf3e8;--card:rgba(255,251,244,.72);--card-2:rgba(255,251,244,.55);
+  --hair:rgba(120,96,54,.14);--hair-2:rgba(120,96,54,.24);
+  --shadow-card:0 30px 60px -30px rgba(90,64,30,.4);--shadow-lift:0 20px 44px -26px rgba(90,64,30,.34);
+  --serif:"Noto Serif SC",serif;--sans:"Noto Sans SC",-apple-system,BlinkMacSystemFont,sans-serif;--lat:"Cormorant Garamond",serif;
+  --t-h2:24px;--gut:22px;--radius:20px;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:#efe6da;color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{max-width:460px;margin:0 auto;min-height:100vh;position:relative;overflow-x:hidden}
+button{font-family:inherit;border:0;background:none;cursor:pointer;color:inherit}
+.grain{position:absolute;inset:0;pointer-events:none;opacity:.4;mix-blend-mode:soft-light;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");}
+.gilt{background:linear-gradient(155deg,var(--gold-hi) 0%,var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep) 100%);
+  box-shadow:0 16px 30px -14px var(--gold-glow),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(120,90,30,.4);}
+.disc{text-align:center;font-size:10.5px;color:var(--ink-faint);letter-spacing:.04em;line-height:1.75;padding:14px 34px 26px}
 
-:root {
-  --jade-deep:  #3d9e82;
-  --jade-main:  #5bbfa0;
-  --jade-mid:   #8dd9bf;
-  --jade-bright:#c8f0e0;
-  --gold:       #c9a84c;
-  --gold-light: #e8d08a;
-  --gold-deep:  #a07830;
-  --ink:        rgba(40,35,30,0.92);
-  --ink-mid:    rgba(80,70,55,0.7);
-  --ink-light:  rgba(80,70,55,0.5);
-  --bg:         #faf8f5;
-  --bg-card:    #ffffff;
-}
+.view{display:none;min-height:100vh;position:relative}
+.view.active{display:block}
 
-html, body {
-  background: var(--bg);
-  font-family: 'Noto Serif SC', serif;
-  color: var(--ink);
-  -webkit-font-smoothing: antialiased;
-}
-body {
-  max-width: 390px;
-  margin: 0 auto;
-  min-height: 100vh;
-  overflow-y: auto;
-  padding-bottom: 80px;
-}
+.topnav{position:sticky;top:0;z-index:35;display:flex;align-items:center;justify-content:space-between;padding:14px 18px 12px;}
+.topnav .back{width:44px;height:44px;display:grid;place-items:center;font-size:22px;color:var(--ink-mute);margin-left:-6px}
+.brandmark{display:flex;flex-direction:column;align-items:center;line-height:1}
+.brandmark .cn{font-family:var(--serif);font-weight:500;font-size:19px;letter-spacing:.36em;color:var(--ink);text-indent:.36em}
+.brandmark .en{font-family:var(--lat);font-size:10px;letter-spacing:.44em;color:var(--gold-deep);margin-top:6px;text-transform:uppercase;text-indent:.44em}
+.moon{width:44px;height:44px;display:grid;place-items:center;margin-right:-4px}
+.moon i{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 35% 30%,rgba(200,163,90,.32),rgba(200,163,90,.06));border:1px solid var(--gold-line)}
+.dark .topnav .back,.dark .brandmark .cn{color:#f2e7d6}
+.dark .brandmark .en{color:var(--gold-hi)}
 
-/* Dawn gradient */
-body::before {
-  content: '';
-  position: fixed; inset: 0;
-  background:
-    radial-gradient(ellipse at 50% -10%, rgba(201,168,76,0.10) 0%, transparent 60%),
-    radial-gradient(ellipse at 50% 12%, rgba(201,168,76,0.04) 0%, transparent 45%);
-  pointer-events: none; z-index: 0;
-}
+/* ===== ONBOARDING ===== */
+#view-onboard{background:linear-gradient(180deg,#fbe6cf 0%,#f4d3c4 40%,#e6c6d4 100%);}
+.ob-sky{position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:360px;height:360px;pointer-events:none;z-index:0;
+  background:radial-gradient(circle at 50% 40%,rgba(255,236,196,.9),rgba(255,220,180,.25) 46%,transparent 70%);}
+.ob-in{position:relative;z-index:2;padding:8px 26px 40px;text-align:center}
+.ob-seal{margin:14px auto 20px;width:64px;height:64px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid var(--gold-line-2);font-family:var(--serif);font-weight:500;font-size:28px;color:var(--gold-deep);
+  background:radial-gradient(circle at 35% 30%,rgba(201,155,120,.22),transparent);box-shadow:0 0 26px -8px var(--gold-glow)}
+.ob-k{font-family:var(--lat);font-style:italic;font-size:13px;letter-spacing:.22em;color:var(--gold-deep)}
+.ob-in h1{font-family:var(--serif);font-weight:600;font-size:25px;color:var(--ink);margin-top:12px;letter-spacing:.05em;line-height:1.5}
+.ob-in .lead{font-size:13px;color:var(--ink-soft);margin-top:14px;line-height:1.9;letter-spacing:.02em}
+.ob-form{margin-top:26px;text-align:left}
+.ob-form .fld{margin-bottom:16px}
+.ob-form label{display:block;font-family:var(--serif);font-weight:500;font-size:13px;color:var(--ink-soft);letter-spacing:.08em;margin-bottom:8px}
+.ob-form .grid3{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:10px}
+.ob-form select,.ob-form input{width:100%;height:50px;border-radius:14px;border:1px solid var(--hair-2);background:var(--paper);
+  padding:0 14px;font-family:var(--sans);font-size:15px;color:var(--ink);letter-spacing:.02em;-webkit-appearance:none;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%23a07d38' stroke-width='1.6'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.ob-form .seg{display:flex;gap:10px}
+.ob-form .seg .opt{flex:1;height:50px;border-radius:14px;border:1px solid var(--hair-2);background:var(--paper);
+  display:grid;place-items:center;font-family:var(--serif);font-size:15px;color:var(--ink-mute);letter-spacing:.1em}
+.ob-form .seg .opt.on{border-color:var(--gold);background:rgba(201,155,120,.14);color:var(--gold-deep);box-shadow:inset 0 0 0 1px var(--gold-line-2)}
+.ob-go{margin-top:24px;height:56px;border-radius:16px;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+  font-family:var(--serif);font-weight:600;font-size:16px;letter-spacing:.14em;text-indent:.14em;color:#3a2a10}
+.ob-note{font-size:11px;color:var(--ink-mute);margin-top:14px;text-align:center;letter-spacing:.02em;line-height:1.7}
 
-.back-btn {
-  position: fixed; top: 16px; left: 16px; z-index: 99;
-  background: none; border: none;
-  font-family: 'Noto Serif SC', serif; font-size: 13px;
-  color: var(--gold); letter-spacing: 0.06em; cursor: pointer; padding: 4px 0;
-}
+/* ===== TODAY ===== */
+#view-today{background:linear-gradient(180deg,#fbe6cf 0%,#f7d9c0 26%,#f0c9c2 52%,#e4c3d0 76%,#dcc4d8 100%);padding-bottom:40px}
+#view-today .sky{position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:360px;height:360px;pointer-events:none;z-index:0;
+  background:radial-gradient(circle at 50% 40%,rgba(255,236,196,.9),rgba(255,220,180,.25) 46%,transparent 70%);}
+.today-head{padding:6px 26px 0;text-align:center;position:relative;z-index:2}
+.today-date{display:flex;align-items:center;justify-content:center;gap:12px;color:var(--ink-soft);font-size:12px;letter-spacing:.16em;flex-wrap:wrap}
+.today-date .sep{width:3px;height:3px;border-radius:50%;background:var(--gold);opacity:.6}
+.today-date .lunar{font-family:var(--serif);color:var(--ink);font-weight:500}
+.today-greet{font-family:var(--serif);font-weight:500;font-size:15px;color:var(--ink-soft);margin-top:14px;letter-spacing:.06em;line-height:1.7}
+.orb-wrap{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;margin-top:14px}
+.orb{width:216px;height:216px;border-radius:50%;position:relative;display:grid;place-items:center;
+  background:radial-gradient(circle at 38% 32%,rgba(255,251,240,.98) 0%,rgba(245,206,169,.9) 42%,rgba(226,169,180,.85) 74%,rgba(198,140,168,.82) 100%);
+  box-shadow:0 30px 60px -24px rgba(200,140,120,.6),inset 0 3px 14px rgba(255,255,255,.7),inset 0 -10px 30px rgba(180,110,120,.28);
+  animation:breathe 6s ease-in-out infinite;}
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
+.orb:before{content:"";position:absolute;inset:-14px;border-radius:50%;border:1px solid var(--gold-line);opacity:.7}
+.orb:after{content:"";position:absolute;inset:-26px;border-radius:50%;border:1px dashed rgba(160,125,56,.22)}
+.orb .score{font-family:var(--lat);font-weight:600;font-size:74px;line-height:.9;color:#7a5334;letter-spacing:-.01em;text-shadow:0 1px 0 rgba(255,255,255,.5)}
+.orb .of{font-family:var(--lat);font-size:16px;color:#a07a52;margin-top:2px;letter-spacing:.1em}
+.orb .mood{font-family:var(--serif);font-weight:600;font-size:16px;color:#6a4a30;letter-spacing:.3em;text-indent:.3em;margin-top:6px}
+.orb-cap{font-family:var(--lat);font-style:italic;font-size:12.5px;letter-spacing:.2em;color:var(--gold-deep);margin-top:18px;text-transform:uppercase}
+.dianbo{position:relative;z-index:2;margin:24px var(--gut) 0;text-align:center}
+.dianbo .q{font-family:var(--serif);font-weight:500;font-size:20px;line-height:1.75;color:var(--ink);letter-spacing:.03em}
+.dianbo .mark{font-family:var(--lat);font-size:44px;color:var(--gold);opacity:.4;line-height:0;display:block;height:14px}
+.tiles{position:relative;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:26px var(--gut) 0}
+.tile{background:var(--card);border:1px solid var(--hair);border-radius:16px;padding:16px 16px 15px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:var(--shadow-lift)}
+.tile .lab{font-family:var(--serif);font-weight:600;font-size:13px;letter-spacing:.14em;display:flex;align-items:center;gap:8px}
+.tile .lab .badge{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:14px;color:#fff}
+.tile.yi .lab .badge{background:linear-gradient(150deg,#8bbf9a,#5f9078)}
+.tile.ji .lab .badge{background:linear-gradient(150deg,#e3a08f,#c47a72)}
+.tile .items{margin-top:12px;display:flex;flex-direction:column;gap:8px}
+.tile .items div{font-size:13px;color:var(--ink-soft);letter-spacing:.02em;display:flex;align-items:flex-start;gap:8px}
+.tile .items div:before{content:"";width:4px;height:4px;border-radius:50%;background:var(--gold);flex-shrink:0;margin-top:7px}
+.luck{position:relative;z-index:2;margin:12px var(--gut) 0;display:flex;gap:12px}
+.luck .lk{flex:1;background:var(--card);border:1px solid var(--hair);border-radius:16px;padding:14px 10px;text-align:center;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.luck .lk .t{font-size:10px;letter-spacing:.12em;color:var(--ink-mute);text-transform:uppercase}
+.luck .lk .v{font-family:var(--serif);font-weight:600;font-size:15px;color:var(--ink);margin-top:8px;letter-spacing:.04em}
+.luck .lk .swatch{width:34px;height:34px;border-radius:50%;margin:8px auto 6px;border:2px solid rgba(255,255,255,.8);box-shadow:0 4px 10px -3px rgba(0,0,0,.25)}
+.timenav{position:relative;z-index:2;display:flex;gap:8px;margin:22px var(--gut) 0}
+.timenav .tn{flex:1;border-radius:13px;padding:11px 4px;text-align:center;background:var(--card-2);border:1px solid var(--hair);
+  font-size:12px;letter-spacing:.06em;color:var(--ink-mute);font-family:var(--serif);position:relative}
+.timenav .tn.on{background:rgba(201,155,120,.16);border-color:var(--gold);color:var(--gold-deep);font-weight:600}
+.timenav .tn .lk{position:absolute;top:5px;right:7px;font-size:9px;opacity:.7}
+.today-cta{position:relative;z-index:2;padding:24px var(--gut) 6px}
+.today-cta .draw{height:58px;border-radius:16px;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+  font-family:var(--serif);font-weight:600;font-size:16px;letter-spacing:.14em;text-indent:.14em;color:#3a2a10}
+.today-cta .draw .sub{font-family:var(--sans);font-weight:400;font-size:11px;opacity:.6;letter-spacing:.06em;text-indent:0}
+.today-cta .share{margin-top:12px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:9px;width:100%;
+  font-size:13px;letter-spacing:.1em;color:var(--ink-soft);background:var(--card-2);border:1px solid var(--hair-2)}
 
-/* ── Date hero ── */
-.date-hero {
-  position: relative; z-index: 1;
-  width: 100%;
-  padding: 44px 20px 24px;
-  text-align: center;
-}
+/* ===== DRAW / QIAN ===== */
+#view-draw{background:linear-gradient(180deg,#3a2f4a 0%,#4a3a5e 40%,#5f4a62 72%,#7a5560 100%);color:#f2e7d6;padding-bottom:40px}
+#view-draw .stars{position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.7;
+  background-image:radial-gradient(1.4px 1.4px at 20% 18%,rgba(255,244,220,.9),transparent),radial-gradient(1.2px 1.2px at 68% 12%,rgba(255,244,220,.7),transparent),radial-gradient(1.6px 1.6px at 82% 30%,rgba(255,244,220,.8),transparent),radial-gradient(1.1px 1.1px at 38% 34%,rgba(255,244,220,.6),transparent),radial-gradient(1.3px 1.3px at 12% 46%,rgba(255,244,220,.5),transparent),radial-gradient(1.2px 1.2px at 90% 54%,rgba(255,244,220,.6),transparent);}
+.draw-head{position:relative;z-index:2;padding:12px 30px 0;text-align:center}
+.draw-head .k{font-family:var(--lat);font-style:italic;font-size:13px;letter-spacing:.22em;color:var(--gold-hi)}
+.draw-head h2{font-family:var(--serif);font-weight:600;font-size:var(--t-h2);margin-top:10px;letter-spacing:.16em;text-indent:.16em;color:#f7efe0}
+.draw-head p{font-size:12.5px;color:rgba(242,231,214,.6);margin-top:12px;line-height:1.9;letter-spacing:.04em}
+.qian{position:relative;z-index:2;margin:26px auto 0;width:262px}
+.qian .strip{position:relative;border-radius:16px 16px 20px 20px;padding:26px 22px 30px;text-align:center;overflow:hidden;
+  background:linear-gradient(180deg,#f7efe0,#efe1c9);box-shadow:0 30px 60px -24px rgba(0,0,0,.6),inset 0 2px 0 rgba(255,255,255,.6);border:1px solid rgba(160,125,56,.4)}
+.qian .strip:before{content:"";position:absolute;left:0;right:0;top:0;height:8px;background:linear-gradient(180deg,rgba(160,125,56,.18),transparent)}
+.qian .cap-seal{width:40px;height:40px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;
+  border:1px solid var(--gold-line-2);font-family:var(--serif);font-weight:600;font-size:18px;color:var(--gold-deep);background:radial-gradient(circle at 36% 30%,rgba(200,163,90,.2),transparent)}
+.qian .title{font-family:var(--serif);font-weight:700;font-size:22px;color:var(--ink);margin-top:6px;letter-spacing:.08em}
+.qian .verse{font-family:var(--serif);font-weight:500;font-size:16px;line-height:2;color:var(--ink);margin-top:16px;letter-spacing:.05em}
+.qian-read{position:relative;z-index:2;margin:24px var(--gut) 0;background:rgba(255,251,244,.1);border:1px solid rgba(231,211,160,.24);border-radius:16px;padding:20px}
+.qian-read .qh{font-family:var(--serif);font-weight:600;font-size:14px;color:var(--gold-hi);letter-spacing:.14em}
+.qian-read p{font-size:13px;line-height:2;color:rgba(242,231,214,.86);margin-top:10px;letter-spacing:.02em}
+.draw-actions{position:relative;z-index:2;padding:22px var(--gut) 6px}
+.draw-actions .save{height:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;
+  font-family:var(--serif);font-weight:600;font-size:15px;letter-spacing:.12em;color:#3a2a10}
+.draw-actions .again{margin-top:14px;text-align:center;font-size:12px;color:rgba(242,231,214,.55);letter-spacing:.06em}
+.draw-actions .again b{color:var(--gold-hi);font-weight:500}
 
-.date-en {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 10px; font-style: italic;
-  letter-spacing: 0.35em; color: rgba(201,168,76,0.6);
-  margin-bottom: 6px;
-}
+/* ===== SHARE CARD ===== */
+#view-share{background:linear-gradient(180deg,#efe6da,#e6dccb);flex-direction:column;align-items:center;padding-bottom:40px}
+#view-share.active{display:flex}
+.share-head{padding:14px 26px 4px;text-align:center}
+.share-head h2{font-family:var(--serif);font-weight:600;font-size:19px;color:var(--ink);letter-spacing:.1em}
+.share-head p{font-size:12px;color:var(--ink-mute);margin-top:8px;letter-spacing:.04em}
+.daycard{position:relative;margin:18px auto 0;width:308px;border-radius:22px;overflow:hidden;
+  box-shadow:0 40px 80px -34px rgba(60,40,60,.7),0 0 0 1px rgba(160,125,56,.3);
+  background:linear-gradient(180deg,#4a3a5e 0%,#6a4f66 46%,#8a6060 74%,#b98a6e 100%)}
+.daycard .grain{opacity:.28}
+.daycard .dc-in{position:relative;z-index:2;padding:26px 24px 22px;text-align:center;color:#f7efe0}
+.daycard .dc-top{display:flex;align-items:center;justify-content:space-between}
+.daycard .dc-top .bm{font-family:var(--serif);font-weight:500;font-size:14px;letter-spacing:.3em;text-indent:.3em;color:#f7efe0}
+.daycard .dc-top .en{font-family:var(--lat);font-size:9px;letter-spacing:.4em;color:var(--gold-hi);text-transform:uppercase}
+.daycard .dc-date{font-family:var(--lat);font-size:12px;letter-spacing:.14em;color:rgba(247,239,224,.7);text-align:right}
+.daycard .dc-orb{width:120px;height:120px;border-radius:50%;margin:20px auto 0;display:grid;place-items:center;
+  background:radial-gradient(circle at 38% 32%,rgba(255,248,235,.95),rgba(245,206,169,.9) 42%,rgba(226,169,180,.85) 78%,rgba(198,140,168,.8));
+  box-shadow:inset 0 3px 12px rgba(255,255,255,.6),inset 0 -8px 20px rgba(150,90,110,.4),0 16px 36px -14px rgba(0,0,0,.5)}
+.daycard .dc-orb .s{font-family:var(--lat);font-weight:600;font-size:46px;color:#7a5334;line-height:.9}
+.daycard .dc-orb .m{font-family:var(--serif);font-weight:600;font-size:12px;color:#6a4a30;letter-spacing:.2em;margin-top:2px}
+.daycard .dc-q{font-family:var(--serif);font-weight:500;font-size:16px;line-height:1.75;color:#fbf3e6;margin-top:22px;letter-spacing:.03em;padding:0 6px}
+.daycard .dc-hr{width:30px;height:1px;background:rgba(231,211,160,.5);margin:18px auto}
+.daycard .dc-yiji{display:flex;justify-content:center;gap:22px;font-size:12px;letter-spacing:.06em;flex-wrap:wrap}
+.daycard .dc-yiji .g{font-family:var(--serif);font-weight:700;font-size:15px;margin-right:6px}
+.daycard .dc-yiji .yi .g{color:#a8dcb6}
+.daycard .dc-yiji .ji .g{color:#f2b6a6}
+.daycard .dc-luck{display:flex;justify-content:center;align-items:center;gap:14px;margin-top:16px;font-size:11px;color:rgba(247,239,224,.82);letter-spacing:.04em;flex-wrap:wrap}
+.daycard .dc-luck .sw{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,.7);display:inline-block;vertical-align:middle;margin-right:6px}
+.daycard .dc-luck .d{width:3px;height:3px;border-radius:50%;background:var(--gold-hi);opacity:.6}
+.daycard .dc-foot{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:22px;padding-top:16px;border-top:1px solid rgba(247,239,224,.16);font-size:9.5px;letter-spacing:.14em;color:rgba(247,239,224,.6)}
+.daycard .dc-foot .seal{width:22px;height:22px;border-radius:50%;border:1px solid rgba(231,211,160,.5);display:grid;place-items:center;font-family:var(--serif);font-size:11px;color:var(--gold-hi)}
+.daycard .dc-qr{width:34px;height:34px;border-radius:6px;background:
+  repeating-linear-gradient(0deg,#f7efe0 0 3px,transparent 3px 6px),repeating-linear-gradient(90deg,#f7efe0 0 3px,transparent 3px 6px);
+  opacity:.75;position:absolute;right:20px;bottom:16px;z-index:3;border:2px solid rgba(247,239,224,.4)}
+.share-row{display:flex;gap:12px;margin:22px var(--gut) 0;width:calc(100% - 44px)}
+.share-row .sb{flex:1;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:13px;letter-spacing:.06em;color:var(--ink);background:var(--paper);border:1px solid var(--hair-2)}
+.share-row .sb.main{color:#3a2a10;border:0}
+.share-note{font-size:11px;color:var(--ink-mute);letter-spacing:.04em;margin:16px var(--gut) 0;text-align:center;line-height:1.7}
 
-.date-zh {
-  font-size: 15px; letter-spacing: 0.22em;
-  color: var(--ink); margin-bottom: 4px;
-}
+/* ===== SUBSCRIPTION ===== */
+#view-sub{background:linear-gradient(180deg,#3a2f4a 0%,#4a3a5e 44%,#6a4f60 78%,#8a6560 100%);color:#f2e7d6;padding-bottom:40px}
+#view-sub .stars{position:absolute;inset:0;pointer-events:none;z-index:0;opacity:.6;
+  background-image:radial-gradient(1.4px 1.4px at 22% 14%,rgba(255,244,220,.9),transparent),radial-gradient(1.2px 1.2px at 72% 10%,rgba(255,244,220,.7),transparent),radial-gradient(1.5px 1.5px at 86% 26%,rgba(255,244,220,.8),transparent),radial-gradient(1.1px 1.1px at 34% 30%,rgba(255,244,220,.6),transparent);}
+.sub-hero{position:relative;z-index:2;padding:22px 30px 0;text-align:center}
+.sub-hero .seal{margin:0 auto 20px;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;
+  border:1px solid var(--gold-line-2);font-family:var(--serif);font-weight:500;font-size:26px;color:var(--gold-hi);
+  background:radial-gradient(circle at 35% 30%,rgba(201,155,120,.3),transparent);box-shadow:0 0 26px -8px var(--gold-glow)}
+.sub-hero .k{font-family:var(--lat);font-style:italic;font-size:13px;letter-spacing:.2em;color:var(--gold-hi)}
+.sub-hero h2{font-family:var(--serif);font-weight:600;font-size:var(--t-h2);margin-top:12px;letter-spacing:.05em;line-height:1.5;color:#f9f1e3}
+.sub-hero p{font-size:13px;color:rgba(242,231,214,.7);margin-top:14px;line-height:1.9}
+.sub-list{position:relative;z-index:2;margin:24px var(--gut) 0;background:rgba(255,251,244,.07);border:1px solid rgba(231,211,160,.22);border-radius:18px;padding:6px 0}
+.sub-list .row{display:flex;align-items:center;gap:14px;padding:15px 20px;border-bottom:1px solid rgba(231,211,160,.14);min-height:54px}
+.sub-list .row:last-child{border-bottom:0}
+.sub-list .row .ck{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#3a2a10;font-size:11px;flex-shrink:0}
+.sub-list .row .t b{font-size:14px;color:#f4ead9;font-weight:500;letter-spacing:.02em}
+.sub-list .row .t span{display:block;font-size:11.5px;color:rgba(242,231,214,.5);margin-top:3px;letter-spacing:.02em;line-height:1.5}
+.plans{position:relative;z-index:2;display:flex;gap:12px;margin:22px var(--gut) 0}
+.plans .pl{flex:1;border-radius:16px;padding:18px 14px;text-align:center;background:rgba(255,251,244,.06);border:1px solid rgba(231,211,160,.24);position:relative}
+.plans .pl.best{border-color:var(--gold);background:rgba(201,155,120,.14);box-shadow:0 0 0 1px var(--gold-line-2)}
+.plans .pl .tag{position:absolute;top:-10px;left:50%;transform:translateX(-50%);font-family:var(--serif);font-size:10px;letter-spacing:.14em;color:#3a2a10;border-radius:999px;padding:4px 12px;white-space:nowrap}
+.plans .pl .name{font-family:var(--serif);font-weight:600;font-size:13px;color:#f4ead9;letter-spacing:.08em}
+.plans .pl .amt{font-family:var(--lat);font-weight:600;font-size:34px;color:var(--gold-hi);margin-top:8px;line-height:1}
+.plans .pl .amt sup{font-size:15px;top:-10px;position:relative}
+.plans .pl .per{font-size:11px;color:rgba(242,231,214,.55);margin-top:4px;letter-spacing:.04em}
+.plans .pl .eq{font-size:10.5px;color:rgba(242,231,214,.4);margin-top:8px;letter-spacing:.02em}
+.sub-cta{position:relative;z-index:2;padding:20px var(--gut) 4px}
+.sub-cta .go{height:58px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;width:100%;
+  font-family:var(--serif);font-weight:600;font-size:16px;letter-spacing:.1em;color:#3a2a10}
+.sub-cta .go small{font-family:var(--sans);font-weight:400;font-size:11px;opacity:.62;letter-spacing:.06em}
+.sub-trust{position:relative;z-index:2;display:flex;justify-content:center;align-items:center;gap:14px;margin:18px var(--gut) 0;color:rgba(242,231,214,.55);font-size:10.5px;letter-spacing:.04em}
+.sub-trust span{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.sub-trust .d{width:3px;height:3px;border-radius:50%;background:var(--gold-hi);opacity:.6}
 
-.date-ganzhi {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 22px; letter-spacing: 0.18em;
-  color: var(--gold); font-weight: 400;
-  margin-bottom: 12px;
-}
-
-.gold-line {
-  width: 50px; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  margin: 0 auto;
-}
-
-/* ── Birth input form ── */
-.input-wrap {
-  position: relative; z-index: 1;
-  margin: 0 16px 16px;
-  background: var(--bg-card);
-  border: 1px solid rgba(201,168,76,0.12);
-  border-radius: 10px;
-  padding: 18px 16px;
-}
-.field-group {
-  background: rgba(201,168,76,0.04);
-  border: 1px solid rgba(201,168,76,0.12);
-  border-radius: 12px; overflow: hidden; margin-bottom: 10px;
-}
-.field-row {
-  display: flex; align-items: center;
-  padding: 0 14px;
-  border-bottom: 1px solid rgba(201,168,76,0.08);
-}
-.field-row:last-child { border-bottom: none; }
-.field-label {
-  font-size: 11px; color: var(--ink-mid);
-  letter-spacing: 0.06em; min-width: 64px; flex-shrink: 0;
-}
-.field-select {
-  flex: 1; background: none; border: none; outline: none;
-  font-family: 'Noto Serif SC', serif; font-size: 13px;
-  color: var(--ink); padding: 12px 8px;
-  letter-spacing: 0.04em; -webkit-appearance: none;
-}
-.field-select option { background: var(--bg-card); color: var(--ink); }
-.gender-row {
-  display: flex; gap: 8px; margin-bottom: 12px;
-}
-.gender-opt {
-  flex: 1; background: rgba(201,168,76,0.04);
-  border: 1px solid rgba(201,168,76,0.12);
-  border-radius: 10px; padding: 10px 0;
-  text-align: center; font-size: 13px;
-  color: var(--ink-mid); letter-spacing: 0.12em;
-  cursor: pointer; transition: all 0.2s;
-}
-.gender-opt.selected { border-color: var(--gold); background: rgba(201,168,76,0.12); color: var(--gold-deep); }
-
-/* ── Loading ── */
-.loading-screen {
-  display: none; position: relative; z-index: 1;
-  flex-direction: column; align-items: center;
-  padding: 60px 20px; gap: 16px;
-}
-.loading-screen.show { display: flex; }
-.load-glyph {
-  font-size: 56px; color: rgba(201,168,76,0.3);
-  font-weight: 300; animation: load-breathe 2s ease-in-out infinite;
-}
-
-.load-text {
-  font-family: 'Cormorant Garamond', serif;
-  font-style: italic; font-size: 14px;
-  color: rgba(201,168,76,0.5); letter-spacing: 0.18em;
-}
-.load-steps { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
-.load-step {
-  font-size: 10px; color: rgba(80,70,55,0.5);
-  letter-spacing: 0.08em; animation: step-fade 0.5s ease-out both;
-}
-@keyframes step-fade {
-  from{opacity:0;transform:translateY(4px)}
-  to{opacity:1;transform:none}
-}
-
-/* ── Element energy bar ── */
-.energy-wrap {
-  position: relative; z-index: 1;
-  margin: 0 16px 12px;
-  background: var(--bg-card);
-  border: 1px solid rgba(201,168,76,0.12);
-  border-radius: 10px;
-  padding: 18px 16px;
-}
-
-.energy-title {
-  font-size: 10px; letter-spacing: 0.22em;
-  color: var(--gold); margin-bottom: 14px;
-}
-
-.energy-rows { display: flex; flex-direction: column; gap: 9px; }
-
-.e-row { display: flex; align-items: center; gap: 10px; }
-
-.e-label {
-  font-size: 12px; width: 14px;
-  text-align: center; flex-shrink: 0;
-  color: var(--ink-mid);
-}
-
-.e-bar-bg {
-  flex: 1; height: 5px;
-  background: rgba(201,168,76,0.1); border-radius: 3px;
-  overflow: hidden;
-}
-
-.e-bar-fill {
-  height: 100%; border-radius: 3px;
-  background: var(--jade-main);
-  transition: width 0.8s ease;
-}
-.e-bar-fill.w { background: linear-gradient(90deg, #4a9fd4, #7ac4e8); }
-.e-bar-fill.f { background: linear-gradient(90deg, #e05a30, #f08060); }
-.e-bar-fill.e { background: linear-gradient(90deg, #c9a84c, #e8d08a); }
-.e-bar-fill.m { background: linear-gradient(90deg, #5bbfa0, #8dd9bf); }
-.e-bar-fill.me { background: linear-gradient(90deg, #888, #bbb); }
-
-.e-pct {
-  font-size: 10px; width: 28px;
-  text-align: right; color: var(--ink-light);
-  flex-shrink: 0;
-}
-
-/* ── Today cards ── */
-.cards-wrap {
-  position: relative; z-index: 1;
-  display: grid; grid-template-columns: 1fr 1fr;
-  gap: 8px; padding: 0 16px 12px;
-}
-
-.today-card {
-  background: var(--bg-card);
-  border: 1px solid rgba(201,168,76,0.12);
-  border-radius: 8px;
-  padding: 14px 12px;
-  display: flex; flex-direction: column; gap: 6px;
-}
-
-.tc-label {
-  font-size: 9px; letter-spacing: 0.22em;
-  color: var(--gold); opacity: 0.75;
-}
-
-.tc-value {
-  font-size: 16px; font-weight: 400;
-  letter-spacing: 0.08em; color: var(--ink);
-}
-
-.tc-sub {
-  font-size: 10px; color: var(--ink-light);
-  letter-spacing: 0.04em; line-height: 1.5;
-}
-
-/* Color swatch */
-.color-swatch {
-  width: 28px; height: 28px; border-radius: 50%;
-  margin-bottom: 2px;
-}
-
-/* ── Affirmation ── */
-.affirmation-wrap {
-  position: relative; z-index: 1;
-  margin: 0 16px 12px;
-  background: linear-gradient(135deg, rgba(201,168,76,0.06) 0%, rgba(91,191,160,0.04) 100%);
-  border: 1px solid rgba(201,168,76,0.2);
-  border-radius: 10px;
-  padding: 20px 18px;
-}
-
-.aff-label {
-  font-size: 9px; letter-spacing: 0.3em;
-  color: rgba(201,168,76,0.6); margin-bottom: 10px;
-}
-
-.aff-text {
-  font-size: 14px; line-height: 2;
-  color: var(--ink);
-  letter-spacing: 0.08em;
-  font-weight: 300;
-}
-
-.aff-text em {
-  font-style: normal;
-  color: var(--jade-deep);
-}
-
-/* ── Subscribe CTA ── */
-.sub-wrap {
-  position: relative; z-index: 1;
-  margin: 0 16px;
-  background: var(--bg-card);
-  border: 1px solid rgba(201,168,76,0.12);
-  border-radius: 10px;
-  padding: 18px 16px;
-}
-
-.sub-head {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 10px;
-}
-
-.sub-title {
-  font-size: 14px; letter-spacing: 0.08em; color: var(--ink);
-}
-
-.sub-price {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 20px; color: var(--gold);
-}
-.sub-price .unit { font-family: 'Noto Serif SC', serif; font-size: 10px; }
-.sub-price .per  { font-size: 10px; color: var(--ink-light); }
-
-.sub-perks {
-  display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px;
-}
-
-.sub-perk {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 11px; color: var(--ink-mid); letter-spacing: 0.04em;
-}
-
-.perk-dot {
-  width: 5px; height: 5px;
-  border-radius: 50%; background: var(--jade-main); flex-shrink: 0;
-}
-
-.btn-gold {
-  width: 100%; padding: 14px 0;
-  background: linear-gradient(135deg, var(--gold-deep), var(--gold), var(--gold-light), var(--gold));
-  border: none; border-radius: 14px;
-  color: rgba(26,26,24,0.95);
-  font-family: 'Noto Serif SC', serif;
-  font-size: 14px; font-weight: 500; letter-spacing: 0.2em;
-  cursor: pointer;
-  box-shadow: 0 4px 16px rgba(201,168,76,0.3);
-  transition: all 0.25s;
-}
-.btn-gold:hover { transform: translateY(-1px); box-shadow: 0 6px 24px rgba(201,168,76,0.48); }
-.btn-gold:active { transform: scale(0.97); }
-
-.preview-note {
-  text-align: center; font-size: 10px;
-  color: var(--ink-light); letter-spacing: 0.08em;
-  margin-top: 10px;
-}
-
-/* ── Result fade ── */
-@keyframes fadeUp {
-  from{opacity:0;transform:translateY(12px)}
-  to{opacity:1;transform:none}
-}
-#resultArea { animation: fadeUp 0.6s ease both; }
-
-/* ✦ 升级动画层 ✦ */
-
-/* 晨光氛围加强 */
-body::before {
-  background:
-    radial-gradient(ellipse at 50% -10%, rgba(201,168,76,0.15) 0%, transparent 60%),
-    radial-gradient(ellipse at 50% 12%, rgba(201,168,76,0.08) 0%, transparent 45%),
-    radial-gradient(ellipse at 30% 30%, rgba(91,191,160,0.05) 0%, transparent 40%) !important;
-}
-
-/* 金色光泽动画 */
-.gold-shimmer{
-  background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a,#c9a84c,#8a6420) !important;
-  background-size:300% auto !important;
-  animation:gold-shimmer 3s linear infinite !important;
-}
-.shimmer-text{
-  background:linear-gradient(90deg,#8a6420,#c9a84c,#e8d08a,#c9a84c,#8a6420);
-  background-size:300% auto;
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  background-clip:text;
-  animation:gold-shimmer 3s linear infinite;
-}
-.date-ganzhi{background-size:300% auto;animation:gold-shimmer 4s linear infinite}
-
-/* 玻璃态 */
-.glass-card{
-  background:rgba(23,14,6,0.6) !important;
-  backdrop-filter:blur(12px) !important;
-  -webkit-backdrop-filter:blur(12px) !important;
-  border:1px solid rgba(201,168,76,0.15) !important;
-  box-shadow:0 8px 32px rgba(0,0,0,0.3) !important;
-}
-
-/* 通用入场动画 */
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-.page-enter-d1{animation-delay:.1s}.page-enter-d2{animation-delay:.2s}
-.page-enter-d3{animation-delay:.3s}.page-enter-d4{animation-delay:.4s}
-.page-enter-d5{animation-delay:.5s}.page-enter-d6{animation-delay:.6s}
-
-/* 悬浮增强 */
-.energy-wrap,.input-wrap,.sub-wrap,.today-card,.affirmation-wrap{transition:transform .3s ease,box-shadow .3s ease,border-color .3s ease}
-.energy-wrap:hover,.input-wrap:hover,.sub-wrap:hover,.today-card:hover,.affirmation-wrap:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(0,0,0,0.3);border-color:rgba(201,168,76,0.25)}
-
-/* 星尘背景 */
-.stardust span{position:absolute;width:3px;height:3px;background:rgba(201,168,76,0.6);border-radius:50%;animation:twinkle 3s ease-in-out infinite;opacity:0;transition:opacity .5s}
-
-@keyframes load-breathe{0%,100%{opacity:0.5;transform:scale(0.97)}50%{opacity:1;transform:scale(1)}}
-@keyframes twinkle{0%,100%{opacity:0.3}50%{opacity:1}}
-@keyframes gold-shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
+/* ===== LOADING / ERROR / TOAST ===== */
+.loading{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:120px 30px;text-align:center}
+.loading .spin{width:44px;height:44px;border-radius:50%;border:2px solid var(--gold-line);border-top-color:var(--gold);animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading .msg{font-family:var(--serif);font-size:14px;color:var(--ink-soft);margin-top:20px;letter-spacing:.1em}
+.errbox{position:relative;z-index:5;margin:40px var(--gut);background:var(--card);border:1px solid var(--hair-2);border-radius:16px;padding:28px 22px;text-align:center;box-shadow:var(--shadow-lift)}
+.errbox .ei{font-size:30px}
+.errbox h3{font-family:var(--serif);font-weight:600;font-size:16px;color:var(--ink);margin-top:12px;letter-spacing:.06em}
+.errbox p{font-size:12.5px;color:var(--ink-mute);margin-top:10px;line-height:1.8}
+.errbox .retry{margin-top:20px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-weight:600;font-size:14px;letter-spacing:.1em;color:#3a2a10}
+#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:340px;width:88%;padding:12px 16px;border-radius:10px;font-family:var(--serif);font-size:12.5px;letter-spacing:.06em;text-align:center;opacity:0;pointer-events:none;transition:opacity .3s}
+#toast.show{opacity:1}
+[hidden]{display:none!important}
 </style>
-<link rel="manifest" href="/manifest.json">
-<link rel="stylesheet" href="/assets/css/common.css">
 </head>
 <body>
-<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题" style="z-index:999">🌙</button>
 
-<div class="stardust" id="stardust"></div>
-
-<button class="back-btn" onclick="history.back()">‹ 返回</button>
-
-<div class="date-hero page-enter page-enter-d1">
-  <div class="date-en">TODAY · HEAVENLY GUIDANCE</div>
-  <div class="date-zh" id="dateZh"></div>
-  <div class="date-ganzhi" id="dateGanzhi"></div>
-  <div class="gold-line"></div>
-</div>
-
-<!-- Input form -->
-<div class="input-wrap" id="inputWrap">
-  <div class="energy-title" style="margin-bottom:10px">输入生辰 · 获取每日天机</div>
-  <div class="field-group">
-    <div class="field-row">
-      <span class="field-label">出生年</span>
-      <select class="field-select" id="year"></select>
-    </div>
-    <div class="field-row">
-      <span class="field-label">月</span>
-      <select class="field-select" id="month"></select>
-    </div>
-    <div class="field-row">
-      <span class="field-label">日</span>
-      <select class="field-select" id="day"></select>
-    </div>
-    <div class="field-row">
-      <span class="field-label">时辰</span>
-      <select class="field-select" id="hour">
-        <option value="">不详</option>
-        <option value="0">子时 (23-01)</option><option value="1">丑时 (01-03)</option>
-        <option value="3">寅时 (03-05)</option><option value="5">卯时 (05-07)</option>
-        <option value="7">辰时 (07-09)</option><option value="9">巳时 (09-11)</option>
-        <option value="11">午时 (11-13)</option><option value="13">未时 (13-15)</option>
-        <option value="15">申时 (15-17)</option><option value="17">酉时 (17-19)</option>
-        <option value="19">戌时 (19-21)</option><option value="21">亥时 (21-23)</option>
-      </select>
+<!-- ===== ONBOARDING ===== -->
+<section id="view-onboard" class="view">
+  <div class="ob-sky"></div>
+  <div class="topnav">
+    <div class="back" style="opacity:0">‹</div>
+    <div class="brandmark"><div class="cn">善缘</div><div class="en">Runae</div></div>
+    <div class="moon"><i><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="4.5" fill="#c8a35a"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M13 3l-1.4 1.4M4.4 11.6 3 13" stroke="#c8a35a" stroke-width="1.2" stroke-linecap="round"/></svg></i></div>
+  </div>
+  <div class="ob-in">
+    <div class="ob-seal">缘</div>
+    <div class="ob-k" data-i="ob_k">Your daily fortune</div>
+    <h1 data-i="ob_h1">先留下你的生辰<br>此后每日为你排一次运</h1>
+    <p class="lead" data-i="ob_lead">运势因你八字命盘 × 当天流日而生，<br>因人因日不同。只需填一次，之后每天打开即得。</p>
+    <div class="ob-form">
+      <div class="fld">
+        <label data-i="ob_birth">出生日期（阳历）</label>
+        <div class="grid3">
+          <select id="obYear"></select>
+          <select id="obMonth"></select>
+          <select id="obDay"></select>
+        </div>
+      </div>
+      <div class="fld">
+        <label data-i="ob_hour">出生时辰</label>
+        <select id="obHour"></select>
+      </div>
+      <div class="fld">
+        <label data-i="ob_gender">性别</label>
+        <div class="seg" id="obGender">
+          <div class="opt on" data-v="female" data-i="ob_female">女</div>
+          <div class="opt" data-v="male" data-i="ob_male">男</div>
+        </div>
+      </div>
+      <button class="ob-go gilt" id="obGo" data-i="ob_go">开启今日运势</button>
+      <div class="ob-note" data-i="ob_note">生辰仅存于你本机，用于为你排盘 · 可随时在顶部菜单修改</div>
     </div>
   </div>
-  <div class="gender-row">
-    <div class="gender-opt selected" onclick="selectGender(this,'male')">男命</div>
-    <div class="gender-opt" onclick="selectGender(this,'female')">女命</div>
+  <div class="disc" data-i="disc">AI 生成内容 · 仅供娱乐参考，不构成医疗、法律或财务建议。</div>
+</section>
+
+<!-- ===== TODAY ===== -->
+<section id="view-today" class="view">
+  <div class="sky"></div>
+  <div class="topnav">
+    <button class="back" onclick="go('onboard')" title="修改生辰">☰</button>
+    <div class="brandmark"><div class="cn">善缘</div><div class="en">Runae</div></div>
+    <div class="moon"><i><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="4.5" fill="#c8a35a"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M13 3l-1.4 1.4M4.4 11.6 3 13" stroke="#c8a35a" stroke-width="1.2" stroke-linecap="round"/></svg></i></div>
   </div>
-  <button class="btn-gold" onclick="getDailyReading()" id="genBtn">获取今日天机</button>
-  <p class="preview-note" style="margin-top:8px">根据你的真实八字生成专属每日运势</p>
-</div>
 
-<!-- Loading -->
-<div class="loading-screen" id="loadingScreen">
-  <div class="load-glyph">天</div>
-  <div class="load-text">天机推演中…</div>
-  <div class="load-steps" id="loadSteps"></div>
-</div>
+  <div class="loading" id="todayLoading">
+    <div class="spin"></div>
+    <div class="msg" data-i="loading">正为你推演今日流运…</div>
+  </div>
 
-<!-- Results (hidden initially) -->
-<div id="resultArea" style="display:none">
+  <div class="errbox" id="todayError" hidden>
+    <div class="ei">☁︎</div>
+    <h3 data-i="err_h">今日运势暂未算出</h3>
+    <p data-i="err_p">星象连接似有薄云。请稍候片刻，再试一次。</p>
+    <button class="retry gilt" onclick="loadToday()" data-i="err_retry">重新推演</button>
+  </div>
 
-  <div class="energy-wrap">
-    <div class="energy-title">今日五行能量</div>
-    <div class="energy-rows" id="energyRows">
-      <div class="e-row"><div class="e-label">木</div><div class="e-bar-bg"><div class="e-bar-fill m" style="width:0%"></div></div><div class="e-pct" id="pctWood">0%</div></div>
-      <div class="e-row"><div class="e-label">火</div><div class="e-bar-bg"><div class="e-bar-fill f" style="width:0%"></div></div><div class="e-pct" id="pctFire">0%</div></div>
-      <div class="e-row"><div class="e-label">土</div><div class="e-bar-bg"><div class="e-bar-fill e" style="width:0%"></div></div><div class="e-pct" id="pctEarth">0%</div></div>
-      <div class="e-row"><div class="e-label">金</div><div class="e-bar-bg"><div class="e-bar-fill me" style="width:0%"></div></div><div class="e-pct" id="pctMetal">0%</div></div>
-      <div class="e-row"><div class="e-label">水</div><div class="e-bar-bg"><div class="e-bar-fill w" style="width:0%"></div></div><div class="e-pct" id="pctWater">0%</div></div>
+  <div id="todayContent" hidden>
+    <div class="today-head">
+      <div class="today-date">
+        <span id="tdGreg">—</span><span class="sep"></span><span class="lunar" id="tdLunar">—</span>
+      </div>
+      <div class="today-greet" id="tdGreet">—</div>
     </div>
-  </div>
 
-  <div class="cards-wrap">
-    <div class="today-card">
-      <div class="tc-label">幸运色</div>
-      <div class="color-swatch" id="luckyColorSwatch" style="background:#5bbfa0"></div>
-      <div class="tc-value" id="luckyColorName">—</div>
-      <div class="tc-sub" id="luckyColorHint">—</div>
+    <div class="orb-wrap">
+      <div class="orb">
+        <div class="score" id="tdScore">—</div>
+        <div class="of">/ 100</div>
+        <div class="mood" id="tdMood">—</div>
+      </div>
+      <div class="orb-cap" id="tdCap">Today</div>
     </div>
-    <div class="today-card">
-      <div class="tc-label">幸运数字</div>
-      <div class="tc-value" style="font-size:32px;color:var(--gold);font-family:'Cormorant Garamond',serif" id="luckyNumber">—</div>
-      <div class="tc-sub" id="luckyNumberHint">—</div>
+
+    <div class="dianbo">
+      <span class="mark">&ldquo;</span>
+      <div class="q" id="tdInsight">—</div>
     </div>
-    <div class="today-card">
-      <div class="tc-label">宜</div>
-      <div class="tc-value" style="font-size:13px" id="yiText">—</div>
-      <div class="tc-sub" id="yiHint">—</div>
-    </div>
-    <div class="today-card">
-      <div class="tc-label">忌</div>
-      <div class="tc-value" style="font-size:13px" id="jiText">—</div>
-      <div class="tc-sub" id="jiHint">—</div>
-    </div>
-  </div>
 
-  <div class="affirmation-wrap">
-    <div class="aff-label">今日命盘 · 专属指引</div>
-    <div class="aff-text" id="affirmationText"></div>
-  </div>
-
-  <!-- 一键分享卡 — Co-Star 抄法：让 AI 输出本身成为可截图内容 -->
-  <div id="shareCardWrap" style="display:none;margin:20px 0 8px;text-align:center">
-    <canvas id="dailyShareCanvas" width="1080" height="1080" style="display:none"></canvas>
-    <img id="dailyShareImg" style="width:100%;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.4)" alt="今日天机分享图">
-    <div style="display:flex;gap:8px;margin-top:10px;justify-content:center">
-      <button onclick="downloadDailyCard()" style="flex:1;max-width:160px;padding:11px 0;background:linear-gradient(135deg,#c9a84c,#a8823a);border:none;border-radius:12px;color:#fff;font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:.06em">⬇ 保存图片</button>
-      <button onclick="shareDailyCard()" style="flex:1;max-width:160px;padding:11px 0;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.3);border-radius:12px;color:#c9a84c;font-size:13px;font-family:inherit;cursor:pointer;letter-spacing:.06em">↗ 分享</button>
-    </div>
-    <div style="font-size:10px;color:rgba(201,168,76,0.4);margin-top:6px;letter-spacing:.05em">长按图片可保存 · 发朋友圈/小红书</div>
-  </div>
-
-  <!-- 每日回来钩子 -->
-  <div id="dailyReturnHook" style="text-align:center;padding:12px 20px 4px;position:relative;z-index:1">
-    <div style="display:inline-block;padding:10px 20px;background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.15);border-radius:20px;font-size:11px;color:rgba(201,168,76,0.7);letter-spacing:0.12em">
-      明日运势明天揭晓 · 收藏此页每日来看
-    </div>
-  </div>
-
-  <div id="tomorrowTeaser" style="display:none;margin:24px 16px 16px;padding:20px 18px;background:linear-gradient(135deg,rgba(201,168,76,0.08) 0%,rgba(91,191,160,0.05) 100%);border:1px solid rgba(201,168,76,0.25);border-radius:14px;text-align:center;">
-    <div style="font-size:10px;color:rgba(201,168,76,0.6);letter-spacing:.22em;margin-bottom:10px">✦ 明日天机预览 ✦</div>
-    <div id="tomorrowText" style="font-size:13px;color:var(--ink);line-height:1.8;letter-spacing:.05em;font-weight:300;margin-bottom:14px">加载中…</div>
-    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto 14px;width:80%"></div>
-    <button onclick="handleTomorrowCTA(this)" style="width:100%;padding:13px 0;background:none;border:1px solid rgba(201,168,76,0.4);border-radius:12px;color:var(--gold);font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:.18em;cursor:pointer;transition:all .25s" onmouseover="this.style.background='rgba(201,168,76,0.1)'" onmouseout="this.style.background='none'" ontouchstart="this.style.opacity='.7'" ontouchend="this.style.opacity='1'">明日运势 · 明天再来解锁 →</button>
-    <div style="font-size:10px;color:rgba(201,168,76,0.4);letter-spacing:.06em;margin-top:10px">每日8时更新 · 每天来看最准</div>
-  </div>
-
-  <!-- 分享今日运势 CTA -->
-  <div id="shareFriendCTA" style="margin:0 16px 16px;padding:16px 18px;background:var(--bg-card);border:1px solid rgba(91,191,160,0.2);border-radius:12px;text-align:center;">
-    <div style="font-size:10px;color:var(--jade-deep);letter-spacing:.18em;margin-bottom:10px;opacity:.75">✦ 把今日运势分享给朋友 ✦</div>
-    <div style="font-size:12px;color:var(--ink-mid);letter-spacing:.05em;line-height:1.6;margin-bottom:14px">好运不独享 · 分享给在意的人</div>
-    <button onclick="handleShareFriend(this)" style="width:100%;padding:13px 0;background:linear-gradient(135deg,rgba(91,191,160,0.15),rgba(91,191,160,0.08));border:1px solid rgba(91,191,160,0.35);border-radius:12px;color:var(--jade-deep);font-family:'Noto Serif SC',serif;font-size:13px;letter-spacing:.16em;cursor:pointer;transition:all .25s" ontouchstart="this.style.opacity='.7'" ontouchend="this.style.opacity='1'">分享今日运势给朋友</button>
-  </div>
-
-  <!-- 订阅升级 CTA（在结果之后展示，转化逻辑正确）-->
-  <div class="sub-wrap" style="margin:0 16px 16px">
-    <div class="sub-head">
-      <div class="sub-title">每日天机订阅</div>
-      <div class="sub-price">
-        <span class="unit">$</span>4.90<span class="per">/月</span>
+    <div class="tiles">
+      <div class="tile yi">
+        <div class="lab"><span class="badge">宜</span><span data-i="yi_lab">今日宜</span></div>
+        <div class="items" id="tdYi"></div>
+      </div>
+      <div class="tile ji">
+        <div class="lab"><span class="badge">忌</span><span data-i="ji_lab">今日忌</span></div>
+        <div class="items" id="tdJi"></div>
       </div>
     </div>
-    <div class="sub-perks">
-      <div class="sub-perk"><div class="perk-dot"></div>每日专属Affirmation（基于你的八字）</div>
-      <div class="sub-perk"><div class="perk-dot"></div>五行能量值 · 幸运色/数字</div>
-      <div class="sub-perk"><div class="perk-dot"></div>每日宜忌 · 流年提醒</div>
-      <div class="sub-perk"><div class="perk-dot"></div>月度大运预警（提前7天）</div>
+
+    <div class="luck">
+      <div class="lk"><div class="t" data-i="luck_color">Lucky Color</div><div class="swatch" id="tdColorSw"></div><div class="v" id="tdColorName">—</div></div>
+      <div class="lk"><div class="t" data-i="luck_dir">方位</div><div class="v" id="tdDir" style="margin-top:16px">—</div></div>
+      <div class="lk"><div class="t" data-i="luck_hour">时辰</div><div class="v" id="tdHour" style="margin-top:16px">—</div></div>
     </div>
-    <button class="btn-gold" onclick="subscribeDaily()">开启每日天机 · 立即开通 · $4.90/月</button>
-    <p class="preview-note">此为预览版 · 开通后内容基于你的真实八字生成</p>
+
+    <div class="timenav">
+      <div class="tn" onclick="gateTime()" data-i="tn_yesterday">昨日<span class="lk">🔒</span></div>
+      <div class="tn on" data-i="tn_today">今日</div>
+      <div class="tn" onclick="gateTime()" data-i="tn_tomorrow">明日<span class="lk">🔒</span></div>
+      <div class="tn" onclick="gateTime()" data-i="tn_year">流年<span class="lk">🔒</span></div>
+    </div>
+
+    <div class="today-cta">
+      <button class="draw gilt" onclick="go('draw')"><span data-i="draw_cta">抽今日一签</span> <span class="sub" data-i="draw_sub">· 每日一次 · 免费</span></button>
+      <button class="share" onclick="go('share')">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#6a5c46" stroke-width="1.6"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5 8.6 10.5"/></svg>
+        <span data-i="share_cta">生成今日卡 · 分享</span>
+      </button>
+    </div>
+    <div class="disc" data-i="disc">AI 生成内容 · 仅供娱乐参考，不构成医疗、法律或财务建议。</div>
+  </div>
+</section>
+
+<!-- ===== DRAW / QIAN ===== -->
+<section id="view-draw" class="view dark">
+  <div class="stars"></div>
+  <div class="topnav">
+    <button class="back" onclick="go('today')">‹</button>
+    <div class="brandmark"><div class="cn">善缘</div><div class="en">Runae</div></div>
+    <div class="moon"><i></i></div>
+  </div>
+  <div class="draw-head">
+    <div class="k" data-i="draw_k">Draw of the day</div>
+    <h2 data-i="draw_title">今日一签</h2>
+    <p data-i="draw_p">心念一事，指尖轻触——<br>此签，为你此刻而落。</p>
+  </div>
+  <div class="qian">
+    <div class="strip">
+      <div class="cap-seal">签</div>
+      <div class="title" id="qianTitle">—</div>
+      <div class="verse" id="qianVerse">—</div>
+    </div>
+  </div>
+  <div class="qian-read">
+    <div class="qh" data-i="qian_read_h">签解 · 为你而读</div>
+    <p id="qianText">—</p>
+  </div>
+  <div class="draw-actions">
+    <button class="save gilt" onclick="go('share')">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3a2a10" stroke-width="1.8"><path d="M5 3h14v18l-7-4-7 4V3Z"/></svg>
+      <span data-i="qian_save">收藏此签 · 生成今日卡</span>
+    </button>
+    <div class="again" data-i="qian_again">今日已抽 · <b>明日可再抽一签</b></div>
+  </div>
+</section>
+
+<!-- ===== SHARE CARD ===== -->
+<section id="view-share" class="view">
+  <div class="topnav">
+    <button class="back" onclick="go('today')">‹</button>
+    <div class="brandmark"><div class="cn">善缘</div><div class="en">Runae</div></div>
+    <div class="moon"><i></i></div>
+  </div>
+  <div class="share-head">
+    <h2 data-i="share_h">今日卡</h2>
+    <p data-i="share_sub">一日一卡 · 长按保存，或分享给在意的人</p>
   </div>
 
-  <!-- 邮件订阅入口 -->
-  <div class="subscribe-hook" style="text-align:center;padding:24px;background:#f5f0e8;border-radius:12px;margin:0 16px 16px">
-    <div style="font-size:15px;font-weight:500;margin-bottom:4px">每日天机 · 专属运势推送</div>
-    <div style="font-size:13px;color:#888;margin-bottom:16px">每天早8点，收到今日五行能量与宜忌</div>
-    <div style="display:flex;gap:8px;max-width:320px;margin:0 auto">
-      <input type="email" id="subscribeEmail" placeholder="输入邮箱" style="flex:1;padding:10px 14px;border:1px solid #d4c9a8;border-radius:8px;font-size:14px">
-      <button onclick="submitSubscribe()" style="background:#5bbfa0;color:white;border:none;padding:10px 16px;border-radius:8px;font-size:14px;cursor:pointer;white-space:nowrap">订阅</button>
+  <div class="daycard" id="daycard">
+    <div class="grain"></div>
+    <div class="dc-in">
+      <div class="dc-top">
+        <div style="text-align:left"><div class="bm">善缘</div><div class="en">Runae</div></div>
+        <div class="dc-date" id="dcDate">—</div>
+      </div>
+      <div class="dc-orb"><div class="s" id="dcScore">—</div><div class="m" id="dcMood">—</div></div>
+      <div class="dc-q" id="dcInsight">—</div>
+      <div class="dc-hr"></div>
+      <div class="dc-yiji">
+        <span class="yi"><span class="g">宜</span><span id="dcYi">—</span></span>
+        <span class="ji"><span class="g">忌</span><span id="dcJi">—</span></span>
+      </div>
+      <div class="dc-luck">
+        <span><span class="sw" id="dcColorSw"></span><span id="dcColor">—</span></span>
+        <span class="d"></span><span id="dcDir2">—</span><span class="d"></span><span id="dcHour">—</span>
+      </div>
+      <div class="dc-foot">
+        <span class="seal">缘</span> RUNAE · <span data-i="dc_foot">你的每日运势</span> · runae.net
+      </div>
     </div>
-    <div id="subscribeMsg" style="font-size:12px;color:#5bbfa0;margin-top:8px;display:none">✓ 已订阅，明天早8点见</div>
+    <div class="dc-qr"></div>
   </div>
 
-</div>
-
-<!-- 温馨提示：设置提醒 -->
-<div style="text-align:center;padding:20px 24px 8px;position:relative;z-index:1">
-  <div style="display:inline-flex;align-items:center;gap:10px;padding:12px 20px;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.12);border-radius:20px">
-    <span style="font-size:16px">⏰</span>
-    <div style="text-align:left">
-      <div style="font-size:11px;color:var(--gold);letter-spacing:.1em;margin-bottom:2px">每天早上8点来看运势</div>
-      <div style="font-size:10px;color:var(--ink-light);letter-spacing:.05em">在手机日历设置提醒 · 不错过每日天机</div>
-    </div>
+  <div class="share-row">
+    <button class="sb" onclick="saveCard()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6a5c46" stroke-width="1.6"><path d="M12 3v13M7 8l5-5 5 5M5 21h14"/></svg>
+      <span data-i="save_img">保存图片</span>
+    </button>
+    <button class="sb main gilt" onclick="shareCard()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3a2a10" stroke-width="1.8"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5 8.6 10.5"/></svg>
+      <span data-i="share_card">分享今日卡</span>
+    </button>
   </div>
-</div>
+  <div class="share-note" data-i="share_note">卡片带你的专属邀请码 —— 朋友扫码即得一份免费命盘。</div>
+</section>
 
-<!-- Brand tagline -->
-<div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
-  <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto 12px"></div>
-  <div style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;color:rgba(201,168,76,0.35);letter-spacing:0.3em">你求什么 · 自有天机</div>
-</div>
+<!-- ===== SUBSCRIPTION ===== -->
+<section id="view-sub" class="view dark">
+  <div class="stars"></div>
+  <div class="topnav">
+    <button class="back" onclick="go('today')">✕</button>
+    <div class="brandmark"><div class="cn">善缘</div><div class="en">Runae</div></div>
+    <div class="moon"><i></i></div>
+  </div>
+  <div class="sub-hero">
+    <div class="seal">缘</div>
+    <div class="k">Runae Companion</div>
+    <h2 data-i="sub_h">善缘 · 常伴<br>让运势，天天陪着你</h2>
+    <p data-i="sub_p">你的免费「今日」永远都在。<br>常伴，是把昨日、明日、本周、流年，都为你连成一线。</p>
+  </div>
+  <div class="sub-list">
+    <div class="row"><div class="ck gilt">✓</div><div class="t"><b data-i="sub_f1t">时间深度</b><span data-i="sub_f1s">昨日复盘 · 明日预告 · 本周走势 · 流年月历</span></div></div>
+    <div class="row"><div class="ck gilt">✓</div><div class="t"><b data-i="sub_f2t">每日长解读</b><span data-i="sub_f2s">不止一句点拨，展开为你今日的完整篇章</span></div></div>
+    <div class="row"><div class="ck gilt">✓</div><div class="t"><b data-i="sub_f3t">无限抽签 · 限定签</b><span data-i="sub_f3s">随时可抽，streak 里程碑解锁专属签库</span></div></div>
+    <div class="row"><div class="ck gilt">✓</div><div class="t"><b data-i="sub_f4t">无水印高清今日卡</b><span data-i="sub_f4s">更美的卡面，可换四季主题</span></div></div>
+  </div>
+  <div class="plans">
+    <div class="pl"><div class="name" data-i="plan_m">月</div><div class="amt"><sup>¥</sup>19</div><div class="per" data-i="plan_m_p">每月 · 可随时取消</div><div class="eq" data-i="plan_m_e">≈ 一杯咖啡</div></div>
+    <div class="pl best"><div class="tag gilt" data-i="plan_best">最超值</div><div class="name" data-i="plan_y">年</div><div class="amt"><sup>¥</sup>138</div><div class="per" data-i="plan_y_p">每年 · 合 ¥11.5/月</div><div class="eq" data-i="plan_y_e">省 40%</div></div>
+  </div>
+  <div class="sub-cta">
+    <button class="go gilt" onclick="handleSubscribe()"><span data-i="sub_go">开启善缘·常伴</span> <small data-i="sub_go_s">· 3 天免费试用 · 到期前提醒你</small></button>
+  </div>
+  <div class="sub-trust">
+    <span data-i="trust_1">明码标价</span><span class="d"></span>
+    <span data-i="trust_2">随时可取消</span><span class="d"></span>
+    <span data-i="trust_3">不自动暗扣</span>
+  </div>
+  <div class="disc" data-i="sub_disc">AI 生成内容 · 仅供娱乐参考。订阅到期自动续费前会提醒，可随时在设置中关闭。</div>
+</section>
+
+<div id="toast"></div>
 
 <script>
-function showToast(msg, type) {
-  var t = document.createElement('div');
-  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;text-align:center;font-family:Noto Serif SC,serif;cursor:pointer;';
-  t.style.background = type === 'error' ? 'rgba(180,40,40,0.92)' : 'rgba(23,14,6,0.95)';
-  t.style.border = type === 'error' ? '1px solid rgba(220,80,80,0.4)' : '1px solid rgba(201,168,76,0.2)';
-  t.style.color = type === 'error' ? 'rgba(255,220,220,0.95)' : 'rgba(255,245,220,0.9)';
-  t.textContent = msg;
-  t.onclick = function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); };
-  document.body.appendChild(t);
-  if (t._toastTimer) clearTimeout(t._toastTimer);
-  t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
-}
-// Init year/day selectors
-var ySel = document.getElementById('year');
-for (var y = new Date().getFullYear(); y >= 1920; y--) ySel.innerHTML += '<option value="'+y+'">'+y+'年</option>';
-var mSel = document.getElementById('month');
-for (var m = 1; m <= 12; m++) mSel.innerHTML += '<option value="'+m+'">'+m+'月</option>';
-var dSel = document.getElementById('day');
-for (var d = 1; d <= 31; d++) dSel.innerHTML += '<option value="'+d+'">'+d+'日</option>';
-
-// Auto-fill today's date
-var today = new Date();
-var dateStr = today.getFullYear() + '年' + (today.getMonth()+1) + '月' + today.getDate() + '日 · ' + ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][today.getDay()];
-document.getElementById('dateZh').textContent = dateStr;
-// 初始化今日干支占位（API结果回来后会覆盖）
-(function(){
-  var TG = ['甲','乙','丙','丁','戊','己','庚','辛','壬','癸'];
-  var DZ = ['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
-  // 甲子日起始基准：2000-01-07 为甲子日（JD=2451551，天干地支均从0起）
-  var base = new Date(2000, 0, 7); // 甲子日基准
-  var diff = Math.floor((today - base) / 86400000);
-  var tgIdx = ((diff % 10) + 10) % 10;
-  var dzIdx = ((diff % 12) + 12) % 12;
-  document.getElementById('dateGanzhi').textContent = TG[tgIdx] + DZ[dzIdx] + '日';
+/* ========= i18n ========= */
+var LANG = (function(){
+  var p = new URLSearchParams(location.search).get('lang');
+  if (p === 'en' || p === 'zh') return p;
+  return (navigator.language||'zh').toLowerCase().indexOf('zh') === 0 ? 'zh' : 'en';
 })();
-
-var gender = 'male';
-
-function selectGender(el, g) {
-  document.querySelectorAll('.gender-opt').forEach(function(o){ o.classList.remove('selected'); });
-  el.classList.add('selected'); gender = g;
-}
-
-function getDailyReading() {
-  var year = parseInt(document.getElementById('year').value);
-  var month = parseInt(document.getElementById('month').value);
-  var day = parseInt(document.getElementById('day').value);
-  if (!year || !month || !day) { showToast('请填写完整的出生年月日'); return; }
-
-  document.getElementById('inputWrap').style.display = 'none';
-  document.getElementById('loadingScreen').classList.add('show');
-  var steps = ['读取生辰信息…','推算今日天干地支…','分析五行能量…','生成专属运势…','写今日Affirmation…'];
-  var stepsEl = document.getElementById('loadSteps');
-  stepsEl.innerHTML = '';
-  steps.forEach(function(s, i) {
-    setTimeout(function(){
-      stepsEl.innerHTML += '<div class="load-step">✦ '+s+'</div>';
-    }, i * 400);
+var I18N = { en: {
+  ob_k:'Your daily fortune', ob_h1:'Leave your birth details<br>we’ll read your fortune daily',
+  ob_lead:'Fortune is born from your BaZi chart × the day’s flow —<br>unique to you, unique each day. Enter it once; open daily.',
+  ob_birth:'Date of birth (solar)', ob_hour:'Hour of birth', ob_gender:'Gender',
+  ob_female:'Female', ob_male:'Male', ob_go:'Open today’s fortune',
+  ob_note:'Your birth details stay on your device, used only to cast your chart · edit anytime from the top menu',
+  disc:'AI-generated content · For entertainment only. Not medical, legal or financial advice.',
+  loading:'Reading your fortune for today…',
+  err_h:'Today’s fortune isn’t ready', err_p:'The stars seem hazy. Please wait a moment and try again.',
+  err_retry:'Read again',
+  yi_lab:'Advised today', ji_lab:'Avoid today',
+  luck_color:'Lucky Color', luck_dir:'Direction', luck_hour:'Hour',
+  tn_yesterday:'Yesterday', tn_today:'Today', tn_tomorrow:'Tomorrow', tn_year:'Year',
+  draw_cta:'Draw today’s sign', draw_sub:'· once a day · free',
+  share_cta:'Make today’s card · share',
+  draw_k:'Draw of the day', draw_title:'Today’s Sign', draw_p:'Hold a thought, touch gently —<br>this sign falls for you, now.',
+  qian_read_h:'Reading · for you', qian_save:'Save this sign · make card',
+  qian_again:'Drawn for today · <b>draw again tomorrow</b>',
+  share_h:'Today’s Card', share_sub:'One card a day · long-press to save, or share with someone you care for',
+  dc_foot:'your daily fortune', save_img:'Save image', share_card:'Share card',
+  share_note:'The card carries your invite code — friends who scan get a free chart.',
+  sub_h:'Runae Companion<br>fortune by your side, every day',
+  sub_p:'Your free “today” is always here.<br>Companion connects yesterday, tomorrow, the week and the year into one line.',
+  sub_f1t:'Time depth', sub_f1s:'Yesterday recap · tomorrow preview · weekly trend · yearly calendar',
+  sub_f2t:'Daily deep reading', sub_f2s:'More than a line — your full chapter for today',
+  sub_f3t:'Unlimited draws · rare signs', sub_f3s:'Draw anytime; streak milestones unlock a special deck',
+  sub_f4t:'Watermark-free HD card', sub_f4s:'A finer card face, seasonal themes',
+  plan_m:'Monthly', plan_m_p:'per month · cancel anytime', plan_m_e:'≈ a cup of coffee',
+  plan_best:'Best value', plan_y:'Yearly', plan_y_p:'per year · ¥11.5/mo', plan_y_e:'save 40%',
+  sub_go:'Start Runae Companion', sub_go_s:'· 3-day free trial · we remind you before it ends',
+  trust_1:'Clear pricing', trust_2:'Cancel anytime', trust_3:'No hidden charges',
+  sub_disc:'AI-generated content · For entertainment only. We remind you before renewal; cancel anytime in settings.'
+}};
+function t(k){ return (LANG==='en' && I18N.en[k]!=null) ? I18N.en[k] : null; }
+function applyI18n(){
+  document.querySelectorAll('[data-i]').forEach(function(el){
+    var v = t(el.getAttribute('data-i'));
+    if (v!=null) el.innerHTML = v;
   });
+  document.documentElement.lang = LANG==='en'?'en':'zh-CN';
+}
 
-  var hour = document.getElementById('hour').value;
-  var body = { birthYear: year, birthMonth: month, birthDay: day, gender: gender };
-  if (hour) body.birthHour = parseInt(hour);
-  // 记住生辰，回访免重输（提升次日留存）
-  try{ localStorage.setItem('sy_birth', JSON.stringify({y:year,m:month,d:day,h:hour||'',g:gender})); }catch(e){}
+/* ========= state / storage ========= */
+var STORE_KEY = 'runae_daily_birth';
+var qsRef = new URLSearchParams(location.search).get('ref');
+var REF = qsRef || localStorage.getItem('runae_ref') || '';
+if (qsRef) localStorage.setItem('runae_ref', REF);
+var BIRTH = null, DAILY = null;
+function loadBirth(){ try { return JSON.parse(localStorage.getItem(STORE_KEY)); } catch(e){ return null; } }
+function saveBirth(b){ localStorage.setItem(STORE_KEY, JSON.stringify(b)); }
 
-  fetch('/api/daily', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(data){
-    document.getElementById('loadingScreen').classList.remove('show');
-    if (data.reading) {
-      // Show the result area with the raw AI reading
-      document.getElementById('affirmationText').innerHTML = data.reading.replace(/\n/g, '<br>');
+/* ========= router ========= */
+function go(name){
+  document.querySelectorAll('.view').forEach(function(v){ v.classList.remove('active'); });
+  var el = document.getElementById('view-'+name);
+  if (el) el.classList.add('active');
+  window.scrollTo(0,0);
+  if (name==='draw') renderDraw();
+  if (name==='share') renderShare();
+}
 
-      // ── 解析五行能量百分比 ──
-      // AI输出格式例：木：25% 或 木 25% 或 木火土金水各带百分比
-      var reading = data.reading || '';
-      var elementMap = { wood: ['木'], fire: ['火'], earth: ['土'], metal: ['金'], water: ['水'] };
-      var elementIds = { wood: 'pctWood', fire: 'pctFire', earth: 'pctEarth', metal: 'pctMetal', water: 'pctWater' };
-      var elementBars = { wood: 0, fire: 1, earth: 2, metal: 3, water: 4 };
-      var anyBarFilled = false;
-      Object.keys(elementMap).forEach(function(key) {
-        var char = elementMap[key][0];
-        // 多种格式匹配：木：25% / 木25% / 木（25%）/ 木 25%
-        var re = new RegExp(char + '[^\\n]{0,30}?(\\d{1,3})\\s*%', 'u');
-        var m = reading.match(re);
-        if (m) {
-          var pct = Math.min(100, parseInt(m[1], 10));
-          var pctEl = document.getElementById(elementIds[key]);
-          if (pctEl) pctEl.textContent = pct + '%';
-          // 填充对应进度条
-          var bars = document.getElementById('energyRows').querySelectorAll('.e-bar-fill');
-          var barIdx = elementBars[key];
-          if (bars[barIdx]) {
-            bars[barIdx].style.width = pct + '%';
-            anyBarFilled = true;
-          }
-        }
-      });
-      // 若AI未返回百分比格式，显示"--"而非硬编码假数据
-      if (!anyBarFilled) {
-        var pctIds = ['pctWood','pctFire','pctEarth','pctMetal','pctWater'];
-        pctIds.forEach(function(id) {
-          var pctEl = document.getElementById(id);
-          if (pctEl) pctEl.textContent = '--';
-        });
-      }
-
-      // ── 解析今日干支并填入大字 ──
-      // AI输出格式例："甲子日"、"今日干支：丙午日"、"今日干支为丙午日"
-      var ganzhiMatch = reading.match(/今日干支[：:为是]?\s*[「「]?([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥][日]?)[」」]?/);
-      if (!ganzhiMatch) {
-        // 宽松匹配：直接找干支格式（天干+地支）后面跟"日"或独立的
-        ganzhiMatch = reading.match(/[（(【\s「]([甲乙丙丁戊己庚辛壬癸][子丑寅卯辰巳午未申酉戌亥]日?)[）)】\s」]/);
-      }
-      if (ganzhiMatch) {
-        var gz = ganzhiMatch[1].replace(/日$/, '') + '日';
-        document.getElementById('dateGanzhi').textContent = gz;
-      }
-      // 注：若API未返回干支则保留页面上已有内容（不清空）
-
-      // ── 解析幸运色 ──
-      var colorMap = { '天青': '#5bbfa0', '月白': '#e8e4d8', '黛蓝': '#3d5a80', '红': '#e63946', '橙': '#f4a261', '黄': '#e9c46a', '绿': '#2a9d8f', '蓝': '#457b9d', '紫': '#7b2d8b', '金': '#c9a84c', '白': '#f0ede8', '黑': '#2d2d2d', '粉': '#ffb3c6', '棕': '#8b6357', '灰': '#9e9e9e' };
-      var colorMatch = reading.match(/幸运色[^：:]*[：:]\s*([^\n（(【]{2,8})/);
-      if (!colorMatch) colorMatch = reading.match(/\*\*幸运色\*\*[^：:]*[：:]\s*([^\n（(【]{2,8})/);
-      if (!colorMatch) colorMatch = reading.match(/1[.、．]\s*\*?\*?([^\s（(【\*]{2,6}色?)\*?\*?[（(]/);
-      if (colorMatch) {
-        var cname = colorMatch[1].replace(/[*\s]/g,'').split('、')[0].split('，')[0].split(',')[0];
-        var cnEl = document.getElementById('luckyColorName');
-        if (cnEl) cnEl.textContent = cname;
-        var swEl = document.getElementById('luckyColorSwatch');
-        if (swEl) {
-          var hexColor = null;
-          Object.keys(colorMap).forEach(function(k){ if (cname.indexOf(k) !== -1 && !hexColor) hexColor = colorMap[k]; });
-          if (hexColor) swEl.style.background = hexColor;
-        }
-      }
-
-      // ── 解析幸运数字 ──
-      var numMatch = reading.match(/幸运数字[^：:]*[：:][^0-9]*(\d)[^0-9]*(\d)[^0-9]*(\d)/);
-      if (!numMatch) numMatch = reading.match(/\*\*幸运数字\*\*[^：:]*[：:][^0-9]*(\d)[^0-9]*(\d)[^0-9]*(\d)/);
-      if (numMatch) {
-        var nums = numMatch[1] + ' · ' + numMatch[2] + ' · ' + numMatch[3];
-        var numEl = document.getElementById('luckyNumber');
-        if (numEl) numEl.textContent = nums;
-      }
-
-      // ── 解析宜忌 ──
-      var yiMatch = reading.match(/今日宜[^：:\n]*[：:]([^\n]{5,80})/);
-      if (!yiMatch) yiMatch = reading.match(/宜[签会开表整饮祈拜运动社交]\S{0,10}(?:[、，,]\S{0,10}){1,4}/);
-      if (yiMatch) {
-        var yiItems = yiMatch[1] ? yiMatch[1].replace(/[*\s]/g,'').split(/[、，,]/).filter(Boolean).slice(0,3) : [];
-        var yiContainer = document.querySelector('.yi-list') || document.getElementById('yiList');
-        if (yiContainer && yiItems.length) {
-          yiContainer.innerHTML = yiItems.map(function(s){ return '<div class="yi-item">宜 ' + s + '</div>'; }).join('');
-        }
-      }
-      var jiMatch = reading.match(/今日忌[^：:\n]*[：:]([^\n]{5,80})/);
-      if (!jiMatch) jiMatch = reading.match(/忌[动远熬口穿抢]\S{0,10}(?:[、，,]\S{0,10}){1,4}/);
-      if (jiMatch) {
-        var jiItems = jiMatch[1] ? jiMatch[1].replace(/[*\s]/g,'').split(/[、，,]/).filter(Boolean).slice(0,3) : [];
-        var jiContainer = document.querySelector('.ji-list') || document.getElementById('jiList');
-        if (jiContainer && jiItems.length) {
-          jiContainer.innerHTML = jiItems.map(function(s){ return '<div class="ji-item">忌 ' + s + '</div>'; }).join('');
-        }
-      }
-
-      document.getElementById('resultArea').style.display = 'block';
-      document.getElementById('resultArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
-      injectDisclaimer('resultArea');
-      if (data.streak) showStreak(data.streak);
-      setTimeout(generateDailyShareCard, 400);
-      if (data.broke && data.prevStreak >= 3) {
-        setTimeout(function(){
-          showToast('😔 ' + data.prevStreak + '天连击中断了 · 开通会员可获1次补签机会', 'error');
-          setTimeout(function(){
-            var b = document.createElement('div');
-            b.style.cssText = 'text-align:center;margin:12px 0 4px';
-            b.innerHTML = '<a href="/pages/member.html" style="display:inline-block;padding:9px 24px;background:linear-gradient(135deg,#c9a84c,#a8823a);border-radius:20px;color:#fff;font-size:13px;text-decoration:none;letter-spacing:0.08em">开通会员 · 保护你的连击 →</a>';
-            var ra = document.getElementById('streakBadge');
-            if (ra) ra.after(b);
-          }, 800);
-        }, 1200);
-      }
-      loadTomorrowTeaser();
-    } else {
-      showToast('获取天机失败，请稍后重试', 'error');
-      document.getElementById('inputWrap').style.display = 'block';
-    }
-  })
-  .catch(function(err){
-    document.getElementById('loadingScreen').classList.remove('show');
-    showToast('网络异常，请稍后重试', 'error');
-    document.getElementById('inputWrap').style.display = 'block';
+/* ========= onboarding ========= */
+function buildForm(){
+  var ySel=document.getElementById('obYear'), mSel=document.getElementById('obMonth'), dSel=document.getElementById('obDay'), hSel=document.getElementById('obHour');
+  var now=new Date(), thisY=now.getFullYear();
+  var yPh=LANG==='en'?'Year':'年', mPh=LANG==='en'?'Month':'月', dPh=LANG==='en'?'Day':'日';
+  ySel.innerHTML='<option value="">'+yPh+'</option>';
+  for(var y=thisY;y>=1930;y--) ySel.innerHTML+='<option value="'+y+'">'+y+(LANG==='en'?'':' 年')+'</option>';
+  mSel.innerHTML='<option value="">'+mPh+'</option>';
+  for(var m=1;m<=12;m++) mSel.innerHTML+='<option value="'+m+'">'+m+(LANG==='en'?'':' 月')+'</option>';
+  dSel.innerHTML='<option value="">'+dPh+'</option>';
+  for(var d=1;d<=31;d++) dSel.innerHTML+='<option value="'+d+'">'+d+(LANG==='en'?'':' 日')+'</option>';
+  var HOURS_ZH=['子时 23-1','丑时 1-3','寅时 3-5','卯时 5-7','辰时 7-9','巳时 9-11','午时 11-13','未时 13-15','申时 15-17','酉时 17-19','戌时 19-21','亥时 21-23'];
+  var HOUR_VAL=[0,2,4,6,8,10,12,14,16,18,20,22];
+  hSel.innerHTML='<option value="">'+(LANG==='en'?'Hour':'时辰')+'</option>';
+  for(var i=0;i<12;i++){
+    var lab = LANG==='en' ? (HOUR_VAL[i]+':00–'+((HOUR_VAL[i]+2)%24)+':00') : HOURS_ZH[i];
+    hSel.innerHTML+='<option value="'+HOUR_VAL[i]+'">'+lab+'</option>';
+  }
+  hSel.innerHTML+='<option value="-1">'+(LANG==='en'?'Unknown':'时辰未知')+'</option>';
+  document.querySelectorAll('#obGender .opt').forEach(function(o){
+    o.onclick=function(){ document.querySelectorAll('#obGender .opt').forEach(function(x){x.classList.remove('on');}); o.classList.add('on'); };
   });
-}
-
-function showStreak(count) {
-  if (!count || count < 1) return;
-  var el = document.getElementById('streakBadge');
-  if (!el) {
-    el = document.createElement('div');
-    el.id = 'streakBadge';
-    el.style.cssText = 'text-align:center;padding:14px 16px 4px;font-size:13px;color:#9a7529;letter-spacing:.05em';
-    var container = document.getElementById('resultArea');
-    if (container) container.prepend(el);
-  }
-  var flames = count >= 7 ? '🔥🔥🔥' : count >= 3 ? '🔥🔥' : '🔥';
-  el.innerHTML = flames + ' 连续 ' + count + ' 天查运势 &nbsp;<button onclick="shareDaily()" style="font-size:11px;padding:4px 10px;background:rgba(154,117,41,0.12);border:1px solid rgba(154,117,41,0.3);border-radius:10px;color:#9a7529;cursor:pointer;font-family:inherit;letter-spacing:.05em;vertical-align:middle">分享运势</button>';
-}
-// Safari <15.4 兼容的圆角矩形绘制（替代 ctx.roundRect）
-function drawRoundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-}
-// ── 每日天机截图卡（Co-Star 抄法：让 AI 输出本身成为朋友圈内容）──
-function generateDailyShareCard() {
-  var canvas = document.getElementById('dailyShareCanvas');
-  var ctx = canvas.getContext('2d');
-  var W = 1080, H = 1080;
-  canvas.width = W; canvas.height = H;
-
-  // 背景：深色玫瑰金渐变
-  var bg = ctx.createLinearGradient(0, 0, W, H);
-  bg.addColorStop(0, '#0d0805'); bg.addColorStop(0.5, '#1a1005'); bg.addColorStop(1, '#0a0608');
-  ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
-
-  // 金色光晕
-  var glow = ctx.createRadialGradient(W*0.5, H*0.25, 0, W*0.5, H*0.25, W*0.55);
-  glow.addColorStop(0, 'rgba(201,168,76,0.12)'); glow.addColorStop(1, 'transparent');
-  ctx.fillStyle = glow; ctx.fillRect(0, 0, W, H);
-
-  // 边框
-  ctx.strokeStyle = 'rgba(201,168,76,0.25)'; ctx.lineWidth = 2;
-  ctx.strokeRect(24, 24, W-48, H-48);
-  ctx.strokeStyle = 'rgba(201,168,76,0.08)'; ctx.lineWidth = 1;
-  ctx.strokeRect(32, 32, W-64, H-64);
-
-  // 日期
-  var now = new Date();
-  var months = ['一','二','三','四','五','六','七','八','九','十','十一','十二'];
-  var dateStr = now.getFullYear() + '年' + months[now.getMonth()] + '月' + now.getDate() + '日';
-  ctx.fillStyle = 'rgba(201,168,76,0.55)'; ctx.font = '32px serif';
-  ctx.textAlign = 'center'; ctx.fillText(dateStr, W/2, 100);
-
-  // 分割线
-  ctx.fillStyle = 'rgba(201,168,76,0.3)'; ctx.fillRect(W/2-60, 118, 120, 1);
-
-  // LOGO
-  ctx.fillStyle = 'rgba(201,168,76,0.9)'; ctx.font = 'bold 48px serif';
-  ctx.fillText('善 缘', W/2, 185);
-  ctx.fillStyle = 'rgba(201,168,76,0.4)'; ctx.font = '22px serif';
-  ctx.fillText('S H E N Y U A N', W/2, 218);
-
-  // 幸运色块
-  var swatch = document.getElementById('luckyColorSwatch');
-  var colorName = (document.getElementById('luckyColorName') || {}).textContent || '';
-  if (swatch && swatch.style.background) {
-    ctx.fillStyle = swatch.style.background || '#5bbfa0';
-    drawRoundRect(ctx, W/2-28, 248, 56, 56, 28); ctx.fill();
-    ctx.fillStyle = 'rgba(255,245,220,0.5)'; ctx.font = '24px serif';
-    ctx.fillText('今日幸运色 · ' + colorName, W/2, 338);
-  }
-
-  // AI 金句（取 affirmationText 前两句）
-  var aff = (document.getElementById('affirmationText') || {}).textContent || '';
-  var sentences = aff.replace(/[。！？]/g, '$&\n').split('\n').filter(function(s){ return s.trim().length > 4; });
-  var quote = sentences.slice(0, 2).join('').substring(0, 60);
-  if (!quote) quote = '今日五行运势，顺势而为';
-
-  // 金句大字（自动换行）
-  ctx.fillStyle = 'rgba(255,245,220,0.95)'; ctx.font = 'bold 52px serif';
-  ctx.textAlign = 'center';
-  var words = quote.split('');
-  var line = '', lines = [], maxW = W - 160;
-  for (var i = 0; i < words.length; i++) {
-    var test = line + words[i];
-    if (ctx.measureText(test).width > maxW && line) { lines.push(line); line = words[i]; }
-    else { line = test; }
-  }
-  if (line) lines.push(line);
-  var startY = H/2 - (lines.length * 72)/2 + 40;
-  lines.forEach(function(l, idx) { ctx.fillText(l, W/2, startY + idx * 72); });
-
-  // 分割线
-  ctx.fillStyle = 'rgba(201,168,76,0.25)'; ctx.fillRect(W/2-80, startY + lines.length*72 + 20, 160, 1);
-
-  // 底部子标题
-  ctx.fillStyle = 'rgba(201,168,76,0.5)'; ctx.font = '28px serif';
-  ctx.fillText('今日命盘 · 专属指引', W/2, startY + lines.length*72 + 68);
-
-  // 域名水印
-  ctx.fillStyle = 'rgba(201,168,76,0.2)'; ctx.font = '22px sans-serif';
-  ctx.fillText('runae.app', W/2, H - 60);
-
-  // 显示预览图
-  var img = document.getElementById('dailyShareImg');
-  img.src = canvas.toDataURL('image/png');
-  document.getElementById('shareCardWrap').style.display = 'block';
-}
-function downloadDailyCard() {
-  var canvas = document.getElementById('dailyShareCanvas');
-  var a = document.createElement('a');
-  a.download = '善缘今日天机-' + new Date().toISOString().slice(0,10) + '.png';
-  a.href = canvas.toDataURL('image/png'); a.click();
-  showToast('图片已保存，发给朋友圈/小红书吧 ✨', 'success');
-}
-function shareDailyCard() {
-  var canvas = document.getElementById('dailyShareCanvas');
-  canvas.toBlob(function(blob) {
-    if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob],'天机.png',{type:'image/png'})] })) {
-      navigator.share({ files: [new File([blob],'天机.png',{type:'image/png'})], title: '善缘今日天机', text: '今天的五行运势，发给你看看 🔮' }).catch(function(){});
-    } else { downloadDailyCard(); }
-  });
-}
-
-function shareDaily() {
-  var ref = localStorage.getItem('sy_ref_code') || '';
-  var url = window.location.origin + '/pages/daily.html' + (ref ? '?ref=' + ref : '');
-  var text = '善缘每日天机 · 今天的五行运势挺准的！你也来测测 ' + url;
-  if (navigator.share) { navigator.share({ title: '善缘每日天机', text: text, url: url }).catch(function(){}); return; }
-  var ta = document.createElement('textarea'); ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
-  document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch(e) {}
-  document.body.removeChild(ta);
-  showToast('已复制今日运势链接，分享给朋友吧 🎁', 'success');
-}
-
-function loadTomorrowTeaser() {
-  var tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
-  var y = tomorrow.getFullYear(), m = tomorrow.getMonth() + 1, d = tomorrow.getDate();
-  // 传入用户生辰参数，确保明日运势个性化
-  var birthYear = document.getElementById('year').value || '';
-  var birthMonth = document.getElementById('month').value || '';
-  var birthDay = document.getElementById('day').value || '';
-  var birthHour = document.getElementById('hour').value || '';
-  var birthGender = gender || 'male';
-  var params = '?y=' + y + '&m=' + m + '&d=' + d;
-  if (birthYear) params += '&birthYear=' + birthYear;
-  if (birthMonth) params += '&birthMonth=' + birthMonth;
-  if (birthDay) params += '&birthDay=' + birthDay;
-  if (birthHour !== '') params += '&birthHour=' + birthHour;
-  params += '&gender=' + birthGender;
-  fetch('/api/daily-teaser' + params)
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      var el = document.getElementById('tomorrowTeaser');
-      var txt = document.getElementById('tomorrowText');
-      if (data && data.teaser) {
-        txt.textContent = data.teaser;
-      } else {
-        txt.textContent = '明日运势更新中 · 明天再来';
-      }
-      el.style.display = 'block';
-    }).catch(function(){
-      var el = document.getElementById('tomorrowTeaser');
-      var txt = document.getElementById('tomorrowText');
-      if (el && txt) { txt.textContent = '明日运势更新中 · 明天再来'; el.style.display = 'block'; }
-    });
-}
-
-function handleTomorrowCTA(btn) {
-  // 点击视觉反馈 + 提示用户明天再来
-  if (btn) { btn.textContent = '已记下 · 明天见 ✓'; btn.style.opacity = '.7'; btn.disabled = true; }
-  showToast('明天早8点来看完整运势，好运不等人 ☀️', 'success');
-  // 尝试触发系统提醒（描述性，不依赖真实通知权限）
-  setTimeout(function(){
-    if (btn) { btn.textContent = '明天8点见 · 已加入日历提醒'; }
-  }, 800);
-}
-
-function handleShareFriend(btn) {
-  // 点击视觉反馈
-  if (btn) { btn.textContent = '分享中…'; btn.style.opacity = '.7'; }
-  shareDaily();
-  setTimeout(function(){
-    if (btn) { btn.textContent = '已分享 · 好运传递 ✓'; btn.style.opacity = '1'; }
-    setTimeout(function(){
-      if (btn) { btn.textContent = '分享今日运势给朋友'; }
-    }, 2500);
-  }, 800);
-}
-
-async function submitSubscribe() {
-  var emailEl = document.getElementById('subscribeEmail');
-  if (!emailEl) return;
-  var email = emailEl.value.trim();
-  if (!email || !email.includes('@')) return;
-  try {
-    await fetch('/api/subscribe', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ email: email, source: 'daily-report' })
-    });
-  } catch(e) {}
-  var msg = document.getElementById('subscribeMsg');
-  if (msg) msg.style.display = 'block';
-  localStorage.setItem('sy_subscribed_email', email);
-}
-function subscribeDaily() {
-  var btns = document.querySelectorAll('.btn-gold');
-  btns.forEach(function(b){ b.disabled = true; b.textContent = '跳转中…'; });
-  fetch('/api/create-checkout', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({product: 'daily_sub', token: localStorage.getItem('sy_token') || ''})
-  })
-  .then(function(r){ return r.json(); })
-  .then(function(d){
-    if (d.url) { window.location.href = d.url; }
-    else { showToast('支付系统暂不可用', 'error'); var btns2 = document.querySelectorAll('.btn-gold'); btns2.forEach(function(b){ b.disabled = false; b.textContent = '开启每日天机 · 立即开通 · $4.90/月'; }); }
-  })
-  .catch(function(){
-    showToast('网络错误，请稍后重试', 'error'); var btns2 = document.querySelectorAll('.btn-gold'); btns2.forEach(function(b){ b.disabled = false; b.textContent = '开启每日天机 · 立即开通 · $4.90/月'; });
-  });
-}
-</script>
-
-<!-- 星尘粒子生成 -->
-<script>
-(function(){
-  var c = document.getElementById('stardust');
-  if (!c) return;
-  for (var i = 0; i < 30; i++) {
-    var s = document.createElement('span');
-    s.style.cssText = 'left:'+(Math.random()*100)+'%;top:'+(Math.random()*100)+'%;width:'+(1.5+Math.random()*2.5)+'px;height:'+(1.5+Math.random()*2.5)+'px;--dur:'+(2+Math.random()*4)+'s;animation-delay:'+(Math.random()*5)+'s';
-    c.appendChild(s);
-  }
-  setTimeout(function(){ c.querySelectorAll('span').forEach(function(s){ s.style.opacity = '1'; }); }, 100);
-})();
-function injectDisclaimer(containerId) {
-  var c = document.getElementById(containerId);
-  if (!c || c.querySelector('.sy-disclaimer')) return;
-  var d = document.createElement('div');
-  d.className = 'sy-disclaimer';
-  d.innerHTML = '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto;width:80%"></div><div style="font-size:10px;color:rgba(201,168,76,0.4);text-align:center;letter-spacing:0.06em;padding:10px 20px">仅供娱乐参考，切勿沉迷。命理是可能性的艺术，不是定数。</div>';
-  c.appendChild(d);
-}
-</script>
-
-<script>
-(function(){var t=localStorage.getItem('sy_theme');if(t==='light'){document.documentElement.classList.add('light-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='☀️';}})();
-function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('light-mode');var l=e.classList.contains('light-mode');if(b)b.textContent=l?'☀️':'🌙';localStorage.setItem('sy_theme',l?'light':'dark');}
-</script>
-
-<div id="pwaPrompt" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:440px;z-index:999;background:linear-gradient(135deg,rgba(58,48,38,0.96),rgba(42,32,22,0.98));border:1px solid rgba(201,168,76,0.3);border-radius:16px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.35);">
-  <div style="display:flex;align-items:center;gap:12px">
-    <div style="font-size:28px;flex-shrink:0">📲</div>
-    <div style="flex:1">
-      <div style="font-size:13px;font-weight:600;color:#e0c874;margin-bottom:4px">添加到主屏幕</div>
-      <div style="font-size:11px;color:rgba(224,200,116,0.7);line-height:1.5">每天一键查运势，不错过任何天机</div>
-    </div>
-    <button onclick="document.getElementById('pwaPrompt').style.display='none'" style="background:none;border:none;color:rgba(224,200,116,0.5);font-size:18px;cursor:pointer;padding:4px;line-height:1">✕</button>
-  </div>
-  <div style="display:flex;gap:8px;margin-top:14px">
-    <button id="pwaInstallBtn" style="flex:1;padding:10px;background:linear-gradient(135deg,#a8823a,#8a6a26);border:none;border-radius:9px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">立即添加</button>
-    <button onclick="localStorage.setItem('pwa_dismissed','1');document.getElementById('pwaPrompt').style.display='none'" style="padding:10px 16px;background:rgba(201,168,76,0.1);border:1px solid rgba(201,168,76,0.2);border-radius:9px;color:rgba(224,200,116,0.7);font-size:12px;cursor:pointer;font-family:inherit">稍后</button>
-  </div>
-</div>
-
-<div id="pushPrompt" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);width:calc(100% - 32px);max-width:440px;z-index:1000;background:linear-gradient(135deg,rgba(30,20,50,0.97),rgba(20,10,40,0.99));border:1px solid rgba(130,80,200,0.35);border-radius:16px;padding:16px 20px;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
-  <div style="display:flex;align-items:center;gap:12px">
-    <div style="font-size:28px;flex-shrink:0">🔮</div>
-    <div style="flex:1">
-      <div style="font-size:13px;font-weight:600;color:#c8a0f8;margin-bottom:4px">开启每日天机推送</div>
-      <div style="font-size:11px;color:rgba(200,160,248,0.7);line-height:1.5">每天早8点收到专属运势 · 打开率是普通提醒的4倍</div>
-    </div>
-    <button onclick="document.getElementById('pushPrompt').style.display='none';localStorage.setItem('push_dismissed','1')" style="background:none;border:none;color:rgba(200,160,248,0.5);font-size:18px;cursor:pointer;padding:4px;line-height:1">✕</button>
-  </div>
-  <div style="display:flex;gap:8px;margin-top:14px">
-    <button onclick="enablePushNotifications()" style="flex:1;padding:10px;background:linear-gradient(135deg,#7c3aed,#5b21b6);border:none;border-radius:9px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit">开启推送 ✓</button>
-    <button onclick="localStorage.setItem('push_dismissed','1');document.getElementById('pushPrompt').style.display='none'" style="padding:10px 16px;background:rgba(130,80,200,0.1);border:1px solid rgba(130,80,200,0.2);border-radius:9px;color:rgba(200,160,248,0.7);font-size:12px;cursor:pointer;font-family:inherit">稍后</button>
-  </div>
-</div>
-
-<script>
-async function enablePushNotifications() {
-  if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-    showToast('您的浏览器不支持推送通知', 'error'); return;
-  }
-  var btn = document.querySelector('#pushPrompt button');
-  if (btn) { btn.disabled = true; btn.textContent = '请求中…'; }
-  try {
-    var perm = await Notification.requestPermission();
-    if (perm !== 'granted') {
-      showToast('需要允许通知才能接收天机推送', 'error');
-      if (btn) { btn.disabled = false; btn.textContent = '开启推送 ✓'; }
-      return;
-    }
-    var reg = await navigator.serviceWorker.ready;
-    var vapidResp = await fetch('/api/vapid-public-key');
-    var vapidData = await vapidResp.json();
-    var sub = await reg.pushManager.subscribe({
-      userVisibleOnly: true,
-      applicationServerKey: urlBase64ToUint8Array(vapidData.publicKey)
-    });
-    await fetch('/api/push/subscribe', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify(sub.toJSON())
-    });
-    document.getElementById('pushPrompt').style.display = 'none';
-    localStorage.setItem('push_enabled', '1');
-    showToast('✅ 每日天机推送已开启！明早8点见', 'success');
-  } catch(e) {
-    showToast('开启失败，请稍后重试', 'error');
-    if (btn) { btn.disabled = false; btn.textContent = '开启推送 ✓'; }
+  var b=loadBirth();
+  if(b){ ySel.value=b.birthYear; mSel.value=b.birthMonth; dSel.value=b.birthDay; hSel.value=(b.birthHour==null?-1:b.birthHour);
+    document.querySelectorAll('#obGender .opt').forEach(function(x){ x.classList.toggle('on', x.getAttribute('data-v')===b.gender); });
   }
 }
-function urlBase64ToUint8Array(b64) {
-  var pad = '='.repeat((4 - b64.length % 4) % 4);
-  var raw = atob((b64 + pad).replace(/-/g,'+').replace(/_/g,'/'));
-  var out = new Uint8Array(raw.length);
-  for (var i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
-  return out;
-}
-(function(){
-  if (localStorage.getItem('push_enabled') || localStorage.getItem('push_dismissed')) return;
-  if (!('Notification' in window) || Notification.permission === 'denied') return;
-  setTimeout(function(){ document.getElementById('pushPrompt').style.display = 'block'; }, 8000);
-})();
-</script>
-
-<script>
-(function(){
-  if (localStorage.getItem('pwa_dismissed') || localStorage.getItem('pwa_installed')) return;
-  var deferredPrompt = null;
-  window.addEventListener('beforeinstallprompt', function(e) {
-    e.preventDefault();
-    deferredPrompt = e;
-    setTimeout(function(){ document.getElementById('pwaPrompt').style.display = 'block'; }, 3000);
-  });
-  document.getElementById('pwaInstallBtn').addEventListener('click', function(){
-    if (!deferredPrompt) {
-      document.getElementById('pwaPrompt').innerHTML = '<div style="color:#e0c874;font-size:13px;line-height:1.7;text-align:center;padding:8px 0">iPhone: 点击底部 <b>分享</b> 按钮 → 选择<b>「添加到主屏幕」</b><br><span style="font-size:11px;color:rgba(224,200,116,0.6)">添加后在桌面直接打开</span></div>';
-      return;
-    }
-    deferredPrompt.prompt();
-    deferredPrompt.userChoice.then(function(r){
-      if (r.outcome === 'accepted') localStorage.setItem('pwa_installed', '1');
-      document.getElementById('pwaPrompt').style.display = 'none';
-      deferredPrompt = null;
-    });
-  });
-  window.addEventListener('load', function(){
-    var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
-    var isInStandalone = window.navigator.standalone;
-    if (isIOS && !isInStandalone && !localStorage.getItem('pwa_dismissed') && !localStorage.getItem('pwa_installed')) {
-      setTimeout(function(){ document.getElementById('pwaPrompt').style.display = 'block'; }, 5000);
-    }
-  });
-  if(new URLSearchParams(location.search).get('activated')==='1'){
-    localStorage.setItem('sy_daily_sub','1');
-    localStorage.setItem('sy_daily_sub_ts', Date.now().toString());
-    setTimeout(function(){if(typeof showToast==='function')showToast('每日天机订阅成功！☀️','success');},600);
-  }
-})();
-</script>
-<script src="/assets/js/common.js"></script>
-<script>
-// 回访预填生辰（提升留存）：读 localStorage.sy_birth，全防御，无数据即 no-op
-window.addEventListener('load', function(){
-  try{
-    var raw = localStorage.getItem('sy_birth'); if(!raw) return;
-    var b = JSON.parse(raw); if(!b || !b.y || !b.m || !b.d) return;
-    function setSel(id,val){ var s=document.getElementById(id); if(s && val!=null && val!=='') s.value=String(val); }
-    setSel('year', b.y); setSel('month', b.m); setSel('day', b.d);
-    if(b.h!=null && b.h!=='') setSel('hour', b.h);
-    if(b.g){ var opts=document.querySelectorAll('.gender-opt'); if(opts.length>=2){ (b.g==='female'?opts[1]:opts[0]).click(); } }
-    var btn=document.querySelector('[onclick*="getDailyReading"]');
-    if(btn && btn.parentNode){ var hint=document.createElement('div'); hint.textContent='已记住你的生辰 · 点击查看今日天机 ☀️'; hint.style.cssText='text-align:center;font-size:11px;color:#3d9e82;margin:8px 0 2px;letter-spacing:.04em'; btn.parentNode.insertBefore(hint, btn); }
-  }catch(e){}
+document.getElementById('obGo').addEventListener('click', function(){
+  var y=+document.getElementById('obYear').value, m=+document.getElementById('obMonth').value, d=+document.getElementById('obDay').value;
+  var hRaw=document.getElementById('obHour').value;
+  var gEl=document.querySelector('#obGender .opt.on');
+  if(!y||!m||!d){ toast(LANG==='en'?'Please choose your birth date':'请选择出生日期'); return; }
+  if(hRaw===''){ toast(LANG==='en'?'Please choose hour (or unknown)':'请选择时辰'); return; }
+  var h=+hRaw; if(h<0) h=null;
+  BIRTH={ birthYear:y, birthMonth:m, birthDay:d, birthHour:h, gender: gEl?gEl.getAttribute('data-v'):'female' };
+  saveBirth(BIRTH);
+  go('today'); loadToday();
 });
+
+/* ========= date helpers ========= */
+function todayStr(){ var n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); }
+function fmtGreg(){
+  var n=new Date();
+  if(LANG==='en'){ return n.toLocaleDateString('en-US',{month:'long',day:'numeric',weekday:'short'}); }
+  var wd=['周日','周一','周二','周三','周四','周五','周六'][n.getDay()];
+  return (n.getMonth()+1)+'月'+n.getDate()+'日 · '+wd;
+}
+
+/* ========= fetch daily ========= */
+function loadToday(){
+  BIRTH = BIRTH || loadBirth();
+  if(!BIRTH){ go('onboard'); return; }
+  show('todayLoading'); hide('todayError'); hide('todayContent');
+  fetch('/api/daily/card', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({
+      birthYear:BIRTH.birthYear, birthMonth:BIRTH.birthMonth, birthDay:BIRTH.birthDay,
+      birthHour:BIRTH.birthHour, gender:BIRTH.gender, date:todayStr(), lang:LANG
+    })
+  })
+  .then(function(res){ if(!res.ok) return res.json().then(function(e){ throw new Error(e.error||('HTTP '+res.status)); }); return res.json(); })
+  .then(function(data){
+    if(!data || typeof data.score==='undefined') throw new Error('empty');
+    DAILY=data; hide('todayLoading'); renderToday();
+  })
+  .catch(function(){ hide('todayLoading'); show('todayError'); });
+}
+
+/* ========= render ========= */
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function renderToday(){
+  var d=DAILY;
+  document.getElementById('tdGreg').textContent = fmtGreg();
+  document.getElementById('tdLunar').textContent = d.lunar || (d.date||todayStr());
+  document.getElementById('tdGreet').textContent = d.greeting || (LANG==='en'?'Good morning. Today’s sky is clear —':'早安。今日天光清朗——');
+  document.getElementById('tdScore').textContent = d.score;
+  document.getElementById('tdMood').textContent = d.mood||'';
+  document.getElementById('tdCap').textContent = d.cap || ('Today · '+(d.mood||''));
+  document.getElementById('tdInsight').innerHTML = esc(d.insight||'');
+  fillList('tdYi', d.yi); fillList('tdJi', d.ji);
+  var c=(d.luckyColor||{});
+  document.getElementById('tdColorSw').style.background = c.hex || '#c8a35a';
+  document.getElementById('tdColorName').textContent = c.name||'';
+  document.getElementById('tdDir').textContent = d.luckyDir||'';
+  document.getElementById('tdHour').textContent = d.luckyHour || '—';
+  show('todayContent');
+}
+function fillList(id, arr){
+  var el=document.getElementById(id); el.innerHTML='';
+  (arr||[]).slice(0,3).forEach(function(x){ var div=document.createElement('div'); div.textContent=x; el.appendChild(div); });
+}
+function renderDraw(){
+  var q=(DAILY&&DAILY.qian)||{};
+  document.getElementById('qianTitle').textContent = q.title || (LANG==='en'?'Today’s Sign':'今日一签');
+  var verse = q.text||'';
+  document.getElementById('qianVerse').innerHTML = esc(verse).replace(/\n/g,'<br>').replace(/([，。；])/g,'$1<br>').replace(/(<br>)+$/,'');
+  document.getElementById('qianText').textContent = q.read || q.text || '';
+}
+function renderShare(){
+  var d=DAILY||{}; var n=new Date();
+  document.getElementById('dcDate').innerHTML = String(n.getMonth()+1).padStart(2,'0')+' · '+String(n.getDate()).padStart(2,'0')+'<br>'+(d.lunar||'');
+  document.getElementById('dcScore').textContent = d.score!=null?d.score:'--';
+  document.getElementById('dcMood').textContent = d.mood||'';
+  document.getElementById('dcInsight').innerHTML = esc(d.insight||'');
+  document.getElementById('dcYi').textContent = (d.yi||[]).slice(0,2).join(' · ');
+  document.getElementById('dcJi').textContent = (d.ji||[]).slice(0,2).join(' · ');
+  var c=(d.luckyColor||{}); document.getElementById('dcColorSw').style.background=c.hex||'#c8a35a';
+  document.getElementById('dcColor').textContent=c.name||'';
+  document.getElementById('dcDir2').textContent=d.luckyDir||'';
+  document.getElementById('dcHour').textContent=d.luckyHour||'';
+}
+
+/* ========= share card ========= */
+function cardFilename(){ return 'runae-daily-'+todayStr()+'.png'; }
+function renderCardCanvas(){ return html2canvas(document.getElementById('daycard'), {backgroundColor:null, scale:2, useCORS:true, logging:false}); }
+function saveCard(){
+  if(typeof html2canvas==='undefined'){ toast(LANG==='en'?'Long-press the card to save':'长按卡片即可保存'); return; }
+  toast(LANG==='en'?'Generating card…':'正在生成卡片…');
+  renderCardCanvas().then(function(cv){
+    var a=document.createElement('a'); a.href=cv.toDataURL('image/png'); a.download=cardFilename(); a.click();
+    toast(LANG==='en'?'Saved. Share it anywhere ✨':'已保存 · 可发朋友圈/小红书 ✨');
+  }).catch(function(){ toast(LANG==='en'?'Long-press the card to save':'长按卡片即可保存'); });
+}
+function shareCard(){
+  if(typeof html2canvas==='undefined'){ saveCard(); return; }
+  toast(LANG==='en'?'Preparing to share…':'准备分享…');
+  renderCardCanvas().then(function(cv){
+    cv.toBlob(function(blob){
+      var file=new File([blob], cardFilename(), {type:'image/png'});
+      var shareUrl='https://runae.net/daily'+(REF?('?ref='+encodeURIComponent(REF)):'');
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        navigator.share({files:[file], title:'善缘 Runae · 今日运势', text:(LANG==='en'?'My fortune today':'我的今日运势')+' · '+shareUrl}).catch(function(){});
+      } else {
+        var a=document.createElement('a'); a.href=cv.toDataURL('image/png'); a.download=cardFilename(); a.click();
+        toast(LANG==='en'?'Saved. Share it manually':'已保存 · 可手动分享');
+      }
+    },'image/png');
+  }).catch(function(){ saveCard(); });
+}
+
+/* ========= paywall ========= */
+function gateTime(){ go('sub'); }
+function handleSubscribe(){
+  var btn=document.querySelector('#view-sub .sub-cta .go');
+  if(btn){ btn.style.opacity='.6'; btn.querySelector('span').textContent = LANG==='en'?'Redirecting…':'跳转支付…'; }
+  fetch('/api/create-checkout', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ product:'daily_companion_year', price:138, title:'善缘·常伴（年）', token:'', ref:REF, lang:LANG })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if(d && d.url){ window.location.href=d.url; }
+    else { toast(LANG==='en'?'Failed, please retry':'跳转失败，请重试'); resetSub(); }
+  }).catch(function(){ toast(LANG==='en'?'Network error, please retry':'网络异常，请重试'); resetSub(); });
+}
+function resetSub(){
+  var btn=document.querySelector('#view-sub .sub-cta .go');
+  if(btn){ btn.style.opacity='1'; btn.querySelector('span').textContent = t('sub_go')||'开启善缘·常伴'; }
+}
+
+/* ========= util ========= */
+function show(id){ document.getElementById(id).hidden=false; }
+function hide(id){ document.getElementById(id).hidden=true; }
+var _toastTimer=null;
+function toast(msg){
+  var el=document.getElementById('toast');
+  el.textContent=msg; el.style.background='rgba(58,47,74,.94)'; el.style.color='#f2e7d6';
+  el.classList.add('show');
+  clearTimeout(_toastTimer); _toastTimer=setTimeout(function(){ el.classList.remove('show'); }, 2600);
+}
+
+/* ========= boot ========= */
+(function(){
+  applyI18n();
+  buildForm();
+  BIRTH=loadBirth();
+  if(BIRTH){ go('today'); loadToday(); }
+  else { go('onboard'); }
+})();
 </script>
 </body>
 </html>
