@@ -27,6 +27,7 @@
 中腰部:**@rashitarot**(131K)· **@cuttingcardtarot**(148K)· **@antphrodite**(115K·男性视角差异化)· **@mysticmolly1111**(258K)
 - **P1 通用话术(EN)**:
   > Hi [名] — your [塔罗/星座] readings have such a loyal community. We made Runae, an AI reading tool (BaZi + Western astrology, framed for insight & entertainment). Different angle from your live readings — could be a fun add for your audience, with a revenue-share on anyone who upgrades. Free access to try — can I send a link?
+  - **填好的范例(@greystrega·WitchTok)——照这个粒度替换,别留占位符**:*Hi Strega — your witchcraft + tarot blend is one of the most grounded reads on my FYP, that [她具体某条视频] especially. We built Runae, an AI reading tool (BaZi + Western astrology, for insight & fun) — a different angle you could riff on, with a rev-share on anyone who upgrades. Free access to try — can I send a link?*
 
 > **深挖路径**:TikTok `#bazi` `#chineseastrology` `#fourpillars` 按最赞;Feedspot Top 60 Tarot TikTok 榜单;Modash/SeekSocial(22K+ 占星号带邮箱,可批量 outreach)。
 
@@ -35,7 +36,7 @@
 ## 二、国内 小红书 / 抖音 / B站
 
 **可直接私信/接触(有据可查)**
-- **@陈阿伯**(小红书 17.3万)· 开运香囊/艾条玄学带货,评论区"用后升职/上岸",购买力已验证——话术:「你的开运内容粉丝黏性很强。Runae 是个 AI 命理工具,能出个性化八字报告,想请你免费体验,若粉丝喜欢有分成合作。」
+- **@陈阿伯**(小红书 17.3万)· 开运香囊/艾条玄学带货,评论区"用后升职/上岸",购买力已验证——话术(**走玄学生活方式措辞、避"算命/八字报告"限流硬词**):「你的开运内容粉丝黏性很强。Runae 是个 AI 玄学工具,参考五行帮你找个人能量方向,想请你免费体验,若粉丝喜欢有分成合作。」
 - **@我最爱吃手枪腿**(小红书·玄学穿搭/每日幸运色·高互动)· **@有易说易**(小红书·易经科普·措辞谨慎合规好)· **@邓仙贝**(玄学美甲/配色·和手相/五行交叉)
 - **@慧慧子慧慧**(抖音 64万·塔罗/命理·公益测算引流)——⚠️抖音算命限流,转化不确定,先测
 - **@龙女塔罗**(B站 152万·单视频近300万播放·咨询1000元/次=受众付费意愿强)——塔罗非八字,体量大,PR/背书向
@@ -60,6 +61,6 @@
 ## 四、首批 5 个(本周发·海外优先)
 1. **@jingtheory**(海外·英文八字·完美对位 ★)
 2. **@thetarotteller**(海外·塔罗腰部·CPS 成本低)
-3. **@baziuniverse**(海外·英文 bazi 种子·蓝海卡位)
+3. **从 TikTok `#bazi`/`#chineseastrology` 实筛的一个当前活跃英文 bazi 腰部号**(蓝海卡位·@baziuniverse 等小号须先核实再联,不作首批)
 4. **@陈阿伯**(国内·购买力已验证)
 5. 新红筛的第一个国内命理腰部号

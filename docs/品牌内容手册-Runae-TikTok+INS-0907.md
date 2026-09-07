@@ -139,8 +139,8 @@ Runae 不是一个预言机，也不是 TikTok 上那种"信则灵"的玄学号�
 - TikTok：每条聚焦一种日主，30秒，"gift AND shadow" 结构（正向特质 + 盲点，真实不吹捧）
 - Instagram Carousel：十种日主系列，每张一种，可连续发布10天，配套一张 "which one are you" 互动图
 
-**CTA：** "Find out your exact element → link in bio (needs your birth HOUR, not just date)"
-**注意**：强调需要出生时辰，这是 BaZi vs 普通星座的核心差异，也是让用户去 runae.app 输入的理由。
+**CTA：** "Find out your exact element → link in bio (you only need your birthday)"
+**注意**：日主（Day Master）由出生日期唯一确定，无需时辰。时辰影响的是时柱，不是日主。CTA 主钩子统一用"只需生日"降低门槛；若引导完整四柱报告，可加可选层 "if you want the full reading, bring your birth hour too"，但主钩子不要求时辰。
 
 **为什么有效：** 身份认同 + 分享欲 = 最强的自然传播。"Run yours and drop your element in the comments 👇" 是每条视频的评论区炸弹。
 
@@ -419,10 +419,10 @@ for entertainment & cultural insight · AI · not a prediction
 | 0:03-0:09 | 屏幕录制 | runae.app 五行选择界面 or 排盘结果中的 Day Master 元素展示 | `There are 10 Day Masters. Each one is an element + yin or yang.` | "There are ten Day Masters — five elements, yin and yang. Mine is Yang Wood." |
 | 0:09-0:18 | 中景 + 字幕变化 | 人物描述自己的元素特质，用手势辅助说明 | `Yang Wood: grows fast, bends in wind, roots deep.` `The tree, not the forest.` | "Yang Wood — grows fast, bends in the wind without breaking, roots go deep. The tree, not the forest." |
 | 0:18-0:24 | 近景 | 人物轻笑，点头 | `…I have been told I'm stubborn AND flexible simultaneously.` `Rude but accurate.` | "I have been told I'm stubborn and flexible simultaneously. The chart just called that out in one line." |
-| 0:24-0:30 | 中景 | 人物看向镜头，做"go check yours"的手势 | `Drop your Day Master in the comments 👇` `→ link in bio for yours` + `for entertainment · AI` | "Drop your Day Master in the comments. Link in bio to find yours — you need your birth HOUR, not just the date." |
+| 0:24-0:30 | 中景 | 人物看向镜头，做"go check yours"的手势 | `Drop your Day Master in the comments 👇` `→ link in bio for yours` + `for entertainment · AI` | "Drop your Day Master in the comments. Link in bio to find yours — you only need your birthday." |
 
 **口播全文（英文）：**
-> "Do you know your Chinese element? Not your zodiac year — your Day Master. It's different. There are ten Day Masters — five elements, yin and yang. Mine is Yang Wood — grows fast, bends in the wind without breaking, roots go deep. The tree, not the forest. I have been told I'm stubborn and flexible simultaneously. The chart just called that out in one line. Drop your Day Master in the comments. Link in bio to find yours — you need your birth hour, not just the date."
+> "Do you know your Chinese element? Not your zodiac year — your Day Master. It's different. There are ten Day Masters — five elements, yin and yang. Mine is Yang Wood — grows fast, bends in the wind without breaking, roots go deep. The tree, not the forest. I have been told I'm stubborn and flexible simultaneously. The chart just called that out in one line. Drop your Day Master in the comments. Link in bio to find yours — you only need your birthday."
 
 **配乐：** 古风现代融合轻音乐 · 节奏稳 · 不用 trending pop
 
@@ -438,7 +438,7 @@ I've been told I'm stubborn and flexible simultaneously.
 
 The chart said that in one line.
 
-To find yours, you need your exact birth HOUR — that's what makes BaZi different from just checking your Chinese zodiac year.
+To find your Day Master, you only need your birthday — that's it. (The deeper layers of BaZi use your birth hour, but your Day Master comes straight from the date.)
 
 Drop your Day Master below 👇 curious how many Wood types are here.
 
@@ -473,12 +473,12 @@ Mercury retrograde 是 TikTok spiritual 社区最大的梗词。"It's not in BaZ
 | 0:00-0:03 | 中景 | 人物说话，带点"准备告诉你一个秘密"的表情 | `Mercury retrograde isn't in your BaZi.`（大字）`This is what Chinese astrology watches instead.` | "Mercury retrograde isn't a thing in Chinese astrology. Here's what it watches instead — and honestly it tracks harder." |
 | 0:03-0:11 | 屏幕录制 + 字幕 | runae.app 或静态解释图，展示天干地支循环图 | `Chinese astrology runs on a 10-year cycle. Not planetary transits.` | "Chinese astrology runs on what's called a 10-year Luck Pillar. Not planetary transits — your entire decade is mapped to one energy phase." |
 | 0:11-0:19 | 近景 | 人物指着手机屏幕，带惊讶感 | `My current decade (32-42): "Resource and Seal" phase.`（字幕）`= 学习、被认可、有人托底的阶段` | "My current decade — I'm 33 — is called a 'Resource and Seal' phase. Which in the system means: a time when learning deepens, and support shows up." |
-| 0:19-0:26 | 中景 | 人物放下手机，看向镜头 | `I moved cities, went back to studying, found my people.`（字幕）`Decade checks out.` | "I moved cities, went back to studying, found my people. The decade checks out." |
+| 0:19-0:26 | 中景 | 人物放下手机，看向镜头 | `I moved cities, went back to studying, found my people.`（字幕）`I don't know how much is the system — but the framing was useful.` | "I moved cities, went back to studying, found my people. I don't know how much is the system and how much is just life — but the framing was useful." |
 | 0:26-0:32 | 屏幕录制 | runae.app 中"Luck Pillar"界面 | `It's not planets. It's your personal calendar.` | "It's not planets — it's your personal energy calendar. Different rhythm, specific to you." |
 | 0:32-0:38 | 中景 | 人物正视，轻松语气 | `Curious what decade you're in? → link in bio` + `for entertainment & cultural insight · AI` | "Curious what decade you're in? Link in bio. For cultural insight — not a forecast." |
 
 **口播全文（英文）：**
-> "Mercury retrograde isn't a thing in Chinese astrology. Here's what it watches instead — and honestly it tracks harder. Chinese astrology runs on what's called a 10-year Luck Pillar. Not planetary transits — your entire decade is mapped to one energy phase. My current decade — I'm 33 — is called a 'Resource and Seal' phase. Which in the system means: a time when learning deepens, and support shows up. I moved cities, went back to studying, found my people. The decade checks out. It's not planets — it's your personal energy calendar. Different rhythm, specific to you. Curious what decade you're in? Link in bio. For cultural insight — not a forecast."
+> "Mercury retrograde isn't a thing in Chinese astrology. Here's what it watches instead — and honestly it tracks harder. Chinese astrology runs on what's called a 10-year Luck Pillar. Not planetary transits — your entire decade is mapped to one energy phase. My current decade — I'm 33 — is called a 'Resource and Seal' phase. Which in the system means: a time when learning deepens, and support shows up. I moved cities, went back to studying, found my people. I don't know how much is the system and how much is just life — but the framing was useful. It's not planets — it's your personal energy calendar. Different rhythm, specific to you. Curious what decade you're in? Link in bio. For cultural insight — not a forecast."
 
 **配乐：** 低沉弦乐 · 有轻微 tension → resolve 的弧度 · 不要 spiritual 的那种 harp 声
 
@@ -494,7 +494,7 @@ Mine (I'm 33) is called a "Resource and Seal" phase — the system describes it 
 
 I moved cities this year. Went back to studying something I'd dropped. Found the right people.
 
-The decade checks out.
+I don't know how much is the system and how much is just life — but the framing was useful.
 
 It's not universal (not "everyone born in 1991 is in this phase") — it's calculated from YOUR specific Four Pillars. Which is why it's more specific than Mercury retrograde, which affects everyone simultaneously.
 
