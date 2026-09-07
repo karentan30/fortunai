@@ -62,7 +62,7 @@ async function _callOne(provider, messages, opts, stream) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + provider.key },
     body,
-    signal: AbortSignal.timeout(opts.timeout || 300000)
+    signal: AbortSignal.timeout(opts.timeout || 120000)
   });
   if (!res.ok) {
     const err = await res.text().catch(() => 'unknown');
