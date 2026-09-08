@@ -164,49 +164,56 @@ const FMT_LAW_EN = '\n\n[FORMAT RULES] For in-body sub-headers use **bold text**
  * @param {object} [westernChartExtra]  computeWesternChart() 返回值（可选，供追加精确行星表）
  * @returns {string}  Markdown 格式的事实卡文本块
  */
-function buildWesternFactCard(chart) {
+function buildWesternFactCard(chart, lang) {
   if (!chart) return '';
-  const lines = [
-    '---',
-    '## 📊 命盘事实卡（后端引擎生成 · 100% 准确 · 禁止 AI 修改）',
-    '',
-    `| 项目 | 星座 | 度数 |`,
-    `|------|------|------|`,
-    `| ☀️ 太阳 Sun | ${chart.sun.signZh}（${chart.sun.signEn}）| ${chart.sun.degree}° |`,
-    `| 🌙 月亮 Moon | ${chart.moon.signZh}（${chart.moon.signEn}）| ${chart.moon.degree}° |`,
-    `| ⬆️ 上升 Rising | ${chart.rising.signZh}（${chart.rising.signEn}）| ${chart.rising.degree}° |`,
-  ];
+  var en = !!(lang && lang !== 'zh');
+  var _EL_EN = { '火':'Fire','土':'Earth','风':'Air','水':'Water' };
+  var _MO_EN = { '开创':'Cardinal','固定':'Fixed','变动':'Mutable' };
+  var _sig = function(o){ return en ? (o.signEn || o.signZh) : (o.signZh + '（' + o.signEn + '）'); };
+  const lines = en
+    ? [ '---', '## 📊 Chart Fact Card (backend engine · 100% accurate · AI must not alter)', '',
+        `| Item | Sign | Degree |`, `|------|------|------|`,
+        `| ☀️ Sun | ${chart.sun.signEn} | ${chart.sun.degree}° |`,
+        `| 🌙 Moon | ${chart.moon.signEn} | ${chart.moon.degree}° |`,
+        `| ⬆️ Rising | ${chart.rising.signEn} | ${chart.rising.degree}° |` ]
+    : [ '---', '## 📊 命盘事实卡（后端引擎生成 · 100% 准确 · 禁止 AI 修改）', '',
+        `| 项目 | 星座 | 度数 |`, `|------|------|------|`,
+        `| ☀️ 太阳 Sun | ${chart.sun.signZh}（${chart.sun.signEn}）| ${chart.sun.degree}° |`,
+        `| 🌙 月亮 Moon | ${chart.moon.signZh}（${chart.moon.signEn}）| ${chart.moon.degree}° |`,
+        `| ⬆️ 上升 Rising | ${chart.rising.signZh}（${chart.rising.signEn}）| ${chart.rising.degree}° |` ];
 
   // 五大行星
   const planetMap = [
-    ['☿ 水星 Mercury', chart.planets.mercury],
-    ['♀ 金星 Venus',   chart.planets.venus],
-    ['♂ 火星 Mars',    chart.planets.mars],
-    ['♃ 木星 Jupiter', chart.planets.jupiter],
-    ['♄ 土星 Saturn',  chart.planets.saturn],
+    [en ? '☿ Mercury' : '☿ 水星 Mercury', chart.planets.mercury],
+    [en ? '♀ Venus' : '♀ 金星 Venus',   chart.planets.venus],
+    [en ? '♂ Mars' : '♂ 火星 Mars',    chart.planets.mars],
+    [en ? '♃ Jupiter' : '♃ 木星 Jupiter', chart.planets.jupiter],
+    [en ? '♄ Saturn' : '♄ 土星 Saturn',  chart.planets.saturn],
   ];
   for (const [label, p] of planetMap) {
-    if (p) lines.push(`| ${label} | ${p.signZh}（${p.signEn}）| ${p.degree}° |`);
+    if (p) lines.push(`| ${label} | ${_sig(p)} | ${p.degree}° |`);
   }
 
   // 元素与模式
   if (chart.elements && chart.elements.length) {
     lines.push('');
-    lines.push('**元素分布：**' + chart.elements.map(e => `${e.name} ${e.percentage}%`).join(' · '));
+    lines.push((en ? '**Elements:** ' : '**元素分布：**') + chart.elements.map(e => `${en ? (_EL_EN[e.name] || e.name) : e.name} ${e.percentage}%`).join(' · '));
   }
   if (chart.modalities && chart.modalities.length) {
-    lines.push('**模式分布：**' + chart.modalities.map(m => `${m.name} ${m.percentage}%`).join(' · '));
+    lines.push((en ? '**Modalities:** ' : '**模式分布：**') + chart.modalities.map(m => `${en ? (_MO_EN[m.name] || m.name) : m.name} ${m.percentage}%`).join(' · '));
   }
 
   // 宫位
   if (chart.houses && chart.houses.length) {
     lines.push('');
-    lines.push('**宫位（等宫制）：**');
-    lines.push(chart.houses.map(h => `第${h.number}宫:${h.signZh}`).join(' | '));
+    lines.push(en ? '**Houses (Equal House):**' : '**宫位（等宫制）：**');
+    lines.push(chart.houses.map(h => en ? `H${h.number}:${h.signEn || h.signZh}` : `第${h.number}宫:${h.signZh}`).join(' | '));
   }
 
   lines.push('');
-  lines.push('> ⚠️ 以上数据由后端天文引擎计算，AI 解读内容须与本事实卡完全一致。');
+  lines.push(en
+    ? '> ⚠️ The above is computed by the backend ephemeris; the AI reading must match this fact card exactly.'
+    : '> ⚠️ 以上数据由后端天文引擎计算，AI 解读内容须与本事实卡完全一致。');
   lines.push('---');
   lines.push('');
   return lines.join('\n');
@@ -3820,27 +3827,38 @@ router.post('/xingming', rateLimitMiddleware, async (req, res) => {
 // 事实卡（精确天文引擎版·单一数据源·杜绝旧引擎冲突）
 const _WEST_ZH_SIGNS = ['白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手','摩羯','水瓶','双鱼'];
 const _WEST_PLANET_ZH = { Sun:'☀️ 太阳 Sun', Moon:'🌙 月亮 Moon', Mercury:'☿ 水星 Mercury', Venus:'♀ 金星 Venus', Mars:'♂ 火星 Mars', Jupiter:'♃ 木星 Jupiter', Saturn:'♄ 土星 Saturn', Uranus:'♅ 天王星 Uranus', Neptune:'♆ 海王星 Neptune', Pluto:'♇ 冥王星 Pluto' };
-function buildPreciseFactCard(wc) {
+function buildPreciseFactCard(wc, lang) {
   if (!wc || !wc.planets || !wc.planets.length) return '';
-  var lines = ['---', '## 📊 命盘事实卡（后端精确天文引擎 VSOP87 · 禁止 AI 修改）', '', '| 行星 | 星座 | 度数 |', '|------|------|------|'];
+  var en = !!(lang && lang !== 'zh');
+  var ELEM_EN = { '火':'Fire','土':'Earth','风':'Air','水':'Water' };
+  var MODE_EN = { '开创':'Cardinal','固定':'Fixed','变动':'Mutable' };
+  var lines = en
+    ? ['---', '## 📊 Chart Fact Card (backend precise ephemeris · VSOP87 · AI must not alter)', '', '| Planet | Sign | Degree |', '|------|------|------|']
+    : ['---', '## 📊 命盘事实卡（后端精确天文引擎 VSOP87 · 禁止 AI 修改）', '', '| 行星 | 星座 | 度数 |', '|------|------|------|'];
   var elem = { '火':0,'土':0,'风':0,'水':0 }, mode = { '开创':0,'固定':0,'变动':0 };
   wc.planets.forEach(function(p){
     var zh = _WEST_ZH_SIGNS[p.signIndex] || p.sign;
-    lines.push('| ' + (_WEST_PLANET_ZH[p.name] || p.name) + ' | ' + zh + '（' + p.sign + '）| ' + (p.degreeInSign != null ? Math.floor(p.degreeInSign) + '°' : '') + (p.retrograde ? ' ℞' : '') + ' |');
+    var planetLabel = en ? p.name : (_WEST_PLANET_ZH[p.name] || p.name);
+    var signLabel = en ? p.sign : (zh + '（' + p.sign + '）');
+    lines.push('| ' + planetLabel + ' | ' + signLabel + ' | ' + (p.degreeInSign != null ? Math.floor(p.degreeInSign) + '°' : '') + (p.retrograde ? ' ℞' : '') + ' |');
     elem[['火','土','风','水'][p.signIndex % 4]]++;
     mode[['开创','固定','变动'][p.signIndex % 3]]++;
   });
   var tot = wc.planets.length;
   lines.push('');
-  lines.push('**元素分布：**' + Object.keys(elem).map(function(k){ return k + ' ' + Math.round(elem[k]/tot*100) + '%'; }).join(' · '));
-  lines.push('**模式分布：**' + Object.keys(mode).map(function(k){ return k + ' ' + Math.round(mode[k]/tot*100) + '%'; }).join(' · '));
+  lines.push((en ? '**Elements:** ' : '**元素分布：**') + Object.keys(elem).map(function(k){ return (en ? ELEM_EN[k] : k) + ' ' + Math.round(elem[k]/tot*100) + '%'; }).join(' · '));
+  lines.push((en ? '**Modalities:** ' : '**模式分布：**') + Object.keys(mode).map(function(k){ return (en ? MODE_EN[k] : k) + ' ' + Math.round(mode[k]/tot*100) + '%'; }).join(' · '));
   if (wc.meta && wc.meta.hasFullChart && wc.ascendant) {
-    lines.push('**⬆️ 上升 Ascendant：**' + (_WEST_ZH_SIGNS[wc.ascendant.signIndex] || wc.ascendant.sign) + '（' + wc.ascendant.sign + '）' + Math.floor(wc.ascendant.degreeInSign || 0) + '°');
+    lines.push((en ? '**⬆️ Ascendant:** ' : '**⬆️ 上升 Ascendant：**') + (en ? wc.ascendant.sign : ((_WEST_ZH_SIGNS[wc.ascendant.signIndex] || wc.ascendant.sign) + '（' + wc.ascendant.sign + '）')) + ' ' + Math.floor(wc.ascendant.degreeInSign || 0) + '°');
   } else {
-    lines.push('**⬆️ 上升与十二宫：**需提供精确出生时间与出生地方可精算（本报告基于太阳/月亮/行星星座解读，不含上升与宫位；请勿在正文杜撰上升或宫位）');
+    lines.push(en
+      ? '**⬆️ Ascendant & Houses:** need exact birth time and place to compute (this report reads Sun/Moon/planet signs only, no Rising or houses; do not fabricate a Rising or house in the body).'
+      : '**⬆️ 上升与十二宫：**需提供精确出生时间与出生地方可精算（本报告基于太阳/月亮/行星星座解读，不含上升与宫位；请勿在正文杜撰上升或宫位）');
   }
   lines.push('');
-  lines.push('> ⚠️ 以上为后端精确天文引擎计算，AI 解读须与本事实卡完全一致，禁止另算或改动任何行星星座/度数，禁止写出与上表不同的星座。');
+  lines.push(en
+    ? '> ⚠️ The above is computed by the backend precise ephemeris. The AI reading must match this fact card exactly — never recompute or alter any planet sign/degree, never state a sign different from this table.'
+    : '> ⚠️ 以上为后端精确天文引擎计算，AI 解读须与本事实卡完全一致，禁止另算或改动任何行星星座/度数，禁止写出与上表不同的星座。');
   lines.push('---');
   return lines.join('\n');
 }
@@ -3912,7 +3930,7 @@ ${westernEngineBlock}
         timezone: (latitude != null && longitude != null) ? Math.round(parseFloat(longitude) / 15) : undefined,
       });
     } catch (e) { console.warn('[ASTRO] computeWesternChart 不可用，回退旧事实卡:', e.message); }
-    const _astroFactCard = _wcPrecise ? buildPreciseFactCard(_wcPrecise) : buildWesternFactCard(chart);
+    const _astroFactCard = _wcPrecise ? buildPreciseFactCard(_wcPrecise, lang) : buildWesternFactCard(chart, lang);
 
     const _astroIntl = !!(lang && lang !== 'zh');
     const astroSystemPrompt = _astroIntl
