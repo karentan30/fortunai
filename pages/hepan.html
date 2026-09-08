@@ -3,174 +3,320 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#0e0408">
+<meta name="theme-color" content="#1a0a14">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-<title>善缘 · 合婚邀请</title>
-<meta name="description" content="邀请TA一起测合婚 — 双方八字合算，看你们是天作之合还是互补互长">
-<meta property="og:title" content="TA邀请你一起测合婚">
+<title>善缘 · 合盘配对</title>
+<meta name="description" content="邀请TA一起测合盘 — 双方八字合算，看你们是天作之合还是互补互长">
+<meta property="og:title" content="TA邀请你一起测合盘">
 <meta property="og:description" content="免费查看你们的八字相合度，看缘分深浅">
 <meta property="og:image" content="/og-card.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+/* ══════════════════════════════════════════════════════
+   HEPAN · Runae 独角兽设计系统 · 合盘双人玫瑰金版
+   ══════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#0e0408;--card:#1c080e;--mid:#280c14;
-  --rose:#cc2244;--rose-light:#e84466;--rose-dark:#8a1030;
-  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
-  --ink:rgba(248,230,220,0.92);--sub:rgba(210,180,168,0.7);
+  /* ── 暖纸底 ── */
+  --paper-0:#e4e2d8; --paper:#eee9da; --paper-2:#f5f2e8; --paper-3:#faf8f2; --paper-edge:#d8d2c4;
+  --bg:var(--paper-2); --card:var(--paper-3); --mid:var(--paper);
+  /* ── 玫瑰金主调 ── */
+  --rose:#b8405c; --rose-light:#cc5570; --rose-dark:#8a2840; --rose-wash:rgba(184,64,92,0.08); --rose-line:rgba(184,64,92,0.28);
+  /* ── 玉 ── */
+  --jade:#2f8f6b; --jade-mid:#6fbfa0; --jade-deep:#1f6b4e; --jade-wash:rgba(47,143,107,0.08);
+  /* ── 金 ── */
+  --gold:#c9a84c; --gold-light:#e8d08a; --gold-deep:#8a6420; --gold-wash:rgba(201,168,76,0.08); --gold-line:rgba(201,168,76,0.25);
+  /* ── 文字 ── */
+  --ink:#232822; --sub:#60685a; --text:#232822;
+  /* ── 阴影 ── */
+  --shadow-card:0 24px 48px -20px rgba(30,18,12,0.28); --shadow-lift:0 12px 28px -14px rgba(30,18,12,0.22);
+  /* ── 字体 ── */
+  --serif:'Noto Serif SC',serif; --lat:'Cormorant Garamond',serif;
 }
-html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink);-webkit-font-smoothing:antialiased}
-body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:100px;overflow-x:hidden}
+html,body{background:var(--bg);font-family:var(--serif);color:var(--ink);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:120px;overflow-x:hidden;position:relative}
+/* 双色晕光 */
 body::before{content:'';position:fixed;inset:0;
-  background:radial-gradient(ellipse at 50% -5%,rgba(180,20,40,0.45) 0%,rgba(201,168,76,0.05) 52%,transparent 70%);
+  background:radial-gradient(ellipse at 20% 0%,rgba(184,64,92,0.12) 0%,transparent 55%),
+             radial-gradient(ellipse at 80% 0%,rgba(47,143,107,0.08) 0%,transparent 50%),
+             radial-gradient(ellipse at 50% 100%,rgba(201,168,76,0.05) 0%,transparent 40%);
   pointer-events:none;z-index:0}
 
-.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(201,96,122,0.55);cursor:pointer;transition:color .2s}
+/* ── 星尘粒子 ── */
+.stardust{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.stardust span{position:absolute;width:2.5px;height:2.5px;background:rgba(184,64,92,0.4);border-radius:50%;opacity:0;animation:twinkle var(--dur,3s) ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:0;transform:scale(0.6)}50%{opacity:0.6;transform:scale(1.1)}}
+
+/* ── 返回按钮 ── */
+.back-btn{position:fixed;top:calc(14px + env(safe-area-inset-top,0px));left:12px;z-index:99;background:none;border:none;font-family:var(--serif);font-size:22px;color:var(--sub);cursor:pointer;padding:6px 10px;line-height:1;transition:color 0.2s;min-height:44px;display:flex;align-items:center}
 .back-btn:hover{color:var(--rose)}
 
 /* ── header ── */
-.header{position:relative;z-index:1;text-align:center;padding:56px 20px 20px}
-.header-xi{font-size:72px;color:rgba(180,20,40,0.9);line-height:1;margin-bottom:6px;text-shadow:0 0 40px rgba(201,168,76,0.35);display:block}
-.header-title{font-size:22px;font-weight:300;letter-spacing:0.16em;margin-bottom:5px}
-.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:13px;letter-spacing:0.18em;color:rgba(204,34,68,0.7)}
-.gold-line{width:70px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:12px auto 0}
+.header{position:relative;z-index:1;text-align:center;padding:52px 20px 24px}
 
-/* ── invite banner ── */
-.invite-banner{display:none;margin:0 16px 16px;padding:16px;border-radius:14px;
-  background:linear-gradient(135deg,rgba(201,96,122,0.18),rgba(201,168,76,0.08));
-  border:1px solid rgba(201,96,122,0.35);text-align:center;position:relative;z-index:2;animation:fadeUp .5s ease both}
+/* 品牌标识 */
+.brandmark{display:flex;flex-direction:column;align-items:center;line-height:1;margin-bottom:12px}
+.brandmark .cn{font-family:var(--serif);font-weight:500;font-size:18px;letter-spacing:.38em;color:var(--ink);text-indent:.38em}
+.brandmark .en{font-family:var(--lat);font-size:10px;letter-spacing:.44em;color:var(--gold);margin-top:5px;text-transform:uppercase;text-indent:.44em}
+
+/* 大字 */
+.hero-glyph{
+  font-family:var(--serif);font-size:84px;font-weight:400;line-height:1;text-align:center;display:block;margin:0 auto 10px;
+  background:linear-gradient(155deg,var(--rose-dark) 0%,var(--rose) 45%,rgba(201,168,76,0.85) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:none;
+  filter:drop-shadow(0 4px 18px rgba(184,64,92,0.25));
+}
+
+/* 烟雾粒子 */
+.header-smoke{width:90px;height:64px;margin:0 auto 10px;display:flex;gap:10px;justify-content:center;align-items:flex-end}
+.smoke-col{display:flex;flex-direction:column;gap:7px}
+.smoke-particle{width:2.5px;border-radius:1px;background:linear-gradient(to top,rgba(184,64,92,0.45),transparent);
+  animation:riseSmoke var(--dur,3s) ease-in-out infinite;transform-origin:bottom center}
+.smoke-particle:nth-child(1){height:18px;--dur:2.8s;animation-delay:0s}
+.smoke-particle:nth-child(2){height:26px;--dur:3.3s;animation-delay:0.4s}
+.smoke-particle:nth-child(3){height:22px;--dur:2.9s;animation-delay:0.8s}
+@keyframes riseSmoke{
+  0%{height:4px;opacity:0.7;transform:scaleX(1) translateY(0)}
+  40%{opacity:0.4;transform:scaleX(1.3) translateY(-12px)}
+  80%{opacity:0.1;transform:scaleX(1.6) translateY(-30px)}
+  100%{height:3px;opacity:0;transform:scaleX(0.8) translateY(-44px)}
+}
+
+.header-title{font-family:var(--serif);font-size:22px;font-weight:400;letter-spacing:0.18em;margin-bottom:5px;color:var(--ink)}
+.header-sub{font-family:var(--lat);font-style:italic;font-size:13px;letter-spacing:0.22em;color:rgba(184,64,92,0.75);margin-bottom:2px}
+.rose-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--rose),transparent);margin:12px auto 0}
+
+/* ── 邀请 banner ── */
+.invite-banner{display:none;margin:0 16px 12px;padding:14px 16px;border-radius:14px;
+  background:linear-gradient(135deg,var(--rose-wash),var(--gold-wash));
+  border:1px solid var(--rose-line);text-align:center;position:relative;z-index:2;
+  animation:fadeUp 0.5s ease both;box-shadow:var(--shadow-lift)}
 .invite-banner.show{display:block}
-.invite-banner-heart{font-size:28px;margin-bottom:6px}
-.invite-banner-name{font-size:16px;color:var(--gold-light);letter-spacing:0.08em;margin-bottom:4px}
-.invite-banner-sub{font-size:11px;color:var(--sub);letter-spacing:.06em}
+.invite-banner-heart{font-size:26px;margin-bottom:5px}
+.invite-banner-name{font-size:14px;color:var(--ink);letter-spacing:0.1em;margin-bottom:3px;font-weight:500}
+.invite-banner-sub{font-size:11px;color:var(--sub);letter-spacing:0.06em}
 
-/* ── section label ── */
-.section-label{font-size:10px;letter-spacing:.22em;color:var(--sub);padding:0 16px;margin-bottom:8px;position:relative;z-index:1}
+/* ── section eyebrow label ── */
+.section-label{font-size:10px;letter-spacing:0.22em;color:var(--sub);padding:0 16px;margin-bottom:8px;
+  position:relative;z-index:1;display:flex;align-items:center;gap:10px}
+.section-label::before,.section-label::after{content:'';height:1px;flex:1;background:var(--gold-line)}
 
 /* ── person card ── */
-.person-card{background:var(--card);border-radius:12px;padding:14px;margin:0 16px 12px;position:relative;z-index:1;border:1px solid}
-.person-a-card{border-color:rgba(201,96,122,0.22)}
-.person-b-card{border-color:rgba(91,191,160,0.18)}
-.person-card-label{font-size:10px;letter-spacing:.2em;margin-bottom:10px}
-.person-a-card .person-card-label{color:var(--rose-light)}
-.person-b-card .person-card-label{color:#5bbfa0}
+.person-card{background:var(--card);border-radius:14px;padding:14px 12px 12px;margin:0 16px 12px;
+  position:relative;z-index:1;border:1px solid;box-shadow:var(--shadow-lift);
+  transition:transform 0.25s,box-shadow 0.25s}
+.person-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-card)}
+.person-a-card{border-color:rgba(184,64,92,0.22)}
+.person-b-card{border-color:rgba(47,143,107,0.20)}
 
-.name-input{width:100%;background:var(--mid);border:1px solid rgba(201,168,76,0.12);border-radius:8px;color:var(--ink);font-family:'Noto Serif SC',serif;font-size:13px;padding:9px 12px;margin-bottom:8px;outline:none;letter-spacing:.08em}
-.name-input:focus{border-color:rgba(201,168,76,0.4)}
-.name-input::placeholder{color:rgba(210,180,168,0.3)}
+.person-card-label{font-size:10px;letter-spacing:0.2em;margin-bottom:10px;text-align:center;font-weight:500}
+.person-a-card .person-card-label{color:var(--rose)}
+.person-b-card .person-card-label{color:var(--jade)}
+
+.name-input{width:100%;background:var(--mid);border:1px solid var(--gold-line);border-radius:8px;
+  color:var(--ink);font-family:var(--serif);font-size:13px;padding:9px 10px;margin-bottom:8px;
+  outline:none;letter-spacing:0.08em;min-height:36px;text-align:center;transition:border-color 0.2s}
+.name-input::placeholder{color:rgba(80,68,50,0.35)}
+.person-a-card .name-input:focus{border-color:rgba(184,64,92,0.5);box-shadow:0 0 0 2px rgba(184,64,92,0.08)}
+.person-b-card .name-input:focus{border-color:rgba(47,143,107,0.5);box-shadow:0 0 0 2px rgba(47,143,107,0.08)}
 
 .date-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px}
-.mini-sel{width:100%;background:var(--mid);border:1px solid rgba(201,168,76,0.12);border-radius:8px;color:var(--ink);font-family:'Noto Serif SC',serif;font-size:11px;padding:8px 4px;-webkit-appearance:none;outline:none;text-align:center}
-.mini-sel option{background:var(--card)}
+.mini-sel{width:100%;background:var(--mid);border:1px solid var(--gold-line);border-radius:8px;
+  color:var(--ink);font-family:var(--serif);font-size:11px;padding:8px 4px;
+  -webkit-appearance:none;outline:none;text-align:center;min-height:40px;transition:border-color 0.2s}
+.mini-sel:focus{border-color:var(--gold)}
+.mini-sel option{background:var(--card);color:var(--ink)}
 
 .gender-row{display:flex;gap:6px}
-.g-opt{flex:1;text-align:center;padding:7px 0;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid rgba(201,168,76,0.15);color:var(--sub);transition:all .2s;-webkit-tap-highlight-color:transparent}
-.person-a-card .g-opt.sel{border-color:var(--rose);background:rgba(201,96,122,0.14);color:var(--rose-light)}
-.person-b-card .g-opt.sel{border-color:#5bbfa0;background:rgba(91,191,160,0.1);color:#8dd9bf}
+.g-opt{flex:1;text-align:center;padding:7px 0;border-radius:8px;font-size:12px;cursor:pointer;
+  border:1px solid var(--gold-line);color:var(--sub);background:var(--mid);
+  transition:all 0.2s;-webkit-tap-highlight-color:transparent;min-height:36px;display:flex;align-items:center;justify-content:center}
+.person-a-card .g-opt.sel{border-color:var(--rose);background:rgba(184,64,92,0.1);color:var(--rose-light)}
+.person-b-card .g-opt.sel{border-color:var(--jade);background:rgba(47,143,107,0.1);color:var(--jade)}
 
 /* locked A info display */
-.locked-info{background:var(--mid);border-radius:8px;padding:10px 12px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.locked-info-text{font-size:12px;color:var(--ink);letter-spacing:.06em}
-.locked-info-badge{font-size:10px;padding:2px 8px;background:rgba(201,96,122,0.2);border-radius:8px;color:var(--rose-light);white-space:nowrap}
+.locked-info{background:var(--mid);border-radius:8px;padding:10px 12px;margin-bottom:8px;
+  display:flex;align-items:center;gap:8px;border:1px solid var(--gold-line)}
+.locked-info-text{font-size:12px;color:var(--ink);letter-spacing:0.06em;flex:1}
+.locked-info-badge{font-size:10px;padding:2px 8px;background:rgba(184,64,92,0.12);
+  border-radius:8px;color:var(--rose);white-space:nowrap;border:1px solid rgba(184,64,92,0.2)}
 
-/* ── buttons ── */
-.btn-primary{width:100%;padding:14px 0;background:linear-gradient(135deg,var(--rose-dark),var(--rose),var(--rose-light));border:none;border-radius:14px;color:#fff;font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:.18em;cursor:pointer;box-shadow:0 4px 20px rgba(180,20,40,0.4);transition:all .2s;transform:translateY(0)}
-.btn-primary:hover{box-shadow:0 6px 28px rgba(180,20,40,0.55);transform:translateY(-1px)}
-.btn-primary:active{transform:translateY(0)}
-.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+/* ── CTA 按钮（漆面金·独角兽） ── */
 .btn-wrap{padding:0 16px;position:relative;z-index:1}
+.btn-primary{
+  position:relative;overflow:hidden;
+  width:100%;min-height:54px;padding:14px 16px;
+  background:linear-gradient(90deg,var(--gold-deep),var(--gold),var(--gold-light),var(--gold),var(--gold-deep));
+  background-size:300% auto;
+  animation:gold-shimmer 3.5s linear infinite;
+  border:none;border-radius:16px;
+  color:rgba(18,10,4,0.96);
+  font-family:var(--serif);font-size:15px;font-weight:600;letter-spacing:0.2em;
+  cursor:pointer;
+  box-shadow:0 8px 28px -8px rgba(201,168,76,0.45),inset 0 1px 0 rgba(255,255,255,0.4);
+  transition:opacity 0.2s,transform 0.2s;
+}
+.btn-primary::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,0.35),transparent);
+  transform:skewX(-18deg);animation:btnSheen 3.6s ease-in-out infinite}
+@keyframes btnSheen{0%,70%{left:-60%}88%,100%{left:130%}}
+@keyframes gold-shimmer{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+.btn-primary:hover{transform:translateY(-1px);box-shadow:0 10px 34px -8px rgba(201,168,76,0.58)}
+.btn-primary:active{transform:translateY(0);opacity:0.9}
+.btn-primary:disabled{opacity:0.55;cursor:not-allowed;transform:none!important;animation:none}
 
 /* ── loading ── */
-.loading-wrap{display:none;text-align:center;padding:44px 20px;position:relative;z-index:1}
+.loading-wrap{display:none;text-align:center;padding:52px 20px;position:relative;z-index:1}
 .loading-wrap.show{display:block}
-.sy-spinner{display:inline-block;width:40px;height:40px;border:3px solid rgba(201,168,76,0.18);border-top-color:var(--gold);border-radius:50%;animation:spin .9s linear infinite;margin-bottom:14px}
+.sy-spinner{display:inline-block;width:44px;height:44px;border:3px solid rgba(184,64,92,0.15);
+  border-top-color:var(--rose);border-radius:50%;animation:spin 0.9s linear infinite;margin-bottom:16px}
 @keyframes spin{to{transform:rotate(360deg)}}
-.load-txt{font-size:11px;color:var(--rose-light);letter-spacing:.18em;opacity:.8}
+.load-txt{font-size:11px;color:var(--rose);letter-spacing:0.18em;opacity:0.8}
 
 /* ── results ── */
 .results-wrap{display:none;position:relative;z-index:1}
-.results-wrap.show{display:block;animation:fadeUp .5s ease both}
+.results-wrap.show{display:block;animation:fadeUp 0.5s ease both}
 @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
-/* score ring */
-.score-block{text-align:center;padding:20px 16px 8px}
-.score-ring{width:110px;height:110px;margin:0 auto 10px;position:relative}
+/* 分数环 */
+.score-block{text-align:center;padding:28px 16px 18px}
+.score-ring{width:130px;height:130px;margin:0 auto 16px;position:relative}
 .score-ring svg{transform:rotate(-90deg)}
-.ring-bg{stroke:rgba(255,255,255,0.06);fill:none;stroke-width:7}
-.ring-fill{fill:none;stroke:var(--rose);stroke-width:7;stroke-linecap:round;stroke-dasharray:0 345;transition:stroke-dasharray 1.4s ease}
+.ring-bg{stroke:rgba(184,64,92,0.12);fill:none;stroke-width:8}
+.ring-fill{fill:none;stroke:var(--rose);stroke-width:8;stroke-linecap:round;stroke-dasharray:0 327;transition:stroke-dasharray 1.4s ease}
 .score-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.score-num{font-family:'Cormorant Garamond',serif;font-size:34px;line-height:1;color:var(--gold-light)}
-.score-pct{font-size:12px;opacity:.7}
-.score-grade{font-size:16px;letter-spacing:.14em;color:var(--rose-light);margin-top:4px}
-.score-names{font-size:11px;color:var(--sub);margin-top:3px;letter-spacing:.06em}
+.score-num{font-family:var(--lat);font-size:40px;line-height:1;color:var(--ink)}
+.score-pct{font-size:14px;margin-left:1px;opacity:0.6}
+.score-grade{font-size:20px;letter-spacing:0.16em;margin-bottom:5px;color:var(--rose)}
+.score-names{font-size:11px;color:var(--sub);margin-top:3px;letter-spacing:0.06em}
 
-/* preview cards */
+/* 预览卡 */
 .previews{padding:0 16px;margin-bottom:10px}
-.preview-card{background:var(--card);border:1px solid rgba(201,96,122,0.12);border-radius:12px;padding:14px;margin-bottom:8px;animation:fadeUp .5s ease both}
+.preview-card{background:var(--card);border:1px solid rgba(184,64,92,0.12);border-radius:14px;
+  padding:14px;margin-bottom:8px;animation:fadeUp 0.5s ease both;box-shadow:var(--shadow-lift);
+  transition:transform 0.2s}
+.preview-card:hover{transform:translateY(-1px)}
 .preview-card:nth-child(2){animation-delay:.1s}
 .preview-card:nth-child(3){animation-delay:.2s}
 .preview-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 .preview-icon{font-size:18px}
-.preview-title{font-size:12px;letter-spacing:.08em;color:var(--gold)}
-.preview-text{font-size:12px;color:var(--sub);line-height:1.8}
+.preview-title{font-size:12px;letter-spacing:0.08em;color:var(--gold)}
+.preview-text{font-size:12px;color:var(--sub);line-height:1.85}
 
-/* locked paywall */
-.locked-section{margin:0 16px 14px;position:relative;border-radius:12px;overflow:hidden}
-.locked-blur{padding:14px;filter:blur(5px);pointer-events:none;user-select:none;background:var(--card);border:1px solid rgba(201,96,122,0.1);border-radius:12px}
+/* 锁定 paywall */
+.locked-section{margin:0 16px 14px;position:relative;border-radius:14px;overflow:hidden;box-shadow:var(--shadow-card)}
+.locked-blur{padding:14px;filter:blur(5px);pointer-events:none;user-select:none;
+  background:var(--card);border:1px solid rgba(184,64,92,0.12);border-radius:14px}
 .locked-blur-line{font-size:11px;color:var(--sub);margin-bottom:8px;line-height:1.7}
-.locked-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(14,4,8,0.82);border-radius:12px}
-.lock-icon{font-size:24px;margin-bottom:6px}
-.lock-title{font-size:11px;color:var(--sub);margin-bottom:12px;letter-spacing:.1em;text-align:center;padding:0 20px}
-.btn-unlock{padding:11px 28px;background:linear-gradient(135deg,var(--rose-dark),var(--rose),var(--rose-light));border:none;border-radius:12px;color:#fff;font-family:'Noto Serif SC',serif;font-size:13px;font-weight:500;letter-spacing:.14em;cursor:pointer;transition:all .2s}
-.btn-unlock:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(180,20,40,0.5)}
-.lock-price{font-size:10px;color:rgba(210,180,168,0.5);margin-top:8px}
+.locked-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;background:linear-gradient(to bottom,rgba(250,248,242,0.10) 0%,rgba(250,248,242,0.92) 35%);
+  border-radius:14px}
+.lock-icon{font-size:28px;margin-bottom:8px}
+.lock-title{font-size:12px;color:var(--ink);margin-bottom:14px;letter-spacing:0.1em;text-align:center;padding:0 20px}
+.btn-unlock{padding:12px 28px;
+  background:linear-gradient(135deg,var(--rose-dark),var(--rose),var(--rose-light));
+  border:none;border-radius:12px;color:#fff;font-family:var(--serif);font-size:13px;
+  font-weight:500;letter-spacing:0.14em;cursor:pointer;
+  box-shadow:0 4px 18px rgba(184,64,92,0.35);transition:all 0.2s}
+.btn-unlock:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(184,64,92,0.5)}
+.lock-price{font-size:10px;color:var(--sub);margin-top:8px;opacity:0.65}
 
-/* share section */
-.share-section{margin:0 16px 16px;padding:16px;background:linear-gradient(135deg,rgba(180,20,40,0.1),rgba(201,168,76,0.05));border:1px solid rgba(201,96,122,0.18);border-radius:14px;position:relative;z-index:1}
-.share-title{font-size:10px;letter-spacing:.2em;color:var(--gold);margin-bottom:12px;text-align:center}
-.share-link-box{background:var(--mid);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--sub);word-break:break-all;margin-bottom:10px;line-height:1.6}
+/* 分享区 */
+.share-section{margin:0 16px 16px;padding:16px;
+  background:linear-gradient(135deg,var(--rose-wash),var(--gold-wash));
+  border:1px solid var(--rose-line);border-radius:14px;position:relative;z-index:1;
+  box-shadow:var(--shadow-lift)}
+.share-title{font-size:10px;letter-spacing:0.2em;color:var(--gold);margin-bottom:12px;text-align:center}
+.share-link-box{background:var(--mid);border-radius:8px;padding:10px 12px;font-size:11px;
+  color:var(--sub);word-break:break-all;margin-bottom:10px;line-height:1.6;border:1px solid var(--gold-line)}
 .share-btns{display:flex;gap:8px}
-.share-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;background:var(--card);border:1px solid rgba(201,96,122,0.18);border-radius:12px;padding:10px 8px;cursor:pointer;font-family:'Noto Serif SC',serif;transition:all .25s;-webkit-tap-highlight-color:transparent}
-.share-btn:hover{border-color:rgba(201,96,122,0.4);transform:translateY(-1px)}
-.share-btn-icon{font-size:18px;line-height:1}
-.share-btn-label{font-size:10px;color:var(--sub);letter-spacing:.06em;white-space:nowrap}
+.share-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;
+  background:var(--card);border:1px solid var(--rose-line);border-radius:12px;padding:10px 8px;
+  cursor:pointer;font-family:var(--serif);transition:all 0.25s;-webkit-tap-highlight-color:transparent;
+  box-shadow:var(--shadow-lift)}
+.share-btn:hover{border-color:rgba(184,64,92,0.45);transform:translateY(-2px);box-shadow:var(--shadow-card)}
+.share-btn:active{transform:scale(0.96)}
+.share-btn-icon{font-size:20px;line-height:1}
+.share-btn-label{font-size:10px;color:var(--sub);letter-spacing:0.06em;white-space:nowrap}
 
-/* ── invite link shown after create ── */
-.invite-created{display:none;margin:0 16px 14px;padding:16px;background:linear-gradient(135deg,rgba(180,20,40,0.14),rgba(201,168,76,0.06));border:1px solid rgba(201,168,76,0.25);border-radius:14px;position:relative;z-index:1}
-.invite-created.show{display:block;animation:fadeUp .45s ease both}
-.invite-created-title{font-size:11px;letter-spacing:.16em;color:var(--gold);margin-bottom:10px;text-align:center}
-.invite-link-box{background:var(--mid);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--sub);word-break:break-all;margin-bottom:10px;line-height:1.6;border:1px solid rgba(201,168,76,0.12)}
-.btn-copy{width:100%;padding:11px 0;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light));border:none;border-radius:12px;color:rgba(15,8,10,0.95);font-family:'Noto Serif SC',serif;font-size:13px;font-weight:500;letter-spacing:.16em;cursor:pointer;transition:all .2s;margin-bottom:8px}
+/* ── 邀请链接展示 ── */
+.invite-created{display:none;margin:0 16px 14px;padding:16px;
+  background:linear-gradient(135deg,var(--rose-wash),var(--gold-wash));
+  border:1px solid var(--gold-line);border-radius:14px;position:relative;z-index:1;
+  box-shadow:var(--shadow-lift)}
+.invite-created.show{display:block;animation:fadeUp 0.45s ease both}
+.invite-created-title{font-size:11px;letter-spacing:0.16em;color:var(--gold);margin-bottom:10px;text-align:center}
+.invite-link-box{background:var(--mid);border-radius:8px;padding:10px 12px;font-size:11px;
+  color:var(--sub);word-break:break-all;margin-bottom:10px;line-height:1.6;border:1px solid var(--gold-line)}
+.btn-copy{width:100%;padding:12px 0;
+  background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light));
+  border:none;border-radius:12px;color:rgba(15,8,10,0.95);font-family:var(--serif);
+  font-size:13px;font-weight:500;letter-spacing:0.16em;cursor:pointer;transition:all 0.2s;margin-bottom:8px}
 .btn-copy:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(201,168,76,0.4)}
-.copy-hint{font-size:10px;color:var(--sub);text-align:center;letter-spacing:.08em}
+.copy-hint{font-size:10px;color:var(--sub);text-align:center;letter-spacing:0.08em}
 
-/* invite-again button */
-.btn-invite-again{display:block;width:calc(100% - 32px);margin:0 16px 10px;padding:12px 0;background:none;border:1px solid rgba(201,96,122,0.3);border-radius:12px;color:var(--rose-light);font-family:'Noto Serif SC',serif;font-size:12px;letter-spacing:.14em;cursor:pointer;transition:all .2s;position:relative;z-index:1}
-.btn-invite-again:hover{background:rgba(201,96,122,0.08)}
+/* invite-again 按钮 */
+.btn-invite-again{display:block;width:calc(100% - 32px);margin:0 16px 10px;padding:12px 0;
+  background:none;border:1.5px solid var(--rose-line);border-radius:12px;color:var(--rose-light);
+  font-family:var(--serif);font-size:12px;letter-spacing:0.14em;cursor:pointer;
+  transition:all 0.2s;position:relative;z-index:1}
+.btn-invite-again:hover{background:var(--rose-wash)}
 
 /* toast */
-.sy-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(28,8,14,0.96);color:var(--gold-light);font-size:12px;padding:9px 20px;border-radius:20px;letter-spacing:.1em;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+.sy-toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+  background:rgba(250,248,242,0.97);color:var(--ink);font-size:12px;padding:10px 20px;
+  border-radius:20px;letter-spacing:0.1em;z-index:999;opacity:0;transition:opacity 0.3s;
+  pointer-events:none;white-space:nowrap;
+  border:1px solid var(--gold-line);box-shadow:var(--shadow-lift)}
 .sy-toast.show{opacity:1}
+
+/* 入场动画 */
+.page-enter{animation:fadeUp 0.6s ease both}
+.page-enter-d1{animation-delay:.08s}
+.page-enter-d2{animation-delay:.16s}
 </style>
 </head>
 <body>
 
+<div class="stardust" id="stardust"></div>
 <button class="back-btn" onclick="history.back()">← 返回</button>
 <div class="sy-toast" id="syToast"></div>
 
 <!-- 头部 -->
-<div class="header">
-  <span class="header-xi">囍</span>
-  <div class="header-title" id="headerTitle">合婚邀请</div>
+<div class="header page-enter page-enter-d1">
+  <div class="brandmark">
+    <span class="cn">善 缘</span>
+    <span class="en">Runae · 合盘配对</span>
+  </div>
+  <span class="hero-glyph">♡</span>
+  <div class="header-smoke">
+    <div class="smoke-col">
+      <div class="smoke-particle"></div>
+      <div class="smoke-particle"></div>
+      <div class="smoke-particle"></div>
+    </div>
+    <div class="smoke-col">
+      <div class="smoke-particle"></div>
+      <div class="smoke-particle"></div>
+      <div class="smoke-particle"></div>
+    </div>
+    <div class="smoke-col">
+      <div class="smoke-particle"></div>
+      <div class="smoke-particle"></div>
+      <div class="smoke-particle"></div>
+    </div>
+  </div>
+  <div class="header-title" id="headerTitle">合盘邀请</div>
   <div class="header-sub" id="headerSub">双方八字·合缘测算</div>
-  <div class="gold-line"></div>
+  <div style="font-size:10.5px;color:var(--sub);letter-spacing:0.09em;margin-top:6px">AI 缘分契合分析 · 内容仅供娱乐参考</div>
+  <div class="rose-line"></div>
 </div>
 
 <!-- 被邀请 banner（有 invite= 参数时显示） -->
 <div class="invite-banner" id="inviteBanner">
   <div class="invite-banner-heart">❤️</div>
-  <div class="invite-banner-name" id="inviterNameDisplay">TA在等你一起测合婚</div>
+  <div class="invite-banner-name" id="inviterNameDisplay">TA在等你一起测合盘</div>
   <div class="invite-banner-sub">填入你的生辰，见证你们的缘分</div>
 </div>
 
@@ -220,15 +366,16 @@ body::before{content:'';position:fixed;inset:0;
   </div>
 
   <!-- CTA button -->
-  <div class="btn-wrap" style="margin-top:4px">
+  <div class="btn-wrap" style="margin-top:8px">
     <button class="btn-primary" id="mainBtn" onclick="handleMainBtn()">生成邀请链接</button>
   </div>
+  <div style="text-align:center;font-size:10px;color:rgba(184,64,92,0.45);margin-top:8px;letter-spacing:0.08em;position:relative;z-index:1">先免费看配对预览，满意再解锁完整报告</div>
 
   <!-- 生成后：邀请链接展示 -->
-  <div class="invite-created" id="inviteCreated">
-    <div class="invite-created-title">邀请链接已生成</div>
+  <div class="invite-created" id="inviteCreated" style="margin-top:12px">
+    <div class="invite-created-title">✦ 邀请链接已生成 ✦</div>
     <div class="invite-link-box" id="inviteLinkBox">—</div>
-    <button class="btn-copy" onclick="copyInviteLink()">📋 复制邀请链接</button>
+    <button class="btn-copy" onclick="copyInviteLink()">🔗 复制邀请链接</button>
     <div class="copy-hint">发给TA，TA填完后你们就能看结果了</div>
   </div>
 
@@ -238,6 +385,7 @@ body::before{content:'';position:fixed;inset:0;
 <div class="loading-wrap" id="loadingWrap">
   <div class="sy-spinner"></div>
   <div class="load-txt">正在推算你们的八字缘分…</div>
+  <div style="font-size:12px;color:rgba(184,64,92,0.6);letter-spacing:0.06em;margin-top:8px">AI 生成中，请稍候</div>
 </div>
 
 <!-- ── 结果 ── -->
@@ -246,9 +394,10 @@ body::before{content:'';position:fixed;inset:0;
   <!-- 分数环 -->
   <div class="score-block">
     <div class="score-ring">
-      <svg width="110" height="110" viewBox="0 0 110 110">
-        <circle class="ring-bg" cx="55" cy="55" r="45"/>
-        <circle class="ring-fill" id="ringFill" cx="55" cy="55" r="45"/>
+      <svg width="130" height="130" viewBox="0 0 130 130">
+        <circle class="ring-bg" cx="65" cy="65" r="52"/>
+        <circle class="ring-fill" id="ringFill" cx="65" cy="65" r="52"
+          stroke-dasharray="0 327" stroke-linecap="round"/>
       </svg>
       <div class="score-inner">
         <span class="score-num" id="scoreNum">—</span><span class="score-pct">分</span>
@@ -270,7 +419,7 @@ body::before{content:'';position:fixed;inset:0;
     </div>
     <div class="locked-overlay">
       <div class="lock-icon">🔮</div>
-      <div class="lock-title">解锁完整合婚报告<br>包含化解建议·宜婚年份·大运分析</div>
+      <div class="lock-title">解锁完整合盘报告<br>包含化解建议 · 宜婚年份 · 大运分析</div>
       <button class="btn-unlock" onclick="unlockFull()">解锁完整报告 $9.90</button>
       <div class="lock-price">原价 $19.90 · 今日特价</div>
     </div>
@@ -280,11 +429,11 @@ body::before{content:'';position:fixed;inset:0;
   <button class="btn-invite-again" onclick="inviteAgain()">💌 邀请我的另一半也来测</button>
 
   <div class="share-section" id="shareSection" style="display:none">
-    <div class="share-title">分享给TA</div>
+    <div class="share-title">✦ 分享给TA ✦</div>
     <div class="share-link-box" id="shareLinkBox">—</div>
     <div class="share-btns">
       <button class="share-btn" onclick="copyShareLink()">
-        <span class="share-btn-icon">📋</span>
+        <span class="share-btn-icon">🔗</span>
         <span class="share-btn-label">复制链接</span>
       </button>
       <button class="share-btn" onclick="shareViaSystem()">
@@ -305,6 +454,20 @@ var gGenderA = 'male';
 var gGenderB = 'female';
 var gInviteLink = '';
 var gShareLink = '';
+
+// ── 星尘粒子 ──
+(function() {
+  var sd = document.getElementById('stardust');
+  for (var i = 0; i < 18; i++) {
+    var sp = document.createElement('span');
+    sp.style.left = (Math.random() * 100) + '%';
+    sp.style.top = (Math.random() * 100) + '%';
+    sp.style.setProperty('--dur', (2 + Math.random() * 3) + 's');
+    sp.style.animationDelay = (Math.random() * 4) + 's';
+    if (Math.random() > 0.5) { sp.style.background = 'rgba(201,168,76,0.4)'; }
+    sd.appendChild(sp);
+  }
+})();
 
 // ── Init select options ──
 (function() {
@@ -359,7 +522,7 @@ function loadInviteData(inviteId) {
 }
 
 function renderCreateMode() {
-  document.getElementById('headerTitle').textContent = '合婚邀请';
+  document.getElementById('headerTitle').textContent = '合盘邀请';
   document.getElementById('headerSub').textContent = '双方八字 · 合缘测算';
   document.getElementById('mainBtn').textContent = '生成邀请链接';
   document.getElementById('labelA').textContent = '你的信息';
@@ -369,12 +532,12 @@ function renderCreateMode() {
 
 function renderInvitedMode(data) {
   var inviterName = data.inviterName || data.nameA || 'TA';
-  document.getElementById('headerTitle').textContent = inviterName + ' 邀请你测合婚';
+  document.getElementById('headerTitle').textContent = inviterName + ' 邀请你测合盘';
   document.getElementById('headerSub').textContent = '填入你的生辰 · 见证你们的缘分';
 
   var banner = document.getElementById('inviteBanner');
   banner.classList.add('show');
-  document.getElementById('inviterNameDisplay').textContent = inviterName + ' 在等你一起测合婚';
+  document.getElementById('inviterNameDisplay').textContent = inviterName + ' 在等你一起测合盘';
 
   // A's card: show locked info
   document.getElementById('aInputs').style.display = 'none';
@@ -383,11 +546,11 @@ function renderInvitedMode(data) {
   document.getElementById('labelA').textContent = inviterName + ' 的信息';
 
   // B's card: show for B to fill
-  document.getElementById('labelB').style.display = 'block';
+  document.getElementById('labelB').style.display = 'flex';
   document.getElementById('labelB').textContent = '你的信息';
   document.getElementById('personBCard').style.display = 'block';
 
-  document.getElementById('mainBtn').textContent = '查看我们的合婚结果';
+  document.getElementById('mainBtn').textContent = '查看我们的合盘结果';
 }
 
 function selGender(person, gender) {
@@ -521,7 +684,7 @@ function renderResults(payload, data) {
   document.getElementById('scoreNames').textContent = (payload.nameA || 'A') + ' × ' + (payload.nameB || 'B');
 
   setTimeout(function() {
-    var circ = 2 * Math.PI * 45;
+    var circ = 2 * Math.PI * 52;
     document.getElementById('ringFill').style.strokeDasharray = (score / 100 * circ) + ' ' + circ;
   }, 200);
 
@@ -583,7 +746,7 @@ function copyShareLink() {
 function shareViaSystem() {
   var link = gShareLink || gInviteLink;
   if (navigator.share && link) {
-    navigator.share({ title: '一起来测合婚', text: '我在善缘测了我们的合婚，你也来看看？', url: link });
+    navigator.share({ title: '一起来测合盘', text: '我在善缘测了我们的合盘，你也来看看？', url: link });
   } else {
     copyText(link, '链接已复制');
   }

@@ -12,63 +12,87 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
+/* ── reset ── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{background:#0d0b08;font-family:'Noto Serif SC',serif;color:rgba(255,245,220,0.85);-webkit-font-smoothing:antialiased}
-body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:80px}
+:root{
+  --ink:#0d0b08;--ink2:#130f0a;--ink3:#1c1510;
+  --cream:rgba(255,245,220,0.88);--cream-dim:rgba(255,245,220,0.38);--cream-faint:rgba(255,245,220,0.15);
+  --jade:rgba(91,191,160,1);--jade-hi:rgba(91,191,160,0.85);--jade-mid:rgba(91,191,160,0.35);--jade-low:rgba(91,191,160,0.08);
+  --gold:rgba(201,168,76,1);--gold-hi:rgba(201,168,76,0.85);--gold-mid:rgba(201,168,76,0.35);--gold-low:rgba(201,168,76,0.08);
+  --r:12px;
+}
+html,body{background:var(--ink);font-family:'Noto Serif SC',serif;color:var(--cream);-webkit-font-smoothing:antialiased}
+body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:84px}
 
-.hero{padding:32px 20px 24px;text-align:center;position:relative}
-.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(91,191,160,0.08),transparent 70%);pointer-events:none}
-.hero-badge{font-size:9px;letter-spacing:0.22em;color:rgba(91,191,160,0.5);margin-bottom:12px}
-.hero-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:300;color:rgba(255,245,220,0.95);letter-spacing:0.08em;line-height:1.3;margin-bottom:6px}
-.hero-sub{font-size:11px;color:rgba(255,245,220,0.4);letter-spacing:0.1em;line-height:1.8}
-.gold-line{width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.5),transparent);margin:16px auto}
-.hero-stats{display:flex;justify-content:center;gap:24px;margin-top:16px}
-.stat{text-align:center}
-.stat-num{font-family:'Cormorant Garamond',serif;font-size:20px;color:rgba(201,168,76,0.8);line-height:1}
-.stat-label{font-size:8px;color:rgba(255,245,220,0.3);letter-spacing:0.1em;margin-top:2px}
+/* ── nav back ── */
+.nav-back{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--gold-mid);letter-spacing:0.12em;padding:18px 20px 0;text-decoration:none;transition:color 0.2s}
+.nav-back:active{color:var(--gold-hi)}
 
-.tabs{display:flex;gap:0;margin:0 16px 8px;border:1px solid rgba(255,245,220,0.08);border-radius:8px;overflow:hidden}
-.tab{flex:1;padding:11px 0;text-align:center;font-size:11px;letter-spacing:0.08em;color:rgba(255,245,220,0.4);cursor:pointer;transition:all 0.2s;background:transparent}
-.tab.active{background:rgba(91,191,160,0.1);color:rgba(91,191,160,0.85);border-bottom:2px solid rgba(91,191,160,0.5)}
+/* ── hero ── */
+.hero{padding:28px 20px 26px;text-align:center;position:relative;overflow:hidden;background:linear-gradient(180deg,#1a100a 0%,var(--ink) 100%)}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 50% 0%,rgba(91,191,160,0.10),transparent 75%);pointer-events:none}
+.hero::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.25),transparent)}
+.hero-badge{font-size:9px;letter-spacing:0.28em;color:rgba(91,191,160,0.55);margin-bottom:14px;text-transform:uppercase}
+.hero-title{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:300;color:rgba(255,245,220,0.97);letter-spacing:0.1em;line-height:1.25;margin-bottom:6px}
+.hero-subtitle{font-size:11px;color:rgba(201,168,76,0.7);letter-spacing:0.12em;font-weight:400;margin-bottom:4px}
+.hero-sub{font-size:10.5px;color:var(--cream-dim);letter-spacing:0.06em;line-height:1.85}
+.gold-line{width:48px;height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.55),transparent);margin:18px auto}
+.hero-stats{display:flex;justify-content:center;gap:0;margin-top:16px;border:1px solid rgba(201,168,76,0.12);border-radius:8px;overflow:hidden;background:rgba(0,0,0,0.18)}
+.stat{flex:1;text-align:center;padding:12px 8px;border-right:1px solid rgba(201,168,76,0.1)}
+.stat:last-child{border-right:none}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:21px;color:rgba(201,168,76,0.85);line-height:1}
+.stat-label{font-size:8px;color:var(--cream-faint);letter-spacing:0.1em;margin-top:4px}
 
+/* ── tabs ── */
+.tabs{display:flex;gap:0;margin:0 16px 10px;border:1px solid rgba(255,245,220,0.08);border-radius:9px;overflow:hidden;background:rgba(0,0,0,0.2)}
+.tab{flex:1;padding:12px 0;text-align:center;font-size:11px;letter-spacing:0.1em;color:var(--cream-dim);cursor:pointer;transition:all 0.25s;background:transparent}
+.tab.active{background:rgba(91,191,160,0.10);color:rgba(91,191,160,0.9);border-bottom:2px solid rgba(91,191,160,0.55)}
+
+/* ── city filter ── */
 .city-filter{display:flex;gap:6px;padding:8px 16px 16px;overflow-x:auto;scrollbar-width:none}
 .city-filter::-webkit-scrollbar{display:none}
-.city-btn{flex-shrink:0;font-size:10px;padding:5px 12px;border-radius:20px;border:1px solid rgba(255,245,220,0.12);color:rgba(255,245,220,0.4);cursor:pointer;background:transparent;font-family:'Noto Serif SC',serif;white-space:nowrap;transition:all 0.2s}
-.city-btn.active{background:rgba(201,168,76,0.1);border-color:rgba(201,168,76,0.3);color:rgba(201,168,76,0.8)}
+.city-btn{flex-shrink:0;font-size:10px;padding:5px 13px;border-radius:20px;border:1px solid rgba(255,245,220,0.10);color:var(--cream-dim);cursor:pointer;background:transparent;font-family:'Noto Serif SC',serif;white-space:nowrap;transition:all 0.2s}
+.city-btn.active{background:rgba(201,168,76,0.10);border-color:rgba(201,168,76,0.35);color:rgba(201,168,76,0.85)}
 
-.section-label{font-size:9px;letter-spacing:0.22em;color:rgba(201,168,76,0.4);padding:0 20px;margin-bottom:12px;margin-top:4px}
+/* ── section label ── */
+.section-label{display:flex;align-items:center;gap:10px;font-size:9px;letter-spacing:0.26em;color:rgba(201,168,76,0.45);padding:0 20px;margin-bottom:14px;margin-top:4px}
+.section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(201,168,76,0.2),transparent)}
 
-.card{margin:0 16px 14px;background:rgba(255,245,220,0.03);border:1px solid rgba(255,245,220,0.07);border-radius:12px;overflow:hidden;transition:border-color 0.2s}
-.card:active{border-color:rgba(91,191,160,0.3)}
+/* ── card ── */
+.card{margin:0 16px 16px;background:linear-gradient(160deg,rgba(30,22,14,0.9),rgba(19,15,10,0.95));border:1px solid rgba(255,245,220,0.07);border-top:1px solid rgba(201,168,76,0.12);border-radius:var(--r);overflow:hidden;transition:border-color 0.25s,box-shadow 0.25s}
+.card:active{border-color:rgba(91,191,160,0.35);box-shadow:0 0 20px rgba(91,191,160,0.06)}
 .card-top{padding:16px 16px 0}
 .card-row1{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
-.card-name{font-size:15px;font-weight:500;letter-spacing:0.04em;color:rgba(255,245,220,0.92);flex:1;padding-right:8px}
-.card-score{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0}
-.score-num{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:rgba(91,191,160,0.9);line-height:1}
-.score-label{font-size:8px;color:rgba(91,191,160,0.4);letter-spacing:0.1em}
-.card-sub{font-size:10px;color:rgba(255,245,220,0.35);letter-spacing:0.06em;margin-bottom:10px}
+.card-name{font-size:15px;font-weight:500;letter-spacing:0.04em;color:rgba(255,245,220,0.94);flex:1;padding-right:10px;line-height:1.35}
+/* score badge — circular jewel */
+.card-score{display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;width:52px;height:52px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(91,191,160,0.14),rgba(91,191,160,0.04));border:1px solid rgba(91,191,160,0.28);position:relative}
+.card-score::before{content:'';position:absolute;inset:-1px;border-radius:50%;border:1px solid rgba(201,168,76,0.10);pointer-events:none}
+.score-num{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:400;color:rgba(91,191,160,0.95);line-height:1}
+.score-label{font-size:7px;color:rgba(91,191,160,0.45);letter-spacing:0.06em;margin-top:2px}
+.card-sub{font-size:10px;color:rgba(255,245,220,0.28);letter-spacing:0.06em;margin-bottom:10px}
 .tags{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
-.tag{font-size:9px;padding:3px 8px;border-radius:3px;letter-spacing:0.06em}
-.tag-jade{background:rgba(91,191,160,0.08);border:1px solid rgba(91,191,160,0.2);color:rgba(91,191,160,0.7)}
-.tag-gold{background:rgba(201,168,76,0.08);border:1px solid rgba(201,168,76,0.2);color:rgba(201,168,76,0.65)}
-.tag-dim{background:rgba(255,245,220,0.04);border:1px solid rgba(255,245,220,0.1);color:rgba(255,245,220,0.35)}
+.tag{font-size:9px;padding:3px 9px;border-radius:4px;letter-spacing:0.06em}
+.tag-jade{background:rgba(91,191,160,0.07);border:1px solid rgba(91,191,160,0.22);color:rgba(91,191,160,0.75)}
+.tag-gold{background:rgba(201,168,76,0.07);border:1px solid rgba(201,168,76,0.22);color:rgba(201,168,76,0.72)}
+.tag-dim{background:rgba(255,245,220,0.04);border:1px solid rgba(255,245,220,0.09);color:rgba(255,245,220,0.32)}
 
-.fengshui-brief{background:rgba(91,191,160,0.04);border-left:2px solid rgba(91,191,160,0.25);padding:10px 12px;margin-bottom:14px;border-radius:0 6px 6px 0}
-.fengshui-brief p{font-size:11px;color:rgba(255,245,220,0.55);line-height:1.8;letter-spacing:0.03em}
+/* ── fengshui brief ── */
+.fengshui-brief{background:rgba(91,191,160,0.04);border-left:2px solid rgba(91,191,160,0.28);padding:10px 13px;margin-bottom:14px;border-radius:0 6px 6px 0}
+.fengshui-brief p{font-size:11px;color:rgba(255,245,220,0.58);line-height:1.85;letter-spacing:0.03em}
 
-/* pricing table */
+/* ── pricing table ── */
 .price-section{margin-bottom:14px}
-.price-section-title{font-size:9px;letter-spacing:0.18em;color:rgba(201,168,76,0.45);margin-bottom:8px}
+.price-section-title{font-size:9px;letter-spacing:0.22em;color:rgba(201,168,76,0.45);margin-bottom:9px;text-transform:uppercase}
 .price-table{width:100%;border-collapse:collapse}
 .price-table tr{border-bottom:1px solid rgba(255,245,220,0.05)}
 .price-table tr:last-child{border-bottom:none}
 .price-table td{padding:7px 0;vertical-align:top}
-.pt-type{font-size:11px;color:rgba(255,245,220,0.5);letter-spacing:0.04em;line-height:1.5}
-.pt-desc{font-size:9px;color:rgba(255,245,220,0.25);letter-spacing:0.02em;display:block;margin-top:1px}
-.pt-price{font-family:'Cormorant Garamond',serif;font-size:14px;color:rgba(201,168,76,0.85);text-align:right;white-space:nowrap;padding-left:8px}
-.pt-unit{font-size:9px;color:rgba(255,245,220,0.2);display:block;text-align:right;margin-top:1px}
+.pt-type{font-size:11px;color:rgba(255,245,220,0.52);letter-spacing:0.04em;line-height:1.5}
+.pt-desc{font-size:9px;color:rgba(255,245,220,0.30);letter-spacing:0.02em;display:block;margin-top:1px}
+.pt-price{font-family:'Cormorant Garamond',serif;font-size:14px;color:rgba(201,168,76,0.88);text-align:right;white-space:nowrap;padding-left:8px}
+.pt-unit{font-size:9px;color:rgba(255,245,220,0.25);display:block;text-align:right;margin-top:1px}
 
-/* reviews */
+/* ── reviews (legacy classes, kept for compatibility) ── */
 .reviews-section{border-top:1px solid rgba(255,245,220,0.06);padding:12px 0 4px}
 .reviews-title{font-size:9px;letter-spacing:0.18em;color:rgba(201,168,76,0.45);margin-bottom:10px}
 .reviews-verified{font-size:8px;color:rgba(91,191,160,0.45);letter-spacing:0.08em;margin-bottom:10px;margin-top:-6px}
@@ -79,68 +103,73 @@ body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:80px}
 .r-stars{color:rgba(201,168,76,0.65);font-size:10px;letter-spacing:1px}
 .review-text{font-size:10px;color:rgba(255,245,220,0.38);line-height:1.65;letter-spacing:0.03em;font-style:italic}
 
+/* ── card actions ── */
 .card-actions{display:flex;border-top:1px solid rgba(255,245,220,0.06);margin-top:12px}
-.btn-action{flex:1;padding:13px 0;text-align:center;font-size:11px;letter-spacing:0.1em;cursor:pointer;transition:background 0.2s;background:transparent;border:none;font-family:'Noto Serif SC',serif;color:rgba(255,245,220,0.45)}
+.btn-action{flex:1;padding:13px 0;text-align:center;font-size:11px;letter-spacing:0.1em;cursor:pointer;transition:background 0.2s;background:transparent;border:none;font-family:'Noto Serif SC',serif;color:rgba(255,245,220,0.42)}
 .btn-action:first-child{border-right:1px solid rgba(255,245,220,0.06)}
-.btn-action.primary{color:rgba(91,191,160,0.8);font-weight:500}
+.btn-action.primary{color:rgba(91,191,160,0.85);font-weight:500}
 .btn-action:active{background:rgba(255,255,255,0.03)}
 
-.featured-badge{display:inline-block;font-size:8px;padding:2px 7px;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.25);border-radius:2px;color:rgba(201,168,76,0.65);letter-spacing:0.1em;margin-left:6px;vertical-align:middle}
+/* ── featured badge ── */
+.featured-badge{display:inline-block;font-size:8px;padding:2px 8px;background:rgba(201,168,76,0.12);border:1px solid rgba(201,168,76,0.28);border-radius:3px;color:rgba(201,168,76,0.72);letter-spacing:0.12em;margin-left:7px;vertical-align:middle}
 
-.partner-block{margin:8px 16px 14px;background:linear-gradient(135deg,rgba(201,168,76,0.06),rgba(201,168,76,0.02));border:1px solid rgba(201,168,76,0.2);border-radius:12px;padding:18px 16px}
-.partner-title{font-size:12px;letter-spacing:0.12em;color:rgba(201,168,76,0.8);margin-bottom:6px}
+/* ── partner block ── */
+.partner-block{margin:8px 16px 14px;background:linear-gradient(135deg,rgba(201,168,76,0.06),rgba(201,168,76,0.02));border:1px solid rgba(201,168,76,0.18);border-top:1px solid rgba(201,168,76,0.28);border-radius:var(--r);padding:18px 16px}
+.partner-title{font-size:12px;letter-spacing:0.14em;color:rgba(201,168,76,0.85);margin-bottom:8px}
 .partner-body{font-size:11px;color:rgba(255,245,220,0.45);line-height:1.9;letter-spacing:0.03em}
-.partner-email{color:rgba(91,191,160,0.7);font-size:11px;margin-top:8px;display:block;letter-spacing:0.04em}
+.partner-email{color:rgba(91,191,160,0.72);font-size:11px;margin-top:10px;display:block;letter-spacing:0.06em;text-decoration:none}
 
-/* funeral partner block */
-.funeral-block{margin:0 16px 20px;background:linear-gradient(135deg,rgba(91,191,160,0.05),rgba(91,191,160,0.02));border:1px solid rgba(91,191,160,0.15);border-radius:12px;overflow:hidden}
-.funeral-header{padding:16px 16px 12px;border-bottom:1px solid rgba(255,245,220,0.06)}
-.funeral-title{font-size:12px;letter-spacing:0.12em;color:rgba(91,191,160,0.8);margin-bottom:5px}
-.funeral-sub{font-size:10px;color:rgba(255,245,220,0.35);line-height:1.7;letter-spacing:0.03em}
+/* ── funeral partner block ── */
+.funeral-block{margin:0 16px 20px;background:linear-gradient(160deg,rgba(20,28,24,0.6),rgba(13,11,8,0.8));border:1px solid rgba(91,191,160,0.14);border-top:1px solid rgba(91,191,160,0.22);border-radius:var(--r);overflow:hidden}
+.funeral-header{padding:18px 16px 14px;border-bottom:1px solid rgba(255,245,220,0.06)}
+.funeral-title{font-size:12px;letter-spacing:0.14em;color:rgba(91,191,160,0.85);margin-bottom:6px}
+.funeral-sub{font-size:10px;color:rgba(255,245,220,0.35);line-height:1.75;letter-spacing:0.03em}
 .funeral-channels{padding:14px 16px}
-.channel-row{display:flex;align-items:flex-start;gap:12px;margin-bottom:14px}
+.channel-row{display:flex;align-items:flex-start;gap:12px;margin-bottom:15px}
 .channel-row:last-child{margin-bottom:0}
-.channel-icon{font-size:18px;flex-shrink:0;margin-top:2px}
+.channel-icon{font-size:18px;flex-shrink:0;margin-top:1px;opacity:0.85}
 .channel-info{}
-.channel-name{font-size:11px;font-weight:500;color:rgba(255,245,220,0.75);letter-spacing:0.06em;margin-bottom:3px}
-.channel-desc{font-size:10px;color:rgba(255,245,220,0.35);line-height:1.7;letter-spacing:0.02em}
-.channel-highlight{color:rgba(201,168,76,0.7);font-size:9px;letter-spacing:0.06em;display:block;margin-top:3px}
-.funeral-cta{border-top:1px solid rgba(255,245,220,0.06);padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
-.funeral-cta-text{font-size:10px;color:rgba(255,245,220,0.4);letter-spacing:0.04em;line-height:1.6}
-.funeral-cta-email{font-size:11px;color:rgba(91,191,160,0.7);letter-spacing:0.04em;text-decoration:none;display:block;margin-top:4px}
+.channel-name{font-size:11px;font-weight:500;color:rgba(255,245,220,0.78);letter-spacing:0.06em;margin-bottom:3px}
+.channel-desc{font-size:10px;color:rgba(255,245,220,0.35);line-height:1.75;letter-spacing:0.02em}
+.channel-highlight{color:rgba(201,168,76,0.72);font-size:9px;letter-spacing:0.06em;display:block;margin-top:4px}
+.funeral-cta{border-top:1px solid rgba(255,245,220,0.06);padding:15px 16px;display:flex;align-items:center;justify-content:space-between}
+.funeral-cta-text{font-size:10px;color:rgba(255,245,220,0.4);letter-spacing:0.04em;line-height:1.65}
+.funeral-cta-email{font-size:11px;color:rgba(91,191,160,0.72);letter-spacing:0.04em;text-decoration:none;display:block;margin-top:4px}
 
-.bottom-cta{margin:24px 16px 0;background:linear-gradient(135deg,rgba(91,191,160,0.06),rgba(201,168,76,0.04));border:1px solid rgba(91,191,160,0.15);border-radius:12px;padding:20px 16px;text-align:center}
-.cta-title{font-size:14px;letter-spacing:0.1em;color:rgba(255,245,220,0.85);margin-bottom:6px}
-.cta-sub{font-size:10px;color:rgba(255,245,220,0.35);line-height:1.8;margin-bottom:16px}
-.btn-cta{display:block;width:100%;padding:14px 0;background:linear-gradient(135deg,rgba(91,191,160,0.18),rgba(91,191,160,0.1));border:1px solid rgba(91,191,160,0.3);border-radius:6px;color:rgba(91,191,160,0.9);font-size:13px;letter-spacing:0.12em;font-family:'Noto Serif SC',serif;cursor:pointer;text-decoration:none;margin-bottom:8px}
-.btn-cta:active{background:rgba(91,191,160,0.25)}
-.btn-cta-gold{background:linear-gradient(135deg,rgba(201,168,76,0.15),rgba(201,168,76,0.08));border-color:rgba(201,168,76,0.25);color:rgba(201,168,76,0.85)}
+/* ── bottom CTA ── */
+.bottom-cta{margin:24px 16px 0;background:linear-gradient(160deg,rgba(20,35,28,0.6),rgba(13,11,8,0.85));border:1px solid rgba(91,191,160,0.15);border-top:1px solid rgba(91,191,160,0.25);border-radius:var(--r);padding:22px 18px;text-align:center}
+.cta-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:300;letter-spacing:0.08em;color:rgba(255,245,220,0.9);margin-bottom:8px}
+.cta-sub{font-size:10.5px;color:var(--cream-dim);line-height:1.85;margin-bottom:18px}
+.btn-cta{display:block;width:100%;padding:14px 0;background:linear-gradient(135deg,rgba(91,191,160,0.18),rgba(91,191,160,0.10));border:1px solid rgba(91,191,160,0.32);border-radius:6px;color:rgba(91,191,160,0.9);font-size:13px;letter-spacing:0.14em;font-family:'Noto Serif SC',serif;cursor:pointer;text-decoration:none;margin-bottom:10px;transition:background 0.2s}
+.btn-cta:active{background:rgba(91,191,160,0.26)}
+.btn-cta-gold{background:linear-gradient(135deg,rgba(201,168,76,0.16),rgba(201,168,76,0.08));border-color:rgba(201,168,76,0.28);color:rgba(201,168,76,0.88)}
 
-.nav-back{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(201,168,76,0.4);letter-spacing:0.1em;padding:16px 20px 0;cursor:pointer;text-decoration:none}
-.disclaimer{font-size:9px;color:rgba(255,245,220,0.18);text-align:center;padding:20px 24px 0;line-height:1.8;letter-spacing:0.04em}
+/* ── disclaimer ── */
+.disclaimer{font-size:9px;color:rgba(255,245,220,0.16);text-align:center;padding:22px 24px 0;line-height:1.85;letter-spacing:0.04em}
 
-.modal{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.7);backdrop-filter:blur(4px);align-items:flex-end}
+/* ── modal ── */
+.modal{display:none;position:fixed;inset:0;z-index:999;background:rgba(0,0,0,0.72);backdrop-filter:blur(5px);align-items:flex-end}
 .modal.show{display:flex}
-.modal-box{background:#131008;border:1px solid rgba(255,245,220,0.1);border-radius:16px 16px 0 0;padding:24px 20px 40px;width:100%;max-width:390px;margin:0 auto}
-.modal-title{font-size:15px;letter-spacing:0.08em;color:rgba(255,245,220,0.9);margin-bottom:6px}
-.modal-sub{font-size:10px;color:rgba(255,245,220,0.35);margin-bottom:20px;line-height:1.8}
-.modal-input{width:100%;background:rgba(255,245,220,0.04);border:1px solid rgba(255,245,220,0.1);border-radius:6px;padding:12px 14px;font-size:13px;color:rgba(255,245,220,0.8);font-family:'Noto Serif SC',serif;margin-bottom:10px;outline:none}
-.modal-input:focus{border-color:rgba(91,191,160,0.3)}
-.btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,rgba(91,191,160,0.2),rgba(91,191,160,0.12));border:1px solid rgba(91,191,160,0.35);border-radius:6px;color:rgba(91,191,160,0.9);font-size:13px;letter-spacing:0.12em;font-family:'Noto Serif SC',serif;cursor:pointer;margin-top:4px;transition:opacity 0.2s}
-.btn-submit:disabled{opacity:0.5;cursor:not-allowed}
-.btn-cancel{width:100%;padding:12px;background:transparent;border:none;color:rgba(255,245,220,0.25);font-size:11px;font-family:'Noto Serif SC',serif;cursor:pointer;margin-top:6px;letter-spacing:0.06em}
+.modal-box{background:#13100a;border:1px solid rgba(255,245,220,0.10);border-top:1px solid rgba(201,168,76,0.2);border-radius:18px 18px 0 0;padding:24px 20px 42px;width:100%;max-width:390px;margin:0 auto}
+.modal-title{font-family:'Cormorant Garamond',serif;font-size:17px;font-weight:300;letter-spacing:0.08em;color:rgba(255,245,220,0.92);margin-bottom:6px}
+.modal-sub{font-size:10px;color:var(--cream-dim);margin-bottom:22px;line-height:1.85}
+.modal-input{width:100%;background:rgba(255,245,220,0.04);border:1px solid rgba(255,245,220,0.10);border-radius:7px;padding:12px 14px;font-size:13px;color:rgba(255,245,220,0.82);font-family:'Noto Serif SC',serif;margin-bottom:10px;outline:none;transition:border-color 0.2s}
+.modal-input:focus{border-color:rgba(91,191,160,0.35)}
+.btn-submit{width:100%;padding:14px;background:linear-gradient(135deg,rgba(91,191,160,0.22),rgba(91,191,160,0.12));border:1px solid rgba(91,191,160,0.38);border-radius:7px;color:rgba(91,191,160,0.92);font-size:13px;letter-spacing:0.14em;font-family:'Noto Serif SC',serif;cursor:pointer;margin-top:4px;transition:opacity 0.2s}
+.btn-submit:disabled{opacity:0.45;cursor:not-allowed}
+.btn-cancel{width:100%;padding:12px;background:transparent;border:none;color:rgba(255,245,220,0.22);font-size:11px;font-family:'Noto Serif SC',serif;cursor:pointer;margin-top:6px;letter-spacing:0.06em}
 .error-msg{font-size:11px;color:rgba(255,100,100,0.8);text-align:center;margin-top:8px;display:none}
-.btn-wechat-fallback{width:100%;padding:12px;background:rgba(91,191,160,0.08);border:1px solid rgba(91,191,160,0.25);border-radius:6px;color:rgba(91,191,160,0.8);font-size:12px;font-family:'Noto Serif SC',serif;cursor:pointer;margin-top:8px;letter-spacing:0.06em;text-decoration:none;display:none;text-align:center}
+.btn-wechat-fallback{width:100%;padding:12px;background:rgba(91,191,160,0.07);border:1px solid rgba(91,191,160,0.22);border-radius:7px;color:rgba(91,191,160,0.82);font-size:12px;font-family:'Noto Serif SC',serif;cursor:pointer;margin-top:8px;letter-spacing:0.06em;text-decoration:none;display:none;text-align:center}
 .modal-success{text-align:center;padding:20px 0}
 .modal-success-icon{font-size:40px;margin-bottom:12px}
-.modal-success-title{font-size:15px;letter-spacing:0.08em;color:rgba(91,191,160,0.9);margin-bottom:6px}
-.modal-success-sub{font-size:11px;color:rgba(255,245,220,0.4);line-height:1.8;margin-bottom:20px}
+.modal-success-title{font-size:15px;letter-spacing:0.08em;color:rgba(91,191,160,0.92);margin-bottom:6px}
+.modal-success-sub{font-size:11px;color:rgba(255,245,220,0.4);line-height:1.85;margin-bottom:20px}
 .inline-error{font-size:11px;color:rgba(255,100,100,0.8);margin-top:4px;margin-bottom:4px;display:none}
 
-/* Fixed bottom CTA bar */
-.fixed-bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:390px;background:linear-gradient(to top,rgba(13,11,8,0.98),rgba(13,11,8,0.9));border-top:1px solid rgba(91,191,160,0.15);padding:12px 16px;z-index:100;display:flex;align-items:center;justify-content:space-between;gap:10px}
-.fixed-bottom-bar-text{font-size:11px;color:rgba(255,245,220,0.5);letter-spacing:0.04em;flex:1;line-height:1.4}
-.fixed-bottom-bar-btn{flex-shrink:0;padding:11px 16px;background:linear-gradient(135deg,rgba(91,191,160,0.2),rgba(91,191,160,0.12));border:1px solid rgba(91,191,160,0.35);border-radius:6px;color:rgba(91,191,160,0.9);font-size:12px;letter-spacing:0.08em;font-family:'Noto Serif SC',serif;cursor:pointer;text-decoration:none;white-space:nowrap}
+/* ── fixed bottom bar ── */
+.fixed-bottom-bar{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:390px;background:linear-gradient(to top,rgba(13,11,8,0.99),rgba(13,11,8,0.92));border-top:1px solid rgba(91,191,160,0.18);padding:12px 16px;z-index:100;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.fixed-bottom-bar-text{font-size:11px;color:rgba(255,245,220,0.5);letter-spacing:0.04em;flex:1;line-height:1.45}
+.fixed-bottom-bar-btn{flex-shrink:0;padding:11px 18px;background:linear-gradient(135deg,rgba(91,191,160,0.22),rgba(91,191,160,0.12));border:1px solid rgba(91,191,160,0.38);border-radius:7px;color:rgba(91,191,160,0.92);font-size:12px;letter-spacing:0.1em;font-family:'Noto Serif SC',serif;cursor:pointer;text-decoration:none;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -149,10 +178,10 @@ body{max-width:390px;margin:0 auto;min-height:100vh;padding-bottom:80px}
 
 <div class="hero">
   <div class="hero-badge">FENG SHUI CEMETERY GUIDE · 善缘风水择地</div>
-  <div style="font-size:11px;letter-spacing:0.06em;color:rgba(201,168,76,0.75);margin-bottom:6px;font-weight:500">华人墓地风水评分平台 · 覆盖美国+中国25家墓地</div>
   <div class="hero-title">华人墓地<br>风水指南</div>
+  <div class="hero-subtitle">覆盖美国 · 中国 · 25家陵园</div>
   <div class="gold-line"></div>
-  <div class="hero-sub">善缘专家团队三元玄空+形势派双体系评测<br>坐山朝向 · 龙脉水法 · 市场定价 · 选购指南</div>
+  <div class="hero-sub">善缘专家团队 · 三元玄空 + 形势派双体系评测<br>坐山朝向 · 龙脉水法 · 市场定价 · 选购指南</div>
   <div class="hero-stats">
     <div class="stat"><div class="stat-num">25+</div><div class="stat-label">评测陵园</div></div>
     <div class="stat"><div class="stat-num">15</div><div class="stat-label">覆盖城市</div></div>

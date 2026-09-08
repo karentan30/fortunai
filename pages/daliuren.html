@@ -17,75 +17,110 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#faf8f5;--card:#ffffff;--mid:#f5f0e8;
-  --gold:#b8944a;--gold-light:#d4b06a;--gold-deep:#8a7020;
-  --jade:#5bbfa0;--jade-mid:#8dd9bf;--jade-deep:#3d9e82;
-  --ink:rgba(40,35,30,0.92);--sub:rgba(80,70,55,0.7);}
-.dark-mode{--bg:#faf8f5;--card:#ffffff;--mid:#1f1408;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  /* ── 玄海 · deep teal-jade void, layered for ritual depth ── */
+  --void-0:#03100c;--void:#061a13;--abyss:#04140e;
+  --panel:#0a2018;--panel-2:#0d271d;
+  --bg:#03100c;--card:#0a2018;--card2:#081b14;--mid:#0d271d;
+  /* ── jade starlight ── */
+  --jade:#5bbfa0;--jade-mid:#8dd9bf;--jade-deep:#3d9e82;--jade-light:#a6e6d0;
+  /* ── ancient gold (seal / accent only) ── */
   --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
-  --jade:#5bbfa0;--jade-mid:#8dd9bf;--jade-deep:#3d9e82;
-  --ink:rgba(40,35,30,0.92);--sub:rgba(80,70,55,0.7);}
-html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:antialiased}
+  /* ── text (jade-tinted neutrals, high contrast) ── */
+  --text:rgba(224,245,236,0.92);--text-dim:rgba(200,232,220,0.74);--sub:rgba(141,217,191,0.55);
+  --hair:rgba(91,191,160,0.12);--hair-2:rgba(91,191,160,0.22);
+  --ink:rgba(224,245,236,0.92);}
+.dark-mode{--bg:#03100c;--card:#0a2018;--card2:#081b14;--mid:#0d271d;}
+html,body{background:var(--void-0);font-family:'Noto Serif SC',serif;color:var(--text);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
 body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:120px}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(91,191,160,.12) 0%,transparent 50%),radial-gradient(ellipse at 80% 90%,rgba(201,168,76,.06) 0%,transparent 40%);pointer-events:none;z-index:0}
+/* Nebula veil — jade mist rising from the abyss */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(130% 78% at 50% -10%,rgba(45,120,98,.42) 0%,rgba(12,48,36,.55) 40%,rgba(6,26,19,.85) 72%,var(--void-0) 100%),
+    radial-gradient(ellipse at 82% 92%,rgba(201,168,76,.05) 0%,transparent 42%)}
+/* Faint star dust */
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.6;
+  background-image:
+    radial-gradient(circle,rgba(166,230,208,0.55) 1px,transparent 1px),
+    radial-gradient(circle,rgba(201,168,76,0.32) 1px,transparent 1px);
+  background-size:118px 118px,164px 164px;
+  background-position:18px 22px,64px 44px}
 
 .back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(141,217,191,.7);cursor:pointer;padding:4px 0}
 
 /* Header */
-.header{position:relative;z-index:1;text-align:center;padding:44px 20px 16px}
-.header-title{font-size:20px;font-weight:400;letter-spacing:.22em;margin-bottom:6px}
-.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:.26em;color:rgba(91,191,160,.55);margin-bottom:14px}
-.jade-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--jade),transparent);margin:0 auto}
+.header{position:relative;z-index:1;text-align:center;padding:52px 20px 8px}
+.header-mark{font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:.5em;color:rgba(141,217,191,.6);text-indent:.5em;margin-bottom:14px}
+.header-title{font-size:23px;font-weight:500;letter-spacing:.2em;color:#e8f5f0;text-indent:.2em;margin-bottom:8px;text-shadow:0 2px 18px rgba(91,191,160,.22)}
+.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:.26em;color:rgba(91,191,160,.62);margin-bottom:16px}
+.jade-line{width:64px;height:1px;background:linear-gradient(90deg,transparent,var(--jade),transparent);margin:0 auto}
+/* Ritual sigil under the title */
+.header-glyph{position:relative;z-index:1;text-align:center;margin:20px auto 4px;font-family:'Noto Serif SC',serif;font-size:40px;font-weight:300;color:rgba(141,217,191,.85);line-height:1;text-shadow:0 0 26px rgba(91,191,160,.45);animation:load-breathe 4.5s ease-in-out infinite}
+.header-glyph-ring{position:relative;z-index:1;width:96px;height:96px;margin:14px auto 2px;border-radius:50%;border:1px solid rgba(91,191,160,.28);display:flex;align-items:center;justify-content:center;box-shadow:0 0 30px rgba(91,191,160,.14) inset,0 0 24px rgba(91,191,160,.1)}
+.header-glyph-ring::before{content:'';position:absolute;inset:8px;border-radius:50%;border:1px dashed rgba(201,168,76,.28)}
+.header-glyph-ring span{font-family:'Noto Serif SC',serif;font-size:34px;font-weight:300;color:rgba(166,230,208,.9);text-shadow:0 0 22px rgba(91,191,160,.5)}
+.header-caption{text-align:center;margin-top:14px;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:12px;letter-spacing:.14em;color:rgba(141,217,191,.5);position:relative;z-index:1}
 
 /* Topic selector */
-.topic-bar{position:relative;z-index:1;display:flex;gap:6px;padding:12px 16px 4px;overflow-x:auto;scrollbar-width:none}
+.topic-bar{position:relative;z-index:1;display:flex;gap:6px;padding:16px 16px 4px;overflow-x:auto;scrollbar-width:none}
 .topic-bar::-webkit-scrollbar{display:none}
-.topic-btn{flex-shrink:0;padding:6px 14px;border-radius:20px;border:1px solid rgba(91,191,160,.2);background:transparent;font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:.06em;color:rgba(224,240,232,.45);cursor:pointer;transition:all .2s}
-.topic-btn.active{background:rgba(91,191,160,.15);border-color:var(--jade);color:var(--jade-mid)}
+.topic-btn{flex-shrink:0;padding:7px 15px;border-radius:20px;border:1px solid rgba(91,191,160,.22);background:rgba(91,191,160,.04);font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:.06em;color:rgba(200,232,220,.6);cursor:pointer;transition:all .2s}
+.topic-btn.active{background:rgba(91,191,160,.16);border-color:var(--jade);color:var(--jade-light);box-shadow:0 2px 14px rgba(91,191,160,.18)}
 
 /* Question area */
 .q-wrap{position:relative;z-index:1;padding:8px 16px 8px}
-.q-label{font-size:10px;letter-spacing:.2em;color:rgba(91,191,160,.45);margin-bottom:8px}
-.q-box{background:var(--card);border:1px solid rgba(91,191,160,.15);border-radius:8px;padding:12px 14px}
-.q-input{width:100%;background:none;border:none;outline:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(224,240,232,.82);letter-spacing:.04em;line-height:1.8;resize:none;min-height:56px}
-.q-input::placeholder{color:rgba(224,240,232,.2)}
+.q-label{font-size:10px;letter-spacing:.2em;color:rgba(141,217,191,.6);margin-bottom:8px}
+.q-box{background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--hair-2);border-radius:12px;padding:14px 15px;box-shadow:0 12px 30px -20px rgba(0,0,0,.8)}
+.q-box:focus-within{border-color:rgba(91,191,160,.42);box-shadow:0 12px 30px -18px rgba(91,191,160,.25)}
+.q-input{width:100%;background:none;border:none;outline:none;font-family:'Noto Serif SC',serif;font-size:13px;color:var(--text);letter-spacing:.04em;line-height:1.8;resize:none;min-height:60px}
+.q-input::placeholder{color:rgba(200,232,220,.32)}
 
 /* Extra fields */
 .extra-fields{position:relative;z-index:1;padding:0 16px 8px;display:flex;gap:8px}
 .extra-field{flex:1}
 .extra-field .q-label{margin-bottom:6px}
-.extra-field select,.extra-field input{width:100%;background:var(--card);border:1px solid rgba(91,191,160,.15);border-radius:6px;padding:8px 10px;font-family:'Noto Serif SC',serif;font-size:12px;color:rgba(224,240,232,.82);outline:none;appearance:none;-webkit-appearance:none}
-.extra-field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6' viewBox='0 0 8 6'%3E%3Cpath d='M1 1l3 3 3-3' stroke='rgba(91,191,160,.4)' fill='none' stroke-width='1.2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
-.extra-field select option{background:var(--card);color:rgba(224,240,232,.82)}
-.extra-field input::placeholder{color:rgba(224,240,232,.25)}
+.extra-field select,.extra-field input{width:100%;background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--hair-2);border-radius:9px;padding:10px 11px;font-family:'Noto Serif SC',serif;font-size:12px;color:var(--text);outline:none;appearance:none;-webkit-appearance:none}
+.extra-field select:focus,.extra-field input:focus{border-color:rgba(91,191,160,.42)}
+.extra-field select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='6' viewBox='0 0 8 6'%3E%3Cpath d='M1 1l3 3 3-3' stroke='rgba(141,217,191,.6)' fill='none' stroke-width='1.2'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center}
+.extra-field select option{background:#081b14;color:var(--text)}
+.extra-field input::placeholder{color:rgba(200,232,220,.32)}
 
 /* Submit area */
-.submit-wrap{position:relative;z-index:1;padding:8px 16px 12px}
-.btn-submit{width:100%;padding:15px 0;background:linear-gradient(90deg,#1a4a3a,#5bbfa0,#8dd9bf,#5bbfa0,#1a4a3a);background-size:300% auto;border:none;border-radius:4px;color:rgba(10,21,16,.95);font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:.22em;cursor:pointer;animation:gold-shimmer 3s linear infinite;box-shadow:0 4px 20px rgba(91,191,160,.3)}
-.btn-submit:active{transform:scale(0.97)}
+.submit-wrap{position:relative;z-index:1;padding:12px 16px 12px}
+.btn-submit{width:100%;padding:16px 0;background:linear-gradient(90deg,#0f3527,#3d9e82,#8dd9bf,#3d9e82,#0f3527);background-size:300% auto;border:none;border-radius:12px;color:#04140e;font-family:'Noto Serif SC',serif;font-size:14px;font-weight:600;letter-spacing:.2em;cursor:pointer;animation:gold-shimmer 3.5s linear infinite;box-shadow:0 10px 30px -8px rgba(91,191,160,.45),inset 0 1px 0 rgba(255,255,255,.28)}
+.btn-submit:active{transform:scale(0.98)}
+@keyframes gold-shimmer{0%{background-position:0% 50%}100%{background-position:300% 50%}}
 
 /* Loading */
-.loading-screen{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;padding:60px 20px;gap:16px}
-.load-glyph{font-size:48px;color:rgba(91,191,160,0.3);font-weight:300;animation:load-breathe 2s ease-in-out infinite}
-.load-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:rgba(91,191,160,.5);letter-spacing:0.18em}
-.load-steps{display:flex;flex-direction:column;gap:5px}
+.loading-screen{position:relative;z-index:1;display:none;flex-direction:column;align-items:center;padding:64px 20px;gap:18px}
+.loading-screen.show{display:flex}
+.load-glyph{font-size:52px;color:rgba(141,217,191,0.42);font-weight:300;animation:load-breathe 2s ease-in-out infinite;text-shadow:0 0 30px rgba(91,191,160,.4)}
+@keyframes load-breathe{0%,100%{opacity:.5;transform:scale(.96)}50%{opacity:1;transform:scale(1.04)}}
+.load-text{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:14px;color:rgba(141,217,191,.7);letter-spacing:0.18em}
+.load-steps{display:flex;flex-direction:column;gap:6px;align-items:center}
+.load-step{font-size:11px;letter-spacing:.08em;color:rgba(166,230,208,.72);animation:step-fade .4s ease both}
 @keyframes step-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* Report screen */
+.report-screen{display:none}
+.report-screen.show{display:block}
 
 /* Report sections */
 .report-header{padding:12px 16px 8px}
 .report-header .q-label{margin-bottom:6px}
-.report-question{background:var(--card2);border:1px solid rgba(91,191,160,.1);border-radius:6px;padding:10px 12px;font-size:11px;color:var(--text);letter-spacing:0.04em;margin-bottom:10px}
-.ai-section-wrap{display:flex;flex-direction:column;gap:8px;padding:0 16px}
-.ai-section{background:var(--card);border:1px solid rgba(91,191,160,.12);border-radius:10px;overflow:hidden}
-.ai-section.open{border-color:rgba(91,191,160,.28)}
-.ai-section-head{display:flex;align-items:center;padding:12px 14px;gap:10px;cursor:pointer}
-.ai-section-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
-.ai-section-title{font-size:13px;letter-spacing:.08em;flex:1;color:var(--jade-light)}
-.ai-section-arrow{font-size:10px;color:rgba(255,245,220,0.25);transition:transform 0.25s}
-.ai-section-body{padding:0 14px 14px;display:none}
+.report-question{background:var(--card2);border:1px solid var(--hair);border-radius:8px;padding:11px 13px;font-size:11.5px;color:var(--text-dim);letter-spacing:0.04em;line-height:1.7;margin-bottom:10px}
+.ai-section-wrap{display:flex;flex-direction:column;gap:9px;padding:0 16px}
+.ai-section{background:linear-gradient(160deg,var(--card),var(--card2));border:1px solid var(--hair-2);border-radius:12px;overflow:hidden;box-shadow:0 14px 34px -24px rgba(0,0,0,.7)}
+.ai-section.open{border-color:rgba(91,191,160,.3)}
+.ai-section-head{display:flex;align-items:center;padding:13px 15px;gap:11px;cursor:pointer}
+.ai-section-icon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;border:1px solid rgba(91,191,160,.16)}
+.ai-section-title{font-size:13.5px;letter-spacing:.08em;flex:1;color:var(--jade-light)}
+.ai-section-arrow{font-size:11px;color:rgba(141,217,191,0.5);transition:transform 0.25s}
+.ai-section-arrow.open{transform:rotate(180deg)}
+.ai-section-body{padding:0 15px 15px;display:none}
 .ai-section-body.open{display:block}
-.ai-section-text{font-size:11px;color:var(--text-dim);letter-spacing:0.04em;line-height:1.9;white-space:pre-wrap}
+.ai-section-text{font-size:12.5px;color:var(--text-dim);letter-spacing:0.03em;line-height:1.95;white-space:pre-wrap}
 
 /* QA section */
 .qa-section{position:relative;z-index:1;display:none;padding:16px 0 80px}
@@ -152,10 +187,14 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 <button class="back-btn" onclick="history.back()">‹ 返回</button>
 
 <div class="header page-enter page-enter-d1">
+  <div class="header-mark">善缘 · 玄课</div>
   <div class="header-title">大六壬 · 神课占卜</div>
   <div class="header-sub">GREAT SIX REN · HEAVENLY ORACULUM</div>
   <div class="jade-line"></div>
 </div>
+
+<div class="header-glyph-ring page-enter page-enter-d1"><span>壬</span></div>
+<div class="header-caption page-enter page-enter-d2">三传四课 · 十二天将 · 以壬窥天机</div>
 
 <!-- Topic selector -->
 <div class="topic-bar page-enter page-enter-d2">
@@ -190,7 +229,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 </div>
 
 <!-- Submit -->
-<div class="submit-wrap page-enter page-enter-d3">
+<div class="submit-wrap page-enter page-enter-d3" id="submitWrap">
   <button class="btn-submit" id="submitBtn" onclick="submitReading()">请AI占课 · 深度解读</button>
 </div>
 

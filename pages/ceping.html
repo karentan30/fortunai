@@ -2,83 +2,550 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#5bbfa0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#c8a35a">
 <meta name="description" content="善缘 · 天赋测评 · AI灵性分析，仅供娱乐参考">
 <title>善缘 · 天赋测评</title>
 <link rel="icon" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&family=Noto+Sans+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--jade:#5bbfa0;--jade-deep:#3d9e82;--bg:#faf8f5;--card:#fff;--ink:#1a1a18;--ink-mid:#4a4a46;--ink-light:#8a8a84;--radius:12px}
-html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink);-webkit-font-smoothing:antialiased}
-body{max-width:420px;margin:0 auto;min-height:100vh;padding:0 16px 40px}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-.header{text-align:center;padding:36px 20px 8px}
-.header-icon{font-size:40px;margin-bottom:6px}
-.header-title{font-size:18px;font-weight:500;letter-spacing:2px}
-.header-sub{font-size:11px;color:var(--ink-light);letter-spacing:1px;margin-top:4px}
+:root {
+  --paper: #f4f0e8;
+  --paper-2: #faf6ee;
+  --paper-3: #fdfbf5;
+  --bg: #ede8dc;
+  --card: rgba(253,250,242,.82);
+  --card-solid: #fdfbf5;
+  --hair: rgba(120,96,54,.13);
+  --hair-2: rgba(120,96,54,.22);
+  --gold-hi: #e7d3a0;
+  --gold: #c8a35a;
+  --gold-deep: #a07d38;
+  --gold-soft: #cda968;
+  --gold-line: rgba(160,125,56,.28);
+  --gold-line-2: rgba(160,125,56,.50);
+  --gold-glow: rgba(200,163,90,.45);
+  --jade: #3d9e82;
+  --jade-deep: #2a7a62;
+  --jade-soft: #5bb89a;
+  --jade-wash: rgba(61,158,130,.09);
+  --ink: #2c2418;
+  --ink-soft: #6a5c46;
+  --ink-mute: #938770;
+  --ink-faint: #b3a78f;
+  --shadow-card: 0 24px 48px -20px rgba(80,55,20,.28);
+  --shadow-lift: 0 16px 32px -18px rgba(80,55,20,.22);
+  --serif: 'Noto Serif SC', serif;
+  --sans: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  --lat: 'Cormorant Garamond', serif;
+  --radius: 18px;
+}
 
-.progress-bar{height:4px;background:rgba(91,191,160,0.12);border-radius:2px;margin:16px 0;overflow:hidden}
-.progress-fill{height:100%;background:var(--jade);border-radius:2px;transition:width 0.4s ease}
+html, body {
+  background: var(--bg);
+  font-family: var(--serif);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
 
-.q-screen{display:none}
-.q-screen.active{display:block;animation:fadeIn 0.3s ease}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+body {
+  max-width: 420px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 0 16px max(40px, env(safe-area-inset-bottom));
+  position: relative;
+}
 
-.q-num{font-size:11px;color:var(--jade-deep);letter-spacing:2px;margin-bottom:4px}
-.q-category{font-size:10px;color:var(--ink-light);letter-spacing:1px;margin-bottom:12px}
-.q-text{font-size:16px;line-height:1.5;color:var(--ink);margin-bottom:16px;font-weight:500}
+/* subtle grain overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: .25;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+}
 
-.options{display:flex;flex-direction:column;gap:8px}
-.option{background:var(--card);border:1.5px solid rgba(91,191,160,0.1);border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:12px;box-shadow:0 1px 4px rgba(0,0,0,0.04)}
-.option:hover{border-color:rgba(91,191,160,0.25)}
-.option.selected{border-color:var(--jade);background:rgba(91,191,160,0.04);box-shadow:0 0 0 1px var(--jade)}
-.option-letter{width:24px;height:24px;border-radius:50%;background:rgba(91,191,160,0.08);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--jade-deep);flex-shrink:0}
-.option.selected .option-letter{background:var(--jade);color:#fff}
-.option-text{font-size:14px;color:var(--ink);letter-spacing:0.5px;line-height:1.4}
+/* glow at top */
+body::after {
+  content: '';
+  position: fixed;
+  top: -80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 340px;
+  height: 340px;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(circle at 50% 40%, rgba(200,163,90,.18), transparent 68%);
+}
 
-.btn-row{display:flex;gap:10px;margin-top:20px}
-.btn-prev{flex:1;padding:12px 0;border:1px solid rgba(91,191,160,0.15);border-radius:8px;background:var(--card);color:var(--ink-mid);font-family:'Noto Serif SC',serif;font-size:13px;cursor:pointer}
-.btn-next{flex:2;padding:12px 0;border:none;border-radius:8px;background:linear-gradient(135deg,var(--jade-deep),var(--jade));color:#fff;font-family:'Noto Serif SC',serif;font-size:13px;cursor:pointer;letter-spacing:1px;transition:all 0.2s}
-.btn-next:disabled{opacity:0.4;cursor:default}
-.btn-next:active:not(:disabled){transform:scale(0.97)}
+/* ── Header ── */
+.header {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 52px 20px 12px;
+}
 
-.result-screen{display:none;padding:20px 0}
-.result-screen.show{display:block}
-.result-badge{display:inline-block;background:rgba(91,191,160,0.1);padding:4px 14px;border-radius:8px;font-size:10px;color:var(--jade-deep);letter-spacing:1px;margin-bottom:12px}
-.result-title{font-size:20px;font-weight:500;margin-bottom:4px}
-.result-sub{font-size:12px;color:var(--ink-mid);margin-bottom:20px;line-height:1.6}
-.result-card{background:var(--card);border:1px solid rgba(91,191,160,0.1);border-radius:var(--radius);padding:16px 18px;margin-bottom:10px;box-shadow:0 1px 6px rgba(0,0,0,0.04)}
-.result-card-title{font-size:12px;color:var(--jade-deep);letter-spacing:1px;margin-bottom:6px;font-weight:500}
-.result-card-text{font-size:12px;color:var(--ink-mid);line-height:1.8;letter-spacing:0.5px}
-.result-btn{display:block;width:100%;padding:14px 0;border:none;border-radius:8px;background:linear-gradient(135deg,var(--jade-deep),var(--jade));color:#fff;font-family:'Noto Serif SC',serif;font-size:14px;cursor:pointer;letter-spacing:1px;text-align:center;text-decoration:none;margin-top:16px;box-shadow:0 4px 16px rgba(91,191,160,0.2)}
+.header-seal {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 1px solid var(--gold-line-2);
+  background: radial-gradient(circle at 35% 30%, rgba(200,163,90,.18), transparent);
+  box-shadow: 0 0 24px -8px var(--gold-glow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  margin: 0 auto 14px;
+}
+
+.header-title {
+  font-family: var(--serif);
+  font-size: 18px;
+  font-weight: 500;
+  letter-spacing: .22em;
+  color: var(--ink);
+}
+
+.header-sub {
+  font-family: var(--lat);
+  font-style: italic;
+  font-size: 12px;
+  letter-spacing: .2em;
+  color: var(--gold-deep);
+  margin-top: 6px;
+}
+
+.gold-divider {
+  width: 48px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-line-2), transparent);
+  margin: 12px auto 0;
+}
+
+/* ── Progress ── */
+.progress-wrap {
+  position: relative;
+  z-index: 1;
+  margin: 20px 0 6px;
+}
+
+.progress-bar {
+  height: 3px;
+  background: rgba(160,125,56,.12);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold-deep), var(--gold));
+  border-radius: 2px;
+  transition: width .45s ease;
+}
+
+.progress-label {
+  font-family: var(--lat);
+  font-size: 11px;
+  letter-spacing: .18em;
+  color: var(--gold-deep);
+  text-align: right;
+  margin-top: 6px;
+  opacity: .7;
+}
+
+/* ── Question screens ── */
+.q-screen { display: none; position: relative; z-index: 1; }
+.q-screen.active { display: block; animation: fadeSlide .32s ease; }
+
+@keyframes fadeSlide {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.q-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.q-num {
+  font-family: var(--lat);
+  font-size: 11px;
+  letter-spacing: .18em;
+  color: var(--gold-deep);
+}
+
+.q-dot {
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  background: var(--gold-line-2);
+}
+
+.q-category {
+  font-family: var(--sans);
+  font-size: 10px;
+  letter-spacing: .14em;
+  color: var(--ink-mute);
+}
+
+.q-text {
+  font-family: var(--serif);
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--ink);
+  font-weight: 500;
+  letter-spacing: .04em;
+  margin-bottom: 18px;
+}
+
+/* ── Options ── */
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.option {
+  background: var(--card);
+  border: 1px solid var(--hair);
+  border-radius: 14px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all .2s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-lift);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.option:hover {
+  border-color: var(--gold-line-2);
+  background: rgba(253,250,242,.95);
+}
+
+.option:active {
+  transform: scale(.97);
+}
+
+.option.selected {
+  border-color: var(--gold);
+  background: rgba(200,163,90,.08);
+  box-shadow: 0 0 0 1px var(--gold-line-2), var(--shadow-lift);
+}
+
+.option-letter {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid var(--gold-line);
+  background: rgba(200,163,90,.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--lat);
+  font-size: 12px;
+  color: var(--gold-deep);
+  flex-shrink: 0;
+  transition: all .2s;
+}
+
+.option.selected .option-letter {
+  background: linear-gradient(135deg, var(--gold-deep), var(--gold));
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 3px 8px -2px var(--gold-glow);
+}
+
+.option-text {
+  font-family: var(--sans);
+  font-size: 13.5px;
+  color: var(--ink-soft);
+  letter-spacing: .03em;
+  line-height: 1.45;
+}
+
+.option.selected .option-text {
+  color: var(--ink);
+}
+
+/* ── Navigation buttons ── */
+.btn-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.btn-prev {
+  flex: 1;
+  padding: 13px 0;
+  border: 1px solid var(--hair-2);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--ink-mute);
+  font-family: var(--serif);
+  font-size: 13px;
+  letter-spacing: .08em;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  -webkit-tap-highlight-color: transparent;
+  transition: all .18s;
+}
+
+.btn-prev:active { transform: scale(.96); }
+
+.btn-next {
+  flex: 2;
+  padding: 13px 0;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--gold-deep), var(--gold), var(--gold-soft), var(--gold));
+  background-size: 250% auto;
+  color: rgba(14,10,4,.92);
+  font-family: var(--serif);
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: .14em;
+  cursor: pointer;
+  box-shadow: 0 6px 20px -6px var(--gold-glow);
+  transition: all .2s;
+  animation: gold-shimmer 3s linear infinite;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@keyframes gold-shimmer {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 250% 50%; }
+}
+
+.btn-next:disabled {
+  opacity: .38;
+  cursor: default;
+  animation: none;
+}
+
+.btn-next:active:not(:disabled) { transform: scale(.97); }
+
+/* ── Result screen ── */
+.result-screen {
+  display: none;
+  position: relative;
+  z-index: 1;
+  padding: 8px 0 0;
+}
+
+.result-screen.show { display: block; animation: fadeSlide .4s ease; }
+
+/* Result hero */
+.result-hero {
+  text-align: center;
+  padding: 36px 20px 28px;
+}
+
+.result-orb {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  margin: 0 auto 18px;
+  background: radial-gradient(circle at 38% 32%,
+    rgba(255,251,240,.95) 0%,
+    rgba(235,196,120,.82) 42%,
+    rgba(200,163,90,.74) 80%);
+  box-shadow: 0 24px 48px -18px var(--gold-glow),
+    inset 0 2px 10px rgba(255,255,255,.65),
+    inset 0 -6px 20px rgba(160,120,40,.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  animation: breathe 5s ease-in-out infinite;
+  border: 1px solid var(--gold-line-2);
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50%       { transform: scale(1.04); }
+}
+
+.result-badge {
+  display: inline-block;
+  border: 1px solid var(--gold-line-2);
+  border-radius: 99px;
+  padding: 4px 16px;
+  font-family: var(--lat);
+  font-size: 10.5px;
+  letter-spacing: .22em;
+  color: var(--gold-deep);
+  margin-bottom: 12px;
+  background: rgba(200,163,90,.06);
+}
+
+.result-title {
+  font-family: var(--serif);
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: .08em;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.result-sub {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink-soft);
+  letter-spacing: .04em;
+  line-height: 1.7;
+}
+
+/* Result cards */
+.result-cards-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.result-card {
+  background: var(--card);
+  border: 1px solid var(--hair);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-card);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.result-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.result-card-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: linear-gradient(150deg, var(--gold), var(--gold-deep));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.result-card-title {
+  font-family: var(--serif);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: .16em;
+  color: var(--gold-deep);
+}
+
+.result-card-divider {
+  height: 1px;
+  background: linear-gradient(90deg, var(--gold-line), transparent);
+  margin-bottom: 12px;
+}
+
+.result-card-text {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.85;
+  letter-spacing: .03em;
+}
+
+/* CTA button */
+.result-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 15px 0;
+  border: none;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--gold-deep), var(--gold), var(--gold-soft), var(--gold));
+  background-size: 300% auto;
+  animation: gold-shimmer 3s linear infinite;
+  color: rgba(14,10,4,.92);
+  font-family: var(--serif);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: .18em;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  margin-top: 18px;
+  box-shadow: 0 8px 24px -8px var(--gold-glow);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.result-btn:active { transform: scale(.97); }
+
+/* Disclaimer */
+.disclaimer {
+  text-align: center;
+  padding: 16px 0 8px;
+  font-family: var(--sans);
+  font-size: 10px;
+  color: var(--ink-faint);
+  letter-spacing: .04em;
+  line-height: 1.8;
+}
 </style>
 <link rel="stylesheet" href="/assets/css/common.css">
 </head>
 <body>
 
+<!-- Header -->
 <div class="header">
-  <div class="header-icon">🎯</div>
+  <div class="header-seal">🔮</div>
   <div class="header-title">职业天赋深度测评</div>
-  <div class="header-sub">20题 · 约5分钟</div>
+  <div class="header-sub">20 Questions · 约5分钟</div>
+  <div class="gold-divider"></div>
 </div>
 
-<div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:5%"></div></div>
+<!-- Progress -->
+<div class="progress-wrap">
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressFill" style="width:5%"></div>
+  </div>
+</div>
 
+<!-- Quiz container — JS renders questions here; do NOT rename this id -->
 <div id="quizContainer"></div>
 
+<!-- Result screen — do NOT rename any id here -->
 <div class="result-screen" id="resultScreen">
-  <div style="text-align:center;padding:30px 0 20px">
-    <div style="font-size:48px;margin-bottom:12px">🎉</div>
+  <div class="result-hero">
+    <div class="result-orb">✨</div>
     <div class="result-badge">测评完成</div>
     <div class="result-title">你的天赋画像</div>
-    <div class="result-sub" id="resultSub">分析中...</div>
+    <div class="result-sub" id="resultSub">分析中…</div>
   </div>
-  <div id="resultCards"></div>
-  <a class="result-btn" href="zhiyuan.html">🎓 查看完整专业推荐</a>
-  <div style="text-align:center;padding:16px 0;font-size:10px;color:var(--ink-light);letter-spacing:0.5px">* 本测评基于天赋特征分析，仅供参考</div>
+
+  <div class="result-cards-wrap" id="resultCards"></div>
+
+  <a class="result-btn" href="zhiyuan.html">查看完整专业推荐 →</a>
+
+  <div class="disclaimer">* 本测评基于天赋特征分析，仅供娱乐参考</div>
 </div>
 
 <script>
@@ -234,14 +701,17 @@ function render() {
     var hasAnswer = answers[idx] !== undefined;
 
     div.innerHTML =
-      '<div class="q-num">' + (idx+1) + '/' + questions.length + '</div>' +
-      '<div class="q-category">' + q.category + '</div>' +
+      '<div class="q-meta">' +
+        '<span class="q-num">' + (idx+1) + ' / ' + questions.length + '</span>' +
+        '<span class="q-dot"></span>' +
+        '<span class="q-category">' + q.category + '</span>' +
+      '</div>' +
       '<div class="q-text">' + q.text + '</div>' +
       '<div class="options">' + optsHtml + '</div>' +
       '<div class="btn-row">' +
         (idx > 0 ? '<button class="btn-prev" onclick="prev()">← 上一题</button>' : '<div></div>') +
         '<button class="btn-next" id="btnNext' + idx + '" onclick="next()"' + (hasAnswer ? '' : ' disabled') + '>' +
-        (idx < questions.length - 1 ? '下一题 →' : '查看结果 ✓') + '</button>' +
+        (idx < questions.length - 1 ? '下一题 →' : '查看结果 ✦') + '</button>' +
       '</div>';
 
     container.appendChild(div);
@@ -292,7 +762,7 @@ function updateProgress() {
 function showResult() {
   document.getElementById('quizContainer').style.display = 'none';
   document.querySelector('.header').style.display = 'none';
-  document.querySelector('.progress-bar').style.display = 'none';
+  document.querySelector('.progress-wrap').style.display = 'none';
 
   var resultScreen = document.getElementById('resultScreen');
   resultScreen.classList.add('show');
@@ -328,21 +798,44 @@ function showResult() {
     manage:['工商管理','市场营销','金融','国际贸易','创业管理','项目管理']
   };
 
-  document.getElementById('resultSub').textContent = '你的核心特质: ' + typeNames[maxType];
+  var typeEmoji = {tech:'🔬', creative:'🎨', social:'🤝', manage:'🏆'};
 
-  var cardsHtml = '';
-  cardsHtml += '<div class="result-card"><div class="result-card-title">🧬 天赋分布</div><div class="result-card-text">' +
-    '钻研型: ' + scores.tech + '题 | 创造型: ' + scores.creative +
-    '题 | 社交型: ' + scores.social + '题 | 领导型: ' + scores.manage + '题</div></div>';
+  document.getElementById('resultSub').textContent = '你的核心特质：' + typeNames[maxType];
 
-  cardsHtml += '<div class="result-card"><div class="result-card-title">🎯 核心天赋</div>' +
-    '<div class="result-card-text">' + typeDescs[maxType] + '</div></div>';
+  var cardsData = [
+    {
+      emoji: '📊',
+      title: '天赋分布',
+      text: '钻研型 ' + scores.tech + ' 题　创造型 ' + scores.creative +
+            ' 题　社交型 ' + scores.social + ' 题　领导型 ' + scores.manage + ' 题'
+    },
+    {
+      emoji: typeEmoji[maxType],
+      title: '核心天赋',
+      text: typeDescs[maxType]
+    },
+    {
+      emoji: '📚',
+      title: '推荐专业方向',
+      text: typeIndustries[maxType].join('　·　')
+    },
+    {
+      emoji: '✦',
+      title: '深度建议',
+      text: '结合你的出生信息再做一次AI命理分析，可以得到更精准的行业方向、旺运城市和学校推荐。点击下方进入完整报告。'
+    }
+  ];
 
-  cardsHtml += '<div class="result-card"><div class="result-card-title">📚 推荐专业方向</div>' +
-    '<div class="result-card-text">' + typeIndustries[maxType].join('、') + '</div></div>';
-
-  cardsHtml += '<div class="result-card"><div class="result-card-title">💡 深度建议</div>' +
-    '<div class="result-card-text">结合您的出生信息再做一次AI命理分析，可以得到更精准的行业方向、旺运城市和学校推荐。<br>点击下方进入完整报告。</div></div>';
+  var cardsHtml = cardsData.map(function(c) {
+    return '<div class="result-card">' +
+      '<div class="result-card-header">' +
+        '<div class="result-card-badge">' + c.emoji + '</div>' +
+        '<div class="result-card-title">' + c.title + '</div>' +
+      '</div>' +
+      '<div class="result-card-divider"></div>' +
+      '<div class="result-card-text">' + c.text + '</div>' +
+    '</div>';
+  }).join('');
 
   document.getElementById('resultCards').innerHTML = cardsHtml;
 }
