@@ -950,6 +950,42 @@ function _dailyDayPillar(dateStr) {
   } catch (e) { return null; }
 }
 
+// ── 五行生克 · 每日运势卡后端硬算（不让 LLM 自己推五行·极不稳）──
+const _WX_ORDER = ['木', '火', '土', '金', '水'];
+const _WX_GEN  = { '木': '火', '火': '土', '土': '金', '金': '水', '水': '木' }; // A 生 B
+const _WX_CTRL = { '木': '土', '火': '金', '土': '水', '金': '木', '水': '火' }; // A 克 B
+// D=当日流日五行, M=日主五行 → D 对 M 的关系（生/助/泄/克/耗）
+function _wxRelation(D, M) {
+  if (!D || !M) return null;
+  if (D === M) return '助';
+  if (_WX_GEN[D] === M) return '生';   // 当日生我（资源/印）
+  if (_WX_GEN[M] === D) return '泄';   // 我生当日（输出/食伤）
+  if (_WX_CTRL[D] === M) return '克';  // 当日克我（压力/官杀）
+  if (_WX_CTRL[M] === D) return '耗';  // 我克当日（付出/财）
+  return null;
+}
+const _WX_SCORE = { '生': 75, '助': 70, '泄': 60, '耗': 50, '克': 45 };
+const _REL_EN = { '生': 'supported', '助': 'reinforced', '泄': 'outward/expressive', '克': 'pressured', '耗': 'spending' };
+const _REL_STANCE_ZH = { '生': '偏进取', '助': '偏进取', '泄': '偏输出表达', '克': '偏保守修整', '耗': '偏保守修整' };
+const _REL_STANCE_EN = { '生': 'lean into action', '助': 'lean into action', '泄': 'lean into expression/output', '克': 'lean into caution & repair', '耗': 'lean into caution & repair' };
+// 五行→幸运色/方位/吉时（硬规则·取"今日需补五行"=命局最缺五行）
+const _WX_LUCK = {
+  '木': { colorZh: '绿/青',   colorEn: 'Green',      hex: '#2E7D5B', dirZh: '东',    dirEn: 'East',   hour: '05:00–07:00' },
+  '火': { colorZh: '红/橙',   colorEn: 'Red/Orange', hex: '#C0392B', dirZh: '南',    dirEn: 'South',  hour: '11:00–13:00' },
+  '土': { colorZh: '黄/棕',   colorEn: 'Yellow/Brown', hex: '#B8860B', dirZh: '本地/中宫', dirEn: 'Center', hour: '07:00–09:00' },
+  '金': { colorZh: '白/银',   colorEn: 'White/Silver', hex: '#AEB6BF', dirZh: '西',    dirEn: 'West',   hour: '17:00–19:00' },
+  '水': { colorZh: '黑/深蓝', colorEn: 'Black/Deep Blue', hex: '#1F3A5F', dirZh: '北', dirEn: 'North', hour: '21:00–23:00' },
+};
+function _wxLacking(wx) {
+  // 命局最缺五行（计数最小；并列按固定序 木火土金水）
+  let best = null, min = Infinity;
+  for (const e of _WX_ORDER) { const c = Number((wx || {})[e] || 0); if (c < min) { min = c; best = e; } }
+  return best;
+}
+// 每日 insight 去重历史（内存·同人最近几条·防连续多天语义雷同）
+const _dailyInsightHist = new Map(); // key: 生辰+性别 → [insight,...]（cap 5）
+function _dailyHistKey(b) { return [b.birthYear, b.birthMonth, b.birthDay, b.gender].join('|'); }
+
 router.post('/daily/card', rateLimitMiddleware, async (req, res) => {
   const lang = (req.body && req.body.lang === 'en') ? 'en' : 'zh';
   const fallback = DAILY_DEFAULT[lang];
@@ -968,9 +1004,13 @@ router.post('/daily/card', rateLimitMiddleware, async (req, res) => {
     const baziBlock = buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour: _hasHour ? birthHour : 0, gender }) || '';
     // 命盘核心（日主/五行/身强弱）——即使无时辰也能算出，供个性化锚点
     let chartCore = '';
+    let rzElement = null, isStrong = false, chartWx = {};
     try {
       const _bz = calcBazi(Number(birthYear), Number(birthMonth), Number(birthDay), _hasHour ? Number(birthHour) : 12, gender || 'male');
       const wx = _bz.wuxing || {};
+      chartWx = wx;
+      rzElement = _bz.dayMasterElement || null;
+      isStrong = !!_bz.isStrong;
       chartCore = '日主：' + _bz.dayMaster + '（' + _bz.dayMasterElement + '）｜身' + (_bz.isStrong ? '强' : '弱')
         + '｜五行分布 木' + (wx['木'] || 0) + ' 火' + (wx['火'] || 0) + ' 土' + (wx['土'] || 0) + ' 金' + (wx['金'] || 0) + ' 水' + (wx['水'] || 0);
     } catch (e) {}
@@ -979,44 +1019,87 @@ router.post('/daily/card', rateLimitMiddleware, async (req, res) => {
     const dayPillar = _dailyDayPillar(dateStr);
     const liuriLine = dayPillar ? ('当日流日干支：' + dayPillar.ganzhi + '（' + dateStr + '）') : ('当日日期：' + dateStr);
 
+    // ③ 五行生克全部后端硬算（relation/score/幸运色·方位·吉时）——不交给 LLM 推
+    const dayElement = dayPillar ? (_GAN_WUXING[dayPillar.gan] || null) : null;
+    const relation = _wxRelation(dayElement, rzElement);          // 当日流日五行 对 日主五行
+    const needElement = _wxLacking(chartWx) || rzElement;         // "今日需补五行"=命局最缺（并列取固定序）
+    const luck = _WX_LUCK[needElement] || _WX_LUCK[rzElement] || null;
+    // score：relation 基础分 + 身强弱微调(±5·更贴八字) + 因人因日确定性浮动(±5·同人同日恒定)
+    let codeScore = null;
+    if (relation) {
+      codeScore = _WX_SCORE[relation];
+      if (isStrong && (relation === '泄' || relation === '克' || relation === '耗')) codeScore += 5;   // 身强喜泄克耗
+      if (!isStrong && (relation === '生' || relation === '助')) codeScore += 5;                       // 身弱喜生助
+      const _seed = (Number(birthYear) * 372 + Number(birthMonth) * 31 + Number(birthDay)
+        + parseInt(String(dateStr).replace(/-/g, ''), 10)) % 11;
+      codeScore += (_seed - 5);
+      codeScore = Math.max(1, Math.min(100, Math.round(codeScore)));
+    }
+    // 幸运色/方位/吉时（代码直接生成·不经 LLM）
+    const codeLuckyColor = luck ? { name: (lang === 'en' ? luck.colorEn : luck.colorZh), hex: luck.hex } : null;
+    const codeLuckyDir   = luck ? (lang === 'en' ? luck.dirEn : luck.dirZh) : null;
+    const codeLuckyHour  = luck ? luck.hour : null;
+    // 过去几天 insight（防连续雷同）
+    const _histKey = _dailyHistKey({ birthYear, birthMonth, birthDay, gender });
+    const _recentInsights = (_dailyInsightHist.get(_histKey) || []).slice(-3);
+
     const system = (lang === 'en')
-      ? 'You are a precise, slightly mystical daily-fortune reader who blends BaZi (Chinese Four Pillars) with a Co-Star-like intimate voice. Given a person\'s natal chart and the specific day\'s day-pillar, you produce ONE day\'s reading that is personal to THIS person on THIS day — never generic, never random. You reason from the interaction between the day-master / chart elements and the day-pillar\'s stem-branch element. Output STRICT JSON only, no markdown, no code fences, no commentary. Keep every string tight and evocative.'
-      : '你是一位精准又略带神秘感的每日运势命理师，融合八字命盘与 Co-Star 式私密、点睛的语气。给你此人的命盘与当天流日干支，你要产出「只属于此人在此日」的一日运势——因人因日不同，绝不套模板、绝不随机。你的判断必须来自命盘日主/五行与当日流日干支五行的生克关系。只输出严格 JSON，禁止 markdown、禁止代码围栏、禁止任何多余说明。每条字段简短有力、有画面感。';
+      ? `You are Runae's daily-fortune advisor, blending The Pattern (turn chart data into plain psychological language), Co-Star (a friend who calls it straight), and Chani (specific doable actions that honor real life).
+[PRE-COMPUTED ANCHORS] The day-master element, body strength, most-lacking element, today's day-pillar element, the relation (support/reinforce/output/pressure/spending), and today's score are ALREADY decided by the system — do NOT change them and do NOT reason about Five Elements yourself. You MUST let the relation drive mood/do/avoid/insight: support or reinforce → lean into action; pressure or spending → lean into caution & repair; output → lean into expression. Never drift into generic pep-talk; two different relations on the same day must yield clearly different do/avoid/insight.
+[NO-JARGON RULE] Chart / Five Elements / stems-branches / ten-gods (day-master, "Metal", strength, etc.) are for your internal reasoning ONLY — they must NEVER appear in any user-visible output. Everything plain-spoken + concrete.
+[HONESTY] Self-awareness + entertainment; no fate claims, no scaring, no promised outcomes. Output STRICT JSON only — no markdown, no code fences, no commentary.`
+      : `你是 Runae 每日运势顾问。融合 The Pattern（把命理数据翻成大白话心理语言）、Co-Star（像朋友直白点你）、Chani（给具体能做的事、照顾真实处境）。
+【已给你算好的锚点】日主五行、身强弱、命局最缺五行、今日流日五行、relation（生/助/泄/克/耗）、今日分数——这些已由系统算定，你不要改动，也不要自己推五行。你必须用 relation 驱动 mood/宜/忌/insight：relation=生/助→偏进取；克/耗→偏保守修整；泄→偏输出表达。绝不脱离锚点写通用鸡汤；不同 relation 的人同一天，宜/忌/insight 必须明显不同。
+【零黑话铁律】命盘/五行/干支/十神（日主/酉金/庚食神/身强弱等）只用于内部推理，绝不能出现在任何用户可见输出。全部大白话+具体建议。
+【诚实】自我觉察+娱乐，不做命定断言/不吓唬/不承诺结果。只输出严格 JSON，禁止 markdown、禁止代码围栏、禁止任何多余说明。`;
+
+    // 给 LLM 的内部锚点（不可外露）；score/幸运色/方位/吉时由代码算定，LLM 不产出这些
+    const relEn = _REL_EN[relation] || 'neutral';
+    const anchorBlock = (lang === 'en')
+      ? `[INTERNAL ANCHORS — never surface these words]
+Relation today = ${relation || 'unknown'} (${relEn}); stance = ${_REL_STANCE_EN[relation] || 'balanced'}. Body = ${isStrong ? 'strong' : 'weak'}. Score (fixed) = ${codeScore == null ? 'n/a' : codeScore}.`
+      : `【内部锚点·任何词都不可外露】
+今日 relation = ${relation || '未知'}；姿态 = ${_REL_STANCE_ZH[relation] || '平衡'}。身${isStrong ? '强' : '弱'}。今日分数（已定）= ${codeScore == null ? '无' : codeScore}。`;
+
+    const avoidBlock = _recentInsights.length
+      ? (lang === 'en'
+          ? `\n[Do NOT repeat the meaning of these recent insights]\n- ${_recentInsights.join('\n- ')}`
+          : `\n【禁止与近日 insight 语义重复】\n- ${_recentInsights.join('\n- ')}`)
+      : '';
 
     const schemaHint = (lang === 'en')
-      ? `Return EXACTLY this JSON shape (no extra keys):
+      ? `Return EXACTLY this JSON (no extra keys, no score/color/direction — those are fixed by the system):
 {
-  "score": <integer 0-100, today's overall fortune>,
-  "mood": "<one evocative word, e.g. 'Gathering' / 'Open'>",
+  "mood": "<one evocative plain word, e.g. 'Gathering' / 'Open'>",
   "yi": ["<do 1>", "<do 2>", "<do 3>"],
   "ji": ["<avoid 1>", "<avoid 2>"],
-  "luckyColor": {"name": "<color name>", "hex": "#RRGGBB"},
-  "luckyDir": "<a compass direction, e.g. 'Southeast'>",
-  "insight": "<one intimate, slightly mysterious line, <= 40 chars, specific to this person today>",
-  "qian": {"title": "<name of today's oracle stick>", "text": "<1-2 line oracle verse>"}
-}`
-      : `严格返回如下 JSON 结构（不得多加字段）：
+  "insight": "<one line like a friend speaking to you, <= 45 chars: [today's energy state] + [ONE concrete action for THIS person]. If it still holds for a different relation, it's too generic — rewrite>",
+  "qian": {"title": "<short oracle name>", "text": "<1-2 plain lines, no classical jargon>"}
+}
+Field rules: do/avoid must be concrete, scene-specific ("pitch the plan in the meeting", not "advance work"); yi[0] MUST follow today's relation/stance. Self-check before output: would insight/yi[0] still hold under a different relation? If yes, rewrite.`
+      : `严格返回如下 JSON（不得多加字段，不要 score/幸运色/方位——那些系统已定）：
 {
-  "score": <0-100 整数，今日整体运势分>,
-  "mood": "<一个有画面感的词，如'蓄势'/'开阔'>",
+  "mood": "<一个有画面感的大白话词，如'蓄势'/'开阔'>",
   "yi": ["<今日宜1>", "<宜2>", "<宜3>"],
   "ji": ["<今日忌1>", "<忌2>"],
-  "luckyColor": {"name": "<颜色名>", "hex": "#RRGGBB"},
-  "luckyDir": "<方位，如'东南'>",
-  "insight": "<一句既私人又略神秘的点拨，≤40字，当天专属于此人>",
-  "qian": {"title": "<今日一签名>", "text": "<签文一两句>"}
-}`;
+  "insight": "<像朋友当面说的一句话，≤45字：[今天能量状态]+[对这个人具体的一个行动]。换一个不同 relation 的人还成立=太泛，重写>",
+  "qian": {"title": "<今日一签名>", "text": "<大白话一两句，禁文言黑话>"}
+}
+字段规则：宜/忌必须具体场景化（"开会提方案"而非"推进工作"）；yi[0] 必须扣今日 relation/姿态。输出前自检：insight/yi[0] 换个 relation 还成立吗？成立就重写。
+示例 ✅"今天推力够，那个你一直没启动的计划，动一步比等下去强。" ❌"能量聚焦，适时而动，把握当下。"（废话·禁）`;
 
     const userPrompt = (lang === 'en')
       ? `Person: born ${birthYear}-${birthMonth}-${birthDay}${_hasHour ? ' hour ' + birthHour : ' (hour unknown)'}, ${gender === 'male' ? 'male' : 'female'}.
-${chartCore ? 'Natal chart core: ' + chartCore + '\n' : ''}${baziBlock ? baziBlock + '\n' : ''}${liuriLine}
+${chartCore ? 'Natal chart core (internal): ' + chartCore + '\n' : ''}${liuriLine}
+${anchorBlock}${avoidBlock}
 
-Read THIS day for THIS person, reasoning from how today's day-pillar element interacts (生克) with their day-master and chart elements. Make the score, mood, yi/ji, lucky color/direction and insight all trace back to that interaction — so a different person or a different day would get a different card.
+Write today's card for THIS person, driven by the relation above. mood/do/avoid/insight must all trace to it — a different relation would give a clearly different card.
 ${schemaHint}`
       : `命主：${birthYear}年${birthMonth}月${birthDay}日${_hasHour ? birthHour + '时' : '（时辰不详）'}生，${gender === 'male' ? '男' : '女'}。
-${chartCore ? '命盘核心：' + chartCore + '\n' : ''}${baziBlock ? baziBlock + '\n' : ''}${liuriLine}
+${chartCore ? '命盘核心（内部）：' + chartCore + '\n' : ''}${liuriLine}
+${anchorBlock}${avoidBlock}
 
-请为「此人在此日」批一张每日运势卡：从当日流日干支的五行与命主日主/命局五行的生克关系出发推断。score、mood、宜忌、幸运色/方位、insight 都要能追溯到这层生克——换个人或换一天，卡就应该不同。insight 要像 Co-Star 那样既私人又略神秘、当天专属。
+请为「此人在此日」写今日卡，由上面的 relation 驱动：mood/宜/忌/insight 都要追溯到它——换个 relation 卡就明显不同。
 ${schemaHint}`;
 
     const raw = await deepseekChat(buildReadingPrompt(system, userPrompt), { maxTokens: 700 });
@@ -1030,34 +1113,40 @@ ${schemaHint}`;
       parsed = null;
     }
 
-    // 逐字段兜底 + 归一化，保证契约字段齐全且类型正确
+    // 逐字段兜底 + 归一化。score/幸运色/方位/吉时以【代码算定值】为权威，LLM 不产出这些。
     const p = parsed && typeof parsed === 'object' ? parsed : {};
-    let score = Number(p.score);
+    // score：优先代码 relation 算定；relation 缺失时才退回 LLM/默认
+    let score = (codeScore != null) ? codeScore : Number(p.score);
     if (!isFinite(score)) score = fallback.score;
     score = Math.max(0, Math.min(100, Math.round(score)));
 
     const arr = (v, def) => (Array.isArray(v) && v.length ? v.map(String).map(s => s.trim()).filter(Boolean) : def);
-    const lc = (p.luckyColor && typeof p.luckyColor === 'object') ? p.luckyColor : {};
-    const hexOk = typeof lc.hex === 'string' && /^#?[0-9a-fA-F]{6}$/.test(lc.hex.trim());
     const qn = (p.qian && typeof p.qian === 'object') ? p.qian : {};
+
+    const insight = (typeof p.insight === 'string' && p.insight.trim()) ? p.insight.trim() : fallback.insight;
 
     const out = {
       score,
       mood: (typeof p.mood === 'string' && p.mood.trim()) ? p.mood.trim() : fallback.mood,
       yi: arr(p.yi, fallback.yi).slice(0, 3),
       ji: arr(p.ji, fallback.ji).slice(0, 2),
-      luckyColor: {
-        name: (typeof lc.name === 'string' && lc.name.trim()) ? lc.name.trim() : fallback.luckyColor.name,
-        hex: hexOk ? (lc.hex.trim().startsWith('#') ? lc.hex.trim() : '#' + lc.hex.trim()) : fallback.luckyColor.hex,
-      },
-      luckyDir: (typeof p.luckyDir === 'string' && p.luckyDir.trim()) ? p.luckyDir.trim() : fallback.luckyDir,
-      insight: (typeof p.insight === 'string' && p.insight.trim()) ? p.insight.trim() : fallback.insight,
+      luckyColor: codeLuckyColor || fallback.luckyColor,   // 代码硬规则（今日需补五行）
+      luckyDir: codeLuckyDir || fallback.luckyDir,          // 代码硬规则
+      luckyHour: codeLuckyHour || null,                     // 代码硬规则（吉时窗口）；前端无栏可忽略
+      insight,
       qian: {
         title: (typeof qn.title === 'string' && qn.title.trim()) ? qn.title.trim() : fallback.qian.title,
         text: (typeof qn.text === 'string' && qn.text.trim()) ? qn.text.trim() : fallback.qian.text,
       },
       date: dateStr,
     };
+
+    // 记录 insight 历史（内存·cap 5·防连续雷同）
+    try {
+      const _h = _dailyInsightHist.get(_histKey) || [];
+      _h.push(insight);
+      _dailyInsightHist.set(_histKey, _h.slice(-5));
+    } catch (e) {}
 
     try { insertReading.run('daily', JSON.stringify(req.body), JSON.stringify(out), req.userId); } catch (e) {}
     res.json(out);
