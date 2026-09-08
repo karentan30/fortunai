@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0b08">
+<title>AI Face &amp; Palm Reading Online · Physiognomy | Runae</title>
+<meta name="description" content="Runae Face &amp; Palm Reading — AI physiognomy analysis, a full read from forehead to chin in three minutes.">
+<meta property="og:title" content="Runae · Face &amp; Palm Reading">
+<meta property="og:description" content="Runae Face &amp; Palm Reading — AI physiognomy analysis, a full read from forehead to chin.">
+<meta property="og:image" content="/og-card.png">
+<meta property="og:url" content="https://runae.app/pages/mianxiang-en.html">
+<meta property="og:type" content="website">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Runae · Face &amp; Palm Reading">
+<meta name="twitter:description" content="Runae Face &amp; Palm Reading — AI physiognomy analysis, a full read from forehead to chin.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@200;300;400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color:transparent; }
+:root {
+  /* ── ink, layered (never flat black) ── */
+  --ink-0:#0a0b08; --ink:#101209; --ink-2:#171a10; --ink-3:#1e2216; --ink-4:#262a1c;
+  --ink-card:#1e2216;
+  /* ── paper / cream ── */
+  --cream:#f4efe4; --cream-2:#e9e1cf; --paper:#f7f2e8;
+  /* ── gold family ── */
+  --gold-hi:#e7d3a0; --gold:#c8a35a; --gold-deep:#a07d38; --gold-soft:#d8bd85;
+  --gold-light:#e7d3a0;
+  --gold-line:rgba(200,163,90,.32); --gold-line-2:rgba(200,163,90,.5); --gold-glow:rgba(200,163,90,.5);
+  --jade:#7fa08a;
+  /* legacy aliases so injected report keeps compiling (remapped to gold/ink palette) */
+  --teal:#c8a35a; --teal-light:#d8bd85; --teal-mid:#e7d3a0;
+  --rose:#b07a4a; --rose-light:#d8bd85;
+  /* ── text ── */
+  --text-cream:#ece6d8; --text-mute:#a49f90; --text-faint:#7d7a6e; --text-ghost:#5c5a51;
+  /* ── hairlines ── */
+  --hair:rgba(236,230,216,.08); --hair-2:rgba(236,230,216,.14);
+  --shadow-card:0 30px 60px -30px rgba(0,0,0,.85); --shadow-lift:0 20px 40px -24px rgba(0,0,0,.7);
+  --serif:"Noto Serif SC",serif; --sans:"Noto Sans SC",-apple-system,BlinkMacSystemFont,sans-serif; --lat:"Cormorant Garamond",serif;
+  --gut:18px; --radius:20px; --radius-lg:24px;
+}
+html, body { background:#08090a; font-family: var(--sans); color: var(--text-cream); -webkit-font-smoothing: antialiased; text-rendering:optimizeLegibility; }
+body { max-width: 402px; margin: 0 auto; min-height: 100vh; overflow-x:hidden; padding-bottom: 60px; position:relative; }
+/* paper grain */
+body::after { content:''; position:fixed; inset:0; pointer-events:none; opacity:.32; mix-blend-mode:soft-light; z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E"); }
+body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(130% 60% at 50% -8%, #252a1e 0%, #161810 42%, var(--ink-0) 100%); pointer-events: none; z-index: 0; }
+.back-btn { position: fixed; top: 14px; left: 12px; z-index: 99; background: none; border: none; font-family: var(--serif); font-size: 22px; color: var(--text-mute); cursor: pointer; padding: 6px 10px; line-height:1; }
+
+/* wordmark / header */
+.header { position: relative; z-index: 1; text-align: center; padding: 46px 20px 6px; }
+.brandmark{display:flex;flex-direction:column;align-items:center;line-height:1;margin-bottom:18px}
+.brandmark .cn{font-family:var(--serif);font-weight:500;font-size:19px;letter-spacing:.36em;color:var(--cream);text-indent:.36em}
+.brandmark .en{font-family:var(--lat);font-size:10px;letter-spacing:.44em;color:var(--gold);margin-top:6px;text-transform:uppercase;text-indent:.44em}
+.header-title { font-family:var(--serif); font-size: 21px; font-weight: 600; letter-spacing: 0.14em; text-indent:.14em; color:var(--cream); margin-bottom: 10px; }
+.header-sub { font-family: var(--lat); font-style: italic; font-size: 12px; letter-spacing: 0.24em; color: var(--gold); opacity:.9; margin-bottom: 16px; }
+.teal-line { width: 40px; height: 1px; background: var(--gold-line-2); margin: 0 auto; }
+
+.eyebrow{font-family:var(--lat);font-size:12px;font-style:italic;letter-spacing:.22em;color:var(--gold);opacity:.92}
+
+/* gilded surface */
+.gilt{background:linear-gradient(155deg,var(--gold-hi) 0%,var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep) 100%);
+  box-shadow:0 16px 30px -14px var(--gold-glow),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(120,90,30,.4);}
+
+/* ── Mode tabs (segmented, gilt thumb) ── */
+.mode-tabs { position: relative; z-index: 1; display: flex; gap: 0; margin: 14px var(--gut) 0; background: var(--ink-2); border: 1px solid var(--hair); border-radius: 14px; padding:5px; overflow: hidden; }
+.mode-tab { flex: 1; height:40px; display:flex; align-items:center; justify-content:center; text-align: center; font-family:var(--serif); font-weight:500; font-size: 14px; letter-spacing: 0.12em; text-indent:.12em; color: var(--text-mute); cursor: pointer; transition: all 0.3s cubic-bezier(.65,0,.2,1); border-radius:10px; }
+.mode-tab.active { background:linear-gradient(155deg,var(--gold-hi),var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep)); color: #2a1f0c; box-shadow:0 10px 22px -12px var(--gold-glow),inset 0 1px 0 rgba(255,255,255,.5); }
+
+/* hook hero */
+.hook-hero{position:relative;z-index:1;padding:20px 26px 0;text-align:center}
+.hook-title{font-family:var(--serif);font-weight:600;font-size:29px;line-height:1.34;letter-spacing:.05em;color:var(--cream);margin-top:14px}
+.hook-title em{font-style:normal;color:var(--gold-soft);position:relative;white-space:nowrap}
+.hook-title em:after{content:"";position:absolute;left:2%;right:2%;bottom:-4px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-line-2),transparent)}
+.hook-sub{font-size:13px;line-height:1.9;color:var(--text-mute);margin-top:16px;letter-spacing:.02em}
+
+/* taste-of-report card */
+.taste{position:relative;z-index:1;margin:22px var(--gut) 0;border-radius:var(--radius);overflow:hidden;
+  background:linear-gradient(180deg,#1c2016,#121408);border:1px solid var(--hair-2);box-shadow:var(--shadow-lift)}
+.taste .tImg{height:120px;position:relative;overflow:hidden;
+  background:radial-gradient(90% 130% at 82% 0%,rgba(200,163,90,.12),transparent 55%),linear-gradient(160deg,#3a3f30,#20241b 60%,#151810);}
+.taste .tImg .watermark{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-family:var(--serif);font-weight:900;
+  font-size:104px;line-height:1;color:transparent;-webkit-text-stroke:1px rgba(244,239,228,.12);opacity:.7}
+.taste .tImg .tag{position:absolute;left:14px;top:14px;font-size:10.5px;letter-spacing:.18em;color:var(--gold-soft);
+  border:1px solid var(--gold-line);border-radius:999px;padding:5px 12px;background:rgba(14,16,10,.45);backdrop-filter:blur(6px)}
+.taste .tBody{padding:16px 18px 18px}
+.taste .tChap{font-family:var(--serif);font-weight:600;font-size:16px;color:var(--cream);letter-spacing:.03em}
+.taste .tQuote{font-family:var(--serif);font-size:14.5px;line-height:1.85;color:var(--gold-soft);
+  margin-top:10px;padding-left:14px;border-left:1.5px solid var(--gold-line-2);font-weight:500}
+.taste .tFade{margin-top:10px;font-size:12.5px;line-height:1.85;color:var(--text-faint);
+  -webkit-mask-image:linear-gradient(180deg,#000 15%,transparent 96%);mask-image:linear-gradient(180deg,#000 15%,transparent 96%)}
+
+/* ── Upload area (gold dropzone) ── */
+.upload-wrap { position: relative; z-index: 1; padding: 20px var(--gut) 4px; }
+.zone-label{display:flex;align-items:center;gap:12px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--text-faint);margin-bottom:14px}
+.zone-label:before,.zone-label:after{content:"";height:1px;flex:1;background:var(--hair)}
+.upload-area { background: radial-gradient(120% 100% at 50% 0%,rgba(200,163,90,.06),rgba(200,163,90,.01)); border: 1px dashed var(--gold-line); border-radius: 18px; min-height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: all 0.25s; position: relative; overflow: hidden; }
+.upload-area:active { border-color: var(--gold-line-2); background: rgba(200,163,90,.09); }
+.upload-area.has-image { border-style: solid; border-color: var(--gold-line-2); }
+.upload-icon { width: 50px; height: 50px; border-radius: 50%; border: 1px solid var(--gold-line); display: flex; align-items: center; justify-content: center; font-family:var(--serif); font-size: 22px; color: var(--gold-soft); background:radial-gradient(circle at 40% 32%,rgba(200,163,90,.14),transparent); }
+.upload-text { font-family:var(--serif); font-size: 14px; color: var(--text-cream); letter-spacing: 0.04em; }
+.upload-hint { font-size: 11px; color: var(--text-faint); letter-spacing: 0.1em; }
+.upload-area img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 17px; }
+.upload-area .img-overlay { position: absolute; inset: 0; background: rgba(10,11,8,0.42); border-radius: 17px; display: flex; align-items: center; justify-content: center; }
+.img-overlay-text { font-size: 12px; color: var(--cream); letter-spacing: 0.1em; background: rgba(10,11,8,0.62); padding: 7px 16px; border-radius: 999px; border:1px solid var(--gold-line); }
+input[type=file] { display: none; }
+
+/* Camera option */
+.camera-row { display: flex; gap: 12px; margin-top: 12px; }
+.cam-btn { flex: 1; background: var(--ink-3); border: 1px solid var(--hair-2); border-radius: 13px; height:46px; display:flex; align-items:center; justify-content:center; font-size: 13px; color: var(--text-cream); letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; }
+.cam-btn:active { border-color: var(--gold-line-2); color: var(--gold-soft); }
+
+/* trust row */
+.trust{display:flex;justify-content:center;align-items:center;gap:14px;margin:18px var(--gut) 0;color:var(--text-faint);font-size:11px;letter-spacing:.05em;position:relative;z-index:1}
+.trust span{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.trust .d{width:3px;height:3px;border-radius:50%;background:var(--gold);opacity:.55}
+
+/* ── Question ── */
+.q-wrap { position: relative; z-index: 1; padding: 20px var(--gut) 4px; }
+.q-label { font-family:var(--lat); font-style:italic; font-size: 12px; letter-spacing: 0.14em; color: var(--gold); margin-bottom: 12px; text-align:center; }
+.q-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content:center; margin-bottom: 4px; }
+.q-chip { padding: 8px 15px; border-radius: 999px; border: 1px solid var(--hair-2); background: var(--ink-2); font-family:var(--serif); font-size: 12px; color: var(--text-mute); cursor: pointer; letter-spacing: 0.06em; transition: all 0.25s; }
+.q-chip.sel { border-color: var(--gold-line-2); background: linear-gradient(180deg,#2c2b1c,#1c1c11); color: var(--gold-soft); box-shadow:0 0 0 1px var(--gold-line-2),0 14px 26px -18px var(--gold-glow); }
+
+/* ── Submit ── */
+.submit-wrap { position: relative; z-index: 1; padding: 20px var(--gut) 6px; }
+.btn-analyze { width: 100%; height:56px; background:linear-gradient(155deg,var(--gold-hi) 0%,var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep) 100%); border: none; border-radius: 16px; color: #2a1f0c; font-family: var(--serif); font-size: 17px; font-weight: 600; letter-spacing: 0.16em; text-indent:.16em; cursor: pointer; box-shadow: 0 16px 30px -14px var(--gold-glow),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(120,90,30,.4); transition:opacity .2s; }
+.btn-analyze:disabled { opacity: 0.35; cursor: not-allowed; }
+.hook-disc{text-align:center;font-size:10.5px;color:var(--text-faint);letter-spacing:.04em;line-height:1.75;padding:12px 30px 6px;position:relative;z-index:1}
+
+/* ── Loading — face-scan ritual ── */
+.loading-wrap { position: relative; z-index: 1; display: none; flex-direction: column; align-items: center; padding: 22px var(--gut) 30px; gap: 0; }
+.loading-wrap.show { display: flex; }
+.scan-stage{position:relative;width:100%;height:360px;border-radius:var(--radius-lg);overflow:hidden;
+  background:radial-gradient(80% 60% at 50% 38%,#3a3428,#241f16 58%,#100e08);border:1px solid var(--hair-2)}
+.scan-stage .portrait{position:absolute;inset:0}
+.scan-stage .portrait:before{content:"";position:absolute;left:50%;top:34%;width:150px;height:190px;transform:translate(-50%,-50%);
+  border-radius:50% 50% 46% 46%;background:radial-gradient(circle at 50% 40%,rgba(128,116,88,.5),rgba(60,54,40,.16) 68%,transparent);filter:blur(3px)}
+.mesh{position:absolute;left:50%;top:37%;transform:translate(-50%,-50%);width:190px;height:238px;opacity:.9}
+.mesh svg{width:100%;height:100%;overflow:visible}
+.mesh .node{fill:var(--gold-hi)}
+.mesh .node2{fill:var(--gold-soft);opacity:.65}
+.mesh .edge{stroke:rgba(216,189,133,.28);stroke-width:.5;fill:none}
+.mesh .edge-key{stroke:rgba(216,189,133,.55);stroke-width:.7;fill:none}
+.scanline{position:absolute;left:0;right:0;height:120px;pointer-events:none;z-index:3;
+  background:linear-gradient(180deg,transparent,rgba(216,189,133,.12) 42%,rgba(231,211,160,.42) 50%,rgba(216,189,133,.12) 58%,transparent);
+  animation:sweep 3.6s cubic-bezier(.55,0,.45,1) infinite}
+@keyframes sweep{0%{top:-120px;opacity:0}12%{opacity:1}88%{opacity:1}100%{top:360px;opacity:0}}
+.guides{position:absolute;inset:0;pointer-events:none;z-index:2}
+.guides .g{position:absolute;left:16px;right:16px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-line),transparent)}
+.guides .g:after{content:attr(data-l);position:absolute;right:0;top:-9px;font-family:var(--serif);font-size:10px;letter-spacing:.14em;color:var(--gold-soft);
+  background:rgba(14,14,9,.55);padding:2px 8px;border-radius:4px}
+.guides .g1{top:27%}.guides .g2{top:48%}.guides .g3{top:70%}
+.retic{position:absolute;width:20px;height:20px;border:1px solid var(--gold-line);z-index:2}
+.retic.tl{left:14px;top:14px;border-right:0;border-bottom:0}
+.retic.tr{right:14px;top:14px;border-left:0;border-bottom:0}
+.retic.bl{left:14px;bottom:14px;border-right:0;border-top:0}
+.retic.br{right:14px;bottom:14px;border-left:0;border-top:0}
+.scan-meta{padding:30px 20px 0;text-align:center;position:relative}
+.scan-ring{width:58px;height:58px;margin:0 auto 20px;position:relative}
+.scan-ring svg{transform:rotate(-90deg)}
+.scan-ring .bg{stroke:var(--hair-2);fill:none;stroke-width:1.5}
+.scan-ring .fg{stroke:var(--gold);fill:none;stroke-width:1.5;stroke-linecap:round;stroke-dasharray:182;stroke-dashoffset:60;
+  animation:fill 25s linear forwards;filter:drop-shadow(0 0 4px var(--gold-glow))}
+@keyframes fill{to{stroke-dashoffset:16}}
+.scan-ring .pct{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--lat);font-size:15px;font-weight:500;color:var(--gold-soft)}
+/* loading-text is the rotating micro-copy line */
+.loading-text{font-family:var(--serif);font-size:17px;color:var(--cream);letter-spacing:.1em;text-indent:.1em;min-height:24px;transition:opacity .3s}
+.loading-text .cursor{color:var(--gold);animation:blink 1s steps(1) infinite;margin-left:2px}
+@keyframes blink{50%{opacity:0}}
+.scan-steps{font-family:var(--lat);font-style:italic;font-size:11.5px;color:var(--text-faint);margin-top:12px;letter-spacing:.16em}
+.scan-note{font-family:var(--serif);font-size:12.5px;color:var(--text-faint);margin-top:24px;line-height:1.9;text-align:center;letter-spacing:.03em}
+
+/* ── Results ── */
+.result-wrap { position: relative; z-index: 1; padding: 8px var(--gut) 0; display: none; }
+.result-wrap.show { display: block; }
+
+/* legacy feature classes (injected fallback) — restyled to ink-wash gold */
+.feature-card { background: linear-gradient(180deg,#181b12,#101109); border: 1px solid var(--hair-2); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; }
+.feature-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.feature-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.feature-title { font-family:var(--serif); font-weight:600; font-size: 15px; letter-spacing: 0.03em; color:var(--cream); }
+.feature-score { margin-left: auto; font-family: var(--lat); font-size: 18px; color:var(--gold-soft); }
+.feature-bar { height: 3px; background: var(--hair); border-radius: 2px; margin-bottom: 8px; overflow: hidden; }
+.feature-fill { height: 100%; border-radius: 2px; }
+.feature-text { font-size: 12px; color: rgba(201,197,183,.9); letter-spacing: 0.01em; line-height: 2; }
+
+.overall-box { background: linear-gradient(180deg,rgba(200,163,90,.07),rgba(200,163,90,.015)); border: 1px solid var(--gold-line); border-radius: var(--radius); padding: 20px 18px; margin-bottom: 16px; text-align: center; }
+.overall-label { font-family:var(--lat); font-style:italic; font-size: 12px; letter-spacing: 0.2em; color: var(--gold); margin-bottom: 10px; }
+.overall-quote { font-family: var(--serif); font-weight:500; font-size: 15px; color: var(--gold-soft); letter-spacing: 0.02em; line-height: 1.95; }
+
+.cta-btn { width: 100%; padding: 15px 0; background: transparent; border: 1px solid var(--hair-2); border-radius: 14px; color: var(--text-mute); font-family: var(--serif); font-size: 13px; letter-spacing: 0.1em; cursor: pointer; margin-bottom: 14px; transition:all .2s; }
+
+/* ══════════ 精装报告阅读体验（对齐 mockup · 深墨+金） ══════════ */
+@keyframes mxFadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+/* 顶部阅读进度条 */
+#readProgressWrap{position:fixed;top:0;left:0;right:0;height:3px;z-index:1200;background:rgba(0,0,0,0.3);opacity:0;transition:opacity .3s;pointer-events:none}
+#readProgressWrap.show{opacity:1}
+#readProgressBar{height:100%;width:0;background:linear-gradient(90deg,var(--gold-deep),var(--gold),var(--gold-hi));box-shadow:0 0 8px var(--gold-glow);transition:width .12s ease-out}
+#readProgressChapter{position:fixed;top:8px;right:12px;z-index:1200;font-family:var(--lat);font-size:11px;letter-spacing:0.12em;color:var(--gold-soft);background:rgba(10,11,8,0.75);border:1px solid var(--gold-line);border-radius:20px;padding:3px 11px;opacity:0;transition:opacity .3s;pointer-events:none;backdrop-filter:blur(6px)}
+#readProgressChapter.show{opacity:1}
+
+/* 章节封面卡 — ink-wash banner */
+.chapter-cover{position:relative;margin:20px 0 10px;border-radius:var(--radius);overflow:hidden;min-height:150px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:var(--shadow-lift);animation:mxFadeUp 0.6s ease both;background:linear-gradient(180deg,#181b12,#101109);border:1px solid var(--hair-2)}
+.chapter-cover-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.42;filter:saturate(0.85) sepia(.2)}
+.chapter-cover-veil{position:absolute;inset:0;background:linear-gradient(180deg,rgba(16,17,9,0.3) 0%,rgba(16,17,9,0.55) 45%,rgba(16,17,9,0.94) 100%)}
+.chapter-cover-body{position:relative;padding:16px 18px 16px}
+.chapter-cover-num{font-family:var(--serif);font-size:11px;letter-spacing:0.28em;color:var(--gold-soft);margin-bottom:6px}
+.chapter-cover-num::before{content:'';display:inline-block;width:20px;height:1px;background:linear-gradient(90deg,var(--gold-line-2),transparent);vertical-align:middle;margin-right:8px}
+.chapter-cover-title{font-family:var(--serif);font-size:19px;font-weight:600;letter-spacing:0.03em;color:var(--cream);line-height:1.25;text-shadow:0 2px 12px rgba(0,0,0,0.6)}
+.chapter-cover-lead{font-family:var(--lat);font-style:italic;font-size:12px;line-height:1.6;letter-spacing:0.06em;color:var(--gold-soft);opacity:.85;margin-top:6px;max-width:94%}
+
+/* 首字下沉 */
+.mx-body{font-size:13px;line-height:2;color:#c9c5b7;letter-spacing:0.01em}
+/* English: no oversized drop-cap (a single Latin capital looks odd) */
+.mx-body.drop-cap::first-letter{float:none;font-size:1em;font-weight:inherit;color:inherit;margin:0;text-shadow:none}
+
+/* 金句 pull quote */
+.pull-quote{position:relative;margin:16px 4px;padding:2px 4px 2px 18px;text-align:left}
+.pull-quote::before{content:'';position:absolute;left:0;top:4px;bottom:4px;width:1.5px;background:var(--gold-line-2);border-radius:2px}
+.pull-quote-text{font-family:var(--serif);font-size:16px;font-weight:500;line-height:1.95;letter-spacing:0.02em;color:var(--gold-soft)}
+.pull-quote-mark{display:none}
+
+/* 高亮卡 — 气运调养 wisdom */
+.hl-note{margin:16px 0;padding:20px 18px;background:linear-gradient(180deg,rgba(200,163,90,.07),rgba(200,163,90,.015));border:1px solid var(--gold-line);border-radius:18px;font-size:12.5px;line-height:1.95;letter-spacing:0.02em;color:var(--text-mute);text-align:center}
+.hl-note b,.hl-note strong{color:var(--gold-soft);font-weight:500}
+
+/* 章节目录 */
+.chapter-toc{margin:6px 0;padding:6px 0;background:var(--ink-2);border:1px solid var(--hair);border-radius:18px;overflow:hidden;animation:mxFadeUp 0.5s ease both}
+.chapter-toc-title{font-size:10.5px;letter-spacing:0.22em;text-transform:uppercase;color:var(--text-faint);padding:14px 18px;border-bottom:1px solid var(--hair);display:flex;align-items:center;gap:7px}
+.chapter-toc-item{display:flex;align-items:center;gap:14px;padding:15px 18px;border-bottom:1px solid var(--hair);text-decoration:none;transition:all .2s;cursor:pointer;min-height:56px}
+.chapter-toc-item:last-child{border-bottom:none}
+.chapter-toc-item:active{opacity:0.6}
+.chapter-toc-idx{font-family:var(--serif);font-size:16px;color:var(--gold);min-width:24px;text-align:center}
+.chapter-toc-label{flex:1;font-family:var(--serif);font-size:14.5px;letter-spacing:0.03em;color:var(--text-cream)}
+.chapter-toc-arrow{font-size:16px;color:var(--text-faint)}
+
+/* 精装章卡 — ink-wash chapter body */
+.mx-chapter-card{background:linear-gradient(180deg,#181b12,#101109);border:1px solid var(--hair-2);border-radius:var(--radius);padding:20px 20px 22px;margin-bottom:14px;box-shadow:var(--shadow-lift);animation:mxFadeUp 0.5s ease both}
+.mx-chapter-card .feature-head{margin-bottom:12px}
+.mx-chapter-card .feature-title{font-family:var(--serif);font-weight:600;font-size:17px;color:var(--cream)}
+
+/* report-viz 主题微调（深墨金）：评分环 */
+.rv-frame{background:linear-gradient(180deg,#181b12,#101109) !important;border-color:var(--hair-2) !important}
+.rv-frame-title{color:var(--gold-soft) !important}
+.rv-ring-label{color:var(--text-cream) !important}
+
+/* AIGC / disclaimer injected badges */
+.sy-disclaimer{margin-top:8px}
+
+@media print{
+  .chapter-cover{break-inside:avoid}
+  #readProgressWrap,#readProgressChapter{display:none !important}
+}
+</style>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/common.css">
+</head>
+<body>
+<button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme" style="z-index:999">🌙</button>
+
+
+<button class="back-btn" onclick="history.back()">‹</button>
+
+<div class="header">
+  <div class="brandmark"><div class="cn">善缘</div><div class="en">Runae</div></div>
+  <div class="eyebrow">Ancient physiognomy, re-read by AI</div>
+  <div class="header-title" style="margin-top:12px">Face &amp; Palm Reading</div>
+  <div class="header-sub">PHYSIOGNOMY · MA YI SHEN XIANG</div>
+  <div class="teal-line"></div>
+</div>
+
+<div class="mode-tabs">
+  <div class="mode-tab active" onclick="switchMode('face',this)">Face</div>
+  <div class="mode-tab" onclick="switchMode('palm',this)">Palm</div>
+</div>
+
+<div class="hook-hero">
+  <div class="hook-title" id="hookTitle">One portrait,<br>your <em>Three-Court</em> destiny</div>
+  <div class="hook-sub" id="hookSub">Upper court governs early fortune, middle court wealth, lower court later blessings.<br>Three minutes for a reading worth keeping.</div>
+</div>
+
+<!-- taste of report -->
+<div class="taste">
+  <div class="tImg">
+    <svg viewBox="0 0 400 120" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;width:100%;height:100%;display:block">
+      <defs><linearGradient id="mg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a4a38"/><stop offset="1" stop-color="#20241a"/></linearGradient></defs>
+      <path d="M0 120 L0 80 C60 48 90 70 140 50 C185 34 220 64 270 44 C320 26 360 54 400 40 L400 120Z" fill="url(#mg1)" opacity=".8"/>
+      <path d="M0 120 L0 96 C70 80 120 94 180 80 C245 66 300 90 360 78 L400 84 L400 120Z" fill="#151810" opacity=".92"/>
+      <circle cx="332" cy="28" r="14" fill="#d8bd85" opacity=".2"/>
+    </svg>
+    <div class="watermark">相</div>
+    <div class="tag">Excerpt · the opening chapter of your report</div>
+  </div>
+  <div class="tBody">
+    <div class="tChap">The Three Courts · Overview</div>
+    <div class="tQuote">"When the three courts are balanced, it is the noble sign of harmony between heaven, earth and self."</div>
+    <div class="tFade">A steady, well-ordered life without extreme highs and lows. A full, broad upper court points to early brilliance and a solid family foundation; a rounded, straight nose in the middle court marks the golden years for wealth in mid-life…</div>
+  </div>
+</div>
+
+<div class="upload-wrap">
+  <div class="zone-label">Upload a front-facing photo</div>
+  <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+    <div class="upload-icon" id="uploadIcon">面</div>
+    <div class="upload-text" id="uploadText">Tap to upload, or take a photo</div>
+    <div class="upload-hint" id="uploadHint">Even light · front-facing · unobstructed</div>
+  </div>
+  <input type="file" id="fileInput" accept="image/*" capture="user" onchange="handleFile(this)">
+  <div class="camera-row">
+    <div class="cam-btn" onclick="document.getElementById('fileInput').click()">Choose from album</div>
+    <div class="cam-btn" onclick="openCamera()">Take a photo</div>
+  </div>
+</div>
+
+<div class="trust">
+  <span>Twelve Palaces</span><span class="d"></span>
+  <span>Three Courts · feature by feature</span><span class="d"></span>
+  <span>Photos not stored</span>
+</div>
+
+<div class="q-wrap">
+  <div class="q-label">What do you most want to see right now?</div>
+  <div class="q-chips" id="qChips">
+    <div class="q-chip sel" onclick="toggleChip(this)">Wealth</div>
+    <div class="q-chip" onclick="toggleChip(this)">Love &amp; marriage</div>
+    <div class="q-chip" onclick="toggleChip(this)">Career</div>
+    <div class="q-chip" onclick="toggleChip(this)">Health &amp; vitality</div>
+    <div class="q-chip" onclick="toggleChip(this)">Personality</div>
+    <div class="q-chip" onclick="toggleChip(this)">Helpful &amp; harmful people</div>
+  </div>
+</div>
+
+<div class="submit-wrap">
+  <button class="btn-analyze" id="analyzeBtn" onclick="startAnalysis()" disabled>Upload a photo to begin</button>
+</div>
+<div class="hook-disc">AI-generated content · for entertainment only. Not medical, legal or financial advice.</div>
+
+<div class="loading-wrap" id="loadingWrap">
+  <div class="scan-stage">
+    <div class="portrait"></div>
+    <div class="mesh"><svg viewBox="0 0 200 250" id="meshSvg"></svg></div>
+    <div class="guides">
+      <div class="g g1" data-l="Upper · Heaven"></div>
+      <div class="g g2" data-l="Middle · Human"></div>
+      <div class="g g3" data-l="Lower · Earth"></div>
+    </div>
+    <div class="scanline"></div>
+    <div class="retic tl"></div><div class="retic tr"></div><div class="retic bl"></div><div class="retic br"></div>
+  </div>
+  <div class="scan-meta">
+    <div class="scan-ring">
+      <svg width="58" height="58" viewBox="0 0 60 60"><circle class="bg" cx="30" cy="30" r="29"/><circle class="fg" cx="30" cy="30" r="29"/></svg>
+      <div class="pct">观</div>
+    </div>
+    <div class="loading-text" id="loadingText">Measuring the three courts<span class="cursor">·</span></div>
+    <div class="scan-steps">measuring · reading qi · mapping palaces</div>
+    <div class="scan-note">Be still — spirit shapes countenance.<br>Reading your fortune across the twelve palaces…</div>
+  </div>
+</div>
+
+<div class="result-wrap" id="resultWrap">
+  <!-- Dynamic results -->
+</div>
+
+<script>
+var currentMode = 'face';
+var hasImage = false;
+
+function switchMode(mode, el) {
+  document.querySelectorAll('.mode-tab').forEach(function(t){ t.classList.remove('active'); });
+  el.classList.add('active');
+  currentMode = mode;
+  document.getElementById('uploadIcon').textContent = mode === 'face' ? '面' : '手';
+  document.getElementById('uploadText').textContent = 'Tap to upload, or take a photo';
+  document.getElementById('uploadHint').textContent = mode === 'face' ? 'Even light · front-facing · unobstructed' : 'Palm up · fingers spread · in focus';
+  // Update hero copy (loadingText is handled by the scan-ritual rotator)
+  var ht = document.getElementById('hookTitle'), hs = document.getElementById('hookSub'), zl = document.querySelector('.zone-label'), ql = document.querySelector('.q-label');
+  if (mode === 'face') {
+    if (ht) ht.innerHTML = 'One portrait,<br>your <em>Three-Court</em> destiny';
+    if (hs) hs.innerHTML = 'Upper court governs early fortune, middle court wealth, lower court later blessings.<br>Three minutes for a reading worth keeping.';
+    if (zl) zl.textContent = 'Upload a front-facing photo';
+  } else {
+    if (ht) ht.innerHTML = 'One palm,<br>your <em>lifeline</em> destiny';
+    if (hs) hs.innerHTML = 'The life line marks your foundation, the heart line your bonds, the fate line your drive.<br>Three minutes for a reading worth keeping.';
+    if (zl) zl.textContent = 'Upload a photo of your palm';
+  }
+  // 切换扫描仪式的轮播词库（面相/手相各一套）
+  window._mxScanMode = mode;
+}
+
+function handleFile(input) {
+  if (!input.files[0]) return;
+  var file = input.files[0];
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    var dataUrl = e.target.result;
+    // 存储 base64 数据供 startAnalysis 使用
+    var commaIdx = dataUrl.indexOf(',');
+    window._mxImageData = {
+      base64: commaIdx !== -1 ? dataUrl.slice(commaIdx + 1) : dataUrl,
+      mimeType: file.type || 'image/jpeg'
+    };
+    var area = document.getElementById('uploadArea');
+    area.innerHTML = '<img src="'+dataUrl+'" alt="" loading="lazy"><div class="img-overlay"><div class="img-overlay-text">Uploaded · tap to change</div></div>';
+    area.classList.add('has-image');
+    area.onclick = function(){ document.getElementById('fileInput').click(); };
+    hasImage = true;
+    var btn = document.getElementById('analyzeBtn');
+    btn.textContent = 'Read my '+(currentMode==='face'?'face':'palm');
+    btn.disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function openCamera() {
+  var inp = document.getElementById('fileInput');
+  inp.setAttribute('capture', currentMode === 'face' ? 'user' : 'environment');
+  inp.click();
+}
+
+function toggleChip(el) {
+  el.classList.toggle('sel');
+}
+
+function startAnalysis() {
+  if (!hasImage) return;
+
+  // Prevent double-clicks: disable button
+  var btn = document.getElementById('analyzeBtn');
+  btn.disabled = true;
+  btn.textContent = 'Analyzing…';
+
+  // Collect the areas the user cares about
+  var chips = Array.from(document.querySelectorAll('.q-chip.sel')).map(function(c){ return c.textContent; });
+  var question = chips.length ? chips.join(', ') : (currentMode === 'face' ? 'A full face reading' : 'A full palm reading');
+
+  // 读取图片 base64（已在 handleFile 时存入 window._mxImageData）
+  var imageBase64 = window._mxImageData ? window._mxImageData.base64 : null;
+  var mimeType = window._mxImageData ? window._mxImageData.mimeType : 'image/jpeg';
+
+  if (!imageBase64) {
+    showMxToast('Could not read the photo — please upload again', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Read my '+(currentMode==='face'?'face':'palm');
+    return;
+  }
+
+  document.getElementById('loadingWrap').classList.add('show');
+  document.getElementById('resultWrap').classList.remove('show');
+  document.getElementById('resultWrap').innerHTML = '';
+  document.getElementById('analyzeBtn').style.display = 'none';
+  try { startScanRitual(); } catch(e) {}
+
+  // 读取 auth token（httpOnly cookie，不从 localStorage 取；后端接受 Bearer ''）
+  var token = '';
+
+  fetch('/api/mianxiang', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    },
+    body: JSON.stringify({
+      question: question,
+      imageBase64: imageBase64,
+      mimeType: mimeType,
+      lang: 'en'
+    })
+  })
+  .then(function(res) {
+    if (!res.ok) return res.json().then(function(e){ throw new Error(e.error || 'Server error ' + res.status); });
+    return res.json();
+  })
+  .then(function(data) {
+    document.getElementById('loadingWrap').classList.remove('show');
+    if (!data || !data.reading) throw new Error('The AI returned no content');
+    renderResult(data.reading, data.tier, data.locked);
+  })
+  .catch(function(err) {
+    document.getElementById('loadingWrap').classList.remove('show');
+    document.getElementById('analyzeBtn').style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'Try again';
+    showMxToast('Something went wrong: ' + (err.message || 'please try again shortly'), 'error');
+  });
+}
+
+function showMxToast(msg, type) {
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:9999;max-width:340px;width:90%;padding:12px 16px;border-radius:8px;font-family:"Noto Serif SC",serif;font-size:12px;letter-spacing:0.06em;text-align:center;cursor:pointer;' +
+    (type === 'error' ? 'background:rgba(180,40,40,0.92);color:rgba(255,220,220,0.95)' : 'background:rgba(74,143,160,0.92);color:#fff');
+  t.textContent = msg;
+  t.onclick = function(){ t.remove(); };
+  document.body.appendChild(t);
+  setTimeout(function(){ if (t.parentNode) { t.style.opacity='0'; t.style.transition='opacity 0.3s'; setTimeout(function(){t.remove();},300); } }, 3500);
+}
+
+// ─── 精装排版辅助（对齐 bazi.html · 面相偏气运格局） ───
+var _MX_ORD = ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'];
+function mxOrdinal(i){ return _MX_ORD[i] || String(i + 1); }
+function mxEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// 章节封面卡（氛围图 + 中文数序 + 一句核心结论）
+function mxChapterCover(idx, title, art, lead){
+  var l = lead ? mxEsc(String(lead).slice(0,42)) : '';
+  var h = '<div class="chapter-cover">';
+  h += '<img class="chapter-cover-img" loading="lazy" src="/samples/caijing/art-'+art+'.png" alt="" onerror="this.style.display=\'none\'">';
+  h += '<div class="chapter-cover-veil"></div><div class="chapter-cover-body">';
+  h += '<div class="chapter-cover-num">'+mxOrdinal(idx)+'</div>';
+  h += '<div class="chapter-cover-title">'+mxEsc(title)+'</div>';
+  if (l) h += '<div class="chapter-cover-lead">'+l+'</div>';
+  h += '</div></div>';
+  return h;
+}
+// Pull a strong one-line quote from the body text
+function mxPullQuote(text){
+  var parts = String(text||'').split(/(?<=[.!?;])\s+|[。！；]/).map(function(s){return s.trim();})
+    .filter(function(s){ return s.length>=24 && s.length<=120; });
+  if(!parts.length) return '';
+  var re = /(fortune|destiny|noble|blessing|steady|balanced|character|grace|composure|resolve|prosper|wealth|foundation)/i;
+  for(var i=0;i<parts.length;i++){ if(re.test(parts[i])) return parts[i]; }
+  return parts[0];
+}
+// 章节目录 + 悬浮进度
+function mxInjectTOC(entries){
+  var c = document.getElementById('resultWrap');
+  var toc = document.createElement('div');
+  toc.className = 'chapter-toc';
+  var inner = '<div class="chapter-toc-title"><span>📖</span> Report contents · '+entries.length+' chapters</div>';
+  entries.forEach(function(e,i){
+    inner += '<div class="chapter-toc-item" onclick="mxJump(\''+e.id+'\')">'
+      + '<span class="chapter-toc-idx">'+mxOrdinal(i)+'</span>'
+      + '<span class="chapter-toc-label">'+mxEsc(e.title)+'</span>'
+      + '<span class="chapter-toc-arrow">›</span></div>';
+  });
+  toc.innerHTML = inner;
+  var ov = c.querySelector('.overall-box');
+  if (ov && ov.nextSibling) c.insertBefore(toc, ov.nextSibling); else c.appendChild(toc);
+}
+function mxJump(id){ var el=document.getElementById(id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
+var _mxProgHandler=null;
+function mxSetupProgress(){
+  var wrap=document.getElementById('readProgressWrap');
+  if(!wrap){ wrap=document.createElement('div'); wrap.id='readProgressWrap'; wrap.innerHTML='<div id="readProgressBar"></div>'; document.body.appendChild(wrap); }
+  var lbl=document.getElementById('readProgressChapter');
+  if(!lbl){ lbl=document.createElement('div'); lbl.id='readProgressChapter'; document.body.appendChild(lbl); }
+  var bar=document.getElementById('readProgressBar');
+  if(_mxProgHandler) window.removeEventListener('scroll',_mxProgHandler);
+  _mxProgHandler=function(){
+    var rw=document.getElementById('resultWrap');
+    if(!rw||!rw.classList.contains('show')){ wrap.classList.remove('show'); lbl.classList.remove('show'); return; }
+    var doc=document.documentElement;
+    var st=window.scrollY||doc.scrollTop||0;
+    var sh=Math.max(doc.scrollHeight,document.body.scrollHeight)-window.innerHeight;
+    var pct=sh>0?Math.min(Math.max(st/sh,0),1):0;
+    bar.style.width=(pct*100).toFixed(1)+'%';
+    wrap.classList.add('show');
+  };
+  window.addEventListener('scroll',_mxProgHandler,{passive:true});
+  _mxProgHandler();
+}
+
+function renderResult(aiReading, tier, locked) {
+  var mode = currentMode;
+
+  // ── 若有真实AI返回，走精装文字报告渲染 ──
+  if (aiReading && typeof aiReading === 'string') {
+    renderMxAIReport(aiReading, tier, locked);
+    return;
+  }
+
+  // Local demo fallback (not normally reached)
+  // 🔴 Compliance: physiognomy reads fortune & disposition only, never judges attractiveness. score = "fortune pattern" score, not looks.
+  var FACE_FEATURES = [
+    { part:'Forehead', dot:'#e8d08a', title:'Heavenly Court · Career pattern', art:'career', score:72+Math.random()*22|0, color:'rgba(201,168,76,0.5)',
+      text:'The forehead governs early fortune and the pattern of your thinking. When broad and open, it points to clear reasoning and a talent for coordination, a solid foundation for a distinguished career. Mid-life (35-45) trends upward — a good time to take responsibility and plan ahead. Avoid impulsiveness; a steady temperament is your greatest advantage.' },
+    { part:'Eyes', dot:'#8ac4e8', title:'Gaze · Wisdom pattern', art:'mingge', score:68+Math.random()*25|0, color:'rgba(74,143,160,0.6)',
+      text:'The eyes are windows to the heart, governing perception and decisiveness. A clear, settled gaze marks sharp insight and composure under pressure — you can recognize and seize opportunity. In love you feel deeply; take care not to overthink and miss a good match. Trust your instincts and take initiative.' },
+    { part:'Nose', dot:'#c0e8b0', title:'Wealth Palace · Steady fortune', art:'wealth', score:60+Math.random()*35|0, color:'rgba(91,191,160,0.5)',
+      text:'The nose is the Wealth Palace, governing lifelong prosperity and the ability to preserve it. When straight and full, it marks steady earnings and strong accumulation. Advance steadily and avoid all-or-nothing bets. Your fortune deepens with age — a pattern that rewards the long game.' },
+    { part:'Lips', dot:'#d4a0c8', title:'Speech · Expression pattern', art:'love', score:65+Math.random()*30|0, color:'rgba(180,80,160,0.5)',
+      text:'The mouth governs expression and rapport. When well-balanced, your speech is measured and persuasive, suited to work that needs communication and collaboration. In love you express your feelings well — a real advantage. Just remember that restraint is its own kind of cultivation.' }
+  ];
+
+  var PALM_FEATURES = [
+    { part:'Life line', dot:'#e8d08a', title:'Life line · Foundation pattern', art:'health', score:75+Math.random()*20|0, color:'rgba(201,168,76,0.5)',
+      text:'The life line governs vitality and life rhythm — it has no fixed link to lifespan. When clear and full, it marks abundant energy, good recovery and staying power. Around mid-life, a regular routine and a good balance of effort and rest keep this pattern strong.' },
+    { part:'Heart line', dot:'#c96a6a', title:'Heart line · Emotion pattern', art:'love', score:62+Math.random()*30|0, color:'rgba(201,106,106,0.5)',
+      text:'The heart line governs how you express feeling and relate to others. When long and clear, it marks sincerity in love and a respect for commitment. On the path of connection, be patient and genuine; when you meet real feeling you will sense it clearly — no need to settle.' },
+    { part:'Fate line', dot:'#8ac4e8', title:'Fate line · Drive pattern', art:'career', score:70+Math.random()*25|0, color:'rgba(74,143,160,0.6)',
+      text:'The fate line governs sense of direction and self-drive. When distinct, it marks clear goals and steady progress — strength built by your own effort. After thirty your fortune rises; the harder you work, the smoother it goes.' },
+    { part:'Head line', dot:'#c0e8b0', title:'Head line · Strategy pattern', art:'mingge', score:58+Math.random()*35|0, color:'rgba(91,191,160,0.5)',
+      text:'The head line governs how you think and strategize. When open and flowing, it marks flexible thinking and good judgment — favor multiple perspectives and avoid tunnel vision. Playing to your strengths and planning steadily is the right path for this pattern.' }
+  ];
+
+  var features = mode === 'face' ? FACE_FEATURES : PALM_FEATURES;
+  var overall = mode === 'face'
+    ? 'An overall countenance that is harmonious and spirited — a broad Heavenly Court, a rounded chin and well-matched features, the sign of an enduring fortune pattern (physiognomy reads fortune and disposition, never looks). Wisdom and prosperity go hand in hand; fortune rises after mid-life, with a settled later chapter.'
+    : 'The three main lines are clear and complete and the palm is full and firm — the sign of a well-grounded pattern. Devoted in love, career built on merit, wealth advancing steadily.';
+
+  // 气色 / 格局 综合评分环（取均值分维度呈现）
+  var avg = Math.round(features.reduce(function(a,f){return a+f.score;},0)/features.length);
+  var qiSe = Math.min(97, avg + (Math.random()*6|0) - 3);   // 气色
+  var geJu = Math.min(97, avg + (Math.random()*6|0) - 3);   // 格局
+
+  var html = '<div class="overall-box"><div class="overall-label">Overall Fortune Verdict</div><div class="overall-quote">"'+overall+'"</div></div>';
+
+  // ── Complexion / Structure score rings (report-viz renderScoreRing, side by side) ──
+  if (window.ReportViz) {
+    try {
+      html += ReportViz.renderScoreRing.group([
+        { label:'Complexion', score:qiSe, max:100, tone:'jade', sub:'Present spirit &amp; vitality' },
+        { label:'Structure', score:geJu, max:100, tone:'gold', sub:'Innate physiognomic frame' }
+      ], (mode==='face'?'Facial fortune overview':'Palm fortune overview'));
+    } catch(e){}
+  }
+
+  var tocEntries = [];
+  features.forEach(function(f, i) {
+    var anchorId = 'mx-chap-'+i;
+    tocEntries.push({ id: anchorId, title: f.title });
+    // ① 章节封面
+    html += '<div id="'+anchorId+'">' + mxChapterCover(i, f.title, f.art, f.text) + '</div>';
+    // ② 该宫位评分环（单个）
+    var ring = '';
+    if (window.ReportViz) { try { ring = ReportViz.renderScoreRing({ label:f.part, score:f.score, max:100, size:96, tone:'auto' }); } catch(e){} }
+    // ③ 金句
+    var pq = mxPullQuote(f.text);
+    var pqHtml = pq ? '<div class="pull-quote"><span class="pull-quote-mark">“</span><div class="pull-quote-text">'+mxEsc(pq)+'</div><span class="pull-quote-mark">”</span></div>' : '';
+    // ④ 正文卡（首字下沉）
+    html += '<div class="mx-chapter-card">' +
+      '<div class="feature-head"><div class="feature-dot" style="background:'+f.dot+'"></div><div class="feature-title">'+f.title+'</div></div>' +
+      (ring ? '<div style="display:flex;justify-content:center;margin:2px 0 8px">'+ring+'</div>' : '') +
+      pqHtml +
+      '<div class="mx-body drop-cap">'+mxEsc(f.text)+'</div>' +
+    '</div>';
+  });
+
+  // Fortune-cultivation highlight card (compliance: positive guidance, no fear-mongering, no looks judgment)
+  html += '<div class="hl-note"><strong>🔑 Cultivating your fortune</strong>: countenance follows the heart, and spirit shapes the face. A reading shows present patterns and tendencies, not a fixed fate. <b>Keep a kind heart, a regular routine and a calm bearing</b>, and both complexion and structure can improve over time — the most practical lesson in physiognomy.</div>';
+
+  html += '<button class="cta-btn" onclick="resetScan()">New photo · read again</button>';
+  html += '<button class="cta-btn" style="border-color:rgba(201,130,10,0.3);color:rgba(232,176,106,0.8);margin-bottom:16px">In-depth face + destiny cross-reading · $29</button>';
+
+  var rw = document.getElementById('resultWrap');
+  rw.innerHTML = html;
+  rw.classList.add('show');
+  try { mxInjectTOC(tocEntries); } catch(e){}
+  try { mxSetupProgress(); } catch(e){}
+  injectDisclaimer('resultWrap');
+}
+
+// ── 精装 AI 报告渲染（对齐 bazi.html renderUltimateReport 风格） ──
+function mxEscHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function mxRichText(s) {
+  return mxEscHtml(s)
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--teal-light)">$1</strong>')
+    .replace(/\b(\d{4})\b/g, '<span style="color:var(--gold-light);font-weight:500">$1</span>')
+    .replace(/\b(\d+)\s*(pts?|points?|\/\s*100)\b/gi, '<span style="color:var(--teal-light)">$1 $2</span>');
+}
+
+function renderMxAIReport(aiText, tier, locked) {
+  var rw = document.getElementById('resultWrap');
+
+  // ── 付费墙判定 ──
+  var isLocked = (locked === true) || (tier === 'free') || (tier === 'basic');
+
+  // ── 按 ---LOCKED--- 干净切分：免费预览只解析分隔符之前的正文(全是免费章·全展示)，
+  //    之后的锁定预告丢弃(转化由底部付费墙 CTA 承载)。修 bug: 原按章节 index 硬锁 (i>=2)，
+  //    把第3个免费章(官禄宫)误当付费占位卡渲染。──
+  var _lockPos = isLocked ? aiText.indexOf('---LOCKED---') : -1;
+  var _freeText = _lockPos >= 0 ? aiText.slice(0, _lockPos) : aiText;
+
+  // ── 解析 markdown 段落：标题行=章节，其余=正文 ──
+  var sections = [];
+  var cur = null;
+  var lines = _freeText.split('\n');
+  lines.forEach(function(line) {
+    var tr = line.trim();
+    if (!tr) return;
+    var hMatch = tr.match(/^#{1,3}\s*(.+)$/)
+               || tr.match(/^([\u{1F300}-\u{1FAFF}✦▪▸]\s*)(.*?)$/u)
+               || tr.match(/^\*{2}([^*]+)\*{2}/);
+    if (hMatch) {
+      if (cur) sections.push(cur);
+      var title = (hMatch[1] || hMatch[0]).replace(/^#{1,3}\s*/, '').trim();
+      cur = { title: title, content: [] };
+    } else if (cur) {
+      if (tr !== '---') cur.content.push(tr);
+    } else {
+      if (!sections.length) sections.push({ title: 'Overview', content: [] });
+      sections[sections.length - 1].content.push(tr);
+    }
+  });
+  if (cur) sections.push(cur);
+  if (!sections.length) sections.push({ title: 'Face Reading', content: [_freeText] });
+
+  // ── 评分环（如有 report-viz.js，生成气色/格局双环） ──
+  var scoreRingHtml = '';
+  if (window.ReportViz) {
+    try {
+      scoreRingHtml = ReportViz.renderScoreRing.group([
+        { label: 'Complexion', score: 78, max: 100, tone: 'jade', sub: 'Present spirit &amp; vitality' },
+        { label: 'Structure', score: 74, max: 100, tone: 'gold', sub: 'Innate physiognomic frame' }
+      ], (mode === 'face' ? 'Facial fortune overview' : 'Palm fortune overview'));
+    } catch (e) {}
+  }
+
+  // ── AIGC badge ──
+  var html = '<div style="display:flex;align-items:center;gap:6px;margin:0 0 12px;padding:7px 12px;background:rgba(74,143,160,0.06);border:1px solid rgba(74,143,160,0.2);border-radius:6px;font-size:11px;color:rgba(122,191,204,0.75);letter-spacing:0.06em"><span>🤖</span><span><b>AI-generated content</b> · for entertainment only. Not medical, legal or financial advice.</span></div>';
+
+  // 评分环
+  if (scoreRingHtml) html += '<div style="margin:0 0 14px">' + scoreRingHtml + '</div>';
+
+  // ── 章节目录 ──（已按 ---LOCKED--- 截断，展示的均为免费正文章，全部展示）
+  var tocHtml = '<div class="chapter-toc"><div class="chapter-toc-title"><span>📖</span> Report contents · ' + sections.length + ' chapters</div>';
+  sections.forEach(function(sec, i) {
+    tocHtml += '<div class="chapter-toc-item" onclick="mxJump(\'mx-ai-chap-' + i + '\')">'
+      + '<span class="chapter-toc-idx">' + (mxOrdinal(i)) + '</span>'
+      + '<span class="chapter-toc-label">' + mxEscHtml(sec.title) + '</span>'
+      + '<span class="chapter-toc-arrow">›</span></div>';
+  });
+  tocHtml += '</div>';
+  html += tocHtml;
+
+  // ── 章节渲染 ──（已按 ---LOCKED--- 截断，均为免费正文章，全展示；付费转化由底部 CTA 承载）
+  sections.forEach(function(sec, i) {
+    var anchorId = 'mx-ai-chap-' + i;
+
+    // 章节封面卡
+    var art = mxGetArt(sec.title);
+    var leadLine = sec.content.length ? sec.content[0] : '';
+    html += '<div id="' + anchorId + '">' + mxChapterCover(i, sec.title, art, leadLine) + '</div>';
+
+    // 评分环（单个，小尺寸）— 仅前3章显示，节约空间
+    if (i < 3 && window.ReportViz) {
+      try {
+        var ring = ReportViz.renderScoreRing({ label: mode === 'face' ? 'Fortune' : 'Structure', score: 70 + (i * 7 % 25), max: 100, size: 88, tone: 'auto' });
+        html += '<div style="display:flex;justify-content:center;margin:2px 0 6px">' + ring + '</div>';
+      } catch (e) {}
+    }
+
+    // 金句
+    var pq = mxPullQuote(sec.content.join('。'));
+    if (pq) {
+      html += '<div class="pull-quote"><span class="pull-quote-mark">"</span>'
+        + '<div class="pull-quote-text">' + mxEscHtml(pq) + '</div>'
+        + '<span class="pull-quote-mark">"</span></div>';
+    }
+
+    // 正文卡（首字下沉）
+    html += '<div class="mx-chapter-card"><div class="feature-head"><div class="feature-dot" style="background:var(--teal)"></div><div class="feature-title">' + mxEscHtml(sec.title) + '</div></div>';
+    var bodyHtml = sec.content.map(function(ln, li) {
+      var cls = 'mx-body' + (li === 0 ? ' drop-cap' : '');
+      return '<div class="' + cls + '">' + mxRichText(ln) + '</div>';
+    }).join('');
+    html += bodyHtml + '</div>';
+  });
+
+  // Compliance fortune-cultivation note
+  html += '<div class="hl-note"><strong>🔑 Cultivating your fortune</strong>: countenance follows the heart, and spirit shapes the face. A reading shows present patterns and tendencies, not a fixed fate. <b>Keep a kind heart, a regular routine and a calm bearing</b>, and both complexion and structure can improve over time.</div>';
+
+  html += '<button class="cta-btn" onclick="resetScan()">New photo · read again</button>';
+
+  if (isLocked) {
+    html += '<button class="cta-btn" style="border-color:rgba(201,130,10,0.3);color:rgba(232,176,106,0.8);margin-bottom:8px" onclick="handleMxUnlock()">Unlock the full face reading · $9.9</button>';
+  }
+
+  rw.innerHTML = html;
+  rw.classList.add('show');
+  try { mxSetupProgress(); } catch (e) {}
+  injectDisclaimer('resultWrap');
+}
+
+function mxGetArt(title) {
+  var t = String(title || '');
+  if (/财|帛|鼻|wealth|money|nose|prosper|fortune palace/i.test(t)) return 'wealth';
+  if (/感情|夫妻|婚|情|桃花|love|marriage|romance|heart|relationship/i.test(t)) return 'love';
+  if (/事业|官|禄|额|天庭|career|forehead|office|work|fate line/i.test(t)) return 'career';
+  if (/健康|疾厄|养生|health|vitality|life line|illness/i.test(t)) return 'health';
+  if (/五岳|三停|格局|总纲|命宫|概|总|overview|three court|pattern|summary|life palace|head line|gaze|wisdom/i.test(t)) return 'mingge';
+  return 'mingge';
+}
+
+function handleMxUnlock() {
+  var btn = document.querySelector('#resultWrap .cta-btn:last-of-type');
+  if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to payment…'; }
+  fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ product: 'mianxiang_full', price: 9.9, title: 'Full Face Reading', token: '', lang: 'en' })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.url) { window.location.href = d.url; }
+    else { showMxToast('Redirect failed, please try again', 'error'); if (btn) { btn.disabled = false; btn.textContent = 'Unlock the full face reading · $9.9'; } }
+  }).catch(function(){
+    showMxToast('Network error, please try again', 'error');
+    if (btn) { btn.disabled = false; btn.textContent = 'Unlock the full face reading · $9.9'; }
+  });
+}
+
+function resetScan() {
+  document.getElementById('resultWrap').classList.remove('show');
+  var pw=document.getElementById('readProgressWrap'); if(pw) pw.classList.remove('show');
+  var pc=document.getElementById('readProgressChapter'); if(pc) pc.classList.remove('show');
+  document.getElementById('analyzeBtn').style.display = 'block';
+  var area = document.getElementById('uploadArea');
+  area.innerHTML = '<div class="upload-icon" id="uploadIcon">'+(currentMode==='face'?'面':'手')+'</div><div class="upload-text" id="uploadText">Upload a '+(currentMode==='face'?'front-facing':'palm')+' photo</div><div class="upload-hint" id="uploadHint">'+(currentMode==='face'?'Even light · front-facing · unobstructed':'Palm up · fingers spread · in focus')+'</div>';
+  area.classList.remove('has-image');
+  area.onclick = function(){ document.getElementById('fileInput').click(); };
+  hasImage = false;
+  document.getElementById('analyzeBtn').textContent = 'Upload a photo to begin';
+  document.getElementById('analyzeBtn').disabled = true;
+}
+function injectDisclaimer(containerId) {
+  var c = document.getElementById(containerId);
+  if (!c || c.querySelector('.sy-disclaimer')) return;
+  var d = document.createElement('div');
+  d.className = 'sy-disclaimer';
+  d.innerHTML = '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,168,76,0.2),transparent);margin:0 auto;width:80%"></div><div style="font-size:10px;color:rgba(201,168,76,0.4);text-align:center;letter-spacing:0.06em;padding:10px 20px">For entertainment only — please don\'t take it too seriously. Fortune-telling is an art of possibility, not certainty.</div>';
+  c.appendChild(d);
+}
+</script>
+
+<script>
+// ══════════ 观相扫描仪式（面相 mesh + 扫描线 + 轮播文案 + 进度环）══════════
+// build a dense, credible physiognomy mesh (not a low-poly polygon)
+(function(){
+  var svg=document.getElementById('meshSvg'); if(!svg) return;
+  var NS='http://www.w3.org/2000/svg';
+  var outline=[[100,18],[72,30],[54,52],[44,86],[42,118],[46,150],[58,182],[78,208],[100,222],[122,208],[142,182],[154,150],[158,118],[156,86],[146,52],[128,30]];
+  var inner=[
+    [100,66],[74,74],[126,74],[60,80],[140,80],[78,94],[122,94],[64,98],[136,98],
+    [100,110],[100,128],[100,146],[86,150],[114,150],[100,170],[84,168],[116,168],
+    [70,120],[130,120],[100,196]
+  ];
+  function edge(a,b,cls){var l=document.createElementNS(NS,'line');l.setAttribute('x1',a[0]);l.setAttribute('y1',a[1]);l.setAttribute('x2',b[0]);l.setAttribute('y2',b[1]);l.setAttribute('class',cls||'edge');svg.appendChild(l);}
+  for(var i=0;i<outline.length;i++) edge(outline[i],outline[(i+1)%outline.length],'edge-key');
+  edge([100,18],[100,222],'edge-key');
+  var links=[[0,1],[0,2],[1,3],[2,4],[1,5],[2,6],[3,7],[4,8],[5,7],[6,8],[9,0],[9,10],[10,11],[11,12],[11,13],[12,14],[13,14],[14,15],[14,16],[17,5],[17,7],[18,6],[18,8],[9,17],[9,18],[10,17],[10,18],[19,12],[19,13]];
+  links.forEach(function(k){ if(inner[k[0]]&&inner[k[1]]) edge(inner[k[0]],inner[k[1]],'edge'); });
+  edge(inner[3],outline[2],'edge');edge(inner[4],outline[14],'edge');
+  edge(inner[17],outline[3],'edge');edge(inner[18],outline[13],'edge');
+  edge(inner[12],outline[6],'edge');edge(inner[13],outline[10],'edge');
+  edge(inner[19],outline[7],'edge');
+  for(var s=0;s<38;s++){
+    var a=Math.random()*Math.PI*2, r=20+Math.random()*70;
+    var x=100+Math.cos(a)*r*0.8, y=120+Math.sin(a)*r*1.05;
+    if(x<44||x>156||y<26||y>216) continue;
+    var c=document.createElementNS(NS,'circle');c.setAttribute('cx',x.toFixed(1));c.setAttribute('cy',y.toFixed(1));c.setAttribute('r',(Math.random()<.3?1:0.7).toFixed(1));c.setAttribute('class','node2');svg.appendChild(c);
+  }
+  function dot(p,r,cls){var c=document.createElementNS(NS,'circle');c.setAttribute('cx',p[0]);c.setAttribute('cy',p[1]);c.setAttribute('r',r);c.setAttribute('class',cls||'node');svg.appendChild(c);}
+  outline.forEach(function(p){dot(p,1.4,'node');});
+  inner.forEach(function(p){dot(p,p[0]===100&&(p[1]===66||p[1]===128)?2.1:1.5,'node');});
+})();
+
+// scan-state rotating micro-copy + progress ring — (re)started on each analysis
+var _mxScanTimers=[];
+function startScanRitual(){
+  // clear previous run
+  _mxScanTimers.forEach(function(t){ clearInterval(t); });
+  _mxScanTimers=[];
+  var faceLines=['Measuring the three courts','Reading the brow complexion','Sensing the Life Palace spirit','Assessing the Career Palace','Weighing the Wealth star at the nose','Distilling your core pattern','Setting it to scroll……'];
+  var palmLines=['Reading the palm’s five elements','Tracing the life line','Reading the heart line','Following the fate line','Studying the head line','Distilling your palm pattern','Setting it to scroll……'];
+  var lines = (window._mxScanMode==='palm') ? palmLines : faceLines;
+  var el=document.getElementById('loadingText');
+  if(el){
+    el.innerHTML=lines[0]+'<span class="cursor">·</span>';
+    var i=0;
+    _mxScanTimers.push(setInterval(function(){
+      i=(i+1)%lines.length; el.style.opacity=0;
+      setTimeout(function(){ el.innerHTML=lines[i]+'<span class="cursor">·</span>'; el.style.opacity=1; },240);
+    },2600));
+  }
+  // restart the 25s fill ring animation
+  var fg=document.querySelector('.scan-ring .fg');
+  if(fg){ fg.style.animation='none'; void fg.offsetWidth; fg.style.animation='fill 25s linear forwards'; }
+  // pct counter into the 观 seal
+  var pct=document.querySelector('.scan-ring .pct');
+  if(pct){
+    pct.textContent='观'; var v=0;
+    var t=setInterval(function(){ v+=Math.max(1,Math.round((100-v)/22)); if(v>=99){v=99;clearInterval(t);} pct.textContent=v+'%'; },260);
+    _mxScanTimers.push(t);
+  }
+}
+</script>
+
+<script>
+(function(){var t=localStorage.getItem('sy_theme');if(t==='light'){document.documentElement.classList.add('light-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='☀️';}})();
+function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('light-mode');var l=e.classList.contains('light-mode');if(b)b.textContent=l?'☀️':'🌙';localStorage.setItem('sy_theme',l?'light':'dark');}
+</script>
+<script src="/pages/report-viz.js"></script>
+<script src="/assets/js/common.js"></script>
+</body>
+</html>
