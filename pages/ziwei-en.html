@@ -98,10 +98,6 @@ input:focus,select:focus{outline:none;border-color:var(--jade);box-shadow:0 0 0 
 .palaces-wrap{margin:14px 0}
 .palaces-wrap h3{font-family:'Playfair Display',serif;font-size:15px;color:var(--jade-deep);margin-bottom:12px}
 .palaces-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.palace{background:var(--card);border:1px solid var(--jade-border);border-radius:12px;padding:11px 12px;
-  position:relative;min-height:70px}
-.palace.is-life{border-color:var(--gold);background:linear-gradient(135deg,rgba(201,168,76,0.06),#fff)}
-.palace.is-body{border-color:var(--jade)}
 .palace-name{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--sub);margin-bottom:4px}
 .palace.is-life .palace-name{color:var(--gold-deep)}
 .palace-stars{font-size:12.5px;color:var(--ink);line-height:1.45;font-weight:500}
@@ -112,12 +108,33 @@ input:focus,select:focus{outline:none;border-color:var(--jade);box-shadow:0 0 0 
 .palace-tag.life{background:rgba(201,168,76,0.14);color:var(--gold-deep)}
 .palace-tag.body{background:var(--jade-pale);color:var(--jade-deep)}
 
-/* reading */
-.reading{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);
-  box-shadow:var(--shadow);padding:20px 18px;margin:14px 0;font-size:13.5px;line-height:1.75;color:var(--ink)}
-.reading h3{font-family:'Playfair Display',serif;font-size:15px;color:var(--jade-deep);margin-bottom:10px}
-.reading p{margin-bottom:12px}
-.reading p:last-child{margin-bottom:0}
+/* reading — upgraded: textured card with gold left bar (mirrors bazi-en ur-card) */
+.reading{position:relative;background:linear-gradient(158deg,#fffdf8 0%,#faf5ea 100%);
+  border:1px solid rgba(201,168,76,0.22);border-radius:16px;overflow:hidden;
+  box-shadow:0 2px 14px rgba(120,90,30,0.05);margin:14px 0;padding:18px 18px 18px 22px;
+  transition:all 0.3s}
+.reading::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:linear-gradient(180deg,#d4b45a,#c9a84c 60%,rgba(201,168,76,0.3))}
+.reading:hover{border-color:rgba(201,168,76,0.4);box-shadow:0 8px 30px rgba(201,168,76,0.14);transform:translateY(-1px)}
+.reading-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.reading-icon{font-size:22px;width:40px;height:40px;line-height:40px;text-align:center;flex-shrink:0;
+  background:radial-gradient(circle,rgba(201,168,76,0.16),rgba(201,168,76,0.04));border-radius:50%}
+.reading h3{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:var(--gold-deep);
+  letter-spacing:0.02em;margin:0}
+.reading-body{font-size:13.5px;line-height:1.85;color:rgba(50,44,34,0.9);letter-spacing:0.01em;
+  border-top:1px solid rgba(201,168,76,0.1);padding-top:14px}
+.reading-body p{margin-bottom:12px}
+.reading-body p:last-child{margin-bottom:0}
+
+/* palace cards — subtle gradient upgrade */
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.palace{background:linear-gradient(145deg,#fffdf8,#faf8f2);border:1px solid var(--jade-border);border-radius:12px;
+  padding:11px 12px;position:relative;min-height:70px;
+  box-shadow:0 1px 6px rgba(0,0,0,0.04);transition:all 0.2s;animation:fadeUp 0.4s ease both}
+.palace:hover{box-shadow:0 4px 16px rgba(91,191,160,0.12);transform:translateY(-1px)}
+.palace.is-life{border-color:var(--gold);background:linear-gradient(135deg,rgba(201,168,76,0.09),#fffdf8)}
+.palace.is-life:hover{box-shadow:0 4px 16px rgba(201,168,76,0.18)}
+.palace.is-body{border-color:var(--jade);background:linear-gradient(135deg,rgba(91,191,160,0.07),#fffdf8)}
 
 /* luxury dark-gold share card */
 .shareCard{position:relative;overflow:hidden;border-radius:22px;color:#fff;isolation:isolate;
@@ -250,13 +267,17 @@ footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align
   <!-- palace grid -->
   <div class="palaces-wrap">
     <h3>Your 12 Life Palaces</h3>
+    <div class="jade-line" style="margin:8px 0 12px"></div>
     <div class="palaces-grid" id="palacesGrid"></div>
   </div>
 
   <!-- reading -->
   <div class="reading">
-    <h3>Your Purple Star Reading</h3>
-    <div id="readingText"></div>
+    <div class="reading-head">
+      <div class="reading-icon">✦</div>
+      <h3>Your Purple Star Reading</h3>
+    </div>
+    <div class="reading-body" id="readingText"></div>
   </div>
 
   <!-- share card -->
@@ -317,12 +338,13 @@ footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align
   function renderPalaces(palaces, shenGongIndex) {
     var grid = document.getElementById('palacesGrid');
     grid.innerHTML = '';
-    palaces.forEach(function (p) {
+    palaces.forEach(function (p, idx) {
       var div = document.createElement('div');
       var classes = 'palace';
       if (p.isLife) classes += ' is-life';
       if (p.isBody) classes += ' is-body';
       div.className = classes;
+      div.style.animationDelay = (idx * 0.05) + 's';
 
       var stars = p.mainStars.length ? p.mainStars.join(' · ') : '';
       var starsClass = p.mainStars.length ? 'palace-stars' : 'palace-stars empty';

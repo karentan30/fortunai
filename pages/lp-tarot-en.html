@@ -53,6 +53,12 @@ html, body {
   -webkit-font-smoothing: antialiased;
 }
 
+body::before {
+  content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.08) 0%, transparent 50%);
+  pointer-events:none;z-index:0;
+}
+
 body {
   max-width: 480px;
   margin: 0 auto;
@@ -166,18 +172,19 @@ section { position: relative; z-index: 1; }
 
 .feature-grid-3 { display:grid;grid-template-columns:1fr;gap:12px; }
 .feature-card {
-  background:var(--card);border:1px solid var(--jade-border);border-radius:16px;padding:22px 20px;
-  display:flex;align-items:flex-start;gap:16px;transition:border-color 0.2s;box-shadow:0 2px 12px rgba(0,0,0,0.05);
+  background:linear-gradient(158deg,#fffdf8 0%,#faf5ea 100%);border:1px solid rgba(201,168,76,0.22);border-radius:16px;padding:22px 20px;
+  display:flex;align-items:flex-start;gap:16px;transition:border-color 0.2s,box-shadow 0.2s,transform 0.2s;box-shadow:0 2px 14px rgba(120,90,30,0.05);
 }
-.feature-card:hover { border-color:var(--jade); }
+.feature-card:hover { border-color:rgba(201,168,76,0.4);box-shadow:0 8px 28px rgba(201,168,76,0.13);transform:translateY(-1px); }
 .feature-left { flex-shrink:0;text-align:center; }
 .feature-symbol {
-  width:48px;height:72px;border-radius:6px;background:var(--surface);border:1px solid var(--jade-border);
-  display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:6px;color:var(--gold);
+  width:48px;height:72px;border-radius:6px;background:radial-gradient(ellipse at center,rgba(201,168,76,0.16),rgba(201,168,76,0.04));
+  border:1px solid rgba(201,168,76,0.28);
+  display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:6px;color:var(--gold);
 }
 .feature-price { font-family:'Playfair Display',serif;font-size:14px;color:var(--jade-deep);font-style:italic;font-weight:600; }
 .feature-right { flex:1; }
-.feature-name { font-family:'Playfair Display',serif;font-size:18px;letter-spacing:0.01em;margin-bottom:4px;color:var(--ink);font-weight:600; }
+.feature-name { font-family:'Playfair Display',serif;font-size:18px;letter-spacing:0.01em;margin-bottom:6px;color:var(--gold-deep);font-weight:700; }
 .feature-tagline { font-size:11px;color:var(--jade-deep);letter-spacing:0.1em;margin-bottom:8px;text-transform:uppercase;font-weight:600; }
 .feature-desc { font-size:13px;color:var(--sub);letter-spacing:0.01em;line-height:1.75; }
 
@@ -187,20 +194,28 @@ section { position: relative; z-index: 1; }
   border-top:1px solid var(--jade-border);border-bottom:1px solid var(--jade-border);position:relative;z-index:1;
 }
 .scenes-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:24px; }
-.scene-item { background:var(--card);border:1px solid var(--jade-border);border-radius:14px;padding:20px 16px;text-align:center;box-shadow:0 2px 10px rgba(0,0,0,0.04); }
-.scene-glyph { font-size:26px;margin-bottom:10px;display:block;color:var(--gold); }
-.scene-name { font-family:'Playfair Display',serif;font-size:15px;letter-spacing:0.01em;margin-bottom:6px;color:var(--ink);font-weight:600; }
+.scene-item { background:linear-gradient(158deg,#fffdf8 0%,#faf5ea 100%);border:1px solid rgba(201,168,76,0.22);border-radius:14px;padding:20px 16px;text-align:center;box-shadow:0 2px 12px rgba(120,90,30,0.05);transition:border-color 0.2s,transform 0.2s; }
+.scene-item:hover { border-color:rgba(201,168,76,0.4);transform:translateY(-1px); }
+.scene-glyph { font-size:24px;margin-bottom:10px;display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:radial-gradient(circle,rgba(201,168,76,0.16),rgba(201,168,76,0.04));color:var(--gold);border:1px solid rgba(201,168,76,0.22); }
+.scene-name { font-family:'Playfair Display',serif;font-size:15px;letter-spacing:0.01em;margin-bottom:6px;color:var(--gold-deep);font-weight:700; }
 .scene-desc { font-size:11px;color:var(--sub);letter-spacing:0.01em;line-height:1.7; }
 
 /* ── What's Included ── */
 .included { padding:56px 20px;position:relative;z-index:1; }
-.inc-list { display:flex;flex-direction:column;gap:12px;margin-top:24px; }
+.inc-list { display:flex;flex-direction:column;gap:14px;margin-top:24px; }
 .inc-card {
-  border-radius:16px;padding:20px 18px;background:var(--card);
-  border:1px solid var(--jade-border);box-shadow:0 2px 12px rgba(0,0,0,0.05);
+  position:relative;border-radius:16px;padding:20px 20px 20px 26px;
+  background:linear-gradient(158deg,#fffdf8 0%,#faf5ea 100%);
+  border:1px solid rgba(201,168,76,0.22);box-shadow:0 2px 14px rgba(120,90,30,0.05);
+  overflow:hidden;transition:border-color 0.2s,box-shadow 0.2s,transform 0.2s;
 }
-.inc-title { font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--jade-deep);margin-bottom:6px; }
-.inc-text { font-size:14px;color:var(--sub);line-height:1.75;letter-spacing:0.01em; }
+.inc-card::before {
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:linear-gradient(180deg,#d4b45a,#c9a84c 60%,rgba(201,168,76,0.3));
+}
+.inc-card:hover { border-color:rgba(201,168,76,0.4);box-shadow:0 8px 28px rgba(201,168,76,0.13);transform:translateY(-1px); }
+.inc-title { font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--gold-deep);margin-bottom:8px;letter-spacing:0.01em; }
+.inc-text { font-size:13.5px;color:var(--sub);line-height:1.8;letter-spacing:0.01em; }
 
 /* ── Footer CTA ── */
 .footer-cta { padding:56px 20px 24px;position:relative;z-index:1;text-align:center; }
@@ -312,9 +327,9 @@ section { position: relative; z-index: 1; }
     </div>
 
     <!-- Three-Card Spread -->
-    <div class="feature-card" style="border-color:var(--jade);background:var(--jade-pale);">
+    <div class="feature-card" style="border-color:var(--jade);background:linear-gradient(158deg,rgba(91,191,160,0.10) 0%,rgba(91,191,160,0.04) 100%);">
       <div class="feature-left">
-        <div class="feature-symbol" style="border-color:var(--jade);">✦</div>
+        <div class="feature-symbol" style="border-color:var(--jade);background:radial-gradient(ellipse at center,rgba(91,191,160,0.22),rgba(91,191,160,0.06));">✦</div>
         <div class="feature-price">$1.39</div>
       </div>
       <div class="feature-right">
