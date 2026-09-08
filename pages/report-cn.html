@@ -3,117 +3,224 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#0b0616">
 <title>善缘 · 你的八字命盘报告</title>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400;1,500&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#0d0618;color:#e8dcc8;font-family:'Noto Serif SC',serif;min-height:100vh;line-height:1.9}
-a{color:#c9a84c;text-decoration:none}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+
+:root{
+  /* ── cosmos ── */
+  --void-0:#08040f;--void:#0f0820;--indigo:#1a1035;--indigo-2:#231545;
+  /* ── gold ── */
+  --gold-hi:#f4e6b6;--gold:#dcc082;--gold-deep:#9a7530;--gold-soft:#e8d49c;
+  --gold-line:rgba(220,192,130,.26);--gold-line-2:rgba(220,192,130,.48);--gold-glow:rgba(220,192,130,.4);
+  /* ── violet accent ── */
+  --star:#d3b6ff;--star-soft:#b492ea;--violet-line:rgba(176,120,255,.28);--violet-line-2:rgba(176,120,255,.48);--violet-glow:rgba(176,120,255,.5);
+  /* ── text ── */
+  --text-cream:#efeafa;--text-mute:#b0a6cf;--text-faint:#867ba6;--text-ghost:#5f5680;
+  /* ── hair ── */
+  --hair:rgba(206,190,255,.09);--hair-2:rgba(206,190,255,.16);
+  --shadow-card:0 30px 60px -30px rgba(0,0,0,.9);--shadow-lift:0 20px 40px -24px rgba(0,0,0,.78);
+  --serif:"Noto Serif SC",serif;--lat:"Cormorant Garamond",serif;
+}
+
+html,body{background:var(--void-0);font-family:var(--serif);color:var(--text-cream);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+a{color:var(--gold);text-decoration:none}
+
+/* ── cosmos background ── */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(135% 80% at 50% -8%,#3a2070 0%,#1e1040 38%,#100a20 72%,var(--void-0) 100%)}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.7;
+  background-image:radial-gradient(circle,rgba(236,223,255,.65) 1px,transparent 1px),radial-gradient(circle,rgba(244,230,182,.35) 1px,transparent 1px),radial-gradient(circle,rgba(211,182,255,.4) 1px,transparent 1px);
+  background-size:130px 130px,90px 90px,170px 170px;background-position:18px 22px,65px 44px,32px 85px}
+
+/* ── reading progress bar ── */
+#rpProgressWrap{position:fixed;top:0;left:0;right:0;height:2px;z-index:1200;background:rgba(0,0,0,.3);opacity:0;transition:opacity .3s;pointer-events:none}
+#rpProgressWrap.show{opacity:1}
+#rpProgressBar{height:100%;width:0;background:linear-gradient(90deg,var(--star-soft),var(--gold-soft),var(--gold-hi));box-shadow:0 0 8px var(--violet-glow);transition:width .12s ease-out}
+#rpChapterLabel{position:fixed;top:8px;right:12px;z-index:1200;font-family:var(--lat);font-size:11px;letter-spacing:.12em;color:var(--gold-soft);background:rgba(15,8,32,.82);border:1px solid var(--violet-line);border-radius:20px;padding:3px 11px;opacity:0;transition:opacity .3s;pointer-events:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+#rpChapterLabel.show{opacity:1}
 
 /* ── Loading ── */
-#loading{position:fixed;inset:0;background:#0d0618;z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px}
+#loading{position:fixed;inset:0;background:var(--void-0);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px}
 #loading.hidden{display:none}
-.load-stars{font-size:40px;margin-bottom:20px;animation:spin 4s linear infinite}
-@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-.load-title{color:#c9a84c;font-size:20px;letter-spacing:4px;margin-bottom:12px}
-.load-sub{color:rgba(255,255,255,.45);font-size:13px;margin-bottom:32px;text-wrap:balance}
-.load-bar-wrap{width:240px;height:4px;background:rgba(201,168,76,.15);border-radius:2px;overflow:hidden;margin:0 auto}
-.load-bar{height:100%;background:linear-gradient(90deg,#b8922f,#e0c875);border-radius:2px;width:0;transition:width .4s ease}
-.load-tip{color:rgba(255,255,255,.3);font-size:11px;margin-top:16px;min-height:18px}
+.load-stars{font-size:40px;margin-bottom:20px;animation:spinGlyph 6s linear infinite;color:var(--gold)}
+@keyframes spinGlyph{0%{transform:rotate(0deg) scale(1);opacity:.7}50%{transform:rotate(180deg) scale(1.12);opacity:1}100%{transform:rotate(360deg) scale(1);opacity:.7}}
+.load-title{font-family:var(--serif);color:var(--gold-soft);font-size:20px;letter-spacing:.2em;margin-bottom:10px}
+.load-sub{color:var(--text-mute);font-size:13px;margin-bottom:28px;max-width:260px;line-height:1.7}
+.load-bar-wrap{width:220px;height:2px;background:rgba(220,192,130,.12);border-radius:2px;overflow:hidden;margin:0 auto}
+.load-bar{height:100%;background:linear-gradient(90deg,var(--gold-deep),var(--gold-hi));border-radius:2px;width:0;transition:width .4s ease}
+.load-tip{color:var(--text-faint);font-size:11px;margin-top:14px;min-height:18px;font-family:var(--lat);letter-spacing:.08em}
 
 /* ── Error ── */
-#error-screen{display:none;position:fixed;inset:0;background:#0d0618;z-index:8999;align-items:center;justify-content:center;text-align:center;padding:32px;flex-direction:column;gap:16px}
+#error-screen{display:none;position:fixed;inset:0;background:var(--void-0);z-index:8999;align-items:center;justify-content:center;text-align:center;padding:32px;flex-direction:column;gap:16px}
 #error-screen.show{display:flex}
-.err-title{color:#e87060;font-size:18px}
-.err-sub{color:rgba(255,255,255,.5);font-size:14px;max-width:280px;text-wrap:balance}
-.err-btn{background:#c9a84c;color:#0a0814;border:none;padding:12px 32px;border-radius:50px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:8px}
+.err-title{color:#e87060;font-size:18px;font-family:var(--serif);letter-spacing:.08em}
+.err-sub{color:var(--text-mute);font-size:14px;max-width:280px;line-height:1.8}
+.err-btn{background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-hi));color:#0a0814;border:none;padding:12px 32px;border-radius:50px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--serif);margin-top:8px;letter-spacing:.1em}
 
-/* ── Report ── */
-#report{display:none;max-width:760px;margin:0 auto;padding:48px 28px 80px}
+/* ── Report wrapper ── */
+#report{display:none;position:relative;z-index:1;max-width:720px;margin:0 auto;padding:0 0 100px}
 #report.show{display:block}
 
-.rp-cover{text-align:center;padding:64px 0 48px;border-bottom:1px solid rgba(201,168,76,.2);margin-bottom:48px}
-.rp-brand{font-size:11px;letter-spacing:6px;color:rgba(201,168,76,.5);margin-bottom:24px}
-.rp-name{font-size:42px;color:#fff;font-weight:300;letter-spacing:8px;margin-bottom:12px}
-.rp-date{color:rgba(255,255,255,.4);font-size:13px;letter-spacing:2px;margin-bottom:24px}
-.rp-pillars{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px}
-.pillar{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:8px 16px;font-size:14px;color:rgba(201,168,76,.8);letter-spacing:2px}
-.pillar.cell{padding:10px 16px;text-align:center;min-width:58px}
-.pillar .pl{display:block;font-size:10px;color:#9a8a6a;letter-spacing:1px;margin-bottom:5px}
-.pillar .pg{display:block;font-size:22px;color:#e8d8b0;line-height:1.15}
-.pillar .pz{display:block;font-size:18px;color:#c9b890;line-height:1.2}
-.pillar.day{border-color:#c9a84c;background:rgba(201,168,76,.16);box-shadow:0 0 18px rgba(201,168,76,.18)}
-.pillar.day .pg{color:#e8d08a}
-.rp-overview{margin:26px auto 0;max-width:min(360px,100%)}
-.ov-title{font-size:12px;color:#c9a84c;letter-spacing:3px;margin-bottom:12px;text-align:center}
-.ov-wx{margin:0 auto}
-.wx-row{display:flex;align-items:center;gap:9px;margin-bottom:7px}
-.wx-k{width:16px;font-size:13px;color:#c9b890;flex-shrink:0}
-.wx-bar{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
-.wx-fill{display:block;height:100%;border-radius:4px;transition:width .6s ease}
-.wx-v{width:28px;text-align:right;font-size:11px;color:#9a8a6a;flex-shrink:0}
-.ov-dy{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
-.dy-cell{flex:0 0 auto;min-width:54px;text-align:center;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.15);border-radius:8px;padding:8px 6px}
-.dy-cell.cur{border-color:#c9a84c;background:rgba(201,168,76,.18)}
-.dy-gz{display:block;font-size:14px;color:#e8d8b0;letter-spacing:1px}
-.dy-age{display:block;font-size:9px;color:#9a8a6a;margin-top:3px}
-.dy-cell.fut{opacity:.45}
-.rp-daymaster{text-align:center;font-size:15px;color:#e8d08a;letter-spacing:2px;margin-bottom:16px}
-.rp-daymaster b{color:#c9a84c;font-weight:500}
+/* ── Cover hero ── */
+.rp-cover{text-align:center;padding:72px 24px 56px;border-bottom:1px solid var(--gold-line);margin-bottom:0;position:relative}
+.rp-cover::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:60%;height:1px;background:linear-gradient(90deg,transparent,var(--gold-line-2),transparent)}
+.rp-brand{font-family:var(--lat);font-style:italic;font-size:12px;letter-spacing:.36em;color:rgba(220,192,130,.5);margin-bottom:28px}
+.rp-name{font-family:var(--serif);font-size:42px;color:var(--text-cream);font-weight:300;letter-spacing:.18em;margin-bottom:10px;text-shadow:0 2px 24px rgba(176,120,255,.2)}
+.rp-date{font-family:var(--lat);color:var(--text-faint);font-size:13px;letter-spacing:.16em;margin-bottom:32px}
+.rp-divider{width:40px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-line-2),transparent);margin:0 auto 32px}
 
-.rp-section{margin-top:56px}
-.rp-section h2{color:#c9a84c;font-size:20px;letter-spacing:3px;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid rgba(201,168,76,.12)}
-.rp-section p{margin-bottom:14px;font-size:15px;line-height:1.95;text-wrap:balance;word-break:keep-all}
-.rp-section strong,.rp-section b{color:#e0c875}
-.rp-section h3{color:rgba(201,168,76,.8);font-size:16px;margin:24px 0 10px;letter-spacing:1px}
-.rp-section table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;border-collapse:collapse;margin:16px 0;font-size:13px}
-.rp-section th{background:rgba(201,168,76,.12);color:#c9a84c;padding:8px 12px;text-align:center;border:1px solid rgba(201,168,76,.15)}
-.rp-section td{padding:8px 12px;border:1px solid rgba(255,255,255,.06);text-align:center;vertical-align:top}
-.rp-section ul,.rp-section ol{padding-left:20px;margin-bottom:14px}
-.rp-section li{margin-bottom:6px;font-size:15px}
+/* ── Four Pillars (四柱) grid ── */
+.rp-pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:340px;margin:0 auto 0}
+.pillar{border-radius:14px;padding:12px 8px;text-align:center;background:linear-gradient(180deg,var(--indigo-2),var(--indigo));border:1px solid var(--hair-2);transition:border-color .2s}
+.pillar .pl{display:block;font-size:9px;color:var(--text-ghost);letter-spacing:.14em;margin-bottom:8px;font-family:var(--lat)}
+.pillar .pg{display:block;font-size:24px;color:var(--gold-soft);font-weight:400;line-height:1.1;margin-bottom:4px}
+.pillar .pz{display:block;font-size:19px;color:var(--star-soft);font-weight:300;line-height:1.2}
+.pillar.day{border-color:var(--gold-line-2);background:linear-gradient(180deg,rgba(220,192,130,.1),rgba(220,192,130,.03));box-shadow:0 0 20px rgba(220,192,130,.12)}
+.pillar.day .pg{color:var(--gold-hi)}
+.pillar.day .pl{color:var(--gold);opacity:.8}
+/* legacy: .pillar.cell same as .pillar */
+.pillar.cell{padding:10px 8px}
+
+/* ── Overview: daymaster + wuxing + dayun ── */
+.rp-overview{margin:0 auto;padding:24px 20px 0;max-width:640px}
+.rp-daymaster{text-align:center;font-size:14px;color:var(--gold-soft);letter-spacing:.12em;margin-bottom:18px;font-family:var(--lat);font-style:italic}
+.rp-daymaster b{color:var(--gold-hi);font-style:normal;font-family:var(--serif)}
+.ov-title{font-size:10px;letter-spacing:.22em;color:var(--text-faint);text-transform:uppercase;margin-bottom:12px;font-family:var(--lat);display:flex;align-items:center;gap:10px}
+.ov-title::before,.ov-title::after{content:'';flex:1;height:1px;background:var(--hair)}
+.ov-wx{margin:0 auto 20px}
+.wx-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.wx-k{width:18px;font-size:12px;color:var(--text-mute);flex-shrink:0;text-align:center}
+.wx-bar{flex:1;height:5px;background:rgba(206,190,255,.08);border-radius:3px;overflow:hidden}
+.wx-fill{display:block;height:100%;border-radius:3px;transition:width .7s ease}
+.wx-v{width:28px;text-align:right;font-size:10px;color:var(--text-ghost);flex-shrink:0;font-family:var(--lat)}
+
+/* dayun scroll */
+.ov-dy-wrap{margin-bottom:8px}
+.ov-dy{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;scrollbar-width:none}
+.ov-dy::-webkit-scrollbar{display:none}
+.dy-cell{flex:0 0 auto;min-width:56px;text-align:center;background:linear-gradient(180deg,var(--indigo-2),var(--indigo));border:1px solid var(--hair-2);border-radius:10px;padding:9px 6px;transition:border-color .2s}
+.dy-cell.cur{border-color:var(--gold-line-2);background:linear-gradient(180deg,rgba(220,192,130,.1),rgba(220,192,130,.03));box-shadow:0 0 12px rgba(220,192,130,.1)}
+.dy-gz{display:block;font-size:14px;color:var(--gold-soft);letter-spacing:.06em}
+.dy-age{display:block;font-size:9px;color:var(--text-ghost);margin-top:3px;font-family:var(--lat)}
+.dy-cell.fut{opacity:.38}
+
+/* ── Chapter ToC ── */
+.rp-toc{margin:32px 20px 0;padding:18px 18px 14px;background:var(--indigo);border:1px solid var(--hair);border-radius:20px;animation:rpFadeUp .5s ease both}
+.rp-toc-title{font-size:10px;letter-spacing:.22em;color:var(--text-faint);margin-bottom:14px;font-family:var(--lat);text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.rp-toc-title::after{content:'';flex:1;height:1px;background:var(--hair)}
+.rp-toc-item{display:flex;align-items:baseline;gap:12px;padding:11px 2px;border-bottom:1px solid var(--hair);cursor:pointer;text-decoration:none;transition:opacity .2s;min-height:44px}
+.rp-toc-item:last-child{border-bottom:none}
+.rp-toc-item:active{opacity:.6}
+.rp-toc-idx{font-family:var(--lat);font-size:14px;color:var(--gold);min-width:24px;text-align:center}
+.rp-toc-label{flex:1;font-family:var(--serif);font-size:14px;letter-spacing:.02em;color:var(--text-cream)}
+.rp-toc-arrow{font-size:12px;color:var(--text-ghost)}
+
+/* ── Report Sections ── */
+@keyframes rpFadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.rp-section{margin:16px 20px 0;animation:rpFadeUp .5s ease both}
+
+/* chapter cover card */
+.rp-chapter-cover{position:relative;border-radius:20px;overflow:hidden;min-height:110px;display:flex;flex-direction:column;justify-content:flex-end;box-shadow:var(--shadow-lift);background:var(--indigo-2);margin-bottom:0;border:1px solid var(--gold-line)}
+.rp-chapter-body{padding:18px 20px 16px;position:relative}
+.rp-chapter-num{font-family:var(--lat);font-size:11px;letter-spacing:.3em;color:var(--gold-soft);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.rp-chapter-num::before{content:'';width:18px;height:1px;background:linear-gradient(90deg,var(--gold-line-2),transparent);flex-shrink:0}
+.rp-chapter-title{font-family:var(--serif);font-size:20px;font-weight:500;letter-spacing:.04em;color:var(--text-cream);line-height:1.3}
+
+/* accordion card */
+.rp-ur-card{background:linear-gradient(180deg,var(--indigo-2),var(--indigo));border:1px solid var(--hair-2);border-radius:18px;overflow:hidden;margin-top:10px;box-shadow:var(--shadow-lift)}
+.rp-ur-head{display:flex;align-items:center;gap:12px;padding:16px 18px;cursor:pointer;user-select:none}
+.rp-ur-emoji{font-size:15px;width:24px;text-align:center;flex-shrink:0;color:var(--gold-soft)}
+.rp-ur-title{flex:1;font-family:var(--serif);font-size:15px;font-weight:500;letter-spacing:.04em;color:var(--text-cream)}
+.rp-ur-arrow{font-size:12px;color:var(--text-faint);transition:transform .3s;flex-shrink:0}
+.rp-ur-arrow.open{transform:rotate(180deg)}
+.rp-ur-body{display:none;border-top:1px solid var(--hair)}
+.rp-ur-body.open{display:block}
+.rp-ur-text{font-size:14px;line-height:2;color:var(--text-mute);letter-spacing:.01em;padding:16px 20px 20px}
+.rp-ur-text h3{font-family:var(--serif);font-size:14px;letter-spacing:.1em;color:var(--gold-soft);margin:16px 0 8px}
+.rp-ur-text p{margin-bottom:12px}
+.rp-ur-text p:last-child{margin-bottom:0}
+.rp-ur-text strong,.rp-ur-text b{color:var(--gold-soft)}
+.rp-ur-text ul,.rp-ur-text ol{padding-left:18px;margin-bottom:12px}
+.rp-ur-text li{margin-bottom:5px}
+
+/* pull quote */
+.rp-pull-quote{position:relative;margin:18px 4px;padding:6px 4px 6px 20px}
+.rp-pull-quote::before{content:'';position:absolute;left:6px;top:6px;bottom:6px;width:2px;background:linear-gradient(180deg,transparent,var(--gold-line-2),transparent);border-radius:2px}
+.rp-pull-quote-text{font-family:var(--serif);font-size:16px;font-weight:400;line-height:1.95;letter-spacing:.02em;color:var(--gold-soft)}
+
+/* fallback: section used when parseSections renders direct h2 ── */
+.rp-section h2{color:var(--gold-soft);font-size:17px;letter-spacing:.12em;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--gold-line);font-weight:500}
+.rp-section h3{color:rgba(220,192,130,.8);font-size:14px;margin:20px 0 8px;letter-spacing:.06em}
+.rp-section p{margin-bottom:12px;font-size:14px;line-height:2;color:var(--text-mute);letter-spacing:.01em}
+.rp-section strong,.rp-section b{color:var(--gold-soft)}
+.rp-section ul,.rp-section ol{padding-left:18px;margin-bottom:12px}
+.rp-section li{margin-bottom:5px;font-size:14px;color:var(--text-mute);line-height:1.9}
+.rp-section table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+.rp-section th{background:rgba(220,192,130,.1);color:var(--gold);padding:8px 12px;border:1px solid var(--gold-line)}
+.rp-section td{padding:8px 12px;border:1px solid var(--hair);color:var(--text-mute);vertical-align:top}
 
 /* ── Paywall ── */
-.locked-section{filter:blur(5px);pointer-events:none;user-select:none;max-height:200px;overflow:hidden;position:relative}
-.paywall-gate{background:linear-gradient(135deg,#1a1030,#0d0618);border:1px solid rgba(201,168,76,.3);border-radius:16px;padding:36px 24px;text-align:center;margin:48px 0}
-.gate-icon{font-size:36px;margin-bottom:10px}
-.gate-title{color:#c9a84c;font-size:19px;font-weight:700;letter-spacing:3px;margin-bottom:8px}
-.gate-desc{color:rgba(255,255,255,.55);font-size:13px;margin-bottom:20px;text-wrap:balance}
-.gate-price{color:#fff;font-size:28px;font-weight:300;margin-bottom:6px}
-.gate-orig{color:rgba(255,255,255,.3);font-size:13px;text-decoration:line-through;margin-left:6px}
-.gate-btn{background:linear-gradient(135deg,#b8922f,#c9a84c,#e0c875);color:#0a0814;border:none;padding:14px 0;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:2px;font-family:inherit;display:block;width:100%;max-width:260px;margin:0 auto 12px}
-.gate-alt{color:rgba(201,168,76,.6);font-size:12px;cursor:pointer;text-decoration:underline;display:block}
+.locked-section{filter:blur(5px);pointer-events:none;user-select:none;max-height:180px;overflow:hidden;position:relative}
+.paywall-gate{margin:20px 20px 0;background:linear-gradient(180deg,rgba(26,16,53,.96),rgba(15,8,32,.98));border:1px solid var(--gold-line-2);border-radius:22px;padding:36px 24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6),inset 0 1px 0 rgba(220,192,130,.1)}
+.gate-icon{font-size:32px;margin-bottom:10px;opacity:.85}
+.gate-title{color:var(--gold-hi);font-size:18px;font-weight:500;letter-spacing:.14em;margin-bottom:6px;font-family:var(--serif)}
+.gate-desc{color:var(--text-mute);font-size:12px;margin-bottom:18px;line-height:1.7}
+.gate-price{color:var(--text-cream);font-size:26px;font-weight:300;margin-bottom:6px;font-family:var(--lat)}
+.gate-orig{color:var(--text-ghost);font-size:13px;text-decoration:line-through;margin-left:6px}
+.gate-btn{position:relative;overflow:hidden;background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-hi));color:#100820;border:none;padding:14px 0;border-radius:50px;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:.14em;font-family:var(--serif);display:block;width:100%;max-width:260px;margin:0 auto 12px;box-shadow:0 6px 22px rgba(220,192,130,.32)}
+.gate-btn::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.4),transparent);transform:skewX(-18deg);animation:gateSheen 3.6s ease-in-out infinite}
+@keyframes gateSheen{0%,72%{left:-60%}88%,100%{left:130%}}
+.gate-btn:hover{transform:translateY(-1px);box-shadow:0 8px 30px rgba(220,192,130,.46)}
+.gate-alt{color:rgba(220,192,130,.55);font-size:12px;cursor:pointer;text-decoration:underline;display:block}
+#gate-items{text-align:left;margin:18px 0;display:grid;gap:12px}
 
 /* ── Pay Modal ── */
-#pay-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center}
+#pay-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;align-items:center;justify-content:center}
 #pay-modal.open{display:flex}
-.pay-box{background:#1a1030;border:1px solid rgba(201,168,76,.35);border-radius:20px;padding:32px 24px;text-align:center;max-width:320px;width:90%}
-.pay-title{color:#c9a84c;font-size:16px;font-weight:700;letter-spacing:2px;margin-bottom:4px}
-.pay-amount{color:#fff;font-size:34px;font-weight:300;margin-bottom:16px}
+.pay-box{background:linear-gradient(180deg,var(--indigo-2),var(--indigo));border:1px solid var(--gold-line-2);border-radius:22px;padding:32px 24px;text-align:center;max-width:320px;width:90%;box-shadow:0 30px 80px rgba(0,0,0,.7)}
+.pay-title{color:var(--gold);font-size:15px;font-weight:500;letter-spacing:.14em;margin-bottom:4px;font-family:var(--serif)}
+.pay-amount{color:var(--text-cream);font-size:32px;font-weight:300;margin-bottom:16px;font-family:var(--lat)}
 #pay-qr-wrap{width:190px;height:190px;background:#fff;border-radius:12px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;overflow:hidden}
 #pay-qr-img{width:100%;height:100%;object-fit:contain}
-.pay-status{color:rgba(255,255,255,.5);font-size:12px;margin-bottom:14px}
-.pay-close{color:rgba(255,255,255,.35);font-size:12px;cursor:pointer;text-decoration:underline;display:inline-block;padding:12px 20px}
+.pay-status{color:var(--text-mute);font-size:12px;margin-bottom:14px}
+.pay-close{color:var(--text-ghost);font-size:12px;cursor:pointer;text-decoration:underline;display:inline-block;padding:12px 20px}
 
 /* ── Share ── */
-.share-bar{text-align:center;margin:48px 0 24px;padding:24px;border:1px solid rgba(201,168,76,.1);border-radius:12px}
-.share-bar p{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:14px}
+.share-bar{text-align:center;margin:32px 20px 20px;padding:24px;border:1px solid var(--gold-line);border-radius:18px;background:linear-gradient(180deg,rgba(26,16,53,.6),rgba(15,8,32,.8))}
+.share-bar p{color:var(--text-mute);font-size:13px;margin-bottom:14px;line-height:1.7}
 .share-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.share-btn{padding:10px 22px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:inherit}
+.share-btn{padding:10px 22px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:var(--serif);letter-spacing:.06em}
 .share-wx{background:#07C160;color:#fff}
-.share-copy{background:rgba(201,168,76,.15);color:#c9a84c;border:1px solid rgba(201,168,76,.3)}
+.share-copy{background:rgba(220,192,130,.12);color:var(--gold);border:1px solid var(--gold-line-2)}
 
-/* ── Back to LP ── */
-.back-bar{text-align:center;padding:12px;color:rgba(255,255,255,.3);font-size:12px}
-.back-bar a{color:rgba(201,168,76,.5)}
+/* ── Back ── */
+.back-bar{text-align:center;padding:12px;color:var(--text-ghost);font-size:12px;margin:0 20px}
+.back-bar a{color:rgba(220,192,130,.5)}
+
+/* ── Disclaimer ── */
+.rp-disclaimer{text-align:center;font-size:10px;color:var(--text-ghost);opacity:.7;padding:16px 24px calc(18px + env(safe-area-inset-bottom,0px));line-height:1.8;max-width:720px;margin:0 auto}
 
 @media(max-width:600px){
-  #report{padding:32px 16px 80px}
-  .rp-name{font-size:30px}
-  .rp-section h2{font-size:17px}
+  #report{padding:0 0 80px}
+  .rp-name{font-size:30px;letter-spacing:.12em}
+  .rp-section{margin:14px 14px 0}
+  .paywall-gate{margin:16px 14px 0}
+  .share-bar{margin:24px 14px 16px}
+  .back-bar{margin:0 14px}
 }
 </style>
 </head>
 <body>
+
+<!-- 阅读进度 -->
+<div id="rpProgressWrap"><div id="rpProgressBar"></div></div>
+<div id="rpChapterLabel"></div>
 
 <!-- 加载中 -->
 <div id="loading">
@@ -133,10 +240,12 @@ a{color:#c9a84c;text-decoration:none}
 
 <!-- 报告 -->
 <div id="report">
+  <!-- 封面 hero -->
   <div class="rp-cover">
     <div class="rp-brand">善 缘 · 八 字 命 盘</div>
     <div class="rp-name" id="rp-name">—</div>
     <div class="rp-date" id="rp-date">—</div>
+    <div class="rp-divider"></div>
     <div class="rp-pillars" id="rp-pillars"></div>
   </div>
 
@@ -148,7 +257,7 @@ a{color:#c9a84c;text-decoration:none}
     <div class="gate-icon">🔮</div>
     <h3 class="gate-title" id="gate-title">解锁深度分析</h3>
     <p class="gate-desc">一次解锁 · 永久查看</p>
-    <div id="gate-items" style="text-align:left;margin:20px 0;display:grid;gap:14px"></div>
+    <div id="gate-items"></div>
     <div class="gate-price">¥19.9 <span class="gate-orig">¥59</span></div>
     <button class="gate-btn" onclick="syPay('a','wechat')">🟢 微信扫码解锁</button>
     <span class="gate-alt" onclick="syPay('a','alipay')">支付宝支付</span>
@@ -192,59 +301,30 @@ function qs(name){ var u=new URLSearchParams(location.search); return (u.get(nam
 // ── 个性化付款门 ──
 function renderGate(){
   var name = qs('name') || '你';
-  var date = qs('date'); // 1991-10-05
+  var date = qs('date');
   var gender = qs('gender');
   var year = date ? parseInt(date.split('-')[0]) : 1990;
   var curYear = new Date().getFullYear();
   var age = curYear - year;
-
-  // 根据出生年推算生肖和天干
   var SHENGXIAO = ['鼠','牛','虎','兔','龙','蛇','马','羊','猴','鸡','狗','猪'];
   var sx = SHENGXIAO[(year - 4) % 12];
-
-  // 性别相关词
   var isF = gender === 'female';
-  var pref = isF ? '她的' : '他的';
 
-  // 个性化标题
   document.getElementById('gate-title').textContent = name + ' · 专属深度命盘';
 
-  // 5条个性化内容
   var items = [
-    {
-      icon: '💰',
-      title: name + '的财运格局',
-      desc: curYear + '年财运是涨还是跌？' + (age < 30 ? '年轻' + sx + '命' : sx + '命' + age + '岁') + '的偏财时机与最应避开的破财月份'
-    },
-    {
-      icon: '💕',
-      title: isF ? '她的姻缘密码' : '他的桃花运势',
-      desc: isF
-        ? (age < 30 ? '感情空窗还是遇见对的人？' : '婚姻运何时开花？') + '命中另一半的生肖与方位，' + curYear + '年最旺桃花的季节'
-        : (age < 30 ? '何时遇见她？' : '感情何时稳定？') + '命中另一半的特征，' + curYear + '年感情破冰时机'
-    },
-    {
-      icon: '🏆',
-      title: name + '适合什么事业？',
-      desc: sx + '命' + (isF ? '女' : '男') + '命中的财禄方向——打工升职还是自己创业更旺？' + curYear + '年的贵人在哪个方位出现'
-    },
-    {
-      icon: '🌿',
-      title: '命中健康预警',
-      desc: '生于' + (date ? date.replace(/-/g, '年').replace('年', '年').split('年').slice(0,2).join('年') + '月' : '此日') + '需重点护养的脏腑，' + curYear + '年容易出现的健康低谷与调养时机'
-    },
-    {
-      icon: '🌊',
-      title: '未来十年大运走势',
-      desc: age + '岁正处于哪段大运？接下来几年是爬坡积累还是收获期，哪一年是命运的关键转折点'
-    }
+    {icon:'💰',title:name+'的财运格局',desc:curYear+'年财运是涨还是跌？'+(age<30?'年轻'+sx+'命':sx+'命'+age+'岁')+'的偏财时机与最应避开的破财月份'},
+    {icon:'💕',title:isF?'她的姻缘密码':'他的桃花运势',desc:isF?(age<30?'感情空窗还是遇见对的人？':'婚姻运何时开花？')+'命中另一半的生肖与方位，'+curYear+'年最旺桃花的季节':(age<30?'何时遇见她？':'感情何时稳定？')+'命中另一半的特征，'+curYear+'年感情破冰时机'},
+    {icon:'🏆',title:name+'适合什么事业？',desc:sx+'命'+(isF?'女':'男')+'命中的财禄方向——打工升职还是自己创业更旺？'+curYear+'年的贵人在哪个方位出现'},
+    {icon:'🌿',title:'命中健康预警',desc:'生于'+(date?date.replace(/-/g,'年').replace('年','年').split('年').slice(0,2).join('年')+'月':'此日')+'需重点护养的脏腑，'+curYear+'年容易出现的健康低谷与调养时机'},
+    {icon:'🌊',title:'未来十年大运走势',desc:age+'岁正处于哪段大运？接下来几年是爬坡积累还是收获期，哪一年是命运的关键转折点'}
   ];
 
   var html = items.map(function(it){
     return '<div style="display:flex;gap:12px;align-items:flex-start">'
-      + '<span style="font-size:18px;flex-shrink:0">' + it.icon + '</span>'
-      + '<div><div style="font-size:13px;font-weight:600;color:#c9a84c;letter-spacing:0.05em">' + it.title + '</div>'
-      + '<div style="font-size:12px;color:rgba(220,210,190,0.78);margin-top:3px;line-height:1.65">' + it.desc + '</div></div>'
+      + '<span style="font-size:16px;flex-shrink:0;margin-top:1px">'+it.icon+'</span>'
+      + '<div><div style="font-size:12px;font-weight:600;color:var(--gold);letter-spacing:.06em">'+it.title+'</div>'
+      + '<div style="font-size:11px;color:var(--text-mute);margin-top:3px;line-height:1.7">'+it.desc+'</div></div>'
       + '</div>';
   }).join('');
 
@@ -252,6 +332,30 @@ function renderGate(){
   if(el) el.innerHTML = html;
 }
 document.addEventListener('DOMContentLoaded', renderGate);
+
+// ── 阅读进度条 ──
+(function(){
+  var prog = document.getElementById('rpProgressBar');
+  var wrap = document.getElementById('rpProgressWrap');
+  var chap = document.getElementById('rpChapterLabel');
+  var _shown = false;
+  function update(){
+    var scrollTop = window.scrollY||document.documentElement.scrollTop;
+    var docH = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
+    var pct = docH > 0 ? Math.min(100, (scrollTop/docH)*100) : 0;
+    prog.style.width = pct+'%';
+    if(!_shown && scrollTop > 80){ wrap.classList.add('show'); _shown=true; }
+    // chapter label
+    var sections = document.querySelectorAll('.rp-chapter-cover');
+    var cur = null;
+    sections.forEach(function(s){ if(s.getBoundingClientRect().top < 80) cur=s; });
+    if(cur){
+      var t = cur.querySelector('.rp-chapter-title');
+      if(t){ chap.textContent = t.textContent; chap.classList.add('show'); }
+    } else { chap.classList.remove('show'); }
+  }
+  window.addEventListener('scroll', update, {passive:true});
+})();
 
 // ── 进度条动画 ──
 function startLoadAnim(){
@@ -280,26 +384,67 @@ function md2html(text){
     .replace(/(<\/ul>)\s*<ul>/g,'');
 }
 
+// ── 章节 emoji 列表 ──
+var SECTION_EMOJIS = ['📜','🔥','🟤','💰','💕','💼','🏥','📅','🔮','✨','🌿','👨‍👩‍👧‍👦','🎯','📖','🔑','💌','🌟','⭐'];
+var _sectionCount = 0;
+var _tocItems = [];
+
+// 渲染章节卡
+function renderChapterCard(title, body, idx){
+  var id = 'rp-sec-'+idx;
+  var numLabel = (idx+1).toString().padStart(2,'0');
+  _tocItems.push({num:numLabel, title:title, id:id});
+  var bodyHtml = md2html(body);
+  // accordion
+  var html = '<div class="rp-section" id="'+id+'" data-chapter="'+encodeURIComponent(title)+'">';
+  html += '<div class="rp-chapter-cover">';
+  html += '<div class="rp-chapter-body">';
+  html += '<div class="rp-chapter-num">'+numLabel+'</div>';
+  html += '<div class="rp-chapter-title">'+escHtml(title)+'</div>';
+  html += '</div></div>';
+  html += '<div class="rp-ur-card">';
+  html += '<div class="rp-ur-head" onclick="toggleSection(\''+id+'\')">';
+  html += '<span class="rp-ur-emoji">✦</span>';
+  html += '<span class="rp-ur-title">查看详情</span>';
+  html += '<span class="rp-ur-arrow open" id="arr-'+id+'">▾</span>';
+  html += '</div>';
+  html += '<div class="rp-ur-body open" id="body-'+id+'">';
+  html += '<div class="rp-ur-text">'+bodyHtml+'</div>';
+  html += '</div>';
+  html += '</div>';
+  html += '</div>';
+  return html;
+}
+
+function toggleSection(id){
+  var body = document.getElementById('body-'+id);
+  var arr = document.getElementById('arr-'+id);
+  if(!body) return;
+  var isOpen = body.classList.contains('open');
+  body.classList.toggle('open',!isOpen);
+  if(arr) arr.classList.toggle('open',!isOpen);
+}
+
 // ── 渲染免费/锁定内容 ──
 function renderReport(reading, name, dateStr, timeStr, pillars){
-  // 填封面
+  // 封面
   document.getElementById('rp-name').textContent = name || '命盘';
   document.getElementById('rp-date').textContent = dateStr + (timeStr ? ' · ' + timeStr : '');
 
-  // 四柱可视化（用后端返回的 pillars，日柱高亮=日主）·防御式，无数据即留空
+  // 四柱可视化
   try{
     if(pillars){
       var _cols=[['年',pillars.year],['月',pillars.month],['日',pillars.day],['时',pillars.hour]];
       var _h=_cols.map(function(c,i){
         var p=c[1]||{}, isDay=(i===2), gan=p.gan||'', zhi=p.zhi||'';
         if(!gan && !zhi) return '';
-        return '<div class="pillar cell'+(isDay?' day':'')+'"><span class="pl">'+c[0]+'柱'+(isDay?'·日主':'')+'</span><span class="pg">'+(gan||'—')+'</span><span class="pz">'+(zhi||'—')+'</span></div>';
+        return '<div class="pillar cell'+(isDay?' day':'')+'"><span class="pl">'+c[0]+'柱'+(isDay?' · 日主':'')+'</span><span class="pg">'+(gan||'—')+'</span><span class="pz">'+(zhi||'—')+'</span></div>';
       }).join('');
       var _host=document.getElementById('rp-pillars'); if(_host && _h) _host.innerHTML=_h;
     }
   }catch(e){}
 
-  // 命盘速览：五行力量条 + 大运时间轴（付费感·全防御式，无数据即不渲染）
+  // 命盘速览：五行能量条 + 大运时间轴
   try{
     if(pillars && (pillars.wuxing || (pillars.daYun && pillars.daYun.length))){
       var _ov='';
@@ -307,7 +452,7 @@ function renderReport(reading, name, dateStr, timeStr, pillars){
       if(pillars.wuxing){
         var _wx=pillars.wuxing, _wk=['木','火','土','金','水'];
         var _wmax=Math.max.apply(null,_wk.map(function(k){return +_wx[k]||0}).concat([1]));
-        var _wc={'木':'#5bbfa0','火':'#d98b6a','土':'#c9a84c','金':'#d8c88a','水':'#6a9fd9'};
+        var _wc={'木':'#5bbfa0','火':'#c0472e','土':'#c8a35a','金':'#b0b3a3','水':'#3a5566'};
         _ov+='<div class="ov-title">五行能量</div><div class="ov-wx">'+_wk.map(function(k){
           var v=+_wx[k]||0, pct=(v===0)?0:Math.max(4,Math.round(v/_wmax*100));
           return '<div class="wx-row"><span class="wx-k">'+k+'</span><span class="wx-bar"><span class="wx-fill" style="width:'+pct+'%;background:'+_wc[k]+'"></span></span><span class="wx-v">'+(v?v.toFixed(1):'0')+'</span></div>';
@@ -315,13 +460,19 @@ function renderReport(reading, name, dateStr, timeStr, pillars){
       }
       if(pillars.daYun && pillars.daYun.length){
         var _by=parseInt(dateStr,10)||0, _age=_by?(new Date().getFullYear()-_by):-1;
-        _ov+='<div class="ov-title" style="margin-top:20px">大运</div><div class="ov-dy">'+pillars.daYun.map(function(d){
+        _ov+='<div class="ov-title" style="margin-top:20px">大运</div><div class="ov-dy-wrap"><div class="ov-dy">'+pillars.daYun.map(function(d){
           var cur=(_age>=0 && _age>=d.startAge && _age<=d.endAge);
           var fut=(_age>=0 && d.startAge>_age);
           return '<div class="dy-cell'+(cur?' cur':'')+(fut?' fut':'')+'"><span class="dy-gz">'+(d.name||((d.gan||'')+(d.zhi||'')))+'</span><span class="dy-age">'+d.startAge+'-'+d.endAge+'岁</span></div>';
-        }).join('')+'</div>';
+        }).join('')+'</div></div>';
       }
-      if(_ov){ var _wrap=document.createElement('div'); _wrap.className='rp-overview'; _wrap.innerHTML=_ov; var _hp=document.getElementById('rp-pillars'); if(_hp && _hp.parentNode) _hp.parentNode.insertBefore(_wrap,_hp.nextSibling); }
+      if(_ov){
+        var _wrap=document.createElement('div');
+        _wrap.className='rp-overview';
+        _wrap.innerHTML=_ov;
+        var _hp=document.getElementById('rp-pillars');
+        if(_hp && _hp.parentNode) _hp.parentNode.insertBefore(_wrap,_hp.nextSibling);
+      }
     }
   }catch(e){}
 
@@ -329,15 +480,32 @@ function renderReport(reading, name, dateStr, timeStr, pillars){
   var freeText = parts[0] || '';
   var lockedText = parts[1] || '';
 
-  // 解析免费区段落（按emoji标题分章）
+  // 解析免费区
+  _sectionCount = 0;
+  _tocItems = [];
   var freeHtml = parseSections(freeText);
   document.getElementById('free-content').innerHTML = freeHtml;
+
+  // 插入 ToC（在 rp-overview 之后、free-content 之前）
+  if(_tocItems.length > 1){
+    var tocHtml = '<div class="rp-toc">';
+    tocHtml += '<div class="rp-toc-title">报告目录</div>';
+    _tocItems.forEach(function(it){
+      tocHtml += '<a class="rp-toc-item" href="#'+it.id+'">'
+        +'<span class="rp-toc-idx">'+it.num+'</span>'
+        +'<span class="rp-toc-label">'+escHtml(it.title)+'</span>'
+        +'<span class="rp-toc-arrow">›</span>'
+        +'</a>';
+    });
+    tocHtml += '</div>';
+    var freeEl = document.getElementById('free-content');
+    freeEl.insertAdjacentHTML('beforebegin', tocHtml);
+  }
 
   // 锁定区
   if(lockedText.trim()){
     var lockedHtml = parseSections(lockedText);
     document.getElementById('locked-content').innerHTML = lockedHtml;
-    // 检查localStorage解锁状态
     syInitUnlock();
   } else {
     document.getElementById('gate-a').style.display = 'none';
@@ -349,7 +517,6 @@ function renderReport(reading, name, dateStr, timeStr, pillars){
 
 function parseSections(text){
   if(!text) return '';
-  // 按emoji或数字标题分段
   var chunks = text.split(/\n(?=(?:\d+\.|[📜🔥🟤💰💕💼🏥📅🔮✨🌿👨‍👩‍👧‍👦🎯📖🔑💌🌟⭐]))/);
   return chunks.map(function(chunk){
     chunk = chunk.trim();
@@ -357,7 +524,8 @@ function parseSections(text){
     var lines = chunk.split('\n');
     var title = lines[0];
     var body = lines.slice(1).join('\n').trim();
-    return '<div class="rp-section"><h2>' + escHtml(title) + '</h2>' + md2html(body) + '</div>';
+    var idx = _sectionCount++;
+    return renderChapterCard(title, body, idx);
   }).join('');
 }
 
@@ -402,7 +570,7 @@ function syStartPoll(orderNo, tier){
         syPayClose();
         syInitUnlock();
         var gate = document.getElementById('gate-'+tier);
-        if(gate){gate.innerHTML='<p style="color:#c9a84c;text-align:center;padding:16px">✅ 已解锁！</p>';setTimeout(function(){gate.style.display='none';},1000);}
+        if(gate){gate.innerHTML='<p style="color:var(--gold);text-align:center;padding:16px">✅ 已解锁！</p>';setTimeout(function(){gate.style.display='none';},1000);}
       }
     }).catch(function(){});
   }, 3000);
@@ -422,8 +590,8 @@ function copyLink(){
 // ── 主流程 ──
 (function main(){
   var name = qs('name');
-  var dateStr = qs('date');   // YYYY-MM-DD
-  var timeStr = qs('time');   // 子时/丑时/...
+  var dateStr = qs('date');
+  var timeStr = qs('time');
   var city = qs('city');
   var gender = qs('gender') || 'female';
 
@@ -434,23 +602,17 @@ function copyLink(){
     return;
   }
 
-  // 更新加载提示
   if(name) document.getElementById('load-name-hint').textContent = '正在为 ' + name + ' 排盘...';
 
   var stopAnim = startLoadAnim();
 
-  // 解析日期
   var parts = dateStr.split('-');
   var bYear  = parseInt(parts[0])||1990;
   var bMonth = parseInt(parts[1])||1;
   var bDay   = parseInt(parts[2])||1;
   var bHour  = timeStr ? (TIME_MAP[timeStr] !== undefined ? TIME_MAP[timeStr] : undefined) : undefined;
 
-  // 调用八字API
-  var body = {
-    birthYear: bYear, birthMonth: bMonth, birthDay: bDay,
-    gender: gender, lang: 'zh'
-  };
+  var body = {birthYear:bYear, birthMonth:bMonth, birthDay:bDay, gender:gender, lang:'zh'};
   if(bHour !== undefined) body.birthHour = bHour;
   if(name) body.name = name;
   if(city) body.city = city;
@@ -466,13 +628,9 @@ function copyLink(){
   })
   .then(function(data){
     stopAnim();
-    if(!data.reading){
-      throw new Error('报告生成失败，请重试');
-    }
-    // 隐藏加载，显示报告
+    if(!data.reading){ throw new Error('报告生成失败，请重试'); }
     document.getElementById('loading').classList.add('hidden');
     document.getElementById('report').classList.add('show');
-    // 渲染报告
     renderReport(data.reading, name, dateStr.replace(/-/g,'年').replace('-','月')+'日', timeStr, data.pillars);
   })
   .catch(function(err){
@@ -483,7 +641,8 @@ function copyLink(){
   });
 })();
 </script>
-<div style="text-align:center;font-size:10px;color:#9a8a6a;opacity:0.75;padding:16px 16px calc(18px + env(safe-area-inset-bottom,0px));line-height:1.7;max-width:760px;margin:0 auto">
+
+<div class="rp-disclaimer">
   本报告由 AI 辅助生成，仅供参考娱乐，不构成医学 / 法律 / 投资等任何决策建议。<br>© 2026 善缘 Runae
 </div>
 </body>

@@ -3,141 +3,368 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#0b0616">
 <title>Runae · Your BaZi Destiny Report</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<meta name="description" content="Your personalized BaZi Four Pillars destiny report — Five Elements, Luck Cycles, and Year Forecast, interpreted by Runae AI.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--gold:#c9a84c;--gold-l:#e0c875;--gold-d:#8a6420;--bg:#0d0618;--text:rgba(232,220,200,.92);--sub:rgba(200,185,155,.5);--r:14px}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;line-height:1.9}
-a{color:var(--gold);text-decoration:none}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
-/* Loading */
-#loading{position:fixed;inset:0;background:var(--bg);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px}
+:root{
+  /* ── cosmos: deep amethyst void ── */
+  --void-0:#07040f;--void:#0b0616;--indigo:#17092e;--indigo-2:#1e0f3a;--violet-s:#2e1a60;
+  /* ── starlight / gold ── */
+  --gold-hi:#f4e6b6;--gold:#dcc082;--gold-d:#ab8642;--gold-soft:#e8d49c;
+  --gold-line:rgba(220,192,130,.28);--gold-line-2:rgba(220,192,130,.50);--gold-glow:rgba(220,192,130,.45);
+  /* ── celestial accent ── */
+  --star:#d3b6ff;--star-soft:#b492ea;
+  --violet-glow:rgba(180,128,255,.50);--violet-line:rgba(176,120,255,.28);--violet-line-2:rgba(176,120,255,.50);
+  /* ── text ── */
+  --text:#efeafa;--sub:rgba(176,165,210,.75);--faint:rgba(140,128,175,.6);--ghost:rgba(100,90,140,.55);
+  /* ── legacy aliases kept for injected content ── */
+  --gold-l:#e8d49c;--bg:#07040f;--r:14px;
+  --hair:rgba(206,190,255,.08);--hair-2:rgba(206,190,255,.14);
+  --shadow-card:0 30px 60px -30px rgba(0,0,0,.9);
+  --lat:'Cormorant Garamond',serif;
+}
+
+html,body{background:var(--void-0);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;line-height:1.9;-webkit-font-smoothing:antialiased}
+a{color:var(--gold-soft);text-decoration:none}
+
+/* ── Starfield background ── */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(130% 80% at 50% -6%, #3a1f78 0%, #22104e 36%, #110628 72%, var(--void-0) 100%);
+}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.7;
+  background-image:
+    radial-gradient(circle,rgba(236,223,255,.65) 1px,transparent 1px),
+    radial-gradient(circle,rgba(211,182,255,.45) 1px,transparent 1px),
+    radial-gradient(circle,rgba(244,230,182,.35) 1px,transparent 1px);
+  background-size:130px 130px,85px 85px,175px 175px;
+  background-position:18px 22px,65px 44px,33px 88px;
+}
+
+/* ── Loading screen ── */
+#loading{
+  position:fixed;inset:0;z-index:9000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:40px 28px;
+  background:radial-gradient(130% 80% at 50% -6%, #3a1f78 0%, #22104e 36%, #110628 72%, var(--void-0) 100%);
+}
 #loading.hidden{display:none}
-.load-stars{font-size:40px;margin-bottom:20px;animation:spin 4s linear infinite}
-@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-.load-title{color:var(--gold);font-size:20px;letter-spacing:3px;margin-bottom:12px;font-family:'Cormorant Garamond',serif;font-weight:300}
-.load-sub{color:rgba(255,255,255,.4);font-size:13px;margin-bottom:32px}
-.load-bar-wrap{width:240px;height:4px;background:rgba(201,168,76,.15);border-radius:2px;overflow:hidden;margin:0 auto}
-.load-bar{height:100%;background:linear-gradient(90deg,#b8922f,#e0c875);border-radius:2px;width:0;transition:width .4s ease}
-.load-tip{color:rgba(255,255,255,.3);font-size:13px;margin-top:16px;min-height:18px;letter-spacing:.05em}
 
-/* Error */
-#error-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:8999;align-items:center;justify-content:center;text-align:center;padding:32px;flex-direction:column;gap:16px}
+/* Concentric ring animation */
+.load-orbit{position:relative;width:88px;height:88px;margin:0 auto 28px;flex-shrink:0}
+.load-ring{position:absolute;inset:0;border-radius:50%;animation:orbitSpin 7s linear infinite}
+.load-ring-1{border:1.5px solid var(--violet-line-2)}
+.load-ring-2{inset:10px;border:1px solid var(--gold-line-2);animation-duration:11s;animation-direction:reverse}
+.load-ring-3{inset:20px;border:1px dashed var(--violet-line);animation-duration:5s}
+.load-dot{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-family:var(--lat);font-style:italic;font-size:15px;letter-spacing:.06em;color:var(--gold-soft);
+  animation:dotPulse 2.2s ease-in-out infinite;
+}
+@keyframes orbitSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes dotPulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+.load-title{
+  color:var(--gold-soft);font-size:17px;letter-spacing:.22em;margin-bottom:10px;
+  font-family:var(--lat);font-style:italic;font-weight:400;
+}
+.load-sub{color:var(--faint);font-size:13px;margin-bottom:28px;letter-spacing:.06em}
+.load-bar-wrap{width:200px;height:3px;background:rgba(176,120,255,.12);border-radius:2px;overflow:hidden;margin:0 auto}
+.load-bar{
+  height:100%;border-radius:2px;width:0;transition:width .5s ease;
+  background:linear-gradient(90deg,var(--star-soft),var(--gold-soft));
+  box-shadow:0 0 8px var(--violet-glow);
+}
+.load-tip{color:var(--ghost);font-size:12px;margin-top:14px;letter-spacing:.08em;min-height:18px}
+
+/* ── Error screen ── */
+#error-screen{
+  display:none;position:fixed;inset:0;background:var(--void-0);z-index:8999;
+  align-items:center;justify-content:center;text-align:center;padding:32px;flex-direction:column;gap:16px;
+}
 #error-screen.show{display:flex}
-.err-title{color:#e87060;font-size:18px}
-.err-sub{color:rgba(255,255,255,.5);font-size:14px;max-width:280px}
-.err-btn{background:var(--gold);color:#0a0814;border:none;padding:12px 32px;border-radius:50px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px}
+.err-title{color:#e87060;font-size:18px;font-family:var(--lat);font-style:italic;letter-spacing:.08em}
+.err-sub{color:var(--faint);font-size:14px;max-width:280px;line-height:1.7}
+.err-btn{
+  background:linear-gradient(135deg,var(--gold-d),var(--gold),var(--gold-soft));
+  color:#120c02;border:none;padding:13px 36px;border-radius:50px;
+  font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;letter-spacing:.06em;
+}
 
-/* Report */
-#report{display:none;max-width:760px;margin:0 auto;padding:48px 28px 80px}
+/* ── Report container ── */
+#report{
+  display:none;position:relative;z-index:1;
+  max-width:780px;margin:0 auto;padding:52px 24px 88px;
+}
 #report.show{display:block}
 
-.rp-cover{text-align:center;padding:64px 0 48px;border-bottom:1px solid rgba(201,168,76,.2);margin-bottom:48px}
-.rp-brand{font-size:11px;letter-spacing:4px;color:rgba(201,168,76,.5);margin-bottom:24px}
-.rp-name{font-size:38px;color:#fff;font-weight:300;letter-spacing:6px;margin-bottom:12px;font-family:'Cormorant Garamond',serif}
-.rp-date{color:rgba(255,255,255,.4);font-size:13px;letter-spacing:2px;margin-bottom:24px}
-.rp-pillars{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:20px}
-.pillar.cell{background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.2);border-radius:8px;padding:10px 16px;text-align:center;min-width:64px}
-.pillar .pl{display:block;font-size:9px;color:#9a8a6a;letter-spacing:1px;margin-bottom:5px;text-transform:uppercase}
-.pillar .pg{display:block;font-size:22px;color:#e8d8b0;line-height:1.15}
-.pillar .pz{display:block;font-size:18px;color:#c9b890;line-height:1.2}
-.pillar.cell.day{border-color:#c9a84c;background:rgba(201,168,76,.16);box-shadow:0 0 18px rgba(201,168,76,.18)}
-.pillar.cell.day .pg{color:#e8d08a}
-.rp-overview{margin:26px auto 0;max-width:min(380px,100%)}
-.rp-daymaster{text-align:center;font-size:15px;color:#e8d08a;letter-spacing:1px;margin-bottom:16px}
-.rp-daymaster b{color:#c9a84c;font-weight:500}
-.ov-title{font-size:12px;color:#c9a84c;letter-spacing:3px;margin-bottom:12px;text-align:center;text-transform:uppercase}
-.wx-row{display:flex;align-items:center;gap:9px;margin-bottom:7px}
-.wx-k{width:46px;font-size:11px;color:#c9b890;flex-shrink:0}
-.wx-bar{flex:1;height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
-.wx-fill{display:block;height:100%;border-radius:4px;transition:width .6s ease}
-.wx-v{width:28px;text-align:right;font-size:11px;color:#9a8a6a;flex-shrink:0}
-.ov-dy{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px}
-.dy-cell{flex:0 0 auto;min-width:54px;text-align:center;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.15);border-radius:8px;padding:8px 6px}
-.dy-cell.cur{border-color:#c9a84c;background:rgba(201,168,76,.18)}
-.dy-cell.fut{opacity:.45}
-.dy-gz{display:block;font-size:14px;color:#e8d8b0;letter-spacing:1px}
-.dy-age{display:block;font-size:9px;color:#9a8a6a;margin-top:3px}
-.rp-section table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;border-collapse:collapse;margin:16px 0;font-size:13px}
+/* ── Cover hero ── */
+.rp-cover{
+  text-align:center;padding:60px 8px 52px;
+  border-bottom:1px solid var(--gold-line);margin-bottom:52px;
+  position:relative;
+}
+.rp-cover::before{
+  content:'';position:absolute;left:50%;top:0;transform:translateX(-50%);
+  width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,rgba(100,60,200,.18) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+.rp-brand{
+  font-family:var(--lat);font-style:italic;font-size:11px;
+  letter-spacing:.44em;color:rgba(220,192,130,.45);
+  margin-bottom:28px;position:relative;z-index:1;
+  text-transform:uppercase;
+}
+.rp-name{
+  font-size:40px;color:var(--text);font-weight:300;
+  letter-spacing:.14em;margin-bottom:12px;
+  font-family:var(--lat);font-style:italic;position:relative;z-index:1;
+  text-shadow:0 0 40px rgba(180,128,255,.25);
+}
+.rp-date{color:var(--faint);font-size:12px;letter-spacing:.18em;margin-bottom:28px;position:relative;z-index:1;text-transform:uppercase}
+.rp-divider{
+  width:60px;height:1px;margin:0 auto 28px;
+  background:linear-gradient(90deg,transparent,var(--gold-line-2),transparent);
+  position:relative;z-index:1;
+}
 
-.rp-section{margin-top:52px}
-.rp-section h2,.rp-section h3{color:var(--gold);font-family:'Cormorant Garamond',serif;letter-spacing:2px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(201,168,76,.12);font-weight:400}
-.rp-section h2{font-size:22px}
-.rp-section h3{font-size:17px;border-bottom:none;padding-bottom:0;margin-top:20px}
-.rp-section p{margin-bottom:14px;font-size:15px;line-height:1.95}
-.rp-section strong,.rp-section b{color:var(--gold-l)}
-.rp-section ul,.rp-section ol{padding-left:20px;margin-bottom:14px}
-.rp-section li{margin-bottom:6px;font-size:15px}
+/* Four Pillars */
+.rp-pillars{
+  display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
+  margin-top:8px;position:relative;z-index:1;
+}
+.pillar.cell{
+  background:linear-gradient(180deg,var(--indigo-2),var(--indigo));
+  border:1px solid var(--hair-2);border-radius:12px;
+  padding:12px 18px;text-align:center;min-width:68px;
+  transition:all .25s;
+}
+.pillar .pl{display:block;font-size:9px;color:var(--ghost);letter-spacing:.16em;margin-bottom:7px;text-transform:uppercase;font-family:var(--lat)}
+.pillar .pg{
+  display:block;font-size:24px;color:var(--gold-soft);line-height:1.15;
+  background:linear-gradient(90deg,var(--gold-d),var(--gold),var(--gold-hi),var(--gold),var(--gold-d));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  background-size:200%;
+}
+.pillar .pz{display:block;font-size:19px;color:var(--star-soft);line-height:1.2;margin-top:3px}
+.pillar.cell.day{
+  border-color:var(--gold-line-2);
+  background:linear-gradient(180deg,rgba(74,42,140,.55),rgba(30,15,58,.9));
+  box-shadow:0 0 24px rgba(220,192,130,.14),inset 0 1px 0 rgba(220,192,130,.1);
+}
+.pillar.cell.day .pz{color:var(--gold-hi)}
 
-/* Paywall */
-.locked-section{filter:blur(5px);pointer-events:none;user-select:none;max-height:200px;overflow:hidden}
-.paywall-gate{background:linear-gradient(135deg,#1a1030,#0d0618);border:1px solid rgba(201,168,76,.3);border-radius:16px;padding:36px 24px;text-align:center;margin:48px 0}
-.gate-icon{font-size:36px;margin-bottom:10px}
-.gate-title{color:var(--gold);font-size:18px;font-weight:400;letter-spacing:2px;margin-bottom:8px;font-family:'Cormorant Garamond',serif}
-.gate-desc{color:rgba(255,255,255,.55);font-size:13px;margin-bottom:20px}
-.gate-price{color:#fff;font-size:28px;font-weight:300;margin-bottom:6px;font-family:'Cormorant Garamond',serif}
-.gate-orig{color:rgba(255,255,255,.3);font-size:13px;text-decoration:line-through;margin-left:6px}
-.gate-btn{background:linear-gradient(135deg,#b8922f,#c9a84c,#e0c875);color:#0a0814;border:none;padding:14px 0;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;display:block;width:100%;max-width:260px;margin:0 auto 12px}
-.gate-alt{color:rgba(201,168,76,.6);font-size:12px;cursor:pointer;text-decoration:underline;display:block}
-.gate-stripe{background:#635bff;color:#fff;border:none;padding:11px 0;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;display:block;width:100%;max-width:260px;margin:8px auto 0}
+/* Day Master + Five Elements overview */
+.rp-overview{margin:30px auto 0;max-width:min(400px,100%);position:relative;z-index:1}
+.rp-daymaster{
+  text-align:center;font-size:14px;color:var(--gold-soft);
+  letter-spacing:.08em;margin-bottom:18px;font-family:var(--lat);font-style:italic;
+}
+.rp-daymaster b{color:var(--gold-hi);font-style:normal;font-weight:500}
+.ov-title{
+  font-size:10px;color:var(--gold);letter-spacing:.26em;
+  margin-bottom:14px;text-align:center;text-transform:uppercase;font-family:var(--lat);
+}
+.wx-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.wx-k{width:44px;font-size:11px;color:var(--sub);flex-shrink:0;letter-spacing:.04em}
+.wx-bar{flex:1;height:6px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden}
+.wx-fill{display:block;height:100%;border-radius:3px;transition:width .7s ease}
+.wx-v{width:28px;text-align:right;font-size:11px;color:var(--ghost);flex-shrink:0}
+.ov-dy{display:flex;gap:6px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:6px;scrollbar-width:none}
+.ov-dy::-webkit-scrollbar{display:none}
+.dy-cell{
+  flex:0 0 auto;min-width:58px;text-align:center;
+  background:var(--indigo);border:1px solid var(--hair);
+  border-radius:10px;padding:9px 8px;
+}
+.dy-cell.cur{border-color:var(--gold-line-2);background:rgba(220,192,130,.08)}
+.dy-cell.fut{opacity:.42}
+.dy-gz{display:block;font-size:15px;color:var(--text);letter-spacing:.06em}
+.dy-age{display:block;font-size:9px;color:var(--ghost);margin-top:3px;letter-spacing:.04em}
+
+/* ── Report sections (free + locked text) ── */
+.rp-section{
+  margin-top:0;margin-bottom:12px;
+  background:linear-gradient(180deg,var(--indigo-2),var(--indigo));
+  border:1px solid var(--hair-2);border-radius:20px;
+  overflow:hidden;
+  box-shadow:var(--shadow-card);
+  animation:secFadeUp .55s ease both;
+}
+@keyframes secFadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.rp-section h2{
+  color:var(--gold-soft);font-family:var(--lat);letter-spacing:.12em;
+  margin-bottom:0;padding:18px 20px 14px;
+  border-bottom:1px solid var(--hair);font-weight:400;font-size:18px;
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  transition:color .2s;
+}
+.rp-section h2::after{
+  content:'›';font-size:18px;color:var(--faint);margin-left:auto;
+  transition:transform .25s,color .25s;flex-shrink:0;
+}
+.rp-section h2.open::after{transform:rotate(90deg);color:var(--gold-soft)}
+.rp-section-body{display:none;padding:16px 20px 20px}
+.rp-section-body.open{display:block}
+
+.rp-section h3{
+  color:var(--gold);font-family:var(--lat);letter-spacing:.1em;
+  margin-bottom:10px;padding-bottom:0;font-weight:400;font-size:15px;
+}
+.rp-section p{margin-bottom:13px;font-size:14.5px;line-height:2;color:var(--sub)}
+.rp-section strong,.rp-section b{color:var(--gold-soft)}
+.rp-section ul,.rp-section ol{padding-left:18px;margin-bottom:12px}
+.rp-section li{margin-bottom:6px;font-size:14.5px;color:var(--sub);line-height:1.85}
+
+/* ── Paywall gate ── */
+.locked-section{filter:blur(5px);pointer-events:none;user-select:none;max-height:180px;overflow:hidden;opacity:.65}
+.paywall-gate{
+  background:linear-gradient(135deg,#1e0f3a,#0b0616);
+  border:1px solid var(--gold-line-2);border-radius:20px;
+  padding:36px 24px;text-align:center;margin:48px 0;
+  box-shadow:0 20px 60px -20px rgba(0,0,0,.8),0 0 0 1px var(--gold-line);
+  position:relative;overflow:hidden;
+}
+.paywall-gate::before{
+  content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);
+  width:240px;height:240px;border-radius:50%;
+  background:radial-gradient(circle,rgba(180,128,255,.14) 0%,transparent 70%);
+  pointer-events:none;
+}
+.gate-icon{font-size:32px;margin-bottom:14px;position:relative;z-index:1}
+.gate-title{
+  color:var(--gold-soft);font-size:20px;font-weight:400;letter-spacing:.1em;
+  margin-bottom:10px;font-family:var(--lat);font-style:italic;
+  position:relative;z-index:1;
+}
+.gate-desc{color:var(--faint);font-size:13px;margin-bottom:20px;line-height:1.75;position:relative;z-index:1}
+.gate-price{
+  color:var(--text);font-size:30px;font-weight:300;margin-bottom:8px;
+  font-family:var(--lat);position:relative;z-index:1;
+}
+.gate-orig{color:var(--ghost);font-size:13px;text-decoration:line-through;margin-left:6px}
+.gate-btn{
+  background:linear-gradient(135deg,var(--gold-d),var(--gold),var(--gold-soft));
+  color:#120c02;border:none;padding:15px 0;border-radius:50px;
+  font-size:15px;font-weight:700;cursor:pointer;display:block;
+  width:100%;max-width:260px;margin:0 auto 12px;letter-spacing:.06em;
+  box-shadow:0 8px 24px rgba(220,192,130,.28);
+  position:relative;z-index:1;
+}
+.gate-alt{color:rgba(220,192,130,.55);font-size:12px;cursor:pointer;text-decoration:underline;display:block;position:relative;z-index:1}
+.gate-stripe{
+  background:linear-gradient(135deg,#5b50ff,#7c6fff);
+  color:#fff;border:none;padding:13px 0;border-radius:50px;
+  font-size:14px;font-weight:600;cursor:pointer;display:block;
+  width:100%;max-width:260px;margin:8px auto 0;
+  box-shadow:0 6px 20px rgba(100,80,255,.35);
+  position:relative;z-index:1;
+}
 .stripe-loading{opacity:.7;pointer-events:none}
 
-/* Pay Modal */
-#pay-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center}
+/* ── Pay modal ── */
+#pay-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;align-items:center;justify-content:center}
 #pay-modal.open{display:flex}
-.pay-box{background:#1a1030;border:1px solid rgba(201,168,76,.35);border-radius:20px;padding:32px 24px;text-align:center;max-width:320px;width:90%}
-.pay-title{color:var(--gold);font-size:15px;font-weight:500;letter-spacing:1px;margin-bottom:4px}
-.pay-amount{color:#fff;font-size:32px;font-weight:300;margin-bottom:16px;font-family:'Cormorant Garamond',serif}
-#pay-qr-wrap{width:190px;height:190px;background:#fff;border-radius:12px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;overflow:hidden}
-#pay-qr-img{width:100%;height:100%;object-fit:contain}
-.pay-status{color:rgba(255,255,255,.5);font-size:12px;margin-bottom:14px;min-height:18px}
-.pay-close{color:rgba(255,255,255,.35);font-size:12px;cursor:pointer;text-decoration:underline;display:inline-block;padding:12px 20px}
-
-/* Share */
-.share-bar{text-align:center;margin:48px 0 24px;padding:24px;border:1px solid rgba(201,168,76,.1);border-radius:12px}
-.share-bar p{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:14px}
-.share-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.share-btn{padding:10px 22px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:none}
-.share-copy{background:rgba(201,168,76,.15);color:var(--gold);border:1px solid rgba(201,168,76,.3)}
-
-.back-bar{text-align:center;padding:12px;color:rgba(255,255,255,.3);font-size:12px}
-.back-bar a{color:rgba(201,168,76,.5)}
-
-/* AIGC disclaimer */
-.aigc-bar{text-align:center;padding:16px;font-size:12px;color:rgba(200,185,155,.35);letter-spacing:.06em;line-height:1.8;border-top:1px solid rgba(201,168,76,.06);margin-top:32px}
-
-@media(max-width:600px){
-  #report{padding:32px 16px 80px}
-  .rp-name{font-size:28px}
-  .rp-section h2{font-size:18px}
+.pay-box{
+  background:var(--indigo-2);border:1px solid var(--gold-line-2);border-radius:22px;
+  padding:32px 24px;text-align:center;max-width:320px;width:90%;
+  box-shadow:0 30px 80px rgba(0,0,0,.8);
 }
+.pay-title{color:var(--gold-soft);font-size:14px;font-weight:500;letter-spacing:.1em;margin-bottom:4px;font-family:var(--lat);font-style:italic}
+.pay-amount{color:var(--text);font-size:32px;font-weight:300;margin-bottom:16px;font-family:var(--lat)}
+#pay-qr-wrap{width:190px;height:190px;background:#fff;border-radius:14px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+#pay-qr-img{width:100%;height:100%;object-fit:contain}
+.pay-status{color:var(--faint);font-size:12px;margin-bottom:14px;min-height:18px}
+.pay-close{color:var(--ghost);font-size:12px;cursor:pointer;text-decoration:underline;display:inline-block;padding:12px 20px}
+
+/* ── Share ── */
+.share-bar{
+  text-align:center;margin:48px 0 24px;padding:28px 24px;
+  background:linear-gradient(180deg,var(--indigo-2),var(--indigo));
+  border:1px solid var(--hair-2);border-radius:20px;
+  box-shadow:var(--shadow-card);
+}
+.share-bar p{color:var(--faint);font-size:13px;margin-bottom:16px;letter-spacing:.06em}
+.share-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.share-btn{
+  padding:11px 28px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:none;
+  letter-spacing:.06em;transition:all .2s;
+}
+.share-copy{
+  background:rgba(220,192,130,.12);color:var(--gold-soft);
+  border:1px solid var(--gold-line-2);
+}
+.share-copy:hover{background:rgba(220,192,130,.2)}
+
+/* ── Back bar ── */
+.back-bar{text-align:center;padding:14px;color:var(--ghost);font-size:12px;letter-spacing:.06em}
+.back-bar a{color:rgba(220,192,130,.5)}
+
+/* ── AIGC disclaimer ── */
+.aigc-bar{
+  text-align:center;padding:20px 16px;font-size:11px;color:var(--ghost);
+  letter-spacing:.08em;line-height:2;
+  border-top:1px solid var(--hair);margin-top:36px;
+}
+
+/* ── Countdown ── */
+#countdown-bar{
+  font-size:12px;color:#e87a60;letter-spacing:.06em;
+  margin-bottom:12px;min-height:18px;position:relative;z-index:1;
+}
+
+/* ── Responsive ── */
+@media(max-width:600px){
+  #report{padding:36px 14px 80px}
+  .rp-name{font-size:28px;letter-spacing:.08em}
+  .rp-section h2{font-size:16px}
+  .paywall-gate{padding:28px 16px}
+}
+
+/* ── Table scroll wrapper ── */
+.rp-section table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
 </style>
 </head>
 <body>
 
 <!-- Loading -->
 <div id="loading">
-  <div class="load-stars">✦</div>
+  <div class="load-orbit">
+    <div class="load-ring load-ring-1"></div>
+    <div class="load-ring load-ring-2"></div>
+    <div class="load-ring load-ring-3"></div>
+    <div class="load-dot">✦</div>
+  </div>
   <div class="load-title">Reading Your Destiny</div>
-  <div class="load-sub" id="load-name-hint">Calculating your Four Pillars...</div>
+  <div class="load-sub" id="load-name-hint">Calculating your Four Pillars…</div>
   <div class="load-bar-wrap"><div class="load-bar" id="load-bar"></div></div>
-  <div class="load-tip" id="load-tip">Mapping year pillar...</div>
+  <div class="load-tip" id="load-tip">Mapping year pillar…</div>
 </div>
 
 <!-- Error -->
 <div id="error-screen">
-  <div class="err-title">⚠️ Something went wrong</div>
-  <div class="err-sub" id="err-msg">Our AI reader is temporarily busy. Please try again.</div>
+  <div class="err-title">Something went wrong</div>
+  <div class="err-sub" id="err-msg">Our AI reader is temporarily busy. Please try again in a moment.</div>
   <button class="err-btn" onclick="history.back()">← Go Back</button>
 </div>
 
 <!-- Report -->
 <div id="report">
+  <!-- Cover hero -->
   <div class="rp-cover">
-    <div class="rp-brand">R U N A E · B A Z I · D E S T I N Y</div>
+    <div class="rp-brand">R U N A E &nbsp;·&nbsp; B A Z I &nbsp;·&nbsp; D E S T I N Y</div>
     <div class="rp-name" id="rp-name">—</div>
     <div class="rp-date" id="rp-date">—</div>
+    <div class="rp-divider"></div>
     <div class="rp-pillars" id="rp-pillars"></div>
   </div>
 
@@ -146,16 +373,16 @@ a{color:var(--gold);text-decoration:none}
 
   <!-- Paywall gate -->
   <div id="gate-a" class="paywall-gate">
-    <div class="gate-icon">🔮</div>
+    <div class="gate-icon">✦</div>
     <h3 class="gate-title">Unlock Your Full Destiny Report</h3>
-    <p class="gate-desc">Love & Marriage · Wealth & Finance · Career Path · Ten-Year Luck Cycles · Year-by-Year Forecast</p>
-    <div id="countdown-bar" style="font-size:12px;color:#e05c5c;letter-spacing:.06em;margin-bottom:10px;min-height:18px"></div>
+    <p class="gate-desc">Love &amp; Relationships · Wealth &amp; Fortune · Career Path<br>Ten-Year Luck Cycles · Year-by-Year Forecast</p>
+    <div id="countdown-bar"></div>
     <div class="gate-price">$9.90</div>
-    <button class="gate-stripe" id="stripe-btn-a" onclick="syPayStripe('a')">💳 Pay with Card ($9.90)</button>
-    <details style="margin-top:14px;text-align:left">
-      <summary style="font-size:13px;color:rgba(201,168,76,.5);cursor:pointer;letter-spacing:.08em;list-style:none;text-align:center">Other payment options ▾</summary>
-      <div style="margin-top:10px;text-align:center">
-        <button class="gate-btn" style="font-size:13px;padding:10px 0;margin-bottom:8px" onclick="syPay('a','wechat')">🟢 Pay via WeChat</button>
+    <button class="gate-stripe" id="stripe-btn-a" onclick="syPayStripe('a')">💳 Pay with Card — $9.90</button>
+    <details style="margin-top:16px;text-align:left">
+      <summary style="font-size:12px;color:rgba(220,192,130,.45);cursor:pointer;letter-spacing:.1em;list-style:none;text-align:center">Other payment options ▾</summary>
+      <div style="margin-top:12px;text-align:center">
+        <button class="gate-btn" style="font-size:13px;padding:11px 0;margin-bottom:10px" onclick="syPay('a','wechat')">🟢 Pay via WeChat</button>
         <span class="gate-alt" onclick="syPay('a','alipay')">Pay via Alipay</span>
       </div>
     </details>
@@ -166,15 +393,23 @@ a{color:var(--gold);text-decoration:none}
 
   <!-- Share -->
   <div class="share-bar" id="share-bar" style="display:none">
-    <p>Your BaZi report is ready · Share with a friend</p>
+    <p>Your BaZi report is ready — share it with someone you trust</p>
     <div class="share-btns">
       <button class="share-btn share-copy" onclick="copyLink()">Copy Link</button>
     </div>
   </div>
 
-  <div class="back-bar"><a href="lp-master-EN.html">← Re-enter birth details</a> · <a href="life-events.html">Consult a Master</a></div>
+  <div class="back-bar">
+    <a href="lp-master-EN.html">← Re-enter birth details</a>
+    &nbsp;·&nbsp;
+    <a href="life-events.html">Consult a Master</a>
+  </div>
 
-  <div class="aigc-bar">🤖 AI-GENERATED · FOR REFERENCE & ENTERTAINMENT · NOT PROFESSIONAL ADVICE<br>AI-generated content · Does not constitute medical, legal, or financial advice<br>Runae · Metaphysical AI · All rights reserved</div>
+  <div class="aigc-bar">
+    🤖 AI-GENERATED · FOR REFERENCE &amp; ENTERTAINMENT ONLY · NOT PROFESSIONAL ADVICE<br>
+    Does not constitute medical, legal, or financial guidance.<br>
+    Runae · Metaphysical AI · All rights reserved.
+  </div>
 </div>
 
 <!-- Pay Modal -->
@@ -183,7 +418,7 @@ a{color:var(--gold);text-decoration:none}
     <div class="pay-title" id="pay-title">Scan to Pay</div>
     <div class="pay-amount" id="pay-amount">$9.90</div>
     <div id="pay-qr-wrap"><img id="pay-qr-img" src="" alt="QR Code"></div>
-    <p class="pay-status" id="pay-status">Generating QR code...</p>
+    <p class="pay-status" id="pay-status">Generating QR code…</p>
     <span class="pay-close" onclick="syPayClose()">✕ Cancel</span>
   </div>
 </div>
@@ -210,7 +445,7 @@ a{color:var(--gold);text-decoration:none}
 })();
 var SY_API = (location.hostname==='localhost'||location.hostname==='127.0.0.1') ? 'http://localhost:3021/api' : '/api';
 var TIME_MAP = {子时:0,丑时:1,寅时:3,卯时:5,辰时:7,巳时:9,午时:11,未时:13,申时:15,酉时:17,戌时:19,亥时:21};
-var LOAD_TIPS = ['Mapping year & month pillars...','Analyzing your Day Master...','Calculating Five Elements balance...','Reading your luck cycles...','Finalizing your destiny report...'];
+var LOAD_TIPS = ['Mapping year & month pillars…','Analyzing your Day Master…','Calculating Five Elements balance…','Reading your luck cycles…','Finalizing your destiny report…'];
 var _tipIdx = 0, _loadPct = 0, _syPoll = null, _syMethod = 'wechat';
 
 function qs(name){ return (new URLSearchParams(location.search).get(name)||'').trim(); }
@@ -248,8 +483,18 @@ function parseSections(text){
     if(!chunk) return '';
     var firstLine = chunk.split('\n')[0];
     var rest = chunk.slice(firstLine.length).trim();
-    return '<div class="rp-section"><h2>'+firstLine+'</h2>'+md2html(rest)+'</div>';
+    var sectionId = 'sec-' + Math.random().toString(36).slice(2,7);
+    return '<div class="rp-section"><h2 onclick="toggleSection(this)" data-body="'+sectionId+'">'+firstLine+'</h2><div class="rp-section-body" id="'+sectionId+'">'+md2html(rest)+'</div></div>';
   }).join('');
+}
+
+function toggleSection(h2){
+  var bodyId = h2.getAttribute('data-body');
+  var body = document.getElementById(bodyId);
+  if(!body) return;
+  var isOpen = body.classList.contains('open');
+  h2.classList.toggle('open', !isOpen);
+  body.classList.toggle('open', !isOpen);
 }
 
 function renderReport(reading, name, dateStr, timeStr, pillars, birthYear){
@@ -263,7 +508,7 @@ function renderReport(reading, name, dateStr, timeStr, pillars, birthYear){
       var _h=_cols.map(function(c,i){
         var p=c[1]||{}, isDay=(i===2), gan=p.gan||'', zhi=p.zhi||'';
         if(!gan && !zhi) return '';
-        return '<div class="pillar cell'+(isDay?' day':'')+'"><span class="pl">'+c[0]+(isDay?' · Day':'')+'</span><span class="pg">'+(gan||'—')+'</span><span class="pz">'+(zhi||'—')+'</span></div>';
+        return '<div class="pillar cell'+(isDay?' day':'')+'"><span class="pl">'+c[0]+(isDay?' · Day Master':'')+'</span><span class="pg">'+(gan||'—')+'</span><span class="pz">'+(zhi||'—')+'</span></div>';
       }).join('');
       var _host=document.getElementById('rp-pillars'); if(_host && _h) _host.innerHTML=_h;
     }
@@ -273,7 +518,7 @@ function renderReport(reading, name, dateStr, timeStr, pillars, birthYear){
     if(pillars && (pillars.wuxing || (pillars.daYun && pillars.daYun.length))){
       var _elMap={'木':'Wood','火':'Fire','土':'Earth','金':'Metal','水':'Water'};
       var _ov='';
-      if(pillars.dayMaster){ var _dme=_elMap[pillars.dayMasterElement]||pillars.dayMasterElement||''; _ov+='<div class="rp-daymaster">Day Master <b>'+pillars.dayMaster+(_dme?' · '+_dme:'')+'</b>'+(typeof pillars.isStrong==='boolean'?(' · '+(pillars.isStrong?'Strong':'Weak')):'')+'</div>'; }
+      if(pillars.dayMaster){ var _dme=_elMap[pillars.dayMasterElement]||pillars.dayMasterElement||''; _ov+='<div class="rp-daymaster">Day Master <b>'+pillars.dayMaster+(_dme?' · '+_dme:'')+'</b>'+(typeof pillars.isStrong==='boolean'?(' · '+(pillars.isStrong?'Strong chart':'Weak chart')):'')+'</div>'; }
       if(pillars.wuxing){
         var _wx=pillars.wuxing, _wk=['木','火','土','金','水'];
         var _wmax=Math.max.apply(null,_wk.map(function(k){return +_wx[k]||0}).concat([1]));
@@ -285,9 +530,9 @@ function renderReport(reading, name, dateStr, timeStr, pillars, birthYear){
       }
       if(pillars.daYun && pillars.daYun.length){
         var _by=birthYear||parseInt(dateStr,10)||0, _age=_by?(new Date().getFullYear()-_by):-1;
-        _ov+='<div class="ov-title" style="margin-top:20px">Luck Cycles (Age)</div><div class="ov-dy">'+pillars.daYun.map(function(d){
+        _ov+='<div class="ov-title" style="margin-top:22px">Luck Cycles</div><div class="ov-dy">'+pillars.daYun.map(function(d){
           var cur=(_age>=0 && _age>=d.startAge && _age<=d.endAge), fut=(_age>=0 && d.startAge>_age);
-          return '<div class="dy-cell'+(cur?' cur':'')+(fut?' fut':'')+'"><span class="dy-gz">'+(d.name||((d.gan||'')+(d.zhi||'')))+'</span><span class="dy-age">'+d.startAge+'-'+d.endAge+'</span></div>';
+          return '<div class="dy-cell'+(cur?' cur':'')+(fut?' fut':'')+'"><span class="dy-gz">'+(d.name||((d.gan||'')+(d.zhi||'')))+'</span><span class="dy-age">'+d.startAge+'–'+d.endAge+'</span></div>';
         }).join('')+'</div>';
       }
       if(_ov){ var _wrap=document.createElement('div'); _wrap.className='rp-overview'; _wrap.innerHTML=_ov; var _hp=document.getElementById('rp-pillars'); if(_hp && _hp.parentNode) _hp.parentNode.insertBefore(_wrap,_hp.nextSibling); }
@@ -299,6 +544,12 @@ function renderReport(reading, name, dateStr, timeStr, pillars, birthYear){
   var lockedText = parts[1] || '';
 
   document.getElementById('free-content').innerHTML = parseSections(freeText);
+
+  // Auto-open first section
+  try{
+    var firstH2 = document.querySelector('#free-content .rp-section h2');
+    if(firstH2) toggleSection(firstH2);
+  }catch(e){}
 
   if(lockedText.trim()){
     document.getElementById('locked-content').innerHTML = parseSections(lockedText);
@@ -324,7 +575,7 @@ function syInitUnlock(){
     var hubOid = urlParams.get('oid') || localStorage.getItem('sy_stripe_hub_a');
     var localOid = localStorage.getItem('sy_stripe_local_a');
     if(hubOid){
-      document.getElementById('gate-a').innerHTML='<div style="padding:20px;color:#c9a84c">⏳ Verifying payment...</div>';
+      document.getElementById('gate-a').innerHTML='<div style="padding:24px;color:var(--gold-soft);font-family:var(--lat);font-style:italic;letter-spacing:.08em">⏳ Verifying payment…</div>';
       syStripeWait('a', hubOid, localOid, 0);
     }
   }
@@ -332,7 +583,7 @@ function syInitUnlock(){
 
 function syPayStripe(tier){
   var btn = document.getElementById('stripe-btn-'+tier);
-  if(btn){ btn.classList.add('stripe-loading'); btn.textContent='Redirecting to checkout...'; }
+  if(btn){ btn.classList.add('stripe-loading'); btn.textContent='Redirecting to checkout…'; }
   var product = tier==='a' ? 'report_unlock_a' : 'report_unlock_b';
   var successUrl = location.href.split('?')[0] + '?' + location.search.replace(/^[?]/, '');
   fetch(SY_API+'/pay/stripe/create', {
@@ -341,7 +592,7 @@ function syPayStripe(tier){
     body: JSON.stringify({product: product, success_url: location.href.split('?')[0] + location.search, currency:'usd'})
   }).then(function(r){ return r.json(); }).then(function(d){
     if(!d.ok || !d.url){
-      if(btn){ btn.classList.remove('stripe-loading'); btn.textContent='💳 Pay with Card ($9.90)'; }
+      if(btn){ btn.classList.remove('stripe-loading'); btn.textContent='💳 Pay with Card — $9.90'; }
       alert('Payment error. Please try WeChat/Alipay or try again later.');
       return;
     }
@@ -349,13 +600,13 @@ function syPayStripe(tier){
     localStorage.setItem('sy_stripe_local_a', d.out_trade_no || '');
     location.href = d.url;
   }).catch(function(){
-    if(btn){ btn.classList.remove('stripe-loading'); btn.textContent='💳 Pay with Card ($9.90)'; }
+    if(btn){ btn.classList.remove('stripe-loading'); btn.textContent='💳 Pay with Card — $9.90'; }
     alert('Network error. Please try again.');
   });
 }
 
 function syStripeWait(tier, hubOid, localOid, tries){
-  if(tries > 20){ document.getElementById('gate-a').innerHTML='<div style="padding:20px;color:#999">Payment not confirmed yet. Please refresh in a moment.</div>'; return; }
+  if(tries > 20){ document.getElementById('gate-a').innerHTML='<div style="padding:20px;color:var(--faint)">Payment not confirmed yet. Please refresh in a moment.</div>'; return; }
   var qUrl = SY_API+'/pay/stripe/query?hub_order_no='+encodeURIComponent(hubOid);
   if(localOid) qUrl += '&out_trade_no='+encodeURIComponent(localOid);
   fetch(qUrl).then(function(r){ return r.json(); }).then(function(s){
@@ -379,7 +630,7 @@ function syPay(tier, method){
   var amount = tier==='a' ? '$9.90' : '$4.99';
   document.getElementById('pay-title').textContent = method==='wechat' ? 'Scan with WeChat' : 'Scan with Alipay';
   document.getElementById('pay-amount').textContent = amount;
-  document.getElementById('pay-status').textContent = 'Generating QR code...';
+  document.getElementById('pay-status').textContent = 'Generating QR code…';
   document.getElementById('pay-qr-img').src = '';
   document.getElementById('pay-modal').classList.add('open');
 
@@ -446,7 +697,7 @@ function copyLink(){
 
   if(!dateStr){ document.getElementById('err-msg').textContent='Missing birth date. Please go back and fill in the form.'; document.getElementById('error-screen').classList.add('show'); document.getElementById('loading').classList.add('hidden'); return; }
 
-  document.getElementById('load-name-hint').textContent = 'Preparing '+name+'’s chart…';
+  document.getElementById('load-name-hint').textContent = 'Preparing ' + name + '\'s chart...';
   var stopAnim = startLoadAnim();
 
   // Parse date
@@ -479,26 +730,26 @@ function copyLink(){
 </script>
 
 <!-- Annual Upsell Modal (EN) -->
-<div id="sy-upsell-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:9999;align-items:center;justify-content:center;padding:16px">
-  <div style="background:#1a0f2e;border:1px solid rgba(212,175,55,0.35);border-radius:18px;max-width:360px;width:100%;padding:28px 22px;position:relative;box-shadow:0 8px 48px rgba(0,0,0,0.6);animation:upsellIn 0.35s cubic-bezier(0.34,1.56,0.64,1)">
+<div id="sy-upsell-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:9999;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#1e0f3a;border:1px solid rgba(220,192,130,0.38);border-radius:22px;max-width:360px;width:100%;padding:28px 22px;position:relative;box-shadow:0 8px 60px rgba(0,0,0,0.7);animation:upsellIn 0.35s cubic-bezier(0.34,1.56,0.64,1)">
     <style>@keyframes upsellIn{from{transform:scale(0.85) translateY(20px);opacity:0}to{transform:scale(1) translateY(0);opacity:1}}</style>
-    <div style="text-align:center;font-size:30px;margin-bottom:6px">✨</div>
-    <div style="text-align:center;font-family:'Cormorant Garamond',serif;font-size:20px;color:#f5e8b0;letter-spacing:0.08em;margin-bottom:8px">Upgrade to Annual — Save 75%</div>
-    <div style="text-align:center;font-size:12px;color:#a89060;line-height:1.7;margin-bottom:18px">
+    <div style="text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-size:26px;color:#e8d49c;margin-bottom:6px">✦</div>
+    <div style="text-align:center;font-family:'Cormorant Garamond',serif;font-size:20px;color:#f5e8b0;letter-spacing:0.08em;margin-bottom:8px;font-style:italic">Upgrade to Annual — Save 75%</div>
+    <div style="text-align:center;font-size:12px;color:#a89060;line-height:1.8;margin-bottom:18px">
       You've unlocked your full report.<br>
-      Upgrade now for unlimited readings all year —<br>
-      <span style="color:#d4af37;font-size:16px">only $49</span>
+      Upgrade for unlimited readings all year —<br>
+      <span style="color:#d4af37;font-size:16px;font-family:'Cormorant Garamond',serif">only $49</span>
       <span style="color:#6a5a3a;text-decoration:line-through;font-size:13px;margin-left:4px">orig. $196</span>
     </div>
-    <div style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:10px;padding:12px 14px;margin-bottom:18px">
+    <div style="background:rgba(220,192,130,0.07);border:1px solid rgba(220,192,130,0.18);border-radius:12px;padding:12px 14px;margin-bottom:18px">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px"><span style="font-size:13px">♾️</span><span style="font-size:13px;color:#c8a84c">All readings unlimited · 365 days</span></div>
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px"><span style="font-size:13px">💑</span><span style="font-size:13px;color:#c8a84c">Compatibility · Zi Wei · Tarot included</span></div>
       <div style="display:flex;align-items:center;gap:8px"><span style="font-size:13px">📅</span><span style="font-size:13px;color:#c8a84c">Save 41% vs monthly · 75% vs single</span></div>
     </div>
-    <button id="upsell-cta-en" onclick="syAnnualUpgradeEN()" style="display:block;width:100%;padding:14px 0;border:none;border-radius:12px;background:linear-gradient(135deg,#9a7529,#d4af37,#f5e8b0);color:#1a0f2e;font-family:'Cormorant Garamond',serif;font-size:15px;font-weight:600;cursor:pointer;letter-spacing:0.08em;box-shadow:0 4px 20px rgba(212,175,55,0.35);margin-bottom:10px">
-      Upgrade Now $49/year →
+    <button id="upsell-cta-en" onclick="syAnnualUpgradeEN()" style="display:block;width:100%;padding:14px 0;border:none;border-radius:14px;background:linear-gradient(135deg,#9a7529,#d4af37,#f5e8b0);color:#1a0f2e;font-family:'Cormorant Garamond',serif;font-size:16px;font-weight:600;cursor:pointer;letter-spacing:0.08em;box-shadow:0 6px 24px rgba(212,175,55,0.32);margin-bottom:10px">
+      Upgrade Now — $49 / year →
     </button>
-    <button onclick="syUpsellDismissEN()" style="display:block;width:100%;padding:11px 0;border:1px solid rgba(212,175,55,0.2);border-radius:12px;background:transparent;color:#6a5a3a;font-size:12px;cursor:pointer;letter-spacing:0.06em">
+    <button onclick="syUpsellDismissEN()" style="display:block;width:100%;padding:11px 0;border:1px solid rgba(220,192,130,0.18);border-radius:14px;background:transparent;color:#6a5a3a;font-size:12px;cursor:pointer;letter-spacing:0.06em">
       No thanks, I'll stay on single purchase
     </button>
   </div>
@@ -514,15 +765,15 @@ function syAnnualUpgradeEN(){
   if(_upsellUpgradingEN) return;
   _upsellUpgradingEN = true;
   var btn=document.getElementById('upsell-cta-en');
-  if(btn){ btn.textContent='Redirecting...'; btn.style.opacity='0.7'; btn.style.pointerEvents='none'; }
+  if(btn){ btn.textContent='Redirecting…'; btn.style.opacity='0.7'; btn.style.pointerEvents='none'; }
   try{ localStorage.setItem('sy_annual_upsell_shown','1'); }catch(e){}
   fetch(SY_API+'/pay/stripe/create',{
     method:'POST', headers:{'Content-Type':'application/json'},
     body: JSON.stringify({product:'member_yearly', success_url: location.origin+'/pages/order-confirm.html?type=member_yearly&method=Stripe&amount=$49', currency:'usd'})
   }).then(function(r){ return r.json(); }).then(function(d){
     if(d.url){ localStorage.setItem('sy_stripe_hub_annual', d.hub_order_no||''); location.href=d.url; }
-    else{ _upsellUpgradingEN=false; if(btn){ btn.textContent='Upgrade Now $49/year →'; btn.style.opacity='1'; btn.style.pointerEvents='auto'; } alert('Checkout failed. Please try again.'); }
-  }).catch(function(){ _upsellUpgradingEN=false; if(btn){ btn.textContent='Upgrade Now $49/year →'; btn.style.opacity='1'; btn.style.pointerEvents='auto'; } alert('Network error. Please try again.'); });
+    else{ _upsellUpgradingEN=false; if(btn){ btn.textContent='Upgrade Now — $49 / year →'; btn.style.opacity='1'; btn.style.pointerEvents='auto'; } alert('Checkout failed. Please try again.'); }
+  }).catch(function(){ _upsellUpgradingEN=false; if(btn){ btn.textContent='Upgrade Now — $49 / year →'; btn.style.opacity='1'; btn.style.pointerEvents='auto'; } alert('Network error. Please try again.'); });
 }
 function syMaybeShowUpsellEN(){
   try{ if(localStorage.getItem('sy_annual_upsell_shown')) return; }catch(e){}
