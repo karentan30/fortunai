@@ -46,19 +46,19 @@ body { max-width: 402px; margin: 0 auto; min-height: 100vh; overflow-x:hidden; p
 /* paper grain */
 body::after { content:''; position:fixed; inset:0; pointer-events:none; opacity:.32; mix-blend-mode:soft-light; z-index:0;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E"); }
-body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(130% 60% at 50% -8%, #252a1e 0%, #161810 42%, var(--ink-0) 100%); pointer-events: none; z-index: 0; }
+body::before { content: ''; position: fixed; inset: 0; background: radial-gradient(130% 60% at 50% -8%, #1b1f15 0%, #121509 42%, var(--ink-0) 100%); pointer-events: none; z-index: 0; }
 .back-btn { position: fixed; top: 14px; left: 12px; z-index: 99; background: none; border: none; font-family: var(--serif); font-size: 22px; color: var(--text-mute); cursor: pointer; padding: 6px 10px; line-height:1; }
 
 /* wordmark / header */
 .header { position: relative; z-index: 1; text-align: center; padding: 46px 20px 6px; }
 .brandmark{display:flex;flex-direction:column;align-items:center;line-height:1;margin-bottom:18px}
-.brandmark .cn{font-family:var(--serif);font-weight:500;font-size:19px;letter-spacing:.36em;color:var(--cream);text-indent:.36em}
-.brandmark .en{font-family:var(--lat);font-size:10px;letter-spacing:.44em;color:var(--gold);margin-top:6px;text-transform:uppercase;text-indent:.44em}
-.header-title { font-family:var(--serif); font-size: 21px; font-weight: 600; letter-spacing: 0.14em; text-indent:.14em; color:var(--cream); margin-bottom: 10px; }
-.header-sub { font-family: var(--lat); font-style: italic; font-size: 12px; letter-spacing: 0.24em; color: var(--gold); opacity:.9; margin-bottom: 16px; }
+.brandmark .cn{font-family:var(--serif);font-weight:500;font-size:19px;letter-spacing:.36em;color:var(--cream);text-indent:.36em;text-shadow:0 1px 8px rgba(0,0,0,.55)}
+.brandmark .en{font-family:var(--lat);font-size:11px;letter-spacing:.44em;color:var(--gold-hi);margin-top:6px;text-transform:uppercase;text-indent:.44em;text-shadow:0 1px 6px rgba(0,0,0,.5)}
+.header-title { font-family:var(--serif); font-size: 21px; font-weight: 600; letter-spacing: 0.14em; text-indent:.14em; color:var(--cream); margin-bottom: 10px; text-shadow:0 1px 10px rgba(0,0,0,.6); }
+.header-sub { font-family: var(--lat); font-style: italic; font-size: 12px; letter-spacing: 0.24em; color: var(--gold-hi); margin-bottom: 16px; text-shadow:0 1px 6px rgba(0,0,0,.5); }
 .teal-line { width: 40px; height: 1px; background: var(--gold-line-2); margin: 0 auto; }
 
-.eyebrow{font-family:var(--lat);font-size:12px;font-style:italic;letter-spacing:.22em;color:var(--gold);opacity:.92}
+.eyebrow{font-family:var(--lat);font-size:12px;font-style:italic;letter-spacing:.22em;color:var(--gold-hi);text-shadow:0 1px 6px rgba(0,0,0,.5)}
 
 /* gilded surface */
 .gilt{background:linear-gradient(155deg,var(--gold-hi) 0%,var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep) 100%);
@@ -71,10 +71,10 @@ body::before { content: ''; position: fixed; inset: 0; background: radial-gradie
 
 /* hook hero */
 .hook-hero{position:relative;z-index:1;padding:20px 26px 0;text-align:center}
-.hook-title{font-family:var(--serif);font-weight:600;font-size:29px;line-height:1.34;letter-spacing:.05em;color:var(--cream);margin-top:14px}
-.hook-title em{font-style:normal;color:var(--gold-soft);position:relative;white-space:nowrap}
+.hook-title{font-family:var(--serif);font-weight:600;font-size:29px;line-height:1.34;letter-spacing:.05em;color:var(--cream);margin-top:14px;text-shadow:0 2px 14px rgba(0,0,0,.62)}
+.hook-title em{font-style:normal;color:var(--gold-hi);position:relative;white-space:nowrap}
 .hook-title em:after{content:"";position:absolute;left:2%;right:2%;bottom:-4px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-line-2),transparent)}
-.hook-sub{font-size:13px;line-height:1.9;color:var(--text-mute);margin-top:16px;letter-spacing:.02em}
+.hook-sub{font-size:13px;line-height:1.9;color:var(--cream-2);margin-top:16px;letter-spacing:.02em;text-shadow:0 1px 8px rgba(0,0,0,.55)}
 
 /* taste-of-report card */
 .taste{position:relative;z-index:1;margin:22px var(--gut) 0;border-radius:var(--radius);overflow:hidden;
@@ -457,18 +457,22 @@ function startAnalysis() {
   // 读取 auth token（httpOnly cookie，不从 localStorage 取；后端接受 Bearer ''）
   var token = '';
 
-  fetch('/api/mianxiang', {
+  // 手相走 /api/shouxiang（真手相分支）；面相走 /api/mianxiang
+  var _endpoint = currentMode === 'palm' ? '/api/shouxiang' : '/api/mianxiang';
+  var _payload = {
+    question: question,
+    imageBase64: imageBase64,
+    mimeType: mimeType,
+    lang: 'zh'
+  };
+  if (currentMode === 'palm') _payload.hand = 'right';
+  fetch(_endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': 'Bearer ' + token
     },
-    body: JSON.stringify({
-      question: question,
-      imageBase64: imageBase64,
-      mimeType: mimeType,
-      lang: 'zh'
-    })
+    body: JSON.stringify(_payload)
   })
   .then(function(res) {
     if (!res.ok) return res.json().then(function(e){ throw new Error(e.error || '服务器错误 ' + res.status); });
@@ -652,6 +656,15 @@ function renderResult(aiReading, tier, locked) {
   injectDisclaimer('resultWrap');
 }
 
+// ── 剥离 prompt 里漏进标题/正文的字数指令（中英都不外露）：（200字）(150 words) 约2500字 ~400 words 等 ──
+function mxStripWordCount(s) {
+  return String(s == null ? '' : s)
+    .replace(/[（(]\s*(?:约|about|approx\.?|~)?\s*\d[\d,]*\s*(?:字|个?字|words?|字数?)\s*[)）]/gi, '')
+    .replace(/\s*[·•\-—,，、]?\s*(?:约|about|approx\.?|~)?\s*\d[\d,]*\s*(?:字|words?)\b/gi, '')
+    .replace(/\s{2,}/g, ' ')
+    .replace(/[·•\-—,，、\s]+$/,'')
+    .trim();
+}
 // ── 精装 AI 报告渲染（对齐 bazi.html renderUltimateReport 风格） ──
 function mxEscHtml(s) {
   return String(s == null ? '' : s)
@@ -684,15 +697,19 @@ function renderMxAIReport(aiText, tier, locked) {
   lines.forEach(function(line) {
     var tr = line.trim();
     if (!tr) return;
-    var hMatch = tr.match(/^#{1,3}\s*(.+)$/)
-               || tr.match(/^([\u{1F300}-\u{1FAFF}✦▪▸]\s*)(.*?)$/u)
-               || tr.match(/^\*{2}([^*]+)\*{2}/);
+    var mdH = tr.match(/^#{1,3}\s*(.+)$/);
+    // emoji heading: leading pictographic char (incl. U+2600–27BF symbol block, ❤ ☀ ✨ etc.) + optional U+FE0F + text
+    var emH = tr.match(/^([\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}✦▪▸]️?)\s*(.+)$/u);
+    var boldH = tr.match(/^\*{2}([^*]+)\*{2}\s*$/);
+    var hMatch = mdH || emH || boldH;
     if (hMatch) {
       if (cur) sections.push(cur);
-      var title = (hMatch[1] || hMatch[0]).replace(/^#{1,3}\s*/, '').trim();
+      var title = mdH ? mdH[1] : emH ? (emH[1] + ' ' + emH[2]) : boldH[1];
+      title = mxStripWordCount(title.trim());
       cur = { title: title, content: [] };
     } else if (cur) {
-      if (tr !== '---') cur.content.push(tr);
+      // body: only strip the parenthetical count-instruction form (safe); leave prose numbers intact
+      if (tr !== '---') cur.content.push(tr.replace(/[（(]\s*(?:约|about|approx\.?|~)?\s*\d[\d,]*\s*(?:字|个?字|words?|字数?)\s*[)）]/gi, '').trim());
     } else {
       if (!sections.length) sections.push({ title: '相理概览', content: [] });
       sections[sections.length - 1].content.push(tr);

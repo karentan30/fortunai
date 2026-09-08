@@ -270,13 +270,33 @@ body::after {
   .zw-chapter-cover { break-inside:avoid; }
   #zwProgressWrap, #zwProgressChapter, #zwFloatTocBtn, #zwFloatTocPanel { display:none !important; }
 }
+
+/* ── Page-level guard: keep the deep-amethyst cosmos theme even after
+      site-wide assets/css/style.css (loaded later) tries to force a
+      light background + narrow 640px cap. High specificity + !important
+      so this page stays dark & readable. Do NOT edit style.css itself. ── */
+html, body.ziwei-cosmos {
+  background: #08040f !important;
+  color: var(--text-cream) !important;
+  font-family: var(--sans) !important;
+}
+body.ziwei-cosmos { max-width: 402px !important; }
+@media (min-width: 900px) {
+  body.ziwei-cosmos { max-width: 780px !important; margin: 0 auto !important; }
+}
+/* restore the amethyst nebula layers that style.css's own body::before would mask */
+body.ziwei-cosmos::before {
+  content: '' !important; position: fixed !important; inset: 0 !important;
+  pointer-events: none !important; z-index: 0 !important;
+  background: radial-gradient(135% 80% at 50% -8%, #4a2a8c 0%, #2c1858 38%, #160a2e 72%, var(--void-0) 100%) !important;
+}
 </style>
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <script src="report-viz.js" defer></script>
 <link rel="stylesheet" href="../assets/css/style.css">
 <link rel="stylesheet" href="/assets/css/common.css">
 </head>
-<body>
+<body class="ziwei-cosmos">
 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题" style="z-index:999">🌙</button>
 
 
@@ -1123,7 +1143,7 @@ function renderZiweiDeepReport(text, locked) {
       cta.className = 'zw-ur-card';
       cta.style.cssText = 'position:relative;margin-top:16px;text-align:center;padding:24px 16px';
       cta.innerHTML = '<div class="zw-ur-head" style="justify-content:center"><span class="zw-ur-emoji">🔒</span><span class="zw-ur-title">解锁完整深度解读</span></div>'
-        + '<div style="font-size:12px;line-height:1.9;color:rgba(232,240,255,0.65);margin:10px 0 14px">完整版含 17 个维度深度批算：财帛宫 · 夫妻宫（含精准婚期）· 官禄宫 · 四化飞星 · 未来10年逐年流年 · 开运锦囊。</div>'
+        + '<div style="font-size:12px;line-height:1.9;color:rgba(232,240,255,0.65);margin:10px 0 14px">完整版含多维深度批算：财帛宫 · 夫妻宫（含精准婚期）· 官禄宫 · 四化飞星 · 未来10年逐年流年 · 开运锦囊。</div>'
         + '<button onclick="unlockZiwei(this)" style="background:linear-gradient(155deg,#f4e6b6,#e8d49c 34%,#dcc082 62%,#ab8642);border:1px solid rgba(224,196,130,0.5);border-radius:10px;color:#241a08;font-family:\'Noto Serif SC\',serif;font-size:13px;padding:10px 24px;cursor:pointer">立即解锁 · $19.90 →</button>';
       deepBox.appendChild(cta);
     }

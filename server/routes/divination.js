@@ -58,6 +58,33 @@ function _refundCreditOnFail(req) {
   } catch (e) {}
 }
 const { getToken } = require('../lib/store');
+
+// ══════════════════════════════════════════
+// 🔴 P0 照片守卫（造假红线）— 面相/手相无照片绝不凭空生成
+// ══════════════════════════════════════════
+// 1) 载荷校验：必须是像样的 base64 图片（有一定长度、mime 是 image/*）
+function _isValidImagePayload(imageBase64, mimeType) {
+  if (!imageBase64 || typeof imageBase64 !== 'string') return false;
+  var b64 = imageBase64.indexOf(',') !== -1 ? imageBase64.slice(imageBase64.indexOf(',') + 1) : imageBase64;
+  b64 = b64.trim();
+  if (b64.length < 512) return false;                       // 太短不可能是真实照片
+  if (!/^[A-Za-z0-9+/=\s]+$/.test(b64.slice(0, 128))) return false; // 非 base64 字符
+  if (mimeType && typeof mimeType === 'string' && !/^image\//i.test(mimeType)) return false;
+  return true;
+}
+// 2) 视觉端复核：vision 返回的描述里是否确实“看到了”主体（脸/手）。
+//    vision 不可用(null)时保守拒绝——宁可不出，也不凭空造假。
+//    vision 明说“未检测到清晰人脸/手掌”时拒绝。
+function _visionSawSubject(features, kind) {
+  if (!features || typeof features !== 'string') return false; // 无 key / 超时 / 空 → 拒绝
+  var t = features;
+  var negFace = /(未检测到清晰人脸|不是人脸|没有.{0,4}人脸|no (clear )?face|not a face|no human face)/i;
+  var negPalm = /(未检测到清晰手掌|不是手掌|没有.{0,4}手掌|no (clear )?palm|not a (palm|hand)|no hand)/i;
+  if (kind === 'face' && negFace.test(t)) return false;
+  if (kind === 'palm' && negPalm.test(t)) return false;
+  return true;
+}
+
 const { rateLimitMiddleware } = require('../middleware');
 const { PRODUCTS, matchProduct } = require('../data/products');
 
@@ -1764,17 +1791,22 @@ ${ziweiBlock ? `【精确命盘（后端注入·禁止 LLM 自行推算）】\n$
 router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
   try {
     const { question, imageBase64, mimeType, lang } = req.body;
+    // ── P0 照片守卫（造假红线）：无照片绝不凭空生成面相 ──
+    if (!_isValidImagePayload(imageBase64, mimeType)) {
+      return res.status(400).json({ error: lang === 'en' ? 'A clear face photo is required.' : '请先上传一张清晰的正面照片', code: 'need_photo' });
+    }
     // If front-end sent a photo, run vision extraction first; otherwise use caller-provided features (or none)
     let features = req.body.features || null;
     if (features && typeof features !== 'string') features = JSON.stringify(features);
-    if (imageBase64 && !features) {
-      features = await analyzeFace(imageBase64, mimeType);
-      // analyzeFace returns null on no-key or error → graceful fallback (features stays null)
+    features = await analyzeFace(imageBase64, mimeType);
+    // ── 视觉端未检测到清晰人脸 / vision 不可用 → 拒绝，不凭空生成 ──
+    if (!_visionSawSubject(features, 'face')) {
+      return res.status(400).json({ error: lang === 'en' ? 'No clear face detected in the photo. Please upload a clear, front-facing photo.' : '照片中未检测到清晰人脸，请上传一张清晰的正面照片', code: 'no_face' });
     }
     const _LANG = { en: 'English', ko: '한국어', 'pt-br': 'Português (Brasil)', th: 'ไทย', es: 'Español' }[lang];
     const _langLine = _LANG
-      ? `Output the ENTIRE report in ${_LANG}. Translate all palace/zone names to ${_LANG} (keep the Ma Yi / pinyin term in parentheses once). Do NOT output Chinese prose. Avoid the word "Chinese" — say "Eastern physiognomy / Ma Yi Shen Xiang".`
-      : '用 Markdown，标题分段，简体中文';
+      ? `Output the ENTIRE report in ${_LANG}. CRITICAL: every markdown heading line (## / ###) MUST be written in ${_LANG} — translate all palace/zone names to ${_LANG} (you may keep the pinyin term in parentheses once, e.g. "## Life Palace (Ming Gong)"). Do NOT copy the Chinese heading text from the instructions verbatim. Do NOT output any Chinese prose. NEVER include any word-count directive (e.g. "(200 words)", "（200字）", "about 2500 words") anywhere in headings or body — those are internal length guides only. Avoid the word "Chinese" — say "Eastern physiognomy / Ma Yi Shen Xiang".`
+      : '用 Markdown，标题分段，简体中文。切勿把括号里的字数指令（如"（200字）"）写进标题或正文——那只是内部长度参考。';
 
     // ── 分档控制 ──
     var _gm = gateMessages(req, ['mianxiang', '面相', 'member'], [], 16384);
@@ -1880,18 +1912,23 @@ router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
 router.post('/mianxiang/stream', rateLimitMiddleware, async (req, res) => {
   try {
     const { question, imageBase64, mimeType, lang } = req.body;
+    // ── P0 照片守卫（造假红线）：无有效图片直接 400，绝不凭空生成 ──
+    if (!_isValidImagePayload(imageBase64, mimeType)) {
+      return res.status(400).json({ error: lang === 'en' ? 'A clear face photo is required.' : '请先上传一张清晰的正面照片', code: 'need_photo' });
+    }
     let features = req.body.features || null;
     if (features && typeof features !== 'string') features = JSON.stringify(features);
 
     // Phase 1: vision extraction (blocking, must finish before streaming)
-    if (imageBase64 && !features) {
-      features = await analyzeFace(imageBase64, mimeType);
+    features = await analyzeFace(imageBase64, mimeType);
+    if (!_visionSawSubject(features, 'face')) {
+      return res.status(400).json({ error: lang === 'en' ? 'No clear face detected in the photo. Please upload a clear, front-facing photo.' : '照片中未检测到清晰人脸，请上传一张清晰的正面照片', code: 'no_face' });
     }
 
     const _LANG = { en: 'English', ko: '한국어', 'pt-br': 'Português (Brasil)', th: 'ไทย', es: 'Español' }[lang];
     const _langLine = _LANG
-      ? `Output the ENTIRE report in ${_LANG}. Translate all palace/zone names to ${_LANG} (keep the Ma Yi / pinyin term in parentheses once). Do NOT output Chinese prose. Avoid the word "Chinese" — say "Eastern physiognomy / Ma Yi Shen Xiang".`
-      : '用 Markdown，标题分段，简体中文';
+      ? `Output the ENTIRE report in ${_LANG}. CRITICAL: every markdown heading line (## / ###) MUST be written in ${_LANG} — translate all palace/zone names to ${_LANG} (you may keep the pinyin term in parentheses once, e.g. "## Life Palace (Ming Gong)"). Do NOT copy the Chinese heading text from the instructions verbatim. Do NOT output any Chinese prose. NEVER include any word-count directive (e.g. "(200 words)", "（200字）", "about 2500 words") anywhere in headings or body — those are internal length guides only. Avoid the word "Chinese" — say "Eastern physiognomy / Ma Yi Shen Xiang".`
+      : '用 Markdown，标题分段，简体中文。切勿把括号里的字数指令（如"（200字）"）写进标题或正文——那只是内部长度参考。';
 
     const SYSTEM = `你是一位精通《麻衣神相》的正宗面相师，以宋代陈抟（希夷先生）传承的麻衣道者相法为宗，融汇三停五岳十二宫气色神韵一整套体系。
 
@@ -2045,10 +2082,15 @@ function buildShouxiangMessages({ features, handLabel, question, lang, full }) {
 router.post('/shouxiang', rateLimitMiddleware, async (req, res) => {
   try {
     const { question, hand, imageBase64, mimeType, lang } = req.body;
+    // ── P0 照片守卫（造假红线）：无手掌照片绝不凭空生成手相 ──
+    if (!_isValidImagePayload(imageBase64, mimeType)) {
+      return res.status(400).json({ error: lang === 'en' ? 'A clear palm photo is required.' : '请先上传一张清晰的手掌照片', code: 'need_photo' });
+    }
     let features = req.body.features || null;
     if (features && typeof features !== 'string') features = JSON.stringify(features);
-    if (imageBase64 && !features) {
-      features = await analyzePalm(imageBase64, mimeType);
+    features = await analyzePalm(imageBase64, mimeType);
+    if (!_visionSawSubject(features, 'palm')) {
+      return res.status(400).json({ error: lang === 'en' ? 'No clear palm detected in the photo. Please upload a clear photo of your open palm.' : '照片中未检测到清晰手掌，请上传一张五指舒展、清晰的手掌照片', code: 'no_palm' });
     }
     const handLabel = hand === 'left' ? '左手' : '右手（主手）';
     var _sxFull = gateReportAccess(req, ['shouxiang', '手相', 'member']).full;
@@ -2069,10 +2111,15 @@ router.post('/shouxiang', rateLimitMiddleware, async (req, res) => {
 router.post('/shouxiang/stream', rateLimitMiddleware, async (req, res) => {
   try {
     const { question, hand, imageBase64, mimeType, lang } = req.body;
+    // ── P0 照片守卫（造假红线）：无手掌照片绝不凭空生成手相 ──
+    if (!_isValidImagePayload(imageBase64, mimeType)) {
+      return res.status(400).json({ error: lang === 'en' ? 'A clear palm photo is required.' : '请先上传一张清晰的手掌照片', code: 'need_photo' });
+    }
     let features = req.body.features || null;
     if (features && typeof features !== 'string') features = JSON.stringify(features);
-    if (imageBase64 && !features) {
-      features = await analyzePalm(imageBase64, mimeType);
+    features = await analyzePalm(imageBase64, mimeType);
+    if (!_visionSawSubject(features, 'palm')) {
+      return res.status(400).json({ error: lang === 'en' ? 'No clear palm detected in the photo. Please upload a clear photo of your open palm.' : '照片中未检测到清晰手掌，请上传一张五指舒展、清晰的手掌照片', code: 'no_palm' });
     }
     const handLabel = hand === 'left' ? '左手' : '右手（主手）';
     var _sxFull = gateReportAccess(req, ['shouxiang', '手相', 'member']).full;

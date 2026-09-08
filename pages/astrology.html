@@ -33,7 +33,7 @@
   --blue:#2f7a6f; --blue-mid:#4fb3a6; --blue-light:#6fd4c4;
   /* ── text ── */
   --star:#f1efe0; --star-dim:rgba(147,168,162,0.6);
-  --text-cream:#e8e7dd; --text-mute:#93a8a2; --text-faint:#68807a; --text-ghost:#4e615c;
+  --text-cream:#e8e7dd; --text-mute:#93a8a2; --text-faint:#88a099; --text-ghost:#647a74;
   --hair:rgba(224,238,232,.07); --hair-2:rgba(224,238,232,.13);
   --shadow-card:0 30px 60px -30px rgba(0,0,0,.9); --shadow-lift:0 20px 44px -24px rgba(0,0,0,.78);
   --serif:"Noto Serif SC",serif; --sans:"Noto Sans SC",-apple-system,BlinkMacSystemFont,sans-serif; --lat:"Cormorant Garamond",serif;
@@ -424,6 +424,11 @@ select option { background: var(--night-3); color: var(--star); }
   </div>
 </div>
 
+<label class="consent-row" style="display:flex;align-items:flex-start;gap:8px;padding:4px 16px 12px;font-size:12px;color:rgba(215,224,220,0.82);line-height:1.7;letter-spacing:0.04em;cursor:pointer">
+  <input type="checkbox" id="consentCheck" style="margin-top:3px;width:16px;height:16px;flex-shrink:0;accent-color:#4fb3a6">
+  <span>我已年满 18 周岁，同意将出生日期/性别用于命理分析，并了解信息将传输至境外服务器处理（<a href="/legal-CN.html#privacy" style="color:#6fd4c4">隐私政策</a>）。</span>
+</label>
+
 <div class="submit-wrap">
   <button class="btn-submit" id="submitBtn">起我的星盘 &middot; Draw my chart</button>
   <div style="text-align:center;font-size:10.5px;color:var(--text-faint);letter-spacing:0.04em;line-height:1.75;padding:14px 12px 4px">出生信息仅用于本次起盘计算 · 不作它用。<br>AI 生成内容 · 仅供娱乐参考，不构成医疗、法律或财务建议 · For entertainment only.</div>
@@ -544,6 +549,12 @@ async function doReading() {
     return;
   }
 
+  var consent = document.getElementById('consentCheck');
+  if (consent && !consent.checked) {
+    showError('请先勾选同意隐私条款');
+    return;
+  }
+
   btn.disabled = true;
   btn.textContent = '占星运算中...';
   document.getElementById('loadingWrap').classList.add('show');
@@ -558,7 +569,7 @@ async function doReading() {
     btn.disabled = false; btn.textContent = '起我的星盘 · Draw my chart';
     var rw = document.getElementById('resultWrap'); rw.classList.add('show');
     rw.innerHTML = '<div style="text-align:center;padding:16px 0 4px"><div style="font-size:30px;font-weight:800;letter-spacing:4px;background:linear-gradient(180deg,#fff3cf,#e0be6e);-webkit-background-clip:text;background-clip:text;color:transparent">西方占星</div><div style="font-size:12px;color:#9fb0cc;margin-top:6px">' + birthYear + '.' + birthMonth + '.' + birthDay + '</div></div><div id="astMount"></div>';
-    if (window.RunaeSessions) RunaeSessions.render({ method: 'astrology', input: _astInput, mount: document.getElementById('astMount'), methodLabel: '西方占星' });
+    if (window.RunaeSessions) RunaeSessions.render({ method: 'astrology', input: _astInput, mount: document.getElementById('astMount'), methodLabel: '西方占星', overviewHint: 'AI 生成中，约 30 秒，请稍候…' });
     rw.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, 600);
   return;
