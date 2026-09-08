@@ -14,100 +14,172 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="善缘 · 邀请好友">
 <meta name="twitter:description" content="把你的命理分享给朋友，邀 TA 一起测测缘分">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#faf8f5;--card:#ffffff;--mid:#f5f0e8;
-  --gold:#b8944a;--gold-light:#d4b06a;--gold-deep:#8a7020;
-  --jade:#5bbfa0;--jade-mid:#8dd9bf;--jade-deep:#3d9e82;
-  --ink:rgba(40,35,30,0.92);--sub:rgba(80,70,55,0.7);}
-.dark-mode{--bg:#faf8f5;--card:#ffffff;--mid:#1f1408;
-  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;
-  --jade:#5bbfa0;--jade-mid:#8dd9bf;--jade-deep:#3d9e82;
-  --ink:rgba(40,35,30,0.92);--sub:rgba(80,70,55,0.7);}
-html,body{background:var(--bg);font-family:'Noto Serif SC',serif;color:var(--ink-text);-webkit-font-smoothing:antialiased}
-body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:80px}
-body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(91,191,160,0.05) 0%,transparent 50%);pointer-events:none;z-index:0}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 
-.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:'Noto Serif SC',serif;font-size:13px;color:rgba(201,168,76,0.6);cursor:pointer;padding:4px 0}
+/* ── Design tokens — rice-paper base, bazi/ziwei family ── */
+:root{
+  --paper:#f4f5ea;--paper-2:#eef0e2;--paper-3:#faf9f3;--paper-edge:#d6ddc9;
+  --bg:var(--paper);--card:var(--paper-3);
+  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;--gold-soft:#d4b86a;
+  --jade:#2f8f6b;--jade-mid:#8fc2a5;--jade-deep:#1f6b4e;--jade-soft:#5aa886;
+  --jade-line:rgba(31,107,78,.28);--jade-wash:rgba(47,143,107,.08);
+  --gold-line:rgba(201,168,76,.22);--gold-line-2:rgba(201,168,76,.44);--gold-wash:rgba(201,168,76,.07);
+  --ink:#232a22;--sub:#68705f;--faint:#9aa48f;
+  --serif:'Noto Serif SC',serif;--lat:'Cormorant Garamond',serif;
+  --shadow:0 20px 48px -20px rgba(28,56,38,.22);
+}
 
-.header{position:relative;z-index:1;text-align:center;padding:52px 20px 24px}
-.header-icon{font-size:40px;margin-bottom:10px;display:block;opacity:0.7}
-.header-title{font-size:20px;font-weight:400;letter-spacing:0.22em;margin-bottom:5px}
-.header-sub{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:11px;letter-spacing:0.26em;color:rgba(201,168,76,0.45);margin-bottom:14px}
-.gold-line{width:60px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto}
+html,body{background:var(--bg);font-family:var(--serif);color:var(--ink);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{max-width:390px;margin:0 auto;min-height:100vh;overflow-y:auto;padding-bottom:max(80px,env(safe-area-inset-bottom))}
 
-.content{position:relative;z-index:1;padding:0 16px}
+/* ambient top glow */
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 80% 40% at 50% -4%,rgba(47,143,107,.10) 0%,transparent 60%);
+  pointer-events:none;z-index:0}
 
-.section-label{font-size:10px;letter-spacing:0.2em;color:rgba(201,168,76,0.5);margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.section-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(201,168,76,0.15),transparent)}
+/* ── Back ── */
+.back-btn{position:fixed;top:16px;left:16px;z-index:99;background:none;border:none;font-family:var(--serif);font-size:13px;color:rgba(201,168,76,.55);cursor:pointer;padding:4px 0}
+.back-btn:active{opacity:.7}
 
-/* ── invited count card ── */
-.invited-card{background:linear-gradient(135deg,rgba(91,191,160,0.1),rgba(201,168,76,0.06));border:1px solid rgba(201,168,76,0.25);border-radius:12px;padding:22px 18px;margin-bottom:16px;text-align:center}
-.invited-amount{font-family:'Cormorant Garamond',serif;font-size:44px;line-height:1;color:var(--jade-deep);letter-spacing:0.02em}
-.invited-label{font-size:10px;color:var(--sub-text);letter-spacing:0.1em;margin-top:8px}
+/* ── Hero header ── */
+.hero{position:relative;z-index:1;text-align:center;padding:56px 24px 28px}
+.hero-seal{
+  width:60px;height:60px;border-radius:50%;
+  background:radial-gradient(circle at 40% 35%,rgba(201,168,76,.85),rgba(120,88,20,.95) 70%,rgba(50,30,5,1));
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 16px;
+  box-shadow:0 6px 24px rgba(201,168,76,.30),inset 0 1px 0 rgba(255,240,180,.35);
+  font-size:26px;line-height:1
+}
+.hero-title{font-size:22px;font-weight:400;letter-spacing:.22em;color:var(--ink);margin-bottom:6px}
+.hero-sub{font-family:var(--lat);font-style:italic;font-size:12px;letter-spacing:.28em;color:rgba(201,168,76,.5);margin-bottom:16px}
+.gold-rule{width:56px;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);margin:0 auto}
 
-/* ── invite code (big, tap to copy) ── */
-.code-card{background:var(--card);border:1px solid rgba(201,168,76,0.15);border-radius:12px;padding:22px 18px;margin-bottom:16px;text-align:center;cursor:pointer;transition:border-color 0.2s}
-.code-card:hover{border-color:rgba(201,168,76,0.4)}
-.code-card:active{transform:scale(0.99)}
-.code-label{font-size:10px;color:var(--sub-text);letter-spacing:0.1em;margin-bottom:10px}
-.code-value{font-family:'Cormorant Garamond',serif;font-size:38px;letter-spacing:0.18em;color:var(--gold);font-weight:400;word-break:break-all}
-.code-hint{font-size:9px;color:rgba(201,168,76,0.5);letter-spacing:0.08em;margin-top:10px}
+/* ── Section label ── */
+.sec-label{font-size:10px;letter-spacing:.22em;color:rgba(201,168,76,.55);margin-bottom:10px;display:flex;align-items:center;gap:8px;padding:0 16px}
+.sec-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--gold-line),transparent)}
 
-/* ── invite link (one-tap copy) ── */
-.link-card{background:var(--card);border:1px solid rgba(201,168,76,0.12);border-radius:10px;padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px}
-.link-text{flex:1;min-width:0;font-size:11px;color:var(--sub-text);letter-spacing:0.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.link-copy{flex-shrink:0;padding:7px 12px;background:rgba(91,191,160,0.1);border:1px solid rgba(91,191,160,0.2);border-radius:7px;color:var(--jade-deep);font-family:'Noto Serif SC',serif;font-size:11px;letter-spacing:0.06em;cursor:pointer;transition:all 0.2s}
-.link-copy:hover{background:rgba(91,191,160,0.18)}
-.link-copy:active{transform:scale(0.96)}
-.link-copy:disabled{opacity:0.5;cursor:default}
+/* ── Stat strip — invited count hero ── */
+.stat-strip{position:relative;z-index:1;margin:0 16px 20px;
+  background:linear-gradient(135deg,rgba(31,107,78,.10) 0%,rgba(201,168,76,.07) 100%);
+  border:1px solid rgba(47,143,107,.28);border-radius:16px;
+  padding:22px 20px;text-align:center;
+  box-shadow:var(--shadow)}
+.stat-strip::before{
+  content:'';position:absolute;inset:0;border-radius:16px;
+  background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(47,143,107,.08),transparent);
+  pointer-events:none}
+.stat-num{
+  font-family:var(--lat);font-size:52px;line-height:1;font-weight:300;
+  color:var(--jade);letter-spacing:.04em;
+  text-shadow:0 0 24px rgba(47,143,107,.30)}
+.stat-label{font-size:10px;letter-spacing:.18em;color:var(--faint);margin-top:8px}
+.stat-reward{
+  margin-top:14px;padding:10px 14px;
+  background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.18);
+  border-radius:10px;font-size:12px;color:var(--ink);line-height:1.7;letter-spacing:.03em}
+.stat-reward b{color:var(--gold)}
 
-/* ── reward note ── */
-.reward-note{background:rgba(201,168,76,0.06);border:1px solid rgba(201,168,76,0.12);border-radius:10px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px}
-.reward-note .r-icon{font-size:18px;flex-shrink:0;line-height:1.5}
-.reward-note .r-text{font-size:12px;color:var(--ink-text);line-height:1.7;letter-spacing:0.02em}
-.reward-note .r-text b{color:var(--gold)}
+/* ── Invite code hero card ── */
+.code-hero{position:relative;z-index:1;margin:0 16px 16px;cursor:pointer;
+  background:var(--card);
+  border:1px solid var(--gold-line-2);border-radius:14px;
+  padding:24px 20px;text-align:center;
+  box-shadow:var(--shadow);
+  transition:border-color .2s,transform .15s}
+.code-hero:hover{border-color:rgba(201,168,76,.55)}
+.code-hero:active{transform:scale(.985)}
+.code-hero-label{font-size:10px;letter-spacing:.2em;color:rgba(201,168,76,.5);margin-bottom:12px}
+.code-hero-value{
+  font-family:var(--lat);font-size:42px;letter-spacing:.22em;
+  font-weight:300;color:var(--gold);word-break:break-all;line-height:1.1;
+  background:linear-gradient(135deg,var(--gold-deep),var(--gold),var(--gold-light),var(--gold));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.code-hero-hint{
+  margin-top:12px;padding:7px 14px;
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(201,168,76,.08);border:1px solid rgba(201,168,76,.18);
+  border-radius:20px;font-size:10px;color:rgba(201,168,76,.7);letter-spacing:.1em}
 
-/* ── QR code ── */
-.qr-card{background:var(--card);border:1px solid rgba(201,168,76,0.15);border-radius:12px;padding:16px 18px;margin-bottom:16px;text-align:center}
-.qr-card-label{font-size:10px;color:rgba(201,168,76,0.5);letter-spacing:0.15em;margin-bottom:12px}
-#qrCodeBox{display:flex;justify-content:center;align-items:center;min-height:120px}
-#qrCodeBox canvas,#qrCodeBox img{border-radius:6px;border:3px solid rgba(255,255,255,0.9);box-shadow:0 2px 12px rgba(0,0,0,0.08)}
-.qr-hint{font-size:9px;color:rgba(201,168,76,0.4);letter-spacing:0.08em;margin-top:10px}
+/* ── Link row ── */
+.link-row{position:relative;z-index:1;margin:0 16px 16px;
+  background:var(--card);border:1px solid var(--gold-line);border-radius:12px;
+  padding:12px 14px;display:flex;align-items:center;gap:10px}
+.link-row-text{flex:1;min-width:0;font-size:11px;color:var(--sub);letter-spacing:.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.link-row-btn{
+  flex-shrink:0;padding:8px 14px;
+  background:var(--jade-wash);border:1px solid var(--jade-line);
+  border-radius:8px;color:var(--jade);font-family:var(--serif);
+  font-size:11px;letter-spacing:.08em;cursor:pointer;transition:all .2s}
+.link-row-btn:hover{background:rgba(47,143,107,.14)}
+.link-row-btn:active{transform:scale(.95)}
+.link-row-btn:disabled{opacity:.45;cursor:default}
 
-/* ── share texts ── */
-.share-texts-wrap{margin-bottom:16px}
-.share-text-item{background:var(--card);border:1px solid rgba(91,191,160,0.12);border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;transition:border-color 0.2s;position:relative}
-.share-text-item:hover{border-color:rgba(91,191,160,0.3)}
-.share-text-item:active{transform:scale(0.99)}
-.share-text-platform{font-size:9px;color:rgba(91,191,160,0.6);letter-spacing:0.15em;margin-bottom:5px;display:flex;align-items:center;gap:5px}
-.share-text-body{font-size:11px;color:var(--ink-text);line-height:1.7;letter-spacing:0.03em}
-.share-text-copy{position:absolute;right:12px;top:50%;transform:translateY(-50%);padding:5px 10px;background:rgba(91,191,160,0.1);border:1px solid rgba(91,191,160,0.2);border-radius:6px;color:var(--jade-deep);font-family:'Noto Serif SC',serif;font-size:10px;letter-spacing:0.06em;cursor:pointer;white-space:nowrap}
-.share-text-copy:active{transform:translateY(-50%) scale(0.95)}
+/* ── QR block ── */
+.qr-block{position:relative;z-index:1;margin:0 16px 20px;
+  background:var(--card);border:1px solid var(--gold-line);border-radius:14px;
+  padding:20px 18px;text-align:center}
+.qr-block-label{font-size:10px;letter-spacing:.18em;color:rgba(201,168,76,.5);margin-bottom:14px}
+#qrCodeBox{display:flex;justify-content:center;align-items:center;min-height:132px}
+#qrCodeBox canvas,#qrCodeBox img{border-radius:8px;border:3px solid rgba(255,255,255,.9);box-shadow:0 4px 16px rgba(0,0,0,.10)}
+.qr-hint{font-size:9px;color:rgba(201,168,76,.4);letter-spacing:.1em;margin-top:12px}
 
-/* ── share button ── */
-.share-cta{width:100%;padding:15px 0;border:none;border-radius:8px;background:linear-gradient(135deg,var(--jade-deep),var(--jade),var(--jade-mid));color:#050e08;font-family:'Noto Serif SC',serif;font-size:14px;font-weight:500;letter-spacing:0.18em;cursor:pointer;transition:all 0.2s;margin-bottom:20px}
-.share-cta:hover{opacity:0.92}
-.share-cta:active{transform:scale(0.98)}
-.share-cta:disabled{opacity:0.5;cursor:default}
+/* ── Share CTA — primary action ── */
+.share-cta-wrap{position:relative;z-index:1;padding:0 16px;margin-bottom:20px}
+.share-cta{
+  width:100%;padding:16px 0;border:none;border-radius:14px;cursor:pointer;
+  background:linear-gradient(135deg,var(--jade-deep),var(--jade),var(--jade-soft),var(--jade-mid));
+  color:#050e08;font-family:var(--serif);font-size:14.5px;font-weight:500;letter-spacing:.18em;
+  box-shadow:0 8px 28px rgba(31,107,78,.30),inset 0 1px 0 rgba(255,255,255,.25);
+  transition:all .2s;position:relative;overflow:hidden}
+.share-cta::after{
+  content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.30),transparent);
+  transform:skewX(-18deg);animation:cta-sheen 4s ease-in-out infinite}
+@keyframes cta-sheen{0%,70%{left:-60%}88%,100%{left:130%}}
+.share-cta:hover{transform:translateY(-1px);box-shadow:0 12px 36px rgba(31,107,78,.40)}
+.share-cta:active{transform:scale(.97)}
+.share-cta:disabled{opacity:.5;cursor:default}
 
-/* ── states ── */
-.empty-state{text-align:center;padding:30px 20px}
-.empty-icon{font-size:44px;opacity:0.25;margin-bottom:12px;display:block}
-.empty-text{font-size:12px;color:var(--sub-text);letter-spacing:0.08em}
-.login-cta{display:inline-block;margin-top:14px;padding:10px 22px;background:rgba(91,191,160,0.1);border:1px solid rgba(91,191,160,0.25);border-radius:8px;color:var(--jade-deep);font-family:'Noto Serif SC',serif;font-size:12px;letter-spacing:0.1em;text-decoration:none;transition:all 0.2s}
-.login-cta:hover{background:rgba(91,191,160,0.18)}
+/* ── Platform share texts ── */
+.platform-wrap{position:relative;z-index:1;margin:0 16px 20px}
+.platform-item{
+  background:var(--card);border:1px solid var(--jade-line);border-radius:12px;
+  padding:14px;margin-bottom:8px;cursor:pointer;
+  transition:border-color .2s;position:relative}
+.platform-item:last-child{margin-bottom:0}
+.platform-item:hover{border-color:rgba(47,143,107,.40)}
+.platform-item:active{transform:scale(.99)}
+.platform-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.platform-name{font-size:10px;letter-spacing:.18em;color:rgba(47,143,107,.65)}
+.platform-copy-btn{
+  padding:4px 10px;background:var(--jade-wash);border:1px solid var(--jade-line);
+  border-radius:6px;color:var(--jade);font-family:var(--serif);font-size:9px;letter-spacing:.08em;
+  cursor:pointer;white-space:nowrap;flex-shrink:0}
+.platform-copy-btn:active{transform:scale(.93)}
+.platform-body{font-size:11px;color:var(--sub);line-height:1.75;letter-spacing:.03em;
+  /* truncate long preview */
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
 
-.skeleton{background:rgba(201,168,76,0.06);border-radius:6px;animation:pulse 1.5s ease-in-out infinite;display:inline-block}
-@keyframes pulse{0%,100%{opacity:0.4}50%{opacity:0.8}}
+/* ── Guest / error states ── */
+.state-wrap{position:relative;z-index:1;text-align:center;padding:50px 24px}
+.state-icon{font-size:44px;opacity:.22;margin-bottom:14px;display:block}
+.state-text{font-size:12px;color:var(--sub);letter-spacing:.1em;line-height:1.8}
+.state-cta{
+  display:inline-block;margin-top:18px;padding:11px 26px;
+  background:var(--jade-wash);border:1px solid var(--jade-line);
+  border-radius:10px;color:var(--jade);font-family:var(--serif);
+  font-size:12px;letter-spacing:.12em;text-decoration:none;transition:all .2s}
+.state-cta:hover{background:rgba(47,143,107,.14)}
 
-.footer-links{position:relative;z-index:1;text-align:center;margin-top:20px}
-.footer-links a{font-size:10px;color:rgba(201,168,76,0.4);letter-spacing:0.08em;text-decoration:none;margin:0 8px}
-.footer-links a:hover{color:rgba(201,168,76,0.7)}
-
-.footnote{text-align:center;padding:20px;position:relative;z-index:1;font-size:9px;color:var(--sub-text);letter-spacing:0.06em;line-height:1.7;opacity:0.7}
+/* ── Skeleton loader ── */
+.skeleton{background:rgba(201,168,76,.07);border-radius:6px;animation:sk-pulse 1.5s ease-in-out infinite;display:inline-block}
+@keyframes sk-pulse{0%,100%{opacity:.35}50%{opacity:.75}}
 
 /* ── 中元节横幅 ── */
 .zhongyuan-banner{display:none;background:linear-gradient(135deg,#6b1a1a 0%,#8b2020 50%,#5a1212 100%);padding:12px 16px;text-align:center;position:relative;overflow:hidden}
@@ -117,12 +189,18 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 .zhongyuan-banner .zy-text b{color:#e8d08a}
 .zhongyuan-banner .zy-deadline{font-size:10px;color:rgba(245,233,192,.65);letter-spacing:.06em;margin-top:3px}
 
-.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;max-width:360px;width:90%;padding:12px 16px;border-radius:8px;font-size:12px;letter-spacing:0.06em;line-height:1.6;text-align:center;font-family:'Noto Serif SC',serif;cursor:pointer;transition:opacity 0.3s;opacity:0;pointer-events:none}
+/* ── Footer ── */
+.footer-links{position:relative;z-index:1;text-align:center;margin-top:8px;padding-bottom:4px}
+.footer-links a{font-size:10px;color:rgba(201,168,76,.38);letter-spacing:.08em;text-decoration:none;margin:0 8px}
+.footer-links a:hover{color:rgba(201,168,76,.65)}
+.footnote{text-align:center;padding:16px 20px 24px;position:relative;z-index:1;font-size:9px;color:var(--faint);letter-spacing:.06em;line-height:1.8;opacity:.8}
+
+/* ── Toast ── */
+.toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:999;max-width:360px;width:90%;padding:12px 16px;border-radius:10px;font-size:12px;letter-spacing:.06em;line-height:1.6;text-align:center;font-family:var(--serif);cursor:pointer;transition:opacity .3s;opacity:0;pointer-events:none}
 .toast.show{opacity:1;pointer-events:auto}
-.toast.error{background:rgba(180,40,40,0.92);border:1px solid rgba(220,80,80,0.4);color:rgba(255,220,220,0.95)}
-.toast.success{background:rgba(40,130,80,0.92);border:1px solid rgba(80,200,120,0.4);color:rgba(220,255,230,0.95)}
+.toast.error{background:rgba(160,35,35,.94);border:1px solid rgba(210,70,70,.4);color:rgba(255,215,215,.96)}
+.toast.success{background:rgba(30,110,65,.94);border:1px solid rgba(70,185,110,.4);color:rgba(215,255,228,.96)}
 </style>
-<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/css/style.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <link rel="stylesheet" href="/assets/css/common.css">
@@ -138,103 +216,99 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 <button class="back-btn" onclick="history.back()">‹ 返回</button>
 
-<!-- Header -->
-<div class="header">
-  <span class="header-icon">🎁</span>
-  <div class="header-title">邀请好友</div>
-  <div class="header-sub">INVITE FRIENDS · SHEN YUAN</div>
-  <div class="gold-line"></div>
+<!-- Hero header -->
+<div class="hero">
+  <div class="hero-seal">🎁</div>
+  <div class="hero-title">邀请好友</div>
+  <div class="hero-sub">INVITE FRIENDS · SHEN YUAN</div>
+  <div class="gold-rule"></div>
 </div>
 
-<!-- Main content (populated after auth check) -->
+<!-- ══════════════════════════════════════
+     Main view (logged-in)
+     ══════════════════════════════════════ -->
 <div id="mainView" style="display:none">
-  <!-- Invited count -->
-  <div class="content">
-    <div class="invited-card">
-      <div class="invited-amount" id="invitedVal">—</div>
-      <div class="invited-label">已邀请好友</div>
-    </div>
+
+  <!-- Invited count + reward summary -->
+  <div class="stat-strip">
+    <div class="stat-num" id="invitedVal"><span class="skeleton" style="width:48px;height:50px;border-radius:6px"></span></div>
+    <div class="stat-label">位好友已加入</div>
+    <div class="stat-reward"><b>邀1位好友注册 → 解锁1次免费合婚报告</b>（价值¥19.9）<br>好友填写邀请码后即刻到账，缘来是福</div>
   </div>
 
-  <!-- Invite code -->
-  <div class="content">
-    <div class="section-label">我的邀请码</div>
-    <div class="code-card" id="codeCard" onclick="copyCode()">
-      <div class="code-label">分享给好友填写</div>
-      <div class="code-value" id="refCode"><span class="skeleton" style="width:120px;height:38px"></span></div>
-      <div class="code-hint">轻触复制邀请码</div>
+  <!-- Invite code — hero element -->
+  <div class="sec-label">我的邀请码</div>
+  <div class="code-hero" id="codeCard" onclick="copyCode()">
+    <div class="code-hero-label">分享给好友填写</div>
+    <div class="code-hero-value" id="refCode"><span class="skeleton" style="width:130px;height:42px"></span></div>
+    <div class="code-hero-hint">
+      <span>⊙</span><span>轻触复制邀请码</span>
     </div>
   </div>
 
   <!-- Invite link -->
-  <div class="content">
-    <div class="section-label">邀请链接</div>
-    <div class="link-card">
-      <div class="link-text" id="shareUrl"><span class="skeleton" style="width:180px;height:11px"></span></div>
-      <button class="link-copy" id="copyLinkBtn" onclick="copyLink()">复制</button>
-    </div>
+  <div class="sec-label">邀请链接</div>
+  <div class="link-row">
+    <div class="link-row-text" id="shareUrl"><span class="skeleton" style="width:180px;height:11px"></span></div>
+    <button class="link-row-btn" id="copyLinkBtn" onclick="copyLink()">复制链接</button>
   </div>
 
   <!-- QR Code -->
-  <div class="content">
-    <div class="qr-card">
-      <div class="qr-card-label">微信扫码 · 直接分享</div>
-      <div id="qrCodeBox"><span class="skeleton" style="width:120px;height:120px;border-radius:6px"></span></div>
-      <div class="qr-hint">截图发给朋友 / 保存到相册</div>
-    </div>
+  <div class="sec-label">微信扫码</div>
+  <div class="qr-block">
+    <div class="qr-block-label">扫码直接分享 · 截图发给朋友</div>
+    <div id="qrCodeBox"><span class="skeleton" style="width:128px;height:128px;border-radius:8px"></span></div>
+    <div class="qr-hint">截图保存到相册，随时分享</div>
   </div>
 
-  <!-- Reward note -->
-  <div class="content">
-    <div class="reward-note">
-      <span class="r-icon">✨</span>
-      <div class="r-text"><b>邀1位好友注册 → 你解锁1次免费合婚报告</b>（价值¥19.9）。好友填写邀请码后你立刻获奖。缘来是福，共测八字。</div>
-    </div>
-  </div>
-
-  <!-- 3 platform share texts -->
-  <div class="content">
-    <div class="section-label">分享文案 · 一键复制</div>
-    <div class="share-texts-wrap">
-      <div class="share-text-item" onclick="copyShareText('wechat')">
-        <div class="share-text-platform">💬 微信好友</div>
-        <div class="share-text-body" id="shareTextWechat">加载中…</div>
-        <button class="share-text-copy" onclick="event.stopPropagation();copyShareText('wechat')">复制</button>
-      </div>
-      <div class="share-text-item" onclick="copyShareText('moments')">
-        <div class="share-text-platform">🌅 朋友圈</div>
-        <div class="share-text-body" id="shareTextMoments">加载中…</div>
-        <button class="share-text-copy" onclick="event.stopPropagation();copyShareText('moments')">复制</button>
-      </div>
-      <div class="share-text-item" onclick="copyShareText('xhs')">
-        <div class="share-text-platform">📕 小红书</div>
-        <div class="share-text-body" id="shareTextXhs">加载中…</div>
-        <button class="share-text-copy" onclick="event.stopPropagation();copyShareText('xhs')">复制</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- One-tap share -->
-  <div class="content">
+  <!-- Primary share CTA -->
+  <div class="share-cta-wrap">
     <button class="share-cta" id="shareBtn" onclick="handleShare()">一键分享邀请</button>
   </div>
-</div>
+
+  <!-- Platform share texts -->
+  <div class="sec-label">分享文案 · 一键复制</div>
+  <div class="platform-wrap">
+    <div class="platform-item" onclick="copyShareText('wechat')">
+      <div class="platform-head">
+        <span class="platform-name">💬 微信好友</span>
+        <button class="platform-copy-btn" onclick="event.stopPropagation();copyShareText('wechat')">复制</button>
+      </div>
+      <div class="platform-body" id="shareTextWechat">加载中…</div>
+    </div>
+    <div class="platform-item" onclick="copyShareText('moments')">
+      <div class="platform-head">
+        <span class="platform-name">🌅 朋友圈</span>
+        <button class="platform-copy-btn" onclick="event.stopPropagation();copyShareText('moments')">复制</button>
+      </div>
+      <div class="platform-body" id="shareTextMoments">加载中…</div>
+    </div>
+    <div class="platform-item" onclick="copyShareText('xhs')">
+      <div class="platform-head">
+        <span class="platform-name">📕 小红书</span>
+        <button class="platform-copy-btn" onclick="event.stopPropagation();copyShareText('xhs')">复制</button>
+      </div>
+      <div class="platform-body" id="shareTextXhs">加载中…</div>
+    </div>
+  </div>
+
+</div><!-- /mainView -->
 
 <!-- Not-logged-in view -->
-<div id="guestView" class="content" style="display:none">
-  <div class="empty-state">
-    <span class="empty-icon">🔒</span>
-    <div class="empty-text">请先登录，再邀请好友</div>
-    <a class="login-cta" href="login.html">前往登录</a>
+<div id="guestView" style="display:none">
+  <div class="state-wrap">
+    <span class="state-icon">🔒</span>
+    <div class="state-text">请先登录，再邀请好友</div>
+    <a class="state-cta" href="login.html">前往登录</a>
   </div>
 </div>
 
 <!-- Error view -->
-<div id="errorView" class="content" style="display:none">
-  <div class="empty-state">
-    <span class="empty-icon">⚠️</span>
-    <div class="empty-text">加载失败，请稍后重试</div>
-    <a class="login-cta" href="javascript:location.reload()">重新加载</a>
+<div id="errorView" style="display:none">
+  <div class="state-wrap">
+    <span class="state-icon">⚠️</span>
+    <div class="state-text">加载失败，请稍后重试</div>
+    <a class="state-cta" href="javascript:location.reload()">重新加载</a>
   </div>
 </div>
 
@@ -243,11 +317,13 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   <a href="account.html">我的账户</a>
   <a href="member.html">善缘会员</a>
 </div>
-
 <div class="footnote">命理内容仅供参考，愿君缘来是福。</div>
 
 <div class="toast" id="toast"></div>
 
+<!-- ══════════════════════════════════════
+     FUNCTIONAL JS — unchanged from original
+     ══════════════════════════════════════ -->
 <script>
 var BASE = '';
 var refState = { ref_code: '', share_url: '', share_text: '' };
