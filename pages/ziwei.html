@@ -103,7 +103,7 @@ body::after {
 
 /* ── Gender row ── */
 .gender-row { display: grid; grid-template-columns:1fr 1fr; gap: 12px; padding: 0 16px; margin: 14px 0; position:relative; z-index:1; }
-.gender-opt { background: var(--indigo-2); border: 1px solid var(--hair-2); border-radius: 14px; padding: 15px 0; text-align: center; cursor: pointer; transition: all 0.2s; font-family:var(--serif); font-size: 15px; color: var(--text-mute); letter-spacing: 0.1em; }
+.gender-opt { background: var(--indigo-2); border: 1px solid var(--hair-2); border-radius: 14px; padding: 16px 12px 14px; text-align: center; cursor: pointer; transition: all 0.2s; font-family:var(--serif); font-size: 15px; color: var(--text-mute); letter-spacing: 0.1em; display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .gender-opt.selected { border-color: var(--gold-line-2); color: var(--gold-soft); background: linear-gradient(180deg,#33206a,#20134a); box-shadow:0 0 0 1px var(--gold-line-2); }
 
 /* ── Submit ── */
@@ -271,6 +271,65 @@ body::after {
   #zwProgressWrap, #zwProgressChapter, #zwFloatTocBtn, #zwFloatTocPanel { display:none !important; }
 }
 
+/* ══════════ Visual Picker UI (date + hour) ══════════ */
+/* Hide native selects — JS still reads their value */
+.field-group-hidden { display: none !important; }
+
+/* Date picker 3-column layout */
+.zw-date-picker { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 0 16px; margin-bottom: 14px; position: relative; z-index: 1; }
+.zw-picker-col { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.zw-picker-card { background: var(--indigo-2); border: 1px solid var(--hair-2); border-radius: 14px; width: 100%; overflow: hidden; }
+.zw-picker-label { font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-mute); text-align: center; padding: 9px 4px 5px; border-bottom: 1px solid var(--hair); }
+.zw-picker-body { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px; }
+.zw-picker-btn { background: none; border: none; color: var(--text-faint); font-size: 16px; cursor: pointer; padding: 6px 8px; line-height: 1; transition: color 0.15s; flex-shrink: 0; }
+.zw-picker-btn:active { color: var(--gold); transform: scale(0.9); }
+.zw-picker-val { font-family: var(--serif); font-size: 18px; color: var(--gold-soft); letter-spacing: 0.04em; text-align: center; flex: 1; padding: 8px 2px; }
+.zw-picker-unit { font-size: 10px; color: var(--text-faint); letter-spacing: 0.08em; }
+
+/* Hour wheel — horizontal scroll */
+.zw-hour-section { position: relative; z-index: 1; padding: 0 16px; margin-bottom: 14px; }
+.zw-hour-label { font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-mute); margin-bottom: 8px; }
+.zw-hour-wheel { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 10px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.zw-hour-wheel::-webkit-scrollbar { display: none; }
+.zw-hw { flex-shrink: 0; background: var(--indigo-2); border: 1px solid var(--hair-2); border-radius: 12px; padding: 10px 12px; text-align: center; cursor: pointer; scroll-snap-align: start; transition: all 0.18s; min-width: 62px; }
+.zw-hw .hw-name { font-family: var(--serif); font-size: 13px; color: var(--text-mute); letter-spacing: 0.04em; }
+.zw-hw .hw-time { font-size: 9px; color: var(--text-ghost); letter-spacing: 0.03em; margin-top: 3px; line-height: 1.35; }
+.zw-hw.active { background: linear-gradient(180deg, rgba(74,42,140,0.8), rgba(42,24,82,0.9)); border-color: var(--gold-line-2); box-shadow: 0 0 0 1px var(--gold-line-2); }
+.zw-hw.active .hw-name { color: var(--gold-soft); }
+.zw-hw.active .hw-time { color: var(--gold-deep); }
+
+/* Gender cards — enhanced */
+.gender-row .gender-opt .g-icon { display: block; font-size: 22px; margin-bottom: 5px; line-height: 1; }
+.gender-row .gender-opt .g-label { display: block; font-size: 15px; letter-spacing: 0.1em; }
+.gender-row .gender-opt .g-sub { display: block; font-size: 9.5px; color: var(--text-faint); letter-spacing: 0.08em; margin-top: 3px; font-family: var(--lat); font-style: italic; }
+.gender-opt.selected .g-sub { color: var(--gold-deep); }
+
+/* Taste / intro card enhanced */
+.taste-card { position: relative; z-index: 1; margin: 0 16px 18px; border-radius: 18px; overflow: hidden; background: linear-gradient(160deg, rgba(74,42,140,0.25), rgba(42,24,82,0.15)); border: 1px solid var(--violet-line); }
+.taste-card-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; border-bottom: 1px solid var(--hair); }
+.taste-card-icon { font-size: 18px; color: var(--gold-soft); }
+.taste-card-title { font-family: var(--serif); font-size: 12px; letter-spacing: 0.14em; color: var(--gold-soft); flex: 1; }
+.taste-card-badge { font-size: 9px; letter-spacing: 0.1em; color: var(--text-ghost); font-family: var(--lat); font-style: italic; }
+.taste-preview { padding: 12px 16px 14px; }
+.taste-preview-line { display: flex; align-items: flex-start; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--hair); font-size: 12px; color: var(--text-mute); line-height: 1.7; letter-spacing: 0.01em; }
+.taste-preview-line:last-child { border-bottom: none; }
+.taste-preview-line::before { content: '✦'; color: var(--gold); font-size: 8px; margin-top: 5px; flex-shrink: 0; }
+
+/* form-label improved contrast */
+.form-label { color: var(--text-mute) !important; }
+.field-label { color: var(--text-mute) !important; }
+
+/* Disc compliance text */
+.zw-disc { position: relative; z-index: 1; text-align: center; font-size: 10px; color: var(--text-ghost); letter-spacing: 0.06em; padding: 6px 20px 12px; line-height: 1.8; }
+
+/* See-sample divider */
+.zw-see-sample { display: flex; align-items: center; gap: 10px; padding: 0 16px; margin: 2px 0 12px; position: relative; z-index: 1; }
+.zw-see-sample::before, .zw-see-sample::after { content: ''; flex: 1; height: 1px; background: var(--hair); }
+.zw-see-sample a { font-size: 10.5px; color: var(--gold-soft); letter-spacing: 0.12em; text-decoration: none; white-space: nowrap; font-family: var(--lat); font-style: italic; opacity: 0.8; }
+
+/* Grain texture for header */
+.header-grain { position: absolute; inset: 0; pointer-events: none; opacity: 0.03; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); background-size: 128px; }
+
 /* ── Page-level guard: keep the deep-amethyst cosmos theme even after
       site-wide assets/css/style.css (loaded later) tries to force a
       light background + narrow 640px cap. High specificity + !important
@@ -302,7 +361,8 @@ body.ziwei-cosmos::before {
 
 <button class="back-btn" onclick="history.back()">‹</button>
 
-<div class="header">
+<div class="header" style="position:relative">
+  <div class="header-grain"></div>
   <div class="brandmark"><div class="cn">善缘</div><div class="en">Runae</div></div>
   <div class="eyebrow">The Emperor of Chinese Astrology</div>
   <div class="header-title">生辰四柱<br>排一张属于你的<em>紫微命盘</em></div>
@@ -322,14 +382,58 @@ body.ziwei-cosmos::before {
   <span>大运流年</span>
 </div>
 
-<div class="intro-card" style="margin-top:16px">
-  <div class="intro-card-title">什么是紫微斗数 · What is Zi Wei Dou Shu</div>
-  <div class="intro-card-body">紫微斗数源于唐宋，是中国命理学的巅峰体系。以出生年月日时推算星曜分布，将人生划分为十二宫位，涵盖事业、财运、感情、健康等核心面向。不同于西洋星座，紫微斗数精确到时辰，可呈现个人独特的星盘格局与一生大运走向。</div>
+<div class="taste-card" style="margin-top:16px">
+  <div class="taste-card-head">
+    <span class="taste-card-icon">✦</span>
+    <span class="taste-card-title">什么是紫微斗数 · What is Zi Wei Dou Shu</span>
+    <span class="taste-card-badge">preview</span>
+  </div>
+  <div class="taste-preview">
+    <div class="taste-preview-line">紫微斗数源于唐宋，以出生年月日时推算一百零八星曜分布，将人生划分为十二宫位。</div>
+    <div class="taste-preview-line">涵盖事业、财运、感情、健康等核心面向，精确到时辰，呈现个人独特格局。</div>
+    <div class="taste-preview-line">不同于西洋星座，紫微斗数可呈现一生大运走向，是命理学的巅峰体系。</div>
+  </div>
 </div>
 
 <div class="form-wrap">
   <div class="form-label">出生信息 · Your Moment of Birth</div>
-  <div class="field-group">
+
+  <!-- ── Visual date picker (UI layer only; hidden selects below carry the values) ── -->
+  <div class="zw-date-picker">
+    <div class="zw-picker-col">
+      <div class="zw-picker-card">
+        <div class="zw-picker-label">年 · Year</div>
+        <div class="zw-picker-body">
+          <button class="zw-picker-btn" onclick="zwPickerStep('birthYear',-1)" aria-label="减年">‹</button>
+          <div class="zw-picker-val" id="zwYearVal">1990<span class="zw-picker-unit">年</span></div>
+          <button class="zw-picker-btn" onclick="zwPickerStep('birthYear',1)" aria-label="加年">›</button>
+        </div>
+      </div>
+    </div>
+    <div class="zw-picker-col">
+      <div class="zw-picker-card">
+        <div class="zw-picker-label">月 · Month</div>
+        <div class="zw-picker-body">
+          <button class="zw-picker-btn" onclick="zwPickerStep('birthMonth',-1)" aria-label="减月">‹</button>
+          <div class="zw-picker-val" id="zwMonthVal">1<span class="zw-picker-unit">月</span></div>
+          <button class="zw-picker-btn" onclick="zwPickerStep('birthMonth',1)" aria-label="加月">›</button>
+        </div>
+      </div>
+    </div>
+    <div class="zw-picker-col">
+      <div class="zw-picker-card">
+        <div class="zw-picker-label">日 · Day</div>
+        <div class="zw-picker-body">
+          <button class="zw-picker-btn" onclick="zwPickerStep('birthDay',-1)" aria-label="减日">‹</button>
+          <div class="zw-picker-val" id="zwDayVal">1<span class="zw-picker-unit">日</span></div>
+          <button class="zw-picker-btn" onclick="zwPickerStep('birthDay',1)" aria-label="加日">›</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Native selects (hidden, read by JS) ── -->
+  <div class="field-group field-group-hidden">
     <div class="field-row">
       <span class="field-label">出生年 · Year</span>
       <select class="field-select" id="birthYear"></select>
@@ -367,16 +471,44 @@ body.ziwei-cosmos::before {
   </div>
 </div>
 
-<div class="form-label" style="padding:2px 16px 0;margin:16px 0 -6px">性别 · Yin / Yang</div>
+<!-- ── Visual hour wheel (UI layer; syncs to hidden #birthHour) ── -->
+<div class="zw-hour-section">
+  <div class="zw-hour-label">时辰 · Hour of Birth</div>
+  <div class="zw-hour-wheel" id="zwHourWheel">
+    <div class="zw-hw active" onclick="zwSelectHour(0,this)"><div class="hw-name">子时</div><div class="hw-time">23–01</div></div>
+    <div class="zw-hw" onclick="zwSelectHour(1,this)"><div class="hw-name">丑时</div><div class="hw-time">01–03</div></div>
+    <div class="zw-hw" onclick="zwSelectHour(2,this)"><div class="hw-name">寅时</div><div class="hw-time">03–05</div></div>
+    <div class="zw-hw" onclick="zwSelectHour(3,this)"><div class="hw-name">卯时</div><div class="hw-time">05–07</div></div>
+    <div class="zw-hw" onclick="zwSelectHour(4,this)"><div class="hw-name">辰时</div><div class="hw-time">07–09</div></div>
+    <div class="zw-hw" onclick="zwSelectHour(5,this)"><div class="hw-name">巳时</div><div class="hw-time">09–11</div></div>
+    <div class="zw-hw" onclick="zwSelectHour(6,this)"><div class="hw-name">午时</div><div class="hw-time">11–13</div></div>
+    <div class="zw-hw" onclick="zwSelectHour(7,this)"><div class="hw-name">未时</div><div class="hw-time">13–15</div></div>
+    <div class="zw-hw" onclick="zwSelectHour(8,this)"><div class="hw-name">申时</div><div class="hw-time">15–17</div></div>
+    <div class="zw-hw" onclick="zwSelectHour(9,this)"><div class="hw-name">酉时</div><div class="hw-time">17–19</div></div>
+    <div class="zw-hw" onclick="zwSelectHour(10,this)"><div class="hw-name">戌时</div><div class="hw-time">19–21</div></div>
+    <div class="zw-hw" onclick="zwSelectHour(11,this)"><div class="hw-name">亥时</div><div class="hw-time">21–23</div></div>
+  </div>
+</div>
+
+<div class="form-label" style="padding:2px 16px 0;margin:16px 0 8px">性别 · Yin / Yang</div>
 <div class="gender-row">
-  <div class="gender-opt selected" onclick="selectGender(this,'male')">☀ 男 · 阳</div>
-  <div class="gender-opt" onclick="selectGender(this,'female')">☾ 女 · 阴</div>
+  <div class="gender-opt selected" onclick="selectGender(this,'male')">
+    <span class="g-icon">☀</span>
+    <span class="g-label">男 · 阳</span>
+    <span class="g-sub">Yang · 主动</span>
+  </div>
+  <div class="gender-opt" onclick="selectGender(this,'female')">
+    <span class="g-icon">☾</span>
+    <span class="g-label">女 · 阴</span>
+    <span class="g-sub">Yin · 柔顺</span>
+  </div>
 </div>
 
 <div class="submit-wrap">
   <button class="btn-calc" id="btnCalc" onclick="calcZiwei()">起盘 · 排我的命盘</button>
   <div class="pricing-note">命盘总览免费 · 专项 Session 每个 <strong>$3.99</strong> · 一键全买 $11.99<br><span style="font-family:var(--lat);font-style:italic;letter-spacing:.06em;opacity:.85">Chart preview free · full reading unlocks each palace</span></div>
 </div>
+<div class="zw-disc">仅限 14 岁以上 · 仅供娱乐参考 · AI 生成内容，不构成任何建议<br>For entertainment only · AI-generated · Not advice of any kind</div>
 
 <div class="loading-wrap" id="loadingWrap">
   <div class="star-ring"></div>
@@ -723,6 +855,99 @@ for (var y = 2026; y >= 1940; y--) {
 // Day selector
 var dSel = document.getElementById('birthDay');
 for (var d = 1; d <= 31; d++) dSel.innerHTML += '<option value="'+d+'">'+d+'日</option>';
+
+// ══════════ Visual Picker UI JS ══════════
+// Picker config: id → { min, max, unit, displayEl }
+var _ZW_PICKER_CFG = {
+  birthYear:  { min: 1940, max: 2026, unit: '年', displayId: 'zwYearVal',  defaultVal: 1990 },
+  birthMonth: { min: 1,    max: 12,   unit: '月', displayId: 'zwMonthVal', defaultVal: 1    },
+  birthDay:   { min: 1,    max: 31,   unit: '日', displayId: 'zwDayVal',   defaultVal: 1    }
+};
+
+function zwPickerInit() {
+  // Set defaults: year=1990, month=1, day=1
+  Object.keys(_ZW_PICKER_CFG).forEach(function(id) {
+    var cfg = _ZW_PICKER_CFG[id];
+    var sel = document.getElementById(id);
+    if (!sel) return;
+    // Set select to default
+    var defStr = String(cfg.defaultVal);
+    for (var i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value === defStr) { sel.selectedIndex = i; break; }
+    }
+    // Update display
+    zwPickerUpdateDisplay(id);
+  });
+}
+
+function zwPickerUpdateDisplay(id) {
+  var cfg = _ZW_PICKER_CFG[id];
+  if (!cfg) return;
+  var sel = document.getElementById(id);
+  if (!sel) return;
+  var val = parseInt(sel.value, 10);
+  var displayEl = document.getElementById(cfg.displayId);
+  if (displayEl) displayEl.innerHTML = val + '<span class="zw-picker-unit">' + cfg.unit + '</span>';
+}
+
+function zwPickerStep(id, delta) {
+  var cfg = _ZW_PICKER_CFG[id];
+  if (!cfg) return;
+  var sel = document.getElementById(id);
+  if (!sel) return;
+  var cur = parseInt(sel.value, 10);
+  var next = cur + delta;
+  if (next < cfg.min) next = cfg.max;
+  if (next > cfg.max) next = cfg.min;
+  // Update select
+  var nextStr = String(next);
+  for (var i = 0; i < sel.options.length; i++) {
+    if (sel.options[i].value === nextStr) { sel.selectedIndex = i; break; }
+  }
+  zwPickerUpdateDisplay(id);
+  // If month or year changed, clamp day
+  if (id === 'birthYear' || id === 'birthMonth') {
+    zwClampDay();
+  }
+}
+
+function zwClampDay() {
+  var y = parseInt(document.getElementById('birthYear').value, 10);
+  var m = parseInt(document.getElementById('birthMonth').value, 10);
+  if (!y || !m) return;
+  var maxDay = new Date(y, m, 0).getDate(); // last day of month
+  var cfg = _ZW_PICKER_CFG.birthDay;
+  if (cfg) cfg.max = maxDay;
+  var daySel = document.getElementById('birthDay');
+  if (!daySel) return;
+  var curDay = parseInt(daySel.value, 10);
+  if (curDay > maxDay) {
+    // Set to max day
+    for (var i = 0; i < daySel.options.length; i++) {
+      if (parseInt(daySel.options[i].value, 10) === maxDay) { daySel.selectedIndex = i; break; }
+    }
+    zwPickerUpdateDisplay('birthDay');
+  }
+}
+
+function zwSelectHour(hourVal, el) {
+  // Update hidden select
+  var sel = document.getElementById('birthHour');
+  if (sel) {
+    for (var i = 0; i < sel.options.length; i++) {
+      if (parseInt(sel.options[i].value, 10) === hourVal) { sel.selectedIndex = i; break; }
+    }
+  }
+  // Update visual active state
+  document.querySelectorAll('.zw-hw').forEach(function(w) { w.classList.remove('active'); });
+  if (el) el.classList.add('active');
+}
+
+// Initialize pickers after DOM is ready
+(function() {
+  // Wait for year/day selects to be populated (they're populated just above)
+  zwPickerInit();
+})();
 
 var gender = 'male';
 function selectGender(el, g) {
