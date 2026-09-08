@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#5bbfa0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#160809">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <title>Runae · Feng Shui for your real home — see harmonizing objects placed in your room</title>
 <meta name="description" content="Upload a photo of your room. Runae reads its feng shui, suggests feng-shui-aligned objects and the reasoning (tuned to your birth chart), then shows them placed right in your room. AI-powered. For inspiration only.">
 <meta property="og:title" content="Runae · See feng shui placed in your actual room">
@@ -11,251 +12,439 @@
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@200;300;400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --jade:#5bbfa0;--jade-deep:#3d9e82;--jade-light:#8dd9bf;
-  --jade-pale:rgba(91,191,160,0.08);--jade-border:rgba(91,191,160,0.22);
-  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;--gold-pale:rgba(201,168,76,0.08);
-  --bg:#faf8f5;--card:#ffffff;--surface:#f2f5f2;
-  --ink:#1a1a18;--sub:rgba(60,75,65,0.72);--muted:rgba(80,95,85,0.45);
-  --radius:14px;--shadow:0 2px 12px rgba(0,0,0,0.06);
-  /* five-element accents */
-  --fire:#e08a5a;--water:#5a86e0;--wood:#5bbf7a;--metal:#c9a84c;--earth:#c79a5a;
+  --void-0:#0c0507; --void:#160809; --void-2:#220d0f; --void-3:#2e1215; --void-4:#3c181c;
+  --oxblood:#4a0f16; --oxblood-2:#63151e; --crimson:#7a1622; --crimson-2:#9c1f2c; --ember:#2a0d10;
+
+  --gold-hi:#f4dfa4; --gold:#d0a856; --gold-deep:#9c7128; --gold-soft:#e6c884;
+  --gold-light:#f4dfa4;
+  --gold-line:rgba(208,168,86,.34); --gold-line-2:rgba(208,168,86,.58); --gold-glow:rgba(208,168,86,.5);
+  --rose:#e0a08a;
+
+  /* five-element palette — warm ember tones layered over deep void */
+  --fire:#e07a50;  --water:#507ac8; --wood:#5aaa78; --metal:#c9a84c; --earth:#c47a48;
+
+  --text-cream:#f3ebe1; --cream:#f3ebe1; --text-mute:#c3aaa6; --text-faint:#98817e; --text-ghost:#6a5350;
+  --star:#f3ebe1;
+  --deep:#160809; --deep-mid:#220d0f; --deep-card:#2e1215;
+
+  --hair:rgba(243,235,225,.08); --hair-2:rgba(243,235,225,.15);
+  --shadow-card:0 34px 66px -30px rgba(0,0,0,.9); --shadow-lift:0 22px 44px -24px rgba(0,0,0,.78);
+
+  --serif:"Noto Serif SC",serif; --sans:"Noto Sans SC",-apple-system,BlinkMacSystemFont,sans-serif; --lat:"Cormorant Garamond",serif;
+  --gut:20px; --radius:18px;
 }
-html{background:var(--bg);-webkit-font-smoothing:antialiased}
-body{font-family:'Inter',sans-serif;color:var(--ink);max-width:440px;margin:0 auto;
-  min-height:100dvh;overflow-x:hidden;
-  padding:0 0 calc(96px + env(safe-area-inset-bottom,0px));
-  padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
-body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(91,191,160,0.09) 0%,transparent 60%),
-             radial-gradient(ellipse 60% 30% at 80% 100%,rgba(201,168,76,0.05) 0%,transparent 50%)}
+
+html,body{background:#080304;color:var(--text-cream);font-family:var(--sans);-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+body{max-width:440px;margin:0 auto;min-height:100vh;overflow-y:auto;overflow-x:hidden;
+  padding:0 0 calc(96px + env(safe-area-inset-bottom,0px));position:relative;
+  background:radial-gradient(135% 82% at 50% -6%,#3a1a0a 0%,#1e0e07 38%,var(--void-0) 100%)}
+
+/* velvet grain */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;opacity:.28;mix-blend-mode:soft-light;z-index:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E")}
+
+/* z-layer */
 .z1{position:relative;z-index:1}
-.serif{font-family:'Playfair Display',serif}
-.wrap{padding:0 20px}
-.divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,var(--jade-border),transparent);margin:6px 0}
-a{color:inherit}
 
-/* Jade orb mark */
-.clasp{position:relative;border-radius:50%;width:82px;height:82px;margin:0 auto 16px;
-  background:radial-gradient(circle at 34% 27%,rgba(255,255,255,0.92) 0%,rgba(255,255,255,0.35) 7%,transparent 18%),
-    radial-gradient(circle at 70% 68%,var(--jade-deep) 0%,transparent 38%),
-    radial-gradient(circle at 20% 72%,rgba(0,180,80,0.22) 0%,transparent 35%),
-    radial-gradient(ellipse at 42% 38%,var(--jade-light) 0%,var(--jade) 22%,var(--jade) 52%,var(--jade-deep) 100%);
-  box-shadow:0 6px 22px rgba(91,191,160,0.32)}
-.clasp::after{content:'';position:absolute;border-radius:50%;background:var(--bg);
-  width:20px;height:20px;top:50%;left:50%;transform:translate(-50%,-50%);
-  box-shadow:inset 0 2px 6px rgba(0,0,0,0.08)}
+/* ── Brand header ── */
+.brand-row{text-align:center;padding:26px 20px 8px;position:relative;z-index:1}
+.brand-cn{font-family:var(--serif);font-weight:500;font-size:19px;letter-spacing:.36em;color:var(--text-cream);text-indent:.36em}
+.brand-en{font-family:var(--lat);font-size:10px;letter-spacing:.44em;color:var(--gold);margin-top:5px;text-transform:uppercase;text-indent:.44em}
 
-/* Hero */
-.hero{text-align:center;padding:40px 20px 26px}
-.logo{font-family:'Playfair Display',serif;font-size:15px;letter-spacing:0.42em;color:var(--jade-deep);
-  text-transform:uppercase;margin-bottom:16px;padding-left:0.42em}
-.badge{display:inline-flex;align-items:center;gap:6px;background:var(--jade-pale);
-  border:1px solid var(--jade-border);border-radius:20px;padding:6px 14px;
-  font-size:10px;color:var(--jade-deep);letter-spacing:.1em;text-transform:uppercase;margin-bottom:18px}
-.hero h1{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;line-height:1.28;margin-bottom:14px}
-.hero h1 em{font-style:italic;color:var(--jade-deep)}
-.hero-sub{font-size:14px;color:var(--sub);line-height:1.75;margin-bottom:24px}
-.hero-sub b{color:var(--ink);font-weight:600}
+/* ── Eyebrow / eyebrow-style label ── */
+.eyebrow{font-family:var(--lat);font-size:12px;font-style:italic;letter-spacing:.24em;color:var(--gold);opacity:.9}
+.ensub{font-family:var(--lat);font-style:italic;font-weight:500;font-size:14px;letter-spacing:.12em;color:var(--gold-soft);margin-top:8px}
+
+/* ── Gold divider line ── */
+.gilt-line{width:44px;height:1px;background:var(--gold-line-2);margin:0 auto}
+
+/* ── Jade orb reimagined as a five-element compass orb ── */
+.orb-mark{position:relative;border-radius:50%;width:78px;height:78px;margin:0 auto 14px;
+  background:
+    radial-gradient(circle at 34% 28%,rgba(255,255,255,.8) 0%,rgba(255,255,255,.25) 7%,transparent 16%),
+    radial-gradient(circle at 72% 68%,#6a3810 0%,transparent 36%),
+    radial-gradient(ellipse at 44% 40%,#d0a856 0%,#9c7128 45%,#5a3808 100%);
+  box-shadow:0 6px 24px var(--gold-glow),inset 0 0 0 1px rgba(208,168,86,.35)}
+.orb-mark::after{content:'';position:absolute;border-radius:50%;
+  width:18px;height:18px;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:radial-gradient(circle,rgba(244,223,164,.4),rgba(156,113,40,.7));
+  box-shadow:0 0 8px rgba(208,168,86,.6)}
+
+/* ── Hero section ── */
+.hero{text-align:center;padding:36px 20px 24px;position:relative;z-index:1}
+.hero-badge{display:inline-flex;align-items:center;gap:7px;
+  background:linear-gradient(180deg,rgba(208,168,86,.10),rgba(208,168,86,.03));
+  border:1px solid var(--gold-line-2);border-radius:20px;
+  padding:6px 16px;font-family:var(--lat);font-style:italic;font-size:11px;
+  letter-spacing:.18em;color:var(--gold-soft);margin-bottom:18px}
+.hero h1{font-family:var(--serif);font-size:27px;font-weight:600;line-height:1.32;
+  letter-spacing:.04em;color:var(--text-cream);margin-bottom:12px}
+.hero h1 em{font-style:normal;color:var(--gold-soft);position:relative;white-space:nowrap}
+.hero h1 em::after{content:'';position:absolute;left:2%;right:2%;bottom:-3px;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold-line-2),transparent)}
+.hero-sub{font-size:13px;line-height:1.8;color:var(--text-mute);margin-bottom:24px;letter-spacing:.02em}
+.hero-sub b{color:var(--gold-soft);font-weight:500}
+
+/* ── Primary CTA button (gilt) ── */
 .cta{display:block;max-width:320px;margin:0 auto;padding:16px 18px;text-align:center;text-decoration:none;
-  background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);border-radius:30px;color:#3a2e0e;
-  font-size:16px;font-weight:700;box-shadow:0 6px 20px rgba(201,168,76,0.36);transition:.2s;min-height:44px}
-.cta:hover{transform:translateY(-2px);box-shadow:0 9px 26px rgba(201,168,76,0.46)}
-.cta small{display:block;font-size:11px;font-weight:400;opacity:.9;margin-top:4px}
-.cta-note{font-size:11px;color:var(--muted);margin-top:12px;letter-spacing:.02em}
+  background:linear-gradient(155deg,var(--gold-hi) 0%,var(--gold-soft) 32%,var(--gold) 60%,var(--gold-deep) 100%);
+  border-radius:16px;color:#2a1a06;font-family:var(--serif);font-size:16px;font-weight:600;
+  letter-spacing:.10em;text-indent:.10em;cursor:pointer;
+  box-shadow:0 16px 30px -14px var(--gold-glow),inset 0 1px 0 rgba(255,255,255,.6),inset 0 -1px 0 rgba(110,80,26,.42);
+  transition:transform .2s,opacity .2s;min-height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.cta:hover{transform:translateY(-2px)}
+.cta small{display:block;font-family:var(--lat);font-style:italic;font-size:11px;font-weight:400;
+  letter-spacing:.12em;opacity:.85;margin-top:5px;color:#3a2a0a}
+.cta-note{font-family:var(--lat);font-style:italic;font-size:11px;color:var(--text-faint);
+  text-align:center;margin-top:11px;letter-spacing:.08em}
 
-.ai-note{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--jade-pale);
-  border:1px solid var(--jade-border);border-radius:12px;padding:11px 14px;margin:8px 20px 0;
-  font-size:11.5px;color:var(--jade-deep);line-height:1.5;text-align:center}
+/* ── AI notice cards ── */
+.ai-note{display:flex;align-items:flex-start;justify-content:center;gap:8px;
+  background:linear-gradient(180deg,rgba(208,168,86,.07),rgba(208,168,86,.02));
+  border:1px solid var(--gold-line);border-radius:14px;padding:12px 16px;
+  margin:8px 16px 0;font-family:var(--serif);font-size:11.5px;
+  color:var(--text-mute);line-height:1.7;text-align:left}
+.ai-note a{color:var(--gold-soft);text-decoration:underline;font-weight:500}
 
-/* Section shells */
-.section{padding:32px 20px}
-.sec-cap{text-align:center;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--jade);font-weight:600;margin-bottom:8px}
-.sec-title{font-family:'Playfair Display',serif;text-align:center;font-size:22px;font-weight:700;margin-bottom:6px;line-height:1.3}
-.sec-sub{text-align:center;font-size:13px;color:var(--sub);line-height:1.65;margin:0 auto 20px;max-width:340px}
+/* ── Section containers ── */
+.section{padding:28px 16px;position:relative;z-index:1}
+.sec-eyebrow{font-family:var(--lat);font-style:italic;font-size:11px;letter-spacing:.22em;
+  color:var(--gold);text-align:center;margin-bottom:7px}
+.sec-title{font-family:var(--serif);font-size:21px;font-weight:600;letter-spacing:.06em;
+  text-align:center;color:var(--text-cream);margin-bottom:6px;line-height:1.28}
+.sec-sub{font-family:var(--serif);font-size:12.5px;color:var(--text-mute);line-height:1.75;
+  text-align:center;margin:0 auto 18px;max-width:340px;letter-spacing:.02em}
 
-/* Flow steps (numbered) */
-.steps{display:flex;flex-direction:column;gap:12px;margin-top:18px}
-.step{display:flex;align-items:flex-start;gap:14px;background:var(--card);border:1px solid var(--jade-border);
-  border-radius:var(--radius);padding:15px 16px;box-shadow:var(--shadow)}
-.step-num{flex-shrink:0;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;
-  background:var(--jade-pale);color:var(--jade-deep);font-family:'Playfair Display',serif;font-size:16px;font-weight:700}
-.step-body h3{font-size:14px;font-weight:600;margin-bottom:3px}
-.step-body p{font-size:12.5px;color:var(--sub);line-height:1.6}
+/* ── Gold divider ── */
+.divider{width:100%;height:1px;
+  background:linear-gradient(90deg,transparent,var(--gold-line),transparent);
+  margin:4px 0;position:relative;z-index:1}
 
-/* ---- Live demo device ---- */
-.demo-label{text-align:center;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:4px 0 14px}
-.phone{background:var(--card);border:1px solid var(--jade-border);border-radius:22px;box-shadow:0 10px 34px rgba(22,28,24,0.10);overflow:hidden;margin:0 auto;max-width:360px}
-.phone-bar{display:flex;align-items:center;gap:7px;padding:11px 15px;background:var(--surface);border-bottom:1px solid var(--jade-border)}
+/* ── Flow steps ── */
+.steps{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.step{display:flex;align-items:flex-start;gap:14px;
+  background:linear-gradient(160deg,#281016,#180a0c);
+  border:1px solid var(--hair-2);border-radius:var(--radius);
+  padding:15px 16px;box-shadow:var(--shadow-lift)}
+.step-num{flex-shrink:0;width:34px;height:34px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;
+  background:linear-gradient(155deg,var(--gold-hi),var(--gold-soft) 40%,var(--gold) 70%,var(--gold-deep));
+  color:#2a1a06;font-family:var(--lat);font-size:16px;font-weight:600;
+  box-shadow:0 4px 12px -4px var(--gold-glow)}
+.step-body h3{font-family:var(--serif);font-size:13.5px;font-weight:600;
+  letter-spacing:.04em;color:var(--text-cream);margin-bottom:4px}
+.step-body p{font-family:var(--serif);font-size:12px;color:var(--text-mute);line-height:1.7;letter-spacing:.01em}
+.step-body .opt{color:var(--text-faint)}
+
+/* ── Demo screens (phone frames) ── */
+.demo-label{text-align:center;font-family:var(--lat);font-style:italic;font-size:10.5px;
+  letter-spacing:.14em;color:var(--text-faint);margin:4px 0 12px}
+.phone{background:linear-gradient(160deg,#281016,#180a0c);
+  border:1px solid var(--hair-2);border-radius:22px;
+  box-shadow:0 14px 40px rgba(0,0,0,.65);overflow:hidden;
+  margin:0 auto;max-width:380px}
+.phone-bar{display:flex;align-items:center;gap:7px;padding:11px 15px;
+  background:linear-gradient(180deg,#2e1215,#220d0f);
+  border-bottom:1px solid var(--hair)}
 .dot{width:8px;height:8px;border-radius:50%}
-.phone-bar .u{margin-left:auto;font-size:10.5px;color:var(--muted);letter-spacing:.08em}
+.phone-bar .u{margin-left:auto;font-family:var(--lat);font-style:italic;font-size:10px;
+  color:var(--text-faint);letter-spacing:.1em}
 .screen{padding:16px 15px}
 
-/* Upload card */
-.uploader{border:2px dashed var(--jade-border);border-radius:var(--radius);background:var(--jade-pale);
-  padding:26px 16px;text-align:center;margin-bottom:12px}
-.uploader .big{font-size:30px;margin-bottom:8px}
-.uploader h4{font-size:14px;font-weight:600;margin-bottom:4px}
-.uploader p{font-size:11.5px;color:var(--sub);line-height:1.5}
-.chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
-.chip{font-size:11px;color:var(--jade-deep);background:var(--card);border:1px solid var(--jade-border);border-radius:16px;padding:5px 11px}
+/* ── Upload card ── */
+.uploader{border:1.5px dashed var(--gold-line-2);border-radius:var(--radius);
+  background:linear-gradient(180deg,rgba(208,168,86,.06),rgba(208,168,86,.01));
+  padding:24px 16px;text-align:center;margin-bottom:12px}
+.uploader .big{font-size:28px;margin-bottom:7px}
+.uploader h4{font-family:var(--serif);font-size:13.5px;font-weight:600;
+  color:var(--text-cream);letter-spacing:.04em;margin-bottom:4px}
+.uploader p{font-family:var(--serif);font-size:11.5px;color:var(--text-mute);line-height:1.6}
+.chips{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:11px}
+.chip{font-family:var(--serif);font-size:11px;color:var(--text-mute);
+  background:var(--void-2);border:1px solid var(--hair-2);border-radius:999px;padding:5px 13px}
 
-/* Room photo mock (CSS-drawn placeholder "room") */
+/* ── CSS room mock ── */
 .room{position:relative;border-radius:12px;overflow:hidden;height:180px;
-  background:linear-gradient(160deg,#efe9e0 0%,#e4dccf 55%,#d8cdb9 100%)}
+  background:linear-gradient(160deg,#3a2a1e 0%,#2a1e14 55%,#1e1408 100%)}
 .room::before{content:'';position:absolute;inset:0;
-  background:linear-gradient(180deg,transparent 60%,rgba(120,100,70,0.10) 100%)}
-.room .wall{position:absolute;top:0;left:0;right:0;height:62%;background:linear-gradient(180deg,#f2ece2,#e8e0d2)}
-.room .floor{position:absolute;bottom:0;left:0;right:0;height:38%;background:linear-gradient(180deg,#cdbfa4,#bda98a)}
-.room .sofa{position:absolute;bottom:16%;left:12%;width:48%;height:26%;border-radius:8px 8px 5px 5px;background:#b9a98f;box-shadow:0 3px 8px rgba(0,0,0,.12)}
-.room .win{position:absolute;top:12%;right:12%;width:26%;height:38%;border-radius:4px;background:linear-gradient(160deg,#cfe4e8,#aecdd6);border:3px solid #efe9e0}
-.room .tag{position:absolute;top:9px;left:9px;font-size:9.5px;letter-spacing:.06em;background:rgba(26,26,24,.55);color:#fff;padding:3px 8px;border-radius:12px}
+  background:linear-gradient(180deg,transparent 60%,rgba(0,0,0,.3) 100%)}
+.room .wall{position:absolute;top:0;left:0;right:0;height:62%;
+  background:linear-gradient(180deg,#2e2218,#261c12)}
+.room .floor{position:absolute;bottom:0;left:0;right:0;height:38%;
+  background:linear-gradient(180deg,#3a2810,#2e1e08)}
+.room .sofa{position:absolute;bottom:16%;left:12%;width:48%;height:26%;
+  border-radius:8px 8px 5px 5px;background:#4a3418;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.room .win{position:absolute;top:12%;right:12%;width:26%;height:38%;border-radius:4px;
+  background:linear-gradient(160deg,rgba(208,168,86,.18),rgba(208,168,86,.06));
+  border:2px solid var(--gold-line)}
+.room .tag{position:absolute;top:9px;left:9px;font-family:var(--lat);font-style:italic;
+  font-size:9.5px;letter-spacing:.06em;background:rgba(12,5,7,.72);color:var(--text-faint);
+  padding:3px 9px;border-radius:12px;border:1px solid var(--hair)}
 
 /* scanning overlay */
-.scan{position:absolute;inset:0;background:rgba(91,191,160,.10);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
-.spinner{width:30px;height:30px;border-radius:50%;border:3px solid var(--jade-border);border-top-color:var(--jade-deep);animation:spin 0.9s linear infinite}
+.scan{position:absolute;inset:0;background:rgba(208,168,86,.06);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+.spinner{width:30px;height:30px;border-radius:50%;
+  border:2.5px solid var(--gold-line);border-top-color:var(--gold);
+  animation:spin 0.9s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.scan p{font-size:11.5px;color:var(--jade-deep);font-weight:600}
+.scan p{font-family:var(--lat);font-style:italic;font-size:11.5px;
+  color:var(--gold-soft);letter-spacing:.12em}
 
-/* compass step */
-.compass{width:96px;height:96px;border-radius:50%;margin:6px auto 10px;position:relative;
-  background:radial-gradient(circle at 50% 50%,#fff 0%,#f2f5f2 70%);border:2px solid var(--jade-border);
-  box-shadow:var(--shadow)}
-.compass .needle{position:absolute;top:12px;left:50%;width:3px;height:36px;background:linear-gradient(180deg,var(--fire),#c94a4a);transform-origin:bottom center;transform:translateX(-50%) rotate(28deg);border-radius:2px}
-.compass .n{position:absolute;top:5px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;color:var(--jade-deep)}
-.compass .cap{position:absolute;bottom:-2px;left:50%;transform:translate(-50%,100%);font-size:11px;color:var(--sub);white-space:nowrap}
+/* ── compass ── */
+.compass{width:90px;height:90px;border-radius:50%;margin:8px auto 12px;position:relative;
+  background:radial-gradient(circle at 50%,#281016,#180a0c);
+  border:1.5px solid var(--gold-line-2);
+  box-shadow:0 0 24px -8px var(--gold-glow)}
+.compass .needle{position:absolute;top:13px;left:50%;width:3px;height:34px;
+  background:linear-gradient(180deg,var(--fire),rgba(224,122,80,.5));
+  transform-origin:bottom center;transform:translateX(-50%) rotate(28deg);border-radius:2px}
+.compass .n{position:absolute;top:5px;left:50%;transform:translateX(-50%);
+  font-family:var(--lat);font-size:10px;font-weight:600;color:var(--gold)}
+.compass .cap{position:absolute;bottom:-2px;left:50%;transform:translate(-50%,100%);
+  font-family:var(--lat);font-style:italic;font-size:11px;color:var(--text-faint);white-space:nowrap}
 
-/* analysis cards */
-.acard{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);padding:14px 14px;margin-bottom:11px;box-shadow:var(--shadow);position:relative}
-.acard .dir{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:#fff;border-radius:12px;padding:4px 10px;margin-bottom:9px}
-.d-wood{background:var(--wood)}.d-water{background:var(--water)}.d-fire{background:var(--fire)}.d-metal{background:var(--metal)}.d-earth{background:var(--earth)}
-.acard h4{font-size:14px;font-weight:600;margin-bottom:5px}
-.acard .now{font-size:12px;color:var(--sub);line-height:1.55;margin-bottom:8px}
-.acard .why{font-size:12px;color:var(--ink);line-height:1.55;background:var(--jade-pale);border-left:3px solid var(--jade);border-radius:0 8px 8px 0;padding:8px 10px;margin-bottom:8px}
-.acard .why b{color:var(--jade-deep)}
-.acard .free{font-size:11.5px;color:var(--gold-deep);background:var(--gold-pale);border-radius:8px;padding:7px 10px;line-height:1.5}
+/* ── Analysis cards ── */
+.acard{background:linear-gradient(160deg,#281016,#180a0c);
+  border:1px solid var(--hair-2);border-radius:var(--radius);
+  padding:14px;margin-bottom:11px;box-shadow:var(--shadow-lift)}
+.acard .dir{display:inline-flex;align-items:center;gap:6px;font-family:var(--lat);
+  font-style:italic;font-size:11px;letter-spacing:.14em;color:#fff;border-radius:12px;
+  padding:4px 11px;margin-bottom:9px}
+.d-wood{background:linear-gradient(135deg,#3a7a50,#2a5a38)}
+.d-water{background:linear-gradient(135deg,#3050a0,#204080)}
+.d-fire{background:linear-gradient(135deg,#b05a30,#8a4020)}
+.d-metal{background:linear-gradient(155deg,var(--gold) 0%,var(--gold-deep) 100%)}
+.d-earth{background:linear-gradient(135deg,#8a5028,#6a3818)}
+.acard h4{font-family:var(--serif);font-size:13.5px;font-weight:600;letter-spacing:.04em;
+  color:var(--text-cream);margin-bottom:5px}
+.acard .now{font-family:var(--serif);font-size:12px;color:var(--text-mute);line-height:1.7;margin-bottom:8px}
+.acard .why{font-family:var(--serif);font-size:12px;color:var(--text-cream);line-height:1.7;
+  background:linear-gradient(180deg,rgba(208,168,86,.07),rgba(208,168,86,.02));
+  border-left:2px solid var(--gold-line-2);border-radius:0 10px 10px 0;padding:9px 12px;margin-bottom:8px}
+.acard .why b{color:var(--gold-soft)}
+.acard .free{font-family:var(--serif);font-size:11.5px;color:var(--gold-soft);
+  background:rgba(208,168,86,.05);border:1px solid var(--gold-line);
+  border-radius:10px;padding:8px 11px;line-height:1.6}
 .acard .free b{font-weight:600}
-/* locked card */
-.acard.locked{filter:none}
-.locked-veil{background:linear-gradient(180deg,rgba(255,255,255,.4),var(--card));border:1px dashed var(--jade-border);border-radius:var(--radius);padding:18px 14px;text-align:center;margin-bottom:11px}
-.locked-veil .lk{font-size:20px;margin-bottom:6px}
-.locked-veil h4{font-size:13.5px;font-weight:600;margin-bottom:3px}
-.locked-veil p{font-size:11.5px;color:var(--muted);margin-bottom:11px}
 
-/* visualization before/after */
+/* locked veil */
+.locked-veil{background:linear-gradient(180deg,rgba(46,18,21,.6),rgba(34,13,15,.8));
+  border:1px dashed var(--gold-line);border-radius:var(--radius);
+  padding:20px 16px;text-align:center;margin-bottom:11px}
+.locked-veil .lk{font-size:22px;margin-bottom:7px}
+.locked-veil h4{font-family:var(--serif);font-size:13.5px;font-weight:600;
+  color:var(--text-cream);letter-spacing:.04em;margin-bottom:4px}
+.locked-veil p{font-family:var(--serif);font-size:11.5px;color:var(--text-mute);
+  line-height:1.7;margin-bottom:12px}
+
+/* inline badge-link */
+.pbuy-inline{background:linear-gradient(155deg,var(--gold-hi),var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep));
+  color:#2a1a06;font-family:var(--serif);font-size:12px;font-weight:600;letter-spacing:.06em;
+  padding:10px 18px;border-radius:14px;text-decoration:none;display:inline-flex;align-items:center;
+  box-shadow:0 8px 20px -8px var(--gold-glow);cursor:pointer}
+
+/* ── Visualization (before/after) ── */
 .viz{position:relative;border-radius:12px;overflow:hidden;height:200px}
-.viz .synth-tag{position:absolute;bottom:9px;left:9px;right:9px;font-size:9.5px;letter-spacing:.03em;background:rgba(26,26,24,.62);color:#fff;padding:5px 9px;border-radius:10px;text-align:center;line-height:1.4}
-/* placed object glow markers */
-.marker{position:absolute;border-radius:50%;box-shadow:0 0 0 3px rgba(255,255,255,.5)}
-.m-lamp{bottom:30%;left:66%;width:34px;height:34px;background:radial-gradient(circle,rgba(224,138,90,.9),rgba(224,138,90,.35));animation:glow 2s ease-in-out infinite}
-.m-plant{bottom:22%;left:20%;width:26px;height:26px;background:radial-gradient(circle,rgba(91,191,122,.9),rgba(91,191,122,.35))}
-@keyframes glow{0%,100%{box-shadow:0 0 0 3px rgba(255,255,255,.5),0 0 12px rgba(224,138,90,.5)}50%{box-shadow:0 0 0 3px rgba(255,255,255,.7),0 0 22px rgba(224,138,90,.85)}}
-.viz .placed-lamp{position:absolute;bottom:22%;left:63%;width:16px;height:40px;background:linear-gradient(180deg,#f2c98a,#d8a95a);border-radius:8px 8px 3px 3px;box-shadow:0 0 16px rgba(224,138,90,.55)}
-.viz .placed-plant{position:absolute;bottom:18%;left:17%;width:26px;height:34px;background:radial-gradient(ellipse at 50% 30%,#6fbf82,#3d8e5a);border-radius:50% 50% 6px 6px}
-.viz-switch{display:flex;gap:8px;margin-top:10px}
-.viz-switch button{flex:1;font-size:11.5px;font-weight:600;padding:8px;border-radius:9px;border:1px solid var(--jade-border);background:var(--card);color:var(--sub)}
-.viz-switch button.on{background:var(--jade);color:#fff;border-color:var(--jade)}
+.viz .synth-tag{position:absolute;bottom:9px;left:9px;right:9px;
+  font-family:var(--serif);font-size:9.5px;letter-spacing:.02em;
+  background:rgba(12,5,7,.78);color:var(--text-faint);
+  border:1px solid var(--hair);padding:5px 9px;border-radius:10px;
+  text-align:center;line-height:1.5}
 
-/* product buy card */
-.pcard{display:flex;gap:12px;align-items:center;background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);padding:12px;margin-bottom:10px;box-shadow:var(--shadow)}
-.pthumb{width:58px;height:58px;border-radius:10px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px;background:var(--surface);border:1px solid var(--jade-border)}
+/* placed objects & glow markers — IDs preserved */
+.marker{position:absolute;border-radius:50%;box-shadow:0 0 0 3px rgba(255,255,255,.4)}
+.m-lamp{bottom:30%;left:66%;width:34px;height:34px;
+  background:radial-gradient(circle,rgba(224,138,90,.9),rgba(224,138,90,.3));
+  animation:glow 2s ease-in-out infinite}
+.m-plant{bottom:22%;left:20%;width:26px;height:26px;
+  background:radial-gradient(circle,rgba(91,191,122,.9),rgba(91,191,122,.3))}
+@keyframes glow{0%,100%{box-shadow:0 0 0 3px rgba(255,255,255,.4),0 0 12px rgba(224,138,90,.45)}
+  50%{box-shadow:0 0 0 3px rgba(255,255,255,.65),0 0 22px rgba(224,138,90,.8)}}
+.viz .placed-lamp{position:absolute;bottom:22%;left:63%;width:16px;height:40px;
+  background:linear-gradient(180deg,var(--gold-hi),var(--gold));
+  border-radius:8px 8px 3px 3px;box-shadow:0 0 18px rgba(224,138,90,.55)}
+.viz .placed-plant{position:absolute;bottom:18%;left:17%;width:26px;height:34px;
+  background:radial-gradient(ellipse at 50% 30%,#6fbf82,#3d8e5a);border-radius:50% 50% 6px 6px}
+.viz-switch{display:flex;gap:8px;margin-top:10px}
+.viz-switch button{flex:1;font-family:var(--serif);font-size:12px;letter-spacing:.06em;
+  padding:9px;border-radius:11px;border:1px solid var(--hair-2);
+  background:var(--void-2);color:var(--text-mute);cursor:pointer;transition:all .2s}
+.viz-switch button.on{background:linear-gradient(155deg,var(--gold-hi),var(--gold-soft) 40%,var(--gold) 70%,var(--gold-deep));
+  color:#2a1a06;border-color:var(--gold);font-weight:600}
+
+/* ── Product cards ── */
+.pcard{display:flex;gap:12px;align-items:center;
+  background:linear-gradient(160deg,#281016,#180a0c);
+  border:1px solid var(--hair-2);border-radius:var(--radius);
+  padding:13px;margin-bottom:10px;box-shadow:var(--shadow-lift)}
+.pthumb{width:56px;height:56px;border-radius:10px;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center;font-size:26px;
+  background:var(--void-2);border:1px solid var(--hair-2)}
 .pinfo{flex:1;min-width:0}
-.pinfo h5{font-size:13px;font-weight:600;margin-bottom:2px}
-.pinfo .rea{font-size:11px;color:var(--jade-deep);line-height:1.4;margin-bottom:3px}
+.pinfo h5{font-family:var(--serif);font-size:12.5px;font-weight:600;letter-spacing:.03em;
+  color:var(--text-cream);margin-bottom:3px}
+.pinfo .rea{font-family:var(--lat);font-style:italic;font-size:11px;color:var(--gold-soft);
+  line-height:1.4;margin-bottom:4px;letter-spacing:.08em}
 .pinfo .prow{display:flex;align-items:center;gap:8px}
-.pinfo .price{font-size:13px;font-weight:700;color:var(--ink)}
-.pinfo .stars{font-size:10.5px;color:var(--gold-deep)}
-.pbuy{flex-shrink:0;text-decoration:none;background:linear-gradient(135deg,var(--jade),var(--jade-deep));color:#fff;font-size:12px;font-weight:600;padding:9px 12px;border-radius:20px;white-space:nowrap;min-height:38px;display:flex;align-items:center}
-.aff-note{font-size:10.5px;color:var(--muted);text-align:center;margin:2px 0 4px;line-height:1.5}
-.free-alt{font-size:11.5px;color:var(--gold-deep);background:var(--gold-pale);border-radius:8px;padding:8px 11px;line-height:1.5;margin-top:2px}
+.pinfo .price{font-family:var(--lat);font-size:14px;font-weight:600;color:var(--gold)}
+.pinfo .stars{font-family:var(--lat);font-size:10.5px;color:var(--text-faint)}
+.pbuy{flex-shrink:0;text-decoration:none;
+  background:linear-gradient(155deg,var(--gold-hi),var(--gold-soft) 40%,var(--gold) 70%,var(--gold-deep));
+  color:#2a1a06;font-family:var(--serif);font-size:12px;font-weight:600;letter-spacing:.06em;
+  padding:9px 13px;border-radius:14px;white-space:nowrap;
+  min-height:38px;display:flex;align-items:center;
+  box-shadow:0 6px 16px -6px var(--gold-glow)}
+.aff-note{font-family:var(--lat);font-style:italic;font-size:10.5px;
+  color:var(--text-faint);text-align:center;margin:3px 0 5px;line-height:1.6}
+.free-alt{font-family:var(--serif);font-size:11.5px;color:var(--gold-soft);
+  background:rgba(208,168,86,.05);border:1px solid var(--gold-line);
+  border-radius:10px;padding:9px 12px;line-height:1.6;margin-top:3px}
 .free-alt b{font-weight:600}
 
-/* pricing */
-.plan{background:var(--card);border:1px solid var(--jade-border);border-radius:16px;padding:20px 18px;margin-bottom:13px;box-shadow:var(--shadow)}
-.plan.featured{border-color:var(--jade);box-shadow:0 0 0 1px var(--jade),0 6px 24px rgba(91,191,160,0.14)}
-.plan-tag{display:inline-block;background:var(--jade);color:#fff;font-size:10px;font-weight:600;border-radius:6px;padding:3px 9px;margin-bottom:9px;letter-spacing:.08em;text-transform:uppercase}
-.plan-name{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;margin-bottom:4px}
-.plan-price{font-size:28px;font-weight:700;color:var(--jade-deep);margin-bottom:2px}
-.plan-price span{font-size:13px;font-weight:400;color:var(--sub)}
-.plan-note{font-size:12px;color:var(--muted);margin-bottom:11px}
-.plan ul{list-style:none;font-size:12.5px;color:var(--sub);line-height:1.95}
-.plan ul li::before{content:"✓ ";color:var(--jade);font-weight:700}
-.plan-btn{display:block;text-align:center;text-decoration:none;width:100%;margin-top:14px;padding:13px;border-radius:12px;
-  background:linear-gradient(135deg,var(--jade),var(--jade-deep));color:#fff;font-size:14px;font-weight:600;transition:.2s;min-height:44px}
-.plan-btn.ghost{background:transparent;color:var(--jade-deep);border:1px solid var(--jade-border)}
+/* ── Five-element mapping steps ── */
+.el-step{display:flex;align-items:flex-start;gap:14px;
+  background:linear-gradient(160deg,#281016,#180a0c);
+  border:1px solid var(--hair-2);border-radius:var(--radius);
+  padding:14px 16px;margin-bottom:9px;box-shadow:var(--shadow-lift)}
+.el-glyph{flex-shrink:0;width:36px;height:36px;border-radius:50%;display:flex;
+  align-items:center;justify-content:center;
+  font-family:var(--serif);font-size:18px;font-weight:600;color:#2a1a06;
+  box-shadow:0 4px 12px -4px var(--gold-glow)}
+.el-body h3{font-family:var(--serif);font-size:13.5px;font-weight:600;
+  letter-spacing:.06em;color:var(--text-cream);margin-bottom:3px}
+.el-body p{font-family:var(--serif);font-size:12px;color:var(--text-mute);line-height:1.7}
+
+/* ── Pricing cards ── */
+.plan{background:linear-gradient(160deg,#281016,#180a0c);
+  border:1px solid var(--hair-2);border-radius:20px;
+  padding:22px 20px;margin-bottom:13px;box-shadow:var(--shadow-lift)}
+.plan.featured{border-color:var(--gold-line-2);
+  box-shadow:0 0 0 1px var(--gold-line),var(--shadow-lift)}
+.plan-tag{display:inline-block;
+  background:linear-gradient(155deg,var(--gold-hi),var(--gold-soft) 40%,var(--gold) 70%,var(--gold-deep));
+  color:#2a1a06;font-family:var(--lat);font-style:italic;font-size:10px;font-weight:600;
+  letter-spacing:.12em;border-radius:8px;padding:3px 10px;margin-bottom:10px}
+.plan-name{font-family:var(--serif);font-size:16px;font-weight:600;letter-spacing:.06em;
+  color:var(--text-cream);margin-bottom:5px}
+.plan-price{font-family:var(--lat);font-size:30px;font-weight:600;
+  color:var(--gold);margin-bottom:3px}
+.plan-price span{font-family:var(--serif);font-size:13px;font-weight:400;color:var(--text-mute)}
+.plan-note{font-family:var(--lat);font-style:italic;font-size:12px;color:var(--text-faint);
+  letter-spacing:.08em;margin-bottom:12px}
+.plan ul{list-style:none;font-family:var(--serif);font-size:12.5px;color:var(--text-mute);line-height:2.0}
+.plan ul li::before{content:"✦ ";color:var(--gold);font-family:var(--lat)}
+.plan-btn{display:block;text-align:center;text-decoration:none;width:100%;margin-top:15px;
+  padding:14px;border-radius:14px;
+  background:linear-gradient(155deg,var(--gold-hi),var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep));
+  color:#2a1a06;font-family:var(--serif);font-size:14px;font-weight:600;letter-spacing:.08em;
+  box-shadow:0 10px 24px -10px var(--gold-glow);transition:.2s;min-height:44px;
+  display:flex;align-items:center;justify-content:center}
+.plan-btn.ghost{background:transparent;color:var(--gold-soft);
+  border:1px solid var(--gold-line-2);box-shadow:none}
 .plan-btn:hover{transform:translateY(-1px)}
 
-footer{padding:26px 20px calc(28px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.85}
-footer a{color:var(--jade-deep);text-decoration:none}
-footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:13px;color:var(--jade-deep);letter-spacing:.06em;margin-bottom:10px}
+/* ── Footer ── */
+footer{padding:24px 16px calc(24px + env(safe-area-inset-bottom,0px));
+  text-align:center;font-family:var(--serif);font-size:11px;
+  color:var(--text-faint);line-height:1.9;position:relative;z-index:1}
+footer a{color:var(--gold-soft);text-decoration:none}
+footer .fbrand{font-family:var(--lat);font-style:italic;font-size:14px;
+  color:var(--gold);letter-spacing:.22em;margin-bottom:10px}
 
-/* sticky */
+/* ── Disclaimer ── */
+.disc{text-align:center;font-family:var(--serif);font-size:10.5px;color:var(--text-faint);
+  letter-spacing:.03em;line-height:1.8;padding:10px 28px 4px;position:relative;z-index:1}
+.disc .en{display:block;font-family:var(--lat);font-style:italic;font-size:10px;
+  letter-spacing:.08em;color:var(--text-ghost);margin-top:3px}
+
+/* ── Sticky bottom bar ── */
 #sticky{position:fixed;bottom:0;left:50%;transform:translateX(-50%) translateY(110%);
-  width:100%;max-width:440px;background:linear-gradient(135deg,var(--jade),var(--jade-deep));
-  padding:14px 18px calc(14px + env(safe-area-inset-bottom,0px));
+  width:100%;max-width:440px;
+  background:linear-gradient(180deg,rgba(12,5,7,0) 0%,var(--void-0) 32%);
+  padding:14px 16px calc(14px + env(safe-area-inset-bottom,0px));
   display:flex;justify-content:space-between;align-items:center;gap:12px;
-  box-shadow:0 -4px 20px rgba(22,28,24,0.15);z-index:99;transition:transform .3s}
+  z-index:99;transition:transform .3s}
 #sticky.show{transform:translateX(-50%) translateY(0)}
-.sticky-text{font-size:13px;font-weight:600;color:#fff;line-height:1.3}
-.sticky-btn{background:#fff;color:var(--jade-deep);padding:11px 18px;border-radius:22px;font-size:13px;font-weight:700;text-decoration:none;white-space:nowrap;min-height:44px;display:flex;align-items:center}
+.sticky-text{font-family:var(--serif);font-size:12.5px;font-weight:600;
+  color:var(--gold-soft);line-height:1.3;letter-spacing:.04em}
+.sticky-btn{background:linear-gradient(155deg,var(--gold-hi),var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep));
+  color:#2a1a06;font-family:var(--serif);font-size:13px;font-weight:600;letter-spacing:.08em;
+  padding:12px 20px;border-radius:14px;text-decoration:none;white-space:nowrap;
+  min-height:44px;display:flex;align-items:center;
+  box-shadow:0 8px 20px -8px var(--gold-glow)}
+
+/* inline helper */
+.inline-gold{color:var(--gold-soft);font-weight:500}
 </style>
 </head>
 <body>
 
-<!-- HERO -->
+<!-- ── Brandmark ── -->
+<div class="brand-row">
+  <div class="brand-cn">善缘</div>
+  <div class="brand-en">Runae</div>
+</div>
+
+<!-- ── Hero ── -->
 <header class="hero z1">
-  <div class="logo">Runae</div>
-  <div class="clasp"></div>
-  <div class="badge">✦ Feng Shui · for your real home</div>
-  <h1 class="serif">See harmonizing objects placed<br><em>in your actual room</em></h1>
-  <p class="hero-sub">Snap a photo of any room. Runae reads its <b>feng shui</b>, suggests <b>feng-shui-aligned objects</b> and the <b>reasoning</b> — tuned to your birth chart — then shows them <b>placed right in your room</b>. Then shop the look if you like the idea.</p>
+  <div class="orb-mark"></div>
+  <div class="hero-badge">✦ Feng Shui · for your real home</div>
+  <h1>See harmonizing objects placed<br><em>in your actual room</em></h1>
+  <p class="hero-sub">Snap a photo of any room. Runae reads its <b>feng shui</b>, suggests <b>feng-shui-aligned objects</b> with the <b>reasoning</b> — tuned to your birth chart — then shows them <b>placed right in your room</b>.</p>
   <a class="cta" href="#demo">Scan my room free →<small>One photo. See your first fix in seconds.</small></a>
   <div class="cta-note">Free room scan · Full home plan from $19 · No card to start</div>
 </header>
 
-<div class="ai-note z1">🤖 AI-powered · readings and room visuals are AI-generated. For cultural inspiration &amp; reflection — buying an object won't change your luck or guarantee any outcome.</div>
+<div class="ai-note z1" style="background:linear-gradient(180deg,rgba(208,168,86,.06),rgba(208,168,86,.01));border-color:var(--gold-line)">🤖 AI-powered · readings and room visuals are AI-generated. For cultural inspiration &amp; reflection — buying an object won't change your luck or guarantee any outcome.</div>
 
-<div class="ai-note z1" style="background:var(--gold-pale);border-color:rgba(201,168,76,0.22);color:var(--gold-deep);margin-top:8px">🔐 Your room photo is personal data. It's used only to generate your reading &amp; the placement preview, kept on/for your session, never used to train AI or shared. <a href="privacy.html" style="color:var(--gold-deep);font-weight:600;text-decoration:underline">How we handle photos ›</a></div>
+<div class="ai-note z1" style="margin-top:8px">🔐 Your room photo is personal data. Used only to generate your reading &amp; placement preview — never to train AI or shared. <a href="privacy.html">How we handle photos ›</a></div>
 
-<!-- HOW IT WORKS -->
+<!-- ── How it works ── -->
 <section class="section z1">
-  <div class="sec-cap">How it works</div>
-  <h2 class="sec-title serif">Photo in. Placed in your room. Shop.</h2>
+  <div class="sec-eyebrow">How it works</div>
+  <h2 class="sec-title">Photo in. Placed in your room. Shop.</h2>
   <p class="sec-sub">No feng shui knowledge needed. Start with one photo.</p>
   <div class="steps">
     <div class="step">
-      <div class="step-num serif">1</div>
-      <div class="step-body"><h3>Photograph your room</h3><p>One photo of the room you care about most. AI reads the layout, colors, materials, and clutter.</p></div>
+      <div class="step-num">1</div>
+      <div class="step-body"><h3>Photograph your room</h3><p>One photo of the room you care about most. AI reads layout, colors, materials, and clutter.</p></div>
     </div>
     <div class="step">
-      <div class="step-num serif">2</div>
+      <div class="step-num">2</div>
       <div class="step-body"><h3>Point your compass</h3><p>Stand in the doorway, face out. 15 seconds sets your room's direction — the one detail that makes it accurate.</p></div>
     </div>
     <div class="step">
-      <div class="step-num serif">3</div>
-      <div class="step-body"><h3>Add your chart <span style="color:var(--muted);font-weight:400">(optional)</span></h3><p>Reuse your Runae birth chart so advice is tuned to <b>your</b> element balance — not generic feng shui.</p></div>
+      <div class="step-num">3</div>
+      <div class="step-body"><h3>Add your chart <span class="opt">(optional)</span></h3><p>Reuse your Runae birth chart so advice is tuned to <b>your</b> element balance — not generic feng shui.</p></div>
     </div>
     <div class="step">
-      <div class="step-num serif">4</div>
+      <div class="step-num">4</div>
       <div class="step-body"><h3>See it placed &amp; shop</h3><p>AI drops the recommended objects into your real photo. Love it? One tap to buy — or do the free version yourself.</p></div>
     </div>
   </div>
 </section>
 
-<div class="wrap z1"><div class="divider"></div></div>
+<div class="divider z1"></div>
 
-<!-- LIVE DEMO -->
+<!-- ── Live demo ── -->
 <section class="section z1" id="demo">
-  <div class="sec-cap">The experience</div>
-  <h2 class="sec-title serif">Walk through a real scan</h2>
+  <div class="sec-eyebrow">The experience</div>
+  <h2 class="sec-title">Walk through a real scan</h2>
   <p class="demo-label">↓ Interactive preview — tap the toggles</p>
 
   <!-- Screen A: upload + scanning -->
   <div class="phone">
-    <div class="phone-bar"><span class="dot" style="background:#e08a5a"></span><span class="dot" style="background:#c9a84c"></span><span class="dot" style="background:#5bbfa0"></span><span class="u">runae.app · Step 1 of 4</span></div>
+    <div class="phone-bar">
+      <span class="dot" style="background:var(--fire)"></span>
+      <span class="dot" style="background:var(--gold)"></span>
+      <span class="dot" style="background:var(--wood)"></span>
+      <span class="u">runae.app · Step 1 of 4</span>
+    </div>
     <div class="screen">
       <div class="uploader">
         <div class="big">📷</div>
@@ -276,13 +465,18 @@ footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:
 
   <!-- Screen B: compass -->
   <div class="phone">
-    <div class="phone-bar"><span class="dot" style="background:#e08a5a"></span><span class="dot" style="background:#c9a84c"></span><span class="dot" style="background:#5bbfa0"></span><span class="u">runae.app · Step 2 of 4</span></div>
+    <div class="phone-bar">
+      <span class="dot" style="background:var(--fire)"></span>
+      <span class="dot" style="background:var(--gold)"></span>
+      <span class="dot" style="background:var(--wood)"></span>
+      <span class="u">runae.app · Step 2 of 4</span>
+    </div>
     <div class="screen" style="text-align:center">
       <div class="compass"><span class="n">N</span><div class="needle"></div></div>
-      <h4 style="font-size:14px;font-weight:600;margin-bottom:4px">Stand in the doorway, face out</h4>
-      <p style="font-size:12px;color:var(--sub);line-height:1.55;margin-bottom:10px">This sets your room's <b style="color:var(--ink)">sitting direction</b> — the one detail feng shui hinges on.</p>
+      <h4 style="font-family:var(--serif);font-size:13.5px;font-weight:600;letter-spacing:.04em;color:var(--text-cream);margin-bottom:5px">Stand in the doorway, face out</h4>
+      <p style="font-family:var(--serif);font-size:12px;color:var(--text-mute);line-height:1.7;margin-bottom:10px">This sets your room's <b class="inline-gold">sitting direction</b> — the one detail feng shui hinges on.</p>
       <div class="chips" style="justify-content:center"><span class="chip">▶ 15-sec demo: how to hold your phone</span></div>
-      <p style="font-size:11px;color:var(--muted);margin-top:9px">Can't get a clear reading? <b style="color:var(--jade-deep)">Use my address instead →</b></p>
+      <p style="font-family:var(--lat);font-style:italic;font-size:11px;color:var(--text-faint);margin-top:9px">Can't get a clear reading? <b style="color:var(--gold-soft)">Use my address instead →</b></p>
     </div>
   </div>
 
@@ -290,9 +484,14 @@ footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:
 
   <!-- Screen C: analysis cards -->
   <div class="phone">
-    <div class="phone-bar"><span class="dot" style="background:#e08a5a"></span><span class="dot" style="background:#c9a84c"></span><span class="dot" style="background:#5bbfa0"></span><span class="u">runae.app · Your reading</span></div>
+    <div class="phone-bar">
+      <span class="dot" style="background:var(--fire)"></span>
+      <span class="dot" style="background:var(--gold)"></span>
+      <span class="dot" style="background:var(--wood)"></span>
+      <span class="u">runae.app · Your reading</span>
+    </div>
     <div class="screen">
-      <div style="font-size:11px;color:var(--jade-deep);background:var(--jade-pale);border:1px solid var(--jade-border);border-radius:10px;padding:9px 11px;margin-bottom:12px;line-height:1.5">
+      <div style="font-family:var(--serif);font-size:11px;color:var(--gold-soft);background:linear-gradient(180deg,rgba(208,168,86,.09),rgba(208,168,86,.02));border:1px solid var(--gold-line);border-radius:11px;padding:10px 12px;margin-bottom:13px;line-height:1.7;letter-spacing:.02em">
         ✦ <b>Your chart favors Fire &amp; Wood.</b> Your living room reads a little cold — here's how to warm it, tuned to you.
       </div>
 
@@ -319,27 +518,32 @@ footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:
         <div class="lk">🔒</div>
         <h4>4 more rooms mapped &amp; ready</h4>
         <p>Bedroom, entryway, kitchen &amp; study — full placement plan + every "why".</p>
-        <a class="pbuy" style="margin:0 auto;display:inline-flex" href="#pricing">Unlock full home plan →</a>
+        <a class="pbuy-inline" href="#pricing">Unlock full home plan →</a>
       </div>
     </div>
   </div>
 
   <div style="height:20px"></div>
 
-  <!-- Screen D: VISUALIZATION (killer feature) -->
+  <!-- Screen D: visualization (killer feature) — DOM ids preserved -->
   <div class="phone">
-    <div class="phone-bar"><span class="dot" style="background:#e08a5a"></span><span class="dot" style="background:#c9a84c"></span><span class="dot" style="background:#5bbfa0"></span><span class="u">runae.app · See it in your room</span></div>
+    <div class="phone-bar">
+      <span class="dot" style="background:var(--fire)"></span>
+      <span class="dot" style="background:var(--gold)"></span>
+      <span class="dot" style="background:var(--wood)"></span>
+      <span class="u">runae.app · See it in your room</span>
+    </div>
     <div class="screen">
-      <div style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--jade);font-weight:600;text-align:center;margin-bottom:10px">✦ Killer feature · placed in your photo</div>
+      <div style="font-family:var(--lat);font-style:italic;font-size:11px;letter-spacing:.16em;color:var(--gold-soft);font-weight:600;text-align:center;margin-bottom:11px">✦ Placed in your actual photo</div>
 
       <div class="viz" id="vizStage">
         <div class="room" style="height:200px;border-radius:12px">
           <div class="wall"></div><div class="floor"></div>
           <div class="sofa"></div><div class="win"></div>
-          <!-- placed objects (shown in "after") -->
+          <!-- placed objects (shown in "after") — IDs preserved -->
           <div class="placed-lamp" id="objLamp"></div>
           <div class="placed-plant" id="objPlant"></div>
-          <!-- glow markers -->
+          <!-- glow markers — IDs preserved -->
           <div class="marker m-lamp" id="mkLamp"></div>
           <div class="marker m-plant" id="mkPlant"></div>
         </div>
@@ -350,7 +554,7 @@ footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:
         <button id="btnBefore" onclick="setViz('before')">Your room</button>
         <button id="btnAfter" class="on" onclick="setViz('after')">Placed for you ✦</button>
       </div>
-      <p style="font-size:10.5px;color:var(--muted);text-align:center;margin-top:8px;line-height:1.5">Premium visual. Free plan shows a blurred preview + text; unlock for the clear render.</p>
+      <p style="font-family:var(--lat);font-style:italic;font-size:10.5px;color:var(--text-faint);text-align:center;margin-top:9px;line-height:1.6">Premium visual. Free plan shows a blurred preview + text; unlock for the clear render.</p>
     </div>
   </div>
 
@@ -358,9 +562,14 @@ footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:
 
   <!-- Screen E: shop the objects -->
   <div class="phone">
-    <div class="phone-bar"><span class="dot" style="background:#e08a5a"></span><span class="dot" style="background:#c9a84c"></span><span class="dot" style="background:#5bbfa0"></span><span class="u">runae.app · Shop the look</span></div>
+    <div class="phone-bar">
+      <span class="dot" style="background:var(--fire)"></span>
+      <span class="dot" style="background:var(--gold)"></span>
+      <span class="dot" style="background:var(--wood)"></span>
+      <span class="u">runae.app · Shop the look</span>
+    </div>
     <div class="screen">
-      <div style="font-size:12px;color:var(--sub);line-height:1.5;margin-bottom:12px">Each object is picked for <b style="color:var(--ink)">your chart + this room</b>. Or skip it — every fix has a free version.</div>
+      <div style="font-family:var(--serif);font-size:12px;color:var(--text-mute);line-height:1.7;margin-bottom:12px">Each object is picked for <b class="inline-gold">your chart + this room</b>. Or skip it — every fix has a free version.</div>
 
       <div class="pcard">
         <div class="pthumb">💡</div>
@@ -398,31 +607,42 @@ footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:
   </div>
 </section>
 
-<div class="wrap z1"><div class="divider"></div></div>
+<div class="divider z1"></div>
 
-<!-- ELEMENT MAPPING -->
+<!-- ── Five-element mapping ── -->
 <section class="section z1">
-  <div class="sec-cap">Why it's personal</div>
-  <h2 class="sec-title serif">Tuned to your five elements</h2>
+  <div class="sec-eyebrow">Why it's personal</div>
+  <h2 class="sec-title">Tuned to your five elements</h2>
   <p class="sec-sub">Your birth chart says which element you need more of. That drives the colors, materials &amp; objects we suggest.</p>
-  <div class="steps">
-    <div class="step"><div class="step-num serif" style="background:rgba(224,138,90,.14);color:var(--fire)">火</div><div class="step-body"><h3>Need Fire</h3><p>Warm lamps, reds &amp; ambers, wood, uplighting — placed south / warm corners.</p></div></div>
-    <div class="step"><div class="step-num serif" style="background:rgba(90,134,224,.14);color:var(--water)">水</div><div class="step-body"><h3>Need Water</h3><p>Mirrors, glass, flowing water features, blue-black tones — north / wealth spot.</p></div></div>
-    <div class="step"><div class="step-num serif" style="background:rgba(91,191,122,.14);color:var(--wood)">木</div><div class="step-body"><h3>Need Wood</h3><p>Living plants, greens, rattan &amp; wood, landscape art — east / southeast.</p></div></div>
-    <div class="step"><div class="step-num serif" style="background:rgba(201,168,76,.16);color:var(--metal)">金</div><div class="step-body"><h3>Need Metal</h3><p>Brass pieces, white crystals, round metal decor, whites — west / northwest.</p></div></div>
+
+  <div class="el-step">
+    <div class="el-glyph" style="background:linear-gradient(135deg,#c05030,#8a3820)">火</div>
+    <div class="el-body"><h3>Need Fire</h3><p>Warm lamps, reds &amp; ambers, wood, uplighting — placed south / warm corners.</p></div>
+  </div>
+  <div class="el-step">
+    <div class="el-glyph" style="background:linear-gradient(135deg,#3050a0,#204080)">水</div>
+    <div class="el-body"><h3>Need Water</h3><p>Mirrors, glass, flowing water features, blue-black tones — north / wealth spot.</p></div>
+  </div>
+  <div class="el-step">
+    <div class="el-glyph" style="background:linear-gradient(135deg,#3a7a50,#2a5a38)">木</div>
+    <div class="el-body"><h3>Need Wood</h3><p>Living plants, greens, rattan &amp; wood, landscape art — east / southeast.</p></div>
+  </div>
+  <div class="el-step">
+    <div class="el-glyph" style="background:linear-gradient(155deg,var(--gold),var(--gold-deep))">金</div>
+    <div class="el-body"><h3>Need Metal</h3><p>Brass pieces, white crystals, round metal decor, whites — west / northwest.</p></div>
   </div>
 </section>
 
-<div class="wrap z1"><div class="divider"></div></div>
+<div class="divider z1"></div>
 
-<!-- PRICING -->
+<!-- ── Pricing ── -->
 <section class="section z1" id="pricing">
-  <div class="sec-cap">Pricing</div>
-  <h2 class="sec-title serif">Scan free, unlock when ready</h2>
+  <div class="sec-eyebrow">Pricing</div>
+  <h2 class="sec-title">Scan free, unlock when ready</h2>
   <p class="sec-sub">Your first room fix is always free.</p>
 
   <div class="plan">
-    <div class="plan-name serif">Free room scan</div>
+    <div class="plan-name">Free room scan</div>
     <div class="plan-price">$0</div>
     <div class="plan-note">One photo · no card</div>
     <ul>
@@ -435,7 +655,7 @@ footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:
 
   <div class="plan featured">
     <div class="plan-tag">Most popular</div>
-    <div class="plan-name serif">Full home plan</div>
+    <div class="plan-name">Full home plan</div>
     <div class="plan-price">$19 <span>one-time</span></div>
     <div class="plan-note">Every room · yours forever</div>
     <ul>
@@ -448,33 +668,35 @@ footer .fbrand{font-family:'Playfair Display',serif;font-style:italic;font-size:
   </div>
 
   <div class="plan">
-    <div class="plan-name serif">Runae Home membership</div>
+    <div class="plan-name">Runae Home membership</div>
     <div class="plan-price">$99 <span>/ year</span></div>
     <div class="plan-note">Billed yearly · cancel anytime</div>
     <ul>
       <li><b>Room visualizer — clear renders</b></li>
-      <li>Seasonal &amp; annual re-scans as the seasonal energy shifts</li>
+      <li>Seasonal &amp; annual re-scans as energy shifts</li>
       <li>Member discounts on curated objects</li>
     </ul>
     <a class="plan-btn ghost" href="#demo">See membership</a>
   </div>
 </section>
 
-<!-- FOOTER -->
-<footer class="z1">
+<!-- ── Footer ── -->
+<footer>
   <div class="fbrand">Runae</div>
-  <div style="margin-bottom:10px">🤖 AI-generated readings &amp; room visuals · a traditional feng shui craft for reflection &amp; inspiration.<br>Not a guarantee of luck, wealth, or health. Not medical, legal, or financial advice.</div>
+  <div style="margin-bottom:10px;letter-spacing:.02em">🤖 AI-generated readings &amp; room visuals · a traditional feng shui craft for reflection &amp; inspiration.<br>Not a guarantee of luck, wealth, or health. Not medical, legal, or financial advice.</div>
   <div>support@runae.app · © 2026 Runae · <a href="privacy.html">Privacy</a> · <a href="legal-us.html">Terms</a></div>
 </footer>
 
-<!-- STICKY -->
+<div class="disc z1">AI 生成内容 · 仅供娱乐参考，不构成医疗、法律或财务建议。<span class="en">AI-generated · for entertainment only · not medical, legal or financial advice.</span></div>
+
+<!-- ── Sticky bottom bar — DOM id preserved ── -->
 <div id="sticky">
   <span class="sticky-text">✦ Scan your room free</span>
   <a class="sticky-btn" href="#demo">Start →</a>
 </div>
 
 <script>
-// visualization toggle
+// visualization toggle — function name & DOM ids preserved verbatim
 function setViz(mode){
   var after = mode==='after';
   document.getElementById('objLamp').style.opacity = after?1:0;
@@ -488,7 +710,7 @@ function setViz(mode){
 ['objLamp','objPlant','mkLamp','mkPlant'].forEach(function(id){
   var el=document.getElementById(id); if(el){el.style.transition='opacity .35s ease';}
 });
-// sticky show/hide
+// sticky show/hide — DOM id preserved
 window.addEventListener('scroll',function(){
   var s=document.getElementById('sticky');
   var h=document.body.scrollHeight-window.innerHeight;

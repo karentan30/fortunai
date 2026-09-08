@@ -2,92 +2,294 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>ShenYuan · รายงานโชคชะตาปาจีของคุณ</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#0b0616">
+<title>Runae · รายงานโชคชะตาปาจีของคุณ</title>
+<meta name="description" content="รายงานโชคชะตาปาจีส่วนตัวของคุณ — ธาตุทั้งห้า วัฏจักรโชคชะตา และพยากรณ์รายปี ตีความโดย Runae AI">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-:root{--gold:#c9a84c;--gold-l:#e0c875;--gold-d:#8a6420;--bg:#0d0618;--text:rgba(232,220,200,.92);--sub:rgba(200,185,155,.5);--r:14px}
-body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;line-height:1.9}
-a{color:var(--gold);text-decoration:none}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 
-#loading{position:fixed;inset:0;background:var(--bg);z-index:9000;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px}
+:root{
+  /* ── cosmos: deep amethyst void ── */
+  --void-0:#07040f;--void:#0b0616;--indigo:#17092e;--indigo-2:#1e0f3a;--violet-s:#2e1a60;
+  /* ── starlight / gold ── */
+  --gold-hi:#f4e6b6;--gold:#dcc082;--gold-d:#ab8642;--gold-soft:#e8d49c;
+  --gold-line:rgba(220,192,130,.28);--gold-line-2:rgba(220,192,130,.50);--gold-glow:rgba(220,192,130,.45);
+  /* ── celestial accent ── */
+  --star:#d3b6ff;--star-soft:#b492ea;
+  --violet-glow:rgba(180,128,255,.50);--violet-line:rgba(176,120,255,.28);--violet-line-2:rgba(176,120,255,.50);
+  /* ── text ── */
+  --text:#efeafa;--sub:rgba(176,165,210,.75);--faint:rgba(140,128,175,.6);--ghost:rgba(100,90,140,.55);
+  /* ── legacy aliases ── */
+  --gold-l:#e8d49c;--bg:#07040f;--r:14px;
+  --hair:rgba(206,190,255,.08);--hair-2:rgba(206,190,255,.14);
+  --shadow-card:0 30px 60px -30px rgba(0,0,0,.9);
+  --lat:'Cormorant Garamond',serif;
+}
+
+html,body{background:var(--void-0);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;line-height:2;-webkit-font-smoothing:antialiased}
+a{color:var(--gold-soft);text-decoration:none}
+
+/* ── Starfield background ── */
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(130% 80% at 50% -6%, #3a1f78 0%, #22104e 36%, #110628 72%, var(--void-0) 100%);
+}
+body::after{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;opacity:.7;
+  background-image:
+    radial-gradient(circle,rgba(236,223,255,.65) 1px,transparent 1px),
+    radial-gradient(circle,rgba(211,182,255,.45) 1px,transparent 1px),
+    radial-gradient(circle,rgba(244,230,182,.35) 1px,transparent 1px);
+  background-size:130px 130px,85px 85px,175px 175px;
+  background-position:18px 22px,65px 44px,33px 88px;
+}
+
+/* ── Loading screen ── */
+#loading{
+  position:fixed;inset:0;z-index:9000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;padding:40px 28px;
+  background:radial-gradient(130% 80% at 50% -6%, #3a1f78 0%, #22104e 36%, #110628 72%, var(--void-0) 100%);
+}
 #loading.hidden{display:none}
-.load-stars{font-size:40px;margin-bottom:20px;animation:spin 4s linear infinite}
-@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-.load-title{color:var(--gold);font-size:20px;letter-spacing:3px;margin-bottom:12px;font-family:'Cormorant Garamond',serif;font-weight:300}
-.load-sub{color:rgba(255,255,255,.4);font-size:13px;margin-bottom:32px}
-.load-bar-wrap{width:240px;height:4px;background:rgba(201,168,76,.15);border-radius:2px;overflow:hidden;margin:0 auto}
-.load-bar{height:100%;background:linear-gradient(90deg,#b8922f,#e0c875);border-radius:2px;width:0;transition:width .4s ease}
-.load-tip{color:rgba(255,255,255,.3);font-size:11px;margin-top:16px;min-height:18px;letter-spacing:.05em}
 
-#error-screen{display:none;position:fixed;inset:0;background:var(--bg);z-index:8999;align-items:center;justify-content:center;text-align:center;padding:32px;flex-direction:column;gap:16px}
+/* Concentric ring animation */
+.load-orbit{position:relative;width:88px;height:88px;margin:0 auto 28px;flex-shrink:0}
+.load-ring{position:absolute;inset:0;border-radius:50%;animation:orbitSpin 7s linear infinite}
+.load-ring-1{border:1.5px solid var(--violet-line-2)}
+.load-ring-2{inset:10px;border:1px solid var(--gold-line-2);animation-duration:11s;animation-direction:reverse}
+.load-ring-3{inset:20px;border:1px dashed var(--violet-line);animation-duration:5s}
+.load-dot{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  font-family:var(--lat);font-style:italic;font-size:15px;letter-spacing:.06em;color:var(--gold-soft);
+  animation:dotPulse 2.2s ease-in-out infinite;
+}
+@keyframes orbitSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes dotPulse{0%,100%{opacity:.5}50%{opacity:1}}
+
+.load-title{
+  color:var(--gold-soft);font-size:17px;letter-spacing:.12em;margin-bottom:10px;
+  font-family:var(--lat);font-style:italic;font-weight:400;
+}
+.load-sub{color:var(--faint);font-size:13px;margin-bottom:28px;letter-spacing:.04em;line-height:2}
+.load-bar-wrap{width:200px;height:3px;background:rgba(176,120,255,.12);border-radius:2px;overflow:hidden;margin:0 auto}
+.load-bar{
+  height:100%;border-radius:2px;width:0;transition:width .5s ease;
+  background:linear-gradient(90deg,var(--star-soft),var(--gold-soft));
+  box-shadow:0 0 8px var(--violet-glow);
+}
+.load-tip{color:var(--ghost);font-size:12px;margin-top:14px;letter-spacing:.04em;min-height:18px;line-height:2}
+
+/* ── Error screen ── */
+#error-screen{
+  display:none;position:fixed;inset:0;background:var(--void-0);z-index:8999;
+  align-items:center;justify-content:center;text-align:center;padding:32px;flex-direction:column;gap:16px;
+}
 #error-screen.show{display:flex}
-.err-title{color:#e87060;font-size:18px}
-.err-sub{color:rgba(255,255,255,.5);font-size:14px;max-width:280px}
-.err-btn{background:var(--gold);color:#0a0814;border:none;padding:12px 32px;border-radius:50px;font-size:14px;font-weight:700;cursor:pointer;margin-top:8px}
+.err-title{color:#e87060;font-size:18px;font-family:var(--lat);font-style:italic;letter-spacing:.08em}
+.err-sub{color:var(--faint);font-size:14px;max-width:280px;line-height:2}
+.err-btn{
+  background:linear-gradient(135deg,var(--gold-d),var(--gold),var(--gold-soft));
+  color:#120c02;border:none;padding:13px 36px;border-radius:50px;
+  font-size:14px;font-weight:600;cursor:pointer;margin-top:8px;letter-spacing:.06em;
+}
 
-#report{display:none;max-width:760px;margin:0 auto;padding:48px 28px 80px}
+/* ── Report container ── */
+#report{
+  display:none;position:relative;z-index:1;
+  max-width:780px;margin:0 auto;padding:52px 24px 88px;
+}
 #report.show{display:block}
 
-.rp-cover{text-align:center;padding:64px 0 48px;border-bottom:1px solid rgba(201,168,76,.2);margin-bottom:48px}
-.rp-brand{font-size:10px;letter-spacing:6px;color:rgba(201,168,76,.5);margin-bottom:24px}
-.rp-name{font-size:38px;color:#fff;font-weight:300;letter-spacing:6px;margin-bottom:12px;font-family:'Cormorant Garamond',serif}
-.rp-date{color:rgba(255,255,255,.4);font-size:13px;letter-spacing:2px;margin-bottom:24px}
+/* ── Cover hero ── */
+.rp-cover{
+  text-align:center;padding:60px 8px 52px;
+  border-bottom:1px solid var(--gold-line);margin-bottom:52px;
+  position:relative;
+}
+.rp-cover::before{
+  content:'';position:absolute;left:50%;top:0;transform:translateX(-50%);
+  width:280px;height:280px;border-radius:50%;
+  background:radial-gradient(circle,rgba(100,60,200,.18) 0%,transparent 70%);
+  pointer-events:none;z-index:0;
+}
+.rp-brand{
+  font-family:var(--lat);font-style:italic;font-size:11px;
+  letter-spacing:.44em;color:rgba(220,192,130,.45);
+  margin-bottom:28px;position:relative;z-index:1;
+  text-transform:uppercase;
+}
+.rp-name{
+  font-size:40px;color:var(--text);font-weight:300;
+  letter-spacing:.14em;margin-bottom:12px;
+  font-family:var(--lat);font-style:italic;position:relative;z-index:1;
+  text-shadow:0 0 40px rgba(180,128,255,.25);
+}
+.rp-date{color:var(--faint);font-size:12px;letter-spacing:.12em;margin-bottom:28px;position:relative;z-index:1}
+.rp-divider{
+  width:60px;height:1px;margin:0 auto 28px;
+  background:linear-gradient(90deg,transparent,var(--gold-line-2),transparent);
+  position:relative;z-index:1;
+}
+.rp-aigc-inline{
+  font-size:10px;letter-spacing:.1em;color:rgba(220,192,130,.32);
+  margin-top:8px;position:relative;z-index:1;line-height:2;
+}
 
-.rp-section{margin-top:52px}
-.rp-section h2,.rp-section h3{color:var(--gold);font-family:'Cormorant Garamond',serif;letter-spacing:2px;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid rgba(201,168,76,.12);font-weight:400}
-.rp-section h2{font-size:22px}
-.rp-section h3{font-size:17px;border-bottom:none;padding-bottom:0;margin-top:20px}
-.rp-section p{margin-bottom:14px;font-size:15px;line-height:1.95}
-.rp-section strong,.rp-section b{color:var(--gold-l)}
-.rp-section ul,.rp-section ol{padding-left:20px;margin-bottom:14px}
-.rp-section li{margin-bottom:6px;font-size:15px}
+/* ── Report sections ── */
+.rp-section{
+  margin-top:0;margin-bottom:12px;
+  background:linear-gradient(180deg,var(--indigo-2),var(--indigo));
+  border:1px solid var(--hair-2);border-radius:20px;
+  overflow:hidden;
+  box-shadow:var(--shadow-card);
+  animation:secFadeUp .55s ease both;
+}
+@keyframes secFadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
-.locked-section{filter:blur(5px);pointer-events:none;user-select:none;max-height:200px;overflow:hidden}
-.paywall-gate{background:linear-gradient(135deg,#1a1030,#0d0618);border:1px solid rgba(201,168,76,.3);border-radius:16px;padding:36px 24px;text-align:center;margin:48px 0}
-.gate-icon{font-size:36px;margin-bottom:10px}
-.gate-title{color:var(--gold);font-size:18px;font-weight:400;letter-spacing:2px;margin-bottom:8px;font-family:'Cormorant Garamond',serif}
-.gate-desc{color:rgba(255,255,255,.55);font-size:13px;margin-bottom:20px}
-.gate-price{color:#fff;font-size:28px;font-weight:300;margin-bottom:6px;font-family:'Cormorant Garamond',serif}
-.gate-orig{color:rgba(255,255,255,.3);font-size:13px;text-decoration:line-through;margin-left:6px}
-.gate-btn{background:linear-gradient(135deg,#b8922f,#c9a84c,#e0c875);color:#0a0814;border:none;padding:14px 0;border-radius:50px;font-size:15px;font-weight:700;cursor:pointer;display:block;width:100%;max-width:260px;margin:0 auto 12px}
-.gate-alt{color:rgba(201,168,76,.6);font-size:12px;cursor:pointer;text-decoration:underline;display:block}
-.gate-stripe{background:#635bff;color:#fff;border:none;padding:11px 0;border-radius:50px;font-size:14px;font-weight:600;cursor:pointer;display:block;width:100%;max-width:260px;margin:8px auto 0}
+.rp-section h2{
+  color:var(--gold-soft);font-family:var(--lat);letter-spacing:.1em;
+  margin-bottom:0;padding:18px 20px 14px;
+  border-bottom:1px solid var(--hair);font-weight:400;font-size:18px;
+  display:flex;align-items:center;gap:10px;cursor:pointer;
+  transition:color .2s;line-height:2;
+}
+.rp-section h2::after{
+  content:'›';font-size:18px;color:var(--faint);margin-left:auto;
+  transition:transform .25s,color .25s;flex-shrink:0;
+}
+.rp-section h2.open::after{transform:rotate(90deg);color:var(--gold-soft)}
+.rp-section-body{display:none;padding:16px 20px 20px}
+.rp-section-body.open{display:block}
+
+.rp-section h3{
+  color:var(--gold);font-family:var(--lat);letter-spacing:.08em;
+  margin-bottom:10px;padding-bottom:0;font-weight:400;font-size:15px;
+  line-height:2;
+}
+/* Thai-specific: generous line-height for stacked diacritics */
+.rp-section p{margin-bottom:13px;font-size:14.5px;line-height:2;color:var(--sub)}
+.rp-section strong,.rp-section b{color:var(--gold-soft)}
+.rp-section ul,.rp-section ol{padding-left:18px;margin-bottom:12px}
+.rp-section li{margin-bottom:8px;font-size:14.5px;color:var(--sub);line-height:2}
+
+/* ── Paywall gate ── */
+.locked-section{filter:blur(5px);pointer-events:none;user-select:none;max-height:180px;overflow:hidden;opacity:.65}
+.paywall-gate{
+  background:linear-gradient(135deg,#1e0f3a,#0b0616);
+  border:1px solid var(--gold-line-2);border-radius:20px;
+  padding:36px 24px;text-align:center;margin:48px 0;
+  box-shadow:0 20px 60px -20px rgba(0,0,0,.8),0 0 0 1px var(--gold-line);
+  position:relative;overflow:hidden;
+}
+.paywall-gate::before{
+  content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);
+  width:240px;height:240px;border-radius:50%;
+  background:radial-gradient(circle,rgba(180,128,255,.14) 0%,transparent 70%);
+  pointer-events:none;
+}
+.gate-icon{font-size:32px;margin-bottom:14px;position:relative;z-index:1}
+.gate-title{
+  color:var(--gold-soft);font-size:20px;font-weight:400;letter-spacing:.1em;
+  margin-bottom:10px;font-family:var(--lat);font-style:italic;
+  position:relative;z-index:1;line-height:2;
+}
+.gate-desc{color:var(--faint);font-size:13px;margin-bottom:20px;line-height:2;position:relative;z-index:1}
+.gate-price{
+  color:var(--text);font-size:30px;font-weight:300;margin-bottom:8px;
+  font-family:var(--lat);position:relative;z-index:1;
+}
+.gate-orig{color:var(--ghost);font-size:13px;text-decoration:line-through;margin-left:6px}
+.gate-btn{
+  background:linear-gradient(135deg,var(--gold-d),var(--gold),var(--gold-soft));
+  color:#120c02;border:none;padding:15px 0;border-radius:50px;
+  font-size:15px;font-weight:700;cursor:pointer;display:block;
+  width:100%;max-width:260px;margin:0 auto 12px;letter-spacing:.06em;
+  box-shadow:0 8px 24px rgba(220,192,130,.28);
+  position:relative;z-index:1;
+}
+.gate-alt{color:rgba(220,192,130,.55);font-size:12px;cursor:pointer;text-decoration:underline;display:block;position:relative;z-index:1}
+.gate-stripe{
+  background:linear-gradient(135deg,#5b50ff,#7c6fff);
+  color:#fff;border:none;padding:13px 0;border-radius:50px;
+  font-size:14px;font-weight:600;cursor:pointer;display:block;
+  width:100%;max-width:260px;margin:8px auto 0;
+  box-shadow:0 6px 20px rgba(100,80,255,.35);
+  position:relative;z-index:1;
+}
 .stripe-loading{opacity:.7;pointer-events:none}
 
-#pay-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;align-items:center;justify-content:center}
+/* ── Pay modal ── */
+#pay-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;align-items:center;justify-content:center}
 #pay-modal.open{display:flex}
-.pay-box{background:#1a1030;border:1px solid rgba(201,168,76,.35);border-radius:20px;padding:32px 24px;text-align:center;max-width:320px;width:90%}
-.pay-title{color:var(--gold);font-size:15px;font-weight:500;letter-spacing:1px;margin-bottom:4px}
-.pay-amount{color:#fff;font-size:32px;font-weight:300;margin-bottom:16px;font-family:'Cormorant Garamond',serif}
-#pay-qr-wrap{width:190px;height:190px;background:#fff;border-radius:12px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.pay-box{
+  background:var(--indigo-2);border:1px solid var(--gold-line-2);border-radius:22px;
+  padding:32px 24px;text-align:center;max-width:320px;width:90%;
+  box-shadow:0 30px 80px rgba(0,0,0,.8);
+}
+.pay-title{color:var(--gold-soft);font-size:14px;font-weight:500;letter-spacing:.1em;margin-bottom:4px;font-family:var(--lat);font-style:italic;line-height:2}
+.pay-amount{color:var(--text);font-size:32px;font-weight:300;margin-bottom:16px;font-family:var(--lat)}
+#pay-qr-wrap{width:190px;height:190px;background:#fff;border-radius:14px;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;overflow:hidden}
 #pay-qr-img{width:100%;height:100%;object-fit:contain}
-.pay-status{color:rgba(255,255,255,.5);font-size:12px;margin-bottom:14px;min-height:18px}
-.pay-close{color:rgba(255,255,255,.35);font-size:12px;cursor:pointer;text-decoration:underline}
+.pay-status{color:var(--faint);font-size:12px;margin-bottom:14px;min-height:18px;line-height:2}
+.pay-close{color:var(--ghost);font-size:12px;cursor:pointer;text-decoration:underline;display:inline-block;padding:12px 20px}
 
-.share-bar{text-align:center;margin:48px 0 24px;padding:24px;border:1px solid rgba(201,168,76,.1);border-radius:12px}
-.share-bar p{color:rgba(255,255,255,.5);font-size:13px;margin-bottom:14px}
+/* ── Share bar ── */
+.share-bar{
+  text-align:center;margin:48px 0 24px;padding:28px 24px;
+  background:linear-gradient(180deg,var(--indigo-2),var(--indigo));
+  border:1px solid var(--hair-2);border-radius:20px;
+  box-shadow:var(--shadow-card);
+}
+.share-bar p{color:var(--faint);font-size:13px;margin-bottom:16px;letter-spacing:.04em;line-height:2}
 .share-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.share-btn{padding:10px 22px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:none}
-.share-copy{background:rgba(201,168,76,.15);color:var(--gold);border:1px solid rgba(201,168,76,.3)}
+.share-btn{
+  padding:11px 28px;border-radius:50px;font-size:13px;font-weight:600;cursor:pointer;border:none;
+  letter-spacing:.06em;transition:all .2s;
+}
+.share-copy{
+  background:rgba(220,192,130,.12);color:var(--gold-soft);
+  border:1px solid var(--gold-line-2);
+}
+.share-copy:hover{background:rgba(220,192,130,.2)}
 
-.back-bar{text-align:center;padding:12px;color:rgba(255,255,255,.3);font-size:12px}
-.back-bar a{color:rgba(201,168,76,.5)}
+/* ── Back bar ── */
+.back-bar{text-align:center;padding:14px;color:var(--ghost);font-size:12px;letter-spacing:.04em}
+.back-bar a{color:rgba(220,192,130,.5)}
 
-.aigc-bar{text-align:center;padding:16px;font-size:10px;color:rgba(200,185,155,.35);letter-spacing:.06em;line-height:1.8;border-top:1px solid rgba(201,168,76,.06);margin-top:32px}
+/* ── AIGC disclaimer ── */
+.aigc-bar{
+  text-align:center;padding:20px 16px;font-size:11px;color:var(--ghost);
+  letter-spacing:.06em;line-height:2;
+  border-top:1px solid var(--hair);margin-top:36px;
+}
 
+/* ── Table scroll ── */
+.rp-section table{display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;border-collapse:collapse;margin:14px 0;font-size:13px}
+
+/* ── Responsive ── */
 @media(max-width:600px){
-  #report{padding:32px 16px 80px}
-  .rp-name{font-size:28px}
-  .rp-section h2{font-size:18px}
+  #report{padding:36px 14px 80px}
+  .rp-name{font-size:28px;letter-spacing:.08em}
+  .rp-section h2{font-size:16px}
+  .paywall-gate{padding:28px 16px}
+  .rp-cover{padding:48px 8px 40px}
 }
 </style>
 </head>
 <body>
 
 <div id="loading">
-  <div class="load-stars">✦</div>
+  <div class="load-orbit">
+    <div class="load-ring load-ring-1"></div>
+    <div class="load-ring load-ring-2"></div>
+    <div class="load-ring load-ring-3"></div>
+    <div class="load-dot">✦</div>
+  </div>
   <div class="load-title">กำลังอ่านโชคชะตาของคุณ</div>
   <div class="load-sub" id="load-name-hint">กำลังคำนวณสี่เสาของคุณ...</div>
   <div class="load-bar-wrap"><div class="load-bar" id="load-bar"></div></div>
@@ -102,10 +304,11 @@ a{color:var(--gold);text-decoration:none}
 
 <div id="report">
   <div class="rp-cover">
-    <div class="rp-brand">S H E N Y U A N · ป า จี · โ ช ค ช ะ ต า</div>
+    <div class="rp-brand">R U N A E &nbsp;·&nbsp; ป า จี &nbsp;·&nbsp; โ ช ค ช ะ ต า</div>
     <div class="rp-name" id="rp-name">—</div>
     <div class="rp-date" id="rp-date">—</div>
-    <div style="font-size:10px;letter-spacing:.15em;color:rgba(201,168,76,.35);margin-top:8px">🤖 สร้างโดย AI · เพื่อการอ้างอิงและความบันเทิง · ไม่ใช่คำแนะนำระดับมืออาชีพ</div>
+    <div class="rp-divider"></div>
+    <div class="rp-aigc-inline">🤖 สร้างโดย AI · เพื่อการอ้างอิงและความบันเทิง · ไม่ใช่คำแนะนำระดับมืออาชีพ</div>
   </div>
 
   <div id="free-content"></div>
@@ -113,7 +316,7 @@ a{color:var(--gold);text-decoration:none}
   <div id="gate-a" class="paywall-gate">
     <div class="gate-icon">🔮</div>
     <h3 class="gate-title">ปลดล็อกรายงานฉบับเต็ม</h3>
-    <p class="gate-desc">ความรัก & การแต่งงาน · โชคลาภ & การเงิน · อาชีพ · วัฏจักร 10 ปี · พยากรณ์รายปี</p>
+    <p class="gate-desc">ความรัก &amp; การแต่งงาน · โชคลาภ &amp; การเงิน · อาชีพ · วัฏจักร 10 ปี · พยากรณ์รายปี</p>
     <div class="gate-price">฿109 <span class="gate-orig">฿790</span></div>
     <button class="gate-btn" onclick="syPay('a','wechat')">🟢 ชำระผ่าน WeChat</button>
     <button class="gate-stripe" id="stripe-btn-a" onclick="syPayStripe('a')">💳 ชำระด้วยบัตร ($2.99)</button>
@@ -131,7 +334,7 @@ a{color:var(--gold);text-decoration:none}
 
   <div class="back-bar"><a href="lp-master-TH.html">← กรอกวันเกิดใหม่</a> · <a href="life-events.html">ปรึกษาอาจารย์</a></div>
 
-  <div class="aigc-bar">เนื้อหาสร้างโดย AI · เพื่อความบันเทิงและการอ้างอิงเท่านั้น · ไม่ถือเป็นคำแนะนำทางการแพทย์ กฎหมาย หรือการเงิน<br>ShenYuan · อภิปรัชญา AI · สงวนลิขสิทธิ์</div>
+  <div class="aigc-bar">เนื้อหาสร้างโดย AI · เพื่อความบันเทิงและการอ้างอิงเท่านั้น · ไม่ถือเป็นคำแนะนำทางการแพทย์ กฎหมาย หรือการเงิน<br>Runae · อภิปรัชญา AI · สงวนลิขสิทธิ์</div>
 </div>
 
 <div id="pay-modal">
@@ -185,8 +388,18 @@ function parseSections(text){
     if(!chunk) return '';
     var firstLine = chunk.split('\n')[0];
     var rest = chunk.slice(firstLine.length).trim();
-    return '<div class="rp-section"><h2>'+firstLine+'</h2>'+md2html(rest)+'</div>';
+    var sectionId = 'sec-' + Math.random().toString(36).slice(2,7);
+    return '<div class="rp-section"><h2 onclick="toggleSection(this)" data-body="'+sectionId+'">'+firstLine+'</h2><div class="rp-section-body" id="'+sectionId+'">'+md2html(rest)+'</div></div>';
   }).join('');
+}
+
+function toggleSection(h2){
+  var bodyId = h2.getAttribute('data-body');
+  var body = document.getElementById(bodyId);
+  if(!body) return;
+  var isOpen = body.classList.contains('open');
+  h2.classList.toggle('open', !isOpen);
+  body.classList.toggle('open', !isOpen);
 }
 
 function renderReport(reading, name, dateStr, timeStr){
@@ -196,6 +409,13 @@ function renderReport(reading, name, dateStr, timeStr){
   var freeText = parts[0] || '';
   var lockedText = parts[1] || '';
   document.getElementById('free-content').innerHTML = parseSections(freeText);
+
+  // Auto-open first section
+  try{
+    var firstH2 = document.querySelector('#free-content .rp-section h2');
+    if(firstH2) toggleSection(firstH2);
+  }catch(e){}
+
   if(lockedText.trim()){
     document.getElementById('locked-content').innerHTML = parseSections(lockedText);
     syInitUnlock();
@@ -218,7 +438,7 @@ function syInitUnlock(){
     var hubOid = urlParams.get('oid') || localStorage.getItem('sy_stripe_hub_a');
     var localOid = localStorage.getItem('sy_stripe_local_a');
     if(hubOid){
-      document.getElementById('gate-a').innerHTML='<div style="padding:20px;color:#c9a84c">⏳ กำลังตรวจสอบ...</div>';
+      document.getElementById('gate-a').innerHTML='<div style="padding:20px;color:var(--gold-soft);font-family:var(--lat);font-style:italic;letter-spacing:.08em">⏳ กำลังตรวจสอบ...</div>';
       syStripeWait('a', hubOid, localOid, 0);
     }
   }
@@ -248,7 +468,7 @@ function syPayStripe(tier){
 }
 
 function syStripeWait(tier, hubOid, localOid, tries){
-  if(tries > 20){ document.getElementById('gate-a').innerHTML='<div style="padding:20px;color:#999">กำลังรอการยืนยัน กรุณารีเฟรช</div>'; return; }
+  if(tries > 20){ document.getElementById('gate-a').innerHTML='<div style="padding:20px;color:var(--faint)">กำลังรอการยืนยัน กรุณารีเฟรช</div>'; return; }
   var qUrl = SY_API+'/pay/stripe/query?hub_order_no='+encodeURIComponent(hubOid);
   if(localOid) qUrl += '&out_trade_no='+encodeURIComponent(localOid);
   fetch(qUrl).then(function(r){ return r.json(); }).then(function(s){
