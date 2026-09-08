@@ -3914,7 +3914,21 @@ ${westernEngineBlock}
     } catch (e) { console.warn('[ASTRO] computeWesternChart 不可用，回退旧事实卡:', e.message); }
     const _astroFactCard = _wcPrecise ? buildPreciseFactCard(_wcPrecise) : buildWesternFactCard(chart);
 
-    const astroSystemPrompt = `你是一位真正有功底的资深占星师，从业20年，为上千人亲手解过本命星盘，融古典占星与现代心理占星于一炉。你的功夫是正统的——太阳/月亮/上升三巨头（the big three）、关键相位（合 conjunction／冲 opposition／刑 square／拱 trine）、十二宫位（houses）、行运与过境（transits）一样不含糊；但你说人话，不端着、不故弄玄虚、不用生僻术语吓人。你讲"为什么"（是盘里哪颗行星、哪个相位、走到哪个宫位在起作用），把星盘翻译成TA生活里真实的职场与关系场景，让TA一读就"这说的就是我"，并且清楚知道该怎么做。每章写透，绝不以"略"或"以此类推"敷衍。
+    const _astroIntl = !!(lang && lang !== 'zh');
+    const astroSystemPrompt = _astroIntl
+      ? `You are a seasoned astrologer with real depth — 20 years in practice, thousands of natal charts read by hand, blending classical and modern psychological astrology. Your craft is orthodox: the Big Three (Sun / Moon / Rising), the key aspects (conjunction / opposition / square / trine), the twelve houses, transits and progressions — nothing vague. But you speak like a real person: never pompous, never mystifying, never scaring anyone with obscure jargon. You explain the "why" (which planet, which aspect, which house is at work), translating the chart into the reader's real work and relationship scenes so they think "this is exactly me" — and know what to do. Write every chapter through; never fob it off with "etc." or "and so on".
+Be concrete and actionable — not "you may be creative" but "your Venus in Gemini opposes your Mars in Sagittarius — your creativity comes from friction, it stalls the moment things get comfortable, so at work you should…". Name the term once, then the point is always "what this means for YOU and what to do".
+
+[PRECISE CHART DATA — backend-injected · LLM must NOT recompute]
+${fullChartBlock}
+
+[CONSISTENCY IRON RULE] The report body already opens with a backend-inserted "chart fact card" (a Markdown table: Sun/Moon/Rising + five major planets, signs + degrees + elements + houses) that is 100% accurate. Your reading begins AFTER that card; never re-list or alter any planet sign/degree in the body — interpret only. The injected data may carry some Chinese labels — translate ALL sign / planet / house names into English in your output. If data is missing (e.g. no birth time → no Rising), the card marks it, and you must match it: say "cannot be determined without a birth time" — never fabricate.
+
+[TIME BASE] The current year is ${NOW_Y}. All transit / progression / yearly analysis must treat ${NOW_Y} as "now / this year"; never treat a past year (2024/2025) as this year.
+
+[HEALTH SECTION] Only wellness/constitution tendencies — never a medical diagnosis, never name a specific disease, never induce fear.
+[CLOSING COMPLIANCE] End with one disclaimer line.${DISCLAIMER_EN}${FMT_LAW_EN}${langSuffix(lang)}`
+      : `你是一位真正有功底的资深占星师，从业20年，为上千人亲手解过本命星盘，融古典占星与现代心理占星于一炉。你的功夫是正统的——太阳/月亮/上升三巨头（the big three）、关键相位（合 conjunction／冲 opposition／刑 square／拱 trine）、十二宫位（houses）、行运与过境（transits）一样不含糊；但你说人话，不端着、不故弄玄虚、不用生僻术语吓人。你讲"为什么"（是盘里哪颗行星、哪个相位、走到哪个宫位在起作用），把星盘翻译成TA生活里真实的职场与关系场景，让TA一读就"这说的就是我"，并且清楚知道该怎么做。每章写透，绝不以"略"或"以此类推"敷衍。
 你的语言：70%中文 + 30%英文关键术语（星座名/行星名用英文，其余中文解释），让用户既能看懂又能学到占星知识。
 解读要具体、可落地——不说"你可能比较有创意"，说"你的 Venus 在 Gemini 与 Mars 在 Sagittarius 形成对分（opposition）——所以你的创意来自碰撞，一安稳就没灵感，在工作里你最该做的是……"。术语一句带过，重点永远是"这对你意味着什么、你该怎么做"。
 
@@ -3931,7 +3945,26 @@ ${fullChartBlock}
     let astroUserPrompt, astroMaxTokens;
     if (astroTier === 'free') {
       astroMaxTokens = 3200;
-      astroUserPrompt = `出生：${birthYear}/${birthMonth}/${birthDay}
+      astroUserPrompt = _astroIntl
+        ? `Birth: ${birthYear}/${birthMonth}/${birthDay}
+Focus: ${question || 'Please give me a full natal chart reading'}
+
+This is a [Free Preview] — write it like a story no one can stop reading: grab them from the first sentence, every line relatable, each one pulling them to read on; never a flat recital. Output ONLY these 3 sections (about 550 words total), tightly anchored to the real Sun/Moon/Rising and element balance in the fact card above:
+
+## 🌟 Chart Overview (how the Big Three combine into "you", how your dominant element shows up in real life — use concrete scenes they recognize, ~180 words)
+## ☀️🌙⬆️ The Big Three, quick read (Sun = core self / Moon = emotional needs / Rising = how you meet the world; ~60 words each, landed on scenes they recognize)
+## 📅 How ${NOW_Y} Unfolds (tie to this year's Jupiter/Saturn transits — trend for a concrete area + one doable tip, ~180 words). This section MUST end with a strong, [specific] cliffhanger — in your own words, name this year's single most important opportunity window OR the pitfall to avoid (land it on a concrete area/direction, spark curiosity; never write empty filler like "there's a turning point / a risk", and never copy this instruction's wording) — but leave "which month exactly, how to seize/avoid it, which planet drives it" for the full version, so the reader must unlock.
+
+Then, on a new line, output exactly: ---LOCKED---
+Then list ONLY these locked chapter names (do not expand any content):
+🪐 Planetary Placements (all 10 planets) · Unlock Full
+🏠 12 Houses In-Depth · Unlock Full
+📐 Major Aspects Explained · Unlock Full
+💰💕💼🏥 Life Areas Deep-Dive · Unlock Full
+📅 Next 3 Years of Transits · Unlock Full
+
+Do not expand any locked chapter content.`
+        : `出生：${birthYear}/${birthMonth}/${birthDay}
 用户关注：${question || '请给我完整的星盘解读'}
 
 这是一份【免费预览】，要像一个让人停不下来的故事——开头第一句就抓住TA、句句有代入感、越读越想知道下文，绝不平铺直叙报菜名。请仅输出以下3节（合计约900字），紧扣上方事实卡里真实的太阳/月亮/上升与元素分布：
@@ -3951,7 +3984,23 @@ ${fullChartBlock}
 禁止展开任何锁定章节内容。`;
     } else if (astroTier === 'standard') {
       astroMaxTokens = 8000;
-      astroUserPrompt = `出生：${birthYear}/${birthMonth}/${birthDay}
+      astroUserPrompt = _astroIntl
+        ? `Birth: ${birthYear}/${birthMonth}/${birthDay}
+Gender: ${gender === 'male' ? 'Male' : 'Female'}
+Focus: ${question || 'Please give me a full natal chart reading'}
+
+Produce a Standard natal astrology report (~1600 words) in this structure:
+
+1. 🌟 Chart Overview (Big Three / dominant element / modality, ~180 words)
+2. ☀️🌙⬆️ The Big Three In-Depth (Sun / Moon / Rising, ~120 words each)
+3. 🪐 Planetary Summary (the 5 most important planets, ~60 words each)
+4. 🏠 Houses at a Glance (all 12, brief)
+5. 💰💕💼 Core Life Areas (wealth / love / career, ~60 words each)
+6. 📅 This year's key Jupiter/Saturn transits
+7. 💌 Astrologer's Note (~60 words)
+
+Close with: want the full version? The $9.9 full report includes precise analysis of all 10 planets, major aspects, and the next 3 years of transits + a moon-phase calendar.`
+        : `出生：${birthYear}/${birthMonth}/${birthDay}
 性别：${gender === 'male' ? '男 Male' : '女 Female'}
 用户关注：${question || '请给我完整的星盘解读'}
 
@@ -3968,7 +4017,37 @@ ${fullChartBlock}
 结尾：想看完整版？$9.9完整版包含：10颗行星精确解析、主要相位详解、未来3年逐年行运与月相日历。`;
     } else {
       astroMaxTokens = 16384;
-      astroUserPrompt = `出生：${birthYear}/${birthMonth}/${birthDay} ${birthHour !== undefined ? birthHour + ':' + (birthMinute || '00') : '时间不详'}
+      astroUserPrompt = _astroIntl
+        ? `Birth: ${birthYear}/${birthMonth}/${birthDay} ${birthHour !== undefined ? birthHour + ':' + (birthMinute || '00') : 'time unknown'}
+Birthplace: ${latitude !== undefined ? 'lat ' + latitude + '° lng ' + longitude + '°' : 'not provided (houses/Rising unavailable)'}
+Gender: ${gender === 'male' ? 'Male' : 'Female'}
+Focus: ${question || 'Please give me a full natal chart reading'}
+
+Using the precise chart data above, produce a complete Western astrology reading across these 10 dimensions (5500-7000 words, every chapter written through, never perfunctory). Every passage must land on concrete scenes and doable advice, making clear "which planet / which aspect is at work → what it means for you → what to do":
+
+1. 🌟 Chart Overview (Big Three, dominant element & modality, overall shape, ~250 words)
+
+2. ☀️🌙⬆️ The Big Three In-Depth (at least 250 words each)
+   - Sun: core self / life direction / identity
+   - Moon: emotional needs / inner security / instinctive reactions
+   - Rising: outer image / first impression / how you meet the world
+
+3. 🪐 Planetary Placements (all 10 planets, at least 90 words each) — sign + house meaning, and major aspects to Sun/Moon
+
+4. 🔥🌍💨💧 Elements & Modalities (~250 words) — four elements (Fire/Earth/Air/Water) balance, three modalities (Cardinal/Fixed/Mutable), and how to compensate for a lacking element
+
+5. 🏠 The 12 Houses (brief, ~40 words each)
+
+6. 📐 Major Aspects (pick the 3-5 most important, ~120 words each; you MUST cite only aspects that truly exist in the injected data above — name the planets, degrees and orb; never fabricate an aspect not in the chart)
+
+7. 🌙 Moon Phase (current phase + effect on the natal Moon, ~120 words)
+
+8. 💰💕💼🏥 Life Areas Deep-Dive (~180 words each) — Wealth (2nd/8th/Jupiter/Venus); Love (5th/7th/Venus/Mars, with timing windows); Career (6th/10th/Saturn/Jupiter, best phases); Health (1st/6th & innate constitution, wellness direction only)
+
+9. 📅 Next 3 Years of Transits (~120 words per year) — which house Jupiter/Saturn transit + the core theme
+
+10. 💌 Astrologer's Note (words meant only for this chart, ~90 words)`
+        : `出生：${birthYear}/${birthMonth}/${birthDay} ${birthHour !== undefined ? birthHour + ':' + (birthMinute || '00') : '时间不详'}
 出生地：${latitude !== undefined ? '纬度' + latitude + '° 经度' + longitude + '°' : '未提供（宫位/上升不可用）'}
 性别：${gender === 'male' ? '男 Male' : '女 Female'}
 用户关注：${question || '请给我完整的星盘解读'}
