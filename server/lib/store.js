@@ -720,8 +720,12 @@ function onInviteeFirstReading(userId) {
     return r.invitee_id === userId && !r.inviter_rewarded;
   });
   if (!ref) return;
-  grantReferralReward(ref.inviter_id);   // 此刻(被邀请人真实激活)才给邀请人发
-  ref.inviter_rewarded = true;           // referral 记录加标记防重复发
+  // 软护栏: 邀请人 24h 归因数超 cap 时不发邀请人奖励，但仍打 inviter_rewarded 防重试绕过。
+  var overCap = referralAttributionsInLast24h(ref.inviter_id) > REFERRAL_DAILY_CAP;
+  ref.inviter_rewarded = true;           // 先打标记防重复（无论是否超 cap）
+  if (!overCap) {
+    grantReferralReward(ref.inviter_id); // 此刻(被邀请人真实激活)才给邀请人发
+  }
   _persist();
 }
 

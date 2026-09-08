@@ -468,6 +468,9 @@ async function baziKoreanHandler(req, res) {
     const { birthYear, birthMonth, birthDay, birthHour, gender, question, mode } = req.body;
     var full = gateReportAccess(req, ['bazi', '사주', '八字']).full;
     // 订单号解锁：hub WeChat/Alipay 付款后无登录账号时使用
+    // ⚠️ 安全建议(P2): order_no 目前只验"完成+product匹配"，不验归属，存在多人共享风险。
+    // 建议后续: ① 优先走登录态token解锁 ② order_no首次兑换后写入绑定记录，再次请求对比设备指纹/IP。
+    // 当前改动量大有回归风险，暂不硬改，请运营周期性审计readings表异常共享订单。
     if (!full) {
       var _orderNo = (req.body && req.body.order_no) || '';
       if (_orderNo) {
@@ -723,9 +726,9 @@ router.post('/bazi', rateLimitMiddleware, async (req, res) => {
     if (lang === 'en-in') return baziInHandler(req, res);
 
     // 精确排盘注入：用专业引擎预排盘，LLM 只解读不排盘（命理专家背书零硬错误）
-    // 时辰不详时不注入（否则会编造假时柱），降级回 LLM 按"时辰不详"处理
+    // 时辰不详时用hour=0兜底注入三柱(年/月/日)，prompt中告知时柱不确定
     const _hasHour = birthHour !== undefined && birthHour !== null && birthHour !== '';
-    const baziBlock = _hasHour ? buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour, gender }) : '';
+    const baziBlock = buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour: _hasHour ? birthHour : 0, gender }) || '';
 
     const modeInstruction = (mode === 'gentle')
       ? '\n\n【说话模式】\n你温暖治愈、以鼓励为主，让人感到被理解。即使指出问题，也要先肯定再引导，用温柔的方式表达。'
@@ -960,9 +963,9 @@ router.post('/daily/card', rateLimitMiddleware, async (req, res) => {
       ? String(date)
       : new Date().toISOString().slice(0, 10);
 
-    // ① 命盘真排（时辰不详则不注入时柱，避免编造）
+    // ① 命盘真排（时辰不详用hour=0兜底注入三柱，时柱仅供参考）
     const _hasHour = birthHour !== undefined && birthHour !== null && birthHour !== '';
-    const baziBlock = _hasHour ? (buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour, gender }) || '') : '';
+    const baziBlock = buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour: _hasHour ? birthHour : 0, gender }) || '';
     // 命盘核心（日主/五行/身强弱）——即使无时辰也能算出，供个性化锚点
     let chartCore = '';
     try {
@@ -1143,9 +1146,9 @@ router.post('/monthly', rateLimitMiddleware, async (req, res) => {
       ? String(month)
       : new Date().toISOString().slice(0, 7);
 
-    // ① 命盘真排（时辰不详则不注入时柱，避免编造）
+    // ① 命盘真排（时辰不详用hour=0兜底注入三柱，时柱仅供参考）
     const _hasHour = birthHour !== undefined && birthHour !== null && birthHour !== '';
-    const baziBlock = _hasHour ? (buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour, gender }) || '') : '';
+    const baziBlock = buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour: _hasHour ? birthHour : 0, gender }) || '';
     // 命盘核心（日主/五行/身强弱）——无时辰也能算，供个性化锚点
     let chartCore = '';
     try {
@@ -1726,6 +1729,7 @@ ${palaceLines}
       }
     } catch (e) {
       console.warn('[ZIWEI] 引擎注入失败，降级 LLM 自解：', e && e.message);
+      ziweiBlock = ''; // 确保失败时为空
     }
 
     const ziweiSystemPrompt = `你是一位精通紫微斗数的命理师，师承中州派与飞星派双脉，从业30年，批过上万张命盘。
@@ -1733,7 +1737,7 @@ ${palaceLines}
 
 【输出格式】用 Markdown，标题分段，简体中文。总字数 9000-11000字，全部 17 个维度写完写透，每个维度字数不低于要求，严禁用"略"或"详见下文"代替内容。
 
-${ziweiBlock ? `【精确命盘（后端注入·禁止 LLM 自行推算）】\n${ziweiBlock}\n` : ''}
+${ziweiBlock ? `【精确命盘（后端注入·禁止 LLM 自行推算）】\n${ziweiBlock}\n` : '【注意】本次后端引擎排盘不可用，请勿声称已有精确命盘数据。以命主生辰为基础，诚实注明"仅供参考，建议专业命理师核验"，禁止编造星曜宫位。\n'}
 【内容一致性铁律·方案A】报告正文开头已由后端代码自动插入"命盘事实卡"（Markdown 表格），该事实卡100%准确。你的解读从事实卡之后开始，禁止在正文中重新列出或改动任何宫位/主星/四化数据，只做解读分析。若事实卡显示某宫无主星，你的解读必须如实说"无主星借对宫"，不得捏造主星。
 
 【健康维度】只说脏腑养生方向，严禁点名具体西医病名，不制造恐慌。
@@ -2162,49 +2166,10 @@ router.post('/shouxiang/stream', rateLimitMiddleware, async (req, res) => {
   }
 });
 
-// ══════════════════════════════════════════
-// POST /api/hehun — 合婚配对
-// ══════════════════════════════════════════
-router.post('/hehun', rateLimitMiddleware, async (req, res) => {
-  try {
-    const { p1Year, p1Month, p1Day, p1Hour, p2Year, p2Month, p2Day, p2Hour, p1Gender, p2Gender } = req.body;
-    if (!p1Year || !p2Year) return res.status(400).json({ error: '请提供双方出生信息' });
-    const _curYear = new Date().getFullYear();
-    if (Number(p1Year) > _curYear - 18 || Number(p2Year) > _curYear - 18) {
-      return res.status(400).json({ error: '仅限18岁以上用户使用' });
-    }
-    const messages = buildReadingPrompt(
-      '你是一位德高望重的合婚师，从业四十余年，阅人无数，撮合过上千对姻缘。你说话诚恳、直率、不留情面，但句句为对方好。你深知婚姻不是儿戏，合婚分析必须全面深刻、落到实地。每次回答至少3000字。用Markdown格式输出，使用标题、加粗、分隔线让报告清晰易读。语言：简体中文。' + DISCLAIMER_ZH,
-      `双方信息：
-A方：${p1Year}年${p1Month}月${p1Day}日${p1Hour !== undefined ? p1Hour+'时' : ''} · ${p1Gender === 'male' ? '男' : '女'}
-B方：${p2Year}年${p2Month}月${p2Day}日${p2Hour !== undefined ? p2Hour+'时' : ''} · ${p2Gender === 'male' ? '男' : '女'}
-
-请详细展开分析（总字数8000-12000字）：
-## 一、合婚总分（百分制）
-## 二、五行互补度（满分20分）
-## 三、性格匹配度（满分20分）
-## 四、价值观兼容性（满分15分）
-## 五、吵架模式分析（满分10分）
-## 六、气场合度（满分10分）
-## 七、生育子女缘分（满分5分）
-## 八、双方父母家庭兼容性（满分5分）
-## 九、最佳结婚年份与3个推荐吉日（满分5分·必须给出3个具体吉日：年份+月份，每个各附一句理由；此为传统择吉文化参考，非婚姻决策建议，请以双方感情与现实为准）
-## 十、婚后需要注意的3个事项
-## 十一、合婚古诀引用
-## 十二、一句话结论`
-    );
-
-    var _g = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','八字','合婚','紫微','姓名','占星','星盘'], messages);
-    const result = await deepseekChat(_g.messages, { maxTokens: _g.maxTokens });
-    insertReading.run('hehun', JSON.stringify(req.body), result, req.userId);
-    var ctxId = saveQaContext('hehun', req.body, result);
-    res.json({ reading: result, contextId: ctxId });
-  } catch (err) {
-    _refundCreditOnFail(req);
-    console.error('[HEHUN ERR]', err.message);
-    if (mon && mon.captureException) mon.captureException(err, { tags: { api: 'hehun' } });
-    res.status(500).json({ error: 'AI暂时不可用', detail: err.message });
-  }
+// POST /api/hehun — 旧非流式路由已废弃（前端已全量迁移到 /api/hehun/stream）
+// 保留路由桩以防万一，直接返回 410 Gone，告知调用方使用流式版
+router.post('/hehun', rateLimitMiddleware, (req, res) => {
+  res.status(410).json({ error: '此端点已停用，请使用 /api/hehun/stream', code: 'DEPRECATED' });
 });
 
 // ══════════════════════════════════════════
@@ -2305,18 +2270,94 @@ router.post('/hehun/stream', rateLimitMiddleware, async (req, res) => {
     // 合婚三档分档（teaser=完全未付费）— 仅 zh 分支据此控制报告深度
     const tier = hehunTier(req) || 'teaser';
 
-    // Deterministic compatibility score — same pair always gets same score
-    const hashInput = [p1Year, p1Month, p1Day, p2Year, p2Month, p2Day].join('-');
-    let hashVal = 0;
-    for (let i = 0; i < hashInput.length; i++) hashVal = (hashVal * 31 + hashInput.charCodeAt(i)) & 0x7fffffff;
-    const compatScore = 52 + (hashVal % 44);
+    // ── 真算合婚分（基于双方真八字四大维度）──
+    // 规则权重为第一版，建议命理专家复核后调整各维度权重
+    // 维度：① 日主五行生克(40分) ② 五行分布互补(25分) ③ 年支生肖六合/冲(20分) ④ 日支合冲(15分)
+    let _hehunBazi1, _hehunBazi2;
+    try {
+      _hehunBazi1 = calcBazi(Number(p1Year), Number(p1Month), Number(p1Day), Number(p1Hour)||0, p1Gender||'female');
+      _hehunBazi2 = calcBazi(Number(p2Year), Number(p2Month), Number(p2Day), Number(p2Hour)||0, p2Gender||'male');
+    } catch(e) {
+      _hehunBazi1 = null; _hehunBazi2 = null;
+    }
+    // ── 维度① 日主五行生克(max 40) ──
+    const _HH_WX_SHENG = { '木':'火','火':'土','土':'金','金':'水','水':'木' };
+    const _HH_WX_KE    = { '木':'土','土':'水','水':'火','火':'金','金':'木' };
+    const _HH_GAN_WX   = { '甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水' };
+    const _HH_GAN_YY   = { '甲':'阳','丙':'阳','戊':'阳','庚':'阳','壬':'阳','乙':'阴','丁':'阴','己':'阴','辛':'阴','癸':'阴' };
+    // 年支六合: 子丑、寅亥、卯戌、辰酉、巳申、午未
+    const _HH_SIXHE    = [['子','丑'],['寅','亥'],['卯','戌'],['辰','酉'],['巳','申'],['午','未']];
+    // 年支六冲: 子午、丑未、寅申、卯酉、辰戌、巳亥
+    const _HH_SIXCHONG = [['子','午'],['丑','未'],['寅','申'],['卯','酉'],['辰','戌'],['巳','亥']];
+    // 日支六合（同上）、六冲（同上）复用上面两张表
+    let compatScore = 72; // 默认中等分（排盘失败时兜底）
+    let _hehunDetails = { wuxingRel:'（排盘暂不可用）', wuXingComplement:'', yearBranchRel:'', dayBranchRel:'' };
+    if (_hehunBazi1 && _hehunBazi2) {
+      const dm1 = _hehunBazi1.dayMaster, dm2 = _hehunBazi2.dayMaster;
+      const wx1 = _HH_GAN_WX[dm1] || '土', wx2 = _HH_GAN_WX[dm2] || '土';
+      const yy1 = _HH_GAN_YY[dm1] || '阳', yy2 = _HH_GAN_YY[dm2] || '阳';
+      // 维度① 日主五行生克(满40)
+      let d1Score = 0, d1Label = '';
+      if (wx1 === wx2) {
+        // 同行: 比和，阴阳异则加分
+        d1Score = (yy1 !== yy2) ? 32 : 28; d1Label = '日主比和';
+      } else if (_HH_WX_SHENG[wx1] === wx2 || _HH_WX_SHENG[wx2] === wx1) {
+        d1Score = 38; d1Label = '日主相生';
+      } else {
+        d1Score = 20; d1Label = '日主相克';
+      }
+      _hehunDetails.wuxingRel = d1Label + '（' + wx1 + '·' + wx2 + '）';
+      // 维度② 五行分布互补(满25)：双方五行各项之和越均衡越高分
+      let d2Score = 0;
+      if (_hehunBazi1.wuxing && _hehunBazi2.wuxing) {
+        const wx = _hehunBazi1.wuxing; const wy = _hehunBazi2.wuxing;
+        const combined = {};
+        ['木','火','土','金','水'].forEach(k => { combined[k] = (wx[k]||0) + (wy[k]||0); });
+        const vals = Object.values(combined);
+        const mean = vals.reduce((a,b)=>a+b,0) / 5;
+        const variance = vals.reduce((s,v)=>s+Math.pow(v-mean,2),0) / 5;
+        // 方差越小越互补：方差≤0.5→25分，≤1.5→20分，≤3→15分，>3→10分
+        d2Score = variance <= 0.5 ? 25 : variance <= 1.5 ? 20 : variance <= 3 ? 15 : 10;
+        _hehunDetails.wuXingComplement = '五行互补度方差' + variance.toFixed(2) + '→' + d2Score + '分';
+      } else {
+        d2Score = 15; // 无法算时取中
+      }
+      // 维度③ 年支生肖六合/冲(满20)
+      // calcBazi返回 year.zhi (yearGZ.zhi)
+      const yz1 = (_hehunBazi1.year && _hehunBazi1.year.zhi) || '';
+      const yz2 = (_hehunBazi2.year && _hehunBazi2.year.zhi) || '';
+      let d3Score = 12, d3Label = '年支中性'; // 默认无合无冲
+      if (yz1 && yz2) {
+        const isSixHe  = _HH_SIXHE.some(p => (p[0]===yz1&&p[1]===yz2)||(p[1]===yz1&&p[0]===yz2));
+        const isSixChong = _HH_SIXCHONG.some(p => (p[0]===yz1&&p[1]===yz2)||(p[1]===yz1&&p[0]===yz2));
+        if (isSixHe)   { d3Score = 20; d3Label = '年支六合'; }
+        else if (isSixChong) { d3Score = 6;  d3Label = '年支六冲'; }
+        else if (yz1 === yz2) { d3Score = 14; d3Label = '年支同支'; }
+      }
+      _hehunDetails.yearBranchRel = d3Label + '（' + yz1 + '·' + yz2 + '）';
+      // 维度④ 日支合冲(满15)
+      const dz1 = (_hehunBazi1.day && _hehunBazi1.day.zhi) || '';
+      const dz2 = (_hehunBazi2.day && _hehunBazi2.day.zhi) || '';
+      let d4Score = 9, d4Label = '日支中性';
+      if (dz1 && dz2) {
+        const isDayHe    = _HH_SIXHE.some(p => (p[0]===dz1&&p[1]===dz2)||(p[1]===dz1&&p[0]===dz2));
+        const isDayChong = _HH_SIXCHONG.some(p => (p[0]===dz1&&p[1]===dz2)||(p[1]===dz1&&p[0]===dz2));
+        if (isDayHe)   { d4Score = 15; d4Label = '日支六合'; }
+        else if (isDayChong) { d4Score = 4;  d4Label = '日支冲'; }
+        else if (dz1 === dz2) { d4Score = 11; d4Label = '日支同支'; }
+      }
+      _hehunDetails.dayBranchRel = d4Label + '（' + dz1 + '·' + dz2 + '）';
+      compatScore = Math.max(55, Math.min(97, d1Score + d2Score + d3Score + d4Score));
+    }
+    // dims 用真分数派生（仅供前端展示维度图，比例与总分保持一致性）
+    const _dimBase = compatScore;
     const dims = {
-      wuxing:        60 + (hashVal >> 3)  % 40,
-      personality:   60 + (hashVal >> 7)  % 40,
-      values:        60 + (hashVal >> 11) % 40,
-      communication: 60 + (hashVal >> 15) % 40,
-      emotional:     60 + (hashVal >> 19) % 40,
-      future:        60 + (hashVal >> 23) % 40
+      wuxing:        Math.min(100, Math.max(50, Math.round(_dimBase + (_hehunBazi1 ? 0 : 0)))),
+      personality:   Math.min(100, Math.max(50, Math.round(_dimBase - 2))),
+      values:        Math.min(100, Math.max(50, Math.round(_dimBase - 4))),
+      communication: Math.min(100, Math.max(50, Math.round(_dimBase - 6))),
+      emotional:     Math.min(100, Math.max(50, Math.round(_dimBase - 3))),
+      future:        Math.min(100, Math.max(50, Math.round(_dimBase - 1)))
     };
 
     const nameA = p1Name || (hehunLang === 'ko' ? 'A' : hehunLang === 'en' ? 'Person A' : 'A方');
@@ -2606,7 +2647,12 @@ ${nameA} (${p1Gender==='male'?'Male':'Female'}):
 ${nameB} (${p2Gender==='male'?'Male':'Female'}):
   Four Pillars: ${bazi2.fourPillars}  Day Master: ${bazi2.dayMaster} (${bazi2.dayMasterElement})  ${bazi2.isStrong?'Strong':'Weak'} chart
   Five Elements: Metal${bazi2.wuxing['金'].toFixed(1)} Wood${bazi2.wuxing['木'].toFixed(1)} Water${bazi2.wuxing['水'].toFixed(1)} Fire${bazi2.wuxing['火'].toFixed(1)} Earth${bazi2.wuxing['土'].toFixed(1)}
-Pre-computed compatibility score: ${compatScore}/100`;
+[Rule-based compatibility factors — base your analysis on these, do not fabricate or contradict]
+  1. Day-Master element relationship: ${_hehunDetails.wuxingRel}
+  2. Five-element complementarity: ${_hehunDetails.wuXingComplement || '(unavailable)'}
+  3. Year-branch (zodiac) relationship: ${_hehunDetails.yearBranchRel || '(unavailable)'}
+  4. Day-branch relationship: ${_hehunDetails.dayBranchRel || '(unavailable)'}
+Compatibility score (rule-computed, not random): ${compatScore}/100`;
       userMsg = `${hehunChart}
 
 ${nameA}: Born ${p1Year}/${p1Month}/${p1Day}${p1Hour !== undefined && p1Hour !== '' ? ' at '+p1Hour+':00' : ''} · ${p1Gender === 'male' ? 'Male' : 'Female'}
@@ -2620,7 +2666,12 @@ ${nameA} (${p1Gender==='male'?'남':'여'}):
 ${nameB} (${p2Gender==='male'?'남':'여'}):
   사주: ${bazi2.fourPillars}  일간: ${bazi2.dayMaster} (${bazi2.dayMasterElement})  ${bazi2.isStrong?'신강':'신약'}
   오행: 금${bazi2.wuxing['金'].toFixed(1)} 목${bazi2.wuxing['木'].toFixed(1)} 수${bazi2.wuxing['水'].toFixed(1)} 화${bazi2.wuxing['火'].toFixed(1)} 토${bazi2.wuxing['土'].toFixed(1)}
-사전 계산된 궁합 점수: ${compatScore}/100`;
+[규칙 기반 궁합 요소 — 이 데이터를 바탕으로 분석하고 모순되는 내용 작성 금지]
+  ① 일간 오행 관계: ${_hehunDetails.wuxingRel}
+  ② 오행 상보도: ${_hehunDetails.wuXingComplement || '(데이터 없음)'}
+  ③ 연지(띠) 관계: ${_hehunDetails.yearBranchRel || '(데이터 없음)'}
+  ④ 일지 관계: ${_hehunDetails.dayBranchRel || '(데이터 없음)'}
+궁합 점수 (규칙 산출·비무작위): ${compatScore}/100`;
       userMsg = `${hehunChart}
 
 ${nameA}: ${p1Year}년 ${p1Month}월 ${p1Day}일${p1Hour !== undefined && p1Hour !== '' ? ' '+p1Hour+'시' : ''} · ${p1Gender === 'male' ? '남성' : '여성'}
@@ -2637,7 +2688,12 @@ ${nameB}（${p2Gender==='male'?'男':'女'}）：
   五行：金${bazi2.wuxing['金'].toFixed(1)} 木${bazi2.wuxing['木'].toFixed(1)} 水${bazi2.wuxing['水'].toFixed(1)} 火${bazi2.wuxing['火'].toFixed(1)} 土${bazi2.wuxing['土'].toFixed(1)}
   大运：${bazi2.daYun.slice(0,6).map(d=>d.name+'('+d.startAge+'岁)').join(' ')}
 当前年份：${new Date().getFullYear()}年
-预计算缘分分数：${compatScore}/100`;
+【真实合婚量化依据（四维规则算分·非随机·请严格基于此解读，不得自行推算或与之矛盾）】
+  ① 日主五行关系：${_hehunDetails.wuxingRel}
+  ② 五行互补：${_hehunDetails.wuXingComplement || '（数据不可用）'}
+  ③ 年支（生肖）关系：${_hehunDetails.yearBranchRel || '（数据不可用）'}
+  ④ 日支关系：${_hehunDetails.dayBranchRel || '（数据不可用）'}
+缘分分数（基于以上四维真实计算）：${compatScore}/100`;
       userMsg = `${hehunChart}
 
 ${nameA}：${p1Year}年${p1Month}月${p1Day}日${p1Hour !== undefined && p1Hour !== '' ? p1Hour+'时' : ''} · ${p1Gender === 'male' ? '男' : '女'}
@@ -2736,12 +2792,62 @@ router.post('/hehun/book-consult', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 // POST /api/tarot/stream — 塔罗流式（SSE）
 // ══════════════════════════════════════════
+// 合法塔罗牌名集合（大阿卡纳22张+小阿卡纳56张，含中英文常见别名）
+const _VALID_TAROT_CARDS = new Set([
+  // 大阿卡纳（中文）
+  '愚者','魔法师','女祭司','女皇','皇帝','教皇','恋人','战车','力量','隐士',
+  '命运之轮','正义','倒吊人','死神','节制','恶魔','塔','星星','月亮','太阳','审判','世界',
+  // 大阿卡纳（英文）
+  'The Fool','The Magician','The High Priestess','The Empress','The Emperor',
+  'The Hierophant','The Lovers','The Chariot','Strength','The Hermit',
+  'Wheel of Fortune','Justice','The Hanged Man','Death','Temperance',
+  'The Devil','The Tower','The Star','The Moon','The Sun','Judgement','The World',
+  // 小阿卡纳花色（权杖/圣杯/宝剑/星币，Ace~10+骑士/侍者/王后/国王）
+  '权杖王牌','权杖二','权杖三','权杖四','权杖五','权杖六','权杖七','权杖八','权杖九','权杖十',
+  '权杖侍者','权杖骑士','权杖王后','权杖国王',
+  '圣杯王牌','圣杯二','圣杯三','圣杯四','圣杯五','圣杯六','圣杯七','圣杯八','圣杯九','圣杯十',
+  '圣杯侍者','圣杯骑士','圣杯王后','圣杯国王',
+  '宝剑王牌','宝剑二','宝剑三','宝剑四','宝剑五','宝剑六','宝剑七','宝剑八','宝剑九','宝剑十',
+  '宝剑侍者','宝剑骑士','宝剑王后','宝剑国王',
+  '星币王牌','星币二','星币三','星币四','星币五','星币六','星币七','星币八','星币九','星币十',
+  '星币侍者','星币骑士','星币王后','星币国王',
+  // 英文小阿卡纳
+  'Ace of Wands','Two of Wands','Three of Wands','Four of Wands','Five of Wands',
+  'Six of Wands','Seven of Wands','Eight of Wands','Nine of Wands','Ten of Wands',
+  'Page of Wands','Knight of Wands','Queen of Wands','King of Wands',
+  'Ace of Cups','Two of Cups','Three of Cups','Four of Cups','Five of Cups',
+  'Six of Cups','Seven of Cups','Eight of Cups','Nine of Cups','Ten of Cups',
+  'Page of Cups','Knight of Cups','Queen of Cups','King of Cups',
+  'Ace of Swords','Two of Swords','Three of Swords','Four of Swords','Five of Swords',
+  'Six of Swords','Seven of Swords','Eight of Swords','Nine of Swords','Ten of Swords',
+  'Page of Swords','Knight of Swords','Queen of Swords','King of Swords',
+  'Ace of Pentacles','Two of Pentacles','Three of Pentacles','Four of Pentacles','Five of Pentacles',
+  'Six of Pentacles','Seven of Pentacles','Eight of Pentacles','Nine of Pentacles','Ten of Pentacles',
+  'Page of Pentacles','Knight of Pentacles','Queen of Pentacles','King of Pentacles',
+]);
 router.post('/tarot/stream', rateLimitMiddleware, async (req, res) => {
   try {
     const { cards, question, topic } = req.body;
     if (!question) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: '请提供你的问题' });
+    }
+    // ── 牌面基本校验（防注入/防伪造数据）──
+    if (cards !== undefined && cards !== null) {
+      if (!Array.isArray(cards)) {
+        return res.status(400).json({ error: '牌面数据格式错误', code: 'INVALID_CARDS' });
+      }
+      if (cards.length > 12) {
+        return res.status(400).json({ error: '单次最多12张牌', code: 'TOO_MANY_CARDS' });
+      }
+      for (const c of cards) {
+        if (!c || typeof c !== 'object' || typeof c.name !== 'string' || !c.name.trim()) {
+          return res.status(400).json({ error: '每张牌必须包含合法的name字段', code: 'INVALID_CARD_NAME' });
+        }
+        if (!_VALID_TAROT_CARDS.has(c.name.trim())) {
+          return res.status(400).json({ error: `非法牌名: ${c.name}`, code: 'UNKNOWN_CARD' });
+        }
+      }
     }
     const cardDesc = cards && cards.length
       ? cards.map((c, i) => `第${i+1}张（${c.position||'位置'+(i+1)}）：${c.name}${c.reversed?'（逆位）':'（正位）'}`).join('\n')
@@ -2832,9 +2938,12 @@ ${palaceLines}
       }
     } catch (e) {
       console.warn('[ZIWEI-STREAM] 引擎注入失败，降级 LLM 自解：', e && e.message);
+      zwEngineBlock = ''; // 确保失败时为空
     }
 
-    const zwEngineSection = zwEngineBlock ? `\n${zwEngineBlock}\n` : '';
+    const zwEngineSection = zwEngineBlock
+      ? `\n${zwEngineBlock}\n`
+      : '\n【注意】本次后端排盘引擎不可用，请勿声称已有精确命盘数据。诚实注明"仅供参考，建议专业命理师核验"，禁止编造星曜宫位。\n';
     const ziweiSystemFull = `你是一位精通紫微斗数的命理师，师承中州派与飞星派双脉，从业30年，批过上万张命盘。你深谙紫微精髓，能从命盘中看透一个人的一生轨迹。语言通俗易懂，大白话让完全不懂紫微的人也能听懂。分析必须专业、深刻、具体。
 
 【输出格式】用 Markdown，标题分段，简体中文。总字数 9000-11000字，全部 17 个维度写完写透，每个维度字数不低于要求，严禁用"略"或"详见下文"代替内容。
@@ -3629,14 +3738,17 @@ router.post('/astrology', rateLimitMiddleware, async (req, res) => {
       tz: latitude !== undefined ? Math.round(parseFloat(longitude || 116) / 15) : undefined,
     });
 
-    const fullChartBlock = `【西方占星精确星盘数据（后端注入·禁 LLM 自算或修改任何行星位置）】
+    const _astroEngineAvailable = !!westernEngineBlock;
+    const fullChartBlock = _astroEngineAvailable
+      ? `【西方占星精确星盘数据（后端注入·禁 LLM 自算或修改任何行星位置）】
 出生：${birthYear}/${birthMonth}/${birthDay} ${birthHour !== undefined ? birthHour + ':' + (birthMinute || '00') : '时间不详（精确月亮/上升不可用）'}
 性别：${gender === 'male' ? '男 Male' : gender === 'female' ? '女 Female' : '未知'}
 出生地经纬度：${latitude !== undefined ? latitude + '°N/S' : '未提供'}，${longitude !== undefined ? longitude + '°E/W' : '未提供'}
 
-${westernEngineBlock || '（精确天文引擎数据不可用，请仅基于报告开头的事实卡解读）'}
+${westernEngineBlock}
 
-【铁律】以上及报告开头「事实卡」为唯一权威数据源。全文任何行星星座/度数/相位/上升/宫位，必须与之逐字一致；严禁写出与事实卡不同的星座，严禁自行推算，严禁保留任何"等等、需修正、以数据为准"之类的思考过程文字。若缺出生时间地点，上升与宫位一律说"需精确出生时间与出生地方可精算"，绝不杜撰。`;
+【铁律】以上及报告开头「事实卡」为唯一权威数据源。全文任何行星星座/度数/相位/上升/宫位，必须与之逐字一致；严禁写出与事实卡不同的星座，严禁自行推算，严禁保留任何"等等、需修正、以数据为准"之类的思考过程文字。若缺出生时间地点，上升与宫位一律说"需精确出生时间与出生地方可精算"，绝不杜撰。`
+      : `【注意】本次后端精确天文排盘引擎不可用。请勿声称已有精确星盘数据，禁止编造行星星座/度数/相位。解读时诚实说明"精确天文数据暂不可用，以下仅供参考"，建议用户重试或联系客服。`;
 
     // ── 分档控制 ──
     var _gm = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','八字','合婚','紫微','姓名','占星','星盘'], [], 16384);

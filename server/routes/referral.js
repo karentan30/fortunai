@@ -9,7 +9,7 @@
 const router = require('express').Router();
 const {
   getUserById, getUserOrders,
-  invitedCount, wasInvited, getUserByRefCode, createReferral, grantReferralReward,
+  invitedCount, wasInvited, getUserByRefCode, createReferral, grantInviteeReward,
   CHANNELS, REWARD_TIERS,
 } = require('../lib/store');
 const { buildShareUrl } = require('../lib/utils');
@@ -59,7 +59,9 @@ router.post('/claim', simpleRateLimitMiddleware, authMiddleware, (req, res) => {
   if (!inviter) return res.status(400).json({ error: '邀请码无效' });
   if (inviter.id === req.user.id) return res.status(400).json({ error: '不能使用自己的邀请码' });
   createReferral(inviter.id, req.user.id, channel);
-  grantReferralReward(inviter.id);
+  // 邀请人奖励不在此发放——等被邀请人首次真实测算(onInviteeFirstReading)后才发，与 tryApplyReferral 统一防刷。
+  // 只给被邀请人发欢迎奖励(幂等，重复调用安全)。
+  grantInviteeReward(req.user.id);
 
   // 返回邀请者的新等级
   const invited = invitedCount(inviter.id);
