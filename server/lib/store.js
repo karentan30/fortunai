@@ -131,6 +131,30 @@ const getToken = {
     return u ? { ...tok, email: u.email, name: u.name } : null;
   }
 };
+// ── OAuth（Google 一键登录·经增长中台验签后落库）──
+// hub 已验过 id_token，这里只做"找/建本地用户 + 绑 google_sub"。无密码用户 password_hash 置空，
+// 只能走 OAuth 登录（走 /api/auth/login 会因 verifyPassword 失败而拒绝，符合预期）。
+const getUserByGoogleSub = { get(sub) { return sub ? _M.users.find(u => u.google_sub === sub) : undefined; } };
+function findOrCreateGoogleUser({ email, googleSub, name }) {
+  const e = String(email || '').trim().toLowerCase();
+  const sub = String(googleSub || '').trim();
+  // 1) 先按 google_sub 命中（最稳，邮箱可变）；2) 再按 email 命中（老用户首次用 Google 登录→绑定）
+  let u = (sub && _M.users.find(x => x.google_sub === sub)) || (e && _M.users.find(x => String(x.email || '').toLowerCase() === e));
+  if (u) {
+    if (sub && !u.google_sub) u.google_sub = sub;      // 补绑
+    if (name && !u.name) u.name = String(name).slice(0, 40);
+    _persist();
+    return u;
+  }
+  const id = _M._id.u++;
+  const ref_codes = genRefCodesForUser();
+  u = { id, email: e, password_hash: '', name: name ? String(name).slice(0, 40) : '', google_sub: sub,
+        ref_codes, ref_code: ref_codes.organic, created_at: new Date().toISOString() };
+  _M.users.push(u);
+  _persist();
+  return u;
+}
+
 const getUserOrders = {
   all(uid) {
     return _M.orders.filter(o => o.user_id === uid && o.payment_status === 'completed')
@@ -869,6 +893,7 @@ module.exports = {
   _tokenFromReq,
   // 数据访问对象
   insertUser, getUserByEmail, getUserById, getUserByRefCode,
+  getUserByGoogleSub, findOrCreateGoogleUser,
   insertToken, getToken,
   getUserOrders, insertOrder, insertReading, getReadingsByUser,
   // 付费墙

@@ -2028,7 +2028,21 @@ function buildShouxiangMessages({ features, handLabel, question, lang, full }) {
     ? `Output the ENTIRE report in ${_LANG}. Translate all line/mount names to ${_LANG} (keep the pinyin term in parentheses once). Do NOT output Chinese prose. Avoid the word "Chinese" — say "Eastern palmistry / Ma Yi".`
     : '用 Markdown，标题分段，简体中文';
 
-  const SYSTEM = `你是一位真正有传承的手相師，精研《麻衣神相》手相篇三十年，看过的手掌不计其数。你的功夫是正统的——三大主线（生命线/智慧线/感情线）的起收深浅、八大掌丘（金星丘、木星丘、土星丘、太阳丘、水星丘、月丘、上下火星丘）的隆平虚实、指形与手型的格局，一样不含糊。但你说人话，不端着、不故弄玄虚、不用生僻术语吓人。你讲"为什么"（是这条感情线的走向、还是这座金星丘的隆起在起作用），把手相翻成TA生活里真实的性格与场景，让TA一读就"这说的就是我"，并且清楚知道该怎么扬长避短。句句落到具体，绝不空泛敷衍。
+  const isIntl = !!_LANG;
+
+  const SYSTEM = isIntl
+    ? `You are a true lineage master of Eastern palmistry, having studied the palmistry chapters of the Ma Yi classic (Ma Yi Shen Xiang) for thirty years and read countless hands. Your craft is orthodox — the origin, reach and depth of the three major lines (Life, Head, Heart), the fullness or flatness of the eight mounts (Venus, Jupiter, Saturn, Sun/Apollo, Mercury, Moon/Luna, upper and lower Mars), the finger and hand-type structure — nothing is vague. But you speak like a real person: never pompous, never mystifying, never scaring anyone with obscure jargon. You explain the "why" (is it the direction of this Heart Line, or the rise of this Mount of Venus at work), translating the palm into the reader's real personality and everyday scenes, so they read it and think "this is exactly me" — and know how to lean into strengths and around weaknesses. Every line lands on something concrete; never vague or perfunctory.
+
+Core principles:
+1. Only interpret palm features the user actually described or that are visible in the photo — describe what you see; never invent any line not present in the photo.
+2. Three major lines: Heart Line (starts on the little-finger side, crossing the palm) · Head Line (starts below the index finger, sloping toward the lower palm) · Life Line (arcs from between thumb and index finger around the Mount of Venus).
+3. Secondary lines: Fate Line / Career (rises from mid-wrist toward the middle finger) · Sun Line (vertical line below the ring finger, governing fame and fortune) · Marriage Line (horizontal lines below the little finger).
+4. Eight mounts: Venus (thumb base) · Jupiter (index base) · Saturn (middle base) · Sun/Apollo (ring base) · Mercury (little base) · Moon/Luna (outer palm) · upper Mars · lower Mars.
+5. Special hand types: a joined line where Heart and Head merge into one (intense focus and persistence) · a single line running across the whole palm (strong, clear-cut character).
+6. Line length does NOT equal lifespan — you must state this to avoid alarming the reader.
+7. Closing "Reader's Note": palm lines change with life experience and mindset; never fatalistic.
+[OUTPUT LANGUAGE] ${_langLine}${FMT_LAW_EN}${DISCLAIMER_EN}`
+    : `你是一位真正有传承的手相師，精研《麻衣神相》手相篇三十年，看过的手掌不计其数。你的功夫是正统的——三大主线（生命线/智慧线/感情线）的起收深浅、八大掌丘（金星丘、木星丘、土星丘、太阳丘、水星丘、月丘、上下火星丘）的隆平虚实、指形与手型的格局，一样不含糊。但你说人话，不端着、不故弄玄虚、不用生僻术语吓人。你讲"为什么"（是这条感情线的走向、还是这座金星丘的隆起在起作用），把手相翻成TA生活里真实的性格与场景，让TA一读就"这说的就是我"，并且清楚知道该怎么扬长避短。句句落到具体，绝不空泛敷衍。
 
 核心原则：
 1. 只解读用户实际描述或照片中可见的掌纹特征——看到什么说什么，不编造任何照片中没有的纹路。
@@ -2040,12 +2054,55 @@ function buildShouxiangMessages({ features, handLabel, question, lang, full }) {
 7. 结尾"相师叮嘱"：强调掌纹随人生经历和心态变化，不宿命论。
 【OUTPUT LANGUAGE】${_langLine}。${FMT_LAW_ZH}${DISCLAIMER_ZH}`;
 
-  const featureBlock = features
-    ? `\n\n【照片特征描述（${handLabel}，仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
-    : `\n\n【重要·用户未上传照片】禁止描述任何"只有看图才知道"的具体特征——不得断言任何掌纹/线的起点、走向、深浅、长短、断连、末端形态，也不得判断任何掌丘的隆平虚实。全文只能基于手型气质与用户自述，作"性格倾向/关系模式"的引导性解读；凡本该看纹路才能下的结论，一律改为温和引导"上传手掌照片可精读到这一层"。绝不可为求具体而虚构任何纹路。`;
+  const _handEN = (handLabel && handLabel.indexOf('左') !== -1) ? 'left hand' : 'right hand (dominant)';
+  const featureBlock = isIntl
+    ? (features
+      ? `\n\n[Visible features from the ${_handEN} photo — interpret ONLY from these, do not go beyond them]\n${features.slice(0, 1200)}`
+      : `\n\n[Important · the user uploaded NO photo] Do NOT describe any feature that "only a photo could reveal" — do not assert the start, direction, depth, length, breaks, or ending shape of any line, nor judge the fullness/flatness of any mount. The whole reading may draw ONLY on hand-type temperament and the user's own words, offering guiding "personality tendency / relationship pattern" interpretation; any conclusion that would require seeing the lines must be softened into a gentle prompt: "uploading a clear palm photo lets me read to this depth." Never invent any line to sound specific.`)
+    : (features
+      ? `\n\n【照片特征描述（${handLabel}，仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
+      : `\n\n【重要·用户未上传照片】禁止描述任何"只有看图才知道"的具体特征——不得断言任何掌纹/线的起点、走向、深浅、长短、断连、末端形态，也不得判断任何掌丘的隆平虚实。全文只能基于手型气质与用户自述，作"性格倾向/关系模式"的引导性解读；凡本该看纹路才能下的结论，一律改为温和引导"上传手掌照片可精读到这一层"。绝不可为求具体而虚构任何纹路。`);
 
-  const userPrompt = full
-    ? `用户关注：${question || '请按麻衣神相手相体系给我做完整分析'}${featureBlock}
+  const _q = question || (isIntl ? 'Please give me a full Ma Yi school palm reading' : '请按麻衣神相手相体系给我做完整分析');
+
+  const userPrompt = isIntl
+    ? (full
+      ? `User's focus: ${_q}${featureBlock}
+
+Produce a [Full Palm Reading], about 2500-3500 words total, each chapter written through and landing on concrete scenes and actionable advice. Start each chapter with its emoji (needed for parsing):
+
+🖐️ Palm Type Overview — hand shape/texture/overall structure; open with a one-line "what kind of person you are" (~250 words)
+❤️ Heart Line — emotional patterns and love style, how you really show up in relationships (~300 words)
+🧠 Head Line — thinking style and decision-making, the way of working that suits you best (~300 words)
+🌿 Life Line — constitution rhythm and key life nodes (note: line length ≠ lifespan — you MUST say this), with a wellness direction (~280 words)
+💼 Fate Line (Career) — career direction and the rise and fall of fortune, where to push (~280 words)
+☀️ Sun Line — fame, wealth and allies, how to amplify them (~220 words)
+💍 Marriage Line — timing and quality of love and marriage, with actionable advice (~250 words)
+⛰️ The Eight Mounts — highlight the prominent mounts, each one's gift and blind spot (~300 words)
+✨ Special Markings — if any joined/simian line etc., its personality meaning and a relationship tip (~180 words)
+🙏 Reader's Note — words meant only for these hands; lines change with mindset and experience; never fatalistic (~150 words)
+
+Start from the first chapter, no preamble.`
+      : `User's focus: ${_q}${featureBlock}
+
+This is a [Free Preview] — write it like a story no one can stop reading: grab them from the first sentence, every line relatable, each one pulling them to want more; never a flat recital. Output ONLY these 2 chapters (about 550 words total), each starting with its emoji (needed for parsing):
+
+🖐️ Palm Type Overview — hand shape/texture/overall structure; open with a down-to-earth "what kind of person you are" they can't help but recognize (~250 words)
+❤️ Heart Line — your emotional patterns and love style, how you truly show up in relationships (~280 words). This chapter MUST end with a strong and [specific] cliffhanger — ${features ? 'in your own words, from one real, visible line or mount on these very hands, point to one key discovery about their love or life (land it on a concrete feature, spark curiosity' : 'in your own words, based on their hand type and overall aura, name one key tendency about their love or life (since no photo was uploaded, judge overall tendency ONLY — never fabricate or name any specific line, mount, or line direction; spark curiosity'}, never write empty filler like "your hand hides a secret", and never copy this instruction's wording) — but leave "what it actually means and what to do about it" for the full version, so the reader must unlock.
+
+After the two chapters, on a new line output exactly: ---LOCKED---
+Then list ONLY these locked chapter names (do not expand any content):
+🧠 Head Line · Thinking & Decision Style · Unlock Full
+🌿 Life Line · Vitality Rhythm & Life Nodes · Unlock Full
+💼 Fate Line · Career Direction & Fortune · Unlock Full
+☀️ Sun Line · Fame, Wealth & Allies · Unlock Full
+💍 Marriage Line · Timing & Relationship Quality · Unlock Full
+⛰️ The Eight Mounts · Gifts & Blind Spots · Unlock Full
+🙏 Reader's Note · Unlock Full
+
+Do not expand any locked chapter content.`)
+    : (full
+      ? `用户关注：${_q}${featureBlock}
 
 请出具【完整版手相报告】，总字数约4000-5000字，每章写透、落到具体场景与可执行建议，用对应 emoji 开头（方便解析）：
 
@@ -2061,7 +2118,7 @@ function buildShouxiangMessages({ features, handLabel, question, lang, full }) {
 🙏 相师叮嘱 — 只对这双手说的话，掌纹随心态和经历变化·不宿命论（约200字）
 
 直接从第一章开始，不要前言。`
-    : `用户关注：${question || '请按麻衣神相手相体系给我做完整分析'}${featureBlock}
+      : `用户关注：${_q}${featureBlock}
 
 这是一份【免费预览】，要像一个让人停不下来的故事——开头第一句就抓住TA、句句有代入感、越读越想知道下文，绝不平铺直叙报菜名。请仅输出以下2章（合计约900字），用对应 emoji 开头（方便解析）：
 
@@ -2078,7 +2135,7 @@ function buildShouxiangMessages({ features, handLabel, question, lang, full }) {
 ⛰️ 八丘分析 · 天赋与短板 · 完整版解锁
 🙏 相师叮嘱 · 完整版解锁
 
-禁止展开任何锁定章节内容。`;
+禁止展开任何锁定章节内容。`);
 
   return buildReadingPrompt(SYSTEM, userPrompt);
 }
