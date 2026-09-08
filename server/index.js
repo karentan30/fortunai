@@ -69,6 +69,8 @@ app.use(function(req, res, next) {
 // ── Body parsers ──
 // Stripe webhook 需要 raw body（必须在 express.json 之前）
 app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }));
+// 中台订阅事件回调需 raw body 做 HMAC 验签（必须在 express.json 之前）
+app.use('/api/hub-callback', express.raw({ type: 'application/json' }));
 // 微信支付回调是 XML(text)
 app.use('/api/pay/wechat/notify', express.text({ type: '*/*', limit: '1mb' }));
 // 支付宝回调是 application/x-www-form-urlencoded

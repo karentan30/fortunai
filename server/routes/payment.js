@@ -41,6 +41,12 @@ const QUESTION_CREDIT_MAP = {
 
 // 月会员购其他报告(非订阅产品)享5折
 const MONTHLY_MEMBER_REPORT_DISCOUNT = 0.5;
+
+// 🔵 灰度: 订阅走增长中台 /hub/sub(HUB_SUB_ENABLED=1 开启·off 时零改变·保持现状本地 Stripe)。
+//   仅 USD 路径走中台(CN 已被 isCN 拦截·KR/CNY 保留原路径)；中台统一续期/退订/失败并 HMAC 回调 /api/hub-callback。
+//   Runae product → 中台 plan_code(需在中台 HUB_SUB_PLANS+HUB_PRICING 登记)。先只接 daily_companion_year 样板。
+const HUB_SUB_ENABLED = process.env.HUB_SUB_ENABLED === '1';
+const HUB_SUB_PLAN_MAP = { daily_companion_year: 'daily_companion_year' };
 const { sendEmail, getClientIp, resolveUserFromToken } = require('../lib/utils');
 const { rateLimitMiddleware, simpleRateLimitMiddleware, authMiddleware } = require('../middleware');
 const { recordAffiliateOrder, completeAffiliateOrder } = require('./affiliate');
@@ -216,6 +222,30 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
     const isMonthlyDiscount = !isSubscription && !isJoss && memberTier(req) === 'monthly';
     if (isMonthlyDiscount) {
       unitAmount = Math.round(unitAmount * MONTHLY_MEMBER_REPORT_DISCOUNT);
+    }
+
+    // 🔵 灰度: 订阅且 USD → 走中台 /hub/sub(off/未映射/失败均回退下方本地 Stripe，不阻断)。
+    if (isSubscription && HUB_SUB_ENABLED && payCurrency === 'usd'
+        && HUB_SUB_PLAN_MAP[product] && hub.HUB_SECRET === '(configured)') {
+      try {
+        const hr = await hub.subCreate(HUB_SUB_PLAN_MAP[product], orderNo, {
+          country: ipCountry || undefined,
+          ref_code: _extractRef(req) || undefined,
+          success_url: successUrl || (FRONTEND_URL + '/api/success?product=' + product),
+          cancel_url:  cancelUrl  || (FRONTEND_URL + '/pages/' + product.split('_')[0] + '.html'),
+        });
+        // 本地建单(out_ref=orderNo)：中台回调按 out_ref 找此单发货/续期
+        insertOrder.run(orderNo, product, Math.round((hr.amount || unitAmount / 100) * 100),
+                        (hr.currency || 'usd').toLowerCase(), userId, donorName || '', contact || '',
+                        wishText || '', hr.session_id || '');
+        const _rc = _extractRef(req);
+        if (_rc) recordAffiliateOrder(orderNo, _rc, product, hr.amount || unitAmount / 100);
+        console.log(`[CHECKOUT/hub-sub] ${orderNo} — ${product} $${hr.amount}`);
+        return res.json({ url: hr.url, sessionId: hr.session_id, orderNo });
+      } catch (e) {
+        console.error('[CHECKOUT/hub-sub ERR]', e.message, '→ 回退本地 Stripe');
+        // 落到下方本地直连订阅逻辑（不阻断收款）
+      }
     }
 
     const currKey = isKR ? product + '_krw' : isCNY ? product + '_cny' : product;
@@ -398,6 +428,50 @@ router.post('/stripe-webhook', async (req, res) => {
   } catch (err) {
     console.error('[WEBHOOK ERR]', err);
     res.status(500).send('Webhook handler error');
+  }
+});
+
+// ══════════════════════════════════════════
+// POST /api/hub-callback — 接收增长中台订阅事件(HMAC 验签)
+//   raw body 由 index.js express.raw 提供。按 event 发货：
+//   paid/renewed → 授予/续期访问期(_grantPeriodicPackExpiry)；canceled → 到期；payment_failed → 记录。
+//   订阅生命周期(续期/退订/失败)由中台统一处理，本端点只落地权益。
+// ══════════════════════════════════════════
+router.post('/hub-callback', (req, res) => {
+  try {
+    const raw = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body || {}));
+    if (!hub.verifyCallback(raw, req.headers['x-sign'])) {
+      return res.status(401).json({ error: 'invalid signature' });
+    }
+    const p = JSON.parse(raw.toString('utf8') || '{}');
+    const orderNo = p.out_ref || '';
+    const order = orderNo ? _findOrder(orderNo) : null;
+    switch (p.event) {
+      case 'paid':
+        if (order) {
+          _updOrder('completed', orderNo);
+          completeAffiliateOrder(orderNo);
+          _grantPeriodicPackExpiry(_findOrder(orderNo));
+          console.log('[HUB-CB] paid ' + orderNo + ' → expires ' + (_findOrder(orderNo) || {}).expires_at);
+        } else console.warn('[HUB-CB] paid 未找到订单 ' + orderNo);
+        break;
+      case 'renewed':
+        if (order) { _grantPeriodicPackExpiry(order); console.log('[HUB-CB] renewed ' + orderNo + ' → ' + order.expires_at); }
+        else console.warn('[HUB-CB] renewed 未找到订单 ' + orderNo);
+        break;
+      case 'canceled':
+        if (order) { _updOrderExpiry(orderNo, new Date().toISOString()); console.log('[HUB-CB] canceled ' + orderNo); }
+        break;
+      case 'payment_failed':
+        console.log('[HUB-CB] payment_failed ' + orderNo + ' sub=' + (p.sub_id || ''));
+        break;
+      default:
+        console.log('[HUB-CB] 未知 event ' + p.event);
+    }
+    res.json({ received: true });
+  } catch (e) {
+    console.error('[HUB-CB ERR]', e.message);
+    res.status(500).json({ error: 'handler error' });
   }
 });
 
