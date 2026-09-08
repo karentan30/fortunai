@@ -2,276 +2,572 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#5bbfa0">
-<title>Runae · Zi Wei Dou Shu — Purple Star Astrology</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#08101a">
+<title>Runae · Purple Star Astrology — Zi Wei Dou Shu</title>
 <meta name="description" content="The most detailed Eastern birth chart system — 12 life palaces, each governed by stars that reveal your destiny's architecture. Computed by a real engine, read by AI.">
 <meta property="og:title" content="Runae · Purple Star Astrology — Zi Wei Dou Shu">
 <meta property="og:description" content="12 life palaces, major stars in each, AI-interpreted. Computed by a real Eastern astrology engine. Free reading.">
-<meta property="og:type" content="website">
+<meta property="og:image" content="/og-card.png">
 <meta property="og:url" content="https://runae.app/pages/ziwei-en.html">
+<meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Runae · Purple Star Astrology — Zi Wei Dou Shu">
+<meta name="twitter:description" content="12 life palaces, major stars in each, AI-interpreted. Free reading.">
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Runae">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@200;300;400;500;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --jade:#5bbfa0;--jade-deep:#3d9e82;--jade-light:#8dd9bf;
-  --jade-pale:rgba(91,191,160,0.08);--jade-border:rgba(91,191,160,0.22);
-  --gold:#c9a84c;--gold-light:#e8d08a;--gold-deep:#8a6420;--gold-pale:rgba(201,168,76,0.08);
-  --bg:#faf8f5;--card:#ffffff;--surface:#f2f5f2;
-  --ink:#1a1a18;--sub:rgba(60,75,65,0.72);--muted:rgba(80,95,85,0.45);
-  --radius:14px;--shadow:0 2px 12px rgba(0,0,0,0.06);
-  --lux-ink0:#0d0b08;--lux-ink1:#181310;--lux-ink2:#241a12;
-  --lux-gold:#c9a84c;--lux-gold-hi:#f6e6a8;--lux-gold-lo:#8a6420;
-  --lux-line:rgba(201,168,76,0.30);--lux-line-soft:rgba(201,168,76,0.14);
-  --lux-sub:rgba(232,208,138,0.60);
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color:transparent; }
+:root {
+  /* ── cosmos: deep AMETHYST ── */
+  --void-0:#0b0616; --void:#140a26; --indigo:#20123f; --indigo-2:#2a1852; --violet-s:#3a2170; --violet-2:#4a2a8c;
+  /* ── starlight / gold ── */
+  --gold-hi:#f4e6b6; --gold:#dcc082; --gold-deep:#ab8642; --gold-soft:#e8d49c;
+  --gold-line:rgba(224,196,130,.30); --gold-line-2:rgba(224,196,130,.54); --gold-glow:rgba(224,196,130,.5);
+  /* ── celestial accent ── */
+  --star:#d3b6ff; --star-soft:#b492ea; --violet-glow:rgba(176,120,255,.55); --violet-line:rgba(176,120,255,.32); --violet-line-2:rgba(176,120,255,.5);
+  /* ── text ── */
+  --text-cream:#efeafa; --text-mute:#b0a6cf; --text-faint:#867ba6; --text-ghost:#5f5680;
+  /* ── hairlines ── */
+  --hair:rgba(206,190,255,.09); --hair-2:rgba(206,190,255,.16);
+  --shadow-card:0 30px 60px -30px rgba(0,0,0,.9); --shadow-lift:0 20px 44px -24px rgba(0,0,0,.78);
+  --serif:"Noto Serif SC",serif; --sans:"Noto Sans SC",-apple-system,BlinkMacSystemFont,sans-serif; --lat:"Cormorant Garamond",serif;
+  /* ── legacy aliases ── */
+  --navy:#08040f; --navy-mid:#140a26; --navy-card:#20123f;
+  --purple:#4a2a8c; --violet:#b492ea;
+  --star-gold:#f4e6b6; --gold-light:#e8d49c;
+  --azure:#b492ea; --azure-light:#d3b6ff;
+  --rose:#c98bd4;
+  --gut:22px; --radius:20px; --radius-lg:24px;
 }
-html{background:var(--bg);-webkit-font-smoothing:antialiased}
-body{font-family:'Inter',sans-serif;color:var(--ink);max-width:440px;margin:0 auto;
-  background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(91,191,160,0.09) 0%,transparent 60%),var(--bg);
-  min-height:100vh;padding-bottom:40px}
-.serif{font-family:'Playfair Display',serif}
-.jade-line{width:48px;height:2px;background:linear-gradient(90deg,transparent,var(--jade),transparent);margin:14px auto}
-a{color:inherit;text-decoration:none}
+html, body { background: #08040f; font-family: var(--sans); color: var(--text-cream); -webkit-font-smoothing: antialiased; text-rendering:optimizeLegibility; }
+body { max-width: 402px; margin: 0 auto; min-height: 100vh; overflow-y: auto; padding-bottom: 80px; }
 
-/* header */
-.top{display:flex;align-items:center;justify-content:center;gap:9px;padding:20px 20px 4px}
-.clasp{width:20px;height:20px;border-radius:50%;flex-shrink:0;
-  background:radial-gradient(circle at 34% 27%,rgba(255,255,255,0.92) 0%,rgba(255,255,255,0.35) 7%,transparent 18%),
-    radial-gradient(circle at 70% 68%,var(--jade-deep) 0%,transparent 38%),
-    radial-gradient(ellipse at 42% 38%,var(--jade-light) 0%,var(--jade) 22%,var(--jade) 52%,var(--jade-deep) 100%)}
-.logo{font-family:'Playfair Display',serif;font-size:14px;letter-spacing:0.42em;color:var(--jade-deep)}
+/* Star background */
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background: radial-gradient(135% 80% at 50% -8%, #4a2a8c 0%, #2c1858 38%, #160a2e 72%, var(--void-0) 100%);
+}
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity:.85;
+  background-image:
+    radial-gradient(circle, rgba(236,223,255,0.75) 1px, transparent 1px),
+    radial-gradient(circle, rgba(211,182,255,0.5) 1px, transparent 1px),
+    radial-gradient(circle, rgba(244,230,182,0.4) 1px, transparent 1px);
+  background-size: 120px 120px, 80px 80px, 160px 160px;
+  background-position: 15px 20px, 60px 40px, 30px 80px;
+}
 
-.hero{text-align:center;padding:14px 22px 6px}
-.badge{display:inline-flex;align-items:center;gap:6px;background:var(--jade-pale);border:1px solid var(--jade-border);
-  border-radius:20px;padding:6px 14px;font-size:10px;color:var(--jade-deep);letter-spacing:.1em;text-transform:uppercase;margin-bottom:16px}
-.hero h1{font-family:'Playfair Display',serif;font-size:27px;font-weight:700;line-height:1.28;margin-bottom:12px}
-.hero h1 em{font-style:italic;color:var(--jade-deep)}
-.hero-sub{font-size:13.5px;color:var(--sub);line-height:1.7;margin-bottom:6px}
-.hero-sub b{color:var(--ink);font-weight:600}
+.back-btn { position: fixed; top: 14px; left: 12px; z-index: 99; background: none; border: none; font-family: var(--serif); font-size: 22px; color: var(--text-mute); cursor: pointer; padding: 6px 10px; line-height:1; }
 
-.ai-note{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--jade-pale);
-  border:1px solid var(--jade-border);border-radius:12px;padding:11px 14px;margin:14px 20px 0;
-  font-size:11.5px;color:var(--jade-deep);letter-spacing:.02em;line-height:1.5;text-align:center}
+/* ── gilded surface ── */
+.gilt{background:linear-gradient(155deg,var(--gold-hi) 0%,var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep) 100%);
+  box-shadow:0 16px 32px -14px var(--gold-glow),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(120,90,30,.4);}
+.eyebrow{font-family:var(--lat);font-size:13px;font-style:italic;letter-spacing:.24em;color:var(--gold);opacity:.94}
+.en-sub{font-family:var(--lat);font-style:italic;font-weight:500;font-size:14px;letter-spacing:.14em;color:var(--gold-soft);margin-top:8px}
 
-/* form */
-.form-card{background:var(--card);border:1px solid var(--jade-border);border-radius:var(--radius);
-  box-shadow:var(--shadow);margin:18px 20px;padding:20px 18px}
-.form-card h2{font-family:'Playfair Display',serif;font-size:17px;font-weight:600;margin-bottom:4px}
-.form-card .cap{font-size:11.5px;color:var(--sub);margin-bottom:16px}
-label{display:block;font-size:11px;font-weight:600;color:var(--sub);letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px}
-.row{display:flex;gap:10px}
-.row .fld{flex:1}
-.fld{margin-bottom:14px}
-input,select{width:100%;border:1px solid var(--jade-border);border-radius:10px;padding:12px 12px;font-size:15px;
-  font-family:inherit;color:var(--ink);background:#fff;min-height:46px;-webkit-appearance:none;appearance:none}
-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%233d9e82' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:right 12px center;padding-right:34px}
-input:focus,select:focus{outline:none;border-color:var(--jade);box-shadow:0 0 0 3px var(--jade-pale)}
-.err-msg{font-size:11px;color:#c0392b;margin-top:-8px;margin-bottom:10px;display:none}
-.err-msg.show{display:block}
-.cta{display:block;width:100%;text-align:center;background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);
-  color:#3a2e0e;font-size:15px;font-weight:700;border:none;border-radius:30px;padding:15px;min-height:52px;
-  cursor:pointer;letter-spacing:.02em;box-shadow:0 4px 16px rgba(201,168,76,0.28);font-family:inherit}
-.cta:disabled{opacity:.6;cursor:default}
-.cta-note{font-size:11px;color:var(--muted);margin-top:10px;text-align:center}
+/* ── Header ── */
+.header { position: relative; z-index: 1; text-align: center; padding: 44px 20px 20px; }
+.brandmark{display:flex;flex-direction:column;align-items:center;line-height:1;margin-bottom:16px}
+.brandmark .cn{font-family:var(--lat);font-weight:600;font-size:18px;letter-spacing:.36em;color:var(--text-cream)}
+.brandmark .sub{font-family:var(--lat);font-size:10px;letter-spacing:.44em;color:var(--gold);margin-top:6px;text-transform:uppercase}
+.header-title { font-family:var(--lat); font-size: 26px; font-weight: 600; line-height:1.34; letter-spacing: 0.03em; color:var(--text-cream); margin-bottom: 6px; font-style: normal; }
+.header-title em{font-style:italic;color:var(--gold-soft);position:relative;white-space:nowrap}
+.header-title em:after{content:"";position:absolute;left:2%;right:2%;bottom:-4px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-line-2),transparent)}
+.header-sub { font-family: var(--lat); font-size: 13.5px; line-height:1.9; letter-spacing: 0.02em; color: var(--text-mute); margin-top:14px; margin-bottom: 14px; font-style: italic; }
+.azure-line { width: 60px; height: 1px; background: var(--gold-line-2); margin: 16px auto 0; }
 
-/* spinner */
-.spin{display:none;text-align:center;padding:40px 20px;color:var(--jade-deep)}
-.spin.on{display:block}
-.spin .dot{display:inline-block;width:9px;height:9px;margin:0 3px;border-radius:50%;background:var(--jade);animation:b 1.2s infinite ease-in-out}
-.spin .dot:nth-child(2){animation-delay:.15s}.spin .dot:nth-child(3){animation-delay:.3s}
-@keyframes b{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
-.spin p{font-size:12.5px;color:var(--sub);margin-top:14px}
+/* ── HERO star-chart preview ── */
+.hero-chart{position:relative;margin:22px auto 0;width:260px;height:260px;z-index:1}
+.hero-chart svg{width:100%;height:100%;overflow:visible;filter:drop-shadow(0 10px 40px rgba(120,110,255,.28))}
+.hero-caption{text-align:center;margin-top:12px;font-family:var(--lat);font-style:italic;font-weight:500;font-size:13px;letter-spacing:.14em;color:var(--gold-soft);line-height:1.7}
+.trust{display:flex;justify-content:center;align-items:center;gap:14px;margin:20px 16px 0;color:var(--text-faint);font-size:11px;letter-spacing:.06em;position:relative;z-index:1;flex-wrap:wrap}
+.trust span{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.trust .d{width:3px;height:3px;border-radius:50%;background:var(--gold);opacity:.6}
 
-/* result panel */
-#result{display:none;padding:0 20px}
+/* ── Birth form ── */
+.form-wrap { position: relative; z-index: 1; padding: 6px 16px 8px; }
+.form-label { display:flex;align-items:center;gap:12px; font-family:var(--lat); font-size: 10.5px; letter-spacing: 0.22em; text-transform:uppercase; color: var(--text-mute) !important; margin-bottom: 14px; }
+.form-label:before,.form-label:after{content:"";height:1px;flex:1;background:var(--hair)}
+.field-group { background: var(--indigo-2); border: 1px solid var(--hair-2); border-radius: 14px; overflow: hidden; }
+.field-row { display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid var(--hair); }
+.field-row:last-child { border-bottom: none; }
+.field-label { font-family:var(--lat); font-size: 11px; color: var(--text-mute) !important; letter-spacing: 0.06em; min-width: 64px; flex-shrink: 0; }
+.field-input, .field-select { flex: 1; background: none; border: none; outline: none; font-family: var(--lat); font-size: 14px; color: var(--gold-soft); padding: 14px 8px; letter-spacing: 0.04em; -webkit-appearance: none; }
+.field-select option { background: var(--indigo-2); color: var(--text-cream); }
+.field-input::placeholder { color: var(--text-ghost); }
 
-/* palace grid */
-.palaces-wrap{margin:14px 0}
-.palaces-wrap h3{font-family:'Playfair Display',serif;font-size:15px;color:var(--jade-deep);margin-bottom:12px}
-.palaces-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.palace-name{font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--sub);margin-bottom:4px}
-.palace.is-life .palace-name{color:var(--gold-deep)}
-.palace-stars{font-size:12.5px;color:var(--ink);line-height:1.45;font-weight:500}
-.palace-stars.empty{color:var(--muted);font-style:italic;font-weight:400}
-.palace-aux{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.3}
-.palace-tag{position:absolute;top:6px;right:7px;font-size:8px;font-weight:700;letter-spacing:.06em;
-  text-transform:uppercase;padding:2px 6px;border-radius:6px}
-.palace-tag.life{background:rgba(201,168,76,0.14);color:var(--gold-deep)}
-.palace-tag.body{background:var(--jade-pale);color:var(--jade-deep)}
+/* ── Visual date picker ── */
+.field-group-hidden { display: none !important; }
 
-/* reading — upgraded: textured card with gold left bar (mirrors bazi-en ur-card) */
-.reading{position:relative;background:linear-gradient(158deg,#fffdf8 0%,#faf5ea 100%);
-  border:1px solid rgba(201,168,76,0.22);border-radius:16px;overflow:hidden;
-  box-shadow:0 2px 14px rgba(120,90,30,0.05);margin:14px 0;padding:18px 18px 18px 22px;
-  transition:all 0.3s}
-.reading::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
-  background:linear-gradient(180deg,#d4b45a,#c9a84c 60%,rgba(201,168,76,0.3))}
-.reading:hover{border-color:rgba(201,168,76,0.4);box-shadow:0 8px 30px rgba(201,168,76,0.14);transform:translateY(-1px)}
-.reading-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.reading-icon{font-size:22px;width:40px;height:40px;line-height:40px;text-align:center;flex-shrink:0;
-  background:radial-gradient(circle,rgba(201,168,76,0.16),rgba(201,168,76,0.04));border-radius:50%}
-.reading h3{font-family:'Playfair Display',serif;font-size:15px;font-weight:600;color:var(--gold-deep);
-  letter-spacing:0.02em;margin:0}
-.reading-body{font-size:13.5px;line-height:1.85;color:rgba(50,44,34,0.9);letter-spacing:0.01em;
-  border-top:1px solid rgba(201,168,76,0.1);padding-top:14px}
-.reading-body p{margin-bottom:12px}
-.reading-body p:last-child{margin-bottom:0}
+.zw-date-picker { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; padding: 0 16px; margin-bottom: 14px; position: relative; z-index: 1; }
+.zw-picker-col { display: flex; flex-direction: column; align-items: center; gap: 0; }
+.zw-picker-card { background: var(--indigo-2); border: 1px solid var(--hair-2); border-radius: 14px; width: 100%; overflow: hidden; }
+.zw-picker-label { font-family:var(--lat); font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-mute); text-align: center; padding: 9px 4px 5px; border-bottom: 1px solid var(--hair); }
+.zw-picker-body { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px; }
+.zw-picker-btn { background: none; border: none; color: var(--text-faint); font-size: 16px; cursor: pointer; padding: 6px 8px; line-height: 1; transition: color 0.15s; flex-shrink: 0; }
+.zw-picker-btn:active { color: var(--gold); transform: scale(0.9); }
+.zw-picker-val { font-family: var(--lat); font-size: 18px; color: var(--gold-soft); letter-spacing: 0.04em; text-align: center; flex: 1; padding: 8px 2px; }
+.zw-picker-unit { font-size: 10px; color: var(--text-faint); letter-spacing: 0.08em; }
 
-/* palace cards — subtle gradient upgrade */
-@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.palace{background:linear-gradient(145deg,#fffdf8,#faf8f2);border:1px solid var(--jade-border);border-radius:12px;
-  padding:11px 12px;position:relative;min-height:70px;
-  box-shadow:0 1px 6px rgba(0,0,0,0.04);transition:all 0.2s;animation:fadeUp 0.4s ease both}
-.palace:hover{box-shadow:0 4px 16px rgba(91,191,160,0.12);transform:translateY(-1px)}
-.palace.is-life{border-color:var(--gold);background:linear-gradient(135deg,rgba(201,168,76,0.09),#fffdf8)}
-.palace.is-life:hover{box-shadow:0 4px 16px rgba(201,168,76,0.18)}
-.palace.is-body{border-color:var(--jade);background:linear-gradient(135deg,rgba(91,191,160,0.07),#fffdf8)}
+/* ── Hour wheel ── */
+.zw-hour-section { position: relative; z-index: 1; padding: 0 16px; margin-bottom: 14px; }
+.zw-hour-label { font-family:var(--lat); font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-mute); margin-bottom: 8px; }
+.zw-hour-wheel { display: flex; gap: 8px; overflow-x: auto; padding: 4px 0 10px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.zw-hour-wheel::-webkit-scrollbar { display: none; }
+.zw-hw { flex-shrink: 0; background: var(--indigo-2); border: 1px solid var(--hair-2); border-radius: 12px; padding: 10px 12px; text-align: center; cursor: pointer; scroll-snap-align: start; transition: all 0.18s; min-width: 64px; }
+.zw-hw .hw-name { font-family: var(--lat); font-size: 11px; color: var(--text-mute); letter-spacing: 0.04em; font-style: italic; }
+.zw-hw .hw-time { font-size: 9px; color: var(--text-ghost); letter-spacing: 0.03em; margin-top: 3px; line-height: 1.35; }
+.zw-hw.active { background: linear-gradient(180deg, rgba(74,42,140,0.8), rgba(42,24,82,0.9)); border-color: var(--gold-line-2); box-shadow: 0 0 0 1px var(--gold-line-2); }
+.zw-hw.active .hw-name { color: var(--gold-soft); }
+.zw-hw.active .hw-time { color: var(--gold-deep); }
 
-/* luxury dark-gold share card */
+/* ── Gender cards ── */
+.gender-row { display: grid; grid-template-columns:1fr 1fr; gap: 12px; padding: 0 16px; margin: 14px 0; position:relative; z-index:1; }
+.gender-opt { background: var(--indigo-2); border: 1px solid var(--hair-2); border-radius: 14px; padding: 16px 12px 14px; text-align: center; cursor: pointer; transition: all 0.2s; font-family:var(--lat); font-size: 15px; color: var(--text-mute); letter-spacing: 0.1em; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.gender-opt.selected { border-color: var(--gold-line-2); color: var(--gold-soft); background: linear-gradient(180deg,#33206a,#20134a); box-shadow:0 0 0 1px var(--gold-line-2); }
+.gender-opt .g-icon { display: block; font-size: 22px; margin-bottom: 5px; line-height: 1; }
+.gender-opt .g-label { display: block; font-size: 14px; letter-spacing: 0.1em; }
+.gender-opt .g-sub { display: block; font-size: 9.5px; color: var(--text-faint); letter-spacing: 0.08em; margin-top: 3px; font-family: var(--lat); font-style: italic; }
+.gender-opt.selected .g-sub { color: var(--gold-deep); }
+
+/* ── Submit ── */
+.submit-wrap { position: relative; z-index: 1; padding: 8px 16px 16px; }
+.btn-calc { width: 100%; min-height:58px; padding: 9px 16px; background:linear-gradient(155deg,var(--gold-hi) 0%,var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep) 100%); border: none; border-radius: 16px; color: #241a08; font-family: var(--lat); font-size: 17px; font-weight: 600; letter-spacing: 0.12em; cursor: pointer; box-shadow:0 16px 32px -14px var(--gold-glow),inset 0 1px 0 rgba(255,255,255,.55); transition: opacity 0.2s; }
+.btn-calc:active { transform: scale(0.97); }
+.btn-calc:disabled { opacity: 0.55; cursor: not-allowed; }
+.pricing-note { text-align: center; font-family:var(--lat); font-style:italic; font-size: 11px; color: var(--text-faint); margin-top: 10px; letter-spacing: 0.04em; line-height:1.7; }
+.pricing-note strong { color: var(--gold-soft); font-weight: 500; }
+
+/* ── Intro / taste card ── */
+.taste-card { position: relative; z-index: 1; margin: 0 16px 18px; border-radius: 18px; overflow: hidden; background: linear-gradient(160deg, rgba(74,42,140,0.25), rgba(42,24,82,0.15)); border: 1px solid var(--violet-line); }
+.taste-card-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; border-bottom: 1px solid var(--hair); }
+.taste-card-icon { font-size: 18px; color: var(--gold-soft); }
+.taste-card-title { font-family: var(--lat); font-size: 12px; letter-spacing: 0.14em; color: var(--gold-soft); flex: 1; font-style: italic; }
+.taste-card-badge { font-size: 9px; letter-spacing: 0.1em; color: var(--text-ghost); font-family: var(--lat); font-style: italic; }
+.taste-preview { padding: 12px 16px 14px; }
+.taste-preview-line { display: flex; align-items: flex-start; gap: 8px; padding: 7px 0; border-bottom: 1px solid var(--hair); font-family: var(--lat); font-size: 12.5px; color: var(--text-mute); line-height: 1.75; letter-spacing: 0.01em; }
+.taste-preview-line:last-child { border-bottom: none; }
+.taste-preview-line::before { content: '✦'; color: var(--gold); font-size: 8px; margin-top: 5px; flex-shrink: 0; }
+
+/* ── Loading ── */
+.loading-wrap { position: relative; z-index: 1; display: none; flex-direction: column; align-items: center; padding: 36px 16px; gap: 20px; }
+.loading-wrap.show { display: flex; }
+.star-ring { width: 64px; height: 64px; position: relative; animation: star-rotate 8s linear infinite; }
+.star-ring::before, .star-ring::after { content: ''; position: absolute; border-radius: 50%; animation: ring-pulse 2s ease-in-out infinite; }
+.star-ring::before { inset: 0; border: 1px solid var(--violet-line-2); }
+.star-ring::after { inset: 8px; border: 1px solid var(--gold-line-2); animation-delay: 0.5s; }
+@keyframes star-rotate { to { transform: rotate(360deg); } }
+@keyframes ring-pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+.loading-text { font-family: var(--lat); font-style: italic; font-size: 17px; letter-spacing: 0.1em; color: var(--text-cream); animation: pulse-txt 1.8s ease-in-out infinite; }
+.loading-steps { font-family: var(--lat); font-style: italic; font-size: 11.5px; color: var(--text-faint); letter-spacing: 0.16em; }
+@keyframes pulse-txt { 0%,100%{opacity:0.55} 50%{opacity:1} }
+
+/* ── Result ── */
+.result-wrap { position: relative; z-index: 1; padding: 0 16px; display: none; }
+.result-wrap.show { display: block; }
+
+/* Palace grid — 4×3 standard Zi Wei layout */
+.palace-label { font-family:var(--lat); font-size: 10.5px; letter-spacing: 0.22em; text-transform:uppercase; color: var(--text-faint); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+.palace-label::after { content: ''; flex: 1; height: 1px; background: var(--hair); }
+
+.palace-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-bottom: 18px; }
+.palace { background: linear-gradient(180deg,#20123f,#150a2c); border: 1px solid var(--hair-2); border-radius: 8px; padding: 5px 4px; display: flex; flex-direction: column; justify-content: space-between; position: relative; overflow: hidden; min-height: 70px; }
+.palace.center-empty { background: rgba(11,6,22,0.8); border: 1px solid var(--hair); display: flex; align-items: center; justify-content: center; }
+.palace.highlight { border-color: var(--gold-line-2); background: rgba(224,196,130,0.08); }
+.palace.main-star { border-color: var(--violet-line-2); background: rgba(176,120,255,0.1); }
+.palace-name { font-family:var(--lat); font-size: 8px; color: var(--star-soft); letter-spacing: 0.06em; text-transform:uppercase; }
+.palace-stars { font-size: 8.5px; color: var(--gold-soft); line-height: 1.5; }
+.palace-stars .main { font-family:var(--lat); font-size: 9.5px; color: var(--gold-hi); font-weight: 600; }
+.palace-stars .sub { color: var(--star); font-size: 7.5px; }
+.palace-earthly { font-size: 7px; color: var(--text-ghost); position: absolute; bottom: 3px; right: 4px; }
+
+/* Key stars section */
+.stars-section { background: linear-gradient(180deg,#20123f,#100826); border: 1px solid var(--hair-2); border-radius: 16px; padding: 16px; margin-bottom: 14px; box-shadow:var(--shadow-lift); }
+.star-row { display: flex; align-items: baseline; gap: 12px; padding: 9px 0; border-bottom: 1px solid var(--hair); }
+.star-row:last-child { border-bottom: none; }
+.star-name { font-family:var(--lat); font-size: 13px; color: var(--gold-soft); letter-spacing: 0.06em; min-width: 60px; font-style: italic; }
+.star-palace { font-size: 10px; color: var(--star-soft); min-width: 34px; font-family:var(--lat); }
+.star-meaning { font-size: 12px; color: var(--text-mute); letter-spacing: 0.02em; line-height: 1.75; font-family:var(--lat); }
+
+/* Fortune panels */
+.fortune-section { margin-bottom: 12px; }
+.fortune-head { background: linear-gradient(180deg,#20123f,#160b30); border: 1px solid var(--hair-2); border-radius: 16px 16px 0 0; padding: 14px 16px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
+.fortune-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family:var(--lat); font-size: 11px; color:#241a08; font-style: italic; }
+.fortune-title { font-family: var(--lat); font-size: 14px; letter-spacing: 0.08em; color: var(--text-cream); flex: 1; font-style: italic; }
+.fortune-score { font-family: var(--lat); font-weight:600; font-size: 22px; }
+.fortune-body { background: rgba(16,8,38,0.72); border: 1px solid var(--hair); border-top: none; border-radius: 0 0 16px 16px; padding: 14px 16px; font-family:var(--lat); font-size: 12.5px; color: var(--text-mute); letter-spacing: 0.02em; line-height: 2; }
+.fortune-body.hidden { display: none; }
+
+/* Year fortune */
+.year-strip { background: linear-gradient(180deg,rgba(224,196,130,.08),rgba(224,196,130,.015)); border: 1px solid var(--gold-line); border-radius: 16px; padding: 16px 18px; margin-bottom: 14px; }
+.year-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.year-title { font-family:var(--lat); font-size: 13px; letter-spacing: 0.08em; color: var(--gold-soft); font-style: italic; }
+.year-val { font-family: var(--lat); font-weight:600; font-size: 24px; color: var(--gold-hi); }
+.year-bars { display: flex; gap: 4px; height: 5px; margin-bottom: 12px; }
+.year-bar { flex: 1; height: 100%; border-radius: 3px; background: rgba(176,120,255,0.15); overflow: hidden; }
+.year-bar .fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--star-soft), var(--gold-hi)); }
+.year-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.year-item { background: rgba(11,6,22,0.6); border: 1px solid var(--hair); border-radius: 10px; padding: 9px 12px; }
+.year-item-name { font-family:var(--lat); font-size: 9.5px; color: var(--text-faint); letter-spacing: 0.08em; margin-bottom: 3px; text-transform:uppercase; }
+.year-item-val { font-family:var(--lat); font-size: 13px; color: var(--text-cream); letter-spacing: 0.04em; }
+
+/* CTA */
+.cta-section { position: relative; z-index: 1; padding: 6px 16px 16px; }
+.btn-deep { width: 100%; min-height:56px; padding: 12px 16px; background: linear-gradient(180deg,rgba(176,120,255,.2),rgba(176,120,255,.06)); border: 1px solid var(--violet-line-2); border-radius: 16px; color: var(--gold-soft); font-family: var(--lat); font-weight:500; font-size: 15px; letter-spacing: 0.12em; cursor: pointer; font-style: italic; }
+.btn-deep:active { opacity: 0.8; }
+.cta-note { text-align: center; font-family:var(--lat); font-size: 10.5px; color: var(--text-faint); margin-top: 10px; letter-spacing: 0.04em; font-style: italic; }
+.paywall-blurred { filter: blur(5px); pointer-events: none; user-select: none; position: relative; }
+.paywall-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(transparent 0%, rgba(11,6,22,0.97) 40%); display: flex; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 40px; z-index: 10; }
+
+/* ── Reading progress ── */
+@keyframes zwFadeUp { from { opacity:0; transform:translateY(16px);} to { opacity:1; transform:none; } }
+#zwProgressWrap { position:fixed; top:0; left:0; right:0; height:3px; z-index:1200; background:rgba(0,0,0,0.28); opacity:0; transition:opacity .3s; pointer-events:none; }
+#zwProgressWrap.show { opacity:1; }
+#zwProgressBar { height:100%; width:0; background:linear-gradient(90deg, var(--violet-2), var(--star-soft), var(--gold-hi)); box-shadow:0 0 8px var(--violet-glow); transition:width .12s ease-out; }
+#zwProgressChapter { position:fixed; top:8px; right:12px; z-index:1200; font-family:var(--lat); font-size:11px; letter-spacing:0.12em; color:var(--gold-soft); background:rgba(20,10,38,0.72); border:1px solid var(--violet-line); border-radius:20px; padding:3px 11px; opacity:0; transition:opacity .3s; pointer-events:none; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px); }
+#zwProgressChapter.show { opacity:1; }
+
+/* Chapter cover cards */
+.zw-chapter-cover { position:relative; margin:22px 0 10px; border-radius:20px; overflow:hidden; min-height:168px; display:flex; flex-direction:column; justify-content:flex-end; box-shadow:var(--shadow-lift); animation:zwFadeUp 0.6s ease both; background:#150a2c; }
+.zw-chapter-cover-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; opacity:0.55; filter:saturate(0.95); }
+.zw-chapter-cover-veil { position:absolute; inset:0; background:linear-gradient(180deg, rgba(11,6,22,0.32) 0%, rgba(11,6,22,0.56) 45%, rgba(11,6,22,0.94) 100%); }
+.zw-chapter-cover-body { position:relative; padding:20px 20px 18px; }
+.zw-chapter-cover-num { font-family:var(--lat); font-size:12px; letter-spacing:0.32em; color:var(--gold-soft); margin-bottom:6px; font-style:italic; }
+.zw-chapter-cover-num::before { content:''; display:inline-block; width:22px; height:1px; background:linear-gradient(90deg, var(--violet-line-2), transparent); vertical-align:middle; margin-right:8px; }
+.zw-chapter-cover-title { font-family:var(--lat); font-size:21px; font-weight:600; letter-spacing:0.03em; color:var(--text-cream); line-height:1.25; text-shadow:0 2px 12px rgba(0,0,0,0.65); }
+.zw-chapter-cover-lead { font-family:var(--lat); font-size:12.5px; line-height:1.75; letter-spacing:0.02em; color:var(--text-mute); margin-top:8px; max-width:92%; }
+
+/* Report cards */
+.zw-ur-card { background:linear-gradient(180deg,#20123f,#100826); border:1px solid var(--hair-2); border-radius:20px; overflow:hidden; animation:zwFadeUp 0.5s ease both; margin-bottom:12px; box-shadow:var(--shadow-lift); }
+.zw-ur-head { display:flex; align-items:center; gap:12px; padding:16px 18px; cursor:pointer; user-select:none; }
+.zw-ur-emoji { font-size:16px; width:26px; text-align:center; flex-shrink:0; color:var(--gold-soft); }
+.zw-ur-title { flex:1; font-family:var(--lat); font-size:15px; font-weight:600; letter-spacing:0.03em; color:var(--text-cream); }
+.zw-ur-arrow { font-size:13px; color:var(--text-faint); transition:transform 0.3s; flex-shrink:0; }
+.zw-ur-arrow.open { transform:rotate(180deg); }
+.zw-ur-body { display:none; }
+.zw-ur-body.open { display:block; }
+.zw-ur-text { font-family:var(--lat); font-size:14px; line-height:2; color:#c7c4dc; letter-spacing:0.01em; padding:0 20px 20px; }
+.zw-hl-note { margin:14px 0; padding:14px 16px; background:linear-gradient(135deg, rgba(176,120,255,0.12), rgba(176,120,255,0.03)); border:1px solid var(--violet-line); border-left:3px solid var(--star-soft); border-radius:14px; font-family:var(--lat); font-size:13px; line-height:1.95; letter-spacing:0.01em; color:var(--text-cream); }
+.zw-hl-note b, .zw-hl-note strong { color:var(--gold-soft); }
+.zw-pull-quote { position:relative; margin:18px 6px; padding:6px 4px 6px 20px; text-align:center; }
+.zw-pull-quote::before { content:''; position:absolute; left:6px; top:6px; bottom:6px; width:2px; background:linear-gradient(180deg, transparent, var(--gold-line-2), transparent); border-radius:2px; }
+.zw-pull-quote-text { font-family:var(--lat); font-size:17px; font-weight:500; line-height:1.85; letter-spacing:0.02em; color:var(--gold-soft); font-style:italic; }
+.zw-pull-quote-mark { font-family:var(--lat); font-size:26px; color:rgba(224,196,130,0.4); line-height:0; }
+.zw-hl-year { color:var(--gold-hi); font-weight:500; }
+.zw-hl-score { color:var(--star); font-weight:500; }
+.zw-hl-money { color:var(--gold-soft); font-weight:500; }
+
+/* Chapter TOC */
+.zw-chapter-toc { margin:16px 0 6px; padding:16px 18px 12px; background:var(--indigo); border:1px solid var(--hair); border-radius:18px; animation:zwFadeUp 0.5s ease both; }
+.zw-chapter-toc-title { font-family:var(--lat); font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:var(--text-faint); margin-bottom:12px; display:flex; align-items:center; gap:7px; }
+.zw-chapter-toc-item { display:flex; align-items:baseline; gap:12px; padding:11px 2px; border-bottom:1px solid var(--hair); text-decoration:none; transition:all .2s; min-height:44px; }
+.zw-chapter-toc-item:last-child { border-bottom:none; }
+.zw-chapter-toc-item:active { opacity:0.6; }
+.zw-chapter-toc-idx { font-family:var(--lat); font-size:15px; color:var(--gold); min-width:26px; text-align:center; }
+.zw-chapter-toc-label { flex:1; font-family:var(--lat); font-size:14.5px; letter-spacing:0.02em; color:var(--text-cream); }
+.zw-chapter-toc-arrow { font-size:14px; color:var(--text-faint); }
+
+/* Float TOC */
+#zwFloatTocBtn { position:fixed; right:16px; bottom:96px; width:46px; height:46px; border-radius:50%; background:linear-gradient(135deg, var(--violet-2), var(--star-soft)); border:none; color:var(--text-cream); font-size:18px; cursor:pointer; z-index:1100; box-shadow:0 4px 16px var(--violet-glow); display:none; align-items:center; justify-content:center; }
+#zwFloatTocBtn.show { display:flex; }
+#zwFloatTocPanel { display:none; position:fixed; right:16px; bottom:150px; z-index:1100; background:rgba(20,10,38,0.97); border:1px solid var(--violet-line-2); border-radius:16px; padding:14px; max-height:56vh; overflow-y:auto; width:min(230px, calc(100vw - 32px)); box-shadow:0 10px 30px rgba(0,0,0,0.6); -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); }
+#zwFloatTocPanel.show { display:block; animation:zwFadeUp 0.25s ease both; }
+#zwFloatTocPanel .ft-title { font-family:var(--lat); font-size:12px; letter-spacing:0.16em; color:var(--gold-soft); margin-bottom:10px; }
+#zwFloatTocPanel a { display:flex; gap:8px; color:var(--text-mute); text-decoration:none; padding:9px 0; font-family:var(--lat); font-size:13px; border-bottom:1px solid var(--hair); line-height:1.4; }
+#zwFloatTocPanel a:last-child { border-bottom:none; }
+#zwFloatTocPanel a .ft-idx { color:var(--gold); font-family:var(--lat); }
+
+/* Share card */
 .shareCard{position:relative;overflow:hidden;border-radius:22px;color:#fff;isolation:isolate;
-  padding:28px 22px 22px;margin:14px 0;font-family:'Inter',sans-serif;
+  padding:28px 22px 22px;margin:14px 0;font-family:var(--lat);
   background:
-    radial-gradient(120% 70% at 50% -10%,rgba(201,168,76,0.18) 0%,transparent 55%),
-    radial-gradient(90% 55% at 50% 115%,rgba(201,168,76,0.10) 0%,transparent 60%),
-    linear-gradient(165deg,var(--lux-ink2) 0%,var(--lux-ink1) 42%,var(--lux-ink0) 100%);
+    radial-gradient(120% 70% at 50% -10%,rgba(74,42,140,0.35) 0%,transparent 55%),
+    linear-gradient(165deg,#241352 0%,#140a26 42%,#08040f 100%);
   box-shadow:0 12px 40px rgba(0,0,0,0.4)}
 .shareCard::before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;
-  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,0.020) 0 1px,transparent 1px 6px),
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,0.015) 0 1px,transparent 1px 6px),
     repeating-linear-gradient(-45deg,rgba(0,0,0,0.06) 0 1px,transparent 1px 6px);mix-blend-mode:overlay}
 .shareCard::after{content:"";position:absolute;inset:11px;z-index:1;pointer-events:none;border-radius:14px;
-  border:1px solid var(--lux-line);
-  box-shadow:inset 0 0 0 1px rgba(0,0,0,0.4),inset 0 0 40px rgba(201,168,76,0.06),inset 0 0 0 6px rgba(0,0,0,0.25)}
+  border:1px solid var(--gold-line);box-shadow:inset 0 0 0 1px rgba(0,0,0,0.4),inset 0 0 40px rgba(224,196,130,0.04)}
 .shareCard > *{position:relative;z-index:2}
-.foil{background:linear-gradient(100deg,var(--lux-gold-lo) 0%,var(--lux-gold) 24%,var(--lux-gold-hi) 44%,#fffbe8 50%,var(--lux-gold-hi) 56%,var(--lux-gold) 76%,var(--lux-gold-lo) 100%);
+.foil{background:linear-gradient(100deg,var(--gold-deep) 0%,var(--gold) 24%,var(--gold-hi) 44%,#fffbe8 50%,var(--gold-hi) 56%,var(--gold) 76%,var(--gold-deep) 100%);
   background-size:250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
   animation:foilSweep 5.5s linear infinite}
 @keyframes foilSweep{0%{background-position:180% 0}100%{background-position:-80% 0}}
 .card-head{text-align:center;margin-bottom:16px}
-.card-eyebrow{font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--lux-sub);margin-bottom:10px}
-.card-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:800;line-height:1.25;margin-bottom:6px}
-.card-star{font-size:26px;font-family:'Playfair Display',serif;font-weight:700;margin:6px 0}
-.card-divider{height:1px;background:linear-gradient(90deg,transparent,var(--lux-line),transparent);margin:14px 0}
+.card-eyebrow{font-family:var(--lat);font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--text-faint);margin-bottom:10px}
+.card-title{font-family:var(--lat);font-size:20px;font-weight:700;line-height:1.25;margin-bottom:6px}
+.card-star{font-size:24px;font-family:var(--lat);font-weight:600;margin:6px 0;font-style:italic}
+.card-divider{height:1px;background:linear-gradient(90deg,transparent,var(--gold-line),transparent);margin:14px 0}
 .card-palaces{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
 .card-palace-row{display:flex;align-items:baseline;gap:8px}
-.card-palace-label{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--lux-sub);min-width:96px;flex-shrink:0}
-.card-palace-stars{font-size:11.5px;color:var(--lux-gold-hi);font-weight:500;line-height:1.3}
-.card-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--lux-line-soft)}
-.card-brand{font-family:'Playfair Display',serif;font-size:14px;letter-spacing:.32em;color:var(--lux-gold-hi)}
-.card-brand small{display:block;font-family:'Inter';font-size:7.5px;letter-spacing:.16em;color:var(--lux-sub);margin-top:4px;text-transform:uppercase}
-.card-ai{font-size:7.5px;line-height:1.4;color:rgba(255,255,255,0.42);text-align:right;max-width:130px}
+.card-palace-label{font-family:var(--lat);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-faint);min-width:96px;flex-shrink:0}
+.card-palace-stars{font-family:var(--lat);font-size:11.5px;color:var(--gold-hi);font-weight:500;line-height:1.3}
+.card-foot{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--gold-line)}
+.card-brand{font-family:var(--lat);font-size:14px;letter-spacing:.32em;color:var(--gold-hi)}
+.card-brand small{display:block;font-family:var(--lat);font-size:7.5px;letter-spacing:.16em;color:var(--text-faint);margin-top:4px;text-transform:uppercase}
+.card-ai{font-size:7.5px;line-height:1.4;color:rgba(255,255,255,0.35);text-align:right;max-width:130px;font-family:var(--lat)}
 
-/* share buttons */
+/* Share buttons */
 .share{display:flex;gap:10px;margin:14px 0 6px}
-.share button{flex:1;background:var(--jade-pale);border:1px solid var(--jade-border);color:var(--jade-deep);
-  font-size:12.5px;font-weight:600;border-radius:24px;padding:12px;min-height:46px;cursor:pointer;font-family:inherit}
-.share button:active{background:var(--jade-border)}
-#saveBtn{background:linear-gradient(135deg,#d8b65a,var(--gold),#b8923a);color:#3a2e0e;border:none;box-shadow:0 4px 14px rgba(201,168,76,0.34);}
-#saveBtn:active{background:linear-gradient(135deg,#c9a84c,#b8923a,#a07828);}
+.share button{flex:1;background:rgba(176,120,255,0.1);border:1px solid var(--violet-line);color:var(--text-mute);
+  font-family:var(--lat);font-size:12.5px;font-weight:500;border-radius:24px;padding:12px;min-height:46px;cursor:pointer}
+.share button:active{background:var(--indigo)}
+#saveBtn{background:linear-gradient(135deg,var(--gold-soft),var(--gold),var(--gold-deep));color:#241a08;border:none;box-shadow:0 4px 14px rgba(201,168,76,0.28);font-weight:600}
+#saveBtn:active{opacity:0.85}
 
-.disc{font-size:10.5px;color:var(--muted);line-height:1.65;text-align:center;margin:16px 6px 4px}
-footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;color:var(--muted);line-height:1.85}
+/* Spinner */
+.spin{display:none;text-align:center;padding:40px 20px;color:var(--star-soft)}
+.spin.on{display:block}
+.spin .dot{display:inline-block;width:9px;height:9px;margin:0 3px;border-radius:50%;background:var(--star-soft);animation:b 1.2s infinite ease-in-out}
+.spin .dot:nth-child(2){animation-delay:.15s}.spin .dot:nth-child(3){animation-delay:.3s}
+@keyframes b{0%,80%,100%{opacity:.25;transform:scale(.8)}40%{opacity:1;transform:scale(1)}}
+.spin p{font-family:var(--lat);font-size:12.5px;color:var(--text-mute);margin-top:14px;font-style:italic}
+
+/* Error */
+.err-msg{font-family:var(--lat);font-size:12px;color:#e07070;margin-bottom:10px;display:none;padding:0 16px}
+.err-msg.show{display:block}
+
+/* Compliance */
+.zw-disc { position: relative; z-index: 1; text-align: center; font-family:var(--lat); font-size: 10px; color: var(--text-ghost); letter-spacing: 0.06em; padding: 6px 20px 12px; line-height: 1.8; }
+
+/* See-sample */
+.zw-see-sample { display: flex; align-items: center; gap: 10px; padding: 0 16px; margin: 2px 0 12px; position: relative; z-index: 1; }
+.zw-see-sample::before, .zw-see-sample::after { content: ''; flex: 1; height: 1px; background: var(--hair); }
+.zw-see-sample a { font-family:var(--lat); font-size: 10.5px; color: var(--gold-soft); letter-spacing: 0.12em; text-decoration: none; white-space: nowrap; font-style: italic; opacity: 0.8; }
+
+/* Header grain */
+.header-grain { position: absolute; inset: 0; pointer-events: none; opacity: 0.03; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"); background-size: 128px; }
+
+/* Page-level guard: keep dark cosmos even after site-wide CSS */
+html, body.ziwei-cosmos {
+  background: #08040f !important;
+  color: var(--text-cream) !important;
+  font-family: var(--sans) !important;
+}
+body.ziwei-cosmos { max-width: 402px !important; }
+@media (min-width: 900px) {
+  body.ziwei-cosmos { max-width: 780px !important; margin: 0 auto !important; }
+}
+body.ziwei-cosmos::before {
+  content: '' !important; position: fixed !important; inset: 0 !important;
+  pointer-events: none !important; z-index: 0 !important;
+  background: radial-gradient(135% 80% at 50% -8%, #4a2a8c 0%, #2c1858 38%, #160a2e 72%, var(--void-0) 100%) !important;
+}
+
+/* Result panel (EN version uses id=result, not resultWrap) */
+#result { display: none; padding: 0 16px; position: relative; z-index: 1; }
+
+/* Palace grid in result (2-col for EN simple view) */
+.palaces-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.palace.is-life { border-color: var(--gold-line-2); background: rgba(224,196,130,0.08); }
+.palace.is-body { border-color: var(--violet-line-2); background: rgba(176,120,255,0.1); }
+.palace-tag { position:absolute; top:6px; right:7px; font-size:8px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:2px 6px; border-radius:6px; font-family:var(--lat); }
+.palace-tag.life { background:rgba(224,196,130,0.14); color:var(--gold-soft); }
+.palace-tag.body { background:rgba(176,120,255,0.14); color:var(--star-soft); }
+.palace-name.en { font-family:var(--lat); font-size:9px; color:var(--star-soft); letter-spacing:0.08em; text-transform:uppercase; margin-bottom:4px; }
+.palace-stars.en { font-size:11.5px; color:var(--gold-soft); line-height:1.45; font-family:var(--lat); }
+.palace-stars.en.empty { color:var(--text-ghost); font-style:italic; }
+.palace-aux { font-family:var(--lat); font-size:9.5px; color:var(--text-faint); margin-top:3px; line-height:1.3; }
+
+/* Reading card (EN version) */
+.reading { position:relative; background:linear-gradient(180deg,#20123f,#100826); border:1px solid var(--hair-2); border-radius:20px; overflow:hidden; box-shadow:var(--shadow-lift); margin:14px 0; padding:18px 18px 18px 22px; }
+.reading::before { content:''; position:absolute; left:0; top:0; bottom:0; width:4px; background:linear-gradient(180deg,var(--gold-hi),var(--gold) 60%,rgba(220,192,130,0.3)); }
+.reading-head { display:flex; align-items:center; gap:12px; margin-bottom:14px; }
+.reading-icon { font-size:22px; width:40px; height:40px; line-height:40px; text-align:center; flex-shrink:0; background:radial-gradient(circle,rgba(224,196,130,0.16),rgba(224,196,130,0.04)); border-radius:50%; }
+.reading h3 { font-family:var(--lat); font-size:15px; font-weight:600; color:var(--gold-soft); letter-spacing:0.02em; margin:0; }
+.reading-body { font-family:var(--lat); font-size:13.5px; line-height:1.9; color:var(--text-mute); letter-spacing:0.01em; border-top:1px solid var(--hair); padding-top:14px; }
+.reading-body p { margin-bottom:12px; }
+.reading-body p:last-child { margin-bottom:0; }
+
+/* Disc / footer */
+.disc { font-family:var(--lat); font-size:10.5px; color:var(--text-ghost); line-height:1.65; text-align:center; margin:16px 6px 4px; }
+footer { padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px)); text-align:center; font-family:var(--lat); font-size:11px; color:var(--text-faint); line-height:1.85; }
+footer a { color:var(--gold-soft); }
+
+@media print {
+  #zwProgressWrap, #zwProgressChapter, #zwFloatTocBtn, #zwFloatTocPanel { display:none !important; }
+}
 </style>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/css/style.css">
+<link rel="stylesheet" href="/assets/css/common.css">
 </head>
-<body>
+<body class="ziwei-cosmos">
 
-<!-- header -->
-<div class="top">
-  <div class="clasp"></div>
-  <span class="logo">RUNAE</span>
+<button class="back-btn" onclick="history.back()">‹</button>
+
+<!-- Header -->
+<div class="header" style="position:relative">
+  <div class="header-grain"></div>
+  <div class="brandmark">
+    <div class="cn">RUNAE</div>
+    <div class="sub">Eastern Astrology</div>
+  </div>
+  <div class="eyebrow">The Emperor of Eastern Astrology</div>
+  <div class="header-title">Cast Your<br><em>Purple Star</em> Birth Chart</div>
+  <div class="en-sub">Zi Wei Dou Shu · 紫微斗數</div>
+  <div class="header-sub">108 stars. 12 life palaces. One chart, yours alone.<br>Three minutes to a reading you can keep forever.</div>
+  <div class="azure-line"></div>
+  <div style="margin-top:10px;font-size:9px;color:var(--text-faint);letter-spacing:0.1em;font-family:var(--lat)">AI-generated · for reflection &amp; entertainment only</div>
 </div>
 
-<!-- hero -->
-<div class="hero">
-  <div class="badge">◆ Zi Wei Dou Shu · Purple Star Astrology</div>
-  <h1>Your <em>Purple Star</em> birth chart</h1>
-  <p class="hero-sub">The most detailed Eastern birth chart system — <b>12 life palaces</b>, each governed by stars that reveal your destiny's architecture. More precise than a zodiac sign.</p>
+<!-- HERO star-chart preview -->
+<div class="hero-chart"><svg id="zwHeroChart" viewBox="0 0 280 280"></svg></div>
+<div class="hero-caption">Twelve Palaces · Fourteen Major Stars<br>One Chart, Yours Alone</div>
+
+<div class="trust">
+  <span>All 12 Palaces</span><span class="d"></span>
+  <span>14 Major Stars</span><span class="d"></span>
+  <span>Decade &amp; Year Cycles</span>
 </div>
 
-<!-- AI label -->
-<div class="ai-note">
-  ✦ AI-generated · computed by a real Eastern astrology engine · for reflection and entertainment
+<!-- Intro card -->
+<div class="taste-card" style="margin-top:16px">
+  <div class="taste-card-head">
+    <span class="taste-card-icon">✦</span>
+    <span class="taste-card-title">What is Zi Wei Dou Shu?</span>
+    <span class="taste-card-badge">preview</span>
+  </div>
+  <div class="taste-preview">
+    <div class="taste-preview-line">Born in the Tang–Song dynasties, Purple Star Astrology maps 108 celestial bodies across 12 life palaces from your exact birth moment.</div>
+    <div class="taste-preview-line">It covers career, wealth, relationships, and health — precise to the birth hour, revealing your personal blueprint.</div>
+    <div class="taste-preview-line">Unlike Western sun signs, Zi Wei Dou Shu reveals the arc of your entire life — the pinnacle of classical Eastern destiny arts.</div>
+  </div>
 </div>
 
-<!-- form -->
-<div class="form-card">
-  <h2>Enter your birth details</h2>
-  <p class="cap">Solar calendar date · all fields required</p>
+<!-- Birth form -->
+<div class="form-wrap">
+  <div class="form-label">Your Moment of Birth</div>
 
-  <div class="row">
-    <div class="fld">
-      <label for="year">Year</label>
-      <input type="number" id="year" name="year" placeholder="e.g. 1990" min="1900" max="2010" inputmode="numeric">
+  <!-- Visual date picker (UI layer; hidden inputs below carry values for submitForm()) -->
+  <div class="zw-date-picker">
+    <div class="zw-picker-col">
+      <div class="zw-picker-card">
+        <div class="zw-picker-label">Year</div>
+        <div class="zw-picker-body">
+          <button class="zw-picker-btn" onclick="enPickerStep('year',-1)" aria-label="Previous year">‹</button>
+          <div class="zw-picker-val" id="enYearVal">1990</div>
+          <button class="zw-picker-btn" onclick="enPickerStep('year',1)" aria-label="Next year">›</button>
+        </div>
+      </div>
     </div>
-    <div class="fld">
-      <label for="month">Month</label>
-      <input type="number" id="month" name="month" placeholder="1–12" min="1" max="12" inputmode="numeric">
+    <div class="zw-picker-col">
+      <div class="zw-picker-card">
+        <div class="zw-picker-label">Month</div>
+        <div class="zw-picker-body">
+          <button class="zw-picker-btn" onclick="enPickerStep('month',-1)" aria-label="Previous month">‹</button>
+          <div class="zw-picker-val" id="enMonthVal">1</div>
+          <button class="zw-picker-btn" onclick="enPickerStep('month',1)" aria-label="Next month">›</button>
+        </div>
+      </div>
     </div>
-    <div class="fld">
-      <label for="day">Day</label>
-      <input type="number" id="day" name="day" placeholder="1–31" min="1" max="31" inputmode="numeric">
+    <div class="zw-picker-col">
+      <div class="zw-picker-card">
+        <div class="zw-picker-label">Day</div>
+        <div class="zw-picker-body">
+          <button class="zw-picker-btn" onclick="enPickerStep('day',-1)" aria-label="Previous day">‹</button>
+          <div class="zw-picker-val" id="enDayVal">1</div>
+          <button class="zw-picker-btn" onclick="enPickerStep('day',1)" aria-label="Next day">›</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="fld">
-    <label for="hour">Birth hour (approximate is fine)</label>
+  <!-- Hidden native inputs — read by submitForm() JS (IDs: year, month, day, hour, gender) -->
+  <div class="field-group-hidden">
+    <input type="number" id="year" name="year" value="1990" min="1900" max="2010">
+    <input type="number" id="month" name="month" value="1" min="1" max="12">
+    <input type="number" id="day" name="day" value="1" min="1" max="31">
     <select id="hour">
-      <option value="" disabled selected>Select birth hour period</option>
-      <option value="23">子時 Zi · 11 pm – 1 am</option>
-      <option value="1">丑時 Chou · 1 am – 3 am</option>
-      <option value="3">寅時 Yin · 3 am – 5 am</option>
-      <option value="5">卯時 Mao · 5 am – 7 am</option>
-      <option value="7">辰時 Chen · 7 am – 9 am</option>
-      <option value="9">巳時 Si · 9 am – 11 am</option>
-      <option value="11">午時 Wu · 11 am – 1 pm</option>
-      <option value="13">未時 Wei · 1 pm – 3 pm</option>
-      <option value="15">申時 Shen · 3 pm – 5 pm</option>
-      <option value="17">酉時 You · 5 pm – 7 pm</option>
-      <option value="19">戌時 Xu · 7 pm – 9 pm</option>
-      <option value="21">亥時 Hai · 9 pm – 11 pm</option>
+      <option value="23">Zi · 11 pm – 1 am</option>
+      <option value="1">Chou · 1 am – 3 am</option>
+      <option value="3">Yin · 3 am – 5 am</option>
+      <option value="5">Mao · 5 am – 7 am</option>
+      <option value="7">Chen · 7 am – 9 am</option>
+      <option value="9">Si · 9 am – 11 am</option>
+      <option value="11">Wu · 11 am – 1 pm</option>
+      <option value="13">Wei · 1 pm – 3 pm</option>
+      <option value="15">Shen · 3 pm – 5 pm</option>
+      <option value="17">You · 5 pm – 7 pm</option>
+      <option value="19">Xu · 7 pm – 9 pm</option>
+      <option value="21">Hai · 9 pm – 11 pm</option>
     </select>
-  </div>
-
-  <div class="fld">
-    <label for="gender">Gender (affects palace direction in this system)</label>
     <select id="gender">
-      <option value="" disabled selected>Select gender</option>
       <option value="male">Male</option>
       <option value="female">Female</option>
     </select>
   </div>
-
-  <div class="err-msg" id="errMsg"></div>
-
-  <button class="cta" id="submitBtn" onclick="submitForm()">Reveal My Purple Star Chart ✦</button>
-  <p class="cta-note">Free · 1 reading per day · AI-generated for reflection only</p>
 </div>
 
-<!-- spinner -->
-<div class="spin" id="spin">
-  <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-  <p>Charting your 12 palaces…</p>
+<!-- Hour wheel -->
+<div class="zw-hour-section">
+  <div class="zw-hour-label">Birth Hour</div>
+  <div class="zw-hour-wheel" id="zwHourWheel">
+    <div class="zw-hw active" onclick="enSelectHour('23',this)"><div class="hw-name">Zi</div><div class="hw-time">11 pm–1 am</div></div>
+    <div class="zw-hw" onclick="enSelectHour('1',this)"><div class="hw-name">Chou</div><div class="hw-time">1–3 am</div></div>
+    <div class="zw-hw" onclick="enSelectHour('3',this)"><div class="hw-name">Yin</div><div class="hw-time">3–5 am</div></div>
+    <div class="zw-hw" onclick="enSelectHour('5',this)"><div class="hw-name">Mao</div><div class="hw-time">5–7 am</div></div>
+    <div class="zw-hw" onclick="enSelectHour('7',this)"><div class="hw-name">Chen</div><div class="hw-time">7–9 am</div></div>
+    <div class="zw-hw" onclick="enSelectHour('9',this)"><div class="hw-name">Si</div><div class="hw-time">9–11 am</div></div>
+    <div class="zw-hw" onclick="enSelectHour('11',this)"><div class="hw-name">Wu</div><div class="hw-time">11 am–1 pm</div></div>
+    <div class="zw-hw" onclick="enSelectHour('13',this)"><div class="hw-name">Wei</div><div class="hw-time">1–3 pm</div></div>
+    <div class="zw-hw" onclick="enSelectHour('15',this)"><div class="hw-name">Shen</div><div class="hw-time">3–5 pm</div></div>
+    <div class="zw-hw" onclick="enSelectHour('17',this)"><div class="hw-name">You</div><div class="hw-time">5–7 pm</div></div>
+    <div class="zw-hw" onclick="enSelectHour('19',this)"><div class="hw-name">Xu</div><div class="hw-time">7–9 pm</div></div>
+    <div class="zw-hw" onclick="enSelectHour('21',this)"><div class="hw-name">Hai</div><div class="hw-time">9–11 pm</div></div>
+  </div>
 </div>
 
-<!-- result -->
+<div class="form-label" style="padding:2px 16px 0;margin:16px 0 8px">Gender · Yin / Yang</div>
+<div class="gender-row">
+  <div class="gender-opt selected" onclick="enSelectGender(this,'male')">
+    <span class="g-icon">☀</span>
+    <span class="g-label">Male · Yang</span>
+    <span class="g-sub">Active principle</span>
+  </div>
+  <div class="gender-opt" onclick="enSelectGender(this,'female')">
+    <span class="g-icon">☾</span>
+    <span class="g-label">Female · Yin</span>
+    <span class="g-sub">Receptive principle</span>
+  </div>
+</div>
+
+<div class="submit-wrap">
+  <button class="btn-calc" id="submitBtn" onclick="submitForm()">Reveal My Purple Star Chart ✦</button>
+  <div class="pricing-note">Free chart overview · Full reading from <strong>$3.99</strong> per palace · All palaces $11.99<br><span style="font-style:italic;opacity:.85">One chart, cast from your real birth data</span></div>
+</div>
+<div class="zw-disc">Must be 18 or older · For entertainment only · AI-generated content, not advice of any kind</div>
+
+<div class="err-msg" id="errMsg"></div>
+
+<!-- Loading -->
+<div class="loading-wrap" id="spin">
+  <div class="star-ring"></div>
+  <div class="loading-text">Placing the stars…</div>
+  <div class="loading-steps">mapping palaces · charting your destiny · drawing the board</div>
+</div>
+
+<!-- Result -->
 <div id="result">
 
-  <!-- palace grid -->
-  <div class="palaces-wrap">
-    <h3>Your 12 Life Palaces</h3>
-    <div class="jade-line" style="margin:8px 0 12px"></div>
+  <div style="text-align:center;font-size:10px;color:var(--text-faint);letter-spacing:0.06em;padding:6px 16px 10px;font-family:var(--lat)">AI-generated reading based on Zi Wei Dou Shu theory · for entertainment only</div>
+
+  <!-- Palace grid -->
+  <div class="palaces-wrap" style="margin:14px 0">
+    <div style="font-family:var(--lat);font-size:15px;color:var(--gold-soft);margin-bottom:8px;letter-spacing:0.04em">Your 12 Life Palaces</div>
+    <div style="width:48px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-line-2),transparent);margin:0 0 12px"></div>
     <div class="palaces-grid" id="palacesGrid"></div>
   </div>
 
-  <!-- reading -->
+  <!-- Reading -->
   <div class="reading">
     <div class="reading-head">
       <div class="reading-icon">✦</div>
@@ -280,7 +576,7 @@ footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align
     <div class="reading-body" id="readingText"></div>
   </div>
 
-  <!-- share card -->
+  <!-- Share card -->
   <div class="shareCard" id="shareCard">
     <div class="card-head">
       <div class="card-eyebrow">Runae · Purple Star Astrology</div>
@@ -295,7 +591,7 @@ footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align
     </div>
   </div>
 
-  <!-- share buttons -->
+  <!-- Share buttons -->
   <div class="share">
     <button onclick="copyReading()">Copy Reading</button>
     <button id="saveBtn" onclick="saveCard()">Save Chart Card ✦</button>
@@ -304,22 +600,127 @@ footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align
   <p class="disc">For entertainment and reflection only. AI-generated reading. Zi Wei Dou Shu is an ancient Eastern art — results reflect archetypal patterns, not guaranteed outcomes. Not a substitute for professional advice.</p>
 </div>
 
+<!-- Brand tagline -->
+<div style="text-align:center;padding:24px 20px 40px;position:relative;z-index:1">
+  <div style="width:40px;height:1px;background:var(--gold-line-2);margin:0 auto 12px"></div>
+  <div style="font-family:var(--lat);font-style:italic;font-size:12px;color:var(--gold-soft);letter-spacing:0.2em;opacity:.7">Seek what you will · the stars have always known</div>
+  <div style="font-family:var(--lat);font-style:italic;font-size:10px;color:var(--text-faint);letter-spacing:0.14em;margin-top:6px">Destiny is an art of possibility, not a fixed verdict.</div>
+</div>
+
 <footer>
   Runae · Eastern Astrology · runae.app<br>
-  <a href="/pages/about-en.html" style="color:var(--jade-deep)">About</a> · <a href="/pages/bazi-en.html" style="color:var(--jade-deep)">Four Pillars (Bazi)</a>
+  <a href="/pages/about-en.html">About</a> · <a href="/pages/bazi-en.html">Four Pillars (Bazi)</a>
 </footer>
 
+<!-- Hero SVG chart -->
+<script>
+(function(){
+  var svg = document.getElementById('zwHeroChart'); if(!svg) return;
+  var NS='http://www.w3.org/2000/svg';
+  function el(t,a){var e=document.createElementNS(NS,t);for(var k in a)e.setAttribute(k,a[k]);svg.appendChild(e);return e;}
+  var C=140, R=118;
+  el('circle',{cx:C,cy:C,r:R,fill:'none',stroke:'rgba(224,196,130,.4)','stroke-width':1});
+  el('circle',{cx:C,cy:C,r:R-14,fill:'none',stroke:'rgba(224,196,130,.16)','stroke-width':.7});
+  el('circle',{cx:C,cy:C,r:58,fill:'rgba(176,120,255,.06)',stroke:'rgba(224,196,130,.28)','stroke-width':.8});
+  var palaces=['Life','Sib','Love','Child','Wealth','Health','Travel','Friends','Career','Home','Spirit','Parents'];
+  var nodes=[];
+  for(var i=0;i<12;i++){
+    var ang=(-90 + i*30)*Math.PI/180;
+    var x1=C+Math.cos(ang)*(R-14), y1=C+Math.sin(ang)*(R-14);
+    var x0=C+Math.cos(ang)*58, y0=C+Math.sin(ang)*58;
+    el('line',{x1:x0,y1:y0,x2:x1,y2:y1,stroke:'rgba(206,190,255,.14)','stroke-width':.7});
+    var lx=C+Math.cos(ang)*(R-30), ly=C+Math.sin(ang)*(R-30);
+    var tp=el('text',{x:lx,y:ly+4,'text-anchor':'middle','font-family':'Cormorant Garamond,serif','font-size':8.5,'font-style':'italic',fill:'rgba(176,166,207,.95)'});tp.textContent=palaces[i];
+    var nr=(i%4===0)?84:76;
+    nodes.push([C+Math.cos(ang)*nr, C+Math.sin(ang)*nr, i%4===0]);
+  }
+  for(var j=0;j<12;j++){
+    var a=nodes[j], b=nodes[(j+1)%12];
+    el('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'rgba(211,182,255,.12)','stroke-width':.6});
+  }
+  [[0,4],[0,8],[4,8]].forEach(function(p){
+    var a=nodes[p[0]],b=nodes[p[1]];
+    el('line',{x1:a[0],y1:a[1],x2:b[0],y2:b[1],stroke:'rgba(224,196,130,.3)','stroke-width':.8,'stroke-dasharray':'2 4'});
+  });
+  nodes.forEach(function(n){
+    if(n[2]){el('circle',{cx:n[0],cy:n[1],r:8,fill:'rgba(224,196,130,.18)'});el('circle',{cx:n[0],cy:n[1],r:3.2,fill:'#f4e6b6'});}
+    else{el('circle',{cx:n[0],cy:n[1],r:5,fill:'rgba(176,120,255,.16)'});el('circle',{cx:n[0],cy:n[1],r:2.2,fill:'#d3b6ff'});}
+  });
+  el('circle',{cx:C,cy:C,r:16,fill:'rgba(224,196,130,.14)'});
+  el('circle',{cx:C,cy:C,r:5,fill:'#f4e6b6'});
+  var t=el('text',{x:C,y:C+30,'text-anchor':'middle','font-family':'Cormorant Garamond,serif','font-size':10,'font-style':'italic',fill:'#e8d49c','font-weight':600,'letter-spacing':'2'});t.textContent='紫微';
+})();
+</script>
+
+<!-- Visual picker + gender sync JS -->
+<script>
+// ── EN visual date picker (syncs to hidden #year, #month, #day inputs) ──
+var _EN_PICKER = {
+  year:  { min: 1900, max: 2010, cur: 1990, displayId: 'enYearVal' },
+  month: { min: 1,    max: 12,   cur: 1,    displayId: 'enMonthVal' },
+  day:   { min: 1,    max: 31,   cur: 1,    displayId: 'enDayVal' }
+};
+
+function enPickerUpdateDisplay(id) {
+  var cfg = _EN_PICKER[id]; if (!cfg) return;
+  var el = document.getElementById(cfg.displayId);
+  if (el) el.textContent = cfg.cur;
+  var inp = document.getElementById(id);
+  if (inp) inp.value = cfg.cur;
+}
+
+function enPickerStep(id, delta) {
+  var cfg = _EN_PICKER[id]; if (!cfg) return;
+  var next = cfg.cur + delta;
+  if (next < cfg.min) next = cfg.max;
+  if (next > cfg.max) next = cfg.min;
+  cfg.cur = next;
+  enPickerUpdateDisplay(id);
+  // Clamp day to valid range for selected month/year
+  if (id === 'year' || id === 'month') {
+    var y = _EN_PICKER.year.cur, m = _EN_PICKER.month.cur;
+    var maxDay = new Date(y, m, 0).getDate();
+    _EN_PICKER.day.max = maxDay;
+    if (_EN_PICKER.day.cur > maxDay) { _EN_PICKER.day.cur = maxDay; enPickerUpdateDisplay('day'); }
+  }
+}
+
+// Initialize
+(function() {
+  enPickerUpdateDisplay('year');
+  enPickerUpdateDisplay('month');
+  enPickerUpdateDisplay('day');
+})();
+
+// ── Hour wheel — syncs to hidden #hour select ──
+function enSelectHour(val, el) {
+  var sel = document.getElementById('hour');
+  if (sel) sel.value = val;
+  document.querySelectorAll('.zw-hw').forEach(function(w) { w.classList.remove('active'); });
+  if (el) el.classList.add('active');
+}
+
+// ── Gender cards — syncs to hidden #gender select ──
+function enSelectGender(el, g) {
+  document.querySelectorAll('.gender-opt').forEach(function(o){ o.classList.remove('selected'); });
+  el.classList.add('selected');
+  var sel = document.getElementById('gender');
+  if (sel) sel.value = g;
+}
+</script>
+
+<!-- Core functional JS — all API calls, rendering, save/copy. IDs unchanged. -->
 <script>
 (function () {
   'use strict';
 
   var lastResult = null;
 
-  // ── Helpers ──────────────────────────────────────────────────────
   function showErr(msg) {
     var el = document.getElementById('errMsg');
     el.textContent = msg;
     el.classList.add('show');
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
   function clearErr() {
     var el = document.getElementById('errMsg');
@@ -327,14 +728,15 @@ footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align
     el.classList.remove('show');
   }
   function setSpinner(on) {
-    document.getElementById('spin').className = 'spin' + (on ? ' on' : '');
+    var s = document.getElementById('spin');
+    if (s) s.className = 'loading-wrap' + (on ? ' show' : '');
   }
   function setSubmitDisabled(dis) {
     var btn = document.getElementById('submitBtn');
-    btn.disabled = dis;
+    if (btn) btn.disabled = dis;
   }
 
-  // ── Palace grid renderer ─────────────────────────────────────────
+  // ── Palace grid renderer ──
   function renderPalaces(palaces, shenGongIndex) {
     var grid = document.getElementById('palacesGrid');
     grid.innerHTML = '';
@@ -347,7 +749,7 @@ footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align
       div.style.animationDelay = (idx * 0.05) + 's';
 
       var stars = p.mainStars.length ? p.mainStars.join(' · ') : '';
-      var starsClass = p.mainStars.length ? 'palace-stars' : 'palace-stars empty';
+      var starsClass = 'palace-stars en' + (p.mainStars.length ? '' : ' empty');
       var starsText = p.mainStars.length ? stars : 'empty';
 
       var aux = '';
@@ -361,14 +763,14 @@ footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align
 
       div.innerHTML =
         tag +
-        '<div class="palace-name">' + p.nameEn + '</div>' +
+        '<div class="palace-name en">' + p.nameEn + '</div>' +
         '<div class="' + starsClass + '">' + starsText + '</div>' +
         aux;
       grid.appendChild(div);
     });
   }
 
-  // ── Reading renderer ─────────────────────────────────────────────
+  // ── Reading renderer ──
   function renderReading(text) {
     var el = document.getElementById('readingText');
     var paras = text.trim().split(/\n\n+/);
@@ -377,7 +779,7 @@ footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align
     }).join('');
   }
 
-  // ── Share card renderer ──────────────────────────────────────────
+  // ── Share card renderer ──
   function renderShareCard(palaces, lifePalace) {
     var cardStar = document.getElementById('cardStar');
     var lifeStars = lifePalace.mainStars.length ? lifePalace.mainStars.join(' · ') : 'Void Position';
@@ -403,7 +805,7 @@ footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align
     });
   }
 
-  // ── Submit ───────────────────────────────────────────────────────
+  // ── Submit ──
   window.submitForm = function () {
     clearErr();
 
@@ -420,8 +822,8 @@ footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align
     if (!gender) { showErr('Please select a gender.'); return; }
 
     var currentYear = new Date().getFullYear();
-    if (currentYear - year < 14) {
-      showErr('This reading is for ages 14 and above.');
+    if (currentYear - year < 18) {
+      showErr('This reading is for ages 18 and above.');
       return;
     }
 
@@ -465,7 +867,7 @@ footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align
     });
   };
 
-  // ── Copy reading ─────────────────────────────────────────────────
+  // ── Copy reading ──
   window.copyReading = function () {
     if (!lastResult) return;
     var lifeStars = lastResult.lifePalace.mainStars.length ? lastResult.lifePalace.mainStars.join(', ') : 'empty palace';
@@ -484,7 +886,7 @@ footer{padding:24px 20px calc(24px + env(safe-area-inset-bottom,0px));text-align
     }
   };
 
-  // ── Save card (html2canvas) ──────────────────────────────────────
+  // ── Save card (html2canvas) ──
   window.saveCard = function () {
     var card = document.getElementById('shareCard');
     if (!card || typeof html2canvas === 'undefined') { alert('Save not available — please try again.'); return; }
