@@ -44,7 +44,7 @@ const { computeWesternChart } = require('../lib/western-astro-engine/index.js');
 const { buildLiuyaoBlock } = require('../lib/liuyao-engine/prompt-block');
 const { buildQimenBlock } = require('../lib/qimen-engine/prompt-block');
 const { computeDaLiuRen } = require('../lib/daliuren-engine');
-const { insertReading, hasFullAccess, hasVipAccess, hehunTier, hehunTierReadonly, gateMessages, gateReportAccess, memberTier, monthlyReportCreditRemaining, refundMonthlyReportCredit, saveQaContext, qaContext, _findOrder, _tokenFromReq } = require('../lib/store');
+const { _M, insertReading, hasFullAccess, hasVipAccess, hehunTier, hehunTierReadonly, gateMessages, gateReportAccess, memberTier, monthlyReportCreditRemaining, refundMonthlyReportCredit, saveQaContext, qaContext, _findOrder, _tokenFromReq } = require('../lib/store');
 
 // 🔴 P0-C helper(专家复审): 报告端点若本请求消费了月会员 credit(gateReportAccess/hehunTier 会在
 //   req._syCreditUid 打标记), 而后续 LLM 生成抛错, 回补一次 credit, 防"扣了额度没拿到报告"。
@@ -1006,6 +1006,11 @@ router.post('/daily/card', rateLimitMiddleware, async (req, res) => {
       ? String(date)
       : new Date().toISOString().slice(0, 10);
 
+    // 同人同日缓存：避免同一用户当天重复调 LLM
+    if (!_M.dailyCardCache) _M.dailyCardCache = {};
+    const _cardKey = [birthYear, birthMonth, birthDay, birthHour||'x', gender||'m', dateStr, lang].join('|');
+    if (_M.dailyCardCache[_cardKey]) return res.json(_M.dailyCardCache[_cardKey]);
+
     // ① 命盘真排（时辰不详用hour=0兜底注入三柱，时柱仅供参考）
     const _hasHour = birthHour !== undefined && birthHour !== null && birthHour !== '';
     const baziBlock = buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour: _hasHour ? birthHour : 0, gender }) || '';
@@ -1156,6 +1161,11 @@ ${schemaHint}`;
     } catch (e) {}
 
     try { insertReading.run('daily', JSON.stringify(req.body), JSON.stringify(out), req.userId); } catch (e) {}
+    // 缓存本次结果（同人同日命中时直接返回，26小时后自动失效）
+    try {
+      _M.dailyCardCache[_cardKey] = out;
+      setTimeout(() => { try { delete _M.dailyCardCache[_cardKey]; } catch(e) {} }, 26 * 60 * 60 * 1000);
+    } catch(e) {}
     res.json(out);
   } catch (err) {
     console.error('[DAILY CARD ERR]', err && err.message);
@@ -1645,35 +1655,62 @@ const SESSION_CFG = {
 };
 router.post('/session', rateLimitMiddleware, async (req, res) => {
   try {
-    const { method, topic, birthYear, birthMonth, birthDay, birthHour, gender } = req.body;
-    const mc = SESSION_CFG[method]; if (!mc) return res.status(400).json({ error: '未知方法' });
-    const cfg = mc.topics[topic]; if (!cfg) return res.status(400).json({ error: '未知 session' });
+    const { method, topic, birthYear, birthMonth, birthDay, birthHour, gender, lang } = req.body;
+    const _sesLang = (lang === 'en') ? 'en' : 'zh';
+    const mc = SESSION_CFG[method]; if (!mc) return res.status(400).json({ error: _sesLang === 'en' ? 'Unknown method' : '未知方法' });
+    const cfg = mc.topics[topic]; if (!cfg) return res.status(400).json({ error: _sesLang === 'en' ? 'Unknown session' : '未知 session' });
     if (mc.twoPerson) {
-      if (!req.body.p1Year || !req.body.p2Year) return res.status(400).json({ error: '请提供双方出生信息' });
-      if (Number(req.body.p1Year) > new Date().getFullYear() - 18 || Number(req.body.p2Year) > new Date().getFullYear() - 18) return res.status(400).json({ error: '仅限18岁以上用户使用' });
+      if (!req.body.p1Year || !req.body.p2Year) return res.status(400).json({ error: _sesLang === 'en' ? 'Please provide both persons\' birth info' : '请提供双方出生信息' });
+      if (Number(req.body.p1Year) > new Date().getFullYear() - 18 || Number(req.body.p2Year) > new Date().getFullYear() - 18) return res.status(400).json({ error: _sesLang === 'en' ? 'Users must be 18 or older' : '仅限18岁以上用户使用' });
     } else {
-      if (!birthYear || !birthMonth || !birthDay) return res.status(400).json({ error: '请提供出生年月日' });
-      if (Number(birthYear) > new Date().getFullYear() - 14) return res.status(400).json({ error: '仅限14岁以上用户使用' });
+      if (!birthYear || !birthMonth || !birthDay) return res.status(400).json({ error: _sesLang === 'en' ? 'Please provide your complete birth date' : '请提供出生年月日' });
+      if (Number(birthYear) > new Date().getFullYear() - 14) return res.status(400).json({ error: _sesLang === 'en' ? 'Users must be 14 or older' : '仅限14岁以上用户使用' });
     }
 
     const engineBlock = buildSessionEngineBlock(method, req.body);
     const full = cfg.free ? true : gateReportAccess(req, [method + '_s_' + topic, method]).full;
 
-    const system = `${mc.persona}
+    const _fmtLaw = _sesLang === 'en' ? FMT_LAW_EN : FMT_LAW_ZH;
+    const _disclaimer = _sesLang === 'en' ? DISCLAIMER_EN : DISCLAIMER_ZH;
+
+    let system;
+    if (_sesLang === 'en') {
+      system = `You are a seasoned ${mc.label || 'divination'} reader with 30 years of experience, fluent in plain English. Focus deeply on the single topic requested; never ramble.
+[Current year baseline] This year is ${NOW_Y}. All transits/major-luck periods must use ${NOW_Y} as "this year" — never cite past years as current.
+[Engine rule] ${engineBlock ? 'A precise chart fact card has already been injected at the top of the report by the backend. Every star/planet/palace/degree in the body must match it exactly — never recalculate or alter, never keep meta-commentary like "needs correction".' : '(Limited chart data this session — read conservatively from what is provided; do not fabricate specific stars, palaces, or degrees.)'}
+[Authenticity rule — first red line] The person has only provided birth time and gender. You know nothing about their actual life.
+① Never state hypothetical events as facts (e.g., "In 2024 you restarted a project", "Last month you lost sleep"). Speak of tendencies only: "You likely…", "People with this chart often…".
+② Never fabricate statistics or quantities (e.g., "47 days over 3 years", "70% better than peers"). Unless a number appears verbatim in the fact card (e.g., planet degrees, luck-period years), replace it with qualitative terms.
+③ No absurd rituals; date selection only for matters the person explicitly mentioned.
+④ No percentage signs (%) anywhere (except in fact-card element distributions). Use qualitative tiers (dominant/moderate/weak) for element or modal balance.
+⑤ Never fabricate research, papers, or authoritative sources.${_fmtLaw}${_disclaimer}${langSuffix('en')}`;
+    } else {
+      system = `${mc.persona}
 【当前时间基准】今年是 ${NOW_Y} 年，所有流年/大限/过境必须以 ${NOW_Y} 年为"今年"，禁止把过去年份当今年。
 【引擎铁律】${engineBlock ? '报告开头已由后端注入精确排盘事实卡，全文星曜/宫位/行星/度数必须与之逐字一致，禁止另算或改动、禁止保留任何"等等/需修正/以数据为准"之类思考过程文字。' : '（本次排盘数据有限，仅就已知信息稳健解读，不编造具体星曜/宫位。）'}
 【真实性铁律·违反即废稿·本产品第一红线】命主只提供了出生时间与性别，你对TA的真实经历一无所知。
 ①绝不把假设写成"发生过的事实"。以下都是曾被打回的错误示范，一律禁止："2024年某次项目重启""2023年你把备用金拆成三笔""上个月你失眠""过去三年你接手过某项目""近五年你已试过两种变现路径""过去7年你至少经历过1次关系降温""某次帮朋友解决难题后对方引荐了客户""你妈发17条语音"——任何带具体年份/月份区间的既定往事、具体人物剧情、"你曾/你已经/上次你/那次你/近X年你已/过去X年你经历过"句式，全部禁止。谈特质只能用推测语气："你很可能/你这类命格往往/遇到X情境时你多半会…"。
 ②绝不编造量化数字。曾被打回的错误示范："过去三年有47天""失误率低于同龄人70%""2个百万级配置""比同龄人多1-2年积累""相当于正常值1/4强度""多出1.5倍独处时间""0.3秒决策""沉默三秒""字体间距偏差0.5pt""改到第7版""打8.5分""高于七成""近十年最充盈"——任何"X天/X次/X倍/X秒/Xpt/第X版/多X年/百万级/前X%/X分/几成/近X年最"的具体计数或比较，除非逐字来自上方事实卡（如五行小数、大运起止年份），否则删掉或改定性词（"更强/偏弱/明显/为数不多"）。
 ③不写荒诞仪式，择日只对TA明确说过要做的事。④全文一个百分号(%)都不许出现（事实卡元素数值除外）；五行/元素/模式强弱一律用"偏旺/中和/偏弱/较重/较轻"等档位词，绝不写成百分比（如"水40%""开创模式40%"）。⑤绝不虚构研究、论文、数据来源或权威出处（如"数据来自2025年《占星与神经科学》研究"），命理解读不得伪装成科研统计。${FMT_LAW_ZH}`;
+    }
+
     const info = mc.twoPerson
-      ? `A方：${req.body.p1Year}年${req.body.p1Month}月${req.body.p1Day}日 · ${req.body.p1Gender === 'male' ? '男' : '女'}\nB方：${req.body.p2Year}年${req.body.p2Month}月${req.body.p2Day}日 · ${req.body.p2Gender === 'male' ? '男' : '女'}\n${engineBlock ? '\n' + engineBlock + '\n' : ''}`
-      : `出生：${birthYear}年${birthMonth}月${birthDay}日${(birthHour !== undefined && birthHour !== null && birthHour !== '') ? birthHour + '时' : '（时辰不详）'}\n性别：${gender === 'male' ? '男' : '女'}\n${engineBlock ? '\n' + engineBlock + '\n' : ''}`;
+      ? (_sesLang === 'en'
+          ? `Person A: ${req.body.p1Year}-${req.body.p1Month}-${req.body.p1Day} · ${req.body.p1Gender === 'male' ? 'Male' : 'Female'}\nPerson B: ${req.body.p2Year}-${req.body.p2Month}-${req.body.p2Day} · ${req.body.p2Gender === 'male' ? 'Male' : 'Female'}\n${engineBlock ? '\n' + engineBlock + '\n' : ''}`
+          : `A方：${req.body.p1Year}年${req.body.p1Month}月${req.body.p1Day}日 · ${req.body.p1Gender === 'male' ? '男' : '女'}\nB方：${req.body.p2Year}年${req.body.p2Month}月${req.body.p2Day}日 · ${req.body.p2Gender === 'male' ? '男' : '女'}\n${engineBlock ? '\n' + engineBlock + '\n' : ''}`)
+      : (_sesLang === 'en'
+          ? `Born: ${birthYear}-${birthMonth}-${birthDay}${(birthHour !== undefined && birthHour !== null && birthHour !== '') ? ' hour ' + birthHour : ' (birth hour unknown)'}\nGender: ${gender === 'male' ? 'Male' : 'Female'}\n${engineBlock ? '\n' + engineBlock + '\n' : ''}`
+          : `出生：${birthYear}年${birthMonth}月${birthDay}日${(birthHour !== undefined && birthHour !== null && birthHour !== '') ? birthHour + '时' : '（时辰不详）'}\n性别：${gender === 'male' ? '男' : '女'}\n${engineBlock ? '\n' + engineBlock + '\n' : ''}`);
+
     let userPrompt;
     if (full) {
-      userPrompt = `${info}\n请出具一份【${mc.label} · ${cfg.title}】专项深度解读，只写这一个主题，1000-1500字，写满写透。必须覆盖：${cfg.focus}。用朋友聊天语气、关键处加粗，靠**具体场景与画面感**增强代入感（可引用事实卡里的真实星曜/宫位/大运年份），但严禁编造评分、百分比、倍数、天数、秒数、"第X版"等任何统计数字，也严禁把假设写成发生过的往事。结尾一句温暖寄语。`;
+      userPrompt = _sesLang === 'en'
+        ? `${info}\nPlease produce an in-depth reading on [${mc.label} · ${cfg.title}] — this topic only, 1000-1500 words, thorough. Must cover: ${cfg.focus}. Use a conversational friend tone, bold key phrases, bring in vivid scenes (you may reference exact stars/planets/luck-period years from the fact card). No fabricated statistics or past-event assumptions. End with one warm closing sentence.`
+        : `${info}\n请出具一份【${mc.label} · ${cfg.title}】专项深度解读，只写这一个主题，1000-1500字，写满写透。必须覆盖：${cfg.focus}。用朋友聊天语气、关键处加粗，靠**具体场景与画面感**增强代入感（可引用事实卡里的真实星曜/宫位/大运年份），但严禁编造评分、百分比、倍数、天数、秒数、"第X版"等任何统计数字，也严禁把假设写成发生过的往事。结尾一句温暖寄语。`;
     } else {
-      userPrompt = `${info}\n这是【${mc.label} · ${cfg.title}】的【免费预览】，第一句就抓住TA、句句有代入感。仅写约350字，点出这个主题上TA最核心的一个亮点或一个要留意的坎，落到具体、制造强烈好奇，但把"具体哪年/怎么做/哪个宫位或行星在推动"留到完整版。结尾另起一行输出恰好：\n---LOCKED---\n${cfg.lockTitles.join('\n')}\n禁止展开任何锁定章节。`;
+      userPrompt = _sesLang === 'en'
+        ? `${info}\nThis is the [FREE PREVIEW] of [${mc.label} · ${cfg.title}]. Hook the reader from the first sentence. Write about 350 words: highlight the single most striking strength or challenge for this topic, be specific enough to create strong curiosity, but save "which year / how to act / which planet drives it" for the full version. End with exactly:\n---LOCKED---\n${cfg.lockTitles.join('\n')}\nDo NOT expand any locked section.`
+        : `${info}\n这是【${mc.label} · ${cfg.title}】的【免费预览】，第一句就抓住TA、句句有代入感。仅写约350字，点出这个主题上TA最核心的一个亮点或一个要留意的坎，落到具体、制造强烈好奇，但把"具体哪年/怎么做/哪个宫位或行星在推动"留到完整版。结尾另起一行输出恰好：\n---LOCKED---\n${cfg.lockTitles.join('\n')}\n禁止展开任何锁定章节。`;
     }
     const result = await deepseekChat(buildReadingPrompt(system, userPrompt), { maxTokens: full ? 4096 : 1400, priority: 'deepseek' });
     insertReading.run(method + '_topic_' + topic, JSON.stringify({ birthYear, birthMonth, birthDay, birthHour, gender, method, topic }), result, req.userId);
@@ -3092,37 +3129,47 @@ const _VALID_TAROT_CARDS = new Set([
 ]);
 router.post('/tarot/stream', rateLimitMiddleware, async (req, res) => {
   try {
-    const { cards, question, topic } = req.body;
+    const { cards, question, topic, lang: _tsLang } = req.body;
+    const _tsIsEn = (_tsLang === 'en');
     if (!question) {
       res.setHeader('Content-Type', 'application/json');
-      return res.status(400).json({ error: '请提供你的问题' });
+      return res.status(400).json({ error: _tsIsEn ? 'Please provide your question' : '请提供你的问题' });
     }
     // ── 牌面基本校验（防注入/防伪造数据）──
     if (cards !== undefined && cards !== null) {
       if (!Array.isArray(cards)) {
-        return res.status(400).json({ error: '牌面数据格式错误', code: 'INVALID_CARDS' });
+        return res.status(400).json({ error: _tsIsEn ? 'Invalid cards format' : '牌面数据格式错误', code: 'INVALID_CARDS' });
       }
       if (cards.length > 12) {
-        return res.status(400).json({ error: '单次最多12张牌', code: 'TOO_MANY_CARDS' });
+        return res.status(400).json({ error: _tsIsEn ? 'Maximum 12 cards per reading' : '单次最多12张牌', code: 'TOO_MANY_CARDS' });
       }
       for (const c of cards) {
         if (!c || typeof c !== 'object' || typeof c.name !== 'string' || !c.name.trim()) {
-          return res.status(400).json({ error: '每张牌必须包含合法的name字段', code: 'INVALID_CARD_NAME' });
+          return res.status(400).json({ error: _tsIsEn ? 'Each card must have a valid name' : '每张牌必须包含合法的name字段', code: 'INVALID_CARD_NAME' });
         }
         if (!_VALID_TAROT_CARDS.has(c.name.trim())) {
-          return res.status(400).json({ error: `非法牌名: ${c.name}`, code: 'UNKNOWN_CARD' });
+          return res.status(400).json({ error: `${_tsIsEn ? 'Unknown card name' : '非法牌名'}: ${c.name}`, code: 'UNKNOWN_CARD' });
         }
       }
     }
     const cardDesc = cards && cards.length
-      ? cards.map((c, i) => `第${i+1}张（${c.position||'位置'+(i+1)}）：${c.name}${c.reversed?'（逆位）':'（正位）'}`).join('\n')
-      : '使用随机三张塔罗牌（过去-现在-未来）';
+      ? cards.map((c, i) => _tsIsEn
+          ? `Card ${i+1} (${c.position||'Position '+(i+1)}): ${c.name}${c.reversed?' (Reversed)':' (Upright)'}`
+          : `第${i+1}张（${c.position||'位置'+(i+1)}）：${c.name}${c.reversed?'（逆位）':'（正位）'}`).join('\n')
+      : (_tsIsEn ? 'Using 3 random tarot cards (past-present-future)' : '使用随机三张塔罗牌（过去-现在-未来）');
     const topicMap = { love: '感情姻缘', wealth: '财运事业', health: '健康运势', decision: '抉择指引', year: '年度运势', recent: '近期预测' };
+    const topicMapEn = { love: 'Love & Relationships', wealth: 'Career & Wealth', health: 'Health & Wellbeing', decision: 'Decision Guidance', year: 'Annual Fortune', recent: 'Near-term Forecast' };
     const isRecent = topic === 'recent';
-    const systemPrompt = `你是一位融合东西方智慧的塔罗占卜师，从业二十年，解读过上万个案。你像一位知心姐姐，温暖有力量，说话柔和但直抵人心。你能让求助者在迷茫中看到光，在困惑中找到方向。记住：逆位牌不是坏牌，是提醒；困难不是终点，是转折。每次回答至少2000字。语言：简体中文。`;
-    const userMsg = isRecent
-      ? `问题：${question}\n主题：近期预测（未来30天内将发生什么）\n${cardDesc ? '牌面信息：\n' + cardDesc : '使用随机三张塔罗牌（过去能量-当下现状-即将到来）'}\n\n你是一位精准的近期事件预言师。请用塔罗牌告诉我接下来约30天内可能发生的具体事情。\n\n请按以下结构输出（至少2500字）：\n\n## ✨ 近期能量总览（未来30天的整体气场）\n（描述接下来这段时间整体的能量走向，是动荡期还是稳定期，是机会期还是蛰伏期；说明这段时间的底色情绪是什么）\n\n## 📅 三张牌代表的三个时间节点\n（把三张牌分别对应"本周至10天内""10-20天""20-30天"，每个节点：\n- 这张牌揭示这段时间的主要能量是什么\n- 在感情/财运/工作/健康/人际关系这几个维度，最可能发生什么具体的事（要具体，不能只说"会有变化"，要说"可能收到一个意外消息""身边可能有人提出合作""一段旧情感可能重新浮现"）\n- 需要特别注意什么）\n\n## 🌟 最值得期待的机会窗口\n（在这30天内，哪些日子/哪段时间能量最旺？适合做什么重要的事：签合同、告白、开始新项目、谈判、求职……）\n\n## ⚠️ 需要提防的风险信号\n（这30天内最需要警惕什么？是某类人、某类决定、还是自己的某种情绪状态？给出具体的"如果你看到这个信号，一定要小心"的提示）\n\n## 💌 占卜师给你的近期锦囊\n（2-3条针对这段时间的专属行动建议，具体到"这段时间可以主动联系某人""这段时间适合储蓄而非消费""这段时间每天早晨做这一件小事会让能量更稳"）\n\n## 🔮 一句话预言\n（用一句话精准描述这30天的总体走向，让人能记住、能对照、能在结束时回来验证）`
-      : `问题：${question}\n主题：${topicMap[topic] || topic || '综合'}\n${cardDesc ? '牌面信息：\n' + cardDesc : '使用随机三张塔罗牌（过去-现在-未来）'}\n\n请按以下结构出具完整塔罗解读：\n## 一、整体格局概览（200-300字）\n## 二、逐牌详细解读（每张牌300-400字）\n## 三、综合解读与能量走向（300-400字）\n## 四、3条可执行的行动建议\n## 五、占卜师的悄悄话（100-150字）`;
+    const systemPrompt = _tsIsEn
+      ? `You are a tarot reader with 20 years of experience, blending Eastern and Western wisdom. You are like a wise, warm friend — your words are gentle but go straight to the heart. You help seekers find light in confusion. Remember: reversed cards are reminders, not punishments; difficulties are turning points, not endings. Write at least 2000 words.${langSuffix('en')}`
+      : `你是一位融合东西方智慧的塔罗占卜师，从业二十年，解读过上万个案。你像一位知心姐姐，温暖有力量，说话柔和但直抵人心。你能让求助者在迷茫中看到光，在困惑中找到方向。记住：逆位牌不是坏牌，是提醒；困难不是终点，是转折。每次回答至少2000字。语言：简体中文。`;
+    const userMsg = _tsIsEn
+      ? (isRecent
+          ? `Question: ${question}\nTopic: Near-term forecast (what may happen in the next 30 days)\n${cardDesc ? 'Cards:\n' + cardDesc : 'Using 3 random tarot cards (past energy - present state - approaching)'}\n\nPlease provide a near-term tarot forecast structured as follows (at least 2500 words):\n\n## ✨ Overall Energy Overview (next 30 days)\n## 📅 Three Time Windows (the three cards mapped to: days 1-10 / days 10-20 / days 20-30)\nFor each window: main energy · most likely specific events across love/career/health/relationships · key warnings\n## 🌟 Best Opportunity Window\n## ⚠️ Risk Signals to Watch For\n## 💌 Your Personal Action Tips (2-3 concrete suggestions for this period)\n## 🔮 One-Line Prophecy (memorable, verifiable in 30 days)`
+          : `Question: ${question}\nTopic: ${topicMapEn[topic] || topic || 'General'}\n${cardDesc ? 'Cards:\n' + cardDesc : 'Using 3 random tarot cards (past-present-future)'}\n\nPlease provide a full tarot reading in this structure:\n## I. Overall Landscape (200-300 words)\n## II. Card-by-Card Detailed Reading (300-400 words per card)\n## III. Synthesis & Energy Direction (300-400 words)\n## IV. 3 Actionable Suggestions\n## V. A Quiet Word from Your Reader (100-150 words)`)
+      : (isRecent
+          ? `问题：${question}\n主题：近期预测（未来30天内将发生什么）\n${cardDesc ? '牌面信息：\n' + cardDesc : '使用随机三张塔罗牌（过去能量-当下现状-即将到来）'}\n\n你是一位精准的近期事件预言师。请用塔罗牌告诉我接下来约30天内可能发生的具体事情。\n\n请按以下结构输出（至少2500字）：\n\n## ✨ 近期能量总览（未来30天的整体气场）\n（描述接下来这段时间整体的能量走向，是动荡期还是稳定期，是机会期还是蛰伏期；说明这段时间的底色情绪是什么）\n\n## 📅 三张牌代表的三个时间节点\n（把三张牌分别对应"本周至10天内""10-20天""20-30天"，每个节点：\n- 这张牌揭示这段时间的主要能量是什么\n- 在感情/财运/工作/健康/人际关系这几个维度，最可能发生什么具体的事（要具体，不能只说"会有变化"，要说"可能收到一个意外消息""身边可能有人提出合作""一段旧情感可能重新浮现"）\n- 需要特别注意什么）\n\n## 🌟 最值得期待的机会窗口\n（在这30天内，哪些日子/哪段时间能量最旺？适合做什么重要的事：签合同、告白、开始新项目、谈判、求职……）\n\n## ⚠️ 需要提防的风险信号\n（这30天内最需要警惕什么？是某类人、某类决定、还是自己的某种情绪状态？给出具体的"如果你看到这个信号，一定要小心"的提示）\n\n## 💌 占卜师给你的近期锦囊\n（2-3条针对这段时间的专属行动建议，具体到"这段时间可以主动联系某人""这段时间适合储蓄而非消费""这段时间每天早晨做这一件小事会让能量更稳"）\n\n## 🔮 一句话预言\n（用一句话精准描述这30天的总体走向，让人能记住、能对照、能在结束时回来验证）`
+          : `问题：${question}\n主题：${topicMap[topic] || topic || '综合'}\n${cardDesc ? '牌面信息：\n' + cardDesc : '使用随机三张塔罗牌（过去-现在-未来）'}\n\n请按以下结构出具完整塔罗解读：\n## 一、整体格局概览（200-300字）\n## 二、逐牌详细解读（每张牌300-400字）\n## 三、综合解读与能量走向（300-400字）\n## 四、3条可执行的行动建议\n## 五、占卜师的悄悄话（100-150字）`);
 
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
@@ -3907,11 +3954,30 @@ router.post('/geo-fortune', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.post('/xingming', rateLimitMiddleware, async (req, res) => {
   try {
-    const { surname, givenName, zodiac, gender } = req.body;
-    if (!surname || !givenName) return res.status(400).json({ error: '请提供姓氏和名字' });
-    const messages = buildReadingPrompt(
-      '你是一位精通姓名学的命理大师，深谙五格剖象法（天格、人格、地格、外格、总格）与生肖喜忌之道，从业三十余年，为成千上万人改过名。你的分析专业深刻——笔画数理、五行补益、生肖适配，面面俱到。你的语气亲切实在，用大白话解释深奥姓名学原理，不故弄玄虚。每个建议都给出具体的新名字选项，让人能照着做。' + DISCLAIMER_ZH,
-      `用户姓名：${surname}${givenName}
+    const { surname, givenName, zodiac, gender, lang: _xmLang } = req.body;
+    const _xmIsEn = (_xmLang === 'en');
+    if (!surname || !givenName) return res.status(400).json({ error: _xmIsEn ? 'Please provide surname and given name' : '请提供姓氏和名字' });
+    let messages;
+    if (_xmIsEn) {
+      messages = buildReadingPrompt(
+        'You are a master of Chinese name analysis, with 30+ years of experience. You are fluent in the Five-Grid system (Heaven / Person / Earth / Outer / Total grids), zodiac compatibility, and Five Element balancing. You explain these principles in plain English, never jargon. Every suggestion includes concrete alternative name options the person can actually use.' + DISCLAIMER_EN + langSuffix('en'),
+        `Name: ${surname} ${givenName}
+Surname: ${surname}, Given name: ${givenName}, Chinese zodiac: ${zodiac || 'not provided'}, Gender: ${gender === 'male' ? 'Male' : gender === 'female' ? 'Female' : 'Not provided'}
+
+Please produce a complete Chinese name analysis report (at least 3000 words):
+## I. 📊 Five-Grid Numerology Analysis (600-800 words)
+## II. 🦊 Zodiac Compatibility Analysis (400-600 words)
+## III. 🔥 Five-Element Balance Analysis (300-400 words)
+## IV. 🎯 Overall Name Score (100-200 words)
+## V. 📈 Name's Influence on Life Domains (500-600 words)
+## VI. 💡 Name-Change Suggestions (600-800 words · names are cultural symbols, not fate determiners; change is personal choice — positive, anxiety-free tone)
+## VII. 📝 Tips to Boost Your Name's Energy (200-300 words)
+## VIII. 💌 A Closing Note from Your Name Advisor (100-200 words)`
+      );
+    } else {
+      messages = buildReadingPrompt(
+        '你是一位精通姓名学的命理大师，深谙五格剖象法（天格、人格、地格、外格、总格）与生肖喜忌之道，从业三十余年，为成千上万人改过名。你的分析专业深刻——笔画数理、五行补益、生肖适配，面面俱到。你的语气亲切实在，用大白话解释深奥姓名学原理，不故弄玄虚。每个建议都给出具体的新名字选项，让人能照着做。' + DISCLAIMER_ZH,
+        `用户姓名：${surname}${givenName}
 姓氏：${surname}，名字：${givenName}，生肖：${zodiac || '未提供'}，性别：${gender === 'male' ? '男' : gender === 'female' ? '女' : '未提供'}
 
 请按以下结构出具一份完整的姓名学分析报告，总字数不少于3000字：
@@ -3923,7 +3989,8 @@ router.post('/xingming', rateLimitMiddleware, async (req, res) => {
 ## 六、💡 改名建议（600-800字·姓名是文化符号，非命运决定因素；改名纯属个人选择，不断言现名不好、不制造焦虑，语气正向温和）
 ## 七、📝 姓名能量提升小技巧（200-300字）
 ## 八、💌 姓名学师的叮嘱（100-200字）`
-    );
+      );
+    }
     var _g = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','八字','合婚','紫微','姓名','占星','星盘'], messages);
     const result = await deepseekChat(_g.messages, { maxTokens: _g.maxTokens });
     insertReading.run('xingming', JSON.stringify(req.body), result, req.userId);
@@ -4314,7 +4381,8 @@ ${liuyaoBlock || '（引擎暂不可用，请基于通识给出六爻解读框�
 // ══════════════════════════════════════════
 router.post('/lingqian', rateLimitMiddleware, async (req, res) => {
   try {
-    const { question, temple } = req.body;
+    const { question, temple, lang: _lqLang } = req.body;
+    const _lqIsEn = (_lqLang === 'en');
     // 真签库：只抽 verified 真谱（禁 LLM 编签诗）·黄大仙庙用黄大仙谱，否则观音谱
     let sign = null, signSrc = '观音灵签';
     try {
@@ -4328,13 +4396,21 @@ router.post('/lingqian', rateLimitMiddleware, async (req, res) => {
     let messages;
     if (sign) {
       messages = [
-        { role: 'system', content: `你是一位在庙宇解签多年的解签师。【铁律】下方签诗是${signSrc}的固定庙谱真文，一字不能改写、不得自行创作或替换签诗，你只负责"解签"——结合求签者所问之事把这支固定签的含义讲透、给方向与安慰。语气温和、有智慧、给希望，不恐吓、不承诺灵验。` + DISCLAIMER_ZH },
-        { role: 'user', content: `求签地点：${temple || signSrc}\n用户问题：${question || '请指点迷津'}\n\n【${signSrc} · 第${sign.no}签 · ${sign.grade}】（固定庙谱真文·禁改写）\n签诗：\n${sign.poem.join('\n')}\n典故：${sign.gong || ''}\n解曰：${sign.explain || ''}\n圣意：${sign.meaning || ''}\n\n请只做"解签"（不要改写或重编签诗），生成：\n1. 🏮 这支签对你所问之事的含义（结合签诗与所问，300字左右）\n2. 🎯 对你的启示\n3. 💡 行动建议\n4. 🙏 祈福/调心方法\n\n开头先原样引用上方签诗，再解。结尾附一句娱乐参考免责。` }
+        { role: 'system', content: _lqIsEn
+            ? `You are an experienced temple oracle interpreter. [RULE] The poem below is the authentic fixed text from ${signSrc} — you must NOT rewrite or replace it. Your role is interpretation only: explain what this oracle means for the seeker's question, give direction and comfort. Warm, wise, hopeful tone — no threats, no promises of divine guarantee.${langSuffix('en')}${DISCLAIMER_EN}`
+            : `你是一位在庙宇解签多年的解签师。【铁律】下方签诗是${signSrc}的固定庙谱真文，一字不能改写、不得自行创作或替换签诗，你只负责"解签"——结合求签者所问之事把这支固定签的含义讲透、给方向与安慰。语气温和、有智慧、给希望，不恐吓、不承诺灵验。${DISCLAIMER_ZH}` },
+        { role: 'user', content: _lqIsEn
+            ? `Temple: ${temple || signSrc}\nQuestion: ${question || 'Please guide me'}\n\n[${signSrc} · Oracle #${sign.no} · ${sign.grade}] (Authentic fixed text — do not rewrite)\nPoem (kept in original Chinese as this is a traditional artifact):\n${sign.poem.join('\n')}\nAllegory: ${sign.gong || ''}\nInterpretation note: ${sign.explain || ''}\nDivine intent: ${sign.meaning || ''}\n\nPlease INTERPRET (do not rewrite the poem). Provide in English:\n1. 🏮 What this oracle means for your question (~300 words)\n2. 🎯 Key insight for you\n3. 💡 Action suggestions\n4. 🙏 A blessing or way to center your mind\n\nStart by quoting the poem exactly as given, then interpret. End with an entertainment disclaimer.`
+            : `求签地点：${temple || signSrc}\n用户问题：${question || '请指点迷津'}\n\n【${signSrc} · 第${sign.no}签 · ${sign.grade}】（固定庙谱真文·禁改写）\n签诗：\n${sign.poem.join('\n')}\n典故：${sign.gong || ''}\n解曰：${sign.explain || ''}\n圣意：${sign.meaning || ''}\n\n请只做"解签"（不要改写或重编签诗），生成：\n1. 🏮 这支签对你所问之事的含义（结合签诗与所问，300字左右）\n2. 🎯 对你的启示\n3. 💡 行动建议\n4. 🙏 祈福/调心方法\n\n开头先原样引用上方签诗，再解。结尾附一句娱乐参考免责。` }
       ];
     } else {
       messages = [
-        { role: 'system', content: '你是一位解签师。语气温和、有智慧、给希望，不恐吓、不承诺灵验。' + DISCLAIMER_ZH },
-        { role: 'user', content: `求签地点：${temple || '善缘灵境'}\n用户问题：${question || '请指点迷津'}\n\n（签谱库暂不可用）请就求签者所问，从传统解签文化角度给予温和的方向指引与安慰，明确说明这是文化参考、非抽到具体庙签，不编造签诗。结尾附娱乐免责。` }
+        { role: 'system', content: _lqIsEn
+            ? `You are a temple oracle interpreter. Warm, wise, hopeful tone — no threats, no promises of divine guarantee.${langSuffix('en')}${DISCLAIMER_EN}`
+            : `你是一位解签师。语气温和、有智慧、给希望，不恐吓、不承诺灵验。${DISCLAIMER_ZH}` },
+        { role: 'user', content: _lqIsEn
+            ? `Temple: ${temple || 'Runae Sanctuary'}\nQuestion: ${question || 'Please guide me'}\n\n(Oracle library temporarily unavailable) Please offer gentle, culturally-grounded guidance for the seeker's question from the tradition of Chinese temple oracle reading. Clearly state this is cultural reference, not a specific drawn oracle. End with an entertainment disclaimer.`
+            : `求签地点：${temple || '善缘灵境'}\n用户问题：${question || '请指点迷津'}\n\n（签谱库暂不可用）请就求签者所问，从传统解签文化角度给予温和的方向指引与安慰，明确说明这是文化参考、非抽到具体庙签，不编造签诗。结尾附娱乐免责。` }
       ];
     }
     var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 8192);
@@ -4772,18 +4848,33 @@ router.post('/offering-plan', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.post('/zhiyuan', rateLimitMiddleware, async (req, res) => {
   try {
-    const { birthYear, birthMonth, birthDay, birthHour, gender, score, province, subjectType, ranking } = req.body;
-    if (!birthYear || !score || !province) return res.status(400).json({ error: '请提供出生信息和高考分数' });
-    const sysPrompt = `你是一位结合八字命理与升学数据的高考志愿参考顾问。根据用户的出生信息和高考分数，提供专业、城市、学校的参考方向。用大白话写，不要古文。
+    const { birthYear, birthMonth, birthDay, birthHour, gender, score, province, subjectType, ranking, lang: _zyLang } = req.body;
+    const _zyIsEn = (_zyLang === 'en');
+    if (!birthYear || !score || !province) return res.status(400).json({ error: _zyIsEn ? 'Please provide birth info, score, and province' : '请提供出生信息和高考分数' });
+    let sysPrompt, userPrompt;
+    if (_zyIsEn) {
+      sysPrompt = `You are a college application advisor who blends Chinese astrology with academic data. Based on the user's birth chart and exam score, you provide reference directions for majors, cities, and schools. Write in plain English — no classical terms.
+[Compliance rule] Astrology serves only as a personality/interest reference perspective; it does not replace official cutoff scores, enrollment data, or the student's/parents'/teachers' judgment. Section 5 must only objectively describe typical industry income levels — never promise individual salary outcomes. End with: "This report is for reference and entertainment. For actual applications, rely on official score cutoffs, enrollment plans, and your own interests; consult parents and teachers for major decisions."
+Required sections (at least 200 words each):
+1. 📜 Industry inclinations from the birth chart\n2. 🔥 Suitable major directions\n3. 🌆 Suitable city types for development\n4. 🏫 School suggestions (considering the score)\n5. 💰 Typical income levels in related industries (objective overview — not a personal salary promise)\n6. 🎯 Summary and recommendations (with disclaimer)\nTotal: 4000-6000 words.${langSuffix('en')}`;
+      userPrompt = `Born: ${birthYear}-${birthMonth||'?'}-${birthDay||'?'}${birthHour!==undefined?' hour '+birthHour:''}
+Gender: ${gender === 'male' ? 'Male' : 'Female'}
+Exam score: ${score} (${province} province)
+Subject stream: ${subjectType || 'Science'}
+Province ranking: ${ranking || 'unknown'}
+Please provide college application suggestions.`;
+    } else {
+      sysPrompt = `你是一位结合八字命理与升学数据的高考志愿参考顾问。根据用户的出生信息和高考分数，提供专业、城市、学校的参考方向。用大白话写，不要古文。
 【合规铁律】：命理只作性格兴趣的参考视角，不替代分数线/招生数据/本人兴趣/家长老师意见；第5章只客观介绍"相关行业的普遍收入水平"作为行业了解，绝不承诺"你毕业能拿多少薪资"；结尾必须加免责："本报告为参考娱乐，志愿填报请以官方分数线、招生计划及本人兴趣为准，重大决策请与家长老师充分商量。"
 必须包含以下章节（每个至少200字）：
 1. 📜 八字命格适合的行业倾向\n2. 🔥 适合的专业方向\n3. 🌆 适合发展的城市类型\n4. 🏫 可报考的学校建议（结合分数）\n5. 💰 相关行业的一般收入水平参考（客观介绍行业普遍情况·非个人薪资承诺）\n6. 🎯 总结建议（附免责）\n总字数4000-6000字。`;
-    const userPrompt = `出生：${birthYear}年${birthMonth||'?'}月${birthDay||'?'}日${birthHour!==undefined?birthHour+'时':''}
-性别：${gender === "male" ? "男" : "女"}
+      userPrompt = `出生：${birthYear}年${birthMonth||'?'}月${birthDay||'?'}日${birthHour!==undefined?birthHour+'时':''}
+性别：${gender === 'male' ? '男' : '女'}
 高考分数：${score}分（${province}省）
-科目：${subjectType || "理科"}
-全省排名：${ranking || "未知"}
+科目：${subjectType || '理科'}
+全省排名：${ranking || '未知'}
 请给出高考志愿填报建议。`;
+    }
     const messages = [{ role: 'system', content: sysPrompt }, { role: 'user', content: userPrompt }];
     var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 8192);
     const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
@@ -4886,14 +4977,22 @@ router.post('/ask-followup', rateLimitMiddleware, async (req, res) => {
 // ══════════════════════════════════════════
 router.get('/daily-teaser', rateLimitMiddleware, async (req, res) => {
   try {
-    const { y, m, d } = req.query;
-    const dateStr = (y || '') + '年' + (m || '') + '月' + (d || '') + '日';
-    const messages = [
-      { role: 'system', content: '你是命理助手，根据日期给出25字以内的运势预告，语气神秘有悬念，结尾留钩子让人明天来看完整版。不要说具体建议，只给一句悬念式预告。' },
-      { role: 'user', content: dateStr + '的运势预告，25字以内，只需一句话。' }
-    ];
+    const { y, m, d, lang: _dtLang } = req.query;
+    const _dtIsEn = (_dtLang === 'en');
+    const dateStr = _dtIsEn
+      ? ((m || '') + '/' + (d || '') + '/' + (y || ''))
+      : ((y || '') + '年' + (m || '') + '月' + (d || '') + '日');
+    const messages = _dtIsEn
+      ? [
+          { role: 'system', content: 'You are a fortune assistant. Given a date, produce a mysterious fortune teaser of 20 words or fewer — leave a hook that makes the reader want to check the full reading tomorrow. No specific advice, just one suspenseful sentence.' },
+          { role: 'user', content: `Fortune teaser for ${dateStr}, 20 words max, one sentence only.` }
+        ]
+      : [
+          { role: 'system', content: '你是命理助手，根据日期给出25字以内的运势预告，语气神秘有悬念，结尾留钩子让人明天来看完整版。不要说具体建议，只给一句悬念式预告。' },
+          { role: 'user', content: dateStr + '的运势预告，25字以内，只需一句话。' }
+        ];
     const teaser = await deepseekChat(messages, { maxTokens: 60 });
-    res.json({ teaser: teaser.trim().slice(0, 50) });
+    res.json({ teaser: teaser.trim().slice(0, 80) });
   } catch (e) {
     res.json({ teaser: '明日天机已定，来看看你的运势将如何转折…' });
   }
