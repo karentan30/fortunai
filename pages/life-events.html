@@ -73,7 +73,13 @@ section{position:relative;z-index:1;padding:80px 24px;}
 .process-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-top:48px;}
 .step{text-align:center;padding:24px 16px;}
 .step-num{width:40px;height:40px;border:1px solid var(--gold);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:14px;color:var(--gold);font-weight:700;}
-.step-text{font-size:13px;color:var(--text-dim);line-height:1.8;text-wrap:balance;word-break:keep-all;}
+/* 2026-09-09 修横向溢出:word-break:keep-all 是给韩文用的(防词内断行),
+   中文没有空格 → keep-all 等于禁止一切换行 → 14字的「提交当事人生辰八字及情况说明」
+   必须挤一行,需要 182px 而容器只有 148px,撑出 61px 横向溢出。
+   实测(390px视口):中文+keep-all 需 182px 溢出;中文+normal 需 148px 不溢出;
+   韩文/英文两种设置都不溢出(它们有词间空格)。
+   text-wrap:balance 保留 —— 它负责让多行长短均匀,不影响能否换行。 */
+.step-text{font-size:13px;color:var(--text-dim);line-height:1.8;text-wrap:balance;}
 .trust-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;}
 .trust-card{background:var(--card-bg);border:1px solid var(--card-border);border-radius:16px;padding:28px;}
 .trust-stars{color:var(--gold);font-size:14px;margin-bottom:12px;}
