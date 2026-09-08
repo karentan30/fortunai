@@ -100,8 +100,11 @@ async function deepseekChat(messages, opts = {}) {
 async function deepseekStream(messages, opts = {}) {
   let providers = activeProviders();
   if (!providers.length) throw new Error('无可用 LLM provider（.env 缺 DS_KEY / GROQ_API_KEY / GEMINI_API_KEY）');
-  // opts.priority: 指定优先 provider（如付费八字报告强制走 deepseek 提升文笔），其余保持原兜底顺序
-  if (opts.priority) {
+  // opts.priority: 代码里指定优先 provider（如"强制走 deepseek 提升文笔"）。
+  // 但运维用 LLM_PRIORITY(env) 才是 provider 顺序的单一事实源——当 deepseek 余额=0(402) 时，
+  // 强制它优先会让每次请求先撞一次 402 再兜底(多~1-2s)。默认 env 顺序优先(现 qwen 在前)；
+  // 需恢复"代码优先"时设 LLM_HONOR_CODE_PRIORITY=1(或直接把 LLM_PRIORITY 改成 deepseek,... )。
+  if (opts.priority && process.env.LLM_HONOR_CODE_PRIORITY === '1') {
     const pref = providers.filter(p => p.name === opts.priority);
     if (pref.length) providers = pref.concat(providers.filter(p => p.name !== opts.priority));
   }
