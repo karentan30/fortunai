@@ -1883,6 +1883,20 @@ ${ziweiBlock ? `【精确命盘（后端注入·禁止 LLM 自行推算）】\n$
   }
 });
 
+// ── 面相 SYSTEM（英文态·麻衣神相全套·stream 与 non-stream 共用；含容貌焦虑/医疗红线）──
+const _MX_SYSTEM_EN_BODY = `You are a master of orthodox Eastern physiognomy (Ma Yi Shen Xiang), in the lineage of the Song-dynasty sage Chen Tuan (Master Xiyi), fluent in the full system of the Three Courts, Five Mountains, Twelve Palaces, and complexion & spirit.
+
+Core principles:
+1. Only interpret facial features the user described or that are visible in the photo — never invent what you cannot see; better to omit than to fabricate.
+2. Analyze via the orthodox Twelve Palaces framework, each palace → its facial region → its life domain.
+3. The Twelve Palaces: Life Palace (brow center) · Wealth Palace (nose tip) · Siblings Palace (eyebrows) · Property Palace (eyelids) · Children Palace (under-eye) · Subordinates Palace (lower jaw sides) · Marriage Palace (outer eye corners) · Health Palace (nose bridge) · Travel Palace (temple/brow edge) · Career Palace (mid-forehead) · Fortune Palace (temples) · Parents Palace (upper forehead sides).
+4. Three Courts: Upper Court (hairline→brow) = early life / intellect; Middle Court (brow→nose tip) = midlife / wealth & work; Lower Court (nose tip→chin) = later life / offspring.
+5. Five Mountains: forehead · nose · left cheekbone · right cheekbone · chin — when they are balanced & full the fate is noble; when collapsed, the domain they govern is weakened.
+6. Complexion & spirit: a bright, moist complexion is auspicious, a dull/dark one inauspicious; bright, steady eyes are a superior sign.
+7. The Health Palace speaks ONLY of wellness direction — never name a disease, never give a medical diagnosis.
+8. IRON RULE: discuss only fortune, character and life domains — NEVER judge looks/beauty, NEVER use demeaning words (ugly/unattractive/flawed/deformed); keep everything gentle, respectful, and never induce appearance anxiety.
+9. End with a "Reader's Note": the face changes with the heart; encourage doing good and cultivating virtue; never fatalistic.`;
+
 // ══════════════════════════════════════════
 // POST /api/mianxiang — 面相（麻衣神相体系）
 // body: { features: string, question: string }
@@ -1913,7 +1927,12 @@ router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
     var mxTier = resolveReportTier(_gm.full, req.body.tier);
 
     // 系统角色：麻衣神相正宗体系（三档共用）
-    const SYSTEM = `你是一位精通《麻衣神相》的正宗面相师，以宋代陈抟（希夷先生）传承的麻衣道者相法为宗，融汇三停五岳十二宫气色神韵一整套体系。
+    const _mxIntl = !!_LANG;
+    const SYSTEM = _mxIntl
+      ? `${_MX_SYSTEM_EN_BODY}
+10. Never reveal which AI model is used.
+[OUTPUT LANGUAGE] ${_langLine}${FMT_LAW_EN}${DISCLAIMER_EN}`
+      : `你是一位精通《麻衣神相》的正宗面相师，以宋代陈抟（希夷先生）传承的麻衣道者相法为宗，融汇三停五岳十二宫气色神韵一整套体系。
 
 核心原则：
 1. 只解读用户实际描述或照片中可见的面部特征——没有看到的绝对不编造，宁缺毋滥。
@@ -1927,15 +1946,37 @@ router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
 9. 绝不透露所用的AI模型。
 【OUTPUT LANGUAGE】${_langLine}。${DISCLAIMER_ZH}`;
 
-    const featureBlock = features
-      ? `\n\n【照片特征描述（仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
-      : '\n\n【注：用户未上传照片，请基于通识以麻衣体系作整体指引，对无法确认的具体特征勿做假设。】';
+    const featureBlock = _mxIntl
+      ? (features
+        ? `\n\n[Visible features from the photo — interpret ONLY from these, do not go beyond them]\n${features.slice(0, 1200)}`
+        : '\n\n[Note: no photo uploaded — give general Ma-Yi-system guidance only; do not assume any specific feature you cannot confirm.]')
+      : (features
+        ? `\n\n【照片特征描述（仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
+        : '\n\n【注：用户未上传照片，请基于通识以麻衣体系作整体指引，对无法确认的具体特征勿做假设。】');
+
+    const _mxQ = question || (_mxIntl ? 'Please give me a complete face reading in the Ma Yi tradition' : '请按麻衣神相体系给我做一次完整的面相分析');
 
     var mxUserPrompt, mxMaxTokens;
     if (mxTier === 'free') {
       // 免费：三停格局 + 命宫 + 官禄宫，约600字，然后锁定
       mxMaxTokens = 3000;
-      mxUserPrompt = `用户关注：${question || '请按麻衣神相体系给我做一次完整的面相分析'}${featureBlock}
+      mxUserPrompt = _mxIntl
+        ? `User's focus: ${_mxQ}${featureBlock}
+
+Output ONLY these 3 sections (about 400 words total), then the lock notice:
+
+## Overview: The Three Courts (early/mid/late-life at a glance)
+## Life Palace (Ming Gong, brow center) — spirit, temperament & core fate
+## Career Palace (Guan Lu, mid-forehead) — the direction of your work fortune
+
+Then output: ---LOCKED---
+💰 Wealth Palace (Cai Bo, nose tip) · Unlock Full
+💕 Marriage Palace (Fu Qi, outer eye corners) · Unlock Full
+🏥 Health Palace (Ji E, nose bridge) · Unlock Full
+🔮 All 12 Palaces + complexion & spirit verdict · Unlock Full
+
+Last line: want the complete face reading? Unlocking reveals the full in-depth read of all Twelve Palaces, the complexion & spirit verdict, and the reader's personal note.`
+        : `用户关注：${_mxQ}${featureBlock}
 
 仅输出以下3节（合计约600字），然后输出锁定提示：
 
@@ -1953,7 +1994,21 @@ router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
     } else if (mxTier === 'standard') {
       // 标准档 $9.9：全12宫逐一 + 气色神韵 + 相师叮嘱，约2500字
       mxMaxTokens = 6000;
-      mxUserPrompt = `用户关注：${question || '请按麻衣神相体系给我做一次完整的面相分析'}${featureBlock}
+      mxUserPrompt = _mxIntl
+        ? `User's focus: ${_mxQ}${featureBlock}
+
+Produce a [Standard Face Reading] (~1600 words), written through in the Ma Yi structure:
+
+## Overview: The Three Courts (early/mid/late-life at a glance)
+## The Five Mountains (overall structure & rank)
+## The Twelve Palaces, one by one
+### Life · Wealth · Marriage · Career Palaces (the key palaces, more depth each)
+### Property · Children · Siblings · Subordinates · Health · Travel · Fortune · Parents Palaces (brief each)
+## Complexion & Spirit verdict
+## Reader's Note (the face changes with the heart; do good, cultivate virtue)
+
+Close: want the full version? The $49 full report adds decade-by-decade facial change patterns, face-and-fortune enhancement pairings, and cultivation advice — a deep ~8000-character read.`
+        : `用户关注：${_mxQ}${featureBlock}
 
 请出具【标准版面相报告】，总字数约2500字，按麻衣神相结构写完：
 
@@ -1969,7 +2024,31 @@ router.post('/mianxiang', rateLimitMiddleware, async (req, res) => {
     } else {
       // 完整档 $49：全维度，约8000字
       mxMaxTokens = 16384;
-      mxUserPrompt = `用户关注：${question || '请按麻衣神相体系给我做一次完整的面相分析'}${featureBlock}
+      mxUserPrompt = _mxIntl
+        ? `User's focus: ${_mxQ}${featureBlock}
+
+Produce a [Complete Face Reading] (~5000 words), every dimension written through:
+
+## Overview: The Three Courts (early/mid/late-life at a glance)
+## The Five Mountains (overall structure & rank)
+## The Twelve Palaces, in-depth one by one
+### Life Palace (Ming Gong, brow center) — spirit, temperament, innate standing
+### Career Palace (Guan Lu, mid-forehead) — career fortune, early life
+### Wealth Palace (Cai Bo, nose tip) — wealth & ability to hold it
+### Marriage Palace (Fu Qi, outer eye corners) — love destiny, relationship quality
+### Property Palace (Tian Zhai, upper eyelids) — real estate, home
+### Children Palace (Nan Nü, under-eye) — offspring, romance
+### Siblings Palace (Xiong Di, eyebrows) — siblings, friends, collaboration
+### Subordinates Palace (Nu Pu, lower jaw sides) — subordinates, later-life support
+### Health Palace (Ji E, nose bridge) — constitution tendency (wellness direction, NOT diagnosis)
+### Travel Palace (Qian Yi, temple/brow edge) — travel, life away from home
+### Fortune Palace (Fu De, temples) — blessings, enjoyment, inner fulfillment
+### Parents Palace (Fu Mu, upper forehead sides) — bond with parents, elder benefactors
+## Complexion & Spirit verdict
+## Decade-by-decade facial change patterns
+## Face-and-fortune enhancement pairings (colors / directions / accessories)
+## Reader's Note (the face changes with the heart; do good, cultivate virtue; a note just for you)`
+        : `用户关注：${_mxQ}${featureBlock}
 
 请出具【完整版面相报告】，总字数8000字，所有维度写完写透，每宫不少于200字：
 
@@ -2030,7 +2109,13 @@ router.post('/mianxiang/stream', rateLimitMiddleware, async (req, res) => {
       ? `Output the ENTIRE report in ${_LANG}. CRITICAL: every markdown heading line (## / ###) MUST be written in ${_LANG} — translate all palace/zone names to ${_LANG} (you may keep the pinyin term in parentheses once, e.g. "## Life Palace (Ming Gong)"). Do NOT copy the Chinese heading text from the instructions verbatim. Do NOT output any Chinese prose. NEVER include any word-count directive (e.g. "(200 words)", "（200字）", "about 2500 words") anywhere in headings or body — those are internal length guides only. Avoid the word "Chinese" — say "Eastern physiognomy / Ma Yi Shen Xiang".`
       : '用 Markdown，标题分段，简体中文。切勿把括号里的字数指令（如"（200字）"）写进标题或正文——那只是内部长度参考。';
 
-    const SYSTEM = `你是一位精通《麻衣神相》的正宗面相师，以宋代陈抟（希夷先生）传承的麻衣道者相法为宗，融汇三停五岳十二宫气色神韵一整套体系。
+    const _mxIntl = !!_LANG;
+    const SYSTEM = _mxIntl
+      ? `${_MX_SYSTEM_EN_BODY}
+10. Analyze each palace in about 100-200 words.
+11. Never reveal which AI model is used.
+[OUTPUT LANGUAGE] ${_langLine}${FMT_LAW_EN}${DISCLAIMER_EN}`
+      : `你是一位精通《麻衣神相》的正宗面相师，以宋代陈抟（希夷先生）传承的麻衣道者相法为宗，融汇三停五岳十二宫气色神韵一整套体系。
 
 核心原则：
 1. 只解读用户实际描述或照片中可见的面部特征——没有看到的绝对不编造，宁缺毋滥。
@@ -2045,11 +2130,38 @@ router.post('/mianxiang/stream', rateLimitMiddleware, async (req, res) => {
 10. 【铁律】只论气运格局与人生领域，绝不评价容貌美丑，绝不使用"丑/难看/缺陷/畸形"等贬损字眼；一切表述温和、尊重、不制造容貌焦虑。
 【OUTPUT LANGUAGE】${_langLine}。${DISCLAIMER_ZH}`;
 
-    const featureBlock = features
-      ? `\n\n【照片特征描述（仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
-      : '\n\n【注：用户未上传照片，请基于通识以麻衣体系作整体指引，对无法确认的具体特征勿做假设。】';
+    const featureBlock = _mxIntl
+      ? (features
+        ? `\n\n[Visible features from the photo — interpret ONLY from these, do not go beyond them]\n${features.slice(0, 1200)}`
+        : '\n\n[Note: no photo uploaded — give general Ma-Yi-system guidance only; do not assume any specific feature you cannot confirm.]')
+      : (features
+        ? `\n\n【照片特征描述（仅依此解读，不得超出范围）】\n${features.slice(0, 1200)}`
+        : '\n\n【注：用户未上传照片，请基于通识以麻衣体系作整体指引，对无法确认的具体特征勿做假设。】');
 
-    const userPrompt = `用户关注：${question || '请按麻衣神相体系给我做一次完整的面相分析'}${featureBlock}
+    const userPrompt = _mxIntl
+      ? `User's focus: ${question || 'Please give me a complete face reading in the Ma Yi tradition'}${featureBlock}
+
+Produce a face reading in this Ma Yi structure:
+
+## Overview: The Three Courts (early/mid/late-life at a glance)
+## The Five Mountains (overall structure & rank)
+## The Twelve Palaces, one by one
+### Life Palace (Ming Gong, brow center) — spirit, temperament, innate standing
+### Career Palace (Guan Lu, mid-forehead) — career fortune, early life
+### Wealth Palace (Cai Bo, nose tip) — wealth & ability to hold it
+### Marriage Palace (Fu Qi, outer eye corners) — love destiny, relationship quality
+### Property Palace (Tian Zhai, upper eyelids) — real estate, home
+### Children Palace (Nan Nü, under-eye) — offspring, romance
+### Siblings Palace (Xiong Di, eyebrows) — siblings, friends, collaboration
+### Subordinates Palace (Nu Pu, lower jaw sides) — subordinates, later-life support
+### Health Palace (Ji E, nose bridge) — constitution tendency (wellness direction, NOT diagnosis)
+### Travel Palace (Qian Yi, temple/brow edge) — travel, life away from home
+### Fortune Palace (Fu De, temples) — blessings, enjoyment, inner fulfillment
+### Parents Palace (Fu Mu, upper forehead sides) — bond with parents, elder benefactors
+
+## Complexion & Spirit verdict
+## Reader's Note (the face changes with the heart; do good, cultivate virtue)`
+      : `用户关注：${question || '请按麻衣神相体系给我做一次完整的面相分析'}${featureBlock}
 
 请按以下麻衣神相结构出具面相报告：
 
@@ -4749,12 +4861,16 @@ router.get('/context/:id', (req, res) => {
 // ══════════════════════════════════════════
 router.post('/ask-followup', rateLimitMiddleware, async (req, res) => {
   try {
-    const { contextId, question } = req.body;
-    if (!contextId || !question) return res.status(400).json({ error: '缺少上下文ID或问题' });
+    const { contextId, question, lang } = req.body;
+    const _afIntl = !!(lang && lang !== 'zh');
+    if (!contextId || !question) return res.status(400).json({ error: _afIntl ? 'Missing context ID or question' : '缺少上下文ID或问题' });
     const ctx = qaContext[contextId];
-    if (!ctx) return res.status(404).json({ error: '上下文已过期，请重新生成报告' });
+    if (!ctx) return res.status(404).json({ error: _afIntl ? 'This session has expired — please regenerate your report' : '上下文已过期，请重新生成报告' });
+    const _afSystem = _afIntl
+      ? 'You are a seasoned reader on the Runae divination platform. The user just read their report and now has a follow-up question. Answer it based on the report below, in warm, professional, concrete language — give timeframes and actionable advice. Reply in fluent English (never Chinese).\n\nTheir report:\n' + ctx.reading.slice(0, 3000)
+      : '你是一位善缘命理平台的资深命理师。用户刚刚看了他们的命理报告，现在有后续问题要问你。\n请基于以下报告内容回答用户的问题。语气亲切、专业、具体，给出时间点和建议。\n\n之前的报告内容：\n' + ctx.reading.slice(0, 3000);
     const messages = [
-      { role: 'system', content: '你是一位善缘命理平台的资深命理师。用户刚刚看了他们的命理报告，现在有后续问题要问你。\n请基于以下报告内容回答用户的问题。语气亲切、专业、具体，给出时间点和建议。\n\n之前的报告内容：\n' + ctx.reading.slice(0, 3000) },
+      { role: 'system', content: _afSystem },
       { role: 'user', content: question }
     ];
     const answer = await deepseekChat(messages, { maxTokens: 2048 });
