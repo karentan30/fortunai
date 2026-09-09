@@ -3160,9 +3160,18 @@ router.post('/tarot/stream', rateLimitMiddleware, async (req, res) => {
     const topicMap = { love: '感情姻缘', wealth: '财运事业', health: '健康运势', decision: '抉择指引', year: '年度运势', recent: '近期预测' };
     const topicMapEn = { love: 'Love & Relationships', wealth: 'Career & Wealth', health: 'Health & Wellbeing', decision: 'Decision Guidance', year: 'Annual Fortune', recent: 'Near-term Forecast' };
     const isRecent = topic === 'recent';
+
+    // ── 付费门（P0·2026-09-09）──
+    // 修复前本端点无任何鉴权，匿名 POST 即返回完整五段解读（实测 23,555 字符）。
+    // 照同文件 ziwei(3219/3274/3284/3293) 的既有模式，不自创写法。
+    const tarotAccess = gateReportAccess(req, ['tarot_5', 'tarot_3', 'tarot']).full;
+    const _tarotPreviewRule = _tsIsEn
+      ? '\n\nIMPORTANT — THIS IS A FREE PREVIEW. Output ONLY the opening overall reading (about 150 words), then STOP. Do NOT interpret individual cards. Do NOT output the synthesis, the action advice, or the closing remarks. End with a single line inviting the reader to unlock the full reading.'
+      : '\n\n【重要·这是免费预览】只输出开头的「整体格局概览」约150字，然后立即停止。不要逐牌详解、不要综合解读、不要行动建议、不要占卜师悄悄话。结尾用一句话引导解锁完整解读。';
     const systemPrompt = _tsIsEn
       ? `You are a tarot reader with 20 years of experience, blending Eastern and Western wisdom. You are like a wise, warm friend — your words are gentle but go straight to the heart. You help seekers find light in confusion. Remember: reversed cards are reminders, not punishments; difficulties are turning points, not endings. Write at least 2000 words.${langSuffix('en')}`
       : `你是一位融合东西方智慧的塔罗占卜师，从业二十年，解读过上万个案。你像一位知心姐姐，温暖有力量，说话柔和但直抵人心。你能让求助者在迷茫中看到光，在困惑中找到方向。记住：逆位牌不是坏牌，是提醒；困难不是终点，是转折。每次回答至少2000字。语言：简体中文。`;
+    const systemPromptGated = systemPrompt + (tarotAccess ? '' : _tarotPreviewRule);
     const userMsg = _tsIsEn
       ? (isRecent
           ? `Question: ${question}\nTopic: Near-term forecast (what may happen in the next 30 days)\n${cardDesc ? 'Cards:\n' + cardDesc : 'Using 3 random tarot cards (past energy - present state - approaching)'}\n\nPlease provide a near-term tarot forecast structured as follows (at least 2500 words):\n\n## ✨ Overall Energy Overview (next 30 days)\n## 📅 Three Time Windows (the three cards mapped to: days 1-10 / days 10-20 / days 20-30)\nFor each window: main energy · most likely specific events across love/career/health/relationships · key warnings\n## 🌟 Best Opportunity Window\n## ⚠️ Risk Signals to Watch For\n## 💌 Your Personal Action Tips (2-3 concrete suggestions for this period)\n## 🔮 One-Line Prophecy (memorable, verifiable in 30 days)`
@@ -3176,9 +3185,9 @@ router.post('/tarot/stream', rateLimitMiddleware, async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
     _setSseCors(req, res);
     res.flushHeaders();
-    res.write(`data: ${JSON.stringify({ type: 'meta' })}\n\n`);
+    res.write(`data: ${JSON.stringify({ type: 'meta', tier: tarotAccess ? 'full' : 'basic', locked: !tarotAccess })}\n\n`);
 
-    const streamBody = await deepseekStream([{ role: 'system', content: systemPrompt }, { role: 'user', content: userMsg }], { maxTokens: 8192, timeout: 300000 });
+    const streamBody = await deepseekStream([{ role: 'system', content: systemPromptGated }, { role: 'user', content: userMsg }], { maxTokens: tarotAccess ? 8192 : 1200, timeout: 300000 });
     const reader = streamBody.getReader();
     const decoder = new TextDecoder('utf-8');
     let fullText = '', buf = '';
