@@ -212,7 +212,11 @@ const UNLOCK_BY_CATEGORY = {
   'daliuren': ['daliuren'], '大六壬': ['daliuren'],
   'lingqian': ['lingqian'], '灵签': ['lingqian'],
   'pastlife': ['pastlife'], '前世': ['pastlife'],
-  'tarot': ['tarot'], '塔罗': ['tarot'],
+  // 0909: 原本只列 ['tarot'],导致买了 tarot_3($9.00)/tarot_5($19.90) 的用户
+  //   在 hasFullAccess 里查不到分类键 → 被当成未付费。照 astrology/fengshui 的
+  //   既有惯例,分类键要列全所有能解锁它的产品变体。高档位自然覆盖低档位。
+  'tarot': ['tarot','tarot_3','tarot_5'], '塔罗': ['tarot','tarot_3','tarot_5'],
+  'tarot_3': ['tarot_3','tarot_5'], 'tarot_5': ['tarot_5'],
   'jyotish_full': ['jyotish_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'], 'jyotish': ['jyotish_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'],
   'maya_full': ['maya_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'], 'maya': ['maya_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'],
   'tibet_full': ['tibet_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'], 'tibet': ['tibet_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'],
