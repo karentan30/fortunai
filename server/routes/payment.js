@@ -48,6 +48,7 @@ const MONTHLY_MEMBER_REPORT_DISCOUNT = 0.5;
 const HUB_SUB_ENABLED = process.env.HUB_SUB_ENABLED === '1';
 const HUB_SUB_PLAN_MAP = { daily_companion_year: 'daily_companion_year' };
 const { sendEmail, getClientIp, resolveUserFromToken } = require('../lib/utils');
+const { resolvePaymentMethods } = require('../lib/stripe-methods');
 const { rateLimitMiddleware, simpleRateLimitMiddleware, authMiddleware } = require('../middleware');
 const { recordAffiliateOrder, completeAffiliateOrder } = require('./affiliate');
 
@@ -268,8 +269,18 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
             ) : undefined,
           }, quantity: 1 };
 
+    // 🔴 0909：Stripe 的支付宝/微信只支持一次性付款，不能用于 subscription。
+    // payMethods(看 region/currency) 和 isSubscription(看 product) 此前各算各的，
+    // 组合出 ['card','alipay'] + mode:'subscription' 会被 Stripe 直接拒掉 → 500 → 订不了。
+    // 详见 server/lib/stripe-methods.js 的注释（含为什么现在还没炸、以及为什么开通支付宝后会炸）。
+    const _pm = resolvePaymentMethods(payMethods, isSubscription);
+    if (_pm.dropped.length) {
+      console.warn('[CHECKOUT] 订阅单不支持 ' + _pm.dropped.join('/') + '，已回落为 '
+                   + _pm.methods.join('/') + '（product=' + product + '）');
+    }
+
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: payMethods,
+      payment_method_types: _pm.methods,
       line_items: [lineItem],
       mode: isSubscription ? 'subscription' : 'payment',
       success_url: successUrl || FRONTEND_URL + '/api/success?session_id={CHECKOUT_SESSION_ID}&product=' + product,
