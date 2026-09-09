@@ -190,7 +190,13 @@ const getReadingsByUser = {
 // ── 产品/付费墙相关常量 ──
 // 🔴 P1-1 付费墙修复: 精确白名单，bazi_trial 不解锁完整报告
 const UNLOCK_BY_CATEGORY = {
-  'bazi': ['bazi_full','bazi_vip'], '八字': ['bazi_full','bazi_vip'], '사주': ['bazi_full','bazi_vip'],
+  // 0909(P0·收钱): 补 duanshi 鉴权时顺带核对本表——原本只列 bazi_full/bazi_vip，
+  //   漏了韩语专属产品 saju_kr_full(₩9,900·server/lib/store.js PRODUCTS，Stripe price
+  //   price_1TzAjREAXrE2YgcrLqhHWUtf，成功页 payment.js:533 明确写"완전한 사주 분석이 열렸어요")。
+  //   pages/saju-KR.html 用 Authorization token 调 /api/bazi(lang=ko)，
+  //   hasFullAccess 查 '사주'/'bazi'/'八字' 三个键都查不到 saju_kr_full → 买家被判未付费。
+  //   同 tarot_3/tarot_5 那类"表里没列产品变体"的漏付费墙 bug，严格超集式追加。
+  'bazi': ['bazi_full','bazi_vip','saju_kr_full'], '八字': ['bazi_full','bazi_vip','saju_kr_full'], '사주': ['bazi_full','bazi_vip','saju_kr_full'],
   // 八字 session：买对应单 session 或买全套 bazi_full/vip 都解锁该 session
   'bazi_s_wealth': ['bazi_s_wealth','bazi_full','bazi_vip'], 'bazi_s_love': ['bazi_s_love','bazi_full','bazi_vip'], 'bazi_s_career': ['bazi_s_career','bazi_full','bazi_vip'],
   'bazi_s_dayun': ['bazi_s_dayun','bazi_full','bazi_vip'], 'bazi_s_health': ['bazi_s_health','bazi_full','bazi_vip'], 'bazi_s_luck': ['bazi_s_luck','bazi_full','bazi_vip'],
@@ -217,6 +223,10 @@ const UNLOCK_BY_CATEGORY = {
   //   既有惯例,分类键要列全所有能解锁它的产品变体。高档位自然覆盖低档位。
   'tarot': ['tarot','tarot_3','tarot_5'], '塔罗': ['tarot','tarot_3','tarot_5'],
   'tarot_3': ['tarot_3','tarot_5'], 'tarot_5': ['tarot_5'],
+  // 0909(P0·收钱): /api/duanshi/stream 补鉴权时发现 —— 这张表里原本连 duanshi 分类键
+  //   都不存在,查表直接查到 undefined→false,产品(duanshi_full $29/¥59)从未被纳入解锁范围。
+  //   只有唯一档位,无 tarot 式多档,故三个键全部映射到同一个产品。
+  'duanshi': ['duanshi_full'], '断事': ['duanshi_full'], 'duanshi_full': ['duanshi_full'],
   'jyotish_full': ['jyotish_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'], 'jyotish': ['jyotish_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'],
   'maya_full': ['maya_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'], 'maya': ['maya_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'],
   'tibet_full': ['tibet_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'], 'tibet': ['tibet_full','member_yearly','member_quarterly','member_3year','member_lifetime','member_daily'],

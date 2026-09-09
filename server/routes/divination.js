@@ -482,7 +482,7 @@ async function baziKoreanHandler(req, res) {
       var _orderNo = (req.body && req.body.order_no) || '';
       if (_orderNo) {
         var _ord = _findOrder(_orderNo);
-        if (_ord && _ord.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_ord.product)) full = true;
+        if (_ord && _ord.payment_status === 'completed' && ['bazi_full','bazi_vip','saju_kr_full'].includes(_ord.product)) full = true;
       }
     }
     const modeIns = (mode === 'gentle')
@@ -5691,7 +5691,7 @@ router.post('/bazi/chapter', rateLimitMiddleware, async (req, res) => {
     // 订单号解锁（沿用 baziEnglishHandler 逻辑）
     if (!full && order_no) {
       var _o = _findOrder(order_no);
-      if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
+      if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip','saju_kr_full'].includes(_o.product)) full = true;
     }
 
     // ── 付费章无权限：直接返回 locked 事件，正文一字不产 ──
@@ -6416,6 +6416,12 @@ router.post('/duanshi/stream', async (req, res) => {
     const { question, topic, method } = req.body;
     if (!question || question.length < 5) return res.status(400).json({ error: 'question required' });
 
+    // ── 付费门（P0·2026-09-09）──
+    // 修复前本端点无任何鉴权，匿名 POST 即返回完整 verdict/summary/analysis/timing_desc/timing_val/actions。
+    // 照同文件 ziwei(3228/3283/3302) 的既有模式，不自创写法。
+    const duanshiAccess = gateReportAccess(req, ['duanshi_full', 'duanshi']).full;
+    const _duanshiPreviewRule = '只输出 verdict 和 summary 两个字段的判断方向，analysis/timing_desc/timing_val/actions 一律输出空字符串或空数组，不展开卦象解析、时机研判、行动建议的具体内容。';
+
     // 六爻真实起卦（与 /liuyao 同款引擎·纳甲/六亲/六神/世应/空亡·禁 LLM 自编卦象）
     let liuyaoBlock = '';
     try { liuyaoBlock = await buildLiuyaoBlock({ date: new Date() }); }
@@ -6427,7 +6433,7 @@ router.post('/duanshi/stream', async (req, res) => {
     const systemPrompt = `你是精通六爻预测的命理大师，精通《增删卜易》《断易天机》，擅长以六爻卦象断事。
 你的风格：直接、有力、不绕弯子。给出明确的"宜/不宜/等待"判断，配上卦象解释和具体行动建议。所有判断均为传统术数参考，仅供娱乐参考，不构成任何决策建议——请在 summary 或 analysis 中体现这一分寸，不作绝对化承诺。
 【铁律】必须严格依据下方【六爻真实卦象】里排出的本卦/变卦/纳甲/六亲/六神/世应/空亡断事，禁止自行编造或改动任何爻象。
-你必须返回严格的JSON格式，不要有任何markdown或额外文字。`;
+你必须返回严格的JSON格式，不要有任何markdown或额外文字。${duanshiAccess ? '' : _duanshiPreviewRule}`;
 
     const userMsg = `今日${dateStr}，来问一件事：${question}
 
@@ -6440,10 +6446,10 @@ ${liuyaoBlock || '（六爻引擎暂不可用，请就所问事项审慎给出�
 {
   "verdict": "yi|buyi|deng",
   "summary": "一句话总结判断（20字以内，有力直接）",
-  "analysis": "卦象解析（3-4句，引用卦名和爻象，解释吉凶原因）",
-  "timing_desc": "时机研判（具体说几月/几周后，给出动作节点）",
-  "timing_val": "时机评分如'75分'或'30分'",
-  "actions": ["行动建议1", "行动建议2", "行动建议3"]
+  "analysis": "${duanshiAccess ? '卦象解析（3-4句，引用卦名和爻象，解释吉凶原因）' : '留空，不展开'}",
+  "timing_desc": "${duanshiAccess ? '时机研判（具体说几月/几周后，给出动作节点）' : '留空，不展开'}",
+  "timing_val": "${duanshiAccess ? '时机评分如75分或30分' : '留空，不展开'}",
+  "actions": ${duanshiAccess ? '["行动建议1", "行动建议2", "行动建议3"]' : '[]'}
 }`;
 
     const messages = [
@@ -6451,7 +6457,7 @@ ${liuyaoBlock || '（六爻引擎暂不可用，请就所问事项审慎给出�
       { role: 'user', content: userMsg }
     ];
 
-    const raw = await deepseekChat(messages, { maxTokens: 800 });
+    const raw = await deepseekChat(messages, { maxTokens: duanshiAccess ? 800 : 200 });
 
     // 解析JSON
     let parsed;
@@ -6470,7 +6476,11 @@ ${liuyaoBlock || '（六爻引擎暂不可用，请就所问事项审慎给出�
       };
     }
 
-    res.json(parsed);
+    // 双保险：即使 prompt 被绕过，未付费请求也只拿到 verdict/summary，不含 analysis/timing/actions
+    if (!duanshiAccess) {
+      return res.json({ verdict: parsed.verdict, summary: parsed.summary, locked: true, tier: 'teaser' });
+    }
+    res.json(Object.assign({}, parsed, { locked: false, tier: 'full' }));
   } catch(e) {
     res.status(500).json({ error: e.message });
   }
