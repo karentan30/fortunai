@@ -10,20 +10,7 @@
 <title>彩镜 · 个人色彩诊断 · 拍脸测季型</title>
 <script src="./vendor/html2canvas.min.js"></script>
 <script src="./vendor/qrcode.js"></script>
-<!-- PostHog 埋点（复用 Slim 现有项目 key；零成本分发实验，2 周看数据） -->
-<script>
-window.POSTHOG_KEY="phc_n7uWzLr7fMb9b4SSKEw5GKowFQ6d9Yn8gP8zb6kqBtcp";
-window.POSTHOG_HOST="https://us.i.posthog.com";
-</script>
-<script>
-!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-try{
-  if(window.POSTHOG_KEY&&POSTHOG_KEY.indexOf("phc_")===0){
-    posthog.init(POSTHOG_KEY,{api_host:POSTHOG_HOST,capture_pageview:false,autocapture:false});
-    posthog.register({app:'caijing',ref:(new URLSearchParams(location.search).get('ref')||'direct')});
-  }
-}catch(e){}
-</script>
+<!-- 埋点：Lumee 自建中台（同源 POST /track，落 Lumee events 表）·不接第三方 -->
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:"PingFang SC","Hiragino Sans GB",sans-serif;background:#f3ece0;color:#3a332a;-webkit-tap-highlight-color:transparent}
@@ -166,7 +153,19 @@ import { FaceLandmarker, ImageSegmenter, FilesetResolver } from "./vendor/vision
 const $ = id => document.getElementById(id);
 let landmarker = null, segmenter = null;
 const REF = new URLSearchParams(location.search).get('ref') || 'direct';
-function track(ev, props){ var p=Object.assign({ref:REF}, props||{}); try{ if(window.posthog&&posthog.capture) window.posthog.capture(ev, p); }catch(e){} console.log('[track]', ev, p); }
+// 埋点 → Lumee 自建中台（同源 /track·CSP 'self' 放行·无第三方）
+// guest_token 存本机,用于把同一访客的多条事件串起来(纯随机·不含任何个人信息)
+const GT = (function(){ try{ var k='caijing_gt', v=localStorage.getItem(k);
+  if(!v){ v='cj_'+Math.random().toString(36).slice(2)+Date.now().toString(36); localStorage.setItem(k,v); }
+  return v; }catch(e){ return 'cj_anon'; } })();
+function track(ev, props){
+  var p = Object.assign({ref:REF}, props||{});
+  var payload = JSON.stringify({event:('caijing_'+ev).slice(0,40), scene:'caijing', guest_token:GT, meta:p});
+  try{
+    if(navigator.sendBeacon) navigator.sendBeacon('/track', new Blob([payload],{type:'application/json'}));
+    else fetch('/track',{method:'POST',headers:{'Content-Type':'application/json'},body:payload,keepalive:true}).catch(function(){});
+  }catch(e){}
+}
 track('page_view', {});
 
 // ---------- 季型数据 ----------
