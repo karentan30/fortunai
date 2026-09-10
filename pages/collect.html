@@ -38,6 +38,7 @@
   .field input,.field select{border:none;background:transparent;font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;width:100%;margin-top:2px;outline:none}
   .field input::placeholder{color:var(--ink-3);font-weight:400}
   .field .opt{font-size:11px;color:var(--ink-3);margin-left:auto;white-space:nowrap}
+  .dsel{display:flex;gap:7px}.dsel select{flex:1;min-width:0;font-size:15px;padding:1px 0}
   .cal-toggle{display:flex;gap:2px;background:var(--jade-wash);border-radius:9px;padding:2px;flex-shrink:0}
   .cal-toggle span{font-size:11px;padding:5px 10px;border-radius:7px;color:var(--ink-3);cursor:pointer;font-weight:500}
   .cal-toggle span.on{background:#fff;color:var(--jade);font-weight:600}
@@ -80,7 +81,7 @@
   <div class="sec" id="secBirth">出生信息</div>
   <div class="field">
     <svg class="ic"><use href="#i-cal"/></svg>
-    <div class="fcol"><div class="lab" id="labDate">出生日期</div><input id="bdate" type="date"></div>
+    <div class="fcol"><div class="lab" id="labDate">出生日期</div><div class="dsel"><select id="byear"></select><select id="bmonth"></select><select id="bday"></select></div></div>
     <div class="cal-toggle"><span class="on" data-cal="solar" id="calSolar">阳历</span><span data-cal="lunar" id="calLunar">农历</span></div>
   </div>
   <div class="field">
@@ -131,7 +132,7 @@
       title:'先告诉我<br>你是谁',
       sub:'八字 · 塔罗 · 星座 · 面相 · 手相，想算什么都行。填一次，以后回来直接看，不用重填。',
       secBirth:'出生信息',
-      labDate:'出生日期', calSolar:'阳历', calLunar:'农历',
+      labDate:'出生日期', calSolar:'阳历', calLunar:'农历', yearPh:'年', monthPh:'月', dayPh:'日',
       labTime:'出生时间', timePh:'不确定可跳过', optTime:'可选',
       labCity:'出生地', cityPh:'城市，如 上海', optCity:'可选',
       labGender:'性别', gFemale:'女', gMale:'男',
@@ -152,7 +153,7 @@
       title:'First, tell me<br>who you are',
       sub:'BaZi · Tarot · Astrology · Face · Palm — read whatever you like. Fill this out once; come back anytime, no need to re-enter.',
       secBirth:'Birth information',
-      labDate:'Birth date', calSolar:'Solar', calLunar:'Lunar',
+      labDate:'Birth date', calSolar:'Solar', calLunar:'Lunar', yearPh:'Year', monthPh:'Month', dayPh:'Day',
       labTime:'Birth time', timePh:'Skip if unsure', optTime:'Optional',
       labCity:'Birthplace', cityPh:'City, e.g. Shanghai', optCity:'Optional',
       labGender:'Gender', gFemale:'Female', gMale:'Male',
@@ -202,7 +203,15 @@
   // 载入已有 profile（回访免重填）
   var P = {};
   try { P = JSON.parse(localStorage.getItem('runae_profile')||'{}'); } catch(e){}
-  if(P.bdate) document.getElementById('bdate').value = P.bdate;
+  (function(){
+    var ys=document.getElementById('byear'),ms=document.getElementById('bmonth'),ds=document.getElementById('bday');
+    var MON_EN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    function opt(s,v,l){var o=document.createElement('option');o.value=v;o.textContent=l;s.appendChild(o);}
+    opt(ys,'',t.yearPh); var ny=new Date().getFullYear(); for(var y=ny;y>=1920;y--)opt(ys,y,y);
+    opt(ms,'',t.monthPh); for(var mo=1;mo<=12;mo++)opt(ms,mo,EN?MON_EN[mo-1]:(mo+'月'));
+    opt(ds,'',t.dayPh); for(var d=1;d<=31;d++)opt(ds,d,EN?String(d):(d+'日'));
+    if(P.bdate){var pp=P.bdate.split('-');if(pp.length===3){ys.value=+pp[0];ms.value=+pp[1];ds.value=+pp[2];}}
+  })();
   if(P.btime) document.getElementById('btime').value = P.btime;
   if(P.bcity) document.getElementById('bcity').value = P.bcity;
   if(P.gender) document.getElementById('gender').value = P.gender;
@@ -225,8 +234,9 @@
   });
 
   document.getElementById('next').onclick=function(){
-    var bdate=document.getElementById('bdate').value;
-    if(!bdate){ alert(t.alertDate); return; }
+    var _y=document.getElementById('byear').value,_m=document.getElementById('bmonth').value,_d=document.getElementById('bday').value;
+    if(!_y||!_m||!_d){ alert(t.alertDate); return; }
+    var bdate=_y+'-'+('0'+_m).slice(-2)+'-'+('0'+_d).slice(-2);
     var aspects=[]; document.querySelectorAll('#aspects .chip.on').forEach(function(c){ aspects.push(c.dataset.a); });
     var cal=document.querySelector('.cal-toggle span.on').dataset.cal;
     var prof={
