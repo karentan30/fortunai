@@ -64,6 +64,20 @@
   .crossread .cx .cn{font-size:14.5px;font-weight:600;color:var(--ink);font-family:var(--serif)}
   .crossread .cx .ch{font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-top:3px}
   .crossread .cx .cg{margin-left:auto;align-self:center;stroke:var(--ink-3);width:16px;height:16px;flex-shrink:0}
+  /* ── per-chapter streaming states (progressive report) ── */
+  .read.streaming p::after{content:'▍';color:var(--jade-soft);animation:ccr .9s steps(2) infinite;margin-left:1px}
+  @keyframes ccr{0%,49%{opacity:1}50%,100%{opacity:0}}
+  .read h3{display:flex;align-items:center;gap:8px}
+  .chspin{width:13px;height:13px;border:2px solid var(--line-2);border-top-color:var(--jade-soft);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .chip{font-size:10px;letter-spacing:.1em;color:var(--ink-3);font-weight:600;margin-left:auto;text-transform:uppercase}
+  .chskel .ln{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--line),rgba(255,255,255,.06),var(--line));background-size:200% 100%;animation:sh 1.3s infinite;margin-bottom:11px}
+  .cherr{font-size:13px;color:var(--ink-2);line-height:1.7}
+  .cherr button{background:none;border:1px solid var(--line-2);border-radius:8px;color:var(--gold-soft);font-size:12px;padding:5px 12px;margin-left:8px;cursor:pointer;font-family:inherit}
+  .chart.skel-chart{background:var(--jade-deep)}
+  .chart .csk{height:26px;border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,.05),rgba(255,255,255,.11),rgba(255,255,255,.05));background-size:200% 100%;animation:sh 1.3s infinite}
+  .wall .walllist{list-style:none;text-align:left;margin:4px auto 16px;max-width:230px}
+  .wall .walllist li{font-size:13px;color:var(--ink-2);padding:4px 0;letter-spacing:.02em}
 </style>
 </head>
 <body>
@@ -114,8 +128,25 @@
     comingHead:EN?'This reading is coming soon':'新版报告正在接入',
     comingBody:EN?'This one is almost ready. Want to start with your BaZi in the meantime?':'这个推演的新版报告马上就好。先看看你的八字？',
     seeBazi:EN?'See BaZi Report First':'先看八字报告',
-    pillarLabels:EN?['Year','Month','Day','Hour']:['年','月','日','时']
+    pillarLabels:EN?['Year','Month','Day','Hour']:['年','月','日','时'],
+    streaming:EN?'writing…':'撰写中…',
+    chGenFail:EN?'This chapter failed to load.':'这一章生成失败了。',
+    chRetry:EN?'Retry':'重试',
+    lockedTag:EN?'LOCKED':'待解锁'
   };
+  // 章节列表（与后端 BAZI_CHAPTERS 同步；free 章渐进流式，付费章显付费墙）
+  var CHAPTERS=[
+    {id:'pillars', emoji:'📜', free:true,  t:EN?'Four Pillars Chart':'四柱命盘'},
+    {id:'elements',emoji:'🌊', free:true,  t:EN?'Five Elements':'五行能量'},
+    {id:'year',    emoji:'🌟', free:true,  t:EN?"This Year's Fortune":'今年运势'},
+    {id:'wealth',  emoji:'💰', free:false, t:EN?'Wealth & Finance':'财运格局'},
+    {id:'love',    emoji:'💕', free:false, t:EN?'Love & Relationships':'感情姻缘'},
+    {id:'career',  emoji:'💼', free:false, t:EN?'Career & Purpose':'事业格局'},
+    {id:'luck',    emoji:'📅', free:false, t:EN?'Luck Cycles':'大运周期'},
+    {id:'forecast',emoji:'🔮', free:false, t:EN?'Year Forecast':'流年预测'},
+    {id:'remedy',  emoji:'🎯', free:false, t:EN?'Recommendations':'开运锦囊'},
+    {id:'message', emoji:'💌', free:false, t:EN?'Personal Message':'命理师寄语'}
+  ];
   var P={},M='bazi';
   try{ P=JSON.parse(localStorage.getItem('runae_profile')||'{}'); }catch(e){}
   M=localStorage.getItem('runae_method')||'bazi';
@@ -190,24 +221,195 @@
     return '<div class="crossread"><div class="k">'+esc(kk)+'</div><h4>'+esc(head)+'</h4><div class="fr">'+esc(fr)+'</div>'+cards+'</div>';
   }
 
-  function renderBazi(d){
-    var body=document.getElementById('body'),hero=document.getElementById('hero'),p=d.pillars||{};
-    var dm=p.dayMaster||'',el=p.dayMasterElement||'';
-    var heroH=EN?('Your Day Master is &laquo;'+esc(dm+el)+'&raquo;'):('你的日主是「'+esc(dm+el)+'」');
-    hero.innerHTML='<div class="rhero"><div class="k">BaZi · '+esc(P.bdate||'')+'</div><div class="dv"></div><h2>'+heroH+'</h2></div>';
-    var chart='';['year','month','day','hour'].forEach(function(k,i){var q=p[k]||{};chart+='<div class="pil"><div class="c">'+esc(q.gan||'')+'<br>'+esc(q.zhi||'')+'</div><div class="l">'+T.pillarLabels[i]+'</div></div>';});
-    var html='<div class="chart"><div class="pillars">'+chart+'</div></div>';
-    var parts=(d.reading||'').split(/---LOCKED---/i),free=parts[0]||'',locked=parts[1]||'';
-    free=free.replace(/^📜[^\n]*\n/,'').replace(/^公历[^\n]*\n/,'').replace(/^八字：[^\n]*\n/,'');
-    sections(free).forEach(function(s){ html+='<div class="read">'+(s.t?'<h3>'+esc(s.t)+'</h3>':'')+'<p>'+md(s.b.join('\n'))+'</p></div>'; });
-    if(locked.trim()){ html+='<div class="read"><h3>'+esc(T.deeper)+'</h3><p class="blur">'+md(locked.replace(/^\s+/,'').slice(0,110))+'……</p></div>'; }
-    html+='<div class="wall"><h4>'+esc(T.unlock)+'</h4><p>'+esc(T.unlockSub)+'</p><button class="cta gold" onclick="goCheckout(\'bazi_full\')">'+esc(T.unlockBtn)+'</button><div class="price"><b>$9.90</b> '+esc(T.price1)+'</div></div>';
-    html+='<div class="expand">'+esc(T.techLabel)+'</div>';
-    html+=crossReadHTML();
-    var advLis=T.advList.map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
-    html+='<div class="adv"><div class="k">'+esc(T.advK)+'</div><h4>'+T.advH+'</h4><ul>'+advLis+'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">'+esc(T.advBtn)+'</button></div>';
-    body.innerHTML=html;
+  /* ── Chart card (deep-jade 四柱) — instant from /bazi/stream meta chart|pillars ── */
+  // meta.chart.pillars is an ARRAY [{label,gan,zhi,...}]; meta.pillars (en/ko) is an OBJECT {year,month,...}.
+  function normPillars(chart,pillars){
+    var dm='',el='',cells=[];
+    if(chart&&Array.isArray(chart.pillars)){
+      dm=chart.dayMaster||''; el=chart.dayMasterElement||'';
+      chart.pillars.forEach(function(q){ cells.push({gan:q.gan||'',zhi:q.zhi||''}); });
+    } else if(pillars){
+      dm=pillars.dayMaster||''; el=pillars.dayMasterElement||'';
+      ['year','month','day','hour'].forEach(function(k){ var q=pillars[k]||{}; cells.push({gan:q.gan||'',zhi:q.zhi||''}); });
+    }
+    while(cells.length<4) cells.push({gan:'',zhi:''});
+    return {dm:dm,el:el,cells:cells};
   }
+  function renderHeroChart(chart,pillars){
+    var hero=document.getElementById('hero');
+    var np=normPillars(chart,pillars);
+    var heroH=EN?('Your Day Master is &laquo;'+esc(np.dm+np.el)+'&raquo;'):('你的日主是「'+esc(np.dm+np.el)+'」');
+    hero.innerHTML='<div class="rhero"><div class="k">BaZi · '+esc(P.bdate||'')+'</div><div class="dv"></div><h2>'+heroH+'</h2></div>';
+    var chartHtml='';
+    np.cells.forEach(function(q,i){ chartHtml+='<div class="pil"><div class="c">'+esc(q.gan)+'<br>'+esc(q.zhi)+'</div><div class="l">'+T.pillarLabels[i]+'</div></div>'; });
+    document.getElementById('chartcard').innerHTML='<div class="pillars">'+chartHtml+'</div>';
+    document.getElementById('chartcard').classList.remove('skel-chart');
+  }
+
+  /* ── Progressive chapter state machine ── */
+  var _st={}, _txt={}, _hasFull=false;
+  CHAPTERS.forEach(function(c){ _st[c.id]='idle'; _txt[c.id]=''; });
+
+  // strip the leading "📜 四柱命盘" style title line the LLM re-emits (chart card already shows it)
+  function stripLead(id,text){
+    var ch=null; for(var i=0;i<CHAPTERS.length;i++){ if(CHAPTERS[i].id===id){ch=CHAPTERS[i];break;} }
+    var t=text.replace(/^\s+/,'');
+    if(ch){ var re=new RegExp('^'+ch.emoji.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'?\\s*'+ch.t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'[^\\n]*\\n'); t=t.replace(re,''); }
+    return t;
+  }
+
+  function chapCard(c){
+    var st=_st[c.id];
+    if(st==='locked'){
+      return '<div class="wall" id="card-'+c.id+'"><h4>'+esc(c.emoji+' '+c.t)+'</h4><p>'+esc(T.unlockSub)+'</p>'
+        +'<button class="cta gold" onclick="goCheckout(\'bazi_full\')">'+esc(T.unlockBtn)+'</button>'
+        +'<div class="price"><b>$9.90</b> '+esc(T.price1)+'</div></div>';
+    }
+    var head='<h3>'+esc(c.emoji+' '+c.t)+(st==='streaming'?'<span class="chspin"></span>':(st==='loading'?'<span class="chip">'+esc(T.streaming)+'</span>':''))+'</h3>';
+    if(st==='idle'||st==='loading'){
+      return '<div class="read" id="card-'+c.id+'">'+head+'<div class="chskel"><div class="ln" style="width:88%"></div><div class="ln" style="width:96%"></div><div class="ln" style="width:70%"></div></div></div>';
+    }
+    if(st==='error'){
+      return '<div class="read" id="card-'+c.id+'">'+head+'<div class="cherr">'+esc(T.chGenFail)+'<button onclick="loadChapter(\''+c.id+'\')">'+esc(T.chRetry)+'</button></div></div>';
+    }
+    // streaming / done
+    var cls=(st==='streaming')?'read streaming':'read';
+    return '<div class="'+cls+'" id="card-'+c.id+'">'+head+'<p>'+md(_txt[c.id]||'')+'</p></div>';
+  }
+  function paintChapter(id){
+    var el=document.getElementById('card-'+id); if(!el) return;
+    var c=null; for(var i=0;i<CHAPTERS.length;i++){ if(CHAPTERS[i].id===id){c=CHAPTERS[i];break;} }
+    if(!c) return;
+    var tmp=document.createElement('div'); tmp.innerHTML=chapCard(c);
+    el.parentNode.replaceChild(tmp.firstChild,el);
+  }
+
+  // SSE fetch for one chapter (20s/章 timeout · accumulating chunks)
+  window.loadChapter=function(id){
+    if(_st[id]!=='idle'&&_st[id]!=='error') return;
+    ensureCard(id);
+    _st[id]='loading'; paintChapter(id);
+    var ctrl=new AbortController();
+    var to=setTimeout(function(){ ctrl.abort(); },20000);
+    fetch('/api/bazi/chapter',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
+      body:JSON.stringify(Object.assign(bd(),{chapterId:id,token:localStorage.getItem('sy_token')||''}))})
+    .then(function(res){
+      clearTimeout(to);
+      if(!res.ok||!res.body) throw new Error('stream failed');
+      var reader=res.body.getReader(),dec=new TextDecoder('utf-8'),buf='';
+      _st[id]='streaming'; paintChapter(id);
+      function read(){
+        reader.read().then(function(r){
+          if(r.done){ if(_st[id]==='streaming'){ _st[id]='done'; paintChapter(id); afterChapter(id); } return; }
+          buf+=dec.decode(r.value,{stream:true});
+          var lines=buf.split('\n'); buf=lines.pop();
+          lines.forEach(function(line){
+            if(line.indexOf('data: ')!==0) return;
+            try{
+              var ev=JSON.parse(line.slice(6));
+              if(ev.type==='chunk'){ _txt[id]=stripLead(id,(_txt[id]||'')+ev.content); _st[id]='streaming'; paintChapter(id); }
+              else if(ev.type==='done'){ _st[id]='done'; paintChapter(id); afterChapter(id); }
+              else if(ev.type==='locked'){ _st[id]='locked'; paintChapter(id); afterChapter(id); }
+              else if(ev.type==='error'){ throw new Error(ev.message||'error'); }
+            }catch(e){}
+          });
+          if(_st[id]==='streaming') read();
+        }).catch(function(){ clearTimeout(to); if(_st[id]!=='done'&&_st[id]!=='locked'){ _st[id]='error'; paintChapter(id); afterChapter(id); } });
+      }
+      read();
+    }).catch(function(){ clearTimeout(to); _st[id]='error'; paintChapter(id); afterChapter(id); });
+  };
+
+  var _tailDone=false;
+  function revealTail(){
+    var tail=document.getElementById('tail'); if(!tail||_tailDone) return; _tailDone=true;
+    var advLis=T.advList.map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
+    tail.innerHTML=crossReadHTML()
+      +'<div class="adv"><div class="k">'+esc(T.advK)+'</div><h4>'+T.advH+'</h4><ul>'+advLis+'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">'+esc(T.advBtn)+'</button></div>';
+  }
+  // sequential progression: kick the next chapter, or collapse remaining paid chapters into ONE paywall
+  function afterChapter(id){
+    var idx=-1; for(var i=0;i<CHAPTERS.length;i++){ if(CHAPTERS[i].id===id){idx=i;break;} }
+    if(idx<0) return;
+    var next=CHAPTERS[idx+1];
+    if(next){
+      if(!next.free&&!_hasFull){ collapsePaidTail(idx+1); return; } // free user hits first paid chapter → single wall
+      if(_st[next.id]==='idle'){ ensureCard(next.id); loadChapter(next.id); }
+    } else {
+      revealTail();
+    }
+  }
+  // Replace all remaining paid chapter shells with one consolidated paywall + a locked chapter list, then tail.
+  function collapsePaidTail(fromIdx){
+    for(var i=fromIdx;i<CHAPTERS.length;i++){ var el=document.getElementById('card-'+CHAPTERS[i].id); if(el) el.parentNode.removeChild(el); }
+    var lockedList=CHAPTERS.slice(fromIdx).map(function(c){ return '<li>'+esc(c.emoji+' '+c.t)+'</li>'; }).join('');
+    var wall='<div class="wall"><h4>'+esc(T.unlock)+'</h4><p>'+esc(T.unlockSub)+'</p>'
+      +'<ul class="walllist">'+lockedList+'</ul>'
+      +'<button class="cta gold" onclick="goCheckout(\'bazi_full\')">'+esc(T.unlockBtn)+'</button>'
+      +'<div class="price"><b>$9.90</b> '+esc(T.price1)+'</div></div>';
+    var slot=document.getElementById('paywall-slot');
+    if(slot){ slot.innerHTML=wall; }
+    revealTail();
+  }
+
+  // build scaffold (chart + free chapters), then start streaming. Paid cards are appended on demand.
+  function startProgressive(){
+    var body=document.getElementById('body');
+    var html='<div class="chart skel-chart" id="chartcard"><div class="csk"></div></div>';
+    html+='<div id="chaps"></div>';
+    html+='<div id="paywall-slot"></div>';
+    html+='<div class="expand">'+esc(T.techLabel)+'</div>';
+    html+='<div id="tail"></div>';
+    body.innerHTML=html;
+    var chaps=document.getElementById('chaps');
+    // scaffold the 3 free chapters up front (only the first is skeleton-active; rest queue in sequence)
+    CHAPTERS.filter(function(c){return c.free;}).forEach(function(c){ chaps.insertAdjacentHTML('beforeend',chapCard(c)); });
+    // 1) grab chart + tier fast via /bazi/stream meta, then abort
+    fetchChartMeta();
+    // 2) start streaming the first chapter immediately (parallel to chart fetch)
+    loadChapter('pillars');
+  }
+  // ensure a chapter card exists in #chaps (append if missing) — used when advancing to paid chapters (full users)
+  function ensureCard(id){
+    if(document.getElementById('card-'+id)) return;
+    var c=null; for(var i=0;i<CHAPTERS.length;i++){ if(CHAPTERS[i].id===id){c=CHAPTERS[i];break;} }
+    if(!c) return;
+    document.getElementById('chaps').insertAdjacentHTML('beforeend',chapCard(c));
+  }
+
+  // /bazi/stream: read first `meta` (has chart/pillars + tier), abort — don't burn LLM tokens
+  function fetchChartMeta(){
+    var ctrl=new AbortController(), got=false;
+    var to=setTimeout(function(){ ctrl.abort(); },12000);
+    fetch('/api/bazi/stream',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,
+      body:JSON.stringify(Object.assign(bd(),{mode:'truth',question:EN?'Please analyze my chart':'请全面分析我的命盘',token:localStorage.getItem('sy_token')||''}))})
+    .then(function(res){
+      if(!res.ok||!res.body) throw new Error('meta failed');
+      var reader=res.body.getReader(),dec=new TextDecoder('utf-8'),buf='';
+      function read(){
+        reader.read().then(function(r){
+          if(r.done||got) return;
+          buf+=dec.decode(r.value,{stream:true});
+          var lines=buf.split('\n'); buf=lines.pop();
+          lines.forEach(function(line){
+            if(line.indexOf('data: ')!==0||got) return;
+            try{
+              var ev=JSON.parse(line.slice(6));
+              if(ev.type==='meta'){
+                got=true; clearTimeout(to);
+                if(ev.tier==='full'||ev.tier==='paid'||ev.locked===false){ _hasFull=true; }
+                try{ renderHeroChart(ev.chart||null,ev.pillars||null); }catch(e){}
+                ctrl.abort();
+              }
+            }catch(e){}
+          });
+          if(!got) read();
+        }).catch(function(){});
+      }
+      read();
+    }).catch(function(){ clearTimeout(to); });
+  }
+
   function fail(msg){ document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="location.reload()">'+esc(T.retry)+'</button></div>'; }
 
   window.goCheckout=function(product){
@@ -222,10 +424,7 @@
   };
 
   if(M==='bazi'){
-    fetch('/api/bazi',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bd())})
-      .then(function(r){ if(!r.ok)throw new Error(T.genFailStatus+r.status); return r.json(); })
-      .then(function(d){ if(!d.reading)throw new Error(T.emptyReport); renderBazi(d); })
-      .catch(function(e){ fail(T.genFail+e.message); });
+    startProgressive();
   } else {
     document.getElementById('body').innerHTML='<div class="chart" style="text-align:center"><div style="font-family:var(--serif);font-size:20px;margin-bottom:6px;color:#fff">'+esc(NAMES[M]||'')+'</div><div style="font-size:13px;color:rgba(255,255,255,.7)">'+esc(T.comingHead)+'</div></div><div class="read"><p>'+esc(T.comingBody)+'</p></div><button class="cta" onclick="localStorage.setItem(\'runae_method\',\'bazi\');location.reload()">'+esc(T.seeBazi)+'</button>';
   }
