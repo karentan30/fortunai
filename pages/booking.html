@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>Runae · 一对一 真人命理师</title>
+<title>Runae · One-on-One Reading with a Real Reader</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -80,39 +80,31 @@
 <body>
 <div class="wrap">
   <div class="bar">
-    <div class="nav-back" onclick="history.length>1?history.back():location.href='pick.html'"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>返回</div>
-    <div class="step">真人预约</div>
+    <div class="nav-back" id="navBack"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="backTxt">返回</span></div>
+    <div class="step" id="stepTxt">真人预约</div>
   </div>
 
   <div class="rhero">
-    <div class="k">Runae · One-on-One</div>
+    <div class="k" id="heroK">Runae · One-on-One</div>
     <div class="dv"></div>
-    <h2>一对一 · 真人命理师</h2>
-    <div class="sub">AI 排盘看格局，真人命理师陪你把事聊透。<br>视频 / 语音连线，一人一时段，只谈你的盘。</div>
+    <h2 id="heroH">一对一 · 真人命理师</h2>
+    <div class="sub" id="heroSub">AI 排盘看格局，真人命理师陪你把事聊透。<br>视频 / 语音连线，一人一时段，只谈你的盘。</div>
   </div>
 
   <div class="chart">
-    <div class="vpts">
-      <div class="vpt"><div class="c">1对1</div><div class="l">专属时段<br>不拼场</div></div>
-      <div class="vpt"><div class="c">真人</div><div class="l">视频/语音<br>面对面聊</div></div>
-      <div class="vpt"><div class="c">带盘</div><div class="l">先出报告<br>再深聊</div></div>
-    </div>
+    <div class="vpts" id="vpts"></div>
   </div>
 
   <div id="masters"></div>
 
   <div class="adv">
-    <div class="k">Runae 会员 · 更划算</div>
-    <h4>会员预约真人<br>享专属优惠</h4>
-    <ul>
-      <li>会员预约真人命理师一对一，价格更优</li>
-      <li>连线前自动带上你的完整命盘与历史</li>
-      <li>AI 顾问日常追问 + 真人深聊，双线陪伴</li>
-    </ul>
-    <button class="sbtn" onclick="goCheckout('member_monthly')">订阅 Runae 顾问 · $9.9 / 月</button>
+    <div class="k" id="advK">Runae 会员 · 更划算</div>
+    <h4 id="advH">会员预约真人<br>享专属优惠</h4>
+    <ul id="advUl"></ul>
+    <button class="sbtn" id="advBtn" onclick="goCheckout('member_monthly')">订阅 Runae 顾问 · $9.9 / 月</button>
   </div>
 
-  <div class="note">
+  <div class="note" id="note">
     真人命理咨询以传统文化与人生陪伴为主，不作命运、健康、投资等结果承诺，不能替代医疗、法律、金融等专业意见。<br>
     提交预约即表示你同意我们通过所留联系方式与你确认时段。
   </div>
@@ -128,21 +120,87 @@
   var P={};
   try{ P=JSON.parse(localStorage.getItem('runae_profile')||'{}'); }catch(e){}
 
+  var LANG=(new URLSearchParams(location.search).get('lang'))||localStorage.getItem('runae_lang')||'zh';localStorage.setItem('runae_lang',LANG);var EN=(LANG==='en');
+
+  // ── 文案 ──
+  var T=EN?{
+    title:'Runae · One-on-One Reading with a Real Reader',
+    back:'Back', step:'Book a Reader',
+    heroK:'Runae · One-on-One', heroH:'One-on-One · With a Real Reader',
+    heroSub:'AI maps out the structure; a real reader walks you through it.<br>Video or voice call, one person per slot, all about your chart.',
+    vpts:[['1-on-1','Your slot alone<br>never shared'],['Live','Video or voice<br>face to face'],['With chart','Report first<br>then we go deep']],
+    advK:'Runae Member · Better Value', advH:'Members book real readers<br>at member rates',
+    advLi:['Members book one-on-one readings at a better price','Your full chart & history come to the call automatically','AI advisor for everyday questions + a real reader for the deep ones'],
+    advBtn:'Subscribe to Runae Advisor · $9.9 / mo',
+    note:'These sessions are grounded in traditional culture and personal guidance. They make no promises about your fate, health, or financial outcomes, and are no substitute for medical, legal, or financial advice.<br>By submitting a booking, you agree to let us confirm your time slot using the contact details you provide.',
+    bookTitle1:'Book "', bookTitle2:'"',
+    bookSub:'Leave your contact and preferred time, and we\'ll confirm shortly. Your saved chart comes to the call with you.',
+    lblEmail:'Contact email (to confirm your booking)', phEmail:'you@example.com',
+    lblContact:'WeChat / phone (optional, for faster contact)', phContact:'WeChat ID or phone number',
+    lblTime:'Preferred time (optional)', phTime:'e.g. this weekend evening / weekday afternoon',
+    lblNote:'Topic you\'d like to discuss (optional)', phNote:'e.g. career direction this year, love outlook, date selection…',
+    cancel:'Cancel', submit:'Submit booking', submitting:'Submitting…',
+    bookCta:'Book a session',
+    invalidEmail:'Please enter a valid email so we can confirm your booking.',
+    submitFail:'Couldn’t submit — please try again in a moment.', netErr:'Network error — please try again.',
+    okBig:'Booking received', okP1:'We\'ll confirm your reader and time slot within 24 hours at <b>', okP2:'</b>.<br>Your full chart will be ready before the call.', okBtn:'Got it',
+    ticketHead:'[Live fate reader booking request]', ticketReader:'Reader: ', ticketContact:'Contact: ', ticketTime:'Preferred time: ', ticketTopic:'Topic: ', ticketChart:'Chart profile: ', ticketBlank:'(not provided)',
+    payCnAlert:'Please pay via WeChat / Alipay (coming soon).', payFail:'Couldn’t open checkout — please try again.',
+    priceLine:'By appointment · one-on-one'
+  }:{
+    title:'Runae · 一对一 真人命理师',
+    back:'返回', step:'真人预约',
+    heroK:'Runae · One-on-One', heroH:'一对一 · 真人命理师',
+    heroSub:'AI 排盘看格局，真人命理师陪你把事聊透。<br>视频 / 语音连线，一人一时段，只谈你的盘。',
+    vpts:[['1对1','专属时段<br>不拼场'],['真人','视频/语音<br>面对面聊'],['带盘','先出报告<br>再深聊']],
+    advK:'Runae 会员 · 更划算', advH:'会员预约真人<br>享专属优惠',
+    advLi:['会员预约真人命理师一对一，价格更优','连线前自动带上你的完整命盘与历史','AI 顾问日常追问 + 真人深聊，双线陪伴'],
+    advBtn:'订阅 Runae 顾问 · $9.9 / 月',
+    note:'真人命理咨询以传统文化与人生陪伴为主，不作命运、健康、投资等结果承诺，不能替代医疗、法律、金融等专业意见。<br>提交预约即表示你同意我们通过所留联系方式与你确认时段。',
+    bookTitle1:'预约「', bookTitle2:'」',
+    bookSub:'留下联系方式与期望时段，我们会尽快与你确认。连线时会带上你已保存的命盘。',
+    lblEmail:'联系邮箱（用于确认预约）', phEmail:'you@example.com',
+    lblContact:'微信 / 手机（选填，方便更快联系）', phContact:'微信号或手机号',
+    lblTime:'期望时段（选填）', phTime:'如：本周末晚上 / 工作日下午',
+    lblNote:'想聊的主题（选填）', phNote:'如：今年事业方向、感情走向、择日……',
+    cancel:'取消', submit:'提交预约', submitting:'提交中…',
+    bookCta:'预约咨询',
+    invalidEmail:'请填写有效邮箱，方便我们与你确认预约',
+    submitFail:'提交失败，请稍后重试', netErr:'网络异常，请重试',
+    okBig:'预约已收到', okP1:'我们会在 24 小时内通过 <b>', okP2:'</b> 与你确认命理师与时段。<br>连线前会为你准备好完整命盘。', okBtn:'好的',
+    ticketHead:'【真人命理师预约意向】', ticketReader:'命理师：', ticketContact:'联系方式：', ticketTime:'期望时段：', ticketTopic:'想聊主题：', ticketChart:'命盘档案：', ticketBlank:'（未填）',
+    payCnAlert:'国内用户请用微信 / 支付宝支付（接入中）', payFail:'跳转支付失败，请重试',
+    priceLine:'预约咨询 · 一对一'
+  };
+
   // ── 命理师卡：中性占位，绝不编造具名身份/资质/评分 ──
   // ⚠️ 待 Karen 填入真实入驻命理师的真实资料后替换 name/meta/desc。
-  var MASTERS=[
+  var MASTERS=EN?[
+    { key:'senior',   name:'Senior Reader',   meta:'BaZi · Zi Wei · 15+ years of practice',
+      tags:['BaZi Reading','Zi Wei Dou Shu','Luck Cycles'],
+      desc:'Reads your chart across both BaZi and Zi Wei, making sense of your major luck cycles and the year ahead so you can decide well at the turning points. Best if you want a thorough read of the whole chart.',
+      price:T.priceLine },
+    { key:'relations',name:'Relationship Reader',   meta:'Compatibility · Love · Long-term guidance',
+      tags:['Love & Marriage','Compatibility','Relationship Coaching'],
+      desc:'Focused on love and relationships — reads both charts for the dynamics and the pitfalls, talks through what you\'re going through, and offers grounded, practical ways to connect.',
+      price:T.priceLine },
+    { key:'western',  name:'Astrology Reader',   meta:'Western astrology · English & Chinese',
+      tags:['Natal Chart','Transits','English & Chinese'],
+      desc:'Works mainly with your Western natal chart and current transits — reading personality, gifts, and life lessons. Sessions in English or Chinese, for anyone who thinks in the language of astrology.',
+      price:T.priceLine }
+  ]:[
     { key:'senior',   name:'资深命理顾问',   meta:'八字 · 紫微 · 15 年以上从业',
       tags:['八字批命','紫微斗数','流年大运'],
       desc:'擅长以八字与紫微双体系交叉看格局，把大运流年讲清楚，帮你在关键节点上做取舍。适合想系统看一遍命盘的你。',
-      price:'预约咨询 · 一对一' },
+      price:T.priceLine },
     { key:'relations',name:'情感关系顾问',   meta:'合婚 · 感情 · 长期陪伴式咨询',
       tags:['感情姻缘','合婚配对','关系经营'],
       desc:'专注感情与关系议题，从双方命盘看相处模式与雷区，陪你把当下的困惑聊透，给出可落地的相处之道。',
-      price:'预约咨询 · 一对一' },
+      price:T.priceLine },
     { key:'western',  name:'占星咨询顾问',   meta:'西方占星 · 中英双语咨询',
       tags:['本命星盘','行运过境','中英双语'],
       desc:'以西方占星本命盘与行运为主，解读性格天赋与人生课题，支持中英文连线。适合习惯占星语言的你。',
-      price:'预约咨询 · 一对一' }
+      price:T.priceLine }
   ];
 
   var USER=(function(){var s=document.createElementNS('http://www.w3.org/2000/svg','svg');return '<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';})();
@@ -157,7 +215,7 @@
       html+='<div class="m-tags">'+m.tags.map(function(t){return '<span class="m-tag">'+esc(t)+'</span>';}).join('')+'</div>';
       html+='<div class="m-desc">'+esc(m.desc)+'</div>';
       html+='<div class="m-price"><b>'+esc(m.price)+'</b></div>';
-      html+='<button class="cta gold" onclick="openBooking(\''+m.key+'\')">预约咨询</button>';
+      html+='<button class="cta gold" onclick="openBooking(\''+m.key+'\')">'+esc(T.bookCta)+'</button>';
       html+='</div>';
     });
     box.innerHTML=html;
@@ -170,13 +228,13 @@
     var m=MASTERS.filter(function(x){return x.key===key;})[0]||MASTERS[0];
     var email=(P.email||'');
     document.getElementById('sheet').innerHTML=
-      '<h4>预约「'+esc(m.name)+'」</h4>'+
-      '<div class="sh-sub">留下联系方式与期望时段，我们会尽快与你确认。连线时会带上你已保存的命盘。</div>'+
-      '<div class="fld"><label>联系邮箱（用于确认预约）</label><input id="bk-email" type="email" placeholder="you@example.com" value="'+esc(email)+'"></div>'+
-      '<div class="fld"><label>微信 / 手机（选填，方便更快联系）</label><input id="bk-contact" type="text" placeholder="微信号或手机号"></div>'+
-      '<div class="fld"><label>期望时段（选填）</label><input id="bk-time" type="text" placeholder="如：本周末晚上 / 工作日下午"></div>'+
-      '<div class="fld"><label>想聊的主题（选填）</label><textarea id="bk-note" rows="3" placeholder="如：今年事业方向、感情走向、择日……"></textarea></div>'+
-      '<div class="sheet-row"><button class="btn-ghost" onclick="closeBooking()">取消</button><button class="cta" id="bk-submit" onclick="submitBooking()">提交预约</button></div>';
+      '<h4>'+esc(T.bookTitle1)+esc(m.name)+esc(T.bookTitle2)+'</h4>'+
+      '<div class="sh-sub">'+esc(T.bookSub)+'</div>'+
+      '<div class="fld"><label>'+esc(T.lblEmail)+'</label><input id="bk-email" type="email" placeholder="'+esc(T.phEmail)+'" value="'+esc(email)+'"></div>'+
+      '<div class="fld"><label>'+esc(T.lblContact)+'</label><input id="bk-contact" type="text" placeholder="'+esc(T.phContact)+'"></div>'+
+      '<div class="fld"><label>'+esc(T.lblTime)+'</label><input id="bk-time" type="text" placeholder="'+esc(T.phTime)+'"></div>'+
+      '<div class="fld"><label>'+esc(T.lblNote)+'</label><textarea id="bk-note" rows="3" placeholder="'+esc(T.phNote)+'"></textarea></div>'+
+      '<div class="sheet-row"><button class="btn-ghost" onclick="closeBooking()">'+esc(T.cancel)+'</button><button class="cta" id="bk-submit" onclick="submitBooking()">'+esc(T.submit)+'</button></div>';
     document.getElementById('mask').classList.add('on');
   };
   window.closeBooking=function(){ document.getElementById('mask').classList.remove('on'); };
@@ -184,54 +242,75 @@
 
   window.submitBooking=function(){
     var email=(document.getElementById('bk-email').value||'').trim();
-    if(!email||email.indexOf('@')<0){ alert('请填写有效邮箱，方便我们与你确认预约'); return; }
+    if(!email||email.indexOf('@')<0){ alert(T.invalidEmail); return; }
     var contact=(document.getElementById('bk-contact').value||'').trim();
     var ptime=(document.getElementById('bk-time').value||'').trim();
     var note=(document.getElementById('bk-note').value||'').trim();
     var m=MASTERS.filter(function(x){return x.key===curKey;})[0]||MASTERS[0];
 
     var btn=document.getElementById('bk-submit');
-    btn.disabled=true; btn.textContent='提交中…';
+    btn.disabled=true; btn.textContent=T.submitting;
 
     // 汇总意向：真人预约暂无独立下单端点，走通用工单端点 /api/support-ticket 录单给运营，
-    // 并带上用户命盘档案(runae_profile) 供命理师连线前预读。
-    var summary='【真人命理师预约意向】\n'
-      +'命理师：'+m.name+'（'+m.meta+'）\n'
-      +'联系方式：'+(contact||'（未填）')+'\n'
-      +'期望时段：'+(ptime||'（未填）')+'\n'
-      +'想聊主题：'+(note||'（未填）')+'\n'
-      +'命盘档案：'+JSON.stringify(P);
+    // 并带上用户命盘档案(runae_profile) 供命理师连线前预读。product 不随语言变化。
+    var summary=T.ticketHead+'\n'
+      +T.ticketReader+m.name+'（'+m.meta+'）\n'
+      +T.ticketContact+(contact||T.ticketBlank)+'\n'
+      +T.ticketTime+(ptime||T.ticketBlank)+'\n'
+      +T.ticketTopic+(note||T.ticketBlank)+'\n'
+      +T.ticketChart+JSON.stringify(P);
 
     fetch('/api/support-ticket',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ product:'shenyuan_booking', email:email, question:summary })})
      .then(function(r){return r.json();})
      .then(function(d){
        if(d&&d.ok){ showOk(email); }
-       else{ btn.disabled=false; btn.textContent='提交预约'; alert((d&&d.error)||'提交失败，请稍后重试'); }
+       else{ btn.disabled=false; btn.textContent=T.submit; alert((d&&d.error)||T.submitFail); }
      })
-     .catch(function(){ btn.disabled=false; btn.textContent='提交预约'; alert('网络异常，请重试'); });
+     .catch(function(){ btn.disabled=false; btn.textContent=T.submit; alert(T.netErr); });
   };
 
   function showOk(email){
     document.getElementById('sheet').innerHTML=
       '<div class="ok"><div class="chk"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>'+
-      '<div class="big">预约已收到</div>'+
-      '<p>我们会在 24 小时内通过 <b>'+esc(email)+'</b> 与你确认命理师与时段。<br>连线前会为你准备好完整命盘。</p>'+
-      '<button class="cta" style="margin-top:20px" onclick="closeBooking()">好的</button></div>';
+      '<div class="big">'+esc(T.okBig)+'</div>'+
+      '<p>'+T.okP1+esc(email)+T.okP2+'</p>'+
+      '<button class="cta" style="margin-top:20px" onclick="closeBooking()">'+esc(T.okBtn)+'</button></div>';
   }
 
   // ── 结账（沿用 report-v2 的 goCheckout）──
   window.goCheckout=function(product){
     fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({product:product,token:localStorage.getItem('sy_token')||'',
-        successUrl:location.origin+'/pages/booking.html?paid=1',cancelUrl:location.href})})
+        successUrl:location.origin+'/pages/booking.html?paid=1&lang='+LANG,cancelUrl:location.href})})
      .then(function(r){return r.json();}).then(function(d){
        if(d.url){ location.href=d.url; }
-       else if(d.channel==='cn'){ alert('国内用户请用微信 / 支付宝支付（接入中）'); }
-       else { alert('跳转支付失败，请重试'); }
-     }).catch(function(){ alert('网络异常，请重试'); });
+       else if(d.channel==='cn'){ alert(T.payCnAlert); }
+       else { alert(T.payFail); }
+     }).catch(function(){ alert(T.netErr); });
   };
 
+  // ── 应用文案 ──
+  function applyI18n(){
+    document.documentElement.lang=EN?'en':'zh-CN';
+    document.title=T.title;
+    document.getElementById('backTxt').textContent=T.back;
+    document.getElementById('stepTxt').textContent=T.step;
+    document.getElementById('heroK').textContent=T.heroK;
+    document.getElementById('heroH').textContent=T.heroH;
+    document.getElementById('heroSub').innerHTML=T.heroSub;
+    document.getElementById('vpts').innerHTML=T.vpts.map(function(v){
+      return '<div class="vpt"><div class="c">'+esc(v[0])+'</div><div class="l">'+v[1]+'</div></div>';
+    }).join('');
+    document.getElementById('advK').textContent=T.advK;
+    document.getElementById('advH').innerHTML=T.advH;
+    document.getElementById('advUl').innerHTML=T.advLi.map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
+    document.getElementById('advBtn').textContent=T.advBtn;
+    document.getElementById('note').innerHTML=T.note;
+    document.getElementById('navBack').onclick=function(){ if(history.length>1){history.back();} else {location.href='pick.html?lang='+LANG;} };
+  }
+
+  applyI18n();
   renderMasters();
 </script>
 </body>

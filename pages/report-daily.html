@@ -94,8 +94,8 @@
 <body>
 <div class="wrap">
   <div class="bar">
-    <div class="nav-back" onclick="location.href='pick.html'"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>返回</div>
-    <div class="step">每日运势</div>
+    <div class="nav-back" id="navBack"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="navBackTxt">返回</span></div>
+    <div class="step" id="stepLabel">每日运势</div>
   </div>
   <div id="hero"></div>
   <div id="body">
@@ -106,8 +106,20 @@
   </div>
 </div>
 <script>
+  var LANG=(new URLSearchParams(location.search).get('lang'))||localStorage.getItem('runae_lang')||'zh';localStorage.setItem('runae_lang',LANG);var EN=(LANG==='en');
+  if(EN){document.documentElement.lang='en';document.title='Runae · Daily Horoscope';}
   var P={};
   try{ P=JSON.parse(localStorage.getItem('runae_profile')||'{}'); }catch(e){}
+
+  // ---- static UI text (bilingual) ----
+  (function initBar(){
+    var nb=document.getElementById('navBackTxt'), st=document.getElementById('stepLabel'),
+        back=document.getElementById('navBack'), lm=document.getElementById('loadmsg');
+    if(nb) nb.textContent = EN?'Back':'返回';
+    if(st) st.textContent = EN?'Daily Horoscope':'每日运势';
+    if(lm) lm.textContent = EN?'Reading today’s energy for you…':'正在为你推演今日流运…';
+    if(back) back.onclick=function(){ location.href='pick.html?lang='+LANG; };
+  })();
 
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
@@ -118,10 +130,14 @@
     var n=new Date();
     var date=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
     return { birthYear:+m[0], birthMonth:+m[1], birthDay:+m[2], birthHour:h,
-             gender:P.gender||'female', lang:'zh', date:date };
+             gender:P.gender||'female', lang:LANG, date:date };
   }
   function fmtDate(iso){
     var n = iso ? new Date(iso.replace(/-/g,'/')) : new Date();
+    if(EN){
+      return n.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' · '
+        +['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][n.getDay()];
+    }
     var wd=['周日','周一','周二','周三','周四','周五','周六'][n.getDay()];
     return (n.getMonth()+1)+'月'+n.getDate()+'日 · '+wd;
   }
@@ -129,18 +145,18 @@
   function goCheckout(product){
     fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({product:product,token:localStorage.getItem('sy_token')||'',
-        successUrl:location.origin+'/pages/report-daily.html?paid=1',cancelUrl:location.href})})
+        successUrl:location.origin+'/pages/report-daily.html?paid=1&lang='+LANG,cancelUrl:location.href})})
      .then(function(r){return r.json();}).then(function(d){
        if(d.url){ location.href=d.url; }
-       else if(d.channel==='cn'){ alert('国内用户请用微信 / 支付宝支付（接入中）'); }
-       else { alert('跳转支付失败，请重试'); }
-     }).catch(function(){ alert('网络异常，请重试'); });
+       else if(d.channel==='cn'){ alert(EN?'Please pay via WeChat / Alipay (coming soon).':'国内用户请用微信 / 支付宝支付（接入中）'); }
+       else { alert(EN?'Couldn’t open checkout — please try again.':'跳转支付失败，请重试'); }
+     }).catch(function(){ alert(EN?'Network error — please try again.':'网络异常，请重试'); });
   }
   window.goCheckout=goCheckout;
 
   function fail(msg){
     document.getElementById('hero').innerHTML='';
-    document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="location.reload()">重试</button></div>';
+    document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="location.reload()">'+(EN?'Retry':'重试')+'</button></div>';
   }
 
   function ringDash(score){
@@ -150,7 +166,7 @@
 
   function render(d){
     var hero=document.getElementById('hero'), body=document.getElementById('body');
-    hero.innerHTML='<div class="rhero"><div class="k">Daily · '+esc(fmtDate(d.date))+'</div><div class="dv"></div><h2>今日为你排的运</h2></div>';
+    hero.innerHTML='<div class="rhero"><div class="k">Daily · '+esc(fmtDate(d.date))+'</div><div class="dv"></div><h2>'+(EN?'Today, read just for you':'今日为你排的运')+'</h2></div>';
 
     var rd=ringDash(d.score);
     var html='';
@@ -162,7 +178,7 @@
        +'<circle class="prog" cx="84" cy="84" r="75" stroke-dasharray="'+rd.c+'" stroke-dashoffset="'+rd.c+'" id="progRing"></circle>'
        +'</svg><div class="mid"><div class="num">'+esc(d.score)+'</div><div class="of">/ 100</div></div></div>'
        +(d.mood?'<div class="mood">'+esc(d.mood)+'</div>':'')
-       +'<div class="cap">Today\'s Fortune</div>'
+       +'<div class="cap">'+(EN?'Today\'s Score':'今日运势')+'</div>'
        +'</div>';
 
     // insight
@@ -173,39 +189,47 @@
     // yi / ji
     var yi=(d.yi||[]), ji=(d.ji||[]);
     html+='<div class="yiji">'
-       +'<div class="col yi"><div class="lab"><span class="badge">宜</span><span class="t">今日宜</span></div><ul>'
+       +'<div class="col yi"><div class="lab"><span class="badge">'+(EN?'Do':'宜')+'</span><span class="t">'+(EN?'Do today':'今日宜')+'</span></div><ul>'
        + yi.slice(0,3).map(function(x){return '<li>'+esc(x)+'</li>';}).join('') +'</ul></div>'
-       +'<div class="col ji"><div class="lab"><span class="badge">忌</span><span class="t">今日忌</span></div><ul>'
+       +'<div class="col ji"><div class="lab"><span class="badge">'+(EN?'Not':'忌')+'</span><span class="t">'+(EN?'Avoid today':'今日忌')+'</span></div><ul>'
        + ji.slice(0,3).map(function(x){return '<li>'+esc(x)+'</li>';}).join('') +'</ul></div>'
        +'</div>';
 
     // lucky trio
     var c=(d.luckyColor||{});
     html+='<div class="luck">'
-       +'<div class="lk"><div class="t">Lucky Color</div><div class="sw" style="background:'+esc(c.hex||'#C3A05A')+'"></div><div class="v">'+esc(c.name||'—')+'</div></div>'
-       +'<div class="lk"><div class="t">方位</div><div class="v" style="margin-top:16px">'+esc(d.luckyDir||'—')+'</div></div>'
-       +'<div class="lk"><div class="t">吉时</div><div class="v" style="margin-top:16px">'+esc(d.luckyHour||'—')+'</div></div>'
+       +'<div class="lk"><div class="t">'+(EN?'Lucky Color':'幸运色')+'</div><div class="sw" style="background:'+esc(c.hex||'#C3A05A')+'"></div><div class="v">'+esc(c.name||'—')+'</div></div>'
+       +'<div class="lk"><div class="t">'+(EN?'Direction':'方位')+'</div><div class="v" style="margin-top:16px">'+esc(d.luckyDir||'—')+'</div></div>'
+       +'<div class="lk"><div class="t">'+(EN?'Lucky Hour':'吉时')+'</div><div class="v" style="margin-top:16px">'+esc(d.luckyHour||'—')+'</div></div>'
        +'</div>';
 
     // qian
     var q=(d.qian||{});
     if(q.title||q.text){
-      html+='<div class="qian"><div class="seal">签</div><div class="k">Draw of the day · 今日一签</div>'
+      html+='<div class="qian"><div class="seal">'+(EN?'✦':'签')+'</div><div class="k">'+(EN?'Draw of the day':'Draw of the day · 今日一签')+'</div>'
          +(q.title?'<div class="title">'+esc(q.title)+'</div>':'')
-         +(q.text?'<div class="verse">'+esc(q.text).replace(/\n/g,'<br>').replace(/([，。；])/g,'$1<br>').replace(/(<br>)+$/,'')+'</div>':'')
+         +(q.text?'<div class="verse">'+esc(q.text).replace(/\n/g,'<br>').replace(EN?/([.;])\s+/g:/([，。；])/g,EN?'$1<br>':'$1<br>').replace(/(<br>)+$/,'')+'</div>':'')
          +'</div>';
     }
 
     // advisor subscription card (from report-v2)
-    html+='<div class="adv"><div class="k">Runae 顾问 · 会记得你</div><h4>不止今日一卡<br>是一个懂你的命理顾问</h4><ul>'
-       +'<li>每日运势与流年动态，天天更新</li>'
-       +'<li>AI 对话随时追问深聊，像身边的老师</li>'
-       +'<li>中西命理 + 面相手相，交叉印证同一个你</li>'
-       +'<li>记得你的盘与历史，越用越懂你</li>'
-       +'<li>可约真人命理师一对一（会员优惠）</li>'
-       +'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">订阅 Runae 顾问 · $9.9 / 月</button></div>';
+    html+= EN
+      ? '<div class="adv"><div class="k">Runae Advisor · remembers you</div><h4>More than a daily card<br>an advisor who actually knows you</h4><ul>'
+        +'<li>Your daily horoscope and annual forecast, refreshed every day</li>'
+        +'<li>Ask follow-ups anytime in AI chat — like a mentor on call</li>'
+        +'<li>Eastern & Western astrology plus face and palm reading — the same you, seen from every angle</li>'
+        +'<li>Remembers your chart and your history — the more you use it, the better it knows you</li>'
+        +'<li>Book a one-on-one with a real reader (member discount)</li>'
+        +'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">Subscribe to Runae Advisor · $9.9 / mo</button></div>'
+      : '<div class="adv"><div class="k">Runae 顾问 · 会记得你</div><h4>不止今日一卡<br>是一个懂你的命理顾问</h4><ul>'
+        +'<li>每日运势与流年动态，天天更新</li>'
+        +'<li>AI 对话随时追问深聊，像身边的老师</li>'
+        +'<li>中西命理 + 面相手相，交叉印证同一个你</li>'
+        +'<li>记得你的盘与历史，越用越懂你</li>'
+        +'<li>可约真人命理师一对一（会员优惠）</li>'
+        +'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">订阅 Runae 顾问 · $9.9 / 月</button></div>';
 
-    html+='<div class="disc">AI 生成内容 · 仅供娱乐参考，不构成医疗、法律或财务建议。</div>';
+    html+='<div class="disc">'+(EN?'AI-generated content · for entertainment and self-reflection only; not medical, legal, or financial advice.':'AI 生成内容 · 仅供娱乐参考，不构成医疗、法律或财务建议。')+'</div>';
 
     body.innerHTML=html;
     // animate ring after paint
@@ -216,11 +240,11 @@
 
   (function boot(){
     // 无生辰 → 回到采集页
-    if(!P.bdate){ location.href='collect.html'; return; }
+    if(!P.bdate){ location.href='collect.html?lang='+LANG; return; }
     fetch('/api/daily/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bd())})
       .then(function(r){ if(!r.ok) return r.json().then(function(e){ throw new Error(e.error||('HTTP '+r.status)); }); return r.json(); })
-      .then(function(d){ if(!d||typeof d.score==='undefined') throw new Error('今日运势为空'); render(d); })
-      .catch(function(e){ fail('今日运势暂未算出：'+e.message); });
+      .then(function(d){ if(!d||typeof d.score==='undefined') throw new Error(EN?'Daily fortune is empty':'今日运势为空'); render(d); })
+      .catch(function(e){ fail((EN?'Today’s fortune isn’t ready yet: ':'今日运势暂未算出：')+e.message); });
   })();
 </script>
 </body>

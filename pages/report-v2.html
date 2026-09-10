@@ -57,7 +57,7 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="bar"><div class="nav-back" onclick="location.href='pick.html'"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>返回</div><div class="step" id="mname">你的报告</div></div>
+  <div class="bar"><div class="nav-back" id="navback"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="backtxt">返回</span></div><div class="step" id="mname">你的报告</div></div>
   <div id="hero"></div>
   <div id="body">
     <div class="skel"><div class="ln" style="width:60%"></div><div class="ln" style="width:100%"></div><div class="ln" style="width:88%"></div></div>
@@ -66,11 +66,56 @@
   </div>
 </div>
 <script>
+  var LANG=(new URLSearchParams(location.search).get('lang'))||localStorage.getItem('runae_lang')||'zh';localStorage.setItem('runae_lang',LANG);var EN=(LANG==='en');
+  var T={
+    back:EN?'Back':'返回',
+    reportTitle:EN?'Your Report':'你的报告',
+    loading:EN?'Casting your chart…':'正在为你排盘…',
+    retry:EN?'Retry':'重试',
+    genFail:EN?'Something went wrong generating your report: ':'报告生成遇到问题：',
+    genFailStatus:EN?'Generation failed ':'生成失败 ',
+    emptyReport:EN?'Empty report':'报告为空',
+    netErr:EN?'Network error, please try again':'网络异常，请重试',
+    payFail:EN?'Failed to open checkout, please try again':'跳转支付失败，请重试',
+    cnPay:EN?'Mainland users: please pay via WeChat / Alipay (coming soon)':'国内用户请用微信 / 支付宝支付（接入中）',
+    deeper:EN?'A Deeper Reading':'更深的推演',
+    unlock:EN?'Unlock Full Report':'解锁完整报告',
+    unlockSub:EN?'Luck Cycles & Annual Forecast · Year-by-year outlook · Advanced cross-reading':'大运流年 · 逐年预测 · 进阶交叉印证',
+    unlockBtn:EN?'Unlock Full Version':'解锁完整版',
+    price1:EN?'one-time · or subscribe for better value ↓':'一次性 · 或订阅更划算 ↓',
+    techLabel:EN?'▾ Technical chart details (Ten Gods / Hidden Stems / Nayin)':'▾ 命盘技术细节（十神 / 藏干 / 纳音）',
+    advK:EN?'Runae Advisor · Remembers You':'Runae 顾问 · 会记得你',
+    advH:EN?'More than a report<br>An advisor who actually knows you':'不止一份报告<br>是一个懂你的命理顾问',
+    advList:EN?[
+      'Your daily horoscope and live annual forecast, refreshed every day',
+      'Ask anything, anytime — like having a teacher on call',
+      'Eastern & Western astrology plus face and palm reading — the same you, seen from every angle',
+      'Remembers your chart and your history — the more you use it, the better it knows you',
+      'Book a one-on-one session with a real reader (member discount)'
+    ]:[
+      '每日运势与流年动态，天天更新',
+      'AI 对话随时追问深聊，像身边的老师',
+      '中西命理 + 面相手相，交叉印证同一个你',
+      '记得你的盘与历史，越用越懂你',
+      '可约真人命理师一对一（会员优惠）'
+    ],
+    advBtn:EN?'Subscribe to Runae Advisor · $9.9 / mo':'订阅 Runae 顾问 · $9.9 / 月',
+    comingHead:EN?'This reading is coming soon':'新版报告正在接入',
+    comingBody:EN?'This one is almost ready. Want to start with your BaZi in the meantime?':'这个推演的新版报告马上就好。先看看你的八字？',
+    seeBazi:EN?'See BaZi Report First':'先看八字报告',
+    pillarLabels:EN?['Year','Month','Day','Hour']:['年','月','日','时']
+  };
   var P={},M='bazi';
   try{ P=JSON.parse(localStorage.getItem('runae_profile')||'{}'); }catch(e){}
   M=localStorage.getItem('runae_method')||'bazi';
-  var NAMES={bazi:'八字命理',hehun:'合婚',tarot:'塔罗',astro:'星座占星',daily:'每日运势',palm:'手相',face:'面相'};
-  document.getElementById('mname').textContent=NAMES[M]||'你的报告';
+  var NAMES=EN
+    ?{bazi:'BaZi',hehun:'Compatibility',tarot:'Tarot',astro:'Astrology',daily:'Daily',palm:'Palmistry',face:'Face Reading'}
+    :{bazi:'八字命理',hehun:'合婚',tarot:'塔罗',astro:'星座占星',daily:'每日运势',palm:'手相',face:'面相'};
+  document.getElementById('mname').textContent=NAMES[M]||T.reportTitle;
+  document.documentElement.setAttribute('lang',EN?'en':'zh-CN');
+  document.getElementById('backtxt').textContent=T.back;
+  document.getElementById('navback').onclick=function(){location.href='pick.html?lang='+LANG;};
+  var _lm=document.getElementById('loadmsg'); if(_lm)_lm.textContent=T.loading;
 
   function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
@@ -80,31 +125,33 @@
     var lines=text.split('\n'),secs=[],cur=null;
     lines.forEach(function(raw){
       var l=raw.replace(/\s+$/,''); if(!l.trim())return;
-      if(HEAD.test(l)&&l.trim().length<38){
+      if(HEAD.test(l)&&l.trim().length<(EN?60:38)){
         cur={t:l.replace(/[\uD800-\uDFFF←-⯿☀-➿️#*【】]/g,'').trim(),b:[]};secs.push(cur);
       }else{ if(!cur){cur={t:'',b:[]};secs.push(cur);} cur.b.push(l.trim()); }
     });
     return secs.filter(function(s){return s.t||s.b.length;});
   }
   function bd(){ var m=(P.bdate||'').split('-');var h=10;if(P.btime){h=parseInt(P.btime.split(':')[0],10);if(isNaN(h))h=10;}
-    return {birthYear:+m[0],birthMonth:+m[1],birthDay:+m[2],birthHour:h,gender:P.gender||'female',lang:'zh'}; }
+    return {birthYear:+m[0],birthMonth:+m[1],birthDay:+m[2],birthHour:h,gender:P.gender||'female',lang:LANG}; }
 
   function renderBazi(d){
     var body=document.getElementById('body'),hero=document.getElementById('hero'),p=d.pillars||{};
     var dm=p.dayMaster||'',el=p.dayMasterElement||'';
-    hero.innerHTML='<div class="rhero"><div class="k">BaZi · '+esc(P.bdate||'')+'</div><div class="dv"></div><h2>你的日主是「'+esc(dm+el)+'」</h2></div>';
-    var chart='';['year','month','day','hour'].forEach(function(k,i){var q=p[k]||{};chart+='<div class="pil"><div class="c">'+esc(q.gan||'')+'<br>'+esc(q.zhi||'')+'</div><div class="l">'+['年','月','日','时'][i]+'</div></div>';});
+    var heroH=EN?('Your Day Master is &laquo;'+esc(dm+el)+'&raquo;'):('你的日主是「'+esc(dm+el)+'」');
+    hero.innerHTML='<div class="rhero"><div class="k">BaZi · '+esc(P.bdate||'')+'</div><div class="dv"></div><h2>'+heroH+'</h2></div>';
+    var chart='';['year','month','day','hour'].forEach(function(k,i){var q=p[k]||{};chart+='<div class="pil"><div class="c">'+esc(q.gan||'')+'<br>'+esc(q.zhi||'')+'</div><div class="l">'+T.pillarLabels[i]+'</div></div>';});
     var html='<div class="chart"><div class="pillars">'+chart+'</div></div>';
     var parts=(d.reading||'').split(/---LOCKED---/i),free=parts[0]||'',locked=parts[1]||'';
     free=free.replace(/^📜[^\n]*\n/,'').replace(/^公历[^\n]*\n/,'').replace(/^八字：[^\n]*\n/,'');
     sections(free).forEach(function(s){ html+='<div class="read">'+(s.t?'<h3>'+esc(s.t)+'</h3>':'')+'<p>'+md(s.b.join('\n'))+'</p></div>'; });
-    if(locked.trim()){ html+='<div class="read"><h3>更深的推演</h3><p class="blur">'+md(locked.replace(/^\s+/,'').slice(0,110))+'……</p></div>'; }
-    html+='<div class="wall"><h4>解锁完整报告</h4><p>大运流年 · 逐年预测 · 进阶交叉印证</p><button class="cta gold" onclick="goCheckout(\'bazi_full\')">解锁完整版</button><div class="price"><b>$9.90</b> 一次性 · 或订阅更划算 ↓</div></div>';
-    html+='<div class="expand">▾ 命盘技术细节（十神 / 藏干 / 纳音）</div>';
-    html+='<div class="adv"><div class="k">Runae 顾问 · 会记得你</div><h4>不止一份报告<br>是一个懂你的命理顾问</h4><ul><li>每日运势与流年动态，天天更新</li><li>AI 对话随时追问深聊，像身边的老师</li><li>中西命理 + 面相手相，交叉印证同一个你</li><li>记得你的盘与历史，越用越懂你</li><li>可约真人命理师一对一（会员优惠）</li></ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">订阅 Runae 顾问 · $9.9 / 月</button></div>';
+    if(locked.trim()){ html+='<div class="read"><h3>'+esc(T.deeper)+'</h3><p class="blur">'+md(locked.replace(/^\s+/,'').slice(0,110))+'……</p></div>'; }
+    html+='<div class="wall"><h4>'+esc(T.unlock)+'</h4><p>'+esc(T.unlockSub)+'</p><button class="cta gold" onclick="goCheckout(\'bazi_full\')">'+esc(T.unlockBtn)+'</button><div class="price"><b>$9.90</b> '+esc(T.price1)+'</div></div>';
+    html+='<div class="expand">'+esc(T.techLabel)+'</div>';
+    var advLis=T.advList.map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
+    html+='<div class="adv"><div class="k">'+esc(T.advK)+'</div><h4>'+T.advH+'</h4><ul>'+advLis+'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">'+esc(T.advBtn)+'</button></div>';
     body.innerHTML=html;
   }
-  function fail(msg){ document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="location.reload()">重试</button></div>'; }
+  function fail(msg){ document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="location.reload()">'+esc(T.retry)+'</button></div>'; }
 
   window.goCheckout=function(product){
     fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -112,18 +159,18 @@
         successUrl:location.origin+'/pages/report-v2.html?paid=1',cancelUrl:location.href})})
      .then(function(r){return r.json();}).then(function(d){
        if(d.url){ location.href=d.url; }
-       else if(d.channel==='cn'){ alert('国内用户请用微信 / 支付宝支付（接入中）'); }
-       else { alert('跳转支付失败，请重试'); }
-     }).catch(function(){ alert('网络异常，请重试'); });
+       else if(d.channel==='cn'){ alert(T.cnPay); }
+       else { alert(T.payFail); }
+     }).catch(function(){ alert(T.netErr); });
   };
 
   if(M==='bazi'){
     fetch('/api/bazi',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bd())})
-      .then(function(r){ if(!r.ok)throw new Error('生成失败 '+r.status); return r.json(); })
-      .then(function(d){ if(!d.reading)throw new Error('报告为空'); renderBazi(d); })
-      .catch(function(e){ fail('报告生成遇到问题：'+e.message); });
+      .then(function(r){ if(!r.ok)throw new Error(T.genFailStatus+r.status); return r.json(); })
+      .then(function(d){ if(!d.reading)throw new Error(T.emptyReport); renderBazi(d); })
+      .catch(function(e){ fail(T.genFail+e.message); });
   } else {
-    document.getElementById('body').innerHTML='<div class="chart" style="text-align:center"><div style="font-family:var(--serif);font-size:20px;margin-bottom:6px;color:#fff">'+(NAMES[M]||'')+'</div><div style="font-size:13px;color:rgba(255,255,255,.7)">新版报告正在接入</div></div><div class="read"><p>这个推演的新版报告马上就好。先看看你的八字？</p></div><button class="cta" onclick="localStorage.setItem(\'runae_method\',\'bazi\');location.reload()">先看八字报告</button>';
+    document.getElementById('body').innerHTML='<div class="chart" style="text-align:center"><div style="font-family:var(--serif);font-size:20px;margin-bottom:6px;color:#fff">'+esc(NAMES[M]||'')+'</div><div style="font-size:13px;color:rgba(255,255,255,.7)">'+esc(T.comingHead)+'</div></div><div class="read"><p>'+esc(T.comingBody)+'</p></div><button class="cta" onclick="localStorage.setItem(\'runae_method\',\'bazi\');location.reload()">'+esc(T.seeBazi)+'</button>';
   }
 </script>
 </body>

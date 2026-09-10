@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>Runae · 选择推演</title>
+<title>Runae · Choose a Reading</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -64,37 +64,111 @@
 </defs></svg>
 
 <div class="wrap">
-  <div class="bar"><div class="nav-back" onclick="location.href='collect.html'"><svg class="ic" style="width:15px;height:15px;transform:rotate(180deg)"><use href="#i-chev"/></svg>返回</div><div class="step">2 / 3</div></div>
+  <div class="bar"><div class="nav-back" id="navBack"><svg class="ic" style="width:15px;height:15px;transform:rotate(180deg)"><use href="#i-chev"/></svg><span id="backTxt">返回</span></div><div class="step">2 / 3</div></div>
   <div class="stepper"><i class="on"></i><span class="ln"></span><i class="on"></i><span class="ln"></span><i></i></div>
-  <div class="eyebrow">用你刚填的信息</div>
-  <h1 class="t">想算哪一种</h1>
+  <div class="eyebrow" id="eyebrow">用你刚填的信息</div>
+  <h1 class="t" id="title">想算哪一种</h1>
   <p class="sub" id="sub">灰色的，补张照片即可解锁。</p>
 
   <div class="mgrid" id="grid"></div>
 
-  <div style="text-align:center;margin-top:20px;font-size:13px;color:var(--ink-3)"><a href="advisor-chat.html" style="color:var(--jade);font-weight:600;text-decoration:none">💬 问 AI 顾问</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="booking.html" style="color:var(--gold);font-weight:600;text-decoration:none">预约真人命理师</a></div>
+  <div style="text-align:center;margin-top:20px;font-size:13px;color:var(--ink-3)"><a href="advisor-chat.html" id="linkAdvisor" style="color:var(--jade);font-weight:600;text-decoration:none">💬 问 AI 顾问</a>&nbsp;&nbsp;·&nbsp;&nbsp;<a href="booking.html" id="linkBooking" style="color:var(--gold);font-weight:600;text-decoration:none">预约真人命理师</a></div>
 
   <div class="sticky"><button class="cta" id="go">生成我的报告</button></div>
 </div>
 
 <script>
+  // ===== 统一语言检测 =====
+  var LANG=(new URLSearchParams(location.search).get('lang'))||localStorage.getItem('runae_lang')||'zh';localStorage.setItem('runae_lang',LANG);var EN=(LANG==='en');
+  var Q='?lang='+LANG;
+
+  // ===== 文案字典 =====
+  var T={
+    zh:{
+      docTitle:'Runae · 选择推演',
+      htmlLang:'zh-CN',
+      back:'返回',
+      eyebrow:'用你刚填的信息',
+      title:'想算哪一种',
+      subBase:'灰色的，补张照片即可解锁。',
+      subSorted:function(sel){ return '按你选的「'+sel+'」排序。'; },
+      linkAdvisor:'💬 问 AI 顾问',
+      linkBooking:'预约真人命理师',
+      go:'生成我的报告',
+      confirmPalm:'去补一张手相照片来解锁？',
+      confirmFace:'去补一张面相照片来解锁？',
+      aspectSep:' · ',
+      A2N:{career:'事业',love:'爱情',wealth:'财运',health:'健康'},
+      methods:{
+        bazi:{name:'八字命理',desc:'四柱排盘 · 事业财运姻缘深度解读',tag:''},
+        hehun:{name:'合婚',desc:'两个人合不合，一测便知',tag:'复用你的生辰'},
+        tarot:{name:'塔罗',desc:'此刻的困惑，抽牌给你答案',tag:'立即可算'},
+        astro:{name:'星座占星',desc:'西方星盘 · 性格与运势',tag:'复用你的生辰'},
+        daily:{name:'每日运势',desc:'今天宜什么、忌什么',tag:'每天更新'},
+        palm:{name:'手相',desc:'掌纹里的命运线',tag:'补手相照解锁'},
+        face:{name:'面相',desc:'五官里的运势密码',tag:'补面相照解锁'}
+      }
+    },
+    en:{
+      docTitle:'Runae · Choose a Reading',
+      htmlLang:'en',
+      back:'Back',
+      eyebrow:'Based on what you just told us',
+      title:'Which reading?',
+      subBase:'Grayed out? Add a photo to unlock.',
+      subSorted:function(sel){ return 'Ordered around what matters most to you: '+sel+'. '; },
+      linkAdvisor:'💬 Ask the AI advisor',
+      linkBooking:'Book a human reader',
+      go:'Generate my report',
+      confirmPalm:'Add a palm photo to unlock?',
+      confirmFace:'Add a face photo to unlock?',
+      aspectSep:' · ',
+      A2N:{career:'Career',love:'Love',wealth:'Wealth',health:'Health'},
+      methods:{
+        bazi:{name:'BaZi Reading',desc:'Four Pillars · a deep read on career, wealth & love',tag:''},
+        hehun:{name:'Compatibility',desc:'How the two of you fit — the quick answer',tag:'Uses your birth details'},
+        tarot:{name:'Tarot',desc:"Whatever's on your mind right now — pull a card",tag:'Ready now'},
+        astro:{name:'Astrology',desc:'Your Western natal chart · personality & path',tag:'Uses your birth details'},
+        daily:{name:'Daily Horoscope',desc:"Today's dos and don'ts",tag:'Updated daily'},
+        palm:{name:'Palm Reading',desc:'What the lines in your palm reveal',tag:'Add palm photo to unlock'},
+        face:{name:'Face Reading',desc:'The story written in your features',tag:'Add face photo to unlock'}
+      }
+    }
+  };
+  var t=T[LANG]||T.zh;
+
+  // ===== 应用文案 =====
+  document.documentElement.lang=t.htmlLang;
+  document.title=t.docTitle;
+  document.getElementById('backTxt').textContent=t.back;
+  document.getElementById('eyebrow').textContent=t.eyebrow;
+  document.getElementById('title').textContent=t.title;
+  document.getElementById('linkAdvisor').textContent=t.linkAdvisor;
+  document.getElementById('linkBooking').textContent=t.linkBooking;
+  document.getElementById('go').textContent=t.go;
+  // 站内链接带 lang
+  document.getElementById('navBack').onclick=function(){ location.href='collect.html'+Q; };
+  document.getElementById('linkAdvisor').href='advisor-chat.html'+Q;
+  document.getElementById('linkBooking').href='booking.html'+Q;
+
   var P={}; try{ P=JSON.parse(localStorage.getItem('runae_profile')||'{}'); }catch(e){}
-  if(!P.bdate){ location.href='collect.html'; }
+  if(!P.bdate){ location.href='collect.html'+Q; }
 
-  var A2N={career:'事业',love:'爱情',wealth:'财运',health:'健康'};
+  var A2N=t.A2N;
   var aspects=P.aspects||[];
-  var sel=aspects.map(function(a){return A2N[a];}).filter(Boolean).join(' · ');
-  document.getElementById('sub').textContent = (sel? '按你选的「'+sel+'」排序。':'') + '灰色的，补张照片即可解锁。';
+  var sel=aspects.map(function(a){return A2N[a];}).filter(Boolean).join(t.aspectSep);
+  document.getElementById('sub').textContent = (sel? t.subSorted(sel):'') + t.subBase;
 
-  // 方法定义
+  // 方法定义（名称/描述/标签走字典）
+  var M=t.methods;
   var METHODS=[
-    {id:'bazi', name:'八字命理', glyph:'m-bazi', desc:'四柱排盘 · 事业财运姻缘深度解读', page:'bazi.html', tag:'', top:true},
-    {id:'hehun',name:'合婚',    glyph:'m-hehun',desc:'两个人合不合，一测便知', page:'hehun.html', tag:'复用你的生辰', aspect:'love'},
-    {id:'tarot',name:'塔罗',    glyph:'m-tarot',desc:'此刻的困惑，抽牌给你答案', page:'tarot.html', tag:'立即可算', aspect:'love'},
-    {id:'astro',name:'星座占星',glyph:'m-astro',desc:'西方星盘 · 性格与运势', page:'astrology.html', tag:'复用你的生辰'},
-    {id:'daily',name:'每日运势',glyph:'m-daily',desc:'今天宜什么、忌什么', page:'daily.html', tag:'每天更新'},
-    {id:'palm', name:'手相',    glyph:'m-palm', desc:'掌纹里的命运线', page:'palm-reading.html', tag:'补手相照解锁', need:'hasPalm'},
-    {id:'face', name:'面相',    glyph:'m-face', desc:'五官里的运势密码', page:'mianxiang.html', tag:'补面相照解锁', need:'hasFace'}
+    {id:'bazi', name:M.bazi.name, glyph:'m-bazi', desc:M.bazi.desc, tag:M.bazi.tag, top:true},
+    {id:'hehun',name:M.hehun.name,glyph:'m-hehun',desc:M.hehun.desc,tag:M.hehun.tag, aspect:'love'},
+    {id:'tarot',name:M.tarot.name,glyph:'m-tarot',desc:M.tarot.desc,tag:M.tarot.tag, aspect:'love'},
+    {id:'astro',name:M.astro.name,glyph:'m-astro',desc:M.astro.desc,tag:M.astro.tag},
+    {id:'daily',name:M.daily.name,glyph:'m-daily',desc:M.daily.desc,tag:M.daily.tag},
+    {id:'palm', name:M.palm.name, glyph:'m-palm', desc:M.palm.desc, tag:M.palm.tag, need:'hasPalm'},
+    {id:'face', name:M.face.name, glyph:'m-face', desc:M.face.desc, tag:M.face.tag, need:'hasFace'}
   ];
   // 按方向排序：love 选中→合婚/塔罗提前；bazi 永远置顶
   var loveOn=aspects.indexOf('love')>-1;
@@ -115,17 +189,17 @@
       el.innerHTML='<svg class="mic"><use href="#'+m.glyph+'"/></svg><div class="mn">'+m.name+'</div><div class="md">'+m.desc+'</div>'+tagHtml;
     }
     el.onclick=function(){
-      if(locked){ if(confirm('去补一张'+(m.need==='hasPalm'?'手相':'面相')+'照片来解锁？')) location.href='collect.html'; return; }
+      if(locked){ if(confirm(m.need==='hasPalm'?t.confirmPalm:t.confirmFace)) location.href='collect.html'+Q; return; }
       localStorage.setItem('runae_method', m.id);
       var PG={bazi:'report-v2.html',hehun:'report-hehun.html',tarot:'report-tarot.html',astro:'report-astrology.html',daily:'report-daily.html',palm:'report-palm.html',face:'report-face.html'};
-      location.href=PG[m.id]||'report-v2.html';
+      location.href=(PG[m.id]||'report-v2.html')+Q;
     };
     grid.appendChild(el);
   });
 
   document.getElementById('go').onclick=function(){
     localStorage.setItem('runae_method','bazi');
-    location.href='report-v2.html';
+    location.href='report-v2.html'+Q;
   };
 </script>
 </body>

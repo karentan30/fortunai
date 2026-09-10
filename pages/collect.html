@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>Runae · 开始你的推演</title>
+<title>Runae · Begin</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -73,40 +73,40 @@
 <div class="wrap">
   <div class="bar"><div class="brand">Runae<span class="dot">.</span></div><div class="step">1 / 3</div></div>
   <div class="stepper"><i class="on"></i><span class="ln"></span><i></i><span class="ln"></span><i></i></div>
-  <div class="eyebrow">你的命盘起点</div>
-  <h1 class="t">先告诉我<br>你是谁</h1>
-  <p class="sub">八字 · 塔罗 · 星座 · 面相 · 手相，想算什么都行。填一次，以后回来直接看，不用重填。</p>
+  <div class="eyebrow" id="eyebrow">你的命盘起点</div>
+  <h1 class="t" id="title">先告诉我<br>你是谁</h1>
+  <p class="sub" id="sub">八字 · 塔罗 · 星座 · 面相 · 手相，想算什么都行。填一次，以后回来直接看，不用重填。</p>
 
-  <div class="sec">出生信息</div>
+  <div class="sec" id="secBirth">出生信息</div>
   <div class="field">
     <svg class="ic"><use href="#i-cal"/></svg>
-    <div class="fcol"><div class="lab">出生日期</div><input id="bdate" type="date" value="1994-06-15"></div>
-    <div class="cal-toggle"><span class="on" data-cal="solar">阳历</span><span data-cal="lunar">农历</span></div>
+    <div class="fcol"><div class="lab" id="labDate">出生日期</div><input id="bdate" type="date" value="1994-06-15"></div>
+    <div class="cal-toggle"><span class="on" data-cal="solar" id="calSolar">阳历</span><span data-cal="lunar" id="calLunar">农历</span></div>
   </div>
   <div class="field">
     <svg class="ic"><use href="#i-clock"/></svg>
-    <div class="fcol"><div class="lab">出生时间</div><input id="btime" type="time" placeholder="不确定可跳过"></div>
-    <span class="opt">可选</span>
+    <div class="fcol"><div class="lab" id="labTime">出生时间</div><input id="btime" type="time" placeholder="不确定可跳过"></div>
+    <span class="opt" id="optTime">可选</span>
   </div>
   <div class="field">
     <svg class="ic"><use href="#i-pin"/></svg>
-    <div class="fcol"><div class="lab">出生地</div><input id="bcity" type="text" placeholder="城市，如 上海"></div>
-    <span class="opt">可选</span>
+    <div class="fcol"><div class="lab" id="labCity">出生地</div><input id="bcity" type="text" placeholder="城市，如 上海"></div>
+    <span class="opt" id="optCity">可选</span>
   </div>
   <div class="field">
     <svg class="ic"><use href="#i-user"/></svg>
-    <div class="fcol"><div class="lab">性别</div>
-      <select id="gender"><option value="female">女</option><option value="male">男</option></select>
+    <div class="fcol"><div class="lab" id="labGender">性别</div>
+      <select id="gender"><option value="female" id="gFemale">女</option><option value="male" id="gMale">男</option></select>
     </div>
   </div>
 
-  <div class="sec">加了更准 · 可选</div>
+  <div class="sec" id="secPhoto">加了更准 · 可选</div>
   <div class="tiles">
-    <label class="tile" id="tilePalm"><div class="plus"><svg class="ic" style="stroke:var(--ink-2)"><use href="#i-plus"/></svg></div><div class="n">手相照</div><div class="h">解锁手相推演</div><input type="file" accept="image/*" data-photo="palm"></label>
-    <label class="tile" id="tileFace"><div class="plus"><svg class="ic" style="stroke:var(--ink-2)"><use href="#i-cam"/></svg></div><div class="n">面相照</div><div class="h">解锁面相推演</div><input type="file" accept="image/*" data-photo="face"></label>
+    <label class="tile" id="tilePalm"><div class="plus"><svg class="ic" style="stroke:var(--ink-2)"><use href="#i-plus"/></svg></div><div class="n" id="palmN">手相照</div><div class="h" id="palmH">解锁手相推演</div><input type="file" accept="image/*" data-photo="palm"></label>
+    <label class="tile" id="tileFace"><div class="plus"><svg class="ic" style="stroke:var(--ink-2)"><use href="#i-cam"/></svg></div><div class="n" id="faceN">面相照</div><div class="h" id="faceH">解锁面相推演</div><input type="file" accept="image/*" data-photo="face"></label>
   </div>
 
-  <div class="sec">你最想看哪方面</div>
+  <div class="sec" id="secAspect">你最想看哪方面</div>
   <div class="chips" id="aspects">
     <span class="chip on" data-a="career">事业</span>
     <span class="chip on" data-a="love">爱情</span>
@@ -115,10 +115,90 @@
   </div>
 
   <button class="cta" id="next">下一步 · 选择推演</button>
-  <div class="hint"><svg class="ic" style="width:14px;height:14px"><use href="#i-shield"/></svg>信息仅用于生成你的报告</div>
+  <div class="hint"><svg class="ic" style="width:14px;height:14px"><use href="#i-shield"/></svg><span id="hintTxt">信息仅用于生成你的报告</span></div>
 </div>
 
 <script>
+  // ===== 统一语言检测 =====
+  var LANG=(new URLSearchParams(location.search).get('lang'))||localStorage.getItem('runae_lang')||'zh';localStorage.setItem('runae_lang',LANG);var EN=(LANG==='en');
+
+  // ===== 文案字典 =====
+  var T={
+    zh:{
+      docTitle:'Runae · 开始你的推演',
+      htmlLang:'zh-CN',
+      eyebrow:'你的命盘起点',
+      title:'先告诉我<br>你是谁',
+      sub:'八字 · 塔罗 · 星座 · 面相 · 手相，想算什么都行。填一次，以后回来直接看，不用重填。',
+      secBirth:'出生信息',
+      labDate:'出生日期', calSolar:'阳历', calLunar:'农历',
+      labTime:'出生时间', timePh:'不确定可跳过', optTime:'可选',
+      labCity:'出生地', cityPh:'城市，如 上海', optCity:'可选',
+      labGender:'性别', gFemale:'女', gMale:'男',
+      secPhoto:'加了更准 · 可选',
+      palmN:'手相照', palmH:'解锁手相推演',
+      faceN:'面相照', faceH:'解锁面相推演',
+      photoAdded:'已添加',
+      secAspect:'你最想看哪方面',
+      career:'事业', love:'爱情', wealth:'财运', health:'健康',
+      next:'下一步 · 选择推演',
+      hint:'信息仅用于生成你的报告',
+      alertDate:'请填写出生日期'
+    },
+    en:{
+      docTitle:'Runae · Begin',
+      htmlLang:'en',
+      eyebrow:'Where your chart begins',
+      title:'First, tell me<br>who you are',
+      sub:'BaZi · Tarot · Astrology · Face · Palm — read whatever you like. Fill this out once; come back anytime, no need to re-enter.',
+      secBirth:'Birth information',
+      labDate:'Birth date', calSolar:'Solar', calLunar:'Lunar',
+      labTime:'Birth time', timePh:'Skip if unsure', optTime:'Optional',
+      labCity:'Birthplace', cityPh:'City, e.g. Shanghai', optCity:'Optional',
+      labGender:'Gender', gFemale:'Female', gMale:'Male',
+      secPhoto:'Add a photo for a sharper read · Optional',
+      palmN:'Palm photo', palmH:'Unlock palm reading',
+      faceN:'Face photo', faceH:'Unlock face reading',
+      photoAdded:'Added',
+      secAspect:'What matters most to you',
+      career:'Career', love:'Love', wealth:'Wealth', health:'Health',
+      next:'Next · Choose a reading',
+      hint:'Only used to create your reading',
+      alertDate:'Please enter your birth date'
+    }
+  };
+  var t=T[LANG]||T.zh;
+
+  // ===== 应用文案 =====
+  document.documentElement.lang=t.htmlLang;
+  document.title=t.docTitle;
+  document.getElementById('eyebrow').textContent=t.eyebrow;
+  document.getElementById('title').innerHTML=t.title;
+  document.getElementById('sub').textContent=t.sub;
+  document.getElementById('secBirth').textContent=t.secBirth;
+  document.getElementById('labDate').textContent=t.labDate;
+  document.getElementById('calSolar').textContent=t.calSolar;
+  document.getElementById('calLunar').textContent=t.calLunar;
+  document.getElementById('labTime').textContent=t.labTime;
+  document.getElementById('btime').placeholder=t.timePh;
+  document.getElementById('optTime').textContent=t.optTime;
+  document.getElementById('labCity').textContent=t.labCity;
+  document.getElementById('bcity').placeholder=t.cityPh;
+  document.getElementById('optCity').textContent=t.optCity;
+  document.getElementById('labGender').textContent=t.labGender;
+  document.getElementById('gFemale').textContent=t.gFemale;
+  document.getElementById('gMale').textContent=t.gMale;
+  document.getElementById('secPhoto').textContent=t.secPhoto;
+  document.getElementById('palmN').textContent=t.palmN;
+  document.getElementById('palmH').textContent=t.palmH;
+  document.getElementById('faceN').textContent=t.faceN;
+  document.getElementById('faceH').textContent=t.faceH;
+  document.getElementById('secAspect').textContent=t.secAspect;
+  (function(){ var m={career:t.career,love:t.love,wealth:t.wealth,health:t.health};
+    document.querySelectorAll('#aspects .chip').forEach(function(c){ if(m[c.dataset.a]) c.textContent=m[c.dataset.a]; }); })();
+  document.getElementById('next').textContent=t.next;
+  document.getElementById('hintTxt').textContent=t.hint;
+
   // 载入已有 profile（回访免重填）
   var P = {};
   try { P = JSON.parse(localStorage.getItem('runae_profile')||'{}'); } catch(e){}
@@ -140,13 +220,13 @@
   var photos={};
   document.querySelectorAll('input[type=file]').forEach(function(inp){
     inp.onchange=function(){
-      var k=inp.dataset.photo; if(inp.files&&inp.files[0]){ photos[k]=inp.files[0].name; inp.closest('.tile').classList.add('done'); inp.closest('.tile').querySelector('.h').textContent='已添加'; }
+      var k=inp.dataset.photo; if(inp.files&&inp.files[0]){ photos[k]=inp.files[0].name; inp.closest('.tile').classList.add('done'); inp.closest('.tile').querySelector('.h').textContent=t.photoAdded; }
     };
   });
 
   document.getElementById('next').onclick=function(){
     var bdate=document.getElementById('bdate').value;
-    if(!bdate){ alert('请填写出生日期'); return; }
+    if(!bdate){ alert(t.alertDate); return; }
     var aspects=[]; document.querySelectorAll('#aspects .chip.on').forEach(function(c){ aspects.push(c.dataset.a); });
     var cal=document.querySelector('.cal-toggle span.on').dataset.cal;
     var prof={
@@ -156,7 +236,7 @@
       ts:Date.now()
     };
     localStorage.setItem('runae_profile', JSON.stringify(prof));
-    location.href='pick.html';
+    location.href='pick.html?lang='+LANG;
   };
 </script>
 </body>

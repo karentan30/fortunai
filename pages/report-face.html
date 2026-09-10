@@ -100,38 +100,38 @@
 <body>
 <div class="wrap">
   <div class="bar">
-    <div class="nav-back" onclick="history.back()"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>返回</div>
-    <div class="step">面相 · 麻衣神相</div>
+    <div class="nav-back" onclick="history.back()"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="navBack">返回</span></div>
+    <div class="step" id="stepLabel">面相 · 麻衣神相</div>
   </div>
 
   <!-- ═══ STAGE 1 · 上传正面照 ═══ -->
   <div id="uploadStage">
     <div class="up-hero">
-      <div class="k">FACE READING · 面相</div>
+      <div class="k" id="upK">FACE READING · 面相</div>
       <div class="dv"></div>
-      <h2>一张正脸<br>读出你的三停格局</h2>
-      <div class="sub">上停主早运、中停主财帛、下停主晚福。<br>依麻衣神相十二宫，为你通读一份可珍藏的相理长卷。</div>
+      <h2 id="upH">一张正脸<br>读出你的三停格局</h2>
+      <div class="sub" id="upSub">上停主早运、中停主财帛、下停主晚福。<br>依麻衣神相十二宫，为你通读一份可珍藏的相理长卷。</div>
     </div>
 
     <div class="tile">
       <div class="drop" id="drop" onclick="pickFile()">
         <div class="drop-icon">面</div>
-        <div class="drop-text">上传一张正面照片</div>
-        <div class="drop-hint">光线均匀 · 正面 · 无遮挡</div>
+        <div class="drop-text" id="dropText">上传一张正面照片</div>
+        <div class="drop-hint" id="dropHint">光线均匀 · 正面 · 无遮挡</div>
       </div>
       <input type="file" id="fileInput" accept="image/*" capture="user" onchange="handleFile(this)">
       <div class="cap-row">
-        <div class="cap-btn" onclick="pickAlbum()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A9803A" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="m3 17 5-4 4 3 3-3 6 5"/></svg>从相册选择</div>
-        <div class="cap-btn" onclick="openCamera()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A9803A" stroke-width="1.6"><path d="M5 8h3l1.5-2h5L16 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.2"/></svg>拍照上传</div>
+        <div class="cap-btn" onclick="pickAlbum()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A9803A" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="m3 17 5-4 4 3 3-3 6 5"/></svg><span id="capAlbum">从相册选择</span></div>
+        <div class="cap-btn" onclick="openCamera()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A9803A" stroke-width="1.6"><path d="M5 8h3l1.5-2h5L16 8h3a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.2"/></svg><span id="capCamera">拍照上传</span></div>
       </div>
       <div class="trust">
-        <span>相理十二宫</span><span class="d"></span>
-        <span>三停五岳逐读</span><span class="d"></span>
-        <span>照片不留存</span>
+        <span id="trust1">相理十二宫</span><span class="d"></span>
+        <span id="trust2">三停五岳逐读</span><span class="d"></span>
+        <span id="trust3">照片不留存</span>
       </div>
       <button class="go" id="goBtn" onclick="startAnalysis()" disabled>开始解读 <small>· 约需 25 秒</small></button>
     </div>
-    <div class="disc-top">照片仅用于本次 AI 视觉观察，分析后即刻丢弃、不作留存。<br>AI 生成内容 · 仅供娱乐参考，不构成医疗、法律或财务建议。</div>
+    <div class="disc-top" id="discTop">照片仅用于本次 AI 视觉观察，分析后即刻丢弃、不作留存。<br>AI 生成内容 · 仅供娱乐参考，不构成医疗、法律或财务建议。</div>
   </div>
 
   <!-- ═══ STAGE 2 · 加载 ═══ -->
@@ -149,8 +149,120 @@
 </div>
 
 <script>
+  var LANG=(new URLSearchParams(location.search).get('lang'))||localStorage.getItem('runae_lang')||'zh';localStorage.setItem('runae_lang',LANG);var EN=(LANG==='en');
+
   var hasImage = false;
   var loadTimer = null;
+
+  // ── 中英文案表 ──
+  var T = EN ? {
+    title:'Runae · Face Reading',
+    navBack:'Back', step:'Face · Ma Yi Physiognomy',
+    upK:'FACE READING · Physiognomy',
+    upH:'One front-facing photo<br>reveals your three-zone structure',
+    upSub:'The upper zone speaks to early life, the middle zone to your prime and wealth, the lower zone to the years that follow.<br>Reading through the twelve palaces of Ma Yi physiognomy, we write you a face scroll worth keeping.',
+    dropText:'Upload a front-facing photo',
+    dropHint:'Even lighting · front-facing · unobstructed',
+    capAlbum:'Choose from album',
+    capCamera:'Take a photo',
+    trust1:'Twelve palaces', trust2:'Three zones & five peaks', trust3:'Photo not stored',
+    goReady:'Start face reading <small>· ~25 sec</small>',
+    goIdle:'Start reading <small>· ~25 sec</small>',
+    goBusy:'Analyzing…',
+    discTop:'Your photo is used only for this AI visual observation and is discarded immediately after — never stored.<br>AI-generated content · for entertainment reference only, not medical, legal, or financial advice.',
+    loadMsgInit:'Tracing your three-zone structure and reading complexion and spirit…',
+    loadLines:['Tracing the outline of your three zones…','Reading the glow between your brows and the spirit in your eyes…','Studying the nose for wealth, the brow for career…','Drawing it all together across the twelve palaces…','Putting it to paper — one moment…'],
+    needPhoto:'Please upload a clear front-facing photo first',
+    noFace:'No clear face detected in the photo. Please use a clear, front-facing photo',
+    serverErr:'Server error ',
+    emptyReading:'AI returned empty content',
+    genProblem:'There was a problem generating the reading: ',
+    tryLater:'please try again later',
+    resetBtn:'Re-upload photo',
+    heroK:'FACE READING · Ma Yi Physiognomy',
+    heroH:'Your three-zone structure<br>and the twelve palaces',
+    heroSub:'Read palace by palace, drawing on the three zones, five peaks, twelve palaces, complexion, and spirit of Ma Yi physiognomy.',
+    aigc:'<b>AI-generated content</b> · based on this AI visual observation, for entertainment reference only, not medical/legal/financial advice. Physiognomy speaks only of fortune and pattern, never of appearance or beauty.',
+    fallbackTitle:'Face Reading',
+    deeperTitle:'A Deeper Reading · Locked',
+    wallH:'Unlock the full face report',
+    wallP:'In-depth reading of all twelve palaces · overall complexion & spirit · master\'s personal counsel',
+    wallLi:['A detailed reading of your wealth, marriage, and health palaces','All twelve palaces + how your five peaks come together','An overall read on complexion & spirit + a master\'s counsel'],
+    wallBtn:'Unlock full version',
+    wallPrice:'<b>$9.90</b> one-time · or subscribe to the advisor and save ↓',
+    advK:'Runae Advisor · Remembers you',
+    advH:'More than a report<br>an advisor who actually knows you',
+    advLi:['Face & palm reading plus BaZi & Zi Wei — the same you, seen from every angle','Your daily horoscope and annual forecast, refreshed every day','Ask follow-ups anytime in chat — like a teacher on call','Remembers your chart and your history — the more you use it, the better it knows you','Book a one-on-one with a real reader (member discount)'],
+    advBtn:'Subscribe to Runae Advisor · $9.9 / mo',
+    resetLine:'↻ Try another photo · read again',
+    footdisc:'The face reflects the heart, the spirit shapes the qi. Physiognomy shows your present pattern and tendencies, not a fixed fate; for entertainment reference only, please don\'t take it too seriously. Your photo was discarded after this analysis, never stored.',
+    ckCn:'Please pay via WeChat / Alipay (coming soon).',
+    ckFail:'Couldn’t open checkout — please try again.',
+    ckNet:'Network error — please try again.',
+    ckGoing:'Opening checkout…'
+  } : {
+    title:'Runae · 面相报告',
+    navBack:'返回', step:'面相 · 麻衣神相',
+    upK:'FACE READING · 面相',
+    upH:'一张正脸<br>读出你的三停格局',
+    upSub:'上停主早运、中停主财帛、下停主晚福。<br>依麻衣神相十二宫，为你通读一份可珍藏的相理长卷。',
+    dropText:'上传一张正面照片',
+    dropHint:'光线均匀 · 正面 · 无遮挡',
+    capAlbum:'从相册选择',
+    capCamera:'拍照上传',
+    trust1:'相理十二宫', trust2:'三停五岳逐读', trust3:'照片不留存',
+    goReady:'开始面相解读 <small>· 约需 25 秒</small>',
+    goIdle:'开始解读 <small>· 约需 25 秒</small>',
+    goBusy:'分析中…',
+    discTop:'照片仅用于本次 AI 视觉观察，分析后即刻丢弃、不作留存。<br>AI 生成内容 · 仅供娱乐参考，不构成医疗、法律或财务建议。',
+    loadMsgInit:'AI 正观三停轮廓、察气色神韵…',
+    loadLines:['AI 观察三停轮廓…','察印堂气色、读命宫神韵…','审鼻准财星、审官禄开阔…','以相理十二宫归纳格局…','落笔成卷，请稍候…'],
+    needPhoto:'请先上传一张清晰的正面照片',
+    noFace:'照片中未检测到清晰人脸，请换一张清晰的正面照片',
+    serverErr:'服务器错误 ',
+    emptyReading:'AI 返回内容为空',
+    genProblem:'面相生成遇到问题：',
+    tryLater:'请稍后重试',
+    resetBtn:'重新上传照片',
+    heroK:'FACE READING · 麻衣神相',
+    heroH:'你的三停格局<br>与相理十二宫',
+    heroSub:'依《麻衣神相》三停五岳十二宫气色神韵，逐宫为你通读。',
+    aigc:'<b>AI 生成内容</b> · 基于本次 AI 视觉观察，仅供娱乐参考，不构成医疗/法律/财务建议。相理只论气运格局，不评容貌美丑。',
+    fallbackTitle:'面相解读',
+    deeperTitle:'更深的推演 · 待解锁',
+    wallH:'解锁完整面相报告',
+    wallP:'十二宫全部深度解读 · 气色神韵总评 · 相师专属叮嘱',
+    wallLi:['财帛宫 · 夫妻宫 · 疾厄宫逐宫详批','全部十二宫 + 五岳朝拱格局高低','气色神韵总评 + 相师叮嘱'],
+    wallBtn:'解锁完整版',
+    wallPrice:'<b>$9.90</b> 一次性 · 或订阅顾问更划算 ↓',
+    advK:'Runae 顾问 · 会记得你',
+    advH:'不止一份报告<br>是一个懂你的命理顾问',
+    advLi:['面相手相 + 八字紫微，交叉印证同一个你','每日运势与流年动态，天天更新','AI 对话随时追问深聊，像身边的老师','记得你的盘与历史，越用越懂你','可约真人命理师一对一（会员优惠）'],
+    advBtn:'订阅 Runae 顾问 · $9.9 / 月',
+    resetLine:'↻ 换张照片 · 重新解读',
+    footdisc:'相由心生，气随神转。相理呈现的是当下格局与倾向，非定数；仅供娱乐参考，切勿沉迷。照片已用于本次分析后即丢弃，不作留存。',
+    ckCn:'国内用户请用微信 / 支付宝支付（接入中）',
+    ckFail:'跳转支付失败，请重试',
+    ckNet:'网络异常，请重试',
+    ckGoing:'跳转支付…'
+  };
+
+  // 应用静态文案
+  (function applyI18n(){
+    try{
+      document.documentElement.lang = EN ? 'en' : 'zh-CN';
+      document.title = T.title;
+      var set=function(id,html){var el=document.getElementById(id);if(el)el.innerHTML=html;};
+      set('navBack',T.navBack); set('stepLabel',T.step);
+      set('upK',T.upK); set('upH',T.upH); set('upSub',T.upSub);
+      set('dropText',T.dropText); set('dropHint',T.dropHint);
+      set('capAlbum',T.capAlbum); set('capCamera',T.capCamera);
+      set('trust1',T.trust1); set('trust2',T.trust2); set('trust3',T.trust3);
+      set('discTop',T.discTop);
+      var lm=document.getElementById('loadmsg'); if(lm)lm.textContent=T.loadMsgInit;
+      var gb=document.getElementById('goBtn'); if(gb)gb.innerHTML=T.goIdle;
+    }catch(e){}
+  })();
 
   // ── 照片上传（对齐 mianxiang.html 格式：存 window._mxImageData{base64,mimeType}）──
   function pickFile(){ document.getElementById('fileInput').click(); }
@@ -169,11 +281,11 @@
         mimeType: file.type || 'image/jpeg'
       };
       var drop = document.getElementById('drop');
-      drop.innerHTML = '<img src="'+dataUrl+'" alt=""><div class="ov"><span>已上传 · 点击更换</span></div>';
+      drop.innerHTML = '<img src="'+dataUrl+'" alt=""><div class="ov"><span>'+(EN?'Uploaded · tap to change':'已上传 · 点击更换')+'</span></div>';
       drop.classList.add('has-image');
       hasImage = true;
       var btn = document.getElementById('goBtn');
-      btn.innerHTML = '开始面相解读 <small>· 约需 25 秒</small>';
+      btn.innerHTML = T.goReady;
       btn.disabled = false;
     };
     reader.readAsDataURL(file);
@@ -210,7 +322,7 @@
     document.getElementById('loadStage').classList.add('hide');
     document.getElementById('reportStage').classList.remove('hide');
     document.getElementById('hero').innerHTML='';
-    document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br><button class="cta" style="max-width:220px;margin:14px auto 0" onclick="resetToUpload()">重新上传照片</button></div>';
+    document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br><button class="cta" style="max-width:220px;margin:14px auto 0" onclick="resetToUpload()">'+esc(T.resetBtn)+'</button></div>';
   }
 
   function resetToUpload(){
@@ -219,17 +331,17 @@
     document.getElementById('loadStage').classList.add('hide');
     document.getElementById('uploadStage').classList.remove('hide');
     var drop=document.getElementById('drop');
-    drop.innerHTML='<div class="drop-icon">面</div><div class="drop-text">上传一张正面照片</div><div class="drop-hint">光线均匀 · 正面 · 无遮挡</div>';
+    drop.innerHTML='<div class="drop-icon">面</div><div class="drop-text">'+esc(T.dropText)+'</div><div class="drop-hint">'+esc(T.dropHint)+'</div>';
     drop.classList.remove('has-image');
     hasImage=false; window._mxImageData=null;
     var btn=document.getElementById('goBtn');
-    btn.innerHTML='开始解读 <small>· 约需 25 秒</small>'; btn.disabled=true;
+    btn.innerHTML=T.goIdle; btn.disabled=true;
     window.scrollTo(0,0);
   }
 
   // ── 加载文案轮播（观相仪式）──
   function startLoadRitual(){
-    var lines=['AI 观察三停轮廓…','察印堂气色、读命宫神韵…','审鼻准财星、审官禄开阔…','以相理十二宫归纳格局…','落笔成卷，请稍候…'];
+    var lines=T.loadLines;
     var el=document.getElementById('loadmsg'); var i=0;
     el.textContent=lines[0];
     loadTimer=setInterval(function(){ i=(i+1)%lines.length; el.style.opacity=0;
@@ -243,7 +355,7 @@
     var mimeType = window._mxImageData ? window._mxImageData.mimeType : 'image/jpeg';
     if(!imageBase64){ resetToUpload(); return; }
 
-    var btn=document.getElementById('goBtn'); btn.disabled=true; btn.innerHTML='分析中…';
+    var btn=document.getElementById('goBtn'); btn.disabled=true; btn.innerHTML=T.goBusy;
 
     document.getElementById('uploadStage').classList.add('hide');
     document.getElementById('loadStage').classList.remove('hide');
@@ -254,24 +366,24 @@
     fetch('/api/mianxiang',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({ question:'请按麻衣神相体系给我做一次完整的面相分析', imageBase64:imageBase64, mimeType:mimeType, lang:'zh' })
+      body:JSON.stringify({ question:EN?'Please give me a complete face reading using the Ma Yi physiognomy system':'请按麻衣神相体系给我做一次完整的面相分析', imageBase64:imageBase64, mimeType:mimeType, lang:LANG })
     })
     .then(function(res){
       if(!res.ok) return res.json().then(function(e){
-        if(e && e.code==='need_photo') throw new Error('请先上传一张清晰的正面照片');
-        if(e && e.code==='no_face') throw new Error('照片中未检测到清晰人脸，请换一张清晰的正面照片');
-        throw new Error(e.error||'服务器错误 '+res.status);
+        if(e && e.code==='need_photo') throw new Error(T.needPhoto);
+        if(e && e.code==='no_face') throw new Error(T.noFace);
+        throw new Error(e.error||(T.serverErr+res.status));
       });
       return res.json();
     })
     .then(function(data){
       if(loadTimer){ clearInterval(loadTimer); loadTimer=null; }
-      if(!data || !data.reading) throw new Error('AI 返回内容为空');
+      if(!data || !data.reading) throw new Error(T.emptyReading);
       renderReport(data.reading, data.tier, data.locked);
     })
     .catch(function(err){
       if(loadTimer){ clearInterval(loadTimer); loadTimer=null; }
-      fail('面相生成遇到问题：'+(err.message||'请稍后重试'));
+      fail(T.genProblem+(err.message||T.tryLater));
     });
   }
 
@@ -289,14 +401,14 @@
     // 去掉可能漏进免费正文头部的技术行
     free=free.replace(/^📜[^\n]*\n/,'').replace(/^公历[^\n]*\n/,'');
 
-    hero.innerHTML='<div class="rhero"><div class="k">FACE READING · 麻衣神相</div><div class="dv"></div><h2>你的三停格局<br>与相理十二宫</h2><div class="sub">依《麻衣神相》三停五岳十二宫气色神韵，逐宫为你通读。</div></div>';
+    hero.innerHTML='<div class="rhero"><div class="k">'+esc(T.heroK)+'</div><div class="dv"></div><h2>'+T.heroH+'</h2><div class="sub">'+esc(T.heroSub)+'</div></div>';
 
     // AIGC 标识
-    var html='<div class="aigc"><span>🤖</span><span><b>AI 生成内容</b> · 基于本次 AI 视觉观察，仅供娱乐参考，不构成医疗/法律/财务建议。相理只论气运格局，不评容貌美丑。</span></div>';
+    var html='<div class="aigc"><span>🤖</span><span>'+T.aigc+'</span></div>';
 
     // 免费正文分段渲染为 .read 卡
     var secs=sections(free);
-    if(!secs.length) secs=[{t:'面相解读',b:[free]}];
+    if(!secs.length) secs=[{t:T.fallbackTitle,b:[free]}];
     secs.forEach(function(s){
       var bodyText=s.b.map(function(l){return stripCount(l);}).join('\n');
       html+='<div class="read">'+(s.t?'<h3>'+esc(stripCount(s.t))+'</h3>':'')+'<p>'+md(bodyText)+'</p></div>';
@@ -305,27 +417,27 @@
     // 锁定预告（模糊呈现，转化交给付费墙）
     if(isLocked && lockedPreview.trim()){
       var preview=lockedPreview.replace(/^\s+/,'').split('\n').filter(function(l){return l.trim();}).slice(0,4).join(' · ');
-      html+='<div class="read"><h3>更深的推演 · 待解锁</h3><p class="blur">'+md(stripCount(preview)).slice(0,140)+'……</p></div>';
+      html+='<div class="read"><h3>'+esc(T.deeperTitle)+'</h3><p class="blur">'+md(stripCount(preview)).slice(0,140)+'……</p></div>';
     }
 
     // 付费墙
     if(isLocked){
-      html+='<div class="wall"><h4>解锁完整面相报告</h4><p>十二宫全部深度解读 · 气色神韵总评 · 相师专属叮嘱</p>'
-        +'<ul><li>财帛宫 · 夫妻宫 · 疾厄宫逐宫详批</li><li>全部十二宫 + 五岳朝拱格局高低</li><li>气色神韵总评 + 相师叮嘱</li></ul>'
-        +'<button class="cta gold" id="unlockBtn" onclick="goCheckout(\'mianxiang_full\')">解锁完整版</button>'
-        +'<div class="price"><b>$9.90</b> 一次性 · 或订阅顾问更划算 ↓</div></div>';
+      html+='<div class="wall"><h4>'+esc(T.wallH)+'</h4><p>'+esc(T.wallP)+'</p>'
+        +'<ul>'+T.wallLi.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'
+        +'<button class="cta gold" id="unlockBtn" onclick="goCheckout(\'mianxiang_full\')">'+esc(T.wallBtn)+'</button>'
+        +'<div class="price">'+T.wallPrice+'</div></div>';
     }
 
     // Runae 顾问 advisor
-    html+='<div class="adv"><div class="k">Runae 顾问 · 会记得你</div><h4>不止一份报告<br>是一个懂你的命理顾问</h4>'
-      +'<ul><li>面相手相 + 八字紫微，交叉印证同一个你</li><li>每日运势与流年动态，天天更新</li><li>AI 对话随时追问深聊，像身边的老师</li><li>记得你的盘与历史，越用越懂你</li><li>可约真人命理师一对一（会员优惠）</li></ul>'
-      +'<button class="sbtn" onclick="goCheckout(\'member_monthly\')">订阅 Runae 顾问 · $9.9 / 月</button></div>';
+    html+='<div class="adv"><div class="k">'+esc(T.advK)+'</div><h4>'+T.advH+'</h4>'
+      +'<ul>'+T.advLi.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'
+      +'<button class="sbtn" onclick="goCheckout(\'member_monthly\')">'+esc(T.advBtn)+'</button></div>';
 
     // 换照重测
-    html+='<div class="reset" onclick="resetToUpload()">↻ 换张照片 · 重新解读</div>';
+    html+='<div class="reset" onclick="resetToUpload()">'+esc(T.resetLine)+'</div>';
 
     // 合规免责页脚
-    html+='<div class="footdisc"><div class="fl"></div><div class="ft">相由心生，气随神转。相理呈现的是当下格局与倾向，非定数；仅供娱乐参考，切勿沉迷。照片已用于本次分析后即丢弃，不作留存。</div></div>';
+    html+='<div class="footdisc"><div class="fl"></div><div class="ft">'+esc(T.footdisc)+'</div></div>';
 
     body.innerHTML=html;
     window.scrollTo(0,0);
@@ -333,15 +445,15 @@
 
   window.goCheckout=function(product){
     var btn=document.getElementById('unlockBtn');
-    if(product==='mianxiang_full' && btn){ btn.disabled=true; btn.textContent='跳转支付…'; }
+    if(product==='mianxiang_full' && btn){ btn.disabled=true; btn.textContent=T.ckGoing; }
     fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({product:product,token:localStorage.getItem('sy_token')||'',
-        successUrl:location.origin+'/pages/report-face.html?paid=1',cancelUrl:location.href})})
+        successUrl:location.origin+'/pages/report-face.html?paid=1&lang='+LANG,cancelUrl:location.href})})
      .then(function(r){return r.json();}).then(function(d){
        if(d.url){ location.href=d.url; }
-       else if(d.channel==='cn'){ alert('国内用户请用微信 / 支付宝支付（接入中）'); if(btn){btn.disabled=false;btn.textContent='解锁完整版';} }
-       else { alert('跳转支付失败，请重试'); if(btn){btn.disabled=false;btn.textContent='解锁完整版';} }
-     }).catch(function(){ alert('网络异常，请重试'); if(btn){btn.disabled=false;btn.textContent='解锁完整版';} });
+       else if(d.channel==='cn'){ alert(T.ckCn); if(btn){btn.disabled=false;btn.textContent=T.wallBtn;} }
+       else { alert(T.ckFail); if(btn){btn.disabled=false;btn.textContent=T.wallBtn;} }
+     }).catch(function(){ alert(T.ckNet); if(btn){btn.disabled=false;btn.textContent=T.wallBtn;} });
   };
 </script>
 </body>

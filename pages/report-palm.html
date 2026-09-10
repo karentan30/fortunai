@@ -90,22 +90,22 @@
 <div id="ageGate" class="agegate">
   <div class="box">
     <div class="ic">🔞</div>
-    <h3>先确认一下</h3>
-    <p>手相解读需要用到你的手掌照片——属于<b>个人（生物识别）信息</b>。本体验仅面向成年人。<br><br>请确认你已<b>年满 18 岁</b>，且这是你本人的手。</p>
+    <h3 id="agTitle">先确认一下</h3>
+    <p id="agBody">手相解读需要用到你的手掌照片——属于<b>个人（生物识别）信息</b>。本体验仅面向成年人。<br><br>请确认你已<b>年满 18 岁</b>，且这是你本人的手。</p>
     <div class="ag-btns">
-      <button class="ag-yes" onclick="passAgeGate()">我已满 18 岁 · 继续</button>
-      <button class="ag-no" onclick="closeAgeGate()">未满 18 岁 · 返回</button>
+      <button class="ag-yes" id="agYes" onclick="passAgeGate()">我已满 18 岁 · 继续</button>
+      <button class="ag-no" id="agNo" onclick="closeAgeGate()">未满 18 岁 · 返回</button>
     </div>
   </div>
 </div>
 
 <div class="wrap">
-  <div class="bar"><div class="nav-back" onclick="history.length>1?history.back():location.href='pick.html'"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>返回</div><div class="step">手相</div></div>
+  <div class="bar"><div class="nav-back" onclick="history.length>1?history.back():location.href='pick.html'"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="navBack">返回</span></div><div class="step" id="stepLabel">手相</div></div>
 
   <div class="rhero">
-    <div class="k">Ma Yi · 麻衣手相</div>
+    <div class="k" id="rheroK">Ma Yi · 麻衣手相</div>
     <div class="dv"></div>
-    <h2>拍下你的手掌<br>让 Runae 读出掌纹</h2>
+    <h2 id="rheroH">拍下你的手掌<br>让 Runae 读出掌纹</h2>
   </div>
 
   <div id="body">
@@ -114,32 +114,122 @@
       <div class="tile">
         <img id="preview" class="preview" alt="">
         <div class="palm-mark" id="palmMark">🖐</div>
-        <h3>上传你的主手手掌照</h3>
-        <div class="sub">五指舒展 · 掌心正对镜头<br>光线充足，让每条掌纹都清晰可见</div>
+        <h3 id="tileH">上传你的主手手掌照</h3>
+        <div class="sub" id="tileSub">五指舒展 · 掌心正对镜头<br>光线充足，让每条掌纹都清晰可见</div>
         <label class="cta gold" for="file" id="pickBtn" style="display:inline-flex;align-items:center;justify-content:center;max-width:240px;margin:0 auto;cursor:pointer">📷 拍照 / 从相册选</label>
         <input type="file" id="file" accept="image/*" hidden>
       </div>
 
       <div class="hint">
         <span class="em">💡</span>
-        <div>用你的主手（多数人是右手）。手掌摊平、五指自然张开，在自然光下——掌纹越清晰，解读越丰富。</div>
+        <div id="hintText">用你的主手（多数人是右手）。手掌摊平、五指自然张开，在自然光下——掌纹越清晰，解读越丰富。</div>
       </div>
 
       <div class="privacy">
         <span class="lock">🔐</span>
-        <div><b>隐私：</b>你的照片仅发送给我们的安全 AI 做特征分析，随后<b>立即丢弃</b>——绝不存储、绝不用于训练、绝不分享。我们只保留文字解读，不保留你的图片。手掌照片属于生物识别信息，仅用于本次会话。</div>
+        <div id="privacyText"><b>隐私：</b>你的照片仅发送给我们的安全 AI 做特征分析，随后<b>立即丢弃</b>——绝不存储、绝不用于训练、绝不分享。我们只保留文字解读，不保留你的图片。手掌照片属于生物识别信息，仅用于本次会话。</div>
       </div>
 
       <div class="ai-note">
         <span>🤖</span>
-        <span>AI 视觉观察 · 仅供自我探索与娱乐——是照见自己的镜子，绝非对寿命、健康或命运的预测。你自己书写自己的未来。</span>
+        <span id="aiNoteText">AI 视觉观察 · 仅供自我探索与娱乐——是照见自己的镜子，绝非对寿命、健康或命运的预测。你自己书写自己的未来。</span>
       </div>
     </div>
   </div>
 </div>
 
 <script>
+  var LANG=(new URLSearchParams(location.search).get('lang'))||localStorage.getItem('runae_lang')||'zh';localStorage.setItem('runae_lang',LANG);var EN=(LANG==='en');
+
   var NAMES={palm:'手相'};
+
+  // ── 中英文案表 ──
+  var T = EN ? {
+    title:'Runae · Palm Reading',
+    navBack:'Back', step:'Palm',
+    rheroK:'Ma Yi · Palmistry',
+    rheroH:'Show us your palm<br>let Runae read your lines',
+    tileH:'Upload a photo of your dominant palm',
+    tileSub:'Fingers relaxed and open · palm facing the camera<br>Good lighting, so every line is clearly visible',
+    pickBtn:'📷 Take photo / Choose from album',
+    hintText:'Use your dominant hand (right for most people). Open your palm flat with fingers naturally spread, in natural light — the clearer the lines, the richer the reading.',
+    privacyText:'<b>Privacy:</b> Your photo is sent only to our secure AI for feature analysis, then <b>discarded immediately</b> — never stored, never used for training, never shared. We keep only the text reading, not your image. Palm photos are biometric information and are used solely for this session.',
+    aiNoteText:'AI visual observation · for self-reflection and entertainment only — a mirror to see yourself, never a prediction of lifespan, health, or fate. You write your own future.',
+    agTitle:'Let\'s confirm first',
+    agBody:'A palm reading uses a photo of your palm — which is <b>personal (biometric) information</b>. This experience is for adults only.<br><br>Please confirm you are <b>18 or older</b>, and that this is your own hand.',
+    agYes:'I\'m 18 or older · Continue',
+    agNo:'Under 18 · Go back',
+    loadmsg:'Reading the lines of your palm…',
+    readFail:'Could not read the photo. Please try another image.',
+    needPhoto:'Please upload a clear photo of your palm.',
+    reportProblem:'There was a problem generating the report: ',
+    emptyReport:'The report came back empty. Please try again.',
+    netErr:'Network error: ',
+    changePhoto:'Try another photo',
+    retry:'Retry',
+    chartTitle:'Ma Yi Palmistry · Line Reading',
+    chartSub:'Three major lines · Eight mounts · Special markings',
+    deeper:'A Deeper Reading',
+    wallH:'Unlock the full palm report',
+    wallP:'Head line · Life line · Fate line · Sun line · Marriage line · Eight mounts · Master\'s counsel',
+    wallBtn:'Unlock full version',
+    wallPrice:'<b>$9.90</b> one-time · or subscribe and save ↓',
+    advK:'Runae Advisor · Remembers you',
+    advH:'More than a report<br>an advisor who actually knows you',
+    advLi:['Your daily horoscope and annual forecast, refreshed every day','Ask follow-ups anytime in chat — like a teacher on call','Eastern & Western astrology plus face and palm reading — the same you, seen from every angle','Remembers your chart and your history — the more you use it, the better it knows you','Book a one-on-one with a real reader (member discount)'],
+    advBtn:'Subscribe to Runae Advisor · $9.9 / mo',
+    footNote:'AI-generated · for reflection and entertainment only · palm lines change with mindset and experience, not fatalism · you write your own future. Your photo was discarded after analysis.'
+  } : {
+    title:'Runae · 手相报告',
+    navBack:'返回', step:'手相',
+    rheroK:'Ma Yi · 麻衣手相',
+    rheroH:'拍下你的手掌<br>让 Runae 读出掌纹',
+    tileH:'上传你的主手手掌照',
+    tileSub:'五指舒展 · 掌心正对镜头<br>光线充足，让每条掌纹都清晰可见',
+    pickBtn:'📷 拍照 / 从相册选',
+    hintText:'用你的主手（多数人是右手）。手掌摊平、五指自然张开，在自然光下——掌纹越清晰，解读越丰富。',
+    privacyText:'<b>隐私：</b>你的照片仅发送给我们的安全 AI 做特征分析，随后<b>立即丢弃</b>——绝不存储、绝不用于训练、绝不分享。我们只保留文字解读，不保留你的图片。手掌照片属于生物识别信息，仅用于本次会话。',
+    aiNoteText:'AI 视觉观察 · 仅供自我探索与娱乐——是照见自己的镜子，绝非对寿命、健康或命运的预测。你自己书写自己的未来。',
+    agTitle:'先确认一下',
+    agBody:'手相解读需要用到你的手掌照片——属于<b>个人（生物识别）信息</b>。本体验仅面向成年人。<br><br>请确认你已<b>年满 18 岁</b>，且这是你本人的手。',
+    agYes:'我已满 18 岁 · 继续',
+    agNo:'未满 18 岁 · 返回',
+    loadmsg:'正在观察你的掌纹…',
+    readFail:'照片读取失败，请换一张图片再试。',
+    needPhoto:'请上传一张清晰的手掌照片',
+    reportProblem:'报告生成遇到问题：',
+    emptyReport:'报告为空，请重试。',
+    netErr:'网络异常：',
+    changePhoto:'换一张照片',
+    retry:'重试',
+    chartTitle:'麻衣手相 · 掌纹解读',
+    chartSub:'三大主线 · 八丘 · 特殊掌纹',
+    deeper:'更深的推演',
+    wallH:'解锁完整手相报告',
+    wallP:'智慧线 · 生命线 · 事业线 · 太阳线 · 婚姻线 · 八丘 · 相师叮嘱',
+    wallBtn:'解锁完整版',
+    wallPrice:'<b>$9.90</b> 一次性 · 或订阅更划算 ↓',
+    advK:'Runae 顾问 · 会记得你',
+    advH:'不止一份报告<br>是一个懂你的命理顾问',
+    advLi:['每日运势与流年动态，天天更新','AI 对话随时追问深聊，像身边的老师','中西命理 + 面相手相，交叉印证同一个你','记得你的盘与历史，越用越懂你','可约真人命理师一对一（会员优惠）'],
+    advBtn:'订阅 Runae 顾问 · $9.9 / 月',
+    footNote:'AI 生成 · 仅供反思与娱乐 · 掌纹随心态与经历变化，不宿命论 · 你自己书写自己的未来。你的照片在分析后已丢弃。'
+  };
+
+  // 应用静态文案
+  (function applyI18n(){
+    try{
+      document.documentElement.lang = EN ? 'en' : 'zh-CN';
+      document.title = T.title;
+      var set=function(id,html){var el=document.getElementById(id);if(el)el.innerHTML=html;};
+      set('navBack',T.navBack); set('stepLabel',T.step);
+      set('rheroK',T.rheroK); set('rheroH',T.rheroH);
+      set('tileH',T.tileH); set('tileSub',T.tileSub);
+      var pb=document.getElementById('pickBtn'); if(pb)pb.textContent=T.pickBtn;
+      set('hintText',T.hintText); set('privacyText',T.privacyText); set('aiNoteText',T.aiNoteText);
+      set('agTitle',T.agTitle); set('agBody',T.agBody); set('agYes',T.agYes); set('agNo',T.agNo);
+    }catch(e){}
+  })();
 
   function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
@@ -188,7 +278,7 @@
     document.getElementById('body').innerHTML=
       '<div class="skel"><div class="ln" style="width:60%"></div><div class="ln" style="width:100%"></div><div class="ln" style="width:88%"></div></div>'+
       '<div class="skel"><div class="ln" style="width:45%"></div><div class="ln" style="width:96%"></div><div class="ln" style="width:92%"></div><div class="ln" style="width:70%"></div></div>'+
-      '<div class="err" id="loadmsg">正在观察你的掌纹…</div>';
+      '<div class="err" id="loadmsg">'+esc(T.loadmsg)+'</div>';
   }
 
   function startReading(file){
@@ -202,7 +292,7 @@
       showLoading();
       callShouxiang(base64, mimeType);
     };
-    reader.onerror=function(){ fail('照片读取失败，请换一张图片再试。', true); };
+    reader.onerror=function(){ fail(T.readFail, true); };
     reader.readAsDataURL(file);
   }
 
@@ -211,11 +301,11 @@
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({
-        question:'请给我一份完整的麻衣手相解读',
+        question:EN?'Please give me a complete Ma Yi palm reading':'请给我一份完整的麻衣手相解读',
         hand:'right',
         imageBase64:base64,
         mimeType:mimeType,
-        lang:'zh'
+        lang:LANG
       })
     })
     .then(function(r){
@@ -226,16 +316,16 @@
       if(!res.ok){
         // need_photo / no_palm 等照片相关错误 → 引导回上传
         if(d.code==='need_photo' || d.code==='no_palm'){
-          fail(d.error || '请上传一张清晰的手掌照片', true);
+          fail(d.error || T.needPhoto, true);
         } else {
-          fail('报告生成遇到问题：'+(d.error||('HTTP '+res.status)), true);
+          fail(T.reportProblem+(d.error||('HTTP '+res.status)), true);
         }
         return;
       }
-      if(!d.reading){ fail('报告为空，请重试。', true); return; }
+      if(!d.reading){ fail(T.emptyReport, true); return; }
       renderPalm(d);
     })
-    .catch(function(e){ fail('网络异常：'+e.message, true); });
+    .catch(function(e){ fail(T.netErr+e.message, true); });
   }
 
   function renderPalm(d){
@@ -244,7 +334,7 @@
     var parts=(d.reading||'').split(/---LOCKED---/i),free=parts[0]||'',locked=parts[1]||'';
     var html='';
     // 顶部小卡：掌型标签（视觉统一，用 report-v2 的 .chart 深色卡）
-    html+='<div class="chart" style="text-align:center"><div style="font-family:var(--serif);font-size:19px;color:#fff;margin-bottom:4px">麻衣手相 · 掌纹解读</div><div style="font-size:12px;color:rgba(255,255,255,.7)">三大主线 · 八丘 · 特殊掌纹</div></div>';
+    html+='<div class="chart" style="text-align:center"><div style="font-family:var(--serif);font-size:19px;color:#fff;margin-bottom:4px">'+esc(T.chartTitle)+'</div><div style="font-size:12px;color:rgba(255,255,255,.7)">'+esc(T.chartSub)+'</div></div>';
 
     // 按 .read 分段渲染，标题剥 emoji
     sections(free).forEach(function(s){
@@ -253,19 +343,19 @@
 
     // 锁定章节：模糊预告一小段（报告为付费门时展示）
     if(d.locked && locked.trim()){
-      html+='<div class="read"><h3>更深的推演</h3><p class="blur">'+md(locked.replace(/^\s+/,'').slice(0,120))+'……</p></div>';
+      html+='<div class="read"><h3>'+esc(T.deeper)+'</h3><p class="blur">'+md(locked.replace(/^\s+/,'').slice(0,120))+'……</p></div>';
     }
 
     // 付费墙（仅未解锁时）
     if(d.locked){
-      html+='<div class="wall"><h4>解锁完整手相报告</h4><p>智慧线 · 生命线 · 事业线 · 太阳线 · 婚姻线 · 八丘 · 相师叮嘱</p><button class="cta gold" onclick="goCheckout(\'shouxiang_full\')">解锁完整版</button><div class="price"><b>$9.90</b> 一次性 · 或订阅更划算 ↓</div></div>';
+      html+='<div class="wall"><h4>'+esc(T.wallH)+'</h4><p>'+esc(T.wallP)+'</p><button class="cta gold" onclick="goCheckout(\'shouxiang_full\')">'+esc(T.wallBtn)+'</button><div class="price">'+T.wallPrice+'</div></div>';
     }
 
     // 顾问卡（advisor，与 report-v2 一致）
-    html+='<div class="adv"><div class="k">Runae 顾问 · 会记得你</div><h4>不止一份报告<br>是一个懂你的命理顾问</h4><ul><li>每日运势与流年动态，天天更新</li><li>AI 对话随时追问深聊，像身边的老师</li><li>中西命理 + 面相手相，交叉印证同一个你</li><li>记得你的盘与历史，越用越懂你</li><li>可约真人命理师一对一（会员优惠）</li></ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">订阅 Runae 顾问 · $9.9 / 月</button></div>';
+    html+='<div class="adv"><div class="k">'+esc(T.advK)+'</div><h4>'+T.advH+'</h4><ul>'+T.advLi.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">'+esc(T.advBtn)+'</button></div>';
 
     // 合规脚注
-    html+='<div class="ai-note" style="margin-top:14px"><span>🤖</span><span>AI 生成 · 仅供反思与娱乐 · 掌纹随心态与经历变化，不宿命论 · 你自己书写自己的未来。你的照片在分析后已丢弃。</span></div>';
+    html+='<div class="ai-note" style="margin-top:14px"><span>🤖</span><span>'+esc(T.footNote)+'</span></div>';
 
     body.innerHTML=html;
     window.scrollTo(0,0);
@@ -273,20 +363,20 @@
 
   function fail(msg, allowRetry){
     var btn = allowRetry
-      ? '<button class="cta" style="max-width:220px;margin:14px auto 0" onclick="location.reload()">换一张照片</button>'
-      : '<button class="cta" style="max-width:200px;margin:14px auto 0" onclick="location.reload()">重试</button>';
+      ? '<button class="cta" style="max-width:220px;margin:14px auto 0" onclick="location.reload()">'+esc(T.changePhoto)+'</button>'
+      : '<button class="cta" style="max-width:200px;margin:14px auto 0" onclick="location.reload()">'+esc(T.retry)+'</button>';
     document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br>'+btn+'</div>';
   }
 
   window.goCheckout=function(product){
     fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({product:product,token:localStorage.getItem('sy_token')||'',
-        successUrl:location.origin+'/pages/report-palm.html?paid=1',cancelUrl:location.href})})
+        successUrl:location.origin+'/pages/report-palm.html?paid=1&lang='+LANG,cancelUrl:location.href})})
      .then(function(r){return r.json();}).then(function(d){
        if(d.url){ location.href=d.url; }
-       else if(d.channel==='cn'){ alert('国内用户请用微信 / 支付宝支付（接入中）'); }
-       else { alert('跳转支付失败，请重试'); }
-     }).catch(function(){ alert('网络异常，请重试'); });
+       else if(d.channel==='cn'){ alert(EN?'Please pay via WeChat / Alipay (coming soon).':'国内用户请用微信 / 支付宝支付（接入中）'); }
+       else { alert(EN?'Couldn’t open checkout — please try again.':'跳转支付失败，请重试'); }
+     }).catch(function(){ alert(EN?'Network error — please try again.':'网络异常，请重试'); });
   };
 </script>
 </body>

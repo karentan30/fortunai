@@ -82,37 +82,46 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="bar"><div class="nav-back" onclick="location.href='pick.html'"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>返回</div><div class="step">塔罗解读</div></div>
+  <div class="bar"><div class="nav-back" onclick="location.href='pick.html?lang='+LANG"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="tBack"></span></div><div class="step" id="tStep"></div></div>
 
   <!-- STEP 1 · ask + draw -->
   <div id="ask">
-    <div class="rhero"><div class="k">Tarot · 韦特体系</div><div class="dv"></div><h2>抽三张牌<br>看清过去 · 现在 · 未来</h2></div>
-    <div class="q-label">把问题放在心上</div>
-    <div class="q-box"><textarea rows="2" class="q-input" id="question" maxlength="120" placeholder="例：我的事业接下来会如何？" oninput="qCount()"></textarea></div>
+    <div class="rhero"><div class="k" id="tHeroK"></div><div class="dv"></div><h2 id="tHeroH"></h2></div>
+    <div class="q-label" id="tQLabel"></div>
+    <div class="q-box"><textarea rows="2" class="q-input" id="question" maxlength="120" oninput="qCount()"></textarea></div>
     <div class="q-chips" id="qChips"></div>
     <div class="q-counter" id="qCounter">0 / 120</div>
-    <button class="cta gold" id="drawBtn" style="margin-top:16px" onclick="draw()">默念问题 · 抽牌</button>
+    <button class="cta gold" id="drawBtn" style="margin-top:16px" onclick="draw()"></button>
   </div>
 
   <!-- STEP 2 · cards + reading -->
   <div id="stage" style="display:none">
     <div id="hero"></div>
     <div class="chart"><div class="cards3" id="cards3"></div></div>
-    <div class="redraw" id="redraw" onclick="reset()"><svg class="ic" style="width:14px;height:14px"><path d="M4 12a8 8 0 0 1 14-5m0 0V4m0 3h-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>换个问题 · 重新抽牌</div>
+    <div class="redraw" id="redraw" onclick="reset()"><svg class="ic" style="width:14px;height:14px"><path d="M4 12a8 8 0 0 1 14-5m0 0V4m0 3h-3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="tRedraw"></span></div>
     <div id="body"></div>
   </div>
 </div>
 
 <script>
+  var LANG=(new URLSearchParams(location.search).get('lang'))||localStorage.getItem('runae_lang')||'zh';localStorage.setItem('runae_lang',LANG);var EN=(LANG==='en');
   var P={}; try{ P=JSON.parse(localStorage.getItem('runae_profile')||'{}'); }catch(e){}
 
   // 建议问题：优先用 runae_profile.aspects
-  var ASPECT_Q={
+  var ASPECT_Q= EN ? {
+    career:'How will my career unfold next?', love:'Will this relationship lead somewhere?',
+    wealth:'What does my near-term financial luck look like?', health:'What should I watch for in my mind and body?'
+  } : {
     career:'我的事业接下来会如何？', love:'这段感情会有结果吗？',
     wealth:'我近期的财运走势怎么样？', health:'我的身心状态需要注意什么？'
   };
   var ASPECT_TOPIC={ career:'wealth', love:'love', wealth:'wealth', health:'health' };
-  var DEFAULT_CHIPS=[
+  var DEFAULT_CHIPS= EN ? [
+    {q:'How will my career unfold next?',t:'wealth'},
+    {q:'Will this relationship lead somewhere?',t:'love'},
+    {q:'What does my near-term financial luck look like?',t:'wealth'},
+    {q:'Should I hold on to this or let it go?',t:'decision'}
+  ] : [
     {q:'我的事业接下来会如何？',t:'wealth'},
     {q:'这段感情会有结果吗？',t:'love'},
     {q:'我近期的财运走势怎么样？',t:'wealth'},
@@ -137,17 +146,43 @@
 
   // 大阿卡纳 22 张——name 必须匹配后端 _VALID_TAROT_CARDS（禁用旧版 tarot.html 的别名如 皇后/隐者/魔术师）
   var DECK=[
-    {name:'愚者',rn:'0',glyph:'零'},{name:'魔法师',rn:'I',glyph:'一'},{name:'女祭司',rn:'II',glyph:'二'},
-    {name:'女皇',rn:'III',glyph:'三'},{name:'皇帝',rn:'IV',glyph:'四'},{name:'教皇',rn:'V',glyph:'五'},
-    {name:'恋人',rn:'VI',glyph:'六'},{name:'战车',rn:'VII',glyph:'七'},{name:'力量',rn:'VIII',glyph:'八'},
-    {name:'隐士',rn:'IX',glyph:'九'},{name:'命运之轮',rn:'X',glyph:'十'},{name:'正义',rn:'XI',glyph:'义'},
-    {name:'倒吊人',rn:'XII',glyph:'吊'},{name:'死神',rn:'XIII',glyph:'变'},{name:'节制',rn:'XIV',glyph:'融'},
-    {name:'恶魔',rn:'XV',glyph:'缚'},{name:'塔',rn:'XVI',glyph:'崩'},{name:'星星',rn:'XVII',glyph:'星'},
-    {name:'月亮',rn:'XVIII',glyph:'月'},{name:'太阳',rn:'XIX',glyph:'日'},{name:'审判',rn:'XX',glyph:'醒'},
-    {name:'世界',rn:'XXI',glyph:'圆'}
+    {name:'愚者',en:'The Fool',rn:'0',glyph:'零'},{name:'魔法师',en:'The Magician',rn:'I',glyph:'一'},{name:'女祭司',en:'The High Priestess',rn:'II',glyph:'二'},
+    {name:'女皇',en:'The Empress',rn:'III',glyph:'三'},{name:'皇帝',en:'The Emperor',rn:'IV',glyph:'四'},{name:'教皇',en:'The Hierophant',rn:'V',glyph:'五'},
+    {name:'恋人',en:'The Lovers',rn:'VI',glyph:'六'},{name:'战车',en:'The Chariot',rn:'VII',glyph:'七'},{name:'力量',en:'Strength',rn:'VIII',glyph:'八'},
+    {name:'隐士',en:'The Hermit',rn:'IX',glyph:'九'},{name:'命运之轮',en:'Wheel of Fortune',rn:'X',glyph:'十'},{name:'正义',en:'Justice',rn:'XI',glyph:'义'},
+    {name:'倒吊人',en:'The Hanged Man',rn:'XII',glyph:'吊'},{name:'死神',en:'Death',rn:'XIII',glyph:'变'},{name:'节制',en:'Temperance',rn:'XIV',glyph:'融'},
+    {name:'恶魔',en:'The Devil',rn:'XV',glyph:'缚'},{name:'塔',en:'The Tower',rn:'XVI',glyph:'崩'},{name:'星星',en:'The Star',rn:'XVII',glyph:'星'},
+    {name:'月亮',en:'The Moon',rn:'XVIII',glyph:'月'},{name:'太阳',en:'The Sun',rn:'XIX',glyph:'日'},{name:'审判',en:'Judgement',rn:'XX',glyph:'醒'},
+    {name:'世界',en:'The World',rn:'XXI',glyph:'圆'}
   ];
-  var POS=['过去 · 根源','现在 · 核心','未来 · 走向'];
+  var POS= EN ? ['Past · Root','Present · Core','Future · Direction'] : ['过去 · 根源','现在 · 核心','未来 · 走向'];
   var drawn=[];
+
+  // ── 静态 UI 文案填充（中英） ──
+  var T = EN ? {
+    back:'Back', step:'Tarot Reading', heroK:'Tarot · Rider–Waite', heroH:'Draw three cards<br>See past · present · future',
+    qLabel:'Hold your question in mind', placeholder:'e.g. How will my career unfold next?',
+    draw:'Hold your question · Draw', drawEmpty:'Write down your question first', redraw:'New question · Draw again',
+    youAsk:'Tarot · You asked', arranging:'The cards are finding their places…',
+    reversed:' Reversed', timeout:'This is taking too long — please try again.', retry:'Retry',
+    netErr:'Network error — please refresh and try again.', redrawBtn:'Draw again', genFail:'Something went wrong'
+  } : {
+    back:'返回', step:'塔罗解读', heroK:'Tarot · 韦特体系', heroH:'抽三张牌<br>看清过去 · 现在 · 未来',
+    qLabel:'把问题放在心上', placeholder:'例：我的事业接下来会如何？',
+    draw:'默念问题 · 抽牌', drawEmpty:'请先写下你的问题', redraw:'换个问题 · 重新抽牌',
+    youAsk:'Tarot · 你问', arranging:'牌正在为你排列…',
+    reversed:' 逆位', timeout:'生成超时，请重试', retry:'重试',
+    netErr:'网络异常，请刷新重试', redrawBtn:'重新抽牌', genFail:'生成失败'
+  };
+  document.documentElement.lang = EN ? 'en' : 'zh-CN';
+  document.getElementById('tBack').textContent = T.back;
+  document.getElementById('tStep').textContent = T.step;
+  document.getElementById('tHeroK').textContent = T.heroK;
+  document.getElementById('tHeroH').innerHTML = T.heroH;
+  document.getElementById('tQLabel').textContent = T.qLabel;
+  document.getElementById('question').placeholder = T.placeholder;
+  document.getElementById('drawBtn').textContent = T.draw;
+  document.getElementById('tRedraw').textContent = T.redraw;
 
   function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
@@ -166,22 +201,22 @@
 
   function draw(){
     var q=document.getElementById('question').value.trim();
-    if(!q){ document.getElementById('question').focus(); document.getElementById('drawBtn').textContent='请先写下你的问题'; setTimeout(function(){document.getElementById('drawBtn').textContent='默念问题 · 抽牌';},1400); return; }
+    if(!q){ document.getElementById('question').focus(); document.getElementById('drawBtn').textContent=T.drawEmpty; setTimeout(function(){document.getElementById('drawBtn').textContent=T.draw;},1400); return; }
     // 洗牌抽三，30% 逆位
     var pool=DECK.slice(); drawn=[];
     for(var i=0;i<3;i++){ var idx=Math.floor(Math.random()*pool.length); var c=pool.splice(idx,1)[0]; drawn.push({card:c,reversed:Math.random()<0.3}); }
     document.getElementById('ask').style.display='none';
     document.getElementById('stage').style.display='block';
-    document.getElementById('hero').innerHTML='<div class="rhero"><div class="k">Tarot · 你问</div><div class="dv"></div><h2>'+esc(q.length>26?q.slice(0,26)+'…':q)+'</h2></div>';
+    document.getElementById('hero').innerHTML='<div class="rhero"><div class="k">'+T.youAsk+'</div><div class="dv"></div><h2>'+esc(q.length>26?q.slice(0,26)+'…':q)+'</h2></div>';
     var trio=document.getElementById('cards3'); trio.innerHTML='';
     drawn.forEach(function(d,i){
-      trio.innerHTML+='<div class="tcard"><div class="face'+(d.reversed?' reverse':'')+'"><div class="glyph">'+d.card.glyph+'</div><div class="rn">'+d.card.rn+'</div><div class="nm">'+esc(d.card.name)+(d.reversed?' 逆位':'')+'</div></div><div class="pos">'+POS[i]+'</div></div>';
+      trio.innerHTML+='<div class="tcard"><div class="face'+(d.reversed?' reverse':'')+'"><div class="glyph">'+d.card.glyph+'</div><div class="rn">'+d.card.rn+'</div><div class="nm">'+esc(EN?(d.card.en||d.card.name):d.card.name)+(d.reversed?T.reversed:'')+'</div></div><div class="pos">'+POS[i]+'</div></div>';
     });
     window.scrollTo({top:0,behavior:'smooth'});
     stream(q);
   }
 
-  function skel(){ return '<div class="skel"><div class="ln" style="width:55%"></div><div class="ln" style="width:100%"></div><div class="ln" style="width:90%"></div><div class="ln" style="width:72%"></div></div><div class="err">牌正在为你排列…</div>'; }
+  function skel(){ return '<div class="skel"><div class="ln" style="width:55%"></div><div class="ln" style="width:100%"></div><div class="ln" style="width:90%"></div><div class="ln" style="width:72%"></div></div><div class="err">'+T.arranging+'</div>'; }
 
   function renderReading(text,locked){
     var body=document.getElementById('body');
@@ -190,11 +225,21 @@
     sections(free).forEach(function(s){ html+='<div class="read">'+(s.t?'<h3>'+esc(s.t)+'</h3>':'')+'<p>'+md(s.b.join('\n'))+'</p></div>'; });
     if(!html) html='<div class="read"><p>'+md(free)+'</p></div>';
     if(locked){
-      html+='<div class="read"><h3>逐牌精读 · 未来走向</h3><p class="blur">过去牌位揭示旧执正在松动，现在牌位星光落肩，未来牌位将迎来一个清晰的节点——把握窗口期，具体到哪一牌位在推动、该怎么抓怎么避，都在完整牌卷里……</p></div>';
-      html+='<div class="wall"><h4>解锁完整牌卷</h4><p>逐牌精读 · 正逆位深意 · 综合走向 · 行动建议 · 占卜师悄悄话</p><button class="cta gold" onclick="goCheckout(\'tarot_3\')">解锁完整解读</button><div class="price"><b>$9.90</b> 一次性 · 或订阅更划算 ↓</div></div>';
-      html+='<div class="expand">▾ 五芒星牌阵 · 五维深度解读（$19）</div>';
+      if(EN){
+        html+='<div class="read"><h3>Card-by-Card Reading · Future Direction</h3><p class="blur">The past card shows an old attachment starting to loosen. The present card sets starlight on your shoulders. And the future card points to a clear turning point ahead — which card is driving it, what to reach for and what to let go, it\'s all in the full reading……</p></div>';
+        html+='<div class="wall"><h4>Unlock the Full Reading</h4><p>Card-by-card reading · Upright & reversed depth · Synthesis · Action advice · A word from your reader</p><button class="cta gold" onclick="goCheckout(\'tarot_3\')">Unlock Full Reading</button><div class="price"><b>$9.90</b> one-time · or subscribe for better value ↓</div></div>';
+        html+='<div class="expand">▾ Five-card spread · Five-dimension deep reading ($19)</div>';
+      } else {
+        html+='<div class="read"><h3>逐牌精读 · 未来走向</h3><p class="blur">过去牌位揭示旧执正在松动，现在牌位星光落肩，未来牌位将迎来一个清晰的节点——把握窗口期，具体到哪一牌位在推动、该怎么抓怎么避，都在完整牌卷里……</p></div>';
+        html+='<div class="wall"><h4>解锁完整牌卷</h4><p>逐牌精读 · 正逆位深意 · 综合走向 · 行动建议 · 占卜师悄悄话</p><button class="cta gold" onclick="goCheckout(\'tarot_3\')">解锁完整解读</button><div class="price"><b>$9.90</b> 一次性 · 或订阅更划算 ↓</div></div>';
+        html+='<div class="expand">▾ 五芒星牌阵 · 五维深度解读（$19）</div>';
+      }
     }
-    html+='<div class="adv"><div class="k">Runae 顾问 · 会记得你</div><h4>不止一次占卜<br>是一个懂你的命理顾问</h4><ul><li>每日运势与流年动态，天天更新</li><li>AI 对话随时追问深聊，像身边的老师</li><li>塔罗 + 八字 + 星座，交叉印证同一个你</li><li>记得你问过的每一个问题，越用越懂你</li><li>可约真人塔罗师一对一（会员优惠）</li></ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">订阅 Runae 顾问 · $9.9 / 月</button></div>';
+    if(EN){
+      html+='<div class="adv"><div class="k">Runae Advisor · Remembers You</div><h4>More than a single reading<br>an advisor who actually knows you</h4><ul><li>Your daily horoscope and annual forecast, refreshed every day</li><li>Ask deeper questions anytime in chat — like a teacher on call</li><li>Tarot + BaZi + Astrology — the same you, seen from every angle</li><li>Remembers every question you\'ve asked — the more you use it, the better it knows you</li><li>Book a 1-on-1 with a real reader (member discount)</li></ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">Subscribe to Runae Advisor · $9.9 / mo</button></div>';
+    } else {
+      html+='<div class="adv"><div class="k">Runae 顾问 · 会记得你</div><h4>不止一次占卜<br>是一个懂你的命理顾问</h4><ul><li>每日运势与流年动态，天天更新</li><li>AI 对话随时追问深聊，像身边的老师</li><li>塔罗 + 八字 + 星座，交叉印证同一个你</li><li>记得你问过的每一个问题，越用越懂你</li><li>可约真人塔罗师一对一（会员优惠）</li></ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">订阅 Runae 顾问 · $9.9 / 月</button></div>';
+    }
     body.innerHTML=html;
   }
 
@@ -202,11 +247,11 @@
     var body=document.getElementById('body'); body.innerHTML=skel();
     var token=localStorage.getItem('sy_token')||'';
     var acc='',locked=false,firstChunk=true,done=false;
-    var to=setTimeout(function(){ if(!done){ done=true; if(!acc) body.innerHTML='<div class="err">生成超时，请重试<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="stream(document.getElementById(\'question\').value.trim()||\''+esc(q).replace(/'/g,"")+'\')">重试</button></div>'; else renderReading(acc,locked); } }, 90000);
+    var to=setTimeout(function(){ if(!done){ done=true; if(!acc) body.innerHTML='<div class="err">'+T.timeout+'<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="stream(document.getElementById(\'question\').value.trim()||\''+esc(q).replace(/'/g,"")+'\')">'+T.retry+'</button></div>'; else renderReading(acc,locked); } }, 90000);
     fetch('/api/tarot/stream',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-      body:JSON.stringify({ lang:'zh', question:q, spread:'three', topic:currentTopic,
+      body:JSON.stringify({ lang:LANG, question:q, spread:'three', topic:currentTopic,
         cards:drawn.map(function(d,i){ return {name:d.card.name, reversed:d.reversed, position:POS[i]}; }) })
     }).then(function(res){
       if(!res.ok||!res.body) throw new Error('stream '+res.status);
@@ -227,14 +272,14 @@
                 if(live){ var cut=acc.indexOf('---LOCKED---'); live.innerHTML=md((cut>=0?acc.slice(0,cut):acc).trim()); }
               }
               else if(ev.type==='done'){ clearTimeout(to); done=true; renderReading(acc,locked); }
-              else if(ev.type==='error'){ clearTimeout(to); done=true; if(!acc) body.innerHTML='<div class="err">'+esc(ev.message||'生成失败')+'<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="draw()">重新抽牌</button></div>'; else renderReading(acc,locked); }
+              else if(ev.type==='error'){ clearTimeout(to); done=true; if(!acc) body.innerHTML='<div class="err">'+esc(ev.message||T.genFail)+'<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="draw()">'+T.redrawBtn+'</button></div>'; else renderReading(acc,locked); }
             }catch(e){}
           });
           pump();
-        }).catch(function(){ clearTimeout(to); if(done)return; done=true; if(!acc) body.innerHTML='<div class="err">网络异常，请刷新重试<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="draw()">重新抽牌</button></div>'; else renderReading(acc,locked); });
+        }).catch(function(){ clearTimeout(to); if(done)return; done=true; if(!acc) body.innerHTML='<div class="err">'+T.netErr+'<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="draw()">'+T.redrawBtn+'</button></div>'; else renderReading(acc,locked); });
       }
       pump();
-    }).catch(function(){ clearTimeout(to); if(done)return; done=true; body.innerHTML='<div class="err">网络异常，请刷新重试<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="draw()">重新抽牌</button></div>'; });
+    }).catch(function(){ clearTimeout(to); if(done)return; done=true; body.innerHTML='<div class="err">'+T.netErr+'<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="draw()">'+T.redrawBtn+'</button></div>'; });
   }
 
   function reset(){
@@ -247,12 +292,12 @@
   window.goCheckout=function(product){
     fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({product:product,token:localStorage.getItem('sy_token')||'',
-        successUrl:location.origin+'/pages/report-tarot.html?paid=1',cancelUrl:location.href})})
+        successUrl:location.origin+'/pages/report-tarot.html?paid=1&lang='+LANG,cancelUrl:location.href})})
      .then(function(r){return r.json();}).then(function(d){
        if(d.url){ location.href=d.url; }
-       else if(d.channel==='cn'){ alert('国内用户请用微信 / 支付宝支付（接入中）'); }
-       else { alert('跳转支付失败，请重试'); }
-     }).catch(function(){ alert('网络异常，请重试'); });
+       else if(d.channel==='cn'){ alert(EN?'Please pay via WeChat / Alipay (coming soon).':'国内用户请用微信 / 支付宝支付（接入中）'); }
+       else { alert(EN?'Couldn’t open checkout — please try again.':'跳转支付失败，请重试'); }
+     }).catch(function(){ alert(EN?'Network error — please try again.':'网络异常，请重试'); });
   };
 </script>
 </body>

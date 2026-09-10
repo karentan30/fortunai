@@ -104,44 +104,44 @@
 <body>
 <div class="wrap">
   <div class="bar">
-    <div class="nav-back" onclick="location.href='pick.html'"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>返回</div>
-    <div class="step">合婚配对</div>
+    <div class="nav-back" onclick="location.href='pick.html?lang='+LANG"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="hBack"></span></div>
+    <div class="step" id="hStep"></div>
   </div>
 
   <!-- ═══ 阶段 1：乙方信息收集 ═══ -->
   <div id="collect">
     <div class="rhero">
-      <div class="k">Hehun · 八字合婚</div>
+      <div class="k" id="hHeroK"></div>
       <div class="dv"></div>
-      <h2>你们，合不合？</h2>
+      <h2 id="hHeroH"></h2>
     </div>
 
-    <div class="sec">甲方（你）</div>
+    <div class="sec" id="hSecA"></div>
     <div id="selfBox"></div>
 
-    <div class="sec">乙方（TA）</div>
+    <div class="sec" id="hSecB"></div>
     <div class="field">
       <svg class="ic"><use href="#i-cal"/></svg>
-      <div class="fcol"><div class="lab">TA 的出生日期</div><input id="bdate" type="date"></div>
+      <div class="fcol"><div class="lab" id="hLabDate"></div><input id="bdate" type="date"></div>
     </div>
     <div class="field">
       <svg class="ic"><use href="#i-clock"/></svg>
-      <div class="fcol"><div class="lab">TA 的出生时间</div><input id="btime" type="time" placeholder="不确定可跳过"></div>
-      <span class="opt">可选</span>
+      <div class="fcol"><div class="lab" id="hLabTime"></div><input id="btime" type="time"></div>
+      <span class="opt" id="hOpt"></span>
     </div>
     <div class="field">
       <svg class="ic"><use href="#i-user"/></svg>
-      <div class="fcol"><div class="lab">TA 的性别</div><div id="genderHint" style="font-size:13px;color:var(--ink-2);font-weight:500;margin-top:2px">与你相对</div></div>
-      <div class="g-toggle" id="gToggle"><span data-g="male">男</span><span data-g="female">女</span></div>
+      <div class="fcol"><div class="lab" id="hLabGender"></div><div id="genderHint" style="font-size:13px;color:var(--ink-2);font-weight:500;margin-top:2px"></div></div>
+      <div class="g-toggle" id="gToggle"><span data-g="male"></span><span data-g="female"></span></div>
     </div>
 
     <label class="consent">
       <input type="checkbox" id="consent">
-      <span>我已年满 18 周岁，同意将双方出生日期/性别用于命理分析，并了解信息将传输至境外服务器处理（<a href="/legal-CN.html#privacy">隐私政策</a>）。</span>
+      <span id="hConsent"></span>
     </label>
 
-    <button class="go" id="go">测我们的合婚 →</button>
-    <div style="text-align:center;font-size:11px;color:var(--ink-3);margin-top:12px;letter-spacing:.04em">先免费看配对预览，满意再解锁完整报告</div>
+    <button class="go" id="go"></button>
+    <div style="text-align:center;font-size:11px;color:var(--ink-3);margin-top:12px;letter-spacing:.04em" id="hSub"></div>
   </div>
 
   <!-- ═══ 阶段 2：报告渲染 ═══ -->
@@ -150,7 +150,7 @@
     <div id="body">
       <div class="skel"><div class="ln" style="width:60%"></div><div class="ln" style="width:100%"></div><div class="ln" style="width:88%"></div></div>
       <div class="skel"><div class="ln" style="width:45%"></div><div class="ln" style="width:96%"></div><div class="ln" style="width:92%"></div><div class="ln" style="width:70%"></div></div>
-      <div class="loadmsg" id="loadmsg">正在为你们合盘推演…约需 20 秒</div>
+      <div class="loadmsg" id="loadmsg"></div>
     </div>
   </div>
 </div>
@@ -162,6 +162,7 @@
 </defs></svg>
 
 <script>
+  var LANG=(new URLSearchParams(location.search).get('lang'))||localStorage.getItem('runae_lang')||'zh';localStorage.setItem('runae_lang',LANG);var EN=(LANG==='en');
   // ── 甲方：从 runae_profile 带入 ──
   var P = {};
   try { P = JSON.parse(localStorage.getItem('runae_profile') || '{}'); } catch(e){}
@@ -169,18 +170,84 @@
   var selfGender = P.gender || 'female';           // 甲方性别
   var bGender = selfGender === 'male' ? 'female' : 'male';  // 乙方默认相对
 
+  var T = EN ? {
+    back:'Back', step:'Compatibility', heroK:'Compatibility · BaZi Matching', heroH:'How well do you two fit?',
+    secA:'You', secB:'Partner (TA)', labDate:'Their birth date', labTime:'Their birth time', opt:'Optional',
+    labGender:'Their gender', male:'M', female:'F', maleFull:'Male', femaleFull:'Female',
+    consent:'I am 18 or older and agree to use both parties\' birth date/gender for astrological analysis, and understand the data will be transmitted to overseas servers for processing (',
+    privacy:'Privacy Policy', go:'Check our compatibility →', sub:'Start with a free match preview — unlock the full report whenever you like.',
+    youChip:'You: ', fromProfile:'From your profile · ', edit:'Edit',
+    missing:'We don\'t have your birth details yet. <b>Compatibility needs both people\'s birth info</b> — it takes 10 seconds to fill out once, then it\'s ready whenever you come back.<br>',
+    missingLink:'→ Fill in my info',
+    alertNeedSelf:'Please fill in your birth info first', alertNeedDate:'Please enter their birth date',
+    alertConsent:'Please agree to the privacy terms first', alertAge:'This platform is for users 18 and older only',
+    loadmsg:'Pairing your charts and reading the signs… about 20 seconds',
+    unlockSuccess:'Unlocked! Your full report is on its way…',
+    genFail:'Something went wrong — please try again.', empty:'The report came back empty — please try again.', netErr:'Network error — please refresh and try again.', retry:'Retry',
+    unlockBtn:'Unlock Full Report', jumping:'Taking you to checkout…',
+    ccn:'Please pay via WeChat / Alipay (coming soon).', cfail:'Couldn’t open checkout — please try again.', cnet:'Network error — please try again.',
+    heroTitle:function(rel){ return 'Your ' + (rel||'Compatibility'); },
+    youL:'You · ', taL:'TA · ', elementSuf:'', youCell:'You', taCell:'TA', partyA:'You', partyB:'Partner',
+    scoreLabel:'Five-element base compatibility',
+    relTable:{ 相生:{t:'Elements Nourishing', arw:'→ 生 ←', tone:'Nourishing · Supportive'}, 相克:{t:'Elements in Check', arw:'⚡', tone:'Tempered'}, def:{t:'Elements in Harmony', arw:'⇌', tone:'Harmonious · Stable'} },
+    paywall:'<div class="wall"><h4>Unlock the Full Compatibility Report</h4><p>Full six-dimension match · 10-year marriage forecast · Best wedding dates · Conflict remedies</p><button class="cta gold" id="unlockBtn" onclick="goCheckout(\'hehun\')">Unlock Full Report</button><div class="price"><b>$9.90</b> one-time · or subscribe for better value ↓</div></div>',
+    advisor:'<div class="adv"><div class="k">Runae Advisor · Remembers You Two</div><h4>More than a single reading<br>an advisor who gets you both</h4><ul><li>When a fight goes quiet, ask one question and we\'ll help decode what your partner is really upset about</li><li>Year-by-year shifts in the relationship, with the key moments flagged early</li><li>BaZi plus both of your personality charts — the two of you, seen from every angle</li><li>Remembers your charts and your history — the more you use it, the better it knows you both</li><li>Book a 1-on-1 with a real reader (member discount)</li></ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">Subscribe to Runae Advisor · $9.9 / mo</button></div>',
+    disclaimer:'<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(178,58,84,.2),transparent);margin:6px auto 0;width:80%"></div><div style="font-size:10.5px;color:var(--ink-3);text-align:center;letter-spacing:.05em;padding:12px 18px;line-height:1.8">🤖 This report is AI-generated and meant for entertainment only. Any marriage years, dates, or yearly themes it mentions are <strong style="color:var(--rose)">not advice on whether to marry</strong>, and are no substitute for medical, legal, or financial advice. Whether to marry is a decision only the two of you can make, based on your own hearts and real circumstances.</div>'
+  } : {
+    back:'返回', step:'合婚配对', heroK:'Hehun · 八字合婚', heroH:'你们，合不合？',
+    secA:'甲方（你）', secB:'乙方（TA）', labDate:'TA 的出生日期', labTime:'TA 的出生时间', opt:'可选',
+    labGender:'TA 的性别', male:'男', female:'女', maleFull:'男', femaleFull:'女',
+    consent:'我已年满 18 周岁，同意将双方出生日期/性别用于命理分析，并了解信息将传输至境外服务器处理（',
+    privacy:'隐私政策', go:'测我们的合婚 →', sub:'先免费看配对预览，满意再解锁完整报告',
+    youChip:'你：', fromProfile:'来自你的档案 · ', edit:'修改',
+    missing:'还没有你的出生信息。<b>合婚需要双方生辰</b>，先花 10 秒填一次，之后回来直接用。<br>',
+    missingLink:'→ 去填我的信息',
+    alertNeedSelf:'请先填写你的出生信息', alertNeedDate:'请填写 TA 的出生日期',
+    alertConsent:'请先勾选同意隐私条款', alertAge:'本平台仅限 18 岁以上用户使用',
+    loadmsg:'正在为你们合盘推演…约需 20 秒',
+    unlockSuccess:'解锁成功！完整报告正在生成…',
+    genFail:'生成失败，请重试', empty:'报告为空，请重试', netErr:'网络异常，请刷新重试', retry:'重试',
+    unlockBtn:'解锁完整报告', jumping:'跳转支付…',
+    ccn:'国内用户请用微信 / 支付宝支付（接入中）', cfail:'跳转支付失败，请重试', cnet:'网络异常，请重试',
+    heroTitle:function(rel){ return '你们的' + (rel||'合婚'); },
+    youL:'你 · ', taL:'TA · ', elementSuf:'命', youCell:'你', taCell:'TA', partyA:'甲方', partyB:'乙方',
+    scoreLabel:'五行契合基础指数',
+    relTable:{ 相生:{t:'五行相生', arw:'→ 生 ←', tone:'相生·相扶'}, 相克:{t:'五行有制', arw:'⚡', tone:'有所制化'}, def:{t:'五行比和', arw:'⇌', tone:'比和·平稳'} },
+    paywall:'<div class="wall"><h4>解锁完整合婚报告</h4><p>完整六维合婚 · 10 年婚姻运程 · 最佳婚期 · 冲克化解方案</p><button class="cta gold" id="unlockBtn" onclick="goCheckout(\'hehun\')">解锁完整报告</button><div class="price"><b>$9.90</b> 一次性 · 或订阅更划算 ↓</div></div>',
+    advisor:'<div class="adv"><div class="k">Runae 顾问 · 会记得你们</div><h4>不止一份合婚<br>是一个懂你们的顾问</h4><ul><li>吵架僵住时问一句，帮你们翻译对方到底在气什么</li><li>逐年感情流年动态，重要节点提前提醒</li><li>八字 + 双方性格盘，交叉印证你们的相处模式</li><li>记得你们的盘与历史，越用越懂你们</li><li>可约真人命理师一对一解读（会员优惠）</li></ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">订阅 Runae 顾问 · $9.9 / 月</button></div>',
+    disclaimer:'<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(178,58,84,.2),transparent);margin:6px auto 0;width:80%"></div><div style="font-size:10.5px;color:var(--ink-3);text-align:center;letter-spacing:.05em;padding:12px 18px;line-height:1.8">🤖 本报告由 AI 生成，仅供娱乐参考。所涉结婚年份、择日、流年基调等<strong style="color:var(--rose)">均非婚姻决策建议</strong>，不代替医学 / 法律 / 投资建议。是否走入婚姻，请以你们的真心与现实考量为准。</div>'
+  };
+  document.documentElement.lang = EN ? 'en' : 'zh-CN';
+  var _pl = EN ? '/legal-en.html#privacy' : '/legal-CN.html#privacy';
+  document.getElementById('hBack').textContent = T.back;
+  document.getElementById('hStep').textContent = T.step;
+  document.getElementById('hHeroK').textContent = T.heroK;
+  document.getElementById('hHeroH').textContent = T.heroH;
+  document.getElementById('hSecA').textContent = T.secA;
+  document.getElementById('hSecB').textContent = T.secB;
+  document.getElementById('hLabDate').textContent = T.labDate;
+  document.getElementById('hLabTime').textContent = T.labTime;
+  document.getElementById('hOpt').textContent = T.opt;
+  document.getElementById('hLabGender').textContent = T.labGender;
+  document.querySelector('#gToggle span[data-g="male"]').textContent = T.male;
+  document.querySelector('#gToggle span[data-g="female"]').textContent = T.female;
+  document.getElementById('hConsent').innerHTML = esc(T.consent).replace(/&lt;b&gt;/g,'<b>').replace(/&lt;\/b&gt;/g,'</b>') + '<a href="'+_pl+'">'+T.privacy+'</a>' + (EN?').':'）。');
+  document.getElementById('go').textContent = T.go;
+  document.getElementById('hSub').textContent = T.sub;
+  document.getElementById('loadmsg').textContent = T.loadmsg;
+
   function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
   // 渲染甲方信息卡（自动带入）；若无 profile 提示去补
   (function renderSelf(){
     var box = document.getElementById('selfBox');
     if (P.bdate) {
-      var genderCn = selfGender === 'male' ? '男' : '女';
-      box.innerHTML = '<div class="self-chip"><span class="dot"></span>你：' + esc(P.bdate) +
+      var genderCn = selfGender === 'male' ? T.maleFull : T.femaleFull;
+      box.innerHTML = '<div class="self-chip"><span class="dot"></span>' + T.youChip + esc(P.bdate) +
         (P.btime ? ' ' + esc(P.btime) : '') + ' · ' + genderCn + '</div>' +
-        '<div style="font-size:11px;color:var(--ink-3);margin:6px 2px 0;letter-spacing:.03em">来自你的档案 · <a href="collect.html" style="color:var(--jade);font-weight:600;text-decoration:none">修改</a></div>';
+        '<div style="font-size:11px;color:var(--ink-3);margin:6px 2px 0;letter-spacing:.03em">' + T.fromProfile + '<a href="collect.html?lang=' + LANG + '" style="color:var(--jade);font-weight:600;text-decoration:none">' + T.edit + '</a></div>';
     } else {
-      box.innerHTML = '<div class="miss">还没有你的出生信息。<b>合婚需要双方生辰</b>，先花 10 秒填一次，之后回来直接用。<br><a href="collect.html">→ 去填我的信息</a></div>';
+      box.innerHTML = '<div class="miss">' + T.missing + '<a href="collect.html?lang=' + LANG + '">' + T.missingLink + '</a></div>';
       document.getElementById('go').disabled = true;
     }
   })();
@@ -191,7 +258,7 @@
     var hint = document.getElementById('genderHint');
     function paint(){
       t.querySelectorAll('span').forEach(function(s){ s.classList.toggle('on', s.dataset.g === bGender); });
-      hint.textContent = (bGender === 'male' ? '男' : '女');
+      hint.textContent = (bGender === 'male' ? T.maleFull : T.femaleFull);
     }
     t.querySelectorAll('span').forEach(function(s){
       s.onclick = function(){ bGender = s.dataset.g; paint(); };
@@ -212,20 +279,20 @@
 
   // ── 提交：组装双方 body，进入报告态并流式 ──
   document.getElementById('go').onclick = function(){
-    if (!P.bdate){ alert('请先填写你的出生信息'); return; }
+    if (!P.bdate){ alert(T.alertNeedSelf); return; }
     var bd = document.getElementById('bdate').value;
-    if (!bd){ alert('请填写 TA 的出生日期'); return; }
-    if (!document.getElementById('consent').checked){ alert('请先勾选同意隐私条款'); return; }
+    if (!bd){ alert(T.alertNeedDate); return; }
+    if (!document.getElementById('consent').checked){ alert(T.alertConsent); return; }
 
     var a = parseDate(P.bdate);
     var b = parseDate(bd);
     var curYear = new Date().getFullYear();
-    if (a.y > curYear - 18 || b.y > curYear - 18){ alert('本平台仅限 18 岁以上用户使用'); return; }
+    if (a.y > curYear - 18 || b.y > curYear - 18){ alert(T.alertAge); return; }
 
     var body = {
       p1Year: a.y, p1Month: a.mo, p1Day: a.d, p1Hour: parseHour(P.btime), p1Gender: selfGender, p1Name: '',
       p2Year: b.y, p2Month: b.mo, p2Day: b.d, p2Hour: parseHour(document.getElementById('btime').value), p2Gender: bGender, p2Name: '',
-      mode: 'marriage', lang: 'zh'
+      mode: 'marriage', lang: LANG
     };
     // 存一份供付费回流复用
     try { localStorage.setItem('sy_last_hehun', JSON.stringify(body)); } catch(e){}
@@ -240,9 +307,9 @@
   var WX_ICON = {'木':'🌿','火':'🔥','土':'🪨','金':'⚪','水':'💧'};
 
   function relLabel(rel){
-    return rel === '相生' ? { t:'五行相生', arw:'→ 生 ←', tone:'相生·相扶' } :
-           rel === '相克' ? { t:'五行有制', arw:'⚡',      tone:'有所制化' } :
-                            { t:'五行比和', arw:'⇌',       tone:'比和·平稳' };
+    return rel === '相生' ? T.relTable['相生'] :
+           rel === '相克' ? T.relTable['相克'] :
+                            T.relTable.def;
   }
 
   // 从 meta 事件渲染顶部合盘卡 + 分数（免费预览的确定性部分）
@@ -254,20 +321,20 @@
     var score = (previewData && previewData.baseScore) || meta.score || 0;
     score = Math.min(97, Math.max(42, Math.round(score)));
 
-    var aCell = a ? ('<div class="c">' + esc(a.dayMaster) + '<br>' + (WX_ICON[a.element]||'') + '</div><div class="l">你 · ' + esc(a.element) + '命</div>')
-                  : ('<div class="c">你</div><div class="l">甲方</div>');
-    var bCell = b ? ('<div class="c">' + esc(b.dayMaster) + '<br>' + (WX_ICON[b.element]||'') + '</div><div class="l">TA · ' + esc(b.element) + '命</div>')
-                  : ('<div class="c">TA</div><div class="l">乙方</div>');
+    var aCell = a ? ('<div class="c">' + esc(a.dayMaster) + '<br>' + (WX_ICON[a.element]||'') + '</div><div class="l">' + T.youL + esc(a.element) + T.elementSuf + '</div>')
+                  : ('<div class="c">' + T.youCell + '</div><div class="l">' + T.partyA + '</div>');
+    var bCell = b ? ('<div class="c">' + esc(b.dayMaster) + '<br>' + (WX_ICON[b.element]||'') + '</div><div class="l">' + T.taL + esc(b.element) + T.elementSuf + '</div>')
+                  : ('<div class="c">' + T.taCell + '</div><div class="l">' + T.partyB + '</div>');
 
     hero.innerHTML =
-      '<div class="rhero"><div class="k">Hehun · 八字合婚</div><div class="dv"></div><h2>你们的' + (rInfo ? rInfo.t : '合婚') + '</h2></div>' +
+      '<div class="rhero"><div class="k">' + T.heroK + '</div><div class="dv"></div><h2>' + T.heroTitle(rInfo ? rInfo.t : '') + '</h2></div>' +
       '<div class="chart">' +
         '<div class="duo">' +
           '<div class="who">' + aCell + '</div>' +
           '<div class="rel"><div class="arw">' + (rInfo?rInfo.arw:'⇌') + '</div><div class="rl">' + (rInfo?rInfo.tone:'') + '</div></div>' +
           '<div class="who">' + bCell + '</div>' +
         '</div>' +
-        '<div class="score-line"><div class="sc">' + score + '<small>%</small></div><div class="sl">五行契合基础指数</div></div>' +
+        '<div class="score-line"><div class="sc">' + score + '<small>%</small></div><div class="sl">' + T.scoreLabel + '</div></div>' +
       '</div>';
   }
 
@@ -292,9 +359,9 @@
     }).join('');
   }
 
-  var PAYWALL = '<div class="wall"><h4>解锁完整合婚报告</h4><p>完整六维合婚 · 10 年婚姻运程 · 最佳婚期 · 冲克化解方案</p><button class="cta gold" id="unlockBtn" onclick="goCheckout(\'hehun\')">解锁完整报告</button><div class="price"><b>$9.90</b> 一次性 · 或订阅更划算 ↓</div></div>';
-  var ADVISOR = '<div class="adv"><div class="k">Runae 顾问 · 会记得你们</div><h4>不止一份合婚<br>是一个懂你们的顾问</h4><ul><li>吵架僵住时问一句，帮你们翻译对方到底在气什么</li><li>逐年感情流年动态，重要节点提前提醒</li><li>八字 + 双方性格盘，交叉印证你们的相处模式</li><li>记得你们的盘与历史，越用越懂你们</li><li>可约真人命理师一对一解读（会员优惠）</li></ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">订阅 Runae 顾问 · $9.9 / 月</button></div>';
-  var DISCLAIMER = '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(178,58,84,.2),transparent);margin:6px auto 0;width:80%"></div><div style="font-size:10.5px;color:var(--ink-3);text-align:center;letter-spacing:.05em;padding:12px 18px;line-height:1.8">🤖 本报告由 AI 生成，仅供娱乐参考。所涉结婚年份、择日、流年基调等<strong style="color:var(--rose)">均非婚姻决策建议</strong>，不代替医学 / 法律 / 投资建议。是否走入婚姻，请以你们的真心与现实考量为准。</div>';
+  var PAYWALL = T.paywall;
+  var ADVISOR = T.advisor;
+  var DISCLAIMER = T.disclaimer;
 
   function streamHehun(body){
     var bodyEl = document.getElementById('body');
@@ -319,7 +386,7 @@
       bodyEl.innerHTML = html;
     }
     function fail(msg){
-      bodyEl.innerHTML = '<div class="err">' + esc(msg) + '<br><br><button class="cta" style="max-width:220px;margin:14px auto 0" onclick="location.reload()">重试</button></div>';
+      bodyEl.innerHTML = '<div class="err">' + esc(msg) + '<br><br><button class="cta" style="max-width:220px;margin:14px auto 0" onclick="location.reload()">' + T.retry + '</button></div>';
     }
 
     var ctrl = new AbortController();
@@ -330,14 +397,14 @@
       signal: ctrl.signal, body: JSON.stringify(body)
     }).then(function(res){
       clearTimeout(to);
-      if (!res.ok || !res.body){ fail('生成失败，请重试'); return; }
+      if (!res.ok || !res.body){ fail(T.genFail); return; }
       var reader = res.body.getReader();
       var decoder = new TextDecoder('utf-8');
       var buf = '';
       function read(){
         reader.read().then(function(r){
           if (r.done){
-            if (!started && !accumulated) fail('报告为空，请重试');
+            if (!started && !accumulated) fail(T.empty);
             return;
           }
           buf += decoder.decode(r.value, {stream:true});
@@ -358,37 +425,37 @@
               } else if (ev.type === 'done'){
                 paint();
               } else if (ev.type === 'error'){
-                if (!accumulated) fail(ev.message || '生成失败，请重试');
+                if (!accumulated) fail(ev.message || T.genFail);
               }
             } catch(e){}
           });
           read();
-        }).catch(function(){ if (!accumulated) fail('网络异常，请刷新重试'); });
+        }).catch(function(){ if (!accumulated) fail(T.netErr); });
       }
       read();
-    }).catch(function(){ clearTimeout(to); fail('网络异常，请刷新重试'); });
+    }).catch(function(){ clearTimeout(to); fail(T.netErr); });
   }
 
   // ── checkout（对齐 report-v2 goCheckout / hehun createCheckout） ──
   window.goCheckout = function(product){
     var btn = document.getElementById('unlockBtn');
-    if (btn){ btn.disabled = true; btn.textContent = '跳转支付…'; }
+    if (btn){ btn.disabled = true; btn.textContent = T.jumping; }
     fetch('/api/create-checkout', {
       method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
       body: JSON.stringify({
         product: product,
         token: localStorage.getItem('sy_token') || '',
-        successUrl: location.origin + '/pages/report-hehun.html?paid=1',
+        successUrl: location.origin + '/pages/report-hehun.html?paid=1&lang=' + LANG,
         cancelUrl: location.href
       })
     }).then(function(r){ return r.json(); }).then(function(d){
       if (d.url){ location.href = d.url; return; }
-      if (d.channel === 'cn'){ alert('国内用户请用微信 / 支付宝支付（接入中）'); }
-      else { alert('跳转支付失败，请重试'); }
-      if (btn){ btn.disabled = false; btn.textContent = '解锁完整报告'; }
+      if (d.channel === 'cn'){ alert(T.ccn); }
+      else { alert(T.cfail); }
+      if (btn){ btn.disabled = false; btn.textContent = T.unlockBtn; }
     }).catch(function(){
-      alert('网络异常，请重试');
-      if (btn){ btn.disabled = false; btn.textContent = '解锁完整报告'; }
+      alert(T.cnet);
+      if (btn){ btn.disabled = false; btn.textContent = T.unlockBtn; }
     });
   };
 
@@ -396,11 +463,11 @@
   (function handlePaidReturn(){
     if (location.search.indexOf('paid=1') < 0) return;
     var saved; try { saved = JSON.parse(localStorage.getItem('sy_last_hehun') || 'null'); } catch(e){}
-    if (window.history.replaceState) window.history.replaceState({}, '', '/pages/report-hehun.html');
+    if (window.history.replaceState) window.history.replaceState({}, '', '/pages/report-hehun.html?lang=' + LANG);
     if (!saved || !saved.p1Year){ return; }
     document.getElementById('collect').style.display = 'none';
     document.getElementById('report').style.display = 'block';
-    document.getElementById('loadmsg').textContent = '解锁成功！完整报告正在生成…';
+    document.getElementById('loadmsg').textContent = T.unlockSuccess;
     streamHehun(saved);
   })();
 </script>

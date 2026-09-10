@@ -88,16 +88,18 @@
 </head>
 <body>
 <div class="wrap">
-  <div class="bar"><div class="nav-back" onclick="history.length>1?history.back():location.href='pick.html'"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>返回</div><div class="step">星座占星 · Astrology</div></div>
+  <div class="bar"><div class="nav-back" id="navBack"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="navBackTxt">返回</span></div><div class="step" id="stepLabel">星座占星 · Astrology</div></div>
   <div id="hero"></div>
   <div id="chartMount"></div>
   <div id="body">
     <div class="skel"><div class="ln" style="width:60%"></div><div class="ln" style="width:100%"></div><div class="ln" style="width:88%"></div></div>
     <div class="skel"><div class="ln" style="width:45%"></div><div class="ln" style="width:96%"></div><div class="ln" style="width:92%"></div><div class="ln" style="width:70%"></div></div>
-    <div class="err" id="loadmsg">正在为你起星盘…</div>
+    <div class="err" id="loadmsg" data-i18n="loadmsg">正在为你起星盘…</div>
   </div>
 </div>
 <script>
+  var LANG=(new URLSearchParams(location.search).get('lang'))||localStorage.getItem('runae_lang')||'zh';localStorage.setItem('runae_lang',LANG);var EN=(LANG==='en');
+  if(EN){document.documentElement.lang='en';document.title='Runae · Your Chart';}
   // ── profile ──
   var P={};
   try{ P=JSON.parse(localStorage.getItem('runae_profile')||'{}'); }catch(e){}
@@ -114,9 +116,19 @@
       lat:(P.lat!=null&&P.lat!=='')?+P.lat:null,
       lng:(P.lng!=null&&P.lng!=='')?+P.lng:null,
       tz:(P.tz!=null&&P.tz!=='')?+P.tz:null,
-      gender:P.gender||'female', lang:'zh'
+      gender:P.gender||'female', lang:LANG
     };
   }
+
+  // ---- static UI text (bilingual) ----
+  (function initBar(){
+    var nb=document.getElementById('navBackTxt'), st=document.getElementById('stepLabel'),
+        back=document.getElementById('navBack'), lm=document.getElementById('loadmsg');
+    if(nb) nb.textContent = EN?'Back':'返回';
+    if(st) st.textContent = EN?'Astrology':'星座占星 · Astrology';
+    if(lm) lm.textContent = EN?'Casting your chart…':'正在为你起星盘…';
+    if(back) back.onclick=function(){ history.length>1?history.back():(location.href='pick.html?lang='+LANG); };
+  })();
 
   // ── sign metadata (engine returns English names only) ──
   var SIGN_ZH={Aries:'白羊座',Taurus:'金牛座',Gemini:'双子座',Cancer:'巨蟹座',Leo:'狮子座',Virgo:'处女座',Libra:'天秤座',Scorpio:'天蝎座',Sagittarius:'射手座',Capricorn:'摩羯座',Aquarius:'水瓶座',Pisces:'双鱼座'};
@@ -125,6 +137,13 @@
   var EL_ZH={fire:'火',earth:'土',air:'风',water:'水'};
   var PLANET_ZH={Sun:'太阳',Moon:'月亮',Mercury:'水星',Venus:'金星',Mars:'火星',Jupiter:'木星',Saturn:'土星',Uranus:'天王星',Neptune:'海王星',Pluto:'冥王星'};
   var ASPECT_ZH={conjunct:'合相',opposition:'对分相',square:'刑相',trine:'拱相',sextile:'六分相'};
+  var ASPECT_EN={conjunct:'conjunct',opposition:'opposition',square:'square',trine:'trine',sextile:'sextile'};
+  var EL_EN={fire:'Fire',earth:'Earth',air:'Air',water:'Water'};
+  // localized label helpers (engine returns English sign/planet names)
+  function signName(s){ return EN ? (s||'') : (SIGN_ZH[s]||s||''); }
+  function planetName(p){ return EN ? (p||'') : (PLANET_ZH[p]||p); }
+  function aspectName(t){ return EN ? (ASPECT_EN[t]||t) : (ASPECT_ZH[t]||t); }
+  function elName(e){ return EN ? EL_EN[e] : EL_ZH[e]; }
 
   function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
@@ -146,20 +165,22 @@
   function renderChart(chart){
     var sun=planetOf(chart,'Sun'), moon=planetOf(chart,'Moon'), asc=chart.ascendant;
     var hero=document.getElementById('hero'), mount=document.getElementById('chartMount');
-    var sunZh=sun?SIGN_ZH[sun.sign]:'';
-    hero.innerHTML='<div class="rhero"><div class="k">Western Astrology · '+esc(P.bdate||'')+'</div><div class="dv"></div><h2>你的太阳落在「'+esc(sunZh)+'」</h2></div>';
+    var sunName=sun?signName(sun.sign):'';
+    hero.innerHTML='<div class="rhero"><div class="k">Western Astrology · '+esc(P.bdate||'')+'</div><div class="dv"></div><h2>'+(EN?('Your Sun is in '+esc(sunName)):('你的太阳落在「'+esc(sunName)+'」'))+'</h2></div>';
 
     // pillars: Sun / Moon / (Rising if present)
-    function pil(pl,label,en){
+    function pil(pl,label){
       if(!pl) return '';
       var s=pl.sign;
-      return '<div class="pil"><div class="sym">'+esc(SIGN_GLYPH[s]||'✦')+'</div><div class="c">'+esc(SIGN_ZH[s]||s)+'</div><div class="en">'+esc(s)+'</div><div class="deg">'+esc(pl.formatted?pl.formatted.split(' ')[0]:'')+'</div><div class="l">'+label+'</div></div>';
+      // when EN, .c shows English sign and .en subtitle is redundant → hide it
+      var sub = EN ? '' : ('<div class="en">'+esc(s)+'</div>');
+      return '<div class="pil"><div class="sym">'+esc(SIGN_GLYPH[s]||'✦')+'</div><div class="c">'+esc(signName(s))+'</div>'+sub+'<div class="deg">'+esc(pl.formatted?pl.formatted.split(' ')[0]:'')+'</div><div class="l">'+label+'</div></div>';
     }
     var hasAsc=!!asc, two=hasAsc?'':' two';
-    var cells=pil(sun,'太阳 Sun')+pil(moon,'月亮 Moon')+(hasAsc?pil(asc,'上升 Rising'):'');
+    var cells=pil(sun,EN?'Sun':'太阳 Sun')+pil(moon,EN?'Moon':'月亮 Moon')+(hasAsc?pil(asc,EN?'Rising':'上升 Rising'):'');
     var note = hasAsc
-      ? '本命回归黄道星盘 · 太阳／月亮／上升'
-      : '未填出生时间，暂无上升星座与宫位。补上准确出生时刻，可解锁上升与十二宫。';
+      ? (EN?'Natal tropical chart · Sun / Moon / Rising':'本命回归黄道星盘 · 太阳／月亮／上升')
+      : (EN?'No birth time given, so no Rising sign or houses yet. Add your exact birth time to unlock Rising and the 12 houses.':'未填出生时间，暂无上升星座与宫位。补上准确出生时刻，可解锁上升与十二宫。');
     mount.innerHTML='<div class="chart"><div class="pillars'+two+'">'+cells+'</div><div class="chart-note">'+note+'</div></div>';
   }
 
@@ -172,22 +193,25 @@
     var order=['fire','earth','air','water'];
     var rows=order.map(function(e){
       var pct=Math.round(counts[e]/total*100);
-      return '<div class="elrow"><div class="en">'+EL_ZH[e]+' <span style="font-size:11px;color:var(--ink-3);font-weight:400">'+e.charAt(0).toUpperCase()+e.slice(1)+'</span></div><div class="track"><div class="fill el-'+e+'" style="width:'+pct+'%"></div></div><div class="num">'+counts[e]+'</div></div>';
+      var lab = EN ? EL_EN[e] : (EL_ZH[e]+' <span style="font-size:11px;color:var(--ink-3);font-weight:400">'+e.charAt(0).toUpperCase()+e.slice(1)+'</span>');
+      return '<div class="elrow"><div class="en">'+lab+'</div><div class="track"><div class="fill el-'+e+'" style="width:'+pct+'%"></div></div><div class="num">'+counts[e]+'</div></div>';
     }).join('');
     // dominant element note
     var dom=order.reduce(function(a,b){return counts[b]>counts[a]?b:a;});
-    var domNote={fire:'火象偏重——行动力强、热情直接，容易点火也容易急躁。',earth:'土象偏重——务实稳定、重视结果，安全感来自可掌控的现实。',air:'风象偏重——思维灵活、善于沟通，靠理解与连接获得能量。',water:'水象偏重——情感细腻、直觉敏锐，内在世界丰富而深。'}[dom];
-    return '<div class="read"><h3>元素能量分布 · Element Balance</h3>'+rows+'<p style="margin-top:14px;font-size:13.5px">'+domNote+'</p></div>';
+    var domNote=(EN
+      ? {fire:'Fire-heavy — driven and direct, quick to ignite and quick to flare.',earth:'Earth-heavy — grounded and results-focused; safety comes from what you can control.',air:'Air-heavy — quick-thinking and communicative; energized by understanding and connection.',water:'Water-heavy — emotionally attuned and intuitive, with a rich inner world.'}
+      : {fire:'火象偏重——行动力强、热情直接，容易点火也容易急躁。',earth:'土象偏重——务实稳定、重视结果，安全感来自可掌控的现实。',air:'风象偏重——思维灵活、善于沟通，靠理解与连接获得能量。',water:'水象偏重——情感细腻、直觉敏锐，内在世界丰富而深。'})[dom];
+    return '<div class="read"><h3>'+(EN?'Element Balance':'元素能量分布 · Element Balance')+'</h3>'+rows+'<p style="margin-top:14px;font-size:13.5px">'+domNote+'</p></div>';
   }
 
   function topAspects(chart){
     var asp=(chart.aspects||[]).slice(0,6);
     if(!asp.length) return '';
     var rows=asp.map(function(a){
-      var p1=PLANET_ZH[a.planet1]||a.planet1, p2=PLANET_ZH[a.planet2]||a.planet2;
-      return '<div class="asp"><div class="g">'+esc(a.symbol||'✦')+'</div><div class="txt"><b>'+esc(p1)+' '+esc(ASPECT_ZH[a.type]||a.type)+' '+esc(p2)+'</b></div><div class="orb">'+a.orb+'°</div></div>';
+      var p1=planetName(a.planet1), p2=planetName(a.planet2);
+      return '<div class="asp"><div class="g">'+esc(a.symbol||'✦')+'</div><div class="txt"><b>'+esc(p1)+' '+esc(aspectName(a.type))+' '+esc(p2)+'</b></div><div class="orb">'+a.orb+'°</div></div>';
     }).join('');
-    return '<div class="read"><h3>主要行星相位 · Key Aspects</h3><p style="font-size:13px;margin-bottom:12px">相位是行星之间的角度关系，标示你性格中的张力与天赋（容许度越小越显著）。</p>'+rows+'</div>';
+    return '<div class="read"><h3>'+(EN?'Key Aspects':'主要行星相位 · Key Aspects')+'</h3><p style="font-size:13px;margin-bottom:12px">'+(EN?'Aspects are the angles between planets, marking the tensions and gifts in your character (the smaller the orb, the stronger the effect).':'相位是行星之间的角度关系，标示你性格中的张力与天赋（容许度越小越显著）。')+'</p>'+rows+'</div>';
   }
 
   // ── AI reading render (streamed) ──
@@ -201,26 +225,32 @@
 
   // ── paywall + advisor ──
   function paywallHtml(){
+    if(EN){
+      return '<div class="wall"><h4>Unlock your full chart</h4><p>All 12 houses · planet-by-planet reading · aspect cross-checks · transit forecast</p><button class="cta gold" onclick="goCheckout(\'astro_full\')">Unlock full version</button><div class="price"><b>$9.90</b> one-time · or subscribe for more value ↓</div></div>'
+        +'<div class="adv"><div class="k">Runae Advisor · remembers you</div><h4>More than a chart<br>an astrologer who actually knows you</h4><ul><li>Daily transits and sky updates, every single day</li><li>Ask follow-ups anytime in AI chat — like an astrologer on call</li><li>Your Western chart plus Eastern astrology — the same you, seen from every angle</li><li>Remembers your chart and your history — the more you use it, the better it knows you</li><li>Book a one-on-one with a real reader (member discount)</li></ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">Subscribe to Runae Advisor · $9.9 / mo</button></div>';
+    }
     return '<div class="wall"><h4>解锁完整星盘</h4><p>十二宫全解 · 逐星深度解读 · 相位交叉印证 · 行运预测</p><button class="cta gold" onclick="goCheckout(\'astro_full\')">解锁完整版</button><div class="price"><b>$9.90</b> 一次性 · 或订阅更划算 ↓</div></div>'
       +'<div class="adv"><div class="k">Runae 顾问 · 会记得你</div><h4>不止一份星盘<br>是一个懂你的占星顾问</h4><ul><li>每日星象与行运动态，天天更新</li><li>AI 对话随时追问深聊，像身边的占星师</li><li>西方星盘 + 东方命理，交叉印证同一个你</li><li>记得你的盘与历史，越用越懂你</li><li>可约真人占星师一对一（会员优惠）</li></ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">订阅 Runae 顾问 · $9.9 / 月</button></div>';
   }
 
   function fail(msg){
-    document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="location.reload()">重试</button></div>';
+    document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="location.reload()">'+(EN?'Retry':'重试')+'</button></div>';
   }
 
   window.goCheckout=function(product){
     fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({product:product,token:localStorage.getItem('sy_token')||'',
-        successUrl:location.origin+'/pages/report-astrology.html?paid=1',cancelUrl:location.href})})
+        successUrl:location.origin+'/pages/report-astrology.html?paid=1&lang='+LANG,cancelUrl:location.href})})
      .then(function(r){return r.json();}).then(function(d){
        if(d.url){ location.href=d.url; }
-       else if(d.channel==='cn'){ alert('国内用户请用微信 / 支付宝支付（接入中）'); }
-       else { alert('跳转支付失败，请重试'); }
-     }).catch(function(){ alert('网络异常，请重试'); });
+       else if(d.channel==='cn'){ alert(EN?'Please pay via WeChat / Alipay (coming soon).':'国内用户请用微信 / 支付宝支付（接入中）'); }
+       else { alert(EN?'Couldn’t open checkout — please try again.':'跳转支付失败，请重试'); }
+     }).catch(function(){ alert(EN?'Network error — please try again.':'网络异常，请重试'); });
   };
 
-  var DISC='<div class="disc">AI 生成解读 · 仅供娱乐与自我探索，不作预测性建议，不构成医疗、法律或财务建议 · 内容适合 14 岁以上读者。</div>';
+  var DISC=EN
+    ? '<div class="disc">AI-generated reading · for entertainment and self-exploration only; not predictive advice, not medical, legal, or financial advice · suitable for readers aged 14+.</div>'
+    : '<div class="disc">AI 生成解读 · 仅供娱乐与自我探索，不作预测性建议，不构成医疗、法律或财务建议 · 内容适合 14 岁以上读者。</div>';
 
   // ── main: stream from /api/western-astrology ──
   var chartData=null, readingText='', bodyEl=document.getElementById('body');
@@ -249,7 +279,7 @@
   async function run(){
     var b=readBirth();
     if(!b.birthYear||!b.birthMonth||!b.birthDay){
-      fail('没有找到你的出生信息，请先返回填写出生日期。');
+      fail(EN?'We couldn’t find your birth info — please go back and enter your birth date.':'没有找到你的出生信息，请先返回填写出生日期。');
       return;
     }
     var res;
@@ -257,8 +287,8 @@
       res=await fetch('/api/western-astrology',{
         method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)
       });
-    }catch(e){ fail('网络异常，请检查连接后重试。'); return; }
-    if(!res.ok){ fail('星盘生成失败（'+res.status+'），请重试。'); return; }
+    }catch(e){ fail(EN?'Network error — please check your connection and retry.':'网络异常，请检查连接后重试。'); return; }
+    if(!res.ok){ fail((EN?'Couldn’t cast your chart (':'星盘生成失败（')+res.status+(EN?') — please try again.':'），请重试。')); return; }
     if(!res.body||!res.body.getReader){
       // no streaming support — read whole text and parse ndjson
       var txt=await res.text();
@@ -300,7 +330,7 @@
 
   function finish(){
     if(!chartData){
-      fail('星盘计算失败，请检查出生信息后重试。');
+      fail(EN?'Chart calculation failed — please check your birth info and retry.':'星盘计算失败，请检查出生信息后重试。');
       return;
     }
     // If the reading never arrived, the structured cards (element + aspects) still carry the page.

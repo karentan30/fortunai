@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<title>Runae 顾问 · 会记得你</title>
+<title>Runae Advisor · Remembers You</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet">
 <style>
   :root{
@@ -78,16 +78,16 @@
 <body>
 <div class="wrap">
   <div class="bar">
-    <div class="nav-back" onclick="history.length>1?history.back():location.href='pick.html'"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>返回</div>
-    <div class="step">Runae 顾问</div>
+    <div class="nav-back" id="navBack"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="backTxt">返回</span></div>
+    <div class="step" id="stepTxt">Runae 顾问</div>
   </div>
 
   <div class="ahero">
     <div class="orb"></div>
     <div class="meta">
-      <div class="k">Runae 顾问 · 会记得你</div>
-      <h1>Rún · 你的命理顾问</h1>
-      <div class="sub">读你的盘，陪你追问 · AI 生成，仅供参考</div>
+      <div class="k" id="heroK">Runae 顾问 · 会记得你</div>
+      <h1 id="heroName">Rún · 你的命理顾问</h1>
+      <div class="sub" id="heroSub">读你的盘，陪你追问 · AI 生成，仅供参考</div>
     </div>
   </div>
 
@@ -101,15 +101,57 @@
       </button>
     </div>
     <div class="quota" id="quota"></div>
-    <div class="disclaimer">AI 生成内容 · 用于自我探索与娱乐参考，不构成医学 / 法律 / 投资建议</div>
+    <div class="disclaimer" id="disclaimer">AI 生成内容 · 用于自我探索与娱乐参考，不构成医学 / 法律 / 投资建议</div>
   </div>
 </div>
 
 <script>
 /* ── 状态 ── */
 var P={}; try{ P=JSON.parse(localStorage.getItem('runae_profile')||'{}'); }catch(e){}
-var LANG=(function(){ var l=(localStorage.getItem('runae_lang')||navigator.language||'zh').toLowerCase();
-  if(l.indexOf('ko')===0)return'ko'; if(l.indexOf('en')===0)return'en'; return'zh'; })();
+var LANG=(new URLSearchParams(location.search).get('lang'))||localStorage.getItem('runae_lang')||'zh';localStorage.setItem('runae_lang',LANG);var EN=(LANG==='en');
+
+/* ── 文案 ── */
+var T=EN?{
+  title:'Runae Advisor · Remembers You',
+  back:'Back', step:'Runae Advisor',
+  heroK:'Runae Advisor · Remembers You', heroName:'Rún · Your Personal Advisor',
+  heroSub:'Reads your chart, follows your questions · AI-generated, for reference only',
+  inputPlaceholder:'Ask Rún about your fortune, career, love…',
+  send:'Send', roleGen:'Rún · AI-generated', roleThinking:'Rún · thinking',
+  quotaUnlimited:'Annual member · <b>unlimited chat</b> — Rún remembers your chart',
+  quotaUsedUp:'You\'re out of chats for today · <b>go annual</b> for unlimited chat',
+  quotaRemain1:'You have ', quotaRemain2:' chats left today',
+  gateInputPlaceholder:'Upgrade to keep chatting with Rún',
+  payK:'Runae Advisor · Remembers You',
+  payTitle:'More than a single question<br>an advisor who actually knows you',
+  payLi:['Unlimited chat — follow up and go deeper anytime','Rún remembers your chart & history — the more you use it, the better it knows you','Your daily horoscope & annual forecast, refreshed every day','Every full report unlocked · Eastern & Western readings cross-checked'],
+  payBtn:'Subscribe to Runae Advisor · $9.9 / mo', payAlt:'Or come back tomorrow for more free chats',
+  disclaimer:'AI-generated content · for self-exploration and entertainment, not medical / legal / investment advice',
+  errBlur:'The stars are hazy for now, please ask again shortly.',
+  greetHas1:'I\'ve got your chart', greetHas2:'.\nWhatever\'s on your mind — career, love, money, or something you can\'t quite name — just ask, and I\'ll read it from your chart.',
+  greetNo:'I\'m Rún — an AI that draws on ancient systems to help you see your own patterns more clearly.\nLet\'s start with the basics: when were you born? A rough time helps, too. And are you male or female?',
+  payCnAlert:'Please pay via WeChat / Alipay (coming soon).', payFail:'Couldn’t open checkout — please try again.', netErr:'Network error — please try again.'
+}:{
+  title:'Runae 顾问 · 会记得你',
+  back:'返回', step:'Runae 顾问',
+  heroK:'Runae 顾问 · 会记得你', heroName:'Rún · 你的命理顾问',
+  heroSub:'读你的盘，陪你追问 · AI 生成，仅供参考',
+  inputPlaceholder:'问问 Rún 你的运势、事业、感情…',
+  send:'发送', roleGen:'Rún · AI 生成', roleThinking:'Rún · 思考中',
+  quotaUnlimited:'年会员 · <b>无限畅聊</b>，Rún 记得你的盘',
+  quotaUsedUp:'今日畅聊已用完 · <b>升级年会员</b>无限畅聊',
+  quotaRemain1:'今日还可畅聊 ', quotaRemain2:' 句',
+  gateInputPlaceholder:'升级会员后继续和 Rún 深聊',
+  payK:'Runae 顾问 · 会记得你',
+  payTitle:'不止一次追问<br>是一个懂你的命理顾问',
+  payLi:['无限畅聊，随时追问深聊','Rún 记得你的盘与历史，越用越懂你','每日运势与流年动态，天天更新','全部完整报告解锁 · 中西命理交叉印证'],
+  payBtn:'订阅 Runae 顾问 · $9.9 / 月', payAlt:'或明天再来还有额度',
+  disclaimer:'AI 生成内容 · 用于自我探索与娱乐参考，不构成医学 / 法律 / 投资建议',
+  errBlur:'星轨暂时模糊，请稍后再问。',
+  greetHas1:'我已经拿到你的盘了', greetHas2:'。\n无论是事业、感情、财运还是最近的困惑，随时问我——我会照着你的盘来说。',
+  greetNo:'我是 Rún——一个读古老体系的 AI，帮你看清你自己的规律。\n先来读读你的柱子：你出生年月日是？知道大概几点更好。男生还是女生？',
+  payCnAlert:'国内用户请用微信 / 支付宝支付（接入中）', payFail:'跳转支付失败，请重试', netErr:'网络异常，请重试'
+};
 var msgs=[];                 // 发给后端的对话历史（含隐藏的盘上下文）
 var sending=false;
 var isMember=false, isUnlimited=false, freeRemaining=null, gated=false;
@@ -123,6 +165,17 @@ if(!_sessionId){
 /* ── 把用户的盘拼成一段隐藏上下文，作为第一条 user 消息注入 ── */
 function buildProfileContext(){
   if(!P||!P.bdate) return '';
+  if(EN){
+    var ge = P.gender==='male'?'Male':(P.gender==='female'?'Female':(P.gender||''));
+    var cale = P.cal==='lunar'?'lunar':'solar';
+    var pe=[];
+    pe.push('Date of birth: '+P.bdate+' ('+cale+')');
+    if(P.btime) pe.push('Time of birth: '+P.btime);
+    if(P.bcity) pe.push('Place of birth: '+P.bcity);
+    if(ge) pe.push('Gender: '+ge);
+    if(P.aspects&&P.aspects.length) pe.push('Focus areas: '+P.aspects.join(', '));
+    return '[My chart information — please remember it and interpret for me based on it; do not ask for these again]\n'+pe.join('\n');
+  }
   var g = P.gender==='male'?'男':(P.gender==='female'?'女':(P.gender||''));
   var cal = P.cal==='lunar'?'农历':'阳历';
   var parts=[];
@@ -140,12 +193,12 @@ function greet(){
   if(ctx){
     // 盘作为隐藏的首条 user 消息（不显示在气泡里），让顾问一开口就"记得你"
     msgs.push({role:'user',content:ctx});
-    var g=P.gender==='male'?'男':(P.gender==='female'?'女':'');
-    var line='我已经拿到你的盘了'+(P.bdate?('（'+P.bdate+(g?' · '+g:'')+'）'):'')+'。\n无论是事业、感情、财运还是最近的困惑，随时问我——我会照着你的盘来说。';
+    var g=EN?(P.gender==='male'?'Male':(P.gender==='female'?'Female':'')):(P.gender==='male'?'男':(P.gender==='female'?'女':''));
+    var line=T.greetHas1+(P.bdate?((EN?' (':'（')+P.bdate+(g?' · '+g:'')+(EN?')':'）')):'')+T.greetHas2;
     addMsg(line,'ai');
     msgs.push({role:'assistant',content:line});
   }else{
-    var line2='我是 Rún——一个读古老体系的 AI，帮你看清你自己的规律。\n先来读读你的柱子：你出生年月日是？知道大概几点更好。男生还是女生？';
+    var line2=T.greetNo;
     addMsg(line2,'ai');
     msgs.push({role:'assistant',content:line2});
   }
@@ -166,10 +219,10 @@ function loadQuota(){
 function updateQuota(){
   var el=document.getElementById('quota');
   if(!el)return;
-  if(isUnlimited){ el.innerHTML='年会员 · <b>无限畅聊</b>，Rún 记得你的盘'; return; }
+  if(isUnlimited){ el.innerHTML=T.quotaUnlimited; return; }
   if(freeRemaining===null){ el.textContent=''; return; }
-  if(freeRemaining<=0){ el.innerHTML='今日畅聊已用完 · <b>升级年会员</b>无限畅聊'; return; }
-  el.innerHTML='今日还可畅聊 <b>'+freeRemaining+'</b> 句';
+  if(freeRemaining<=0){ el.innerHTML=T.quotaUsedUp; return; }
+  el.innerHTML=T.quotaRemain1+'<b>'+freeRemaining+'</b>'+T.quotaRemain2;
 }
 
 /* ── 渲染 ── */
@@ -179,7 +232,7 @@ function addMsg(text,role){
   var chat=document.getElementById('chat');
   var div=document.createElement('div');
   div.className='msg '+role;
-  if(role==='ai'){ div.innerHTML='<div class="role">Rún · AI 生成</div><div class="bubble">'+md(text)+'</div>'; }
+  if(role==='ai'){ div.innerHTML='<div class="role">'+T.roleGen+'</div><div class="bubble">'+md(text)+'</div>'; }
   else{ div.innerHTML='<div class="bubble"></div>'; div.querySelector('.bubble').textContent=text; }
   chat.appendChild(div);
   chat.scrollTop=chat.scrollHeight;
@@ -188,7 +241,7 @@ function showTyping(){
   var chat=document.getElementById('chat');
   var div=document.createElement('div');
   div.className='msg ai'; div.id='typing';
-  div.innerHTML='<div class="role">Rún · 思考中</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>';
+  div.innerHTML='<div class="role">'+T.roleThinking+'</div><div class="bubble"><div class="typing"><span></span><span></span><span></span></div></div>';
   chat.appendChild(div); chat.scrollTop=chat.scrollHeight;
 }
 function clearTyping(){ var t=document.getElementById('typing'); if(t)t.remove(); }
@@ -196,19 +249,16 @@ function clearTyping(){ var t=document.getElementById('typing'); if(t)t.remove()
 /* ── 付费墙 ── */
 function addPaywall(){
   if(gated)return; gated=true;
-  var input=document.getElementById('input'); input.disabled=true; input.placeholder='升级会员后继续和 Rún 深聊';
+  var input=document.getElementById('input'); input.disabled=true; input.placeholder=T.gateInputPlaceholder;
   document.getElementById('sendBtn').disabled=true;
   var chat=document.getElementById('chat');
   var div=document.createElement('div');
   div.className='adv';
-  div.innerHTML='<div class="k">Runae 顾问 · 会记得你</div>'+
-    '<h4>不止一次追问<br>是一个懂你的命理顾问</h4>'+
-    '<ul><li>无限畅聊，随时追问深聊</li>'+
-    '<li>Rún 记得你的盘与历史，越用越懂你</li>'+
-    '<li>每日运势与流年动态，天天更新</li>'+
-    '<li>全部完整报告解锁 · 中西命理交叉印证</li></ul>'+
-    '<button class="sbtn" onclick="goCheckout(\'member_monthly\')">订阅 Runae 顾问 · $9.9 / 月</button>'+
-    '<div class="price">或明天再来还有额度</div>';
+  div.innerHTML='<div class="k">'+T.payK+'</div>'+
+    '<h4>'+T.payTitle+'</h4>'+
+    '<ul>'+T.payLi.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'+
+    '<button class="sbtn" onclick="goCheckout(\'member_monthly\')">'+T.payBtn+'</button>'+
+    '<div class="price">'+T.payAlt+'</div>';
   chat.appendChild(div); chat.scrollTop=chat.scrollHeight;
 }
 
@@ -245,7 +295,7 @@ function send(){
       msgs.push({role:'assistant',content:d.answer});
       if(!isMember && freeRemaining!==null){ freeRemaining=Math.max(0,freeRemaining-1); updateQuota(); if(freeRemaining<=0) addPaywall(); }
     }else{
-      addMsg('星轨暂时模糊，请稍后再问。','ai');
+      addMsg(T.errBlur,'ai');
     }
   }).catch(function(){
     clearTyping(); sending=false; document.getElementById('sendBtn').disabled=false;
@@ -265,15 +315,31 @@ _input.addEventListener('keydown',function(e){
 window.goCheckout=function(product){
   fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({product:product,token:localStorage.getItem('sy_token')||'',
-      successUrl:location.origin+'/pages/advisor-chat.html?paid=1',cancelUrl:location.href})})
+      successUrl:location.origin+'/pages/advisor-chat.html?paid=1&lang='+LANG,cancelUrl:location.href})})
    .then(function(r){return r.json();}).then(function(d){
      if(d.url){ location.href=d.url; }
-     else if(d.channel==='cn'){ alert('国内用户请用微信 / 支付宝支付（接入中）'); }
-     else { alert('跳转支付失败，请重试'); }
-   }).catch(function(){ alert('网络异常，请重试'); });
+     else if(d.channel==='cn'){ alert(T.payCnAlert); }
+     else { alert(T.payFail); }
+   }).catch(function(){ alert(T.netErr); });
 };
 
+/* ── 应用文案 ── */
+function applyI18n(){
+  document.documentElement.lang=EN?'en':'zh-CN';
+  document.title=T.title;
+  document.getElementById('backTxt').textContent=T.back;
+  document.getElementById('stepTxt').textContent=T.step;
+  document.getElementById('heroK').textContent=T.heroK;
+  document.getElementById('heroName').textContent=T.heroName;
+  document.getElementById('heroSub').textContent=T.heroSub;
+  document.getElementById('input').placeholder=T.inputPlaceholder;
+  document.getElementById('sendBtn').setAttribute('aria-label',T.send);
+  document.getElementById('disclaimer').textContent=T.disclaimer;
+}
+document.getElementById('navBack').onclick=function(){ if(history.length>1){history.back();} else {location.href='pick.html?lang='+LANG;} };
+
 /* ── 启动 ── */
+applyI18n();
 loadQuota();
 greet();
 </script>
