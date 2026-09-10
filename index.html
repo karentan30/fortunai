@@ -3,28 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<script>
-// 语言偏好：默认永远留中文。仅在非华语环境顶部显示可关闭的"View in English"小横条，绝不强制跳转。
-(function() {
-  try {
-    var lang = (navigator.language || navigator.userLanguage || '').toLowerCase();
-    if (lang.indexOf('zh') !== -1) return; // 华语用户直接留中文
-    if (localStorage.getItem('sy_lang_bar_dismissed') === '1') return;
-    document.addEventListener('DOMContentLoaded', function() {
-      var bar = document.createElement('div');
-      bar.style.cssText = 'position:sticky;top:0;z-index:9999;background:#1a1a2e;color:#e8dcc0;font-size:13px;text-align:center;padding:8px 36px 8px 12px;letter-spacing:0.04em';
-      bar.innerHTML = 'Prefer English? <a href="/pages/en.html" style="color:#d4af37;text-decoration:underline;margin-left:4px">View in English →</a>' +
-        '<span id="syLangClose" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;opacity:0.7">✕</span>';
-      document.body.insertBefore(bar, document.body.firstChild);
-      document.getElementById('syLangClose').onclick = function() {
-        bar.remove();
-        try { localStorage.setItem('sy_lang_bar_dismissed', '1'); } catch (e) {}
-      };
-    });
-  } catch (e) {}
-})();
-</script>
-<meta name="theme-color" content="#0a0f1a">
+<meta name="theme-color" content="#060e0d">
 <meta name="description" content="善缘AI命理平台，免费八字排盘、紫微斗数、塔罗占卜，AI深度报告洞见财运姻缘大运。立即免费测算 →">
 <meta name="keywords" content="八字排盘,四柱命理,免费八字,AI命理,吠陀占星,Jyotish,玛雅历,Tzolkin,藏传命理,海外华人算命">
 <meta property="og:title" content="善缘 · 东方灵性平台">
@@ -49,666 +28,189 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500&display=swap">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@300;400;500;600;700;900&family=Noto+Sans+SC:wght@200;300;400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet">
 <style>
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-
-:root{
-  /* ── jade cosmos ground ── */
-  --void-0:#060e0d; --void:#0a1614; --deep:#0f1f1c; --deep-2:#152920; --deep-3:#1c3429;
-  /* ── jade / emerald accent ── */
-  --jade:#4fbfa0; --jade-2:#3d9e82; --jade-3:#2d7a62; --jade-hi:#7ddfc0;
-  --jade-line:rgba(79,191,160,.28); --jade-line-2:rgba(79,191,160,.50); --jade-glow:rgba(79,191,160,.45);
-  /* ── gold ── */
-  --gold-hi:#f4e6b6; --gold:#dcc082; --gold-deep:#ab8642; --gold-soft:#e8d49c;
-  --gold-line:rgba(220,192,130,.28); --gold-line-2:rgba(220,192,130,.50); --gold-glow:rgba(220,192,130,.5);
-  /* ── text ── */
-  --text-cream:#e8f0ec; --text-mute:#9abfb2; --text-faint:#6a9488; --text-ghost:#4a726a;
-  /* ── hairlines ── */
-  --hair:rgba(79,191,160,.08); --hair-2:rgba(79,191,160,.15);
-  --shadow-card:0 24px 48px -24px rgba(0,0,0,.85); --shadow-lift:0 14px 32px -18px rgba(0,0,0,.7);
-  /* ── type ── */
-  --serif:"Noto Serif SC",serif; --sans:"Noto Sans SC",-apple-system,BlinkMacSystemFont,sans-serif; --lat:"Cormorant Garamond",serif;
-  --radius:16px; --gut:16px;
-}
-
-html, body { background:#060e0d; font-family:var(--sans); color:var(--text-cream); -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
-body { max-width:420px; margin:0 auto; min-height:100vh; padding:0 0 calc(96px + env(safe-area-inset-bottom,0px)); position:relative; overflow-x:hidden; }
-
-/* ── deep jade nebula sky ── */
-body::before {
-  content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
-  background:
-    radial-gradient(130% 80% at 50% -6%, #1c4a3a 0%, #0d2e22 38%, #060e0d 82%);
-}
-/* ── star field ── */
-body::after {
-  content:''; position:fixed; inset:0; pointer-events:none; z-index:0; opacity:.9;
-  background-image:
-    radial-gradient(circle, rgba(200,245,228,0.80) 1px, transparent 1px),
-    radial-gradient(circle, rgba(79,191,160,0.55) 1px, transparent 1px),
-    radial-gradient(circle, rgba(220,192,130,0.45) 1px, transparent 1px);
-  background-size: 130px 130px, 88px 88px, 170px 170px;
-  background-position: 18px 24px, 64px 44px, 36px 88px;
-}
-
-/* ── Lang switch ── */
-#langSwitch {
-  position:fixed; top:14px; right:14px; z-index:999;
-  background:rgba(79,191,160,.10); border:1px solid rgba(79,191,160,.22);
-  border-radius:20px; padding:10px 14px; font-size:11px;
-  color:var(--jade); text-decoration:none; letter-spacing:.05em; font-family:inherit;
-}
-
-/* ── HEADER ── */
-.header { position:relative; z-index:1; text-align:center; padding:44px 20px 0; }
-.brandmark { display:flex; flex-direction:column; align-items:center; line-height:1; margin-bottom:20px; }
-.brandmark .cn { font-family:var(--serif); font-weight:500; font-size:20px; letter-spacing:.38em; color:var(--text-cream); text-indent:.38em; }
-.brandmark .en { font-family:var(--lat); font-size:10px; letter-spacing:.44em; color:var(--jade); margin-top:7px; text-transform:uppercase; text-indent:.44em; }
-
-/* ── JADE RING HERO (the "green ring" restored as animated cosmic orb) ── */
-.jade-ring-wrap { position:relative; z-index:1; display:flex; justify-content:center; margin:0 0 22px; }
-.jade-ring {
-  position:relative; width:110px; height:110px; border-radius:50%;
-  background:
-    radial-gradient(circle at 34% 27%, rgba(255,255,255,.92) 0%, rgba(255,255,255,.30) 7%, transparent 18%),
-    radial-gradient(circle at 70% 68%, var(--jade-2) 0%, transparent 38%),
-    radial-gradient(circle at 20% 72%, rgba(0,180,80,.22) 0%, transparent 35%),
-    radial-gradient(ellipse at 42% 38%, var(--jade-hi) 0%, var(--jade) 22%, var(--jade) 52%, var(--jade-2) 100%);
-  box-shadow:0 0 0 1px var(--jade-line-2), 0 8px 32px rgba(79,191,160,.35), 0 0 60px -12px rgba(79,191,160,.22);
-  animation:ring-breathe 5s ease-in-out infinite;
-}
-/* hole */
-.jade-ring::before {
-  content:''; position:absolute; border-radius:50%; background:#060e0d;
-  width:32px; height:32px; top:50%; left:50%; transform:translate(-50%,-50%);
-  box-shadow:inset 0 2px 8px rgba(0,0,0,.35);
-}
-/* outer glow ring */
-.jade-ring::after {
-  content:''; position:absolute; inset:-10px; border-radius:50%;
-  border:1px solid var(--jade-line); animation:ring-pulse 3s ease-in-out infinite;
-}
-@keyframes ring-breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.04)} }
-@keyframes ring-pulse { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:.9;transform:scale(1.06)} }
-
-/* inner star mark */
-.jade-ring-inner {
-  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
-  font-family:var(--lat); font-style:italic; font-size:14px; color:rgba(255,255,255,.9);
-  padding-top:4px; z-index:1;
-}
-
-/* ── Hero text ── */
-.hero-eyebrow { font-family:var(--lat); font-size:12px; font-style:italic; letter-spacing:.22em; color:var(--jade); opacity:.9; position:relative; z-index:1; text-align:center; margin-bottom:8px; }
-.hero-title { position:relative; z-index:1; text-align:center; padding:0 24px; }
-.hero-title h1 { font-family:var(--serif); font-weight:600; font-size:clamp(19px,5.5vw,24px); line-height:1.45; letter-spacing:.05em; color:var(--text-cream); }
-.hero-title h1 em { font-style:normal; color:var(--gold-soft); position:relative; white-space:nowrap; }
-.hero-title h1 em::after { content:""; position:absolute; left:2%; right:2%; bottom:-4px; height:1px; background:linear-gradient(90deg,transparent,var(--gold-line-2),transparent); }
-.hero-sub { position:relative; z-index:1; text-align:center; font-size:12px; color:var(--text-mute); line-height:1.85; letter-spacing:.03em; padding:12px 24px 0; }
-.jade-divider { width:44px; height:1px; background:var(--jade-line-2); margin:16px auto; position:relative; z-index:1; }
-
-/* ── Gold CTA ── */
-.gilt { background:linear-gradient(155deg,var(--gold-hi) 0%,var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep) 100%); box-shadow:0 16px 30px -14px var(--gold-glow),inset 0 1px 0 rgba(255,255,255,.55),inset 0 -1px 0 rgba(120,90,30,.42); }
-.hero-cta { display:block; margin:0 auto 6px; max-width:288px; padding:15px 0; text-align:center;
-  border-radius:30px; text-decoration:none; color:#241a08;
-  font-family:var(--serif); font-size:15px; letter-spacing:.16em; text-indent:.16em;
-  font-weight:600; transition:all .2s; position:relative; z-index:1; }
-.hero-cta:hover { transform:translateY(-2px); box-shadow:0 22px 40px -18px var(--gold-glow); }
-.hero-cta:active { transform:scale(0.97); }
-.hero-cta small { display:block; font-size:10px; letter-spacing:.06em; opacity:.8; margin-top:3px; font-weight:400; color:#3a2a08; }
-
-/* ── Trust row ── */
-.trust { display:flex; justify-content:center; gap:14px; flex-wrap:wrap; padding:10px 0 14px; position:relative; z-index:1; }
-.trust-item { font-size:10px; color:var(--text-faint); letter-spacing:.06em; }
-.trust-item b { color:var(--jade); font-weight:500; }
-
-/* ── Snippet / taste of report ── */
-.sample-card {
-  position:relative; z-index:1; margin:0 16px 14px;
-  background:linear-gradient(180deg,rgba(79,191,160,.08),rgba(79,191,160,.02));
-  border:1px solid var(--jade-line); border-radius:var(--radius);
-  padding:12px 16px 14px;
-}
-.sample-label { font-size:9.5px; color:var(--text-faint); letter-spacing:.14em; margin-bottom:7px; text-align:center; }
-.sample-text { font-family:var(--serif); font-size:12.5px; color:var(--text-mute); line-height:1.85; letter-spacing:.02em; }
-.sample-note { font-size:10px; color:var(--jade); margin-top:8px; text-align:center; letter-spacing:.05em; }
-
-/* ── Section label ── */
-.sec-label {
-  position:relative; z-index:1; display:flex; align-items:center; gap:10px;
-  font-size:9.5px; color:var(--text-faint); letter-spacing:.14em; padding:4px 0 10px;
-}
-.sec-label::before, .sec-label::after { content:""; flex:1; height:1px; background:var(--hair); }
-
-/* ── BIG feature card (八字) ── */
-.big-card {
-  position:relative; z-index:1; margin:0 0 10px;
-  display:block; text-decoration:none;
-  background:linear-gradient(135deg,rgba(220,192,130,.10) 0%,rgba(79,191,160,.07) 100%);
-  border:1.5px solid rgba(220,192,130,.30); border-radius:16px;
-  padding:18px 16px 14px; overflow:hidden;
-  box-shadow:0 4px 24px rgba(0,0,0,.35);
-  transition:all .22s;
-}
-.big-card:hover { border-color:rgba(220,192,130,.48); transform:translateY(-2px); box-shadow:0 12px 32px rgba(0,0,0,.5); }
-.big-card:active { transform:scale(.97); }
-.big-card-badge {
-  position:absolute; top:10px; right:12px;
-  font-size:8px; background:rgba(220,192,130,.14); color:var(--gold-soft);
-  border:1px solid rgba(220,192,130,.28); padding:2px 8px; border-radius:8px; letter-spacing:.08em;
-}
-.big-card-inner { display:flex; align-items:center; gap:14px; }
-.big-card-icon { font-size:38px; flex-shrink:0; }
-.big-card-title { font-family:var(--serif); font-size:16px; color:var(--text-cream); letter-spacing:.1em; margin-bottom:3px; }
-.big-card-sub { font-size:11px; color:var(--text-mute); letter-spacing:.03em; line-height:1.6; }
-.big-card-price { display:flex; align-items:center; gap:8px; margin-top:9px; }
-.big-card-price .amt { font-family:var(--lat); font-size:19px; color:var(--gold-soft); font-weight:500; }
-.big-card-price .go { font-size:10px; color:var(--gold); background:rgba(220,192,130,.10); padding:2px 9px; border-radius:8px; }
-
-/* ── Method grid (6+1 core methods) ── */
-.method-grid { position:relative; z-index:1; display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:10px; }
-.mcard {
-  background:linear-gradient(180deg,var(--deep-2),var(--deep));
-  border:1px solid var(--hair-2); border-radius:14px;
-  padding:16px 12px 13px; text-align:center;
-  text-decoration:none; display:block;
-  transition:all .2s; box-shadow:var(--shadow-card);
-}
-.mcard:hover { border-color:var(--jade-line-2); transform:translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.5); }
-.mcard:active { transform:scale(.97); }
-.mcard-icon { font-size:26px; margin-bottom:6px; }
-.mcard-name { font-family:var(--serif); font-size:13.5px; color:var(--text-cream); letter-spacing:.08em; margin-bottom:2px; }
-.mcard-sub { font-size:10px; color:var(--text-faint); letter-spacing:.03em; line-height:1.5; }
-.mcard-badge { display:inline-block; font-size:9.5px; padding:2px 8px; border-radius:8px; margin-top:5px; letter-spacing:.04em; }
-.mcard-badge.free { background:rgba(79,191,160,.12); color:var(--jade); border:1px solid var(--jade-line); }
-.mcard-badge.paid { background:rgba(220,192,130,.10); color:var(--gold-soft); border:1px solid var(--gold-line); }
-
-/* full-width mcard */
-.mcard-wide { grid-column:1/-1; display:flex; align-items:center; gap:12px; padding:14px 18px; text-align:left; }
-.mcard-wide .mcard-icon { margin-bottom:0; font-size:22px; flex-shrink:0; }
-.mcard-wide .mcard-text { flex:1; }
-.mcard-wide .mcard-name { font-size:14px; }
-.mcard-wide .mcard-sub { font-size:10.5px; }
-
-/* rose accent for 合婚 */
-.mcard.rose-border { border-left:3px solid #cc6677; }
-
-/* ── Pulses / live banners ── */
-.monthly-banner, .daily-pulse-bar {
-  position:relative; z-index:1; display:block; text-decoration:none;
-  border-radius:12px; padding:11px 14px; margin-bottom:10px; overflow:hidden;
-  transition:opacity .2s;
-}
-.monthly-banner {
-  background:linear-gradient(135deg,rgba(220,192,130,.09),rgba(79,191,160,.10));
-  border:1px solid rgba(220,192,130,.22);
-}
-.monthly-banner-inner { display:flex; align-items:center; gap:10px; }
-.monthly-banner .mb-text { flex:1; }
-.monthly-banner .mb-title { font-size:13px; color:var(--gold-soft); font-weight:500; letter-spacing:.06em; }
-.monthly-banner .mb-sub { font-size:10px; color:var(--text-faint); margin-top:2px; letter-spacing:.03em; }
-.monthly-banner .mb-go { font-size:12px; color:var(--gold); white-space:nowrap; }
-
-.daily-pulse-bar {
-  background:rgba(79,191,160,.07);
-  border:1px solid rgba(79,191,160,.20);
-  display:flex; align-items:center; justify-content:space-between;
-}
-.daily-pulse-bar .dpb-left { display:flex; align-items:center; gap:8px; }
-.daily-pulse-dot {
-  display:inline-block; width:7px; height:7px; border-radius:50%;
-  background:var(--jade); flex-shrink:0; animation:pulse-dot 1.6s ease-in-out infinite;
-}
-.daily-pulse-bar .dpb-text { font-size:12px; color:var(--jade); letter-spacing:.05em; }
-.daily-pulse-bar .dpb-go { font-size:11px; color:var(--jade); }
-@keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
-
-/* ── upsell dashed link ── */
-.dashed-cta {
-  position:relative; z-index:1; display:block; text-align:center;
-  background:rgba(79,191,160,.04); border:1px dashed rgba(79,191,160,.25);
-  border-radius:12px; padding:10px 14px; margin-bottom:12px;
-  text-decoration:none; font-size:12px; color:var(--jade); letter-spacing:.06em;
-}
-
-/* ── Extended systems grid ── */
-.ext-grid { position:relative; z-index:1; display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-bottom:10px; }
-
-/* ── Member banner ── */
-.mbanner {
-  position:relative; z-index:1;
-  background:linear-gradient(135deg,var(--deep-2),var(--deep-3));
-  border:1px solid var(--jade-line-2);
-  border-radius:var(--radius); padding:18px 16px; margin:4px 0 12px;
-  text-decoration:none; display:block; transition:all .2s;
-  box-shadow:0 2px 20px rgba(79,191,160,.14);
-}
-.mbanner:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(79,191,160,.20); }
-.mbtop { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
-.mbcrown { font-size:24px; }
-.mbinfo { flex:1; }
-.mbtitle { font-family:var(--serif); font-size:14px; color:var(--text-cream); letter-spacing:.1em; margin-bottom:2px; }
-.mbsub { font-size:10px; color:var(--text-mute); letter-spacing:.05em; }
-.mbprice { font-family:var(--lat); font-size:20px; color:var(--jade); font-weight:500; }
-.mbperks { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:8px; }
-.mbperk { font-size:9px; padding:3px 8px; background:rgba(79,191,160,.10); border:1px solid var(--jade-line); border-radius:10px; color:var(--jade); letter-spacing:.04em; }
-.mbbtn { display:block; width:100%; padding:10px 0; text-align:center; background:rgba(79,191,160,.12); border:1px solid var(--jade-line-2); border-radius:12px; color:var(--jade); font-family:var(--serif); font-size:13px; letter-spacing:.14em; }
-
-/* ── Referral hint ── */
-.referral-hint {
-  position:relative; z-index:1;
-  display:flex; align-items:center; justify-content:space-between;
-  background:rgba(220,192,130,.06); border:1px solid rgba(220,192,130,.18);
-  border-radius:10px; padding:10px 14px; margin:0 0 16px; text-decoration:none;
-  transition:opacity .2s;
-}
-.referral-hint .rh-go { font-size:11px; color:var(--gold); letter-spacing:.04em; white-space:nowrap; }
-
-/* ── Consent / footer nav ── */
-.consent { position:relative; z-index:1; text-align:center; font-size:10px; color:var(--text-ghost); line-height:1.6; padding:8px 16px 0; letter-spacing:.02em; }
-.consent a { color:var(--jade); text-decoration:underline; display:inline-block; padding:4px 2px; }
-.bnav { position:relative; z-index:1; display:flex; justify-content:center; gap:14px; padding:20px 0 8px; flex-wrap:wrap; }
-.bnav a { font-size:11px; color:var(--text-faint); text-decoration:none; letter-spacing:.06em; padding:8px 4px; }
-.bnav a:hover { color:var(--jade); }
-.bfooter { position:relative; z-index:1; text-align:center; font-family:var(--lat); font-style:italic; font-size:11px; color:var(--text-ghost); padding:4px 0 2px; letter-spacing:.12em; }
-
-/* ── Disclaimer ── */
-.disclaimer { position:relative; z-index:1; text-align:center; font-size:10px; color:var(--text-ghost); opacity:.65; letter-spacing:.04em; padding:2px 0 8px; }
-
-/* ── Sticky bottom CTA ── */
-#stickyCta {
-  position:fixed; left:50%; transform:translateX(-50%);
-  bottom:calc(10px + env(safe-area-inset-bottom,0px));
-  z-index:900; max-width:380px; width:calc(100% - 32px);
-  text-align:center; padding:13px 0;
-  color:#241a08; text-decoration:none; border-radius:28px;
-  font-family:var(--serif); font-size:14px; letter-spacing:.14em;
-  opacity:0; pointer-events:none; transition:opacity .3s;
-}
-
-/* share btn */
-#shareBtn {
-  background:none; border:1px solid rgba(79,191,160,.28);
-  border-radius:20px; padding:8px 20px; font-size:12px;
-  color:var(--jade); letter-spacing:.1em; cursor:pointer;
-  font-family:'Noto Serif SC',serif;
-}
+  :root{
+    --paper:#060e0d;--card:#0f1b17;--card-2:#0b1512;
+    --ink:#f0ebe0;--ink-2:rgba(240,235,224,.70);--ink-3:rgba(240,235,224,.42);
+    --gold:#dcc082;--gold-soft:#e8d49c;--gold-wash:rgba(220,192,130,.14);
+    --jade:#4fbfa0;--jade-deep:#0e2b24;--jade-soft:#7DDFC0;--jade-wash:rgba(79,191,160,.12);
+    --line:rgba(240,235,224,.10);--line-2:rgba(240,235,224,.17);
+    --sans:'Inter',-apple-system,system-ui,sans-serif;--serif:'Cormorant Garamond','Noto Serif SC',serif;
+    --rl:20px;--r:14px;
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{background:var(--paper);font-family:var(--sans);color:var(--ink);line-height:1.5;font-feature-settings:"tnum";min-height:100vh}
+  .wrap{max-width:430px;margin:0 auto;padding:0 24px 48px;min-height:100vh}
+  svg.ic{width:18px;height:18px;stroke:var(--ink-3);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  svg.mic{width:28px;height:28px;stroke:var(--ink);stroke-width:1.35;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  /* top bar */
+  .bar{display:flex;align-items:center;justify-content:space-between;padding:22px 2px 10px}
+  .brand{font-family:var(--serif);font-size:23px;font-weight:700;letter-spacing:.01em}
+  .brand .dot{color:var(--jade)}
+  .lang{font-size:12px;color:var(--ink-3);text-decoration:none;font-weight:500;letter-spacing:.04em;border:1px solid var(--line-2);border-radius:999px;padding:6px 13px}
+  /* hero */
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin:30px 2px 12px}
+  h1.hero{font-family:var(--serif);font-size:40px;font-weight:600;line-height:1.14;letter-spacing:-.012em}
+  .hero-sub{font-size:14.5px;color:var(--ink-2);margin-top:14px;line-height:1.68}
+  .cta{display:block;width:100%;text-align:center;background:var(--jade-deep);color:#fff;border:none;border-radius:var(--r);padding:17px;font-size:15.5px;font-weight:600;font-family:var(--sans);letter-spacing:.01em;box-shadow:0 14px 30px -16px rgba(28,74,58,.55);cursor:pointer;text-decoration:none;margin-top:26px}
+  .cta small{display:block;font-size:11.5px;font-weight:400;opacity:.72;margin-top:4px;letter-spacing:.02em}
+  .hint{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--ink-3);margin-top:13px}
+  /* section header */
+  .sec{font-size:11px;font-weight:600;color:var(--ink-3);letter-spacing:.14em;text-transform:uppercase;margin:38px 2px 15px}
+  /* method grid */
+  .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .mcard{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;position:relative;min-height:142px;display:flex;flex-direction:column;cursor:pointer;text-decoration:none;color:var(--ink);transition:transform .12s,border-color .15s}
+  .mcard:active{transform:scale(.98)}
+  .mcard:hover{border-color:var(--line-2)}
+  .mcard .mic{margin-bottom:13px}
+  .mcard .mn{font-size:16px;font-weight:600;font-family:var(--serif)}
+  .mcard .md{font-size:12px;color:var(--ink-2);margin-top:6px;line-height:1.55;flex:1}
+  .mcard .tag{font-size:11px;color:var(--ink-3);font-weight:500;margin-top:11px}
+  .mcard.top{grid-column:1/-1;flex-direction:row;align-items:center;gap:18px;min-height:auto;background:var(--jade-deep);border-color:var(--jade-deep)}
+  .mcard.top .mic{margin:0;stroke:var(--gold-soft);width:32px;height:32px}
+  .mcard.top .mn{font-size:19px;color:#fff}
+  .mcard.top .md{color:rgba(255,255,255,.82);margin-top:4px}
+  .mcard.top .tag{color:var(--gold-soft);margin-top:6px}
+  .mcard .badge{position:absolute;top:15px;right:15px;font-size:10px;color:var(--ink-3);letter-spacing:.04em}
+  .mcard.top .badge{color:var(--gold-soft)}
+  /* cross-verify callout */
+  .cross{margin-top:32px;background:var(--card-2);border:1px solid var(--line);border-radius:var(--rl);padding:24px 20px}
+  .cross .ct{font-family:var(--serif);font-size:23px;font-weight:600;line-height:1.24;letter-spacing:-.01em}
+  .cross .cd{font-size:13.5px;color:var(--ink-2);margin-top:10px;line-height:1.7}
+  /* how it works */
+  .steps{display:flex;flex-direction:column;margin-top:4px}
+  .stp{display:flex;align-items:flex-start;gap:15px;padding:16px 2px}
+  .stp+.stp{border-top:1px solid var(--line)}
+  .stp .num{font-family:var(--serif);font-size:20px;font-weight:600;color:var(--jade);width:24px;flex-shrink:0;line-height:1.25}
+  .stp .sh{font-size:15px;font-weight:600}
+  .stp .ss{font-size:13px;color:var(--ink-2);margin-top:3px;line-height:1.55}
+  /* footer */
+  .foot{margin-top:40px;border-top:1px solid var(--line);padding-top:22px;text-align:center}
+  .foot .fnav{display:flex;flex-wrap:wrap;justify-content:center;gap:16px;margin-bottom:16px}
+  .foot .fnav a{font-size:12px;color:var(--ink-3);text-decoration:none;letter-spacing:.04em}
+  .foot .fnav a:hover{color:var(--jade)}
+  .foot .disc{font-size:11px;color:var(--ink-3);line-height:1.7;letter-spacing:.02em}
+  .foot .disc a{color:var(--jade);text-decoration:none}
+  .foot .sig{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink-3);margin-top:16px;letter-spacing:.06em}
 </style>
-<link rel="stylesheet" href="/assets/css/common.css">
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></symbol>
+  <symbol id="m-bazi" viewBox="0 0 32 32"><path d="M7 6v20M13 6v20M19 6v20M25 6v20"/></symbol>
+  <symbol id="m-hehun" viewBox="0 0 32 32"><circle cx="12" cy="16" r="7.5"/><circle cx="20" cy="16" r="7.5"/></symbol>
+  <symbol id="m-tarot" viewBox="0 0 32 32"><rect x="6" y="8" width="12" height="18" rx="2" transform="rotate(-8 12 17)"/><rect x="15" y="6" width="12" height="18" rx="2" transform="rotate(8 21 15)"/></symbol>
+  <symbol id="m-astro" viewBox="0 0 32 32"><circle cx="16" cy="16" r="6"/><path d="M16 3v3M16 26v3M3 16h3M26 16h3M6.6 6.6l2.1 2.1M23.3 23.3l2.1 2.1M25.4 6.6l-2.1 2.1M8.7 23.3l-2.1 2.1"/></symbol>
+  <symbol id="m-daily" viewBox="0 0 32 32"><path d="M24 20a9 9 0 1 1-8-13 7 7 0 0 0 8 13z"/></symbol>
+  <symbol id="m-palm" viewBox="0 0 32 32"><path d="M11 26v-6M11 20V9a2 2 0 0 1 4 0v7M15 16V7a2 2 0 0 1 4 0v9M19 16v-5a2 2 0 0 1 4 0v9a7 7 0 0 1-7 7h-1a6 6 0 0 1-5-3l-3-5a2 2 0 0 1 3.4-2z"/></symbol>
+  <symbol id="m-face" viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><path d="M12 14h.01M20 14h.01M12 20a5 4 0 0 0 8 0"/></symbol>
+</defs></svg>
 
-<a href="/pages/en.html" id="langSwitch" title="Runae · English">English →</a>
+<div class="wrap">
 
-<!-- ══ HEADER ══ -->
-<div class="header">
-  <div class="brandmark">
-    <div class="cn">善 缘</div>
-    <div class="en">S H E N Y U A N</div>
+  <!-- 顶栏 -->
+  <div class="bar">
+    <div class="brand">Runae<span class="dot">.</span></div>
+    <a class="lang" href="/pages/home-en.html">EN</a>
   </div>
 
-  <!-- JADE RING — "绿色圆环" restored as dark-cosmos version of peace-clasp -->
-  <div class="jade-ring-wrap">
-    <div class="jade-ring">
-      <div class="jade-ring-inner">✦</div>
-    </div>
-  </div>
-
-  <div class="hero-eyebrow">Eastern Wisdom · AI Deep Reading</div>
-  <div class="hero-title">
-    <h1>洞见<em>财运·姻缘</em>与人生转折<br><span style="font-size:.85em;letter-spacing:.04em;color:var(--text-mute)">AI 八字深度命盘 · 输入生辰即得</span></h1>
-  </div>
-  <div class="hero-sub">3000 年东方智慧 × 现代 AI · 为海外华人专属解读</div>
-  <div class="jade-divider"></div>
-</div>
-
-<!-- ── Main CTA ── -->
-<div style="position:relative;z-index:1;padding:0 16px 6px">
-  <a class="hero-cta gilt" href="pages/collect.html" id="heroCta">
-    免费开始我的命理推演
-    <small>八字 · 塔罗 · 星座 · 面相 · 手相 · 一次测算</small>
+  <!-- Hero -->
+  <div class="eyebrow">东方智慧 · AI 深度命盘</div>
+  <h1 class="hero">读懂你命盘里<br>一直想说的话</h1>
+  <p class="hero-sub">八字 · 星座 · 塔罗 · 合婚 · 面相 · 手相，同一个你，多重印证。填一次生辰，想算什么都行。</p>
+  <a class="cta" href="pages/collect.html">
+    免费开始我的推演
+    <small>3 分钟出报告 · 无需注册</small>
   </a>
-  <div style="text-align:center;margin-top:10px">
-    <a href="pages/hehun.html" style="font-size:12px;color:var(--text-faint);text-decoration:none;letter-spacing:.06em">测我和 TA 的合婚缘分 →</a>
+  <div class="hint"><svg class="ic" style="width:14px;height:14px"><use href="#i-shield"/></svg><span>信息仅用于生成你的报告</span></div>
+
+  <!-- 7 个方法预览 -->
+  <div class="sec">想算哪一种</div>
+  <div class="mgrid" id="grid"></div>
+
+  <!-- 交叉印证卖点 -->
+  <div class="cross">
+    <div class="ct">同一个你，多重印证</div>
+    <div class="cd">八字看格局，星座看性情，塔罗看当下，面相手相看当面。填一次生辰，一处看齐 —— 几种推演彼此对照，不再各说各话。</div>
   </div>
-</div>
 
-<!-- ── Trust row ── -->
-<div class="trust">
-  <div class="trust-item">⏱ <b>3 分钟</b>出报告</div>
-  <div class="trust-item">📜 <b>深度</b>专属解读</div>
-  <div class="trust-item">🔒 信息<b>不存储</b></div>
-  <div class="trust-item" id="inviteCount" style="display:none">已邀请 <b id="inviteNum">0</b> 位好友</div>
-</div>
+  <!-- how it works -->
+  <div class="sec">怎么用</div>
+  <div class="steps">
+    <div class="stp"><div class="num">1</div><div><div class="sh">填一次资料</div><div class="ss">出生日期、时间、地点，一次填好，回来直接看。</div></div></div>
+    <div class="stp"><div class="num">2</div><div><div class="sh">选一种推演</div><div class="ss">八字、星座、塔罗、合婚、面相、手相，随你挑。</div></div></div>
+    <div class="stp"><div class="num">3</div><div><div class="sh">得专属报告</div><div class="ss">AI 依你的命盘深度解读，几分钟出结果。</div></div></div>
+  </div>
 
-<!-- ── Sample / taste ── -->
-<div style="padding:0 16px">
-<div class="sample-card">
-  <div class="sample-label">命盘节选 · 示例</div>
-  <div class="sample-text">「壬水日主生于秋令，金白水清、财官皆透——2025 至 2026 走财旺之运，宜主动求变，把握合作与置业时机……」</div>
-  <div class="sample-note">✦ 完整报告按你的八字专属生成 · 北美 / 澳洲 / 东南亚均可 ✦</div>
-</div>
-</div>
-
-<!-- ══ FEATURES ══ -->
-<div style="padding:0 16px">
-
-  <!-- 核心命理 -->
-  <div class="sec-label">核心命理</div>
-
-  <!-- 八字大卡 -->
-  <a class="big-card" href="pages/bazi.html">
-    <span class="big-card-badge">⭐ 最受欢迎</span>
-    <div class="big-card-inner">
-      <span class="big-card-icon">☯</span>
-      <div>
-        <div class="big-card-title">八字命理深度解读</div>
-        <div class="big-card-sub">AI 生成深度命盘 · 财运 · 姻缘 · 大运流年全析</div>
-        <div class="big-card-price">
-          <span class="amt">$9.90 起</span>
-          <span class="go">立即测算 →</span>
-        </div>
-      </div>
+  <!-- footer -->
+  <div class="foot">
+    <div class="fnav">
+      <a href="blog/">博客</a>
+      <a href="pages/about.html">关于</a>
+      <a href="pages/contact.html">联系</a>
+      <a href="legal-CN.html#privacy">隐私</a>
+      <a href="legal-CN.html#terms">条款</a>
+      <a href="pages/refund.html">退款</a>
+      <a href="pages/member.html">会员</a>
     </div>
-  </a>
-
-  <!-- 6 methods + AI chat grid -->
-  <div class="method-grid">
-    <a class="mcard" href="pages/ziwei.html">
-      <div class="mcard-icon">⭐</div>
-      <div class="mcard-name">紫微斗数</div>
-      <div class="mcard-sub">中州派·十二宫位批命</div>
-      <span class="mcard-badge paid">$19.90</span>
-    </a>
-    <a class="mcard" href="pages/tarot.html">
-      <div class="mcard-icon">🔮</div>
-      <div class="mcard-name">塔罗占卜</div>
-      <div class="mcard-sub">三张牌阵·感情财运决策</div>
-      <span class="mcard-badge free">免费试</span>
-    </a>
-    <a class="mcard" href="pages/astrology.html">
-      <div class="mcard-icon">🌟</div>
-      <div class="mcard-name">占星排盘</div>
-      <div class="mcard-sub">西方星盘·星座宫位解析</div>
-      <span class="mcard-badge paid">$9.90 起</span>
-    </a>
-    <a class="mcard" href="pages/mianxiang.html">
-      <div class="mcard-icon">🪬</div>
-      <div class="mcard-name">面相手相</div>
-      <div class="mcard-sub">上传照片·AI 观察格局</div>
-      <span class="mcard-badge paid">$9.90 起</span>
-    </a>
-    <a class="mcard" href="pages/daily.html">
-      <div class="mcard-icon">🌅</div>
-      <div class="mcard-name">每日天机</div>
-      <div class="mcard-sub">五行运势·每日专属<br><span style="font-size:9px;color:var(--jade)">中文 / EN 双语</span></div>
-      <span class="mcard-badge free">无需付费</span>
-    </a>
-    <a class="mcard rose-border" href="pages/hehun.html">
-      <div class="mcard-icon">💑</div>
-      <div class="mcard-name">合婚配对</div>
-      <div class="mcard-sub">八字合婚·缘分解析</div>
-      <span class="mcard-badge paid">$19.90</span>
-    </a>
-    <a class="mcard" href="pages/hepan.html" style="border-left:3px solid #cc6677">
-      <div class="mcard-icon">💌</div>
-      <div class="mcard-name">合婚邀请</div>
-      <div class="mcard-sub">发链接·双人合测·免费预览</div>
-      <span class="mcard-badge free">免费</span>
-    </a>
-    <a class="mcard" href="pages/duanshi.html">
-      <div class="mcard-icon">🔯</div>
-      <div class="mcard-name">断事问卦</div>
-      <div class="mcard-sub">拿不定·六爻起卦断吉凶</div>
-      <span class="mcard-badge paid">$9.90</span>
-    </a>
-    <a class="mcard mcard-wide" href="pages/chat.html">
-      <div class="mcard-icon">💬</div>
-      <div class="mcard-text">
-        <div class="mcard-name">AI 命理 · 直接对话</div>
-        <div class="mcard-sub">随问随答 · 免费无限聊</div>
-      </div>
-      <span class="mcard-badge free" style="border-color:rgba(220,192,130,.28)">无需付费</span>
-    </a>
+    <div class="disc">测算需填写出生日期等信息，即代表你同意我们的<a href="legal-CN.html#privacy">隐私政策</a>与<a href="legal-CN.html#terms">服务条款</a>。内容仅供娱乐参考，不代替医学 / 法律 / 投资建议。</div>
+    <div class="sig">每一次相遇，皆有因缘</div>
   </div>
 
-  <!-- 月度运势动态条 -->
-  <a href="pages/daily.html" id="monthlyFortuneBanner" class="monthly-banner">
-    <div class="monthly-banner-inner">
-      <span style="font-size:20px">✨</span>
-      <div class="mb-text">
-        <div class="mb-title"><span id="monthlyFortuneMonth"></span>月运势 · <span id="monthlyFortuneDate"></span>已更新</div>
-        <div class="mb-sub">每月五行能量 · 财 / 事 / 情 / 健 全解读</div>
-      </div>
-      <span class="mb-go">查看 →</span>
-    </div>
-  </a>
-
-  <!-- 每日脉冲 -->
-  <a href="pages/daily.html" id="dailyPulse" class="daily-pulse-bar">
-    <div class="dpb-left">
-      <span id="dailyPulseDot" class="daily-pulse-dot"></span>
-      <span class="dpb-text">每日天机 · <span id="dailyPulseDate" style="color:var(--text-cream)"></span>已更新</span>
-    </div>
-    <span class="dpb-go">查看今日 →</span>
-  </a>
-
-  <!-- 免费钩子 -->
-  <div class="sec-label">免费体验</div>
-  <div class="method-grid" style="margin-bottom:10px">
-    <a class="mcard" href="pages/friends.html">
-      <div class="mcard-icon">👫</div>
-      <div class="mcard-name">好友合盘</div>
-      <div class="mcard-sub">星座合盘·社交对比</div>
-      <span class="mcard-badge free">无需付费</span>
-    </a>
-    <a class="mcard" href="pages/cemetery-guide.html">
-      <div class="mcard-icon">🗺️</div>
-      <div class="mcard-name">墓地指南</div>
-      <div class="mcard-sub">美国·华人墓地风水评测</div>
-      <span class="mcard-badge free">免费</span>
-    </a>
-  </div>
-
-  <a class="dashed-cta" href="pages/bazi.html">不知选哪个？先免费算八字 →</a>
-
-  <!-- 多元体系已砍(印度占星/玛雅/藏传搜索量低·占星排盘主网格已有) -->
-
-  <!-- 特色产品 -->
-  <div class="sec-label">特色产品</div>
-  <div class="method-grid" style="margin-bottom:12px">
-    <a class="mcard" href="pages/zhiyuan.html">
-      <div class="mcard-icon">🎓</div>
-      <div class="mcard-name">高考志愿</div>
-      <div class="mcard-sub">八字选专业·数据填志愿</div>
-      <span class="mcard-badge paid">$13.90</span>
-    </a>
-    <a class="mcard" href="pages/fengshui-intro.html">
-      <div class="mcard-icon">🏠</div>
-      <div class="mcard-name">风水评测</div>
-      <div class="mcard-sub">八宅飞星·房屋布局开运</div>
-      <span class="mcard-badge paid">$19.90</span>
-    </a>
-    <a class="mcard" href="pages/yinzhai-intro.html">
-      <div class="mcard-icon">🪦</div>
-      <div class="mcard-name">阴宅风水</div>
-      <div class="mcard-sub">墓地选址·多候选对比评分</div>
-      <span class="mcard-badge paid">$69.90</span>
-    </a>
-    <a class="mcard" href="pages/shop.html">
-      <div class="mcard-icon">💎</div>
-      <div class="mcard-name">开运手串</div>
-      <div class="mcard-sub">命盘定制·开光能量手串</div>
-      <span class="mcard-badge paid">$29 起</span>
-    </a>
-  </div>
-
-</div><!-- /padding wrapper -->
-
-<!-- ── Member banner ── -->
-<div style="padding:0 16px">
-<a class="mbanner" href="pages/member.html" style="margin:4px 0 12px">
-  <div class="mbtop">
-    <span class="mbcrown">👑</span>
-    <div class="mbinfo">
-      <div class="mbtitle">善缘会员 · 全功能不限次</div>
-      <div class="mbsub">八字 / 合婚 / 紫微 / 塔罗…每月无限畅算</div>
-    </div>
-    <div class="mbprice">$9.90/月</div>
-  </div>
-  <div class="mbperks">
-    <span class="mbperk">全品类不限次</span>
-    <span class="mbperk">专属 AI 命盘报告</span>
-    <span class="mbperk">随时取消</span>
-  </div>
-  <div class="mbbtn">开通会员 · 比单次更划算 →</div>
-</a>
-
-<!-- 裂变入口 -->
-<a href="pages/hehun.html?invite=ref" id="referralHint" class="referral-hint">
-  <div style="display:flex;align-items:center;gap:8px">
-    <span style="font-size:16px">💑</span>
-    <span style="font-size:12px;color:var(--text-mute);letter-spacing:.05em">邀请朋友合婚 · <b style="color:var(--gold-soft)">双方各得一次免费</b></span>
-  </div>
-  <span class="rh-go">生成邀请 →</span>
-</a>
-
-<div class="consent">测算需填写出生日期等信息，即代表你同意我们的<a href="legal-CN.html#privacy">隐私政策</a>与<a href="legal-CN.html#terms">服务条款</a></div>
-
-<div class="bnav">
-  <a href="blog/">博客</a>
-  <a href="pages/about.html">关于</a>
-  <a href="pages/contact.html">联系</a>
-  <a href="legal-CN.html#privacy">隐私</a>
-  <a href="legal-CN.html#terms">条款</a>
-  <a href="pages/refund.html">退款</a>
-  <a href="pages/member.html">会员</a>
 </div>
 
-<!-- 分享 -->
-<div style="text-align:center;padding:14px 0 6px">
-  <button id="shareBtn" onclick="shareShenyuan()">分享善缘给朋友 →</button>
-</div>
-
-<div class="bfooter">每一次相遇，皆有因缘</div>
-<div style="text-align:center;font-size:9px;color:var(--text-ghost);opacity:.5;letter-spacing:.12em;padding:2px 0 4px;font-family:'Cormorant Garamond',serif">Lumen Studio 出品</div>
-<div class="disclaimer">内容仅供娱乐参考，不代替医学 / 法律 / 投资建议</div>
-
-</div><!-- /padding wrapper -->
-
-<!-- ── Sticky CTA ── -->
-<a href="pages/bazi.html" id="stickyCta" class="gilt">免费测我的八字 →</a>
 <script>
-(function(){var s=document.getElementById('stickyCta');if(!s)return;function on(){var y=window.scrollY||0;if(y>520){s.style.opacity='1';s.style.pointerEvents='auto';}else{s.style.opacity='0';s.style.pointerEvents='none';}}window.addEventListener('scroll',on,{passive:true});on();})();
-</script>
-<script src="/assets/js/common.js"></script>
-<script>if(window.SY&&SY.initMembership)SY.initMembership();</script>
-<script>
-(function(){
-  var now=new Date();
-  var monthEl=document.getElementById('monthlyFortuneMonth');
-  if(monthEl) monthEl.textContent=now.getMonth()+1;
-  var dateEl=document.getElementById('monthlyFortuneDate');
-  if(dateEl) dateEl.textContent=(now.getMonth()+1)+'月'+now.getDate()+'日';
-
-  // 每日天机脉冲日期
-  var pulseDate=document.getElementById('dailyPulseDate');
-  if(pulseDate) pulseDate.textContent=(now.getMonth()+1)+'月'+now.getDate()+'日';
-  // 每日天机脉冲点击反馈
-  var dp=document.getElementById('dailyPulse');
-  if(dp){dp.addEventListener('click',function(){this.style.opacity='0.55';});}
-
-  // Hero CTA: prevent double-click / show feedback
-  var cta=document.getElementById('heroCta');
-  if(cta){
-    cta.addEventListener('click',function(){
-      this.style.opacity='0.6';
-      this.style.pointerEvents='none';
-    });
-  }
-
-  // 裂变归因：读 ?ref=xxx 参数存入 localStorage
-  var params=new URLSearchParams(window.location.search);
-  var ref=params.get('ref');
-  if(ref){
-    localStorage.setItem('sy_referrer',ref);
-    // 被邀请人首次到访，给邀请人计数+1（本地记录，服务端异步上报）
-    try{
-      var key='sy_invite_from_'+ref;
-      if(!localStorage.getItem(key)){
-        localStorage.setItem(key,'1');
-        // 异步上报（fire-and-forget，不影响页面）
-        fetch('/api/referral?ref='+encodeURIComponent(ref)+'&event=visit',{method:'POST',keepalive:true}).catch(function(){});
-      }
-    }catch(e){}
-  }
-
-  // 显示"已邀请 X 位好友"
-  try{
-    var inviteCount=parseInt(localStorage.getItem('sy_invite_count')||'0',10);
-    if(inviteCount>0){
-      var el=document.getElementById('inviteCount');
-      var num=document.getElementById('inviteNum');
-      if(el&&num){num.textContent=inviteCount;el.style.display='inline-flex';}
-    }
-  }catch(e){}
-
-  // 更新裂变入口链接，带上当前用户ID
-  try{
-    var uid=localStorage.getItem('sy_uid')||localStorage.getItem('sy_user_id')||'';
-    if(uid){
-      var rlink=document.getElementById('referralHint');
-      if(rlink) rlink.href='pages/hehun.html?invite='+encodeURIComponent(uid);
-    }
-  }catch(e){}
-})();
-
-// 分享功能
-function shareShenyuan(){
-  try{
-    var uid=localStorage.getItem('sy_uid')||localStorage.getItem('sy_user_id')||'ref';
-    var shareUrl='https://runae.app/?ref='+encodeURIComponent(uid);
-    var shareText='我在善缘测了八字命理，你也来测测 → '+shareUrl;
-    if(navigator.share){
-      navigator.share({title:'善缘 · AI命理解读',text:shareText,url:shareUrl}).catch(function(){});
+  // 方法预览：任意卡片 → 先引导填资料 collect.html
+  var METHODS=[
+    {id:'bazi', glyph:'m-bazi', name:'八字命理', desc:'四柱排盘，事业财运姻缘深度解读', tag:'最受欢迎', top:true},
+    {id:'astro',glyph:'m-astro',name:'星座占星', desc:'西方星盘，性格与运势走向'},
+    {id:'tarot',glyph:'m-tarot',name:'塔罗',    desc:'此刻的困惑，抽牌给你答案', tag:'立即可算'},
+    {id:'hehun',glyph:'m-hehun',name:'合婚',    desc:'两个人合不合，一测便知'},
+    {id:'face', glyph:'m-face', name:'面相',    desc:'五官里的运势密码'},
+    {id:'palm', glyph:'m-palm', name:'手相',    desc:'掌纹里的命运线'},
+    {id:'daily',glyph:'m-daily',name:'每日运势', desc:'今天宜什么、忌什么', tag:'每天更新'}
+  ];
+  var grid=document.getElementById('grid');
+  METHODS.forEach(function(m){
+    var el=document.createElement('a');
+    el.className='mcard'+(m.top?' top':'');
+    el.href='pages/collect.html';
+    var badge=m.tag?'<div class="badge">'+m.tag+'</div>':'';
+    var tag=(m.tag&&!m.top)?'':(m.tag&&m.top?'<div class="tag">'+m.tag+'</div>':'');
+    if(m.top){
+      el.innerHTML='<svg class="mic"><use href="#'+m.glyph+'"/></svg><div><div class="mn">'+m.name+'</div><div class="md">'+m.desc+'</div></div>';
     } else {
-      navigator.clipboard.writeText(shareUrl).then(function(){
-        var btn=document.getElementById('shareBtn');
-        if(btn){btn.textContent='链接已复制 ✓';setTimeout(function(){btn.textContent='分享善缘给朋友 →';},2000);}
-      }).catch(function(){
-        prompt('复制链接分享给朋友：',shareUrl);
-      });
+      el.innerHTML=badge+'<svg class="mic"><use href="#'+m.glyph+'"/></svg><div class="mn">'+m.name+'</div><div class="md">'+m.desc+'</div>';
     }
-  }catch(e){alert('分享链接：https://runae.app/');}
-}
-</script>
-<script>
-(function(){
-  try {
-    var params = new URLSearchParams(window.location.search);
-    var ref = (params.get('ref') || '').trim().toUpperCase();
-    if (ref) {
-      localStorage.setItem('sy_ref', ref);
-      localStorage.setItem('sy_ref_ts', Date.now());
-      fetch('/api/affiliate/track?ref=' + encodeURIComponent(ref)).catch(function(){});
-    } else {
-      var storedTs = parseInt(localStorage.getItem('sy_ref_ts') || '0');
-      if (storedTs && Date.now() - storedTs > 30 * 24 * 3600 * 1000) {
-        localStorage.removeItem('sy_ref');
-        localStorage.removeItem('sy_ref_ts');
+    grid.appendChild(el);
+  });
+
+  // 裂变归因：读 ?ref=xxx 参数存入 localStorage（保留原逻辑）
+  (function(){
+    try {
+      var params = new URLSearchParams(window.location.search);
+      var ref = (params.get('ref') || '').trim().toUpperCase();
+      if (ref) {
+        localStorage.setItem('sy_ref', ref);
+        localStorage.setItem('sy_ref_ts', Date.now());
+        fetch('/api/affiliate/track?ref=' + encodeURIComponent(ref)).catch(function(){});
+      } else {
+        var storedTs = parseInt(localStorage.getItem('sy_ref_ts') || '0');
+        if (storedTs && Date.now() - storedTs > 30 * 24 * 3600 * 1000) {
+          localStorage.removeItem('sy_ref');
+          localStorage.removeItem('sy_ref_ts');
+        }
       }
-    }
-  } catch(e) {}
-})();
-window.syGetRef = function() {
-  try {
-    var ts = parseInt(localStorage.getItem('sy_ref_ts') || '0');
-    if (ts && Date.now() - ts > 30 * 24 * 3600 * 1000) return '';
-    return localStorage.getItem('sy_ref') || '';
-  } catch(e) { return ''; }
-};
+    } catch(e) {}
+  })();
+  window.syGetRef = function() {
+    try {
+      var ts = parseInt(localStorage.getItem('sy_ref_ts') || '0');
+      if (ts && Date.now() - ts > 30 * 24 * 3600 * 1000) return '';
+      return localStorage.getItem('sy_ref') || '';
+    } catch(e) { return ''; }
+  };
 </script>
 </body>
 </html>
