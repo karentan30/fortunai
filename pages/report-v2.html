@@ -4,64 +4,117 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>Runae · 你的报告</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --paper:#060e0d;--card:#0f1b17;--card-2:#0b1512;
-    --ink:#f0ebe0;--ink-2:rgba(240,235,224,.70);--ink-3:rgba(240,235,224,.42);
+    --ink:#f0ebe0;--ink-2:rgba(240,235,224,.72);--ink-3:rgba(240,235,224,.44);
     --gold:#dcc082;--gold-soft:#e8d49c;--gold-wash:rgba(220,192,130,.14);
-    --jade:#4fbfa0;--jade-deep:#0e2b24;--jade-soft:#7DDFC0;--jade-wash:rgba(79,191,160,.12);
+    --jade:#4fbfa0;--jade-deep:#0e2b24;--jade-soft:#7ddfc0;--jade-wash:rgba(79,191,160,.12);
     --line:rgba(240,235,224,.10);--line-2:rgba(240,235,224,.17);
+    --wood:#7dcf8f;--fire:#e07a6a;--earth:#d8b56a;--metal:#cfcabb;--water:#6aa8d8;
     --sans:'Inter',-apple-system,system-ui,sans-serif;--serif:'Cormorant Garamond','Noto Serif SC',serif;
     --rl:20px;--r:14px;
   }
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html{color-scheme:dark}body{background:var(--paper);font-family:var(--sans);color:var(--ink);line-height:1.5;font-feature-settings:"tnum";min-height:100vh}
-  .wrap{max-width:430px;margin:0 auto;padding:0 24px 40px;min-height:100vh}
+  html{color-scheme:dark}
+  body{background:var(--paper);font-family:var(--sans);color:var(--ink);line-height:1.5;font-feature-settings:"tnum";min-height:100vh}
+  .wrap{max-width:430px;margin:0 auto;padding:0 22px 44px;min-height:100vh}
   svg.ic{width:18px;height:18px;stroke:var(--ink-3);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
-  .bar{display:flex;align-items:center;justify-content:space-between;padding:22px 2px 12px}
+  /* header */
+  .bar{display:flex;align-items:center;justify-content:space-between;padding:22px 2px 4px}
   .nav-back{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--ink-3);cursor:pointer;font-weight:500}
-  .step{font-size:11px;color:var(--ink-3);letter-spacing:.1em;font-weight:600}
-  .rhero{text-align:center;padding:16px 4px 4px}
+  .step,.doct{font-size:10.5px;color:var(--ink-3);letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+  .rhero{text-align:center;padding:20px 4px 6px}
   .rhero .k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
-  .rhero .dv{width:44px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-soft),transparent);margin:14px auto}
-  .rhero h2{font-family:var(--serif);font-size:29px;font-weight:600;line-height:1.24;letter-spacing:-.01em;margin:0 6px}
-  .chart{background:var(--jade-deep);border:1px solid rgba(195,160,90,.20);border-radius:var(--rl);padding:22px 20px;margin:18px 0;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+  .rhero .dv{width:44px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-soft),transparent);margin:13px auto}
+  .rhero h2{font-family:var(--serif);font-size:30px;font-weight:600;line-height:1.24;letter-spacing:-.01em;margin:0 6px}
+  .rhero .ess{font-size:13.5px;color:var(--ink-2);margin-top:12px;line-height:1.7;padding:0 6px}
+  /* key insight alert */
+  .alert{background:linear-gradient(160deg,rgba(79,191,160,.10),var(--card));border:1px solid var(--jade-soft);border-radius:var(--rl);padding:20px;margin:20px 0;box-shadow:0 14px 34px -22px rgba(79,191,160,.4)}
+  .alert .t{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--jade-soft);font-weight:600;display:flex;align-items:center;gap:7px}
+  .alert p{font-size:15px;color:var(--ink);line-height:1.72;margin-top:10px}
+  .alert p b{color:var(--jade-soft)}
+  /* section label */
+  .sec{font-size:11px;font-weight:600;color:var(--ink-3);letter-spacing:.14em;text-transform:uppercase;margin:30px 2px 13px}
+  /* chart */
+  .chart{background:var(--jade-deep);border:1px solid rgba(195,160,90,.22);border-radius:var(--rl);padding:22px 18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
   .pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center}
-  .pil .c{font-family:var(--serif);font-size:25px;font-weight:600;line-height:1.15;background:linear-gradient(160deg,#E8C87E,#B98A3E);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 1px 0 rgba(0,0,0,.18))}
-  .pil .l{font-size:10px;color:rgba(255,255,255,.62);margin-top:7px;letter-spacing:.08em}
-  .read{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;margin-bottom:14px}
-  .read h3{font-size:14px;font-weight:600;margin-bottom:10px;letter-spacing:.01em}
-  .read p{font-size:15px;color:var(--ink-2);line-height:1.75}
-  .read .rbody p{font-size:15px;color:var(--ink-2);line-height:1.75;margin-bottom:11px}
-  .read .rbody p:last-child{margin-bottom:0}
-  .read .rbody ul{list-style:none;margin:8px 0 11px}
-  .read .rbody li{font-size:14.5px;color:var(--ink-2);line-height:1.7;padding-left:15px;position:relative;margin-bottom:7px}
-  .read .rbody li::before{content:'';position:absolute;left:3px;top:10px;width:4px;height:4px;border-radius:50%;background:var(--gold-soft)}
+  .pil .c{font-family:var(--serif);font-size:25px;font-weight:600;line-height:1.15;background:linear-gradient(160deg,#E8C87E,#B98A3E);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 1px 0 rgba(0,0,0,.2))}
+  .pil .py{font-size:8.5px;color:rgba(255,255,255,.5);margin-top:5px;line-height:1.2}
+  .pil .l{font-size:10px;color:rgba(255,255,255,.6);margin-top:5px;letter-spacing:.06em}
+  /* five elements bars */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px}
+  .bar-row{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+  .bar-row:last-child{margin-bottom:0}
+  .bar-row .nm{font-family:var(--serif);font-size:15px;font-weight:600;width:44px;flex-shrink:0;white-space:nowrap}
+  .bar-track{flex:1;height:8px;background:var(--card-2);border-radius:6px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:6px;transition:width .5s ease}
+  .bar-row .pc{font-size:12px;color:var(--ink-3);width:34px;text-align:right;font-weight:600}
+  /* reading section */
+  .rd,.read{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;margin-bottom:12px}
+  .rd h3,.read h3{font-size:15px;font-weight:600;font-family:var(--serif);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .rd p,.read .rbody p{font-size:14.5px;color:var(--ink-2);line-height:1.8;margin-bottom:10px}
+  .rd p:last-child,.read .rbody p:last-child{margin-bottom:0}
+  .rd p b,.read .rbody strong{color:var(--ink);font-weight:600}
+  .rd em,.read .rbody em{color:var(--jade-soft);font-style:normal}
+  .rd ul,.read .rbody ul{list-style:none;margin:6px 0}
+  .rd li,.read .rbody li{font-size:14px;color:var(--ink-2);line-height:1.7;padding-left:16px;position:relative;margin-bottom:6px}
+  .rd li::before,.read .rbody li::before{content:'';position:absolute;left:3px;top:9px;width:4px;height:4px;border-radius:50%;background:var(--gold-soft)}
   .read .rbody .rsub{font-size:12.5px;color:var(--gold-soft);font-weight:600;letter-spacing:.02em;margin:14px 0 7px}
-  .read .rbody strong{color:var(--ink);font-weight:600}
-  .read .rbody em{color:var(--jade-soft);font-style:normal;font-weight:500}
-  .pil .py{font-size:8.5px;color:rgba(255,255,255,.5);margin-top:4px;letter-spacing:.01em;line-height:1.2}
-  .blur{filter:blur(5px);opacity:.55;user-select:none;pointer-events:none}
-  .wall{background:var(--card);border:1px solid var(--gold-soft);border-radius:var(--rl);padding:24px 20px;text-align:center;margin:16px 0;box-shadow:0 14px 34px -20px rgba(169,128,58,.30)}
+  .blur{filter:blur(5px);opacity:.5;user-select:none;pointer-events:none}
+  /* timeline (大运) */
+  .tl{position:relative;padding-left:4px}
+  .tl .row{display:flex;gap:14px;padding:2px 0 16px;position:relative}
+  .tl .row:last-child{padding-bottom:0}
+  .tl .yr{font-family:var(--serif);font-size:13px;color:var(--gold-soft);font-weight:600;width:66px;flex-shrink:0;padding-top:1px}
+  .tl .dot{position:absolute;left:60px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--jade);box-shadow:0 0 0 3px var(--jade-wash)}
+  .tl .dot.on{background:var(--gold-soft);box-shadow:0 0 0 3px var(--gold-wash)}
+  .tl .bd{border-left:1px solid var(--line);padding-left:20px;margin-left:0;flex:1}
+  .tl .bd .h{font-size:14px;font-weight:600;color:var(--ink)}
+  .tl .bd .d{font-size:13px;color:var(--ink-2);margin-top:3px;line-height:1.6}
+  /* tips */
+  .tip{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 15px;margin-bottom:10px}
+  .tip .e{font-family:var(--serif);color:var(--gold-soft);font-size:17px;font-weight:600;flex-shrink:0;width:22px;text-align:center}
+  .tip .x{font-size:13.5px;color:var(--ink-2);line-height:1.65}.tip .x b{color:var(--ink)}
+  /* wall + adv */
+  .wall{background:var(--card);border:1px solid var(--gold-soft);border-radius:var(--rl);padding:24px 20px;text-align:center;margin:18px 0;box-shadow:0 14px 34px -20px rgba(169,128,58,.3)}
   .wall h4{font-family:var(--serif);font-size:20px;font-weight:600;margin-bottom:5px}
-  .wall p{font-size:13px;color:var(--ink-2);margin-bottom:18px}
-  .cta{width:100%;background:var(--jade-deep);color:#fff;border:none;border-radius:var(--r);padding:16px;font-size:15px;font-weight:600;font-family:var(--sans);cursor:pointer}
-  .cta.gold{background:linear-gradient(135deg,var(--gold-soft),var(--gold))}
-  .wall .price{font-size:13px;color:var(--ink-3);margin-top:12px}
-  .wall .price b{color:var(--gold);font-size:17px;font-weight:600}
-  .expand{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12.5px;color:var(--ink-2);padding:14px;border:1px solid var(--gold-wash);border-radius:var(--r);margin-bottom:12px;background:var(--card-2);font-weight:500}
-  .adv{background:var(--jade-deep);border:1px solid rgba(195,160,90,.20);border-radius:var(--rl);padding:24px 21px;margin:22px 0 8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+  .wall p{font-size:13px;color:var(--ink-2);margin-bottom:16px}
+  .cta{width:100%;background:var(--jade-deep);color:#fff;border:none;border-radius:var(--r);padding:15px;font-size:15px;font-weight:600;font-family:var(--sans);cursor:pointer}
+  .cta.gold{background:linear-gradient(135deg,var(--gold-soft),var(--gold));color:#2a1f0c;font-weight:700}
+  .wall .price{font-size:13px;color:var(--ink-3);margin-top:11px}.wall .price b{color:var(--gold);font-size:17px}
+  .wall .walllist{list-style:none;text-align:left;margin:4px auto 16px;max-width:240px}
+  .wall .walllist li{font-size:13px;color:var(--ink-2);padding:4px 0;letter-spacing:.02em}
+  .adv{background:var(--jade-deep);border:1px solid rgba(195,160,90,.2);border-radius:var(--rl);padding:22px 20px;margin-top:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
   .adv .k{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-soft);font-weight:600}
-  .adv h4{font-family:var(--serif);font-size:21px;font-weight:600;margin:10px 0 4px;color:#fff}
+  .adv h4{font-family:var(--serif);font-size:20px;color:#fff;margin:9px 0 12px;line-height:1.24}
   .adv ul{list-style:none;margin:14px 0}
   .adv li{font-size:13px;color:rgba(255,255,255,.86);padding:6px 0 6px 20px;position:relative}
   .adv li::before{content:'◆';position:absolute;left:2px;top:6px;color:var(--gold-soft);font-size:7px;line-height:2.1}
-  .adv .sbtn{width:100%;background:transparent;color:var(--gold-soft);border:1px solid var(--gold-soft);border-radius:var(--r);padding:15px;font-size:14.5px;font-weight:600;margin-top:10px;cursor:pointer}
+  .adv .sbtn{width:100%;background:transparent;color:var(--gold-soft);border:1px solid var(--gold-soft);border-radius:var(--r);padding:14px;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px}
+  .expand{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12.5px;color:var(--ink-2);padding:14px;border:1px solid var(--gold-wash);border-radius:var(--r);margin:14px 0 4px;background:var(--card-2);font-weight:500}
+  .foot{margin-top:34px;border-top:1px solid var(--line);padding-top:20px;text-align:center}
+  .foot .d{font-size:11px;color:var(--ink-3);line-height:1.7}
+  .foot .sig{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink-3);margin-top:12px;letter-spacing:.05em}
+  /* skeleton / error */
   .skel{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;margin-bottom:14px}
-  .skel .ln{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--line),rgba(255,255,255,.06),var(--line));background-size:200% 100%;animation:sh 1.3s infinite;margin-bottom:11px}
+  .skel .ln,.chskel .ln,.csk{background:linear-gradient(90deg,var(--line),rgba(255,255,255,.06),var(--line));background-size:200% 100%;animation:sh 1.3s infinite}
+  .skel .ln,.chskel .ln{height:12px;border-radius:6px;margin-bottom:11px}
   @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
   .err{text-align:center;color:var(--ink-2);font-size:14px;padding:40px 10px}
+  /* per-chapter streaming states */
+  .read.streaming .rbody p:last-child::after{content:'▍';color:var(--jade-soft);animation:ccr .9s steps(2) infinite;margin-left:1px}
+  @keyframes ccr{0%,49%{opacity:1}50%,100%{opacity:0}}
+  .chspin{width:13px;height:13px;border:2px solid var(--line-2);border-top-color:var(--jade-soft);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .chip{font-size:10px;letter-spacing:.1em;color:var(--ink-3);font-weight:600;margin-left:auto;text-transform:uppercase}
+  .cherr{font-size:13px;color:var(--ink-2);line-height:1.7}
+  .cherr button{background:none;border:1px solid var(--line-2);border-radius:8px;color:var(--gold-soft);font-size:12px;padding:5px 12px;margin-left:8px;cursor:pointer;font-family:inherit}
+  .chart.skel-chart .csk{height:26px;border-radius:8px}
+  .card.skel-el .csk{height:8px;border-radius:6px;margin-bottom:12px}
+  .card.skel-el .csk:last-child{margin-bottom:0}
+  /* cross-reading */
   .crossread{background:var(--card-2);border:1px solid var(--gold-soft);border-radius:var(--rl);padding:22px 20px;margin:22px 0 8px;box-shadow:0 10px 30px -22px rgba(169,128,58,.35)}
   .crossread .k{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:600}
   .crossread h4{font-family:var(--serif);font-size:21px;font-weight:600;color:var(--ink);margin:9px 0 6px;line-height:1.24}
@@ -73,20 +126,6 @@
   .crossread .cx .cn{font-size:14.5px;font-weight:600;color:var(--ink);font-family:var(--serif)}
   .crossread .cx .ch{font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-top:3px}
   .crossread .cx .cg{margin-left:auto;align-self:center;stroke:var(--ink-3);width:16px;height:16px;flex-shrink:0}
-  /* ── per-chapter streaming states (progressive report) ── */
-  .read.streaming p::after{content:'▍';color:var(--jade-soft);animation:ccr .9s steps(2) infinite;margin-left:1px}
-  @keyframes ccr{0%,49%{opacity:1}50%,100%{opacity:0}}
-  .read h3{display:flex;align-items:center;gap:8px}
-  .chspin{width:13px;height:13px;border:2px solid var(--line-2);border-top-color:var(--jade-soft);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
-  @keyframes spin{to{transform:rotate(360deg)}}
-  .chip{font-size:10px;letter-spacing:.1em;color:var(--ink-3);font-weight:600;margin-left:auto;text-transform:uppercase}
-  .chskel .ln{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--line),rgba(255,255,255,.06),var(--line));background-size:200% 100%;animation:sh 1.3s infinite;margin-bottom:11px}
-  .cherr{font-size:13px;color:var(--ink-2);line-height:1.7}
-  .cherr button{background:none;border:1px solid var(--line-2);border-radius:8px;color:var(--gold-soft);font-size:12px;padding:5px 12px;margin-left:8px;cursor:pointer;font-family:inherit}
-  .chart.skel-chart{background:var(--jade-deep)}
-  .chart .csk{height:26px;border-radius:8px;background:linear-gradient(90deg,rgba(255,255,255,.05),rgba(255,255,255,.11),rgba(255,255,255,.05));background-size:200% 100%;animation:sh 1.3s infinite}
-  .wall .walllist{list-style:none;text-align:left;margin:4px auto 16px;max-width:230px}
-  .wall .walllist li{font-size:13px;color:var(--ink-2);padding:4px 0;letter-spacing:.02em}
 </style>
 </head>
 <body>
@@ -107,14 +146,12 @@
     loading:EN?'Casting your chart…':'正在为你排盘…',
     retry:EN?'Retry':'重试',
     genFail:EN?'Something went wrong generating your report: ':'报告生成遇到问题：',
-    genFailStatus:EN?'Generation failed ':'生成失败 ',
     emptyReport:EN?'Empty report':'报告为空',
     netErr:EN?'Network error, please try again':'网络异常，请重试',
     payFail:EN?'Failed to open checkout, please try again':'跳转支付失败，请重试',
     cnPay:EN?'Mainland users: please pay via WeChat / Alipay (coming soon)':'国内用户请用微信 / 支付宝支付（接入中）',
-    deeper:EN?'A Deeper Reading':'更深的推演',
     unlock:EN?'Unlock Full Report':'解锁完整报告',
-    unlockSub:EN?'Luck Cycles & Annual Forecast · Year-by-year outlook · Advanced cross-reading':'大运流年 · 逐年预测 · 进阶交叉印证',
+    unlockSub:EN?'Love & relationships in full · Year-by-year forecast · Ten-Gods pattern deep-dive · Advanced cross-reading':'感情姻缘全解 · 逐年流年预测 · 十神格局详批 · 进阶交叉印证',
     unlockBtn:EN?'Unlock Full Version':'解锁完整版',
     price1:EN?'one-time · or subscribe for better value ↓':'一次性 · 或订阅更划算 ↓',
     techLabel:EN?'▾ Technical chart details (Ten Gods / Hidden Stems / Nayin)':'▾ 命盘技术细节（十神 / 藏干 / 纳音）',
@@ -141,7 +178,16 @@
     streaming:EN?'writing…':'撰写中…',
     chGenFail:EN?'This chapter failed to load.':'这一章生成失败了。',
     chRetry:EN?'Retry':'重试',
-    lockedTag:EN?'LOCKED':'待解锁'
+    lockedTag:EN?'LOCKED':'待解锁',
+    // section labels (doc layout)
+    secInsight:EN?'Key Insight':'核心洞察',
+    secChart:EN?'Four Pillars':'四柱命盘',
+    secElements:EN?'Five-Element Energy':'五行能量分布',
+    secReading:EN?'In-Depth Reading':'深度解读',
+    secLuck:EN?'Luck-Cycle Timeline':'大运时间轴',
+    secRemedy:EN?'Your Lucky Boosters':'开运锦囊',
+    footDisc:EN?'This report is AI-assisted, for self-reflection and entertainment only. It is not a fixed prediction or advice for any decision.':'本报告由 AI 辅助生成，仅供自我觉察与娱乐参考，不构成命定断言或任何决策建议。',
+    footSig:EN?'The answers in your chart have always been there':'你命盘里的答案，一直都在'
   };
   // 章节列表（与后端 BAZI_CHAPTERS 同步；free 章渐进流式，付费章显付费墙）
   var CHAPTERS=[
@@ -173,6 +219,10 @@
   var GAN_EN={'甲':'Jiǎ','乙':'Yǐ','丙':'Bǐng','丁':'Dīng','戊':'Wù','己':'Jǐ','庚':'Gēng','辛':'Xīn','壬':'Rén','癸':'Guǐ'};
   var ZHI_EN={'子':'Zǐ','丑':'Chǒu','寅':'Yín','卯':'Mǎo','辰':'Chén','巳':'Sì','午':'Wǔ','未':'Wèi','申':'Shēn','酉':'Yǒu','戌':'Xū','亥':'Hài'};
   var ELEM_EN={'木':'Wood','火':'Fire','土':'Earth','金':'Metal','水':'Water'};
+  // Ten Gods — standard English glossary (no Chinglish transliteration)
+  var SS_EN={'比肩':'Friend','劫财':'Rob Wealth','食神':'Eating God','伤官':'Hurting Officer','偏财':'Indirect Wealth','正财':'Direct Wealth','七杀':'Seven Killings','正官':'Direct Officer','偏印':'Indirect Resource','正印':'Direct Resource'};
+  function elemEn(x){return EN?(ELEM_EN[x]||x):x;}
+  function ssEn(x){return EN?(SS_EN[x]||x):x;}
   function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*([^*\n]+?)\*/g,'<em>$1</em>');}
   function mdBlock(text){var lines=(text||'').split('\n'),html='',inList=false,para=[];
     function fp(){if(para.length){html+='<p>'+md(para.join(' '))+'</p>';para=[];}}
@@ -183,18 +233,7 @@
       else if(/^#{1,3}\s/.test(l)){fp();fl();html+='<div class="rsub">'+md(l.replace(/^#{1,3}\s+/,''))+'</div>';}
       else{fl();para.push(l);}
     });fp();fl();return html||('<p>'+md(text||'')+'</p>');}
-  var HEAD=/^\s*([【✅📜🌟💰❤💼🌿☀🔮⛰✨🙏]|#{1,3}\s|[\uD83C-\uDBFF])/;
 
-  function sections(text){
-    var lines=text.split('\n'),secs=[],cur=null;
-    lines.forEach(function(raw){
-      var l=raw.replace(/\s+$/,''); if(!l.trim())return;
-      if(HEAD.test(l)&&l.trim().length<(EN?60:38)){
-        cur={t:l.replace(/[\uD800-\uDFFF←-⯿☀-➿️#*【】]/g,'').trim(),b:[]};secs.push(cur);
-      }else{ if(!cur){cur={t:'',b:[]};secs.push(cur);} cur.b.push(l.trim()); }
-    });
-    return secs.filter(function(s){return s.t||s.b.length;});
-  }
   function bd(){ var m=(P.bdate||'').split('-');var h=10;if(P.btime){h=parseInt(P.btime.split(':')[0],10);if(isNaN(h))h=10;}
     return {birthYear:+m[0],birthMonth:+m[1],birthDay:+m[2],birthHour:h,gender:P.gender||'female',lang:LANG}; }
 
@@ -242,8 +281,13 @@
     return '<div class="crossread"><div class="k">'+esc(kk)+'</div><h4>'+esc(head)+'</h4><div class="fr">'+esc(fr)+'</div>'+cards+'</div>';
   }
 
-  /* ── Chart card (deep-jade 四柱) — instant from /bazi/stream meta chart|pillars ── */
-  // meta.chart.pillars is an ARRAY [{label,gan,zhi,...}]; meta.pillars (en/ko) is an OBJECT {year,month,...}.
+  /* ════════════════════════════════════════════════════
+     Deterministic chart data (from /bazi/stream meta.chart)
+     Renders instantly: hero + insight + pillars + elements + timeline + remedy
+     ════════════════════════════════════════════════════ */
+  var CHART=null; // meta.chart snapshot
+
+  // meta.chart.pillars is ARRAY [{label,gan,zhi,shishen,cangGan}]; meta.pillars (en/ko) is OBJECT {year,month,...}.
   function normPillars(chart,pillars){
     var dm='',el='',cells=[];
     if(chart&&Array.isArray(chart.pillars)){
@@ -256,53 +300,175 @@
     while(cells.length<4) cells.push({gan:'',zhi:''});
     return {dm:dm,el:el,cells:cells};
   }
-  function renderHeroChart(chart,pillars){
+
+  // Day-master → one-line poetic essence (deterministic; per element)
+  var DM_ESS={
+    '木':{zh:'木日主，你像一株向上的树——认定方向就往上长，扎根越深越安稳。',en:'A Wood Day Master — you grow like a tree reaching for light: once rooted, you climb steadily upward.'},
+    '火':{zh:'火日主，你天生带着热度与感染力——点亮别人，也容易烧到自己，节奏是你的功课。',en:'A Fire Day Master — warmth and spark come naturally; you light up a room, and pacing yourself is your lesson.'},
+    '土':{zh:'土日主，你是那种能被依靠的人——沉得住、稳得住，慢热但走得长远。',en:'An Earth Day Master — the one others lean on: grounded, steady, slow to warm but built for the long run.'},
+    '金':{zh:'金日主，你天生带着锋芒与原则——分得清、拎得清，对的事会坚持到底。',en:'A Metal Day Master — clarity and principle run through you: decisive, discerning, and unshakeable once you commit.'},
+    '水':{zh:'水日主，你像一条向前奔流的河——表面从容，底下有力量，认定的路会一直走。',en:'A Water Day Master — a river flowing forward: calm on the surface, powerful beneath, and relentless once you find your course.'}
+  };
+  // Favorable-element → remedy (colors / directions / hours) — deterministic
+  var ELEM_REMEDY={
+    '木':{zh:'补木：多穿绿、青色；家居往东布置；晨间寅卯时(3–7点)最养你。',en:'Boost Wood: wear green; arrange your space toward the East; the early hours (3–7am) restore you best.',color:'green',dir:EN?'East':'东'},
+    '火':{zh:'补火：多穿红、紫色；家居往南布置；正午巳午时(9–13点)能量最旺。',en:'Boost Fire: wear red and purple; arrange your space toward the South; midday (9am–1pm) is your peak.',color:'red/purple',dir:EN?'South':'南'},
+    '土':{zh:'补土：多穿黄、棕色；家居往中宫、西南布置；辰戌丑未时段最稳。',en:'Boost Earth: wear yellow and brown; centre your space toward the Southwest; the earth hours steady you.',color:'yellow/brown',dir:EN?'Southwest':'西南'},
+    '金':{zh:'补金：多穿白、金属色；家居往西布置；申酉时(15–19点)最利决断。',en:'Boost Metal: wear white and metallics; arrange your space toward the West; late afternoon (3–7pm) sharpens decisions.',color:'white/metallic',dir:EN?'West':'西'},
+    '水':{zh:'补水：多穿黑、蓝色；家居往北布置；亥子时(21–01点)能量最通。',en:'Boost Water: wear black and blue; arrange your space toward the North; the late-night hours (9pm–1am) flow best for you.',color:'black/blue',dir:EN?'North':'北'}
+  };
+
+  function renderHero(np){
     var hero=document.getElementById('hero');
-    var np=normPillars(chart,pillars);
-    var heroH=EN?('Your Day Master is '+esc((GAN_EN[np.dm]||np.dm)+' · '+(ELEM_EN[np.el]||np.el))):('你的日主是「'+esc(np.dm+np.el)+'」');
-    hero.innerHTML='<div class="rhero"><div class="k">BaZi · '+esc(P.bdate||'')+'</div><div class="dv"></div><h2>'+heroH+'</h2></div>';
-    var chartHtml='';
-    np.cells.forEach(function(q,i){ var py=EN?'<div class="py">'+esc((GAN_EN[q.gan]||q.gan)+' · '+(ZHI_EN[q.zhi]||q.zhi))+'</div>':''; chartHtml+='<div class="pil"><div class="c">'+esc(q.gan)+'<br>'+esc(q.zhi)+'</div>'+py+'<div class="l">'+T.pillarLabels[i]+'</div></div>'; });
-    document.getElementById('chartcard').innerHTML='<div class="pillars">'+chartHtml+'</div>';
-    document.getElementById('chartcard').classList.remove('skel-chart');
+    var dmLabel=EN?((GAN_EN[np.dm]||np.dm)+' '+(ELEM_EN[np.el]||np.el)):(np.dm+np.el);
+    var heroH=EN?('Your Day Master is<br>'+esc(dmLabel)):('你是「'+esc(dmLabel)+'日主」');
+    var ess=(DM_ESS[np.el]&&DM_ESS[np.el][EN?'en':'zh'])||'';
+    hero.innerHTML='<div class="rhero"><div class="k">BaZi · '+esc(P.bdate||'')+' · '+esc(EN?(P.gender==='male'?'M':'F'):(P.gender==='male'?'男':'女'))+'</div><div class="dv"></div>'
+      +'<h2>'+heroH+'</h2><div class="ess">'+esc(ess)+'</div></div>';
   }
 
-  /* ── Progressive chapter state machine ── */
+  // Core-insight sentence built from geju / yongshen / wangShuai / missing (deterministic)
+  function insightHTML(chart){
+    if(!chart) return '';
+    var geju=chart.geju||'', wang=chart.wangShuai||'', ysArr=(chart.yongshen||'').split(/[·,]/).filter(Boolean);
+    var missing=(chart.missing||[]);
+    // map favorable stems→elements for phrasing
+    var GAN2EL={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+    var ysEls=[]; ysArr.forEach(function(g){ var e=GAN2EL[g]||g; if(e&&ysEls.indexOf(e)<0)ysEls.push(e); });
+    var p;
+    if(EN){
+      // translate the pattern (格局) name via ten-gods glossary; strip the 格 suffix
+      var gejuCore=geju?geju.replace(/格$/,''):'';
+      var gejuEn=gejuCore?((SS_EN[gejuCore]||gejuCore)+' pattern'):'';
+      var wangEn=/强|旺/.test(wang)?'a strong Day Master':(/弱/.test(wang)?'a Day Master that needs support':'');
+      p='Your chart reads as '+(gejuEn?('a <b>'+esc(gejuEn)+'</b>'):'a distinct pattern')
+        +(wangEn?(' with <b>'+esc(wangEn)+'</b>'):'')+'. ';
+      if(ysEls.length){ p+='Lean into <b>'+esc(ysEls.map(elemEn).join(' & '))+'</b> — that is where your luck concentrates. '; }
+      if(missing.length){ p+='Your chart runs light on <b>'+esc(missing.map(elemEn).join(' & '))+'</b>; feeding it is the single highest-leverage move you can make.'; }
+    }else{
+      p='你的命局是<b>'+esc(geju||'一格清晰的盘')+'</b>'+(wang?('，日主<b>'+esc(wang)+'</b>'):'')+'。';
+      if(ysEls.length){ p+='用神在<b>'+esc(ysEls.join('、'))+'</b>——这是你运势最该借力的方向。'; }
+      if(missing.length){ p+='命中<b>'+esc(missing.join('、'))+'</b>偏弱，把它补起来，是你性价比最高的一步。'; }
+    }
+    return '<div class="alert"><div class="t">✦ '+esc(T.secInsight)+'</div><p>'+p+'</p></div>';
+  }
+
+  function pillarsHTML(np){
+    var cells=np.cells.map(function(q,i){
+      var py=EN?'<div class="py">'+esc((GAN_EN[q.gan]||q.gan)+' · '+(ZHI_EN[q.zhi]||q.zhi))+'</div>':'';
+      return '<div class="pil"><div class="c">'+esc(q.gan)+'<br>'+esc(q.zhi)+'</div>'+py+'<div class="l">'+T.pillarLabels[i]+'</div></div>';
+    }).join('');
+    return '<div class="pillars">'+cells+'</div>';
+  }
+
+  // five-element bars, normalized to % — order 木火土金水 (with sample colors)
+  function elementsHTML(chart){
+    if(!chart||!chart.wuxing) return '';
+    var order=['木','火','土','金','水'], colorVar={'木':'--wood','火':'--fire','土':'--earth','金':'--metal','水':'--water'};
+    var vals=order.map(function(k){ return Math.max(0,Number(chart.wuxing[k])||0); });
+    var total=vals.reduce(function(a,b){return a+b;},0)||1;
+    var rows=order.map(function(k,i){
+      var pct=Math.round(vals[i]/total*100);
+      var nm=EN?elemEn(k):k;
+      return '<div class="bar-row"><div class="nm" style="color:var('+colorVar[k]+')">'+esc(nm)+'</div>'
+        +'<div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;background:var('+colorVar[k]+')"></div></div>'
+        +'<div class="pc">'+pct+'%</div></div>';
+    }).join('');
+    return '<div class="card">'+rows+'</div>';
+  }
+
+  // luck-cycle timeline from dayun[] — highlight the段 covering current age
+  function timelineHTML(chart){
+    if(!chart||!Array.isArray(chart.dayun)||!chart.dayun.length) return '';
+    var by=+((P.bdate||'').split('-')[0])||0;
+    var age=by?(new Date().getFullYear()-by):-1;
+    var rows=chart.dayun.map(function(d){
+      var startY=by?(by+ (d.startAge||0)):null, endY=by?(by+(d.endAge||0)):null;
+      var yr=startY?(startY+'–'+String(endY).slice(2)):((d.startAge||0)+'–'+(d.endAge||0));
+      var on=(age>=0&&d.startAge!=null&&age>=d.startAge&&age<=(d.endAge!=null?d.endAge:999));
+      var gz=d.ganZhi||'';
+      // one-line meaning from ten-gods
+      var meaning;
+      if(EN){
+        var parts=[]; if(d.ganShiShen)parts.push(ssEn(d.ganShiShen)); if(d.zhiShiShen)parts.push(ssEn(d.zhiShiShen));
+        meaning=parts.length?(parts.join(' / ')+' takes the lead in this cycle.'):'';
+      }else{
+        var partsz=[]; if(d.ganShiShen)partsz.push(d.ganShiShen); if(d.zhiShiShen)partsz.push(d.zhiShiShen);
+        meaning=partsz.length?('这一步'+partsz.join('、')+'当令。'):'';
+      }
+      var head=EN?(esc(gz)+' Cycle'+(on?' · now':'')):(esc(gz)+'运'+(on?' · 当前':''));
+      return '<div class="row"><div class="yr">'+esc(yr)+'</div><div class="dot'+(on?' on':'')+'"></div>'
+        +'<div class="bd"><div class="h">'+head+'</div><div class="d">'+esc(meaning)+'</div></div></div>';
+    }).join('');
+    return '<div class="card"><div class="tl">'+rows+'</div></div>';
+  }
+
+  // 开运锦囊 — deterministic from yongshen / missing favorable elements
+  function remedyHTML(chart){
+    if(!chart) return '';
+    var GAN2EL={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+    var els=[]; (chart.yongshen||'').split(/[·,]/).filter(Boolean).forEach(function(g){ var e=GAN2EL[g]||g; if(e&&els.indexOf(e)<0)els.push(e); });
+    (chart.missing||[]).forEach(function(e){ if(e&&els.indexOf(e)<0)els.push(e); });
+    els=els.slice(0,2);
+    if(!els.length) return '';
+    var tips=els.map(function(e){
+      var r=ELEM_REMEDY[e]; if(!r) return '';
+      return '<div class="tip"><div class="e">'+esc(e)+'</div><div class="x">'+md(r[EN?'en':'zh'])+'</div></div>';
+    }).join('');
+    // add a direction tip from first favorable element
+    var r0=ELEM_REMEDY[els[0]];
+    if(r0){
+      var dirTxt=EN?('<b>Direction.</b> Face your desk or bed toward the '+esc(r0.dir)+' for daily support; pick '+esc(r0.dir)+'-side cities for big talks.')
+                   :('<b>方位。</b>床头、书桌朝'+esc(r0.dir)+'，日常得喜用之力；重要谈判选'+esc(r0.dir)+'向城市更顺。');
+      tips+='<div class="tip"><div class="e">'+esc(EN?'⟟':r0.dir)+'</div><div class="x">'+dirTxt+'</div></div>';
+    }
+    return tips;
+  }
+
+  /* ── Progressive chapter state machine (text reading) ── */
   var _st={}, _txt={}, _hasFull=false;
   CHAPTERS.forEach(function(c){ _st[c.id]='idle'; _txt[c.id]=''; });
 
-  // strip the leading "📜 四柱命盘" style title line the LLM re-emits (chart card already shows it)
+  // free text chapters we surface as .rd cards under 深度解读 (chart/elements已被确定性卡替代)
+  var READ_CHAPTERS=[
+    {id:'year',   emoji:'🌟', t:EN?'This Year & Personality':'性格与今年运势'}
+  ];
+  // paid text chapters shown blurred/locked in the reading area (性格→事业→感情 doc flow)
+  // We stream `year` (free) into 深度解读, then wealth/career (paid) collapse into the paywall.
+
   function stripLead(id,text){
-    var ch=null; for(var i=0;i<CHAPTERS.length;i++){ if(CHAPTERS[i].id===id){ch=CHAPTERS[i];break;} }
-    var t=text.replace(/^\s+/,'');
-    if(ch){ var re=new RegExp('^'+ch.emoji.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'?\\s*'+ch.t.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'[^\\n]*\\n'); t=t.replace(re,''); }
+    var t=(text||'').replace(/^\s+/,'');
+    // strip an echoed emoji-title line
+    var em={year:'🌟',wealth:'💰',love:'💕',career:'💼',luck:'📅',forecast:'🔮',remedy:'🎯',message:'💌'}[id]||'';
+    if(em){ t=t.replace(new RegExp('^'+em+'[^\\n]*\\n'),''); }
     return t;
   }
 
-  function chapCard(c){
+  function readCard(c){
     var st=_st[c.id];
-    if(st==='locked'){
-      return '<div class="wall" id="card-'+c.id+'"><h4>'+esc(c.emoji+' '+c.t)+'</h4><p>'+esc(T.unlockSub)+'</p>'
-        +'<button class="cta gold" onclick="goCheckout(\'bazi_full\')">'+esc(T.unlockBtn)+'</button>'
-        +'<div class="price"><b>$9.90</b> '+esc(T.price1)+'</div></div>';
-    }
-    var head='<h3>'+esc(c.emoji+' '+c.t)+(st==='streaming'?'<span class="chspin"></span>':(st==='loading'?'<span class="chip">'+esc(T.streaming)+'</span>':''))+'</h3>';
+    var spin=(st==='streaming'||st==='loading')?(st==='streaming'?'<span class="chspin"></span>':'<span class="chip">'+esc(T.streaming)+'</span>'):'';
+    var head='<h3>'+esc(c.emoji+' '+c.t)+spin+'</h3>';
     if(st==='idle'||st==='loading'){
       return '<div class="read" id="card-'+c.id+'">'+head+'<div class="chskel"><div class="ln" style="width:88%"></div><div class="ln" style="width:96%"></div><div class="ln" style="width:70%"></div></div></div>';
     }
     if(st==='error'){
       return '<div class="read" id="card-'+c.id+'">'+head+'<div class="cherr">'+esc(T.chGenFail)+'<button onclick="loadChapter(\''+c.id+'\')">'+esc(T.chRetry)+'</button></div></div>';
     }
-    // streaming / done
     var cls=(st==='streaming')?'read streaming':'read';
     return '<div class="'+cls+'" id="card-'+c.id+'">'+head+'<div class="rbody">'+mdBlock(_txt[c.id]||'')+'</div></div>';
   }
   function paintChapter(id){
     var el=document.getElementById('card-'+id); if(!el) return;
-    var c=null; for(var i=0;i<CHAPTERS.length;i++){ if(CHAPTERS[i].id===id){c=CHAPTERS[i];break;} }
+    var c=null; for(var i=0;i<READ_CHAPTERS.length;i++){ if(READ_CHAPTERS[i].id===id){c=READ_CHAPTERS[i];break;} }
     if(!c) return;
-    var tmp=document.createElement('div'); tmp.innerHTML=chapCard(c);
+    var tmp=document.createElement('div'); tmp.innerHTML=readCard(c);
     el.parentNode.replaceChild(tmp.firstChild,el);
+  }
+  function ensureCard(id){
+    if(document.getElementById('card-'+id)) return;
+    var c=null; for(var i=0;i<READ_CHAPTERS.length;i++){ if(READ_CHAPTERS[i].id===id){c=READ_CHAPTERS[i];break;} }
+    if(!c) return;
+    document.getElementById('reading').insertAdjacentHTML('beforeend',readCard(c));
   }
 
   // SSE fetch for one chapter (20s/章 timeout · accumulating chunks)
@@ -348,57 +514,79 @@
     tail.innerHTML=crossReadHTML()
       +'<div class="adv"><div class="k">'+esc(T.advK)+'</div><h4>'+T.advH+'</h4><ul>'+advLis+'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">'+esc(T.advBtn)+'</button></div>';
   }
-  // sequential progression: kick the next chapter, or collapse remaining paid chapters into ONE paywall
+
+  // after the free reading chapter finishes → paint the paywall + locked paid-chapter list, then tail
   function afterChapter(id){
-    var idx=-1; for(var i=0;i<CHAPTERS.length;i++){ if(CHAPTERS[i].id===id){idx=i;break;} }
-    if(idx<0) return;
-    var next=CHAPTERS[idx+1];
-    if(next){
-      if(!next.free&&!_hasFull){ collapsePaidTail(idx+1); return; } // free user hits first paid chapter → single wall
-      if(_st[next.id]==='idle'){ ensureCard(next.id); loadChapter(next.id); }
-    } else {
+    // only the free `year` chapter streams here; once it's terminal, render paywall
+    if(_st[id]==='done'||_st[id]==='locked'||_st[id]==='error'){
+      if(_hasFull){ /* paid user: could stream more here; MVP keeps paid text in advisor */ }
+      renderPaywall();
       revealTail();
     }
   }
-  // Replace all remaining paid chapter shells with one consolidated paywall + a locked chapter list, then tail.
-  function collapsePaidTail(fromIdx){
-    for(var i=fromIdx;i<CHAPTERS.length;i++){ var el=document.getElementById('card-'+CHAPTERS[i].id); if(el) el.parentNode.removeChild(el); }
-    var lockedList=CHAPTERS.slice(fromIdx).map(function(c){ return '<li>'+esc(c.emoji+' '+c.t)+'</li>'; }).join('');
-    var wall='<div class="wall"><h4>'+esc(T.unlock)+'</h4><p>'+esc(T.unlockSub)+'</p>'
+
+  function renderPaywall(){
+    var slot=document.getElementById('paywall-slot'); if(!slot||slot.getAttribute('data-done'))return;
+    slot.setAttribute('data-done','1');
+    // locked chapter titles (love/wealth/career/forecast/message …) as the doc-version 感情 blurred teaser
+    var lockedIds=['wealth','love','career','luck','forecast','message'];
+    var lockedList=CHAPTERS.filter(function(c){return lockedIds.indexOf(c.id)>-1;}).map(function(c){ return '<li>'+esc(c.emoji+' '+c.t)+'</li>'; }).join('');
+    var teaser=EN
+      ?'<div class="rd" style="margin-bottom:14px"><h3>💕 Love &amp; Relationships</h3><p class="blur">Your true match arrives once you loosen your grip on control. The '+esc(GAN_EN[(CHART&&CHART.dayMaster)]||(CHART&&CHART.dayMaster)||'')+' Day Master sitting on your day branch shapes how you attach… in 2026 a connection surfaces whose element is…</p></div>'
+      :'<div class="rd" style="margin-bottom:14px"><h3>❤ 感情姻缘</h3><p class="blur">正缘出现在你放下"掌控"之后。你的日主'+esc((CHART&&CHART.dayMaster)||'')+'坐日支的组合，决定了你在亲密关系里的依附方式……2026 有一段……对方五行属……</p></div>';
+    slot.innerHTML=teaser
+      +'<div class="wall"><h4>'+esc(T.unlock)+'</h4><p>'+esc(T.unlockSub)+'</p>'
       +'<ul class="walllist">'+lockedList+'</ul>'
       +'<button class="cta gold" onclick="goCheckout(\'bazi_full\')">'+esc(T.unlockBtn)+'</button>'
       +'<div class="price"><b>$9.90</b> '+esc(T.price1)+'</div></div>';
-    var slot=document.getElementById('paywall-slot');
-    if(slot){ slot.innerHTML=wall; }
-    revealTail();
   }
 
-  // build scaffold (chart + free chapters), then start streaming. Paid cards are appended on demand.
+  /* ── build the doc-version scaffold, then fill deterministic blocks + stream reading ── */
   function startProgressive(){
     var body=document.getElementById('body');
-    var html='<div class="chart skel-chart" id="chartcard"><div class="csk"></div></div>';
-    html+='<div id="chaps"></div>';
-    html+='<div id="paywall-slot"></div>';
-    html+='<div class="expand">'+esc(T.techLabel)+'</div>';
-    html+='<div id="tail"></div>';
+    var html=''
+      + '<div id="insight-slot"></div>'
+      + '<div class="sec">'+esc(T.secChart)+'</div>'
+      + '<div class="chart skel-chart" id="chartcard"><div class="csk"></div></div>'
+      + '<div class="sec">'+esc(T.secElements)+'</div>'
+      + '<div id="elements-slot"><div class="card skel-el"><div class="csk"></div><div class="csk"></div><div class="csk"></div><div class="csk"></div><div class="csk"></div></div></div>'
+      + '<div class="sec">'+esc(T.secReading)+'</div>'
+      + '<div id="reading"></div>'
+      + '<div class="sec" id="luck-sec" style="display:none">'+esc(T.secLuck)+'</div>'
+      + '<div id="timeline-slot"></div>'
+      + '<div class="sec" id="remedy-sec" style="display:none">'+esc(T.secRemedy)+'</div>'
+      + '<div id="remedy-slot"></div>'
+      + '<div id="paywall-slot"></div>'
+      + '<div class="expand">'+esc(T.techLabel)+'</div>'
+      + '<div id="tail"></div>'
+      + '<div class="foot"><div class="d">'+esc(T.footDisc)+'</div><div class="sig">'+esc(T.footSig)+'</div></div>';
     body.innerHTML=html;
-    var chaps=document.getElementById('chaps');
-    // scaffold the 3 free chapters up front (only the first is skeleton-active; rest queue in sequence)
-    CHAPTERS.filter(function(c){return c.free;}).forEach(function(c){ chaps.insertAdjacentHTML('beforeend',chapCard(c)); });
-    // 1) grab chart + tier fast via /bazi/stream meta, then abort
+    // scaffold the free reading chapter (streamed text)
+    ensureCard('year');
+    // 1) grab deterministic chart via /bazi/stream meta, then abort
     fetchChartMeta();
-    // 2) start streaming the first chapter immediately (parallel to chart fetch)
-    loadChapter('pillars');
-  }
-  // ensure a chapter card exists in #chaps (append if missing) — used when advancing to paid chapters (full users)
-  function ensureCard(id){
-    if(document.getElementById('card-'+id)) return;
-    var c=null; for(var i=0;i<CHAPTERS.length;i++){ if(CHAPTERS[i].id===id){c=CHAPTERS[i];break;} }
-    if(!c) return;
-    document.getElementById('chaps').insertAdjacentHTML('beforeend',chapCard(c));
+    // 2) start streaming the reading chapter in parallel
+    loadChapter('year');
   }
 
-  // /bazi/stream: read first `meta` (has chart/pillars + tier), abort — don't burn LLM tokens
+  function fillDeterministic(chart,pillars){
+    var np=normPillars(chart,pillars);
+    renderHero(np);
+    // pillars
+    var cc=document.getElementById('chartcard'); if(cc){ cc.innerHTML=pillarsHTML(np); cc.classList.remove('skel-chart'); }
+    // insight
+    var isl=document.getElementById('insight-slot'); if(isl&&chart){ isl.innerHTML=insightHTML(chart); }
+    // elements
+    var esl=document.getElementById('elements-slot'); if(esl){ var eh=elementsHTML(chart); if(eh) esl.innerHTML=eh; }
+    // timeline
+    var th=timelineHTML(chart);
+    if(th){ document.getElementById('timeline-slot').innerHTML=th; document.getElementById('luck-sec').style.display=''; }
+    // remedy
+    var rh=remedyHTML(chart);
+    if(rh){ document.getElementById('remedy-slot').innerHTML=rh; document.getElementById('remedy-sec').style.display=''; }
+  }
+
+  // /bazi/stream: read first `meta` (chart/pillars + tier), abort — don't burn LLM tokens
   function fetchChartMeta(){
     var ctrl=new AbortController(), got=false;
     var to=setTimeout(function(){ ctrl.abort(); },12000);
@@ -419,7 +607,8 @@
               if(ev.type==='meta'){
                 got=true; clearTimeout(to);
                 if(ev.tier==='full'||ev.tier==='paid'||ev.locked===false){ _hasFull=true; }
-                try{ renderHeroChart(ev.chart||null,ev.pillars||null); }catch(e){}
+                CHART=ev.chart||null;
+                try{ fillDeterministic(ev.chart||null,ev.pillars||null); }catch(e){}
                 ctrl.abort();
               }
             }catch(e){}
