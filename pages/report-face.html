@@ -95,6 +95,17 @@
   .err{text-align:center;color:var(--ink-2);font-size:14px;padding:40px 10px}
   .loadmsg{text-align:center;color:var(--gold);font-size:13.5px;font-family:var(--serif);padding:18px 10px 0;letter-spacing:.06em;min-height:20px}
   .hide{display:none!important}
+  .crossread{background:var(--card-2);border:1px solid var(--gold-soft);border-radius:var(--rl);padding:22px 20px;margin:22px 0 8px;box-shadow:0 10px 30px -22px rgba(169,128,58,.35)}
+  .crossread .k{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  .crossread h4{font-family:var(--serif);font-size:21px;font-weight:600;color:var(--ink);margin:9px 0 6px;line-height:1.24}
+  .crossread .fr{font-size:13px;color:var(--ink-2);line-height:1.6;margin-bottom:16px}
+  .crossread .cx{display:flex;align-items:flex-start;gap:13px;background:var(--card);border:1px solid var(--gold-wash);border-radius:var(--r);padding:14px 15px;margin-top:10px;cursor:pointer;transition:transform .12s,border-color .15s;text-align:left;width:100%;text-decoration:none}
+  .crossread .cx:active{transform:scale(.98)}
+  .crossread .cx:hover{border-color:var(--gold-soft)}
+  .crossread .cx>svg{width:26px;height:26px;stroke:var(--gold);stroke-width:1.35;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;margin-top:1px}
+  .crossread .cx .cn{font-size:14.5px;font-weight:600;color:var(--ink);font-family:var(--serif)}
+  .crossread .cx .ch{font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-top:3px}
+  .crossread .cx .cg{margin-left:auto;align-self:center;stroke:var(--ink-3);width:16px;height:16px;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -291,6 +302,49 @@
     reader.readAsDataURL(file);
   }
 
+  /* -- Cross-Reading (交叉印证) component -- */
+  var CROSS_CUR='face';
+  var CROSS_META={
+    bazi:{glyph:'<path d="M7 6v20M13 6v20M19 6v20M25 6v20"/>',n:{zh:'八字命理',en:'BaZi'},page:'report-v2.html',
+      h:{zh:'从出生的四柱看你的先天格局，把此刻的困惑放回一整条人生曲线里。',en:'Your birth chart maps the whole arc — the deep pattern behind what you\'re feeling right now.'}},
+    hehun:{glyph:'<circle cx="12" cy="16" r="7.5"/><circle cx="20" cy="16" r="7.5"/>',n:{zh:'合婚',en:'Compatibility'},page:'report-hehun.html',
+      h:{zh:'把你和那个人放在一起看，两张盘怎么咬合、哪里需要磨合，一目了然。',en:'Put your chart next to your partner\'s and see exactly where you fit — and where you grind.'}},
+    tarot:{glyph:'<rect x="6" y="8" width="12" height="18" rx="2" transform="rotate(-8 12 17)"/><rect x="15" y="6" width="12" height="18" rx="2" transform="rotate(8 21 15)"/>',n:{zh:'塔罗',en:'Tarot'},page:'report-tarot.html',
+      h:{zh:'命盘讲长期趋势，塔罗回答此刻那件具体的事——该走还是该留。',en:'Your chart shows the long game; a card answers the one thing weighing on you today.'}},
+    astro:{glyph:'<circle cx="16" cy="16" r="6"/><path d="M16 3v3M16 26v3M3 16h3M26 16h3M6.6 6.6l2.1 2.1M23.3 23.3l2.1 2.1M25.4 6.6l-2.1 2.1M8.7 23.3l-2.1 2.1"/>',n:{zh:'星座占星',en:'Astrology'},page:'report-astrology.html',
+      h:{zh:'西方星盘从另一套坐标读你的性格与关系，常和东方命理指向同一个答案。',en:'Your Western chart reads the same you through a different lens — and usually lands on the same answer.'}},
+    daily:{glyph:'<path d="M24 20a9 9 0 1 1-8-13 7 7 0 0 0 8 13z"/>',n:{zh:'每日运势',en:'Daily Horoscope'},page:'report-daily.html',
+      h:{zh:'把大格局落到今天：今天宜什么、忌什么，天天更新。',en:'Brings the big picture down to today — what to lean into, what to avoid, refreshed daily.'}},
+    palm:{glyph:'<path d="M11 26v-6M11 20V9a2 2 0 0 1 4 0v7M15 16V7a2 2 0 0 1 4 0v9M19 16v-5a2 2 0 0 1 4 0v9a7 7 0 0 1-7 7h-1a6 6 0 0 1-5-3l-3-5a2 2 0 0 1 3.4-2z"/>',n:{zh:'手相',en:'Palm Reading'},page:'report-palm.html',
+      h:{zh:'掌纹记录的是后天的走势，和先天命盘对照着看，更立体。',en:'Your palm tracks how life is actually unfolding — a living counterpart to your birth chart.'}},
+    face:{glyph:'<circle cx="16" cy="16" r="11"/><path d="M12 14h.01M20 14h.01M12 20a5 4 0 0 0 8 0"/>',n:{zh:'面相',en:'Face Reading'},page:'report-face.html',
+      h:{zh:'五官里的运势密码，和命盘相互印证，看得见的另一层线索。',en:'The story in your features — a visible layer that echoes what your chart already hints at.'}}
+  };
+  var CROSS_DEFAULT={bazi:['astro','tarot'],hehun:['bazi','tarot'],tarot:['bazi','astro'],astro:['bazi','tarot'],daily:['bazi','astro'],palm:['bazi','face'],face:['bazi','palm']};
+  function crossPick(){
+    var asp=[];try{asp=(JSON.parse(localStorage.getItem('runae_profile')||'{}').aspects)||[];}catch(e){}
+    var out=[];
+    function add(list){list.forEach(function(m){if(m!==CROSS_CUR&&out.indexOf(m)<0)out.push(m);});}
+    if(asp.indexOf('love')>-1) add(['hehun','tarot','astro']);
+    if(asp.indexOf('career')>-1||asp.indexOf('wealth')>-1) add(['bazi','astro','tarot']);
+    if(asp.indexOf('health')>-1) add(['bazi','palm','daily']);
+    add(CROSS_DEFAULT[CROSS_CUR]||['bazi','astro']);
+    return out.slice(0,3);
+  }
+  function crossReadHTML(){
+    var picks=crossPick();if(!picks.length)return '';
+    var L=EN?'en':'zh';
+    var head=EN?'The same you, seen from every angle':'同一个你，多重印证';
+    var fr=EN?'One profile. Every tradition weighs in — and they rarely disagree.':'一份命盘，多种传承一起看——它们很少各说各话。';
+    var kk=EN?'Cross-Reading · Runae':'交叉印证 · Runae';
+    var chev='<svg class="cg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+    var cards=picks.map(function(m){
+      var meta=CROSS_META[m];if(!meta)return '';
+      return '<a class="cx" href="'+meta.page+'?lang='+LANG+'"><svg viewBox="0 0 32 32">'+meta.glyph+'</svg>'
+        +'<div><div class="cn">'+esc(meta.n[L])+'</div><div class="ch">'+esc(meta.h[L])+'</div></div>'+chev+'</a>';
+    }).join('');
+    return '<div class="crossread"><div class="k">'+esc(kk)+'</div><h4>'+esc(head)+'</h4><div class="fr">'+esc(fr)+'</div>'+cards+'</div>';
+  }
   function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
   // 剥离标题前的 emoji / markdown # 记号（与 report-v2 sections 一致）
@@ -428,6 +482,7 @@
         +'<div class="price">'+T.wallPrice+'</div></div>';
     }
 
+    html+=crossReadHTML();
     // Runae 顾问 advisor
     html+='<div class="adv"><div class="k">'+esc(T.advK)+'</div><h4>'+T.advH+'</h4>'
       +'<ul>'+T.advLi.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'
