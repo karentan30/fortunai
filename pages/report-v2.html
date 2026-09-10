@@ -126,6 +126,18 @@
   .crossread .cx .cn{font-size:14.5px;font-weight:600;color:var(--ink);font-family:var(--serif)}
   .crossread .cx .ch{font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-top:3px}
   .crossread .cx .cg{margin-left:auto;align-self:center;stroke:var(--ink-3);width:16px;height:16px;flex-shrink:0}
+  /* lucky charms 带货 */
+  .charms{background:var(--card-2);border:1px solid var(--gold-soft);border-radius:var(--rl);padding:20px 18px;margin:6px 0 8px;box-shadow:0 10px 30px -22px rgba(169,128,58,.35)}
+  .charms-k{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  .charms-sub{font-size:12px;color:var(--ink-3);line-height:1.5;margin:7px 0 14px}
+  .charm{display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--gold-wash);border-radius:var(--r);padding:12px 13px;margin-top:10px;text-decoration:none;transition:transform .12s,border-color .15s}
+  .charm:active{transform:scale(.98)}.charm:hover{border-color:var(--gold-soft)}
+  .charm-ic{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.15)}
+  .charm-bd{flex:1;min-width:0}
+  .charm-nm{font-size:14.5px;font-weight:600;color:var(--ink);font-family:var(--serif)}
+  .charm-wy{font-size:12px;color:var(--ink-2);line-height:1.5;margin-top:2px}.charm-wy b{color:var(--gold-soft);font-weight:600}
+  .charm-go{display:flex;align-items:center;gap:2px;font-size:11.5px;font-weight:600;color:var(--gold-soft);flex-shrink:0;white-space:nowrap}
+  .charm-go svg{width:13px;height:13px}
 </style>
 </head>
 <body>
@@ -185,6 +197,15 @@
     secElements:EN?'Five-Element Energy':'五行能量分布',
     secReading:EN?'In-Depth Reading':'深度解读',
     secLuck:EN?'Luck-Cycle Timeline':'大运时间轴',
+    secCurve:EN?'Life Luck Curve':'人生运势曲线',
+    curveHint:EN?'A deterministic read of each 10-year Luck Cycle against your favorable elements — higher means the era flows with you.':'依据每步大运与你用神/喜忌的关系推算——越高，代表那十年越顺你的势。',
+    curveNow:EN?'now':'当前',
+    curveHigh:EN?'Peak':'高',
+    curveLow:EN?'Test':'低',
+    charmsHead:EN?'Lucky Charms for You':'你的开运推荐',
+    charmsSub:EN?'Matched to your favorable & missing elements · traditional reference, not a medical or outcome claim':'依你的用神与命中所缺挑选 · 传统开运参考·非功效保证',
+    charmsView:EN?'View':'查看',
+    charmsWhy:EN?'Feeds your ':'补你的',
     secRemedy:EN?'Your Lucky Boosters':'开运锦囊',
     footDisc:EN?'This report is AI-assisted, for self-reflection and entertainment only. It is not a fixed prediction or advice for any decision.':'本报告由 AI 辅助生成，仅供自我觉察与娱乐参考，不构成命定断言或任何决策建议。',
     footSig:EN?'The answers in your chart have always been there':'你命盘里的答案，一直都在'
@@ -425,6 +446,184 @@
     return tips;
   }
 
+  /* ════════════════════════════════════════════════════
+     人生运势曲线 (Life Luck Curve) — deterministic SVG
+     Each 大运 (10yr cycle) scored 0–100 from its stem-element vs
+     用神/喜忌 (favorable / unfavorable elements), adjusted by 旺衰.
+     ════════════════════════════════════════════════════ */
+  var GAN2EL_C={'甲':'木','乙':'木','丙':'火','丁':'火','戊':'土','己':'土','庚':'金','辛':'金','壬':'水','癸':'水'};
+  // 五行相生 next / 相克
+  var SHENG={'木':'火','火':'土','土':'金','金':'水','水':'木'};   // A 生 B
+  var KE={'木':'土','火':'金','土':'水','金':'木','水':'火'};       // A 克 B
+  function generatorOf(el){ for(var k in SHENG){ if(SHENG[k]===el) return k; } return ''; } // 生 el 的那一行(母)
+
+  // Determine favorable(喜用) & unfavorable(忌) element SETS deterministically.
+  function favorSets(chart){
+    var dmEl=chart.dayMasterElement||GAN2EL_C[chart.dayMaster]||'';
+    var yong=[]; (chart.yongshen||'').split(/[·,]/).filter(Boolean).forEach(function(g){ var e=GAN2EL_C[g]||g; if(e&&yong.indexOf(e)<0)yong.push(e); });
+    // 喜神：生日主(母) + 同类(比劫) if weak；耗泄(食伤/财/官杀) if strong
+    var weak=/弱/.test(chart.wangShuai||'');
+    var strong=/强|旺/.test(chart.wangShuai||'');
+    var xi=[];
+    if(dmEl){
+      if(weak){ // 身弱喜印(生我)与比劫(同我)
+        var mo=generatorOf(dmEl); if(mo)xi.push(mo); xi.push(dmEl);
+      } else if(strong){ // 身强喜食伤(我生)、财(我克)、官杀(克我)
+        if(SHENG[dmEl])xi.push(SHENG[dmEl]); if(KE[dmEl])xi.push(KE[dmEl]);
+        for(var k in KE){ if(KE[k]===dmEl)xi.push(k); } // 克我者=官杀
+      }
+    }
+    // 忌神：身弱→耗泄我的(食伤/财/官杀方向)；身强→再生助我的(印/比劫方向)。用神永远优先，忌只作用于非用神行。
+    var ji=[];
+    if(dmEl){
+      if(weak){ if(SHENG[dmEl])pushU(ji,SHENG[dmEl]); if(KE[dmEl])pushU(ji,KE[dmEl]); for(var kk in KE){ if(KE[kk]===dmEl)pushU(ji,kk); } }
+      else if(strong){ var mo2=generatorOf(dmEl); if(mo2)pushU(ji,mo2); pushU(ji,dmEl); }
+    }
+    // 忌神不覆盖用神/喜神
+    ji=ji.filter(function(e){ return yong.indexOf(e)<0 && xi.indexOf(e)<0; });
+    return {yong:yong,xi:xi,ji:ji,dmEl:dmEl,weak:weak,strong:strong};
+  }
+  function pushU(arr,v){ if(v&&arr.indexOf(v)<0)arr.push(v); }
+
+  // Score one 大运 step 0..100 (deterministic, principled)
+  function luckScore(d,fs){
+    var el=GAN2EL_C[(d.ganZhi||'').charAt(0)]||'';
+    var score=55; // 平
+    if(el){
+      if(fs.yong.indexOf(el)>-1) score=88;          // 用神：最旺
+      else if(fs.xi.indexOf(el)>-1) score=74;       // 喜神：偏高
+      else if(fs.ji.indexOf(el)>-1) score=36;       // 忌神：低
+      else score=55;                                // 平/闲神
+    }
+    // Ten-God refinement from ganShiShen (deterministic secondary signal)
+    var g=d.ganShiShen||'';
+    if(fs.weak){ if(/印/.test(g)||/比肩|劫财/.test(g)) score=Math.min(96,score+6); if(/官|杀|财|伤官|食神/.test(g)) score=Math.max(24,score-5); }
+    else if(fs.strong){ if(/官|财|食神/.test(g)) score=Math.min(96,score+6); if(/印/.test(g)||/比肩|劫财|伤官/.test(g)) score=Math.max(24,score-5); }
+    return Math.max(20,Math.min(98,score));
+  }
+
+  function luckCurveHTML(chart){
+    if(!chart||!Array.isArray(chart.dayun)||chart.dayun.length<2) return '';
+    var fs=favorSets(chart);
+    var by=+((P.bdate||'').split('-')[0])||0;
+    var age=by?((new Date().getFullYear())-by):-1;
+    var pts=chart.dayun.map(function(d){
+      var startY=by?(by+(d.startAge||0)):null;
+      var on=(age>=0&&d.startAge!=null&&age>=d.startAge&&age<=(d.endAge!=null?d.endAge:999));
+      return { gz:d.ganZhi||'', s:luckScore(d,fs), startAge:d.startAge||0, startY:startY, on:on };
+    });
+    // ── geometry ──
+    var W=386, H=210, padL=8, padR=8, padT=26, padB=34;
+    var innerW=W-padL-padR, innerH=H-padT-padB;
+    var n=pts.length;
+    var xAt=function(i){ return padL + innerW*(n===1?0.5:(i/(n-1))); };
+    var yAt=function(v){ return padT + innerH*(1-(v-20)/78); }; // 20..98 → bottom..top
+    // Catmull-Rom → cubic bezier smooth path
+    function smooth(getX,getY){
+      var d='M'+getX(0).toFixed(1)+','+getY(0).toFixed(1);
+      for(var i=0;i<n-1;i++){
+        var x0=getX(Math.max(0,i-1)),y0=getY(Math.max(0,i-1));
+        var x1=getX(i),y1=getY(i);
+        var x2=getX(i+1),y2=getY(i+1);
+        var x3=getX(Math.min(n-1,i+2)),y3=getY(Math.min(n-1,i+2));
+        var c1x=x1+(x2-x0)/6, c1y=y1+(y2-y0)/6;
+        var c2x=x2-(x3-x1)/6, c2y=y2-(y3-y1)/6;
+        d+='C'+c1x.toFixed(1)+','+c1y.toFixed(1)+' '+c2x.toFixed(1)+','+c2y.toFixed(1)+' '+x2.toFixed(1)+','+y2.toFixed(1);
+      }
+      return d;
+    }
+    var gx=function(i){return xAt(i);}, gy=function(i){return yAt(pts[i].s);};
+    var line=smooth(gx,gy);
+    var area=line+' L'+xAt(n-1).toFixed(1)+','+(padT+innerH).toFixed(1)+' L'+xAt(0).toFixed(1)+','+(padT+innerH).toFixed(1)+' Z';
+    // gridlines (high / mid / low)
+    var grid='';
+    [ {v:88,lab:T.curveHigh},{v:55,lab:''},{v:36,lab:T.curveLow} ].forEach(function(g){
+      var y=yAt(g.v);
+      grid+='<line x1="'+padL+'" y1="'+y.toFixed(1)+'" x2="'+(W-padR)+'" y2="'+y.toFixed(1)+'" stroke="rgba(240,235,224,.07)" stroke-width="1"'+(g.v===55?' stroke-dasharray="2 4"':'')+'/>';
+      if(g.lab) grid+='<text x="'+(W-padR)+'" y="'+(y-4).toFixed(1)+'" fill="rgba(240,235,224,.3)" font-size="8.5" text-anchor="end" letter-spacing=".08em">'+esc(g.lab)+'</text>';
+    });
+    // node dots + gz labels + year axis
+    var dots='',labels='',axis='';
+    pts.forEach(function(p,i){
+      var x=xAt(i),y=yAt(p.s);
+      // gz label above node (alternate up/down handled by y already; place above line)
+      var ly=y-11; if(ly<padT-2)ly=y+16;
+      labels+='<text x="'+x.toFixed(1)+'" y="'+ly.toFixed(1)+'" fill="'+(p.on?'#f0e6c8':'rgba(240,235,224,.5)')+'" font-size="10" text-anchor="middle" font-family="var(--serif)" font-weight="600">'+esc(p.gz)+'</text>';
+      // node
+      if(p.on){
+        dots+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="9" fill="rgba(220,192,130,.18)"><animate attributeName="r" values="7;11;7" dur="2.4s" repeatCount="indefinite"/></circle>';
+        dots+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="5" fill="url(#lcGold)" stroke="#0f1b17" stroke-width="1.5"/>';
+      } else {
+        dots+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="3.4" fill="#0f1b17" stroke="url(#lcStroke)" stroke-width="1.6"/>';
+      }
+      // year / age axis
+      var axLab=p.startY?(''+p.startY):(p.startAge+'');
+      axis+='<text x="'+x.toFixed(1)+'" y="'+(H-13)+'" fill="rgba(240,235,224,.4)" font-size="8.5" text-anchor="middle">'+esc(axLab)+'</text>';
+      if(i===0){ axis+='<text x="'+x.toFixed(1)+'" y="'+(H-3)+'" fill="rgba(240,235,224,.28)" font-size="7.5" text-anchor="middle">'+(EN?'age '+p.startAge:p.startAge+'岁')+'</text>'; }
+    });
+    // current marker text
+    var cur=pts.filter(function(p){return p.on;})[0];
+    var curTag = cur?('<text x="'+xAt(pts.indexOf(cur)).toFixed(1)+'" y="'+(yAt(cur.s)-19).toFixed(1)+'" fill="#e8d49c" font-size="8.5" text-anchor="middle" letter-spacing=".1em" font-weight="700">'+esc((EN?'':'· ')+T.curveNow.toUpperCase())+'</text>'):'';
+    var svg='<svg viewBox="0 0 '+W+' '+H+'" width="100%" style="display:block" role="img" aria-label="'+esc(T.secCurve)+'">'
+      +'<defs>'
+      +'<linearGradient id="lcArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(79,191,160,.30)"/><stop offset="1" stop-color="rgba(79,191,160,0)"/></linearGradient>'
+      +'<linearGradient id="lcStroke" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#4fbfa0"/><stop offset=".55" stop-color="#7ddfc0"/><stop offset="1" stop-color="#e8d49c"/></linearGradient>'
+      +'<radialGradient id="lcGold" cx="50%" cy="40%" r="60%"><stop offset="0" stop-color="#f2e4b8"/><stop offset="1" stop-color="#dcc082"/></radialGradient>'
+      +'</defs>'
+      +grid
+      +'<path d="'+area+'" fill="url(#lcArea)"/>'
+      +'<path d="'+line+'" fill="none" stroke="url(#lcStroke)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>'
+      +labels+dots+curTag+axis
+      +'</svg>';
+    return '<div class="chart" style="padding:18px 14px 8px"><div style="font-size:12.5px;color:var(--ink-2);line-height:1.6;margin:0 4px 6px">'+esc(T.curveHint)+'</div>'+svg+'</div>';
+  }
+
+  /* ════════════════════════════════════════════════════
+     开运品带货 (Lucky Charms) — deterministic from 用神/缺
+     ════════════════════════════════════════════════════ */
+  var CHARMS={
+    '木':{items:[
+        {zh:'绿幽灵水晶手串',en:'Green Phantom Quartz Bracelet',emoji:'🟢'},
+        {zh:'黄花梨木质手串',en:'Rosewood Bead Bracelet',emoji:'🪵'}]},
+    '火':{items:[
+        {zh:'红玛瑙手串',en:'Red Agate Bracelet',emoji:'🔴'},
+        {zh:'南红/朱砂吊坠',en:'Cinnabar Pendant',emoji:'🟥'}]},
+    '土':{items:[
+        {zh:'黄水晶手串',en:'Citrine Bracelet',emoji:'🟡'},
+        {zh:'和田黄玉平安扣',en:'Yellow Jade Peace Buckle',emoji:'🟠'}]},
+    '金':{items:[
+        {zh:'白水晶手串',en:'Clear Quartz Bracelet',emoji:'⚪'},
+        {zh:'银质本命锁',en:'Sterling Silver Charm',emoji:'⚙'}]},
+    '水':{items:[
+        {zh:'黑曜石手串',en:'Obsidian Bracelet',emoji:'⚫'},
+        {zh:'蓝晶石/海蓝宝吊坠',en:'Aquamarine Pendant',emoji:'🔵'}]}
+  };
+  function charmsHTML(chart){
+    if(!chart) return '';
+    var els=[];
+    (chart.yongshen||'').split(/[·,]/).filter(Boolean).forEach(function(g){ var e=GAN2EL_C[g]||g; if(e&&els.indexOf(e)<0)els.push(e); });
+    (chart.missing||[]).forEach(function(e){ if(e&&els.indexOf(e)<0)els.push(e); });
+    els=els.slice(0,3);
+    if(!els.length) return '';
+    var colorVar={'木':'--wood','火':'--fire','土':'--earth','金':'--metal','水':'--water'};
+    // one card per favorable element (2-3 total)
+    var cards=els.map(function(e){
+      var pack=CHARMS[e]; if(!pack) return '';
+      var it=pack.items[0]; // lead item per element
+      var name=EN?it.en:it.zh;
+      var elName=EN?(ELEM_EN[e]||e):e;
+      var why=EN?(T.charmsWhy+'<b>'+esc(elName)+'</b> — the element your chart leans on most.')
+                :(T.charmsWhy+'<b>'+esc(elName)+'</b>——你命盘最借力的一行。');
+      var href='shop.html?lang='+LANG+'#el='+encodeURIComponent(e);
+      return '<a class="charm" href="'+href+'">'
+        +'<div class="charm-ic" style="background:linear-gradient(150deg,var('+colorVar[e]+'),rgba(0,0,0,.25))">'+it.emoji+'</div>'
+        +'<div class="charm-bd"><div class="charm-nm">'+esc(name)+'</div><div class="charm-wy">'+why+'</div></div>'
+        +'<span class="charm-go">'+esc(T.charmsView)+' <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></a>';
+    }).join('');
+    return '<div class="charms"><div class="charms-k">✦ '+esc(T.charmsHead)+'</div>'
+      +'<div class="charms-sub">'+esc(T.charmsSub)+'</div>'+cards+'</div>';
+  }
+
   /* ── Progressive chapter state machine (text reading) ── */
   var _st={}, _txt={}, _hasFull=false;
   CHAPTERS.forEach(function(c){ _st[c.id]='idle'; _txt[c.id]=''; });
@@ -552,10 +751,13 @@
       + '<div id="elements-slot"><div class="card skel-el"><div class="csk"></div><div class="csk"></div><div class="csk"></div><div class="csk"></div><div class="csk"></div></div></div>'
       + '<div class="sec">'+esc(T.secReading)+'</div>'
       + '<div id="reading"></div>'
+      + '<div class="sec" id="curve-sec" style="display:none">'+esc(T.secCurve)+'</div>'
+      + '<div id="curve-slot"></div>'
       + '<div class="sec" id="luck-sec" style="display:none">'+esc(T.secLuck)+'</div>'
       + '<div id="timeline-slot"></div>'
       + '<div class="sec" id="remedy-sec" style="display:none">'+esc(T.secRemedy)+'</div>'
       + '<div id="remedy-slot"></div>'
+      + '<div id="charms-slot"></div>'
       + '<div id="paywall-slot"></div>'
       + '<div class="expand">'+esc(T.techLabel)+'</div>'
       + '<div id="tail"></div>'
@@ -578,12 +780,16 @@
     var isl=document.getElementById('insight-slot'); if(isl&&chart){ isl.innerHTML=insightHTML(chart); }
     // elements
     var esl=document.getElementById('elements-slot'); if(esl){ var eh=elementsHTML(chart); if(eh) esl.innerHTML=eh; }
+    // life luck curve (above the timeline)
+    try{ var ch=luckCurveHTML(chart); if(ch){ document.getElementById('curve-slot').innerHTML=ch; document.getElementById('curve-sec').style.display=''; } }catch(e){}
     // timeline
     var th=timelineHTML(chart);
     if(th){ document.getElementById('timeline-slot').innerHTML=th; document.getElementById('luck-sec').style.display=''; }
     // remedy
     var rh=remedyHTML(chart);
     if(rh){ document.getElementById('remedy-slot').innerHTML=rh; document.getElementById('remedy-sec').style.display=''; }
+    // lucky charms 带货 (after 开运锦囊)
+    try{ var cm=charmsHTML(chart); if(cm){ document.getElementById('charms-slot').innerHTML=cm; } }catch(e){}
   }
 
   // /bazi/stream: read first `meta` (chart/pillars + tier), abort — don't burn LLM tokens
