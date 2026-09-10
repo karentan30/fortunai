@@ -32,7 +32,16 @@
   .pil .l{font-size:10px;color:rgba(255,255,255,.62);margin-top:7px;letter-spacing:.08em}
   .read{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;margin-bottom:14px}
   .read h3{font-size:14px;font-weight:600;margin-bottom:10px;letter-spacing:.01em}
-  .read p{font-size:15px;color:var(--ink-2);line-height:1.75;white-space:pre-wrap}
+  .read p{font-size:15px;color:var(--ink-2);line-height:1.75}
+  .read .rbody p{font-size:15px;color:var(--ink-2);line-height:1.75;margin-bottom:11px}
+  .read .rbody p:last-child{margin-bottom:0}
+  .read .rbody ul{list-style:none;margin:8px 0 11px}
+  .read .rbody li{font-size:14.5px;color:var(--ink-2);line-height:1.7;padding-left:15px;position:relative;margin-bottom:7px}
+  .read .rbody li::before{content:'';position:absolute;left:3px;top:10px;width:4px;height:4px;border-radius:50%;background:var(--gold-soft)}
+  .read .rbody .rsub{font-size:12.5px;color:var(--gold-soft);font-weight:600;letter-spacing:.02em;margin:14px 0 7px}
+  .read .rbody strong{color:var(--ink);font-weight:600}
+  .read .rbody em{color:var(--jade-soft);font-style:normal;font-weight:500}
+  .pil .py{font-size:8.5px;color:rgba(255,255,255,.5);margin-top:4px;letter-spacing:.01em;line-height:1.2}
   .blur{filter:blur(5px);opacity:.55;user-select:none;pointer-events:none}
   .wall{background:var(--card);border:1px solid var(--gold-soft);border-radius:var(--rl);padding:24px 20px;text-align:center;margin:16px 0;box-shadow:0 14px 34px -20px rgba(169,128,58,.30)}
   .wall h4{font-family:var(--serif);font-size:20px;font-weight:600;margin-bottom:5px}
@@ -161,7 +170,19 @@
   var _lm=document.getElementById('loadmsg'); if(_lm)_lm.textContent=T.loading;
 
   function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-  function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
+  var GAN_EN={'甲':'Jiǎ','乙':'Yǐ','丙':'Bǐng','丁':'Dīng','戊':'Wù','己':'Jǐ','庚':'Gēng','辛':'Xīn','壬':'Rén','癸':'Guǐ'};
+  var ZHI_EN={'子':'Zǐ','丑':'Chǒu','寅':'Yín','卯':'Mǎo','辰':'Chén','巳':'Sì','午':'Wǔ','未':'Wèi','申':'Shēn','酉':'Yǒu','戌':'Xū','亥':'Hài'};
+  var ELEM_EN={'木':'Wood','火':'Fire','土':'Earth','金':'Metal','水':'Water'};
+  function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*([^*\n]+?)\*/g,'<em>$1</em>');}
+  function mdBlock(text){var lines=(text||'').split('\n'),html='',inList=false,para=[];
+    function fp(){if(para.length){html+='<p>'+md(para.join(' '))+'</p>';para=[];}}
+    function fl(){if(inList){html+='</ul>';inList=false;}}
+    lines.forEach(function(raw){var l=raw.replace(/^\s+|\s+$/g,'');
+      if(/^[-•·]\s+/.test(l)){fp();if(!inList){html+='<ul>';inList=true;}html+='<li>'+md(l.replace(/^[-•·]\s+/,''))+'</li>';}
+      else if(!l){fp();fl();}
+      else if(/^#{1,3}\s/.test(l)){fp();fl();html+='<div class="rsub">'+md(l.replace(/^#{1,3}\s+/,''))+'</div>';}
+      else{fl();para.push(l);}
+    });fp();fl();return html||('<p>'+md(text||'')+'</p>');}
   var HEAD=/^\s*([【✅📜🌟💰❤💼🌿☀🔮⛰✨🙏]|#{1,3}\s|[\uD83C-\uDBFF])/;
 
   function sections(text){
@@ -238,10 +259,10 @@
   function renderHeroChart(chart,pillars){
     var hero=document.getElementById('hero');
     var np=normPillars(chart,pillars);
-    var heroH=EN?('Your Day Master is &laquo;'+esc(np.dm+np.el)+'&raquo;'):('你的日主是「'+esc(np.dm+np.el)+'」');
+    var heroH=EN?('Your Day Master is '+esc((GAN_EN[np.dm]||np.dm)+' · '+(ELEM_EN[np.el]||np.el))):('你的日主是「'+esc(np.dm+np.el)+'」');
     hero.innerHTML='<div class="rhero"><div class="k">BaZi · '+esc(P.bdate||'')+'</div><div class="dv"></div><h2>'+heroH+'</h2></div>';
     var chartHtml='';
-    np.cells.forEach(function(q,i){ chartHtml+='<div class="pil"><div class="c">'+esc(q.gan)+'<br>'+esc(q.zhi)+'</div><div class="l">'+T.pillarLabels[i]+'</div></div>'; });
+    np.cells.forEach(function(q,i){ var py=EN?'<div class="py">'+esc((GAN_EN[q.gan]||q.gan)+' · '+(ZHI_EN[q.zhi]||q.zhi))+'</div>':''; chartHtml+='<div class="pil"><div class="c">'+esc(q.gan)+'<br>'+esc(q.zhi)+'</div>'+py+'<div class="l">'+T.pillarLabels[i]+'</div></div>'; });
     document.getElementById('chartcard').innerHTML='<div class="pillars">'+chartHtml+'</div>';
     document.getElementById('chartcard').classList.remove('skel-chart');
   }
@@ -274,7 +295,7 @@
     }
     // streaming / done
     var cls=(st==='streaming')?'read streaming':'read';
-    return '<div class="'+cls+'" id="card-'+c.id+'">'+head+'<p>'+md(_txt[c.id]||'')+'</p></div>';
+    return '<div class="'+cls+'" id="card-'+c.id+'">'+head+'<div class="rbody">'+mdBlock(_txt[c.id]||'')+'</div></div>';
   }
   function paintChapter(id){
     var el=document.getElementById('card-'+id); if(!el) return;
