@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Runae · 3页重构样图 v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F0E7; --card:#FFFFFF; --card-2:#FAF7F0;
+    --ink:#26221C; --ink-2:#6A6357; --ink-3:#A39B8C;
+    --gold:#A9803A; --gold-soft:#C3A05A; --gold-wash:#EFE7D4;
+    --jade:#2D7A62; --jade-deep:#1C4A3A; --jade-soft:#7DDFC0; --jade-wash:#E3EDE8;
+    --line:rgba(38,34,28,.10); --line-2:rgba(38,34,28,.16);
+    --soft:0 14px 34px -18px rgba(38,34,28,.16);
+    --sans:'Inter',-apple-system,system-ui,sans-serif; --serif:'Cormorant Garamond','Noto Serif SC',serif;
+    --rl:20px; --r:14px;
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{background:#e4dfd4;font-family:var(--sans);color:var(--ink);display:flex;flex-wrap:wrap;gap:30px;justify-content:center;padding:40px 16px;line-height:1.5;font-feature-settings:"tnum"}
+  svg.ic{width:18px;height:18px;stroke:var(--ink-3);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  svg.mic{width:26px;height:26px;stroke:var(--ink);stroke-width:1.35;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .phone{width:390px;min-height:812px;background:var(--paper);border-radius:40px;box-shadow:var(--soft);overflow:hidden;position:relative;display:flex;flex-direction:column}
+  .phone-label{position:absolute;top:-26px;left:6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8a8375;font-weight:600}
+  .scr{flex:1;overflow-y:auto;padding:0 24px 26px}
+  .scr::-webkit-scrollbar{display:none}
+  .bar{display:flex;align-items:center;justify-content:space-between;padding:22px 2px 12px}
+  .brand{font-family:var(--serif);font-size:23px;font-weight:700;letter-spacing:.01em}
+  .brand .dot{color:var(--jade)}
+  .step{font-size:11px;color:var(--ink-3);letter-spacing:.1em;font-weight:600}
+  .stepper{display:flex;align-items:center;gap:7px;margin:2px 2px 22px}
+  .stepper i{width:7px;height:7px;border-radius:50%;background:var(--line-2)}
+  .stepper i.on{background:var(--jade)}
+  .stepper .ln{flex:1;height:1px;background:var(--line-2)}
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600;margin-bottom:12px}
+  h1.t{font-family:var(--serif);font-size:37px;font-weight:600;line-height:1.12;letter-spacing:-.012em}
+  .sub{font-size:14px;color:var(--ink-2);margin-top:12px;line-height:1.65;max-width:300px}
+  .sec{font-size:11px;font-weight:600;color:var(--ink-3);letter-spacing:.14em;text-transform:uppercase;margin:28px 2px 13px}
+  .field{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:13px;margin-bottom:10px}
+  .field .fcol{flex:1}
+  .field .lab{font-size:11px;color:var(--ink-3);font-weight:600;letter-spacing:.02em}
+  .field .val{font-size:15px;color:var(--ink);font-weight:500;margin-top:2px}
+  .field .val.ph{color:var(--ink-3);font-weight:400}
+  .field .opt{font-size:11px;color:var(--ink-3);margin-left:auto}
+  .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 12px;text-align:center}
+  .tile .plus{width:30px;height:30px;border-radius:50%;border:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;margin:0 auto 9px}
+  .tile .n{font-size:13.5px;font-weight:600}
+  .tile .h{font-size:11.5px;color:var(--ink-3);margin-top:3px}
+  .chips{display:flex;flex-wrap:wrap;gap:9px}
+  .chip{padding:10px 17px;border-radius:999px;border:1px solid var(--line-2);background:var(--card);font-size:14px;font-weight:500;color:var(--ink-2)}
+  .chip.on{background:var(--jade);color:#fff;border-color:var(--jade);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+  .cta{width:100%;background:var(--jade-deep);color:#fff;border:none;border-radius:var(--r);padding:17px;font-size:15.5px;font-weight:600;font-family:var(--sans);letter-spacing:.01em;box-shadow:0 14px 30px -16px rgba(30,70,56,.55);cursor:pointer;margin-top:28px}
+  .cta.gold{background:linear-gradient(135deg,var(--gold-soft),var(--gold));box-shadow:0 14px 30px -16px rgba(169,128,58,.55)}
+  .hint{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--ink-3);margin-top:14px}
+  .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .mcard{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;position:relative;min-height:138px;display:flex;flex-direction:column}
+  .mcard .mic{margin-bottom:12px}
+  .mcard .mn{font-size:16px;font-weight:600;font-family:var(--serif)}
+  .mcard .md{font-size:12px;color:var(--ink-2);margin-top:6px;line-height:1.55;flex:1}
+  .mcard .tag{font-size:11px;color:var(--ink-3);font-weight:500;margin-top:11px;display:flex;align-items:center;gap:5px}
+  .mcard.top{grid-column:1/-1;flex-direction:row;align-items:center;gap:18px;min-height:auto;background:var(--jade-deep);border-color:var(--jade-deep)}
+  .mcard.top .mic{margin:0;stroke:var(--gold-soft);width:30px;height:30px}
+  .mcard.top .mn{font-size:18px;color:#fff}
+  .mcard.top .md{color:rgba(255,255,255,.82);margin-top:4px}
+  .mcard.rec::after{content:'为你推荐';position:absolute;top:14px;right:14px;font-size:10px;color:var(--ink-3);letter-spacing:.04em}
+  .mcard.top.rec::after{color:var(--gold-soft)}
+  .mcard.lock{opacity:.55}
+  .mcard.lock .mic{stroke:var(--ink-3)}
+  .rhero{text-align:center;padding:16px 4px 4px}
+  .rhero .k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .rhero .dv{width:44px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-soft),transparent);margin:14px auto}
+  .rhero h2{font-family:var(--serif);font-size:29px;font-weight:600;line-height:1.24;letter-spacing:-.01em;margin:0 6px}
+  .chart{background:var(--jade-deep);border:1px solid rgba(195,160,90,.20);border-radius:var(--rl);padding:22px 20px;margin:18px 0;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+  .pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center}
+  .pil .c{font-family:var(--serif);font-size:27px;font-weight:600;background:linear-gradient(160deg,#E8C87E,#B98A3E);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 1px 0 rgba(0,0,0,.18))}
+  .pil .l{font-size:10px;color:rgba(255,255,255,.62);margin-top:6px;letter-spacing:.08em}
+  .read{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;margin-bottom:14px}
+  .read h3{font-size:14px;font-weight:600;margin-bottom:10px;letter-spacing:.01em}
+  .read p{font-size:15px;color:var(--ink-2);line-height:1.75}
+  .blur{filter:blur(5px);opacity:.55;user-select:none;pointer-events:none}
+  .wall{background:var(--card);border:1px solid var(--gold-wash);border-radius:var(--rl);padding:24px 20px;text-align:center;margin:16px 0}
+  .wall h4{font-family:var(--serif);font-size:20px;font-weight:600;margin-bottom:5px}
+  .wall p{font-size:12.5px;color:var(--ink-2);margin-bottom:18px}
+  .wall .price{font-size:12.5px;color:var(--ink-3);margin-top:12px}
+  .wall .price b{color:var(--gold);font-size:17px;font-weight:600}
+  .expand{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12.5px;color:var(--ink-3);padding:14px;border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px;background:var(--card);font-weight:500}
+  .adv{background:var(--jade-deep);border:1px solid rgba(195,160,90,.20);border-radius:var(--rl);padding:24px 21px;margin:22px 0 8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+  .adv .k{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-soft);font-weight:600}
+  .adv h4{font-family:var(--serif);font-size:21px;font-weight:600;margin:10px 0 4px;color:#fff}
+  .adv ul{list-style:none;margin:14px 0}
+  .adv li{font-size:13px;color:rgba(255,255,255,.86);padding:6px 0 6px 20px;position:relative}
+  .adv li::before{content:'◆';position:absolute;left:2px;top:6px;color:var(--gold-soft);font-size:7px;line-height:2.1}
+  .adv .sbtn{width:100%;background:linear-gradient(135deg,var(--gold-soft),var(--gold));color:#fff;border:none;border-radius:var(--r);padding:15px;font-size:14.5px;font-weight:600;margin-top:10px;cursor:pointer}
+  .nav-back{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--ink-3);cursor:pointer;font-weight:500}
+  .sticky{position:sticky;bottom:0;background:linear-gradient(180deg,rgba(244,240,231,0),var(--paper) 32%);padding:16px 0 4px;margin-top:8px}
+  .sticky .cta{margin-top:0}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="17" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-pin" viewBox="0 0 24 24"><path d="M20 10c0 6-8 11-8 11s-8-5-8-11a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="2.6"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 20v-1.5a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4V20"/><circle cx="12" cy="8" r="3.6"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><path d="M22 18a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h3l1.6-2.4h6.8L17 7h3a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="3.4"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 6v12M6 12h12"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="4" y="10.5" width="16" height="10" rx="2.5"/><path d="M7.5 10.5V7a4.5 4.5 0 0 1 9 0v3.5"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/></symbol>
+  <!-- method glyphs -->
+  <symbol id="m-bazi" viewBox="0 0 32 32"><path d="M7 6v20M13 6v20M19 6v20M25 6v20"/></symbol>
+  <symbol id="m-hehun" viewBox="0 0 32 32"><circle cx="12" cy="16" r="7.5"/><circle cx="20" cy="16" r="7.5"/></symbol>
+  <symbol id="m-tarot" viewBox="0 0 32 32"><rect x="6" y="8" width="12" height="18" rx="2" transform="rotate(-8 12 17)"/><rect x="15" y="6" width="12" height="18" rx="2" transform="rotate(8 21 15)"/></symbol>
+  <symbol id="m-astro" viewBox="0 0 32 32"><circle cx="16" cy="16" r="6"/><path d="M16 3v3M16 26v3M3 16h3M26 16h3M6.6 6.6l2.1 2.1M23.3 23.3l2.1 2.1M25.4 6.6l-2.1 2.1M8.7 23.3l-2.1 2.1"/></symbol>
+  <symbol id="m-daily" viewBox="0 0 32 32"><path d="M24 20a9 9 0 1 1-8-13 7 7 0 0 0 8 13z"/></symbol>
+  <symbol id="m-palm" viewBox="0 0 32 32"><path d="M11 26v-6M11 20V9a2 2 0 0 1 4 0v7M15 16V7a2 2 0 0 1 4 0v9M19 16v-5a2 2 0 0 1 4 0v9a7 7 0 0 1-7 7h-1a6 6 0 0 1-5-3l-3-5a2 2 0 0 1 3.4-2z"/></symbol>
+  <symbol id="m-face" viewBox="0 0 32 32"><circle cx="16" cy="16" r="11"/><path d="M12 14h.01M20 14h.01M12 20a5 4 0 0 0 8 0"/></symbol>
+</defs></svg>
+
+<!-- ① 收集 -->
+<div class="phone">
+  <div class="phone-label">1 · 收集 一次填全复用</div>
+  <div class="scr">
+    <div class="bar"><div class="brand">Runae<span class="dot">.</span></div><div class="step">1 / 3</div></div>
+    <div class="stepper"><i class="on"></i><span class="ln"></span><i></i><span class="ln"></span><i></i></div>
+    <div class="eyebrow">你的命盘起点</div>
+    <h1 class="t">先告诉我<br>你是谁</h1>
+    <p class="sub">八字 · 塔罗 · 星座 · 面相 · 手相，想算什么都行。填一次，以后回来直接看，不用重填。</p>
+
+    <div class="sec">出生信息</div>
+    <div class="field"><svg class="ic"><use href="#i-cal"/></svg><div class="fcol"><div class="lab">出生日期</div><div class="val">1994 · 06 · 15</div></div><div style="display:flex;gap:2px;background:var(--jade-wash);border-radius:9px;padding:2px"><span style="font-size:11px;padding:5px 10px;border-radius:7px;background:#fff;color:var(--jade);font-weight:600">阳历</span><span style="font-size:11px;padding:5px 10px;color:var(--ink-3)">农历</span></div></div>
+    <div class="field"><svg class="ic"><use href="#i-clock"/></svg><div class="fcol"><div class="lab">出生时间</div><div class="val ph">不确定时辰？可跳过</div></div><span class="opt">可选</span></div>
+    <div class="field"><svg class="ic"><use href="#i-pin"/></svg><div class="fcol"><div class="lab">出生地</div><div class="val">上海</div></div><span class="opt">可选</span></div>
+    <div class="field"><svg class="ic"><use href="#i-user"/></svg><div class="fcol"><div class="lab">性别</div><div class="val">女</div></div></div>
+
+    <div class="sec">加了更准 · 可选</div>
+    <div class="tiles">
+      <div class="tile"><div class="plus"><svg class="ic" style="stroke:var(--ink-2)"><use href="#i-plus"/></svg></div><div class="n">手相照</div><div class="h">解锁手相推演</div></div>
+      <div class="tile"><div class="plus"><svg class="ic" style="stroke:var(--ink-2)"><use href="#i-cam"/></svg></div><div class="n">面相照</div><div class="h">解锁面相推演</div></div>
+    </div>
+
+    <div class="sec">你最想看哪方面</div>
+    <div class="chips"><span class="chip on">事业</span><span class="chip on">爱情</span><span class="chip">财运</span><span class="chip">健康</span></div>
+
+    <button class="cta">下一步 · 选择推演</button>
+    <div class="hint"><svg class="ic" style="width:14px;height:14px"><use href="#i-shield"/></svg>信息仅用于生成你的报告</div>
+  </div>
+</div>
+
+<!-- ② 选择 -->
+<div class="phone">
+  <div class="phone-label">2 · 选择 只留7个热门</div>
+  <div class="scr">
+    <div class="bar"><div class="nav-back"><svg class="ic" style="width:15px;height:15px;transform:rotate(180deg)"><use href="#i-chev"/></svg>返回</div><div class="step">2 / 3</div></div>
+    <div class="stepper"><i class="on"></i><span class="ln"></span><i class="on"></i><span class="ln"></span><i></i></div>
+    <div class="eyebrow">用你刚填的信息</div>
+    <h1 class="t">想算哪一种</h1>
+    <p class="sub">按你选的「事业 · 爱情」排序。灰色的，补张照片即可解锁。</p>
+
+    <div class="mgrid" style="margin-top:22px">
+      <div class="mcard top rec"><svg class="mic"><use href="#m-bazi"/></svg><div><div class="mn">八字命理</div><div class="md">四柱排盘 · 事业财运姻缘深度解读</div></div></div>
+      <div class="mcard rec"><svg class="mic"><use href="#m-hehun"/></svg><div class="mn">合婚</div><div class="md">两个人合不合，一测便知</div><div class="tag">复用你的生辰</div></div>
+      <div class="mcard"><svg class="mic"><use href="#m-tarot"/></svg><div class="mn">塔罗</div><div class="md">此刻的困惑，抽牌给你答案</div><div class="tag">立即可算</div></div>
+      <div class="mcard"><svg class="mic"><use href="#m-astro"/></svg><div class="mn">星座占星</div><div class="md">西方星盘 · 性格与运势</div><div class="tag">复用你的生辰</div></div>
+      <div class="mcard"><svg class="mic"><use href="#m-daily"/></svg><div class="mn">每日运势</div><div class="md">今天宜什么、忌什么</div><div class="tag">每天更新</div></div>
+      <div class="mcard lock"><svg class="mic"><use href="#m-palm"/></svg><div class="mn">手相</div><div class="md">掌纹里的命运线</div><div class="tag"><svg class="ic" style="width:13px;height:13px"><use href="#i-lock"/></svg>补手相照解锁</div></div>
+      <div class="mcard lock"><svg class="mic"><use href="#m-face"/></svg><div class="mn">面相</div><div class="md">五官里的运势密码</div><div class="tag"><svg class="ic" style="width:13px;height:13px"><use href="#i-lock"/></svg>补面相照解锁</div></div>
+    </div>
+    <div class="sticky"><button class="cta">生成我的报告</button></div>
+  </div>
+</div>
+
+<!-- ③ 报告 -->
+<div class="phone">
+  <div class="phone-label">3 · 报告 单栏·一个付费墙</div>
+  <div class="scr">
+    <div class="bar"><div class="nav-back"><svg class="ic" style="width:15px;height:15px;transform:rotate(180deg)"><use href="#i-chev"/></svg>返回</div><div class="step">你的八字报告</div></div>
+    <div class="rhero"><div class="k">BaZi · 1994.06.15</div><div class="dv"></div><h2>你是「甲木日主」<br>一棵向阳而生的树</h2></div>
+
+    <div class="chart"><div class="pillars">
+      <div class="pil"><div class="c">甲</div><div class="l">年 · 木</div></div>
+      <div class="pil"><div class="c">庚</div><div class="l">月 · 金</div></div>
+      <div class="pil"><div class="c">丙</div><div class="l">日 · 火</div></div>
+      <div class="pil"><div class="c">己</div><div class="l">时 · 土</div></div>
+    </div></div>
+
+    <div class="read"><h3>性格底色</h3><p>你天生有股向上的劲，认定的事会一直走。别人觉得你固执，其实是心里有杆秤——只是有时太硬，容易在人际上碰壁。</p></div>
+    <div class="read"><h3>事业方向 · 你最关心的</h3><p>今明两年走「财旺之运」，适合主动出击、把想法落地。尤其 2026 下半年，有一个你一直没启动的计划——动一步，比等下去强……</p></div>
+    <div class="read"><h3>爱情 · 婚姻走势</h3><p class="blur">正缘出现在你放下焦虑之后。你的命局里，感情来得比事业晚一点，但一旦来了会很稳。要注意 2025 年……你和对方的五行互补关系……</p></div>
+
+    <div class="wall">
+      <h4>解锁完整报告</h4>
+      <p>爱情走势 · 大运流年 · 逐年预测 · 进阶交叉印证</p>
+      <button class="cta gold" style="margin-top:0">解锁完整版</button>
+      <div class="price"><b>$9.90</b> 一次性 · 或订阅更划算 ↓</div>
+    </div>
+
+    <div class="expand"><svg class="ic" style="width:14px;height:14px"><use href="#i-down"/></svg>命盘技术细节（十神 / 藏干 / 纳音）</div>
+
+    <div class="adv">
+      <div class="k">Runae 顾问 · 会记得你</div>
+      <h4>不止一份报告<br>是一个懂你的命理顾问</h4>
+      <ul>
+        <li>记得你的盘与每次提问，越用越懂你</li>
+        <li>每日流年动态更新，你的运势在变</li>
+        <li>随时追问深聊，像身边的老师</li>
+        <li>想更深，可约真人命理师一对一</li>
+      </ul>
+      <button class="sbtn">订阅 Runae 顾问 · $9.9 / 月</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

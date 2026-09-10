@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Runae · 八字深度报告(文档版样张)</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#060e0d;--card:#0f1b17;--card-2:#0b1512;
+    --ink:#f0ebe0;--ink-2:rgba(240,235,224,.72);--ink-3:rgba(240,235,224,.44);
+    --gold:#dcc082;--gold-soft:#e8d49c;--gold-wash:rgba(220,192,130,.14);
+    --jade:#4fbfa0;--jade-deep:#0e2b24;--jade-soft:#7ddfc0;--jade-wash:rgba(79,191,160,.12);
+    --line:rgba(240,235,224,.10);--line-2:rgba(240,235,224,.17);
+    --wood:#7dcf8f;--fire:#e07a6a;--earth:#d8b56a;--metal:#cfcabb;--water:#6aa8d8;
+    --sans:'Inter',-apple-system,system-ui,sans-serif;--serif:'Cormorant Garamond','Noto Serif SC',serif;
+    --rl:20px;--r:14px;
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+  html{color-scheme:dark}
+  body{background:var(--paper);font-family:var(--sans);color:var(--ink);line-height:1.5;font-feature-settings:"tnum"}
+  .wrap{max-width:430px;margin:0 auto;padding:0 22px 44px}
+  /* header */
+  .bar{display:flex;align-items:center;justify-content:space-between;padding:22px 2px 4px}
+  .brand{font-family:var(--serif);font-size:22px;font-weight:700}.brand .dot{color:var(--jade)}
+  .doct{font-size:10.5px;color:var(--ink-3);letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+  .rhero{text-align:center;padding:20px 4px 6px}
+  .rhero .k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .rhero .dv{width:44px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-soft),transparent);margin:13px auto}
+  .rhero h1{font-family:var(--serif);font-size:30px;font-weight:600;line-height:1.24;letter-spacing:-.01em}
+  .rhero .ess{font-size:13.5px;color:var(--ink-2);margin-top:12px;line-height:1.7;padding:0 6px}
+  /* key insight alert */
+  .alert{background:linear-gradient(160deg,rgba(79,191,160,.10),var(--card));border:1px solid var(--jade-soft);border-radius:var(--rl);padding:20px;margin:20px 0;box-shadow:0 14px 34px -22px rgba(79,191,160,.4)}
+  .alert .t{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--jade-soft);font-weight:600;display:flex;align-items:center;gap:7px}
+  .alert p{font-size:15px;color:var(--ink);line-height:1.72;margin-top:10px}
+  .alert p b{color:var(--jade-soft)}
+  /* section label */
+  .sec{font-size:11px;font-weight:600;color:var(--ink-3);letter-spacing:.14em;text-transform:uppercase;margin:30px 2px 13px}
+  /* chart */
+  .chart{background:var(--jade-deep);border:1px solid rgba(195,160,90,.22);border-radius:var(--rl);padding:22px 18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+  .pillars{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center}
+  .pil .c{font-family:var(--serif);font-size:25px;font-weight:600;line-height:1.15;background:linear-gradient(160deg,#E8C87E,#B98A3E);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 1px 0 rgba(0,0,0,.2))}
+  .pil .py{font-size:8.5px;color:rgba(255,255,255,.5);margin-top:5px;line-height:1.2}
+  .pil .l{font-size:10px;color:rgba(255,255,255,.6);margin-top:5px;letter-spacing:.06em}
+  /* five elements bars */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px}
+  .bar-row{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+  .bar-row:last-child{margin-bottom:0}
+  .bar-row .nm{font-family:var(--serif);font-size:15px;font-weight:600;width:20px;flex-shrink:0}
+  .bar-track{flex:1;height:8px;background:var(--card-2);border-radius:6px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:6px}
+  .bar-row .pc{font-size:12px;color:var(--ink-3);width:34px;text-align:right;font-weight:600}
+  /* reading section */
+  .rd{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;margin-bottom:12px}
+  .rd h3{font-size:15px;font-weight:600;font-family:var(--serif);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .rd p{font-size:14.5px;color:var(--ink-2);line-height:1.8;margin-bottom:10px}
+  .rd p:last-child{margin-bottom:0}
+  .rd p b{color:var(--ink);font-weight:600}.rd em{color:var(--jade-soft);font-style:normal}
+  .rd ul{list-style:none;margin:6px 0}
+  .rd li{font-size:14px;color:var(--ink-2);line-height:1.7;padding-left:16px;position:relative;margin-bottom:6px}
+  .rd li::before{content:'';position:absolute;left:3px;top:9px;width:4px;height:4px;border-radius:50%;background:var(--gold-soft)}
+  .blur{filter:blur(5px);opacity:.5;user-select:none}
+  /* timeline (大运) */
+  .tl{position:relative;padding-left:4px}
+  .tl .row{display:flex;gap:14px;padding:2px 0 16px;position:relative}
+  .tl .row:last-child{padding-bottom:0}
+  .tl .yr{font-family:var(--serif);font-size:13px;color:var(--gold-soft);font-weight:600;width:66px;flex-shrink:0;padding-top:1px}
+  .tl .dot{position:absolute;left:60px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--jade);box-shadow:0 0 0 3px var(--jade-wash)}
+  .tl .bd{border-left:1px solid var(--line);padding-left:20px;margin-left:0;flex:1}
+  .tl .bd .h{font-size:14px;font-weight:600;color:var(--ink)}
+  .tl .bd .d{font-size:13px;color:var(--ink-2);margin-top:3px;line-height:1.6}
+  /* tips */
+  .tip{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px 15px;margin-bottom:10px}
+  .tip .e{font-family:var(--serif);color:var(--gold-soft);font-size:17px;font-weight:600;flex-shrink:0;width:22px;text-align:center}
+  .tip .x{font-size:13.5px;color:var(--ink-2);line-height:1.65}.tip .x b{color:var(--ink)}
+  /* wall + adv */
+  .wall{background:var(--card);border:1px solid var(--gold-soft);border-radius:var(--rl);padding:24px 20px;text-align:center;margin:18px 0;box-shadow:0 14px 34px -20px rgba(169,128,58,.3)}
+  .wall h4{font-family:var(--serif);font-size:20px;font-weight:600;margin-bottom:5px}
+  .wall p{font-size:13px;color:var(--ink-2);margin-bottom:16px}
+  .cta{width:100%;background:linear-gradient(135deg,var(--gold-soft),var(--gold));color:#2a1f0c;border:none;border-radius:var(--r);padding:15px;font-size:15px;font-weight:700;cursor:pointer}
+  .wall .price{font-size:13px;color:var(--ink-3);margin-top:11px}.wall .price b{color:var(--gold);font-size:17px}
+  .adv{background:var(--jade-deep);border:1px solid rgba(195,160,90,.2);border-radius:var(--rl);padding:22px 20px;margin-top:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+  .adv .k{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-soft);font-weight:600}
+  .adv h4{font-family:var(--serif);font-size:20px;color:#fff;margin:9px 0 12px;line-height:1.24}
+  .adv .sbtn{width:100%;background:transparent;color:var(--gold-soft);border:1px solid var(--gold-soft);border-radius:var(--r);padding:14px;font-size:14px;font-weight:600;cursor:pointer}
+  .foot{margin-top:34px;border-top:1px solid var(--line);padding-top:20px;text-align:center}
+  .foot .d{font-size:11px;color:var(--ink-3);line-height:1.7}
+  .foot .sig{font-family:var(--serif);font-style:italic;font-size:13px;color:var(--ink-3);margin-top:12px;letter-spacing:.05em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar"><div class="brand">Runae<span class="dot">.</span></div><div class="doct">八字深度报告</div></div>
+
+  <div class="rhero">
+    <div class="k">BaZi · 1990.06.15 · 女</div><div class="dv"></div>
+    <h1>你是「壬水日主」<br>一条向前奔流的河</h1>
+    <div class="ess">水日主生于午月火旺之时——你天生带着穿透力和方向感，认定的路会一直走。这份报告，是你的四柱这辈子一直想告诉你的话。</div>
+  </div>
+
+  <!-- 核心洞察 -->
+  <div class="alert">
+    <div class="t">✦ 核心洞察</div>
+    <p>你命局<b>财星透而根浅</b>——赚钱的机会一直有，但容易"抓不住、留不下"。<b>2025–2027 走壬子癸丑水运</b>，是你日主得根、最该主动出击的三年。这一段你如果还在等，就是最大的浪费。</p>
+  </div>
+
+  <!-- 命盘 -->
+  <div class="sec">四柱命盘</div>
+  <div class="chart"><div class="pillars">
+    <div class="pil"><div class="c">庚<br>午</div><div class="py">Gēng · Wǔ</div><div class="l">年</div></div>
+    <div class="pil"><div class="c">壬<br>午</div><div class="py">Rén · Wǔ</div><div class="l">月</div></div>
+    <div class="pil"><div class="c">壬<br>申</div><div class="py">Rén · Shēn</div><div class="l">日</div></div>
+    <div class="pil"><div class="c">辛<br>亥</div><div class="py">Xīn · Hài</div><div class="l">时</div></div>
+  </div></div>
+
+  <!-- 五行能量 -->
+  <div class="sec">五行能量分布</div>
+  <div class="card">
+    <div class="bar-row"><div class="nm" style="color:var(--wood)">木</div><div class="bar-track"><div class="bar-fill" style="width:8%;background:var(--wood)"></div></div><div class="pc">8%</div></div>
+    <div class="bar-row"><div class="nm" style="color:var(--fire)">火</div><div class="bar-track"><div class="bar-fill" style="width:34%;background:var(--fire)"></div></div><div class="pc">34%</div></div>
+    <div class="bar-row"><div class="nm" style="color:var(--earth)">土</div><div class="bar-track"><div class="bar-fill" style="width:10%;background:var(--earth)"></div></div><div class="pc">10%</div></div>
+    <div class="bar-row"><div class="nm" style="color:var(--metal)">金</div><div class="bar-track"><div class="bar-fill" style="width:26%;background:var(--metal)"></div></div><div class="pc">26%</div></div>
+    <div class="bar-row"><div class="nm" style="color:var(--water)">水</div><div class="bar-track"><div class="bar-fill" style="width:22%;background:var(--water)"></div></div><div class="pc">22%</div></div>
+  </div>
+
+  <!-- 分区解读 -->
+  <div class="sec">深度解读</div>
+  <div class="rd"><h3>🌊 性格底色</h3>
+    <p>壬水日主，你像一条大河——<b>表面从容，底下有力量</b>。认定的事会一直往前，不轻易被人推着走。你对"自由"极度敏感，被管束时会本能地想绕开。</p>
+    <p>火旺泄你的水，让你<em>点子多、表达强、闲不住</em>，但也容易分心、三分钟热度。你最好的状态，是有一个"河道"——清晰的目标框住你，你就能奔流千里。</p>
+  </div>
+  <div class="rd"><h3>💼 事业与财运</h3>
+    <p>你走的是<b>食伤生财</b>的路子——靠才华、表达、创意变现，比靠死工资更旺。适合内容、设计、咨询、任何"用脑子和嘴赚钱"的方向。</p>
+    <ul>
+      <li>2025–2027 财运主升段，适合主动布局、把想法落地成产品</li>
+      <li>忌合伙分权，你的财星怕被夺——宁可自己主导</li>
+      <li>钱要"变成资产"才留得住，纯现金在你手里存不下</li>
+    </ul>
+  </div>
+  <div class="rd"><h3>❤ 感情姻缘</h3>
+    <p class="blur">正缘出现在你放下"掌控"之后。你的日支申金……偏印格局让你在亲密关系里……2026 有一段……对方五行属……</p>
+  </div>
+
+  <!-- 大运时间轴 -->
+  <div class="sec">大运时间轴</div>
+  <div class="card"><div class="tl">
+    <div class="row"><div class="yr">2015–24</div><div class="dot"></div><div class="bd"><div class="h">庚辰运 · 蓄力</div><div class="d">根基期，学本事、攒人脉，别急着要结果。</div></div></div>
+    <div class="row"><div class="yr">2025–34</div><div class="dot"></div><div class="bd"><div class="h">壬子运 · 上升主线</div><div class="d">日主得根、喜用得力，一生事业财富多在此成形。</div></div></div>
+    <div class="row"><div class="yr">2035–44</div><div class="dot"></div><div class="bd"><div class="h">癸丑运 · 收成</div><div class="d">前段布局兑现，注意健康与节奏，别透支。</div></div></div>
+  </div></div>
+
+  <!-- 开运锦囊 -->
+  <div class="sec">开运锦囊</div>
+  <div class="tip"><div class="e">水</div><div class="x"><b>补水木、泄火。</b>多穿黑、蓝、绿；家里往北、往东布置；决策别在火旺的正午冲动做。</div></div>
+  <div class="tip"><div class="e">北</div><div class="x"><b>方位。</b>床头、书桌朝北或东，利你的喜用；重要谈判选北方城市更顺。</div></div>
+  <div class="tip"><div class="e">时</div><div class="x"><b>吉时。</b>亥子时(21–01点)是你能量最通的时段，重要的事放这时想、这时定。</div></div>
+
+  <!-- 付费墙 -->
+  <div class="wall">
+    <h4>解锁完整报告</h4>
+    <p>感情姻缘全解 · 逐年流年预测 · 十神格局详批 · 进阶交叉印证</p>
+    <button class="cta">解锁完整版</button>
+    <div class="price"><b>$9.90</b> 一次性 · 或订阅更划算 ↓</div>
+  </div>
+
+  <!-- 顾问 -->
+  <div class="adv">
+    <div class="k">Runae 顾问 · 会记得你</div>
+    <h4>不止一份报告<br>是一个懂你的命理顾问</h4>
+    <button class="sbtn">订阅 Runae 顾问 · $9.9 / 月</button>
+  </div>
+
+  <div class="foot">
+    <div class="d">本报告由 AI 辅助生成，仅供自我觉察与娱乐参考，不构成命定断言或任何决策建议。</div>
+    <div class="sig">你命盘里的答案，一直都在</div>
+  </div>
+</div>
+</body>
+</html>
