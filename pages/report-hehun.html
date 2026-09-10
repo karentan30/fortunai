@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Runae · 合婚报告</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F0E7;--card:#FFFFFF;--card-2:#FAF7F0;
+    --ink:#26221C;--ink-2:#6A6357;--ink-3:#A39B8C;
+    --gold:#A9803A;--gold-soft:#C3A05A;--gold-wash:#EFE7D4;
+    --jade:#2D7A62;--jade-deep:#1C4A3A;--jade-soft:#7DDFC0;--jade-wash:#E3EDE8;
+    --rose:#B23A54;--rose-soft:#D46A80;--rose-wash:#F3E4E8;
+    --line:rgba(38,34,28,.10);--line-2:rgba(38,34,28,.16);
+    --sans:'Inter',-apple-system,system-ui,sans-serif;--serif:'Cormorant Garamond','Noto Serif SC',serif;
+    --rl:20px;--r:14px;
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{background:var(--paper);font-family:var(--sans);color:var(--ink);line-height:1.5;font-feature-settings:"tnum";min-height:100vh}
+  .wrap{max-width:430px;margin:0 auto;padding:0 24px 40px;min-height:100vh}
+  svg.ic{width:18px;height:18px;stroke:var(--ink-3);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  .bar{display:flex;align-items:center;justify-content:space-between;padding:22px 2px 12px}
+  .nav-back{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--ink-3);cursor:pointer;font-weight:500}
+  .step{font-size:11px;color:var(--ink-3);letter-spacing:.1em;font-weight:600}
+
+  /* ── hero ── */
+  .rhero{text-align:center;padding:16px 4px 4px}
+  .rhero .k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .rhero .dv{width:44px;height:1px;background:linear-gradient(90deg,transparent,var(--rose-soft),transparent);margin:14px auto}
+  .rhero h2{font-family:var(--serif);font-size:29px;font-weight:600;line-height:1.24;letter-spacing:-.01em;margin:0 6px}
+
+  /* ── 双人合盘卡（对齐 report-v2 .chart，玫瑰金 rose 主题） ── */
+  .chart{background:var(--jade-deep);border:1px solid rgba(195,160,90,.20);border-radius:var(--rl);padding:22px 20px;margin:18px 0;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+  .duo{display:flex;align-items:center;justify-content:space-around;text-align:center}
+  .duo .who{flex:1}
+  .duo .who .c{font-family:var(--serif);font-size:26px;font-weight:600;line-height:1.15;background:linear-gradient(160deg,#E8C87E,#B98A3E);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 1px 0 rgba(0,0,0,.18))}
+  .duo .who .l{font-size:11px;color:rgba(255,255,255,.62);margin-top:7px;letter-spacing:.08em}
+  .duo .rel{flex:0 0 auto;padding:0 6px}
+  .duo .rel .arw{font-size:20px;color:var(--gold-soft);line-height:1}
+  .duo .rel .rl{font-size:10px;color:rgba(255,255,255,.7);margin-top:5px;letter-spacing:.06em}
+  .score-line{margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.12);text-align:center}
+  .score-line .sc{font-family:var(--serif);font-size:34px;font-weight:700;color:#fff;line-height:1}
+  .score-line .sc small{font-size:15px;opacity:.7}
+  .score-line .sl{font-size:11px;color:rgba(255,255,255,.6);margin-top:4px;letter-spacing:.1em}
+
+  /* ── read cards ── */
+  .read{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;margin-bottom:14px}
+  .read h3{font-size:14px;font-weight:600;margin-bottom:10px;letter-spacing:.01em}
+  .read p{font-size:15px;color:var(--ink-2);line-height:1.75;white-space:pre-wrap}
+  .read strong{color:var(--ink)}
+  .blur{filter:blur(5px);opacity:.55;user-select:none;pointer-events:none}
+
+  /* ── paywall ── */
+  .wall{background:var(--card);border:1px solid var(--gold-soft);border-radius:var(--rl);padding:24px 20px;text-align:center;margin:16px 0;box-shadow:0 14px 34px -20px rgba(169,128,58,.30)}
+  .wall h4{font-family:var(--serif);font-size:20px;font-weight:600;margin-bottom:5px}
+  .wall p{font-size:13px;color:var(--ink-2);margin-bottom:18px}
+  .cta{width:100%;background:var(--jade-deep);color:#fff;border:none;border-radius:var(--r);padding:16px;font-size:15px;font-weight:600;font-family:var(--sans);cursor:pointer}
+  .cta.gold{background:linear-gradient(135deg,var(--gold-soft),var(--gold))}
+  .cta:disabled{opacity:.5;cursor:not-allowed}
+  .wall .price{font-size:13px;color:var(--ink-3);margin-top:12px}
+  .wall .price b{color:var(--gold);font-size:17px;font-weight:600}
+
+  /* ── advisor ── */
+  .adv{background:var(--jade-deep);border:1px solid rgba(195,160,90,.20);border-radius:var(--rl);padding:24px 21px;margin:22px 0 8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+  .adv .k{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-soft);font-weight:600}
+  .adv h4{font-family:var(--serif);font-size:21px;font-weight:600;margin:10px 0 4px;color:#fff}
+  .adv ul{list-style:none;margin:14px 0}
+  .adv li{font-size:13px;color:rgba(255,255,255,.86);padding:6px 0 6px 20px;position:relative}
+  .adv li::before{content:'◆';position:absolute;left:2px;top:6px;color:var(--gold-soft);font-size:7px;line-height:2.1}
+  .adv .sbtn{width:100%;background:transparent;color:var(--gold-soft);border:1px solid var(--gold-soft);border-radius:var(--r);padding:15px;font-size:14.5px;font-weight:600;margin-top:10px;cursor:pointer}
+
+  /* ── skeleton / states ── */
+  .skel{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;margin-bottom:14px}
+  .skel .ln{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--line),#efe9de,var(--line));background-size:200% 100%;animation:sh 1.3s infinite;margin-bottom:11px}
+  @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .err{text-align:center;color:var(--ink-2);font-size:14px;padding:40px 10px}
+  .loadmsg{text-align:center;color:var(--ink-3);font-size:13px;padding:12px 10px;letter-spacing:.04em}
+
+  /* ── collect: 乙方精简表单（对齐 collect.html .field 样式） ── */
+  .sec{font-size:11px;font-weight:600;color:var(--ink-3);letter-spacing:.14em;text-transform:uppercase;margin:26px 2px 13px}
+  .self-chip{display:inline-flex;align-items:center;gap:8px;background:var(--rose-wash);border:1px solid rgba(178,58,84,.2);border-radius:999px;padding:9px 16px;font-size:13px;font-weight:600;color:var(--rose);margin-bottom:4px}
+  .self-chip .dot{width:7px;height:7px;border-radius:50%;background:var(--rose)}
+  .field{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px 16px;display:flex;align-items:center;gap:13px;margin-bottom:10px;transition:border-color .15s}
+  .field:focus-within{border-color:var(--rose)}
+  .field .fcol{flex:1;min-width:0}
+  .field .lab{font-size:11px;color:var(--ink-3);font-weight:600;letter-spacing:.02em}
+  .field input,.field select{border:none;background:transparent;font-family:var(--sans);font-size:15px;color:var(--ink);font-weight:500;width:100%;margin-top:2px;outline:none}
+  .field input::placeholder{color:var(--ink-3);font-weight:400}
+  .field .opt{font-size:11px;color:var(--ink-3);margin-left:auto;white-space:nowrap}
+  .g-toggle{display:flex;gap:2px;background:var(--rose-wash);border-radius:9px;padding:2px;flex-shrink:0}
+  .g-toggle span{font-size:12px;padding:6px 13px;border-radius:7px;color:var(--ink-3);cursor:pointer;font-weight:500}
+  .g-toggle span.on{background:#fff;color:var(--rose);font-weight:600}
+  .go{width:100%;background:linear-gradient(135deg,var(--rose-soft),var(--rose));color:#fff;border:none;border-radius:var(--r);padding:17px;font-size:15.5px;font-weight:600;font-family:var(--sans);letter-spacing:.01em;box-shadow:0 14px 30px -16px rgba(178,58,84,.55);cursor:pointer;margin-top:24px}
+  .go:disabled{opacity:.5;box-shadow:none;cursor:not-allowed}
+  .consent{display:flex;align-items:flex-start;gap:9px;font-size:11.5px;color:var(--ink-2);line-height:1.6;margin-top:18px;cursor:pointer}
+  .consent input{margin-top:2px;width:15px;height:15px;flex-shrink:0;accent-color:var(--rose)}
+  .consent a{color:var(--rose)}
+  .miss{background:var(--card-2);border:1px solid var(--gold-wash);border-radius:var(--r);padding:14px 16px;font-size:12.5px;color:var(--ink-2);line-height:1.7;margin-bottom:14px}
+  .miss b{color:var(--ink)}
+  .miss a{color:var(--jade);font-weight:600;cursor:pointer;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <div class="nav-back" onclick="location.href='pick.html'"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>返回</div>
+    <div class="step">合婚配对</div>
+  </div>
+
+  <!-- ═══ 阶段 1：乙方信息收集 ═══ -->
+  <div id="collect">
+    <div class="rhero">
+      <div class="k">Hehun · 八字合婚</div>
+      <div class="dv"></div>
+      <h2>你们，合不合？</h2>
+    </div>
+
+    <div class="sec">甲方（你）</div>
+    <div id="selfBox"></div>
+
+    <div class="sec">乙方（TA）</div>
+    <div class="field">
+      <svg class="ic"><use href="#i-cal"/></svg>
+      <div class="fcol"><div class="lab">TA 的出生日期</div><input id="bdate" type="date"></div>
+    </div>
+    <div class="field">
+      <svg class="ic"><use href="#i-clock"/></svg>
+      <div class="fcol"><div class="lab">TA 的出生时间</div><input id="btime" type="time" placeholder="不确定可跳过"></div>
+      <span class="opt">可选</span>
+    </div>
+    <div class="field">
+      <svg class="ic"><use href="#i-user"/></svg>
+      <div class="fcol"><div class="lab">TA 的性别</div><div id="genderHint" style="font-size:13px;color:var(--ink-2);font-weight:500;margin-top:2px">与你相对</div></div>
+      <div class="g-toggle" id="gToggle"><span data-g="male">男</span><span data-g="female">女</span></div>
+    </div>
+
+    <label class="consent">
+      <input type="checkbox" id="consent">
+      <span>我已年满 18 周岁，同意将双方出生日期/性别用于命理分析，并了解信息将传输至境外服务器处理（<a href="/legal-CN.html#privacy">隐私政策</a>）。</span>
+    </label>
+
+    <button class="go" id="go">测我们的合婚 →</button>
+    <div style="text-align:center;font-size:11px;color:var(--ink-3);margin-top:12px;letter-spacing:.04em">先免费看配对预览，满意再解锁完整报告</div>
+  </div>
+
+  <!-- ═══ 阶段 2：报告渲染 ═══ -->
+  <div id="report" style="display:none">
+    <div id="hero"></div>
+    <div id="body">
+      <div class="skel"><div class="ln" style="width:60%"></div><div class="ln" style="width:100%"></div><div class="ln" style="width:88%"></div></div>
+      <div class="skel"><div class="ln" style="width:45%"></div><div class="ln" style="width:96%"></div><div class="ln" style="width:92%"></div><div class="ln" style="width:70%"></div></div>
+      <div class="loadmsg" id="loadmsg">正在为你们合盘推演…约需 20 秒</div>
+    </div>
+  </div>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="17" rx="2.5"/><path d="M3 9h18M8 2.5v4M16 2.5v4"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7.5V12l3 2"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><path d="M19 20v-1.5a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4V20"/><circle cx="12" cy="8" r="3.6"/></symbol>
+</defs></svg>
+
+<script>
+  // ── 甲方：从 runae_profile 带入 ──
+  var P = {};
+  try { P = JSON.parse(localStorage.getItem('runae_profile') || '{}'); } catch(e){}
+
+  var selfGender = P.gender || 'female';           // 甲方性别
+  var bGender = selfGender === 'male' ? 'female' : 'male';  // 乙方默认相对
+
+  function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // 渲染甲方信息卡（自动带入）；若无 profile 提示去补
+  (function renderSelf(){
+    var box = document.getElementById('selfBox');
+    if (P.bdate) {
+      var genderCn = selfGender === 'male' ? '男' : '女';
+      box.innerHTML = '<div class="self-chip"><span class="dot"></span>你：' + esc(P.bdate) +
+        (P.btime ? ' ' + esc(P.btime) : '') + ' · ' + genderCn + '</div>' +
+        '<div style="font-size:11px;color:var(--ink-3);margin:6px 2px 0;letter-spacing:.03em">来自你的档案 · <a href="collect.html" style="color:var(--jade);font-weight:600;text-decoration:none">修改</a></div>';
+    } else {
+      box.innerHTML = '<div class="miss">还没有你的出生信息。<b>合婚需要双方生辰</b>，先花 10 秒填一次，之后回来直接用。<br><a href="collect.html">→ 去填我的信息</a></div>';
+      document.getElementById('go').disabled = true;
+    }
+  })();
+
+  // 乙方性别切换
+  (function initGender(){
+    var t = document.getElementById('gToggle');
+    var hint = document.getElementById('genderHint');
+    function paint(){
+      t.querySelectorAll('span').forEach(function(s){ s.classList.toggle('on', s.dataset.g === bGender); });
+      hint.textContent = (bGender === 'male' ? '男' : '女');
+    }
+    t.querySelectorAll('span').forEach(function(s){
+      s.onclick = function(){ bGender = s.dataset.g; paint(); };
+    });
+    paint();
+  })();
+
+  // ── 解析生日字符串 → {y,m,d}；时间 → hour(0-23 或 '') ──
+  function parseDate(str){
+    var m = (str||'').split('-');
+    return { y: +m[0], mo: +m[1], d: +m[2] };
+  }
+  function parseHour(str){
+    if (!str) return '';
+    var h = parseInt((str.split(':')[0]), 10);
+    return isNaN(h) ? '' : h;
+  }
+
+  // ── 提交：组装双方 body，进入报告态并流式 ──
+  document.getElementById('go').onclick = function(){
+    if (!P.bdate){ alert('请先填写你的出生信息'); return; }
+    var bd = document.getElementById('bdate').value;
+    if (!bd){ alert('请填写 TA 的出生日期'); return; }
+    if (!document.getElementById('consent').checked){ alert('请先勾选同意隐私条款'); return; }
+
+    var a = parseDate(P.bdate);
+    var b = parseDate(bd);
+    var curYear = new Date().getFullYear();
+    if (a.y > curYear - 18 || b.y > curYear - 18){ alert('本平台仅限 18 岁以上用户使用'); return; }
+
+    var body = {
+      p1Year: a.y, p1Month: a.mo, p1Day: a.d, p1Hour: parseHour(P.btime), p1Gender: selfGender, p1Name: '',
+      p2Year: b.y, p2Month: b.mo, p2Day: b.d, p2Hour: parseHour(document.getElementById('btime').value), p2Gender: bGender, p2Name: '',
+      mode: 'marriage', lang: 'zh'
+    };
+    // 存一份供付费回流复用
+    try { localStorage.setItem('sy_last_hehun', JSON.stringify(body)); } catch(e){}
+
+    document.getElementById('collect').style.display = 'none';
+    document.getElementById('report').style.display = 'block';
+    window.scrollTo(0,0);
+    streamHehun(body);
+  };
+
+  // ══════════ 报告渲染 ══════════
+  var WX_ICON = {'木':'🌿','火':'🔥','土':'🪨','金':'⚪','水':'💧'};
+
+  function relLabel(rel){
+    return rel === '相生' ? { t:'五行相生', arw:'→ 生 ←', tone:'相生·相扶' } :
+           rel === '相克' ? { t:'五行有制', arw:'⚡',      tone:'有所制化' } :
+                            { t:'五行比和', arw:'⇌',       tone:'比和·平稳' };
+  }
+
+  // 从 meta 事件渲染顶部合盘卡 + 分数（免费预览的确定性部分）
+  function renderHero(meta, previewData){
+    var hero = document.getElementById('hero');
+    var a = previewData && previewData.a, b = previewData && previewData.b;
+    var rel = (previewData && previewData.relationship) || '';
+    var rInfo = relLabel(rel);
+    var score = (previewData && previewData.baseScore) || meta.score || 0;
+    score = Math.min(97, Math.max(42, Math.round(score)));
+
+    var aCell = a ? ('<div class="c">' + esc(a.dayMaster) + '<br>' + (WX_ICON[a.element]||'') + '</div><div class="l">你 · ' + esc(a.element) + '命</div>')
+                  : ('<div class="c">你</div><div class="l">甲方</div>');
+    var bCell = b ? ('<div class="c">' + esc(b.dayMaster) + '<br>' + (WX_ICON[b.element]||'') + '</div><div class="l">TA · ' + esc(b.element) + '命</div>')
+                  : ('<div class="c">TA</div><div class="l">乙方</div>');
+
+    hero.innerHTML =
+      '<div class="rhero"><div class="k">Hehun · 八字合婚</div><div class="dv"></div><h2>你们的' + (rInfo ? rInfo.t : '合婚') + '</h2></div>' +
+      '<div class="chart">' +
+        '<div class="duo">' +
+          '<div class="who">' + aCell + '</div>' +
+          '<div class="rel"><div class="arw">' + (rInfo?rInfo.arw:'⇌') + '</div><div class="rl">' + (rInfo?rInfo.tone:'') + '</div></div>' +
+          '<div class="who">' + bCell + '</div>' +
+        '</div>' +
+        '<div class="score-line"><div class="sc">' + score + '<small>%</small></div><div class="sl">五行契合基础指数</div></div>' +
+      '</div>';
+  }
+
+  // markdown → 分节 → .read 卡（对齐 report-v2 sections/md）
+  var HEAD = /^\s*([【✅📜🌟💰❤💼🌿☀🔮⛰✨🙏💑💕💠🏠👶🤝📅🌙💌💬]|#{1,4}\s)/;
+  function mdInline(s){ return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>'); }
+  function toSections(text){
+    var lines = text.split('\n'), secs = [], cur = null;
+    lines.forEach(function(raw){
+      var l = raw.replace(/\s+$/,''); if(!l.trim()) return;
+      if (HEAD.test(l) && l.replace(/[#*\s]/g,'').length < 30){
+        cur = { t: l.replace(/[#*【】]/g,'').trim(), b: [] }; secs.push(cur);
+      } else { if(!cur){ cur={t:'',b:[]}; secs.push(cur);} cur.b.push(l.trim()); }
+    });
+    return secs.filter(function(s){ return s.t || s.b.length; });
+  }
+  function renderReading(text){
+    var secs = toSections(text);
+    if (!secs.length) return '<div class="read"><p>' + mdInline(text).replace(/\n/g,'<br>') + '</p></div>';
+    return secs.map(function(s){
+      return '<div class="read">' + (s.t ? '<h3>' + esc(s.t) + '</h3>' : '') + '<p>' + mdInline(s.b.join('\n')) + '</p></div>';
+    }).join('');
+  }
+
+  var PAYWALL = '<div class="wall"><h4>解锁完整合婚报告</h4><p>完整六维合婚 · 10 年婚姻运程 · 最佳婚期 · 冲克化解方案</p><button class="cta gold" id="unlockBtn" onclick="goCheckout(\'hehun\')">解锁完整报告</button><div class="price"><b>$9.90</b> 一次性 · 或订阅更划算 ↓</div></div>';
+  var ADVISOR = '<div class="adv"><div class="k">Runae 顾问 · 会记得你们</div><h4>不止一份合婚<br>是一个懂你们的顾问</h4><ul><li>吵架僵住时问一句，帮你们翻译对方到底在气什么</li><li>逐年感情流年动态，重要节点提前提醒</li><li>八字 + 双方性格盘，交叉印证你们的相处模式</li><li>记得你们的盘与历史，越用越懂你们</li><li>可约真人命理师一对一解读（会员优惠）</li></ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">订阅 Runae 顾问 · $9.9 / 月</button></div>';
+  var DISCLAIMER = '<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(178,58,84,.2),transparent);margin:6px auto 0;width:80%"></div><div style="font-size:10.5px;color:var(--ink-3);text-align:center;letter-spacing:.05em;padding:12px 18px;line-height:1.8">🤖 本报告由 AI 生成，仅供娱乐参考。所涉结婚年份、择日、流年基调等<strong style="color:var(--rose)">均非婚姻决策建议</strong>，不代替医学 / 法律 / 投资建议。是否走入婚姻，请以你们的真心与现实考量为准。</div>';
+
+  function streamHehun(body){
+    var bodyEl = document.getElementById('body');
+    var meta = null;
+    var accumulated = '';
+    var started = false;
+    var locked = true;
+
+    // 先取确定性预览（真日主五行/关系/分数）以渲染顶部合盘卡
+    var previewData = null;
+    var pbody = { p1Year:body.p1Year, p1Month:body.p1Month, p1Day:body.p1Day, p1Gender:body.p1Gender,
+                  p2Year:body.p2Year, p2Month:body.p2Month, p2Day:body.p2Day, p2Gender:body.p2Gender };
+    if (body.p1Hour !== '' && body.p1Hour != null) pbody.p1Hour = body.p1Hour;
+    if (body.p2Hour !== '' && body.p2Hour != null) pbody.p2Hour = body.p2Hour;
+    fetch('/api/hehun/preview', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(pbody) })
+      .then(function(r){ return r.json(); }).then(function(d){ if (d && d.ok){ previewData = d; if (meta) renderHero(meta, previewData); } }).catch(function(){});
+
+    function paint(){
+      var html = renderReading(accumulated);
+      if (locked) html += PAYWALL;
+      html += ADVISOR + DISCLAIMER;
+      bodyEl.innerHTML = html;
+    }
+    function fail(msg){
+      bodyEl.innerHTML = '<div class="err">' + esc(msg) + '<br><br><button class="cta" style="max-width:220px;margin:14px auto 0" onclick="location.reload()">重试</button></div>';
+    }
+
+    var ctrl = new AbortController();
+    var to = setTimeout(function(){ ctrl.abort(); }, 120000);
+
+    fetch('/api/hehun/stream', {
+      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+      signal: ctrl.signal, body: JSON.stringify(body)
+    }).then(function(res){
+      clearTimeout(to);
+      if (!res.ok || !res.body){ fail('生成失败，请重试'); return; }
+      var reader = res.body.getReader();
+      var decoder = new TextDecoder('utf-8');
+      var buf = '';
+      function read(){
+        reader.read().then(function(r){
+          if (r.done){
+            if (!started && !accumulated) fail('报告为空，请重试');
+            return;
+          }
+          buf += decoder.decode(r.value, {stream:true});
+          var lines = buf.split('\n'); buf = lines.pop();
+          lines.forEach(function(line){
+            if (!line.startsWith('data: ')) return;
+            var raw = line.slice(6).trim();
+            if (raw === '[DONE]') return;
+            try {
+              var ev = JSON.parse(raw);
+              if (ev.type === 'meta'){
+                meta = ev; locked = !!ev.locked;
+                renderHero(meta, previewData);
+              } else if (ev.type === 'chunk'){
+                accumulated += ev.content;
+                if (!started){ started = true; }
+                paint();
+              } else if (ev.type === 'done'){
+                paint();
+              } else if (ev.type === 'error'){
+                if (!accumulated) fail(ev.message || '生成失败，请重试');
+              }
+            } catch(e){}
+          });
+          read();
+        }).catch(function(){ if (!accumulated) fail('网络异常，请刷新重试'); });
+      }
+      read();
+    }).catch(function(){ clearTimeout(to); fail('网络异常，请刷新重试'); });
+  }
+
+  // ── checkout（对齐 report-v2 goCheckout / hehun createCheckout） ──
+  window.goCheckout = function(product){
+    var btn = document.getElementById('unlockBtn');
+    if (btn){ btn.disabled = true; btn.textContent = '跳转支付…'; }
+    fetch('/api/create-checkout', {
+      method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
+      body: JSON.stringify({
+        product: product,
+        token: localStorage.getItem('sy_token') || '',
+        successUrl: location.origin + '/pages/report-hehun.html?paid=1',
+        cancelUrl: location.href
+      })
+    }).then(function(r){ return r.json(); }).then(function(d){
+      if (d.url){ location.href = d.url; return; }
+      if (d.channel === 'cn'){ alert('国内用户请用微信 / 支付宝支付（接入中）'); }
+      else { alert('跳转支付失败，请重试'); }
+      if (btn){ btn.disabled = false; btn.textContent = '解锁完整报告'; }
+    }).catch(function(){
+      alert('网络异常，请重试');
+      if (btn){ btn.disabled = false; btn.textContent = '解锁完整报告'; }
+    });
+  };
+
+  // ── 付费回流：?paid=1 → 用上次的 body 重新流式（此时 tier 已升级，locked=false） ──
+  (function handlePaidReturn(){
+    if (location.search.indexOf('paid=1') < 0) return;
+    var saved; try { saved = JSON.parse(localStorage.getItem('sy_last_hehun') || 'null'); } catch(e){}
+    if (window.history.replaceState) window.history.replaceState({}, '', '/pages/report-hehun.html');
+    if (!saved || !saved.p1Year){ return; }
+    document.getElementById('collect').style.display = 'none';
+    document.getElementById('report').style.display = 'block';
+    document.getElementById('loadmsg').textContent = '解锁成功！完整报告正在生成…';
+    streamHehun(saved);
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Runae · 今日运势</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F0E7;--card:#FFFFFF;--card-2:#FAF7F0;
+    --ink:#26221C;--ink-2:#6A6357;--ink-3:#A39B8C;
+    --gold:#A9803A;--gold-soft:#C3A05A;--gold-wash:#EFE7D4;
+    --jade:#2D7A62;--jade-deep:#1C4A3A;--jade-soft:#7DDFC0;--jade-wash:#E3EDE8;
+    --line:rgba(38,34,28,.10);--line-2:rgba(38,34,28,.16);
+    --sans:'Inter',-apple-system,system-ui,sans-serif;--serif:'Cormorant Garamond','Noto Serif SC',serif;
+    --rl:20px;--r:14px;
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{background:var(--paper);font-family:var(--sans);color:var(--ink);line-height:1.5;font-feature-settings:"tnum";min-height:100vh}
+  .wrap{max-width:430px;margin:0 auto;padding:0 24px 40px;min-height:100vh}
+  svg.ic{width:18px;height:18px;stroke:var(--ink-3);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  .bar{display:flex;align-items:center;justify-content:space-between;padding:22px 2px 12px}
+  .nav-back{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--ink-3);cursor:pointer;font-weight:500}
+  .step{font-size:11px;color:var(--ink-3);letter-spacing:.1em;font-weight:600}
+
+  /* ===== HERO / SCORE RING ===== */
+  .rhero{text-align:center;padding:16px 4px 4px}
+  .rhero .k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .rhero .dv{width:44px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-soft),transparent);margin:14px auto}
+  .rhero h2{font-family:var(--serif);font-size:29px;font-weight:600;line-height:1.24;letter-spacing:-.01em;margin:0 6px}
+
+  .scorecard{background:var(--jade-deep);border:1px solid rgba(195,160,90,.20);border-radius:var(--rl);padding:26px 20px 24px;margin:18px 0;box-shadow:inset 0 1px 0 rgba(255,255,255,.07);text-align:center}
+  .ring{position:relative;width:168px;height:168px;margin:2px auto 0}
+  .ring svg{width:168px;height:168px;transform:rotate(-90deg)}
+  .ring .track{fill:none;stroke:rgba(255,255,255,.10);stroke-width:9}
+  .ring .prog{fill:none;stroke:url(#gg);stroke-width:9;stroke-linecap:round;transition:stroke-dashoffset 1.1s cubic-bezier(.22,.8,.28,1)}
+  .ring .mid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ring .num{font-family:var(--serif);font-size:56px;font-weight:600;line-height:.92;background:linear-gradient(160deg,#E8C87E,#B98A3E);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 1px 0 rgba(0,0,0,.18))}
+  .ring .of{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:.14em;margin-top:3px}
+  .scorecard .mood{font-family:var(--serif);font-size:19px;font-weight:600;color:#fff;letter-spacing:.24em;text-indent:.24em;margin-top:16px}
+  .scorecard .cap{font-family:var(--serif);font-style:italic;font-size:12px;letter-spacing:.18em;color:var(--gold-soft);text-transform:uppercase;margin-top:8px}
+
+  /* ===== INSIGHT ===== */
+  .insight{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:22px 22px;margin-bottom:14px;position:relative}
+  .insight .mk{font-family:var(--serif);font-size:40px;line-height:0;color:var(--gold-soft);opacity:.4;position:absolute;top:20px;left:16px}
+  .insight p{font-family:var(--serif);font-size:18px;line-height:1.7;color:var(--ink);padding-left:24px;letter-spacing:.01em}
+
+  /* ===== YI / JI ===== */
+  .yiji{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+  .col{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:18px 16px}
+  .col .lab{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+  .col .lab .badge{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;font-family:var(--serif);font-weight:600;font-size:15px;color:#fff}
+  .col.yi .lab .badge{background:linear-gradient(150deg,#3f9d7f,var(--jade))}
+  .col.ji .lab .badge{background:linear-gradient(150deg,#C79A54,var(--gold))}
+  .col .lab .t{font-size:13px;font-weight:600;letter-spacing:.06em}
+  .col ul{list-style:none;display:flex;flex-direction:column;gap:9px}
+  .col li{font-size:13.5px;color:var(--ink-2);line-height:1.5;display:flex;align-items:flex-start;gap:8px}
+  .col li::before{content:'';width:4px;height:4px;border-radius:50%;background:var(--gold-soft);flex-shrink:0;margin-top:8px}
+
+  /* ===== LUCKY ===== */
+  .luck{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:14px}
+  .luck .lk{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:15px 10px;text-align:center}
+  .luck .lk .t{font-size:9.5px;letter-spacing:.12em;color:var(--ink-3);text-transform:uppercase}
+  .luck .lk .v{font-family:var(--serif);font-size:15px;font-weight:600;color:var(--ink);margin-top:10px;letter-spacing:.03em}
+  .luck .lk .sw{width:30px;height:30px;border-radius:50%;margin:6px auto 4px;border:2px solid rgba(255,255,255,.9);box-shadow:0 3px 8px -2px rgba(0,0,0,.28)}
+
+  /* ===== QIAN ===== */
+  .qian{background:linear-gradient(180deg,var(--card-2),#F3ECDD);border:1px solid var(--gold-wash);border-radius:var(--rl);padding:24px 22px;margin-bottom:14px;text-align:center;box-shadow:0 12px 30px -22px rgba(169,128,58,.4)}
+  .qian .seal{width:38px;height:38px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;border:1px solid var(--gold-soft);font-family:var(--serif);font-weight:600;font-size:18px;color:var(--gold)}
+  .qian .k{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold);font-weight:600}
+  .qian .title{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--ink);margin-top:8px;letter-spacing:.06em}
+  .qian .verse{font-family:var(--serif);font-size:15.5px;line-height:1.95;color:var(--ink-2);margin-top:14px;letter-spacing:.03em}
+
+  /* ===== ADVISOR CARD (from report-v2) ===== */
+  .adv{background:var(--jade-deep);border:1px solid rgba(195,160,90,.20);border-radius:var(--rl);padding:24px 21px;margin:22px 0 8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+  .adv .k{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-soft);font-weight:600}
+  .adv h4{font-family:var(--serif);font-size:21px;font-weight:600;margin:10px 0 4px;color:#fff}
+  .adv ul{list-style:none;margin:14px 0}
+  .adv li{font-size:13px;color:rgba(255,255,255,.86);padding:6px 0 6px 20px;position:relative}
+  .adv li::before{content:'◆';position:absolute;left:2px;top:6px;color:var(--gold-soft);font-size:7px;line-height:2.1}
+  .adv .sbtn{width:100%;background:transparent;color:var(--gold-soft);border:1px solid var(--gold-soft);border-radius:var(--r);padding:15px;font-size:14.5px;font-weight:600;margin-top:10px;cursor:pointer;font-family:var(--sans)}
+
+  .cta{width:100%;background:var(--jade-deep);color:#fff;border:none;border-radius:var(--r);padding:16px;font-size:15px;font-weight:600;font-family:var(--sans);cursor:pointer}
+
+  /* ===== SKELETON / ERROR ===== */
+  .skel{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;margin-bottom:14px}
+  .skel .ln{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--line),#efe9de,var(--line));background-size:200% 100%;animation:sh 1.3s infinite;margin-bottom:11px}
+  .skel .ring-sk{width:150px;height:150px;border-radius:50%;margin:6px auto 4px;background:linear-gradient(90deg,var(--line),#efe9de,var(--line));background-size:200% 100%;animation:sh 1.3s infinite}
+  @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .err{text-align:center;color:var(--ink-2);font-size:14px;padding:40px 10px}
+  .disc{text-align:center;font-size:10.5px;color:var(--ink-3);letter-spacing:.03em;line-height:1.7;padding:14px 20px 4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <div class="nav-back" onclick="location.href='pick.html'"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>返回</div>
+    <div class="step">每日运势</div>
+  </div>
+  <div id="hero"></div>
+  <div id="body">
+    <div class="skel" style="text-align:center"><div class="ring-sk"></div><div class="ln" style="width:40%;margin:14px auto 0"></div></div>
+    <div class="skel"><div class="ln" style="width:70%"></div><div class="ln" style="width:100%"></div></div>
+    <div class="skel"><div class="ln" style="width:45%"></div><div class="ln" style="width:90%"></div><div class="ln" style="width:82%"></div></div>
+    <div class="err" id="loadmsg">正在为你推演今日流运…</div>
+  </div>
+</div>
+<script>
+  var P={};
+  try{ P=JSON.parse(localStorage.getItem('runae_profile')||'{}'); }catch(e){}
+
+  function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+  // ---- profile → daily/card body (mirrors report-v2 bd(), per spec) ----
+  function bd(){
+    var m=(P.bdate||'').split('-');
+    var h=10; if(P.btime){ h=parseInt(String(P.btime).split(':')[0],10); if(isNaN(h))h=10; }
+    var n=new Date();
+    var date=n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0');
+    return { birthYear:+m[0], birthMonth:+m[1], birthDay:+m[2], birthHour:h,
+             gender:P.gender||'female', lang:'zh', date:date };
+  }
+  function fmtDate(iso){
+    var n = iso ? new Date(iso.replace(/-/g,'/')) : new Date();
+    var wd=['周日','周一','周二','周三','周四','周五','周六'][n.getDay()];
+    return (n.getMonth()+1)+'月'+n.getDate()+'日 · '+wd;
+  }
+
+  function goCheckout(product){
+    fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({product:product,token:localStorage.getItem('sy_token')||'',
+        successUrl:location.origin+'/pages/report-daily.html?paid=1',cancelUrl:location.href})})
+     .then(function(r){return r.json();}).then(function(d){
+       if(d.url){ location.href=d.url; }
+       else if(d.channel==='cn'){ alert('国内用户请用微信 / 支付宝支付（接入中）'); }
+       else { alert('跳转支付失败，请重试'); }
+     }).catch(function(){ alert('网络异常，请重试'); });
+  }
+  window.goCheckout=goCheckout;
+
+  function fail(msg){
+    document.getElementById('hero').innerHTML='';
+    document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="location.reload()">重试</button></div>';
+  }
+
+  function ringDash(score){
+    var r=75, c=2*Math.PI*r; var pct=Math.max(0,Math.min(100,score))/100;
+    return { c:c, off:c*(1-pct) };
+  }
+
+  function render(d){
+    var hero=document.getElementById('hero'), body=document.getElementById('body');
+    hero.innerHTML='<div class="rhero"><div class="k">Daily · '+esc(fmtDate(d.date))+'</div><div class="dv"></div><h2>今日为你排的运</h2></div>';
+
+    var rd=ringDash(d.score);
+    var html='';
+    // score ring
+    html+='<div class="scorecard">'
+       +'<div class="ring"><svg viewBox="0 0 168 168">'
+       +'<defs><linearGradient id="gg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E8C87E"/><stop offset="1" stop-color="#B98A3E"/></linearGradient></defs>'
+       +'<circle class="track" cx="84" cy="84" r="75"></circle>'
+       +'<circle class="prog" cx="84" cy="84" r="75" stroke-dasharray="'+rd.c+'" stroke-dashoffset="'+rd.c+'" id="progRing"></circle>'
+       +'</svg><div class="mid"><div class="num">'+esc(d.score)+'</div><div class="of">/ 100</div></div></div>'
+       +(d.mood?'<div class="mood">'+esc(d.mood)+'</div>':'')
+       +'<div class="cap">Today\'s Fortune</div>'
+       +'</div>';
+
+    // insight
+    if(d.insight){
+      html+='<div class="insight"><span class="mk">&ldquo;</span><p>'+esc(d.insight)+'</p></div>';
+    }
+
+    // yi / ji
+    var yi=(d.yi||[]), ji=(d.ji||[]);
+    html+='<div class="yiji">'
+       +'<div class="col yi"><div class="lab"><span class="badge">宜</span><span class="t">今日宜</span></div><ul>'
+       + yi.slice(0,3).map(function(x){return '<li>'+esc(x)+'</li>';}).join('') +'</ul></div>'
+       +'<div class="col ji"><div class="lab"><span class="badge">忌</span><span class="t">今日忌</span></div><ul>'
+       + ji.slice(0,3).map(function(x){return '<li>'+esc(x)+'</li>';}).join('') +'</ul></div>'
+       +'</div>';
+
+    // lucky trio
+    var c=(d.luckyColor||{});
+    html+='<div class="luck">'
+       +'<div class="lk"><div class="t">Lucky Color</div><div class="sw" style="background:'+esc(c.hex||'#C3A05A')+'"></div><div class="v">'+esc(c.name||'—')+'</div></div>'
+       +'<div class="lk"><div class="t">方位</div><div class="v" style="margin-top:16px">'+esc(d.luckyDir||'—')+'</div></div>'
+       +'<div class="lk"><div class="t">吉时</div><div class="v" style="margin-top:16px">'+esc(d.luckyHour||'—')+'</div></div>'
+       +'</div>';
+
+    // qian
+    var q=(d.qian||{});
+    if(q.title||q.text){
+      html+='<div class="qian"><div class="seal">签</div><div class="k">Draw of the day · 今日一签</div>'
+         +(q.title?'<div class="title">'+esc(q.title)+'</div>':'')
+         +(q.text?'<div class="verse">'+esc(q.text).replace(/\n/g,'<br>').replace(/([，。；])/g,'$1<br>').replace(/(<br>)+$/,'')+'</div>':'')
+         +'</div>';
+    }
+
+    // advisor subscription card (from report-v2)
+    html+='<div class="adv"><div class="k">Runae 顾问 · 会记得你</div><h4>不止今日一卡<br>是一个懂你的命理顾问</h4><ul>'
+       +'<li>每日运势与流年动态，天天更新</li>'
+       +'<li>AI 对话随时追问深聊，像身边的老师</li>'
+       +'<li>中西命理 + 面相手相，交叉印证同一个你</li>'
+       +'<li>记得你的盘与历史，越用越懂你</li>'
+       +'<li>可约真人命理师一对一（会员优惠）</li>'
+       +'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">订阅 Runae 顾问 · $9.9 / 月</button></div>';
+
+    html+='<div class="disc">AI 生成内容 · 仅供娱乐参考，不构成医疗、法律或财务建议。</div>';
+
+    body.innerHTML=html;
+    // animate ring after paint
+    requestAnimationFrame(function(){ requestAnimationFrame(function(){
+      var el=document.getElementById('progRing'); if(el) el.style.strokeDashoffset=rd.off;
+    });});
+  }
+
+  (function boot(){
+    // 无生辰 → 回到采集页
+    if(!P.bdate){ location.href='collect.html'; return; }
+    fetch('/api/daily/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bd())})
+      .then(function(r){ if(!r.ok) return r.json().then(function(e){ throw new Error(e.error||('HTTP '+r.status)); }); return r.json(); })
+      .then(function(d){ if(!d||typeof d.score==='undefined') throw new Error('今日运势为空'); render(d); })
+      .catch(function(e){ fail('今日运势暂未算出：'+e.message); });
+  })();
+</script>
+</body>
+</html>

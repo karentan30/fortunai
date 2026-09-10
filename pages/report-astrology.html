@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Runae · 你的星盘</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F0E7;--card:#FFFFFF;--card-2:#FAF7F0;
+    --ink:#26221C;--ink-2:#6A6357;--ink-3:#A39B8C;
+    --gold:#A9803A;--gold-soft:#C3A05A;--gold-wash:#EFE7D4;
+    --jade:#2D7A62;--jade-deep:#1C4A3A;--jade-soft:#7DDFC0;--jade-wash:#E3EDE8;
+    --line:rgba(38,34,28,.10);--line-2:rgba(38,34,28,.16);
+    --sans:'Inter',-apple-system,system-ui,sans-serif;--serif:'Cormorant Garamond','Noto Serif SC',serif;
+    --rl:20px;--r:14px;
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{background:var(--paper);font-family:var(--sans);color:var(--ink);line-height:1.5;font-feature-settings:"tnum";min-height:100vh}
+  .wrap{max-width:430px;margin:0 auto;padding:0 24px 40px;min-height:100vh}
+  svg.ic{width:18px;height:18px;stroke:var(--ink-3);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  .bar{display:flex;align-items:center;justify-content:space-between;padding:22px 2px 12px}
+  .nav-back{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--ink-3);cursor:pointer;font-weight:500}
+  .step{font-size:11px;color:var(--ink-3);letter-spacing:.1em;font-weight:600}
+  .rhero{text-align:center;padding:16px 4px 4px}
+  .rhero .k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .rhero .dv{width:44px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-soft),transparent);margin:14px auto}
+  .rhero h2{font-family:var(--serif);font-size:29px;font-weight:600;line-height:1.24;letter-spacing:-.01em;margin:0 6px}
+
+  /* Big Three natal chart card (mirrors report-v2 .chart / .pillars) */
+  .chart{background:var(--jade-deep);border:1px solid rgba(195,160,90,.20);border-radius:var(--rl);padding:22px 20px;margin:18px 0;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+  .pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+  .pillars.two{grid-template-columns:repeat(2,1fr)}
+  .pil .sym{font-size:22px;line-height:1;color:var(--jade-soft);margin-bottom:8px}
+  .pil .c{font-family:var(--serif);font-size:24px;font-weight:600;line-height:1.15;background:linear-gradient(160deg,#E8C87E,#B98A3E);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 1px 0 rgba(0,0,0,.18))}
+  .pil .en{font-size:11px;color:var(--jade-soft);font-family:var(--serif);letter-spacing:.04em;margin-top:3px}
+  .pil .deg{font-size:9.5px;color:rgba(255,255,255,.5);margin-top:3px;letter-spacing:.04em}
+  .pil .l{font-size:10px;color:rgba(255,255,255,.62);margin-top:8px;letter-spacing:.08em}
+  .chart-note{text-align:center;font-size:11px;color:rgba(255,255,255,.5);margin-top:14px;line-height:1.6;letter-spacing:.02em}
+
+  .read{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;margin-bottom:14px}
+  .read h3{font-size:14px;font-weight:600;margin-bottom:10px;letter-spacing:.01em}
+  .read p{font-size:15px;color:var(--ink-2);line-height:1.75;white-space:pre-wrap}
+  .read p+p{margin-top:10px}
+  .blur{filter:blur(5px);opacity:.55;user-select:none;pointer-events:none}
+
+  /* element balance bars */
+  .elrow{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+  .elrow:last-child{margin-bottom:0}
+  .elrow .en{font-family:var(--serif);font-size:14px;font-weight:600;min-width:60px}
+  .elrow .track{flex:1;height:7px;border-radius:5px;background:var(--gold-wash);overflow:hidden}
+  .elrow .fill{height:100%;border-radius:5px}
+  .elrow .num{font-size:11px;color:var(--ink-3);min-width:26px;text-align:right;font-weight:600}
+  .el-fire{background:linear-gradient(90deg,#E88B4A,#C9622C)}
+  .el-earth{background:linear-gradient(90deg,#B98A3E,#8A6220)}
+  .el-air{background:linear-gradient(90deg,#C3A05A,#DFC488)}
+  .el-water{background:linear-gradient(90deg,#4FA88C,#2D7A62)}
+
+  /* aspect chips */
+  .asp{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--line)}
+  .asp:last-child{border-bottom:none}
+  .asp .g{font-size:15px;color:var(--gold);min-width:20px;text-align:center}
+  .asp .txt{flex:1;font-size:13.5px;color:var(--ink-2)}
+  .asp .txt b{color:var(--ink);font-weight:600}
+  .asp .orb{font-size:10.5px;color:var(--ink-3)}
+
+  .wall{background:var(--card);border:1px solid var(--gold-soft);border-radius:var(--rl);padding:24px 20px;text-align:center;margin:16px 0;box-shadow:0 14px 34px -20px rgba(169,128,58,.30)}
+  .wall h4{font-family:var(--serif);font-size:20px;font-weight:600;margin-bottom:5px}
+  .wall p{font-size:13px;color:var(--ink-2);margin-bottom:18px}
+  .cta{width:100%;background:var(--jade-deep);color:#fff;border:none;border-radius:var(--r);padding:16px;font-size:15px;font-weight:600;font-family:var(--sans);cursor:pointer}
+  .cta.gold{background:linear-gradient(135deg,var(--gold-soft),var(--gold))}
+  .wall .price{font-size:13px;color:var(--ink-3);margin-top:12px}
+  .wall .price b{color:var(--gold);font-size:17px;font-weight:600}
+  .expand{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12.5px;color:var(--ink-2);padding:14px;border:1px solid var(--gold-wash);border-radius:var(--r);margin-bottom:12px;background:var(--card-2);font-weight:500}
+  .adv{background:var(--jade-deep);border:1px solid rgba(195,160,90,.20);border-radius:var(--rl);padding:24px 21px;margin:22px 0 8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+  .adv .k{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-soft);font-weight:600}
+  .adv h4{font-family:var(--serif);font-size:21px;font-weight:600;margin:10px 0 4px;color:#fff}
+  .adv ul{list-style:none;margin:14px 0}
+  .adv li{font-size:13px;color:rgba(255,255,255,.86);padding:6px 0 6px 20px;position:relative}
+  .adv li::before{content:'◆';position:absolute;left:2px;top:6px;color:var(--gold-soft);font-size:7px;line-height:2.1}
+  .adv .sbtn{width:100%;background:transparent;color:var(--gold-soft);border:1px solid var(--gold-soft);border-radius:var(--r);padding:15px;font-size:14.5px;font-weight:600;margin-top:10px;cursor:pointer}
+  .skel{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;margin-bottom:14px}
+  .skel .ln{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--line),#efe9de,var(--line));background-size:200% 100%;animation:sh 1.3s infinite;margin-bottom:11px}
+  @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .err{text-align:center;color:var(--ink-2);font-size:14px;padding:40px 10px}
+  .disc{font-size:11px;color:var(--ink-3);text-align:center;line-height:1.7;margin:18px 4px 0;letter-spacing:.02em}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar"><div class="nav-back" onclick="history.length>1?history.back():location.href='pick.html'"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>返回</div><div class="step">星座占星 · Astrology</div></div>
+  <div id="hero"></div>
+  <div id="chartMount"></div>
+  <div id="body">
+    <div class="skel"><div class="ln" style="width:60%"></div><div class="ln" style="width:100%"></div><div class="ln" style="width:88%"></div></div>
+    <div class="skel"><div class="ln" style="width:45%"></div><div class="ln" style="width:96%"></div><div class="ln" style="width:92%"></div><div class="ln" style="width:70%"></div></div>
+    <div class="err" id="loadmsg">正在为你起星盘…</div>
+  </div>
+</div>
+<script>
+  // ── profile ──
+  var P={};
+  try{ P=JSON.parse(localStorage.getItem('runae_profile')||'{}'); }catch(e){}
+
+  // localStorage runae_profile shape (per report-v2.html bd()): bdate 'YYYY-MM-DD', btime 'HH:MM', gender
+  function readBirth(){
+    var m=(P.bdate||'').split('-');
+    var y=+m[0]||null, mo=+m[1]||null, d=+m[2]||null;
+    var hour=null, minute=0;
+    if(P.btime){ var t=P.btime.split(':'); var h=parseInt(t[0],10); if(!isNaN(h)){hour=h; var mm=parseInt(t[1],10); if(!isNaN(mm))minute=mm;} }
+    return {
+      birthYear:y, birthMonth:mo, birthDay:d,
+      birthHour:hour, birthMinute:minute,
+      lat:(P.lat!=null&&P.lat!=='')?+P.lat:null,
+      lng:(P.lng!=null&&P.lng!=='')?+P.lng:null,
+      tz:(P.tz!=null&&P.tz!=='')?+P.tz:null,
+      gender:P.gender||'female', lang:'zh'
+    };
+  }
+
+  // ── sign metadata (engine returns English names only) ──
+  var SIGN_ZH={Aries:'白羊座',Taurus:'金牛座',Gemini:'双子座',Cancer:'巨蟹座',Leo:'狮子座',Virgo:'处女座',Libra:'天秤座',Scorpio:'天蝎座',Sagittarius:'射手座',Capricorn:'摩羯座',Aquarius:'水瓶座',Pisces:'双鱼座'};
+  var SIGN_GLYPH={Aries:'♈',Taurus:'♉',Gemini:'♊',Cancer:'♋',Leo:'♌',Virgo:'♍',Libra:'♎',Scorpio:'♏',Sagittarius:'♐',Capricorn:'♑',Aquarius:'♒',Pisces:'♓'};
+  var SIGN_ELEMENT={Aries:'fire',Leo:'fire',Sagittarius:'fire',Taurus:'earth',Virgo:'earth',Capricorn:'earth',Gemini:'air',Libra:'air',Aquarius:'air',Cancer:'water',Scorpio:'water',Pisces:'water'};
+  var EL_ZH={fire:'火',earth:'土',air:'风',water:'水'};
+  var PLANET_ZH={Sun:'太阳',Moon:'月亮',Mercury:'水星',Venus:'金星',Mars:'火星',Jupiter:'木星',Saturn:'土星',Uranus:'天王星',Neptune:'海王星',Pluto:'冥王星'};
+  var ASPECT_ZH={conjunct:'合相',opposition:'对分相',square:'刑相',trine:'拱相',sextile:'六分相'};
+
+  function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
+  var HEAD=/^\s*([【✅📜🌟💰❤💼🌿☀🔮⛰✨🙏☉☾♀♂↑]|#{1,3}\s|[\uD83C-\uDBFF])/;
+  function sections(text){
+    var lines=text.split('\n'),secs=[],cur=null;
+    lines.forEach(function(raw){
+      var l=raw.replace(/\s+$/,''); if(!l.trim())return;
+      if(HEAD.test(l)&&l.trim().length<40){
+        cur={t:l.replace(/[\uD800-\uDFFF←-⯿☀-➿️#*【】]/g,'').trim(),b:[]};secs.push(cur);
+      }else{ if(!cur){cur={t:'',b:[]};secs.push(cur);} cur.b.push(l.trim()); }
+    });
+    return secs.filter(function(s){return s.t||s.b.length;});
+  }
+
+  function planetOf(chart,name){ return (chart.planets||[]).find(function(p){return p.name===name;})||null; }
+
+  // ── Big Three hero + chart card ──
+  function renderChart(chart){
+    var sun=planetOf(chart,'Sun'), moon=planetOf(chart,'Moon'), asc=chart.ascendant;
+    var hero=document.getElementById('hero'), mount=document.getElementById('chartMount');
+    var sunZh=sun?SIGN_ZH[sun.sign]:'';
+    hero.innerHTML='<div class="rhero"><div class="k">Western Astrology · '+esc(P.bdate||'')+'</div><div class="dv"></div><h2>你的太阳落在「'+esc(sunZh)+'」</h2></div>';
+
+    // pillars: Sun / Moon / (Rising if present)
+    function pil(pl,label,en){
+      if(!pl) return '';
+      var s=pl.sign;
+      return '<div class="pil"><div class="sym">'+esc(SIGN_GLYPH[s]||'✦')+'</div><div class="c">'+esc(SIGN_ZH[s]||s)+'</div><div class="en">'+esc(s)+'</div><div class="deg">'+esc(pl.formatted?pl.formatted.split(' ')[0]:'')+'</div><div class="l">'+label+'</div></div>';
+    }
+    var hasAsc=!!asc, two=hasAsc?'':' two';
+    var cells=pil(sun,'太阳 Sun')+pil(moon,'月亮 Moon')+(hasAsc?pil(asc,'上升 Rising'):'');
+    var note = hasAsc
+      ? '本命回归黄道星盘 · 太阳／月亮／上升'
+      : '未填出生时间，暂无上升星座与宫位。补上准确出生时刻，可解锁上升与十二宫。';
+    mount.innerHTML='<div class="chart"><div class="pillars'+two+'">'+cells+'</div><div class="chart-note">'+note+'</div></div>';
+  }
+
+  // ── structured cards (always available — element balance + top aspects) ──
+  function elementBalance(chart){
+    var counts={fire:0,earth:0,air:0,water:0},total=0;
+    (chart.planets||[]).forEach(function(p){ var e=SIGN_ELEMENT[p.sign]; if(e){counts[e]++;total++;} });
+    if(chart.ascendant){ var ae=SIGN_ELEMENT[chart.ascendant.sign]; if(ae){counts[ae]++;total++;} }
+    if(!total) return '';
+    var order=['fire','earth','air','water'];
+    var rows=order.map(function(e){
+      var pct=Math.round(counts[e]/total*100);
+      return '<div class="elrow"><div class="en">'+EL_ZH[e]+' <span style="font-size:11px;color:var(--ink-3);font-weight:400">'+e.charAt(0).toUpperCase()+e.slice(1)+'</span></div><div class="track"><div class="fill el-'+e+'" style="width:'+pct+'%"></div></div><div class="num">'+counts[e]+'</div></div>';
+    }).join('');
+    // dominant element note
+    var dom=order.reduce(function(a,b){return counts[b]>counts[a]?b:a;});
+    var domNote={fire:'火象偏重——行动力强、热情直接，容易点火也容易急躁。',earth:'土象偏重——务实稳定、重视结果，安全感来自可掌控的现实。',air:'风象偏重——思维灵活、善于沟通，靠理解与连接获得能量。',water:'水象偏重——情感细腻、直觉敏锐，内在世界丰富而深。'}[dom];
+    return '<div class="read"><h3>元素能量分布 · Element Balance</h3>'+rows+'<p style="margin-top:14px;font-size:13.5px">'+domNote+'</p></div>';
+  }
+
+  function topAspects(chart){
+    var asp=(chart.aspects||[]).slice(0,6);
+    if(!asp.length) return '';
+    var rows=asp.map(function(a){
+      var p1=PLANET_ZH[a.planet1]||a.planet1, p2=PLANET_ZH[a.planet2]||a.planet2;
+      return '<div class="asp"><div class="g">'+esc(a.symbol||'✦')+'</div><div class="txt"><b>'+esc(p1)+' '+esc(ASPECT_ZH[a.type]||a.type)+' '+esc(p2)+'</b></div><div class="orb">'+a.orb+'°</div></div>';
+    }).join('');
+    return '<div class="read"><h3>主要行星相位 · Key Aspects</h3><p style="font-size:13px;margin-bottom:12px">相位是行星之间的角度关系，标示你性格中的张力与天赋（容许度越小越显著）。</p>'+rows+'</div>';
+  }
+
+  // ── AI reading render (streamed) ──
+  function renderReadingSections(text){
+    var secs=sections(text);
+    if(!secs.length) return '';
+    return secs.map(function(s){
+      return '<div class="read">'+(s.t?'<h3>'+esc(s.t)+'</h3>':'')+'<p>'+md(s.b.join('\n'))+'</p></div>';
+    }).join('');
+  }
+
+  // ── paywall + advisor ──
+  function paywallHtml(){
+    return '<div class="wall"><h4>解锁完整星盘</h4><p>十二宫全解 · 逐星深度解读 · 相位交叉印证 · 行运预测</p><button class="cta gold" onclick="goCheckout(\'astro_full\')">解锁完整版</button><div class="price"><b>$9.90</b> 一次性 · 或订阅更划算 ↓</div></div>'
+      +'<div class="adv"><div class="k">Runae 顾问 · 会记得你</div><h4>不止一份星盘<br>是一个懂你的占星顾问</h4><ul><li>每日星象与行运动态，天天更新</li><li>AI 对话随时追问深聊，像身边的占星师</li><li>西方星盘 + 东方命理，交叉印证同一个你</li><li>记得你的盘与历史，越用越懂你</li><li>可约真人占星师一对一（会员优惠）</li></ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">订阅 Runae 顾问 · $9.9 / 月</button></div>';
+  }
+
+  function fail(msg){
+    document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="location.reload()">重试</button></div>';
+  }
+
+  window.goCheckout=function(product){
+    fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({product:product,token:localStorage.getItem('sy_token')||'',
+        successUrl:location.origin+'/pages/report-astrology.html?paid=1',cancelUrl:location.href})})
+     .then(function(r){return r.json();}).then(function(d){
+       if(d.url){ location.href=d.url; }
+       else if(d.channel==='cn'){ alert('国内用户请用微信 / 支付宝支付（接入中）'); }
+       else { alert('跳转支付失败，请重试'); }
+     }).catch(function(){ alert('网络异常，请重试'); });
+  };
+
+  var DISC='<div class="disc">AI 生成解读 · 仅供娱乐与自我探索，不作预测性建议，不构成医疗、法律或财务建议 · 内容适合 14 岁以上读者。</div>';
+
+  // ── main: stream from /api/western-astrology ──
+  var chartData=null, readingText='', bodyEl=document.getElementById('body');
+
+  // Build the full body once we have chart + (whatever) reading. Called repeatedly during stream.
+  function paint(streaming){
+    var html='';
+    var readingHtml=renderReadingSections(readingText);
+    if(readingHtml){
+      html+=readingHtml;
+    }else if(streaming){
+      // still waiting for first text — keep a light skeleton
+      html+='<div class="skel"><div class="ln" style="width:55%"></div><div class="ln" style="width:100%"></div><div class="ln" style="width:90%"></div></div>';
+    }
+    // structured cards (always shown — never let the page be empty)
+    if(chartData){
+      html+=elementBalance(chartData);
+      html+=topAspects(chartData);
+    }
+    if(!streaming){
+      html+=paywallHtml()+DISC;
+    }
+    bodyEl.innerHTML=html;
+  }
+
+  async function run(){
+    var b=readBirth();
+    if(!b.birthYear||!b.birthMonth||!b.birthDay){
+      fail('没有找到你的出生信息，请先返回填写出生日期。');
+      return;
+    }
+    var res;
+    try{
+      res=await fetch('/api/western-astrology',{
+        method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)
+      });
+    }catch(e){ fail('网络异常，请检查连接后重试。'); return; }
+    if(!res.ok){ fail('星盘生成失败（'+res.status+'），请重试。'); return; }
+    if(!res.body||!res.body.getReader){
+      // no streaming support — read whole text and parse ndjson
+      var txt=await res.text();
+      txt.split('\n').forEach(function(l){ handleLine(l); });
+      finish();
+      return;
+    }
+    var reader=res.body.getReader(), dec=new TextDecoder(), buf='';
+    while(true){
+      var chunk;
+      try{ chunk=await reader.read(); }catch(e){ break; }
+      if(chunk.done) break;
+      buf+=dec.decode(chunk.value,{stream:true});
+      var lines=buf.split('\n'); buf=lines.pop();
+      lines.forEach(handleLine);
+    }
+    finish();
+  }
+
+  var streamErrored=false;
+  function handleLine(line){
+    var t=line.trim();
+    if(!t||t.indexOf('data:')!==0) return;
+    var raw=t.slice(5).trim();
+    if(!raw) return;
+    var ev; try{ ev=JSON.parse(raw); }catch(e){ return; }
+    if(ev.type==='chart'){
+      chartData=ev.chart;
+      renderChart(chartData);
+      paint(true);
+    }else if(ev.type==='delta'){
+      readingText+=ev.text||''; paint(true);
+    }else if(ev.type==='text'){
+      readingText+=ev.text||''; paint(true);
+    }else if(ev.type==='error'){
+      streamErrored=true;
+    }
+  }
+
+  function finish(){
+    if(!chartData){
+      fail('星盘计算失败，请检查出生信息后重试。');
+      return;
+    }
+    // If the reading never arrived, the structured cards (element + aspects) still carry the page.
+    if(!readingText.trim() && streamErrored){
+      // prepend a graceful note above structured cards
+      readingText='';
+    }
+    paint(false);
+  }
+
+  run();
+</script>
+</body>
+</html>

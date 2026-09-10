@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Runae · 一对一 真人命理师</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F0E7;--card:#FFFFFF;--card-2:#FAF7F0;
+    --ink:#26221C;--ink-2:#6A6357;--ink-3:#A39B8C;
+    --gold:#A9803A;--gold-soft:#C3A05A;--gold-wash:#EFE7D4;
+    --jade:#2D7A62;--jade-deep:#1C4A3A;--jade-soft:#7DDFC0;--jade-wash:#E3EDE8;
+    --line:rgba(38,34,28,.10);--line-2:rgba(38,34,28,.16);
+    --sans:'Inter',-apple-system,system-ui,sans-serif;--serif:'Cormorant Garamond','Noto Serif SC',serif;
+    --rl:20px;--r:14px;
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{background:var(--paper);font-family:var(--sans);color:var(--ink);line-height:1.5;font-feature-settings:"tnum";min-height:100vh}
+  .wrap{max-width:430px;margin:0 auto;padding:0 24px 48px;min-height:100vh}
+  svg.ic{width:18px;height:18px;stroke:var(--ink-3);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  .bar{display:flex;align-items:center;justify-content:space-between;padding:22px 2px 12px}
+  .nav-back{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--ink-3);cursor:pointer;font-weight:500}
+  .step{font-size:11px;color:var(--ink-3);letter-spacing:.1em;font-weight:600}
+  .rhero{text-align:center;padding:16px 4px 4px}
+  .rhero .k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .rhero .dv{width:44px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-soft),transparent);margin:14px auto}
+  .rhero h2{font-family:var(--serif);font-size:29px;font-weight:600;line-height:1.24;letter-spacing:-.01em;margin:0 6px}
+  .rhero .sub{font-size:13px;color:var(--ink-2);margin-top:12px;line-height:1.7}
+  /* 顶部价值条 */
+  .chart{background:var(--jade-deep);border:1px solid rgba(195,160,90,.20);border-radius:var(--rl);padding:20px 20px;margin:18px 0;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+  .vpts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+  .vpt .c{font-family:var(--serif);font-size:22px;font-weight:600;line-height:1.15;background:linear-gradient(160deg,#E8C87E,#B98A3E);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 1px 0 rgba(0,0,0,.18))}
+  .vpt .l{font-size:10.5px;color:rgba(255,255,255,.62);margin-top:7px;letter-spacing:.06em;line-height:1.4}
+  /* 命理师卡 */
+  .read{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;margin-bottom:14px}
+  .read h3{font-size:14px;font-weight:600;margin-bottom:10px;letter-spacing:.01em}
+  .read p{font-size:15px;color:var(--ink-2);line-height:1.75}
+  .m-top{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .m-ava{width:52px;height:52px;border-radius:50%;flex-shrink:0;background:linear-gradient(150deg,var(--jade),var(--jade-deep));display:flex;align-items:center;justify-content:center}
+  .m-ava svg{width:26px;height:26px;stroke:var(--jade-soft);stroke-width:1.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .m-name{font-family:var(--serif);font-size:19px;font-weight:600;line-height:1.2}
+  .m-meta{font-size:12px;color:var(--ink-3);margin-top:4px;letter-spacing:.02em}
+  .m-tags{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 4px}
+  .m-tag{font-size:11px;color:var(--gold);background:var(--gold-wash);border-radius:20px;padding:4px 11px;font-weight:500}
+  .m-desc{font-size:13px;color:var(--ink-2);line-height:1.7;margin:10px 0 16px}
+  .m-price{font-size:12.5px;color:var(--ink-3);margin-bottom:14px}
+  .m-price b{color:var(--gold);font-size:16px;font-weight:600}
+  .cta{width:100%;background:var(--jade-deep);color:#fff;border:none;border-radius:var(--r);padding:15px;font-size:15px;font-weight:600;font-family:var(--sans);cursor:pointer}
+  .cta.gold{background:linear-gradient(135deg,var(--gold-soft),var(--gold))}
+  /* 会员优惠条（沿用 report-v2 .adv） */
+  .adv{background:var(--jade-deep);border:1px solid rgba(195,160,90,.20);border-radius:var(--rl);padding:24px 21px;margin:22px 0 8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+  .adv .k{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-soft);font-weight:600}
+  .adv h4{font-family:var(--serif);font-size:21px;font-weight:600;margin:10px 0 4px;color:#fff}
+  .adv ul{list-style:none;margin:14px 0}
+  .adv li{font-size:13px;color:rgba(255,255,255,.86);padding:6px 0 6px 20px;position:relative}
+  .adv li::before{content:'◆';position:absolute;left:2px;top:6px;color:var(--gold-soft);font-size:7px;line-height:2.1}
+  .adv .sbtn{width:100%;background:transparent;color:var(--gold-soft);border:1px solid var(--gold-soft);border-radius:var(--r);padding:15px;font-size:14.5px;font-weight:600;margin-top:10px;cursor:pointer}
+  .note{font-size:11.5px;color:var(--ink-3);text-align:center;line-height:1.7;margin:22px 6px 0}
+  /* 预约弹层 */
+  .mask{position:fixed;inset:0;background:rgba(28,24,20,.55);backdrop-filter:blur(3px);display:none;align-items:flex-end;justify-content:center;z-index:50}
+  .mask.on{display:flex}
+  .sheet{background:var(--paper);border-radius:22px 22px 0 0;width:100%;max-width:430px;padding:24px 24px calc(24px + env(safe-area-inset-bottom));max-height:88vh;overflow-y:auto;animation:up .28s ease}
+  @keyframes up{from{transform:translateY(40px);opacity:.6}to{transform:translateY(0);opacity:1}}
+  .sheet h4{font-family:var(--serif);font-size:21px;font-weight:600;margin-bottom:4px}
+  .sheet .sh-sub{font-size:12.5px;color:var(--ink-2);margin-bottom:18px;line-height:1.6}
+  .fld{margin-bottom:14px}
+  .fld label{display:block;font-size:12px;color:var(--ink-2);font-weight:500;margin-bottom:6px}
+  .fld input,.fld textarea{width:100%;background:var(--card);border:1px solid var(--line-2);border-radius:var(--r);padding:13px 14px;font-size:15px;font-family:var(--sans);color:var(--ink);resize:none}
+  .fld input:focus,.fld textarea:focus{outline:none;border-color:var(--gold-soft)}
+  .sheet-row{display:flex;gap:10px;margin-top:6px}
+  .btn-ghost{flex:0 0 96px;background:transparent;border:1px solid var(--line-2);color:var(--ink-2);border-radius:var(--r);padding:14px;font-size:14px;font-weight:500;cursor:pointer}
+  .ok{text-align:center;padding:20px 6px 8px}
+  .ok .big{font-family:var(--serif);font-size:22px;font-weight:600;margin:12px 0 8px}
+  .ok p{font-size:13.5px;color:var(--ink-2);line-height:1.7}
+  .ok .chk{width:56px;height:56px;border-radius:50%;background:var(--jade-wash);display:inline-flex;align-items:center;justify-content:center}
+  .ok .chk svg{width:28px;height:28px;stroke:var(--jade);stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <div class="nav-back" onclick="history.length>1?history.back():location.href='pick.html'"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>返回</div>
+    <div class="step">真人预约</div>
+  </div>
+
+  <div class="rhero">
+    <div class="k">Runae · One-on-One</div>
+    <div class="dv"></div>
+    <h2>一对一 · 真人命理师</h2>
+    <div class="sub">AI 排盘看格局，真人命理师陪你把事聊透。<br>视频 / 语音连线，一人一时段，只谈你的盘。</div>
+  </div>
+
+  <div class="chart">
+    <div class="vpts">
+      <div class="vpt"><div class="c">1对1</div><div class="l">专属时段<br>不拼场</div></div>
+      <div class="vpt"><div class="c">真人</div><div class="l">视频/语音<br>面对面聊</div></div>
+      <div class="vpt"><div class="c">带盘</div><div class="l">先出报告<br>再深聊</div></div>
+    </div>
+  </div>
+
+  <div id="masters"></div>
+
+  <div class="adv">
+    <div class="k">Runae 会员 · 更划算</div>
+    <h4>会员预约真人<br>享专属优惠</h4>
+    <ul>
+      <li>会员预约真人命理师一对一，价格更优</li>
+      <li>连线前自动带上你的完整命盘与历史</li>
+      <li>AI 顾问日常追问 + 真人深聊，双线陪伴</li>
+    </ul>
+    <button class="sbtn" onclick="goCheckout('member_monthly')">订阅 Runae 顾问 · $9.9 / 月</button>
+  </div>
+
+  <div class="note">
+    真人命理咨询以传统文化与人生陪伴为主，不作命运、健康、投资等结果承诺，不能替代医疗、法律、金融等专业意见。<br>
+    提交预约即表示你同意我们通过所留联系方式与你确认时段。
+  </div>
+</div>
+
+<!-- 预约意向弹层 -->
+<div class="mask" id="mask">
+  <div class="sheet" id="sheet"></div>
+</div>
+
+<script>
+  // ── 用户档案（与 report-v2 一致，用于连线时带盘）──
+  var P={};
+  try{ P=JSON.parse(localStorage.getItem('runae_profile')||'{}'); }catch(e){}
+
+  // ── 命理师卡：中性占位，绝不编造具名身份/资质/评分 ──
+  // ⚠️ 待 Karen 填入真实入驻命理师的真实资料后替换 name/meta/desc。
+  var MASTERS=[
+    { key:'senior',   name:'资深命理顾问',   meta:'八字 · 紫微 · 15 年以上从业',
+      tags:['八字批命','紫微斗数','流年大运'],
+      desc:'擅长以八字与紫微双体系交叉看格局，把大运流年讲清楚，帮你在关键节点上做取舍。适合想系统看一遍命盘的你。',
+      price:'预约咨询 · 一对一' },
+    { key:'relations',name:'情感关系顾问',   meta:'合婚 · 感情 · 长期陪伴式咨询',
+      tags:['感情姻缘','合婚配对','关系经营'],
+      desc:'专注感情与关系议题，从双方命盘看相处模式与雷区，陪你把当下的困惑聊透，给出可落地的相处之道。',
+      price:'预约咨询 · 一对一' },
+    { key:'western',  name:'占星咨询顾问',   meta:'西方占星 · 中英双语咨询',
+      tags:['本命星盘','行运过境','中英双语'],
+      desc:'以西方占星本命盘与行运为主，解读性格天赋与人生课题，支持中英文连线。适合习惯占星语言的你。',
+      price:'预约咨询 · 一对一' }
+  ];
+
+  var USER=(function(){var s=document.createElementNS('http://www.w3.org/2000/svg','svg');return '<svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>';})();
+
+  function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+  function renderMasters(){
+    var box=document.getElementById('masters'),html='';
+    MASTERS.forEach(function(m){
+      html+='<div class="read">';
+      html+='<div class="m-top"><div class="m-ava">'+USER+'</div><div><div class="m-name">'+esc(m.name)+'</div><div class="m-meta">'+esc(m.meta)+'</div></div></div>';
+      html+='<div class="m-tags">'+m.tags.map(function(t){return '<span class="m-tag">'+esc(t)+'</span>';}).join('')+'</div>';
+      html+='<div class="m-desc">'+esc(m.desc)+'</div>';
+      html+='<div class="m-price"><b>'+esc(m.price)+'</b></div>';
+      html+='<button class="cta gold" onclick="openBooking(\''+m.key+'\')">预约咨询</button>';
+      html+='</div>';
+    });
+    box.innerHTML=html;
+  }
+
+  // ── 预约意向表单 ──
+  var curKey='';
+  window.openBooking=function(key){
+    curKey=key;
+    var m=MASTERS.filter(function(x){return x.key===key;})[0]||MASTERS[0];
+    var email=(P.email||'');
+    document.getElementById('sheet').innerHTML=
+      '<h4>预约「'+esc(m.name)+'」</h4>'+
+      '<div class="sh-sub">留下联系方式与期望时段，我们会尽快与你确认。连线时会带上你已保存的命盘。</div>'+
+      '<div class="fld"><label>联系邮箱（用于确认预约）</label><input id="bk-email" type="email" placeholder="you@example.com" value="'+esc(email)+'"></div>'+
+      '<div class="fld"><label>微信 / 手机（选填，方便更快联系）</label><input id="bk-contact" type="text" placeholder="微信号或手机号"></div>'+
+      '<div class="fld"><label>期望时段（选填）</label><input id="bk-time" type="text" placeholder="如：本周末晚上 / 工作日下午"></div>'+
+      '<div class="fld"><label>想聊的主题（选填）</label><textarea id="bk-note" rows="3" placeholder="如：今年事业方向、感情走向、择日……"></textarea></div>'+
+      '<div class="sheet-row"><button class="btn-ghost" onclick="closeBooking()">取消</button><button class="cta" id="bk-submit" onclick="submitBooking()">提交预约</button></div>';
+    document.getElementById('mask').classList.add('on');
+  };
+  window.closeBooking=function(){ document.getElementById('mask').classList.remove('on'); };
+  document.getElementById('mask').addEventListener('click',function(e){ if(e.target.id==='mask') closeBooking(); });
+
+  window.submitBooking=function(){
+    var email=(document.getElementById('bk-email').value||'').trim();
+    if(!email||email.indexOf('@')<0){ alert('请填写有效邮箱，方便我们与你确认预约'); return; }
+    var contact=(document.getElementById('bk-contact').value||'').trim();
+    var ptime=(document.getElementById('bk-time').value||'').trim();
+    var note=(document.getElementById('bk-note').value||'').trim();
+    var m=MASTERS.filter(function(x){return x.key===curKey;})[0]||MASTERS[0];
+
+    var btn=document.getElementById('bk-submit');
+    btn.disabled=true; btn.textContent='提交中…';
+
+    // 汇总意向：真人预约暂无独立下单端点，走通用工单端点 /api/support-ticket 录单给运营，
+    // 并带上用户命盘档案(runae_profile) 供命理师连线前预读。
+    var summary='【真人命理师预约意向】\n'
+      +'命理师：'+m.name+'（'+m.meta+'）\n'
+      +'联系方式：'+(contact||'（未填）')+'\n'
+      +'期望时段：'+(ptime||'（未填）')+'\n'
+      +'想聊主题：'+(note||'（未填）')+'\n'
+      +'命盘档案：'+JSON.stringify(P);
+
+    fetch('/api/support-ticket',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ product:'shenyuan_booking', email:email, question:summary })})
+     .then(function(r){return r.json();})
+     .then(function(d){
+       if(d&&d.ok){ showOk(email); }
+       else{ btn.disabled=false; btn.textContent='提交预约'; alert((d&&d.error)||'提交失败，请稍后重试'); }
+     })
+     .catch(function(){ btn.disabled=false; btn.textContent='提交预约'; alert('网络异常，请重试'); });
+  };
+
+  function showOk(email){
+    document.getElementById('sheet').innerHTML=
+      '<div class="ok"><div class="chk"><svg viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg></div>'+
+      '<div class="big">预约已收到</div>'+
+      '<p>我们会在 24 小时内通过 <b>'+esc(email)+'</b> 与你确认命理师与时段。<br>连线前会为你准备好完整命盘。</p>'+
+      '<button class="cta" style="margin-top:20px" onclick="closeBooking()">好的</button></div>';
+  }
+
+  // ── 结账（沿用 report-v2 的 goCheckout）──
+  window.goCheckout=function(product){
+    fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({product:product,token:localStorage.getItem('sy_token')||'',
+        successUrl:location.origin+'/pages/booking.html?paid=1',cancelUrl:location.href})})
+     .then(function(r){return r.json();}).then(function(d){
+       if(d.url){ location.href=d.url; }
+       else if(d.channel==='cn'){ alert('国内用户请用微信 / 支付宝支付（接入中）'); }
+       else { alert('跳转支付失败，请重试'); }
+     }).catch(function(){ alert('网络异常，请重试'); });
+  };
+
+  renderMasters();
+</script>
+</body>
+</html>

@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Runae · 手相报告</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F0E7;--card:#FFFFFF;--card-2:#FAF7F0;
+    --ink:#26221C;--ink-2:#6A6357;--ink-3:#A39B8C;
+    --gold:#A9803A;--gold-soft:#C3A05A;--gold-wash:#EFE7D4;
+    --jade:#2D7A62;--jade-deep:#1C4A3A;--jade-soft:#7DDFC0;--jade-wash:#E3EDE8;
+    --line:rgba(38,34,28,.10);--line-2:rgba(38,34,28,.16);
+    --sans:'Inter',-apple-system,system-ui,sans-serif;--serif:'Cormorant Garamond','Noto Serif SC',serif;
+    --rl:20px;--r:14px;
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{background:var(--paper);font-family:var(--sans);color:var(--ink);line-height:1.5;font-feature-settings:"tnum";min-height:100vh}
+  .wrap{max-width:430px;margin:0 auto;padding:0 24px 40px;min-height:100vh}
+  svg.ic{width:18px;height:18px;stroke:var(--ink-3);stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+  .bar{display:flex;align-items:center;justify-content:space-between;padding:22px 2px 12px}
+  .nav-back{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--ink-3);cursor:pointer;font-weight:500}
+  .step{font-size:11px;color:var(--ink-3);letter-spacing:.1em;font-weight:600}
+  .rhero{text-align:center;padding:16px 4px 4px}
+  .rhero .k{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+  .rhero .dv{width:44px;height:1px;background:linear-gradient(90deg,transparent,var(--gold-soft),transparent);margin:14px auto}
+  .rhero h2{font-family:var(--serif);font-size:29px;font-weight:600;line-height:1.24;letter-spacing:-.01em;margin:0 6px}
+  .chart{background:var(--jade-deep);border:1px solid rgba(195,160,90,.20);border-radius:var(--rl);padding:22px 20px;margin:18px 0;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+  .read{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;margin-bottom:14px}
+  .read h3{font-size:14px;font-weight:600;margin-bottom:10px;letter-spacing:.01em}
+  .read p{font-size:15px;color:var(--ink-2);line-height:1.75;white-space:pre-wrap}
+  .blur{filter:blur(5px);opacity:.55;user-select:none;pointer-events:none}
+  .wall{background:var(--card);border:1px solid var(--gold-soft);border-radius:var(--rl);padding:24px 20px;text-align:center;margin:16px 0;box-shadow:0 14px 34px -20px rgba(169,128,58,.30)}
+  .wall h4{font-family:var(--serif);font-size:20px;font-weight:600;margin-bottom:5px}
+  .wall p{font-size:13px;color:var(--ink-2);margin-bottom:18px}
+  .cta{width:100%;background:var(--jade-deep);color:#fff;border:none;border-radius:var(--r);padding:16px;font-size:15px;font-weight:600;font-family:var(--sans);cursor:pointer}
+  .cta.gold{background:linear-gradient(135deg,var(--gold-soft),var(--gold))}
+  .wall .price{font-size:13px;color:var(--ink-3);margin-top:12px}
+  .wall .price b{color:var(--gold);font-size:17px;font-weight:600}
+  .expand{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12.5px;color:var(--ink-2);padding:14px;border:1px solid var(--gold-wash);border-radius:var(--r);margin-bottom:12px;background:var(--card-2);font-weight:500}
+  .adv{background:var(--jade-deep);border:1px solid rgba(195,160,90,.20);border-radius:var(--rl);padding:24px 21px;margin:22px 0 8px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+  .adv .k{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-soft);font-weight:600}
+  .adv h4{font-family:var(--serif);font-size:21px;font-weight:600;margin:10px 0 4px;color:#fff}
+  .adv ul{list-style:none;margin:14px 0}
+  .adv li{font-size:13px;color:rgba(255,255,255,.86);padding:6px 0 6px 20px;position:relative}
+  .adv li::before{content:'◆';position:absolute;left:2px;top:6px;color:var(--gold-soft);font-size:7px;line-height:2.1}
+  .adv .sbtn{width:100%;background:transparent;color:var(--gold-soft);border:1px solid var(--gold-soft);border-radius:var(--r);padding:15px;font-size:14.5px;font-weight:600;margin-top:10px;cursor:pointer}
+  .skel{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:20px;margin-bottom:14px}
+  .skel .ln{height:12px;border-radius:6px;background:linear-gradient(90deg,var(--line),#efe9de,var(--line));background-size:200% 100%;animation:sh 1.3s infinite;margin-bottom:11px}
+  @keyframes sh{0%{background-position:200% 0}100%{background-position:-200% 0}}
+  .err{text-align:center;color:var(--ink-2);font-size:14px;padding:40px 10px}
+
+  /* ── 上传入口（沿用 report-v2 视觉语言的 tile 卡）── */
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:var(--rl);padding:26px 20px;margin-bottom:14px;text-align:center}
+  .tile .palm-mark{width:64px;height:64px;border-radius:50%;margin:0 auto 14px;
+    border:1px solid var(--gold-soft);display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(circle at 40% 32%,var(--gold-wash),transparent);
+    font-family:var(--serif);font-size:28px;color:var(--gold)}
+  .tile h3{font-family:var(--serif);font-size:19px;font-weight:600;margin-bottom:6px}
+  .tile .sub{font-size:13px;color:var(--ink-2);line-height:1.7;margin-bottom:18px}
+  .tile .preview{width:120px;height:120px;border-radius:16px;object-fit:cover;margin:0 auto 16px;display:none;border:1px solid var(--line-2)}
+  .hint{display:flex;gap:10px;text-align:left;background:var(--card-2);border:1px solid var(--gold-wash);border-radius:var(--r);padding:13px 15px;margin-bottom:12px;font-size:12px;color:var(--ink-2);line-height:1.6}
+  .hint .em{flex-shrink:0}
+  .privacy{display:flex;gap:10px;text-align:left;background:var(--card-2);border:1px solid var(--gold-wash);border-left:2px solid var(--gold);border-radius:var(--r);padding:13px 15px;margin-bottom:14px;font-size:11.5px;color:var(--ink-2);line-height:1.65}
+  .privacy .lock{flex-shrink:0}
+  .privacy b{color:var(--gold);font-weight:600}
+  .ai-note{display:flex;gap:9px;background:var(--card-2);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;margin-top:8px;font-size:11.5px;color:var(--ink-3);line-height:1.6;text-align:left}
+
+  /* ── 18+ 年龄门（手掌照=生物识别数据）── */
+  .agegate{position:fixed;inset:0;z-index:200;background:rgba(38,34,28,.55);backdrop-filter:blur(4px);
+    display:none;align-items:center;justify-content:center;padding:24px}
+  .agegate.on{display:flex}
+  .agegate .box{background:var(--card);border:1px solid var(--gold-soft);border-radius:20px;max-width:340px;width:100%;
+    padding:28px 24px;text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+  .agegate .ic{font-size:28px;margin-bottom:12px}
+  .agegate h3{font-family:var(--serif);font-size:20px;font-weight:600;margin-bottom:10px}
+  .agegate p{font-size:12.5px;color:var(--ink-2);line-height:1.75;margin-bottom:20px}
+  .agegate p b{color:var(--ink)}
+  .agegate .ag-btns{display:flex;flex-direction:column;gap:9px}
+  .agegate .ag-yes{background:linear-gradient(135deg,var(--gold-soft),var(--gold));color:#fff;border:none;padding:14px;border-radius:13px;
+    font-size:14px;font-weight:600;cursor:pointer;min-height:48px}
+  .agegate .ag-no{background:transparent;color:var(--ink-2);border:1px solid var(--line-2);padding:13px;border-radius:13px;
+    font-size:12.5px;cursor:pointer;min-height:44px}
+</style>
+</head>
+<body>
+
+<!-- 18+ 年龄门：手掌照片=生物识别数据，仅限成年人 -->
+<div id="ageGate" class="agegate">
+  <div class="box">
+    <div class="ic">🔞</div>
+    <h3>先确认一下</h3>
+    <p>手相解读需要用到你的手掌照片——属于<b>个人（生物识别）信息</b>。本体验仅面向成年人。<br><br>请确认你已<b>年满 18 岁</b>，且这是你本人的手。</p>
+    <div class="ag-btns">
+      <button class="ag-yes" onclick="passAgeGate()">我已满 18 岁 · 继续</button>
+      <button class="ag-no" onclick="closeAgeGate()">未满 18 岁 · 返回</button>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <div class="bar"><div class="nav-back" onclick="history.length>1?history.back():location.href='pick.html'"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>返回</div><div class="step">手相</div></div>
+
+  <div class="rhero">
+    <div class="k">Ma Yi · 麻衣手相</div>
+    <div class="dv"></div>
+    <h2>拍下你的手掌<br>让 Runae 读出掌纹</h2>
+  </div>
+
+  <div id="body">
+    <!-- ① 上传入口 -->
+    <div id="uploadView">
+      <div class="tile">
+        <img id="preview" class="preview" alt="">
+        <div class="palm-mark" id="palmMark">🖐</div>
+        <h3>上传你的主手手掌照</h3>
+        <div class="sub">五指舒展 · 掌心正对镜头<br>光线充足，让每条掌纹都清晰可见</div>
+        <label class="cta gold" for="file" id="pickBtn" style="display:inline-flex;align-items:center;justify-content:center;max-width:240px;margin:0 auto;cursor:pointer">📷 拍照 / 从相册选</label>
+        <input type="file" id="file" accept="image/*" hidden>
+      </div>
+
+      <div class="hint">
+        <span class="em">💡</span>
+        <div>用你的主手（多数人是右手）。手掌摊平、五指自然张开，在自然光下——掌纹越清晰，解读越丰富。</div>
+      </div>
+
+      <div class="privacy">
+        <span class="lock">🔐</span>
+        <div><b>隐私：</b>你的照片仅发送给我们的安全 AI 做特征分析，随后<b>立即丢弃</b>——绝不存储、绝不用于训练、绝不分享。我们只保留文字解读，不保留你的图片。手掌照片属于生物识别信息，仅用于本次会话。</div>
+      </div>
+
+      <div class="ai-note">
+        <span>🤖</span>
+        <span>AI 视觉观察 · 仅供自我探索与娱乐——是照见自己的镜子，绝非对寿命、健康或命运的预测。你自己书写自己的未来。</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var NAMES={palm:'手相'};
+
+  function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
+  var HEAD=/^\s*([【✅📜🌟💰❤💼🌿☀🔮⛰✨🙏🖐🧠💍]|#{1,3}\s|[\uD83C-\uDBFF])/;
+
+  function sections(text){
+    var lines=text.split('\n'),secs=[],cur=null;
+    lines.forEach(function(raw){
+      var l=raw.replace(/\s+$/,''); if(!l.trim())return;
+      if(HEAD.test(l)&&l.trim().length<38){
+        cur={t:l.replace(/[\uD800-\uDFFF←-⯿☀-➿️#*【】·]/g,'').trim(),b:[]};secs.push(cur);
+      }else{ if(!cur){cur={t:'',b:[]};secs.push(cur);} cur.b.push(l.trim()); }
+    });
+    return secs.filter(function(s){return s.t||s.b.length;});
+  }
+
+  // ── 18+ 年龄门 ──
+  var _pendingUpload=false;
+  function triggerUpload(){
+    if(sessionStorage.getItem('runae_age_ok')!=='1'){
+      _pendingUpload=true;
+      document.getElementById('ageGate').classList.add('on');
+      return false;
+    }
+    return true;
+  }
+  window.passAgeGate=function(){
+    sessionStorage.setItem('runae_age_ok','1');
+    document.getElementById('ageGate').classList.remove('on');
+    if(_pendingUpload){ _pendingUpload=false; document.getElementById('file').click(); }
+  };
+  window.closeAgeGate=function(){
+    _pendingUpload=false;
+    document.getElementById('ageGate').classList.remove('on');
+  };
+
+  // 点击上传按钮时先过年龄门
+  document.getElementById('pickBtn').addEventListener('click', function(e){
+    if(!triggerUpload()){ e.preventDefault(); }
+  });
+  document.getElementById('file').addEventListener('change', function(){
+    if(this.files && this.files[0]) startReading(this.files[0]);
+  });
+
+  function showLoading(){
+    document.getElementById('body').innerHTML=
+      '<div class="skel"><div class="ln" style="width:60%"></div><div class="ln" style="width:100%"></div><div class="ln" style="width:88%"></div></div>'+
+      '<div class="skel"><div class="ln" style="width:45%"></div><div class="ln" style="width:96%"></div><div class="ln" style="width:92%"></div><div class="ln" style="width:70%"></div></div>'+
+      '<div class="err" id="loadmsg">正在观察你的掌纹…</div>';
+  }
+
+  function startReading(file){
+    // 展示所选照片预览（不上传前的本地预览）
+    var reader=new FileReader();
+    reader.onload=function(e){
+      var dataUrl=e.target.result;
+      var base64=dataUrl.split(',')[1]||'';
+      var mimeMatch=dataUrl.match(/^data:([^;]+);/);
+      var mimeType=mimeMatch?mimeMatch[1]:'image/jpeg';
+      showLoading();
+      callShouxiang(base64, mimeType);
+    };
+    reader.onerror=function(){ fail('照片读取失败，请换一张图片再试。', true); };
+    reader.readAsDataURL(file);
+  }
+
+  function callShouxiang(base64, mimeType){
+    fetch('/api/shouxiang',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        question:'请给我一份完整的麻衣手相解读',
+        hand:'right',
+        imageBase64:base64,
+        mimeType:mimeType,
+        lang:'zh'
+      })
+    })
+    .then(function(r){
+      return r.json().then(function(d){ return {ok:r.ok, status:r.status, d:d}; });
+    })
+    .then(function(res){
+      var d=res.d||{};
+      if(!res.ok){
+        // need_photo / no_palm 等照片相关错误 → 引导回上传
+        if(d.code==='need_photo' || d.code==='no_palm'){
+          fail(d.error || '请上传一张清晰的手掌照片', true);
+        } else {
+          fail('报告生成遇到问题：'+(d.error||('HTTP '+res.status)), true);
+        }
+        return;
+      }
+      if(!d.reading){ fail('报告为空，请重试。', true); return; }
+      renderPalm(d);
+    })
+    .catch(function(e){ fail('网络异常：'+e.message, true); });
+  }
+
+  function renderPalm(d){
+    var body=document.getElementById('body');
+    // ---LOCKED--- 契约：分隔符前=免费预览，之后=锁定章节名
+    var parts=(d.reading||'').split(/---LOCKED---/i),free=parts[0]||'',locked=parts[1]||'';
+    var html='';
+    // 顶部小卡：掌型标签（视觉统一，用 report-v2 的 .chart 深色卡）
+    html+='<div class="chart" style="text-align:center"><div style="font-family:var(--serif);font-size:19px;color:#fff;margin-bottom:4px">麻衣手相 · 掌纹解读</div><div style="font-size:12px;color:rgba(255,255,255,.7)">三大主线 · 八丘 · 特殊掌纹</div></div>';
+
+    // 按 .read 分段渲染，标题剥 emoji
+    sections(free).forEach(function(s){
+      html+='<div class="read">'+(s.t?'<h3>'+esc(s.t)+'</h3>':'')+'<p>'+md(s.b.join('\n'))+'</p></div>';
+    });
+
+    // 锁定章节：模糊预告一小段（报告为付费门时展示）
+    if(d.locked && locked.trim()){
+      html+='<div class="read"><h3>更深的推演</h3><p class="blur">'+md(locked.replace(/^\s+/,'').slice(0,120))+'……</p></div>';
+    }
+
+    // 付费墙（仅未解锁时）
+    if(d.locked){
+      html+='<div class="wall"><h4>解锁完整手相报告</h4><p>智慧线 · 生命线 · 事业线 · 太阳线 · 婚姻线 · 八丘 · 相师叮嘱</p><button class="cta gold" onclick="goCheckout(\'shouxiang_full\')">解锁完整版</button><div class="price"><b>$9.90</b> 一次性 · 或订阅更划算 ↓</div></div>';
+    }
+
+    // 顾问卡（advisor，与 report-v2 一致）
+    html+='<div class="adv"><div class="k">Runae 顾问 · 会记得你</div><h4>不止一份报告<br>是一个懂你的命理顾问</h4><ul><li>每日运势与流年动态，天天更新</li><li>AI 对话随时追问深聊，像身边的老师</li><li>中西命理 + 面相手相，交叉印证同一个你</li><li>记得你的盘与历史，越用越懂你</li><li>可约真人命理师一对一（会员优惠）</li></ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">订阅 Runae 顾问 · $9.9 / 月</button></div>';
+
+    // 合规脚注
+    html+='<div class="ai-note" style="margin-top:14px"><span>🤖</span><span>AI 生成 · 仅供反思与娱乐 · 掌纹随心态与经历变化，不宿命论 · 你自己书写自己的未来。你的照片在分析后已丢弃。</span></div>';
+
+    body.innerHTML=html;
+    window.scrollTo(0,0);
+  }
+
+  function fail(msg, allowRetry){
+    var btn = allowRetry
+      ? '<button class="cta" style="max-width:220px;margin:14px auto 0" onclick="location.reload()">换一张照片</button>'
+      : '<button class="cta" style="max-width:200px;margin:14px auto 0" onclick="location.reload()">重试</button>';
+    document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br>'+btn+'</div>';
+  }
+
+  window.goCheckout=function(product){
+    fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({product:product,token:localStorage.getItem('sy_token')||'',
+        successUrl:location.origin+'/pages/report-palm.html?paid=1',cancelUrl:location.href})})
+     .then(function(r){return r.json();}).then(function(d){
+       if(d.url){ location.href=d.url; }
+       else if(d.channel==='cn'){ alert('国内用户请用微信 / 支付宝支付（接入中）'); }
+       else { alert('跳转支付失败，请重试'); }
+     }).catch(function(){ alert('网络异常，请重试'); });
+  };
+</script>
+</body>
+</html>
