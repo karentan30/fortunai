@@ -9,7 +9,7 @@ const { getToken, _tokenFromReq } = require('../lib/store');
 // ── IP 速率限制（滑动窗口，无需 Redis）──
 const _rateLimitMap = new Map(); // key: ip|token → { timestamps: [] }
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1小时
-const RATE_LIMIT_ANON  = 30;   // 未授权 IP：30次/小时
+const RATE_LIMIT_ANON  = 150;  // 未授权 IP：150次/小时（分章报告一次~11调用，需放宽）
 const RATE_LIMIT_AUTH  = 200;  // 有效 token 用户：200次/小时
 
 // 受限路由前缀
