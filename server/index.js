@@ -218,6 +218,17 @@ app.use('/api', supportRouter);
 
 // ── 全局错误处理 ──
 app.use(function(err, req, res, next) {
+  // 🔴 0912: 请求体不是合法 JSON（body-parser 抛的 SyntaxError）是「客户端发错了」，
+  //   不是服务端故障。原来这类请求一律回 500 并打 `[FATAL]` —— 于是每个扫描器/bot
+  //   往 /api/* 扔的垃圾 body，都会在日志里冒充一次服务端崩溃（排查时非常误导），
+  //   客户端拿到的也是「服务暂时不可用」这种错误归因。
+  if (err && err.type === 'entity.parse.failed') {
+    console.warn('[BADREQ]', req.method, req.path, err.message);
+    return res.status(400).json({ error: '请求格式不正确' });
+  }
+  if (err && err.type === 'entity.too.large') {
+    return res.status(413).json({ error: '请求体过大' });
+  }
   console.error('[FATAL]', err.message);
   res.status(500).json({ error: '服务暂时不可用，请稍后重试' });
 });
