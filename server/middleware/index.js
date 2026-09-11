@@ -25,11 +25,25 @@ const RATE_LIMIT_AUTH  = 200;  // 有效 token 用户：200次/小时
 const RATE_LIMIT_EXEMPT_PREFIXES = [
   '/api/stripe-webhook',   // Stripe 回调（raw body + 验签）
   '/api/hub-callback',     // 中台订阅事件回调（HMAC 验签）
-  '/api/pay/',             // 微信/支付宝/中台的 notify + query + create 全在钱路上
+  // 🔴 0911：这里原本写的是 '/api/pay/'（带尾斜杠）—— 但 isExempt 的匹配规则是
+  // 「path === prefix || path.startsWith(prefix + '/')」，prefix 带尾斜杠时第二个条件
+  // 变成 startsWith('/api/pay//')，永远为假；第一个条件 also 只匹配 '/api/pay/' 本身。
+  // 结果是 /api/pay/wechat/notify、/api/pay/alipay/notify 这些**支付回调全部不在豁免
+  // 名单里**。写成不带尾斜杠才正确：既匹配 '/api/pay' 自身，也匹配 '/api/pay/xxx'。
+  // 这是 rate-limit-scope.test.js 写完后立刻抓到的（见该文件第一条用例）。
+  '/api/pay',              // 微信/支付宝/中台的 notify + query + create 全在钱路上
   '/api/orders',           // 订单查询（付款页会轮询）
   '/api/success',          // 付款成功落地页
   '/api/health',           // 健康检查
   '/api/products',         // 静态商品表
+  // ⚠️ 0911：这一条是因为改成默认拒绝后会**打挂排行榜页**才补的。
+  // pages/leaderboard.html + leaderboard-en.html 每 10 秒轮询
+  // /api/referral/leaderboard 和 /api/referral/mine（带 document.hidden 判断）。
+  // 360 次/小时 × 2 个接口，远超匿名 150/h —— 旧白名单模式下它压根不受限，
+  // 改默认拒绝后约 12 分钟就会开始 429。这两个接口只读、不烧 LLM，豁免无成本风险。
+  // 教训：**任何以后新增的轮询页，都要先确认它打的接口在豁免名单里**，
+  // 否则用户开着页面十几分钟就会开始报错。
+  '/api/referral',         // 排行榜轮询（10s 一次·只读·不烧 LLM）
 ];
 
 function isExempt(path) {
@@ -53,7 +67,10 @@ setInterval(function() {
     });
     if (record.timestamps.length === 0) _rateLimitMap.delete(key);
   }
-}, 5 * 60 * 1000);
+}, 5 * 60 * 1000).unref(); // 0911：unref —— 这是后台清理任务，不该把进程钉住。
+// 之前 node --test 引入本文件后会永远挂住（事件循环里有个永不结束的 interval），
+// 所以 rate-limit-scope.test.js 根本跑不完。生产无影响：express 的 listen 自己
+// 会撑住进程，不靠这个定时器。
 
 /**
  * rateLimitMiddleware — AI 路由速率限制（按 token 或 IP 区分）
@@ -197,4 +214,8 @@ module.exports = {
   authMiddleware,
   optionalAuthMiddleware,
   csrfMiddleware,
+  // 0911：导出供 rate-limit-scope.test.js 固定"哪些路径受限"。
+  // 这段判断直接决定钱路回调会不会被 429，值得有测试钉住。
+  isRateLimited,
+  isExempt,
 };
