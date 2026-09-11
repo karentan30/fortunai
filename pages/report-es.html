@@ -574,6 +574,17 @@ function renderReport(reading, name, dateStr, timeStr, pillars, birthYear){
 }
 
 // Pago
+// 🔴 0911: 支付成功后必须**重新取一次正文**。老逻辑只是把 #locked-content 的模糊遮罩
+//   去掉，而 #locked-content 里装的是服务端随免费预览一起下发的「章节标题预告单」——
+//   真实付费正文从来没请求过。服务端现已承认 report_unlock_a/b 这些 SKU，重载一次即得全文。
+//   一次为限（sessionStorage 记号），避免反复刷新。
+function syReloadPaid(){
+  try{
+    if(sessionStorage.getItem('sy_reloaded_paid')==='1') return;
+    sessionStorage.setItem('sy_reloaded_paid','1');
+  }catch(e){}
+  location.reload();
+}
 function syInitUnlock(){
   var orderA = localStorage.getItem('sy_unlock_a');
   if(orderA){
@@ -626,6 +637,7 @@ function syStripeWait(tier, hubOid, localOid, tries){
       localStorage.removeItem('sy_stripe_local_'+tier);
       document.getElementById('gate-'+tier).style.display='none';
       document.getElementById('locked-content').classList.remove('locked-section');
+      syReloadPaid();
     } else {
       setTimeout(function(){ syStripeWait(tier, hubOid, localOid, tries+1); }, 2000);
     }
@@ -678,6 +690,7 @@ function syUnlockPaid(tier, orderNo){
     if(tier==='a'){
       document.getElementById('gate-a').style.display='none';
       document.getElementById('locked-content').classList.remove('locked-section');
+      syReloadPaid();
     }
   }, 1500);
 }
@@ -712,7 +725,7 @@ function copyLink(){
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ birthYear: birthYear, birthMonth: birthMonth, birthDay: birthDay,
-      birthHour: birthHour, gender: gender, lang: 'es', name: name, city: city })
+      birthHour: birthHour, gender: gender, lang: 'es', name: name, city: city, token: (localStorage.getItem('sy_token')||'') })
   }).then(function(r){ return r.json(); }).then(function(d){
     stopAnim();
     document.getElementById('loading').classList.add('hidden');

@@ -571,6 +571,16 @@ function renderReport(reading, name, dateStr, timeStr, pillars, birthYear){
   document.getElementById('share-bar').style.display='block';
 }
 
+// 🔴 0911: 支付成功后必须**重新取一次正文**。老逻辑只是把 #locked-content 的模糊遮罩
+//   去掉，而那里装的是服务端随免费预览一起下发的「章节标题预告单」——真实付费正文从没请求过。
+//   服务端现已承认 report_unlock_a/b 这些 SKU，重载一次即得全文。一次为限，防反复刷新。
+function syReloadPaid(){
+  try{
+    if(sessionStorage.getItem('sy_reloaded_paid')==='1') return;
+    sessionStorage.setItem('sy_reloaded_paid','1');
+  }catch(e){}
+  location.reload();
+}
 function syInitUnlock(){
   var orderA = localStorage.getItem('sy_unlock_a');
   if(orderA){
@@ -623,6 +633,7 @@ function syStripeWait(tier, hubOid, localOid, tries){
       localStorage.removeItem('sy_stripe_local_'+tier);
       document.getElementById('gate-'+tier).style.display='none';
       document.getElementById('locked-content').classList.remove('locked-section');
+      syReloadPaid();
     } else {
       setTimeout(function(){ syStripeWait(tier, hubOid, localOid, tries+1); }, 2000);
     }
@@ -675,6 +686,7 @@ function syUnlockPaid(tier, orderNo){
     if(tier==='a'){
       document.getElementById('gate-a').style.display='none';
       document.getElementById('locked-content').classList.remove('locked-section');
+      syReloadPaid();
     }
   }, 1500);
 }
@@ -698,7 +710,7 @@ function copyLink(){
   var ref = qs('ref');
   if(ref) try{ localStorage.setItem('sy_ref_code', ref.toUpperCase()); }catch(e){}
   if(!dateStr){ document.getElementById('err-msg').textContent='Missing birth date. Please go back and fill in the form.'; document.getElementById('error-screen').classList.add('show'); document.getElementById('loading').classList.add('hidden'); return; }
-  document.getElementById('load-name-hint').textContent = 'Preparing '+name+''s chart…';
+  document.getElementById('load-name-hint').textContent = 'Preparing ' + name + '\'s chart…';
   var stopAnim = startLoadAnim();
   var parts = dateStr.split('-');
   var birthYear = parseInt(parts[0])||0;
@@ -710,7 +722,7 @@ function copyLink(){
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body: JSON.stringify({ birthYear: birthYear, birthMonth: birthMonth, birthDay: birthDay,
-      birthHour: birthHour, gender: gender, lang: 'en-in', name: name, city: city })
+      birthHour: birthHour, gender: gender, lang: 'en-in', name: name, city: city, token: (localStorage.getItem('sy_token')||'') })
   }).then(function(r){ return r.json(); }).then(function(d){
     stopAnim();
     document.getElementById('loading').classList.add('hidden');

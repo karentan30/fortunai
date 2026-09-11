@@ -190,7 +190,14 @@ const getReadingsByUser = {
 // ── 产品/付费墙相关常量 ──
 // 🔴 P1-1 付费墙修复: 精确白名单，bazi_trial 不解锁完整报告
 const UNLOCK_BY_CATEGORY = {
-  'bazi': ['bazi_full','bazi_vip'], '八字': ['bazi_full','bazi_vip'], '사주': ['bazi_full','bazi_vip'],
+  // 🔴 0911: 老报告页(report-{en,cn,in,th,es,pt-br})在卖 report_unlock_a/b，
+  //   韩语站在卖 saju_kr_full，求签/御神签/符文页在卖 bazi_basic——但这四个 key
+  //   原先不在任何解锁表里 → 用户付了钱，服务端一个字都不放。
+  //   gateReportAccess 是二值的（要么免费3章+预告单，要么全文），没法只放第3-6章，
+  //   所以这里一律按「已付费=给全文」处理。宁可多给，不能收钱不给货。
+  'bazi': ['bazi_full','bazi_vip','report_unlock_a','report_unlock_b','bazi_basic','saju_kr_full'],
+  '八字': ['bazi_full','bazi_vip','report_unlock_a','report_unlock_b','bazi_basic','saju_kr_full'],
+  '사주': ['bazi_full','bazi_vip','report_unlock_a','report_unlock_b','bazi_basic','saju_kr_full'],
   // 八字 session：买对应单 session 或买全套 bazi_full/vip 都解锁该 session
   'bazi_s_wealth': ['bazi_s_wealth','bazi_full','bazi_vip'], 'bazi_s_love': ['bazi_s_love','bazi_full','bazi_vip'], 'bazi_s_career': ['bazi_s_career','bazi_full','bazi_vip'],
   'bazi_s_dayun': ['bazi_s_dayun','bazi_full','bazi_vip'], 'bazi_s_health': ['bazi_s_health','bazi_full','bazi_vip'], 'bazi_s_luck': ['bazi_s_luck','bazi_full','bazi_vip'],

@@ -1261,7 +1261,8 @@ function streamBaziReport(input, mode, btn, onDone) {
     credentials: 'include',
     body: JSON.stringify({
       birthYear: input.year, birthMonth: input.month, birthDay: input.day, birthHour: input.hour,
-      gender: input.gender, mode: mode || 'truth', question: '请全面分析我的命盘'
+      gender: input.gender, mode: mode || 'truth', question: '请全面分析我的命盘',
+      token: (localStorage.getItem('sy_token')||'')
     })
   }).then(function(res) {
     if (!res.ok || !res.body) throw new Error('stream failed');
@@ -1399,7 +1400,8 @@ function fetchChapter(chapterId, input, onMeta, onDone, onError) {
     body: JSON.stringify({
       birthYear: input.year, birthMonth: input.month, birthDay: input.day,
       birthHour: input.hour, gender: input.gender,
-      lang: _chapLang, chapterId: chapterId
+      lang: _chapLang, chapterId: chapterId,
+      token: (localStorage.getItem('sy_token')||'')
     })
   }).then(function(res) {
     clearTimeout(timeout);
@@ -1722,7 +1724,8 @@ function fetchBaziReport(input, mode) {
     credentials: 'include',
     body: JSON.stringify({
       birthYear: input.year, birthMonth: input.month, birthDay: input.day, birthHour: input.hour,
-      gender: input.gender, mode: mode || 'truth', question: '请全面分析我的命盘'
+      gender: input.gender, mode: mode || 'truth', question: '请全面分析我的命盘',
+      token: (localStorage.getItem('sy_token')||'')
     })
   }).then(function(r){ return r.text(); }).then(function(txt){
     if (!txt || txt.trim() === '') throw new Error('空响应');

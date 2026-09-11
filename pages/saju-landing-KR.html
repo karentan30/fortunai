@@ -532,18 +532,22 @@ function startPaymentFlow(){
     }));
   }
 
-  // 토큰 가져오기 (없으면 guest)
-  var token = localStorage.getItem('sy_token') || 'guest';
+  // 🔴 0911: 这里原先传的是 `saju_kr_full_krw` —— 那是 Stripe **price id 的键名**
+  //   (见 server/routes/payment.js 的 STRIPE_PRICE_IDS)，不是产品键。服务端拿它查
+  //   PRODUCTS 必然 404 → 按钮永远报「결제 페이지를 불러올 수 없습니다」，한 명도 결제 못 함。
+  //   产品键就是 saju_kr_full；带 currency:'krw' 时服务端自己会去取 saju_kr_full_krw 这个 price。
+  //   token 也别传 'guest' 这种哨兵值：服务端会拿它真去查一次 token 表，必然查空。
+  //   同源 httpOnly cookie 已够用，没有 cookie 时留空让服务端自然回落。
+  var token = localStorage.getItem('sy_token') || '';
 
   // 후단 API 호출: Stripe checkout session 생성
   fetch('/api/create-checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      product: 'saju_kr_full_krw',
+      product: 'saju_kr_full',
       currency: 'krw',
       quantity: 1,
-      amount: 9900,
       token: token
     })
   })

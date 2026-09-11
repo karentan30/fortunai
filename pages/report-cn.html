@@ -542,6 +542,17 @@ function parseSections(text){
 function escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
 // ── 支付 ──
+// 🔴 0911: 付完钱必须**重新取一次正文**。老逻辑只是把 #locked-content 的模糊遮罩去掉，
+//   而那里装的是服务端随免费预览一起下发的「章节标题预告单」——真实付费正文从没请求过。
+//   服务端现已承认 report_unlock_a，重载一次即得全文。一次为限，防反复刷新。
+function syReloadPaid(){
+  try{
+    if(sessionStorage.getItem('sy_reloaded_paid')==='1') return;
+    sessionStorage.setItem('sy_reloaded_paid','1');
+  }catch(e){}
+  location.reload();
+}
+
 function syInitUnlock(){
   if(localStorage.getItem('sy_unlock_a')){
     document.getElementById('gate-a').style.display = 'none';
@@ -580,7 +591,7 @@ function syStartPoll(orderNo, tier){
         syPayClose();
         syInitUnlock();
         var gate = document.getElementById('gate-'+tier);
-        if(gate){gate.innerHTML='<p style="color:var(--gold);text-align:center;padding:16px">✅ 已解锁！</p>';setTimeout(function(){gate.style.display='none';},1000);}
+        if(gate){gate.innerHTML='<p style="color:var(--gold);text-align:center;padding:16px">✅ 已解锁！</p>';setTimeout(function(){gate.style.display='none';syReloadPaid();},1000);}
       }
     }).catch(function(){});
   }, 3000);
@@ -623,6 +634,8 @@ function copyLink(){
   var bHour  = timeStr ? (TIME_MAP[timeStr] !== undefined ? TIME_MAP[timeStr] : undefined) : undefined;
 
   var body = {birthYear:bYear, birthMonth:bMonth, birthDay:bDay, gender:gender, lang:'zh'};
+  // 同源 cookie 通常已够，但没有 cookie 时这是唯一的身份兜底（服务端鉴权靠它认订单）
+  try{ body.token = localStorage.getItem('sy_token') || ''; }catch(e){}
   if(bHour !== undefined) body.birthHour = bHour;
   if(name) body.name = name;
   if(city) body.city = city;
