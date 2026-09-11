@@ -238,8 +238,8 @@ router.post('/chat', rateLimitMiddleware, async (req, res) => {
     if (!isUnlimited) {
       var uid = resolveUserFromToken(req.headers['authorization'] || (req.body && req.body.token), { get: (t) => { const row = _M.tokens.find(x => x.token === t); return row || null; } });
       var day = new Date().toISOString().slice(0, 10);
-      var sessionId = req.headers['x-session-id'];
-      var ckey = (uid || sessionId || getClientIp(req)) + '_' + day;
+      // 🔴 0911：去掉可伪造的 x-session-id（客户端可控 = 配额可重置）。理由见 numerology.js。
+      var ckey = (uid || getClientIp(req)) + '_' + day;
       var used = _M.chatUsage[ckey] || 0;
       if (used >= CHAT_DAILY_LIMIT) {
         // 超出每日限量时: 若用户购买了按次问事 credit, 消费1次放行

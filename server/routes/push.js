@@ -67,7 +67,8 @@ async function sendDailyPush(customBody) {
 // POST /api/push/send-daily
 router.post('/send-daily', async (req, res) => {
   var adminToken = req.headers['x-admin-token'] || (req.body && req.body.token);
-  if (adminToken !== process.env.ADMIN_TOKEN) return res.status(403).json({ error: 'forbidden' });
+  // 🔴 0911：env 未设 ADMIN_TOKEN 时 adminToken/process.env 都是 undefined → 会放行。
+  if (!process.env.ADMIN_TOKEN || adminToken !== process.env.ADMIN_TOKEN) return res.status(403).json({ error: 'forbidden' });
   var r = await sendDailyPush(req.body && req.body.body);
   res.json({ sent: r.sent, total: r.total });
 });

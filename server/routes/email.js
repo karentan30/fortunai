@@ -291,7 +291,9 @@ router.post('/email/send-report', async (req, res) => {
 // GET /api/email/preview — 预览今日邮件（需 ADMIN_TOKEN）
 router.get('/email/preview', async (req, res) => {
   const token = req.headers['x-admin-token'] || req.query.token;
-  if (token !== process.env.ADMIN_TOKEN) return res.status(403).json({ error: 'forbidden' });
+  // 🔴 0911：原来只写 token !== process.env.ADMIN_TOKEN —— 若 env 未设 ADMIN_TOKEN，
+  // 两边都是 undefined，不带任何 token 的请求反而能过。必须显式要求 env 存在。
+  if (!process.env.ADMIN_TOKEN || token !== process.env.ADMIN_TOKEN) return res.status(403).json({ error: 'forbidden' });
   const fortune = await generateFortune('');
   const html = buildEmailHtml({
     name: '测试用户',
@@ -307,7 +309,8 @@ router.get('/email/preview', async (req, res) => {
 // POST /api/admin/email/send-daily — 手动触发每日发送（需 ADMIN_TOKEN）
 router.post('/admin/email/send-daily', async (req, res) => {
   const token = req.headers['x-admin-token'] || req.body && req.body.token;
-  if (token !== process.env.ADMIN_TOKEN) return res.status(403).json({ error: 'forbidden' });
+  // 🔴 0911：同上，env 未设时 undefined === undefined 会放行。
+  if (!process.env.ADMIN_TOKEN || token !== process.env.ADMIN_TOKEN) return res.status(403).json({ error: 'forbidden' });
   const result = await sendDailyBatch();
   res.json(result);
 });
@@ -719,7 +722,8 @@ router.post('/email/send-referral-success', async (req, res) => {
  */
 router.post('/admin/email/test-order', async (req, res) => {
   const token = req.headers['x-admin-token'] || req.body?.token;
-  if (token !== process.env.ADMIN_TOKEN) return res.status(403).json({ error: 'forbidden' });
+  // 🔴 0911：同上，env 未设时 undefined === undefined 会放行。
+  if (!process.env.ADMIN_TOKEN || token !== process.env.ADMIN_TOKEN) return res.status(403).json({ error: 'forbidden' });
 
   try {
     const order = {

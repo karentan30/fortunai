@@ -164,8 +164,12 @@ function _uid(req) {
 function _quotaKey(req) {
   const uid = _uid(req);
   const day = new Date().toISOString().slice(0, 10);
-  const sessionId = req.headers['x-session-id'];
-  return (uid || sessionId || getClientIp(req)) + '_numerology_' + day;
+  // 🔴 0911：原来这里是 (uid || sessionId || getClientIp(req))。
+  // x-session-id 是**客户端自己发的 header**，前端总会带上它，
+  // 于是 uid 为空时永远走 sessionId 分支 —— 每次请求换一个随机值即可重置配额，
+  // 免费额度形同虚设。配额必须只由服务端可控的东西决定：登录 uid 或 IP。
+  // 代价是同 IP 的匿名用户共享额度（NAT/办公室），这是可接受的，伪造才是不可接受的。
+  return (uid || getClientIp(req)) + '_numerology_' + day;
 }
 function _numUsage() { if (!_M.numerologyUsage) _M.numerologyUsage = {}; return _M.numerologyUsage; }
 

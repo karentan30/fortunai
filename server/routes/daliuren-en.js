@@ -40,8 +40,8 @@ function _uid(req) {
 function _quotaKey(req) {
   var uid = _uid(req);
   var day = new Date().toISOString().slice(0, 10);
-  var sessionId = req.headers['x-session-id'];
-  return (uid || sessionId || getClientIp(req)) + '_daliuren_' + day;
+  // 🔴 0911：去掉可伪造的 x-session-id（客户端可控 = 配额可重置）。理由见 numerology.js。
+  return (uid || getClientIp(req)) + '_daliuren_' + day;
 }
 
 function _dlrUsage() {

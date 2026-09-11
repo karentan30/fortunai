@@ -12,17 +12,36 @@ const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000; // 1小时
 const RATE_LIMIT_ANON  = 150;  // 未授权 IP：150次/小时（分章报告一次~11调用，需放宽）
 const RATE_LIMIT_AUTH  = 200;  // 有效 token 用户：200次/小时
 
-// 受限路由前缀
-const RATE_LIMITED_PREFIXES = [
-  '/api/bazi', '/api/hehun', '/api/ziwei', '/api/tarot', '/api/liuyao',
-  '/api/mianxiang', '/api/fengshui', '/api/xingming', '/api/daoshao',
-  '/api/daily', '/api/chat', '/api/saju', '/api/report'
+// ── 受限路由范围（0911 改为默认拒绝）───────────────────────────────────────
+// 旧实现是「白名单枚举」：不在 RATE_LIMITED_PREFIXES 里的路径一律放行。
+// 结果是后来新增的 40+ 个会烧 LLM 的路由（numerology / life-kline /
+// chart-archetype / identity-triad / western-astrology / best-timing /
+// love-destiny / hepan / support-chat / /api/shouxiang / /api/duanshi …）
+// **全都写了 rateLimitMiddleware 却完全不生效** —— 中间件第一行就 return next() 了。
+// 白名单式防护天然会随新增路由腐化，所以改成「/api/* 默认全拦 + 显式豁免」。
+//
+// ⚠️ 豁免名单里**绝不能少掉钱路** —— 支付回调的 IP 是 Stripe/微信/支付宝/中台，
+//    不受我们控制。一旦把这些限流掉，后果是「用户付了钱、回调被 429、不发货」。
+const RATE_LIMIT_EXEMPT_PREFIXES = [
+  '/api/stripe-webhook',   // Stripe 回调（raw body + 验签）
+  '/api/hub-callback',     // 中台订阅事件回调（HMAC 验签）
+  '/api/pay/',             // 微信/支付宝/中台的 notify + query + create 全在钱路上
+  '/api/orders',           // 订单查询（付款页会轮询）
+  '/api/success',          // 付款成功落地页
+  '/api/health',           // 健康检查
+  '/api/products',         // 静态商品表
 ];
 
-function isRateLimited(path) {
-  return RATE_LIMITED_PREFIXES.some(function(prefix) {
+function isExempt(path) {
+  return RATE_LIMIT_EXEMPT_PREFIXES.some(function(prefix) {
     return path === prefix || path.startsWith(prefix + '/') || path.startsWith(prefix + '?');
   });
+}
+
+function isRateLimited(path) {
+  if (!path || path.indexOf('/api') !== 0) return false; // 只覆盖 API
+  if (isExempt(path)) return false;
+  return true; // 默认拒绝：新增路由自动受保护，不需要记得回来加白名单
 }
 
 // 每5分钟清理已过期记录
@@ -41,6 +60,12 @@ setInterval(function() {
  */
 function rateLimitMiddleware(req, res, next) {
   if (!isRateLimited(req.path)) return next();
+
+  // 🔴 0911：本中间件既在 index.js:87 全局挂了一次，又在各路由挂了 89 次，
+  // 同一次请求会走两遍 → 计两次 → 实际限额只有标称的一半（匿名 75/h 而非 150/h）。
+  // 用请求级标记去重，比删掉 89 处调用点安全得多（漏删一处就没有保护了）。
+  if (req._syRateCounted) return next();
+  req._syRateCounted = true;
 
   var now = Date.now();
   var token = _tokenFromReq(req);
