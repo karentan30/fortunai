@@ -857,7 +857,14 @@ router.post('/pay/stripe/create', rateLimitMiddleware, async (req, res) => {
 
     var oid = pay.genOutTradeNo('st');
     var usdAmt = prod.amount;  // amount 字段单位分
-    _insCnOrder(oid, product, usdAmt, null, 'stripe');
+    // 🔴 0911: 这里原来硬编码 null —— 微信/支付宝两条通道都调 _payResolveUser 认人
+    //   （见 /pay/wechat/create、/pay/alipay/qr），只有 Stripe 这条漏了。
+    //   后果：已登录用户在报告页用卡付了 report_unlock_a，订单 user_id 仍是 null，
+    //   hasFullAccess 永远匹配不上 → 钱收了、全文一个字都不给。
+    //   _payResolveUser 内部优先走 _tokenFromReq(req)：header > body.token > sy_token cookie，
+    //   页面同源 fetch 会自动带 cookie，所以已登录用户不用改前端就能被认出来。
+    var uid = _payResolveUser(req.body && req.body.token, req);
+    _insCnOrder(oid, product, usdAmt, uid, 'stripe');
     var refCodeStripe = _extractRef(req);
     if (refCodeStripe) recordAffiliateOrder(oid, refCodeStripe, product, usdAmt / 100);
 

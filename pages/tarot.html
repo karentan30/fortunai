@@ -421,7 +421,7 @@ html.light-mode .hl-note{color:var(--text-mute)}
     <div class="spread-opt" onclick="selectSpread(this,5,'celtic')">
       <div class="spread-num">伍</div>
       <div class="spread-name">五芒星牌阵</div>
-      <div class="spread-price">$19</div>
+      <div class="spread-price">$19.90</div>
     </div>
   </div>
 </div>
@@ -469,7 +469,7 @@ html.light-mode .hl-note{color:var(--text-mute)}
     </div>
     <div class="upgrade-cta-btns">
       <button class="btn-redo" style="border-color:var(--gold-line-2);color:#2a1a06;background:linear-gradient(155deg,var(--gold-hi),var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep));font-weight:600;letter-spacing:.06em" onclick="upgradeTarot(this, 3)">三张牌阵（过去 · 现在 · 未来）$9 USD</button>
-      <button class="btn-redo" style="border-color:var(--gold-line);color:var(--gold-soft)" onclick="upgradeTarot(this, 5)">五芒星牌阵（五维深度）$19 USD</button>
+      <button class="btn-redo" style="border-color:var(--gold-line);color:var(--gold-soft)" onclick="upgradeTarot(this, 5)">五芒星牌阵（五维深度）$19.90 USD</button>
     </div>
   </div>
 
@@ -763,8 +763,8 @@ function showResult(question, drawn) {
 }
 
 function upgradeTarot(btnEl, n) {
-  var price = n === 3 ? 9 : 19;
-  var productId = 'tarot';
+  var price = n === 3 ? 9 : 19.90;
+  var productId = n === 3 ? 'tarot_3' : 'tarot_5';
   btnEl.disabled = true;
   btnEl.textContent = '跳转支付…';
   // Save context for paid return: question, topic, spread, AND the already-drawn cards
@@ -789,10 +789,10 @@ function upgradeTarot(btnEl, n) {
     })
   }).then(function(r){ return r.json(); }).then(function(data){
     if(data.url) window.location.href = data.url;
-    else { btnEl.disabled = false; btnEl.textContent = n===3?'三张牌阵$9':'五芒星$19'; }
+    else { btnEl.disabled = false; btnEl.textContent = n===3?'三张牌阵$9':'五芒星$19.90'; }
   }).catch(function(){
     btnEl.disabled = false;
-    btnEl.textContent = n===3?'三张牌阵$9':'五芒星$19';
+    btnEl.textContent = n===3?'三张牌阵$9':'五芒星$19.90';
   });
 }
 
