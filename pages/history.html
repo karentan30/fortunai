@@ -247,6 +247,10 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
   function toggleCard(el) {
     el.classList.toggle('expanded');
   }
+  // 🔴 0912: 卡片上的 onclick="toggleCard(this)" 是从**全局**作用域找函数的，
+  //   而本页整段脚本包在 IIFE 里 → 点卡片抛 ReferenceError: toggleCard is not defined，
+  //   卡片永远展不开。同页的 generateSummary 就是导出到 window 才生效的，toggleCard 漏了这一步。
+  window.toggleCard = toggleCard;
 
   // Auth check and data fetch
   if (!token) {
@@ -314,7 +318,7 @@ body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellips
 
 <script>
 (function(){var t=localStorage.getItem('sy_theme');if(t==='dark'){document.documentElement.classList.add('dark-mode');var b=document.getElementById('themeToggle');if(b)b.textContent='🌙';}})();
-function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'🌙';localStorage.setItem('sy_theme',l?'dark':'dark');}
+function toggleTheme(){var e=document.documentElement;var b=document.getElementById('themeToggle');e.classList.toggle('dark-mode');var l=e.classList.contains('dark-mode');if(b)b.textContent=l?'🌙':'🌙';localStorage.setItem('sy_theme',l?'dark':'light');}
 </script>
 <script src="/assets/js/common.js"></script>
 </body>

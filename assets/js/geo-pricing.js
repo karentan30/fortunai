@@ -1,10 +1,10 @@
 /**
- * public/geo-pricing.js
+ * assets/js/geo-pricing.js
  * 前端地理定价集成脚本
  * 在页面加载时自动检测IP地理位置，更新价格显示
  *
  * 使用方式:
- * 1. 在 HTML <head> 中引入: <script src="/geo-pricing.js"></script>
+ * 1. 在 HTML <head> 中引入: <script src="/assets/js/geo-pricing.js"></script>
  * 2. 在价格元素上使用 data-price 属性: <span data-price="bazi_full">¥99</span>
  * 3. 支付时调用 getPricingData() 获取地理信息
  */

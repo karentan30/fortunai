@@ -4,8 +4,28 @@ const router = express.Router();
 const fs = require('fs');
 const path = require('path');
 
-const TICKET_FILE = '/www/lumee/data/support_tickets.jsonl';
+// 可用 TICKET_FILE 覆盖：测试要能往临时文件里跑，不能真写线上工单库
+const TICKET_FILE = process.env.TICKET_FILE || '/www/lumee/data/support_tickets.jsonl';
 const NOTIFY_EMAIL = 'tan42204@gmail.com';
+
+// ── 后台鉴权 ──
+// 🔴 0912: 这几个后台接口原来**完全没有鉴权**。线上实测（不带任何 token）：
+//   GET /api/support-tickets          → 200，返回全部工单，含用户邮箱、提问原文、完整对话记录
+//   GET /api/support-messages/<邮箱>  → 200，按邮箱就能查到该用户的客服对话
+//   GET /api/support-stats            → 200，泄露工单总量与各产品分布
+//   POST /api/support-ticket/:id/status → 任何人可改工单状态
+//   同文件里的 /api/bookings 和隔壁 /api/ab-stats 都是要 token 的（403/401）——
+//   只有这几条漏了。工单里是真人邮箱和对话，属于用户个人信息，不能公开读。
+//   前端**没有任何页面**调这四条 GET（admin-support.html 一个 fetch 都没有），
+//   所以加鉴权不会打断任何现有功能；用户提交工单走的 POST /api/support-ticket 仍然公开。
+function requireAdmin(req, res) {
+  const provided = req.headers['x-admin-token'] || req.query.token || '';
+  if (!process.env.ADMIN_TOKEN || provided !== process.env.ADMIN_TOKEN) {
+    res.status(403).json({ error: 'forbidden' });
+    return false;
+  }
+  return true;
+}
 
 const SYSTEM_PROMPTS = {
   lumee: `你是鹿觅的客服助手，用简洁友好的中文帮用户解决问题。
@@ -190,11 +210,8 @@ router.post('/booking', async function(req, res) {
 
 // ── 预约列表（后台查询） ──
 router.get('/bookings', function(req, res) {
+  if (!requireAdmin(req, res)) return;
   try {
-    var provided = req.headers['x-admin-token'] || req.query.token || '';
-    if (!process.env.ADMIN_TOKEN || provided !== process.env.ADMIN_TOKEN) {
-      return res.status(403).json({ error: 'forbidden' });
-    }
     var list = [];
     try {
       list = fs.readFileSync(BOOKING_FILE, 'utf8').split('\n').filter(Boolean).map(JSON.parse);
@@ -292,6 +309,7 @@ router.post('/support-ticket', async function(req, res) {
 
 // ── 工单列表（后台查询） ──
 router.get('/support-tickets', function(req, res) {
+  if (!requireAdmin(req, res)) return;
   try {
     var tickets = [];
 
@@ -325,6 +343,7 @@ router.get('/support-tickets', function(req, res) {
 
 // ── 更新工单状态 ──
 router.post('/support-ticket/:id/status', function(req, res) {
+  if (!requireAdmin(req, res)) return;
   try {
     var ticketId = req.params.id;
     var newStatus = (req.body.status || '').toLowerCase();
@@ -374,6 +393,7 @@ router.post('/support-ticket/:id/status', function(req, res) {
 
 // ── 消息历史（持久化本地） ──
 router.get('/support-messages/:email', function(req, res) {
+  if (!requireAdmin(req, res)) return;
   try {
     var email = req.params.email;
     if (!email || !email.includes('@')) {
@@ -411,6 +431,7 @@ router.get('/support-messages/:email', function(req, res) {
 
 // ── 统计信息 ──
 router.get('/support-stats', function(req, res) {
+  if (!requireAdmin(req, res)) return;
   try {
     var tickets = [];
 
