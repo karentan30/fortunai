@@ -136,6 +136,15 @@ app.use('/api', adminRouter);
 // 认证
 app.use('/api/auth', authRouter);
 
+// 用户档案 / 改密码 / 订阅历史
+// 🔴 0912: routes/profile.js 和 routes/subscription-history.js 一直**存在但没被挂载**，
+//   所以 account.html 的「保存资料」「修改密码」「订阅历史」全是 404：
+//   改密码永远提示「当前密码错误」，订阅历史永远空表，且页面上没有任何报错。
+//   这两个 router 内部写的是 /profile /change-password /verify-password /history，
+//   所以挂 /api 下（和 payment/divination 同一挂法），真实路径 = account.html 里 fetch 的那些。
+app.use('/api', require('./routes/profile'));
+app.use('/api', require('./routes/subscription-history'));
+
 // 邀请裂变
 app.use('/api/referral', referralRouter);
 

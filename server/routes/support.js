@@ -113,6 +113,100 @@ async function sendTicketNotification(ticket) {
   }
 }
 
+// ── 预约咨询（life-events.html 的表单） ──
+// 🔴 0912: life-events.html 一直在 POST /api/booking，而服务端**没有这个路由** ——
+//   那个页面的「预约咨询」表单点了永远是「提交失败」（11 个报告页/落地页链到它）。
+//   没有复用 /api/support-ticket 的原因：那张表要求 email 含 @，
+//   而这里的联系方式字段是「微信号或手机号」，直接改指过去会让正常用户 100% 提交失败。
+//   所以要有一条收 {name, contact, service, birthday, note} 的口。
+// 可用 BOOKING_FILE 覆盖（本地验证/将来搬家都用得上）
+const BOOKING_FILE = process.env.BOOKING_FILE || '/www/lumee/data/shenyuan_bookings.jsonl';
+
+function sendBookingNotification(b) {
+  var resendKey = process.env.RESEND_API_KEY;
+  if (!resendKey) return Promise.resolve();
+  var rows = [
+    ['姓名', b.name], ['联系方式', b.contact], ['咨询项目', b.service],
+    ['出生时间', b.birthday || '未填'], ['需求描述', b.note || '未填'],
+    ['来源页面', b.source || '-'], ['时间', b.ts]
+  ].map(function (r) {
+    return '<tr><td style="padding:4px 8px;color:#666;width:80px">' + r[0] + '</td><td style="padding:4px 8px">'
+      + String(r[1] || '').replace(/</g, '&lt;') + '</td></tr>';
+  }).join('');
+  var html = '<div style="font-family:sans-serif;max-width:600px"><h2 style="color:#333">新预约咨询 · 善缘</h2>'
+    + '<table style="border-collapse:collapse;width:100%">' + rows + '</table>'
+    + '<p style="color:#888;font-size:13px;margin-top:14px">请尽快联系对方（联系方式见上）。</p></div>';
+  var fetchFn = global.fetch || require('node-fetch');
+  return fetchFn('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + resendKey },
+    body: JSON.stringify({
+      from: 'support@shenyuan.app',
+      to: [NOTIFY_EMAIL],
+      subject: '【善缘预约】' + (b.service || '咨询') + ' · ' + (b.name || ''),
+      html: html
+    })
+  });
+}
+
+router.post('/booking', async function(req, res) {
+  try {
+    var body = req.body || {};
+    var name = String(body.name || '').trim().slice(0, 50);
+    var contact = String(body.contact || '').trim().slice(0, 80);
+    var service = String(body.service || '').trim().slice(0, 60);
+    if (!name) return res.status(400).json({ error: '请填写姓名' });
+    if (!contact) return res.status(400).json({ error: '请填写联系方式' });
+
+    var booking = {
+      ts: new Date().toISOString(),
+      id: 'bk_' + Date.now(),
+      name: name,
+      contact: contact,
+      service: service,
+      birthday: String(body.birthday || '').trim().slice(0, 60),
+      note: String(body.note || '').trim().slice(0, 2000),
+      source: String(body.source || '').trim().slice(0, 60),
+      status: 'new',
+      ip: String(req.headers['x-forwarded-for'] || req.ip || '').replace(/^::ffff:/, '').slice(0, 40)
+    };
+
+    try {
+      fs.appendFileSync(BOOKING_FILE, JSON.stringify(booking) + '\n', 'utf8');
+    } catch (e) {
+      console.error('[booking] write failed:', e.message);
+    }
+
+    sendBookingNotification(booking).catch(function(e) {
+      console.error('[booking] notify error:', e.message);
+    });
+
+    res.json({ ok: true, message: '已收到，我们会尽快联系你' });
+  } catch (e) {
+    console.error('[booking]', e.message);
+    res.status(500).json({ error: '提交失败，请稍后重试' });
+  }
+});
+
+// ── 预约列表（后台查询） ──
+router.get('/bookings', function(req, res) {
+  try {
+    var provided = req.headers['x-admin-token'] || req.query.token || '';
+    if (!process.env.ADMIN_TOKEN || provided !== process.env.ADMIN_TOKEN) {
+      return res.status(403).json({ error: 'forbidden' });
+    }
+    var list = [];
+    try {
+      list = fs.readFileSync(BOOKING_FILE, 'utf8').split('\n').filter(Boolean).map(JSON.parse);
+    } catch (e) { /* 文件还没建过 = 还没有预约 */ }
+    list.sort(function(a, b) { return String(b.ts).localeCompare(String(a.ts)); });
+    res.json({ ok: true, bookings: list, count: list.length });
+  } catch (e) {
+    console.error('[bookings]', e.message);
+    res.status(500).json({ error: '读取失败' });
+  }
+});
+
 // ── AI 对话 ──
 router.post('/support-chat', async function(req, res) {
   try {

@@ -104,6 +104,44 @@ const getUserById     = {
     return u ? { id: u.id, email: u.email, name: u.name, ref_code: u.ref_code, created_at: u.created_at } : undefined;
   }
 };
+// 🔴 0912: account.html 的「保存资料 / 改密码」所依赖的两个口。
+// 原来 routes/profile.js 写的是 store._M.db.prepare(UPDATE users ...) —— 那是 SQLite 时代的
+// 残留，本项目 store 是 JSON 快照（_M.users + _persist），根本没有 .db，所以那三段代码
+// 一旦被调用就是 TypeError→500。加这两个 helper 让路由有真实可用的数据访问口。
+// getUserById 故意**不**返回 birthday/gender/password_hash：/api/auth/me 也在用它，
+// 返回 password_hash 等于把口令哈希发给前端。
+const getUserPrivateById = {
+  get(id) {
+    const u = _M.users.find(x => x.id === id);
+    return u ? {
+      id: u.id, email: u.email, name: u.name, ref_code: u.ref_code,
+      birthday: u.birthday || null, gender: u.gender || null,
+      password_hash: u.password_hash, created_at: u.created_at
+    } : undefined;
+  }
+};
+const updateUserFields = {
+  run(id, fields) {
+    const u = _M.users.find(x => x.id === id);
+    if (!u) return false;
+    const ALLOWED = ['name', 'birthday', 'gender', 'password_hash'];
+    for (const k of ALLOWED) if (fields && fields[k] !== undefined) u[k] = fields[k];
+    u.updated_at = new Date().toISOString();
+    _persist();
+    return true;
+  }
+};
+// 改密码后让「其他设备」下线。保留 keepToken 这一条（当前会话），
+// 否则用户改完密码当场被踢出，而页面上只弹「密码已修改」，体验是「刚改完就登录失效」。
+const deleteUserTokens = {
+  run(uid, keepToken) {
+    const before = _M.tokens.length;
+    _M.tokens = _M.tokens.filter(t => t.user_id !== uid || (keepToken && t.token === keepToken));
+    const removed = before - _M.tokens.length;
+    if (removed) _persist();
+    return removed;
+  }
+};
 const getUserByRefCode = {
   get(c) {
     if (!c) return undefined;
@@ -638,10 +676,13 @@ function _grantPeriodicPackExpiry(order) {
   _persist();
 }
 
-function _insCnOrder(oNo, product, amountCents, uid, channel) {
+// amountCents 的单位**随通道变**：微信/支付宝传 prod.amountCny(人民币分)，
+// Stripe 传 prod.amount(美元分)。0912 之前 currency 一律写死 'cny'，
+// 于是刷卡买的 $11.99 在库里被记成 1199 分人民币。加第 6 个参数记录真实币种（默认 cny 不变）。
+function _insCnOrder(oNo, product, amountCents, uid, channel, currency) {
   _M.orders.push({
     id: _M._id.o++, order_no: oNo, product: product, amount: amountCents,
-    currency: 'cny', user_id: uid || null, donor_name: '', contact: '', wish_text: '',
+    currency: currency || 'cny', user_id: uid || null, donor_name: '', contact: '', wish_text: '',
     stripe_session_id: null, channel: channel, trade_no: '',
     payment_status: 'pending', created_at: new Date().toISOString()
   });
@@ -913,6 +954,7 @@ module.exports = {
   _tokenFromReq,
   // 数据访问对象
   insertUser, getUserByEmail, getUserById, getUserByRefCode,
+  getUserPrivateById, updateUserFields, deleteUserTokens,
   getUserByGoogleSub, findOrCreateGoogleUser,
   insertToken, getToken,
   getUserOrders, insertOrder, insertReading, getReadingsByUser,

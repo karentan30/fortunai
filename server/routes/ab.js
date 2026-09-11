@@ -33,6 +33,11 @@ router.post('/ab-track', function(req, res) {
     product:   product,
     event:     event,
     sessionId: sessionId || null,
+    // 0912: 5 个落地页的 CTA 埋点带了 ref（来源）和 label（点了哪个按钮）。
+    // 原来这两个字段被直接丢掉 —— 事件收下了、归因没了，统计里看不出「哪条来源点的哪个按钮」。
+    // 只做透传，校验规则不变。
+    ref:       body.ref   ? String(body.ref).slice(0, 300)   : null,
+    label:     body.label ? String(body.label).slice(0, 80)  : null,
     ip:        (req.ip || '').replace(/^::ffff:/, '').slice(0, 40),
     ts:        new Date().toISOString()
   });

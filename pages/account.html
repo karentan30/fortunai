@@ -1016,7 +1016,9 @@ function renderSubscription(membership, history) {
       html += '<td>' + (h.start_date ? h.start_date.substring(0, 10) : '') + '</td>';
       html += '<td>' + (h.end_date ? h.end_date.substring(0, 10) : '') + '</td>';
       html += '<td>' + (h.tier || '标准') + '</td>';
-      html += '<td>¥' + (h.amount || 0) + '</td>';
+      // 金额由服务端算好带币种：订单里的 amount 是「分」，且 Stripe 单是美元、
+      // 微信/支付宝单是人民币，前端自己拼 '¥' 会把 $11.99 显示成 ¥1199
+      html += '<td>' + (h.amount_text || ('¥' + (h.amount || 0))) + '</td>';
       html += '</tr>';
     });
     html += '</tbody>';
