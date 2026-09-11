@@ -43,6 +43,10 @@ const RATE_LIMIT_EXEMPT_PREFIXES = [
   // 改默认拒绝后约 12 分钟就会开始 429。这两个接口只读、不烧 LLM，豁免无成本风险。
   // 教训：**任何以后新增的轮询页，都要先确认它打的接口在豁免名单里**，
   // 否则用户开着页面十几分钟就会开始报错。
+  // 注：整个 /api/referral 前缀被豁免，但其中的写接口 POST /api/referral/claim
+  // 自己挂了 simpleRateLimitMiddleware（referral.js:52），仍有独立限流；
+  // 且该接口有 authMiddleware + wasInvited 幂等 + 不能用自己的邀请码三重防刷。
+  // 所以这里的豁免不会把 /claim 变成无限制接口。
   '/api/referral',         // 排行榜轮询（10s 一次·只读·不烧 LLM）
 ];
 
