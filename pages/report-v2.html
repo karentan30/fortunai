@@ -759,6 +759,19 @@
     nextPaid();
   }
 
+  // 🔴 meta 比「年柱」章节到得晚时，afterChapter 已经按免费用户画了付费墙，
+  //    而 _hasFull 是 meta 到了才知道的 → 付费用户会一直盯着付费墙。
+  //    两条请求是并发赛跑：meta 要等排盘，章节要等 LLM 首字节，谁先到不保证。
+  //    所以 meta 一到就回头补救一次。
+  function resumePaidIfLate(){
+    if(!_hasFull || _paidRunning || _paidFailed) return;
+    if(_st['year']!=='done') return;                                // 还没判定过，交给 afterChapter
+    var slot=document.getElementById('paywall-slot');
+    if(!slot||!slot.querySelector('.wall')) return;                 // 没画过墙就不重复处理
+    slot.removeAttribute('data-done');
+    streamPaid();                                                   // 内部会清空付费墙并接上付费章节
+  }
+
   // 已付费但服务端仍判 locked（令牌/订单异常）：给明确出路，不要默默再画付费墙
   function renderPaidFallback(){
     var slot=document.getElementById('paywall-slot'); if(!slot) return;
@@ -854,7 +867,7 @@
               var ev=JSON.parse(line.slice(6));
               if(ev.type==='meta'){
                 got=true; clearTimeout(to);
-                if(ev.tier==='full'||ev.tier==='paid'||ev.locked===false){ _hasFull=true; }
+                if(ev.tier==='full'||ev.tier==='paid'||ev.locked===false){ _hasFull=true; try{ resumePaidIfLate(); }catch(e){} }
                 CHART=ev.chart||null;
                 try{ fillDeterministic(ev.chart||null,ev.pillars||null); }catch(e){}
                 ctrl.abort();
