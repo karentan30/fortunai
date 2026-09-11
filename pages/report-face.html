@@ -111,7 +111,7 @@
 <body>
 <div class="wrap">
   <div class="bar">
-    <div class="nav-back" onclick="history.back()"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="navBack">返回</span></div>
+    <div class="nav-back" onclick="goBack()"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="navBack">返回</span></div>
     <div class="step" id="stepLabel">面相 · 麻衣神相</div>
   </div>
 
@@ -210,7 +210,9 @@
     ckCn:'Please pay via WeChat / Alipay (coming soon).',
     ckFail:'Couldn’t open checkout — please try again.',
     ckNet:'Network error — please try again.',
-    ckGoing:'Opening checkout…'
+    ckGoing:'Opening checkout…',
+    timeoutMsg:'This is taking too long — please try again.',
+    retry:'Retry'
   } : {
     title:'Runae · 面相报告',
     navBack:'返回', step:'面相 · 麻衣神相',
@@ -255,7 +257,9 @@
     ckCn:'国内用户请用微信 / 支付宝支付（接入中）',
     ckFail:'跳转支付失败，请重试',
     ckNet:'网络异常，请重试',
-    ckGoing:'跳转支付…'
+    ckGoing:'跳转支付…',
+    timeoutMsg:'生成超时，请重试',
+    retry:'重试'
   };
 
   // 应用静态文案
@@ -372,11 +376,48 @@
       .trim();
   }
 
-  function fail(msg){
+  function fail(msg, retryAnalysis){
+    if(loadTimer){ clearInterval(loadTimer); loadTimer=null; }
     document.getElementById('loadStage').classList.add('hide');
     document.getElementById('reportStage').classList.remove('hide');
     document.getElementById('hero').innerHTML='';
-    document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br><button class="cta" style="max-width:220px;margin:14px auto 0" onclick="resetToUpload()">'+esc(T.resetBtn)+'</button></div>';
+    var btn = retryAnalysis
+      ? '<button class="cta" style="max-width:220px;margin:14px auto 0" onclick="retryAnalysis()">'+esc(T.retry)+'</button>'
+      : '<button class="cta" style="max-width:220px;margin:14px auto 0" onclick="resetToUpload()">'+esc(T.resetBtn)+'</button>';
+    document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br>'+btn+'</div>';
+  }
+
+  // 失败后重试：照片还在内存里就地重跑，否则回到上传
+  window.retryAnalysis=function(){
+    if(window._mxImageData && window._mxImageData.base64){ startAnalysis(); }
+    else { resetToUpload(); }
+  };
+
+  // 返回：同站有来源才回历史；新标签/外链直接打开时兜底回 pick（带 lang）
+  function goBack(){
+    var ref=document.referrer||'';
+    if(ref && ref.indexOf(location.origin)===0 && window.history && history.length>1){ history.back(); return; }
+    location.href='pick.html?lang='+LANG;
+  }
+
+  // 付费回流用：把照片压到 ~900px 再存 localStorage（原图 base64 常超配额）
+  function persistFaceImage(b64, mime){
+    try{
+      var img=new Image();
+      img.onload=function(){
+        try{
+          var max=900, w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+          var sc=(w&&h)?Math.min(1,max/Math.max(w,h)):1;
+          var cw=Math.round(w*sc)||w, ch=Math.round(h*sc)||h;
+          var cv=document.createElement('canvas'); cv.width=cw; cv.height=ch;
+          cv.getContext('2d').drawImage(img,0,0,cw,ch);
+          var out=cv.toDataURL('image/jpeg',0.72).split(',')[1];
+          if(out) localStorage.setItem('sy_last_mianxiang', JSON.stringify({base64:out, mimeType:'image/jpeg'}));
+        }catch(e){}
+      };
+      img.onerror=function(){};
+      img.src='data:'+(mime||'image/jpeg')+';base64,'+b64;
+    }catch(e){}
   }
 
   function resetToUpload(){
@@ -395,6 +436,7 @@
 
   // ── 加载文案轮播（观相仪式）──
   function startLoadRitual(){
+    if(loadTimer){ clearInterval(loadTimer); loadTimer=null; }
     var lines=T.loadLines;
     var el=document.getElementById('loadmsg'); var i=0;
     el.textContent=lines[0];
@@ -403,6 +445,7 @@
   }
 
   // ── 调 /api/mianxiang ──
+  var LOAD_TIMEOUT_MS=60000; // 服务端挂起时不再无限轮播，超时进可重试失败态
   function startAnalysis(){
     if(!hasImage) return;
     var imageBase64 = window._mxImageData ? window._mxImageData.base64 : null;
@@ -412,14 +455,22 @@
     var btn=document.getElementById('goBtn'); btn.disabled=true; btn.innerHTML=T.goBusy;
 
     document.getElementById('uploadStage').classList.add('hide');
+    document.getElementById('reportStage').classList.add('hide');
     document.getElementById('loadStage').classList.remove('hide');
     window.scrollTo(0,0);
     startLoadRitual();
 
+    // 存一份供付费回流复用（照片不能丢）
+    persistFaceImage(imageBase64, mimeType);
+
     var token = localStorage.getItem('sy_token') || '';
+    var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
+    var aborted=false;
+    var to=setTimeout(function(){ aborted=true; if(ctrl) ctrl.abort(); }, LOAD_TIMEOUT_MS);
     fetch('/api/mianxiang',{
       method:'POST',
       headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+      signal: ctrl?ctrl.signal:undefined,
       body:JSON.stringify({ question:EN?'Please give me a complete face reading using the Ma Yi physiognomy system':'请按麻衣神相体系给我做一次完整的面相分析', imageBase64:imageBase64, mimeType:mimeType, lang:LANG })
     })
     .then(function(res){
@@ -431,15 +482,30 @@
       return res.json();
     })
     .then(function(data){
+      clearTimeout(to);
       if(loadTimer){ clearInterval(loadTimer); loadTimer=null; }
       if(!data || !data.reading) throw new Error(T.emptyReading);
       renderReport(data.reading, data.tier, data.locked);
     })
     .catch(function(err){
+      clearTimeout(to);
       if(loadTimer){ clearInterval(loadTimer); loadTimer=null; }
-      fail(T.genProblem+(err.message||T.tryLater));
+      if(aborted || (err && err.name==='AbortError')) fail(T.timeoutMsg, true);
+      else fail(T.genProblem+(err.message||T.tryLater), true);
     });
   }
+
+  // ── 付费回流：?paid=1 → 用上次的照片重跑（此时 tier 已升级，locked=false）──
+  (function handlePaidReturn(){
+    if(location.search.indexOf('paid=1')<0) return;
+    var saved=null; try{ saved=JSON.parse(localStorage.getItem('sy_last_mianxiang')||'null'); }catch(e){}
+    if(window.history.replaceState) window.history.replaceState({},'','/pages/report-face.html?lang='+LANG);
+    if(!saved||!saved.base64) return;
+    window._mxImageData={base64:saved.base64, mimeType:saved.mimeType||'image/jpeg'};
+    hasImage=true;
+    document.getElementById('goBtn').disabled=false;
+    startAnalysis();
+  })();
 
   // ── 渲染报告（.read 分段 + 付费墙 + advisor）──
   function renderReport(reading, tier, locked){
@@ -478,7 +544,7 @@
     if(isLocked){
       html+='<div class="wall"><h4>'+esc(T.wallH)+'</h4><p>'+esc(T.wallP)+'</p>'
         +'<ul>'+T.wallLi.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'
-        +'<button class="cta gold" id="unlockBtn" onclick="goCheckout(\'mianxiang_full\')">'+esc(T.wallBtn)+'</button>'
+        +'<button class="cta gold" id="unlockBtn" onclick="goCheckout(\'mianxiang_full\',this)">'+esc(T.wallBtn)+'</button>'
         +'<div class="price">'+T.wallPrice+'</div></div>';
     }
 
@@ -486,7 +552,7 @@
     // Runae 顾问 advisor
     html+='<div class="adv"><div class="k">'+esc(T.advK)+'</div><h4>'+T.advH+'</h4>'
       +'<ul>'+T.advLi.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'
-      +'<button class="sbtn" onclick="goCheckout(\'member_monthly\')">'+esc(T.advBtn)+'</button></div>';
+      +'<button class="sbtn" onclick="goCheckout(\'member_monthly\',this)">'+esc(T.advBtn)+'</button></div>';
 
     // 换照重测
     html+='<div class="reset" onclick="resetToUpload()">'+esc(T.resetLine)+'</div>';
@@ -498,18 +564,22 @@
     window.scrollTo(0,0);
   }
 
-  window.goCheckout=function(product){
-    var btn=document.getElementById('unlockBtn');
-    if(product==='mianxiang_full' && btn){ btn.disabled=true; btn.textContent=T.ckGoing; }
+  window.goCheckout=function(product,btn){
+    btn = btn || (product==='mianxiang_full' ? document.getElementById('unlockBtn') : null);
+    var orig=null;
+    if(btn){ if(btn.disabled) return; orig=btn.textContent; btn.disabled=true; btn.textContent=T.ckGoing; }
+    var restore=function(){ if(btn){ btn.disabled=false; if(orig!==null) btn.textContent=orig; } };
     fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({product:product,token:localStorage.getItem('sy_token')||'',
         successUrl:location.origin+'/pages/report-face.html?paid=1&lang='+LANG,cancelUrl:location.href})})
      .then(function(r){return r.json();}).then(function(d){
-       if(d.url){ location.href=d.url; }
-       else if(d.channel==='cn'){ alert(T.ckCn); if(btn){btn.disabled=false;btn.textContent=T.wallBtn;} }
-       else { alert(T.ckFail); if(btn){btn.disabled=false;btn.textContent=T.wallBtn;} }
-     }).catch(function(){ alert(T.ckNet); if(btn){btn.disabled=false;btn.textContent=T.wallBtn;} });
+       if(d.url){ location.href=d.url; return; }
+       if(d.channel==='cn'){ alert(T.ckCn); }
+       else { alert(T.ckFail); }
+       restore();
+     }).catch(function(){ alert(T.ckNet); restore(); });
   };
 </script>
+<script src="/pages/report-export.js" defer></script>
 </body>
 </html>

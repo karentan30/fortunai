@@ -229,6 +229,7 @@
     disclaimer:'<div style="height:1px;background:linear-gradient(90deg,transparent,rgba(178,58,84,.2),transparent);margin:6px auto 0;width:80%"></div><div style="font-size:10.5px;color:var(--ink-3);text-align:center;letter-spacing:.05em;padding:12px 18px;line-height:1.8">🤖 本报告由 AI 生成，仅供娱乐参考。所涉结婚年份、择日、流年基调等<strong style="color:var(--rose)">均非婚姻决策建议</strong>，不代替医学 / 法律 / 投资建议。是否走入婚姻，请以你们的真心与现实考量为准。</div>'
   };
   document.documentElement.lang = EN ? 'en' : 'zh-CN';
+  document.title = EN ? 'Runae · Compatibility Report' : 'Runae · 合婚报告';
   var _pl = EN ? '/legal-en.html#privacy' : '/legal-CN.html#privacy';
   document.getElementById('hBack').textContent = T.back;
   document.getElementById('hStep').textContent = T.step;
@@ -349,6 +350,7 @@
       mode: 'marriage', lang: LANG
     };
     // 存一份供付费回流复用
+    LAST_HEHUN_BODY = body;
     try { localStorage.setItem('sy_last_hehun', JSON.stringify(body)); } catch(e){}
 
     document.getElementById('collect').style.display = 'none';
@@ -359,6 +361,8 @@
 
   // ══════════ 报告渲染 ══════════
   var WX_ICON = {'木':'🌿','火':'🔥','土':'🪨','金':'⚪','水':'💧'};
+  // 最近一次合婚请求 body：下单前持久化，供 ?paid=1 回流重放（token 在重放发送时注入）
+  var LAST_HEHUN_BODY = null;
 
   function relLabel(rel){
     return rel === '相生' ? T.relTable['相生'] :
@@ -418,6 +422,7 @@
   var DISCLAIMER = T.disclaimer;
 
   function streamHehun(body){
+    LAST_HEHUN_BODY = body;
     var bodyEl = document.getElementById('body');
     var meta = null;
     var accumulated = '';
@@ -427,10 +432,11 @@
     // 先取确定性预览（真日主五行/关系/分数）以渲染顶部合盘卡
     var previewData = null;
     var pbody = { p1Year:body.p1Year, p1Month:body.p1Month, p1Day:body.p1Day, p1Gender:body.p1Gender,
-                  p2Year:body.p2Year, p2Month:body.p2Month, p2Day:body.p2Day, p2Gender:body.p2Gender };
+                  p2Year:body.p2Year, p2Month:body.p2Month, p2Day:body.p2Day, p2Gender:body.p2Gender,
+                  token: localStorage.getItem('sy_token') || '' };
     if (body.p1Hour !== '' && body.p1Hour != null) pbody.p1Hour = body.p1Hour;
     if (body.p2Hour !== '' && body.p2Hour != null) pbody.p2Hour = body.p2Hour;
-    fetch('/api/hehun/preview', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(pbody) })
+    fetch('/api/hehun/preview', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify(pbody) })
       .then(function(r){ return r.json(); }).then(function(d){ if (d && d.ok){ previewData = d; if (meta) renderHero(meta, previewData); } }).catch(function(){});
 
     function paint(){
@@ -448,7 +454,9 @@
 
     fetch('/api/hehun/stream', {
       method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
-      signal: ctrl.signal, body: JSON.stringify(body)
+      signal: ctrl.signal,
+      // 带上 token：旧会话 token 只在 localStorage 时，服务端才判得出 paid 档（否则回流仍 locked）
+      body: JSON.stringify(Object.assign({}, body, { token: localStorage.getItem('sy_token') || '' }))
     }).then(function(res){
       clearTimeout(to);
       if (!res.ok || !res.body){ fail(T.genFail); return; }
@@ -494,6 +502,8 @@
   window.goCheckout = function(product){
     var btn = document.getElementById('unlockBtn');
     if (btn){ btn.disabled = true; btn.textContent = T.jumping; }
+    // 下单前把「足够回流重放」的请求 body 存好（重放发送时会自动补上 token）
+    try { if (LAST_HEHUN_BODY) localStorage.setItem('sy_last_hehun', JSON.stringify(LAST_HEHUN_BODY)); } catch(e){}
     fetch('/api/create-checkout', {
       method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include',
       body: JSON.stringify({
@@ -525,5 +535,6 @@
     streamHehun(saved);
   })();
 </script>
+<script src="/pages/report-export.js" defer></script>
 </body>
 </html>

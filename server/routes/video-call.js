@@ -13,8 +13,7 @@
 
 const router = require('express').Router();
 const agora = require('../lib/agora-integration');
-const { authMiddleware } = require('../middleware');
-const { _M, _persist } = require('../lib/store');
+const { _M, _persist, _tokenFromReq } = require('../lib/store');
 
 // ── 初始化存储 ──
 if (!_M.videoCallSessions) _M.videoCallSessions = [];
@@ -28,23 +27,43 @@ function findSession(sessionId) {
 }
 
 /**
- * Helper: 解析 Bearer token
+ * Helper: 认出调用者是谁。
+ *
+ * 原来这里有两个空壳（extractToken 解析了但没人用、getUserIdFromToken 永远返回 null），
+ * 于是 /token 只凭 body 里的 sessionId 就签发 Agora 发布者凭证——任何拿到 sessionId
+ * 的人都能加入通话频道。/end-session、/session/:id、/recording/:sessionId 同样裸奔。
+ *
+ * 走 _tokenFromReq（header > body > httpOnly cookie），前端拿不到 cookie 时
+ * 发出的空 "Bearer " 不会把它短路成匿名。
  */
-function extractToken(req) {
-  const authHeader = req.headers.authorization || '';
-  const match = authHeader.match(/^Bearer\s+(.+)$/);
-  return match ? match[1] : null;
+function resolveCaller(req) {
+  const t = _tokenFromReq(req);
+  if (!t) return null;
+  const row = (_M.tokens || []).find(x => x.token === t);
+  if (!row) return null;
+  const user = (_M.users || []).find(u => String(u.id) === String(row.user_id));
+  return user || { id: row.user_id };
 }
 
-/**
- * Helper: 简单的咨询师/用户识别（实际应从 users 表关联）
- * 这里假设有 req.user（由 authMiddleware 设置）
- */
-function getUserIdFromToken(token) {
-  if (!token) return null;
-  // 实际应从 store.getToken.get(token) 取，这里简化
-  // TODO: 依赖 store.js 导出 getToken 接口
-  return null;
+/** 会话只有当事人（用户本人 / 咨询师）能碰 */
+function isParty(session, caller) {
+  if (!caller) return false;
+  const uid = String(caller.id);
+  return String(session.userId) === uid || String(session.consultantId) === uid;
+}
+
+/** 401 未登录 / 403 非当事人 */
+function denyUnlessParty(req, res, session) {
+  const caller = resolveCaller(req);
+  if (!caller) {
+    res.status(401).json({ error: '请先登录后再加入通话' });
+    return false;
+  }
+  if (!isParty(session, caller)) {
+    res.status(403).json({ error: '无权访问该通话' });
+    return false;
+  }
+  return true;
 }
 
 // ══════════════════════════════════════════
@@ -60,8 +79,12 @@ function getUserIdFromToken(token) {
 // }
 router.post('/start-session', (req, res) => {
   try {
-    // 1. 权限检查（可选：验证是否为合法咨询师）
-    // TODO: 从 req.user 检查权限
+    // 1. 权限检查：至少必须是已登录用户（发起方=咨询师，身份字段仍取自 body）
+    // TODO: 咨询师角色体系还没有，等有了要在这里核对 consultantId 属于调用者本人，
+    //       否则任何登录用户都能以任意 consultantId 开一个会话。
+    if (!resolveCaller(req)) {
+      return res.status(401).json({ error: '请先登录' });
+    }
 
     if (!agora.isAgoraReady()) {
       return res.status(503).json({ error: 'Agora 服务未配置' });
@@ -133,10 +156,9 @@ router.post('/start-session', (req, res) => {
 // POST /api/video-call/token
 // ══════════════════════════════════════════
 // 用户加入通话，获取 token
-// body: {
-//   sessionId: "uuid...",
-//   token: "user-token..." (auth token for user lookup)
-// }
+// body: { sessionId: "uuid..." }
+// 调用者身份从 Authorization 头 / body.token / sy_token cookie 解析，
+// 必须与 session.userId 或 session.consultantId 一致。
 router.post('/token', (req, res) => {
   try {
     if (!agora.isAgoraReady()) {
@@ -144,7 +166,6 @@ router.post('/token', (req, res) => {
     }
 
     const { sessionId } = req.body;
-    const authToken = extractToken(req);
 
     if (!sessionId) {
       return res.status(400).json({ error: '缺少 sessionId' });
@@ -155,6 +176,9 @@ router.post('/token', (req, res) => {
     if (!session) {
       return res.status(404).json({ error: '会话不存在' });
     }
+
+    // 2b. 只有当事人能拿到发布者凭证
+    if (!denyUnlessParty(req, res, session)) return;
 
     if (session.status === 'ended') {
       return res.status(410).json({ error: '通话已结束' });
@@ -219,6 +243,9 @@ router.post('/end-session', (req, res) => {
       return res.status(404).json({ error: '会话不存在' });
     }
 
+    // 结束通话会写时长（后续要计费），只允许当事人
+    if (!denyUnlessParty(req, res, session)) return;
+
     // 更新会话
     session.status = 'ended';
     session.endTime = new Date().toISOString();
@@ -277,6 +304,9 @@ router.get('/session/:id', (req, res) => {
       return res.status(404).json({ error: '会话不存在' });
     }
 
+    // 会话里有频道名与双方邮箱，只给当事人看
+    if (!denyUnlessParty(req, res, session)) return;
+
     res.json({
       ok: true,
       session: {
@@ -310,6 +340,13 @@ router.get('/recording/:sessionId', (req, res) => {
       return res.status(404).json({ error: '暂无录音' });
     }
 
+    // 录音是通话内容，只有当事人能拿 URL
+    const session = findSession(sessionId);
+    if (!session) {
+      return res.status(404).json({ error: '会话不存在' });
+    }
+    if (!denyUnlessParty(req, res, session)) return;
+
     res.json({
       ok: true,
       recording: {
@@ -340,3 +377,7 @@ router.get('/health', (req, res) => {
 });
 
 module.exports = router;
+// 供测试直接验证鉴权判定（Express 路由要 Agora 配好才会走到这些分支）
+module.exports._resolveCaller = resolveCaller;
+module.exports._isParty = isParty;
+module.exports._denyUnlessParty = denyUnlessParty;

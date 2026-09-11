@@ -221,7 +221,7 @@ function buildIndex(topics, excerpts) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>善缘命理博客 | 八字塔罗紫微知识库</title>
-<meta name="description" content="善缘命理博客：深度解读八字命理、塔罗占卜、紫微斗数、六爻、风水。127,000+读者的命理知识库，每周更新。">
+<meta name="description" content="善缘命理博客：深度解读八字命理、塔罗占卜、紫微斗数、六爻、风水。面向中文读者的命理知识库，每周更新。">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="${BASE_URL}/blog/">
 <meta property="og:title" content="善缘命理博客 | 八字塔罗紫微知识库">

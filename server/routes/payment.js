@@ -97,7 +97,8 @@ function _payResolveUser(token, req) {
     }
   }
   if (!token) return null;
-  var t2 = String(token).replace('Bearer ', '');
+  var _m = /^Bearer\s+(\S.*)$/i.exec(String(token).trim());
+  var t2 = _m ? _m[1].trim() : String(token).trim();
   var row2 = getToken.get(t2);
   return row2 ? row2.user_id : null;
 }
@@ -487,9 +488,39 @@ router.post('/hub-callback', (req, res) => {
 });
 
 // ══════════════════════════════════════════
+// 支付成功页的核验
+// ══════════════════════════════════════════
+// 返回 true=已付 / false=未付 / null=无法核验（没带 session_id、没配 Stripe、或 Stripe 报错）
+// 以前这一页只读 URL 上的 ?product= 就渲染「功德圆满」，构造一个 URL 就能看到「支付成功」。
+// 没有资损（真正解锁走 gateReportAccess），但用户会被自己伪造的成功页误导，所以补上核验。
+async function verifySessionPaid(sessionId) {
+  if (!sessionId) return null;
+  if (!stripe) return null;
+  try {
+    const s = await stripe.checkout.sessions.retrieve(sessionId);
+    if (!s) return false;
+    // 卡支付立即 paid；支付宝/微信是异步到账，complete 但 payment_status 可能还停在 unpaid
+    if (s.payment_status === 'paid') return true;
+    if (s.status === 'complete') return false;   // 已提交但还没到账 → 前端继续轮询
+    return false;
+  } catch (e) {
+    console.error('[SUCCESS VERIFY ERR]', e.message);
+    return null;
+  }
+}
+
+// GET /api/payment-status — 给成功页轮询用（支付宝/微信异步到账）
+router.get('/payment-status', rateLimitMiddleware, async (req, res) => {
+  const v = await verifySessionPaid(String(req.query.session_id || ''));
+  res.json({ paid: v === true, verified: v !== null });
+});
+
+// ══════════════════════════════════════════
 // GET /api/success — 支付成功页
 // ══════════════════════════════════════════
-router.get('/success', (req, res) => {
+router.get('/success', async (req, res) => {
+  const _sid = String(req.query.session_id || '');
+  const _paid = (await verifySessionPaid(_sid)) === true;
   const html = `<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>支付成功 · 善缘</title>
@@ -549,6 +580,7 @@ const CONFIGS={
   joss_supreme:{icon:'⛩️',title:'至尊法事已受理',sub:'大法事 · 隆重承办',benefits:['全套冥器 + 多位法师联诵','直播仪式 实时观看','专属报告 + 法事证书'],btn:'查看订单详情',url:'/pages/daishao-en.html?order=1'},
 };
 const DEFAULT={icon:'🙏',title:'功德圆满',sub:'支付成功 · 天机已启',benefits:['支付成功确认','善缘已收到您的心意','如有疑问请联系客服'],btn:'返回首页',url:'/'};
+const SERVER_PAID=${_paid ? 'true' : 'false'}, SID=${JSON.stringify(_sid)};
 const params=new URLSearchParams(location.search);
 const cfg=CONFIGS[params.get('product')||'']||DEFAULT;
 document.getElementById('successIcon').textContent=cfg.icon;
@@ -560,8 +592,45 @@ document.getElementById('benefitBox').innerHTML=cfg.benefits.map(b=>'<div class=
 const pc=document.getElementById('particles');
 for(let i=0;i<15;i++){const p=document.createElement('div');p.className='p';p.style.cssText='left:'+Math.random()*100+'%;--d:'+(3+Math.random()*4)+'s;--delay:-'+(Math.random()*4)+'s';pc.appendChild(p);}
 if(window.opener){window.opener.postMessage('payment_complete','*');}
-let t=3;const cd=document.getElementById('countdown');
-const timer=setInterval(()=>{t--;cd.textContent=t+'秒后自动跳转…';if(t<=0){clearInterval(timer);location.href=cfg.url;}},1000);
+const cd=document.getElementById('countdown');
+
+// 服务端没核验到已付 → 不谎称「支付成功」，改成确认中并轮询（支付宝/微信异步到账）
+if(!SERVER_PAID){
+  document.getElementById('successIcon').textContent='⏳';
+  document.getElementById('successTitle').textContent='订单确认中';
+  document.getElementById('successSub').textContent='正在与支付渠道确认，请稍候…';
+  document.getElementById('ctaBtn').textContent='先去查看';
+  if(!SID){
+    // 没有会话号可核验（例如代烧这类另走后端建单的流程）：不谎称成功，也不再空轮询
+    cd.textContent='我们正在处理你的订单，稍后可在账户或邮箱查看。';
+  } else {
+    cd.textContent='确认到账后会自动解锁；本页无需关闭。';
+    let n=0;
+    const poll=setInterval(function(){
+      n++;
+      if(n>20){ clearInterval(poll); cd.textContent='仍未确认到账。若已扣款，请稍后刷新本页或联系客服。'; return; }
+      fetch('/api/payment-status?session_id='+encodeURIComponent(SID))
+        .then(function(r){return r.json();})
+        .then(function(d){
+          if(d&&d.paid){
+            clearInterval(poll);
+            document.getElementById('successIcon').textContent=cfg.icon;
+            document.getElementById('successTitle').textContent=cfg.title;
+            document.getElementById('successSub').textContent=cfg.sub;
+            document.getElementById('ctaBtn').textContent=cfg.btn;
+            startCountdown();
+          }
+        }).catch(function(){});
+    },2500);
+  }
+} else {
+  startCountdown();
+}
+
+function startCountdown(){
+  let t=3;cd.textContent=t+'秒后自动跳转…';
+  const timer=setInterval(()=>{t--;cd.textContent=t+'秒后自动跳转…';if(t<=0){clearInterval(timer);location.href=cfg.url;}},1000);
+}
 </script>
 </body></html>`;
   res.send(html);
@@ -605,7 +674,9 @@ router.post('/pay/wechat/create', rateLimitMiddleware, async (req, res) => {
     if (!prod) return res.status(400).json({ error: '无效的产品 ID', valid: Object.keys(PRODUCTS) });
     if (!hub.HUB_SECRET) return res.status(400).json({ error: '支付服务暂不可用' });
 
-    var uid = _payResolveUser(req.body && (req.body.token || req.headers['authorization']), req);
+    // _payResolveUser(token, req) 内部优先用 _tokenFromReq(req)（header > body > cookie），
+    // 这里的 token 只是第二兜底，不用再手工读 Authorization 头。
+    var uid = _payResolveUser(req.body && req.body.token, req);
     var method = (req.body && (req.body.method || req.body.channel) || 'wechat').toLowerCase();
     if (!['wechat', 'alipay', 'stripe'].includes(method)) method = 'wechat';
     var oid = pay.genOutTradeNo(method === 'alipay' ? 'ali' : method === 'stripe' ? 'st' : 'wx');
@@ -703,7 +774,9 @@ router.post('/pay/alipay/qr', rateLimitMiddleware, async (req, res) => {
     if (!prod) return res.status(400).json({ error: '无效的产品 ID', valid: Object.keys(PRODUCTS) });
     if (!hub.HUB_SECRET) return res.status(400).json({ error: '支付服务暂不可用' });
 
-    var uid = _payResolveUser(req.body && (req.body.token || req.headers['authorization']), req);
+    // _payResolveUser(token, req) 内部优先用 _tokenFromReq(req)（header > body > cookie），
+    // 这里的 token 只是第二兜底，不用再手工读 Authorization 头。
+    var uid = _payResolveUser(req.body && req.body.token, req);
     var oid = pay.genOutTradeNo('ali');
     var cnyAmtAli = prod.amountCny || prod.amount;
     _insCnOrder(oid, product, cnyAmtAli, uid, 'alipay');

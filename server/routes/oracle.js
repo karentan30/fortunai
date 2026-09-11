@@ -16,7 +16,7 @@
 
 const router = require('express').Router();
 const { deepseekChat, buildReadingPrompt } = require('../lib/llm');
-const { insertReading, memberTier, _M, _persist } = require('../lib/store');
+const { insertReading, memberTier, _M, _persist, _tokenFromReq } = require('../lib/store');
 const { getClientIp, resolveUserFromToken } = require('../lib/utils');
 const { rateLimitMiddleware } = require('../middleware');
 
@@ -39,7 +39,7 @@ const HONESTY_EN =
 // ══════════════════════════════════════════
 function _uid(req) {
   return resolveUserFromToken(
-    req.headers['authorization'] || (req.body && req.body.token),
+    _tokenFromReq(req),
     { get: (t) => { const row = _M.tokens.find(x => x.token === t); return row || null; } }
   );
 }

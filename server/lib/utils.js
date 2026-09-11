@@ -33,7 +33,11 @@ function getClientIp(req) {
 // ── Token 解析工具 ──
 function resolveUserFromToken(token, getToken) {
   if (!token) return null;
-  var t = String(token).replace('Bearer ', '');
+  // 允许传入原始请求头，但只在「Bearer 后面确实有东西」时才剥离——
+  // 否则 'Bearer '（前端拿不到 httpOnly cookie 时发出的空令牌）会被当成合法令牌去查表。
+  var _raw = String(token).trim();
+  var _m = /^Bearer\s+(\S.*)$/i.exec(_raw);
+  var t = _m ? _m[1].trim() : _raw;
   var row = getToken.get(t);
   return row ? row.user_id : null;
 }

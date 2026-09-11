@@ -802,13 +802,9 @@ function handlePaidReturn() {
   try { saved = JSON.parse(localStorage.getItem('sy_last_tarot') || 'null'); } catch(e){}
   if (!saved) return;
   if (window.history.replaceState) window.history.replaceState({}, '', '/pages/tarot.html');
-  // Mark paid unlock in localStorage so paywall gate recognizes it
+  // 🔴 收入漏洞修复(2026-09-11): 旧版此处凭 ?paid=1&spread=N 直接写 localStorage 解锁付费牌阵,
+  //   无任何服务端校验。现改为: 只有 /api/tarot/stream 返回 locked=false(服务端已鉴权)才落 localStorage。
   var params = new URLSearchParams(location.search);
-  var spreadParam = parseInt(params.get('spread') || saved.spread || '3');
-  try {
-    if (spreadParam === 3) localStorage.setItem('sy_paid_tarot_3', '1');
-    if (spreadParam === 5) localStorage.setItem('sy_paid_tarot_5', '1');
-  } catch(e){}
   var spread = parseInt(params.get('spread') || saved.spread || '3');
   var positions = spread === 3 ? POSITIONS_3 : POSITIONS_5;
 
@@ -884,7 +880,15 @@ function handlePaidReturn() {
           if (!line.startsWith('data: ')) return;
           try {
             var ev = JSON.parse(line.slice(6));
-            if (ev.type === 'chunk') {
+            if (ev.type === 'meta') {
+              // 🔴 服务端确认已解锁后才写入付费牌阵标记(不再凭 URL 参数解锁)
+              if (ev.locked === false) {
+                try {
+                  if (spread === 3) localStorage.setItem('sy_paid_tarot_3', '1');
+                  if (spread === 5) localStorage.setItem('sy_paid_tarot_5', '1');
+                } catch(e) {}
+              }
+            } else if (ev.type === 'chunk') {
               accumulated += ev.content;
               // Stream interp portion live; advice shown on done
               var split = splitAdvice(accumulated);

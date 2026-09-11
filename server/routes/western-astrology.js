@@ -25,6 +25,26 @@ const { deepseekStream, deepseekChat, buildReadingPrompt } = require('../lib/llm
 const { buildWesternBlock } = require('../lib/western-astro-engine/prompt-block');
 const { computeWesternChart } = require('../lib/western-astro-engine/index');
 const { rateLimitMiddleware } = require('../middleware');
+const { gateReportAccess, refundMonthlyReportCredit } = require('../lib/store');
+
+// 🔴 P0-C pattern (mirrors divination.js): if this request consumed a monthly-member
+//   report credit and the LLM then fails, give the credit back once. No-op for
+//   single-purchase / full members (req._syCreditUid is only set when a credit was used).
+function _refundCreditOnFail(req) {
+  try {
+    if (req && req._syCreditUid != null) {
+      refundMonthlyReportCredit(req._syCreditUid, req);
+      req._syCreditUid = null; // idempotent: only refund once
+    }
+  } catch (e) {}
+}
+
+// Locked-preview teaser shown when the visitor has no access to the full reading.
+const LOCKED_TEASER = {
+  en: 'The full reading — 12 houses, planet-by-planet interpretation, aspect cross-checks and transits — is locked. Unlock to read the complete chart.',
+  zh: '完整解读——十二宫、逐星深度解读、相位交叉印证与行运——尚未解锁。解锁后可阅读完整星盘。',
+  ko: '전체 해석(12하우스, 행성별 해석, 각도 교차 검증, 트랜짓)이 잠겨 있습니다. 잠금을 해제하면 전체 차트를 읽을 수 있습니다.',
+};
 
 let mon = null;
 try {
@@ -163,24 +183,43 @@ router.post('/western-astrology', rateLimitMiddleware, async (req, res) => {
       return res.status(500).json({ error: 'Chart calculation failed — please check your input and try again.' });
     }
 
-    const chartBlock = buildWesternBlock({
-      birthYear: input.year, birthMonth: input.month, birthDay: input.day,
-      birthHour: input.hour, birthMinute: input.minute,
-      lat: input.lat, lng: input.lng, tz: input.tz,
-    });
-
-    const messages = buildMessages(input, chartBlock);
+    // ── Paid-access gate ─────────────────────────────────────────
+    // Free for everyone : the real computed chart (frontend derives the element /
+    //   aspect cards from the `chart` event — existing free content, untouched).
+    // Paid              : the streamed AI interpretation. Without access we emit the
+    //   chart + meta + a single `locked` event and produce ZERO reading text
+    //   (mirrors /api/bazi/chapter so the two pages behave identically).
+    const acc = gateReportAccess(req, ['astrology', 'astrology_full', '占星', '星盘']);
+    const full = acc.full;
 
     // Return chart data immediately + stream AI reading
     // Use streaming response: send chart JSON first, then stream text
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no');
 
-    // First event: structured chart data for the frontend
+    // Event 1: structured chart data (free tier)
     res.write(`data: ${JSON.stringify({ type: 'chart', chart })}\n\n`);
+    // Event 2: access tier — the frontend draws the paywall from this, not unconditionally
+    res.write(`data: ${JSON.stringify({ type: 'meta', tier: full ? 'paid' : 'free', locked: !full })}\n\n`);
 
-    // Stream AI reading
+    // ── No access: locked preview only. No LLM call, no reading text. ──
+    if (!full) {
+      const teaser = LOCKED_TEASER[input.lang] || LOCKED_TEASER.en;
+      res.write(`data: ${JSON.stringify({ type: 'locked', teaser })}\n\n`);
+      res.end();
+      return;
+    }
+
+    // Stream AI reading (paid only) — build the chart block + prompt only now.
+    const chartBlock = buildWesternBlock({
+      birthYear: input.year, birthMonth: input.month, birthDay: input.day,
+      birthHour: input.hour, birthMinute: input.minute,
+      lat: input.lat, lng: input.lng, tz: input.tz,
+    });
+    const messages = buildMessages(input, chartBlock);
+
     let body;
     try {
       body = await deepseekStream(messages, { maxTokens: 1800 });
@@ -193,6 +232,7 @@ router.post('/western-astrology', rateLimitMiddleware, async (req, res) => {
         res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
         res.end();
       } catch (chatErr) {
+        _refundCreditOnFail(req);
         res.write(`data: ${JSON.stringify({ type: 'error', error: 'Reading generation failed.' })}\n\n`);
         res.end();
       }
@@ -203,6 +243,7 @@ router.post('/western-astrology', rateLimitMiddleware, async (req, res) => {
     const { Readable } = require('stream');
     const readable = Readable.fromWeb ? Readable.fromWeb(body) : body;
     let buffer = '';
+    let emitted = false; // any delta already sent? then the credit was legitimately spent
     readable.on('data', chunk => {
       buffer += chunk.toString();
       const lines = buffer.split('\n');
@@ -215,7 +256,7 @@ router.post('/western-astrology', rateLimitMiddleware, async (req, res) => {
         try {
           const parsed = JSON.parse(raw);
           const delta = parsed.choices?.[0]?.delta?.content || '';
-          if (delta) res.write(`data: ${JSON.stringify({ type: 'delta', text: delta })}\n\n`);
+          if (delta) { emitted = true; res.write(`data: ${JSON.stringify({ type: 'delta', text: delta })}\n\n`); }
         } catch (_) {}
       }
     });
@@ -225,11 +266,13 @@ router.post('/western-astrology', rateLimitMiddleware, async (req, res) => {
     });
     readable.on('error', err => {
       console.error('[WESTERN-ASTROLOGY STREAM ERR]', err.message);
+      if (!emitted) _refundCreditOnFail(req); // nothing delivered → give the credit back
       res.write(`data: ${JSON.stringify({ type: 'error', error: 'Stream error.' })}\n\n`);
       res.end();
     });
 
   } catch (err) {
+    _refundCreditOnFail(req);
     console.error('[WESTERN-ASTROLOGY ERR]', err.message);
     if (mon && mon.captureException) mon.captureException(err, { tags: { api: 'western-astrology' } });
     if (!res.headersSent) {

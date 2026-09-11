@@ -273,8 +273,9 @@ function buildZiweiFactCard(zw, meta) {
 //     product 精确匹配，普通 full 用户(bazi_full)不会被误判成 VIP。
 function detectBaziVip(req) {
   try {
-    var auth = req.headers['authorization'] || '';
-    var token = auth.indexOf('Bearer ') === 0 ? auth.slice(7) : ((req.body && req.body.token) || '');
+    // 统一走 _tokenFromReq：旧写法「Bearer 」(结尾空令牌) 会截出空串，
+    // 不再回退 body.token / sy_token cookie，已登录会员会被判成未购买
+    var token = _tokenFromReq(req);
     if (process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN) return true;
     var _orderNo = (req.body && req.body.order_no) || '';
     if (_orderNo) {

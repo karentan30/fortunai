@@ -111,7 +111,7 @@
 </div>
 
 <div class="wrap">
-  <div class="bar"><div class="nav-back" onclick="history.length>1?history.back():location.href='pick.html'"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="navBack">返回</span></div><div class="step" id="stepLabel">手相</div></div>
+  <div class="bar"><div class="nav-back" onclick="goBack()"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="navBack">返回</span></div><div class="step" id="stepLabel">手相</div></div>
 
   <div class="rhero">
     <div class="k" id="rheroK">Ma Yi · 麻衣手相</div>
@@ -189,7 +189,8 @@
     advH:'More than a report<br>an advisor who actually knows you',
     advLi:['Your daily horoscope and annual forecast, refreshed every day','Ask follow-ups anytime in chat — like a teacher on call','Eastern & Western astrology plus face and palm reading — the same you, seen from every angle','Remembers your chart and your history — the more you use it, the better it knows you','Book a one-on-one with a real reader (member discount)'],
     advBtn:'Subscribe to Runae Advisor · $9.9 / mo',
-    footNote:'AI-generated · for reflection and entertainment only · palm lines change with mindset and experience, not fatalism · you write your own future. Your photo was discarded after analysis.'
+    footNote:'AI-generated · for reflection and entertainment only · palm lines change with mindset and experience, not fatalism · you write your own future. Your photo was discarded after analysis.',
+    jumping:'Opening checkout…'
   } : {
     title:'Runae · 手相报告',
     navBack:'返回', step:'手相',
@@ -224,7 +225,8 @@
     advH:'不止一份报告<br>是一个懂你的命理顾问',
     advLi:['每日运势与流年动态，天天更新','AI 对话随时追问深聊，像身边的老师','中西命理 + 面相手相，交叉印证同一个你','记得你的盘与历史，越用越懂你','可约真人命理师一对一（会员优惠）'],
     advBtn:'订阅 Runae 顾问 · $9.9 / 月',
-    footNote:'AI 生成 · 仅供反思与娱乐 · 掌纹随心态与经历变化，不宿命论 · 你自己书写自己的未来。你的照片在分析后已丢弃。'
+    footNote:'AI 生成 · 仅供反思与娱乐 · 掌纹随心态与经历变化，不宿命论 · 你自己书写自己的未来。你的照片在分析后已丢弃。',
+    jumping:'跳转支付…'
   };
 
   // 应用静态文案
@@ -335,6 +337,33 @@
       '<div class="err" id="loadmsg">'+esc(T.loadmsg)+'</div>';
   }
 
+  // 返回：同站有来源才回历史；新标签/外链直接打开时兜底回 pick（带 lang，英文用户不会被带回中文）
+  function goBack(){
+    var ref=document.referrer||'';
+    if(ref && ref.indexOf(location.origin)===0 && window.history && history.length>1){ history.back(); return; }
+    location.href='pick.html?lang='+LANG;
+  }
+
+  // 付费回流用：把照片压到 ~900px 再存 localStorage（原图 base64 常超配额）
+  function persistPalmImage(b64, mime){
+    try{
+      var img=new Image();
+      img.onload=function(){
+        try{
+          var max=900, w=img.naturalWidth||img.width, h=img.naturalHeight||img.height;
+          var sc=(w&&h)?Math.min(1,max/Math.max(w,h)):1;
+          var cw=Math.round(w*sc)||w, ch=Math.round(h*sc)||h;
+          var cv=document.createElement('canvas'); cv.width=cw; cv.height=ch;
+          cv.getContext('2d').drawImage(img,0,0,cw,ch);
+          var out=cv.toDataURL('image/jpeg',0.72).split(',')[1];
+          if(out) localStorage.setItem('sy_last_shouxiang', JSON.stringify({base64:out, mimeType:'image/jpeg'}));
+        }catch(e){}
+      };
+      img.onerror=function(){};
+      img.src='data:'+(mime||'image/jpeg')+';base64,'+b64;
+    }catch(e){}
+  }
+
   function startReading(file){
     // 展示所选照片预览（不上传前的本地预览）
     var reader=new FileReader();
@@ -343,6 +372,7 @@
       var base64=dataUrl.split(',')[1]||'';
       var mimeMatch=dataUrl.match(/^data:([^;]+);/);
       var mimeType=mimeMatch?mimeMatch[1]:'image/jpeg';
+      persistPalmImage(base64, mimeType); // 存一份供付费回流复用
       showLoading();
       callShouxiang(base64, mimeType);
     };
@@ -351,9 +381,10 @@
   }
 
   function callShouxiang(base64, mimeType){
+    var token=localStorage.getItem('sy_token')||'';
     fetch('/api/shouxiang',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
       body:JSON.stringify({
         question:EN?'Please give me a complete Ma Yi palm reading':'请给我一份完整的麻衣手相解读',
         hand:'right',
@@ -402,12 +433,12 @@
 
     // 付费墙（仅未解锁时）
     if(d.locked){
-      html+='<div class="wall"><h4>'+esc(T.wallH)+'</h4><p>'+esc(T.wallP)+'</p><button class="cta gold" onclick="goCheckout(\'shouxiang_full\')">'+esc(T.wallBtn)+'</button><div class="price">'+T.wallPrice+'</div></div>';
+      html+='<div class="wall"><h4>'+esc(T.wallH)+'</h4><p>'+esc(T.wallP)+'</p><button class="cta gold" onclick="goCheckout(\'shouxiang_full\',this)">'+esc(T.wallBtn)+'</button><div class="price">'+T.wallPrice+'</div></div>';
     }
 
     html+=crossReadHTML();
     // 顾问卡（advisor，与 report-v2 一致）
-    html+='<div class="adv"><div class="k">'+esc(T.advK)+'</div><h4>'+T.advH+'</h4><ul>'+T.advLi.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">'+esc(T.advBtn)+'</button></div>';
+    html+='<div class="adv"><div class="k">'+esc(T.advK)+'</div><h4>'+T.advH+'</h4><ul>'+T.advLi.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\',this)">'+esc(T.advBtn)+'</button></div>';
 
     // 合规脚注
     html+='<div class="ai-note" style="margin-top:14px"><span>🤖</span><span>'+esc(T.footNote)+'</span></div>';
@@ -423,16 +454,32 @@
     document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br>'+btn+'</div>';
   }
 
-  window.goCheckout=function(product){
+  window.goCheckout=function(product,btn){
+    var orig=null;
+    if(btn){ if(btn.disabled) return; orig=btn.textContent; btn.disabled=true; btn.textContent=T.jumping; }
+    var restore=function(){ if(btn){ btn.disabled=false; if(orig!==null) btn.textContent=orig; } };
     fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({product:product,token:localStorage.getItem('sy_token')||'',
         successUrl:location.origin+'/pages/report-palm.html?paid=1&lang='+LANG,cancelUrl:location.href})})
      .then(function(r){return r.json();}).then(function(d){
-       if(d.url){ location.href=d.url; }
-       else if(d.channel==='cn'){ alert(EN?'Please pay via WeChat / Alipay (coming soon).':'国内用户请用微信 / 支付宝支付（接入中）'); }
+       if(d.url){ location.href=d.url; return; }
+       if(d.channel==='cn'){ alert(EN?'Please pay via WeChat / Alipay (coming soon).':'国内用户请用微信 / 支付宝支付（接入中）'); }
        else { alert(EN?'Couldn’t open checkout — please try again.':'跳转支付失败，请重试'); }
-     }).catch(function(){ alert(EN?'Network error — please try again.':'网络异常，请重试'); });
+       restore();
+     }).catch(function(){ alert(EN?'Network error — please try again.':'网络异常，请重试'); restore(); });
   };
+
+  // ── 付费回流：?paid=1 → 用上次的手掌照重跑（此时 tier 已升级，locked=false）──
+  (function handlePaidReturn(){
+    if(location.search.indexOf('paid=1')<0) return;
+    var saved=null; try{ saved=JSON.parse(localStorage.getItem('sy_last_shouxiang')||'null'); }catch(e){}
+    if(window.history.replaceState) window.history.replaceState({},'','/pages/report-palm.html?lang='+LANG);
+    if(!saved||!saved.base64) return;
+    sessionStorage.setItem('runae_age_ok','1'); // 付费用户已过年龄门，回流不再拦
+    showLoading();
+    callShouxiang(saved.base64, saved.mimeType||'image/jpeg');
+  })();
 </script>
+<script src="/pages/report-export.js" defer></script>
 </body>
 </html>

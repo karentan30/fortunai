@@ -277,9 +277,18 @@ function _isExpired(o) {
 }
 
 // 从请求中提取 token 字符串 (Authorization header > body.token > sy_token cookie)
+// 🔴 空 Bearer 必须继续回退：新版登录只下发 httpOnly cookie，前端页面普遍写
+//    'Bearer ' + (localStorage.getItem('sy_token')||'')，拿不到 localStorage 时就发出
+//    「Authorization: Bearer 」（尾部空）。旧实现见前缀匹配即 return ''，
+//    导致 cookie 回退永远走不到 —— 已登录会员被当成匿名，付费内容不解锁、
+//    配额按匿名计。这里改成「拿到非空令牌才算命中」。
 function _tokenFromReq(req) {
   var auth = (req.headers && req.headers['authorization']) || '';
-  if (auth.indexOf('Bearer ') === 0) return auth.slice(7).trim();
+  if (auth.indexOf('Bearer ') === 0) {
+    var bearer = auth.slice(7).trim();
+    if (bearer) return bearer;
+    // 空 Bearer → 落到 body.token / cookie 继续找
+  }
   if (req.body && req.body.token) return String(req.body.token).trim();
   // httpOnly cookie fallback — parse raw Cookie header without cookie-parser
   try {

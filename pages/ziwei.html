@@ -1005,7 +1005,12 @@ function renderResult(seed, y, m, d, h) {
   var usedPalaces = new Set();
   MAIN_STARS.forEach(function(star, si) {
     var palaceIdx = rng(seed + si * 37, 12);
-    while (usedPalaces.has(palaceIdx)) palaceIdx = (palaceIdx + 1) % 12;
+    // 🔴 主星 14 颗 > 宫位 12 个：集满 12 宫后必须停下，
+    //    否则第 13 颗星找不到空宫 → while 死循环 → 整个页面卡死。
+    //    集满后允许同宫再落一颗（紫微斗数本来就有双星同宫）。
+    if (usedPalaces.size < 12) {
+      while (usedPalaces.has(palaceIdx)) palaceIdx = (palaceIdx + 1) % 12;
+    }
     usedPalaces.add(palaceIdx);
     assignment[palaceIdx].push(star);
   });
@@ -1113,7 +1118,9 @@ function renderResult(seed, y, m, d, h) {
      text:'疾厄宫今年相对平稳，无重大凶星入驻。注意'+(rng(seed+7,2)?'脾胃':'肝胆')+'养护，切勿过度劳累。春季和秋季各做一次体检为宜。'}
   ];
   var fsHtml = '';
-  var isPaidZiwei = localStorage.getItem('sy_unlock_a') === '1' || new URLSearchParams(location.search).get('paid') === '1';
+  // 🔴 收入漏洞修复(2026-09-11): 绝不凭 ?paid=1 或 localStorage 解锁付费内容。
+  //   付费深度解读只走服务端鉴权路径 handlePaidReturn() → /api/ziwei/stream(带 token, 后端按 locked 下发)。
+  var isPaidZiwei = false;
   FORTUNES.forEach(function(f, fi) {
     var score = f.score;
     var shouldBlurZw = !isPaidZiwei && fi >= 2;
@@ -1124,7 +1131,7 @@ function renderResult(seed, y, m, d, h) {
           '<div class="fortune-title">'+f.title+'</div>' +
           '<div class="fortune-score" style="color:'+(score>75?'#8dd9bf':score>60?'#e8d08a':'#d4607a')+'">'+score+'</div>' +
         '</div>' +
-        '<div class="fortune-body hidden">'+f.text+'</div>' +
+        // 🔴 收入漏洞修复(2026-09-11): 未解锁时绝不把付费正文 f.text 渲染进 DOM(旧版只靠 CSS blur 遮住, F12 可读)。
         '<div class="paywall-overlay"><button onclick="unlockZiwei(this)" style="background:linear-gradient(155deg,#f4e6b6,#e8d49c 34%,#dcc082 62%,#ab8642);border:1px solid rgba(224,196,130,0.5);border-radius:8px;color:#241a08;font-family:\'Noto Serif SC\',serif;font-size:12px;padding:10px 20px;cursor:pointer">解锁'+f.title+' $19.90 →</button></div>' +
       '</div>';
     } else {

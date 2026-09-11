@@ -19,7 +19,7 @@ const {
 
 // 聊天每日限量: 免费/月会员 = 30句/天; 全解锁会员 = 无限。差异化靠"报告"不靠chat。
 const CHAT_DAILY_LIMIT = 30;
-const { getToken } = require('../lib/store');
+const { getToken, _tokenFromReq } = require('../lib/store');
 const { getClientIp, resolveUserFromToken } = require('../lib/utils');
 const { rateLimitMiddleware, authMiddleware } = require('../middleware');
 
@@ -43,7 +43,7 @@ router.post('/daily', rateLimitMiddleware, async (req, res) => {
     // 0817: 月会员套餐含"每日运势", 故 memberTier 非 null 即视为会员; 免费/游客限3次。
     const isMember = memberTier(req) !== null;
     if (!isMember) {
-      const uid = resolveUserFromToken(req.headers['authorization'] || (req.body && req.body.token), { get: (t) => { const row = _M.tokens.find(x => x.token === t); return row || null; } });
+      const uid = resolveUserFromToken(_tokenFromReq(req), { get: (t) => { const row = _M.tokens.find(x => x.token === t); return row || null; } });
       const day = new Date().toISOString().slice(0, 10);
       const dkey = (uid || getClientIp(req)) + '_daily_' + day;
       if (!_M.dailyUsage) _M.dailyUsage = {};
@@ -236,7 +236,7 @@ router.post('/chat', rateLimitMiddleware, async (req, res) => {
     var tier = memberTier(req);
     var isUnlimited = tier === 'unlimited';
     if (!isUnlimited) {
-      var uid = resolveUserFromToken(req.headers['authorization'] || (req.body && req.body.token), { get: (t) => { const row = _M.tokens.find(x => x.token === t); return row || null; } });
+      var uid = resolveUserFromToken(_tokenFromReq(req), { get: (t) => { const row = _M.tokens.find(x => x.token === t); return row || null; } });
       var day = new Date().toISOString().slice(0, 10);
       // 🔴 0911：去掉可伪造的 x-session-id（客户端可控 = 配额可重置）。理由见 numerology.js。
       var ckey = (uid || getClientIp(req)) + '_' + day;
@@ -272,10 +272,11 @@ router.get('/chat/quota', (req, res) => {
     var tier = memberTier(req);
     if (tier === 'unlimited') return res.json({ isMember: true, tier: 'unlimited', remaining: -1 });
     var uid = null;
-    const authH = req.headers['authorization'] || '';
-    if (authH) {
-      const t = authH.replace('Bearer ', '');
-      const row = _M.tokens.find(x => x.token === t);
+    // 统一走 _tokenFromReq：旧写法只认 Authorization 头，且「Bearer 」(空令牌) 会截出空串 ——
+    // 新版登录只下发 httpOnly cookie，会员的 uid 取不到就会被按 session/IP 计额度（额度错乱）。
+    const _tk = _tokenFromReq(req);
+    if (_tk) {
+      const row = _M.tokens.find(x => x.token === _tk);
       if (row) uid = row.user_id;
     }
     var day = new Date().toISOString().slice(0, 10);

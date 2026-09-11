@@ -79,6 +79,7 @@
   .adv li{font-size:13px;color:rgba(255,255,255,.86);padding:6px 0 6px 20px;position:relative}
   .adv li::before{content:'◆';position:absolute;left:2px;top:6px;color:var(--gold-soft);font-size:7px;line-height:2.1}
   .adv .sbtn{width:100%;background:transparent;color:var(--gold-soft);border:1px solid var(--gold-soft);border-radius:var(--r);padding:15px;font-size:14.5px;font-weight:600;margin-top:10px;cursor:pointer;font-family:var(--sans)}
+  .adv .sbtn:disabled{opacity:.6;cursor:not-allowed}
 
   .cta{width:100%;background:var(--jade-deep);color:#fff;border:none;border-radius:var(--r);padding:16px;font-size:15px;font-weight:600;font-family:var(--sans);cursor:pointer}
 
@@ -196,15 +197,20 @@
     return (n.getMonth()+1)+'月'+n.getDate()+'日 · '+wd;
   }
 
-  function goCheckout(product){
+  function goCheckout(product, btn){
+    var busyTxt = EN?'Taking you to checkout…':'跳转支付…';
+    var idleTxt = EN?'Subscribe to Runae Advisor · $9.9 / mo':'订阅 Runae 顾问 · $9.9 / 月';
+    if(btn){ btn.disabled=true; btn.textContent=busyTxt; }
+    function restore(){ if(btn){ btn.disabled=false; btn.textContent=idleTxt; } }
     fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({product:product,token:localStorage.getItem('sy_token')||'',
         successUrl:location.origin+'/pages/report-daily.html?paid=1&lang='+LANG,cancelUrl:location.href})})
      .then(function(r){return r.json();}).then(function(d){
-       if(d.url){ location.href=d.url; }
-       else if(d.channel==='cn'){ alert(EN?'Please pay via WeChat / Alipay (coming soon).':'国内用户请用微信 / 支付宝支付（接入中）'); }
+       if(d.url){ location.href=d.url; return; }
+       restore();
+       if(d.channel==='cn'){ alert(EN?'Please pay via WeChat / Alipay (coming soon).':'国内用户请用微信 / 支付宝支付（接入中）'); }
        else { alert(EN?'Couldn’t open checkout — please try again.':'跳转支付失败，请重试'); }
-     }).catch(function(){ alert(EN?'Network error — please try again.':'网络异常，请重试'); });
+     }).catch(function(){ restore(); alert(EN?'Network error — please try again.':'网络异常，请重试'); });
   }
   window.goCheckout=goCheckout;
 
@@ -260,7 +266,7 @@
     // qian
     var q=(d.qian||{});
     if(q.title||q.text){
-      html+='<div class="qian"><div class="seal">'+(EN?'✦':'签')+'</div><div class="k">'+(EN?'Draw of the day':'Draw of the day · 今日一签')+'</div>'
+      html+='<div class="qian"><div class="seal">'+(EN?'✦':'签')+'</div><div class="k">'+(EN?'Draw of the day':'今日一签')+'</div>'
          +(q.title?'<div class="title">'+esc(q.title)+'</div>':'')
          +(q.text?'<div class="verse">'+esc(q.text).replace(/\n/g,'<br>').replace(EN?/([.;])\s+/g:/([，。；])/g,EN?'$1<br>':'$1<br>').replace(/(<br>)+$/,'')+'</div>':'')
          +'</div>';
@@ -275,14 +281,14 @@
         +'<li>Eastern & Western astrology plus face and palm reading — the same you, seen from every angle</li>'
         +'<li>Remembers your chart and your history — the more you use it, the better it knows you</li>'
         +'<li>Book a one-on-one with a real reader (member discount)</li>'
-        +'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">Subscribe to Runae Advisor · $9.9 / mo</button></div>'
+        +'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\',this)">Subscribe to Runae Advisor · $9.9 / mo</button></div>'
       : '<div class="adv"><div class="k">Runae 顾问 · 会记得你</div><h4>不止今日一卡<br>是一个懂你的命理顾问</h4><ul>'
         +'<li>每日运势与流年动态，天天更新</li>'
         +'<li>AI 对话随时追问深聊，像身边的老师</li>'
         +'<li>中西命理 + 面相手相，交叉印证同一个你</li>'
         +'<li>记得你的盘与历史，越用越懂你</li>'
         +'<li>可约真人命理师一对一（会员优惠）</li>'
-        +'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">订阅 Runae 顾问 · $9.9 / 月</button></div>';
+        +'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\',this)">订阅 Runae 顾问 · $9.9 / 月</button></div>';
 
     html+='<div class="disc">'+(EN?'AI-generated content · for entertainment and self-reflection only; not medical, legal, or financial advice.':'AI 生成内容 · 仅供娱乐参考，不构成医疗、法律或财务建议。')+'</div>';
 
@@ -296,11 +302,20 @@
   (function boot(){
     // 无生辰 → 回到采集页
     if(!P.bdate){ location.href='collect.html?lang='+LANG; return; }
-    fetch('/api/daily/card',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(bd())})
-      .then(function(r){ if(!r.ok) return r.json().then(function(e){ throw new Error(e.error||('HTTP '+r.status)); }); return r.json(); })
-      .then(function(d){ if(!d||typeof d.score==='undefined') throw new Error(EN?'Daily fortune is empty':'今日运势为空'); render(d); })
-      .catch(function(e){ fail((EN?'Today’s fortune isn’t ready yet: ':'今日运势暂未算出：')+e.message); });
+    // 20s 超时（对齐 report-v2）：后端挂起时不再无限转圈，abort 后走失败态 + 重试
+    var ctrl=new AbortController();
+    var to=setTimeout(function(){ ctrl.abort(); },20000);
+    fetch('/api/daily/card',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctrl.signal,body:JSON.stringify(bd())})
+      .then(function(r){ clearTimeout(to); if(!r.ok) return r.json().then(function(e){ throw new Error(e.error||('HTTP '+r.status)); }); return r.json(); })
+      .then(function(d){ clearTimeout(to); if(!d||typeof d.score==='undefined') throw new Error(EN?'Daily fortune is empty':'今日运势为空'); render(d); })
+      .catch(function(e){
+        clearTimeout(to);
+        var msg = (e&&e.name==='AbortError') ? (EN?'Request timed out':'请求超时')
+                                              : (e&&e.message ? e.message : (EN?'Network error':'网络异常'));
+        fail((EN?'Today’s fortune isn’t ready yet: ':'今日运势暂未算出：')+msg);
+      });
   })();
 </script>
+<script src="/pages/report-export.js" defer></script>
 </body>
 </html>

@@ -160,6 +160,10 @@
     genFail:EN?'Something went wrong generating your report: ':'报告生成遇到问题：',
     emptyReport:EN?'Empty report':'报告为空',
     netErr:EN?'Network error, please try again':'网络异常，请重试',
+    alreadyPaid:EN?'You already own this report':'你已购买本报告',
+    alreadyPaidSub:EN?'We could not verify your unlock just now. Please refresh — if it still shows locked, contact support with your order number.':'刚刚没能确认你的解锁状态。请刷新重试；若仍显示未解锁，请带订单号联系客服。',
+    chErrTitle:EN?'Some chapters failed to load':'部分章节没能加载',
+    chartErr:EN?'Chart data failed to load':'命盘数据加载失败',
     payFail:EN?'Failed to open checkout, please try again':'跳转支付失败，请重试',
     cnPay:EN?'Mainland users: please pay via WeChat / Alipay (coming soon)':'国内用户请用微信 / 支付宝支付（接入中）',
     unlock:EN?'Unlock Full Report':'解锁完整报告',
@@ -226,11 +230,14 @@
   var P={},M='bazi';
   try{ P=JSON.parse(localStorage.getItem('runae_profile')||'{}'); }catch(e){}
   M=localStorage.getItem('runae_method')||'bazi';
-  if(!P.bdate){ location.href='collect.html'+(localStorage.getItem('runae_lang')==='en'?'?lang=en':''); }
+  // 没资料 → 回采集页；用 _noProfile 短路后面的启动逻辑，否则会用空生日继续发请求（400 + 空白页）
+  var _noProfile=!P.bdate;
+  if(_noProfile){ location.href='collect.html'+(EN?'?lang=en':''); }
   var NAMES=EN
     ?{bazi:'BaZi',hehun:'Compatibility',tarot:'Tarot',astro:'Astrology',daily:'Daily',palm:'Palmistry',face:'Face Reading'}
     :{bazi:'八字命理',hehun:'合婚',tarot:'塔罗',astro:'星座占星',daily:'每日运势',palm:'手相',face:'面相'};
   document.getElementById('mname').textContent=NAMES[M]||T.reportTitle;
+  document.title='Runae · '+(EN?'Your Report':((NAMES[M]||'')+'报告'));
   document.documentElement.setAttribute('lang',EN?'en':'zh-CN');
   document.getElementById('backtxt').textContent=T.back;
   document.getElementById('navback').onclick=function(){location.href='pick.html?lang='+LANG;};
@@ -632,8 +639,28 @@
   var READ_CHAPTERS=[
     {id:'year',   emoji:'🌟', t:EN?'This Year & Personality':'性格与今年运势'}
   ];
-  // paid text chapters shown blurred/locked in the reading area (性格→事业→感情 doc flow)
-  // We stream `year` (free) into 深度解读, then wealth/career (paid) collapse into the paywall.
+  // 付费章节：免费用户完成后看到付费墙；已付费用户（_hasFull）继续按序流式生成。
+  var PAID_CHAIN=['wealth','career','love','luck','forecast','remedy','message'];
+  function readDef(id){
+    for(var i=0;i<CHAPTERS.length;i++) if(CHAPTERS[i].id===id) return CHAPTERS[i];
+    return null;
+  }
+  var _paidIdx=-1,_paidRunning=false,_paidFailed=false;
+  function streamPaid(){
+    if(_paidRunning) return; _paidRunning=true; _paidIdx=0;
+    var slot=document.getElementById('paywall-slot'); if(slot) slot.innerHTML='';
+    nextPaid();
+  }
+  function nextPaid(){
+    if(_paidIdx>=PAID_CHAIN.length){ revealTail(); return; }
+    var id=PAID_CHAIN[_paidIdx++], def=readDef(id);
+    if(!def) { nextPaid(); return; }
+    var known=false; for(var i=0;i<READ_CHAPTERS.length;i++) if(READ_CHAPTERS[i].id===id) known=true;
+    if(!known) READ_CHAPTERS.push({id:id,emoji:def.emoji,t:def.t});
+    _st[id]='idle';
+    ensureCard(id);
+    loadChapter(id);
+  }
 
   function stripLead(id,text){
     var t=(text||'').replace(/^\s+/,'');
@@ -689,6 +716,7 @@
           if(r.done){ if(_st[id]==='streaming'){ _st[id]='done'; paintChapter(id); afterChapter(id); } return; }
           buf+=dec.decode(r.value,{stream:true});
           var lines=buf.split('\n'); buf=lines.pop();
+          var evErr=null;
           lines.forEach(function(line){
             if(line.indexOf('data: ')!==0) return;
             try{
@@ -696,9 +724,12 @@
               if(ev.type==='chunk'){ _txt[id]=stripLead(id,(_txt[id]||'')+ev.content); _st[id]='streaming'; paintChapter(id); }
               else if(ev.type==='done'){ _st[id]='done'; paintChapter(id); afterChapter(id); }
               else if(ev.type==='locked'){ _st[id]='locked'; paintChapter(id); afterChapter(id); }
-              else if(ev.type==='error'){ throw new Error(ev.message||'error'); }
+              else if(ev.type==='error'){ evErr=ev.message||'error'; }
             }catch(e){}
           });
+          // 服务端 error 事件：旧写法在 try 里 throw，被同一个 catch 吞掉，
+          // 章节会停在 streaming 然后按 done 渲染成空/半截。这里显式处理。
+          if(evErr){ clearTimeout(to); _st[id]='error'; paintChapter(id); afterChapter(id); return; }
           if(_st[id]==='streaming') read();
         }).catch(function(){ clearTimeout(to); if(_st[id]!=='done'&&_st[id]!=='locked'){ _st[id]='error'; paintChapter(id); afterChapter(id); } });
       }
@@ -716,12 +747,23 @@
 
   // after the free reading chapter finishes → paint the paywall + locked paid-chapter list, then tail
   function afterChapter(id){
-    // only the free `year` chapter streams here; once it's terminal, render paywall
-    if(_st[id]==='done'||_st[id]==='locked'||_st[id]==='error'){
-      if(_hasFull){ /* paid user: could stream more here; MVP keeps paid text in advisor */ }
-      renderPaywall();
-      revealTail();
+    if(!(_st[id]==='done'||_st[id]==='locked'||_st[id]==='error')) return;
+    if(id==='year'){
+      // 🔴 付费用户必须真解锁：继续流式生成付费章节，而不是再画一次付费墙
+      if(_hasFull&&_st[id]==='done'){ streamPaid(); }
+      else { renderPaywall(); revealTail(); }
+      return;
     }
+    if(!_paidRunning) return;
+    if(_st[id]==='locked'){ _paidFailed=true; renderPaidFallback(); revealTail(); return; }
+    nextPaid();
+  }
+
+  // 已付费但服务端仍判 locked（令牌/订单异常）：给明确出路，不要默默再画付费墙
+  function renderPaidFallback(){
+    var slot=document.getElementById('paywall-slot'); if(!slot) return;
+    slot.innerHTML='<div class="wall"><h4>'+esc(T.alreadyPaid)+'</h4><p>'+esc(T.alreadyPaidSub)+'</p>'
+      +'<button class="cta gold" onclick="location.reload()">'+esc(T.retry)+'</button></div>';
   }
 
   function renderPaywall(){
@@ -820,10 +862,21 @@
             }catch(e){}
           });
           if(!got) read();
-        }).catch(function(){});
+        }).catch(function(){ metaFail(); });
       }
       read();
-    }).catch(function(){ clearTimeout(to); });
+    }).catch(function(){ metaFail(); });
+
+    // 命盘 meta 拿不到（网络/超时/后端 5xx）：旧写法只 clearTimeout 什么都不说，
+    // hero 空着、命盘和五行永远停在骨架屏。现在给可点的重试。
+    function metaFail(){
+      if(got) return;
+      clearTimeout(to);
+      var cc=document.getElementById('chartcard');
+      if(cc){ cc.classList.remove('skel-chart');
+        cc.innerHTML='<div class="err">'+esc(T.chartErr)+'<br><br><button class="cta" style="max-width:180px;margin:12px auto 0" onclick="fetchChartMeta()">'+esc(T.retry)+'</button></div>'; }
+      var esl=document.getElementById('elements-slot'); if(esl) esl.innerHTML='';
+    }
   }
 
   function fail(msg){ document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br><button class="cta" style="max-width:200px;margin:14px auto 0" onclick="location.reload()">'+esc(T.retry)+'</button></div>'; }
@@ -839,11 +892,14 @@
      }).catch(function(){ alert(T.netErr); });
   };
 
-  if(M==='bazi'){
+  if(_noProfile){
+    /* 已跳采集页，不再发请求 */
+  } else if(M==='bazi'){
     startProgressive();
   } else {
     document.getElementById('body').innerHTML='<div class="chart" style="text-align:center"><div style="font-family:var(--serif);font-size:20px;margin-bottom:6px;color:#fff">'+esc(NAMES[M]||'')+'</div><div style="font-size:13px;color:rgba(255,255,255,.7)">'+esc(T.comingHead)+'</div></div><div class="read"><p>'+esc(T.comingBody)+'</p></div><button class="cta" onclick="localStorage.setItem(\'runae_method\',\'bazi\');location.reload()">'+esc(T.seeBazi)+'</button>';
   }
 </script>
+<script src="/pages/report-export.js" defer></script>
 </body>
 </html>

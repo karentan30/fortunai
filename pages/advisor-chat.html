@@ -121,6 +121,7 @@ var T=EN?{
   quotaUnlimited:'Annual member · <b>unlimited chat</b> — Rún remembers your chart',
   quotaUsedUp:'You\'re out of chats for today · <b>go annual</b> for unlimited chat',
   quotaRemain1:'You have ', quotaRemain2:' chats left today',
+  quotaUnknown:'Usage remaining unknown · tap to retry',
   gateInputPlaceholder:'Upgrade to keep chatting with Rún',
   payK:'Runae Advisor · Remembers You',
   payTitle:'More than a single question<br>an advisor who actually knows you',
@@ -141,6 +142,7 @@ var T=EN?{
   quotaUnlimited:'年会员 · <b>无限畅聊</b>，Rún 记得你的盘',
   quotaUsedUp:'今日畅聊已用完 · <b>升级年会员</b>无限畅聊',
   quotaRemain1:'今日还可畅聊 ', quotaRemain2:' 句',
+  quotaUnknown:'剩余额度未知 · 点此重试',
   gateInputPlaceholder:'升级会员后继续和 Rún 深聊',
   payK:'Runae 顾问 · 会记得你',
   payTitle:'不止一次追问<br>是一个懂你的命理顾问',
@@ -154,7 +156,7 @@ var T=EN?{
 };
 var msgs=[];                 // 发给后端的对话历史（含隐藏的盘上下文）
 var sending=false;
-var isMember=false, isUnlimited=false, freeRemaining=null, gated=false;
+var isMember=false, isUnlimited=false, freeRemaining=null, gated=false, quotaFailed=false;
 
 var _sessionId=localStorage.getItem('sy_session_id');
 if(!_sessionId){
@@ -209,16 +211,23 @@ function loadQuota(){
   fetch('/api/chat/quota',{headers:{'Authorization':'Bearer '+(localStorage.getItem('sy_token')||''),'X-Session-Id':_sessionId}})
     .then(function(r){return r.json();})
     .then(function(d){
+      quotaFailed=false;
       isUnlimited = d.tier==='unlimited';
       isMember = d.isMember || isUnlimited;
       freeRemaining = (typeof d.remaining==='number') ? d.remaining : null;
       if(isUnlimited && freeRemaining===-1) freeRemaining=null;
       updateQuota();
-    }).catch(function(){ updateQuota(); });
+    }).catch(function(){ quotaFailed=true; updateQuota(); });
 }
 function updateQuota(){
   var el=document.getElementById('quota');
   if(!el)return;
+  // 配额接口失败：保守兜底显示「额度未知」，不再空白；send() 里也不会据此放行
+  if(quotaFailed && !isMember){
+    el.innerHTML='<span id="quotaRetry" style="cursor:pointer;text-decoration:underline">'+esc(T.quotaUnknown)+'</span>';
+    var rb=document.getElementById('quotaRetry'); if(rb) rb.onclick=loadQuota;
+    return;
+  }
   if(isUnlimited){ el.innerHTML=T.quotaUnlimited; return; }
   if(freeRemaining===null){ el.textContent=''; return; }
   if(freeRemaining<=0){ el.innerHTML=T.quotaUsedUp; return; }
@@ -268,6 +277,7 @@ function send(){
   var text=input.value.trim();
   if(!text||sending)return;
   if(gated){ return; }
+  if(!isMember && quotaFailed){ updateQuota(); loadQuota(); return; }
   if(!isMember && freeRemaining!==null && freeRemaining<=0){ addPaywall(); return; }
 
   sending=true;
@@ -299,7 +309,7 @@ function send(){
     }
   }).catch(function(){
     clearTyping(); sending=false; document.getElementById('sendBtn').disabled=false;
-    addMsg('星轨暂时模糊，请稍后再问。','ai');
+    addMsg(T.errBlur,'ai');
   });
 }
 
