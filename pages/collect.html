@@ -145,7 +145,7 @@
       career:'事业', love:'爱情', wealth:'财运', health:'健康',
       next:'下一步 · 选择推演',
       hint:'信息仅用于生成你的报告',
-      alertDate:'请填写出生日期', alertGender:'请选择性别',
+      alertDate:'请填写出生日期', alertGender:'请选择性别', alertDateReal:'这一天不存在，请检查月份和日期',
     },
     en:{
       docTitle:'Runae · Begin',
@@ -166,7 +166,7 @@
       career:'Career', love:'Love', wealth:'Wealth', health:'Health',
       next:'Next · Choose a reading',
       hint:'Only used to create your reading',
-      alertDate:'Please enter your birth date', alertGender:'Please select your gender',
+      alertDate:'Please enter your birth date', alertGender:'Please select your gender', alertDateReal:'That date doesn\'t exist — please check the month and day',
     }
   };
   var t=T[LANG]||T.zh;
@@ -212,7 +212,18 @@
     opt(ys,'',t.yearPh); var ny=new Date().getFullYear(); for(var y=ny;y>=1920;y--)opt(ys,y,y);
     opt(ms,'',t.monthPh); for(var mo=1;mo<=12;mo++)opt(ms,mo,EN?MON_EN[mo-1]:(mo+'月'));
     opt(ds,'',t.dayPh); for(var d=1;d<=31;d++)opt(ds,d,EN?String(d):(d+'日'));
+    // 日期列表要跟着年月走。原来恒为 1..31，所以 2月31日/4月31日都能选出来，
+    // 而引擎照单全收（儒略日公式会把它偏移成相邻的一天），排出「看着正常」的错盘。
+    function refillDays(){
+      var y=+ys.value, m=+ms.value, keep=ds.value;
+      var max=(y&&m)? new Date(y, m, 0).getDate() : 31;   // 下月第0天=本月最后一天
+      ds.innerHTML=''; opt(ds,'',t.dayPh);
+      for(var dd=1;dd<=max;dd++) opt(ds,dd,EN?String(dd):(dd+'日'));
+      if(keep && +keep<=max) ds.value=keep;               // 原来的选择还合法就留着
+    }
+    ys.onchange=refillDays; ms.onchange=refillDays;
     if(P.bdate){var pp=P.bdate.split('-');if(pp.length===3){ys.value=+pp[0];ms.value=+pp[1];ds.value=+pp[2];}}
+    refillDays();
   })();
   if(P.btime) document.getElementById('btime').value = P.btime;
   if(P.bcity) document.getElementById('bcity').value = P.bcity;
@@ -223,13 +234,25 @@
   document.querySelectorAll('.cal-toggle span').forEach(function(s){
     s.onclick=function(){ document.querySelectorAll('.cal-toggle span').forEach(function(x){x.classList.remove('on');}); s.classList.add('on'); };
   });
-  // 方向多选
+  // 方向多选：回访时要还原上次勾的，不能让它落回页面默认的「事业/爱情」
+  //   原来这处不恢复，于是老用户回到这页按老习惯直接点下一步，
+  //   选择被静默改写成默认的两项并覆盖存档 —— 用户看不出自己选的东西变了。
+  if(P.aspects&&P.aspects.length){
+    document.querySelectorAll('#aspects .chip').forEach(function(c){ c.classList.toggle('on', P.aspects.indexOf(c.dataset.a)>-1); });
+  }
   document.querySelectorAll('#aspects .chip').forEach(function(c){
     c.onclick=function(){ c.classList.toggle('on'); };
   });
   // 照片（仅标记已选，真实上传在后端流程接）
   var photos={};
+  // 回访时把「已解锁」状态还原：原来 photos 恒为空对象，于是加过手相照的用户
+  // 回到这页再点下一步，提交出去的 hasPalm 变成 false，把存档里的解锁态**覆盖掉**，
+  // 到了选推演那页手相又被锁上（正是「传了照片还被锁」）。
+  if(P.hasPalm) photos.palm=1;
+  if(P.hasFace) photos.face=1;
   document.querySelectorAll('input[type=file]').forEach(function(inp){
+    var k0=inp.dataset.photo;
+    if(photos[k0]){ var tl0=inp.closest('.tile'); tl0.classList.add('done'); tl0.querySelector('.h').textContent=t.photoAdded; }
     inp.onchange=function(){
       var k=inp.dataset.photo; if(inp.files&&inp.files[0]){ photos[k]=inp.files[0].name; inp.closest('.tile').classList.add('done'); inp.closest('.tile').querySelector('.h').textContent=t.photoAdded; }
     };
@@ -238,6 +261,8 @@
   document.getElementById('next').onclick=function(){
     var _y=document.getElementById('byear').value,_m=document.getElementById('bmonth').value,_d=document.getElementById('bday').value;
     if(!_y||!_m||!_d){ alert(t.alertDate); return; }
+    // 兜底：就算日期列表被绕过（改 DOM、旧存档），也不许把不存在的日期送进引擎
+    if(+_d > new Date(+_y,+_m,0).getDate()){ alert(t.alertDateReal); return; }
     // 🔴 性别决定大运顺逆：同一生辰，男命大运起于 8 岁、女命起于 4 岁，整条大运序列不同。
     //   原来没有占位项，<select> 默认选中第一项「女」，没注意到这个框的男性用户
     //   会拿到一份按女命排的报告，而页面上看起来一切正常。必须显式选择。
