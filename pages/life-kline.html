@@ -213,7 +213,7 @@ footer a{color:var(--jade-deep)}
       </select>
     </div>
     <div class="fld"><label>Gender</label>
-      <select id="gender"><option value="male">Male</option><option value="female">Female</option></select>
+      <select id="gender"><option value="">Select</option><option value="male">Male</option><option value="female">Female</option></select>
     </div>
   </div>
   <p class="hint">Hour sharpens the chart but isn't required — we'll use midday if unknown.</p>
@@ -290,6 +290,10 @@ function showErr(msg){ const e=$('#err'); e.textContent=msg; e.style.display='bl
 async function draw(){
   const y=+$('#y').value, m=+$('#m').value, d=+$('#d').value;
   if(!y||!m||!d||y<1900||y>2100||m<1||m>12||d<1||d>31){ showErr('Please enter a valid birth date (year, month, day).'); return; }
+  // 性别决定大运顺逆，不是标签：同一生辰男命起运 8 岁、女命 4 岁，整条序列不同。
+  // 原来这个下拉框首位就是 Male，用户不碰就静默按男命排 —— 而紧邻的 Hour 框
+  // 早就用了空占位（"Don't know"），只有性别漏了，属于同页自相矛盾。
+  if(!$('#gender').value){ showErr('Please select your gender.'); return; }
   const body = { year:y, month:m, day:d, gender:$('#gender').value };
   if($('#hour').value!=='') body.hour = +$('#hour').value;
 

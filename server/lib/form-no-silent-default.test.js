@@ -19,12 +19,13 @@ const path = require('node:path');
 
 const PAGES = path.join(__dirname, '..', '..', 'pages');
 
-// 已记录、待处理：这两页同样是「性别首位带值」，但不在主路口（collect.html）上，
-// 本轮按 Karen「先把主路口做好」的要求没有动。显式列出而不是放宽规则，
-// 免得将来新增的页面混进豁免里不被发现。
+// 已记录、未处理：ziwei-en.html 的性别卡片默认「已选中 Male · Yang」。
+// 之所以没动它：这一页的年/月/日/时**全都是预填的默认值**（1990-1-1 子时），
+// 整页就是「先给一套默认、用户再微调」的设计，性别只是其中之一。
+// 只把性别单独改成必须显式选，会和同页的年月时口径不一致 —— 要么整页加确认，要么维持，
+// 属产品决策，不单方面改。显式列出来而不是放宽规则：将来新增的页面会立刻红。
 const KNOWN_PENDING = new Map([
-  ['life-kline.html', '首位是 Male，女性用户不注意会拿到男命大运'],
-  ['ziwei-en.html',   '首位是 Male，同上'],
+  ['ziwei-en.html', '性别卡片预选 Male；同页年月时也都预填，整页设计问题，待定'],
 ]);
 
 // 抓 <select id="gender"> 的第一个 <option>，返回「用户不选时会提交的那个值」。
@@ -75,6 +76,6 @@ test('守卫自身有效：认得出带值、也认得出无 value 属性的写�
 });
 
 test('豁免清单只能缩小不能悄悄变大', () => {
-  assert.ok(KNOWN_PENDING.size <= 2,
+  assert.ok(KNOWN_PENDING.size <= 1,
     `待处理清单涨到 ${KNOWN_PENDING.size} 条 —— 新增的应直接修掉，而不是加进豁免`);
 });
