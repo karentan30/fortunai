@@ -98,7 +98,7 @@
   <div class="field">
     <svg class="ic"><use href="#i-user"/></svg>
     <div class="fcol"><div class="lab" id="labGender">性别</div>
-      <select id="gender"><option value="female" id="gFemale">女</option><option value="male" id="gMale">男</option></select>
+      <select id="gender"><option value="" id="gPick">请选择</option><option value="female" id="gFemale">女</option><option value="male" id="gMale">男</option></select>
     </div>
   </div>
 
@@ -136,7 +136,7 @@
       labDate:'出生日期', calSolar:'阳历', calLunar:'农历', yearPh:'年', monthPh:'月', dayPh:'日',
       labTime:'出生时间', timePh:'不确定可跳过', optTime:'可选',
       labCity:'出生地', cityPh:'城市，如 上海', optCity:'可选',
-      labGender:'性别', gFemale:'女', gMale:'男',
+      labGender:'性别', gPick:'请选择', gFemale:'女', gMale:'男',
       secPhoto:'加了更准 · 可选',
       palmN:'手相照', palmH:'解锁手相推演',
       faceN:'面相照', faceH:'解锁面相推演',
@@ -145,7 +145,7 @@
       career:'事业', love:'爱情', wealth:'财运', health:'健康',
       next:'下一步 · 选择推演',
       hint:'信息仅用于生成你的报告',
-      alertDate:'请填写出生日期'
+      alertDate:'请填写出生日期', alertGender:'请选择性别',
     },
     en:{
       docTitle:'Runae · Begin',
@@ -157,7 +157,7 @@
       labDate:'Birth date', calSolar:'Solar', calLunar:'Lunar', yearPh:'Year', monthPh:'Month', dayPh:'Day',
       labTime:'Birth time', timePh:'Skip if unsure', optTime:'Optional',
       labCity:'Birthplace', cityPh:'City, e.g. Shanghai', optCity:'Optional',
-      labGender:'Gender', gFemale:'Female', gMale:'Male',
+      labGender:'Gender', gPick:'Select', gFemale:'Female', gMale:'Male',
       secPhoto:'Add a photo for a sharper read · Optional',
       palmN:'Palm photo', palmH:'Unlock palm reading',
       faceN:'Face photo', faceH:'Unlock face reading',
@@ -166,7 +166,7 @@
       career:'Career', love:'Love', wealth:'Wealth', health:'Health',
       next:'Next · Choose a reading',
       hint:'Only used to create your reading',
-      alertDate:'Please enter your birth date'
+      alertDate:'Please enter your birth date', alertGender:'Please select your gender',
     }
   };
   var t=T[LANG]||T.zh;
@@ -188,6 +188,7 @@
   document.getElementById('bcity').placeholder=t.cityPh;
   document.getElementById('optCity').textContent=t.optCity;
   document.getElementById('labGender').textContent=t.labGender;
+  document.getElementById('gPick').textContent=t.gPick;
   document.getElementById('gFemale').textContent=t.gFemale;
   document.getElementById('gMale').textContent=t.gMale;
   document.getElementById('secPhoto').textContent=t.secPhoto;
@@ -237,6 +238,10 @@
   document.getElementById('next').onclick=function(){
     var _y=document.getElementById('byear').value,_m=document.getElementById('bmonth').value,_d=document.getElementById('bday').value;
     if(!_y||!_m||!_d){ alert(t.alertDate); return; }
+    // 🔴 性别决定大运顺逆：同一生辰，男命大运起于 8 岁、女命起于 4 岁，整条大运序列不同。
+    //   原来没有占位项，<select> 默认选中第一项「女」，没注意到这个框的男性用户
+    //   会拿到一份按女命排的报告，而页面上看起来一切正常。必须显式选择。
+    if(!document.getElementById('gender').value){ alert(t.alertGender); return; }
     var bdate=_y+'-'+('0'+_m).slice(-2)+'-'+('0'+_d).slice(-2);
     var aspects=[]; document.querySelectorAll('#aspects .chip.on').forEach(function(c){ aspects.push(c.dataset.a); });
     var cal=document.querySelector('.cal-toggle span.on').dataset.cal;
