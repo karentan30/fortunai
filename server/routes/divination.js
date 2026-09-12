@@ -49,14 +49,36 @@ const { _M, insertReading, hasFullAccess, hasVipAccess, hehunTier, hehunTierRead
 // 🔴 P0-C helper(专家复审): 报告端点若本请求消费了月会员 credit(gateReportAccess/hehunTier 会在
 //   req._syCreditUid 打标记), 而后续 LLM 生成抛错, 回补一次 credit, 防"扣了额度没拿到报告"。
 //   只对本请求真正扣过 credit 的情况回补(靠标记), 不误退其他请求已合法消费的额度。
+// 🔴 0912(专家复审抓到): 「已经 stream 出去正文」的请求不能回补额度 —— 用户手里已经有内容了
+//   (前端会渲染)，再退一次额度 = 一次付款两份报告(拿部分八字 + 用退回的额度再开一份完整塔罗)。
+//   western-astrology.js 早就有 emitted 判断(该文件 :246/:269)，本文件这一支一直没有，
+//   18 个流式端点全都在 catch 里无条件回补。
+//   这里统一判定，不逐个端点改写法：所有流式端点的正文块都是 `data: {"type":"chunk",...}` 这一种形状
+//   (确定性事实卡也是 chunk)，命中一次就置位，之后短路 —— 不会逐 token 扫字符串。
+//   ⚠️ 只在**带 reportId** 的端点拒补：拒补后额度不再退回，但那份报告的标记还在，
+//   会员仍能无限次重试这一份(走 already 直接放行)。未标注 reportId 的端点没有标记、
+//   没有 already 通道，拒补会变成「付了钱拿不到也重试不了」，所以那里维持原行为(回补)。
+function _trackEmitted(req, res, next) {
+  var _w = res.write;
+  res.write = function (chunk, enc, cb) {
+    try {
+      if (!res._syEmitted && chunk && String(chunk).indexOf('"type":"chunk"') !== -1) res._syEmitted = true;
+    } catch (e) {}
+    return _w.apply(res, arguments);
+  };
+  next();
+}
+
 function _refundCreditOnFail(req) {
   try {
     if (req && req._syCreditUid != null) {
-      refundMonthlyReportCredit(req._syCreditUid, req);
+      var _emitted = !!(req.res && req.res._syEmitted);
+      if (!(_emitted && req._syCreditReport)) refundMonthlyReportCredit(req._syCreditUid, req);
       req._syCreditUid = null; // 幂等: 只退一次
     }
   } catch (e) {}
 }
+router.use(_trackEmitted);
 const { getToken } = require('../lib/store');
 
 // ══════════════════════════════════════════
@@ -474,7 +496,7 @@ try { mon = require(process.env.MONITORING_PATH || require('path').join(__dirnam
 async function baziKoreanHandler(req, res) {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, question, mode } = req.body;
-    var full = gateReportAccess(req, ['bazi', '사주', '八字']).full;
+    var full = gateReportAccess(req, ['bazi', '사주', '八字'], 'bazi').full;
     // 订单号解锁：hub WeChat/Alipay 付款后无登录账号时使用
     // ⚠️ 安全建议(P2): order_no 目前只验"完成+product匹配"，不验归属，存在多人共享风险。
     // 建议后续: ① 优先走登录态token解锁 ② order_no首次兑换后写入绑定记录，再次请求对比设备指纹/IP。
@@ -537,7 +559,7 @@ ${_chartKo ? CHART_STRICT.ko + _chartKo + '\n' : ''}
 async function baziEnglishHandler(req, res) {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, order_no } = req.body;
-    var full = gateReportAccess(req, ['bazi', '사주', '八字']).full;
+    var full = gateReportAccess(req, ['bazi', '사주', '八字'], 'bazi').full;
     if (!full && order_no) {
       var _o = _findOrder(order_no);
       if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
@@ -608,7 +630,7 @@ ${full ? `Generate a comprehensive report with these sections (emoji heading req
 async function baziPtBrHandler(req, res) {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, order_no } = req.body;
-    var full = gateReportAccess(req, ['bazi', '사주', '八字']).full;
+    var full = gateReportAccess(req, ['bazi', '사주', '八字'], 'bazi').full;
     if (!full && order_no) {
       var _o = _findOrder(order_no);
       if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
@@ -637,7 +659,7 @@ async function baziPtBrHandler(req, res) {
 async function baziThHandler(req, res) {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, order_no } = req.body;
-    var full = gateReportAccess(req, ['bazi', '사주', '八字']).full;
+    var full = gateReportAccess(req, ['bazi', '사주', '八字'], 'bazi').full;
     if (!full && order_no) {
       var _o = _findOrder(order_no);
       if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
@@ -666,7 +688,7 @@ async function baziThHandler(req, res) {
 async function baziEsHandler(req, res) {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, order_no } = req.body;
-    var full = gateReportAccess(req, ['bazi', '사주', '八字']).full;
+    var full = gateReportAccess(req, ['bazi', '사주', '八字'], 'bazi').full;
     if (!full && order_no) {
       var _o = _findOrder(order_no);
       if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
@@ -695,7 +717,7 @@ async function baziEsHandler(req, res) {
 async function baziInHandler(req, res) {
   try {
     const { birthYear, birthMonth, birthDay, birthHour, gender, order_no } = req.body;
-    var full = gateReportAccess(req, ['bazi', '사주', '八字']).full;
+    var full = gateReportAccess(req, ['bazi', '사주', '八字'], 'bazi').full;
     if (!full && order_no) {
       var _o = _findOrder(order_no);
       if (_o && _o.payment_status === 'completed' && ['bazi_full','bazi_vip'].includes(_o.product)) full = true;
@@ -854,7 +876,7 @@ ${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及�
 - 专属心里话（非套话）+发自内心的祝福`
     );
 
-    var full = gateReportAccess(req, ['bazi', '八字']).full;
+    var full = gateReportAccess(req, ['bazi', '八字'], 'bazi').full;
     var baziTier = resolveReportTier(full, req.body.tier);
     var useMessages = messages;
     if (baziTier === 'free') {
@@ -1495,7 +1517,10 @@ router.post('/bazi/topic', rateLimitMiddleware, async (req, res) => {
     const _hasHour = birthHour !== undefined && birthHour !== null && birthHour !== '';
     const baziBlock = _hasHour ? buildBaziBlock({ birthYear, birthMonth, birthDay, birthHour, gender }) : '';
     // session 制：总览(overview)永远免费出全本(钩子)；其余 session 按「单买该 session 或买全套 bazi_full/vip」解锁
-    const full = cfg.free ? true : gateReportAccess(req, ['bazi_s_' + topic, 'bazi', '八字']).full;
+    // reportId 按 topic 分开：每份 topic 是独立报告，各自要一份额度；
+    // 同一个 topic 本月重复打开则直接放行(不会因为「额度已扣」而让付费会员看预览)。
+    // 「每月 1 份」的总上限由 credit 计数保证，标注 id 不会多送报告。
+    const full = cfg.free ? true : gateReportAccess(req, ['bazi_s_' + topic, 'bazi', '八字'], 'bazi_s_' + topic).full;
 
     // ── English branch: same real chart, same locked contract, English prompts ──
     if (isEn) {
@@ -5662,6 +5687,43 @@ function buildChapterPrompt(chapterId, lang, birth, baziBlock) {
   }
 }
 
+// ── POST /api/bazi/chart ── 只排盘，不出报告（零 LLM、零额度、秒回）
+// 🔴 0912: 免费计算器页(free-bazi-calculator / free-saju-calculator-kr)只需要四柱+日主，
+//   reading 正文在前端是被**丢弃**的（页面注释自己写着「we read pillars off the standard
+//   /api/bazi response and ignore the reading text」）。但它们打的是 /api/bazi —— 实测后果两条：
+//   ① 每来一个访客就烧一次完整报告的 LLM 生成（这两个页是 SEO 最高优先词
+//      /en/free-bazi-calculator 的落地页，流量越大亏越多，且白等十几秒才看到盘）；
+//   ② /api/bazi 带 gate：已登录的月会员用免费计算器会被**扣掉当月唯一一份完整报告额度**
+//      （实测 reportCredits 1/1、标记 #bazi），他看的却是一个免费页。
+//   这里只跑确定性引擎 calcBazi：不调 LLM、不碰 gate、不写 readings、不发邮件。
+//   返回结构与 /api/bazi 的 pillars 一致（页面读的字段：year/month/day/hour.gan|zhi、dayMaster、dayMasterElement）。
+router.post('/bazi/chart', rateLimitMiddleware, (req, res) => {
+  try {
+    const { birthYear, birthMonth, birthDay, birthHour, gender } = req.body || {};
+    if (!birthYear || !birthMonth || !birthDay) return res.status(400).json({ error: '请提供出生年月日' });
+    // 与 /api/bazi 同一套年龄口径（前端年份下拉也只给到 now-14）
+    if (Number(birthYear) > new Date().getFullYear() - 14) return res.status(400).json({ error: '仅限14岁以上用户使用' });
+
+    const bz = calcBazi(Number(birthYear), Number(birthMonth), Number(birthDay), Number(birthHour) || 0, gender || 'female');
+    const hasHour = birthHour !== undefined && birthHour !== null && birthHour !== '';
+    const pillars = {
+      year:  { gan: bz.year.gan,  zhi: bz.year.zhi,  label: 'Year Pillar' },
+      month: { gan: bz.month.gan, zhi: bz.month.zhi, label: 'Month Pillar' },
+      day:   { gan: bz.day.gan,   zhi: bz.day.zhi,   label: 'Day Pillar' },
+      hour:  (hasHour && bz.hour) ? { gan: bz.hour.gan, zhi: bz.hour.zhi, label: 'Hour Pillar' } : null,
+      dayMaster: bz.dayMaster,
+      dayMasterElement: bz.dayMasterElement,
+      wuxing: bz.wuxing, daYun: bz.daYun, isStrong: bz.isStrong,
+    };
+    let chart = null;
+    try { chart = baziChartData({ birthYear, birthMonth, birthDay, birthHour, gender }); } catch (e) {}
+    res.json({ pillars, chart });
+  } catch (err) {
+    console.error('[BAZI-CHART ERR]', err && err.message);
+    res.status(500).json({ error: 'Our chart engine is busy — please try again in a moment.' });
+  }
+});
+
 // ── POST /api/bazi/chapter ── SSE 单章按需生成
 router.post('/bazi/chapter', rateLimitMiddleware, async (req, res) => {
   try {
@@ -5688,7 +5750,7 @@ router.post('/bazi/chapter', rateLimitMiddleware, async (req, res) => {
     }
 
     // ── 权限检查 ──
-    var full = gateReportAccess(req, ['bazi', '八字', '사주']).full;
+    var full = gateReportAccess(req, ['bazi', '八字', '사주'], 'bazi').full;
     // 订单号解锁（沿用 baziEnglishHandler 逻辑）
     if (!full && order_no) {
       var _o = _findOrder(order_no);
@@ -5830,7 +5892,7 @@ router.post('/bazi/stream', rateLimitMiddleware, async (req, res) => {
       res.setHeader('Content-Type', 'application/json');
       return res.status(400).json({ error: '请提供出生年月日' });
     }
-    const full = gateReportAccess(req, ['bazi', '八字', '사주']).full;
+    const full = gateReportAccess(req, ['bazi', '八字', '사주'], 'bazi').full;
 
     // ── 精确排盘（真实算法，不依赖AI猜算）──
     const bazi = calcBazi(Number(birthYear), Number(birthMonth), Number(birthDay), Number(birthHour) || 0, gender);

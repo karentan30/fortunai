@@ -25,7 +25,12 @@ const _DATA_FILE = process.env.DATA_FILE || path.join(__dirname, '../data.json')
     if (!fs.existsSync(_DATA_FILE)) return;
     const d = JSON.parse(fs.readFileSync(_DATA_FILE, 'utf8'));
     // 🔴 0817: 加 reportCredits(月会员报告credit,防重启白刷) + dailyUsage(每日运势免费次数) + rewards + streaks 落盘恢复
-    for (const k of ['users','tokens','orders','readings','subs','referrals','feedbacks','chatUsage','abEvents','reportCredits','dailyUsage','rewards','streaks','questionCredits']) {
+    // 🔴 0912: reportCreditSpentOn / reportCreditServed 必须一起回载 —— 它们记「本月这份额度
+    //   花在哪份报告上」和「这份报告的哪几个请求已经拿到过内容」。
+    //   只回载 reportCredits(计数)而不回载标记, 重启后计数还在、标记没了:
+    //   月会员正在读的那份报告会重新被判「额度用尽」, 第 2 个请求又撞回付费墙;
+    //   而 served 没了, 一次重启就能让「回补」重新放行 —— 刚拿到的报告被退回额度白送一遍。
+    for (const k of ['users','tokens','orders','readings','subs','referrals','feedbacks','chatUsage','abEvents','reportCredits','reportCreditSpentOn','reportCreditServed','dailyUsage','rewards','streaks','questionCredits']) {
       if (Array.isArray(d[k])) _M[k] = d[k];
       else if (d[k] && typeof d[k] === 'object' && !Array.isArray(d[k])) _M[k] = d[k];
     }
@@ -409,15 +414,77 @@ function consumeMonthlyReportCredit(uid, req) {
   return true;
 }
 
+// ── 「本月这份报告的 credit 花在哪一份上」(0912 修复) ──
+// 原来 credit 只按 uid+自然月计数、不记花在哪份报告上。而一份报告要发**多个请求**
+// (报告页一次浏览 = 拿 meta 的 1 个 + 免费章 1 个 + 各付费章 7 个)，于是第 2 个请求起
+// 就被判「额度用尽」→ 付费月会员看到的是免费预览 + 一个「再付一次」的付费墙，
+// 而他明明交着月费。这里记住花在哪份报告上：同一份报告在本月的后续请求直接放行、
+// 不重复扣；换成别份报告仍要各自一份额度，「每月1份」的上限不变。
+function _monthlyCreditSpentKey(uid) {
+  return uid + '_rcs_' + new Date().toISOString().slice(0, 7);
+}
+// 🔴 reportId 必须由调用方显式给出「这是哪一份报告」，绝不能从 productKeys 推。
+//   理由(专家复审抓到的 P0)：productKeys 是**类目并集**，职责是"你拥有其中任一个就解锁"，
+//   不是报告身份。divination.js 里同一个 11 键数组被 /api/ziwei、/api/xingming、
+//   /api/astrology 三个**不同报告**共用，21 键那个更是被 10 个端点共用 ——
+//   一旦拿它当身份，一个 credit 会连锁放行 3~10 份付费报告。
+//   所以：不传 reportId 的端点**维持旧行为**(每个请求各自消耗额度，不做幂等放行)，
+//   默认安全 —— 漏标注只会让那页回到修复前的严格行为，绝不会多送报告。
+//   标记值带 '#' 前缀，与任何由 productKeys 拼出的字符串天然不同名，杜绝跨命名空间撞车。
+// 返回 'already'(同一份报告本月已放行) | 'consumed'(本次扣成功) | 'none'(没额度)
+function _monthlyCreditForReport(uid, reportId, req) {
+  if (!uid) return 'none';
+  if (!_M.reportCreditSpentOn) _M.reportCreditSpentOn = {};
+  var sk = _monthlyCreditSpentKey(uid);
+  if (reportId && _M.reportCreditSpentOn[sk] === '#' + reportId) {
+    // 🔴 P1(专家复审): 记下「这份额度下已经有请求真的拿到过内容了」。
+    //   本函数返回 'already' 的那个请求，服务端是**真的把付费内容发给它了**，
+    //   只是没再扣一次额度。此时若头一个请求(扣额度那个)的 LLM 恰好失败并触发回补，
+    //   额度被退回、标记被清，会员就白拿这一份完整报告，还能用退回的额度再开一份 ——
+    //   一次付款两份报告。有了这个 latch，回补在「已被服务过」时直接拒绝。
+    if (!_M.reportCreditServed) _M.reportCreditServed = {};
+    _M.reportCreditServed[sk] = '#' + reportId;
+    _persist();
+    return 'already';
+  }
+  if (!consumeMonthlyReportCredit(uid, req)) return 'none';
+  if (reportId) {
+    // 新的一次消费：换了一份报告，上一轮「已被服务过」的印记作废。
+    // ⚠️ 复审确认：MONTHLY_REPORT_CREDIT===1 时这行**不可达**（served 非空 ⇒ spentOn 非空 ⇒
+    //    额度已用完，不可能再有「新鲜消费」）。它是为额度>1 的将来留的防御，别当成已生效的行为；
+    //    真要把额度调大，单槽设计必须先改成「每份报告一个槽」（见 refundMonthlyReportCredit 上方注释）。
+    if (_M.reportCreditServed) delete _M.reportCreditServed[sk];
+    _M.reportCreditSpentOn[sk] = '#' + reportId;
+    _persist();
+  }
+  return 'consumed';
+}
+
 // 🔴 P0-C修复(专家复审): 报告生成(LLM)失败时回补已扣的 credit,防"扣了额度没拿到报告"漏账。
 //   端点在 gateReportAccess 返回 viaCredit=true 后, 若 LLM 抛错, 调此回滚。幂等下限保护到 0。
+// 🔴 注意(0912): 「标记」是**单槽**的(uid+月 一个 key) —— 这只有在 MONTHLY_REPORT_CREDIT===1 时
+//   才成立: 一个月只有一份额度，所以「花在哪份报告上」永远是唯一值。若将来把额度调大，
+//   必须把标记改成「每份报告一个槽」的集合，否则第 2 份报告会覆盖第 1 份的标记。
+//   (store-monthly-credit.test.js 里有一条测试钉死这个前提，改常量会先红。)
 function refundMonthlyReportCredit(uid, req) {
   if (!uid) return false;
   if (!_M.reportCredits) _M.reportCredits = {};
   var key = _monthlyBillingKey(uid, req);
   var used = _M.reportCredits[key] || 0;
   if (used <= 0) return false;
+  var name = _monthlyCreditSpentKey(uid);
+  var mine = (req && req._syCreditReport) || null;
+  var marker = _M.reportCreditSpentOn && _M.reportCreditSpentOn[name];
+  // (1) 标记属于**另一份报告** → 这次请求根本没扣成功(扣成功是互斥的)，动它就是替别人作废放行，
+  //     还会留下「计数已退、标记还在」的错位状态。装作没发生，直接在扣减之前返回。
+  if (marker && (!mine || marker !== '#' + mine)) return false;
+  // (2) 同一份报告的兄弟请求已经拿到过内容 → 这份额度已经在用了，不能退。
+  //     退了 = 那份已送达的报告白送，而且退回的额度还能再开一份(一次付款两份报告)。
+  if (mine && _M.reportCreditServed && _M.reportCreditServed[name] === '#' + mine) return false;
   _M.reportCredits[key] = used - 1;
+  // 回补时把「花在哪份报告上」的标记一起清掉 —— 否则那份报告本月会被认成「已放行」，
+  // 之后每个请求都直接放行，等于把退回的这一次额度变成本月无限次。
+  if (marker) delete _M.reportCreditSpentOn[name];
   _persist();
   return true;
 }
@@ -497,7 +564,11 @@ var CREDIT_INELIGIBLE_KEYS = {
 // 优先级: 单买/全解锁会员/裂变 → full(不耗 credit); 否则 月会员且本月还有 credit
 //   且该报告属"credit可覆盖的标准报告" → 消费1个 credit → full。
 // 报告端点用此判定; 聊天/每日运势不要用(它们各有自己的限量逻辑,别误耗报告 credit)。
-function gateReportAccess(req, productKeys) {
+//
+// 第 3 个参数 reportId：**一份报告被多个请求拼出来时必传**(比如八字报告页要发
+// stream + 各章 chapter 共 N 个请求)。同一份报告的所有端点传同一个 id，本月的后续请求
+// 就直接放行、不重复扣额度。不传 = 维持旧行为(每个请求各自要额度)，是默认安全的那一侧。
+function gateReportAccess(req, productKeys, reportId) {
   // 先复用 hasFullAccess: 单买/全解锁会员/裂变奖励
   if (hasFullAccess(req, productKeys)) {
     return { full: true, viaCredit: false, tier: 'paid' };
@@ -506,10 +577,16 @@ function gateReportAccess(req, productKeys) {
   var uid = _uidFromReq(req);
   if (uid && memberTier(req) === 'monthly') {
     var creditEligible = !(productKeys || []).some(function(k) { return CREDIT_INELIGIBLE_KEYS[k]; });
-    if (creditEligible && consumeMonthlyReportCredit(uid, req)) {
-      // 🔴 P0-C: 打标记, 供端点在 LLM 失败时回补 credit(_refundCreditOnFail)。
-      try { req._syCreditUid = uid; } catch (e) {}
-      return { full: true, viaCredit: true, tier: 'monthly' };
+    if (creditEligible) {
+      var _g = _monthlyCreditForReport(uid, reportId, req);
+      // 同一份报告本月已经放行过 → 后续请求(其它章/拿 meta 那次)直接放行，不再扣
+      if (_g === 'already') return { full: true, viaCredit: false, tier: 'monthly', reportId: reportId || null };
+      if (_g === 'consumed') {
+        // 🔴 P0-C: 打标记, 供端点在 LLM 失败时回补 credit(_refundCreditOnFail)。
+        //    _syCreditReport 同时告诉回补逻辑"退的是哪一份"，避免误清别份的放行标记。
+        try { req._syCreditUid = uid; req._syCreditReport = reportId || null; } catch (e) {}
+        return { full: true, viaCredit: true, tier: 'monthly', reportId: reportId || null };
+      }
     }
     // 月会员但 credit 用尽 / 或请求的是高端单品 → 走免费预览(高端单品端点自行 402)
     return { full: false, viaCredit: false, tier: 'monthly' };
@@ -538,8 +615,12 @@ function hehunTier(req) {
     for (var i = 0; i < fullKeys.length; i++) { if (owned[fullKeys[i]]) return 'full'; }
     // 月会员: 消费本月报告 credit → full; credit 用尽则降级(basic/裂变/teaser)
     if (owned['member_monthly']) {
-      if (consumeMonthlyReportCredit(t.user_id, req)) {
-        try { req._syCreditUid = t.user_id; } catch (e) {} // 🔴 P0-C 失败回补标记
+      // 走同一个「这份报告本月是否已放行」判定：合婚报告页若也发多个请求，
+      // 不会在第二个请求上被误判成额度用尽（与 gateReportAccess 同一套语义）
+      var _hg = _monthlyCreditForReport(t.user_id, 'hehun', req);
+      if (_hg === 'already') return 'full';
+      if (_hg === 'consumed') {
+        try { req._syCreditUid = t.user_id; req._syCreditReport = 'hehun'; } catch (e) {} // 🔴 P0-C 失败回补标记
         return 'full';
       }
     }

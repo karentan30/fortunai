@@ -805,7 +805,9 @@ function buildPaywallCta() {
 function createCheckout(btn, tier, price) {
   var label = btn.textContent;
   btn.disabled = true; btn.textContent = 'Redirecting…';
-  if (lastInput) { try { localStorage.setItem('sy_last_jyotish', JSON.stringify(lastInput)); } catch(e){} }
+  // 存储键也必须按页分开: 原来沿用 jyotish.html 的 sy_last_jyotish, 两页同域同键,
+  // 后写的覆盖先写的 —— 在另一标签页生成过印度占星的人回来付款, 本页会用**别人的输入**出报告。
+  if (lastInput) { try { localStorage.setItem('sy_last_tibet', JSON.stringify(lastInput)); } catch(e){} }
   fetch('/api/create-checkout', {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
@@ -825,13 +827,16 @@ function handlePaidReturn() {
   if (new URLSearchParams(location.search).get('paid') !== '1') return;
   try { history.replaceState(null,'',location.pathname); } catch(e){}
   var saved = null;
-  try { saved = JSON.parse(localStorage.getItem('sy_last_jyotish')||'null'); } catch(e){}
+  try { saved = JSON.parse(localStorage.getItem('sy_last_tibet')||'null'); } catch(e){}
   if (saved && saved.dob) {
     lastInput = saved;
     document.getElementById('inputScreen').style.display='none';
     document.getElementById('loadingScreen').classList.add('show');
     runLoadingSteps();
-    fetchJyotishReport(lastInput).then(function(d){
+    // 从 jyotish.html 抄来的付款回流处理器，函数名漏改：本页只定义了 fetchTibetReport(572)，
+    // fetchJyotishReport 从来不存在 → 这里抛 ReferenceError，而 loading 屏刚被 .add('show')，
+    // 于是刚付完钱的用户看到的是一屏永远转不完的圈（.catch 也接不住，因为异常在表达式求值时就抛了）。
+    fetchTibetReport(lastInput).then(function(d){
       document.getElementById('loadingScreen').classList.remove('show');
       if (d && d.reading) { showReport(d.reading, d.contextId, d.tier, d.locked); if (d.product) renderProductCard(d.product); showToast('Payment successful — your full reading is unlocked!'); }
       else { document.getElementById('inputScreen').style.display='block'; showToast('Please generate your report again.'); }

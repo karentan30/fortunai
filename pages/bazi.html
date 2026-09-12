@@ -1254,6 +1254,28 @@ function streamBaziReport(input, mode, btn, onDone) {
   var accumulated = '';
   var reportStarted = false;
   var streamEl = null;
+  var failed = false;   // 流上已经出过错：停止继续 read，并保证只收尾一次
+
+  // 统一失败收尾。三个出口（服务端 error 事件 / 流中断 / 网络错）必须走同一套，而且**必须真的收尾**：
+  // 旧写法在 forEach 里 `throw new Error(ev.message)`，而外层是 `catch(e){}` —— 异常当场被吞掉；
+  // 服务端发完 error 就 res.end()，下一次 read() 拿到 done，而本函数 `if (r.done) return;` 什么都不做。
+  // 净效果：loading 屏一直转、按钮一直灰、没有任何提示，用户只能刷新页面（LLM 抖动时就会撞上）。
+  function _fail(msg) {
+    if (failed) return;            // 已在收尾（如 error 事件之后流又断了），不重复弹提示
+    failed = true;
+    isStreaming = false;
+    var ls = document.getElementById('loadingScreen');
+    if (ls) ls.classList.remove('show');
+    // 出过正文之后再失败：别把用户踢回输入页，已经拿到的部分留在屏幕上
+    if (!reportStarted) {
+      document.getElementById('inputScreen').style.display = 'block';
+      var rs = document.getElementById('reportScreen');
+      if (rs) rs.style.display = 'none';
+    }
+    if (btn) { btn.disabled = false; btn.innerHTML = btn._label || '排盘 · 生成命理预览'; }
+    if (typeof onDone === 'function') onDone();
+    showToast(msg || '生成失败，请重试', 'error');
+  }
 
   fetch('/api/bazi/stream', {
     method: 'POST',
@@ -1306,28 +1328,23 @@ function streamBaziReport(input, mode, btn, onDone) {
             } else if (ev.type === 'product') {
               if (ev.product) renderProductCard(ev.product);
             } else if (ev.type === 'error') {
-              throw new Error(ev.message);
+              // 服务端 error 事件（LLM 失败时的正常出口，不是异常路径）：显式收尾，别再 throw。
+              // throw 出去只会被同一个 catch(e){} 吞掉，见 _fail 上面的注释。
+              _fail(ev.message);
+              try { reader.cancel(); } catch (e2) {}
+              return;
             }
           } catch(e) {}
         });
-        read();
+        // 出错后不再 read()：流已结束时 r.done 分支什么也不做，界面会停在半路
+        if (!failed) read();
       }).catch(function() {
-        isStreaming = false;
-        document.getElementById('loadingScreen').classList.remove('show');
-        document.getElementById('inputScreen').style.display = 'block';
-        if (btn) { btn.disabled = false; btn.innerHTML = btn._label || '排盘 · 生成命理预览'; }
-        if (typeof onDone === 'function') onDone();
-        showToast('生成失败，请重试', 'error');
+        _fail('生成失败，请重试');
       });
     }
     read();
   }).catch(function() {
-    isStreaming = false;
-    document.getElementById('loadingScreen').classList.remove('show');
-    document.getElementById('inputScreen').style.display = 'block';
-    if (btn) { btn.disabled = false; btn.innerHTML = btn._label || '排盘 · 生成命理预览'; }
-    if (typeof onDone === 'function') onDone();
-    showToast('网络异常，请重试', 'error');
+    _fail('网络异常，请重试');
   });
 }
 
@@ -1427,6 +1444,7 @@ function fetchChapter(chapterId, input, onMeta, onDone, onError) {
         buf += decoder.decode(r.value, { stream: true });
         var lines = buf.split('\n');
         buf = lines.pop();
+        var _chapErr = null;   // 本轮读到的 error 事件（LLM 失败时的正常出口）
         lines.forEach(function(line) {
           if (!line.startsWith('data: ')) return;
           var raw = line.slice(6);
@@ -1450,13 +1468,27 @@ function fetchChapter(chapterId, input, onMeta, onDone, onError) {
               _chapText[chapterId] = ev.teaser || '';
               _updateChapCard(chapterId);
             } else if (ev.type === 'error') {
-              throw new Error(ev.message || 'error');
+              // 服务端 error 事件。旧写法在这里 throw，被同一个 catch(e){} 吞掉：
+              // 章节卡停在 streaming，随后流结束又被当 done 渲染成一个**空白章**（用户以为生成成功了）。
+              // 与 report-v2.html 同样的写法：forEach 里只记录，出了 forEach 再收尾。
+              _chapErr = ev.message || '生成失败，请重试';
             }
           } catch (e) {}
         });
+        if (_chapErr) {
+          clearTimeout(timeout);
+          _chapConcurrent = Math.max(0, _chapConcurrent - 1);
+          _chapState[chapterId] = 'error';
+          _updateChapCard(chapterId);
+          if (typeof onError === 'function') onError(chapterId, new Error(_chapErr));
+          try { reader.cancel(); } catch (e2) {}
+          return;
+        }
         if (_chapState[chapterId] === 'streaming' || _chapState[chapterId] === 'loading') read();
       }).catch(function(err) {
         clearTimeout(timeout);
+        // 已按 error 事件收过尾：别再扣一次并发数，否则会挤掉别的章节的名额
+        if (_chapState[chapterId] === 'error') return;
         _chapConcurrent = Math.max(0, _chapConcurrent - 1);
         _chapState[chapterId] = 'error';
         _updateChapCard(chapterId);

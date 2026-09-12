@@ -386,7 +386,10 @@ function calc(){
      chart-only endpoint (calcBazi, no LLM, no token cost) — e.g. POST /api/bazi/chart —
      would be cheaper here; see programmatic-seo-spec.md. Until it exists we read
      `pillars` off the standard /api/bazi response and ignore the reading text. */
-  fetch('/api/bazi',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
+  // ✅ 0912: /api/bazi/chart 已上线 —— 只排盘、不调 AI、不扣会员额度。
+  //    换掉原来打 /api/bazi 的写法：那个每访客烧一次完整报告生成，
+  //    而且带付费门 —— 已登录的月会员用这个免费页会被扣掉当月唯一一份报告额度。
+  fetch('/api/bazi/chart',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})
     .then(function(r){return r.json();})
     .then(function(data){
       if(!data||!data.pillars){throw new Error('no-pillars');}
