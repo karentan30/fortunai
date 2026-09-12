@@ -41,7 +41,9 @@
   .mcard.top .mic{margin:0;stroke:var(--gold-soft);width:30px;height:30px}
   .mcard.top .mn{font-size:18px;color:#fff}
   .mcard.top .md{color:rgba(255,255,255,.82);margin-top:4px}
-  .mcard.rec::after{content:'为你推荐';position:absolute;top:14px;right:14px;font-size:10px;color:var(--ink-3);letter-spacing:.04em}
+  /* 角标走 CSS 变量：写死在 content 里的中文 JS 永远改不到（英文页会露出中文），
+     而 CSS 的 content 又放不进语言包，所以由 JS 把当前语言的文案灌进变量 */
+  .mcard.rec::after{content:var(--rec-badge,'为你推荐');position:absolute;top:14px;right:14px;font-size:10px;color:var(--ink-3);letter-spacing:.04em}
   .mcard.top.rec::after{color:var(--gold-soft)}
   .mcard.lock{opacity:.55;cursor:default}
   .mcard.lock:active{transform:none}
@@ -98,6 +100,7 @@
       confirmPalm:'去补一张手相照片来解锁？',
       confirmFace:'去补一张面相照片来解锁？',
       aspectSep:' · ',
+      recBadge:'为你推荐',
       A2N:{career:'事业',love:'爱情',wealth:'财运',health:'健康'},
       methods:{
         bazi:{name:'八字命理',desc:'四柱排盘 · 事业财运姻缘深度解读',tag:''},
@@ -123,6 +126,7 @@
       confirmPalm:'Add a palm photo to unlock?',
       confirmFace:'Add a face photo to unlock?',
       aspectSep:' · ',
+      recBadge:'Recommended',
       A2N:{career:'Career',love:'Love',wealth:'Wealth',health:'Health'},
       methods:{
         bazi:{name:'BaZi Reading',desc:'Four Pillars · a deep read on career, wealth & love',tag:''},
@@ -136,6 +140,8 @@
     }
   };
   var t=T[LANG]||T.zh;
+  // CSS 的 content: 读到的是字符串，所以要连引号一起传进去
+  document.documentElement.style.setProperty('--rec-badge', "'"+t.recBadge+"'");
 
   // ===== 应用文案 =====
   document.documentElement.lang=t.htmlLang;
