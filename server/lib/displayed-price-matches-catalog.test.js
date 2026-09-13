@@ -38,7 +38,9 @@ function usd(key) {
 // { 页面, 该页在卖什么, 页面上必须出现的价格, 绝不能再出现的旧价 }
 const CASES = [
   { file: 'daishao.html',     product: 'joss_basic',   must: ['$49.90', '$249', '$2,499'], forbid: [/\$39\.90/, /\$199 </, /\$1,999/] },
-  { file: 'bazi.html',        product: 'bazi_full',    must: ['$11.99'],                   forbid: [/USD \$9\.90/] },
+  // 只禁「报告解锁按钮上写 $9.90」：bazi.html 的会员按钮写 USD $9.90/月 是对的
+  // （member_monthly 实收 $9.90，见本文件末尾那条 LIVE 核对）
+  { file: 'bazi.html',        product: 'bazi_full',    must: ['$11.99'],                   forbid: [/解锁完整命盘[^<]*\$9\.90/] },
   { file: 'bazi-en.html',     product: 'bazi_full',    must: ['$11.99'],                   forbid: [/\$9\.90/] },
   { file: 'xingming.html',    product: 'bazi_full',    must: ['$11.99'],                   forbid: [/\$9\.90/] },
   { file: 'kyusei.html',      product: 'kyusei_full',  must: ['$11.99'],                   forbid: [/\$9\.90/] },
@@ -47,6 +49,17 @@ const CASES = [
   { file: 'report-es.html',   product: 'report_unlock_a', must: ['$9.90'],                 forbid: [/\$2\.99/] },
   { file: 'tarot.html',       product: 'tarot_3',      must: ['$9'],                       forbid: [/$19(?![\d.])/] },
   { file: 'tarot.html',       product: 'tarot_5',      must: ['$19.90'],                   forbid: [] },
+  // ── 0913 这一批：页面标价与实收对不上（全是「展示的钱 ≠ 扣的钱」）──
+  { file: 'yinzhai-intro.html', product: 'yinzhai_full', must: ['$99'],   forbid: [/\$69\.90/] },
+  { file: 'fengshui-intro.html', product: 'fengshui_full', must: ['$29'], forbid: [/\$19\.90/] },
+  { file: 'report-tarot.html', product: 'tarot_3',   must: ['$9'],     forbid: [/<b>\$9\.90<\/b>/] },
+  { file: 'report-en.html',    product: 'member_yearly', must: ['$69'], forbid: [/\$49 \/ year/, /only \$49/] },
+  { file: 'order-confirm.html', product: 'member_yearly', must: ['$69'], forbid: [/\$49/] },
+  { file: 'hehun-en.html',     product: 'hehun_full', must: ['$11.99'], forbid: [/\$19\.90/] },
+  { file: 'ziwei.html',        product: 'ziwei_full', must: ['$11.99'], forbid: [/\$19\.90/] },
+  { file: 'zhiyuan.html',      product: 'zhiyuan_full', must: ['¥39.90'], forbid: [/完整报告 ¥99/] },
+  // daily-en 的价格是把 $ 拆在 <sup> 里写的，所以 must 用带标签的串（规则3 会跳过非纯价格串）
+  { file: 'daily-en.html',     product: 'daily_companion_year', must: ['<sup>$</sup>19</div>', '<sup>$</sup>2.90</div>'], forbid: [/<sup>\$<\/sup>39</, /\$4\.90/] },
 ];
 
 test('核对过的页面：显示价 = 目录实收价', () => {
@@ -83,13 +96,20 @@ test('守卫自身有效：改一个数字就会红', () => {
   assert.strictEqual(usd('tarot_5'), '$19.90');
   // 格式化不能把 $11.99 压成 $12 或 $11.99 变 $12.0
   assert.strictEqual(usd('bazi_basic'), '$9.90');
-  assert.strictEqual(usd('member_monthly'), '$12.90');
+  // 🔴 0913 修正：会员三档在 payment.js 里是**硬编码的 Stripe 固定价**（不是空的 STRIPE_PRICE_IDS），
+  //   固定价优先于目录价 —— 也就是说会员的实收价来自 Stripe，不是 PRODUCTS。
+  //   已在 LIVE 账号上只读核对：monthly $9.90 / quarterly $24.90 / yearly $69，三个 price 都 active。
+  //   所以目录必须跟着 Stripe 走（member_monthly 曾写 $12.90、member_yearly 曾写 $99，
+  //   页面写的是 $9.90/$69 —— 两边差着钱，而这张表从来不会报错）。
+  assert.strictEqual(usd('member_monthly'), '$9.90');
 });
 
-test('🔴 STRIPE_PRICE_IDS 为空 —— 本测试的前提，也是线上核过的事实', () => {
-  // 这条断言是给未来的自己留的纸条：如果哪天线上真配了 STRIPE_PRICE_IDS，
-  // 那么「目录即唯一价目表」这个前提就不成立了，上面那些 must/forbid 全要重新核。
-  // 到那时这条会红，提醒你回来读这段注释。
+test('🔴 价格来源逻辑没变（目录价 + 会员固定价两条路）', () => {
+  // 0913 更正：本文件原先断言「STRIPE_PRICE_IDS 是空的、PRODUCTS 是唯一价目表」，
+  // 但 payment.js 里 member_monthly/quarterly/yearly 三个 price 是**硬编码**的（与 .env 无关），
+  // 且固定价优先于目录价 —— 已在 LIVE 账号上只读核对，三个 price 都 active（$9.90/$24.90/$69）。
+  // 所以「目录即唯一价目表」对会员不成立，上面的 must/forbid 只对**非会员商品**有效；
+  // 会员商品的唯一口径是 Stripe 上那三个 price，改价必须两边一起改。
   const src = fs.readFileSync(path.join(__dirname, '..', 'routes', 'payment.js'), 'utf8');
   assert.ok(/STRIPE_PRICE_IDS\[currKey\] \|\| STRIPE_PRICE_IDS\[product\]/.test(src),
     'priceId 的解析逻辑变了，请重新确认价格来源');
