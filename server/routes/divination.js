@@ -3237,6 +3237,10 @@ router.post('/tarot/stream', rateLimitMiddleware, async (req, res) => {
     res.write(`data: ${JSON.stringify({ type: 'done', contextId: ctxId })}\n\n`);
     res.end();
   } catch(err) {
+    // 🔴 0913(专家复审): 本端点原来只 log + 发 error, 少了这一句 —— 月会员在这里失败时
+    //   扣掉的额度不退(其它流式端点都会退)，于是本月额度被锁死在这份塔罗上，只能重试塔罗。
+    //   补了 reportId 之后这句是安全的: 正文没发出去才退, 发出去了由 _trackEmitted 拦住。
+    _refundCreditOnFail(req);
     console.error('[TAROT-STREAM ERR]', err.message);
     try { res.write(`data: ${JSON.stringify({ type: 'error', message: '生成失败' })}\n\n`); res.end(); } catch(e) {}
   }

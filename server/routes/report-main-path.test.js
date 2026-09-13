@@ -323,6 +323,28 @@ test('非八字方法(藏传流)：正文已送出后出错，额度同样不许
   }
 });
 
+// 🔴 专家复审(0913)抓到的另一处不对称：塔罗流式端点的 catch 里漏了 _refundCreditOnFail。
+//   别的流式端点在「一个字都没发出去就失败」时都会回补，只有它不会 —— 额度被锁死在这份塔罗上。
+test('塔罗流：一个字都没发出去就失败，额度必须退回来（不能锁死在塔罗上）', async () => {
+  resetMonth();
+  const BODY = { question: '我的事业', topic: 'career', lang: 'zh', cards: [] };
+  try {
+    FAIL_NEXT = true;
+    const r = await post('/api/tarot/stream', BODY, MEMBER_TOKEN);
+    const events = sseEvents(await r.text());
+    assert.ok(events.some(e => e.type === 'error'), 'LLM 挂了应该发 error 事件');
+    assert.strictEqual(S._M.reportCredits[CREDIT_KEY], 0,
+      '一个字都没发出去却把额度吃了：会员这一整月既拿不到塔罗也换不了别的报告');
+    assert.strictEqual(S.monthlyReportCreditRemaining(1), 1, '退回后额度应回到 1');
+
+    // 退回的额度要真的能用：换成八字能读完整份
+    const bazi = await readStream(MEMBER_TOKEN);
+    assert.strictEqual(bazi.events.find(e => e.type === 'meta').locked, false, '回补后换读八字仍被墙');
+  } finally {
+    FAIL_NEXT = false;
+  }
+});
+
 test('正文已经流出去之后再出错：额度不许退，但那份报告仍能重试', async () => {
   resetMonth();
   try {
