@@ -643,17 +643,12 @@ function generateReport() {
   btn.disabled = true;
   btn.textContent = '分析中…';
 
+  // 🔴 0913: 这里原本写「localStorage 里没 token 就当没登录 → 直接弹付费墙」。
+  //   可登录只下发 httpOnly cookie，localStorage.sy_token 永远是空的 ——
+  //   于是**付过钱的用户也走不到这一行下面**，点「开始分析」只会再看到付费墙,
+  //   再点解锁就是服务端再建一单再收一次 ¥299/$99。判断登录态的唯一正确地方是服务端：
+  //   带上空 Bearer，服务端会回退到 cookie（_tokenFromReq）。所以这里不再自查 token。
   var token = localStorage.getItem('sy_token') || '';
-  if (!token) {
-    // 🔴 0913: 原来是「跳回介绍页」——而介绍页没有购买按钮，等于死循环，谁也没法买。
-    //   改成直接在本页给出付费入口（阴宅全程付费、无免费预览，这是它唯一的上墙方式）。
-    saveYinzhaiPending();
-    document.getElementById('inputScreen').style.display = 'block';
-    btn.disabled = false;
-    btn.textContent = '开始阴宅分析';
-    showPaywall('阴宅风水为完整付费服务，解锁后即可分析（¥299 / $99）');
-    return;
-  }
   fetch('/api/yinzhai/stream', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
@@ -817,8 +812,15 @@ function handlePaidReturn() {
   var saved = null;
   try { saved = JSON.parse(localStorage.getItem('sy_last_yinzhai') || 'null'); } catch(e){}
   if (!saved) { showToast('支付成功！请重新填写信息生成报告'); return; }
-  ['city','relation','masterYear','masterMonth','masterDay','masterGender'].forEach(function(k){
+  // 🔴 键名必须跟存的时候一致：payload 里是 masterBirthYear/Month/Day（上面的 payload 对象），
+  //   这里曾写成 masterYear/Month/Day —— 三个键根本不存在，生辰永远回填不上，
+  //   接着 generateReport() 被「请选择户主出生年份」拦住，付完钱停在空表单上。
+  ['city','relation','masterGender'].forEach(function(k){
     var el = document.getElementById(k); if (el && saved[k] != null && saved[k] !== '') el.value = saved[k];
+  });
+  [['masterYear','masterBirthYear'],['masterMonth','masterBirthMonth'],['masterDay','masterBirthDay']].forEach(function(pair){
+    var el = document.getElementById(pair[0]);
+    if (el && saved[pair[1]] != null && saved[pair[1]] !== '') el.value = saved[pair[1]];
   });
   var q = document.getElementById('extraQuestion');
   if (q && saved.question) q.value = saved.question;

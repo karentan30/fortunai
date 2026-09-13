@@ -674,7 +674,10 @@ function renderResult(data) {
 function startUnlock() {
   var saved;
   try { saved = JSON.parse(localStorage.getItem('sy_last_hehun_kr') || 'null'); } catch(e) {}
-  var token = localStorage.getItem('sy_token') || 'guest';
+  // 🔴 别再兜 'guest'：服务端会拿这个哨兵值去查 token 表，查空就把已登录用户判成
+  //    匿名（新版登录只发 httpOnly cookie，localStorage 永远是空的）。空串会让
+  //    服务端回退到 cookie，这才是已登录用户的真实身份。
+  var token = localStorage.getItem('sy_token') || '';
   if (saved) {
     fetch('/api/create-checkout', {
       method: 'POST',

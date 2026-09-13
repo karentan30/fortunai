@@ -33,11 +33,12 @@ fs.writeFileSync(HUB_STUB, 'module.exports = { HUB_SECRET: "", create: async () 
 process.env.HUB_CLIENT_PATH = HUB_STUB;
 
 const TOK = 'tok_buyer';
+const TOK2 = 'tok_other';
 fs.writeFileSync(process.env.DATA_FILE, JSON.stringify({
-  users: [{ id: 1, email: 'buyer@example.com', name: 'B' }],
-  tokens: [{ id: 1, user_id: 1, token: TOK }],
+  users: [{ id: 1, email: 'buyer@example.com', name: 'B' }, { id: 2, email: 'other@example.com', name: 'O' }],
+  tokens: [{ id: 1, user_id: 1, token: TOK }, { id: 2, user_id: 2, token: TOK2 }],
   orders: [],
-  _id: { u: 2, t: 2, o: 1, r: 1, s: 1, rf: 1 },
+  _id: { u: 3, t: 3, o: 1, r: 1, s: 1, rf: 1 },
 }));
 
 const express = require('express');
@@ -72,7 +73,7 @@ test('报告类商品：没登录就不许下单（401 login_required），而�
 });
 
 test('代烧/供奉/预约这类人工交付的商品：匿名仍然能下单（不能误伤已有成交）', async () => {
-  for (const p of ['/api/create-checkout', '/api/pay/wechat/create', '/api/pay/alipay/qr']) {
+  for (const p of ['/api/create-checkout', '/api/pay/wechat/create', '/api/pay/alipay/qr', '/api/pay/stripe/create']) {
     const r = await post(p, { product: 'joss_premium' });
     assert.notStrictEqual(r.status, 401, p + ' 把代烧也拦了 —— 这类是人工联系交付，不需要账号');
   }
@@ -98,4 +99,51 @@ test('已登录用户不许被这条守卫误拦（返回 401 就意味着把已
   const viaEmptyHeader = await post('/api/create-checkout', { product: 'bazi_full' },
                                     { headers: { cookie: 'sy_token=' + TOK, authorization: 'Bearer ' } });
   assert.notStrictEqual(viaEmptyHeader.status, 401, '空 Authorization 头把 cookie 顶掉了（页面会发 Bearer + 空 token）');
+});
+
+/**
+ * 🔴 0913 实测的另一类误伤：页面的 localStorage 永远为空（登录只发 httpOnly cookie），
+ *    于是「非空但无效」的令牌会顶掉后面真正有效的 cookie，把已登录用户判成匿名。
+ *    已在生产代码里复现：cookie 有效 + body.token='guest' → 401；cookie 有效 +
+ *    已吊销的旧 Bearer → 401。hehun-KR.html:677 就写着 || 'guest'，等于韩国站
+ *    所有已登录用户都买不了（还会被守卫弹去登录页 → 回来再 401，死循环）。
+ *    这里直接钉「按来源逐个查库、第一个查得到用户的胜出」，比只看状态码更有牙齿。
+ */
+test('无效令牌不许顶掉有效的 cookie（前端页面普遍发空/哨兵令牌）', async () => {
+  const req = (headers, body) => ({ headers, body });
+  const ck = { cookie: 'sy_token=' + TOK };
+
+  assert.strictEqual(S._uidFromReq(req(ck, { token: 'guest' })), 1, "body.token='guest' 把有效 cookie 顶掉了");
+  assert.strictEqual(S._uidFromReq(req({ cookie: 'sy_token=' + TOK, authorization: 'Bearer STALE_REVOKED' }, {})), 1,
+                     '已吊销的旧 Bearer 把有效 cookie 顶掉了（改密后旧设备就是这个状态）');
+  assert.strictEqual(S._uidFromReq(req(ck, { token: {} })), 1, 'body.token 传对象/数组时把有效 cookie 顶掉了');
+  assert.strictEqual(S._uidFromReq(req(ck, undefined)), 1, '正常 cookie 应当认出来');
+  // 优先级没被改坏：能查到的 header 仍然胜出
+  assert.strictEqual(S._uidFromReq(req({ cookie: 'sy_token=' + TOK, authorization: 'Bearer ' + TOK2 }, {})), 2,
+                     '来源优先级被改坏了（header 应当胜出）');
+  // 全是无效令牌 → 匿名（守卫该拦还是要拦）
+  assert.strictEqual(S._uidFromReq(req({ cookie: 'sy_token=not_a_real_token' }, { token: 'guest' })), null,
+                     '全是无效令牌时不该认成某个用户');
+
+  // 再走一遍真实 HTTP：哨兵令牌 + 有效 cookie 必须是「过了守卫」，不是 401
+  const r = await post('/api/create-checkout', { product: 'bazi_full', token: 'guest' }, { headers: ck });
+  assert.notStrictEqual(r.status, 401, "body.token='guest' + 有效 cookie 被守卫拦成 401（韩国站就是这样全员买不了）");
+});
+
+/**
+ * POST /api/order（代烧/供奉）是唯一还有的「不带四通道守卫」的建单入口，它允许匿名
+ * （人工联系交付），但生产库里 64 张订单全 user_id=null 就有它一份：以前它压根不写这个字段。
+ * 钉住：能认出登录身份就必须写 user_id，认不出也照旧放行（不能误伤已有的人工成交）。
+ */
+test('/api/order：代烧订单要顺手记上 user_id，但匿名仍可下单', async () => {
+  const ok = await post('/api/order', { donorName: '张三', contact: '13800000000', total: 29900 },
+                        { headers: { cookie: 'sy_token=' + TOK } });
+  assert.strictEqual(ok.status, 200, '带登录身份的代烧下单被拒了：' + ok.status);
+  const mine = S._allOrders().filter(o => o.product === 'joss_burning' && o.user_id === 1);
+  assert.strictEqual(mine.length, 1, '代烧订单没记上 user_id（又是孤儿订单）');
+
+  const anon = await post('/api/order', { donorName: '李四', contact: '13900000000', total: 29900 });
+  assert.strictEqual(anon.status, 200, '匿名代烧下单被拒了（这类是人工联系交付，不该拦）');
+  const orphan = S._allOrders().filter(o => o.product === 'joss_burning' && o.user_id == null);
+  assert.strictEqual(orphan.length, 1, '匿名单没落库或 user_id 不是 null');
 });

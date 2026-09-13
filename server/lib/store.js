@@ -332,14 +332,32 @@ function _isExpired(o) {
 //    「Authorization: Bearer 」（尾部空）。旧实现见前缀匹配即 return ''，
 //    导致 cookie 回退永远走不到 —— 已登录会员被当成匿名，付费内容不解锁、
 //    配额按匿名计。这里改成「拿到非空令牌才算命中」。
-function _tokenFromReq(req) {
+// 🔴 0913 第二刀:「第一个非空令牌」仍然会误伤 —— 前端页面普遍写
+//    localStorage.getItem('sy_token')||'' / ||'guest'，而新版登录只下发 httpOnly cookie：
+//    localStorage 永远为空，于是发出去的是 body.token='guest'（hehun-KR.html 就是这样）
+//    或者改密后残留在旧设备上的已吊销令牌。这类「非空但查不到」的令牌会顶掉后面
+//    真正有效的 cookie，把已登录用户判成匿名 —— 报告不解锁、新加的未登录守卫还会
+//    直接 401（已实测:cookie 有效 + body.token='guest' → 401，cookie 有效 + 过期
+//    Bearer → 401）。这里改成「按来源顺序逐个查库，第一个能查到用户的胜出」，
+//    全部查不到才退回第一个非空串（ADMIN_TOKEN 这种不在 tokens 表里的凭证靠这条兜底）。
+function _firstResolvableToken(cands) {
+  for (var i = 0; i < cands.length; i++) {
+    if (!cands[i]) continue;
+    try { if (getToken.get(cands[i])) return cands[i]; } catch (e) {}
+  }
+  for (var j = 0; j < cands.length; j++) { if (cands[j]) return cands[j]; }
+  return '';
+}
+function _tokenCandidates(req) {
+  var cands = [];
   var auth = (req.headers && req.headers['authorization']) || '';
   if (auth.indexOf('Bearer ') === 0) {
     var bearer = auth.slice(7).trim();
-    if (bearer) return bearer;
-    // 空 Bearer → 落到 body.token / cookie 继续找
+    if (bearer) cands.push(bearer);   // 空 Bearer → 后面的来源继续找
   }
-  if (req.body && req.body.token) return String(req.body.token).trim();
+  if (req.body && req.body.token && typeof req.body.token === 'string') {
+    cands.push(req.body.token.trim());
+  }
   // httpOnly cookie fallback — parse raw Cookie header without cookie-parser
   try {
     var cookieHeader = (req.headers && req.headers['cookie']) || '';
@@ -348,12 +366,16 @@ function _tokenFromReq(req) {
       for (var i = 0; i < cookies.length; i++) {
         var parts = cookies[i].trim().split('=');
         if (parts[0].trim() === 'sy_token' && parts[1]) {
-          return decodeURIComponent(parts.slice(1).join('=').trim());
+          cands.push(decodeURIComponent(parts.slice(1).join('=').trim()));
+          break;
         }
       }
     }
   } catch (e) {}
-  return '';
+  return cands;
+}
+function _tokenFromReq(req) {
+  return _firstResolvableToken(_tokenCandidates(req));
 }
 
 // 取登录 token → user_id。无 token / 无效返回 null。
@@ -370,6 +392,14 @@ function _uidFromReq(req) {
 // unlimited = 全解锁会员(FULL_MEMBER_PRODUCTS); monthly = 仅月会员。ADMIN_TOKEN → unlimited。
 function memberTier(req) {
   try {
+    // ADMIN_TOKEN 不在 tokens 表里，_tokenFromReq 现在优先返回「查得到用户」的令牌，
+    // 所以先在所有来源里找一次 ADMIN_TOKEN，免得管理员带着浏览器 cookie 时被判成会员档而不是 unlimited。
+    if (process.env.ADMIN_TOKEN) {
+      var _cands = _tokenCandidates(req);
+      for (var _i = 0; _i < _cands.length; _i++) {
+        if (_cands[_i] === process.env.ADMIN_TOKEN) return 'unlimited';
+      }
+    }
     var token = _tokenFromReq(req);
     if (process.env.ADMIN_TOKEN && token === process.env.ADMIN_TOKEN) return 'unlimited';
     if (!token) return null;
@@ -808,10 +838,14 @@ function _allOrders() {
   return [..._M.orders].sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 50);
 }
 
-function _insJossOrder(oNo, p, amt, cur, dN, c, wT, ps) {
+// uid：代烧这类人工履约商品允许匿名下单（有 contact 就能联系人），
+// 但只要请求里带得出登录身份就顺手记上 user_id —— 生产库里 64 张订单全 user_id=null
+// 的根因之一就是这里压根不写这个字段，之后没人能把这些订单归到人身上。
+function _insJossOrder(oNo, p, amt, cur, dN, c, wT, ps, uid) {
   _M.orders.push({
     id: _M._id.o++, order_no: oNo, product: p, amount: amt, currency: cur,
-    donor_name: dN, contact: c, wish_text: wT, payment_status: ps, created_at: new Date().toISOString()
+    donor_name: dN, contact: c, wish_text: wT, payment_status: ps, created_at: new Date().toISOString(),
+    user_id: (uid == null ? null : uid)
   });
   _persist();
 }
@@ -1054,6 +1088,7 @@ module.exports = {
   _flushStore,
   // token 提取辅助（header > body > cookie）
   _tokenFromReq,
+  _uidFromReq,
   // 数据访问对象
   insertUser, getUserByEmail, getUserById, getUserByRefCode,
   getUserPrivateById, updateUserFields, deleteUserTokens,

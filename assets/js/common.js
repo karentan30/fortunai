@@ -55,6 +55,11 @@
   var _FIELDS = 'input,select,textarea';
 
   function _fieldKey(el, i) {
+    // 勾选类控件必须按「位置」给 key：同名 radio/checkbox 群（name="concern" 这种）
+    // 每个控件的 id/name 都一样，只记录「用户勾了哪一个」是表达不出来的 ——
+    // 回填时会把每个同 key 的控件都勾上（radio 组变成勾最后一个、checkbox 组全选）。
+    // 按位置 + 总数校验(indexOk)兜底，页面控件数一变就不填，宁可不填也不填错。
+    if (el.type === 'checkbox' || el.type === 'radio') return el.tagName + '#cb' + i;
     if (el.id) return '#' + el.id;
     if (el.name) return '[name="' + el.name + '"]';
     var cls = (el.className || '').split(/\s+/).filter(Boolean)[0];
@@ -113,6 +118,15 @@
       location.href = '/pages/login.html?redirect=' + encodeURIComponent(back);
     }, 300);
   }
+  // 下单请求判定：既要认相对路径('/api/pay/...')，也要认同源的绝对地址
+  // （本机开发时页面写的是 http://localhost:3021/api/...，new Request() 也只会给绝对 url）
+  function _isPayUrl(url) {
+    try {
+      var u = new URL(url, location.origin);
+      if (u.origin !== location.origin) return false;
+      return _SY_PAY_RE.test(u.pathname);
+    } catch (e) { return _SY_PAY_RE.test(String(url).split('?')[0]); }
+  }
   function installPaidLoginGuard() {
     if (window.__syPaidGuard || typeof window.fetch !== 'function') return;
     window.__syPaidGuard = true;
@@ -120,7 +134,7 @@
     window.fetch = function(input) {
       var url = typeof input === 'string' ? input : (input && input.url) || '';
       var p = origFetch.apply(this, arguments);
-      if (!_SY_PAY_RE.test(url.split('?')[0])) return p;
+      if (!_isPayUrl(url)) return p;
       return p.then(function(res) {
         if (res && res.status === 401) {
           try {
@@ -172,10 +186,13 @@
 
   // ── 会员身份态(全站注入): 已登录会员 → 顶部金色徽章, 提示到期日 ──
   function initMembership() {
-    if (!localStorage.getItem('sy_token')) return;
-    fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + localStorage.getItem('sy_token') } })
+    // 🔴 别用 localStorage 有没有 token 来判「登录了没」：登录只下发 httpOnly cookie，
+    //    localStorage.sy_token 永远是空的 —— 上面那行早退会让真会员一个徽章都看不到。
+    //    直接问服务端（同源 fetch 自动带 cookie）。
+    fetch('/api/auth/me', { headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('sy_token') || '') } })
       .then(function(r){ return r.json(); })
       .then(function(d){
+        if (d && d.user) localStorage.setItem('sy_logged_in', '1');
         // 缓存自己的邀请码(sy_my_ref_code), 供各分享页用于裂变归因
         if (d && d.user && d.user.ref_code) localStorage.setItem('sy_my_ref_code', d.user.ref_code);
         if (!d || !d.membership || !d.membership.isMember) return;

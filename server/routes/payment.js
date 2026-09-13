@@ -666,7 +666,9 @@ router.post('/order', rateLimitMiddleware, (req, res) => {
     if (!Number.isFinite(amount) || amount < 100 || amount > 10000000) {
       return res.status(400).json({ error: '订单金额异常' });
     }
-    _insJossOrder(orderNo, 'joss_burning', amount, 'usd', donorName, contact, fullWish, 'pending');
+    // 代烧允许匿名（人工联系交付），但能认出登录用户就记上，别再制造 user_id=null 的孤儿订单
+    _insJossOrder(orderNo, 'joss_burning', amount, 'usd', donorName, contact, fullWish, 'pending',
+                  _payResolveUser(null, req));
     console.log('[JOSS ORDER]', orderNo, '-', donorName, '- $' + (amount/100).toFixed(2));
     res.json({ success: true, orderNo: orderNo });
   } catch (err) {

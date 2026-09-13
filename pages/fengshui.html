@@ -1040,7 +1040,7 @@ function showReport(text) {
         html += '<div class="ur-card" id="'+anchorId+'" style="animation-delay:'+(i*0.08)+'s;position:relative;min-height:80px">';
         html += '<div class="ur-head"><span class="ur-emoji">🔒</span><span class="ur-title">'+escHtml(sec.title||'风水分析')+'</span></div>';
         html += '<div style="padding:16px;text-align:center"><div style="font-size:13px;font-weight:600;letter-spacing:0.1em;color:#1f6b4e;margin-bottom:10px">解锁完整八宅吉位报告</div>';
-        html += '<button onclick="unlockFullReport()" style="background:linear-gradient(135deg,#1f6b4e,#2f8f6b);border:none;border-radius:12px;color:#fbfdf7;font-family:\'Noto Serif SC\',serif;font-size:13px;padding:11px 26px;cursor:pointer">立即解锁 · ¥59 →</button></div></div>';
+        html += '<button onclick="unlockFullReport()" style="background:linear-gradient(135deg,#1f6b4e,#2f8f6b);border:none;border-radius:12px;color:#fbfdf7;font-family:\'Noto Serif SC\',serif;font-size:13px;padding:11px 26px;cursor:pointer">立即解锁 · ¥59 / $29 →</button></div></div>';
         continue;
       }
 
@@ -1074,7 +1074,7 @@ function showReport(text) {
 
   // Paywall CTA
   html += '<div class="sticky-cta-bar">';
-  html += '<button class="btn-unlock" onclick="unlockFullReport()">解锁完整八宅吉位报告 · ¥59</button>';
+  html += '<button class="btn-unlock" onclick="unlockFullReport()">解锁完整八宅吉位报告 · ¥59 / $29</button>';
   html += '<div style="font-size:9.5px;color:#68705f;margin-top:6px;letter-spacing:0.06em">包含财位·旺气位·化煞建议·五行调场方案</div>';
   html += '</div>';
 
@@ -1259,7 +1259,29 @@ function unlockFullReport() {
   // 🔴 0913: 这里原来只有一行 TODO + 一个「即将上线」提示 —— 风水报告**根本收不了钱**
   //   (fengshui_full 这个 SKU 一直存在，但全站没有任何页面提交过它)。
   //   现在接上真付费入口：标价与 SKU 一致(¥59 / 海外 $29)，不再让按钮装样子。
-  if (lastPayload) { try { localStorage.setItem('sy_last_fengshui', JSON.stringify(lastPayload)); } catch(e){} }
+  if (lastPayload) {
+    try {
+      // 🔴 只存 6 个表单字段是不够的：家庭成员、装修状态、照片都是页面级全局变量，
+      //   付款跳走再回来整页重载全没了 —— 用户付了 $29，拿到的报告里没有照片也没有
+      //   同住人分析，而且一句提示都没有。这里把成员/装修状态一起存下来（照片是
+      //   base64，塞 localStorage 会爆配额，只记「有/没有」，回来自动提示重传）。
+      var snap = {};
+      for (var k in lastPayload) { if (Object.prototype.hasOwnProperty.call(lastPayload, k)) snap[k] = lastPayload[k]; }
+      var hs = document.getElementById('houseStatus');
+      snap._houseStatus = hs ? hs.value : '';
+      snap._members = [];
+      for (var mi = 0; mi < maxMembers; mi++) {
+        var q = function(cls) {
+          var el = document.querySelector('.' + cls + '[data-idx="' + mi + '"]');
+          return el ? el.value : '';
+        };
+        if (!document.querySelector('.member-year[data-idx="' + mi + '"]')) continue;
+        snap._members.push({ idx: mi, year: q('member-year'), month: q('member-month'), day: q('member-day'), gender: q('member-gender'), role: q('member-role') });
+      }
+      snap._hadPhoto = !!(floorPlanBase64 || photoStore.decorated.filter(Boolean).length || photoStore.empty.filter(Boolean).length || photoStore.design.filter(Boolean).length);
+      localStorage.setItem('sy_last_fengshui', JSON.stringify(snap));
+    } catch(e){}
+  }
   fetch('/api/create-checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -1286,6 +1308,33 @@ function handlePaidReturn() {
   ['facing','floor','layout','residents','address','question'].forEach(function(k){
     var el = document.getElementById(k); if (el && saved[k] != null) el.value = saved[k];
   });
+  // 装修状态 + 家庭成员（回到本页时这两样原本静默丢失，报告里就少了同住人分析）
+  var hsEl = document.getElementById('houseStatus');
+  if (hsEl && saved._houseStatus) {
+    hsEl.value = saved._houseStatus;
+    if (typeof onHouseStatusChange === 'function') { try { onHouseStatusChange(); } catch(e){} }
+  }
+  if (saved._members && saved._members.length) {
+    saved._members.forEach(function(m) {
+      if (!document.querySelector('.member-year[data-idx="' + m.idx + '"]') && m.idx > 0) {
+        for (var t = 0; t < 6 && !document.querySelector('.member-year[data-idx="' + m.idx + '"]'); t++) addMember();
+      }
+      var setIf = function(cls, val) {
+        var el = document.querySelector('.' + cls + '[data-idx="' + m.idx + '"]');
+        if (el && val) el.value = val;
+      };
+      setIf('member-year', m.year); setIf('member-month', m.month);
+      setIf('member-day', m.day); setIf('member-gender', m.gender); setIf('member-role', m.role);
+      if (typeof updateMingua === 'function') { try { updateMingua(m.idx); } catch(e){} }
+    });
+  }
+  // 有照片时不自动重跑：照片是 base64，过不了整页重载，现在直接生成等于让用户
+  // 花 $29 买到一份「没有照片分析」的报告。宁可停在填好的表单上让他补一张。
+  // （付费解锁是绑账号的，补完照片再点生成一样能出。）
+  if (saved._hadPhoto) {
+    showToast('支付成功！照片需重新上传（支付前那几张没能保留），补好后点「开始分析」即为完整报告', 'error');
+    return;
+  }
   showToast('支付成功，正在解锁完整报告…');
   generateReport();
 }
