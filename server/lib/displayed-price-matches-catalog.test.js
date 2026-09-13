@@ -43,7 +43,7 @@ const CASES = [
   { file: 'bazi.html',        product: 'bazi_full',    must: ['$11.99'],                   forbid: [/解锁完整命盘[^<]*\$9\.90/] },
   { file: 'bazi-en.html',     product: 'bazi_full',    must: ['$11.99'],                   forbid: [/\$9\.90/] },
   { file: 'xingming.html',    product: 'bazi_full',    must: ['$11.99'],                   forbid: [/\$9\.90/] },
-  { file: 'kyusei.html',      product: 'kyusei_full',  must: ['$11.99'],                   forbid: [/\$9\.90/] },
+  { file: 'kyusei.html',      product: 'kyusei_full',  must: ['$11.99', '¥44.90'],         forbid: [/\$9\.90/, /¥9\.9[^0-9]/] },
   { file: 'report-astrology.html', product: 'astrology_full', must: ['$11.99'],            forbid: [/\$9\.90/] },
   { file: 'report-v2.html',   product: 'bazi_full',    must: ['$11.99'],                   forbid: [/\$9\.90/] },
   { file: 'report-es.html',   product: 'report_unlock_a', must: ['$9.90'],                 forbid: [/\$2\.99/] },
@@ -53,13 +53,21 @@ const CASES = [
   { file: 'yinzhai-intro.html', product: 'yinzhai_full', must: ['$99'],   forbid: [/\$69\.90/] },
   { file: 'fengshui-intro.html', product: 'fengshui_full', must: ['$29'], forbid: [/\$19\.90/] },
   { file: 'report-tarot.html', product: 'tarot_3',   must: ['$9'],     forbid: [/<b>\$9\.90<\/b>/] },
-  { file: 'report-en.html',    product: 'member_yearly', must: ['$69'], forbid: [/\$49 \/ year/, /only \$49/] },
-  { file: 'order-confirm.html', product: 'member_yearly', must: ['$69'], forbid: [/\$49/] },
+  { file: 'report-en.html',    product: 'member_yearly', must: ['$69'], forbid: [/\$49 \/ year/, /only \$49/, /orig\. \$196/] },
+  { file: 'order-confirm.html', product: 'member_yearly', must: ['$69'], forbid: [/\$49/, /原价 \$196/] },
   { file: 'hehun-en.html',     product: 'hehun_full', must: ['$11.99'], forbid: [/\$19\.90/] },
   { file: 'ziwei.html',        product: 'ziwei_full', must: ['$11.99'], forbid: [/\$19\.90/] },
   { file: 'zhiyuan.html',      product: 'zhiyuan_full', must: ['¥39.90'], forbid: [/完整报告 ¥99/] },
   // daily-en 的价格是把 $ 拆在 <sup> 里写的，所以 must 用带标签的串（规则3 会跳过非纯价格串）
   { file: 'daily-en.html',     product: 'daily_companion_year', must: ['<sup>$</sup>19</div>', '<sup>$</sup>2.90</div>'], forbid: [/<sup>\$<\/sup>39</, /\$4\.90/] },
+  // ── 0913 第二批（价格扫描 agent 出表后逐条核过的）──
+  // 会员锚价写 $6.90 —— 目录里从来没有这个 SKU，会员实收 $9.90/月（LIVE Stripe 核对过）
+  { file: 'astrology.html',   product: 'member_monthly', must: ['$9.90'],   forbid: [/\$6\.90/] },
+  { file: 'astrology-en.html', product: 'member_monthly', must: ['$9.90'],  forbid: [/\$6\.90/] },
+  // 定价页把「完整报告」写成 $9.90/¥9.90，但页内 CTA 落到 bazi.html（实收 $11.99 / ¥44.90）
+  { file: 'pricing.html',     product: 'bazi_full',  must: ['$11.99', '¥44.90'], forbid: [/\$9\.90/, /¥9\.90/] },
+  // 符文页解锁写 ¥9.9，实收 bazi_basic ¥19.90（USD $9.90 那半是对的）
+  { file: 'rune.html',        product: 'bazi_basic', must: ['$9.90', '¥19.90'], forbid: [/¥9\.9[^0-9]/] },
 ];
 
 test('核对过的页面：显示价 = 目录实收价', () => {
