@@ -58,6 +58,9 @@ const { _M, insertReading, hasFullAccess, hasVipAccess, hehunTier, hehunTierRead
 //   ⚠️ 只在**带 reportId** 的端点拒补：拒补后额度不再退回，但那份报告的标记还在，
 //   会员仍能无限次重试这一份(走 already 直接放行)。未标注 reportId 的端点没有标记、
 //   没有 already 通道，拒补会变成「付了钱拿不到也重试不了」，所以那里维持原行为(回补)。
+//   🔴 0913: 于是 13 处 gateReportAccess 调用(藏传/玛雅/吠陀/紫微/塔罗/风水/阴宅/手相/主题报告)
+//   已经把 reportId 补齐了 —— 每个报告端点给**由调用方显式给出**的稳定身份，不再有靠回补兜底的端点。
+//   新加报告端点时必须照办：漏标注 = 那个方法退回「正文送出也退额度」，一次付款两份报告。
 function _trackEmitted(req, res, next) {
   var _w = res.write;
   res.write = function (chunk, enc, cb) {
@@ -1694,7 +1697,7 @@ router.post('/session', rateLimitMiddleware, async (req, res) => {
     }
 
     const engineBlock = buildSessionEngineBlock(method, req.body);
-    const full = cfg.free ? true : gateReportAccess(req, [method + '_s_' + topic, method]).full;
+    const full = cfg.free ? true : gateReportAccess(req, [method + '_s_' + topic, method], method + '_s_' + topic).full;
 
     const _fmtLaw = _sesLang === 'en' ? FMT_LAW_EN : FMT_LAW_ZH;
     const _disclaimer = _sesLang === 'en' ? DISCLAIMER_EN : DISCLAIMER_ZH;
@@ -2425,7 +2428,7 @@ router.post('/shouxiang', rateLimitMiddleware, async (req, res) => {
       return res.status(400).json({ error: lang === 'en' ? 'No clear palm detected in the photo. Please upload a clear photo of your open palm.' : '照片中未检测到清晰手掌，请上传一张五指舒展、清晰的手掌照片', code: 'no_palm' });
     }
     const handLabel = hand === 'left' ? '左手' : '右手（主手）';
-    var _sxFull = gateReportAccess(req, ['shouxiang', '手相', 'member']).full;
+    var _sxFull = gateReportAccess(req, ['shouxiang', '手相', 'member'], 'shouxiang').full;
     const messages = buildShouxiangMessages({ features, handLabel, question, lang, full: _sxFull });
     const result = await deepseekChat(messages, { maxTokens: _sxFull ? 8192 : 3200, priority: 'deepseek' });
     insertReading.run('shouxiang', JSON.stringify({ question, hand, features: features ? features.slice(0, 200) : null }), result, req.userId);
@@ -2454,7 +2457,7 @@ router.post('/shouxiang/stream', rateLimitMiddleware, async (req, res) => {
       return res.status(400).json({ error: lang === 'en' ? 'No clear palm detected in the photo. Please upload a clear photo of your open palm.' : '照片中未检测到清晰手掌，请上传一张五指舒展、清晰的手掌照片', code: 'no_palm' });
     }
     const handLabel = hand === 'left' ? '左手' : '右手（主手）';
-    var _sxFull = gateReportAccess(req, ['shouxiang', '手相', 'member']).full;
+    var _sxFull = gateReportAccess(req, ['shouxiang', '手相', 'member'], 'shouxiang').full;
     const messages = buildShouxiangMessages({ features, handLabel, question, lang, full: _sxFull });
 
     res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
@@ -3190,7 +3193,7 @@ router.post('/tarot/stream', rateLimitMiddleware, async (req, res) => {
     // ── 付费门（P0·2026-09-09）──
     // 修复前本端点无任何鉴权，匿名 POST 即返回完整五段解读（实测 23,555 字符）。
     // 照同文件 ziwei(3219/3274/3284/3293) 的既有模式，不自创写法。
-    const tarotAccess = gateReportAccess(req, ['tarot_5', 'tarot_3', 'tarot']).full;
+    const tarotAccess = gateReportAccess(req, ['tarot_5', 'tarot_3', 'tarot'], 'tarot').full;
     const _tarotPreviewRule = _tsIsEn
       ? '\n\nIMPORTANT — THIS IS A FREE PREVIEW. Output ONLY the opening overall reading (about 150 words), then STOP. Do NOT interpret individual cards. Do NOT output the synthesis, the action advice, or the closing remarks. End with a single line inviting the reader to unlock the full reading.'
       : '\n\n【重要·这是免费预览】只输出开头的「整体格局概览」约150字，然后立即停止。不要逐牌详解、不要综合解读、不要行动建议、不要占卜师悄悄话。结尾用一句话引导解锁完整解读。';
@@ -3251,7 +3254,7 @@ router.post('/ziwei/stream', rateLimitMiddleware, async (req, res) => {
     }
     // 🔴 P1修复(专家复审): 原为硬 402 全锁死, 违背"所有报告统一免费预览段"。
     //   改为: 全解锁会员/单买/月会员(消费credit)→完整版; 未付费→免费预览段(命盘格局+命宫主星2节+锁定引导)。
-    const ziweiAccess = gateReportAccess(req, ['ziwei_full', 'ziwei']).full;
+    const ziweiAccess = gateReportAccess(req, ['ziwei_full', 'ziwei'], 'ziwei').full;
     const { question: zwQuestion, lang: zwLang } = req.body;
 
     // ── 紫微引擎注入（无论免费/完整版都注入，让免费预览也有真实排盘数据）──
@@ -3364,7 +3367,7 @@ router.post('/fengshui/stream', rateLimitMiddleware, async (req, res) => {
     }
 
     // 付费门：免费只给前两节预览
-    const fullAccess = gateReportAccess(req, ['fengshui', '风水']).full;
+    const fullAccess = gateReportAccess(req, ['fengshui', '风水'], 'fengshui').full;
 
     const systemPrompt = `你是蒋大鸿三元玄空风水嫡传第九代传人，同时精研八宅明镜、三合水法与形势派堪舆，驻场实勘住宅逾三万套、走访海内外35年。你的报告素以"一针见血、落地即用"著称——绝不讲玄虚理论，只给具体到"这面墙放这个、那个角落换那件东西、哪天动工最吉"的实操建议。你同时运用玄空飞星（九星气场流动分析）与八宅明镜（命卦与朝向匹配）双体系互参，层次比单一体系深出一倍。
 
@@ -3680,7 +3683,7 @@ router.post('/yinzhai/stream', rateLimitMiddleware, async (req, res) => {
 
     // 付费门：阴宅全程付费，无免费预览
     // 阴宅=高端报告(全程付费, 无免费预览)。全解锁会员/单买放行; 月会员消费本月 credit 放行。
-    const yinzhaiAccess = gateReportAccess(req, ['yinzhai']).full;
+    const yinzhaiAccess = gateReportAccess(req, ['yinzhai'], 'yinzhai').full;
     if (!yinzhaiAccess) {
       res.setHeader('Content-Type', 'application/json');
       return res.status(402).json({ error: 'payment_required', message: '阴宅风水为高端专属服务，需付费后方可使用', product: 'yinzhai' });
@@ -5117,7 +5120,7 @@ router.post('/jyotish', rateLimitMiddleware, async (req, res) => {
     if (!dob || !tob) return res.status(400).json({ error: '出生日期和时间必填' });
 
     const jyotishData = calculateJyotish(dob, tob);
-    const full = gateReportAccess(req, ['jyotish_full', 'jyotish']).full;
+    const full = gateReportAccess(req, ['jyotish_full', 'jyotish'], 'jyotish').full;
 
     // 吠陀真引擎注入（VSOP87+Lahiri·真Lagna/月亮Rashi/Nakshatra/九曜/Vimshottari大运·替代随机近似·禁LLM自算）
     let vedicInject = '';
@@ -5286,7 +5289,7 @@ router.post('/maya', rateLimitMiddleware, async (req, res) => {
 
     const [year, month, day] = dob.split('-').map(Number);
     const tzolkinData = getTzolkin(year, month, day);
-    const full = gateReportAccess(req, ['maya_full', 'maya']).full;
+    const full = gateReportAccess(req, ['maya_full', 'maya'], 'maya').full;
 
     const mayaLang = lang === 'zh' ? 'Chinese (Simplified)' : lang === 'kr' ? 'Korean' : 'English';
     const systemPrompt = full
@@ -5419,7 +5422,7 @@ router.post('/tibet', rateLimitMiddleware, async (req, res) => {
 
     const birthYear = new Date(dob).getFullYear();
     const tibetData = calculateTibetan(birthYear);
-    const full = gateReportAccess(req, ['tibet_full', 'tibet']).full;
+    const full = gateReportAccess(req, ['tibet_full', 'tibet'], 'tibet').full;
 
     const tibetLang = lang === 'zh' ? 'Chinese (Simplified)' : lang === 'kr' ? 'Korean' : 'English';
     const genderStr = gender === 'M' ? 'male' : 'female';
@@ -6099,7 +6102,7 @@ router.post('/jyotish/stream', rateLimitMiddleware, async (req, res) => {
     }
     const tobStr = tob || '12:00';
     const jyotishData = calculateJyotish(dob, tobStr);
-    const full = gateReportAccess(req, ['jyotish_full', 'jyotish']).full;
+    const full = gateReportAccess(req, ['jyotish_full', 'jyotish'], 'jyotish').full;
 
     // 吠陀真引擎注入（stream·同 non-stream）
     let vedicInject = '';
@@ -6236,7 +6239,7 @@ router.post('/tibet/stream', rateLimitMiddleware, async (req, res) => {
     }
     const birthYear = new Date(dob).getFullYear();
     const tibetData = calculateTibetan(birthYear);
-    const full = gateReportAccess(req, ['tibet_full', 'tibet']).full;
+    const full = gateReportAccess(req, ['tibet_full', 'tibet'], 'tibet').full;
     const tibetLang = lang === 'zh' ? 'Chinese (Simplified)' : lang === 'kr' ? 'Korean' : 'English';
     const genderStr = gender === 'M' ? 'male' : 'female';
 
@@ -6363,7 +6366,7 @@ router.post('/maya/stream', rateLimitMiddleware, async (req, res) => {
     }
     const [year, month, day] = dob.split('-').map(Number);
     const tzolkinData = getTzolkin(year, month, day);
-    const full = gateReportAccess(req, ['maya_full', 'maya']).full;
+    const full = gateReportAccess(req, ['maya_full', 'maya'], 'maya').full;
     const mayaLang = lang === 'zh' ? 'Chinese (Simplified)' : lang === 'kr' ? 'Korean' : 'English';
 
     const mayaLangFull = lang === 'hi' ? 'Hindi' : lang === 'ta' ? 'Tamil' : mayaLang;

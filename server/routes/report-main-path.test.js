@@ -282,6 +282,47 @@ test('失败回补后整串仍要能读完（扣了额度但生成失败不能�
 
 // 🔴 专家复审抓到(既有漏洞，不是本轮引入)：流式端点原来无条件回补。
 //   正文已经 stream 出去了(用户手里有内容)，再退额度 = 一次付款两份报告。
+// 🔴 上面那条测试靠的是 bazi 家系带 reportId。非八字方法(藏传/玛雅/紫微/塔罗…)的 gate
+//   调用**不带 reportId**，于是 _trackEmitted 里那句 `!_syCreditReport` 把它们放过了：
+//   正文已经 stream 出去，出错时照样回补额度 → 会员拿「半份藏传 + 一份全新的八字」只付了一次钱。
+//   (端点本身的动机是「别让会员卡住」，所以这里要的是把 identity 补上，而不是把回补关掉：
+//    带 reportId 后重试走 already 分支，照样拿得到自己那份。)
+test('非八字方法(藏传流)：正文已送出后出错，额度同样不许退，且那份报告仍能重试', async () => {
+  resetMonth();
+  const BODY = { name: 'M', dob: '1990-06-15', gender: 'F', concern: 'career', lang: 'en' };
+  const tibet = async () => {
+    const r = await post('/api/tibet/stream', BODY, MEMBER_TOKEN);
+    return { status: r.status, events: sseEvents(await r.text()) };
+  };
+  try {
+    FAIL_MIDSTREAM = true;
+    const first = await tibet();
+    const meta = first.events.find(e => e.type === 'meta');
+    assert.ok(meta, '藏传流没发 meta');
+    assert.strictEqual(meta.locked, false, '前提不成立：会员打开这页就已经被墙');
+    assert.ok(first.events.some(e => e.type === 'chunk' && e.content), '前提不成立：正文还没发出去');
+    assert.ok(first.events.some(e => e.type === 'error'), '半路断流应该发 error 事件');
+    assert.strictEqual(S._M.reportCredits[CREDIT_KEY], 1,
+      '正文已送到用户手里还退了额度 —— 一次付款两份报告（非八字方法这条路没关上）');
+
+    // 拒补不能让会员「付了钱什么也拿不到」——同一份报告必须还能重试
+    FAIL_MIDSTREAM = false;
+    const retry = await tibet();
+    const rmeta = retry.events.find(e => e.type === 'meta');
+    assert.strictEqual(rmeta.locked, false, '同一份报告重试被墙了：付了月费的会员拿不到自己那份');
+    assert.ok(retry.events.some(e => e.type === 'chunk' && e.content), '重试没拿到正文');
+    assert.strictEqual(S._M.reportCredits[CREDIT_KEY], 1, '重试不该再扣一次额度');
+
+    // 但「每月 1 份」不能破：换成八字仍然是墙
+    const bazi = await readStream(MEMBER_TOKEN);
+    assert.strictEqual(bazi.events.find(e => e.type === 'meta').locked, true,
+      '藏传那份吃掉的额度被白送了：八字也放行了');
+    assert.strictEqual(S._M.reportCreditSpentOn[SPENT_KEY], '#tibet', '标记应指向藏传那一份');
+  } finally {
+    FAIL_MIDSTREAM = false;
+  }
+});
+
 test('正文已经流出去之后再出错：额度不许退，但那份报告仍能重试', async () => {
   resetMonth();
   try {
