@@ -845,10 +845,16 @@ function mxGetArt(title) {
 function handleMxUnlock() {
   var btn = document.querySelector('#resultWrap .cta-btn:last-of-type');
   if (btn) { btn.disabled = true; btn.textContent = '跳转支付…'; }
+  // 🔴 0913: 本页同一个按钮服务面相/手相两种模式，但原来**永远**提交 mianxiang_full。
+  //   手相走的是 /api/shouxiang，它的鉴权是 ['shouxiang','手相','member']，而
+  //   mianxiang_full 只解锁 mianxiang（store.js 的 UNLOCK_BY_CATEGORY）——
+  //   手相用户付了 $9.90 仍然只拿到免费预览。两个 SKU 同价（都是 $9.90），按模式提交即可。
+  var isPalm = (typeof currentMode !== 'undefined' && currentMode === 'palm');
+  var _sku = isPalm ? 'shouxiang_full' : 'mianxiang_full';
   fetch('/api/create-checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ product: 'mianxiang_full', price: 9.9, title: '完整面相报告', token: '' })
+    body: JSON.stringify({ product: _sku, price: 9.9, title: isPalm ? '完整手相报告' : '完整面相报告', token: '' })
   }).then(function(r){ return r.json(); }).then(function(d){
     if (d.url) { window.location.href = d.url; }
     else { showMxToast('跳转失败，请重试', 'error'); if (btn) { btn.disabled = false; btn.textContent = '解锁完整面相报告 · $9.9'; } }

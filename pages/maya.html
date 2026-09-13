@@ -409,6 +409,8 @@ function generateReport() {
 
   var token = localStorage.getItem('sy_token') || '';
   var dob = year + '-' + String(month).padStart(2,'0') + '-' + String(day).padStart(2,'0');
+  // 付款回流时要用（见文件末尾 handlePaidReturn）：不留档就只能让用户重新填一遍
+  try { localStorage.setItem('sy_last_maya', JSON.stringify({ year: year, month: month, day: day, name: name, intention: intention })); } catch(e){}
   var accumulated = '';
   var reportStarted = false;
   var streamEl = null;
@@ -688,15 +690,44 @@ function toggleFloatToc() {
 
 function purchase(productId, contextId) {
   var token = localStorage.getItem('sy_token') || '';
+  // 🔴 0913: successUrl 原来拼的是 location.href + '?paid=1' —— 只要 URL 上已经带了 ?/#
+  //   (带参数进来、或停在 #report 锚点上)就会拼成 "...?a=1?paid=1" / 查询串被吃进 fragment，
+  //   Stripe 回跳后 handlePaidReturn 认不到 paid=1 → 钱扣了页面毫无反应。改成只用 origin+pathname。
+  var base = location.origin + location.pathname;
+  var success = base + '?paid=1' + (contextId ? '&ctx=' + encodeURIComponent(contextId) : '');
   fetch('/api/create-checkout', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer '+token },
-    body: JSON.stringify({ productId: productId, successUrl: window.location.href+'?paid=1&ctx='+contextId, cancelUrl: window.location.href, contextId: contextId })
+    // 🔴 0913: 原来键名写成 productId，而 /api/create-checkout 只读 req.body.product
+    //   (payment.js:173) → 直接 400「无效的产品 ID」，付费按钮点了永远弹「Payment setup failed」。
+    body: JSON.stringify({ product: productId, successUrl: success, cancelUrl: base, contextId: contextId })
   })
   .then(function(r){ return r.json(); })
   .then(function(d){ if (d.url) window.location.href = d.url; else showToast('Payment setup failed, please try again', 'error'); })
   .catch(function(){ showToast('Network error, please try again', 'error'); });
 }
+
+// 🔴 0913: 本页原来**没有任何 ?paid=1 回流处理** —— 付完钱跳回来，页面停在输入屏，
+//   用户以为没成功（钱已经扣了）。照 tibet/jyotish 的做法：付款前把输入存进 localStorage，
+//   回来时恢复表单并自动重跑一次生成；这次订单已在，gate 会放行完整版。
+function handlePaidReturn() {
+  if (new URLSearchParams(location.search).get('paid') !== '1') return;
+  try { history.replaceState(null, '', location.pathname); } catch(e){}
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('sy_last_maya') || 'null'); } catch(e){}
+  if (!saved || !saved.year) { showToast('Payment successful! Please generate your reading again.'); return; }
+  var $ = function(id){ return document.getElementById(id); };
+  if ($('yearSel')) $('yearSel').value = saved.year;
+  if ($('monthSel')) $('monthSel').value = saved.month;
+  if ($('daySel')) $('daySel').value = saved.day;
+  if ($('nameInput')) $('nameInput').value = saved.name || '';
+  if ($('intentionInput')) $('intentionInput').value = saved.intention || '';
+  // 付款前必须勾过同意框才可能走到这里，回流时替用户复选，避免卡在「请先同意条款」
+  if ($('consentCheck')) $('consentCheck').checked = true;
+  showToast('Payment successful — unlocking your full reading…');
+  generateReport();
+}
+handlePaidReturn();
 </script>
 <script>
 // ── 精装阅读体验工具 ──
@@ -719,6 +750,7 @@ function purchase(productId, contextId) {
   });
 })();
 </script>
+<script src="/assets/js/common.js"></script>
 <script src="/pages/report-viz.js"></script>
 </body>
 </html>

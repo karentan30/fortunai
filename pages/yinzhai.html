@@ -313,7 +313,7 @@ html.light-mode .upload-hint { color:rgba(40,35,30,0.4); }
 
   <div style="margin:0 16px 12px;padding:14px 16px;background:rgba(201,168,76,0.05);border:1px solid rgba(201,168,76,0.18);border-radius:8px;position:relative;z-index:1">
     <div style="font-size:11px;color:rgba(201,168,76,0.8);letter-spacing:0.1em;margin-bottom:6px">一块公墓，少则 $8,000，多则 $30,000</div>
-    <div style="font-size:12px;color:rgba(40,35,30,0.75);line-height:1.8;letter-spacing:0.04em">花 <strong style="color:#c9a84c">$69.90</strong> 请专业风水师帮您在候选地中选对方向，是百年家族大事最值得的一笔投入。</div>
+    <div style="font-size:12px;color:rgba(40,35,30,0.75);line-height:1.8;letter-spacing:0.04em">花 <strong style="color:#c9a84c">$99</strong> 请专业风水师帮您在候选地中选对方向，是百年家族大事最值得的一笔投入。</div>
   </div>
 
   <div class="submit-section page-enter page-enter-d6">
@@ -337,6 +337,9 @@ html.light-mode .upload-hint { color:rgba(40,35,30,0.4); }
   <div class="error-icon">🏮</div>
   <div class="error-text" id="errorText">网络异常，请稍后重试</div>
   <button class="btn-retry" onclick="retry()">重新分析</button>
+  <!-- 🔴 0913: 本页原来没有付费入口，且无 token 时直接跳回介绍页 —— 介绍页也没有购买按钮，
+       于是阴宅报告**谁都买不到**（yinzhai_full 这个 SKU 全站无人提交）。这里补上真付费入口。 -->
+  <button class="btn-retry" id="yinzhaiUnlockBtn" style="display:none;margin-top:10px" onclick="unlockYinzhai()">解锁完整阴宅分析 · ¥299 / $99</button>
 </div>
 
 <!-- Report screen -->
@@ -642,13 +645,13 @@ function generateReport() {
 
   var token = localStorage.getItem('sy_token') || '';
   if (!token) {
-    // No auth token — redirect to payment/login page
-    showToast('请先登录或完成支付后继续', 'error');
-    setTimeout(function(){ window.location.href = 'yinzhai-intro.html'; }, 1800);
-    document.getElementById('loadingScreen').classList.remove('show');
+    // 🔴 0913: 原来是「跳回介绍页」——而介绍页没有购买按钮，等于死循环，谁也没法买。
+    //   改成直接在本页给出付费入口（阴宅全程付费、无免费预览，这是它唯一的上墙方式）。
+    saveYinzhaiPending();
     document.getElementById('inputScreen').style.display = 'block';
     btn.disabled = false;
     btn.textContent = '开始阴宅分析';
+    showPaywall('阴宅风水为完整付费服务，解锁后即可分析（¥299 / $99）');
     return;
   }
   fetch('/api/yinzhai/stream', {
@@ -656,6 +659,14 @@ function generateReport() {
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
     body: JSON.stringify(payload)
   }).then(function(res) {
+    // 阴宅无免费预览：没买过就是 402 payment_required —— 这里要给付费入口，不是报错
+    if (res.status === 402) {
+      document.getElementById('loadingScreen').classList.remove('show');
+      btn.disabled = false; btn.textContent = '开始阴宅分析';
+      saveYinzhaiPending();
+      showPaywall('阴宅风水为完整付费服务，解锁后即可分析（¥299 / $99）');
+      return null;
+    }
     if (!res.ok) throw new Error('API error: ' + res.status);
     var reader = res.body.getReader();
     var decoder = new TextDecoder('utf-8');
@@ -699,11 +710,146 @@ function generateReport() {
 
 function showError(msg) {
   document.getElementById('errorText').textContent = msg;
+  var ub = document.getElementById('yinzhaiUnlockBtn');
+  if (ub) ub.style.display = 'none';
   document.getElementById('errorScreen').classList.add('show');
   document.getElementById('loadingScreen').classList.remove('show');
 }
 
+/* ── 🔴 0913: 阴宅付费入口（本页原先没有：无 token 就跳介绍页，介绍页也没有购买按钮，
+     于是 yinzhai_full 这个 SKU 全站无人提交 —— 收不了钱）。这三条是配套的：存待购信息 /
+     跳支付 / 付完回来把信息填回去自动重跑。 ── */
+
+// 存待购信息：剥掉照片 base64（几 MB 会撑爆 localStorage 配额，反而整份存档丢掉），只记一个标记
+function saveYinzhaiPending() {
+  if (!lastPayload) return;
+  try {
+    var slim = JSON.parse(JSON.stringify(lastPayload));
+    var hadPhoto = false;
+    slim.candidates = (slim.candidates || []).map(function(c){
+      if (c.imageBase64) hadPhoto = true;
+      delete c.imageBase64;
+      return c;
+    });
+    slim._hadPhoto = hadPhoto;
+    localStorage.setItem('sy_last_yinzhai', JSON.stringify(slim));
+  } catch(e){}
+}
+
+function showPaywall(msg) {
+  document.getElementById('errorText').textContent = msg;
+  var ub = document.getElementById('yinzhaiUnlockBtn');
+  if (ub) ub.style.display = 'inline-block';
+  document.getElementById('errorScreen').classList.add('show');
+  document.getElementById('loadingScreen').classList.remove('show');
+  window.scrollTo(0, 0);
+}
+
+// 国内用户：create-checkout 只回 {channel:'cn'}，原来这里弹一句「请用微信/支付宝」就断了 ——
+// 本页是中文页，国内用户占大头，等于半个入口是死的。照 hehun.html 接上扫码支付。
+function cnPay(product) {
+  fetch('/api/pay/wechat/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ product: product, method: 'wechat', token: localStorage.getItem('sy_token') || '' })
+  }).then(function(r){ return r.json(); }).then(function(pd){
+    if (!pd || !pd.code_url) { showToast('支付服务暂不可用，请稍后重试', 'error'); return; }
+    cnPayModal(pd.code_url, pd.out_trade_no, pd.amount);
+  }).catch(function(){ showToast('网络异常，请重试', 'error'); });
+}
+
+function cnPayModal(codeUrl, outTradeNo, amountFen) {
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center';
+  wrap.innerHTML = '<div style="background:#faf8f2;border-radius:16px;padding:26px 22px;max-width:320px;width:88%;text-align:center;font-family:\'Noto Serif SC\',serif">'
+    + '<div style="font-size:15px;margin-bottom:6px;color:rgba(35,28,22,0.95)">微信 / 支付宝 扫码支付</div>'
+    + '<div style="font-size:22px;font-weight:700;color:#c9a84c;margin-bottom:12px">¥' + ((amountFen || 0) / 100).toFixed(2) + '</div>'
+    + '<img alt="支付二维码" style="width:200px;height:200px;border-radius:8px;background:#fff;padding:6px" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(codeUrl) + '">'
+    + '<div style="font-size:11px;color:rgba(80,68,50,0.6);margin-top:8px">支付完成后自动解锁报告</div>'
+    + '<button id="cnPayCancel" style="margin-top:16px;background:none;border:1px solid rgba(201,168,76,0.4);color:#c9a84c;padding:9px 26px;border-radius:10px;font-size:13px;min-height:44px">取消</button></div>';
+  document.body.appendChild(wrap);
+  var polls = 0;
+  var timer = setInterval(function(){
+    polls++;
+    if (polls > 40) { clearInterval(timer); wrap.remove(); showToast('支付超时，请重试', 'error'); return; }
+    fetch('/api/pay/wechat/query?out_trade_no=' + encodeURIComponent(outTradeNo))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d && (d.paid || d.status === 'paid')) {
+          clearInterval(timer); wrap.remove();
+          location.href = location.origin + location.pathname + '?paid=1';
+        }
+      }).catch(function(){});
+  }, 3000);
+  wrap.querySelector('#cnPayCancel').onclick = function(){ clearInterval(timer); wrap.remove(); };
+}
+
+function unlockYinzhai() {
+  // 标价与 SKU 一致：yinzhai_full = ¥299 / $99（store.js），页面文案同步为 $99
+  saveYinzhaiPending();
+  var ub = document.getElementById('yinzhaiUnlockBtn');
+  var origText = ub ? ub.textContent : '';
+  if (ub) { ub.disabled = true; ub.textContent = '正在跳转支付…'; }
+  fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      product: 'yinzhai_full',
+      token: localStorage.getItem('sy_token') || '',
+      successUrl: location.origin + location.pathname + '?paid=1',
+      cancelUrl: location.href
+    })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.url) { window.location.href = d.url; return; }
+    if (ub) { ub.disabled = false; ub.textContent = origText; }
+    if (d.channel === 'cn') { cnPay('yinzhai_full'); }
+    else { showToast('支付跳转失败，请重试', 'error'); }
+  }).catch(function(){
+    if (ub) { ub.disabled = false; ub.textContent = origText; }
+    showToast('网络异常，请重试', 'error');
+  });
+}
+
+// 付款回流：本页原来没有这条路径（付完钱跳回来什么都不发生）
+function handlePaidReturn() {
+  if (new URLSearchParams(location.search).get('paid') !== '1') return;
+  try { history.replaceState(null, '', location.pathname); } catch(e){}
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('sy_last_yinzhai') || 'null'); } catch(e){}
+  if (!saved) { showToast('支付成功！请重新填写信息生成报告'); return; }
+  ['city','relation','masterYear','masterMonth','masterDay','masterGender'].forEach(function(k){
+    var el = document.getElementById(k); if (el && saved[k] != null && saved[k] !== '') el.value = saved[k];
+  });
+  var q = document.getElementById('extraQuestion');
+  if (q && saved.question) q.value = saved.question;
+  Array.prototype.forEach.call(document.querySelectorAll('.concern-item'), function(label){
+    var cb = label.querySelector('input[type="checkbox"]');
+    if (cb && saved.concerns && saved.concerns.indexOf(cb.value) >= 0 && !label.classList.contains('checked')) toggleConcern(label);
+  });
+  // 候选地：按顺序重建并回填（addCandidate 自己封顶 4 个）
+  var cands = saved.candidates || [];
+  var need = Math.min(cands.length, 4);
+  var container = document.getElementById('candidatesContainer');
+  while (container.querySelectorAll('.candidate-card').length < need) addCandidate();
+  var cards = container.querySelectorAll('.candidate-card');
+  cands.slice(0, need).forEach(function(c, i){
+    var card = cards[i]; if (!card) return;
+    [['candidate-name', c.name], ['candidate-address', c.address], ['candidate-facing', c.facing],
+     ['candidate-terrain', c.terrain], ['candidate-backing', c.backing], ['candidate-front', c.front],
+     ['candidate-notes', c.notes]].forEach(function(pair){
+      var el = card.querySelector('.' + pair[0]);
+      if (el && pair[1] != null && pair[1] !== '') el.value = pair[1];
+    });
+  });
+  try { updateMinguaBadge(); } catch(e){}
+  if (saved._hadPhoto) showToast('支付成功！现场照片需要重新上传一次', '');
+  else showToast('支付成功，正在解锁完整报告…');
+  generateReport();
+}
+
 function retry() {
+  var ubR = document.getElementById('yinzhaiUnlockBtn');
+  if (ubR) ubR.style.display = 'none';
   document.getElementById('errorScreen').classList.remove('show');
   // Always show inputScreen so user can confirm or correct data before retrying
   document.getElementById('inputScreen').style.display = 'block';
@@ -891,6 +1037,7 @@ function parseAISections(text) {
   addCandidate();
   addCandidate();
 })();
+handlePaidReturn();
 </script>
 
 <script>

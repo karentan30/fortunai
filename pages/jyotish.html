@@ -754,7 +754,13 @@ function createCheckout(btn, tier, price) {
     method: 'POST',
     headers: {'Content-Type':'application/json'},
     body: JSON.stringify({
-      product: tier==='member' ? 'member_monthly' : (tier==='premium' ? 'bazi_vip' : 'bazi_full'),
+      // 🔴 0913: 原来 full 档卖 bazi_full(八字)、premium 档卖 bazi_vip —— 本页鉴权是
+      //   ['jyotish_full','jyotish']，买八字商品解锁不了吠陀报告：按页面写的 $12.90 付款
+      //   ($11.99)后回来还是免费预览。现在卖本页自己的 SKU（$12.90，与页面标价一致）。
+      // 只留两个真按钮会走的档：member=月会员 / 其余=本页自己的 SKU。
+      // 原来还有个 premium→bazi_vip 的分支，页面上没有任何按钮会传 'premium'（死代码），
+      // 而 bazi_vip 并不在本页的解锁表里 —— 留着就是个「点了收钱不解锁」的坑。
+      product: tier==='member' ? 'member_monthly' : 'jyotish_full',
       tier: tier, price: price,
       token: localStorage.getItem('sy_token')||'',
       successUrl: location.origin+'/pages/jyotish.html?paid=1'

@@ -4918,7 +4918,10 @@ Please provide college application suggestions.`;
 请给出高考志愿填报建议。`;
     }
     const messages = [{ role: 'system', content: sysPrompt }, { role: 'user', content: userPrompt }];
-    var _gl = gateMessages(req, ['bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 8192);
+    // 🔴 0913: 这个键列表里原来**没有 zhiyuan/zhiyuan_full** —— 买了 zhiyuan_full(¥39.90)
+    //   打不开本报告，反而买 bazi_full 能打开（靠列表里的 'bazi'）。UNLOCK_BY_CATEGORY
+    //   里 zhiyuan_full 早就映射好了，加进列表即生效。
+    var _gl = gateMessages(req, ['zhiyuan','zhiyuan_full','bazi','hehun','ziwei','xingming','astrology','fengshui','liuyao','qimen','daliuren','lingqian','pastlife','风水','六爻','奇门','大六壬','灵签','前世','紫微','合婚','姓名','占星'], messages, 8192);
     const reading = await deepseekChat(_gl.messages, { maxTokens: _gl.maxTokens });
     var ctxId = saveQaContext('zhiyuan', req.body, reading);
     res.json({ reading, contextId: ctxId });

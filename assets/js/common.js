@@ -43,6 +43,100 @@
     }).then(function(r){ return r.json(); });
   }
 
+  // ── 🔴 0913：未登录下单守卫 + 表单快照 ──
+  // 服务端已拒掉「没账号就下单」（报告类商品发单只认 user_id，匿名订单＝收了钱没人能被解锁）。
+  // 40 个页面各自处理 401 不现实，所以在共享层包一层 fetch：
+  //   · 只关心下单类请求(/api/create-checkout、/api/pay/*)；
+  //   · 只读 res.clone()，原 response 原样返回，页面原有逻辑不受影响；
+  //   · 回 401 login_required 时，先快照当前表单，再带用户去登录页，登录完回本页并把表单填回去
+  //     （不然用户填了八个字段、点付款、被弹去登录、回来一片空白，只能重填）。
+  var _SY_PAY_RE = /^\/api\/(create-checkout|pay\/)/;
+  var _SNAP_KEY = 'sy_form_snapshot';
+  var _FIELDS = 'input,select,textarea';
+
+  function _fieldKey(el, i) {
+    if (el.id) return '#' + el.id;
+    if (el.name) return '[name="' + el.name + '"]';
+    var cls = (el.className || '').split(/\s+/).filter(Boolean)[0];
+    return el.tagName + (cls ? '.' + cls : '') + '|' + el.getAttribute('data-idx') + '|' + i;
+  }
+  function _stableKey(k) { return k.charAt(0) === '#' || k.charAt(0) === '['; }
+  function snapshotForm() {
+    try {
+      var out = [];
+      var all = document.querySelectorAll(_FIELDS);
+      Array.prototype.forEach.call(all, function(el, i) {
+        if (el.type === 'password' || el.type === 'file') return;
+        if (el.type === 'checkbox' || el.type === 'radio') {
+          if (el.checked) out.push([_fieldKey(el, i), 1]);
+          return;
+        }
+        if (el.value) out.push([_fieldKey(el, i), String(el.value)]);
+      });
+      sessionStorage.setItem(_SNAP_KEY, JSON.stringify({ url: location.pathname, total: all.length, fields: out }));
+    } catch (e) {}
+  }
+  function restoreForm() {
+    var raw = null;
+    try { raw = JSON.parse(sessionStorage.getItem(_SNAP_KEY) || 'null'); } catch (e) { return false; }
+    if (!raw || raw.url !== location.pathname || !raw.fields || !raw.fields.length) return false;
+    // 字段总数变了(页面脚本动态加/删了控件)就不许按位置回填 —— 位置已经对不上，
+    // 硬填会把「城市」写进「年份」这种离谱的地方。这时候只回填有 id/name 的字段。
+    var indexOk = (document.querySelectorAll(_FIELDS).length === raw.total);
+    var hit = 0;
+    Array.prototype.forEach.call(document.querySelectorAll(_FIELDS), function(el, i) {
+      var k = _fieldKey(el, i);
+      if (!_stableKey(k) && !indexOk) return;
+      for (var n = 0; n < raw.fields.length; n++) {
+        if (raw.fields[n][0] !== k) continue;
+        var v = raw.fields[n][1];
+        if (el.type === 'checkbox' || el.type === 'radio') {
+          el.checked = true;
+          var lab = el.closest ? el.closest('label') : null;
+          if (lab && lab.classList) lab.classList.add('checked');
+        } else { el.value = v; }
+        try { el.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+        hit++;
+        return;
+      }
+    });
+    try { sessionStorage.removeItem(_SNAP_KEY); } catch (e) {}
+    if (hit) { try { showToast('已为你保留刚才填写的内容，继续支付即可'); } catch (e) {} }
+    return hit > 0;
+  }
+  function _goLogin() {
+    if (window.__syPayRedirecting) return;
+    window.__syPayRedirecting = true;
+    snapshotForm();
+    var back = location.pathname + location.search;
+    setTimeout(function() {
+      location.href = '/pages/login.html?redirect=' + encodeURIComponent(back);
+    }, 300);
+  }
+  function installPaidLoginGuard() {
+    if (window.__syPaidGuard || typeof window.fetch !== 'function') return;
+    window.__syPaidGuard = true;
+    var origFetch = window.fetch;
+    window.fetch = function(input) {
+      var url = typeof input === 'string' ? input : (input && input.url) || '';
+      var p = origFetch.apply(this, arguments);
+      if (!_SY_PAY_RE.test(url.split('?')[0])) return p;
+      return p.then(function(res) {
+        if (res && res.status === 401) {
+          try {
+            res.clone().json().then(function(d) {
+              if (d && d.error === 'login_required') {
+                try { showToast(d.message || '请先登录再购买'); } catch (e) {}
+                _goLogin();
+              }
+            }).catch(function() {});
+          } catch (e) {}
+        }
+        return res;
+      });
+    };
+  }
+
   // ── 复制文本（现代 API + 降级）──
   function copyText(text) {
     if (navigator.clipboard && window.isSecureContext) {
@@ -116,8 +210,21 @@
       }).catch(function(){});
   }
 
+  // 装上守卫（幂等）；回到本页时把登录前填的表单填回去
+  try { installPaidLoginGuard(); } catch (e) {}
+  function _bootRestore() {
+    if (restoreForm()) return;
+    // 有些页面的下拉/日期选项是页面脚本在 load 之后才填的：那一刻回填会落空，
+    // 所以稍后再试一次（快照只有回填成功才删，失败可以安全重试）。
+    setTimeout(function() { restoreForm(); }, 600);
+  }
+  try {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', _bootRestore);
+    else _bootRestore();
+  } catch (e) {}
+
   window.SY = { showToast: showToast, initTheme: initTheme, toggleTheme: toggleTheme,
                 storePaidInput: storePaidInput, readPaidInput: readPaidInput, api: api,
                 copyText: copyText, getRefCode: getRefCode, withRef: withRef, captureRef: captureRef,
-                initMembership: initMembership };
+                initMembership: initMembership, snapshotForm: snapshotForm, restoreForm: restoreForm };
 })(window);

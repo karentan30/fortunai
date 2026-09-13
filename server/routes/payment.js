@@ -31,6 +31,7 @@ const {
   grantQuestionCredits,
   _tokenFromReq,
   _grantPeriodicPackExpiry, PERIODIC_PACK_DAYS,
+  orderNeedsAccount,
 } = require('../lib/store');
 
 // 按次问事产品 → 授予的 credit 数量
@@ -168,14 +169,26 @@ router.get('/orders/mine', authMiddleware, (req, res) => {
 // ══════════════════════════════════════════
 router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
   try {
-    if (!stripe) return res.status(503).json({ error: '支付系统暂未开通' });
-
     const { product, donorName, contact, wishText, email, successUrl, cancelUrl, token } = req.body;
     const prod = PRODUCTS[product];
     if (!prod) return res.status(400).json({ error: '无效的产品 ID', valid: Object.keys(PRODUCTS) });
 
     // Resolve userId: prefer cookie (httpOnly migration) over body token
     let userId = _payResolveUser(token, req);
+
+    // 🔴 0913 生产实测: 全部 64 张订单 user_id=null（含一笔 completed 的 $19）——
+    //   报告类商品的发货只认 user_id（getUserOrders/hasFullAccess 都按 user_id 取单），
+    //   匿名下单＝收了钱没有任何人能被解锁，用户也没有自助补救路径。所以先要账号。
+    //   这一步放在「通道通不通」之前：没账号就不该走到下单，与支付通道状态无关。
+    if (userId == null && orderNeedsAccount(product)) {
+      return res.status(401).json({
+        error: 'login_required',
+        message: '请先登录再购买（订单要绑定到你的账号，否则付了款无法解锁）',
+        loginUrl: '/pages/login.html?redirect=' + encodeURIComponent('/pages/' + product.split('_')[0] + '.html'),
+      });
+    }
+
+    if (!stripe) return res.status(503).json({ error: '支付系统暂未开通' });
 
     const orderNo = 'SY-' + Date.now() + '-' + crypto.randomBytes(3).toString('hex');
 
@@ -672,11 +685,21 @@ router.post('/pay/wechat/create', rateLimitMiddleware, async (req, res) => {
     var product = (req.body && req.body.product || '').trim();
     var prod = PRODUCTS[product];
     if (!prod) return res.status(400).json({ error: '无效的产品 ID', valid: Object.keys(PRODUCTS) });
-    if (!hub.HUB_SECRET) return res.status(400).json({ error: '支付服务暂不可用' });
 
     // _payResolveUser(token, req) 内部优先用 _tokenFromReq(req)（header > body > cookie），
     // 这里的 token 只是第二兜底，不用再手工读 Authorization 头。
     var uid = _payResolveUser(req.body && req.body.token, req);
+
+    // 🔴 0913: 与 /create-checkout 同一条铁律 —— 匿名下单＝收了钱没人能被解锁（发货只认 user_id）。
+    //   国内通道同样是「先有账号再付款」，代烧/供奉/预约等人工交付商品除外。
+    if (uid == null && orderNeedsAccount(product)) {
+      return res.status(401).json({
+        error: 'login_required',
+        message: '请先登录再购买（订单要绑定到你的账号，否则付了款无法解锁）',
+        loginUrl: '/pages/login.html?redirect=' + encodeURIComponent('/pages/' + product.split('_')[0] + '.html'),
+      });
+    }
+    if (!hub.HUB_SECRET) return res.status(400).json({ error: '支付服务暂不可用' });
     var method = (req.body && (req.body.method || req.body.channel) || 'wechat').toLowerCase();
     if (!['wechat', 'alipay', 'stripe'].includes(method)) method = 'wechat';
     var oid = pay.genOutTradeNo(method === 'alipay' ? 'ali' : method === 'stripe' ? 'st' : 'wx');
@@ -772,11 +795,21 @@ router.post('/pay/alipay/qr', rateLimitMiddleware, async (req, res) => {
     var product = (req.body && req.body.product || '').trim();
     var prod = PRODUCTS[product];
     if (!prod) return res.status(400).json({ error: '无效的产品 ID', valid: Object.keys(PRODUCTS) });
-    if (!hub.HUB_SECRET) return res.status(400).json({ error: '支付服务暂不可用' });
 
     // _payResolveUser(token, req) 内部优先用 _tokenFromReq(req)（header > body > cookie），
     // 这里的 token 只是第二兜底，不用再手工读 Authorization 头。
     var uid = _payResolveUser(req.body && req.body.token, req);
+
+    // 🔴 0913: 与 /create-checkout 同一条铁律 —— 匿名下单＝收了钱没人能被解锁（发货只认 user_id）。
+    //   国内通道同样是「先有账号再付款」，代烧/供奉/预约等人工交付商品除外。
+    if (uid == null && orderNeedsAccount(product)) {
+      return res.status(401).json({
+        error: 'login_required',
+        message: '请先登录再购买（订单要绑定到你的账号，否则付了款无法解锁）',
+        loginUrl: '/pages/login.html?redirect=' + encodeURIComponent('/pages/' + product.split('_')[0] + '.html'),
+      });
+    }
+    if (!hub.HUB_SECRET) return res.status(400).json({ error: '支付服务暂不可用' });
     var oid = pay.genOutTradeNo('ali');
     var cnyAmtAli = prod.amountCny || prod.amount;
     _insCnOrder(oid, product, cnyAmtAli, uid, 'alipay');
@@ -853,10 +886,7 @@ router.post('/pay/stripe/create', rateLimitMiddleware, async (req, res) => {
     var product = (req.body && req.body.product || '').trim();
     var prod = PRODUCTS[product];
     if (!prod) return res.status(400).json({ error: '无效的产品 ID' });
-    if (!hub.HUB_SECRET) return res.status(400).json({ error: '海外支付暂未开通' });
 
-    var oid = pay.genOutTradeNo('st');
-    var usdAmt = prod.amount;  // amount 字段单位分
     // 🔴 0911: 这里原来硬编码 null —— 微信/支付宝两条通道都调 _payResolveUser 认人
     //   （见 /pay/wechat/create、/pay/alipay/qr），只有 Stripe 这条漏了。
     //   后果：已登录用户在报告页用卡付了 report_unlock_a，订单 user_id 仍是 null，
@@ -864,6 +894,21 @@ router.post('/pay/stripe/create', rateLimitMiddleware, async (req, res) => {
     //   _payResolveUser 内部优先走 _tokenFromReq(req)：header > body.token > sy_token cookie，
     //   页面同源 fetch 会自动带 cookie，所以已登录用户不用改前端就能被认出来。
     var uid = _payResolveUser(req.body && req.body.token, req);
+
+    // 🔴 0913: 与 /create-checkout 同一条铁律 —— 认出了人还不够，没账号就不许下单
+    //   （匿名订单 user_id=null，发货时谁也对不上）。代烧/供奉/预约等人工交付商品除外。
+    //   必须排在「通道通不通」之前：没账号不该下单，与支付通道状态无关。
+    if (uid == null && orderNeedsAccount(product)) {
+      return res.status(401).json({
+        error: 'login_required',
+        message: '请先登录再购买（订单要绑定到你的账号，否则付了款无法解锁）',
+        loginUrl: '/pages/login.html?redirect=' + encodeURIComponent('/pages/' + product.split('_')[0] + '.html'),
+      });
+    }
+    if (!hub.HUB_SECRET) return res.status(400).json({ error: '海外支付暂未开通' });
+
+    var oid = pay.genOutTradeNo('st');
+    var usdAmt = prod.amount;  // amount 字段单位分
     _insCnOrder(oid, product, usdAmt, uid, 'stripe');
     var refCodeStripe = _extractRef(req);
     if (refCodeStripe) recordAffiliateOrder(oid, refCodeStripe, product, usdAmt / 100);

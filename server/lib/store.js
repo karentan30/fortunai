@@ -517,6 +517,19 @@ function consumeQuestionCredit(uid) {
   return true;
 }
 
+// ── 下单是否必须先有账号 ──
+// 🔴 0913 实测(生产 data.json): 64 张订单**全部** user_id=null，包括唯一一笔
+//   completed 的 $19 daily_companion_year(2026-09-08)——钱收到了，订单却不挂在任何人身上。
+//   发货只看 user_id：getUserOrders.all(uid) / hasFullAccess 都按 user_id 取单，
+//   所以匿名订单等于「收了钱没有任何人能被解锁」，用户也没有自助补救路径。
+//   代烧/供奉/预约这类靠人工联系交付的除外；其余一律要求先登录再付款(名单是白名单，
+//   新增商品默认要求账号 = 失败方向偏「不让付」而不是「收了不给货」)。
+var ORDER_WITHOUT_ACCOUNT = {
+  'joss_basic': true, 'joss_premium': true, 'joss_supreme': true,   // 代烧：人工联系交付
+  'shenyuan': true, 'shenyuan_booking': true,                        // 供奉/当面咨询预约
+};
+function orderNeedsAccount(product) { return !ORDER_WITHOUT_ACCOUNT[product]; }
+
 function hasFullAccess(req, productKeys) {
   try {
     var token = _tokenFromReq(req);
@@ -554,7 +567,7 @@ function hasFullAccess(req, productKeys) {
 //   必须单买对应高端产品或升全解锁会员。标准报告(八字/紫微/合婚/风水/塔罗/占星/姓名/
 //   六爻/奇门/大六壬/灵签/前世/高考志愿/jyotish/maya/tibet 等)照常吃 credit。
 var CREDIT_INELIGIBLE_KEYS = {
-  'yinzhai': true, '阴宅': true, 'yinzhai_full': true,   // $69.9 阴宅
+  'yinzhai': true, '阴宅': true, 'yinzhai_full': true,   // $99 / ¥299 阴宅（与 SKU amount 同步，旧注释写的 $69.9 是错的）
   'bazi_vip': true,                                       // $39.9 大师深度(另有 detectBaziVip 独立门,这里双保险)
   'hehun_master': true,                                   // 大师批婚(另由 hehunTier 独立分档)
 };
@@ -959,6 +972,14 @@ const PRODUCTS = {
   ziwei_full:      { name: '紫微 · 一键全解锁（session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部紫微 session：事业/财帛/夫妻/大限' },
   shouxiang_full:  { name: '手相·麻衣神相完整解读', amount: 990, amountCny: 5900, desc: '掌纹三大主线+八大丘+特殊纹+化解建议' },
   mianxiang_full:  { name: '面相·麻衣神相完整解读', amount: 990, amountCny: 5900, desc: '三停五岳+十二宫+流年气色+化解建议' },
+  // ── 0913: 藏传/吠陀/玛雅三个方法的 SKU 从来不存在，但三个报告页都在卖 ──
+  //   实测后果：藏传页/吠陀页卖的是 bazi_full（收 $11.99 却解锁不了本页报告），
+  //   玛雅页卖 maya_full（SKU 不存在 → create-checkout 400 → 按钮点了没反应）。
+  //   定价照**页面已经标给用户看的价**，保证显示价＝实收价，不新造价格。
+  //   （UNLOCK_BY_CATEGORY 里 tibet_full/jyotish_full/maya_full 早就映射好了，加 SKU 即生效。）
+  tibet_full:      { name: '藏传 · 完整命盘解读', amount: 1490, amountCny: 9900, desc: '密瓦+帕卡+风马·十二章节完整藏历命盘' },
+  jyotish_full:    { name: '吠陀 · 完整星盘解读', amount: 1290, amountCny: 8900, desc: '真Lagna+月亮Rashi+Nakshatra+Vimshottari大运完整解析' },
+  maya_full:       { name: '玛雅 · 完整历法解读', amount: 990,  amountCny: 6900, desc: '神圣Kin+Tzolkin十三音+二十印记完整解读' },
   duanshi_full:    { name: '断事问卦完整解读',  amount: 2900,   amountCny: 5900,  desc: '六爻起卦·吉凶断事·行动建议' },
   astrology_full:  { name: '西占 · 一键全解锁（session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部西占 session：事业/爱情/性格天赋' },
   kyusei_full:     { name: '九星 · 一键全解锁（session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部九星 session：事业/恋爱/方位' },
@@ -1041,6 +1062,7 @@ module.exports = {
   getUserOrders, insertOrder, insertReading, getReadingsByUser,
   // 付费墙
   UNLOCK_BY_CATEGORY, SUBSCRIBE_PRODUCTS, PERIODIC_PACK_DAYS, hasFullAccess, hasVipAccess, hehunTier, gateMessages,
+  orderNeedsAccount,
   _isExpired,
   // 会员分级(0817)
   FULL_MEMBER_PRODUCTS, MONTHLY_MEMBER_PRODUCTS, MONTHLY_REPORT_CREDIT, MONTHLY_CHAT_DAILY_LIMIT,

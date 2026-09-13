@@ -1040,7 +1040,7 @@ function showReport(text) {
         html += '<div class="ur-card" id="'+anchorId+'" style="animation-delay:'+(i*0.08)+'s;position:relative;min-height:80px">';
         html += '<div class="ur-head"><span class="ur-emoji">🔒</span><span class="ur-title">'+escHtml(sec.title||'风水分析')+'</span></div>';
         html += '<div style="padding:16px;text-align:center"><div style="font-size:13px;font-weight:600;letter-spacing:0.1em;color:#1f6b4e;margin-bottom:10px">解锁完整八宅吉位报告</div>';
-        html += '<button onclick="unlockFullReport()" style="background:linear-gradient(135deg,#1f6b4e,#2f8f6b);border:none;border-radius:12px;color:#fbfdf7;font-family:\'Noto Serif SC\',serif;font-size:13px;padding:11px 26px;cursor:pointer">立即解锁 · ¥9.9 →</button></div></div>';
+        html += '<button onclick="unlockFullReport()" style="background:linear-gradient(135deg,#1f6b4e,#2f8f6b);border:none;border-radius:12px;color:#fbfdf7;font-family:\'Noto Serif SC\',serif;font-size:13px;padding:11px 26px;cursor:pointer">立即解锁 · ¥59 →</button></div></div>';
         continue;
       }
 
@@ -1074,7 +1074,7 @@ function showReport(text) {
 
   // Paywall CTA
   html += '<div class="sticky-cta-bar">';
-  html += '<button class="btn-unlock" onclick="unlockFullReport()">解锁完整八宅吉位报告 · ¥9.9</button>';
+  html += '<button class="btn-unlock" onclick="unlockFullReport()">解锁完整八宅吉位报告 · ¥59</button>';
   html += '<div style="font-size:9.5px;color:#68705f;margin-top:6px;letter-spacing:0.06em">包含财位·旺气位·化煞建议·五行调场方案</div>';
   html += '</div>';
 
@@ -1216,10 +1216,80 @@ function shareResult() {
   }
 }
 
-function unlockFullReport() {
-  // TODO: integrate Stripe checkout or WeChat Pay
-  showToast('付费功能即将上线，敬请期待', '');
+// 国内用户：create-checkout 只回 {channel:'cn'}，原来这里弹一句「请用微信/支付宝」就断了 ——
+// 本页是中文页，国内用户占大头，等于半个入口是死的。照 hehun.html 接上扫码支付。
+function cnPay(product) {
+  fetch('/api/pay/wechat/create', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ product: product, method: 'wechat', token: localStorage.getItem('sy_token') || '' })
+  }).then(function(r){ return r.json(); }).then(function(pd){
+    if (!pd || !pd.code_url) { showToast('支付服务暂不可用，请稍后重试', 'error'); return; }
+    cnPayModal(pd.code_url, pd.out_trade_no, pd.amount);
+  }).catch(function(){ showToast('网络异常，请重试', 'error'); });
 }
+
+function cnPayModal(codeUrl, outTradeNo, amountFen) {
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center';
+  wrap.innerHTML = '<div style="background:#faf8f2;border-radius:16px;padding:26px 22px;max-width:320px;width:88%;text-align:center;font-family:\'Noto Serif SC\',serif">'
+    + '<div style="font-size:15px;margin-bottom:6px;color:rgba(35,28,22,0.95)">微信 / 支付宝 扫码支付</div>'
+    + '<div style="font-size:22px;font-weight:700;color:#c9a84c;margin-bottom:12px">¥' + ((amountFen || 0) / 100).toFixed(2) + '</div>'
+    + '<img alt="支付二维码" style="width:200px;height:200px;border-radius:8px;background:#fff;padding:6px" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(codeUrl) + '">'
+    + '<div style="font-size:11px;color:rgba(80,68,50,0.6);margin-top:8px">支付完成后自动解锁报告</div>'
+    + '<button id="cnPayCancel" style="margin-top:16px;background:none;border:1px solid rgba(201,168,76,0.4);color:#c9a84c;padding:9px 26px;border-radius:10px;cursor:pointer;font-size:13px;min-height:44px">取消</button></div>';
+  document.body.appendChild(wrap);
+  var polls = 0;
+  var timer = setInterval(function(){
+    polls++;
+    if (polls > 40) { clearInterval(timer); wrap.remove(); showToast('支付超时，请重试', 'error'); return; }
+    fetch('/api/pay/wechat/query?out_trade_no=' + encodeURIComponent(outTradeNo))
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        if (d && (d.paid || d.status === 'paid')) {
+          clearInterval(timer); wrap.remove();
+          location.href = location.origin + location.pathname + '?paid=1';
+        }
+      }).catch(function(){});
+  }, 3000);
+  wrap.querySelector('#cnPayCancel').onclick = function(){ clearInterval(timer); wrap.remove(); };
+}
+
+function unlockFullReport() {
+  // 🔴 0913: 这里原来只有一行 TODO + 一个「即将上线」提示 —— 风水报告**根本收不了钱**
+  //   (fengshui_full 这个 SKU 一直存在，但全站没有任何页面提交过它)。
+  //   现在接上真付费入口：标价与 SKU 一致(¥59 / 海外 $29)，不再让按钮装样子。
+  if (lastPayload) { try { localStorage.setItem('sy_last_fengshui', JSON.stringify(lastPayload)); } catch(e){} }
+  fetch('/api/create-checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      product: 'fengshui_full',
+      token: localStorage.getItem('sy_token') || '',
+      successUrl: location.origin + location.pathname + '?paid=1',
+      cancelUrl: location.href
+    })
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.url) { window.location.href = d.url; }
+    else if (d.channel === 'cn') { cnPay('fengshui_full'); }
+    else { showToast('支付跳转失败，请重试', 'error'); }
+  }).catch(function(){ showToast('网络异常，请重试', 'error'); });
+}
+
+// 付款回流：原来本页连这条路径都没有(付完钱跳回来什么都不发生)。
+function handlePaidReturn() {
+  if (new URLSearchParams(location.search).get('paid') !== '1') return;
+  try { history.replaceState(null, '', location.pathname); } catch(e){}
+  var saved = null;
+  try { saved = JSON.parse(localStorage.getItem('sy_last_fengshui') || 'null'); } catch(e){}
+  if (!saved) { showToast('支付成功！请重新填写房屋信息生成报告'); return; }
+  ['facing','floor','layout','residents','address','question'].forEach(function(k){
+    var el = document.getElementById(k); if (el && saved[k] != null) el.value = saved[k];
+  });
+  showToast('支付成功，正在解锁完整报告…');
+  generateReport();
+}
+handlePaidReturn();
 </script>
 
 <script>
