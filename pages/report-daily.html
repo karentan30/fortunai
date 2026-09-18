@@ -176,6 +176,7 @@
     }).join('');
     return '<div class="crossread"><div class="k">'+esc(kk)+'</div><h4>'+esc(head)+'</h4><div class="fr">'+esc(fr)+'</div>'+cards+'</div>';
   }
+  function rp(k,f){return '<span data-rp="'+k+'">'+(window.RunaePrice?RunaePrice.fmt(k,f):f)+'</span>';}
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
   // ---- profile → daily/card body (mirrors report-v2 bd(), per spec) ----
@@ -199,7 +200,8 @@
 
   function goCheckout(product, btn){
     var busyTxt = EN?'Taking you to checkout…':'跳转支付…';
-    var idleTxt = EN?'Subscribe to Runae Advisor · $9.9 / mo':'订阅 Runae 顾问 · $9.9 / 月';
+    var _mp = window.RunaePrice?RunaePrice.fmt('member_monthly','$9.9'):'$9.9';
+    var idleTxt = EN?'Subscribe to Runae Advisor · '+_mp+' / mo':'订阅 Runae 顾问 · '+_mp+' / 月';
     if(btn){ btn.disabled=true; btn.textContent=busyTxt; }
     function restore(){ if(btn){ btn.disabled=false; btn.textContent=idleTxt; } }
     fetch('/api/create-checkout',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -280,15 +282,13 @@
         +'<li>Ask follow-ups anytime in AI chat — like a mentor on call</li>'
         +'<li>Eastern & Western astrology plus face and palm reading — the same you, seen from every angle</li>'
         +'<li>Remembers your chart and your history — the more you use it, the better it knows you</li>'
-        +'<li>Book a one-on-one with a real reader (member discount)</li>'
-        +'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\',this)">Subscribe to Runae Advisor · $9.9 / mo</button></div>'
+        +'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\',this)">Subscribe to Runae Advisor · '+rp('member_monthly','$9.9')+' / mo</button></div>'
       : '<div class="adv"><div class="k">Runae 顾问 · 会记得你</div><h4>不止今日一卡<br>是一个懂你的命理顾问</h4><ul>'
         +'<li>每日运势与流年动态，天天更新</li>'
         +'<li>AI 对话随时追问深聊，像身边的老师</li>'
         +'<li>中西命理 + 面相手相，交叉印证同一个你</li>'
         +'<li>记得你的盘与历史，越用越懂你</li>'
-        +'<li>可约真人命理师一对一（会员优惠）</li>'
-        +'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\',this)">订阅 Runae 顾问 · $9.9 / 月</button></div>';
+        +'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\',this)">订阅 Runae 顾问 · '+rp('member_monthly','$9.9')+' / 月</button></div>';
 
     html+='<div class="disc">'+(EN?'AI-generated content · for entertainment and self-reflection only; not medical, legal, or financial advice.':'AI 生成内容 · 仅供娱乐参考，不构成医疗、法律或财务建议。')+'</div>';
 
@@ -319,5 +319,6 @@
 <script src="/assets/js/common.js"></script>
 <script src="/pages/report-export.js" defer></script>
 <script src="/assets/js/ev.js" defer></script>
+<script src="/assets/js/price.js"></script>
 </body>
 </html>

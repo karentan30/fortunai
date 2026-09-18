@@ -131,7 +131,7 @@
   .charms-k{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:600}
   .charms-sub{font-size:12px;color:var(--ink-3);line-height:1.5;margin:7px 0 14px}
   .charm{display:flex;align-items:center;gap:13px;background:var(--card);border:1px solid var(--gold-wash);border-radius:var(--r);padding:12px 13px;margin-top:10px;text-decoration:none;transition:transform .12s,border-color .15s}
-  .charm:active{transform:scale(.98)}.charm:hover{border-color:var(--gold-soft)}
+
   .charm-ic{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;box-shadow:inset 0 1px 0 rgba(255,255,255,.15)}
   .charm-bd{flex:1;min-width:0}
   .charm-nm{font-size:14.5px;font-weight:600;color:var(--ink);font-family:var(--serif)}
@@ -177,16 +177,14 @@
       'Your daily horoscope and live annual forecast, refreshed every day',
       'Ask anything, anytime — like having a teacher on call',
       'Eastern & Western astrology plus face and palm reading — the same you, seen from every angle',
-      'Remembers your chart and your history — the more you use it, the better it knows you',
-      'Book a one-on-one session with a real reader (member discount)'
+      'Remembers your chart and your history — the more you use it, the better it knows you'
     ]:[
       '每日运势与流年动态，天天更新',
       'AI 对话随时追问深聊，像身边的老师',
       '中西命理 + 面相手相，交叉印证同一个你',
-      '记得你的盘与历史，越用越懂你',
-      '可约真人命理师一对一（会员优惠）'
+      '记得你的盘与历史，越用越懂你'
     ],
-    advBtn:EN?'Subscribe to Runae Advisor · $9.9 / mo':'订阅 Runae 顾问 · $9.9 / 月',
+    advBtn:EN?'Subscribe to Runae Advisor · {P} / mo':'订阅 Runae 顾问 · {P} / 月',
     comingHead:EN?'This reading is coming soon':'新版报告正在接入',
     comingBody:EN?'This one is almost ready. Want to start with your BaZi in the meantime?':'这个推演的新版报告马上就好。先看看你的八字？',
     seeBazi:EN?'See BaZi Report First':'先看八字报告',
@@ -208,7 +206,6 @@
     curveLow:EN?'Test':'低',
     charmsHead:EN?'Lucky Charms for You':'你的开运推荐',
     charmsSub:EN?'Matched to your favorable & missing elements · traditional reference, not a medical or outcome claim':'依你的用神与命中所缺挑选 · 传统开运参考·非功效保证',
-    charmsView:EN?'View':'查看',
     charmsWhy:EN?'Feeds your ':'补你的',
     secRemedy:EN?'Your Lucky Boosters':'开运锦囊',
     footDisc:EN?'This report is AI-assisted, for self-reflection and entertainment only. It is not a fixed prediction or advice for any decision.':'本报告由 AI 辅助生成，仅供自我觉察与娱乐参考，不构成命定断言或任何决策建议。',
@@ -251,6 +248,7 @@
   var SS_EN={'比肩':'Friend','劫财':'Rob Wealth','食神':'Eating God','伤官':'Hurting Officer','偏财':'Indirect Wealth','正财':'Direct Wealth','七杀':'Seven Killings','正官':'Direct Officer','偏印':'Indirect Resource','正印':'Direct Resource'};
   function elemEn(x){return EN?(ELEM_EN[x]||x):x;}
   function ssEn(x){return EN?(SS_EN[x]||x):x;}
+  function rp(k,f){return '<span data-rp="'+k+'">'+(window.RunaePrice?RunaePrice.fmt(k,f):f)+'</span>';}
   function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*([^*\n]+?)\*/g,'<em>$1</em>');}
   function mdBlock(text){var lines=(text||'').split('\n'),html='',inList=false,para=[];
     function fp(){if(para.length){html+='<p>'+md(para.join(' '))+'</p>';para=[];}}
@@ -621,13 +619,12 @@
       var it=pack.items[0]; // lead item per element
       var name=EN?it.en:it.zh;
       var elName=EN?(ELEM_EN[e]||e):e;
-      var why=EN?(T.charmsWhy+'<b>'+esc(elName)+'</b> — the element your chart leans on most.')
-                :(T.charmsWhy+'<b>'+esc(elName)+'</b>——你命盘最借力的一行。');
-      var href='shop.html?lang='+LANG+'#el='+encodeURIComponent(e);
-      return '<a class="charm" href="'+href+'">'
+      var why=EN?(T.charmsWhy+'<b>'+esc(elName)+'</b> — a favorable element in your chart.')
+                :(T.charmsWhy+'<b>'+esc(elName)+'</b>——你命盘借力的一行。');
+      // 0918 Karen：只做按命盘的推荐，不再跳商城（商城仅中文+加微信预订，英文用户无法购买）
+      return '<div class="charm">'
         +'<div class="charm-ic" style="background:linear-gradient(150deg,var('+colorVar[e]+'),rgba(0,0,0,.25))">'+it.emoji+'</div>'
-        +'<div class="charm-bd"><div class="charm-nm">'+esc(name)+'</div><div class="charm-wy">'+why+'</div></div>'
-        +'<span class="charm-go">'+esc(T.charmsView)+' <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span></a>';
+        +'<div class="charm-bd"><div class="charm-nm">'+esc(name)+'</div><div class="charm-wy">'+why+'</div></div></div>';
     }).join('');
     return '<div class="charms"><div class="charms-k">✦ '+esc(T.charmsHead)+'</div>'
       +'<div class="charms-sub">'+esc(T.charmsSub)+'</div>'+cards+'</div>';
@@ -744,7 +741,7 @@
     var tail=document.getElementById('tail'); if(!tail||_tailDone) return; _tailDone=true;
     var advLis=T.advList.map(function(x){return '<li>'+esc(x)+'</li>';}).join('');
     tail.innerHTML=crossReadHTML()
-      +'<div class="adv"><div class="k">'+esc(T.advK)+'</div><h4>'+T.advH+'</h4><ul>'+advLis+'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">'+esc(T.advBtn)+'</button></div>';
+      +'<div class="adv"><div class="k">'+esc(T.advK)+'</div><h4>'+T.advH+'</h4><ul>'+advLis+'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\')">'+esc(T.advBtn).replace('{P}',rp('member_monthly','$9.9'))+'</button></div>';
   }
 
   // after the free reading chapter finishes → paint the paywall + locked paid-chapter list, then tail
@@ -794,7 +791,7 @@
       +'<div class="wall"><h4>'+esc(T.unlock)+'</h4><p>'+esc(T.unlockSub)+'</p>'
       +'<ul class="walllist">'+lockedList+'</ul>'
       +'<button class="cta gold" onclick="goCheckout(\'bazi_full\')">'+esc(T.unlockBtn)+'</button>'
-      +'<div class="price"><b>$11.99</b> '+esc(T.price1)+'</div></div>';
+      +'<div class="price"><b>'+rp('bazi_full','$11.99')+'</b> '+esc(T.price1)+'</div></div>';
   }
 
   /* ── build the doc-version scaffold, then fill deterministic blocks + stream reading ── */
@@ -918,5 +915,6 @@
 <script src="/assets/js/common.js"></script>
 <script src="/pages/report-export.js" defer></script>
 <script src="/assets/js/ev.js" defer></script>
+<script src="/assets/js/price.js"></script>
 </body>
 </html>

@@ -891,7 +891,7 @@ ${baziBlock ? '\n' + baziBlock + '\n\n⚠️ 维度1「四柱八字排盘」及�
       // 标准档 $9.9：四柱+五行+财运+感情+事业+开运锦囊，约2500字
       useMessages = buildReadingPrompt(
         '你是子平命理正宗传承者，从事命理批算38年，亲批命盘逾十万张。你说话有分寸，有温度。语言：三分古典七分白话，极度具体——给出具体年份、颜色、方位，让人能照着做。绝不透露所用的AI模型。' + DISCLAIMER_ZH,
-        '请为以下命主生成【标准版】八字命理报告，总字数约2500字，核心5个维度写完写透：\n\n出生：' + birthYear + '年' + birthMonth + '月' + birthDay + '日' + (birthHour !== undefined ? birthHour + '时' : '（时辰不详）') + '\n性别：' + (gender === 'male' ? '男' : '女') + '\n用户关注：' + (question || '请全面分析命盘') + '\n' + (baziBlock ? '\n' + baziBlock + '\n⚠️ 以下分析必须严格采用上方精确排盘结果。\n' : '') + '\n\n1. 📜 四柱八字排盘（400字：四柱展示+格局总评+用神忌神）\n2. 🟤 五行能量分析（400字：精确百分比+旺衰判断+补泄建议+脏腑对应）\n3. 💰 财运格局（500字：正偏财+发财黄金年份3个+行业方向5个）\n4. 💕 感情姻缘（500字：夫妻宫+正缘特征含外貌性格+遇缘年份2-3个）\n5. 💼 事业格局（400字：职业路径+升职最佳时机+贵人特征）\n6. 🎯 开运锦囊（300字：幸运颜色精确色系+吉祥方位+推荐佩戴物）\n\n结尾推荐：$49完整版包含：10大运逐步深批·未来10年逐年流年·神煞藏干·古法断语·16维度全部写完，约9000-11000字。'
+        '请为以下命主生成【标准版】八字命理报告，总字数约2500字，核心5个维度写完写透：\n\n出生：' + birthYear + '年' + birthMonth + '月' + birthDay + '日' + (birthHour !== undefined ? birthHour + '时' : '（时辰不详）') + '\n性别：' + (gender === 'male' ? '男' : '女') + '\n用户关注：' + (question || '请全面分析命盘') + '\n' + (baziBlock ? '\n' + baziBlock + '\n⚠️ 以下分析必须严格采用上方精确排盘结果。\n' : '') + '\n\n1. 📜 四柱八字排盘（400字：四柱展示+格局总评+用神忌神）\n2. 🟤 五行能量分析（400字：精确百分比+旺衰判断+补泄建议+脏腑对应）\n3. 💰 财运格局（500字：正偏财+发财黄金年份3个+行业方向5个）\n4. 💕 感情姻缘（500字：夫妻宫+正缘特征含外貌性格+遇缘年份2-3个）\n5. 💼 事业格局（400字：职业路径+升职最佳时机+贵人特征）\n6. 🎯 开运锦囊（300字：幸运颜色精确色系+吉祥方位+推荐佩戴物）\n\n结尾推荐：完整版包含：10大运逐步深批·未来10年逐年流年·神煞藏干·古法断语·16维度全部写完，约9000-11000字。'
       );
     }
     // full 档维持原有的完整16维 messages（上方 buildReadingPrompt 已构建好）
@@ -1813,7 +1813,7 @@ router.post('/tarot', rateLimitMiddleware, async (req, res) => {
 5. 🎯 3条可执行行动建议（每条100字·具体到什么时候做什么）
 6. 💌 占卜师的悄悄话（150字·只对这个人说的心里话）
 
-结尾推荐：想看12个月能量走势与月相日历？$49完整版包含：逐月解读·备用牌阵追加·深度心理层解析。`;
+结尾推荐：想看12个月能量走势与月相日历？完整版包含：逐月解读·备用牌阵追加·深度心理层解析。`;
     } else {
       // 完整档 $49：全8维度，约6500字
       tarotMaxTokens = 16384;
@@ -2073,7 +2073,7 @@ Produce a [Standard Face Reading] (~1600 words), written through in the Ma Yi st
 ## Complexion & Spirit verdict
 ## Reader's Note (the face changes with the heart; do good, cultivate virtue)
 
-Close: want the full version? The $49 full report adds decade-by-decade facial change patterns, face-and-fortune enhancement pairings, and cultivation advice — a deep ~8000-character read.`
+Close: want the full version? The full report adds decade-by-decade facial change patterns, face-and-fortune enhancement pairings, and cultivation advice — a deep ~8000-character read.`
         : `用户关注：${_mxQ}${featureBlock}
 
 请出具【标准版面相报告】，总字数约2500字，按麻衣神相结构写完：
@@ -2086,7 +2086,7 @@ Close: want the full version? The $49 full report adds decade-by-decade facial c
 ## 气色神韵总评（100字）
 ## 相师叮嘱（面相随心性而变·积善修德，150字）
 
-结尾推荐：$49完整版包含：年龄段流年面相变化规律·面相与开运搭配·修相建议（相由心生维度），约8000字深度解读。`;
+结尾推荐：完整版包含：年龄段流年面相变化规律·面相与开运搭配·修相建议（相由心生维度），约8000字深度解读。`;
     } else {
       // 完整档 $49：全维度，约8000字
       mxMaxTokens = 16384;
@@ -2879,7 +2879,7 @@ Use the pre-computed compatibility score. Give specific year recommendations.`;
 ## 核心结论预览
 （写1段约250字的核心结论：概括两人最关键的一个匹配点或最需要留意的一个隐患，写到最动人处戛然而止，不展开细节）
 
-结尾必须另起一行写：「完整的四柱排盘、六维合婚详批、感情流年与开运化解，请解锁基础版（¥9.9）或完整版查看。」不要输出其它内容。`;
+结尾必须另起一行写：「完整的四柱排盘、六维合婚详批、感情流年与开运化解，解锁完整报告即可查看。」不要输出其它内容。`;
       } else if (tier === 'basic') {
         // 基础版：四柱 + 总分 + 3段核心结论，约1500字，然后锁
         systemPrompt = `${isDating ? _datingPersona : _persona}
@@ -2894,7 +2894,7 @@ Use the pre-computed compatibility score. Give specific year recommendations.`;
 ## 四、长期走势
 （约400字：这段关系的长期走向与最需留意之处）
 
-结尾必须另起一行写：「以上为基础版。完整的六维合婚详批（价值观/气场合度/子女缘/最佳结婚年份/古诀依据等）请解锁完整版（¥39.9）查看。」到此为止，不要展开更多维度。`;
+结尾必须另起一行写：「以上为基础版。完整的六维合婚详批（价值观/气场合度/子女缘/最佳结婚年份/古诀依据等）解锁完整报告即可查看。」到此为止，不要展开更多维度。`;
       } else if (tier === 'master') {
         // 大师批婚：完整六维 + 4节大师专属
         systemPrompt = `${isDating ? _datingPersona : _persona}本次为最高档【大师批婚】，字数8000-12000字。
@@ -4238,7 +4238,7 @@ Produce a Standard natal astrology report (~1600 words) in this structure:
 6. 📅 This year's key Jupiter/Saturn transits
 7. 💌 Astrologer's Note (~60 words)
 
-Close with: want the full version? The $9.9 full report includes precise analysis of all 10 planets, major aspects, and the next 3 years of transits + a moon-phase calendar.`
+Close with: want the full version? The full report includes precise analysis of all 10 planets, major aspects, and the next 3 years of transits + a moon-phase calendar.`
         : `出生：${birthYear}/${birthMonth}/${birthDay}
 性别：${gender === 'male' ? '男 Male' : '女 Female'}
 用户关注：${question || '请给我完整的星盘解读'}
@@ -4253,7 +4253,7 @@ Close with: want the full version? The $9.9 full report includes precise analysi
 6. 📅 今年木星/土星关键过境
 7. 💌 占星师寄语（100字）
 
-结尾：想看完整版？$9.9完整版包含：10颗行星精确解析、主要相位详解、未来3年逐年行运与月相日历。`;
+结尾：想看完整版？完整版包含：10颗行星精确解析、主要相位详解、未来3年逐年行运与月相日历。`;
     } else {
       astroMaxTokens = 16384;
       astroUserPrompt = _astroIntl
@@ -6610,8 +6610,8 @@ router.post('/omikuji', rateLimitMiddleware, async (req, res) => {
       // 标准档 $9.9：全9维，每维度约150字，总计约2500字
       omkMaxTokens = 6000;
       userPrompt = isEn
-        ? `The visitor drew: ${drawn.grade} — ${drawn.en}\nTheir question: ${question || 'General guidance for my life path'}\n\nPlease generate a STANDARD omikuji reading (~2500 words total) covering all 9 sections:\n\n1. 🎋 Fortune Level (${drawn.en}, Japanese + English, 100 words)\n2. 🌸 Sacred Waka Poem (original 5-7-5-7-7 + translation + 200-word reflection)\n3. 🏯 Overall Fortune Reading (500 words)\n4. ❤️ Love & Relationships (250 words)\n5. 📚 Study & Career (250 words)\n6. 💰 Wealth & Fortune (200 words)\n7. 🌿 Health & Vitality (200 words)\n8. 🧳 Travel (150 words)\n9. 🎋 Shrine Priest's Whisper (200 words, personal)\n\nEnd with: For 12-month monthly forecasts, 24-solar-term guidance and detailed ritual instructions, see the full $49 report.`
-        : `参拜者所求签文：${drawn.grade}\n所问之事：${question || '请为我指引人生方向'}\n\n请出具【标准版御神签解读报告】，总字数约2500字，按以下9个维度写完：\n\n1. 🎋 签级与神启（日中双语，100字）\n2. 🌸 御神歌（日文五七五七七原文 + 中文诗意译文 + 200字和歌背景解读）\n3. 🏯 ${drawn.grade} 签文总运详解（500字·语言温暖有力）\n4. ❤️ 恋爱姻缘（250字·感情能量+遇缘指引+落地建议）\n5. 📚 学业事业运（250字·机遇与阻碍+时机建议）\n6. 💰 财运（200字·财运走势+求财建议）\n7. 🌿 健康运（200字·身心养生，不点病名）\n8. 🧳 出行（150字·吉方与时机）\n9. 🎋 神职者叮嘱（200字·专属叮嘱与祝福，非套话）\n\n结尾推荐：$49完整版包含：12个月逐月月运·24节气运势·守护神灵深度解读·寺社参拜具体指引。`;
+        ? `The visitor drew: ${drawn.grade} — ${drawn.en}\nTheir question: ${question || 'General guidance for my life path'}\n\nPlease generate a STANDARD omikuji reading (~2500 words total) covering all 9 sections:\n\n1. 🎋 Fortune Level (${drawn.en}, Japanese + English, 100 words)\n2. 🌸 Sacred Waka Poem (original 5-7-5-7-7 + translation + 200-word reflection)\n3. 🏯 Overall Fortune Reading (500 words)\n4. ❤️ Love & Relationships (250 words)\n5. 📚 Study & Career (250 words)\n6. 💰 Wealth & Fortune (200 words)\n7. 🌿 Health & Vitality (200 words)\n8. 🧳 Travel (150 words)\n9. 🎋 Shrine Priest's Whisper (200 words, personal)\n\nEnd with: For 12-month monthly forecasts, 24-solar-term guidance and detailed ritual instructions, see the full report.`
+        : `参拜者所求签文：${drawn.grade}\n所问之事：${question || '请为我指引人生方向'}\n\n请出具【标准版御神签解读报告】，总字数约2500字，按以下9个维度写完：\n\n1. 🎋 签级与神启（日中双语，100字）\n2. 🌸 御神歌（日文五七五七七原文 + 中文诗意译文 + 200字和歌背景解读）\n3. 🏯 ${drawn.grade} 签文总运详解（500字·语言温暖有力）\n4. ❤️ 恋爱姻缘（250字·感情能量+遇缘指引+落地建议）\n5. 📚 学业事业运（250字·机遇与阻碍+时机建议）\n6. 💰 财运（200字·财运走势+求财建议）\n7. 🌿 健康运（200字·身心养生，不点病名）\n8. 🧳 出行（150字·吉方与时机）\n9. 🎋 神职者叮嘱（200字·专属叮嘱与祝福，非套话）\n\n结尾推荐：完整版包含：12个月逐月月运·24节气运势·守护神灵深度解读·寺社参拜具体指引。`;
     } else {
       // 完整档 $49：全维度 + 12个月月运 + 祈愿仪式，约8000字
       omkMaxTokens = 16384;
@@ -6705,8 +6705,8 @@ router.post('/rune', rateLimitMiddleware, async (req, res) => {
       // 标准档 $9.9：全部符文详解 + 综合解读 + 行动建议，约2500字
       runeMaxTokens = 6000;
       userPrompt = isEn
-        ? `Seeker's question: ${question || 'What guidance do the runes offer me now?'}\nRunes drawn:\n${runeDesc}\n\nPlease provide a STANDARD rune reading (~2500 words):\n\n1. ᚠ Opening — energy of this reading (100 words)\n2. 🔮 Each Rune Deep Interpretation (600-700 words per rune)\n   - Ancient Norse name + Unicode + meaning\n   - Mythology source (deity/myth)\n   - Upright/reversed core meaning\n   - Specific guidance for the seeker's question\n   - One wisdom quote from the Eddas\n3. 🌊 Synthesis — how the runes answer your question together (300 words)\n4. 🎯 3 Practical Action Points (each 100 words, with timeframe)\n5. 🔥 Reader's Closing Word (70 words, poetic)\n\nEnd with: For Norse myth deep dives, 3-month action calendar and rune meditation guides, see the full $49 report.`
-        : `问卦者的问题：${question || '请符文为我指引方向'}\n抽出的符文：\n${runeDesc}\n\n请出具【标准版卢恩符文解读报告】，总字数约2500字：\n\n1. ᚠ 符文能量开场（100字）\n2. 🔮 逐符文深度解读（每个符文600-700字）\n   - 符文名（古北欧语名 + 中文译名 + Unicode 字符）\n   - 神话来源（对应神灵、神话场景）\n   - 正/逆位核心含义\n   - 对提问者的具体指引\n   - 一句符文智慧金句\n3. 🌊 符文合力综合解读（300字）\n4. 🎯 3条可落地行动建议（每条100字·含时间窗）\n5. 🔥 占师结语（70字·诗意）\n\n结尾推荐：$49完整版包含：北欧神话背景深探·三个月行动日历·符文冥想引导，约8000-9000字。`;
+        ? `Seeker's question: ${question || 'What guidance do the runes offer me now?'}\nRunes drawn:\n${runeDesc}\n\nPlease provide a STANDARD rune reading (~2500 words):\n\n1. ᚠ Opening — energy of this reading (100 words)\n2. 🔮 Each Rune Deep Interpretation (600-700 words per rune)\n   - Ancient Norse name + Unicode + meaning\n   - Mythology source (deity/myth)\n   - Upright/reversed core meaning\n   - Specific guidance for the seeker's question\n   - One wisdom quote from the Eddas\n3. 🌊 Synthesis — how the runes answer your question together (300 words)\n4. 🎯 3 Practical Action Points (each 100 words, with timeframe)\n5. 🔥 Reader's Closing Word (70 words, poetic)\n\nEnd with: For Norse myth deep dives, 3-month action calendar and rune meditation guides, see the full report.`
+        : `问卦者的问题：${question || '请符文为我指引方向'}\n抽出的符文：\n${runeDesc}\n\n请出具【标准版卢恩符文解读报告】，总字数约2500字：\n\n1. ᚠ 符文能量开场（100字）\n2. 🔮 逐符文深度解读（每个符文600-700字）\n   - 符文名（古北欧语名 + 中文译名 + Unicode 字符）\n   - 神话来源（对应神灵、神话场景）\n   - 正/逆位核心含义\n   - 对提问者的具体指引\n   - 一句符文智慧金句\n3. 🌊 符文合力综合解读（300字）\n4. 🎯 3条可落地行动建议（每条100字·含时间窗）\n5. 🔥 占师结语（70字·诗意）\n\n结尾推荐：完整版包含：北欧神话背景深探·三个月行动日历·符文冥想引导，约8000-9000字。`;
     } else {
       // 完整档 $49：全7维度，约8000-9000字
       runeMaxTokens = 16384;
@@ -6794,8 +6794,8 @@ router.post('/kyusei', rateLimitMiddleware, async (req, res) => {
       // 标准档 $9.9：全9维，每维度约250字，总计约2500字
       kyuMaxTokens = 6000;
       userPrompt = isEn
-        ? `${starBlock}\nSeeker's question: ${question || 'What is my Nine Star Ki destiny telling me?'}\nBorn: ${birthYear}-${String(birthMonth).padStart(2,'0')}-${String(birthDay).padStart(2,'0')}\n\nPlease provide a STANDARD Nine Star Ki reading (~2500 words), all 9 sections:\n\n1. ⭐ Star Essence — ${star.nameEn} core nature, worldview, shadow side (500 words)\n2. 💼 Career & Life Path — best industries, optimal work style, career timing (300 words)\n3. ❤️ Love & Relationships — love style, best compatible stars, timing windows (300 words)\n4. 💰 Wealth & Resources — wealth accumulation style, best financial years (250 words)\n5. 🌿 Health & Vitality — Five Element body constitution, wellness direction (200 words)\n6. 📅 This Year ${currentYear} — current palace position, key themes, auspicious months (300 words)\n7. 🗓️ Next 3 Years Overview — each year: palace + theme + one key action (200 words)\n8. 🔑 3 Lifetime Keys — deepest wisdom of this star (250 words)\n9. 🌸 Closing (70 words, poetic)\n\nEnd with: For 5-year detailed forecast, auspicious direction charts and compatibility analysis, see the full $9.9 report.`
-        : `${starBlock}\n问卦者的问题：${question || '九星気学告诉我的命运是什么？'}\n出生：${birthYear}年${birthMonth}月${birthDay}日\n\n请出具【标准版九星気学解读报告】，总字数约2500字，按以下9个维度写完：\n\n1. ⭐ 本命星精髓（${star.name}的核心能量、世界观、阴面，500字）\n2. 💼 事业与人生道路（最适行业·工作风格·职业时机，300字）\n3. ❤️ 恋爱与人际关系（恋爱模式·最相性星号·遇缘时机，300字）\n4. 💰 财运与资源（聚财方式·最强财运年份，250字）\n5. 🌿 健康与活力（五行体质弱项·养生方向，不点病名，200字）\n6. 📅 今年运势（${currentYear}年本命星宫位·主题·吉月，300字）\n7. 🗓️ 未来3年方位走势（每年：宫位+主题+最宜做一件大事，200字）\n8. 🔑 三大人生密钥（本命星最深智慧，250字）\n9. 🌸 结语（70字，诗意收尾）\n\n结尾推荐：$9.9完整版包含：未来5年逐年宫位详批·方位择吉详解（家居/出行/工位）·相性兼容性分析，约8000字。`;
+        ? `${starBlock}\nSeeker's question: ${question || 'What is my Nine Star Ki destiny telling me?'}\nBorn: ${birthYear}-${String(birthMonth).padStart(2,'0')}-${String(birthDay).padStart(2,'0')}\n\nPlease provide a STANDARD Nine Star Ki reading (~2500 words), all 9 sections:\n\n1. ⭐ Star Essence — ${star.nameEn} core nature, worldview, shadow side (500 words)\n2. 💼 Career & Life Path — best industries, optimal work style, career timing (300 words)\n3. ❤️ Love & Relationships — love style, best compatible stars, timing windows (300 words)\n4. 💰 Wealth & Resources — wealth accumulation style, best financial years (250 words)\n5. 🌿 Health & Vitality — Five Element body constitution, wellness direction (200 words)\n6. 📅 This Year ${currentYear} — current palace position, key themes, auspicious months (300 words)\n7. 🗓️ Next 3 Years Overview — each year: palace + theme + one key action (200 words)\n8. 🔑 3 Lifetime Keys — deepest wisdom of this star (250 words)\n9. 🌸 Closing (70 words, poetic)\n\nEnd with: For 5-year detailed forecast, auspicious direction charts and compatibility analysis, see the full report.`
+        : `${starBlock}\n问卦者的问题：${question || '九星気学告诉我的命运是什么？'}\n出生：${birthYear}年${birthMonth}月${birthDay}日\n\n请出具【标准版九星気学解读报告】，总字数约2500字，按以下9个维度写完：\n\n1. ⭐ 本命星精髓（${star.name}的核心能量、世界观、阴面，500字）\n2. 💼 事业与人生道路（最适行业·工作风格·职业时机，300字）\n3. ❤️ 恋爱与人际关系（恋爱模式·最相性星号·遇缘时机，300字）\n4. 💰 财运与资源（聚财方式·最强财运年份，250字）\n5. 🌿 健康与活力（五行体质弱项·养生方向，不点病名，200字）\n6. 📅 今年运势（${currentYear}年本命星宫位·主题·吉月，300字）\n7. 🗓️ 未来3年方位走势（每年：宫位+主题+最宜做一件大事，200字）\n8. 🔑 三大人生密钥（本命星最深智慧，250字）\n9. 🌸 结语（70字，诗意收尾）\n\n结尾推荐：完整版包含：未来5年逐年宫位详批·方位择吉详解（家居/出行/工位）·相性兼容性分析，约8000字。`;
     } else {
       // 完整档 $49：全维度，约6500字
       kyuMaxTokens = 16384;

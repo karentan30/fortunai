@@ -119,7 +119,9 @@ test('🔴 价格来源逻辑没变（目录价 + 会员固定价两条路）', 
   // 所以「目录即唯一价目表」对会员不成立，上面的 must/forbid 只对**非会员商品**有效；
   // 会员商品的唯一口径是 Stripe 上那三个 price，改价必须两边一起改。
   const src = fs.readFileSync(path.join(__dirname, '..', 'routes', 'payment.js'), 'utf8');
-  assert.ok(/STRIPE_PRICE_IDS\[currKey\] \|\| STRIPE_PRICE_IDS\[product\]/.test(src),
+  // 0918：美元单仍是「固定价优先于目录价」；非美元单只认本币固定价（*_cny/*_krw，目前一个都没配 → 走目录 amountCny），
+  //   不再回落到美元 priceId（那会让国内看到 ¥39 却被扣 $9.90）。见 price-region.test.js。
+  assert.ok(/payCurrency === 'usd' \? STRIPE_PRICE_IDS\[product\] : STRIPE_PRICE_IDS\[currKey\]/.test(src),
     'priceId 的解析逻辑变了，请重新确认价格来源');
   assert.ok(/unitAmount = prod\.amount;/.test(src),
     'price_data 分支的兜底金额逻辑变了，请重新确认价格来源');

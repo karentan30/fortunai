@@ -184,11 +184,11 @@
     wallH:'Unlock the full palm report',
     wallP:'Head line · Life line · Fate line · Sun line · Marriage line · Eight mounts · Master\'s counsel',
     wallBtn:'Unlock full version',
-    wallPrice:'<b>$9.90</b> one-time · or subscribe and save ↓',
+    wallPrice:'<b>{W}</b> one-time · or subscribe and save ↓',
     advK:'Runae Advisor · Remembers you',
     advH:'More than a report<br>an advisor who actually knows you',
-    advLi:['Your daily horoscope and annual forecast, refreshed every day','Ask follow-ups anytime in chat — like a teacher on call','Eastern & Western astrology plus face and palm reading — the same you, seen from every angle','Remembers your chart and your history — the more you use it, the better it knows you','Book a one-on-one with a real reader (member discount)'],
-    advBtn:'Subscribe to Runae Advisor · $9.9 / mo',
+    advLi:['Your daily horoscope and annual forecast, refreshed every day','Ask follow-ups anytime in chat — like a teacher on call','Eastern & Western astrology plus face and palm reading — the same you, seen from every angle','Remembers your chart and your history — the more you use it, the better it knows you'],
+    advBtn:'Subscribe to Runae Advisor · {P} / mo',
     footNote:'AI-generated · for reflection and entertainment only · palm lines change with mindset and experience, not fatalism · you write your own future. Your photo was discarded after analysis.',
     jumping:'Opening checkout…'
   } : {
@@ -220,11 +220,11 @@
     wallH:'解锁完整手相报告',
     wallP:'智慧线 · 生命线 · 事业线 · 太阳线 · 婚姻线 · 八丘 · 相师叮嘱',
     wallBtn:'解锁完整版',
-    wallPrice:'<b>$9.90</b> 一次性 · 或订阅更划算 ↓',
+    wallPrice:'<b>{W}</b> 一次性 · 或订阅更划算 ↓',
     advK:'Runae 顾问 · 会记得你',
     advH:'不止一份报告<br>是一个懂你的命理顾问',
-    advLi:['每日运势与流年动态，天天更新','AI 对话随时追问深聊，像身边的老师','中西命理 + 面相手相，交叉印证同一个你','记得你的盘与历史，越用越懂你','可约真人命理师一对一（会员优惠）'],
-    advBtn:'订阅 Runae 顾问 · $9.9 / 月',
+    advLi:['每日运势与流年动态，天天更新','AI 对话随时追问深聊，像身边的老师','中西命理 + 面相手相，交叉印证同一个你','记得你的盘与历史，越用越懂你'],
+    advBtn:'订阅 Runae 顾问 · {P} / 月',
     footNote:'AI 生成 · 仅供反思与娱乐 · 掌纹随心态与经历变化，不宿命论 · 你自己书写自己的未来。你的照片在分析后已丢弃。',
     jumping:'跳转支付…'
   };
@@ -288,6 +288,7 @@
     return '<div class="crossread"><div class="k">'+esc(kk)+'</div><h4>'+esc(head)+'</h4><div class="fr">'+esc(fr)+'</div>'+cards+'</div>';
   }
   function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function rp(k,f){return '<span data-rp="'+k+'">'+(window.RunaePrice?RunaePrice.fmt(k,f):f)+'</span>';}
   function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
   var HEAD=/^\s*([【✅📜🌟💰❤💼🌿☀🔮⛰✨🙏🖐🧠💍]|#{1,3}\s|[\uD83C-\uDBFF])/;
 
@@ -433,12 +434,12 @@
 
     // 付费墙（仅未解锁时）
     if(d.locked){
-      html+='<div class="wall"><h4>'+esc(T.wallH)+'</h4><p>'+esc(T.wallP)+'</p><button class="cta gold" onclick="goCheckout(\'shouxiang_full\',this)">'+esc(T.wallBtn)+'</button><div class="price">'+T.wallPrice+'</div></div>';
+      html+='<div class="wall"><h4>'+esc(T.wallH)+'</h4><p>'+esc(T.wallP)+'</p><button class="cta gold" onclick="goCheckout(\'shouxiang_full\',this)">'+esc(T.wallBtn)+'</button><div class="price">'+T.wallPrice.replace('{W}',rp('shouxiang_full','$9.90'))+'</div></div>';
     }
 
     html+=crossReadHTML();
     // 顾问卡（advisor，与 report-v2 一致）
-    html+='<div class="adv"><div class="k">'+esc(T.advK)+'</div><h4>'+T.advH+'</h4><ul>'+T.advLi.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\',this)">'+esc(T.advBtn)+'</button></div>';
+    html+='<div class="adv"><div class="k">'+esc(T.advK)+'</div><h4>'+T.advH+'</h4><ul>'+T.advLi.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul><button class="sbtn" onclick="goCheckout(\'member_monthly\',this)">'+esc(T.advBtn).replace('{P}',rp('member_monthly','$9.9'))+'</button></div>';
 
     // 合规脚注
     html+='<div class="ai-note" style="margin-top:14px"><span>🤖</span><span>'+esc(T.footNote)+'</span></div>';
@@ -483,5 +484,6 @@
 <script src="/assets/js/common.js"></script>
 <script src="/pages/report-export.js" defer></script>
 <script src="/assets/js/ev.js" defer></script>
+<script src="/assets/js/price.js"></script>
 </body>
 </html>

@@ -52,6 +52,7 @@ const HUB_SUB_ENABLED = process.env.HUB_SUB_ENABLED === '1';
 const HUB_SUB_PLAN_MAP = { daily_companion_year: 'daily_companion_year' };
 const { sendEmail, getClientIp, resolveUserFromToken } = require('../lib/utils');
 const { resolvePaymentMethods } = require('../lib/stripe-methods');
+const { priceRegion, displayPrices } = require('../lib/price-region');
 const { rateLimitMiddleware, simpleRateLimitMiddleware, authMiddleware } = require('../middleware');
 const { recordAffiliateOrder, completeAffiliateOrder } = require('./affiliate');
 
@@ -168,6 +169,17 @@ router.get('/orders/mine', authMiddleware, (req, res) => {
 });
 
 // ══════════════════════════════════════════
+// GET /api/price-region — 按所在地返回币种 + 展示价（与 create-checkout 实收同一判定、同一目录）
+// ══════════════════════════════════════════
+router.get('/price-region', async (req, res) => {
+  let region = await priceRegion(req);
+  // 本地/预发可用 ?region=cn|us 预览另一币种；生产不接受覆盖（展示价必须等于实收价）
+  if (process.env.NODE_ENV !== 'production' && /^(cn|us)$/.test(String(req.query.region || ''))) region = req.query.region;
+  res.set('Cache-Control', 'private, max-age=600');
+  res.json({ region, currency: region === 'cn' ? 'cny' : 'usd', symbol: region === 'cn' ? '¥' : '$', prices: displayPrices(region) });
+});
+
+// ══════════════════════════════════════════
 // POST /api/create-checkout — Stripe Checkout Session
 // ══════════════════════════════════════════
 router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
@@ -199,24 +211,20 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
     const orderNo = 'SY-' + Date.now() + '-' + crypto.randomBytes(3).toString('hex');
 
     var ipCountry = (req.headers['cf-ipcountry'] || req.headers['x-vercel-ip-country'] || '').toUpperCase();
-    var isCN = ipCountry === 'CN';
-    if (isCN) {
-      return res.json({
-        channel: 'cn', product,
-        amountCny: prod.amountCny || prod.amount,
-        message: '国内用户请使用微信支付或支付宝',
-      });
-    }
 
+    // 🟢 0918 Karen「按所在地定价：中国=人民币，美国=美元」：币种由服务端按所在地定（lib/price-region.js，
+    //   与 /api/price-region 展示价同一个判定），不再信前端传的 region/currency；
+    //   也不再对国内用户回 channel:'cn' 的死胡同（前端只会弹「接入中」，国内付不了款）——
+    //   国内走 Stripe 人民币：银行卡 + 支付宝 + 微信支付（通道被 Stripe 拒时自动退回只收卡，见下方 create 兜底）。
     const region = (req.body.region || '').toLowerCase();
     const currency = (req.body.currency || '').toLowerCase();
     const isKR = region === 'kr' || currency === 'krw';
-    const isCNY = !isKR && (region === 'cn' || currency === 'cny');
+    const isCNY = !isKR && (await priceRegion(req)) === 'cn';
     const payCurrency = isKR ? 'krw' : isCNY ? 'cny' : 'usd';
     const payMethods = isKR
       ? (process.env.KR_PAY_METHODS ? process.env.KR_PAY_METHODS.split(',').map(s => s.trim()) : ['card'])
       : isCNY
-        ? ['card', 'alipay']
+        ? (process.env.CN_PAY_METHODS ? process.env.CN_PAY_METHODS.split(',').map(s => s.trim()) : ['card', 'alipay', 'wechat_pay'])
         : ['card'];
 
     const isJoss = product.startsWith('joss_');
@@ -234,7 +242,7 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
 
     // 🔴 0907 真自动续订(recurring): 周期包 daily_companion_*/monthly_report_year 走 Stripe subscription。
     //   仅 Stripe 路径(海外为主)接自动续扣; CN(微信/支付宝)仍走手动周期包(无代扣资质),
-    //   由上面 isCN 分支拦截返回 channel:'cn', 不进此处。透明合规: 前端明示"自动续费·可随时取消"。
+    //   0918 起国内订阅也走 Stripe 人民币(支付宝/微信不支持订阅 → resolvePaymentMethods 自动收窄为只收卡)。透明合规: 前端明示"自动续费·可随时取消"。
     const isSubscription = ['daily_sub','member_monthly','member_yearly','member_quarterly','member_3year','member_daily',
                             'daily_companion_month','daily_companion_year','monthly_report_year'].includes(product);
 
@@ -271,7 +279,8 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
     }
 
     const currKey = isKR ? product + '_krw' : isCNY ? product + '_cny' : product;
-    const priceId = (!isMonthlyDiscount && (STRIPE_PRICE_IDS[currKey] || STRIPE_PRICE_IDS[product])) || null;
+    // 0918：非美元单只认本币种的固定价（*_cny/*_krw）。此前会回落到美元 priceId → 国内看到 ¥39、实收 $9.90。
+    const priceId = (!isMonthlyDiscount && (payCurrency === 'usd' ? STRIPE_PRICE_IDS[product] : STRIPE_PRICE_IDS[currKey])) || null;
 
     const lineItem = priceId
       ? { price: priceId, quantity: 1 }
@@ -309,8 +318,9 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
     }
     const _cancel = guest ? (() => { const c = claim.safeReturn(cancelUrl, '/pages/' + product.split('_')[0] + '.html'); return c.origin + c.path; })() : null;
 
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: _pm.methods,
+    const _sessionOpts = (methods) => ({
+      payment_method_types: methods,
+      payment_method_options: methods.includes('wechat_pay') ? { wechat_pay: { client: 'web' } } : undefined,
       line_items: [lineItem],
       mode: isSubscription ? 'subscription' : 'payment',
       success_url: guest
@@ -320,6 +330,15 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
       customer_email: email || undefined,
       metadata: { order_no: orderNo, product, donor_name: donorName || '', contact: contact || '', guest: guest ? '1' : '' }
     });
+    let session;
+    try {
+      session = await stripe.checkout.sessions.create(_sessionOpts(_pm.methods));
+    } catch (e) {
+      // 支付宝/微信没在 Stripe 后台开通（或该币种不支持）时 Stripe 会整单拒掉 → 退回只收卡，保证国内也能付
+      if (_pm.methods.length === 1 && _pm.methods[0] === 'card') throw e;
+      console.warn('[CHECKOUT] ' + _pm.methods.join('/') + ' 被 Stripe 拒（' + e.message + '），退回只收卡');
+      session = await stripe.checkout.sessions.create(_sessionOpts(['card']));
+    }
 
     insertOrder.run(orderNo, product, unitAmount, payCurrency, userId, donorName || '', contact || '', wishText || '', session.id);
     if (guest) {
@@ -337,7 +356,7 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
     }
     var refCode = _extractRef(req);
     if (refCode) recordAffiliateOrder(orderNo, refCode, product, unitAmount / 100);
-    console.log(`[CHECKOUT] ${orderNo} — ${prod.name} $${(prod.amount/100).toFixed(2)}`);
+    console.log(`[CHECKOUT] ${orderNo} — ${prod.name} ${payCurrency} ${(unitAmount/100).toFixed(2)}`);
     logEvent({ e: 'checkout_created', m: product, sid: orderNo, v: userId ? 'user' : 'guest' });
     res.json({ url: session.url, sessionId: session.id, orderNo });
   } catch (err) {

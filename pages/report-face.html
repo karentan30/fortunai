@@ -200,11 +200,11 @@
     wallP:'In-depth reading of all twelve palaces · overall complexion & spirit · master\'s personal counsel',
     wallLi:['A detailed reading of your wealth, marriage, and health palaces','All twelve palaces + how your five peaks come together','An overall read on complexion & spirit + a master\'s counsel'],
     wallBtn:'Unlock full version',
-    wallPrice:'<b>$9.90</b> one-time · or subscribe to the advisor and save ↓',
+    wallPrice:'<b>{W}</b> one-time · or subscribe to the advisor and save ↓',
     advK:'Runae Advisor · Remembers you',
     advH:'More than a report<br>an advisor who actually knows you',
-    advLi:['Face & palm reading plus BaZi & Zi Wei — the same you, seen from every angle','Your daily horoscope and annual forecast, refreshed every day','Ask follow-ups anytime in chat — like a teacher on call','Remembers your chart and your history — the more you use it, the better it knows you','Book a one-on-one with a real reader (member discount)'],
-    advBtn:'Subscribe to Runae Advisor · $9.9 / mo',
+    advLi:['Face & palm reading plus BaZi & Zi Wei — the same you, seen from every angle','Your daily horoscope and annual forecast, refreshed every day','Ask follow-ups anytime in chat — like a teacher on call','Remembers your chart and your history — the more you use it, the better it knows you'],
+    advBtn:'Subscribe to Runae Advisor · {P} / mo',
     resetLine:'↻ Try another photo · read again',
     footdisc:'The face reflects the heart, the spirit shapes the qi. Physiognomy shows your present pattern and tendencies, not a fixed fate; for entertainment reference only, please don\'t take it too seriously. Your photo was discarded after this analysis, never stored.',
     ckCn:'Please pay via WeChat / Alipay (coming soon).',
@@ -247,11 +247,11 @@
     wallP:'十二宫全部深度解读 · 气色神韵总评 · 相师专属叮嘱',
     wallLi:['财帛宫 · 夫妻宫 · 疾厄宫逐宫详批','全部十二宫 + 五岳朝拱格局高低','气色神韵总评 + 相师叮嘱'],
     wallBtn:'解锁完整版',
-    wallPrice:'<b>$9.90</b> 一次性 · 或订阅顾问更划算 ↓',
+    wallPrice:'<b>{W}</b> 一次性 · 或订阅顾问更划算 ↓',
     advK:'Runae 顾问 · 会记得你',
     advH:'不止一份报告<br>是一个懂你的命理顾问',
-    advLi:['面相手相 + 八字紫微，交叉印证同一个你','每日运势与流年动态，天天更新','AI 对话随时追问深聊，像身边的老师','记得你的盘与历史，越用越懂你','可约真人命理师一对一（会员优惠）'],
-    advBtn:'订阅 Runae 顾问 · $9.9 / 月',
+    advLi:['面相手相 + 八字紫微，交叉印证同一个你','每日运势与流年动态，天天更新','AI 对话随时追问深聊，像身边的老师','记得你的盘与历史，越用越懂你'],
+    advBtn:'订阅 Runae 顾问 · {P} / 月',
     resetLine:'↻ 换张照片 · 重新解读',
     footdisc:'相由心生，气随神转。相理呈现的是当下格局与倾向，非定数；仅供娱乐参考，切勿沉迷。照片已用于本次分析后即丢弃，不作留存。',
     ckCn:'国内用户请用微信 / 支付宝支付（接入中）',
@@ -350,6 +350,7 @@
     return '<div class="crossread"><div class="k">'+esc(kk)+'</div><h4>'+esc(head)+'</h4><div class="fr">'+esc(fr)+'</div>'+cards+'</div>';
   }
   function esc(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function rp(k,f){return '<span data-rp="'+k+'">'+(window.RunaePrice?RunaePrice.fmt(k,f):f)+'</span>';}
   function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
   // 剥离标题前的 emoji / markdown # 记号（与 report-v2 sections 一致）
   var HEAD=/^\s*([【✅📜🌟💰❤💼🌿☀🔮⛰✨🙏💕🏥]|#{1,3}\s|[\uD83C-\uDBFF])/;
@@ -545,14 +546,14 @@
       html+='<div class="wall"><h4>'+esc(T.wallH)+'</h4><p>'+esc(T.wallP)+'</p>'
         +'<ul>'+T.wallLi.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'
         +'<button class="cta gold" id="unlockBtn" onclick="goCheckout(\'mianxiang_full\',this)">'+esc(T.wallBtn)+'</button>'
-        +'<div class="price">'+T.wallPrice+'</div></div>';
+        +'<div class="price">'+T.wallPrice.replace('{W}',rp('mianxiang_full','$9.90'))+'</div></div>';
     }
 
     html+=crossReadHTML();
     // Runae 顾问 advisor
     html+='<div class="adv"><div class="k">'+esc(T.advK)+'</div><h4>'+T.advH+'</h4>'
       +'<ul>'+T.advLi.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ul>'
-      +'<button class="sbtn" onclick="goCheckout(\'member_monthly\',this)">'+esc(T.advBtn)+'</button></div>';
+      +'<button class="sbtn" onclick="goCheckout(\'member_monthly\',this)">'+esc(T.advBtn).replace('{P}',rp('member_monthly','$9.9'))+'</button></div>';
 
     // 换照重测
     html+='<div class="reset" onclick="resetToUpload()">'+esc(T.resetLine)+'</div>';
@@ -583,5 +584,6 @@
 <script src="/assets/js/common.js"></script>
 <script src="/pages/report-export.js" defer></script>
 <script src="/assets/js/ev.js" defer></script>
+<script src="/assets/js/price.js"></script>
 </body>
 </html>
