@@ -21,6 +21,7 @@ const crypto = require('crypto');
 const path = require('path');
 const pay = require('../pay.js');
 const { logEvent } = require('./events');
+const claim = require('../lib/claim');
 const hub = require(process.env.HUB_CLIENT_PATH || require('path').join(__dirname, '../../../shared/pay-hub-client.js'));
 
 const {
@@ -81,7 +82,8 @@ const FRONTEND_URL          = process.env.FRONTEND_URL || '';
 let stripe = null;
 try {
   if (STRIPE_SECRET_KEY) {
-    stripe = require('stripe')(STRIPE_SECRET_KEY);
+    // STRIPE_CLIENT_PATH 仅供测试注入桩（生产不设）
+    stripe = process.env.STRIPE_CLIENT_PATH ? require(process.env.STRIPE_CLIENT_PATH) : require('stripe')(STRIPE_SECRET_KEY);
     console.log('✓ Stripe initialized');
   }
 } catch (e) {
@@ -181,7 +183,10 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
     //   报告类商品的发货只认 user_id（getUserOrders/hasFullAccess 都按 user_id 取单），
     //   匿名下单＝收了钱没有任何人能被解锁，用户也没有自助补救路径。所以先要账号。
     //   这一步放在「通道通不通」之前：没账号就不该走到下单，与支付通道状态无关。
-    if (userId == null && orderNeedsAccount(product)) {
+    // 🟢 0918 W1：Stripe 卡付可以不登录 —— Stripe 收邮箱，付完按邮箱自动建号挂单（lib/claim.js）。
+    //   只有 Stripe 通道拿得到邮箱；通道没开时仍按老口径要求登录。
+    const guest = userId == null && orderNeedsAccount(product);
+    if (guest && !stripe) {
       return res.status(401).json({
         error: 'login_required',
         message: '请先登录再购买（订单要绑定到你的账号，否则付了款无法解锁）',
@@ -241,7 +246,7 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
     }
 
     // 🔵 灰度: 订阅且 USD → 走中台 /hub/sub(off/未映射/失败均回退下方本地 Stripe，不阻断)。
-    if (isSubscription && HUB_SUB_ENABLED && payCurrency === 'usd'
+    if (isSubscription && !guest && HUB_SUB_ENABLED && payCurrency === 'usd'
         && HUB_SUB_PLAN_MAP[product] && hub.HUB_SECRET === '(configured)') {
       try {
         const hr = await hub.subCreate(HUB_SUB_PLAN_MAP[product], orderNo, {
@@ -295,17 +300,41 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
                    + _pm.methods.join('/') + '（product=' + product + '）');
     }
 
+    // 游客单：回跳走服务端 /api/checkout/return（核验已付 → 建号挂单 → 同浏览器自动登录 → 302 回报告页），
+    //   前端给的地址只取「白名单源 + 站内路径」，session_id 不再带到页面上。
+    let guestRet = null, claimSecret = null;
+    if (guest) {
+      guestRet = claim.safeReturn(successUrl, '/api/success?product=' + encodeURIComponent(product));
+      claimSecret = claim.rand(24);
+    }
+    const _cancel = guest ? (() => { const c = claim.safeReturn(cancelUrl, '/pages/' + product.split('_')[0] + '.html'); return c.origin + c.path; })() : null;
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types: _pm.methods,
       line_items: [lineItem],
       mode: isSubscription ? 'subscription' : 'payment',
-      success_url: successUrl || FRONTEND_URL + '/api/success?session_id={CHECKOUT_SESSION_ID}&product=' + product,
-      cancel_url: cancelUrl || FRONTEND_URL + '/pages/' + product.split('_')[0] + '.html',
+      success_url: guest
+        ? guestRet.origin + '/api/checkout/return?session_id={CHECKOUT_SESSION_ID}&o=' + encodeURIComponent(orderNo)
+        : (successUrl || FRONTEND_URL + '/api/success?session_id={CHECKOUT_SESSION_ID}&product=' + product),
+      cancel_url: _cancel || cancelUrl || FRONTEND_URL + '/pages/' + product.split('_')[0] + '.html',
       customer_email: email || undefined,
-      metadata: { order_no: orderNo, product, donor_name: donorName || '', contact: contact || '' }
+      metadata: { order_no: orderNo, product, donor_name: donorName || '', contact: contact || '', guest: guest ? '1' : '' }
     });
 
     insertOrder.run(orderNo, product, unitAmount, payCurrency, userId, donorName || '', contact || '', wishText || '', session.id);
+    if (guest) {
+      const o = _findOrder(orderNo);
+      o.guest = true;
+      o.claim_hash = claim.sha(claimSecret);
+      o.site_origin = guestRet.origin;
+      o.return_path = guestRet.path;
+      o.lang = claim.langOf(guestRet.origin, req.body.lang);
+      _persist();
+      res.cookie('sy_claim_' + orderNo, claimSecret, {
+        httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax',
+        path: '/api/checkout', maxAge: 24 * 3600 * 1000,
+      });
+    }
     var refCode = _extractRef(req);
     if (refCode) recordAffiliateOrder(orderNo, refCode, product, unitAmount / 100);
     console.log(`[CHECKOUT] ${orderNo} — ${prod.name} $${(prod.amount/100).toFixed(2)}`);
@@ -343,6 +372,19 @@ router.post('/stripe-webhook', async (req, res) => {
         if (orderNo) {
           _updOrder('completed', orderNo);
           logEvent({ e: 'paid', m: session.metadata?.product || '', sid: orderNo, v: 'stripe' });
+          // 0918 W1：游客单按付款邮箱建号挂单（与 /checkout/return 幂等，谁先到都行），并发「报告已就绪」登录链接
+          try {
+            const _o = _findOrder(orderNo);
+            if (_o && _o.guest && !_o.ready_mail_sent) {
+              const _email = session.customer_details?.email || session.customer_email || '';
+              const _r = claim.claimOrder(_o, _email);
+              if (_r.status !== 'no_email') {
+                _o.ready_mail_sent = true; _persist();
+                const _t = claim.createMagicToken(_email, _o.return_path || '/pages/account.html', undefined, claim.READY_TTL_MS);
+                if (_t) claim.sendMagicEmail(_email, _t, _o.site_origin, _o.lang, 'ready').catch(() => {});
+              }
+            }
+          } catch (e) { console.error('[WEBHOOK claim]', e.message); }
           completeAffiliateOrder(orderNo);
           // 手动周期包(0907): 直连 Stripe 一次性支付完成 → 授予访问期(付一期给一期·非自动续扣)
           if (PERIODIC_PACK_DAYS && PERIODIC_PACK_DAYS[session.metadata?.product || '']) {
@@ -532,6 +574,54 @@ router.get('/payment-status', rateLimitMiddleware, async (req, res) => {
   const v = await verifySessionPaid(String(req.query.session_id || ''));
   res.json({ paid: v === true, verified: v !== null });
 });
+
+// ══════════════════════════════════════════
+// GET /api/checkout/return — 游客单 Stripe 回跳（0918·W1）
+//   核验已付 → 按付款邮箱建号/挂单（与 webhook 幂等）→ 同浏览器新号自动登录 → 302 回站内页面。
+//   去向只用建单时存在订单上的 return_path（已按白名单收窄），不信任本请求的任何跳转参数。
+// ══════════════════════════════════════════
+function _withQuery(p, kv) {
+  const u = new URL(p, 'http://x');
+  Object.keys(kv).forEach(k => u.searchParams.set(k, kv[k]));
+  return u.pathname + u.search + u.hash;
+}
+router.get('/checkout/return', rateLimitMiddleware, async (req, res) => {
+  res.set('Cache-Control', 'no-store').set('Referrer-Policy', 'no-referrer');
+  const sid = String(req.query.session_id || '');
+  const order = _findOrder(String(req.query.o || ''));
+  if (!order || !order.guest || !sid || order.stripe_session_id !== sid) return res.redirect(302, '/');
+  let dest = order.return_path || '/';
+  if (dest.startsWith('/api/success')) dest = _withQuery(dest, { session_id: sid });
+  const cookieName = 'sy_claim_' + order.order_no;
+  try {
+    if (!stripe) return res.redirect(302, dest);
+    const s = await stripe.checkout.sessions.retrieve(sid);
+    const paid = s && (s.payment_status === 'paid' || s.payment_status === 'no_payment_required');
+    if (!paid) return res.redirect(302, _withQuery(dest, { paid: 'pending' }));
+    const email = (s.customer_details && s.customer_details.email) || s.customer_email || '';
+    const r = claim.claimOrder(order, email);
+    const tok = claim.tryAutoLogin(order, req.cookies ? req.cookies[cookieName] : _cookie(req, cookieName));
+    res.clearCookie(cookieName, { path: '/api/checkout' });
+    if (tok) {
+      res.cookie('sy_token', tok, {
+        httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: claim.AUTOLOGIN_TTL_MS,
+      });
+      logEvent({ e: 'claim_ok', m: order.product, sid: order.order_no, v: 'autologin' });
+      return res.redirect(302, dest);
+    }
+    logEvent({ e: 'claim_ok', m: order.product, sid: order.order_no, v: r.status });
+    // 没能自动登录（老账号 / 换了浏览器 / 已用过）：报告已挂在邮箱账号上，去邮箱点登录链接
+    return res.redirect(302, _withQuery(dest, { claim: 'email' }));
+  } catch (e) {
+    console.error('[CHECKOUT RETURN ERR]', e.message);
+    return res.redirect(302, dest);
+  }
+});
+function _cookie(req, name) {
+  const raw = String(req.headers.cookie || '');
+  const m = raw.split(/;\s*/).find(x => x.startsWith(name + '='));
+  return m ? decodeURIComponent(m.slice(name.length + 1)) : '';
+}
 
 // ══════════════════════════════════════════
 // GET /api/success — 支付成功页

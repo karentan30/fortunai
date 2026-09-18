@@ -13,6 +13,7 @@ function hashPassword(password) {
 }
 
 function verifyPassword(password, stored) {
+  if (!stored || typeof stored !== 'string' || stored.indexOf(':') < 0) return false;  // 无密码账号（付款建号/Google）
   var parts = stored.split(':');
   var salt = parts[0];
   var hash = parts[1];

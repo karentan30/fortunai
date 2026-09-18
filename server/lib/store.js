@@ -13,7 +13,7 @@ const crypto = require('crypto');
 const _M = {
   users: [], tokens: [], orders: [], readings: [], subs: [],
   referrals: [], rewards: [], chatUsage: {}, feedbacks: [], streaks: {},
-  abEvents: [],
+  abEvents: [], magicLinks: [],
   _id: { u: 1, t: 1, o: 1, r: 1, s: 1, rf: 1 }
 };
 
@@ -30,7 +30,7 @@ const _DATA_FILE = process.env.DATA_FILE || path.join(__dirname, '../data.json')
     //   只回载 reportCredits(计数)而不回载标记, 重启后计数还在、标记没了:
     //   月会员正在读的那份报告会重新被判「额度用尽」, 第 2 个请求又撞回付费墙;
     //   而 served 没了, 一次重启就能让「回补」重新放行 —— 刚拿到的报告被退回额度白送一遍。
-    for (const k of ['users','tokens','orders','readings','subs','referrals','feedbacks','chatUsage','abEvents','reportCredits','reportCreditSpentOn','reportCreditServed','dailyUsage','rewards','streaks','questionCredits']) {
+    for (const k of ['users','tokens','orders','readings','subs','referrals','feedbacks','chatUsage','abEvents','reportCredits','reportCreditSpentOn','reportCreditServed','dailyUsage','rewards','streaks','questionCredits','magicLinks']) {
       if (Array.isArray(d[k])) _M[k] = d[k];
       else if (d[k] && typeof d[k] === 'object' && !Array.isArray(d[k])) _M[k] = d[k];
     }
@@ -102,7 +102,9 @@ const insertUser = {
     return { lastInsertRowid: id };
   }
 };
-const getUserByEmail  = { get(e) { return _M.users.find(u => u.email === e); } };
+// 🔴 0918: 邮箱一律大小写不敏感（Stripe 回来的邮箱大小写与注册时不一致 → 同一个人建出两个号）
+function normEmail(e) { return String(e || '').trim().toLowerCase(); }
+const getUserByEmail  = { get(e) { const n = normEmail(e); return n ? _M.users.find(u => normEmail(u.email) === n) : undefined; } };
 const getUserById     = {
   get(id) {
     const u = _M.users.find(x => x.id === id);
@@ -161,8 +163,11 @@ const getUserByRefCode = {
   }
 };
 const insertToken = {
-  run(uid, t) {
-    _M.tokens.push({ id: _M._id.t++, user_id: uid, token: t, created_at: new Date().toISOString() });
+  // ttlMs 可选：付款自动登录发的是 30 天令牌，其余沿用不过期
+  run(uid, t, ttlMs) {
+    const row = { id: _M._id.t++, user_id: uid, token: t, created_at: new Date().toISOString() };
+    if (ttlMs) row.expires_at = new Date(Date.now() + ttlMs).toISOString();
+    _M.tokens.push(row);
     _persist();
   }
 };
@@ -170,6 +175,7 @@ const getToken = {
   get(t) {
     const tok = _M.tokens.find(x => x.token === t);
     if (!tok) return null;
+    if (tok.expires_at && Date.parse(tok.expires_at) < Date.now()) return null;
     const u = _M.users.find(x => x.id === tok.user_id);
     return u ? { ...tok, email: u.email, name: u.name } : null;
   }
@@ -184,6 +190,13 @@ function findOrCreateGoogleUser({ email, googleSub, name }) {
   // 1) 先按 google_sub 命中（最稳，邮箱可变）；2) 再按 email 命中（老用户首次用 Google 登录→绑定）
   let u = (sub && _M.users.find(x => x.google_sub === sub)) || (e && _M.users.find(x => String(x.email || '').toLowerCase() === e));
   if (u) {
+    // 🔴 0918: Google 证明了邮箱归属。若这个号是别人用该邮箱「抢注」的未验证密码号，
+    //   清掉密码并踢掉所有旧会话，账号从此归真正的邮箱主人。
+    if (!u.email_verified && u.password_hash) {
+      u.password_hash = '';
+      _M.tokens = _M.tokens.filter(t => t.user_id !== u.id);
+    }
+    u.email_verified = true;
     if (sub && !u.google_sub) u.google_sub = sub;      // 补绑
     if (name && !u.name) u.name = String(name).slice(0, 40);
     _persist();
@@ -191,7 +204,7 @@ function findOrCreateGoogleUser({ email, googleSub, name }) {
   }
   const id = _M._id.u++;
   const ref_codes = genRefCodesForUser();
-  u = { id, email: e, password_hash: '', name: name ? String(name).slice(0, 40) : '', google_sub: sub,
+  u = { id, email: e, password_hash: '', name: name ? String(name).slice(0, 40) : '', google_sub: sub, email_verified: true,
         ref_codes, ref_code: ref_codes.organic, created_at: new Date().toISOString() };
   _M.users.push(u);
   _persist();
@@ -1090,7 +1103,7 @@ module.exports = {
   _tokenFromReq,
   _uidFromReq,
   // 数据访问对象
-  insertUser, getUserByEmail, getUserById, getUserByRefCode,
+  normEmail, insertUser, getUserByEmail, getUserById, getUserByRefCode,
   getUserPrivateById, updateUserFields, deleteUserTokens,
   getUserByGoogleSub, findOrCreateGoogleUser,
   insertToken, getToken,
