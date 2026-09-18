@@ -418,10 +418,12 @@
       // one-line meaning from ten-gods
       var meaning;
       if(EN){
-        var parts=[]; if(d.ganShiShen)parts.push(ssEn(d.ganShiShen)); if(d.zhiShiShen)parts.push(ssEn(d.zhiShiShen));
-        meaning=parts.length?(parts.join(' / ')+' takes the lead in this cycle.'):'';
+        // 0918 走查：外国用户看不懂十神术语 → 译成白话主题，同名去重
+        var TH={'比肩':'independence and your peer circle','劫财':'competition and bold moves','食神':'creativity and enjoying life','伤官':'self-expression and breaking the mold','偏财':'opportunity and windfalls','正财':'steady income and commitment','七杀':'pressure that forges ambition','正官':'status and responsibility','偏印':'intuition and unconventional learning','正印':'support, study and mentors'};
+        var parts=[]; [d.ganShiShen,d.zhiShiShen].forEach(function(x){ if(x&&TH[x]&&parts.indexOf(TH[x])<0) parts.push(TH[x]); });
+        meaning=parts.length?('A decade shaped by '+parts.join(', plus ')+'.'):'';
       }else{
-        var partsz=[]; if(d.ganShiShen)partsz.push(d.ganShiShen); if(d.zhiShiShen)partsz.push(d.zhiShiShen);
+        var partsz=[]; [d.ganShiShen,d.zhiShiShen].forEach(function(x){ if(x&&partsz.indexOf(x)<0) partsz.push(x); });
         meaning=partsz.length?('这一步'+partsz.join('、')+'当令。'):'';
       }
       var head=EN?(esc(gz)+' Cycle'+(on?' · now':'')):(esc(gz)+'运'+(on?' · 当前':''));

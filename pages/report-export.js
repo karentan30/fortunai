@@ -378,59 +378,35 @@
   } catch (e) { }
 
   /* ═══ 屏幕上的等级徽章 ═══ */
-  function renderBadge(g) {
-    var host = document.getElementById('hero') || document.querySelector('.rhero') ||
-               document.querySelector('.wrap');
-    if (!host) return;
-    var lv = g.level === 3 ? T.lv3 : (g.level === 2 ? T.lv2 : T.lv1);
-    var el = document.createElement('div');
-    el.id = 'rxBadge';
-    el.className = 'no-print';
-    el.style.cssText = 'display:flex;align-items:center;gap:7px;justify-content:center;' +
-      'margin:10px auto 0;font-size:11.5px;letter-spacing:.04em';
-    el.innerHTML =
-      '<span style="color:var(--ink-3)">' + esc(T.gradeTitle) + '</span>' +
-      '<span style="color:' + (g.level === 3 ? 'var(--gold)' : 'var(--ink-2)') + ';font-weight:700">' + esc(lv) + '</span>' +
-      '<span title="' + esc(T.basis + ' ' + (g.level === 3 ? T.why3 : (g.level === 2 ? T.why2 : T.why1))) +
-        '" style="width:14px;height:14px;border-radius:50%;border:1px solid var(--line-2);' +
-        'color:var(--ink-3);font-size:9px;display:inline-flex;align-items:center;justify-content:center;' +
-        'cursor:help;flex-shrink:0">i</span>';
-    if (host.id === 'hero' && !host.innerHTML.trim()) {
-      // hero 由页面异步渲染，先挂到 wrap 顶部，稍后由 observer 挪进 hero
-      var wrap = document.querySelector('.wrap');
-      if (wrap) { wrap.insertBefore(el, wrap.children[1] || null); return; }
-    }
-    host.appendChild(el);
-  }
-
-  /* ═══ 底部操作条 ═══ */
+  /* ═══ 导出按钮：放在报告末尾、走文档流（0918 走查：原先 fixed 底条盖住正文，
+     还在塔罗/合婚「还没生成」的输入页上出现）。报告正文真渲染出来才显示。 ═══ */
   function renderBar() {
     var bar = document.createElement('div');
     bar.id = 'rxBar';
     bar.className = 'no-print';
-    bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:60;' +
-      'padding:10px 22px calc(10px + env(safe-area-inset-bottom));' +
-      'background:linear-gradient(180deg,rgba(6,14,13,0),rgba(6,14,13,.92) 38%);' +
-      'display:flex;justify-content:center;pointer-events:none';
-    var inner = document.createElement('div');
-    inner.style.cssText = 'width:100%;max-width:386px;pointer-events:auto';
+    bar.style.cssText = 'display:none;justify-content:center;margin:26px auto 8px;padding:0 22px';
     var btn = document.createElement('button');
     btn.id = 'rxExport';
     btn.type = 'button';
-    btn.style.cssText = 'width:100%;padding:14px;border-radius:14px;border:1px solid rgba(220,192,130,.5);' +
-      'background:linear-gradient(160deg,rgba(220,192,130,.16),rgba(220,192,130,.06));' +
-      'color:var(--gold);font-family:inherit;font-size:14.5px;font-weight:600;cursor:pointer;' +
-      'display:flex;align-items:center;justify-content:center;gap:8px;' +
-      'backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)';
-    btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" ' +
+    btn.style.cssText = 'padding:11px 20px;border-radius:12px;border:1px solid rgba(220,192,130,.4);' +
+      'background:transparent;color:var(--gold);font-family:inherit;font-size:13.5px;font-weight:600;cursor:pointer;' +
+      'display:inline-flex;align-items:center;justify-content:center;gap:8px';
+    btn.innerHTML = '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" ' +
       'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0">' +
       '<path d="M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/></svg>' +
       esc(T.export);
-    inner.appendChild(btn);
-    bar.appendChild(inner);
-    document.body.appendChild(bar);
-    document.body.style.paddingBottom = '78px';
+    bar.appendChild(btn);
+    var body = document.getElementById('body');
+    if (body && body.parentNode) body.parentNode.insertBefore(bar, body.nextSibling);
+    else (document.querySelector('.wrap') || document.body).appendChild(bar);
     return btn;
+  }
+
+  // 报告正文是否已渲染且可见（输入页 / 生成中 = 否）
+  function reportReady() {
+    var body = document.getElementById('body') || document.querySelector('.wrap');
+    if (!body || !body.offsetParent) return false;
+    return (body.textContent || '').replace(/\s+/g, '').length > 80;
   }
 
   function toast(msg) {
@@ -477,20 +453,13 @@
 
   function boot() {
     var g = computeGrade();
-    renderBadge(g);
-    buildPrintNodes(g);          // 常驻，print 时才可见
+    buildPrintNodes(g);          // 等级卡只进打印版：屏幕上的「报告等级」没有参照系，走查判定为噪音
     var btn = renderBar();
     btn.addEventListener('click', function () { doExport(btn); });
-    // 页面异步渲染完 hero 后，把徽章挪进 hero（视觉更贴标题）
-    var hero = document.getElementById('hero');
-    if (hero && window.MutationObserver) {
-      var mo = new MutationObserver(function () {
-        var b = document.getElementById('rxBadge');
-        if (b && hero.innerHTML.trim() && b.parentNode !== hero) { hero.appendChild(b); mo.disconnect(); }
-      });
-      mo.observe(hero, { childList: true });
-      setTimeout(function () { mo.disconnect(); }, 15000);
-    }
+    var bar = document.getElementById('rxBar');
+    var tick = function () { bar.style.display = reportReady() ? 'flex' : 'none'; };
+    tick();
+    setInterval(tick, 1000);
   }
 
   var st = document.createElement('style');
