@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>漏斗看板</title>
+<style>
+body{font:14px/1.5 -apple-system,system-ui,sans-serif;margin:0;padding:16px;background:#faf8f5;color:#222;max-width:900px;margin:auto}
+h1{font-size:20px;margin:8px 0 12px}.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+select,input,button{font:inherit;padding:6px 10px;border:1px solid #ccc;border-radius:6px;background:#fff}
+table{width:100%;border-collapse:collapse;background:#fff;margin-bottom:18px}th,td{padding:6px 8px;border-bottom:1px solid #eee;text-align:left}
+td.n{text-align:right;font-variant-numeric:tabular-nums}.r{color:#888}.low{color:#c0392b;font-weight:600}
+.g{font-weight:600;margin:14px 0 4px}#err{color:#c0392b}
+</style></head><body>
+<h1>Runae 漏斗</h1>
+<div class="bar">
+  <input id="tok" type="password" placeholder="ADMIN_TOKEN" autocomplete="off">
+  <select id="days"><option>1</option><option selected>7</option><option>30</option><option>90</option></select>
+  <select id="by"><option value="">全部</option><option value="lang">按语言</option><option value="src">按来源</option><option value="m">按方法/页面</option></select>
+  <button id="go">刷新</button>
+</div>
+<div id="err"></div><div id="out"></div>
+<script>
+(function(){
+  var NAMES={landing_view:'落地页',collect_view:'填资料页',collect_submit:'提交资料',pick_view:'选方法页',method_pick:'选了方法',report_view:'看报告',free_done:'读完免费部分',paywall_view:'看到付费墙',checkout_click:'点付款',checkout_created:'进 Stripe',paid:'付款成功',claim_ok:'自动建号',daily_optin:'订每日运势',invite_create:'发合婚邀请',invite_open:'邀请被打开',invite_done:'对方完成合盘',share_click:'点分享',magic_sent:'发登录链接',magic_ok:'登录链接成功'};
+  var tok=document.getElementById('tok');
+  try{ tok.value=localStorage.getItem('sy_admin_token')||''; }catch(e){}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+  function load(){
+    try{ localStorage.setItem('sy_admin_token',tok.value); }catch(e){}
+    var q='?days='+document.getElementById('days').value+'&by='+document.getElementById('by').value;
+    fetch('/api/kpi/funnel'+q,{headers:{'x-admin-token':tok.value}}).then(function(r){
+      if(r.status===401) throw new Error('token 不对');
+      return r.json();
+    }).then(function(d){
+      document.getElementById('err').textContent='';
+      var h='<div class="r">近 '+d.days+' 天 · 共 '+d.total+' 条事件 · 数字 = 去重人数（服务端事件按订单数）</div>';
+      Object.keys(d.groups).sort().forEach(function(g){
+        var steps=d.groups[g], prev=null;
+        h+='<div class="g">'+esc(g)+'</div><table><tr><th>步骤</th><th style="text-align:right">人数</th><th style="text-align:right">较上一步</th></tr>';
+        steps.forEach(function(s,i){
+          var inF=d.funnelOrder.indexOf(s.e)>=0;
+          if(!inF && !s.n) return;
+          var rate='';
+          if(inF && prev!==null && prev>0){ var p=Math.round(s.n/prev*100); rate='<span class="'+(p<30?'low':'')+'">'+p+'%</span>'; }
+          h+='<tr><td>'+(NAMES[s.e]||s.e)+(inF?'':' <span class="r">(旁路)</span>')+'</td><td class="n">'+s.n+'</td><td class="n">'+rate+'</td></tr>';
+          if(inF && s.n) prev=s.n;
+        });
+        h+='</table>';
+      });
+      document.getElementById('out').innerHTML=h;
+    }).catch(function(e){ document.getElementById('err').textContent=e.message; });
+  }
+  document.getElementById('go').onclick=load;
+  if(tok.value) load();
+})();
+</script>
+</body></html>

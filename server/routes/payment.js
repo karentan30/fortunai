@@ -20,6 +20,7 @@ const router = require('express').Router();
 const crypto = require('crypto');
 const path = require('path');
 const pay = require('../pay.js');
+const { logEvent } = require('./events');
 const hub = require(process.env.HUB_CLIENT_PATH || require('path').join(__dirname, '../../../shared/pay-hub-client.js'));
 
 const {
@@ -256,6 +257,7 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
         const _rc = _extractRef(req);
         if (_rc) recordAffiliateOrder(orderNo, _rc, product, hr.amount || unitAmount / 100);
         console.log(`[CHECKOUT/hub-sub] ${orderNo} — ${product} $${hr.amount}`);
+        logEvent({ e: 'checkout_created', m: product, sid: orderNo, v: 'hub' });
         return res.json({ url: hr.url, sessionId: hr.session_id, orderNo });
       } catch (e) {
         console.error('[CHECKOUT/hub-sub ERR]', e.message, '→ 回退本地 Stripe');
@@ -307,6 +309,7 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
     var refCode = _extractRef(req);
     if (refCode) recordAffiliateOrder(orderNo, refCode, product, unitAmount / 100);
     console.log(`[CHECKOUT] ${orderNo} — ${prod.name} $${(prod.amount/100).toFixed(2)}`);
+    logEvent({ e: 'checkout_created', m: product, sid: orderNo, v: userId ? 'user' : 'guest' });
     res.json({ url: session.url, sessionId: session.id, orderNo });
   } catch (err) {
     console.error('[CHECKOUT ERR]', err);
@@ -339,6 +342,7 @@ router.post('/stripe-webhook', async (req, res) => {
         const orderNo = session.metadata?.order_no;
         if (orderNo) {
           _updOrder('completed', orderNo);
+          logEvent({ e: 'paid', m: session.metadata?.product || '', sid: orderNo, v: 'stripe' });
           completeAffiliateOrder(orderNo);
           // 手动周期包(0907): 直连 Stripe 一次性支付完成 → 授予访问期(付一期给一期·非自动续扣)
           if (PERIODIC_PACK_DAYS && PERIODIC_PACK_DAYS[session.metadata?.product || '']) {
@@ -475,6 +479,7 @@ router.post('/hub-callback', (req, res) => {
       case 'paid':
         if (order) {
           _updOrder('completed', orderNo);
+          logEvent({ e: 'paid', m: order.product || '', sid: orderNo, v: 'hub' });
           completeAffiliateOrder(orderNo);
           _grantPeriodicPackExpiry(_findOrder(orderNo));
           console.log('[HUB-CB] paid ' + orderNo + ' → expires ' + (_findOrder(orderNo) || {}).expires_at);

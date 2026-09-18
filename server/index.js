@@ -204,6 +204,9 @@ app.use('/api/hepan', require('./routes/hepan'));
 const { router: affiliateRouter } = require('./routes/affiliate');
 app.use('/api', affiliateRouter);
 
+// 漏斗埋点（/api/ev · /api/kpi/funnel）——须在 kpiRouter 之前
+app.use('/api', require('./routes/events').router);
+
 // KPI 监控仪表板
 const kpiRouter = require('./routes/kpi');
 app.use('/api/kpi', kpiRouter);
