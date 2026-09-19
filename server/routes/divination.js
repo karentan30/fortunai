@@ -1588,6 +1588,17 @@ function _dropFakeStatsEn(t) {
     .replace(/\d+\s*%/g, 'a notable degree')
     .replace(/\b\d+(\.\d+)?\s*\/\s*10\b/g, 'a high mark');
 }
+// 0919：prompt 标题里写的字数要求（如「总纲：三停格局（早中晚运总览，200字）」）会被模型原样抄进输出，
+// 只在标题行（# 开头 / 编号开头的短行）剥掉字数说明，正文不动。
+function _stripLenNotes(t) {
+  return String(t || '').split('\n').map(function (line) {
+    var isHead = /^\s*(#|\*\*|【)/.test(line) || (line.length < 90 && /^\s*(\d+[.、]|[一二三四五六七八九十]+、)/.test(line));
+    if (!isHead) return line;
+    return line
+      .replace(/[，,、]\s*各?(约|不少于|合计)?\s*\d+(\s*[-–~至]\s*\d+)?\s*字(以上|左右)?/g, '')
+      .replace(/[（(]\s*(每[^）)\d]*)?各?(约|不少于|合计)?\s*\d+(\s*[-–~至]\s*\d+)?\s*字(以上|左右)?\s*[）)]/g, '');
+  }).join('\n');
+}
 function _dropFakeStats(t) {
   return String(t || '')
     .replace(/\d+\s*%\s*以上/g, '多数')
@@ -1842,7 +1853,7 @@ router.post('/tarot', rateLimitMiddleware, async (req, res) => {
     const result = await deepseekChat(messages, { maxTokens: tarotMaxTokens });
     insertReading.run('tarot', JSON.stringify(req.body), result, req.userId);
     var ctxId = saveQaContext('tarot', req.body, result);
-    res.json({ reading: result, contextId: ctxId, tier: tier, locked: tier === 'free' });
+    res.json({ reading: _stripLenNotes(result), contextId: ctxId, tier: tier, locked: tier === 'free' });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[TAROT ERR]', err.message);
@@ -2143,7 +2154,7 @@ Produce a [Complete Face Reading] (~5000 words), every dimension written through
 
     const result = await deepseekChat(messages, { maxTokens: mxMaxTokens });
     insertReading.run('mianxiang', JSON.stringify({ question, features: features ? features.slice(0, 200) : null }), result, req.userId);
-    res.json({ reading: result, tier: mxTier, locked: mxTier === 'free' });
+    res.json({ reading: _stripLenNotes(result), tier: mxTier, locked: mxTier === 'free' });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[MIANXIANG ERR]', err.message);
@@ -2432,7 +2443,7 @@ router.post('/shouxiang', rateLimitMiddleware, async (req, res) => {
     const messages = buildShouxiangMessages({ features, handLabel, question, lang, full: _sxFull });
     const result = await deepseekChat(messages, { maxTokens: _sxFull ? 8192 : 3200, priority: 'deepseek' });
     insertReading.run('shouxiang', JSON.stringify({ question, hand, features: features ? features.slice(0, 200) : null }), result, req.userId);
-    res.json({ reading: result, tier: _sxFull ? 'full' : 'basic', locked: !_sxFull });
+    res.json({ reading: _stripLenNotes(result), tier: _sxFull ? 'full' : 'basic', locked: !_sxFull });
   } catch (err) {
     _refundCreditOnFail(req);
     console.error('[SHOUXIANG ERR]', err.message);
