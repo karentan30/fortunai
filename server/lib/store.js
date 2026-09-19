@@ -1017,8 +1017,8 @@ const PRODUCTS = {
   tarot_3:         { name: '塔罗三张牌阵',      amount: 900,    amountCny: 990,   desc: 'AI深度三张牌解读（过去·现在·未来）' },
   tarot_5:         { name: '塔罗五芒星牌阵',    amount: 1990,   amountCny: 1990,  desc: 'AI五芒星深度解读·五维度全析' },
   ziwei_full:      { name: '紫微 · 一键全解锁（session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部紫微 session：事业/财帛/夫妻/大限' },
-  shouxiang_full:  { name: '手相·麻衣神相完整解读', amount: 990, amountCny: 5900, desc: '掌纹三大主线+八大丘+特殊纹+化解建议' },
-  mianxiang_full:  { name: '面相·麻衣神相完整解读', amount: 990, amountCny: 5900, desc: '三停五岳+十二宫+流年气色+化解建议' },
+  shouxiang_full:  { name: '手相·麻衣神相完整解读', amount: 990, amountCny: 3990, desc: '掌纹三大主线+八大丘+特殊纹+化解建议' },
+  mianxiang_full:  { name: '面相·麻衣神相完整解读', amount: 990, amountCny: 3990, desc: '三停五岳+十二宫+流年气色+化解建议' },
   // ── 0913: 藏传/吠陀/玛雅三个方法的 SKU 从来不存在，但三个报告页都在卖 ──
   //   实测后果：藏传页/吠陀页卖的是 bazi_full（收 $11.99 却解锁不了本页报告），
   //   玛雅页卖 maya_full（SKU 不存在 → create-checkout 400 → 按钮点了没反应）。
@@ -1055,7 +1055,7 @@ const PRODUCTS = {
   hehun_s_emotion:    { name: '合婚 · 感情经营', amount: 399,   amountCny: 1490,  desc: '感情课题+吵架模式+经营长久' },
   hehun_s_timing:     { name: '合婚 · 婚期择吉', amount: 399,   amountCny: 1490,  desc: '适婚年份+择吉参考' },
   hehun_basic:     { name: '合婚·基础版',       amount: 490,    amountCny: 990,   desc: '四柱+合婚总分+核心结论预览', amountKrw: 1900 },
-  hehun:           { name: '合婚配对',          amount: 990,    amountCny: 5900,  desc: '双方八字合婚分析', amountKrw: 4900 },
+  hehun:           { name: '合婚配对',          amount: 990,    amountCny: 3990,  desc: '双方八字合婚分析', amountKrw: 4900 },
   hehun_master:    { name: '合婚·大师批婚',     amount: 9900,   amountCny: 29900, desc: '完整+5年感情流年+择日+化解+命理师私语+真人连麦', amountKrw: 24900 },
   hehun_full:      { name: '合婚 · 一键全解锁（session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部合婚 session：性格/感情/婚期', amountKrw: 15900 },
   hehun_kr_full:   { name: '궁합 완전 분석',    amount: 1500,   amountCny: 3990,  desc: '궁합 완전 분석 보고서', amountKrw: 19900 },
