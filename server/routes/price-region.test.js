@@ -16,6 +16,9 @@ const TMP = fs.mkdtempSync(path.join(os.tmpdir(), 'sy-price-'));
 process.env.DATA_FILE = path.join(TMP, 'data.json');
 process.env.STRIPE_PAY_SECRET_KEY = 'sk_test_stub';
 delete process.env.CN_PAY_METHODS;
+// 本文件用 cf-ipcountry 模拟地理位置，所以这里显式打开「信任 CDN 国家头」。
+// 生产默认是**关**的（那个头谁都能伪造，见下面最后一条测试）。
+process.env.TRUST_CDN_GEO = '1';
 const HUB_STUB = path.join(TMP, 'hub-stub.js');
 fs.writeFileSync(HUB_STUB, 'module.exports = { HUB_SECRET: "", create: async () => { throw new Error("stub"); }, subCreate: async () => { throw new Error("stub"); } };\n');
 process.env.HUB_CLIENT_PATH = HUB_STUB;
@@ -107,4 +110,22 @@ test('国内订阅：人民币，只收卡（支付宝/微信不支持订阅）'
   assert.strictEqual(s.mode, 'subscription');
   assert.strictEqual(s.line_items[0].price_data.currency, 'cny');
   assert.deepStrictEqual(s.payment_method_types, ['card']);
+});
+
+// ── 0920：别让人加个请求头就拿到国内价 ──────────────────────────────────────
+test('🔴 默认不信 cf-ipcountry：伪造这个头拿不到人民币价（四八折白拿）', async () => {
+  const prev = process.env.TRUST_CDN_GEO;
+  delete process.env.TRUST_CDN_GEO;
+  try {
+    // 内网 IP 查不到地区 → 回落到域名判定 → 127.0.0.1 不是 mylumee.cn → 美元。
+    // 关键是：带着 cf-ipcountry: CN 也照样是美元。
+    const r = await (await fetch(BASE + '/api/price-region', { headers: H('CN') })).json();
+    assert.strictEqual(r.currency, 'usd', '伪造 cf-ipcountry 就能把 $11.99 买成 ¥44.90');
+    const { d, s: sess } = await checkout('CN');
+    assert.ok(d.url);
+    assert.strictEqual(sess.line_items[0].price_data.currency, 'usd', '结账也不能被这个头带偏');
+  } finally { process.env.TRUST_CDN_GEO = prev; }
+  // 自证臂：开关打开时同一个请求必须变成人民币，否则上面两条是空的
+  const on = await (await fetch(BASE + '/api/price-region', { headers: H('CN') })).json();
+  assert.strictEqual(on.currency, 'cny');
 });

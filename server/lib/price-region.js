@@ -50,7 +50,14 @@ async function _lookup(ip) {
 // 返回 'cn' | 'us'（'us' = 美元区，泛指中国以外）
 async function priceRegion(req) {
   const h = req.headers || {};
-  let cc = String(h['cf-ipcountry'] || h['x-vercel-ip-country'] || '').toUpperCase();
+  // 🔴 0920：cf-ipcountry / x-vercel-ip-country 只是普通请求头，**任何人都能自己加**。
+  // 生产是 Caddy 直连（前面没有 Cloudflare/Vercel），实测 `curl -H "cf-ipcountry: CN"`
+  // 就能把 $11.99 变成 ¥44.90（≈$6.2）——四八折白拿，而且结账走同一判定，是真按低价扣的钱。
+  // 所以默认不认这个头，只信 IP 查询（本来就是生产主路径）。
+  // 哪天真挂到 Cloudflare/Vercel 后面（边缘会覆盖掉伪造值），再开 TRUST_CDN_GEO=1。
+  let cc = process.env.TRUST_CDN_GEO === '1'
+    ? String(h['cf-ipcountry'] || h['x-vercel-ip-country'] || '').toUpperCase()
+    : '';
   if (!cc || cc === 'XX') {
     const ip = String(req.ip || '').replace(/^::ffff:/, '');
     if (!_isPrivate(ip)) cc = (await _lookup(ip)) || '';
