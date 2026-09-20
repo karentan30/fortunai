@@ -88,3 +88,49 @@ test('只剩 card 时返回 null（别无限重试，真错误要抛出去）', 
   // 自证臂：还有非卡通道时必须不是 null，否则上面两条是空的
   assert.notStrictEqual(nextMethods(['card', 'alipay']), null);
 });
+
+// ── 0920 第二批：支付宝还在审核、微信过不了地理认证 ──────────────────────────
+// 目标：别让每一单国内结账都白撞一次 Stripe 拒绝；审核通过后要自己恢复。
+const INVALID = 'The payment method type "alipay" is invalid';
+
+test('报错点名哪个通道，就只摘那一个（不误伤旁边已开通的）', () => {
+  const { degrade, parseInvalidMethod, _unavailable } = require('./stripe-methods');
+  _unavailable.clear();
+  assert.strictEqual(parseInvalidMethod(INVALID, ['card', 'alipay', 'kakao_pay']), 'alipay');
+  const next = degrade(['card', 'alipay', 'kakao_pay'], INVALID);
+  assert.deepStrictEqual(next, ['card', 'kakao_pay'], '只该摘支付宝，kakao 要留着');
+  // 自证臂：若实现退化成「从末尾摘」，摘掉的会是 kakao_pay，上面这条就红了
+  assert.ok(next.includes('kakao_pay'));
+  _unavailable.clear();
+});
+
+test('认不出报错就退回从末尾摘（不能卡死重试同一份清单）', () => {
+  const { degrade, _unavailable } = require('./stripe-methods');
+  _unavailable.clear();
+  assert.deepStrictEqual(degrade(['card', 'alipay'], 'some other stripe error'), ['card']);
+  assert.strictEqual(degrade(['card'], 'some other stripe error'), null);
+  _unavailable.clear();
+});
+
+test('card 永远不摘，也永远不进「没开通」名单', () => {
+  const { degrade, parseInvalidMethod, pruneUnavailable, _unavailable } = require('./stripe-methods');
+  _unavailable.clear();
+  assert.strictEqual(parseInvalidMethod('The payment method type "card" is invalid', ['card']), null);
+  assert.strictEqual(degrade(['card'], 'The payment method type "card" is invalid'), null);
+  assert.deepStrictEqual(pruneUnavailable(['card']), ['card']);
+  _unavailable.clear();
+});
+
+test('被拒过的通道 TTL 内不再试，TTL 一过自动放出来（审核通过后自己恢复）', () => {
+  const { degrade, pruneUnavailable, _unavailable, UNAVAILABLE_TTL_MS } = require('./stripe-methods');
+  _unavailable.clear();
+  const t0 = Date.now();
+  degrade(['card', 'alipay'], INVALID, t0);
+  assert.deepStrictEqual(pruneUnavailable(['card', 'alipay'], t0 + 1000), ['card'],
+    'TTL 内还带着支付宝 = 每单白撞一次 Stripe');
+  assert.deepStrictEqual(pruneUnavailable(['card', 'alipay'], t0 + UNAVAILABLE_TTL_MS + 1), ['card', 'alipay'],
+    'TTL 过了不放出来 = 审核通过也永远收不到支付宝，要等重启');
+  // 自证臂：没被拒过的通道本来就不该被摘
+  _unavailable.clear();
+  assert.deepStrictEqual(pruneUnavailable(['card', 'alipay'], t0), ['card', 'alipay']);
+});

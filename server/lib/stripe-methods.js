@@ -66,4 +66,57 @@ function nextMethods(methods) {
   return list.slice(0, -1);
 }
 
-module.exports = { resolvePaymentMethods, nextMethods, ONE_TIME_ONLY_METHODS };
+/**
+ * ── 「没开通」记忆（0920）──────────────────────────────────────────────────
+ * 支付宝在 Stripe 还挂着审核，微信过不了地理认证。没开通的通道会让 Stripe
+ * **整单拒**，于是每一单国内结账都要先白撞一次拒绝再降级 —— 多一个往返、
+ * 多半秒，且日志天天刷。
+ *
+ * 所以被拒一次就把那个通道记下来，TTL 内不再试；TTL 到了自动再试一次，
+ * 审核通过后半小时内自己恢复，不用谁回来改配置或重启。
+ * 只记非卡通道：card 永远不摘，摘光了就没法收钱了。
+ */
+const UNAVAILABLE_TTL_MS = 30 * 60e3;
+const _unavailable = new Map(); // method -> 记录时间
+
+/** 从 Stripe 的报错里认出是哪个通道没开通；认不出返回 null。 */
+function parseInvalidMethod(message, tried) {
+  const m = /The payment method type "([a-z_]+)" is invalid/.exec(String(message || ''));
+  const name = m && m[1];
+  if (!name || name === 'card') return null;
+  return (tried || []).includes(name) ? name : null;
+}
+
+/** 从清单里摘掉「TTL 内被拒过」的通道。card 一律保留。 */
+function pruneUnavailable(methods, now) {
+  const t = now || Date.now();
+  return (methods || []).filter(m => {
+    if (m === 'card') return true;
+    const at = _unavailable.get(m);
+    if (at == null) return true;
+    if (t - at < UNAVAILABLE_TTL_MS) return false;
+    _unavailable.delete(m);   // TTL 过了，放出来再试一次（审核通过就此恢复）
+    return true;
+  });
+}
+
+/**
+ * 整单被拒后算下一次试什么：
+ *   报错点名了哪个通道 → 只摘那一个并记住（精准，不误伤旁边刚开通的）；
+ *   认不出 → 退回从末尾摘一个（清单末尾就是「最可能没开通」的那个）。
+ * 返回 null = 只剩卡了，别再重试，把错抛出去。
+ */
+function degrade(tried, message, now) {
+  const bad = parseInvalidMethod(message, tried);
+  if (bad) {
+    _unavailable.set(bad, now || Date.now());
+    const rest = tried.filter(m => m !== bad);   // bad 必在 tried 里，所以一定更短，不会死循环
+    return rest.length ? rest : null;
+  }
+  return nextMethods(tried);
+}
+
+module.exports = {
+  resolvePaymentMethods, nextMethods, ONE_TIME_ONLY_METHODS,
+  pruneUnavailable, degrade, parseInvalidMethod, _unavailable, UNAVAILABLE_TTL_MS,
+};

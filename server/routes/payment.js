@@ -51,7 +51,7 @@ const MONTHLY_MEMBER_REPORT_DISCOUNT = 0.5;
 const HUB_SUB_ENABLED = process.env.HUB_SUB_ENABLED === '1';
 const HUB_SUB_PLAN_MAP = { daily_companion_year: 'daily_companion_year' };
 const { sendEmail, getClientIp, resolveUserFromToken } = require('../lib/utils');
-const { resolvePaymentMethods, nextMethods } = require('../lib/stripe-methods');
+const { resolvePaymentMethods, pruneUnavailable, degrade } = require('../lib/stripe-methods');
 const { priceRegion, displayPrices, rawAmounts } = require('../lib/price-region');
 const { rateLimitMiddleware, simpleRateLimitMiddleware, authMiddleware } = require('../middleware');
 const { recordAffiliateOrder, completeAffiliateOrder } = require('./affiliate');
@@ -222,13 +222,14 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
     const isKR = region === 'kr' || currency === 'krw';
     const isCNY = !isKR && (await priceRegion(req)) === 'cn';
     const payCurrency = isKR ? 'krw' : isCNY ? 'cny' : 'usd';
-    // 0920 Karen 的 Stripe 已开：Cards / Alipay / KakaoPay / Link / 韩国本地卡（微信未开）。
-    // 排序 = 摘除顺序：下面 create 的降级循环从末尾往前摘，所以把「最想留住的」放前面、
-    // 「最可能没开通」的放后面。整单被拒时只会丢掉尾巴，不会连支付宝/Kakao 一起塌回只收卡。
+    // 0920 Karen 的 Stripe：Cards / KakaoPay / Link / 韩国本地卡已开；支付宝还在审核。
+    // 🔴 微信**不放进默认清单**：微信要地理/主体认证，Karen 那边没过，可预见永远被拒——
+    //    留着只会让每一单国内结账白撞一次 Stripe 拒绝（多一个往返）。真开通了用 CN_PAY_METHODS 加回来。
+    // 排序 = 摘除顺序：下面 create 的降级循环从末尾往前摘，所以把「最想留住的」放前面。
     const payMethods = isKR
       ? (process.env.KR_PAY_METHODS ? process.env.KR_PAY_METHODS.split(',').map(s => s.trim()) : ['card', 'kakao_pay', 'kr_card', 'link'])
       : isCNY
-        ? (process.env.CN_PAY_METHODS ? process.env.CN_PAY_METHODS.split(',').map(s => s.trim()) : ['card', 'alipay', 'wechat_pay'])
+        ? (process.env.CN_PAY_METHODS ? process.env.CN_PAY_METHODS.split(',').map(s => s.trim()) : ['card', 'alipay'])
         : ['card', 'link'];
 
     const isJoss = product.startsWith('joss_');
@@ -334,17 +335,19 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
       customer_email: email || undefined,
       metadata: { order_no: orderNo, product, donor_name: donorName || '', contact: contact || '', guest: guest ? '1' : '' }
     });
-    // 0920：支付宝/微信是分别开通的（Karen 的 Stripe 目前 Cards+Alipay 开了、微信没开）。
-    // Stripe 只要有一种没开通就整单拒，所以不能一拒就塌回只收卡——那样刚开通的支付宝也跟着丢了。
-    // 改成逐个摘掉非卡通道重试：card+alipay+wechat → card+alipay → card。
+    // 0920：支付方式在 Stripe 后台一个一个开通（支付宝审核中、微信过不了地理认证）。
+    // 只要有一种没开通 Stripe 就**整单拒**，所以不能一拒就塌回只收卡——那样已开通的
+    // 支付宝/KakaoPay 会跟着一起丢。改成按报错点名摘掉那一个再试，并记住它半小时内不再试
+    // （见 lib/stripe-methods.js：审核通过后会自己恢复，不用改配置或重启）。
     let session;
-    let _try = _pm.methods.slice();
+    let _try = pruneUnavailable(_pm.methods);
+    if (!_try.length) _try = ['card'];
     for (;;) {
       try {
         session = await stripe.checkout.sessions.create(_sessionOpts(_try));
         break;
       } catch (e) {
-        var _next = nextMethods(_try);
+        const _next = degrade(_try, e.message);
         if (!_next) throw e;   // 只剩卡还失败 = 真错误，别吞
         console.warn('[CHECKOUT] ' + _try.join('/') + ' 里有未开通的（' + e.message + '），降级为 ' + _next.join('/'));
         _try = _next;

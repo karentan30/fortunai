@@ -21,10 +21,13 @@ fs.writeFileSync(HUB_STUB, 'module.exports = { HUB_SECRET: "", create: async () 
 process.env.HUB_CLIENT_PATH = HUB_STUB;
 const STRIPE_STUB = path.join(TMP, 'stripe-stub.js');
 fs.writeFileSync(STRIPE_STUB, `
-let n = 0; global.__CREATED = []; global.__REJECT_WALLETS = false;
+let n = 0; global.__CREATED = []; global.__ATTEMPTS = 0; global.__REJECT_WALLETS = false;
 module.exports = { checkout: { sessions: {
   create: async (a) => {
-    if (global.__REJECT_WALLETS && a.payment_method_types.some(m => m !== 'card')) throw new Error('The payment method type "wechat_pay" is invalid');
+    global.__ATTEMPTS++;
+    // 照 Stripe 真实报错的样子点名是哪个通道没开通（生产里支付宝审核中就是这条）
+    const bad = a.payment_method_types.find(m => m !== 'card');
+    if (global.__REJECT_WALLETS && bad) throw new Error('The payment method type "' + bad + '" is invalid');
     const id = 'cs_test_' + (++n); global.__CREATED.push(a); return { id, url: 'https://checkout.stripe.test/' + id };
   } } }, webhooks: { constructEvent: () => ({}) } };`);
 process.env.STRIPE_CLIENT_PATH = STRIPE_STUB;
@@ -55,26 +58,39 @@ test('展示价：国内=¥ 目录 amountCny，美国=$ 目录 amount', async ()
   assert.strictEqual(us.prices.member_monthly, '$9.90');
 });
 
-test('国内结账：人民币 + 卡/支付宝/微信，金额=目录 amountCny，不再回 channel:cn', async () => {
+test('国内结账：人民币 + 卡/支付宝，金额=目录 amountCny，不再回 channel:cn', async () => {
   const { status, d, s } = await checkout('CN');
   assert.strictEqual(status, 200);
   assert.ok(d.url, JSON.stringify(d));
   assert.notStrictEqual(d.channel, 'cn');
   assert.strictEqual(s.line_items[0].price_data.currency, 'cny');
   assert.strictEqual(s.line_items[0].price_data.unit_amount, S.PRODUCTS.bazi_full.amountCny);
-  assert.deepStrictEqual(s.payment_method_types, ['card', 'alipay', 'wechat_pay']);
-  assert.deepStrictEqual(s.payment_method_options, { wechat_pay: { client: 'web' } });
+  // 0920 Karen：微信过不了 Stripe 的地理/主体认证，从默认清单拿掉——留着只会让
+  // 每一单国内结账白撞一次「整单拒」。真开通了用 CN_PAY_METHODS 加回来。
+  assert.deepStrictEqual(s.payment_method_types, ['card', 'alipay']);
+  assert.strictEqual(s.payment_method_options, undefined, '清单里没微信就不该带 wechat_pay 选项');
 });
 
-test('Stripe 拒了支付宝/微信 → 退回只收卡，国内照样能付', async () => {
+test('支付宝没开通：退回只收卡照样能付，且记住它——下一单不再白撞一次', async () => {
+  const { _unavailable } = require('../lib/stripe-methods');
+  _unavailable.clear();
   global.__REJECT_WALLETS = true;
   try {
+    global.__ATTEMPTS = 0;
     const { status, d, s } = await checkout('CN');
     assert.strictEqual(status, 200);
     assert.ok(d.url);
     assert.deepStrictEqual(s.payment_method_types, ['card']);
     assert.strictEqual(s.line_items[0].price_data.currency, 'cny');
-  } finally { global.__REJECT_WALLETS = false; }
+    assert.strictEqual(global.__ATTEMPTS, 2, '第一单该是「带支付宝被拒 + 只收卡成功」两次');
+
+    // 支付宝还在审核期间，每一单都重撞一次 = 白搭半秒。第二单必须直接只带卡。
+    global.__ATTEMPTS = 0;
+    const second = await checkout('CN');
+    assert.strictEqual(second.status, 200);
+    assert.deepStrictEqual(second.s.payment_method_types, ['card']);
+    assert.strictEqual(global.__ATTEMPTS, 1, '记住「支付宝没开通」后，第二单不该再撞一次 Stripe');
+  } finally { global.__REJECT_WALLETS = false; _unavailable.clear(); }
 });
 
 test('美国结账：美元目录价；前端硬传 currency:cny 也不改币种', async () => {
