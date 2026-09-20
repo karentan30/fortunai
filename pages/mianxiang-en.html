@@ -278,6 +278,8 @@ input[type=file] { display: none; }
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/css/style.css">
 <link rel="stylesheet" href="/assets/css/common.css">
+<!-- 价格按所在地换币种（与结账实收同一口径） -->
+<script src="/assets/js/price.js"></script>
 </head>
 <body>
 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme" style="z-index:999">🌙</button>
@@ -684,7 +686,6 @@ function renderResult(aiReading, tier, locked) {
   html += '<div class="hl-note"><strong>🔑 Cultivating your fortune</strong>: countenance follows the heart, and spirit shapes the face. A reading shows present patterns and tendencies, not a fixed fate. <b>Keep a kind heart, a regular routine and a calm bearing</b>, and both complexion and structure can improve over time — the most practical lesson in physiognomy.</div>';
 
   html += '<button class="cta-btn" onclick="resetScan()">New photo · read again</button>';
-  html += '<button class="cta-btn" style="border-color:rgba(201,130,10,0.3);color:rgba(232,176,106,0.8);margin-bottom:16px">In-depth face + destiny cross-reading · $29</button>';
 
   var rw = document.getElementById('resultWrap');
   rw.innerHTML = html;
@@ -823,7 +824,7 @@ function renderMxAIReport(aiText, tier, locked) {
   html += '<button class="cta-btn" onclick="resetScan()">New photo · read again</button>';
 
   if (isLocked) {
-    html += '<button class="cta-btn" style="border-color:rgba(201,130,10,0.3);color:rgba(232,176,106,0.8);margin-bottom:8px" onclick="handleMxUnlock()">Unlock the full face reading · $9.9</button>';
+    html += '<button class="cta-btn" style="border-color:rgba(201,130,10,0.3);color:rgba(232,176,106,0.8);margin-bottom:8px" onclick="handleMxUnlock()">Unlock the full face reading · <span data-rp="mianxiang_full">$9.9</span></button>';
   }
 
   rw.innerHTML = html;
@@ -851,10 +852,10 @@ function handleMxUnlock() {
     body: JSON.stringify({ product: 'mianxiang_full', price: 9.9, title: 'Full Face Reading', token: '', lang: 'en' })
   }).then(function(r){ return r.json(); }).then(function(d){
     if (d.url) { window.location.href = d.url; }
-    else { showMxToast('Redirect failed, please try again', 'error'); if (btn) { btn.disabled = false; btn.textContent = 'Unlock the full face reading · $9.9'; } }
+    else { showMxToast('Redirect failed, please try again', 'error'); if (btn) { btn.disabled = false; btn.innerHTML = 'Unlock the full face reading · <span data-rp="mianxiang_full">$9.9</span>'; } }
   }).catch(function(){
     showMxToast('Network error, please try again', 'error');
-    if (btn) { btn.disabled = false; btn.textContent = 'Unlock the full face reading · $9.9'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = 'Unlock the full face reading · <span data-rp="mianxiang_full">$9.9</span>'; }
   });
 }
 

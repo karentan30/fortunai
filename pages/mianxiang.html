@@ -277,6 +277,8 @@ input[type=file] { display: none; }
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="../assets/css/style.css">
 <link rel="stylesheet" href="/assets/css/common.css">
+<!-- 价格按所在地换币种（与结账实收同一口径） -->
+<script src="/assets/js/price.js"></script>
 </head>
 <body>
 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题" style="z-index:999">🌙</button>
@@ -683,7 +685,6 @@ function renderResult(aiReading, tier, locked) {
   html += '<div class="hl-note"><strong>🔑 气运调养</strong>：相由心生，气随神转。相理呈现的是当下格局与倾向，非定数。<b>心存善念、作息规律、待人从容</b>，气色与格局皆可日渐提升——这是相学最实用的一课。</div>';
 
   html += '<button class="cta-btn" onclick="resetScan()">换张照片 · 重新解读</button>';
-  html += '<button class="cta-btn" style="border-color:rgba(201,130,10,0.3);color:rgba(232,176,106,0.8);margin-bottom:16px">深度面相+命理合参 · $29</button>';
 
   var rw = document.getElementById('resultWrap');
   rw.innerHTML = html;
@@ -823,7 +824,7 @@ function renderMxAIReport(aiText, tier, locked) {
   html += '<button class="cta-btn" onclick="resetScan()">换张照片 · 重新解读</button>';
 
   if (isLocked) {
-    html += '<button class="cta-btn" style="border-color:rgba(201,130,10,0.3);color:rgba(232,176,106,0.8);margin-bottom:8px" onclick="handleMxUnlock()">解锁完整面相报告 · $9.9</button>';
+    html += '<button class="cta-btn" style="border-color:rgba(201,130,10,0.3);color:rgba(232,176,106,0.8);margin-bottom:8px" onclick="handleMxUnlock()">解锁完整面相报告 · <span data-rp="mianxiang_full">$9.9</span></button>';
   }
 
   rw.innerHTML = html;
@@ -857,10 +858,10 @@ function handleMxUnlock() {
     body: JSON.stringify({ product: _sku, price: 9.9, title: isPalm ? '完整手相报告' : '完整面相报告', token: '' })
   }).then(function(r){ return r.json(); }).then(function(d){
     if (d.url) { window.location.href = d.url; }
-    else { showMxToast('跳转失败，请重试', 'error'); if (btn) { btn.disabled = false; btn.textContent = '解锁完整面相报告 · $9.9'; } }
+    else { showMxToast('跳转失败，请重试', 'error'); if (btn) { btn.disabled = false; btn.innerHTML = '解锁完整面相报告 · <span data-rp="mianxiang_full">$9.9</span>'; } }
   }).catch(function(){
     showMxToast('网络异常，请重试', 'error');
-    if (btn) { btn.disabled = false; btn.textContent = '解锁完整面相报告 · $9.9'; }
+    if (btn) { btn.disabled = false; btn.innerHTML = '解锁完整面相报告 · <span data-rp="mianxiang_full">$9.9</span>'; }
   });
 }
 

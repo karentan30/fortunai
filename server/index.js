@@ -106,6 +106,8 @@ app.use(['/server', '/docs', '/.git', '/node_modules', '/data'], (req, res) => {
 });
 // 0918 Karen：暂无真人命理师；开运商城(shop)也已删除（虚假开光/见效话术） → 真人咨询页全部下线，旧链接/收藏/外链一律 302 回选择页（不 404、不承诺真人服务）
 app.get(/^\/(?:pages\/)?(?:booking|masters?|life-events|shop)\.html$/, (req, res) => res.redirect(302, '/pages/pick.html'));
+// 0920 Karen：祈福代办/代烧下架——没有真人执行，页面不再可达
+app.get(/^\/(?:pages\/)?(?:gongfeng|daishao|daishao-en)\.html$/, (req, res) => res.redirect(302, '/pages/pick.html'));
 // P0-1 补丁: data.json 含所有用户数据，必须在 static 之前显式 403 拦截
 app.use('/data.json', (req, res) => res.status(403).json({ error: 'forbidden' }));
 app.use(express.static(path.join(__dirname, '..'), {

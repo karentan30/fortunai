@@ -138,6 +138,8 @@ body::before{content:'';position:fixed;inset:0;
 @media (prefers-reduced-motion: reduce){*{animation:none !important;transition:none !important}}
 </style>
 <link rel="stylesheet" href="/assets/css/common.css">
+<!-- 价格按所在地换币种：必须排在页面脚本前，否则推导价拿不到当地金额 -->
+<script src="/assets/js/price.js"></script>
 </head>
 <body>
 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle light or dark theme">🌙</button>
@@ -149,7 +151,7 @@ body::before{content:'';position:fixed;inset:0;
   <span class="crown" aria-hidden="true">👑</span>
   <div class="hero-tag">RUNAE PREMIUM</div>
   <div class="hero-title">Membership</div>
-  <div class="hero-sub">Compatibility report $19.90 → free for members<br>Your chart saved forever · Fortune refreshed monthly</div>
+  <div class="hero-sub">Compatibility report <span data-rp="hehun">$9.90</span> → free for members<br>Your chart saved forever · Fortune refreshed monthly</div>
   <div class="divider"></div>
 </div>
 
@@ -164,7 +166,7 @@ body::before{content:'';position:fixed;inset:0;
         <div class="plan-cycle">Billed monthly · Cancel anytime</div>
       </div>
       <div class="plan-price">
-        <div class="plan-amount monthly-c">$9.90</div>
+        <div class="plan-amount monthly-c"><span data-rp="member_monthly">$9.90</span></div>
         <div class="plan-unit">/ month</div>
       </div>
     </div>
@@ -184,13 +186,13 @@ body::before{content:'';position:fixed;inset:0;
       <div class="plan-radio" id="rQuarterly" aria-hidden="true"></div>
       <div style="flex:1;margin-left:10px">
         <div class="plan-name">Quarterly</div>
-        <div class="plan-cycle">3 months · Save 16%</div>
+        <div class="plan-cycle">3 months · <span data-savepct-q="1">Save 16%</span></div>
       </div>
       <div class="plan-price">
-        <div style="font-size:12px;color:var(--sub-text);text-decoration:line-through;text-align:right">$9.90 x 3 = $29.70</div>
-        <div class="plan-amount quarterly-c">$24.90</div>
+        <div style="font-size:12px;color:var(--sub-text);text-decoration:line-through;text-align:right"><span data-rp="member_monthly">$9.90</span> x 3 = <span id="anchorQ">$29.70</span></div>
+        <div class="plan-amount quarterly-c"><span data-rp="member_quarterly">$24.90</span></div>
         <div class="plan-unit">/ quarter</div>
-        <div class="plan-save">Save $4.80</div>
+        <div class="plan-save">Save <span id="saveQ">$4.80</span></div>
       </div>
     </div>
     <div class="plan-divider"></div>
@@ -211,18 +213,16 @@ body::before{content:'';position:fixed;inset:0;
         <div class="plan-cycle">Pay once · Best value</div>
       </div>
       <div class="plan-price">
-        <div style="font-size:12px;color:var(--sub-text);text-decoration:line-through;text-align:right">$9.90 x 12 = $118.80</div>
-        <div class="plan-amount yearly-c">$69</div>
-        <div class="plan-unit">/ year <span style="font-size:12px;background:rgba(200,163,90,0.18);padding:2px 6px;border-radius:4px;color:var(--gilt-deep);font-weight:500">Save 42%</span></div>
-        <div class="plan-save">Save $49.80</div>
+        <div style="font-size:12px;color:var(--sub-text);text-decoration:line-through;text-align:right"><span data-rp="member_monthly">$9.90</span> x 12 = <span id="anchorY">$118.80</span></div>
+        <div class="plan-amount yearly-c"><span data-rp="member_yearly">$69</span></div>
+        <div class="plan-unit">/ year <span style="font-size:12px;background:rgba(200,163,90,0.18);padding:2px 6px;border-radius:4px;color:var(--gilt-deep);font-weight:500" data-savepct-y="1">Save 42%</span></div>
+        <div class="plan-save">Save <span id="saveY">$49.80</span></div>
       </div>
     </div>
     <div class="plan-divider"></div>
     <div class="plan-perks">
       <div class="perk-row highlight"><span class="perk-icon">📖</span>All deep reports unlimited (BaZi · Zi Wei · Feng Shui &amp; more)</div>
-      <div class="perk-row highlight"><span class="perk-icon">👑</span>One Master deep reading every month</div>
-      <div class="perk-row highlight"><span class="perk-icon">💑</span>Compatibility report $19.90 → <b>free</b>, once a quarter</div>
-      <div class="perk-row highlight"><span class="perk-icon">💎</span>Crystal charm gift ($29 value) → one free per year <span style="opacity:0.6;font-size:11px">(subject to availability · while supplies last)</span></div>
+      <div class="perk-row highlight"><span class="perk-icon">💑</span>Compatibility report <span data-rp="hehun">$9.90</span> → <b>free</b>, once a quarter</div>
       <div class="perk-row"><span class="perk-icon">🏆</span>Members-only events · priority invites</div>
     </div>
   </button>
@@ -268,10 +268,6 @@ body::before{content:'';position:fixed;inset:0;
     <div class="compare-feat">Compatibility report</div>
     <div class="compare-cell">—</div><div class="compare-cell">—</div><div class="compare-cell">1/qtr</div>
   </div>
-  <div class="compare-row">
-    <div class="compare-feat">Crystal charm gift</div>
-    <div class="compare-cell">—</div><div class="compare-cell">—</div><div class="compare-cell">1/yr</div>
-  </div>
 </div>
 
 <!-- value props -->
@@ -281,7 +277,7 @@ body::before{content:'';position:fixed;inset:0;
     <div class="test-text">Designed to become a monthly ritual — check your fortune, then plan the month around it. More grounded than a generic one-line horoscope.</div>
   </div>
   <div class="test-card">
-    <div class="test-text">The compatibility report — normally $19.90 on its own — is included every quarter on the yearly plan. For many, that one feature covers the membership.</div>
+    <div class="test-text">The compatibility report — normally <span data-rp="hehun">$9.90</span> on its own — is included every quarter on the yearly plan. For many, that one feature covers the membership.</div>
   </div>
   <div class="test-card">
     <div class="test-text">A gentle morning fortune nudge: a small daily cue to help you time what matters. For guidance &amp; entertainment only.</div>
@@ -335,10 +331,32 @@ function showToast(msg, type) {
 }
 let curPlan = 'monthly';
 const BTN_COPY = {
-  monthly:{text:'Start now · $9.90/mo',cls:'monthly-btn',note:'Cancel anytime · All benefits from day one'},
-  quarterly:{text:'Unlock everything · $24.90',cls:'quarterly-btn',note:'3 months · Save 16% · Cancel anytime'},
-  yearly:{text:'One year · $69',cls:'yearly-btn',note:'All reports unlimited · One Master deep reading each month'},
+  monthly:{text:'',cls:'monthly-btn',note:'Cancel anytime · All benefits from day one'},
+  quarterly:{text:'',cls:'quarterly-btn',note:''},
+  yearly:{text:'',cls:'yearly-btn',note:'All reports unlimited · Compatibility report free every quarter'},
 };
+// 价格全从目录来（/api/price-region 按所在地给 ¥ 或 $），下面只是查不到时的美元兜底。
+const PRICE_FALLBACK = { member_monthly: 990, member_quarterly: 2490, member_yearly: 6900 };
+function amt(k){ var v = window.RunaePrice && RunaePrice.amount(k); return (v == null ? PRICE_FALLBACK[k] : v); }
+function money(c){ return window.RunaePrice ? RunaePrice.money(c) : '$' + (c/100).toFixed(2); }
+function pct(base, price){ return base > 0 ? Math.max(0, Math.round((1 - price / base) * 100)) : 0; }
+function renderPrices(){
+  var m = amt('member_monthly'), q = amt('member_quarterly'), y = amt('member_yearly');
+  BTN_COPY.monthly.text   = 'Start now · ' + money(m) + '/mo';
+  BTN_COPY.quarterly.text = 'Unlock everything · ' + money(q);
+  BTN_COPY.yearly.text    = 'One year · ' + money(y);
+  BTN_COPY.quarterly.note = '3 months · Save ' + pct(m*3, q) + '% · Cancel anytime';
+  var set = function(id, txt){ var el = document.getElementById(id); if (el) el.textContent = txt; };
+  set('anchorQ', money(m*3));
+  set('saveQ', money(Math.max(0, m*3 - q)));
+  set('anchorY', money(m*12));
+  set('saveY', money(Math.max(0, m*12 - y)));
+  document.querySelectorAll('[data-savepct-q]').forEach(function(el){ el.textContent = 'Save ' + pct(m*3, q) + '%'; });
+  document.querySelectorAll('[data-savepct-y]').forEach(function(el){ el.textContent = 'Save ' + pct(m*12, y) + '%'; });
+  var btn = document.getElementById('subBtn'), note = document.getElementById('subNote');
+  if (btn && !btn.disabled) btn.textContent = BTN_COPY[curPlan].text;
+  if (note) note.textContent = BTN_COPY[curPlan].note;
+}
 
 function selectPlan(p){
   document.querySelectorAll('.plan-card').forEach(function(c){c.classList.remove('selected');c.setAttribute('aria-checked','false');});
@@ -378,6 +396,8 @@ function subscribe(){
   });
 }
 
+renderPrices();
+if (window.RunaePrice) RunaePrice.ready(renderPrices);
 selectPlan('monthly');
 </script>
 

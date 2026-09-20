@@ -171,6 +171,8 @@ body::before{content:'';position:fixed;inset:0;
 .theme-toggle{position:fixed;top:14px;right:14px;z-index:999;background:none;border:1px solid var(--jade-line);border-radius:20px;padding:5px 10px;font-size:14px;cursor:pointer;color:var(--sub-text);line-height:1}
 </style>
 <link rel="stylesheet" href="/assets/css/common.css">
+<!-- 价格按所在地换币种：必须在页面脚本之前加载，否则推导价（月费×12/直省）拿不到当地金额 -->
+<script src="/assets/js/price.js"></script>
 </head>
 <body>
 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题" style="z-index:999">🌙</button>
@@ -183,7 +185,7 @@ body::before{content:'';position:fixed;inset:0;
   <span class="crown">👑</span>
   <div class="hero-tag">SHEN YUAN PREMIUM</div>
   <div class="hero-title">善缘会员</div>
-  <div class="hero-sub">合婚报告$19.90 → 会员免费 · 命盘永久保存 · 流年每月更新</div>
+  <div class="hero-sub">合婚报告<span data-rp="hehun">$19.90</span> → 会员免费 · 命盘永久保存 · 流年每月更新</div>
   <div class="divider"></div>
 </div>
 
@@ -200,14 +202,14 @@ body::before{content:'';position:fixed;inset:0;
         <div class="plan-cycle">按月订阅 · 随时取消 · 体验价</div>
       </div>
       <div class="plan-price">
-        <div class="plan-amount monthly-c">$9.90</div>
+        <div class="plan-amount monthly-c"><span data-rp="member_monthly">$9.90</span></div>
         <div class="plan-unit">/ 月</div>
       </div>
     </div>
     <div class="plan-divider"></div>
     <div class="plan-perks">
-      <div class="perk-row highlight"><span class="perk-icon">✨</span>AI八字命理 · 单次$3.90 → 月费内无限</div>
-      <div class="perk-row highlight"><span class="perk-icon">📖</span>完整命盘报告（不锁定 · 单次$7.90）</div>
+      <div class="perk-row highlight"><span class="perk-icon">✨</span>AI八字命理 · 单次<span data-rp="bazi_basic">$9.90</span> → 月费内无限</div>
+      <div class="perk-row highlight"><span class="perk-icon">📖</span>完整命盘报告（不锁定 · 单次<span data-rp="bazi_full">$11.99</span>）</div>
       <div class="perk-row"><span class="perk-icon">🎴</span>高级塔罗牌阵 · 每日1次</div>
       <div class="perk-row"><span class="perk-icon">🌟</span>每日流年运势推送 · 7:00 AM</div>
     </div>
@@ -222,13 +224,13 @@ body::before{content:'';position:fixed;inset:0;
       </div>
       <div style="flex:1;margin-left:10px">
         <div class="plan-name">季度会员</div>
-        <div class="plan-cycle">三个月畅享 · 省18%</div>
+        <div class="plan-cycle">三个月畅享 · <span data-savepct-q="1">省18%</span></div>
       </div>
       <div class="plan-price">
-        <div style="font-size:10px;color:var(--sub);text-decoration:line-through;text-align:right">月费×3 = $29.70</div>
-        <div class="plan-amount quarterly-c">$24.90</div>
-        <div class="plan-unit">/ 季 <span style="font-size:8px;background:rgba(200,163,90,0.18);padding:2px 6px;border-radius:4px;color:var(--gilt-deep);font-weight:500">省16%</span></div>
-        <div class="plan-save">直省 $4.80</div>
+        <div style="font-size:10px;color:var(--sub);text-decoration:line-through;text-align:right">月费×3 = <span id="anchorQ">$29.70</span></div>
+        <div class="plan-amount quarterly-c"><span data-rp="member_quarterly">$24.90</span></div>
+        <div class="plan-unit">/ 季 <span style="font-size:8px;background:rgba(200,163,90,0.18);padding:2px 6px;border-radius:4px;color:var(--gilt-deep);font-weight:500" data-savepct-q="1">省16%</span></div>
+        <div class="plan-save">直省 <span id="saveQ">$4.80</span></div>
       </div>
     </div>
     <div class="plan-divider"></div>
@@ -251,18 +253,16 @@ body::before{content:'';position:fixed;inset:0;
         <div class="plan-cycle">一次付清 · 全年畅用 · 超值</div>
       </div>
       <div class="plan-price">
-        <div style="font-size:10px;color:var(--sub);text-decoration:line-through;text-align:right">月费×12 = $118.80</div>
-        <div class="plan-amount yearly-c">$69</div>
-        <div class="plan-unit">/ 年 <span style="font-size:8px;background:rgba(200,163,90,0.18);padding:2px 6px;border-radius:4px;color:var(--gilt-deep);font-weight:500">省42%</span></div>
-        <div class="plan-save" style="font-size:10px;color:var(--gilt-deep);font-weight:500">直省 $49.80</div>
+        <div style="font-size:10px;color:var(--sub);text-decoration:line-through;text-align:right">月费×12 = <span id="anchorY">$118.80</span></div>
+        <div class="plan-amount yearly-c"><span data-rp="member_yearly">$69</span></div>
+        <div class="plan-unit">/ 年 <span style="font-size:8px;background:rgba(200,163,90,0.18);padding:2px 6px;border-radius:4px;color:var(--gilt-deep);font-weight:500" data-savepct-y="1">省42%</span></div>
+        <div class="plan-save" style="font-size:10px;color:var(--gilt-deep);font-weight:500">直省 <span id="saveY">$49.80</span></div>
       </div>
     </div>
     <div class="plan-divider"></div>
     <div class="plan-perks">
-      <div class="perk-row highlight"><span class="perk-icon">✨</span>AI八字命理 + 完整命盘 · 无限次（月省$30+）</div>
-      <div class="perk-row highlight"><span class="perk-icon">💑</span>合婚配对报告 $19.90 → <b style="color:var(--gold)">会员免费</b> · 每季1次</div>
-      <div class="perk-row highlight"><span class="perk-icon">💎</span>水晶挂件福利 $29 → 年度免费一件</div>
-      <div class="perk-row"><span class="perk-icon">🌙</span>清明/中元代烧服务 · 8折专属优惠</div>
+      <div class="perk-row highlight"><span class="perk-icon">✨</span>AI八字命理 + 完整命盘 · 无限次</div>
+      <div class="perk-row highlight"><span class="perk-icon">💑</span>合婚配对报告 <span data-rp="hehun">$19.90</span> → <b style="color:var(--gold)">会员免费</b> · 每季1次</div>
       <div class="perk-row"><span class="perk-icon">🏆</span>会员专属活动 · 优先邀请</div>
     </div>
   </div>
@@ -332,14 +332,6 @@ body::before{content:'';position:fixed;inset:0;
     <div class="compare-feat">合婚配对报告</div>
     <div class="compare-cell">—</div><div class="compare-cell">—</div><div class="compare-cell">季1次</div>
   </div>
-  <div class="compare-row">
-    <div class="compare-feat">水晶挂件福利</div>
-    <div class="compare-cell">—</div><div class="compare-cell">—</div><div class="compare-cell">年1件</div>
-  </div>
-  <div class="compare-row">
-    <div class="compare-feat">代供代祭折扣</div>
-    <div class="compare-cell">—</div><div class="compare-cell">—</div><div class="compare-cell">8折</div>
-  </div>
 </div>
 
 <!-- 会员价值（诚实价值卡，不含虚构用户/城市/续费年限） -->
@@ -352,7 +344,7 @@ body::before{content:'';position:fixed;inset:0;
     <div class="test-text">✦ <b>完整报告不锁定</b>：5000+ 字深度命盘、合婚报告直接解锁，逐段撰写而非模板。</div>
   </div>
   <div class="test-card">
-    <div class="test-text">✦ <b>年度更划算</b>：年费相当于每月约 $5.75，含合婚报告每季免费一次。</div>
+    <div class="test-text">✦ <b>年度更划算</b>：年费相当于每月约 <span id="perMonthY">$5.75</span>，含合婚报告每季免费一次。</div>
   </div>
   <div class="test-card">
     <div class="test-text">✦ <b>随时取消</b>：不满意可随时退订，无套路。内容仅供娱乐参考。</div>
@@ -372,7 +364,7 @@ body::before{content:'';position:fixed;inset:0;
 <!-- First-visit countdown banner -->
 <div id="countdownBanner" style="display:none;margin:16px 16px 0;padding:14px 16px;border-radius:12px;background:linear-gradient(135deg,var(--jade-wash),rgba(200,163,90,0.06));border:1px solid var(--jade-line);text-align:center;position:relative;z-index:1">
   <div style="font-size:9px;letter-spacing:0.18em;color:var(--gilt-deep);margin-bottom:4px">⏳ 限时优惠</div>
-  <div style="font-size:12px;color:var(--ink-text);letter-spacing:0.06em;margin-bottom:4px">首次访问24小时内：年付立省 <b style="color:var(--gilt-deep)">$49.80</b></div>
+  <div style="font-size:12px;color:var(--ink-text);letter-spacing:0.06em;margin-bottom:4px">首次访问24小时内：年付立省 <b style="color:var(--gilt-deep)" id="promoSaveY">$49.80</b></div>
   <div id="countdownTimer" style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--jade-deep);letter-spacing:0.12em;line-height:1.2"></div>
   <div style="font-size:9px;color:var(--sub-text);margin-top:4px;letter-spacing:0.06em">倒计时结束后优惠失效</div>
 </div>
@@ -397,11 +389,38 @@ function showToast(msg, type) {
   t._toastTimer = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity 0.3s'; setTimeout(function(){ t.remove(); },300); }, 3000);
 }
 let curPlan = 'monthly';
+// 价格一律从目录来（/api/price-region 按所在地给 ¥ 或 $），这里的数字只是查不到时的美元兜底。
+const PRICE_FALLBACK = { member_monthly: 990, member_quarterly: 2490, member_yearly: 6900 };
+function amt(k){ var v = window.RunaePrice && RunaePrice.amount(k); return (v == null ? PRICE_FALLBACK[k] : v); }
+function money(c){ return window.RunaePrice ? RunaePrice.money(c) : '$' + (c/100).toFixed(2); }
 const BTN_COPY = {
-  monthly:{text:'立即开始 $9.90/月',cls:'monthly-btn',note:'随时取消 · 首月立享全部权益'},
-  quarterly:{text:'解锁全站 $24.90',cls:'quarterly-btn',note:'三个月畅享 · 省16% · 随时取消'},
-  yearly:{text:'一年畅享 $69',cls:'yearly-btn',note:'比按月付省42% · 合婚报告每季免费 · 随时可取消'},
+  monthly:{text:'',cls:'monthly-btn',note:'随时取消 · 首月立享全部权益'},
+  quarterly:{text:'',cls:'quarterly-btn',note:'三个月畅享 · 随时取消'},
+  yearly:{text:'',cls:'yearly-btn',note:'比按月付更省 · 合婚报告每季免费 · 随时可取消'},
 };
+// 折扣百分比也得算出来：¥ 与 $ 的档位比例不一样，写死会骗人。
+function pct(base, price){ return base > 0 ? Math.max(0, Math.round((1 - price / base) * 100)) : 0; }
+function renderPrices(){
+  var m = amt('member_monthly'), q = amt('member_quarterly'), y = amt('member_yearly');
+  BTN_COPY.monthly.text   = '立即开始 ' + money(m) + '/月';
+  BTN_COPY.quarterly.text = '解锁全站 ' + money(q);
+  BTN_COPY.yearly.text    = '一年畅享 ' + money(y);
+  BTN_COPY.quarterly.note = '三个月畅享 · 省' + pct(m*3, q) + '% · 随时取消';
+  BTN_COPY.yearly.note    = '比按月付省' + pct(m*12, y) + '% · 合婚报告每季免费 · 随时可取消';
+  var set = function(id, txt){ var el = document.getElementById(id); if (el) el.textContent = txt; };
+  set('anchorQ', money(m*3));
+  set('saveQ', money(Math.max(0, m*3 - q)));
+  set('anchorY', money(m*12));
+  set('saveY', money(Math.max(0, m*12 - y)));
+  set('perMonthY', money(Math.round(y/12)));
+  set('promoSaveY', money(Math.max(0, m*12 - y)));
+  document.querySelectorAll('[data-savepct-q]').forEach(function(el){ el.textContent = '省' + pct(m*3, q) + '%'; });
+  document.querySelectorAll('[data-savepct-y]').forEach(function(el){ el.textContent = '省' + pct(m*12, y) + '%'; });
+  var btn = document.getElementById('subBtn'), note = document.getElementById('subNote');
+  if (btn && !btn.disabled) btn.textContent = BTN_COPY[curPlan].text;
+  if (note) note.textContent = BTN_COPY[curPlan].note;
+  if (typeof updateCalc === 'function') updateCalc(document.getElementById('calcSlider') ? document.getElementById('calcSlider').value : 12);
+}
 
 function selectPlan(p){
   document.querySelectorAll('.plan-card').forEach(c=>c.classList.remove('selected'));
@@ -446,22 +465,23 @@ selectPlan('monthly');
 function updateCalc(months) {
   months = parseInt(months);
   document.getElementById('calcMonthsLabel').textContent = months;
-  var monthTotal = (months * 9.90).toFixed(2);
-  var yearlyPlan, yearlyLabel, perMonth;
+  var monthTotal = months * amt('member_monthly');
+  var planCost, planLabel, perMonth;
   if (months <= 3) {
-    yearlyPlan = 24.90; yearlyLabel = '季费'; perMonth = (24.90/3).toFixed(2);
+    planCost = amt('member_quarterly'); planLabel = '季费'; perMonth = Math.round(planCost/3);
   } else {
-    yearlyPlan = 69.00; yearlyLabel = '年费'; perMonth = (69/12).toFixed(2);
+    planCost = amt('member_yearly'); planLabel = '年费'; perMonth = Math.round(planCost/12);
   }
-  var saving = Math.max(0, monthTotal - yearlyPlan).toFixed(2);
-  var bestMonths = months <= 3 ? 3 : (months <= 12 ? 12 : 36);
-  document.getElementById('calcMonthDisplay').textContent = '按月付：' + months + '个月 = $' + monthTotal;
-  document.getElementById('calcSavingBig').textContent = saving > 0 ? '省 $' + saving : '两者相当';
-  document.getElementById('calcSavingSub').textContent = '选' + yearlyLabel + '方案 · 相当于每月 $' + perMonth + ' · 合婚报告免费包含';
-  document.getElementById('calcMonthTotal').textContent = '$' + monthTotal;
-  document.getElementById('calcYearTotal').textContent = '$' + yearlyPlan.toFixed(2);
+  var saving = Math.max(0, monthTotal - planCost);
+  document.getElementById('calcMonthDisplay').textContent = '按月付：' + months + '个月 = ' + money(monthTotal);
+  document.getElementById('calcSavingBig').textContent = saving > 0 ? '省 ' + money(saving) : '两者相当';
+  document.getElementById('calcSavingSub').textContent = '选' + planLabel + '方案 · 相当于每月 ' + money(perMonth) + ' · 合婚报告免费包含';
+  document.getElementById('calcMonthTotal').textContent = money(monthTotal);
+  document.getElementById('calcYearTotal').textContent = money(planCost);
 }
 updateCalc(12);
+renderPrices();
+if (window.RunaePrice) RunaePrice.ready(renderPrices);
 
 // ── First-visit 24h countdown ──
 (function() {

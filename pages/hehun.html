@@ -385,6 +385,8 @@ body::before{content:'';position:fixed;inset:0;
 }
 </style>
 <link rel="stylesheet" href="/assets/css/common.css">
+<!-- 价格按所在地换币种（与结账实收同一口径） -->
+<script src="/assets/js/price.js"></script>
 </head>
 <body>
 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题" style="z-index:999">🌙</button>
@@ -530,7 +532,7 @@ body::before{content:'';position:fixed;inset:0;
       <div class="tier3-card tier3-popular">
         <div class="tier3-head">
           <div class="tier3-name">完整合婚报告</div>
-          <div class="tier3-price"><span class="tier3-cn">$9.90</span><span class="tier3-os">一次性</span></div>
+          <div class="tier3-price"><span class="tier3-cn" data-rp="hehun">$9.90</span><span class="tier3-os">一次性</span></div>
         </div>
         <div class="tier3-desc">完整六维合婚 · 10年婚姻运程 · 最佳婚期 · 化解方案</div>
       </div>
@@ -656,7 +658,7 @@ body::before{content:'';position:fixed;inset:0;
       <div class="lock-tiers">
         <button class="lock-tier-btn lock-tier-popular" data-product="hehun" onclick="createCheckout(this)">
           <span class="lock-tier-l"><span class="lock-tier-name">完整合婚报告</span><span class="lock-tier-sub">完整六维 · 10年运程 · 婚期 · 化解</span></span>
-          <span class="lock-tier-price">$9.90<span class="lock-tier-os"> one-time</span></span>
+          <span class="lock-tier-price"><span data-rp="hehun">$9.90</span><span class="lock-tier-os"> one-time</span></span>
         </button>
       </div>
       <div class="lock-divider">— 或 —</div>
@@ -717,7 +719,7 @@ body::before{content:'';position:fixed;inset:0;
 
 <!-- sticky -->
 <div class="sticky-bar" id="stickyBar">
-  <button class="sticky-cta">解锁完整合婚报告 · $9.90</button>
+  <button class="sticky-cta">解锁完整合婚报告 · <span data-rp="hehun">$9.90</span></button>
 </div>
 
 <script>
@@ -810,7 +812,7 @@ function syncPaywall(){
       var lc = document.getElementById('lockedCard');
       if (lc) lc.scrollIntoView({behavior:'smooth', block:'center'});
     };
-    sticky.textContent = '解锁完整合婚报告 · $9.90';
+    sticky.innerHTML = '解锁完整合婚报告 · ' + '<span data-rp="hehun">$9.90</span>';
   }
 }
 
@@ -1100,7 +1102,7 @@ function _renderTierUpsell(tier) {
   var box = document.createElement('div');
   box.id = 'tierUpsell';
   box.style.cssText = 'margin:18px 0 6px;padding:16px;border-radius:14px;background:linear-gradient(135deg,rgba(204,34,68,0.1),rgba(201,168,76,0.05));border:1px solid rgba(204,34,68,0.25);text-align:center';
-  var next = { name: '完整合婚报告', product: 'hehun', price: '$9.90', desc: '完整六维·10年运程·最佳婚期·化解方案' };
+  var next = { name: '完整合婚报告', product: 'hehun', price: (window.RunaePrice ? RunaePrice.fmt('hehun','$9.90') : '$9.90'), desc: '完整六维·10年运程·最佳婚期·化解方案' };
   var title = document.createElement('div');
   title.style.cssText = 'font-size:12px;color:var(--gold);letter-spacing:0.08em;margin-bottom:8px';
   title.textContent = '✦ 解锁「' + next.name + '」看到更多 ✦';

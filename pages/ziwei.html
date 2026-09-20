@@ -359,6 +359,8 @@ body.ziwei-cosmos::before {
 <script src="report-viz.js" defer></script>
 <link rel="stylesheet" href="../assets/css/style.css">
 <link rel="stylesheet" href="/assets/css/common.css">
+<!-- 价格按所在地换币种（与结账实收同一口径） -->
+<script src="/assets/js/price.js"></script>
 </head>
 <body class="ziwei-cosmos">
 <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="切换主题" style="z-index:999">🌙</button>
@@ -511,7 +513,7 @@ body.ziwei-cosmos::before {
 
 <div class="submit-wrap">
   <button class="btn-calc" id="btnCalc" onclick="calcZiwei()">起盘 · 排我的命盘</button>
-  <div class="pricing-note">命盘总览免费 · 专项 Session 每个 <strong>$3.99</strong> · 一键全买 $11.99<br><span style="font-family:var(--lat);font-style:italic;letter-spacing:.06em;opacity:.85">Chart preview free · full reading unlocks each palace</span></div>
+  <div class="pricing-note">命盘总览免费 · 专项 Session 每个 <strong data-rp="ziwei_s_career">$3.99</strong> · 一键全买 <span data-rp="ziwei_full">$11.99</span><br><span style="font-family:var(--lat);font-style:italic;letter-spacing:.06em;opacity:.85">Chart preview free · full reading unlocks each palace</span></div>
 </div>
 <div class="zw-disc">仅限 14 岁以上 · 仅供娱乐参考 · AI 生成内容，不构成任何建议<br>For entertainment only · AI-generated · Not advice of any kind</div>
 
@@ -547,7 +549,7 @@ body.ziwei-cosmos::before {
   </div>
 
   <div class="cta-section">
-    <button class="btn-deep" onclick="unlockZiwei(this)">解锁完整命书 · 大运流年 $11.99 →</button>
+    <button class="btn-deep" onclick="unlockZiwei(this)">解锁完整命书 · 大运流年 <span data-rp="ziwei_full">$11.99</span> →</button>
     <div class="cta-note">含十年大运 · 每月运势 · 四大运势趋势图 · Decade &amp; year cycles</div>
   </div>
 
@@ -1229,10 +1231,10 @@ function unlockZiwei(btn) {
     var data;
     try { data = JSON.parse(txt); } catch(e) { throw new Error('解析失败'); }
     if(data.url) window.location.href = data.url;
-    else { btn.disabled = false; btn.textContent = '深度大运流年 · 完整解读 $11.99'; }
+    else { btn.disabled = false; btn.textContent = '深度大运流年 · 完整解读 ' + (window.RunaePrice ? RunaePrice.fmt('ziwei_full','$11.99') : '$11.99'); }
   }).catch(function(){
     btn.disabled = false;
-    btn.textContent = '深度大运流年 · 完整解读 $11.99';
+    btn.textContent = '深度大运流年 · 完整解读 ' + (window.RunaePrice ? RunaePrice.fmt('ziwei_full','$11.99') : '$11.99');
   });
 }
 function handlePaidReturn() {

@@ -25,7 +25,7 @@ const claim = require('../lib/claim');
 const hub = require(process.env.HUB_CLIENT_PATH || require('path').join(__dirname, '../../../shared/pay-hub-client.js'));
 
 const {
-  PRODUCTS, SUBSCRIBE_PRODUCTS,
+  PRODUCTS, SUBSCRIBE_PRODUCTS, RETIRED_PRODUCTS,
   getToken, getUserOrders,
   insertOrder, _updOrder, _updOrderExpiry, _setOrExtendSub, _insSub,
   _findOrder, _insCnOrder, _completeCnOrder, _allOrders, _insJossOrder,
@@ -52,7 +52,7 @@ const HUB_SUB_ENABLED = process.env.HUB_SUB_ENABLED === '1';
 const HUB_SUB_PLAN_MAP = { daily_companion_year: 'daily_companion_year' };
 const { sendEmail, getClientIp, resolveUserFromToken } = require('../lib/utils');
 const { resolvePaymentMethods } = require('../lib/stripe-methods');
-const { priceRegion, displayPrices } = require('../lib/price-region');
+const { priceRegion, displayPrices, rawAmounts } = require('../lib/price-region');
 const { rateLimitMiddleware, simpleRateLimitMiddleware, authMiddleware } = require('../middleware');
 const { recordAffiliateOrder, completeAffiliateOrder } = require('./affiliate');
 
@@ -176,7 +176,7 @@ router.get('/price-region', async (req, res) => {
   // 本地/预发可用 ?region=cn|us 预览另一币种；生产不接受覆盖（展示价必须等于实收价）
   if (process.env.NODE_ENV !== 'production' && /^(cn|us)$/.test(String(req.query.region || ''))) region = req.query.region;
   res.set('Cache-Control', 'private, max-age=600');
-  res.json({ region, currency: region === 'cn' ? 'cny' : 'usd', symbol: region === 'cn' ? '¥' : '$', prices: displayPrices(region) });
+  res.json({ region, currency: region === 'cn' ? 'cny' : 'usd', symbol: region === 'cn' ? '¥' : '$', prices: displayPrices(region), amounts: rawAmounts(region) });
 });
 
 // ══════════════════════════════════════════
@@ -187,6 +187,7 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
     const { product, donorName, contact, wishText, email, successUrl, cancelUrl, token } = req.body;
     const prod = PRODUCTS[product];
     if (!prod) return res.status(400).json({ error: '无效的产品 ID', valid: Object.keys(PRODUCTS) });
+    if (RETIRED_PRODUCTS.includes(product)) return res.status(400).json({ error: '该档位已下架，请选择其他方案' });
 
     // Resolve userId: prefer cookie (httpOnly migration) over body token
     let userId = _payResolveUser(token, req);
@@ -801,6 +802,7 @@ router.post('/pay/wechat/create', rateLimitMiddleware, async (req, res) => {
     var product = (req.body && req.body.product || '').trim();
     var prod = PRODUCTS[product];
     if (!prod) return res.status(400).json({ error: '无效的产品 ID', valid: Object.keys(PRODUCTS) });
+    if (RETIRED_PRODUCTS.includes(product)) return res.status(400).json({ error: '该档位已下架，请选择其他方案' });
 
     // _payResolveUser(token, req) 内部优先用 _tokenFromReq(req)（header > body > cookie），
     // 这里的 token 只是第二兜底，不用再手工读 Authorization 头。
@@ -911,6 +913,7 @@ router.post('/pay/alipay/qr', rateLimitMiddleware, async (req, res) => {
     var product = (req.body && req.body.product || '').trim();
     var prod = PRODUCTS[product];
     if (!prod) return res.status(400).json({ error: '无效的产品 ID', valid: Object.keys(PRODUCTS) });
+    if (RETIRED_PRODUCTS.includes(product)) return res.status(400).json({ error: '该档位已下架，请选择其他方案' });
 
     // _payResolveUser(token, req) 内部优先用 _tokenFromReq(req)（header > body > cookie），
     // 这里的 token 只是第二兜底，不用再手工读 Authorization 头。

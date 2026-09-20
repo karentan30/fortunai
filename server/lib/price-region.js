@@ -27,7 +27,19 @@ async function _lookup(ip) {
     const r = await fetch('https://get.geojs.io/v1/ip/country/' + encodeURIComponent(ip) + '.json',
       { signal: AbortSignal.timeout(1500) });
     if (r.ok) { const d = await r.json(); cc = String(d.country || '').toUpperCase() || null; }
-  } catch (e) { /* 查不到就走兜底 */ }
+  } catch (e) { /* 查不到就换备用源 */ }
+  // 备用源：与 Lumee 中台 /geo 同一个免费服务（ip-api，无 key）。
+  // 主源抽风时不要直接落回美元——国内用户看到 $ 比慢 1 秒更糟。
+  if (!cc) {
+    try {
+      const r2 = await fetch('http://ip-api.com/json/' + encodeURIComponent(ip) + '?fields=status,countryCode',
+        { signal: AbortSignal.timeout(1500) });
+      if (r2.ok) {
+        const d2 = await r2.json();
+        if (d2 && d2.status === 'success') cc = String(d2.countryCode || '').toUpperCase() || null;
+      }
+    } catch (e) { /* 两个源都不行才走域名兜底 */ }
+  }
   if (cc) {
     if (_cache.size > MAX_CACHE) _cache.clear();
     _cache.set(ip, { cc, at: Date.now() });
@@ -70,4 +82,15 @@ function displayPrices(region, keys) {
   return out;
 }
 
-module.exports = { priceRegion, fmt, amountFor, displayPrices, _cache };
+// 原始金额（最小单位：美分/分）。前端算「月费×12」「直省多少」这类推导价要用数字，
+// 不能拿格式化字符串去减，否则换成 ¥ 之后省多少还是按美元算的。
+function rawAmounts(region, keys) {
+  const out = {};
+  (keys || Object.keys(PRODUCTS)).forEach(k => {
+    const a = amountFor(k, region);
+    if (a != null) out[k] = a;
+  });
+  return out;
+}
+
+module.exports = { priceRegion, fmt, amountFor, displayPrices, rawAmounts, _cache };

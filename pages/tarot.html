@@ -311,6 +311,8 @@ html.light-mode .hl-note{color:var(--text-mute)}
 <link rel="stylesheet" href="/assets/css/common.css">
 <script src="/pages/report-viz.js"></script>
 <script src="/assets/js/common.js"></script>
+<!-- 价格按所在地换币种（与结账实收同一口径） -->
+<script src="/assets/js/price.js"></script>
 </head>
 <body>
 <div id="readProgressWrap"><div id="readProgressBar"></div></div>
@@ -416,12 +418,12 @@ html.light-mode .hl-note{color:var(--text-mute)}
     <div class="spread-opt" onclick="selectSpread(this,3,'past_now_future')">
       <div class="spread-num">叁</div>
       <div class="spread-name">过去现在未来</div>
-      <div class="spread-price">$9</div>
+      <div class="spread-price" data-rp="tarot_3">$9</div>
     </div>
     <div class="spread-opt" onclick="selectSpread(this,5,'celtic')">
       <div class="spread-num">伍</div>
       <div class="spread-name">五芒星牌阵</div>
-      <div class="spread-price">$19.90</div>
+      <div class="spread-price" data-rp="tarot_5">$19.90</div>
     </div>
   </div>
 </div>
@@ -469,7 +471,7 @@ html.light-mode .hl-note{color:var(--text-mute)}
     </div>
     <div class="upgrade-cta-btns">
       <button class="btn-redo" style="border-color:var(--gold-line-2);color:#2a1a06;background:linear-gradient(155deg,var(--gold-hi),var(--gold-soft) 34%,var(--gold) 62%,var(--gold-deep));font-weight:600;letter-spacing:.06em" onclick="upgradeTarot(this, 3)">三张牌阵（过去 · 现在 · 未来）$9 USD</button>
-      <button class="btn-redo" style="border-color:var(--gold-line);color:var(--gold-soft)" onclick="upgradeTarot(this, 5)">五芒星牌阵（五维深度）$19.90 USD</button>
+      <button class="btn-redo" style="border-color:var(--gold-line);color:var(--gold-soft)" onclick="upgradeTarot(this, 5)">五芒星牌阵（五维深度）<span data-rp="tarot_5">$19.90</span></button>
     </div>
   </div>
 
@@ -789,10 +791,10 @@ function upgradeTarot(btnEl, n) {
     })
   }).then(function(r){ return r.json(); }).then(function(data){
     if(data.url) window.location.href = data.url;
-    else { btnEl.disabled = false; btnEl.textContent = n===3?'三张牌阵$9':'五芒星$19.90'; }
+    else { btnEl.disabled = false; btnEl.innerHTML = n===3?('三张牌阵'+'<span data-rp="tarot_3">$9</span>'):('五芒星'+'<span data-rp="tarot_5">$19.90</span>'); }
   }).catch(function(){
     btnEl.disabled = false;
-    btnEl.textContent = n===3?'三张牌阵$9':'五芒星$19.90';
+    btnEl.innerHTML = n===3?('三张牌阵'+'<span data-rp="tarot_3">$9</span>'):('五芒星'+'<span data-rp="tarot_5">$19.90</span>');
   });
 }
 

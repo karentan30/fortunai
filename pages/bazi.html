@@ -815,6 +815,8 @@ html[data-page='bazi'] #referralBanner [style*="color:rgba(240,238,230"] { color
 html[data-page='bazi'] #referralBanner [style*="color:rgba(200,196,180"] { color:var(--sub-text) !important; }
 </style>
 <link rel="stylesheet" href="/assets/css/common.css">
+<!-- 价格按所在地换币种（与结账实收同一口径） -->
+<script src="/assets/js/price.js"></script>
 </head>
 <body>
 <div class="stardust" id="stardust"></div>
@@ -835,7 +837,7 @@ html[data-page='bazi'] #referralBanner [style*="color:rgba(200,196,180"] { color
     <div class="bazi-hero-title">生辰八字<br>排出你的<span style="color:var(--jade-deep);position:relative">五行格局</span></div>
     <div class="bazi-hero-divider"></div>
     <div class="bazi-hero-desc">年月日时，四柱八字，定一生气数流转。<br>三分钟，得一卷可珍藏的命理长书。</div>
-    <div style="margin-top:12px;font-size:11.5px;color:var(--jade-soft);letter-spacing:0.12em;opacity:0.9">命格总览免费 · 专项 Session $3.99 · 全套 $11.99</div>
+    <div style="margin-top:12px;font-size:11.5px;color:var(--jade-soft);letter-spacing:0.12em;opacity:0.9">命格总览免费 · 专项 Session <span data-rp="bazi_s_wealth">$3.99</span> · 全套 <span data-rp="bazi_full">$11.99</span></div>
   </div>
   <script>
   (function(){
@@ -1005,7 +1007,7 @@ html[data-page='bazi'] #referralBanner [style*="color:rgba(200,196,180"] { color
     <div>✦ 5000+ 字逐段深度撰写，非模板话术</div>
   </div>
 </div>
-    <div style="text-align:center;font-size:12px;color:var(--jade-deep);margin-bottom:8px;letter-spacing:0.06em;padding:6px 12px;background:var(--jade-wash);border-radius:8px;border:1px solid var(--jade-line)">命格总览免费 → 专项 Session $3.99/个 · 一键全买 $11.99</div>
+    <div style="text-align:center;font-size:12px;color:var(--jade-deep);margin-bottom:8px;letter-spacing:0.06em;padding:6px 12px;background:var(--jade-wash);border-radius:8px;border:1px solid var(--jade-line)">命格总览免费 → 专项 Session <span data-rp="bazi_s_wealth">$3.99</span>/个 · 一键全买 <span data-rp="bazi_full">$11.99</span></div>
     <div style="margin:12px 0;padding:16px;background:var(--paper-2);border:1px solid var(--paper-edge);border-radius:12px;box-shadow:var(--shadow-lift)">
   <div style="font-size:12px;color:var(--jade-deep);font-family:'Noto Serif SC',serif;letter-spacing:0.12em;margin-bottom:10px;display:flex;align-items:center;gap:6px;font-weight:600">
     <span style="font-size:14px">☯</span> 善缘命理研究团队
@@ -1552,7 +1554,7 @@ function _updateChapCard(chapterId) {
     inner = '<div class="chap-head">' + '🔒 ' + escHtml(title) + '</div>' +
       '<div style="padding:12px 16px;text-align:center">' +
       '<div style="font-size:13px;font-weight:500;letter-spacing:0.1em;color:var(--gold);margin-bottom:10px">解锁完整命盘</div>' +
-      '<button onclick="createCheckout(this,\'full\',9.9)" style="background:linear-gradient(135deg,var(--gold-deep),var(--gold));border:none;border-radius:10px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;padding:10px 24px;cursor:pointer">立即解锁 · USD $11.99 →</button>' +
+      '<button onclick="createCheckout(this,\'full\',9.9)" style="background:linear-gradient(135deg,var(--gold-deep),var(--gold));border:none;border-radius:10px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;padding:10px 24px;cursor:pointer">立即解锁 · <span data-rp="bazi_full">$11.99</span> →</button>' +
       '</div>';
   } else if (state === 'error') {
     inner = '<div class="chap-head">' + ch.emoji + ' ' + escHtml(title) + '</div>' +
@@ -1624,7 +1626,7 @@ function startChapteredReport(input, full) {
       html += '<div class="chap-head">🔒 ' + escHtml(_chapTitle(ch)) + '</div>' +
         '<div style="padding:12px 16px;text-align:center">' +
         '<div style="font-size:13px;font-weight:500;letter-spacing:0.1em;color:var(--gold);margin-bottom:10px">解锁完整命盘</div>' +
-        '<button onclick="createCheckout(this,\'full\',9.9)" style="background:linear-gradient(135deg,var(--gold-deep),var(--gold));border:none;border-radius:10px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;padding:10px 24px;cursor:pointer">立即解锁 · USD $11.99 →</button>' +
+        '<button onclick="createCheckout(this,\'full\',9.9)" style="background:linear-gradient(135deg,var(--gold-deep),var(--gold));border:none;border-radius:10px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;padding:10px 24px;cursor:pointer">立即解锁 · <span data-rp="bazi_full">$11.99</span> →</button>' +
         '</div>';
       _chapState[ch.id] = 'locked';
     } else {
@@ -1864,14 +1866,14 @@ function showReport(aiText, contextId, tier, locked) {
           '</div>' +
           '<div class="anchor-row ours">' +
             '<span class="anchor-name">✨ 善缘八字报告</span>' +
-            '<span class="anchor-price ours-price">$11.99</span>' +
+            '<span class="anchor-price ours-price" data-rp="bazi_full">$11.99</span>' +
             '<span class="anchor-note">3分钟出报告·随时查看</span>' +
           '</div>' +
         '</div>' +
         '<div class="anchor-tagline">专业命理分析，不到一杯咖啡的钱</div>' +
       '</div>' +
-      '<button class="btn-unlock" onclick="createCheckout(this, \'full\', 9.9)">立即解锁完整命盘 · USD $11.99 →</button>' +
-      '<button class="btn-member" onclick="createCheckout(this, \'member\', 9.9)">👑 会员无限解读 · USD $9.90/月（最划算）</button>' +
+      '<button class="btn-unlock" onclick="createCheckout(this, \'full\', 9.9)">立即解锁完整命盘 · <span data-rp="bazi_full">$11.99</span> →</button>' +
+      '<button class="btn-member" onclick="createCheckout(this, \'member\', 9.9)">👑 会员无限解读 · <span data-rp="member_monthly">$9.90</span>/月（最划算）</button>' +
       '<div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:10px;padding:8px;background:rgba(91,191,160,0.05);border:1px solid rgba(91,191,160,0.12);border-radius:8px">' +
       '<span style="font-size:14px">🛡️</span>' +
       '<span style="font-size:12px;color:rgba(91,191,160,0.75);letter-spacing:0.06em">不满意 72 小时全额退款 · 无需理由</span>' +
@@ -1941,20 +1943,20 @@ function renderBaziTopicTabs() {
       'style="flex:1;min-width:96px;background:rgba(107,63,160,0.12);border:1px solid rgba(155,111,196,0.35);'+
       'border-radius:12px;padding:14px 8px;color:#e8e0ff;font-size:13px;cursor:pointer;transition:.2s;text-align:center;position:relative">'+
       '<div style="font-size:22px;margin-bottom:4px">'+t.emoji+'</div>'+t.label+
-      '<div style="font-size:11px;color:rgba(245,233,138,0.7);margin-top:3px">$3.99</div></button>';
+      '<div style="font-size:11px;color:rgba(245,233,138,0.7);margin-top:3px" data-rp="bazi_s_wealth">$3.99</div></button>';
   }).join('');
   var wrap = document.createElement('div');
   wrap.id = 'baziTopicTabs';
   wrap.style.cssText = 'margin:28px auto 8px;max-width:720px;padding:0 4px';
   wrap.innerHTML =
-    '<div style="font-size:13px;color:rgba(74,159,212,0.7);letter-spacing:.1em;margin-bottom:6px;text-align:center">— 命理 Session · 命格总览免费，其余每个 $3.99 —</div>'+
+    '<div style="font-size:13px;color:rgba(74,159,212,0.7);letter-spacing:.1em;margin-bottom:6px;text-align:center">— 命理 Session · 命格总览免费，其余每个 <span data-rp="bazi_s_wealth">$3.99</span> —</div>'+
     '<div id="baziOverviewPanel" style="margin:12px 0 18px"></div>'+
     '<div style="display:flex;gap:10px;flex-wrap:wrap">'+grid+'</div>'+
     '<div id="baziTopicPanel" style="margin-top:16px"></div>'+
     '<div style="text-align:center;margin-top:18px;padding:16px;background:rgba(107,63,160,0.1);border:1px solid rgba(245,233,138,0.28);border-radius:14px">'+
       '<div style="color:#f5e98a;font-size:14px;margin-bottom:4px">✨ 一键全买 6 个 Session</div>'+
-      '<div style="color:rgba(232,224,255,0.6);font-size:12px;margin-bottom:10px">单买共 $23.94，一键 <b style="color:#f5e98a">$11.99</b>（五折）</div>'+
-      '<button onclick="sessionCheckout(\'bazi_full\',this)" style="background:linear-gradient(135deg,#f0d98a,#c8a24a);border:none;border-radius:10px;padding:13px 34px;color:#2a1e08;font-size:15px;font-weight:700;cursor:pointer">一键全解锁 · $11.99</button>'+
+      '<div style="color:rgba(232,224,255,0.6);font-size:12px;margin-bottom:10px">单买共 <span data-rp="bazi_s_wealth" data-rp-x="6">$23.94</span>，一键 <b style="color:#f5e98a" data-rp="bazi_full">$11.99</b>（五折）</div>'+
+      '<button onclick="sessionCheckout(\'bazi_full\',this)" style="background:linear-gradient(135deg,#f0d98a,#c8a24a);border:none;border-radius:10px;padding:13px 34px;color:#2a1e08;font-size:15px;font-weight:700;cursor:pointer">一键全解锁 · <span data-rp="bazi_full">$11.99</span></button>'+
     '</div>';
   rs.appendChild(wrap);
   loadBaziOverview();
@@ -1992,8 +1994,8 @@ function openBaziTopic(btn) {
     if (d.locked) {
       html += '<div style="text-align:center;margin-top:14px">'+
         '<div style="color:rgba(245,233,138,0.75);font-size:13px;margin-bottom:10px">🔒 完整「'+(d.title||'专项')+'」Session 已锁定</div>'+
-        '<button onclick="sessionCheckout(\''+(d.product||'')+'\',this)" style="background:linear-gradient(135deg,#9b6fc4,#6b3fa0);border:none;border-radius:10px;padding:13px 30px;color:#fff;font-size:15px;font-weight:600;cursor:pointer">解锁本 Session · $3.99</button>'+
-        '<div style="margin-top:10px"><a onclick="sessionCheckout(\'bazi_full\',this)" style="color:rgba(245,233,138,0.85);font-size:13px;cursor:pointer;text-decoration:underline">或一键全买 6 个 · $11.99（五折）→</a></div></div>';
+        '<button onclick="sessionCheckout(\''+(d.product||'')+'\',this)" style="background:linear-gradient(135deg,#9b6fc4,#6b3fa0);border:none;border-radius:10px;padding:13px 30px;color:#fff;font-size:15px;font-weight:600;cursor:pointer">解锁本 Session · <span data-rp="bazi_s_wealth">$3.99</span></button>'+
+        '<div style="margin-top:10px"><a onclick="sessionCheckout(\'bazi_full\',this)" style="color:rgba(245,233,138,0.85);font-size:13px;cursor:pointer;text-decoration:underline">或一键全买 6 个 · <span data-rp="bazi_full">$11.99</span>（五折）→</a></div></div>';
     }
     panel.innerHTML = html;
     panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -3072,7 +3074,7 @@ function renderUltimateReport(text, containerId, isLocked) {
       html += '<div class="ur-head"><span class="ur-emoji">🔒</span>';
       html += '<span class="ur-title">'+escHtml(sec.title)+'</span></div>';
       html += '<div style="padding:16px;text-align:center">';
-      html += '<div class="paywall-overlay" style="position:relative;background:none;padding:0"><div style="font-size:13px;font-weight:500;letter-spacing:0.1em;color:var(--gold);margin-bottom:10px">解锁完整命盘</div><button onclick="createCheckout(this,\'full\',9.9)" style="background:linear-gradient(135deg,var(--gold-deep),var(--gold));border:none;border-radius:10px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;padding:10px 24px;cursor:pointer">立即解锁 · USD $11.99 →</button></div>';
+      html += '<div class="paywall-overlay" style="position:relative;background:none;padding:0"><div style="font-size:13px;font-weight:500;letter-spacing:0.1em;color:var(--gold);margin-bottom:10px">解锁完整命盘</div><button onclick="createCheckout(this,\'full\',9.9)" style="background:linear-gradient(135deg,var(--gold-deep),var(--gold));border:none;border-radius:10px;color:rgba(14,10,4,0.95);font-family:\'Noto Serif SC\',serif;font-size:13px;padding:10px 24px;cursor:pointer">立即解锁 · <span data-rp="bazi_full">$11.99</span> →</button></div>';
       html += '</div></div>';
       return;
     }
