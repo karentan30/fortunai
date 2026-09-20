@@ -51,7 +51,7 @@ const MONTHLY_MEMBER_REPORT_DISCOUNT = 0.5;
 const HUB_SUB_ENABLED = process.env.HUB_SUB_ENABLED === '1';
 const HUB_SUB_PLAN_MAP = { daily_companion_year: 'daily_companion_year' };
 const { sendEmail, getClientIp, resolveUserFromToken } = require('../lib/utils');
-const { resolvePaymentMethods } = require('../lib/stripe-methods');
+const { resolvePaymentMethods, nextMethods } = require('../lib/stripe-methods');
 const { priceRegion, displayPrices, rawAmounts } = require('../lib/price-region');
 const { rateLimitMiddleware, simpleRateLimitMiddleware, authMiddleware } = require('../middleware');
 const { recordAffiliateOrder, completeAffiliateOrder } = require('./affiliate');
@@ -222,11 +222,14 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
     const isKR = region === 'kr' || currency === 'krw';
     const isCNY = !isKR && (await priceRegion(req)) === 'cn';
     const payCurrency = isKR ? 'krw' : isCNY ? 'cny' : 'usd';
+    // 0920 Karen 的 Stripe 已开：Cards / Alipay / KakaoPay / Link / 韩国本地卡（微信未开）。
+    // 排序 = 摘除顺序：下面 create 的降级循环从末尾往前摘，所以把「最想留住的」放前面、
+    // 「最可能没开通」的放后面。整单被拒时只会丢掉尾巴，不会连支付宝/Kakao 一起塌回只收卡。
     const payMethods = isKR
-      ? (process.env.KR_PAY_METHODS ? process.env.KR_PAY_METHODS.split(',').map(s => s.trim()) : ['card'])
+      ? (process.env.KR_PAY_METHODS ? process.env.KR_PAY_METHODS.split(',').map(s => s.trim()) : ['card', 'kakao_pay', 'kr_card', 'link'])
       : isCNY
         ? (process.env.CN_PAY_METHODS ? process.env.CN_PAY_METHODS.split(',').map(s => s.trim()) : ['card', 'alipay', 'wechat_pay'])
-        : ['card'];
+        : ['card', 'link'];
 
     const isJoss = product.startsWith('joss_');
     let unitAmount;
@@ -331,14 +334,21 @@ router.post('/create-checkout', rateLimitMiddleware, async (req, res) => {
       customer_email: email || undefined,
       metadata: { order_no: orderNo, product, donor_name: donorName || '', contact: contact || '', guest: guest ? '1' : '' }
     });
+    // 0920：支付宝/微信是分别开通的（Karen 的 Stripe 目前 Cards+Alipay 开了、微信没开）。
+    // Stripe 只要有一种没开通就整单拒，所以不能一拒就塌回只收卡——那样刚开通的支付宝也跟着丢了。
+    // 改成逐个摘掉非卡通道重试：card+alipay+wechat → card+alipay → card。
     let session;
-    try {
-      session = await stripe.checkout.sessions.create(_sessionOpts(_pm.methods));
-    } catch (e) {
-      // 支付宝/微信没在 Stripe 后台开通（或该币种不支持）时 Stripe 会整单拒掉 → 退回只收卡，保证国内也能付
-      if (_pm.methods.length === 1 && _pm.methods[0] === 'card') throw e;
-      console.warn('[CHECKOUT] ' + _pm.methods.join('/') + ' 被 Stripe 拒（' + e.message + '），退回只收卡');
-      session = await stripe.checkout.sessions.create(_sessionOpts(['card']));
+    let _try = _pm.methods.slice();
+    for (;;) {
+      try {
+        session = await stripe.checkout.sessions.create(_sessionOpts(_try));
+        break;
+      } catch (e) {
+        var _next = nextMethods(_try);
+        if (!_next) throw e;   // 只剩卡还失败 = 真错误，别吞
+        console.warn('[CHECKOUT] ' + _try.join('/') + ' 里有未开通的（' + e.message + '），降级为 ' + _next.join('/'));
+        _try = _next;
+      }
     }
 
     insertOrder.run(orderNo, product, unitAmount, payCurrency, userId, donorName || '', contact || '', wishText || '', session.id);

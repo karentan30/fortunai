@@ -81,7 +81,8 @@ test('美国结账：美元目录价；前端硬传 currency:cny 也不改币种
   const { s } = await checkout('US', { currency: 'cny', region: 'cn' });
   assert.strictEqual(s.line_items[0].price_data.currency, 'usd');
   assert.strictEqual(s.line_items[0].price_data.unit_amount, S.PRODUCTS.bazi_full.amount);
-  assert.deepStrictEqual(s.payment_method_types, ['card']);
+  // 0920 Karen 的 Stripe 开了 Link（一键复用已存的卡），海外一次性付款默认带上。
+  assert.deepStrictEqual(s.payment_method_types, ['card', 'link']);
 });
 
 test('国内订阅：人民币，只收卡（支付宝/微信不支持订阅）', async () => {

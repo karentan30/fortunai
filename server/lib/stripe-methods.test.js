@@ -63,3 +63,28 @@ test('入参异常不炸', () => {
   assert.deepStrictEqual(resolvePaymentMethods([], false).methods, []);
   assert.deepStrictEqual(resolvePaymentMethods(['card', null, ''], false).methods, ['card']);
 });
+
+// ── 0920：整单被拒时逐个降级，别一步塌回只收卡 ──────────────────────────────
+test('微信没开通时，国内单降到 card+alipay 就停，支付宝不能跟着丢', () => {
+  const { nextMethods } = require('./stripe-methods');
+  const step1 = nextMethods(['card', 'alipay', 'wechat_pay']);
+  assert.deepStrictEqual(step1, ['card', 'alipay'], '第一步只该摘掉微信');
+  // 自证臂：如果实现是「一拒就回 ['card']」，上面这条会红
+  assert.ok(step1.includes('alipay'), '降级一步不该把支付宝也丢掉');
+});
+
+test('韩国单逐个摘：link → kr_card → kakao_pay → 停', () => {
+  const { nextMethods } = require('./stripe-methods');
+  let m = ['card', 'kakao_pay', 'kr_card', 'link'];
+  const seen = [];
+  for (let i = 0; i < 10; i++) { const n = nextMethods(m); if (!n) break; seen.push(n.join('+')); m = n; }
+  assert.deepStrictEqual(seen, ['card+kakao_pay+kr_card', 'card+kakao_pay', 'card']);
+});
+
+test('只剩 card 时返回 null（别无限重试，真错误要抛出去）', () => {
+  const { nextMethods } = require('./stripe-methods');
+  assert.strictEqual(nextMethods(['card']), null);
+  assert.strictEqual(nextMethods([]), null);
+  // 自证臂：还有非卡通道时必须不是 null，否则上面两条是空的
+  assert.notStrictEqual(nextMethods(['card', 'alipay']), null);
+});

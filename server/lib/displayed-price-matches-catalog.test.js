@@ -35,6 +35,12 @@ function usd(key) {
   return '$' + (Number.isInteger(v) ? String(v) : v.toFixed(2));
 }
 
+/** 摘掉 <span data-rp="别的产品">…</span> 整段；本产品的标签和所有裸价都原样留下。 */
+function stripOtherProducts(html, product) {
+  return html.replace(/<span[^>]*\bdata-rp="([^"]+)"[^>]*>[\s\S]*?<\/span>/g,
+    (m, key) => (key === product ? m : ''));
+}
+
 // { 页面, 该页在卖什么, 页面上必须出现的价格, 绝不能再出现的旧价 }
 const CASES = [
   { file: 'daishao.html',     product: 'joss_basic',   must: ['$49.90', '$249', '$2,499'], forbid: [/\$39\.90/, /\$199 </, /\$1,999/] },
@@ -75,6 +81,11 @@ test('核对过的页面：显示价 = 目录实收价', () => {
   for (const c of CASES) {
     const src = fs.readFileSync(path.join(PAGES, c.file), 'utf8');
     const cat = usd(c.product);
+    // forbid 查的是「这一页把**本产品**的价写错了」。0918 接入按所在地定价后，
+    // 页面上会正大光明出现别的产品的价（如八字页赠送合婚，写 data-rp="hehun">$9.90）——
+    // 那是对的，且由 /api/price-region 按目录实时替换。所以查旧价之前先把
+    // 别的产品的 data-rp 标签整段摘掉；没标签的裸价照查不误。
+    const scan = stripOtherProducts(src, c.product);
 
     // 1) 目录价本身必须还在页面上（防的是文案再次漂走）
     for (const m of c.must) {
@@ -82,7 +93,7 @@ test('核对过的页面：显示价 = 目录实收价', () => {
     }
     // 2) 该页曾经写错、已被纠正的旧价，不许回来
     for (const re of c.forbid) {
-      if (re.test(src)) problems.push(`${c.file}: 又出现了旧价 ${re}（${c.product} 实收 ${cat}）`);
+      if (re.test(scan)) problems.push(`${c.file}: 又出现了旧价 ${re}（${c.product} 实收 ${cat}）`);
     }
     // 3) 若页面显示的正是这个产品的价格，它必须等于目录价
     if (c.must.includes(cat) === false && c.must.some(m => /^\$[\d.,]+$/.test(m)) && c.product !== 'joss_supreme') {
@@ -110,6 +121,21 @@ test('守卫自身有效：改一个数字就会红', () => {
   //   所以目录必须跟着 Stripe 走（member_monthly 曾写 $12.90、member_yearly 曾写 $99，
   //   页面写的是 $9.90/$69 —— 两边差着钱，而这张表从来不会报错）。
   assert.strictEqual(usd('member_monthly'), '$9.90');
+});
+
+test('守卫自身有效：摘标签没把旧价查空', () => {
+  // 摘的是「别人的标签」，摘完必须仍然抓得到裸的旧价，否则 forbid 形同虚设。
+  const bare = '<p>解锁完整命盘 $9.90</p>';
+  assert.match(stripOtherProducts(bare, 'bazi_full'), /\$9\.90/);
+  // 本产品自己的标签也要留着（它被写错了照样得红）
+  const own = '<span data-rp="bazi_full">$9.90</span>';
+  assert.match(stripOtherProducts(own, 'bazi_full'), /\$9\.90/);
+  // 只有别的产品的标签才摘
+  const other = '<span data-rp="hehun">$9.90</span>';
+  assert.doesNotMatch(stripOtherProducts(other, 'bazi_full'), /\$9\.90/);
+  // 真页面上这条确实存在（不是拿构造串自娱自乐）
+  const src = fs.readFileSync(path.join(PAGES, 'bazi-en.html'), 'utf8');
+  assert.match(src, /data-rp="hehun"[^>]*>\$9\.90</);
 });
 
 test('🔴 价格来源逻辑没变（目录价 + 会员固定价两条路）', () => {

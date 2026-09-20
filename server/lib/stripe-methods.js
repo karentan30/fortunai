@@ -52,4 +52,18 @@ function resolvePaymentMethods(methods, isSubscription) {
   return { methods: kept.length ? kept : ['card'], dropped };
 }
 
-module.exports = { resolvePaymentMethods, ONE_TIME_ONLY_METHODS };
+/**
+ * 整单被 Stripe 拒时的降级：摘掉最后一个非卡通道，返回下一次要试的清单；
+ * 已经只剩 card（或空）时返回 null，表示别再重试了——那就是真错误，要抛出去。
+ *
+ * 为什么不是一拒就塌回 ['card']：支付方式是在 Stripe 后台一个一个开通的
+ * （0920 Karen 那边 Alipay 开了、微信没开）。只要有一个没开通 Stripe 就整单拒，
+ * 一步塌回只收卡的话，刚开通的支付宝/KakaoPay 会跟着一起丢掉，等于白开。
+ */
+function nextMethods(methods) {
+  const list = Array.isArray(methods) ? methods.filter(Boolean) : [];
+  if (!list.some(m => m !== 'card')) return null;
+  return list.slice(0, -1);
+}
+
+module.exports = { resolvePaymentMethods, nextMethods, ONE_TIME_ONLY_METHODS };
