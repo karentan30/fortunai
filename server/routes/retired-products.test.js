@@ -66,3 +66,14 @@ test('祈福代办页不再可达（路由已 302）', () => {
   const src = require('fs').readFileSync(require('path').join(__dirname, '../index.js'), 'utf8');
   assert.match(src, /gongfeng\|daishao\|daishao-en/);
 });
+
+// 0921：两个没接线的落地页样板（付款按钮指向不存在的 ../server/pay，标价也是编的）
+test('没接线的落地页 302 到真能下单的方法页', () => {
+  const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'index.js'), 'utf8');
+  for (const [page, target] of [['lp-zh-main', 'bazi.html'], ['lp-in-vedic', 'jyotish.html']]) {
+    const re = new RegExp(page + "[^\\n]*redirect\\(302, '/pages/" + target);
+    assert.ok(re.test(src), page + ' 的 302 没了 —— 那个页面的付款按钮是死的，别让它再对外开放');
+  }
+  // 自证臂：换个没下架的页面必须找不到，否则上面是空的
+  assert.ok(!/lp-bazi-cn-a[^\n]*redirect\(302/.test(src), '正常落地页不该被重定向');
+});

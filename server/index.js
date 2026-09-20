@@ -108,6 +108,13 @@ app.use(['/server', '/docs', '/.git', '/node_modules', '/data'], (req, res) => {
 app.get(/^\/(?:pages\/)?(?:booking|masters?|life-events|shop)\.html$/, (req, res) => res.redirect(302, '/pages/pick.html'));
 // 0920 Karen：祈福代办/代烧下架——没有真人执行，页面不再可达
 app.get(/^\/(?:pages\/)?(?:gongfeng|daishao|daishao-en)\.html$/, (req, res) => res.redirect(302, '/pages/pick.html'));
+
+// 0921：两个从没接过线的落地页样板。付款按钮指向 ../server/pay（这个路由不存在，线上 403），
+// 标价也是编的：lp-zh-main 写 ¥29/¥69/原价¥199（目录里是 ¥19.9/¥44.9/¥149）还挂着
+// 「今日已售出 89 份」这种假数字；lp-in-vedic 标 ₹299/₹999，但我们根本不收卢比。
+// 与其留着骗流量，先 302 到真能下单的方法页；要重做就整页重写，别去补那个按钮。
+app.get(/^\/(?:pages\/)?lp-zh-main\.html$/, (req, res) => res.redirect(302, '/pages/bazi.html?ref=lp-zh-main'));
+app.get(/^\/(?:pages\/)?lp-in-vedic\.html$/, (req, res) => res.redirect(302, '/pages/jyotish.html?ref=lp-in-vedic'));
 // P0-1 补丁: data.json 含所有用户数据，必须在 static 之前显式 403 拦截
 app.use('/data.json', (req, res) => res.status(403).json({ error: 'forbidden' }));
 app.use(express.static(path.join(__dirname, '..'), {

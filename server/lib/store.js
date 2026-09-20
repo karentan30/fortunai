@@ -1011,7 +1011,7 @@ const PRODUCTS = {
   bazi_basic:      { name: '基础命盘',         amount: 990,    amountCny: 1990,  desc: '日主+五行+今年运势' },
   bazi_full:       { name: '八字 · 一键全解锁（6 session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部 session：财运/感情/事业/大运/健康/开运，约六折省一半', amountKrw: 15900 },
   bazi_vip:        { name: '深度批命',          amount: 5900,   amountCny: 14900, desc: '八字×紫微双体系交叉印证旗舰', amountKrw: 19900 },
-  saju_kr_full:    { name: '사주팔자 완전 분석', amount: 750,    amountKrw: 9900, desc: '사주 완전 분석 보고서 (천간지지 + 대운 + 유년)' },
+  saju_kr_full:    { name: '사주팔자 완전 분석', amount: 750,    amountKrw: 9900, amountCny: 3990, desc: '사주 완전 분석 보고서 (천간지지 + 대운 + 유년)' },
   daily_sub:       { name: '每日天机订阅',      amount: 490,    amountCny: 1990,  desc: '每日天机·单功能订阅' },
   // ── 每日运势·常伴 (手动周期包·付一期给一期·到期需手动再买·非自动续扣) ──
   daily_companion_month: { name: '每日运势 · 常伴（月）', amount: 290, amountCny: 1900, desc: '每日专属运势与开运指引·1个月（到期手动续购）' },
@@ -1030,9 +1030,9 @@ const PRODUCTS = {
   //   玛雅页卖 maya_full（SKU 不存在 → create-checkout 400 → 按钮点了没反应）。
   //   定价照**页面已经标给用户看的价**，保证显示价＝实收价，不新造价格。
   //   （UNLOCK_BY_CATEGORY 里 tibet_full/jyotish_full/maya_full 早就映射好了，加 SKU 即生效。）
-  tibet_full:      { name: '藏传 · 完整命盘解读', amount: 1490, amountCny: 9900, desc: '密瓦+帕卡+风马·十二章节完整藏历命盘' },
-  jyotish_full:    { name: '吠陀 · 完整星盘解读', amount: 1290, amountCny: 8900, desc: '真Lagna+月亮Rashi+Nakshatra+Vimshottari大运完整解析' },
-  maya_full:       { name: '玛雅 · 完整历法解读', amount: 990,  amountCny: 6900, desc: '神圣Kin+Tzolkin十三音+二十印记完整解读' },
+  tibet_full:      { name: '藏传 · 完整命盘解读', amount: 1490, amountCny: 3990, desc: '密瓦+帕卡+风马·十二章节完整藏历命盘' },
+  jyotish_full:    { name: '吠陀 · 完整星盘解读', amount: 1290, amountCny: 3990, desc: '真Lagna+月亮Rashi+Nakshatra+Vimshottari大运完整解析' },
+  maya_full:       { name: '玛雅 · 完整历法解读', amount: 990,  amountCny: 3990, desc: '神圣Kin+Tzolkin十三音+二十印记完整解读' },
   duanshi_full:    { name: '断事问卦完整解读',  amount: 2900,   amountCny: 5900,  desc: '六爻起卦·吉凶断事·行动建议' },
   astrology_full:  { name: '西占 · 一键全解锁（session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部西占 session：事业/爱情/性格天赋' },
   kyusei_full:     { name: '九星 · 一键全解锁（session 五折）', amount: 1199, amountCny: 4490, desc: '一键解锁全部九星 session：事业/恋爱/方位' },
@@ -1066,7 +1066,7 @@ const PRODUCTS = {
   hehun_full:      { name: '合婚 · 一键全解锁（3 个 session）', amount: 1199, amountCny: 4490, desc: '一键解锁全部合婚 session：性格/感情/婚期', amountKrw: 15900 },
   hehun_kr_full:   { name: '궁합 완전 분석',    amount: 1500,   amountCny: 3990,  desc: '궁합 완전 분석 보고서', amountKrw: 19900 },
   member_monthly:  { name: '月度会员',          amount: 990,   amountCny: 3900,  desc: 'Rún每日30句·每月1份完整报告·其他报告5折·每日运势', amountKrw: 9900 },
-  member_yearly:   { name: '年度会员',          amount: 6900,   amountCny: 29900, desc: '无限畅聊+全报告无限解锁' },
+  member_yearly:   { name: '年度会员',          amount: 6900,   amountCny: 19900, desc: '无限畅聊+全报告无限解锁' },
   member_lifetime: { name: '终身会员',          amount: 18800,  amountCny: 68800, desc: '永久畅享·全部报告·专属档案' },
   member_daily:    { name: '日会员',            amount: 299,    amountCny: 990,   desc: '24小时无限使用' },
   member_quarterly:{ name: '季会员',            amount: 2490,   amountCny: 6900,  desc: '三个月畅享' },
@@ -1076,9 +1076,9 @@ const PRODUCTS = {
   zhiyuan_full:    { name: '高考志愿完整报告',  amount: 1390,   amountCny: 3990,  desc: '八字选专业+数据填志愿完整版' },
   daliuren:        { name: '大六壬预测',        amount: 2900,   amountCny: 5900,  desc: '三传四课' },
   qimen:           { name: '奇门遁甲',          amount: 2900,   amountCny: 5900,  desc: '八门九星' },
-  bazi_trial:      { name: '体验命盘',          amount: 690,    amountCny: 1990,  desc: '快速简批（并入基础档）' },
+  bazi_trial:      { name: '体验命盘',          amount: 690,    amountCny: 990,  desc: '快速简批（并入基础档）' },
   report_unlock_a: { name: '解锁深度报告（第3-6章）', amount: 990, amountCny: 1990, desc: '感情+事业+财运+大运，共4章' },
-  report_unlock_b: { name: '解锁完整报告（第7-10章）', amount: 499, amountCny: 1990, desc: '流年+健康+开运+大师寄语，共4章' },
+  report_unlock_b: { name: '解锁完整报告（第7-10章）', amount: 499, amountCny: 990, desc: '流年+健康+开运+大师寄语，共4章' },
   report_annual:   { name: '年度订阅·全报告无限查', amount: 1490, amountCny: 9900, desc: '全部报告+每季度更新+开运日历' },
   joss_basic:      { name: '代烧·基础套餐',     amount: 4990,   amountCny: 19900, desc: '标准纸钱+元宝+祈福' },
   joss_premium:    { name: '代烧·尊享套餐',     amount: 24900,  amountCny: 99900, desc: '豪邸+纸钱+法器+视频' },
