@@ -43,6 +43,8 @@
   .cal-toggle{display:flex;gap:2px;background:var(--jade-wash);border-radius:9px;padding:2px;flex-shrink:0}
   .cal-toggle span{font-size:11px;padding:5px 10px;border-radius:7px;color:var(--ink-3);cursor:pointer;font-weight:500}
   .cal-toggle span.on{background:#fff;color:var(--jade);font-weight:600}
+  #leapWrap{display:flex;align-items:center;gap:5px;margin-top:7px;font-size:12px;color:var(--ink-3);cursor:pointer}
+  #leapWrap input{width:14px;height:14px;accent-color:var(--jade);margin:0}
   .row2{display:flex;gap:10px}.row2>*{flex:1}
   .tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px}
   .tile{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px 12px;text-align:center;cursor:pointer;transition:border-color .15s;position:relative}
@@ -82,7 +84,7 @@
   <div class="sec" id="secBirth">出生信息</div>
   <div class="field">
     <svg class="ic"><use href="#i-cal"/></svg>
-    <div class="fcol"><div class="lab" id="labDate">出生日期</div><div class="dsel"><select id="byear"></select><select id="bmonth"></select><select id="bday"></select></div></div>
+    <div class="fcol"><div class="lab" id="labDate">出生日期</div><div class="dsel"><select id="byear"></select><select id="bmonth"></select><select id="bday"></select></div><label id="leapWrap" style="display:none"><input type="checkbox" id="bleap"><span id="leapTxt">闰月</span></label></div>
     <div class="cal-toggle"><span class="on" data-cal="solar" id="calSolar">阳历</span><span data-cal="lunar" id="calLunar">农历</span></div>
   </div>
   <div class="field">
@@ -146,6 +148,7 @@
       next:'下一步 · 选择推演',
       hint:'信息仅用于生成你的报告',
       alertDate:'请填写出生日期', alertGender:'请选择性别', alertDateReal:'这一天不存在，请检查月份和日期',
+      calLeap:'闰月', alertLunarReal:'这个农历月只有 {d} 天，请检查日期', alertLunarFail:'农历换算失败，请检查网络后重试',
     },
     en:{
       docTitle:'Runae · Begin',
@@ -167,6 +170,7 @@
       next:'Next · Choose a reading',
       hint:'Only used to create your reading',
       alertDate:'Please enter your birth date', alertGender:'Please select your gender', alertDateReal:'That date doesn\'t exist — please check the month and day',
+      calLeap:'Leap month', alertLunarReal:'This lunar month has only {d} days — please check the date', alertLunarFail:'Couldn\'t convert the lunar date — please check your connection and try again',
     }
   };
   var t=T[LANG]||T.zh;
@@ -181,6 +185,7 @@
   document.getElementById('labDate').textContent=t.labDate;
   document.getElementById('calSolar').textContent=t.calSolar;
   document.getElementById('calLunar').textContent=t.calLunar;
+  document.getElementById('leapTxt').textContent=t.calLeap;
   document.getElementById('labTime').textContent=t.labTime;
   document.getElementById('btime').placeholder=t.timePh;
   document.getElementById('optTime').textContent=t.optTime;
@@ -207,33 +212,74 @@
   try { P = JSON.parse(localStorage.getItem('runae_profile')||'{}'); } catch(e){}
   (function(){
     var ys=document.getElementById('byear'),ms=document.getElementById('bmonth'),ds=document.getElementById('bday');
+    var leapWrap=document.getElementById('leapWrap'),leapChk=document.getElementById('bleap');
     var MON_EN=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     function opt(s,v,l){var o=document.createElement('option');o.value=v;o.textContent=l;s.appendChild(o);}
     opt(ys,'',t.yearPh); var ny=new Date().getFullYear(); for(var y=ny;y>=1920;y--)opt(ys,y,y);
     opt(ms,'',t.monthPh); for(var mo=1;mo<=12;mo++)opt(ms,mo,EN?MON_EN[mo-1]:(mo+'月'));
     opt(ds,'',t.dayPh); for(var d=1;d<=31;d++)opt(ds,d,EN?String(d):(d+'日'));
+    // 当前选的是阳历还是农历
+    function calOf(){ var s=document.querySelector('.cal-toggle span.on'); return s?s.dataset.cal:'solar'; }
+
     // 日期列表要跟着年月走。原来恒为 1..31，所以 2月31日/4月31日都能选出来，
     // 而引擎照单全收（儒略日公式会把它偏移成相邻的一天），排出「看着正常」的错盘。
+    //
+    // 🔴 农历月是 29 或 30 天，跟公历月天数不是一回事：一律按公历天数填，
+    //   农历用户要么选不出「三十」，要么选出该月不存在的日子。
+    //   农历那侧用服务端 /api/calendar/lunar 报的真天数（LCACHE），拿到前先按 30 兜底，
+    //   提交时还会再校验一次——真错了会被拦住并提示，不会静默存错日期。
+    var LCACHE={};
+    function lkey(y,m,leap){ return y+'-'+m+'-'+(leap?1:0); }
     function refillDays(){
-      var y=+ys.value, m=+ms.value, keep=ds.value;
-      var max=(y&&m)? new Date(y, m, 0).getDate() : 31;   // 下月第0天=本月最后一天
+      var y=+ys.value, m=+ms.value, keep=ds.value, max;
+      if(calOf()==='lunar'){
+        max=LCACHE[lkey(y,m,leapChk.checked)]||30;
+      }else{
+        max=(y&&m)? new Date(y, m, 0).getDate() : 31;   // 下月第0天=本月最后一天
+      }
       ds.innerHTML=''; opt(ds,'',t.dayPh);
       for(var dd=1;dd<=max;dd++) opt(ds,dd,EN?String(dd):(dd+'日'));
       if(keep && +keep<=max) ds.value=keep;               // 原来的选择还合法就留着
     }
-    ys.onchange=refillDays; ms.onchange=refillDays;
-    if(P.bdate){var pp=P.bdate.split('-');if(pp.length===3){ys.value=+pp[0];ms.value=+pp[1];ds.value=+pp[2];}}
-    refillDays();
+    // 拉这个农历月的真实天数 + 该年有没有闰月
+    function syncLunarMonth(){
+      var y=+ys.value, m=+ms.value;
+      if(calOf()!=='lunar'||!y||!m){ leapWrap.style.display='none'; return; }
+      fetch('/api/calendar/lunar?y='+y+'&m='+m+(leapChk.checked?'&leap=1':'')).then(function(r){return r.json();}).then(function(j){
+        if(!j||!j.ok) return;
+        LCACHE[lkey(y,m,leapChk.checked)]=j.monthDayCount;
+        // 只有这一年真有闰月、且正好是这个月，才给勾选框；否则连勾都不许留
+        if((j.leapMonth||0)===m){ leapWrap.style.display=''; } else { leapWrap.style.display='none'; leapChk.checked=false; }
+        refillDays();
+      }).catch(function(){
+        // 拉不到就按 30 天兜底，提交时会再校验一次并拦住——不在这里静默改成"看起来对"
+      });
+    }
+    function onYMChange(){
+      if(calOf()==='lunar'){ refillDays(); syncLunarMonth(); }
+      else { leapWrap.style.display='none'; leapChk.checked=false; refillDays(); }
+    }
+    ys.onchange=onYMChange; ms.onchange=onYMChange; leapChk.onchange=function(){ refillDays(); syncLunarMonth(); };
+
+    // 阳历/农历切换：换的是**日期的意思**，不是换个标签。
+    // 切过去要重填日期列表（农历月29/30天）并拉闰月信息。
+    document.querySelectorAll('.cal-toggle span').forEach(function(s){
+      s.onclick=function(){
+        document.querySelectorAll('.cal-toggle span').forEach(function(x){x.classList.remove('on');});
+        s.classList.add('on');
+        onYMChange();
+      };
+    });
+
+    // 回访免重填：bdate 现在恒为公历；用户当初填的是农历就把 bdate 显示回农历数字
+    var shown=(P.cal==='lunar'&&P.blunar)?P.blunar:P.bdate;
+    if(shown){var pp=shown.split('-');if(pp.length===3){ys.value=+pp[0];ms.value=+pp[1];ds.value=+pp[2];}}
+    if(P.cal){ document.querySelectorAll('.cal-toggle span').forEach(function(s){ s.classList.toggle('on', s.dataset.cal===P.cal); }); }
+    onYMChange();
   })();
   if(P.btime) document.getElementById('btime').value = P.btime;
   if(P.bcity) document.getElementById('bcity').value = P.bcity;
   if(P.gender) document.getElementById('gender').value = P.gender;
-  if(P.cal){ document.querySelectorAll('.cal-toggle span').forEach(function(s){ s.classList.toggle('on', s.dataset.cal===P.cal); }); }
-
-  // 阳历/农历
-  document.querySelectorAll('.cal-toggle span').forEach(function(s){
-    s.onclick=function(){ document.querySelectorAll('.cal-toggle span').forEach(function(x){x.classList.remove('on');}); s.classList.add('on'); };
-  });
   // 方向多选：回访时要还原上次勾的，不能让它落回页面默认的「事业/爱情」
   //   原来这处不恢复，于是老用户回到这页按老习惯直接点下一步，
   //   选择被静默改写成默认的两项并覆盖存档 —— 用户看不出自己选的东西变了。
@@ -261,24 +307,55 @@
   document.getElementById('next').onclick=function(){
     var _y=document.getElementById('byear').value,_m=document.getElementById('bmonth').value,_d=document.getElementById('bday').value;
     if(!_y||!_m||!_d){ alert(t.alertDate); return; }
-    // 兜底：就算日期列表被绕过（改 DOM、旧存档），也不许把不存在的日期送进引擎
-    if(+_d > new Date(+_y,+_m,0).getDate()){ alert(t.alertDateReal); return; }
+    var cal=document.querySelector('.cal-toggle span.on').dataset.cal;
+    // 兜底：就算日期列表被绕过（改 DOM、旧存档），也不许把不存在的日期送进引擎。
+    // 这条只在阳历下成立——农历月的天数不是公历月天数，交给服务端校验（见下）。
+    if(cal!=='lunar' && +_d > new Date(+_y,+_m,0).getDate()){ alert(t.alertDateReal); return; }
     // 🔴 性别决定大运顺逆：同一生辰，男命大运起于 8 岁、女命起于 4 岁，整条大运序列不同。
     //   原来没有占位项，<select> 默认选中第一项「女」，没注意到这个框的男性用户
     //   会拿到一份按女命排的报告，而页面上看起来一切正常。必须显式选择。
     if(!document.getElementById('gender').value){ alert(t.alertGender); return; }
-    var bdate=_y+'-'+('0'+_m).slice(-2)+'-'+('0'+_d).slice(-2);
+    var pad=function(n){ return ('0'+n).slice(-2); };
     var aspects=[]; document.querySelectorAll('#aspects .chip.on').forEach(function(c){ aspects.push(c.dataset.a); });
-    var cal=document.querySelector('.cal-toggle span.on').dataset.cal;
     var prof={
-      bdate:bdate, btime:document.getElementById('btime').value||'',
+      btime:document.getElementById('btime').value||'',
       bcity:document.getElementById('bcity').value||'', gender:document.getElementById('gender').value,
       cal:cal, aspects:aspects, hasPalm:!!photos.palm, hasFace:!!photos.face,
       ts:Date.now()
     };
-    localStorage.setItem('runae_profile', JSON.stringify(prof));
-    if(window.RunaeEv) RunaeEv('collect_submit');
-    location.href='pick.html?lang='+LANG;
+    function save(){
+      localStorage.setItem('runae_profile', JSON.stringify(prof));
+      if(window.RunaeEv) RunaeEv('collect_submit');
+      location.href='pick.html?lang='+LANG;
+    }
+    var btn=document.getElementById('next');
+
+    // 🔴 选农历必须在这里换算成公历再存。
+    //   原来是把农历数字原样存进 bdate，而下游每个报告页都把它当公历送去排盘——
+    //   用户亲手选了农历，拿到的却是一份错盘，页面上完全看不出来。
+    //   存盘后 bdate 恒为公历（下游零改动），原始农历另存 blunar 只作显示。
+    if(cal==='lunar'){
+      var leap=document.getElementById('bleap').checked?'&leap=1':'';
+      btn.disabled=true;
+      fetch('/api/calendar/lunar?y='+_y+'&m='+_m+'&d='+_d+leap).then(function(r){
+        return r.json().then(function(j){ return {s:r.status,j:j}; });
+      }).then(function(o){
+        btn.disabled=false;
+        if(o.s!==200 || !o.j || !o.j.ok || !o.j.solar){
+          // 换算不了就不许存盘——宁可当场说清楚，也不要静默存一个错日期
+          alert((o.j&&o.j.monthDayCount) ? t.alertLunarReal.replace('{d}',o.j.monthDayCount) : t.alertLunarFail);
+          return;
+        }
+        var s=o.j.solar;
+        prof.bdate=s.year+'-'+pad(s.month)+'-'+pad(s.day);
+        prof.blunar=_y+'-'+pad(_m)+'-'+pad(_d);
+        save();
+      }).catch(function(){ btn.disabled=false; alert(t.alertLunarFail); });
+      return;
+    }
+
+    prof.bdate=_y+'-'+pad(_m)+'-'+pad(_d);
+    save();
   };
 </script>
 <script src="/assets/js/ev.js" defer></script>

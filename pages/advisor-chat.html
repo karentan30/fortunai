@@ -169,9 +169,9 @@ function buildProfileContext(){
   if(!P||!P.bdate) return '';
   if(EN){
     var ge = P.gender==='male'?'Male':(P.gender==='female'?'Female':(P.gender||''));
-    var cale = P.cal==='lunar'?'lunar':'solar';
     var pe=[];
-    pe.push('Date of birth: '+P.bdate+' ('+cale+')');
+    // bdate 恒为公历（农历在 collect.html 提交时就换算掉了，原始农历另存 blunar）
+    pe.push('Date of birth: '+P.bdate+' (solar)'+(P.blunar?', entered as lunar '+P.blunar:''));
     if(P.btime) pe.push('Time of birth: '+P.btime);
     if(P.bcity) pe.push('Place of birth: '+P.bcity);
     if(ge) pe.push('Gender: '+ge);
@@ -179,9 +179,9 @@ function buildProfileContext(){
     return '[My chart information — please remember it and interpret for me based on it; do not ask for these again]\n'+pe.join('\n');
   }
   var g = P.gender==='male'?'男':(P.gender==='female'?'女':(P.gender||''));
-  var cal = P.cal==='lunar'?'农历':'阳历';
   var parts=[];
-  parts.push('出生日期：'+P.bdate+'（'+cal+'）');
+  // bdate 恒为公历（农历在 collect.html 提交时就换算掉了，原始农历另存 blunar）
+  parts.push('出生日期：'+P.bdate+'（阳历）'+(P.blunar?'，本人填的是农历 '+P.blunar:''));
   if(P.btime) parts.push('出生时间：'+P.btime);
   if(P.bcity) parts.push('出生地：'+P.bcity);
   if(g) parts.push('性别：'+g);

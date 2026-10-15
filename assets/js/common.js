@@ -240,8 +240,37 @@
     else _bootRestore();
   } catch (e) {}
 
+  // ── 存量修正：早期选「农历」的用户，bdate 存的是农历数字，全站却按公历排盘 ──
+  //   （collect.html 现在改成提交时就换算成公历，并另存 blunar。）
+  //   旧档判定：cal==='lunar' 且没有 blunar —— 新格式一定带 blunar，不会误伤新数据。
+  //   换算走服务端唯一真源。**只在换算成功时才改写 localStorage**：
+  //   失败（网络抖动 / 该农历月没有那一天）就原样不动，不留半截状态；
+  //   这类用户下次回到 collect.html 点「下一步」会自动换算正确。
+  function migrateLegacyLunarProfile() {
+    var P;
+    try { P = JSON.parse(localStorage.getItem('runae_profile') || '{}'); } catch (e) { return; }
+    if (!P || P.cal !== 'lunar' || P.blunar || P._lunarMigrated || !P.bdate) return;
+    var m = String(P.bdate).split('-');
+    if (m.length !== 3) return;
+    var q = '/api/calendar/lunar?y=' + parseInt(m[0], 10) + '&m=' + parseInt(m[1], 10) + '&d=' + parseInt(m[2], 10);
+    fetch(q).then(function (r) { return r.json(); }).then(function (j) {
+      if (!j || !j.ok || !j.solar) return;
+      var pad = function (n) { return ('0' + n).slice(-2); };
+      P.blunar = P.bdate;                                        // 保留用户当初填的农历，供显示
+      P.bdate = j.solar.year + '-' + pad(j.solar.month) + '-' + pad(j.solar.day);
+      P._lunarMigrated = 1;                                      // 已换算，不再重复
+      localStorage.setItem('runae_profile', JSON.stringify(P));
+    }).catch(function () {});
+  }
+
+  try {
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', migrateLegacyLunarProfile);
+    else migrateLegacyLunarProfile();
+  } catch (e) {}
+
   window.SY = { showToast: showToast, initTheme: initTheme, toggleTheme: toggleTheme,
                 storePaidInput: storePaidInput, readPaidInput: readPaidInput, api: api,
                 copyText: copyText, getRefCode: getRefCode, withRef: withRef, captureRef: captureRef,
-                initMembership: initMembership, snapshotForm: snapshotForm, restoreForm: restoreForm };
+                initMembership: initMembership, snapshotForm: snapshotForm, restoreForm: restoreForm,
+                migrateLegacyLunarProfile: migrateLegacyLunarProfile };
 })(window);

@@ -34,12 +34,32 @@ test('日期下拉必须随年月收敛，且提交时兜底校验', () => {
   // 收敛：按年月算当月天数重建列表
   assert.match(SRC, /new Date\(y,\s*m,\s*0\)\.getDate\(\)/,
     '日期列表不再随年月收敛 —— 2月31日/4月31日又能选出来了');
-  assert.match(SRC, /ys\.onchange\s*=\s*refillDays|onchange\s*=\s*refillDays/,
+  assert.match(SRC, /ys\.onchange=onYMChange|ys\.onchange\s*=\s*refillDays/,
     '改了年/月没有重算日期列表');
-  // 兜底：绕过下拉（改 DOM、旧存档）也不能把不存在的日期送进引擎
-  assert.match(SRC, /if\(\+_d\s*>\s*new Date\(\+_y,\+_m,0\)\.getDate\(\)\)/,
-    '提交时少了「这一天是否存在」的兜底校验');
+  // 兜底：绕过下拉（改 DOM、旧存档）也不能把不存在的日期送进引擎。
+  // 现在这条只管阳历——农历月的天数不等于公历月天数，农历那侧改由服务端校验（见下一条）。
+  assert.match(SRC, /cal!=='lunar'\s*&&\s*\+_d\s*>\s*new Date\(\+_y,\+_m,0\)\.getDate\(\)\)/,
+    '提交时少了阳历的「这一天是否存在」兜底校验');
   assert.match(SRC, /alertDateReal:/, '少了非法日期的提示文案');
+});
+
+// ── 农历开关必须真的换算，不能又把农历数字当公历存 ──────────────────────
+// 原缺陷：collect.html 有「阳历/农历」开关，但全站没有任何地方换算 —— 选了农历的用户
+// 被按同一串数字当公历排盘，页面上完全看不出来。这里钉死换算这一步还在。
+test('选农历必须换算成公历再存盘（不能原样存数字）', () => {
+  assert.match(SRC, /\/api\/calendar\/lunar\?y=/,
+    '农历不再走服务端换算 —— 用户选农历会拿到一份按同样数字当公历排的错盘');
+  assert.match(SRC, /prof\.bdate=s\.year\+'-'\+pad\(s\.month\)/,
+    '换算结果没有写回 prof.bdate');
+  assert.match(SRC, /prof\.blunar=_y\+'-'\+pad\(_m\)/,
+    '没保留用户当初填的农历（显示要用，也用于存量迁移判断）');
+  // 换算失败必须拦住，不许静默存一个错日期
+  assert.match(SRC, /if\(o\.s!==200 \|\| !o\.j \|\| !o\.j\.ok \|\| !o\.j\.solar\)/,
+    '换算失败的分支没了 —— 会把错日期静默存盘');
+  assert.match(SRC, /alertLunarReal|alertLunarFail/, '少了农历换算失败的提示文案');
+  // 农历月的天数是 29/30，不能再用公历月天数填「日」下拉
+  assert.match(SRC, /LCACHE\[lkey\(y,m,leapChk\.checked\)\]/,
+    '农历模式的「日」下拉又回去按公历月天数填了');
 });
 
 test('性别校验和「记住上次选择」都还在（这几条是本轮一起立起来的）', () => {

@@ -8,15 +8,50 @@ exports.runAllTests = runAllTests;
 exports.formatChartResult = formatChartResult;
 const bazi_1 = require("./bazi");
 const ziwei_standard_1 = require("./ziwei-standard");
+const lunar_typescript_1 = require("../vendor/lunar-typescript");
+/**
+ * 农历输入 → 公历。排盘全程按公历计算，只在这里换算一次。
+ *
+ * 🔴 为什么必须有这个函数：`isLunar` 原来是**死字段**——createBaziChart /
+ *   createZiweiChart 都直接 `Solar.fromYmdHms(birthInfo.year, ...)`，把农历数字
+ *   当公历算。不报错、不警告，静默出错误命盘（月柱、日柱、大运全错）。
+ *   实例：农历1991年八月廿八 06:00 正解是 `辛未 丁酉 戊申 乙卯`，
+ *   按旧行为算成阳历 1991-08-28 → 月柱错成 `丙申`。
+ *
+ * 约定：month 为负表示闰月（lunar-typescript 约定，如 -4 = 闰四月）。
+ *   农历日期不存在时 Lunar.fromYmd 会抛错，这里让它继续抛——
+ *   宁可报错，也不要静默滚到下个月（那又是一次"看起来正常"的错盘）。
+ */
+function normalizeBirthInfo(birthInfo) {
+    if (!birthInfo || !birthInfo.isLunar)
+        return birthInfo;
+    let solar;
+    try {
+        solar = lunar_typescript_1.Lunar.fromYmd(birthInfo.year, birthInfo.month, birthInfo.day).getSolar();
+    }
+    catch (e) {
+        throw new Error(`农历日期不存在：${birthInfo.year}年${birthInfo.month}月${birthInfo.day}日` +
+            `（闰月请用负数月份，如 -4 表示闰四月）`);
+    }
+    return Object.assign({}, birthInfo, {
+        year: solar.getYear(),
+        month: solar.getMonth(),
+        day: solar.getDay(),
+        isLunar: false,
+    });
+}
+exports.normalizeBirthInfo = normalizeBirthInfo;
 /**
  * 创建完整的排盘（八字 + 紫微斗数）
- * @param birthInfo 生辰信息
+ * @param birthInfo 生辰信息（isLunar=true 时按农历输入，内部换算为公历）
  * @returns 完整排盘结果
  */
 function createChart(birthInfo) {
     try {
-        const bazi = (0, bazi_1.createBaziChart)(birthInfo);
-        const ziwei = (0, ziwei_standard_1.createZiweiChart)(birthInfo);
+        // 农历入口统一在此换算；下游（含 ziwei 里的虚岁/大运年份）一律只认公历
+        const solarInfo = normalizeBirthInfo(birthInfo);
+        const bazi = (0, bazi_1.createBaziChart)(solarInfo);
+        const ziwei = (0, ziwei_standard_1.createZiweiChart)(solarInfo);
         return {
             bazi,
             ziwei
