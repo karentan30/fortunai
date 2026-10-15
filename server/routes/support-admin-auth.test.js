@@ -28,7 +28,14 @@ const express = require('express');
 const app = express();
 app.use(express.json());
 app.use('/api', require('./support'));
+
+// 🔴 必须在 require 之后再设一次：support.js 现在会 require ../lib/llm，而 llm.js 顶部
+//   跑 `dotenv.config({override:true})`，模块加载的那一刻会把上面第19行设的值**覆盖**成
+//   服务器 .env 里的真实 ADMIN_TOKEN。于是「正确 token 放行」那条会拿测试 token 去对
+//   生产 token，必然 403 转红——而线上后台其实好着（.env 里 ADMIN_TOKEN 有真值）。
+//   鉴权是逐请求读 process.env 的，所以在起服务之后重设同样有效，且仍是走真实代码路径。
 const server = app.listen(0);
+process.env.ADMIN_TOKEN = ADMIN;
 const BASE = `http://127.0.0.1:${server.address().port}`;
 test.after(() => server.close());
 

@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const fs = require('fs');
 const path = require('path');
+const llm = require('../lib/llm');   // 1009: 多 provider 兜底链（qwen→deepseek→groq），别再硬编码单一 provider
 
 // 可用 TICKET_FILE 覆盖：测试要能往临时文件里跑，不能真写线上工单库
 const TICKET_FILE = process.env.TICKET_FILE || '/www/lumee/data/support_tickets.jsonl';
@@ -234,9 +235,6 @@ router.post('/support-chat', async function(req, res) {
     if (!message) return res.status(400).json({ error: '消息不能为空' });
     if (!SYSTEM_PROMPTS[product]) product = 'lumee';
 
-    var apiKey = process.env.DEEPSEEK_API_KEY || process.env.DS_KEY;
-    if (!apiKey) return res.status(500).json({ reply: '客服暂时不可用，请加微信：mylumee' });
-
     var messages = [{ role: 'system', content: SYSTEM_PROMPTS[product] }];
     var recentHistory = history.slice(-6);
     recentHistory.forEach(function(h) {
@@ -244,23 +242,18 @@ router.post('/support-chat', async function(req, res) {
     });
     messages.push({ role: 'user', content: message });
 
-    var fetch = global.fetch || require('node-fetch');
-    var response = await fetch('https://api.deepseek.com/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        messages: messages,
-        max_tokens: 300,
-        temperature: 0.7
-      })
-    });
-
-    if (!response.ok) throw new Error('DeepSeek API error: ' + response.status);
-
-    var data = await response.json();
-    var reply = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '请加微信客服：mylumee';
-    res.json({ reply: reply });
+    // 🔴 1009：原来这里硬编码 DeepSeek 一家。实测那把 key **余额为 0**（402 Insufficient Balance），
+    // 于是客服每次都走 catch 兜底「暂时无法连接」。改用 lib/llm 的多 provider 兜底链
+    // （LLM_PRIORITY=qwen,deepseek,groq），一家挂了自动切下一家。
+    // 也修掉原来 API key 缺失时返回 500 的问题（用户向接口不该 5xx）。
+    var reply;
+    try {
+      reply = await llm.deepseekChat(messages, { maxTokens: 300, temperature: 0.7, timeout: 30000 });
+    } catch (e) {
+      console.error('[support-chat] LLM 全链失败:', e.message);
+      return res.json({ reply: '暂时无法连接，请加微信客服：mylumee' });
+    }
+    res.json({ reply: reply || '请加微信客服：mylumee' });
   } catch (e) {
     console.error('[support-chat]', e.message);
     res.json({ reply: '暂时无法连接，请加微信客服：mylumee' });

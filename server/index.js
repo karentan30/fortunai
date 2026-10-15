@@ -33,6 +33,13 @@ var ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'http://47.242.80.65:3021',
   'https://shenyuan.mylumee.cn',
+  // 1009: Lumee H5 的共享客服组件打的是本站 /api/support-chat。原白名单没有 mylumee 域，
+  // cors 回调抛 Not allowed by CORS → 全局错误处理转 500 → 客服永远只回本地兜底文案。
+  // （1009 只在服务器上热改过，1015 收进仓库，免得下次 reset --hard 把它冲掉）
+  'https://mylumee.cn',
+  'https://www.mylumee.cn',
+  'https://mylumee.app',
+  'https://www.mylumee.app',
   'https://shenyuan.vercel.app',
   'https://shenyuan-fabulousslim.vercel.app',
   'https://shenyuan-karentan30-fabulousslim.vercel.app',
