@@ -25,9 +25,21 @@ test('回访必须还原方向多选（不能被页面默认值顶掉）', () =>
     '方向不再从存档还原了 —— 老用户的选择会被静默改写成「事业/爱情」');
 });
 
-test('回访必须还原照片解锁态（否则会把存档覆盖成未解锁）', () => {
-  assert.match(SRC, /if\(P\.hasPalm\)\s*photos\.palm/, '手相解锁态不再还原');
-  assert.match(SRC, /if\(P\.hasFace\)\s*photos\.face/, '面相解锁态不再还原');
+test('面相/手相照片只在对应报告页上传，资料页不假解锁', () => {
+  assert.doesNotMatch(SRC, /data-photo=["'](?:palm|face)["']/,
+    '资料页不应收集不会随流程上传的面相/手相图片');
+  assert.doesNotMatch(SRC, /hasPalm\s*:|hasFace\s*:/,
+    '资料页不应保存无法证明照片已上传的解锁标记');
+  const PICK = fs.readFileSync(path.join(__dirname, '..', '..', 'pages', 'pick.html'), 'utf8');
+  assert.doesNotMatch(PICK, /need:'has(?:Palm|Face)'/,
+    '面相/手相不应被虚假的资料页上传状态锁住');
+  assert.match(PICK, /Photo needed next step/,
+    '选读页必须告知面相/手相将在报告页上传照片');
+  for (const [file, key] of [['report-face.html', 'sy_last_mianxiang'], ['report-palm.html', 'sy_last_shouxiang']]) {
+    const report = fs.readFileSync(path.join(__dirname, '..', '..', 'pages', file), 'utf8');
+    assert.match(report, new RegExp(`sessionStorage\\.setItem\\('${key}'`), `${file} 付费恢复图片应限于当前标签页`);
+    assert.match(report, new RegExp(`sessionStorage\\.removeItem\\('${key}'`), `${file} 应在恢复后清理图片副本`);
+  }
 });
 
 test('日期下拉必须随年月收敛，且提交时兜底校验', () => {

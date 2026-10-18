@@ -164,7 +164,7 @@
     tileSub:'Fingers relaxed and open · palm facing the camera<br>Good lighting, so every line is clearly visible',
     pickBtn:'📷 Take photo / Choose from album',
     hintText:'Use your dominant hand (right for most people). Open your palm flat with fingers naturally spread, in natural light — the clearer the lines, the richer the reading.',
-    privacyText:'<b>Privacy:</b> Your photo is sent only to our secure AI for feature analysis, then <b>discarded immediately</b> — never stored, never used for training, never shared. We keep only the text reading, not your image. Palm photos are biometric information and are used solely for this session.',
+    privacyText:'<b>Privacy:</b> Your photo is sent to our analysis service. A resized copy is held temporarily in this browser tab so we can restore your reading after checkout; closing the tab clears it. Palm photos are sensitive personal information.',
     aiNoteText:'AI visual observation · for self-reflection and entertainment only — a mirror to see yourself, never a prediction of lifespan, health, or fate. You write your own future.',
     agTitle:'Let\'s confirm first',
     agBody:'A palm reading uses a photo of your palm — which is <b>personal (biometric) information</b>. This experience is for adults only.<br><br>Please confirm you are <b>18 or older</b>, and that this is your own hand.',
@@ -189,7 +189,7 @@
     advH:'More than a report<br>an advisor who actually knows you',
     advLi:['Your daily horoscope and annual forecast, refreshed every day','Ask follow-ups anytime in chat — like a teacher on call','Eastern & Western astrology plus face and palm reading — the same you, seen from every angle','Remembers your chart and your history — the more you use it, the better it knows you'],
     advBtn:'Subscribe to Runae Advisor · {P} / mo',
-    footNote:'AI-generated · for reflection and entertainment only · palm lines change with mindset and experience, not fatalism · you write your own future. Your photo was discarded after analysis.',
+    footNote:'AI-generated · for reflection and entertainment only · palm lines change with mindset and experience, not fatalism · you write your own future. Your resized photo is held temporarily in this browser tab to restore your reading after checkout.',
     jumping:'Opening checkout…'
   } : {
     title:'Runae · 手相报告',
@@ -200,7 +200,7 @@
     tileSub:'五指舒展 · 掌心正对镜头<br>光线充足，让每条掌纹都清晰可见',
     pickBtn:'📷 拍照 / 从相册选',
     hintText:'用你的主手（多数人是右手）。手掌摊平、五指自然张开，在自然光下——掌纹越清晰，解读越丰富。',
-    privacyText:'<b>隐私：</b>你的照片仅发送给我们的安全 AI 做特征分析，随后<b>立即丢弃</b>——绝不存储、绝不用于训练、绝不分享。我们只保留文字解读，不保留你的图片。手掌照片属于生物识别信息，仅用于本次会话。',
+    privacyText:'<b>隐私：</b>照片会发送至分析服务。为便于支付后恢复报告，压缩后的副本会暂存在当前浏览器标签页；关闭标签页后清除。手掌照片属于敏感个人信息。',
     aiNoteText:'AI 视觉观察 · 仅供自我探索与娱乐——是照见自己的镜子，绝非对寿命、健康或命运的预测。你自己书写自己的未来。',
     agTitle:'先确认一下',
     agBody:'手相解读需要用到你的手掌照片——属于<b>个人（生物识别）信息</b>。本体验仅面向成年人。<br><br>请确认你已<b>年满 18 岁</b>，且这是你本人的手。',
@@ -225,7 +225,7 @@
     advH:'不止一份报告<br>是一个懂你的命理顾问',
     advLi:['每日运势与流年动态，天天更新','AI 对话随时追问深聊，像身边的老师','中西命理 + 面相手相，交叉印证同一个你','记得你的盘与历史，越用越懂你'],
     advBtn:'订阅 Runae 顾问 · {P} / 月',
-    footNote:'AI 生成 · 仅供反思与娱乐 · 掌纹随心态与经历变化，不宿命论 · 你自己书写自己的未来。你的照片在分析后已丢弃。',
+    footNote:'AI 生成 · 仅供反思与娱乐 · 掌纹随心态与经历变化，不宿命论 · 你自己书写自己的未来。压缩后的照片会暂存在当前浏览器标签页，以便支付后恢复报告。',
     jumping:'跳转支付…'
   };
 
@@ -357,7 +357,7 @@
           var cv=document.createElement('canvas'); cv.width=cw; cv.height=ch;
           cv.getContext('2d').drawImage(img,0,0,cw,ch);
           var out=cv.toDataURL('image/jpeg',0.72).split(',')[1];
-          if(out) localStorage.setItem('sy_last_shouxiang', JSON.stringify({base64:out, mimeType:'image/jpeg'}));
+          if(out) sessionStorage.setItem('sy_last_shouxiang', JSON.stringify({base64:out, mimeType:'image/jpeg'}));
         }catch(e){}
       };
       img.onerror=function(){};
@@ -450,7 +450,7 @@
 
   function fail(msg, allowRetry){
     var btn = allowRetry
-      ? '<button class="cta" style="max-width:220px;margin:14px auto 0" onclick="location.reload()">'+esc(T.changePhoto)+'</button>'
+      ? '<button class="cta" style="max-width:220px;margin:14px auto 0" onclick="sessionStorage.removeItem(\'sy_last_shouxiang\');location.reload()">'+esc(T.changePhoto)+'</button>'
       : '<button class="cta" style="max-width:200px;margin:14px auto 0" onclick="location.reload()">'+esc(T.retry)+'</button>';
     document.getElementById('body').innerHTML='<div class="err">'+esc(msg)+'<br><br>'+btn+'</div>';
   }
@@ -473,7 +473,7 @@
   // ── 付费回流：?paid=1 → 用上次的手掌照重跑（此时 tier 已升级，locked=false）──
   (function handlePaidReturn(){
     if(location.search.indexOf('paid=1')<0) return;
-    var saved=null; try{ saved=JSON.parse(localStorage.getItem('sy_last_shouxiang')||'null'); }catch(e){}
+    var saved=null; try{ saved=JSON.parse(sessionStorage.getItem('sy_last_shouxiang')||'null'); sessionStorage.removeItem('sy_last_shouxiang'); }catch(e){}
     if(window.history.replaceState) window.history.replaceState({},'','/pages/report-palm.html?lang='+LANG);
     if(!saved||!saved.base64) return;
     sessionStorage.setItem('runae_age_ok','1'); // 付费用户已过年龄门，回流不再拦

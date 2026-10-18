@@ -6,7 +6,9 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env'), override: true });
 
 const VISION_URL = process.env.QWEN_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions';
-const VISION_MODEL = process.env.VISION_MODEL || 'qwen-vl-max';
+// Use a versioned model ID; legacy qwen-vl aliases are no longer available in
+// the current DashScope model catalog. Keep an override for staged migrations.
+const VISION_MODEL = process.env.VISION_MODEL || 'qwen3-vl-plus';
 
 /**
  * 内部：调 Qwen-VL vision，返回文字描述；失败返回 null。

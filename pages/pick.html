@@ -92,7 +92,7 @@
       back:'返回',
       eyebrow:'用你刚填的信息',
       title:'想算哪一种',
-      subBase:'灰色的，补张照片即可解锁。',
+      subBase:'面相和手相会在下一步提示上传照片。',
       subSorted:function(sel){ return '按你选的「'+sel+'」排序。'; },
       linkAdvisor:'💬 问 AI 顾问',
       go:'先看八字命理 →',
@@ -117,7 +117,7 @@
       back:'Back',
       eyebrow:'Based on what you just told us',
       title:'Which reading?',
-      subBase:'Grayed out? Add a photo to unlock.',
+      subBase:'Face and palm readings ask for a photo on the next step.',
       subSorted:function(sel){ return 'Ordered around what matters most to you: '+sel+'. '; },
       linkAdvisor:'💬 Ask the AI advisor',
       go:'Start with my BaZi reading →',
@@ -132,8 +132,8 @@
         tarot:{name:'Tarot',desc:"Whatever's on your mind right now — pull a card",tag:'Ready now'},
         astro:{name:'Astrology',desc:'Your Western natal chart · personality & path',tag:'Uses your birth details'},
         daily:{name:'Daily Horoscope',desc:"Today's dos and don'ts",tag:'Updated daily'},
-        palm:{name:'Palm Reading',desc:'What the lines in your palm reveal',tag:'Add palm photo to unlock'},
-        face:{name:'Face Reading',desc:'The story written in your features',tag:'Add face photo to unlock'}
+        palm:{name:'Palm Reading',desc:'What the lines in your palm reveal',tag:'Photo needed next step'},
+        face:{name:'Face Reading',desc:'The story written in your features',tag:'Photo needed next step'}
       }
     }
   };
@@ -169,8 +169,8 @@
     {id:'tarot',name:M.tarot.name,glyph:'m-tarot',desc:M.tarot.desc,tag:M.tarot.tag, aspect:'love'},
     {id:'astro',name:M.astro.name,glyph:'m-astro',desc:M.astro.desc,tag:M.astro.tag},
     {id:'daily',name:M.daily.name,glyph:'m-daily',desc:M.daily.desc,tag:M.daily.tag},
-    {id:'palm', name:M.palm.name, glyph:'m-palm', desc:M.palm.desc, tag:M.palm.tag, need:'hasPalm'},
-    {id:'face', name:M.face.name, glyph:'m-face', desc:M.face.desc, tag:M.face.tag, need:'hasFace'}
+    {id:'palm', name:M.palm.name, glyph:'m-palm', desc:M.palm.desc, tag:M.palm.tag},
+    {id:'face', name:M.face.name, glyph:'m-face', desc:M.face.desc, tag:M.face.tag}
   ];
   // 按方向排序：love 选中→合婚/塔罗提前；bazi 永远置顶
   var loveOn=aspects.indexOf('love')>-1;
@@ -178,10 +178,14 @@
   if(loveOn){ ordered.sort(function(a,b){ if(a.top)return -1;if(b.top)return 1; var ap=(a.aspect==='love')?0:1, bp=(b.aspect==='love')?0:1; return ap-bp; }); }
 
   var grid=document.getElementById('grid');
+  var preferred=new URLSearchParams(location.search).get('method');
+  var PG={bazi:'report-v2.html',hehun:'report-hehun.html',tarot:'report-tarot.html',astro:'report-astrology.html',daily:'report-daily.html',palm:'report-palm.html',face:'report-face.html'};
+  var chosen=METHODS.find(function(m){return m.id===preferred;});
+  if(chosen){document.getElementById('go').textContent=(EN?'Start with ':'先看')+chosen.name+' →';}
   ordered.forEach(function(m){
     var locked = m.need && !P[m.need];
     var el=document.createElement('div');
-    el.className='mcard'+(m.top?' top rec':'')+((m.aspect&&aspects.indexOf(m.aspect)>-1&&!m.top)?' rec':'')+(locked?' lock':'');
+    el.className='mcard'+(m.top?' top rec':'')+((m.aspect&&aspects.indexOf(m.aspect)>-1&&!m.top)?' rec':'')+(m.id===preferred?' rec':'')+(locked?' lock':'');
     var tagHtml = locked
       ? '<div class="tag"><svg class="ic" style="width:13px;height:13px"><use href="#i-lock"/></svg>'+m.tag+'</div>'
       : (m.tag? '<div class="tag">'+m.tag+'</div>':'');
@@ -194,16 +198,16 @@
       if(locked){ if(confirm(m.need==='hasPalm'?t.confirmPalm:t.confirmFace)) location.href='collect.html'+Q; return; }
       localStorage.setItem('runae_method', m.id);
       if(window.RunaeEv) RunaeEv('method_pick',{m:m.id});
-      var PG={bazi:'report-v2.html',hehun:'report-hehun.html',tarot:'report-tarot.html',astro:'report-astrology.html',daily:'report-daily.html',palm:'report-palm.html',face:'report-face.html'};
       location.href=(PG[m.id]||'report-v2.html')+Q;
     };
     grid.appendChild(el);
   });
 
   document.getElementById('go').onclick=function(){
-    localStorage.setItem('runae_method','bazi');
-    if(window.RunaeEv) RunaeEv('method_pick',{m:'bazi'});
-    location.href='report-v2.html'+Q;
+    var id=chosen?chosen.id:'bazi';
+    localStorage.setItem('runae_method',id);
+    if(window.RunaeEv) RunaeEv('method_pick',{m:id});
+    location.href=(PG[id]||'report-v2.html')+Q;
   };
 </script>
 <script src="/assets/js/ev.js" defer></script>

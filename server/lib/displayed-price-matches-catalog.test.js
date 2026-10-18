@@ -72,6 +72,13 @@ const CASES = [
   { file: 'astrology-en.html', product: 'member_monthly', must: ['$9.90'],  forbid: [/\$6\.90/] },
   // 定价页把「完整报告」写成 $9.90/¥9.90，但页内 CTA 落到 bazi.html（实收 $11.99 / ¥44.90）
   { file: 'pricing.html',     product: 'bazi_full',  must: ['$11.99', '¥44.90'], forbid: [/\$9\.90/, /¥9\.90/] },
+  // ── English Runae launch refresh: EN price page uses the same live catalog SKUs ──
+  { file: 'pricing-en.html', product: 'bazi_full',   must: ['$11.99'], forbid: [] },
+  { file: 'pricing-en.html', product: 'tarot_3',     must: ['$9'],      forbid: [] },
+  { file: 'pricing-en.html', product: 'hehun_full',  must: ['$11.99'], forbid: [] },
+  { file: 'pricing-en.html', product: 'member_monthly', must: ['$9.90'], forbid: [] },
+  { file: 'pricing-en.html', product: 'member_quarterly', must: ['$24.90'], forbid: [] },
+  { file: 'pricing-en.html', product: 'member_yearly', must: ['$69'], forbid: [] },
   // 符文页解锁写 ¥9.9，实收 bazi_basic ¥19.90（USD $9.90 那半是对的）
   { file: 'rune.html',        product: 'bazi_basic', must: ['$9.90', '¥19.90'], forbid: [/¥9\.9[^0-9]/] },
 ];

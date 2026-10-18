@@ -106,9 +106,11 @@
   .crossread .cx .cn{font-size:14.5px;font-weight:600;color:var(--ink);font-family:var(--serif)}
   .crossread .cx .ch{font-size:12.5px;color:var(--ink-2);line-height:1.5;margin-top:3px}
   .crossread .cx .cg{margin-left:auto;align-self:center;stroke:var(--ink-3);width:16px;height:16px;flex-shrink:0}
+  .agegate{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.68);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:24px}.agegate.on{display:flex}.agegate .box{background:var(--card);border:1px solid var(--gold-soft);border-radius:20px;max-width:340px;width:100%;padding:26px 22px;text-align:center}.agegate h3{font-family:var(--serif);font-size:21px;margin-bottom:10px}.agegate p{font-size:13px;color:var(--ink-2);line-height:1.7;margin-bottom:18px}.agegate button{width:100%;min-height:46px;border-radius:12px;font-size:14px;margin-top:8px}.agegate .ag-yes{background:var(--gold);border:0;color:#111}.agegate .ag-no{background:transparent;border:1px solid var(--line-2);color:var(--ink)}
 </style>
 </head>
 <body>
+<div id="ageGate" class="agegate"><div class="box"><h3 id="ageTitle">Confirm your age</h3><p id="ageBody">This reading uses a face photo and is for adults only. Please confirm you are 18 or older and the photo is yours.</p><button class="ag-yes" id="ageYes" onclick="passFaceAgeGate()">I am 18 or older · Continue</button><button class="ag-no" id="ageNo" onclick="closeFaceAgeGate()">Under 18 · Go back</button></div></div>
 <div class="wrap">
   <div class="bar">
     <div class="nav-back" onclick="goBack()"><svg class="ic" style="width:15px;height:15px"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="navBack">返回</span></div>
@@ -168,6 +170,7 @@
   // ── 中英文案表 ──
   var T = EN ? {
     title:'Runae · Face Reading',
+    ageTitle:'Confirm your age', ageBody:'This reading uses a face photo and is for adults only. Please confirm you are 18 or older and the photo is yours.', ageYes:'I am 18 or older · Continue', ageNo:'Under 18 · Go back',
     navBack:'Back', step:'Face · Ma Yi Physiognomy',
     upK:'FACE READING · Physiognomy',
     upH:'One front-facing photo<br>reveals your three-zone structure',
@@ -176,11 +179,11 @@
     dropHint:'Even lighting · front-facing · unobstructed',
     capAlbum:'Choose from album',
     capCamera:'Take a photo',
-    trust1:'Twelve palaces', trust2:'Three zones & five peaks', trust3:'Photo not stored',
+    trust1:'Twelve palaces', trust2:'Three zones & five peaks', trust3:'Temporary tab storage',
     goReady:'Start face reading <small>· ~25 sec</small>',
     goIdle:'Start reading <small>· ~25 sec</small>',
     goBusy:'Analyzing…',
-    discTop:'Your photo is used only for this AI visual observation and is discarded immediately after — never stored.<br>AI-generated content · for entertainment reference only, not medical, legal, or financial advice.',
+    discTop:'Your photo is sent to our analysis service. A resized copy stays temporarily in this browser tab so we can restore your reading after checkout; closing the tab clears it.<br>AI-generated content · for entertainment reference only, not medical, legal, or financial advice.',
     loadMsgInit:'Tracing your three-zone structure and reading complexion and spirit…',
     loadLines:['Tracing the outline of your three zones…','Reading the glow between your brows and the spirit in your eyes…','Studying the nose for wealth, the brow for career…','Drawing it all together across the twelve palaces…','Putting it to paper — one moment…'],
     needPhoto:'Please upload a clear front-facing photo first',
@@ -206,7 +209,7 @@
     advLi:['Face & palm reading plus BaZi & Zi Wei — the same you, seen from every angle','Your daily horoscope and annual forecast, refreshed every day','Ask follow-ups anytime in chat — like a teacher on call','Remembers your chart and your history — the more you use it, the better it knows you'],
     advBtn:'Subscribe to Runae Advisor · {P} / mo',
     resetLine:'↻ Try another photo · read again',
-    footdisc:'The face reflects the heart, the spirit shapes the qi. Physiognomy shows your present pattern and tendencies, not a fixed fate; for entertainment reference only, please don\'t take it too seriously. Your photo was discarded after this analysis, never stored.',
+    footdisc:'The face reflects the heart, the spirit shapes the qi. Physiognomy shows your present pattern and tendencies, not a fixed fate; for entertainment reference only. Your resized photo is held temporarily in this browser tab to restore your reading after checkout.',
     ckCn:'Please pay via WeChat / Alipay (coming soon).',
     ckFail:'Couldn’t open checkout — please try again.',
     ckNet:'Network error — please try again.',
@@ -215,6 +218,7 @@
     retry:'Retry'
   } : {
     title:'Runae · 面相报告',
+    ageTitle:'请先确认', ageBody:'面相解读需要使用面部照片，仅面向成年人。请确认你已年满 18 岁，且照片是你本人的。', ageYes:'我已满 18 岁 · 继续', ageNo:'未满 18 岁 · 返回',
     navBack:'返回', step:'面相 · 麻衣神相',
     upK:'FACE READING · 面相',
     upH:'一张正脸<br>读出你的三停格局',
@@ -223,11 +227,11 @@
     dropHint:'光线均匀 · 正面 · 无遮挡',
     capAlbum:'从相册选择',
     capCamera:'拍照上传',
-    trust1:'相理十二宫', trust2:'三停五岳逐读', trust3:'照片不留存',
+    trust1:'相理十二宫', trust2:'三停五岳逐读', trust3:'本标签页临时保存',
     goReady:'开始面相解读 <small>· 约需 25 秒</small>',
     goIdle:'开始解读 <small>· 约需 25 秒</small>',
     goBusy:'分析中…',
-    discTop:'照片仅用于本次 AI 视觉观察，分析后即刻丢弃、不作留存。<br>AI 生成内容 · 仅供娱乐参考，不构成医疗、法律或财务建议。',
+    discTop:'照片会发送至分析服务。为便于支付后恢复报告，压缩后的副本会暂存在当前浏览器标签页；关闭标签页后清除。<br>AI 生成内容 · 仅供娱乐参考，不构成医疗、法律或财务建议。',
     loadMsgInit:'AI 正观三停轮廓、察气色神韵…',
     loadLines:['AI 观察三停轮廓…','察印堂气色、读命宫神韵…','审鼻准财星、审官禄开阔…','以相理十二宫归纳格局…','落笔成卷，请稍候…'],
     needPhoto:'请先上传一张清晰的正面照片',
@@ -253,7 +257,7 @@
     advLi:['面相手相 + 八字紫微，交叉印证同一个你','每日运势与流年动态，天天更新','AI 对话随时追问深聊，像身边的老师','记得你的盘与历史，越用越懂你'],
     advBtn:'订阅 Runae 顾问 · {P} / 月',
     resetLine:'↻ 换张照片 · 重新解读',
-    footdisc:'相由心生，气随神转。相理呈现的是当下格局与倾向，非定数；仅供娱乐参考，切勿沉迷。照片已用于本次分析后即丢弃，不作留存。',
+    footdisc:'相由心生，气随神转。相理呈现的是当下格局与倾向，非定数；仅供娱乐参考。压缩后的照片会暂存在当前浏览器标签页，以便支付后恢复报告。',
     ckCn:'国内用户请用微信 / 支付宝支付（接入中）',
     ckFail:'跳转支付失败，请重试',
     ckNet:'网络异常，请重试',
@@ -269,6 +273,7 @@
       document.title = T.title;
       var set=function(id,html){var el=document.getElementById(id);if(el)el.innerHTML=html;};
       set('navBack',T.navBack); set('stepLabel',T.step);
+      set('ageTitle',T.ageTitle); set('ageBody',T.ageBody); set('ageYes',T.ageYes); set('ageNo',T.ageNo);
       set('upK',T.upK); set('upH',T.upH); set('upSub',T.upSub);
       set('dropText',T.dropText); set('dropHint',T.dropHint);
       set('capAlbum',T.capAlbum); set('capCamera',T.capCamera);
@@ -280,9 +285,13 @@
   })();
 
   // ── 照片上传（对齐 mianxiang.html 格式：存 window._mxImageData{base64,mimeType}）──
-  function pickFile(){ document.getElementById('fileInput').click(); }
-  function pickAlbum(){ var i=document.getElementById('fileInput'); i.removeAttribute('capture'); i.click(); }
-  function openCamera(){ var i=document.getElementById('fileInput'); i.setAttribute('capture','user'); i.click(); }
+  var _pendingFacePick=false;
+  window.passFaceAgeGate=function(){sessionStorage.setItem('runae_face_age_ok','1');document.getElementById('ageGate').classList.remove('on');if(_pendingFacePick){_pendingFacePick=false;document.getElementById('fileInput').click();}};
+  window.closeFaceAgeGate=function(){_pendingFacePick=false;document.getElementById('ageGate').classList.remove('on');};
+  function allowFaceUpload(){if(sessionStorage.getItem('runae_face_age_ok')==='1')return true;_pendingFacePick=true;document.getElementById('ageGate').classList.add('on');return false;}
+  function pickFile(){ if(allowFaceUpload())document.getElementById('fileInput').click(); }
+  function pickAlbum(){ if(!allowFaceUpload())return; var i=document.getElementById('fileInput'); i.removeAttribute('capture'); i.click(); }
+  function openCamera(){ if(!allowFaceUpload())return; var i=document.getElementById('fileInput'); i.setAttribute('capture','user'); i.click(); }
 
   function handleFile(input){
     if(!input.files[0]) return;
@@ -413,7 +422,7 @@
           var cv=document.createElement('canvas'); cv.width=cw; cv.height=ch;
           cv.getContext('2d').drawImage(img,0,0,cw,ch);
           var out=cv.toDataURL('image/jpeg',0.72).split(',')[1];
-          if(out) localStorage.setItem('sy_last_mianxiang', JSON.stringify({base64:out, mimeType:'image/jpeg'}));
+          if(out) sessionStorage.setItem('sy_last_mianxiang', JSON.stringify({base64:out, mimeType:'image/jpeg'}));
         }catch(e){}
       };
       img.onerror=function(){};
@@ -422,6 +431,7 @@
   }
 
   function resetToUpload(){
+    try{ sessionStorage.removeItem('sy_last_mianxiang'); }catch(e){}
     if(loadTimer){ clearInterval(loadTimer); loadTimer=null; }
     document.getElementById('reportStage').classList.add('hide');
     document.getElementById('loadStage').classList.add('hide');
@@ -499,7 +509,7 @@
   // ── 付费回流：?paid=1 → 用上次的照片重跑（此时 tier 已升级，locked=false）──
   (function handlePaidReturn(){
     if(location.search.indexOf('paid=1')<0) return;
-    var saved=null; try{ saved=JSON.parse(localStorage.getItem('sy_last_mianxiang')||'null'); }catch(e){}
+    var saved=null; try{ saved=JSON.parse(sessionStorage.getItem('sy_last_mianxiang')||'null'); sessionStorage.removeItem('sy_last_mianxiang'); }catch(e){}
     if(window.history.replaceState) window.history.replaceState({},'','/pages/report-face.html?lang='+LANG);
     if(!saved||!saved.base64) return;
     window._mxImageData={base64:saved.base64, mimeType:saved.mimeType||'image/jpeg'};

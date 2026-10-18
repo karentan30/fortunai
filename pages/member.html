@@ -361,13 +361,6 @@ body::before{content:'';position:fixed;inset:0;
   </div>
 </div>
 
-<!-- First-visit countdown banner -->
-<div id="countdownBanner" style="display:none;margin:16px 16px 0;padding:14px 16px;border-radius:12px;background:linear-gradient(135deg,var(--jade-wash),rgba(200,163,90,0.06));border:1px solid var(--jade-line);text-align:center;position:relative;z-index:1">
-  <div style="font-size:9px;letter-spacing:0.18em;color:var(--gilt-deep);margin-bottom:4px">⏳ 限时优惠</div>
-  <div style="font-size:12px;color:var(--ink-text);letter-spacing:0.06em;margin-bottom:4px">首次访问24小时内：年付立省 <b style="color:var(--gilt-deep)" id="promoSaveY">$49.80</b></div>
-  <div id="countdownTimer" style="font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--jade-deep);letter-spacing:0.12em;line-height:1.2"></div>
-  <div style="font-size:9px;color:var(--sub-text);margin-top:4px;letter-spacing:0.06em">倒计时结束后优惠失效</div>
-</div>
 
 <!-- sticky bottom -->
 <div class="sticky-bottom">
@@ -413,7 +406,6 @@ function renderPrices(){
   set('anchorY', money(m*12));
   set('saveY', money(Math.max(0, m*12 - y)));
   set('perMonthY', money(Math.round(y/12)));
-  set('promoSaveY', money(Math.max(0, m*12 - y)));
   document.querySelectorAll('[data-savepct-q]').forEach(function(el){ el.textContent = '省' + pct(m*3, q) + '%'; });
   document.querySelectorAll('[data-savepct-y]').forEach(function(el){ el.textContent = '省' + pct(m*12, y) + '%'; });
   var btn = document.getElementById('subBtn'), note = document.getElementById('subNote');
@@ -483,37 +475,6 @@ updateCalc(12);
 renderPrices();
 if (window.RunaePrice) RunaePrice.ready(renderPrices);
 
-// ── First-visit 24h countdown ──
-(function() {
-  var STORE_KEY = 'sy_member_first_visit';
-  var firstVisit = parseInt(localStorage.getItem(STORE_KEY));
-  if (!firstVisit || isNaN(firstVisit)) {
-    firstVisit = Date.now();
-    localStorage.setItem(STORE_KEY, firstVisit);
-  }
-  var deadline = firstVisit + 24 * 60 * 60 * 1000;
-  var banner = document.getElementById('countdownBanner');
-  var timerEl = document.getElementById('countdownTimer');
-
-  function tick() {
-    var remaining = deadline - Date.now();
-    if (remaining <= 0) {
-      if (banner) banner.style.display = 'none';
-      return;
-    }
-    if (banner && banner.style.display === 'none') banner.style.display = 'block';
-    var h = Math.floor(remaining / 3600000);
-    var m = Math.floor((remaining % 3600000) / 60000);
-    var s = Math.floor((remaining % 60000) / 1000);
-    if (timerEl) timerEl.textContent =
-      String(h).padStart(2,'0') + ' : ' + String(m).padStart(2,'0') + ' : ' + String(s).padStart(2,'0');
-    setTimeout(tick, 1000);
-  }
-
-  if (deadline > Date.now()) {
-    tick();
-  }
-})();
 </script>
 
 <!-- Disclaimer -->
