@@ -16,7 +16,16 @@ async function main(){
   }
   if(action==='preflight'){
     const c=getFriendsConfig(process.env),errors=c.errors||[];if(!c.enabled)errors.push('交友模块尚未启用');
-    if(c.enabled&&c.ok){const s=createSqliteFriendsStore(c.file,{key:process.env.FRIENDS_DATA_KEY,create:false});try{if(!s.health().ok)errors.push('数据库完整性检查未通过');}finally{s.close();}}
+    if(c.enabled&&c.ok){const s=createSqliteFriendsStore(c.file,{key:process.env.FRIENDS_DATA_KEY,create:false});try{
+      if(!s.health().ok)errors.push('数据库完整性检查未通过');
+      if(process.env.FRIENDS_REPORTS_ENABLED==='true'){
+        try{require.resolve('../server/lib/llm');}catch(_){errors.push('报告模型模块缺失，不能生成付费报告');}
+      }
+      if(process.env.FRIENDS_BILLING_ENABLED==='true'){
+        const billing=require('../server/lib/friends-billing-config').configuredBilling(s);
+        if(!billing.catalog().enabled&&!billing.reconciliationReady())errors.push('计费配置未就绪：请核验共享客户端、商户与报告交付配置');
+      }
+    }finally{s.close();}}
     console.log(JSON.stringify({ready:!errors.length,mode:c.mode||'disabled',errors},null,2));if(errors.length)process.exitCode=1;return;
   }
   const key=process.env.FRIENDS_DATA_KEY;

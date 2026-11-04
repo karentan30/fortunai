@@ -1,0 +1,29 @@
+交友支付后台对账调度（2026-11-04）
+实现脚本scripts/friends-reconcile.cjs；本轮仅本地测试，未真实查生产、未安装调度。
+
+用途与开关
+补足用户支付后关闭浏览器、legacy callback未配置或best-effort丢失的到账核验。复用configuredBilling、真实共享client适配器与加密SQLite；必须交友配置有效、支付开启、主体与商品核验、fresh查单核验、报告开启和交付验收门均通过。关闭配置拒绝运行，不为了对账绕过付款关闭门。
+不发起收款，不创建远端支付意图，不执行退款，不改旧callback。只fresh GET查单和事务更新本地订单权益；缺项目/金额/币种/out_ref证据不授次。
+
+命令（以下路径仅形状示例，不是已安装任务）
+node /absolute/repo/scripts/friends-reconcile.cjs --env=/absolute/private/server.env --limit=25
+默认每批最多25单，--limit允许1至100；环境文件必须绝对路径，密钥只能由受保护环境加载，不作为CLI参数或日志打印。未指定env时使用进程环境。脚本以create:false打开已有数据库，不自动初始化空库。
+--pending-only仅检查pending，可用于临时降低负载；常规应保留默认pending+paid以发现已付后的失败/退款歧义。
+
+状态策略
+pending：有本地绑定hubOrderId才查。即使本地expiresAt已过去仍查；fresh确认paid就按真实到账幂等授予，不因浏览器30分钟显示期限丢弃已到账款项。
+paid：继续查，防长期保留已退款权益；Hub legacy status=failed混合refunded/failed/closed，冻结payment_review并交人工，不虚构退款完成。年卡到期由权益查询本身判断，不由CLI假装发起取消或退款。
+payment_review：不自动重新放行、重扣、撤销人工判断或宣称已退款；人工核对真实交易和退款后处理。
+creating/create_unknown：不猜hubOrderId、不用out_ref另建单，也不自动重试create；只输出数量供运维关注。
+refunded/failed/expired：终态不自动重开。pending/paid缺hubOrderId列为unbound计数，需人工核对。
+
+批次、公平性和失败
+按最早lastReconciledAt（首次取createdAt）排序，逐单顺序处理，完成或查询失败都更新本地lastReconciledAt，避免旧未付订单永久占满每批。只处理最多limit单；连续3个失败提前停止，避免持续访问异常服务。
+同一订单即使多个任务重叠查询，本地grant仍由SQLite事务和幂等事件防重；调度仍建议单实例执行并监测超时，避免多余请求。每次真实查询有适配器超时；旧共享client底层未取消问题见hub-v2补丁说明。
+输出只有批次计数，不输出用户、订单号、出生资料、金额、密钥、远端错误正文或数据库路径；selected/checked/newlyPaid/paidConfirmed/pending/paymentReview/errors等为次数，不是独立用户。退出码0完成、2部分查询错误、1配置/数据库等未执行或失败。
+
+待实际部署
+运维需在获授权环境核验真实Hub契约、备份、报告交付与客服值守后，安装受保护的systemd timer或其他单实例调度（建议先每5分钟、limit25，根据真实队列和流量调整），配置服务用户权限和受控日志保留。此文档没有安装任务；不能称后台对账已在线运行。
+已提供独立停止销售门：FRIENDS_BILLING_SALES_PAUSED=true会使catalog.enabled=false、所有产品enabled=false且channels为空，checkout返回503，不创建新订单；已存在订单、余额、已验签回调和fresh对账继续工作。CLI使用独立reconciliationReady而不是销售目录判断，不因暂停新销售丢弃旧单到账。
+FRIENDS_BILLING_ENABLED=false仍阻止新的支付核验、回调处理和CLI对账；不把新销售暂停门当成总开关绕过。主体/商品/fresh查单/报告启用/报告交付验收门均不弱化；报告未验收或关闭时，暂停销售也不能使对账获准。仅查询本地已存在订单/余额不会发起远端操作，也不会删除用户既有记录。
+建议需要停止新购买而履行已购订单时，保持总开关和已验收配置，设置SALES_PAUSED=true并受控重启；如发现验签或资金风险需完全停核验，再关总开关，并安排人工处理挂起订单。

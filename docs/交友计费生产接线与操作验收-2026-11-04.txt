@@ -37,7 +37,7 @@ FRIENDS_BILLING_PRODUCTS为经核对的JSON对象。
 6. 完成报告实际生成/存储/读取/扣次/失败返还交付验收后，再批准报告交付标记与报告开关。未连接生产模型的单元测试不算报告真实交付验收。
 7. 分渠道执行经授权的小额真实支付与原路退款验收、到账对账、客服工单处理；只有通过的渠道加入channels。不得据单个渠道成功宣称全渠道可用。
 8. 确认前端只认catalog启用渠道，pending/create_unknown/payment_review不出成功文案，不换key绕过结果未知订单。Stripe仅跳checkout.stripe.com HTTPS；二维码文本仅编码，不当HTML或图片地址执行。
-9. 设置告警与人工对账值守。紧急时先关闭FRIENDS_BILLING_ENABLED，保留数据和已购记录；不能删除订单来清错。
+9. 设置告警与人工对账值守。仅暂停新销售时设FRIENDS_BILLING_SALES_PAUSED=true并受控重启：目录与checkout关闭，已有订单的验签、fresh核验、余额与后台对账继续。遇验签/资金风险需全停时关闭FRIENDS_BILLING_ENABLED；保留数据和已购记录，不能删除订单来清错。暂停销售不会替代或绕过任何报告交付验收门。
 
 六、本地测试证据与边界
 server/routes/friends-production.test.cjs实际调用productionRouter，隔离临时SQLite，使用内存测试Hub与测试认证，按index相同顺序挂raw/JSON parser，通过HTTP验证邀请拦截、raw签名回调、fresh到账、渠道关闭与故障隔离。另静态核对index的实际raw路径和顺序。测试不启动整个旧站index、不访问商户、不调用生成模型、不证明生产auth或收单已通过。
