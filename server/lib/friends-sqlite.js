@@ -20,7 +20,8 @@ function createSqliteFriendsStore(file,{key,create=true}={}){
   fs.mkdirSync(path.dirname(file),{recursive:true,mode:0o700});
   const db=new DatabaseSync(file,{open:true});
   try{
-    db.exec('PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA busy_timeout=10000; PRAGMA secure_delete=ON;');
+    // Install the lock wait before WAL/schema initialization: concurrent process startup can lock here too.
+    db.exec('PRAGMA busy_timeout=10000; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL; PRAGMA secure_delete=ON;');
     if(!create){
       const table=db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='friends_state'").get();
       if(!table||!db.prepare('SELECT id FROM friends_state WHERE id=1').get())throw Error('恢复数据库缺少交友数据，拒绝初始化空池');
