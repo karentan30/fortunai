@@ -1,0 +1,45 @@
+Runae 原完整八字报告复用：只读核查与最小集成契约
+核查日期：2026-11-04；源：GitHub karentan30/fortunai main（本次读取，不代表已部署版本）。未调用任何模型、未消费权益、未修改旧路由。
+
+后续执行记录（同日）：root明确授权最小重构后，已将main完整divination.js保存本地并仅提取中文full prompt，新增server/lib/bazi-full-report.js。旧route gate/insertReading/VIP及其他报告代码保持；原调用改共享generateBaziText。共享导出generateFullBaziReport(input,{chartBlock,generate,year})，必须提供非空服务端已验证chartBlock，不调用旧store或任何支付函数。结果{reading,tier:'full',locked:false,source:'runae-bazi-full-v1'}，未持久化、未计费；friends作业适配由root另接。tests/bazi-full-report.test.js共5项stub测试通过、两文件node --check通过。未运行完整旧服务依赖集成，也未调用真实模型；完整章节齐全校验仍需报告作业层实现。本段执行记录更新下方‘建议尚未实现’中共享提取一项状态，不表示整个付费交付链已完成。
+
+一、真实已有路径
+server/routes/divination.js 的 POST /bazi（749-947），由主服务挂载后的 /api/bazi 提供非流式中文报告。输入 birthYear/birthMonth/birthDay/birthHour/gender/question/mode/lang/tier，生日目前按公历；入口只做生日存在及14岁门槛，不足以代替朋友产品的18岁、日期、地点时区校验。
+buildBaziBlock 在调用前用 computeBaziChart 预排盘；目前仅传年月日小时和性别，不传分钟、出生地点、时区或农历标记，失败时降级为空块、允许模型自行排盘。结构化 pillars 另用旧 calcBazi 计算，因此不是同一排盘源。
+882行 gateReportAccess(req,['bazi','八字'],'bazi')；883行 resolveReportTier：没有权益强制free，有权益且tier=standard走标准，其余full。完整档复用原16维prompt，919行 deepseekChat(...,{maxTokens:16384})，全provider失败抛错；成功只保证非空文本，不检查16章齐全/截断。
+921-929行 bazi_vip 是另一次模型生成4章追加，追加失败被吞掉、主报告仍成功。friends的199人民币不是旧bazi_vip商品的自动同义词，初期应明确使用full、不自动承诺VIP。
+937行 insertReading.run('bazi',JSON.stringify(req.body),result,req.userId)；938行 saveQaContext；939行JSON返回 reading/tier/locked/contextId/pillars/product。insertReading不返回阅读记录ID。QA上下文仅内存保存、30分钟惰性清理，不能当长期报告交付链接。
+
+二、旧权益与持久化
+server/lib/store.js gateReportAccess633：先hasFullAccess582。该函数除了查未过期订单，也会将一个未用邀请奖励改为used并落盘；所以并非纯读取。否则月会员走_monthlyCreditForReport484，写reportCredits/reportCreditSpentOn/reportCreditServed后_persist。旧报告身份为固定'bazi'，并非出生输入的唯一ID。
+失败在旧route940-944调用_refundCreditOnFail，主要回补本次旧月额度；邀请奖励消费没有对应回补。兄弟请求served标记也会阻止回补。
+旧store的_M.readings含原始输入JSON/结果/user_id，落入DATA_FILE（默认server/data.json）。QA上下文含同样原输入。不能说复用这条路径后‘所有地方都不保存生日’；朋友库不落原生日和旧报告保存原生日是两件事，接入前必须明确保存边界。
+server/lib/llm.js deepseekChat依配置provider优先级逐一请求，单provider默认120秒超时；非空content或reasoning_content即成功，不检查finish_reason。最多多provider累积超时，HTTP等待并非后台可靠任务。
+
+三、防双扣的最小契约（建议，尚未实现）
+不要friends.reserve之后直接用用户旧登录态HTTP请求/api/bazi：旧gate仍可能另扣月额度或邀请奖励。不要注入ADMIN_TOKEN，它还会触发VIP且超出单报告授权。不要伪造旧completed订单，不接收客户端full=true/内部票据。
+先把同一套原16维prompt、模型生成、章节校验提取为无支付副作用的共享函数 generateBaziFullReport(input,{chart,tier:'full',requestId})；原路由将来再复用同一个函数。当前旧路由只导出Express router，无此可直接复用导出。若本轮严格不改旧路由，可建立独立模块搬用原prompt和生成逻辑并标源版本；但这会产生双份维护，应作为过渡而非宣称已经共享。
+共享函数不得调用gateReportAccess/hasFullAccess/insertReading/saveQaContext，也不得自行扣费；由friends适配器唯一负责授权、存储和交付。输入先验证18岁、有效日期、公历转换、分钟/时区/不详时辰，使用friends已核实的同一chart，排盘失败应失败，不允许AI自排兜底。性别缺省不能擅自male或female。
+建议接口：createReport(uid,{idempotencyKey,normalizedBirthInput,chartSignature,question}) -> {reportId,status}；getReport(uid,reportId)只允许本人。服务端派生inputHash绑定用户、完整规范化出生输入、chart版本、语言、tier、问题及prompt版本；同一幂等键不同hash返回409。原生日仅请求内存使用还是加密报告任务保存须单独批准，重启恢复任务不能依赖原生日已丢失却假装可恢复。
+本地friends-billing.js已有reserve(uid,'report',1,key)及settle(uid,reservationId,'commit'|'release')，事务账本creditLedger/creditReservations。reserve重放会直接返回旧reservation，调用方必须检查status，不能在released/committed后重新生成；预扣幂等键还未绑定报告inputHash，适配器必须补绑定。
+作业状态建议：reserved -> generating -> result_saved -> committed -> delivered；先保存完整加密结果和唯一reportId，再幂等commit，成功后返回，HTTP断线重取同一报告不再调用模型/不再扣。并发请求必须只有一个作业获得执行权；重启后检查已存结果再结算，不能盲目release后继续运行旧请求。
+失败：模型/排盘/章节校验/结果持久化失败，且没有已交付结果，release一次；记录可重试错误。commit时订单退款/过期会409，此时不交付并保留内部审计，不将报告当成功出售。已交付后不自动release。不要把provider失败、网络断开、HTTP200或contextId当真实完整交付的唯一证据。
+
+四、必须通过的接通验收
+实现补充：已新增server/lib/friends-reports.js及server/routes/friends-reports.js。createFriendsReportsService依赖{store,billing,verifyChart,generate,inputHashKey,validateResult,clock}；inputHashKey须稳定服务端至少32字符，不向前端暴露。verifyChart须负责有效日期/18岁/时间地点和签名验证，返回{chartBlock}；generate可直接注入共享generateFullBaziReport。生产应提供validateResult验证完整章节，不应以非空报告代替完整交付。调用create(uid,{idempotencyKey,input,consentRetainReport:true})。新personalReportJobs collection只保存HMAC输入摘要、同意记录、状态与报告结果，原出生输入仅内存。必须由生产加密SQLite及备份覆盖该collection；开发JSON store不因此获得加密。POST需X-Runae-Friends:1、JSON、同源，GET/list本人可查。reserving/generating任务若跨服务启动标识仅进入人工核对，需后台核对模型执行和预扣账本后人工恢复；没有自动超时释放机制，也不要在多进程间共享不同bootId绕此设计。当前服务面向单进程试运行。result_saved可在get时仅重试幂等commit，成功后delivered；异常退款/过期409转人工核对。新增6项作业stub测试通过，加共享5项共11项通过。生产bootstrap挂载与真实交付验收由主agent继续完成。
+
+最终增量（优先于上段早期实现记录）：新增friends-report-adapter.js工厂返回verifyChart/generate/validateResult，可直接注入作业服务。出生数据由friends-chart重算，农历转公历，完整性/成年/城市/DST校验后复用computeBaziChart补层，逐一比较四柱。当前完整报告仅支持出生当时UTC+8且两引擎四柱一致的路径，其他地区/历史夏令时明确暂不可生成完整报告，不消费次数。已提供真实计算的十神、藏干、纳音、五行统计、格局、旺衰、调候、大运与流年干支；没有计算的神煞、疾病、生育及事件结果不推造。朋友专属提示词追加明确文化解读边界和1-16编号输出要求；章节校验逐章非空最低40有效字符、最后完整句号及无LOCKED。模型仍需真实验收，形式校验不证明内容事实或服务效果。
+作业已改180秒租约及30秒心跳，旧bootId不再自动等同进程死亡。活租约跨worker只能读状态；租约过期进入人工核对，旧worker无权再覆盖/交付/释放。billing.reservationByKey支持只读查回reserve后未写reservationId的崩溃窗口，人工核对后处理，不能用reserve充当查询。存结果后未结算可恢复幂等commit，出生输入不落作业库。三组测试共17/17通过。共享prompt旧行为快照仍通过。
+1 真实未付费用户不可生成full，客户端tier/order_no不能越权。
+2 一份friends次数完成一份原full报告，旧reportCredits和邀请奖励前后完全不变。
+3 并发两次同幂等键仅一次模型生成、一次commit；换输入同key409；重开页面返回同报告。
+4 模型全失败、空文本、缺章节、写盘失败，各有明确release/恢复结果；进程重启和响应丢失不重复消费。
+5 订单退款/过期后不能新交付；跨用户GET报告404；日志不输出原生日、提示词或密钥。
+6 同一出生输入的朋友海报日主、报告文字、结构化pillars来自同一经验证chart；不详时辰不冒充00点。
+7 不用真实模型的stub测试先通过，再由授权测试账号做一笔真实完整生成及支付交付验收，才解除生成/支付开关。
+
+源码定位（需仓库权限）：
+https://github.com/karentan30/fortunai/blob/main/server/routes/divination.js#L749
+https://github.com/karentan30/fortunai/blob/main/server/lib/store.js#L633
+https://github.com/karentan30/fortunai/blob/main/server/lib/llm.js
+https://github.com/karentan30/fortunai/blob/main/server/lib/bazi-engine/prompt-block.js

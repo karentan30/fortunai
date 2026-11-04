@@ -78,6 +78,8 @@ app.use(function(req, res, next) {
 app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }));
 // 中台订阅事件回调需 raw body 做 HMAC 验签（必须在 express.json 之前）
 app.use('/api/hub-callback', express.raw({ type: 'application/json' }));
+// Friends hub callbacks retain signed bytes; the isolated router verifies and reconciles them.
+app.use('/api/friends/billing/callback', express.raw({ type: 'application/json', limit: '64kb' }));
 // 微信支付回调是 XML(text)
 app.use('/api/pay/wechat/notify', express.text({ type: '*/*', limit: '1mb' }));
 // 支付宝回调是 application/x-www-form-urlencoded

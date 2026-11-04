@@ -51,6 +51,8 @@ app.get('/api/auth/me',auth,(req,res)=>req.user?res.json({user:req.user}):res.st
 // Small review-only request ceiling, separate from production's global rate limiter.
 const buckets=new Map();app.use('/api/friends',(req,res,next)=>{const k=req.ip,now=Date.now(),b=(buckets.get(k)||[]).filter(t=>now-t<60000);if(b.length>=120)return res.status(429).json({error:'操作过于频繁'});b.push(now);buckets.set(k,b);next();});
 app.use('/api/friends/billing',createBillingRouter({express,auth,service:billing}));
+const {createPersonalReportsRouter}=require('./routes/friends-personal-reports');
+app.use('/api/friends/personal-reports',createPersonalReportsRouter({express,auth,store:reviewStore,billing,env:{FRIENDS_REPORTS_ENABLED:'false'}}));
 app.use('/api/friends',createRouter({express,auth,store:reviewStore,secret:fs.readFileSync(keyFile,'utf8'),adminToken:fs.readFileSync(reviewAdmin,'utf8'),onLogout(req,res){const token=cookie(req);if(token)sessions.delete(token);res.clearCookie('review_session',{path:'/',httpOnly:true,sameSite:'strict'});}}));
 app.get('/',(req,res)=>res.redirect('/pages/friends-connect.html'));
 app.use('/pages',express.static(path.join(root,'pages')));

@@ -71,8 +71,23 @@ function productionRouter(){
   if(config.enabled&&!config.ok){console.error('[friends] Configuration incomplete; feature disabled. Run friends-ops preflight.');return createRouter({express,auth:authMiddleware,enabled:false,mode:'configuration_error',onLogout});}
   try{
     const store=config.enabled?createSqliteFriendsStore(config.file,{key:process.env.FRIENDS_DATA_KEY}):null;
-    return createRouter({express,auth:authMiddleware,enabled:config.enabled,mode:config.mode||'disabled',secret:process.env.FRIENDS_SIGNING_KEY,store,requirePolicy:true,
+    const friends=createRouter({express,auth:authMiddleware,enabled:config.enabled,mode:config.mode||'disabled',secret:process.env.FRIENDS_SIGNING_KEY,store,requirePolicy:true,
       canAccess:req=>config.mode==='public'||config.allowedIds?.has(String(req.user?.id)),onLogout});
+    if(!config.enabled)return friends;
+    const {configuredBilling}=require('../lib/friends-billing-config');
+    const {createBillingRouter,createBillingCallbackRouter}=require('./friends-billing');
+    const billing=configuredBilling(store),bundle=express.Router();
+    bundle.use('/billing/callback',createRateLimit({limit:120}),createBillingCallbackRouter({express,service:billing}));
+    const billingAuth=(req,res,next)=>authMiddleware(req,res,()=>{
+      if(!req.user)return res.status(401).json({error:'请先登录'});
+      if(config.mode!=='public'&&!config.allowedIds?.has(String(req.user.id)))return res.status(403).json({error:'当前为邀请测试'});
+      next();
+    });
+    // In an invite pilot, even an enabled catalog must not advertise purchase to outsiders.
+    bundle.use('/billing',createRateLimit({limit:60}),(req,res,next)=>config.mode==='public'?next():billingAuth(req,res,next),createBillingRouter({express,auth:billingAuth,service:billing}));
+    const {createPersonalReportsRouter}=require('./friends-personal-reports');
+    bundle.use('/personal-reports',createRateLimit({limit:20}),billingAuth,createPersonalReportsRouter({express,auth:billingAuth,store,billing}));
+    bundle.use(friends);return bundle;
   }catch(e){console.error('[friends] Storage not ready; feature disabled. Run protected preflight.');return createRouter({express,auth:authMiddleware,enabled:false,mode:'storage_error',onLogout});}
 }
 module.exports={createRouter,productionRouter};

@@ -10,22 +10,42 @@ const validKey=key=>typeof key==='string'&&/^[A-Za-z0-9_-]{8,100}$/.test(key);
 const own=(s,uid,id)=>{const o=(s.billingOrders||[]).find(o=>o.id===id&&o.userId===uid);if(!o)fail(404,'订单不存在');return o;};
 const publicOrder=o=>({id:o.id,sku:o.sku,status:o.status,amountMinor:o.amountMinor,currency:o.currency,channel:o.channel,createdAt:o.createdAt,expiresAt:o.expiresAt,paidAt:o.paidAt,accessUntil:o.accessUntil,checkout:o.checkout});
 // Real shared client contract, not a payment gateway implementation. No loading of env secrets here.
-function createHubAdapter(client){return {ready:client?.HUB_SECRET==='(configured)'&&typeof client.create==='function'&&typeof client.verifyCallback==='function',projectId:client?.PROJECT_ID,
-  async create(order,registration){const r=await client.create(order.channel,registration.product,order.amountMinor/100,order.id,{currency:order.currency.toLowerCase(),...registration.returnUrls});if(r?.ok!==true||!r.order_no)fail(502,'支付中台未返回有效订单');return {hubOrderId:r.order_no,amountMinor:r.amount===undefined?null:majorToMinor(r.amount),currency:r.currency?.toUpperCase(),channel:r.method,checkout:{...(r.url?{url:r.url}:{}),...(r.code_url?{codeUrl:r.code_url}:{}),...(r.qr_code?{qrCode:r.qr_code}:{})}};},
+function createHubAdapter(client,{timeoutMs=10000}={}){
+  async function bounded(operation){let timer;try{return await Promise.race([Promise.resolve().then(operation),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Object.assign(Error('支付中台查询超时'),{status:502})),timeoutMs);})]);}finally{clearTimeout(timer);}}
+  const secureBase=(()=>{try{return new URL(client?.HUB_BASE).protocol==='https:';}catch(_){return false;}})();
+  return {ready:secureBase&&client?.HUB_SECRET==='(configured)'&&typeof client.create==='function'&&typeof client.status==='function'&&typeof client.verifyCallback==='function',projectId:client?.PROJECT_ID,
+  async freshStatus(hubOrderId){const r=await bounded(()=>client.status(hubOrderId));if(r?.ok!==true||r.order_no!==hubOrderId||!['paid','pending','failed'].includes(r.status)||typeof r.out_ref!=='string'||!r.out_ref||typeof r.currency!=='string'||!r.currency.match(/^[a-z]{3}$/i))fail(502,'中台查单证据不完整');return {hubOrderId:r.order_no,localOrderId:r.out_ref,amountMinor:majorToMinor(r.amount),currency:r.currency.toUpperCase(),status:r.status,rawStatus:r.raw_status||null};},
+  async create(order,registration){const r=await bounded(()=>client.create(order.channel,registration.product,order.amountMinor/100,order.id,{...registration.returnUrls,currency:order.currency.toLowerCase()}));if(r?.ok!==true||!r.order_no)fail(502,'支付中台未返回有效订单');const receipt=await this.freshStatus(r.order_no);if(receipt.localOrderId!==order.id||majorToMinor(r.amount)!==receipt.amountMinor)fail(502,'中台建单与查单绑定不一致');return {hubOrderId:r.order_no,amountMinor:receipt.amountMinor,currency:receipt.currency,channel:r.method,checkout:{...(r.url?{url:r.url}:{}),...(r.code_url?{codeUrl:r.code_url}:{}),...(r.qr_code?{qrCode:r.qr_code}:{})}};},
   verify(raw,signature){return this.ready&&client.verifyCallback(raw,signature)===true;}
 };}
 function majorToMinor(value){const text=String(value);if(!/^\d+(?:\.\d{1,2})?$/.test(text))fail(400,'到账金额格式无效');const [whole,fraction='']=text.split('.'),amount=Number(whole)*100+Number(fraction.padEnd(2,'0'));if(!Number.isSafeInteger(amount))fail(400,'到账金额无效');return amount;}
-function createBillingService(store,{adapter=null,enabled=false,merchantVerified=false,merchantName='',callbackV2Verified=false,registrations={},clock=()=>Date.now()}={}){
+function createBillingService(store,{adapter=null,enabled=false,merchantVerified=false,merchantName='',callbackV2Verified=false,freshPullVerified=false,registrations={},clock=()=>Date.now()}={}){
   const nowISO=()=>new Date(clock()).toISOString();
-  const ready=()=>enabled&&merchantVerified&&merchantName==='Capstone IQ'&&callbackV2Verified&&adapter?.ready&&typeof adapter.projectId==='string'&&!!adapter.projectId;
+  const ready=()=>enabled&&merchantVerified&&merchantName==='Capstone IQ'&&(callbackV2Verified||(freshPullVerified&&typeof adapter?.freshStatus==='function'))&&adapter?.ready&&typeof adapter.projectId==='string'&&!!adapter.projectId;
   const registration=(sku,channel)=>{const product=CATALOG[sku],r=registrations[sku];return product&&r?.verified===true&&r.amountMinor===product.amountMinor&&r.currency===product.currency&&typeof r.product==='string'&&r.product.length>0&&Array.isArray(r.channels)&&r.channels.includes(channel)?r:null;};
   const ledger=(s,entry)=>s.creditLedger.push({id:crypto.randomUUID(),createdAt:nowISO(),...entry});
   const orderAvailable=(s,id,unit)=>(s.creditLedger||[]).filter(e=>e.orderId===id&&e.unit===unit).reduce((sum,e)=>sum+e.delta,0);
   const live=o=>o.status==='paid'&&(!o.accessUntil||Date.parse(o.accessUntil)>clock());
   const balanceIn=(s,uid,unit)=>(s.billingOrders||[]).filter(o=>o.userId===uid&&live(o)).reduce((sum,o)=>sum+Math.max(0,orderAvailable(s,o.id,unit)),0);
+  async function reconcile(uid,id){const snapshot=own(store.read(),uid,id);if(!ready()||!freshPullVerified||!snapshot.hubOrderId)return publicOrder(snapshot);const receipt=await adapter.freshStatus(snapshot.hubOrderId);
+    if(receipt.hubOrderId!==snapshot.hubOrderId||receipt.localOrderId!==id||receipt.amountMinor!==snapshot.amountMinor||receipt.currency!==snapshot.currency)fail(502,'查单订单、金额或币种不符');
+    return store.transaction(s=>{normalize(s);const o=own(s,uid,id),digest=hash(JSON.stringify(receipt)),eventId='pull-'+hash(o.id+digest);if(s.billingEvents.some(e=>e.eventId===eventId))return publicOrder(o);
+      if(receipt.status==='paid'){
+        if(['refunded','expired','failed','payment_review'].includes(o.status))fail(409,'订单状态异常，到账须人工核对');
+        if(o.status!=='paid'){if(o.status!=='pending')fail(409,'订单尚待绑定');o.status='paid';o.paidAt=nowISO();const product=CATALOG[o.sku];if(product.accessDays)o.accessUntil=new Date(clock()+product.accessDays*86400000).toISOString();ledger(s,{orderId:o.id,userId:o.userId,unit:'report',delta:product.reportCredits,type:'grant'});}
+      }else if(receipt.status==='failed'&&!['refunded','failed','expired'].includes(o.status)){
+        // Legacy Hub conflates refunded/failed/closed. Freeze instead of inventing a refund.
+        o.status='payment_review';o.reviewReason='hub_failed_or_refunded';
+      }
+      s.billingEvents.push({eventId,digest,orderId:o.id,status:receipt.status,verification:'authenticated_fresh_pull',createdAt:nowISO()});return publicOrder(o);
+    });
+  }
   return {
     catalog(){return {enabled:!!ready(),merchant:merchantName||null,products:Object.values(CATALOG).map(p=>{const channels=['wechat','alipay','stripe'].filter(c=>registration(p.sku,c)&&ready());return {...p,enabled:channels.length>0,channels,disabledReason:channels.length?null:'商户、商品或安全回调尚未验收，暂不可购买'};})};},
     order(uid,id){return publicOrder(own(store.read(),uid,id));},
+    byKey(uid,key){if(!validKey(key))fail(400,'订单幂等键无效');const o=(store.read().billingOrders||[]).find(o=>o.userId===uid&&o.idempotencyKey===key);if(!o)fail(404,'订单不存在');return publicOrder(o);},
+    reservationByKey(uid,key){if(!validKey(key))fail(400,'服务幂等键无效');const r=(store.read().creditReservations||[]).find(r=>r.userId===uid&&r.key===key);return r?structuredClone(r):null;},
+    refresh:reconcile,
     balance(uid){const s=store.read();return {units:{report:balanceIn(s,uid,'report')},yearAccessUntil:(s.billingOrders||[]).filter(o=>o.userId===uid&&live(o)&&o.accessUntil).map(o=>o.accessUntil).sort().at(-1)||null};},
     async checkout(uid,{sku,channel,idempotencyKey}={}){
       if(uid===undefined||uid===null||uid==='')fail(401,'请先登录');
@@ -33,13 +53,14 @@ function createBillingService(store,{adapter=null,enabled=false,merchantVerified
       const r=registration(sku,channel),p=CATALOG[sku];if(!r)fail(400,'该商品或支付方式尚不可用');if(!validKey(idempotencyKey))fail(400,'请提供有效幂等键');
       const created=store.transaction(s=>{normalize(s);const previous=s.billingOrders.find(o=>o.userId===uid&&o.idempotencyKey===idempotencyKey);if(previous){if(previous.sku!==sku||previous.channel!==channel)fail(409,'幂等键已用于其他购买');return {existing:true,order:structuredClone(previous)};}const o={id:'RF-'+crypto.randomUUID(),userId:uid,idempotencyKey,sku,channel,amountMinor:p.amountMinor,currency:p.currency,status:'creating',createdAt:nowISO(),expiresAt:new Date(clock()+1800000).toISOString()};s.billingOrders.push(o);return {existing:false,order:structuredClone(o)};});
       if(created.existing){if(created.order.status==='creating'||created.order.status==='create_unknown')fail(409,'订单创建结果待核对，请勿重复付款');return publicOrder(created.order);}
-      try{const result=await adapter.create(created.order,r);if(!result?.hubOrderId||result.amountMinor!==p.amountMinor||result.currency!==p.currency||result.channel!==channel)fail(502,'中台订单金额、币种或渠道未通过核验');const checkout=result.checkout||{};if(channel==='stripe'){let url;try{url=new URL(checkout.url);}catch(_){fail(502,'支付链接无效');}if(url.protocol!=='https:')fail(502,'支付链接须为HTTPS');}else if(!(checkout.codeUrl||checkout.qrCode))fail(502,'支付中台没有提供支付入口');
+      try{const result=await adapter.create(created.order,r);if(!result?.hubOrderId||result.amountMinor!==p.amountMinor||result.currency!==p.currency||result.channel!==channel)fail(502,'中台订单金额、币种或渠道未通过核验');const checkout=result.checkout||{};if(channel==='stripe'){let url;try{url=new URL(checkout.url);}catch(_){fail(502,'支付链接无效');}if(url.protocol!=='https:'||url.hostname!=='checkout.stripe.com'||url.username||url.password)fail(502,'支付链接须为Stripe官方HTTPS结账地址');}else if(!(checkout.codeUrl||checkout.qrCode))fail(502,'支付中台没有提供支付入口');
         return store.transaction(s=>{normalize(s);const o=own(s,uid,created.order.id);if(s.billingOrders.some(x=>x.id!==o.id&&x.hubOrderId===result.hubOrderId))fail(409,'中台订单重复');Object.assign(o,{hubOrderId:result.hubOrderId,remoteProduct:r.product,status:'pending',checkout});return publicOrder(o);});
       }catch(e){store.transaction(s=>{const o=own(s,uid,created.order.id);if(o.status==='creating')o.status='create_unknown';});if(e.status)throw e;fail(502,'发起支付结果待核对，请稍后查看订单');}
     },
     callback(raw,signature){
       if(!ready())fail(503,'支付回调尚未完成配置');if(!Buffer.isBuffer(raw)||raw.length>65536)fail(400,'回调须为原始请求体');if(!adapter.verify(raw,signature))fail(401,'支付回调签名无效');
       let p;try{p=JSON.parse(raw.toString('utf8'));}catch(_){fail(400,'回调格式无效');}
+      if(freshPullVerified){if(p.project_id!==adapter.projectId||!['paid','refunded','expired','failed'].includes(p.status))fail(400,'回调项目或状态无效');const o=(store.read().billingOrders||[]).find(o=>o.id===p.out_ref&&o.hubOrderId===p.order_no);if(!o)fail(404,'回调订单不存在');if(p.method!==o.channel||p.product!==o.remoteProduct||majorToMinor(p.amount)!==o.amountMinor)fail(400,'回调订单绑定不符');return reconcile(o.userId,o.id).then(()=>({ok:true,verification:'authenticated_fresh_pull'}));}
       if(!Number.isSafeInteger(p.timestamp)||Math.abs(clock()-p.timestamp*1000)>300000||!validKey(p.nonce)||!validKey(p.event_id))fail(400,'回调缺少有效时间戳、nonce或事件号');
       if(p.project_id!==adapter.projectId||!['paid','refunded','expired','failed'].includes(p.status))fail(400,'回调项目或状态无效');
       const digest=hash(raw);
