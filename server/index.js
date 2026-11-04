@@ -161,6 +161,8 @@ app.use('/api/auth', authRouter);
 //   这两个 router 内部写的是 /profile /change-password /verify-password /history，
 //   所以挂 /api 下（和 payment/divination 同一挂法），真实路径 = account.html 里 fetch 的那些。
 app.use('/api', require('./routes/profile'));
+// Opt-in friends pilot: reuse auth and bazi engine; disabled until explicitly configured.
+app.use('/api/friends', require('./routes/friends').productionRouter());
 app.use('/api', require('./routes/subscription-history'));
 
 // 邀请裂变
@@ -307,3 +309,4 @@ if (!process.env.VERCEL) {
 }
 
 module.exports = app;
+

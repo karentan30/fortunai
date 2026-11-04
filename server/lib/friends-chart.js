@@ -1,0 +1,78 @@
+'use strict';
+// Reuse Runae's vendored calendar and chart engine. Birth input is never persisted here.
+const crypto = require('node:crypto');
+const { Solar, Lunar } = require('./bazi-engine/vendor/lunar-typescript');
+const { computeBaziChart } = require('./bazi-engine');
+const STEMS = [...'甲乙丙丁戊己庚辛壬癸'];
+const ELEMENTS = ['木','火','土','金','水'];
+const ZODIACS = [...'鼠牛虎兔龙蛇马羊猴鸡狗猪'];
+const stemElement = stem => ELEMENTS[Math.floor(STEMS.indexOf(stem) / 2)];
+const bad = message => { const e = new Error(message); e.status = 400; throw e; };
+function directions(stem) {
+  const e = ELEMENTS.indexOf(stemElement(stem));
+  return [
+    {index:(e+4)%5,label:'对方生我',relation:'相生',forMe:'传统五行中，对方的五行生我的五行，可作为支持与滋养的文化意象。',forThem:'从对方视角是“我生对方”；真实相处中，也需要你回应、关心与付出。'},
+    {index:e,label:'同五行',relation:'同类',forMe:'传统五行中属于同类，可作为寻找共同语言的认识入口。',forThem:'双方互为同类；是否聊得来，还要看兴趣、边界和相处方式。'},
+    {index:(e+1)%5,label:'我生对方',relation:'相生',forMe:'从你的视角是“我生对方”，可作为表达、分享与支持的文化意象。',forThem:'对方视角是“对方生我”；并不意味着你必须单方面照顾或承担。'}
+  ].map(({index,...d})=>({...d,element:ELEMENTS[index],stems:STEMS.slice(index*2,index*2+2)}));
+}
+function calculate(input, now=new Date()) {
+  if (!input || typeof input.birthday !== 'string') bad('请填写出生日期');
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(input.birthday);
+  if (!m) bad('日期格式应为 YYYY-MM-DD');
+  const year=+m[1],month=+m[2],day=+m[3];
+  if(year<1900 || year>now.getUTCFullYear() || month<1 || month>12 || day<1 || day>31) bad('出生日期无效');
+  const calendar = input.calendar || 'solar';
+  if(!['solar','lunar'].includes(calendar)) bad('请选择公历或农历');
+  let solar;
+  try {
+    if(calendar==='lunar') {
+      const lunar=Lunar.fromYmd(year,input.leapMonth===true?-month:month,day);
+      solar=lunar.getSolar();
+      if(lunar.getYear()!==year || Math.abs(lunar.getMonth())!==month || lunar.getDay()!==day) bad('农历日期不存在');
+    } else {
+      const date=new Date(Date.UTC(year,month-1,day));
+      if(date.getUTCFullYear()!==year || date.getUTCMonth()+1!==month || date.getUTCDate()!==day) bad('公历日期不存在');
+      solar=Solar.fromYmd(year,month,day);
+    }
+  } catch (_) { bad('出生日期不存在，请检查公历、农历和闰月'); }
+  const sy=solar.getYear(), sm=solar.getMonth(), sd=solar.getDay();
+  const date=new Date(Date.UTC(sy,sm-1,sd));
+  if(date>now) bad('出生日期不能在未来');
+  const age=now.getUTCFullYear()-sy-((now.getUTCMonth()+1<sm || (now.getUTCMonth()+1===sm && now.getUTCDate()<sd))?1:0);
+  if(age<18) bad('交友功能仅供年满18岁的用户使用');
+  const known=input.hour!==undefined && input.hour!==null && input.hour!=='';
+  const hour=known?Number(input.hour):12, minute=known?Number(input.minute??0):0;
+  if(!Number.isInteger(hour)||hour<0||hour>23||!Number.isInteger(minute)||minute<0||minute>59) bad('出生时间无效');
+  const timed=Solar.fromYmdHms(sy,sm,sd,hour,minute,0);
+  const daySolar=hour===23?timed.next(1):timed;
+  const dayPillar=daySolar.getLunar().getEightChar().getDay();
+  // Unknown hour: do not fabricate a time pillar, strength, useful element or full match.
+  let pillars=null;
+  if(known){
+    const full=computeBaziChart({year:sy,month:sm,day:sd,hour,minute,gender:'female',includeZiwei:false});
+    pillars=Object.fromEntries(Object.entries(full.bazi.siZhu).map(([k,v])=>[k,v.gan+v.zhi]));
+  }
+  return { dayMaster:dayPillar[0],element:stemElement(dayPillar[0]),dayPillar,
+    zodiac:solar.getLunar().getYearShengXiao(),age,ageAsOf:now.toISOString().slice(0,10),
+    complete:known,pillars,directions:directions(dayPillar[0]),
+    convention:'中国出生地当地民用时间（UTC+8）；23点换日；生肖按农历春节。暂不校正真太阳时。',
+    note:known?'四柱用于传统文化参考；认识方向仅解释五行关系，不是完整合盘或择偶结论。':'时辰未知：日柱暂按当日中午计算，若可能生于23点后，日主可能变化。没有推算时柱、身强弱或喜用神。' };
+}
+function createChartService(secret) {
+  if(typeof secret!=='string' || secret.length<32) throw Error('FRIENDS_SIGNING_KEY 至少32个字符');
+  const mac = data => crypto.createHmac('sha256',secret).update(data).digest('base64url');
+  return {
+    issue(input){const chart=calculate(input);const data=Buffer.from(JSON.stringify({v:1,exp:Date.now()+2*3600000,chart})).toString('base64url');return {chart,credential:data+'.'+mac(data)};},
+    verify(token){
+      if(typeof token!=='string'||token.length>10000) bad('请先生成日主卡');
+      const [data,sig,...rest]=token.split('.');
+      const a=Buffer.from(sig||''),b=Buffer.from(mac(data||''));
+      if(rest.length || a.length!==b.length || !crypto.timingSafeEqual(a,b)) bad('日主结果无效，请重新计算');
+      let body;try{body=JSON.parse(Buffer.from(data,'base64url').toString());}catch(_){bad('日主结果无效');}
+      if(body.v!==1||body.exp<Date.now()||!STEMS.includes(body.chart?.dayMaster)) bad('日主结果已过期，请重新计算');
+      return body.chart;
+    }
+  };
+}
+module.exports={calculate,createChartService,directions,STEMS,ZODIACS,bad};
