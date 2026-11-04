@@ -1,0 +1,22 @@
+渠道归因范围与留存（2026-11-04）
+
+一、统计的是次数，不是独立用户
+来源白名单：wechat（兼容“微信”输入）、xhs、douyin、channels、direct、tiktok。
+试验码白名单：none、launch_20261105、poster_a、poster_b、video_a、video_b。未知值、非字符串或包含个人信息的任意输入降为direct/none，原始字符串不保存。白名单扩展需要代码评审，不开放任意campaign以免无限维度和个人信息混入。
+每日按UTC日期、事件、来源和试验码聚合count；这些是事件次数，不是UV、注册用户数或去重访客。客户端数据可被重复触发或自动化发送，已有同源和限流不代表可靠去重。
+匿名POST /api/friends/events仅接受share_visit、poster_export、profile_preview；传source/campaign。额外生日、定位、收入、联系方式等字段不存。客户端不能发送注册或首次建档事件。
+
+二、首次建档归因，不是账号注册归因
+POST profile可带attribution:{source,campaign}；服务器在真实登录用户首次成功建档时记录first_profile_created，之后编辑不能修改首次来源。
+新集合attributionMarks仅用于账号级首次建档去重：userId、来源、有限试验码、首次建档时间；不保存生日、收入、资产、精确位置、邮箱或指纹。公开卡片和运营统计不返回标记或账号ID。本人档案可查看自身acquisition来源。
+档案存在期间保留标记；删除档案后保留90天用于避免删档重建夸大新增。重复删除空档案不延长保留期；期限内重建沿用来源，标记重新随档案存续。超过删除后90天清除标记，日后重建可再次计入，因此该指标不是账号终身唯一人数。
+现有写事务会清除到期标记，导出purgeAttributionMarks(state,now)供每日维护任务调用。每日物理清理任务及备份留存/恢复后再清理仍须上线运维接入验收；不能把惰性清理称为已经部署的每日定时删除。加密备份中的到期数据按另行批准的备份周期到期清理。
+旧档案已有但没有标记时补direct标记，不追溯伪造新增；旧profile_created事件保留原名，不重新命名成first_profile_created或注册数。
+
+三、后续转化的解释
+申请创建归因于申请者首次建档来源；接受/拒绝等操作归因于执行操作人的来源。不能直接用跨人角色事件相除声称同一来源用户的精确转化率。举报/反馈等既有总计数默认direct，未假称都已接入渠道归因。
+真实账号注册(auth)和真实付款归因尚未接通。首次建档不等于注册，支付意图不等于已到账，匿名点击不等于新用户。不得用当前指标承诺CAC、付费率或跨平台用户身份识别。
+前端可仅在当前页面内存保留入口source/campaign并跨hash使用，不使用长期storage、指纹或读取无关query；刷新丢失时归为direct。所有入口链接仅使用已部署同源域名，本地localhost链接不得当真实获客入口发布。
+
+四、管理API兼容
+GET admin/summary原metrics增加source/campaign字段；旧行显示direct/none。metadata：metricUnit='event_count'，metricDayTimeZone='UTC'，attributionScope='first_profile_creation_not_account_registration'。不把来源值当已验证的平台证明，它只是有限的入口标签。
