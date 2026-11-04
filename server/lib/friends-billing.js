@@ -22,7 +22,7 @@ function majorToMinor(value){const text=String(value);if(!/^\d+(?:\.\d{1,2})?$/.
 function createBillingService(store,{adapter=null,enabled=false,salesPaused=false,merchantVerified=false,merchantName='',callbackV2Verified=false,freshPullVerified=false,registrations={},clock=()=>Date.now()}={}){
   const nowISO=()=>new Date(clock()).toISOString();
   const ready=()=>enabled&&merchantVerified&&merchantName==='Capstone IQ'&&(callbackV2Verified||(freshPullVerified&&typeof adapter?.freshStatus==='function'))&&adapter?.ready&&typeof adapter.projectId==='string'&&!!adapter.projectId;
-  const registration=(sku,channel)=>{const product=CATALOG[sku],r=registrations[sku];return product&&r?.verified===true&&r.amountMinor===product.amountMinor&&r.currency===product.currency&&typeof r.product==='string'&&r.product.length>0&&Array.isArray(r.channels)&&r.channels.includes(channel)?r:null;};
+  const registration=(sku,channel)=>{const product=CATALOG[sku],r=registrations[sku];return product&&r?.verified===true&&(!product.accessDays||r.benefitsVerified===true)&&r.amountMinor===product.amountMinor&&r.currency===product.currency&&typeof r.product==='string'&&r.product.length>0&&Array.isArray(r.channels)&&r.channels.includes(channel)?r:null;};
   const ledger=(s,entry)=>s.creditLedger.push({id:crypto.randomUUID(),createdAt:nowISO(),...entry});
   const orderAvailable=(s,id,unit)=>(s.creditLedger||[]).filter(e=>e.orderId===id&&e.unit===unit).reduce((sum,e)=>sum+e.delta,0);
   const live=o=>o.status==='paid'&&(!o.accessUntil||Date.parse(o.accessUntil)>clock());

@@ -30,6 +30,8 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.get('/admin/reports',run(req=>({reports:admin.reports(req.query.status)})));
   router.get('/admin/profiles',run(()=>({profiles:admin.profiles()})));
   router.get('/admin/audit',run(()=>({audit:admin.audit()})));
+  router.get('/admin/delivery-review',run(req=>admin.deliveryReview({limit:req.query.limit===undefined?100:Number(req.query.limit),offset:req.query.offset===undefined?0:Number(req.query.offset)})));
+  router.post('/admin/report-jobs/:id/release',async(req,res,next)=>{try{res.json(await admin.releaseReport(req.params.id,req.body,req.friendsAdminActor));}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e);}});
   router.get('/admin/health',run(()=>store.health?store.health():{ok:true,storage:'review-memory'}));
   router.post('/admin/reports/:id',run(req=>admin.review(req.params.id,req.body.status,req.body.note)));
   router.post('/admin/profiles/:id',run(req=>admin.moderate(req.params.id,req.body.disabled,req.body.reason)));

@@ -17,6 +17,8 @@ test('personal report HTTP enforces closed mode, auth, CSRF and owner-only deliv
   assert.equal((await fetch(base+'/closed',{method:'POST',headers:{'Content-Type':'application/json','X-Test-User':'alice'},body})).status,503);
   assert.equal((await fetch(base+'/reports')).status,401);
   const headers={'Content-Type':'application/json','X-Test-User':'alice','X-Runae-Friends':'1'};
+  assert.equal((await fetch(base+'/reports/eligibility',{method:'POST',headers:{'Content-Type':'application/json'},body})).status,401);
+  const eligibility=await(await fetch(base+'/reports/eligibility',{method:'POST',headers,body})).json();assert.equal(eligibility.eligible,true);assert.equal(reserved,0);assert.equal(generated,0);assert.equal((store.read().personalReportJobs||[]).length,0);
   assert.equal((await fetch(base+'/reports',{method:'POST',headers:{...headers,Origin:'https://evil.example'},body})).status,403);assert.equal(reserved,0);
   const created=await(await fetch(base+'/reports',{method:'POST',headers,body})).json();assert.equal(created.status,'delivered');
   assert.equal((await fetch(base+'/closed')).status,401);

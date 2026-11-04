@@ -39,6 +39,10 @@ async function main(){
   const store=createSqliteFriendsStore(file,{key,create:action==='init-db'||action==='migrate-json'});
   try{
     if(action==='init-db'){console.log('加密数据库已就绪。');return;}
+    if(action==='review'){
+      const {deliveryReview}=require('../server/lib/friends-admin');
+      console.log(JSON.stringify(deliveryReview(store.read(),{limit:args.limit===undefined?100:Number(args.limit),offset:args.offset===undefined?0:Number(args.offset)}),null,2));return;
+    }
     if(action==='maintenance'){
       const removed=store.transaction(state=>{const before=state.attributionMarks.length;purgeAttributionMarks(state);return before-state.attributionMarks.length;});
       console.log(JSON.stringify({ok:true,expiredAttributionMarksRemoved:removed}));return;
@@ -51,7 +55,7 @@ async function main(){
       store.transaction(next=>{for(const k of Object.keys(next))if(Array.isArray(old[k]))next[k]=structuredClone(old[k]);});console.log('旧快照已导入加密库；源文件未删除。请验证后按留存政策处理旧明文备份。');return;
     }
     if(action==='check'){console.log(JSON.stringify(store.health()));return;}
-    throw Error('操作无效：init-keys / init-db / migrate-json / check / backup / restore / preflight / maintenance');
+    throw Error('操作无效：init-keys / init-db / migrate-json / check / backup / restore / preflight / maintenance / review');
   }finally{store.close();}
 }
 main().catch(e=>{console.error('交友运维操作未完成：'+e.message);process.exitCode=1;});

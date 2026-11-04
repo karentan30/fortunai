@@ -1,0 +1,33 @@
+交付异常队列与人工失败释放操作（2026-11-04）
+代码已提供；未对真实用户执行次数返还、退款或其他资金操作。
+
+一、先查只读队列
+GET /api/friends/admin/delivery-review?limit=100&offset=0
+使用既有强管理token的X-Admin-Token header，不能放URL。返回readOnly/orderCount/reportCount/orders/reports/hasMore/nextOffset；每类最多100条，按nextOffset继续。
+订单含orderId、hubOrderId、状态、sku、日期、系统原因码、关联reservationIds。报告含reportId、状态、日期、失败码、reservationId、reservationStatus、orderIds、hasSavedResult、linkStatus。缺job.reservationId时仅按同账号report_<reportId>键恢复关联，不能借此读他人订单。
+队列包括creating/create_unknown/payment_review，以及manual_review/result_saved和已过租约的生成作业；不返回姓名、联系方式、原始出生输入、完整命盘、报告正文、收入资产或令牌。中断的释放会显示pendingRelease原幂等键、OPS证据号与原expectedUpdatedAt，便于沿同一操作恢复。
+CLI同一队列：node /absolute/repo/scripts/friends-ops.cjs review --env=/absolute/private/server.env --db=/absolute/private/friends.sqlite --limit=100 --offset=0
+CLI有内部关联ID，输出仅保存在受保护操作记录，不作为公开日志。
+
+二、报告失败释放的人工核对条件
+先建立OPS工单，核对具体reportId/reservationId/orderIds，检查执行日志、队列状态与租约，确认任务未交付、没有已保存结果且旧执行已停止或可被状态fence阻止写回。工单记录证据的实际位置、核对人及结论；接口只接受该证据引用，不自动证明工单内容真实。
+不得释放：delivered/result_saved、有任何已保存result、仍有效的生成租约、已committed预扣、预扣账号/作业键不一致、来源订单缺失。已保存结果应先由本人查询报告触发正常结算恢复；冲突则核对原订单，不得为了恢复余额销毁已生成结果。
+无预扣记录时不凭空加次数；核查原余额和执行记录后，指导本人重新确认输入并使用新报告请求键，不能让用户重复买单以代替核对。
+
+三、执行唯一获准动作
+POST /api/friends/admin/report-jobs/<reportId>/release
+必须管理token header、Content-Type: application/json、X-Runae-Friends: 1，且同源。请求示例仅为格式：
+{"idempotencyKey":"release_ops_20261104_001","expectedUpdatedAt":"从队列复制的原更新时间","evidenceRef":"OPS-20261104-001","reasonCode":"execution_failed_no_result"}
+evidenceRef只接受OPS-开头、后接3至36位大写字母/数字/下划线/连字符的工单编号，不能填客户资料或自由叙述。expectedUpdatedAt必须是队列对应真实时间。操作者从已验证管理凭证指纹取得，body.actor不能伪造；若共用token，这只能识别该凭证，实际人员须在受保护工单记录。
+可用curl --config /absolute/private/admin-curl.conf --request POST --header 'Content-Type: application/json' --header 'X-Runae-Friends: 1' --data-binary @/absolute/private/release-request.json --url 'https://已核验域名/api/friends/admin/report-jobs/实际reportId/release'
+admin-curl.conf由受控环境管理并包含真实认证header，不能提交仓库；本说明不包含密钥。先GET只读队列，同样使用受控curl配置；不要将示例当作可直接对生产执行的授权。
+
+四、结果和重试
+服务端事务先核对状态、来源及预扣并写report.release.intent，原子fence旧任务；再调用既有settle(release)，只结束原预扣并返还原来源仍有效的次数，绝不创造新点或执行现金退款；完成后报告变failed并写report.release.complete。
+响应含reportId/status/reservationId/reservationStatus/duplicate/availableReportCredits。原订单已退款或过期时availableReportCredits可能为0，不承诺返还可用次数1，也不伪造现金退款。
+同幂等键和同证据重试不重复返次；相同键用于不同报告/证据/原状态时间返回409。中断后必须沿pendingRelease里的原键、证据号和expectedUpdatedAt重试，不换键重扣或返还。503保持人工核对，先看队列与审计。活动租约/保存结果冲突409时停止，不强行改数据库。
+完成后让本人刷新余额及失败报告状态；确认有可用次数再使用新的报告请求键重试生成，不要求另行购买。同一个失败报告请求键仍返回原失败记录，这是幂等语义。
+
+五、支付异常的边界
+payment_review需用hubOrderId到真实收单平台核对交易/退款和已批准工单处理；本接口不授新权益、不重开支付、不发起或冒认现金退款。Hub legacy failed混合多个状态，本系统保留fresh查证与冻结审计，不能仅靠该字符串断言退款完成。创建未知且缺hubOrderId不猜订单号、不重复发起收款。
+真实恢复/现金退款凭证必须由运营保存到受保护工单；本轮没有新增自动资金恢复动作。没有可信证据时保留冻结并进行人工平台核验，而不是让用户再付款。
