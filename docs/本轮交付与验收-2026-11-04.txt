@@ -6,7 +6,7 @@ Runae 五行交友网页：本轮交付
 设计主线：先了解八字，再认识彼此。日主为文化认识入口，不凭单个日主保证关系好坏。
 
 可操作
-1. 公历/农历生日、已知或未知时辰，复用 Runae 现有排盘引擎。
+1. 极简首页显选公历/农历，出生城市自动匹配189个已收录全球常用城市经纬度及历史时区，单个HH:mm时间框或时间不详；复用Runae现有历法/排盘引擎。
 2. 日主、生肖及三种五行认识方向；分别解释对方对我、我对对方。
 3. 九项个人资料；每项公开/连接后/仅本人；个人收入资产为自报，非认证。
 4. 自愿入库、真实空列表、按城市与可见的日主/生肖筛选。
@@ -15,15 +15,16 @@ Runae 五行交友网页：本轮交付
 7. 手机与电脑排版；本地环境会显示“本地测试版，尚未上线”。
 
 验证证据
-node --test server/lib/friends.test.cjs：10项通过，0失败。
+node --test server/lib/friends.test.cjs server/lib/friends-location.test.cjs server/lib/friends-chart-location.test.cjs：20项通过，0失败。
 node scripts/friends-e2e.cjs：两套隔离浏览器账号完成生日→注册→九项建档→海报→发现→申请→接受→解除→权限撤回；通过。
 3款PNG均为1080x1440，已实际解码二维码并确认目标为对应个人卡链接。
 390像素手机宽度无横向溢出；端到端浏览器pageerror为0。
+实际界面另测长春农历1991-08-28 06:00为戊申、纽约当地时间、重选城市失效；夏令时重复/不存在时刻不自动猜测。境外年/月柱通过同一瞬间的立春节气边界测试。
 测试使用虚构账号与独立临时数据，未导入正式人库。视觉演示资料只用于截图，不是平台真实嘉宾。
 
 尚待生产验收
 真实Runae账号会话与HTTPS反代、FRIENDS_ENABLED开关、数据文件位置与备份、单进程运行、人工举报负责人。
-现有排盘与身份模块从当前main复用，未改动旧支付与报告逻辑。新模块默认关闭。
+现有排盘与身份模块从当前main复用，旧/pages/friends.html保留原用途，新入口/pages/friends-connect.html。未改动旧支付与报告逻辑。新模块默认关闭。
 本地开发账号与线上账号不同；不要在本地填真实敏感资料。本地二维码不可供异地手机访问。
 
 后续阶段
@@ -37,7 +38,7 @@ PRD-五行交友-2026-11-04.txt：完整需求、字段、权限、分期和验�
 实现状态与部署说明-2026-11-04.txt：实际后台范围与上线步骤、已知局限。
 
 本机查看
-http://127.0.0.1:4188/pages/friends.html
+http://127.0.0.1:4188/pages/friends-connect.html
 重启方法（项目目录）：node server/friends-preview.cjs
 已有server/node_modules/express时直接运行；本地独立副本无依赖时：
 npm.cmd install --prefix .review --cache .review/npm-cache --no-audit --no-fund express@4.22.2

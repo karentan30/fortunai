@@ -3,6 +3,7 @@ const path=require('node:path');
 const {createFriendsStore}=require('../lib/friends-store');
 const {createChartService}=require('../lib/friends-chart');
 const {createFriendsService}=require('../lib/friends-service');
+const {searchCities}=require('../lib/friends-location');
 function createRouter({express,auth,store,secret,enabled=true}) {
   const router=express.Router();
   const charts=enabled?createChartService(secret):null;
@@ -21,6 +22,7 @@ function createRouter({express,auth,store,secret,enabled=true}) {
   });
   const run=fn=>(req,res,next)=>{try{res.json(fn(req));}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e);}};
   router.post('/chart',run(req=>charts.issue(req.body)));
+  router.get('/cities',run(req=>({cities:searchCities(req.query.q)})));
   router.use(auth);
   router.get('/card/:shareId',run(req=>({profile:service.card(req.params.shareId,req.user?.id)})));
   router.use((req,res,next)=>req.user?next():res.status(401).json({error:'请先登录 Runae 账号'}));

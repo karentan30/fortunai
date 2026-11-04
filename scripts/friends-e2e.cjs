@@ -9,18 +9,21 @@ server.on('error',e=>console.error('preview launch:',e.message));
 const base='http://127.0.0.1:4191';
 async function ready(){for(let i=0;i<80;i++){try{if((await fetch(base+'/api/friends-preview/status')).ok)return;}catch{}await new Promise(r=>setTimeout(r,100));}throw Error('preview did not start');}
 const errors=[];
+async function chooseBirthCity(page,query='北京'){
+  await page.locator('#birth-city-search').fill(query);await page.locator('.city-result').first().waitFor();await page.locator('.city-result').first().click();
+}
 async function createPerson(page,slug){
   page.on('pageerror',e=>errors.push(e.message));
-  await page.goto(base+'/pages/friends.html');await page.locator('#birthday').fill('1990-06-15');await page.locator('[name=adult]').check();
+  await page.goto(base+'/pages/friends-connect.html');await page.locator('#birthday').fill('1990-06-15');await chooseBirthCity(page);await page.locator('[name=adult]').check();
   await page.getByRole('button',{name:'免费查我的日主'}).click();await page.waitForURL(/#result$/);
   await page.locator('.day-master').waitFor();assert.equal((await page.locator('.day-master').innerText()).trim(),'辛');
   assert.match(await page.locator('main').innerText(),/对方对我/);assert.match(await page.locator('main').innerText(),/我对对方/);
   await page.locator('#account-button').click();await page.locator('[data-auth-mode=register]').click();
   await page.locator('#auth-form [name=email]').fill(slug+'@example.test');await page.locator('#auth-form [name=password]').fill('OnlyLocalTest-2026');
   await page.locator('#auth-form button[type=submit]').click();await page.locator('#auth-dialog').waitFor({state:'hidden'});
-  await page.goto(base+'/pages/friends.html#profile');
+  await page.goto(base+'/pages/friends-connect.html#profile');
   // Calculation state intentionally stays in memory, so use result from the authenticated chart endpoint after a navigation.
-  if(await page.locator('#profile-form').count()===0){await page.goto(base+'/pages/friends.html');await page.locator('#birthday').fill('1990-06-15');await page.locator('[name=adult]').check();await page.getByRole('button',{name:'免费查我的日主'}).click();await page.locator('.day-master').waitFor();await page.locator('a[href="#profile"]').last().click();}
+  if(await page.locator('#profile-form').count()===0){await page.goto(base+'/pages/friends-connect.html');await page.locator('#birthday').fill('1990-06-15');await chooseBirthCity(page);await page.locator('[name=adult]').check();await page.getByRole('button',{name:'免费查我的日主'}).click();await page.locator('.day-master').waitFor();await page.locator('a[href="#profile"]').last().click();}
   await page.locator('#profile-form').waitFor();
   await page.locator('#nickname').fill('测试样本'+slug);await page.locator('#city').fill('北京');await page.locator('#bio').fill('虚构测试样本：喜欢羽毛球，愿意分享入门经验。');
   const fields={height:'172',weight:'62',school:'示例大学（测试）',occupation:'工程师（测试）',industry:'软件（测试）',title:'开发人员（测试）',income:'20–30',assets:'100–300'};
@@ -38,7 +41,7 @@ async function createPerson(page,slug){
   await ready();browser=await chromium.launch({executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true,args:['--disable-gpu','--no-sandbox']});
   const a=await browser.newContext({viewport:{width:1440,height:1000}}),b=await browser.newContext({viewport:{width:390,height:844}}),anon=await browser.newContext({viewport:{width:390,height:844}});
   const pa=await a.newPage(),pb=await b.newPage(),pc=await anon.newPage();
-  await pc.goto(base+'/pages/friends.html');await pc.locator('#birthday').waitFor();
+  await pc.goto(base+'/pages/friends-connect.html');await pc.locator('#birthday').waitFor();
   assert.equal(await pc.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'mobile horizontal overflow');
   await pc.screenshot({path:path.join(root,'preview-mobile.png'),fullPage:true});
   const ap=await createPerson(pa,'alice'),bp=await createPerson(pb,'bob');
@@ -47,14 +50,14 @@ async function createPerson(page,slug){
     await pa.locator('#poster-confirm').check();const [download]=await Promise.all([pa.waitForEvent('download'),pa.locator('#download-poster').click()]);await download.saveAs(path.join(root,'preview-poster-'+theme+'.png'));
   }
   let response=await anon.request.get(base+'/api/friends/card/'+bp.shareId);let card=(await response.json()).profile;assert.equal(card.fields.income,undefined);assert.equal(card.fields.assets,undefined);assert.equal(card.chart.dayPillar,undefined);
-  await pa.goto(base+'/pages/friends.html#discover');await pa.locator('[data-detail="'+bp.shareId+'"]').click();await pa.locator('#apply-person').click();await pa.locator('#detail-dialog').waitFor({state:'hidden'});
-  await pb.goto(base+'/pages/friends.html#connections');await pb.locator('[data-action=accept]').click();await pb.locator('[data-action=disconnect]').waitFor();
+  await pa.goto(base+'/pages/friends-connect.html#discover');await pa.locator('[data-detail="'+bp.shareId+'"]').click();await pa.locator('#apply-person').click();await pa.locator('#detail-dialog').waitFor({state:'hidden'});
+  await pb.goto(base+'/pages/friends-connect.html#connections');await pb.locator('[data-action=accept]').click();await pb.locator('[data-action=disconnect]').waitFor();
   response=await a.request.get(base+'/api/friends/card/'+bp.shareId);card=(await response.json()).profile;assert.equal(card.fields.income,'20–30');assert.equal(card.fields.assets,undefined);
   const r=await (await a.request.get(base+'/api/friends/requests')).json();assert.equal(r.requests[0].contact,'test-contact-bob');
   pb.once('dialog',d=>d.accept());await pb.locator('[data-action=disconnect]').click();await pb.getByText('已解除').waitFor();
   card=(await (await a.request.get(base+'/api/friends/card/'+bp.shareId)).json()).profile;assert.equal(card.fields.income,undefined);
   assert.equal((await (await a.request.get(base+'/api/friends/requests')).json()).requests[0].contact,undefined);
   // Shared-card URL resolves anonymously and never returns a private birthday.
-  await pc.goto(base+'/pages/friends.html?card='+ap.shareId);await pc.locator('#detail-dialog h2').waitFor();assert.match(await pc.locator('#detail-dialog').innerText(),/测试样本alice/);
+  await pc.goto(base+'/pages/friends-connect.html?card='+ap.shareId);await pc.locator('#detail-dialog h2').waitFor();assert.match(await pc.locator('#detail-dialog').innerText(),/测试样本alice/);
   assert.deepEqual(errors,[]);console.log('E2E PASS: birthday → account → nine fields → three 1080x1440 posters + QR → discovery → request → accept → disconnect → privacy.');
 }finally{if(browser)await browser.close();server.kill();}})().catch(e=>{console.error(e);process.exitCode=1;});

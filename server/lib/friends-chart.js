@@ -3,6 +3,7 @@
 const crypto = require('node:crypto');
 const { Solar, Lunar } = require('./bazi-engine/vendor/lunar-typescript');
 const { computeBaziChart } = require('./bazi-engine');
+const {resolveBirthTime}=require('./friends-location');
 const STEMS = [...'甲乙丙丁戊己庚辛壬癸'];
 const ELEMENTS = ['木','火','土','金','水'];
 const ZODIACS = [...'鼠牛虎兔龙蛇马羊猴鸡狗猪'];
@@ -41,9 +42,15 @@ function calculate(input, now=new Date()) {
   if(date>now) bad('出生日期不能在未来');
   const age=now.getUTCFullYear()-sy-((now.getUTCMonth()+1<sm || (now.getUTCMonth()+1===sm && now.getUTCDate()<sd))?1:0);
   if(age<18) bad('交友功能仅供年满18岁的用户使用');
-  const known=input.hour!==undefined && input.hour!==null && input.hour!=='';
-  const hour=known?Number(input.hour):12, minute=known?Number(input.minute??0):0;
+  let rawHour=input.hour,rawMinute=input.minute;
+  if(Object.hasOwn(input,'time')){
+    if(input.time===null||input.time===''){rawHour=null;rawMinute=0;}
+    else {const tm=/^(\d{2}):(\d{2})$/.exec(String(input.time));if(!tm)bad('出生时间请填写为 HH:mm');rawHour=+tm[1];rawMinute=+tm[2];}
+  }
+  const known=rawHour!==undefined && rawHour!==null && rawHour!=='';
+  const hour=known?Number(rawHour):12, minute=known?Number(rawMinute??0):0;
   if(!Number.isInteger(hour)||hour<0||hour>23||!Number.isInteger(minute)||minute<0||minute>59) bad('出生时间无效');
+  const resolved=input.cityId?resolveBirthTime({year:sy,month:sm,day:sd,hour:known?hour:null,minute,cityId:input.cityId,disambiguation:input.disambiguation}):null;
   const timed=Solar.fromYmdHms(sy,sm,sd,hour,minute,0);
   const daySolar=hour===23?timed.next(1):timed;
   const dayPillar=daySolar.getLunar().getEightChar().getDay();
@@ -52,11 +59,19 @@ function calculate(input, now=new Date()) {
   if(known){
     const full=computeBaziChart({year:sy,month:sm,day:sd,hour,minute,gender:'female',includeZiwei:false});
     pillars=Object.fromEntries(Object.entries(full.bazi.siZhu).map(([k,v])=>[k,v.gan+v.zhi]));
+    if(resolved){
+      // Seasonal boundaries are absolute instants; the existing calendar's ephemeris is expressed in UTC+8.
+      // Day/time pillars intentionally use the recorded local civil date/time (no true-solar correction).
+      const beijing=new Date(Date.parse(resolved.instant)+8*3600000);
+      const seasonal=Solar.fromYmdHms(beijing.getUTCFullYear(),beijing.getUTCMonth()+1,beijing.getUTCDate(),beijing.getUTCHours(),beijing.getUTCMinutes(),0).getLunar().getEightChar();
+      pillars.year=seasonal.getYear();pillars.month=seasonal.getMonth();
+    }
   }
+  const birthLocation=resolved?{...resolved.location,offsetMinutes:resolved.offsetMinutes}:null;
   return { dayMaster:dayPillar[0],element:stemElement(dayPillar[0]),dayPillar,
     zodiac:solar.getLunar().getYearShengXiao(),age,ageAsOf:now.toISOString().slice(0,10),
-    complete:known,pillars,directions:directions(dayPillar[0]),
-    convention:'中国出生地当地民用时间（UTC+8）；23点换日；生肖按农历春节。暂不校正真太阳时。',
+    complete:known,pillars,birthLocation,directions:directions(dayPillar[0]),calculationVersion:'friends-chart-v2;tzdata='+process.versions.tz,
+    convention:resolved?`${resolved.location.label} · ${resolved.location.timeZone}；按出生当地民用日期/时间，23点换日；年/月柱按同一瞬间的节气，生肖按春节。经纬度为城市中心；未校正真太阳时。`:'未填出生城市，暂按UTC+8民用时间；23点换日，生肖按农历春节。未校正真太阳时。',
     note:known?'四柱用于传统文化参考；认识方向仅解释五行关系，不是完整合盘或择偶结论。':'时辰未知：日柱暂按当日中午计算，若可能生于23点后，日主可能变化。没有推算时柱、身强弱或喜用神。' };
 }
 function createChartService(secret) {

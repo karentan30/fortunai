@@ -35,7 +35,7 @@ app.get('/api/auth/me',auth,(req,res)=>req.user?res.json({user:req.user}):res.st
 // Small review-only request ceiling, separate from production's global rate limiter.
 const buckets=new Map();app.use('/api/friends',(req,res,next)=>{const k=req.ip,now=Date.now(),b=(buckets.get(k)||[]).filter(t=>now-t<60000);if(b.length>=120)return res.status(429).json({error:'操作过于频繁'});b.push(now);buckets.set(k,b);next();});
 app.use('/api/friends',createRouter({express,auth,store:createFriendsStore(path.join(dir,'friends.json')),secret:fs.readFileSync(keyFile,'utf8')}));
-app.get('/',(req,res)=>res.redirect('/pages/friends.html'));
+app.get('/',(req,res)=>res.redirect('/pages/friends-connect.html'));
 app.use('/pages',express.static(path.join(root,'pages')));
 app.use('/assets',express.static(path.join(root,'assets')));
-const server=app.listen(Number(process.env.PORT)||4188,'127.0.0.1',()=>console.log('Runae 本地集成版 http://127.0.0.1:'+server.address().port+'/pages/friends.html'));
+const server=app.listen(Number(process.env.PORT)||4188,'127.0.0.1',()=>console.log('Runae 本地集成版 http://127.0.0.1:'+server.address().port+'/pages/friends-connect.html'));
