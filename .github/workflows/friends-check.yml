@@ -1,0 +1,27 @@
+name: Friends feature checks
+on:
+  pull_request:
+    paths:
+      - 'server/lib/friends*'
+      - 'server/routes/friends*'
+      - 'server/data/friends*'
+      - 'server/lib/store.js'
+      - 'server/middleware/**'
+      - 'scripts/test-friends.cjs'
+      - '.github/workflows/friends-check.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci --prefix server --no-audit --no-fund
+      - run: node scripts/test-friends.cjs

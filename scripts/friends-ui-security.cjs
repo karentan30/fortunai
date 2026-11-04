@@ -22,7 +22,7 @@ async function mockUser(page,state){
       if(state.expireProfile){state.loggedIn=false;return reply(401,{error:'登录已过期'});}
       state.profile={...state.profile,...request.postDataJSON()};return reply(200,{profile:state.profile});
     }
-    if(pathname==='/api/friends/events'){const body=request.postDataJSON();assert.deepEqual(Object.keys(body),['event']);assert.ok(['profile_preview','poster_export','share_visit'].includes(body.event));state.events.push(body.event);return reply(200,{ok:true});}
+    if(pathname==='/api/friends/events'){const body=request.postDataJSON();assert.deepEqual(Object.keys(body).sort(),['campaign','event','source']);assert.ok(['wechat','xhs','douyin','channels','direct','tiktok'].includes(body.source));assert.ok(['none','launch_20261105','poster_a','poster_b','video_a','video_b'].includes(body.campaign));assert.ok(['profile_preview','poster_export','share_visit'].includes(body.event));state.events.push(body.event);return reply(200,{ok:true});}
     if(pathname==='/api/friends/requests')return reply(200,{requests:[]});
     if(pathname==='/api/friends/reports')return reply(200,{reports:[]});
     return reply(404,{error:'Fixture route is not configured'});
@@ -66,7 +66,7 @@ async function adminChecks(browser){
     const request=route.request(),url=new URL(request.url());assert.equal(request.headers()['x-admin-token'],TOKEN);assert.equal(url.href.includes(TOKEN),false);requests.push({pathname:url.pathname,method:request.method(),body:request.postDataJSON()});
     if(expired)return route.fulfill({status:401,json:{error:'凭据无效'}});
     const prefix='/api/friends/admin';let data;
-    if(url.pathname===prefix+'/summary')data={profiles:2,listed:1,disabled:profileDisabled?1:0,requests:{pending:1,accepted:1},reports:{open:1},metrics:[{day:'2026-11-04',event:'poster_export',count:2}],feedback:{met:1},privateData:PRIVATE};
+    if(url.pathname===prefix+'/summary')data={profiles:2,listed:1,disabled:profileDisabled?1:0,requests:{pending:1,accepted:1},reports:{open:1},metrics:[{day:'2026-11-04',event:'poster_export',count:2},{day:'2026-11-04',event:'first_profile_created',source:'wechat',campaign:'poster_a',count:1}],feedback:{met:1},privateData:PRIVATE};
     else if(url.pathname===prefix+'/reports')data={reports:[{id:'fixture-report',status:reportStatus,reason:'<img src=x onerror="window.PWNED=1">',createdAt:'2026-11-04',target:{id:'fixture-profile',nickname:'测试用户',city:'北京',birthday:PRIVATE,contact:PRIVATE}}]};
     else if(url.pathname===prefix+'/profiles')data={profiles:[{id:'fixture-profile',nickname:'测试用户',city:'北京',disabled:profileDisabled,assets:PRIVATE,email:PRIVATE}]};
     else if(url.pathname===prefix+'/audit')data={audit:[{id:'fixture-audit',action:'report.review',target:'fixture-report',createdAt:'2026-11-04',detail:{status:'open',note:'这是处理说明。',privateData:PRIVATE}}]};
@@ -77,7 +77,7 @@ async function adminChecks(browser){
   });
   const errors=[];page.on('pageerror',error=>errors.push(error.message));page.on('dialog',dialog=>dialog.accept());
   await page.goto(BASE+'/pages/friends-admin.html');await page.locator('#admin-token').fill(TOKEN);await page.locator('#admin-auth-form button').click();await page.waitForSelector('#admin-workspace:not([hidden])[aria-busy=false]');await page.waitForSelector('[data-report-id]');
-  assert.equal(await page.locator('#admin-token').inputValue(),'');assert.equal((await page.content()).includes(TOKEN),false);assert.equal((await page.content()).includes(PRIVATE),false);assert.equal(await page.evaluate(()=>window.PWNED),undefined);
+  assert.equal(await page.locator('#admin-token').inputValue(),'');assert.match(await page.locator('#admin-metrics').textContent(),/首次真实建档/);assert.match(await page.locator('#admin-metrics').textContent(),/微信/);assert.match(await page.locator('#admin-metrics').textContent(),/海报 A/);assert.equal((await page.content()).includes(TOKEN),false);assert.equal((await page.content()).includes(PRIVATE),false);assert.equal(await page.evaluate(()=>window.PWNED),undefined);
   assert.deepEqual(await page.evaluate(()=>({local:Object.keys(localStorage),session:Object.keys(sessionStorage)})),{local:[],session:[]});
   await page.locator('[data-report-id] [name=status]').selectOption('reviewing');await page.locator('[data-report-id] [name=note]').fill('已开始核查，不需要额外隐私资料。');await page.locator('[data-report-id] button').click();await page.waitForFunction(()=>document.querySelector('[data-report-id] [name=status]')?.value==='reviewing'&&document.querySelector('[data-report-id] [name=note]')?.value===''&&document.querySelector('#admin-workspace').getAttribute('aria-busy')==='false');
   await page.locator('#reports-tab').focus();await page.keyboard.press('ArrowRight');assert.equal(await page.locator('#profiles-tab').getAttribute('aria-selected'),'true');assert.equal(await page.locator('#admin-profiles-panel').isVisible(),true);

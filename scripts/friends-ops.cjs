@@ -3,6 +3,7 @@
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {createSqliteFriendsStore}=require('../server/lib/friends-sqlite');
 const {getFriendsConfig}=require('../server/lib/friends-config');
+const {purgeAttributionMarks}=require('../server/lib/friends-admin');
 const args=Object.fromEntries(process.argv.slice(3).map(x=>{const i=x.indexOf('=');return i<0?[x.replace(/^--/,''),true]:[x.slice(0,i).replace(/^--/,''),x.slice(i+1)];}));
 const action=process.argv[2];
 function absolute(v,label){if(typeof v!=='string'||!path.isAbsolute(v))throw Error(label+'必须是绝对路径');return path.resolve(v);}
@@ -29,15 +30,19 @@ async function main(){
   const store=createSqliteFriendsStore(file,{key,create:action==='init-db'||action==='migrate-json'});
   try{
     if(action==='init-db'){console.log('加密数据库已就绪。');return;}
+    if(action==='maintenance'){
+      const removed=store.transaction(state=>{const before=state.attributionMarks.length;purgeAttributionMarks(state);return before-state.attributionMarks.length;});
+      console.log(JSON.stringify({ok:true,expiredAttributionMarksRemoved:removed}));return;
+    }
     if(action==='backup'){await store.backup(absolute(args.out,'备份目标'));console.log('加密备份已完成，并通过独立恢复读取验证。');return;}
     if(action==='migrate-json'){
       const source=absolute(args.from,'旧数据文件'),old=JSON.parse(fs.readFileSync(source,'utf8'));
-      const target=store.read();if(target.profiles.length||target.requests.length||target.reports.length)throw Error('迁移目标不是空库，拒绝覆盖');
+      const target=store.read();if(Object.values(target).some(value=>Array.isArray(value)&&value.length))throw Error('迁移目标不是空库，拒绝覆盖');
       for(const k of ['profiles','requests','reports','blocks'])if(!Array.isArray(old[k]))throw Error('旧快照格式无效');
       store.transaction(next=>{for(const k of Object.keys(next))if(Array.isArray(old[k]))next[k]=structuredClone(old[k]);});console.log('旧快照已导入加密库；源文件未删除。请验证后按留存政策处理旧明文备份。');return;
     }
     if(action==='check'){console.log(JSON.stringify(store.health()));return;}
-    throw Error('操作无效：init-keys / init-db / migrate-json / check / backup / restore / preflight');
+    throw Error('操作无效：init-keys / init-db / migrate-json / check / backup / restore / preflight / maintenance');
   }finally{store.close();}
 }
 main().catch(e=>{console.error('交友运维操作未完成：'+e.message);process.exitCode=1;});
