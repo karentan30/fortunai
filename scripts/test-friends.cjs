@@ -2,7 +2,7 @@
 const fs=require('node:fs'),path=require('node:path'),{spawnSync}=require('node:child_process');
 const root=path.resolve(__dirname,'..');
 const files=['server/lib','server/routes'].flatMap(dir=>fs.readdirSync(path.join(root,dir)).filter(n=>/^friends.*\.test\.cjs$/.test(n)).sort().map(n=>path.join(root,dir,n)));
-for(const name of ['bazi-full-report.test.js','friends-reports.test.js','friends-report-adapter.test.js','friends-purchase-report.integration.test.js']){const file=path.join(root,'tests',name);if(fs.existsSync(file))files.push(file);}
+for(const name of ['bazi-full-report.test.js','friends-reports.test.js','friends-report-adapter.test.js','friends-purchase-report.integration.test.js','friends-pair-report.test.js']){const file=path.join(root,'tests',name);if(fs.existsSync(file))files.push(file);}
 files.push(path.join(root,'scripts/friends-poster-invitation.test.cjs'));
 files.push(path.join(root,'scripts/friends-install-files.test.cjs'));
 files.push(path.join(root,'scripts/friends-launch.test.cjs'));
