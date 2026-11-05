@@ -7,10 +7,11 @@ const {createFriendsService}=require('../lib/friends-service');
 const {searchCities}=require('../lib/friends-location');
 const {searchAreas,suggestPlaces}=require('../lib/friends-places');
 const {createAdminService,adminAuth,createRateLimit}=require('../lib/friends-admin');
-function createRouter({express,auth,store,secret,enabled=true,adminToken=process.env.FRIENDS_ADMIN_TOKEN||process.env.ADMIN_TOKEN,onLogout,canAccess=()=>true,mode='local_review',requirePolicy=false,quotaOptions={}}) {
+const {referralCode,createFunnelSink,instrumentCompatibility}=require('../lib/friends-campus');
+function createRouter({express,auth,store,secret,enabled=true,adminToken=process.env.FRIENDS_ADMIN_TOKEN||process.env.ADMIN_TOKEN,onLogout,canAccess=()=>true,mode='local_review',requirePolicy=false,quotaOptions={},funnel}) {
   const router=express.Router();
   const charts=enabled?createChartService(secret):null;
-  const service=enabled?createFriendsService(store,charts,quotaOptions):null;
+  const service=enabled?createFriendsService(store,charts,{...quotaOptions,funnel}):null;
   router.use((req,res,next)=>{
     res.set('Cache-Control','no-store').set('Referrer-Policy','no-referrer').set('X-Content-Type-Options','nosniff');
     if(!enabled&&!['/logout','/status','/legal'].includes(req.path))return res.status(503).json({error:'交友功能尚未开放，请稍后再来'});
@@ -49,6 +50,8 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.use((req,res,next)=>req.user?next():res.status(401).json({error:'请先登录 Runae 账号'}));
   router.use(createRateLimit({limit:120}));
   router.get('/quota',run(req=>service.quota(req.user.id)));
+  // 校园分享用的个人推荐码：服务器签名派生，不含用户ID/姓名，链接里只带这个码。
+  router.get('/referral',run(req=>({code:referralCode(secret,req.user.id)})));
   router.get('/me',run(req=>({profile:service.me(req.user.id)})));
   router.post('/profile',run(req=>{if(requirePolicy&&req.body.listed===true&&req.body.policyVersion!=='friends-2026-11-04-v1'){const e=Error('请阅读并同意当前隐私说明与用户条款');e.status=400;throw e;}return{profile:service.save(req.user.id,req.body)};}));
   router.get('/export',run(req=>({profile:service.me(req.user.id),reports:service.reports(req.user.id),exportedAt:new Date().toISOString()})));
@@ -74,7 +77,7 @@ function productionRouter(){
   if(config.enabled&&!config.ok){console.error('[friends] Configuration incomplete; feature disabled. Run friends-ops preflight.');return createRouter({express,auth:authMiddleware,enabled:false,mode:'configuration_error',onLogout});}
   try{
     const store=config.enabled?createSqliteFriendsStore(config.file,{key:process.env.FRIENDS_DATA_KEY}):null;
-    const friends=createRouter({express,auth:authMiddleware,enabled:config.enabled,mode:config.mode||'disabled',secret:process.env.FRIENDS_SIGNING_KEY,store,requirePolicy:true,quotaOptions:{enabled:process.env.FRIENDS_QUOTAS_ENABLED==='true'},
+    const friends=createRouter({express,auth:authMiddleware,enabled:config.enabled,mode:config.mode||'disabled',secret:process.env.FRIENDS_SIGNING_KEY,store,requirePolicy:true,quotaOptions:{enabled:process.env.FRIENDS_QUOTAS_ENABLED==='true'},funnel:createFunnelSink({secret:process.env.FRIENDS_SIGNING_KEY}),
       canAccess:req=>config.mode==='public'||config.allowedIds?.has(String(req.user?.id)),onLogout});
     if(!config.enabled)return friends;
     const {configuredBilling}=require('../lib/friends-billing-config');
@@ -100,6 +103,7 @@ function productionRouter(){
     const {createCompatibilityRouter}=require('./friends-compatibility');
     const {createFriendsQuestionsService}=require('../lib/friends-questions');
     const compatibility=createCompatibilityService({store,questionnaireService:createFriendsQuestionsService({store}),questionBank:require('../../assets/data/friends-relationship-questions.json')});
+    instrumentCompatibility(compatibility,store,createFunnelSink({secret:process.env.FRIENDS_SIGNING_KEY}));
     bundle.use('/compatibility',billingAuth,createCompatibilityRouter({express,auth:billingAuth,service:compatibility}));
     bundle.use(friends);return bundle;
   }catch(e){console.error('[friends] Storage not ready; feature disabled. Run protected preflight.');return createRouter({express,auth:authMiddleware,enabled:false,mode:'storage_error',onLogout});}
