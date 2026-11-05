@@ -2,7 +2,7 @@
 const crypto=require('node:crypto');
 const {STEMS,ZODIACS,bad}=require('./friends-chart');
 const {isDisabled,metric,normalize,normalizeAttribution}=require('./friends-admin');
-const {recommend,normalizeAvailability,findCommonSlots}=require('./friends-preferences');
+const {recommend,typeSuggestions,normalizeTypes,normalizeAvailability,findCommonSlots}=require('./friends-preferences');
 const FIELDS=['age','height','weight','school','occupation','industry','title','income','assets','familyAssets'];
 const SCOPES=['public','connected','private'];
 const text=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'';
@@ -22,12 +22,13 @@ function createFriendsService(store,charts,options={}) {
     const fields=Object.fromEntries(FIELDS.filter(visible).map(k=>[k,p.fields[k]]));
     const chart=Object.fromEntries(['dayMaster','zodiac'].filter(visible).map(k=>[k,p.chart[k]]));
     return {id:p.shareId,shareId:p.shareId,nickname:p.nickname,city:p.city,intent:p.intent,fields,chart,
-      ...(visible('age')?{ageAsOf:p.chart.ageAsOf}:{}),...(self?{recommendations:recommend(p.chart)}:{}),...((self||connected)&&p.availability?{availability:structuredClone(p.availability)}:{}),hobbies:p.hobbies,targetStems:p.targetStems,targetZodiacs:p.targetZodiacs,bio:p.bio,connected};
+      ...(visible('age')?{ageAsOf:p.chart.ageAsOf}:{}),...(visible('constellation')&&p.constellation?{constellation:p.constellation}:{}),...(visible('mbti')&&p.mbti?{mbti:p.mbti}:{}),...(self?{recommendations:profileRecommendations(p),targetConstellations:p.targetConstellations||[],targetMbtis:p.targetMbtis||[]}: {}),...((self||connected)&&p.availability?{availability:structuredClone(p.availability)}:{}),hobbies:p.hobbies,targetStems:p.targetStems,targetZodiacs:p.targetZodiacs,bio:p.bio,connected};
   }
+  const profileRecommendations=p=>{const culture=recommend(p.chart),types=typeSuggestions(p);return {...culture,constellations:types.constellations,mbtis:types.mbtis,basis:{...culture.basis,...types.basis}};};
   const mine=(s,uid)=>s.profiles.find(p=>p.userId===uid);
   const needMine=(s,uid)=>{const p=mine(s,uid);if(isDisabled(s,uid))denied();if(!p||!p.listed)bad('请先完善个人资料并同意加入人库');return p;};
   return {
-    me(uid){return structuredClone(mine(store.read(),uid)||null);},
+    me(uid){const p=mine(store.read(),uid);return p?structuredClone({...p,recommendations:profileRecommendations(p)}):null;},
     save(uid,b) {
       if(b.consent!==true)bad('请确认本人资料及展示权限');
       return store.transaction(s=>{
@@ -36,17 +37,19 @@ function createFriendsService(store,charts,options={}) {
         const attributionMark=s.attributionMarks.find(x=>x.userId===uid),acquisition=attributionMark?normalizeAttribution(attributionMark):normalizeAttribution(prev?{}:b.attribution);
         if(!chart || chart.age<18)bad('请先生成日主卡');
         const nickname=text(b.nickname,24),city=text(b.city,24),intent=b.intent;
-        if(!nickname||!city||!['交朋友','找搭子','认真恋爱'].includes(intent))bad('请补全昵称、城市和认识目的');
+        if(!nickname||!city||!['交朋友','找搭子','找闺蜜','Dating','认真恋爱','认真结婚'].includes(intent))bad('请补全昵称、城市和认识目的');
         const fields={age:String(chart.age)};
         for(const k of FIELDS.slice(1)){fields[k]=text(b.fields?.[k],80);if(!fields[k]&&!['industry','title','familyAssets'].includes(k))bad('请补齐个人资料');}
         const height=Number(fields.height),weight=Number(fields.weight);
         if(!Number.isFinite(height)||height<80||height>250||!Number.isFinite(weight)||weight<25||weight>300)bad('身高用厘米、体重用公斤，请检查数值');
         const visibility={};for(const k of [...FIELDS,'dayMaster','zodiac']) visibility[k]=SCOPES.includes(b.visibility?.[k])?b.visibility[k]:'private';
+        const types=normalizeTypes(b,prev);
+        for(const k of ['constellation','mbti'])visibility[k]=Object.hasOwn(b.visibility||{},k)?(SCOPES.includes(b.visibility[k])?b.visibility[k]:'private'):(prev?.visibility?.[k]||'private');
         const hobbies=Array.isArray(b.hobbies)?[...new Set(b.hobbies.map(x=>text(x,24)).filter(Boolean))].slice(0,10):[];
-        const recommendations=recommend(chart);
+        const recommendations=profileRecommendations({chart,...types});
         const targetStems=array(b.targetStems?.length?b.targetStems:recommendations.stems,[...STEMS,'不限']);const targetZodiacs=array(b.targetZodiacs?.length?b.targetZodiacs:recommendations.zodiacs,[...ZODIACS,'不限']);
         if(!hobbies.length||!targetStems.length||!targetZodiacs.length)bad('请选择爱好及想认识的日主、生肖；也可选不限');
-        const p={userId:uid,shareId:prev?.shareId||crypto.randomBytes(18).toString('hex'),nickname,city,intent,fields,visibility,hobbies,targetStems,targetZodiacs,
+        const p={userId:uid,shareId:prev?.shareId||crypto.randomBytes(18).toString('hex'),nickname,city,intent,fields,visibility,hobbies,targetStems,targetZodiacs,...types,
           bio:text(b.bio,240),contact:text(b.contact,120),contactConsent:b.contactConsent===true,listed:b.listed===true,
           chart,recommendations,availability:Object.hasOwn(b,'availability')?normalizeAvailability(b.availability):(prev?.availability||null),residence:Object.hasOwn(b,'residence')?require('./friends-places').normalizeResidence(b.residence):(prev?.residence||null),policyVersion:b.policyVersion==='friends-2026-11-04-v1'?b.policyVersion:(prev?.policyVersion||'legacy-unversioned'),consentAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
         p.acquisition=acquisition;
@@ -60,13 +63,13 @@ function createFriendsService(store,charts,options={}) {
     discover(uid,q={}){return store.transaction(s=>{
       const self=needMine(s,uid);
       const all=s.profiles.filter(p=>p.userId!==uid&&active(s,p,uid)).map(p=>project(s,p,uid))
-        .filter(p=>(!q.city||p.city===q.city)&&(!q.stem||p.chart.dayMaster===q.stem)&&(!q.zodiac||p.chart.zodiac===q.zodiac))
-        .map(p=>{const reasons=[];let directions=0;if(!self.targetStems.includes('不限')&&p.chart.dayMaster&&self.targetStems.includes(p.chart.dayMaster)){directions++;reasons.push('符合你选择的日主方向');}if(!self.targetZodiacs.includes('不限')&&p.chart.zodiac&&self.targetZodiacs.includes(p.chart.zodiac)){directions++;reasons.push('符合你选择的生肖方向');}const interests=p.hobbies.filter(h=>self.hobbies.includes(h));for(const hobby of interests.slice(0,2))reasons.push('都喜欢'+hobby);const intent=p.intent===self.intent;if(intent)reasons.push('认识意图相同');return {card:{...p,reasons},directions,interests:interests.length,intent:Number(intent)};})
+        .filter(p=>(!q.city||p.city===q.city)&&(!q.stem||p.chart.dayMaster===q.stem)&&(!q.zodiac||p.chart.zodiac===q.zodiac)&&(!q.constellation||p.constellation===q.constellation)&&(!q.mbti||p.mbti===q.mbti))
+        .map(p=>{const reasons=[];let directions=0;if(!self.targetStems.includes('不限')&&p.chart.dayMaster&&self.targetStems.includes(p.chart.dayMaster)){directions++;reasons.push('符合你选择的日主方向');}if(!self.targetZodiacs.includes('不限')&&p.chart.zodiac&&self.targetZodiacs.includes(p.chart.zodiac)){directions++;reasons.push('符合你选择的生肖方向');}for(const [key,targets,label] of [['constellation',self.targetConstellations,'星座'],['mbti',self.targetMbtis,'MBTI']]){if(Array.isArray(targets)&&!targets.includes('不限')&&p[key]&&targets.includes(p[key])){directions++;reasons.push('符合你选择的'+label+'方向（自填）');}}const interests=p.hobbies.filter(h=>self.hobbies.includes(h));for(const hobby of interests.slice(0,2))reasons.push('都喜欢'+hobby);const intent=p.intent===self.intent;if(intent)reasons.push('认识意图相同');return {card:{...p,reasons},directions,interests:interests.length,intent:Number(intent)};})
         .sort((a,b)=>b.directions-a.directions||b.interests-a.interests||b.intent-a.intent)
         .map(item=>item.card);
       const offset=Math.max(0,Math.min(10000,Number(q.offset)||0));
       const available=quotas.discover(s,uid,all);
-      return {profiles:available.slice(offset,offset+24),total:available.length,nextOffset:offset+24<available.length?offset+24:null,quota:quotas.status(s,uid),rankingBasis:'公开日主生肖偏好优先，完整双方合盘需另行授权'};
+      return {profiles:available.slice(offset,offset+24),total:available.length,nextOffset:offset+24<available.length?offset+24:null,quota:quotas.status(s,uid),rankingBasis:'按可见日主、生肖、星座、MBTI偏好及共同兴趣推荐；类型不代表关系结论，完整双方合盘需另行授权'};
     });},
     card(id,uid){const s=store.read();return project(s,s.profiles.find(p=>p.shareId===id),uid);},
     request(uid,shareId){return store.transaction(s=>{
