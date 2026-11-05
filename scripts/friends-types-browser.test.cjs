@@ -38,10 +38,11 @@ assert.equal(saved.mbti,'ENFP');assert.equal(saved.visibility.mbti,'private');as
 assert.deepEqual(saved.targetConstellations,['狮子座','射手座']);
 await page.evaluate(()=>location.hash='profile');await page.locator('#profile-form').waitFor();
 assert.equal(await page.locator('#mbti').inputValue(),'ENFP');
-await page.locator('#mbti').selectOption('');await page.locator('[data-suggest-type=mbti]').count();
+await page.locator('#mbti').selectOption('');assert.equal(await page.locator('#mbti').inputValue(),'');
 await page.evaluate(()=>location.hash='discover');await page.locator('#filter-form').waitFor();
 await page.locator('[name=constellation]').selectOption('狮子座');await page.locator('[name=mbti]').selectOption('INFJ');
-await page.locator('#filter-form button[type=submit]').click();
+const filtered=page.waitForResponse(response=>{const u=new URL(response.url());return u.pathname==='/api/friends/discover'&&u.searchParams.get('constellation')==='狮子座'&&u.searchParams.get('mbti')==='INFJ';});
+await page.locator('#filter-form button[type=submit]').click();await filtered;
 await page.waitForFunction(()=>document.querySelector('#discover-results')?.textContent.includes('还没有找到'));
 assert.equal(new URLSearchParams(discoverQuery).get('constellation'),'狮子座');assert.equal(new URLSearchParams(discoverQuery).get('mbti'),'INFJ');
 for(const width of [320,390,768,1440]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);}
