@@ -52,6 +52,9 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.get('/cities',run(req=>({cities:searchCities(req.query.q)})));
   router.get('/areas',run(req=>({areas:searchAreas(req.query.q)})));
   router.post('/events',createRateLimit({limit:30}),run(req=>service.event(req.body.event,{source:req.body.source,campaign:req.body.campaign})));
+  // Guest onboarding deck (#hello): teaser fields only, fresh opaque tokens per response. See lib/friends-preview-deck.js.
+  const previewDeck=enabled?require('../lib/friends-preview-deck').createPreviewDeck(store):null;
+  router.get('/preview',createRateLimit({limit:30}),run(req=>previewDeck.deck(req.query)));
   router.use(auth);
   router.post('/logout',(req,res,next)=>{try{if(onLogout)onLogout(req,res);else res.clearCookie('sy_token',{path:'/'});res.json({ok:true});}catch(e){next(e);}});
   router.use((req,res,next)=>canAccess(req)?next():res.status(403).json({error:'当前为邀请测试，请联系运营开通账号'}));
@@ -59,6 +62,8 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.use((req,res,next)=>req.user?next():res.status(401).json({error:'请先登录 Runae 账号'}));
   router.use(createRateLimit({limit:120}));
   router.get('/quota',run(req=>service.quota(req.user.id)));
+  // 想认识TA after sign-up: redeem a guest token; the normal card visibility check (listed/blocked/disabled) still applies.
+  router.get('/preview/resolve/:token',run(req=>{const uid=previewDeck.resolve(req.params.token),p=uid&&store.read().profiles.find(x=>x.userId===uid);if(!p){const e=Error('这位朋友暂时看不到了');e.status=404;throw e;}return {shareId:service.card(p.shareId,req.user.id).shareId};}));
   // 校园分享用的个人推荐码：服务器签名派生，不含用户ID/姓名，链接里只带这个码。
   router.get('/referral',run(req=>({code:referralCode(secret,req.user.id)})));
   router.get('/me',run(req=>({profile:service.me(req.user.id)})));
