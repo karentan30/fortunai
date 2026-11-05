@@ -6,13 +6,13 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 const MANIFEST={
   "base": "e7e465d31e1aabfce68f344a7ea825e5a614fe40",
   "installed": "d94dbd807f598552c73b1a01f252a9e676541c34",
-  "release": "53b49ce49b3342b7bdac7b5b6172d9c45d0e4dd0",
+  "release": "1bae5c5f6bf8b88dd80ced6f11d47e54aab3a4b8",
   "files": [
     {
       "path": "assets/css/friends-compatibility.css",
       "before": "4500f18b4e62bfab03112cd207c60ce44b36dda7",
-      "after": "be09776df619dad1411ebb8a52fd7d6395fa4794",
-      "size": 4481
+      "after": "25ce0d6f4d4df8193ed43013ac036660cf685414",
+      "size": 4565
     },
     {
       "path": "assets/css/friends.css",
@@ -380,13 +380,13 @@ const ALTERNATE={
   "manifest": {
     "base": "e7e465d31e1aabfce68f344a7ea825e5a614fe40",
     "installed": "daf2aae4716cd0d933676d213ffe96f3a5237b93",
-    "release": "53b49ce49b3342b7bdac7b5b6172d9c45d0e4dd0",
+    "release": "1bae5c5f6bf8b88dd80ced6f11d47e54aab3a4b8",
     "files": [
       {
         "path": "assets/css/friends-compatibility.css",
         "before": "be09776df619dad1411ebb8a52fd7d6395fa4794",
-        "after": "be09776df619dad1411ebb8a52fd7d6395fa4794",
-        "size": 4481
+        "after": "25ce0d6f4d4df8193ed43013ac036660cf685414",
+        "size": 4565
       },
       {
         "path": "assets/css/friends.css",
