@@ -92,6 +92,8 @@ function productionRouter(){
     bundle.use('/personal-reports',createRateLimit({limit:20}),billingAuth,createPersonalReportsRouter({express,auth:billingAuth,store,billing}));
     const {createFriendsQuestionsRouter}=require('./friends-questions');
     bundle.use('/questions',createRateLimit({limit:60}),billingAuth,createFriendsQuestionsRouter({express,auth:billingAuth,store}));
+    const {createFriendsQuestionnaireRouter}=require('./friends-questionnaire');
+    bundle.use('/questionnaire',createRateLimit({limit:120}),billingAuth,createFriendsQuestionnaireRouter({express,auth:billingAuth,store}));
     const {createFriendsIntakeRouter}=require('./friends-intake');
     bundle.use('/intake',createRateLimit({limit:40}),billingAuth,createFriendsIntakeRouter({express,auth:billingAuth,store}));
     const {createCompatibilityService}=require('../lib/friends-compatibility');
