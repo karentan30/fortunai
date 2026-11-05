@@ -59,7 +59,7 @@
     const stem=chart.dayMaster,i=idx(stem),el=ELEMENTS[i];
     const mother=ELEMENTS[(i+4)%5],child=ELEMENTS[(i+1)%5];
     deckCity=deckCity||b.state.profile?.city||'';
-    b.setView(`<section class="onb onb-deck-wrap"><p class="onb-step">第 2 步，共 2 步 · 看看和你相生的人</p>
+    b.setView(`<section class="onb onb-deck-wrap"><p class="onb-step">看看和你相生的人</p>
       <div class="onb-me" data-element="${TONES[i]}"><div class="onb-me-glyph">${esc(stem)}</div>
         <div><h1 class="onb-me-title">你是${esc(stem+el)}</h1><p class="onb-me-text">${esc(mother)}生${esc(el)}，${esc(el)}生${esc(child)}。下面先排和你相生的人。</p></div></div>
       <div class="onb-deck-bar"><label class="onb-city"><span>城市</span><select id="onb-city"><option value="">不限</option>${CITIES.map(c=>`<option ${c===deckCity?'selected':''}>${c}</option>`).join('')}</select></label>
