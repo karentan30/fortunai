@@ -116,3 +116,17 @@ test('legacy report consent never grants chat; optional chat consent can be revo
  assert.equal((await f.service.report('a',p.id)).kind,'relationship_guide_basic');
  await assert.rejects(f.service.authorize('b',p.id,{version:VERSION,consent:true,input,allowChat:'true'}),{status:400});
 });
+
+test('concurrent SQLite workers retry the same message without duplicate delivery',async()=>{
+ const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto'),{Worker}=require('node:worker_threads'),{createSqliteFriendsStore}=require('./friends-sqlite');
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'runae-chat-race-')),file=path.join(dir,'state.sqlite'),key=crypto.randomBytes(32).toString('hex'),store=createSqliteFriendsStore(file,{key});
+ try{
+  const f=fixture(store),p=await f.ready();
+  const results=await Promise.all([1,2].map(()=>new Promise((resolve,reject)=>{
+   const worker=new Worker("const {parentPort,workerData:d}=require('node:worker_threads');const s=require(d.sqliteModule).createSqliteFriendsStore(d.file,{key:d.key});try{const result=require(d.chatModule).createCompatibilityService({store:s,clock:()=>d.now}).sendMessage('a',d.pairId,{text:'same message',clientMessageId:'concurrent_message_01'});parentPort.postMessage(result);}finally{s.close();}",{eval:true,workerData:{file,key,now:f.now(),pairId:p.id,sqliteModule:require.resolve('./friends-sqlite'),chatModule:require.resolve('./friends-compatibility')}});
+   worker.once('message',resolve);worker.once('error',reject);
+  })));
+  assert.equal(results[0].message.id,results[1].message.id);assert.equal(results.filter(x=>x.duplicate).length,1);
+  assert.equal(f.service.messages('a',p.id).messages.length,1);
+ }finally{store.close();if(path.resolve(dir).startsWith(path.resolve(os.tmpdir())+path.sep)&&path.basename(dir).startsWith('runae-chat-race-'))fs.rmSync(dir,{recursive:true,force:true});}
+});
