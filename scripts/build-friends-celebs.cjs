@@ -74,7 +74,7 @@ ${foot}<script src="/assets/js/friends-celebs.js" defer></script>
 <p class="cl-trait">${esc(stemLine(p.dayMaster))}日主是认识的起点，合不合得来，相处了才知道。</p>
 <a class="cl-primary" href="${CTA_URL}">测测你和TA相不相生</a>
 <p class="cl-cta-note">填生日看自己的日主，不用注册。</p>
-<dl class="cl-facts"><dt>类别</dt><dd>${esc(p.category)}</dd><dt>公开生日</dt><dd>${cnDate(p.birthDate)}</dd><dt>日柱</dt><dd>${esc(p.dayPillar)}</dd><dt>星座</dt><dd>${esc(p.constellation)}</dd><dt>生肖</dt><dd>${esc(p.zodiac)}</dd></dl>
+<dl class="cl-facts"><dt>类别</dt><dd>${esc(p.category)}</dd><dt>公开生日</dt><dd>${cnDate(p.birthDate)}</dd><dt>日柱<small class="cl-dt-hint">出生那天的干支</small></dt><dd>${esc(p.dayPillar)}</dd><dt>星座</dt><dd>${esc(p.constellation)}</dd><dt>生肖</dt><dd>${esc(p.zodiac)}</dd></dl>
 <p class="cl-note">${note}</p>
 ${same.length?`<section class="cl-same" aria-labelledby="same-h"><h2 id="same-h">同是${sv}的还有</h2><ul>${same.map(x=>`<li><a href="/pages/friends-celebs/${x.slug}.html">${esc(x.name)}</a></li>`).join('')}</ul></section>`:''}
 <details class="cl-sources"><summary>生日来源（${p.sources.length}个）</summary><ul>${p.sources.map(u=>`<li><a href="${esc(u)}" rel="nofollow noopener" target="_blank">${esc(host(u))}</a></li>`).join('')}</ul></details>

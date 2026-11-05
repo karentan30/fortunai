@@ -59,7 +59,7 @@
  async function checkChatAccount(sequence,pairId,accountId,signal=AbortSignal.timeout(15000)){
   const actual=await api('/api/auth/me',{privateRequest:true,signal});
   if(!chatValid(sequence,pairId,accountId))return false;
-  if(String(actual.user?.id)!==accountId){clearPrivate();$('#compat-auth').hidden=false;$('#account-state').textContent='登录的账号变了，请点「重新读取登录」后继续。';return false;}return true;
+  if(String(actual.user?.id)!==accountId){clearPrivate();$('#compat-auth').hidden=false;$('#account-state').textContent='登录的账号变了，请点「刷新登录状态」后继续。';return false;}return true;
  }
  function chatFailure(error,sequence,pairId,accountId){
   if(!chatValid(sequence,pairId,accountId)||error.name==='AbortError')return;
