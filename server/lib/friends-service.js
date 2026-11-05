@@ -4,6 +4,8 @@ const {STEMS,ZODIACS,bad}=require('./friends-chart');
 const {isDisabled,metric,normalize,normalizeAttribution}=require('./friends-admin');
 const {recommend,typeSuggestions,normalizeTypes,normalizeAvailability,findCommonSlots}=require('./friends-preferences');
 const M=require('./friends-matching');
+const {isMember}=require('./friends-membership');
+const {VERIFY_FIELDS}=require('./friends-verification');
 const FIELDS=['age','height','weight','school','occupation','industry','title','income','assets','familyAssets','education','house','car','hukou'];
 // Optional profile fields. Income/assets/family assets/house/car/hukou may be left empty ("收入资产允许不提供").
 const OPTIONAL_FIELDS=['industry','title','income','assets','familyAssets','education','house','car','hukou'];
@@ -43,9 +45,14 @@ function createFriendsService(store,charts,options={}) {
     const fields=Object.fromEntries(FIELDS.filter(visible).map(k=>[k,p.fields[k]]));
     const chart=Object.fromEntries(['dayMaster','zodiac'].filter(visible).map(k=>[k,p.chart[k]]));
     return {id:p.shareId,shareId:p.shareId,nickname:p.nickname,city:p.city,intent:p.intent||M.PURPOSE_LABELS[purposes[0]],purposes,purposeLabels:purposes.map(k=>M.PURPOSE_LABELS[k]),fields,chart,
-      // Verification placeholder: always false until a real verification flow exists; never derived from user input.
-      verified:Object.fromEntries(Object.keys(M.WEALTH_TIERS).filter(k=>fields[k]!==undefined).map(k=>[k,false])),
+      // 已核验 marks: only the owner and members receive this key at all. Non-members get no verified data in JSON.
+      ...verifiedFor(s,p,viewer,self,visible),
       ...(visible('age')?{ageAsOf:p.chart.ageAsOf}:{}),...(visible('constellation')&&p.constellation?{constellation:p.constellation}:{}),...(visible('mbti')&&p.mbti?{mbti:p.mbti}:{}),...(self?{recommendations:profileRecommendations(p),targetConstellations:p.targetConstellations||[],targetMbtis:p.targetMbtis||[],expectations:structuredClone(p.expectations||{}),matchingConsent:{...(p.matchingConsent||{})}}: {}),...((self||connected)&&p.availability?{availability:structuredClone(p.availability)}:{}),hobbies:p.hobbies,targetStems:p.targetStems,targetZodiacs:p.targetZodiacs,bio:p.bio,connected};
+  }
+  // Only fields an admin approved (friends-verification.decide) and the viewer can see. Never derived from user input.
+  function verifiedFor(s,p,viewer,self,visible){
+    if(!self&&!isMember(s,viewer))return {};
+    return {verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true&&visible(k)).map(k=>[k,true]))};
   }
   const profileRecommendations=p=>{const culture=recommend(p.chart),types=typeSuggestions(p);return {...culture,constellations:types.constellations,mbtis:types.mbtis,basis:{...culture.basis,...types.basis}};};
   const mine=(s,uid)=>s.profiles.find(p=>p.userId===uid);
@@ -82,7 +89,7 @@ function createFriendsService(store,charts,options={}) {
   }
   const needMine=(s,uid)=>{const p=mine(s,uid);if(isDisabled(s,uid))denied();if(!p||!p.listed)bad('请先完善个人资料并同意加入人库');return p;};
   return {
-    me(uid){const p=mine(store.read(),uid);return p?structuredClone({...M.migrateProfile(p),verified:Object.fromEntries(Object.keys(M.WEALTH_TIERS).filter(k=>p.fields?.[k]).map(k=>[k,false])),recommendations:profileRecommendations(p)}):null;},
+    me(uid){const p=mine(store.read(),uid);return p?structuredClone({...M.migrateProfile(p),verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true).map(k=>[k,true])),recommendations:profileRecommendations(p)}):null;},
     save(uid,b) {
       if(b.consent!==true)bad('请确认本人资料及展示权限');
       return tx((s,queue)=>{
@@ -96,7 +103,7 @@ function createFriendsService(store,charts,options={}) {
         const fields={age:String(chart.age)};
         for(const k of FIELDS.slice(1)){fields[k]=text(b.fields?.[k],80);if(!fields[k]&&!OPTIONAL_FIELDS.includes(k))bad('请补齐个人资料');if(fields[k]&&ENUM_FIELDS[k]&&!ENUM_FIELDS[k].includes(fields[k]))bad('学历、房产或车辆选项无效');}
         // Income/assets: the UI offers only range tiers (M.WEALTH_TIERS). Older/legacy free text is still accepted and stays
-        // readable, always labelled 自述 on display; matching reads tiers by lower bound and legacy text via M.amount().
+        // readable as-is; matching reads tiers by lower bound and legacy text via M.amount().
         const expectations=M.normalizeExpectations(b.expectations,prev?.expectations),matchingConsent=M.normalizeMatchingConsent(b.matchingConsent,prev?.matchingConsent);
         const height=Number(fields.height),weight=Number(fields.weight);
         if(!Number.isFinite(height)||height<80||height>250||!Number.isFinite(weight)||weight<25||weight>300)bad('身高用厘米、体重用公斤，请检查数值');
@@ -110,6 +117,9 @@ function createFriendsService(store,charts,options={}) {
         const p={userId:uid,shareId:prev?.shareId||crypto.randomBytes(18).toString('hex'),nickname,city,intent,purposes,expectations,matchingConsent,fields,visibility,hobbies,targetStems,targetZodiacs,...types,
           bio:text(b.bio,240),contact:text(b.contact,120),contactConsent:b.contactConsent===true,listed:b.listed===true,
           chart,recommendations,availability:Object.hasOwn(b,'availability')?normalizeAvailability(b.availability):(prev?.availability||null),residence:Object.hasOwn(b,'residence')?require('./friends-places').normalizeResidence(b.residence):(prev?.residence||null),policyVersion:b.policyVersion==='friends-2026-11-04-v1'?b.policyVersion:(prev?.policyVersion||'legacy-unversioned'),consentAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+        // Keep admin-approved verification only while the verified value is unchanged; editing the value drops the mark.
+        const keep=VERIFY_FIELDS.filter(k=>prev?.verified?.[k]===true&&prev.fields?.[k]===fields[k]);
+        if(keep.length){p.verified=Object.fromEntries(keep.map(k=>[k,true]));p.verifiedAt=Object.fromEntries(keep.map(k=>[k,prev.verifiedAt?.[k]||null]));}
         p.acquisition=acquisition;
         if(prev)s.profiles[s.profiles.indexOf(prev)]=p;else s.profiles.push(p);
         if(!attributionMark){s.attributionMarks.push({userId:uid,...acquisition,firstProfileAt:prev?.consentAt||new Date().toISOString()});if(!prev){metric(s,'first_profile_created',acquisition);queue.push(['xs_profile_done',uid,acquisition]);}}else{delete attributionMark.expiresAt;delete attributionMark.deletedAt;}

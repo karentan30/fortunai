@@ -13,7 +13,7 @@
 const {stemRelation,branchRelation,relationshipSummary}=require('./friends-compatibility');
 
 const PAIR_REPORT_VERSION='pair-report-v1';
-const SOURCES=Object.freeze(['传统文化线索','本人自述','待确认']);
+const SOURCES=Object.freeze(['传统文化线索','本人填写','待确认']);
 const PURPOSES=Object.freeze({friendship:'交朋友',dating:'以恋爱为前提了解',activity:'找兴趣活动搭子'});
 const STAGES=Object.freeze({just_matched:'刚认识或刚匹配',chatting:'线上聊过几次',met_offline:'线下见过面',dating:'正在交往'});
 const KEYS=['year','month','day','hour'];
@@ -63,7 +63,7 @@ function buildPairFacts({pair,guide,purpose,stage}){
 function factIds(facts){
  return {
   传统文化线索:new Set(facts.traditional.map(f=>f.id)),
-  本人自述:new Set(facts.selfReported.map(f=>f.id)),
+  本人填写:new Set(facts.selfReported.map(f=>f.id)),
   待确认:new Set(facts.pending.map(f=>f.id))
  };
 }
@@ -72,12 +72,12 @@ function buildPairMessages(facts){
  const system=`你是“相生”交友产品的AI文字整理助手，不是命理师，不扮演真人大师。你的任务是把服务端提供的事实整理成一份双人关系交流指南。
 硬性规则：
 1. 只能使用下方JSON中的事实。禁止自行排盘、推算或补写任何干支、四柱、日期、时辰、出生地、五行百分比。不要输出任何天干地支组合（如两字干支）。
-2. 每条内容必须标注source，只能是“传统文化线索”“本人自述”“待确认”之一，并用factRef填写所依据事实的id：传统文化线索只能引用traditional中的id；本人自述只能引用selfReported中的id；待确认可引用pending中的id或填null。没有依据就写成“待确认”，不得编造。
+2. 每条内容必须标注source，只能是“传统文化线索”“本人填写”“待确认”之一，并用factRef填写所依据事实的id：传统文化线索只能引用traditional中的id；本人填写只能引用selfReported中的id；待确认可引用pending中的id或填null。没有依据就写成“待确认”，不得编造。
 3. 禁止任何分数、百分比、匹配度、指数或排名；禁止宿命化或保证性措辞，包括以下词语（即使是否定句也不要使用）：注定、命中注定、天生一对、天作之合、绝配、必然、必定、一定会、肯定会、保证、正缘、孽缘、克夫、克妻、旺夫、旺妻、婚期、离婚、分手、怀孕、生育、子女。
 4. 不评价任何人的道德、家庭、收入、外貌或社会价值；不暗示谁应该付出或改变。称呼只用“邀请方”“受邀方”“你们”。
 5. 只输出一个JSON对象，不要Markdown，不要解释。结构：
 {"summary":[item],"traditionalBasis":[item],"complementPoints":[{"text":"","source":"","factRef":"","howToVerify":""}],"consensus":[item],"differences":[item],"questions":[item×3],"activities":[item×3],"nextSteps":[item]}
-其中item为{"text":"6到200字","source":"","factRef":"事实id或null"}。summary 1-3条（关系摘要）；traditionalBasis 0-6条且全部为传统文化线索（traditional非空时至少1条）；complementPoints 1-4条，每条给出双方可以在真实相处中验证的方法howToVerify；consensus/differences各0-4条，只能基于本人自述或标为待确认；questions恰好3条交流问题；activities恰好3个活动建议；nextSteps 1-3条下一步。`;
+其中item为{"text":"6到200字","source":"","factRef":"事实id或null"}。summary 1-3条（关系摘要）；traditionalBasis 0-6条且全部为传统文化线索（traditional非空时至少1条）；complementPoints 1-4条，每条给出双方可以在真实相处中验证的方法howToVerify；consensus/differences各0-4条，只能基于本人填写或标为待确认；questions恰好3条交流问题；activities恰好3个活动建议；nextSteps 1-3条下一步。`;
  const user='【服务端事实，仅使用以下内容】\n'+JSON.stringify({traditional:facts.traditional,selfReported:facts.selfReported,pending:facts.pending,detailLevel:facts.detailLevel});
  return [{role:'system',content:system},{role:'user',content:user}];
 }

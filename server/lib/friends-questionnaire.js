@@ -5,7 +5,7 @@
 //  2. 对某个人按方向逐项开放；只有双方都对彼此开放了同一个方向，双方才能看到彼此在该方向的答案。
 //  3. 对外解释只说「在X方面想法接近 / 需要聊聊」，且只基于双方都开放的方向。
 //  4. 后台推荐信号（不展示给任何用户）需要本人另行勾选「允许辅助推荐」，双方都勾选才计算。
-//  5. 只记录本人自述的结婚/生育计划，不做任何日期或命运预测。
+//  5. 只记录本人填写的结婚/生育计划，不做任何日期或命运预测。
 const crypto=require('node:crypto');
 const BANK=require('../../assets/data/friends-marriage-questionnaire.json');
 const {isDisabled}=require('./friends-admin');
@@ -34,8 +34,8 @@ function normalizeAnswer(q,value){
  }
  const v=value.value;
  if(q.type==='text'){
-  if(typeof v!=='string'||v.length>q.maxLength)fail(400,`自述最多${q.maxLength}字`);
-  const t=clean(v,q.maxLength);if(!t)fail(400,'自述内容为空，可以选择跳过');out.value=t;
+  if(typeof v!=='string'||v.length>q.maxLength)fail(400,`文字回答最多${q.maxLength}字`);
+  const t=clean(v,q.maxLength);if(!t)fail(400,'文字回答为空，可以选择跳过');out.value=t;
  }else if(q.type==='multi'){
   const valid=q.options.map(o=>o.value);
   if(!Array.isArray(v)||!v.length||v.length>q.maxSelect||new Set(v).size!==v.length||v.some(x=>!valid.includes(x)))fail(400,'多选答案无效');

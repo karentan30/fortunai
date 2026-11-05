@@ -153,13 +153,13 @@ test('expectation validation and amount parsing',()=>{
   assert.equal(M.amount('20–50'),20);assert.equal(M.amount('暂无收入或资产'),0);assert.equal(M.amount('暂不提供'),null);assert.equal(M.amount(''),null);
 });
 
-test('income/assets are range tiers: lower-bound hard filter, A-slang label, always 自述, verified never set by user input',()=>{
+test('income/assets are range tiers: lower-bound hard filter, A-slang label, no self-report suffix, verified never set by user input',()=>{
   const {service:s,base}=setup();
   assert.deepEqual(M.ASSET_TIERS.map(t=>t[0]),['暂不提供','100万以下','100–500万','500–1000万','1000–2000万','2000万–1亿','1亿以上']);
-  assert.equal(M.wealthLabel('assets','1000–2000万'),'A8 · 1000–2000万 · 自述');
-  assert.equal(M.wealthLabel('familyAssets','100–500万'),'A7 · 100–500万 · 自述');
-  assert.equal(M.wealthLabel('income','30–50万'),'30–50万 · 自述');
-  assert.equal(M.wealthLabel('familyAssets','A9.3'),'A9.3 · 自述','legacy free text stays readable, labelled 自述');
+  assert.equal(M.wealthLabel('assets','1000–2000万'),'A8 · 1000–2000万');
+  assert.equal(M.wealthLabel('familyAssets','100–500万'),'A7 · 100–500万');
+  assert.equal(M.wealthLabel('income','30–50万'),'30–50万');
+  assert.equal(M.wealthLabel('familyAssets','A9.3'),'A9.3','legacy free text stays readable as-is');
   assert.equal(M.amount('1000–2000万'),1000);assert.equal(M.amount('100万以下'),0);assert.equal(M.amount('A8.2'),1000);assert.equal(M.amount('暂不提供'),null);
   // A requires family assets >= 1000万 (A8+) and opted in its own; only the opted-in A8 candidate passes.
   s.save('a',base({fields:{familyAssets:'1000–2000万'},matchingConsent:{familyAssets:true},expectations:{familyAssets:{level:'must',min:1000}}}));
@@ -167,10 +167,10 @@ test('income/assets are range tiers: lower-bound hard filter, A-slang label, alw
   s.save('a7',base({fields:{familyAssets:'500–1000万'},matchingConsent:{familyAssets:true}}));
   s.save('noconsent',base({fields:{familyAssets:'1亿以上'}}));
   assert.deepEqual(ids(s.discover('a')),[rich.shareId]);
-  // Public tier is shown with a verified:false placeholder; client cannot set verified.
+  // Client cannot set verified; a non-member viewer gets no verified key at all.
   const pub=s.save('pub',base({fields:{assets:'1亿以上'},visibility:{age:'public',height:'public',dayMaster:'public',zodiac:'public',assets:'public'},verified:{assets:true}}));
-  const card=s.card(pub.shareId,'a');assert.equal(card.fields.assets,'1亿以上');assert.deepEqual(card.verified,{assets:false});
-  assert.equal(s.me('pub').verified.assets,false);
+  const card=s.card(pub.shareId,'a');assert.equal(card.fields.assets,'1亿以上');assert.equal('verified' in card,false);
+  assert.equal(s.me('pub').verified.assets,undefined);
   // Legacy free-text value saved earlier is kept as-is on re-save.
   s.save('legacy',base({fields:{familyAssets:'A9.3'}}));s.save('legacy',base({fields:{familyAssets:'A9.3'},bio:'改简介'}));
   assert.equal(s.me('legacy').fields.familyAssets,'A9.3');

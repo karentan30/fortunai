@@ -108,14 +108,14 @@ function migrateProfile(p){
 }
 
 // Income/asset ranges (万元人民币). Stored as the tier string; matching uses the tier's lower bound.
-// Asset slang: A7 = 7-digit yuan (100万–999万), A8 = 8-digit, A9 = 9-digit (亿级). All values are 自述 (self-reported).
+// Asset slang: A7 = 7-digit yuan (100万–999万), A8 = 8-digit, A9 = 9-digit (亿级). Values are self-reported unless an admin approved a verification (see friends-verification.js).
 const INCOME_TIERS=[['暂不提供',null],['10万以下',0],['10–30万',10],['30–50万',30],['50–100万',50],['100–300万',100],['300万以上',300]];
 const ASSET_TIERS=[['暂不提供',null,''],['100万以下',0,''],['100–500万',100,'A7'],['500–1000万',500,'A7'],['1000–2000万',1000,'A8'],['2000万–1亿',2000,'A8'],['1亿以上',10000,'A9']];
 const WEALTH_TIERS={income:INCOME_TIERS,assets:ASSET_TIERS,familyAssets:ASSET_TIERS};
 const TIER_LOWER=new Map([...INCOME_TIERS,...ASSET_TIERS].map(([label,lower])=>[label,lower]));
 const isWealthTier=(key,v)=>!!WEALTH_TIERS[key]?.some(([label])=>label===v);
-// Display: "A8 · 1000–2000万 · 自述"; legacy free text shown as-is plus "· 自述". Never claims verification.
-function wealthLabel(key,v){const s=String(v??'').trim();if(!s||s==='暂不提供')return s;const tier=WEALTH_TIERS[key]?.find(([label])=>label===s);return (tier?.[2]?tier[2]+' · ':'')+s+' · 自述';}
+// Display: "A8 · 1000–2000万"; legacy free text shown as-is. Verification status is never part of this label.
+function wealthLabel(key,v){const s=String(v??'').trim();if(!s||s==='暂不提供')return s;const tier=WEALTH_TIERS[key]?.find(([label])=>label===s);return (tier?.[2]?tier[2]+' · ':'')+s;}
 // Tiers → lower bound; legacy "A8.2" → 1000 (8-digit yuan); "20–50" → 20; "暂无收入或资产" → 0; "暂不提供"/'' → null (unknown).
 function amount(v){if(typeof v!=='string'&&typeof v!=='number')return null;const s=String(v).trim();if(TIER_LOWER.has(s))return TIER_LOWER.get(s);if(!s||/暂不提供|不提供|保密/.test(s))return null;const slang=/^A(\d{1,2})(?:\.\d+)?$/i.exec(s);if(slang){const digits=Number(slang[1]);return digits>=5?10**(digits-1)/1e4:0;}if(/暂无|无收入|无资产/.test(s))return 0;const m=s.match(/\d+(?:\.\d+)?/);return m?Number(m[0]):null;}
 function valueOf(key,values){

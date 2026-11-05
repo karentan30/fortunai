@@ -24,7 +24,7 @@ function goodOutput(over={}){return {
  differences:[item('对本次了解目的的看法还需要另一方确认。','待确认','p_peer_view')],
  questions:[item('你理想中周末是怎样度过的？','待确认',null),item('遇到分歧时你希望怎样暂停？','待确认',null),item('你最近在认真投入的一件事是什么？','待确认',null)],
  activities:[item('一起去逛一次本地的书店。','待确认',null),item('约一次城市徒步散步。','待确认',null),item('一起做一顿简单的晚饭。','待确认',null)],
- nextSteps:[item('先各自说说本次了解目的，再决定是否见面。','本人自述','s_purpose')],
+ nextSteps:[item('先各自说说本次了解目的，再决定是否见面。','本人填写','s_purpose')],
  ...over};}
 
 function fixture({generate,enabled=true,store=createFriendsStore(),seed=true,billingWrap}={}){
@@ -180,8 +180,8 @@ test('validator rejects leaks, fake scores, fate claims, invented facts and wron
  ];
  for(const [text,code]of cases){const r=validatePairReport(bad(text),facts,{forbiddenStrings});assert.equal(r.ok,false,text);assert.ok(r.errors.includes(code),text+' '+r.errors);}
  assert.equal(validatePairReport(bad('先问问自己未必想说出口的期待。'),facts,{forbiddenStrings}).ok,true,'自己未 is not a pillar');
- assert.ok(validatePairReport(goodOutput({summary:[item('双方问卷都偏好安静的周末活动。','本人自述','s_q99')]}),facts).errors.includes('fact_ref:summary[0]'));
- assert.ok(validatePairReport(goodOutput({traditionalBasis:[item('邀请方很会照顾人，适合恋爱。','本人自述','s_purpose')]}),facts).errors.includes('source_section:traditionalBasis[0]'));
+ assert.ok(validatePairReport(goodOutput({summary:[item('双方问卷都偏好安静的周末活动。','本人填写','s_q99')]}),facts).errors.includes('fact_ref:summary[0]'));
+ assert.ok(validatePairReport(goodOutput({traditionalBasis:[item('邀请方很会照顾人，适合恋爱。','本人填写','s_purpose')]}),facts).errors.includes('source_section:traditionalBasis[0]'));
  assert.ok(validatePairReport(goodOutput({questions:goodOutput().questions.slice(0,2)}),facts).errors.includes('section_count:questions'));
  assert.ok(validatePairReport({...goodOutput(),extra:[]},facts).errors.includes('section_keys'));
  assert.ok(validatePairReport(goodOutput({summary:[item('短','待确认',null)]}),facts).errors.includes('text_length:summary[0]'));

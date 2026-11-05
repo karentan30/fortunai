@@ -12,7 +12,7 @@ function normalizeAnswers(input){
   const own=value.selfAnswer??null,accepted=value.acceptablePartnerAnswers??null,importance=value.importance??'unspecified';
   if(!bank.importanceOptions.some(o=>o.value===importance))fail(400,'重要性选项无效');
   if(q.type==='short_text'){
-   if(own!==null&&(typeof own!=='string'||own.length>500)||accepted!==null)fail(400,'自述限500字且不自动比较');
+   if(own!==null&&(typeof own!=='string'||own.length>500)||accepted!==null)fail(400,'文字回答限500字且不自动比较');
   }else{
    const values=q.options.map(o=>o.value);
    if(own!==null&&!values.includes(own)||accepted!==null&&(!Array.isArray(accepted)||accepted.length>values.length||accepted.some(v=>!values.includes(v))||new Set(accepted).size!==accepted.length))fail(400,'答案选项无效');
