@@ -23,7 +23,7 @@
 <p class="fine-print">提交于 ${esc(r.submittedAt)}${r.profile?` · 用户填写：${esc(r.profile.claimed??'未填写')}`:''}</p>
 ${r.code?`<p>学信网在线验证码：<code>${esc(r.code)}</code>（请在学信网官网自行查验）</p>`:''}
 <ul class="vf-files">${r.files.map(f=>`<li><span>${esc(f.name)} · ${esc(f.mime)} · ${size(f.size)}</span><button type="button" class="text-button" data-view="${esc(f.id)}">查看文件</button></li>`).join('')||'<li>无文件</li>'}</ul>
-<div class="vf-actions"><button type="button" class="primary" data-approve>通过</button><input type="text" class="vf-code" maxlength="200" placeholder="不通过原因（会展示给用户）" data-reason><button type="button" class="secondary" data-reject>不通过</button></div></article>`;
+${r.choices?`<p class="fine-print">请对照录屏：从打开「国家政务服务平台」到结果页，含实名姓名。已婚应显示结婚证电子证照，未婚显示「无关联数据」。</p><div class="vf-actions">${Object.entries(r.choices).map(([k,l])=>`<button type="button" class="${k==='unclear'?'secondary':'primary'}" data-result="${esc(k)}">${esc(l)}</button>`).join('')}<input type="text" class="vf-code" maxlength="200" placeholder="无法判断时可补充原因（会展示给用户）" data-reason></div></article>`:`<div class="vf-actions"><button type="button" class="primary" data-approve>通过</button><input type="text" class="vf-code" maxlength="200" placeholder="不通过原因（会展示给用户）" data-reason><button type="button" class="secondary" data-reject>不通过</button></div></article>`}`;
   }
   async function load(){revokeAll();$('#verify-error').textContent='';try{const {requests}=await request('/verifications');$('#verify-list').innerHTML=requests.length?requests.map(row).join(''):'<p class="muted">暂无待审核申请。</p>';}catch(e){$('#verify-error').textContent=e.message;}}
   $('#verify-list').addEventListener('click',async e=>{
@@ -31,6 +31,9 @@ ${r.code?`<p>学信网在线验证码：<code>${esc(r.code)}</code>（请在学�
     const view=e.target.closest('[data-view]');
     try{
       if(view){const blob=await request('/verifications/'+encodeURIComponent(id)+'/files/'+encodeURIComponent(view.dataset.view),{raw:true});const url=URL.createObjectURL(blob);blobs.add(url);window.open(url,'_blank','noopener');return;}
+      const pick=e.target.closest('[data-result]');
+      if(pick){const result=pick.dataset.result,unclear=result==='unclear';if(!confirm(`确认结果为「${pick.textContent}」？原始文件将立即删除。`))return;
+        const reason=item.querySelector('[data-reason]')?.value.trim();await request('/verifications/'+encodeURIComponent(id),{body:{decision:unclear?'reject':'approve',result,...(unclear&&reason?{reason}:{})}});toast('已记录结果，原始文件已删除。');return load();}
       if(e.target.closest('[data-approve]')){if(!confirm('确认通过？原始文件将立即删除。'))return;await request('/verifications/'+encodeURIComponent(id),{body:{decision:'approve'}});toast('已通过，原始文件已删除。');return load();}
       if(e.target.closest('[data-reject]')){const reason=item.querySelector('[data-reason]').value.trim();if(!reason){toast('请填写不通过原因。');return;}await request('/verifications/'+encodeURIComponent(id),{body:{decision:'reject',reason}});toast('已标记未通过，原始文件已删除。');return load();}
     }catch(x){$('#verify-error').textContent=x.message;}

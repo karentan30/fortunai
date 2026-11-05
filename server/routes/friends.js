@@ -8,7 +8,7 @@ const {searchCities}=require('../lib/friends-location');
 const {searchAreas,suggestPlaces}=require('../lib/friends-places');
 const {createAdminService,adminAuth,createRateLimit}=require('../lib/friends-admin');
 const {referralCode,createFunnelSink,instrumentCompatibility}=require('../lib/friends-campus');
-function createRouter({express,auth,store,secret,enabled=true,adminToken=process.env.FRIENDS_ADMIN_TOKEN||process.env.ADMIN_TOKEN,onLogout,canAccess=()=>true,mode='local_review',requirePolicy=false,quotaOptions={},funnel,verification=null}) {
+function createRouter({express,auth,store,secret,enabled=true,adminToken=process.env.FRIENDS_ADMIN_TOKEN||process.env.ADMIN_TOKEN,onLogout,canAccess=()=>true,mode='local_review',requirePolicy=false,quotaOptions={},funnel,verification=null,seriousMedia=null}) {
   const router=express.Router();
   const charts=enabled?createChartService(secret):null;
   const service=enabled?createFriendsService(store,charts,{...quotaOptions,funnel,
@@ -19,7 +19,9 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
     if(!enabled&&!['/logout','/status','/legal'].includes(req.path))return res.status(503).json({error:'交友功能尚未开放，请稍后再来'});
     if(['POST','DELETE','PUT','PATCH'].includes(req.method)) {
       // Browser client must send JSON and this same-origin-only header. Cross-origin preflights have no matching allowlist here.
-      if(req.get('X-Runae-Friends')!=='1'||!req.is('application/json'))return res.status(403).json({error:'请从本站页面操作'});
+      // One exception: the 婚况 screen recording is sent as raw bytes (≤30MB) — still needs the custom header (forces a preflight).
+      const rawVideo=req.method==='POST'&&req.path==='/verification/video'&&req.is('application/octet-stream');
+      if(req.get('X-Runae-Friends')!=='1'||!(rawVideo||req.is('application/json')))return res.status(403).json({error:'请从本站页面操作'});
       if(req.get('Sec-Fetch-Site')==='cross-site')return res.status(403).json({error:'不允许跨站操作'});
       const origin=req.get('Origin');
       if(origin){let url;try{url=new URL(origin);}catch(_){return res.sendStatus(403);}if(url.origin!==`${req.protocol}://${req.get('Host')}`)return res.status(403).json({error:'不允许跨站操作'});}
@@ -62,10 +64,23 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.get('/me',run(req=>({profile:service.me(req.user.id)})));
   router.post('/profile',run(req=>{if(requirePolicy&&req.body.listed===true&&req.body.policyVersion!=='friends-2026-11-04-v1'){const e=Error('请阅读并同意当前隐私说明与用户条款');e.status=400;throw e;}return{profile:service.save(req.user.id,req.body)};}));
   router.get('/export',run(req=>({profile:service.me(req.user.id),reports:service.reports(req.user.id),exportedAt:new Date().toISOString()})));
-  router.delete('/profile',run(req=>{const out=service.remove(req.user.id);if(verification)verification.purgeUser(req.user.id);return out;}));
+  // Owner's own delete: photos/voice files of the 相亲页 go with the profile.
+  router.delete('/profile',run(req=>{if(seriousMedia)seriousMedia.purgeUser(req.user.id);const out=service.remove(req.user.id);if(verification)verification.purgeUser(req.user.id);return out;}));
+  // 认真相亲页. Media bytes only via the scoped route below; there is no static URL for any photo or voice file.
+  const needMedia=()=>{if(!seriousMedia){const e=Error('照片和语音功能未配置');e.status=503;throw e;}return seriousMedia;};
+  router.get('/serious',run(req=>service.seriousOwn(req.user.id)));
+  router.post('/serious',createRateLimit({limit:60}),run(req=>service.seriousSave(req.user.id,req.body)));
+  router.post('/serious/photos',createRateLimit({limit:30,windowMs:3600000}),run(req=>needMedia().addPhoto(req.user.id,req.body)));
+  router.delete('/serious/photos/:id',run(req=>needMedia().removePhoto(req.user.id,req.params.id)));
+  router.post('/serious/voice',createRateLimit({limit:30,windowMs:3600000}),run(req=>needMedia().setVoice(req.user.id,req.body)));
+  router.delete('/serious/voice',run(req=>needMedia().removeVoice(req.user.id)));
+  router.get('/serious/:shareId',run(req=>({page:service.seriousPage(req.params.shareId,req.user.id)})));
+  router.get('/serious/:shareId/media/:mediaId',(req,res,next)=>{try{service.seriousMedia(req.params.shareId,req.user.id,req.params.mediaId);const f=needMedia().open(req.params.mediaId);
+    res.set('Content-Type',f.mime).set('Content-Disposition','inline').set('Content-Security-Policy',"default-src 'none'; sandbox").set('Cache-Control','no-store, private').set('Cross-Origin-Resource-Policy','same-origin');res.send(f.body);}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e);}});
   // 申请核验 (owner only). One file per request keeps each JSON body under the global 10MB parser limit.
   router.get('/verification',run(req=>needVerification().status(req.user.id)));
   router.post('/verification/files',createRateLimit({limit:30}),run(req=>needVerification().upload(req.user.id,req.body)));
+  router.post('/verification/video',createRateLimit({limit:10,windowMs:3600000}),express.raw({type:'application/octet-stream',limit:'31mb'}),run(req=>needVerification().uploadVideo(req.user.id,{field:'marital',name:decodeURIComponent(String(req.get('X-File-Name')||'').slice(0,240)).slice(0,80),buf:Buffer.isBuffer(req.body)?req.body:null})));
   router.delete('/verification/files/:fileId',run(req=>needVerification().removeFile(req.user.id,req.params.fileId)));
   router.post('/verification/submit',createRateLimit({limit:20}),run(req=>needVerification().submit(req.user.id,req.body)));
   router.get('/discover',run(req=>service.discover(req.user.id,req.query)));
@@ -92,7 +107,9 @@ function productionRouter(){
     // Proof files live next to the encrypted database (outside the repo; friends-config already rejects in-repo paths).
     let verification=null;
     if(config.enabled){try{verification=require('../lib/friends-verification').createVerificationService({store,dir:process.env.FRIENDS_VERIFICATION_DIR||path.join(path.dirname(config.file),'friends-verification'),key:process.env.FRIENDS_DATA_KEY});verification.sweep();const v=verification;setInterval(()=>{try{v.sweep();}catch(_){}},3600000).unref();}catch(e){console.error('[friends] Verification storage not ready; verification disabled.');verification=null;}}
-    const friends=createRouter({express,auth:authMiddleware,verification,enabled:config.enabled,mode:config.mode||'disabled',secret:process.env.FRIENDS_SIGNING_KEY,store,requirePolicy:true,quotaOptions:{enabled:process.env.FRIENDS_QUOTAS_ENABLED==='true'},funnel:createFunnelSink({secret:process.env.FRIENDS_SIGNING_KEY}),
+    let seriousMedia=null;
+    if(config.enabled){try{seriousMedia=require('../lib/friends-serious').createSeriousMediaService({store,dir:process.env.FRIENDS_MEDIA_DIR||path.join(path.dirname(config.file),'friends-media'),key:process.env.FRIENDS_DATA_KEY});}catch(e){console.error('[friends] Media storage not ready; photos/voice disabled.');seriousMedia=null;}}
+    const friends=createRouter({express,auth:authMiddleware,verification,seriousMedia,enabled:config.enabled,mode:config.mode||'disabled',secret:process.env.FRIENDS_SIGNING_KEY,store,requirePolicy:true,quotaOptions:{enabled:process.env.FRIENDS_QUOTAS_ENABLED==='true'},funnel:createFunnelSink({secret:process.env.FRIENDS_SIGNING_KEY}),
       canAccess:req=>config.mode==='public'||config.allowedIds?.has(String(req.user?.id)),onLogout});
     if(!config.enabled)return friends;
     const {configuredBilling}=require('../lib/friends-billing-config');

@@ -17,17 +17,23 @@ const denied=()=>{const e=Error('没有操作权限');e.status=403;throw e;};
 const conflict=m=>{const e=Error(m);e.status=409;throw e;};
 const {fullAttribution}=require('./friends-campus');
 const array=(v,valid,max=12)=>Array.isArray(v)?[...new Set(v.filter(x=>valid.includes(x)))].slice(0,max):[];
+const SP=require('./friends-serious'),SPT=require('./friends-serious-tags');
+const questionnaireOf=(s,uid)=>(s.marriageQuestionnaires||[]).find(r=>r.userId!==undefined&&r.userId!==null&&String(r.userId)===String(uid))||null;
+// Visibility rule shared by the 交友卡, matching, explanations and the 认真相亲页 (one definition, used everywhere).
+const blockedPair=(s,a,b)=>s.blocks.some(x=>(x.by===a&&x.target===b)||(x.by===b&&x.target===a));
+const connectedPair=(s,a,b)=>s.requests.some(r=>r.status==='accepted'&&((r.from===a&&r.to===b)||(r.to===a&&r.from===b)));
+const profileOf=(s,uid)=>s.profiles.find(p=>p.userId===uid);
+const activeFor=(s,p,viewer)=>p?.listed&&!isDisabled(s,p.userId)&&!blockedPair(s,p.userId,viewer);
+const connectedFor=(s,p,viewer)=>!!profileOf(s,viewer)?.listed&&!isDisabled(s,viewer)&&connectedPair(s,p.userId,viewer);
+const scopeAllows=(s,p,viewer)=>{const self=p.userId===viewer,connected=!self&&connectedFor(s,p,viewer);return scope=>self||scope==='public'||(connected&&scope==='connected');};
 function createFriendsService(store,charts,options={}) {
   const quotas=require('./friends-quotas').createFriendsQuotas(options);
   // 校园漏斗：事务提交成功后再发事件，回滚的操作不计数。
   const funnel=typeof options.funnel==='function'?options.funnel:()=>{};
   const tx=fn=>{const queue=[];const result=store.transaction(s=>fn(s,queue));for(const q of queue){try{funnel(...q);}catch(_){}}return result;};
-  const blocked=(s,a,b)=>s.blocks.some(x=>(x.by===a&&x.target===b)||(x.by===b&&x.target===a));
-  const connection=(s,a,b)=>s.requests.some(r=>r.status==='accepted'&&((r.from===a&&r.to===b)||(r.to===a&&r.from===b)));
-  const active=(s,p,viewer)=>p?.listed&&!isDisabled(s,p.userId)&&!blocked(s,p.userId,viewer);
-  const isConnected=(s,p,viewer)=>!!mine(s,viewer)?.listed&&!isDisabled(s,viewer)&&connection(s,p.userId,viewer);
-  // Single visibility rule shared by projection, matching and explanations.
-  const visibleTo=(s,p,viewer)=>{const self=p.userId===viewer,connected=!self&&isConnected(s,p,viewer);return k=>self||p.visibility?.[k]==='public'||(connected&&p.visibility?.[k]==='connected');};
+  const blocked=blockedPair,connection=connectedPair,active=activeFor,isConnected=connectedFor;
+  // Single visibility rule shared by projection, matching, explanations and the long page.
+  const visibleTo=(s,p,viewer)=>{const allows=scopeAllows(s,p,viewer);return k=>allows(p.visibility?.[k]);};
   // Values the viewer's expectations may be tested against: visible fields, plus fields the owner opted into private matching.
   // Sensitive fields (income/assets/house/car/hukou) need the owner's opt-in even when public.
   function matchValues(s,p,viewer){
@@ -87,6 +93,11 @@ function createFriendsService(store,charts,options={}) {
       {state:'none',text:'这只是推荐：TA还没有表示是否想认识你，要等TA自己回应。'};
     return {forYou,forThem,element:relation?relation.text:null,status,sharedPurposes:M.compatiblePurposes(myPurposes,theirPurposes).map(k=>M.PURPOSE_LABELS[k]),note:'推荐只依据双方可见资料与你自己的期待；不代表对方已同意，也不是关系结论或评分。'};
   }
+  function seriousPayload(s,p,viewer){
+    const self=p.userId===viewer;
+    return SP.buildSeriousPage({row:SP.rowOf(s,p.userId),profile:p,self,allows:scopeAllows(s,p,viewer),fieldVisible:visibleTo(s,p,viewer),member:!self&&isMember(s,viewer),
+      ownerRecord:questionnaireOf(s,p.userId),viewerRecord:self?null:questionnaireOf(s,viewer),viewerRow:self?null:SP.rowOf(s,viewer)});
+  }
   const needMine=(s,uid)=>{const p=mine(s,uid);if(isDisabled(s,uid))denied();if(!p||!p.listed)bad('请先完善个人资料并同意加入人库');return p;};
   return {
     me(uid){const p=mine(store.read(),uid);return p?structuredClone({...M.migrateProfile(p),verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true).map(k=>[k,true])),recommendations:profileRecommendations(p)}):null;},
@@ -120,6 +131,7 @@ function createFriendsService(store,charts,options={}) {
         // Keep admin-approved verification only while the verified value is unchanged; editing the value drops the mark.
         const keep=VERIFY_FIELDS.filter(k=>prev?.verified?.[k]===true&&prev.fields?.[k]===fields[k]);
         if(keep.length){p.verified=Object.fromEntries(keep.map(k=>[k,true]));p.verifiedAt=Object.fromEntries(keep.map(k=>[k,prev.verifiedAt?.[k]||null]));}
+        if(keep.includes('marital')&&prev.verifiedDetail?.marital)p.verifiedDetail={marital:prev.verifiedDetail.marital}; // 婚况 result (admin-set), members-only via 认证条
         p.acquisition=acquisition;
         if(prev)s.profiles[s.profiles.indexOf(prev)]=p;else s.profiles.push(p);
         if(!attributionMark){s.attributionMarks.push({userId:uid,...acquisition,firstProfileAt:prev?.consentAt||new Date().toISOString()});if(!prev){metric(s,'first_profile_created',acquisition);queue.push(['xs_profile_done',uid,acquisition]);}}else{delete attributionMark.expiresAt;delete attributionMark.deletedAt;}
@@ -157,7 +169,34 @@ function createFriendsService(store,charts,options={}) {
     card(id,uid){const s=store.read(),target=s.profiles.find(p=>p.shareId===id),card=project(s,target,uid),viewer=uid&&mine(s,uid);
       // Explanations only (no must/pass state): opening a shared link must not reveal whether anyone's hidden filter passed.
       if(viewer?.listed&&target.userId!==uid&&!isDisabled(s,uid)){const self=M.migrateProfile(viewer),p=M.migrateProfile(target);card.explanation=explain(s,self,p,card,M.evaluate(self,matchValues(s,p,uid)));}
+      // 「看TA的相亲资料」 link: only when TA picked 享受恋爱/认真结婚 and the page has something this viewer may see.
+      if(SP.eligible(target)&&SP.rowOf(s,target.userId)&&SP.hasContent(seriousPayload(s,target,uid)))card.seriousPage=true;
       return card;},
+    // ---- 认真相亲页 ----
+    seriousOwn(uid){const s=store.read(),p=mine(s,uid);if(!p)return {eligible:false,hasProfile:false};
+      const r=SP.rowOf(s,uid),row=r||SP.blankRow(uid);
+      return {eligible:SP.eligible(p),hasProfile:true,shareId:p.shareId,listed:!!p.listed,
+        page:{about:row.about,family:row.family,ideal:row.ideal,hobby:{...row.hobby},plans:[...row.plans],qtags:[...(row.qtags||[])],scopes:{...SP.DEFAULT_SCOPES,...row.scopes},photos:row.photos.map(x=>({id:x.id,w:x.w,h:x.h})),voice:row.voice?{id:row.voice.id,durationMs:row.voice.durationMs,...(row.voice.peaks?{peaks:row.voice.peaks}:{})}:null},
+        // Owner-only: the tags they could tick, from their own current answers. Never sent to anyone else.
+        availableTags:SPT.availableTags(questionnaireOf(s,uid)).map(({key,dimensionId,dimension,label})=>({key,dimensionId,dimension,label})),
+        planTags:[...SP.PLAN_TAGS],preview:seriousPayload(s,p,uid)};},
+    seriousSave(uid,body){return store.transaction(s=>{const p=mine(s,uid);if(!p)bad('请先保存交友卡');if(!SP.eligible(p))bad('认识目的选了「享受恋爱」或「认真结婚」，才能填写相亲资料');
+      const list=SP.rows(s);let r=SP.rowOf(s,uid);const next=SP.normalizeSerious(body,r);
+      // Only tags backed by the owner's own current answers can be ticked.
+      const allowed=new Set(SPT.availableTags(questionnaireOf(s,uid)).map(t=>t.key));if(next.qtags.some(k=>!allowed.has(k)))bad('只能选择你自己问卷里的回答');
+      if(!r){r=SP.blankRow(uid);list.push(r);}Object.assign(r,next,{updatedAt:new Date().toISOString()});return {ok:true};});},
+    // Viewer must be logged in (route). Same 404 for missing / unlisted / blocked / not eligible: nothing leaks.
+    seriousPage(shareId,uid){const s=store.read(),p=s.profiles.find(x=>x.shareId===shareId);
+      if(!p||!(p.userId===uid||active(s,p,uid))||!SP.eligible(p))missing();
+      return {shareId:p.shareId,nickname:p.nickname,city:p.city,purposeLabels:M.purposesOf(p).map(k=>M.PURPOSE_LABELS[k]),
+        ...(visibleTo(s,p,uid)('age')?{age:p.fields?.age}:{}),...(visibleTo(s,p,uid)('dayMaster')?{dayMaster:p.chart?.dayMaster}:{}),
+        own:p.userId===uid,connected:p.userId!==uid&&isConnected(s,p,uid),...seriousPayload(s,p,uid)};},
+    // Returns true only if this exact media id is currently visible to the viewer on that page; route streams bytes after.
+    seriousMedia(shareId,uid,mediaId){const s=store.read(),p=s.profiles.find(x=>x.shareId===shareId);
+      if(!p||!(p.userId===uid||active(s,p,uid))||!SP.eligible(p))missing();
+      const sec=seriousPayload(s,p,uid).sections;
+      if(!(sec.photos||[]).some(x=>x.id===mediaId)&&sec.voice?.id!==mediaId)missing();
+      return true;},
     request(uid,shareId){return tx((s,queue)=>{
       const self=needMine(s,uid),target=s.profiles.find(p=>p.shareId===shareId);
       if(!active(s,target,uid))missing();if(target.userId===uid)bad('不能向自己申请');
@@ -194,7 +233,7 @@ function createFriendsService(store,charts,options={}) {
     reports(uid){return store.read().reports.filter(r=>r.by===uid).map(r=>({id:r.id,status:r.status||'open',createdAt:r.createdAt,updatedAt:r.updatedAt}));},
     feedback(uid,id,outcome){if(!['met','helpful','not_helpful','unsafe'].includes(outcome))bad('反馈选项无效');return tx((s,queue)=>{normalize(s);const r=s.requests.find(r=>r.id===id&&[r.from,r.to].includes(uid)&&['accepted','disconnected'].includes(r.status));if(!r)denied();if(s.feedback.some(x=>x.by===uid&&x.requestId===id))conflict('已提交反馈');s.feedback.push({by:uid,requestId:id,outcome,createdAt:new Date().toISOString()});metric(s,'feedback_'+outcome);if(outcome==='met')queue.push(['xs_met_reported',uid,mine(s,uid)?.acquisition||{},{pairWith:r.from===uid?r.to:r.from}]);return {ok:true};});},
     event(event,attribution){if(!['poster_export','share_visit','profile_preview'].includes(event))bad('事件无效');return store.transaction(s=>{metric(s,event,attribution);return {ok:true};});},
-    remove(uid){return store.transaction(s=>{normalize(s);if(s.profiles.some(p=>p.userId===uid)){const mark=s.attributionMarks.find(x=>x.userId===uid);if(mark){mark.deletedAt=new Date().toISOString();mark.expiresAt=new Date(Date.now()+90*86400000).toISOString();}}s.profiles=s.profiles.filter(p=>p.userId!==uid);s.requests=s.requests.filter(r=>r.from!==uid&&r.to!==uid);s.compatibilityPairs=(s.compatibilityPairs||[]).filter(p=>String(p.from)!==String(uid)&&String(p.to)!==String(uid));/* Keep account-level blocks and moderation across profile recreation. */return {ok:true};});}
+    remove(uid){return store.transaction(s=>{normalize(s);if(s.profiles.some(p=>p.userId===uid)){const mark=s.attributionMarks.find(x=>x.userId===uid);if(mark){mark.deletedAt=new Date().toISOString();mark.expiresAt=new Date(Date.now()+90*86400000).toISOString();}}s.profiles=s.profiles.filter(p=>p.userId!==uid);if(Array.isArray(s.seriousPages))s.seriousPages=s.seriousPages.filter(r=>r.userId!==uid);s.requests=s.requests.filter(r=>r.from!==uid&&r.to!==uid);s.compatibilityPairs=(s.compatibilityPairs||[]).filter(p=>String(p.from)!==String(uid)&&String(p.to)!==String(uid));/* Keep account-level blocks and moderation across profile recreation. */return {ok:true};});}
   };
 }
 module.exports={createFriendsService,FIELDS,OPTIONAL_FIELDS};

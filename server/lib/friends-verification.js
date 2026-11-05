@@ -5,12 +5,28 @@
 //  - Admin approves or rejects; in BOTH cases the original files (and any 学信网 code) are deleted immediately.
 //    Only the result is kept: profile.verified[field]=true + profile.verifiedAt[field] on approval, or the reason on rejection.
 //  - Display rule lives in friends-service.project(): only members (and the owner) ever receive verified data.
+//  - 婚况 (owner decision 2026-11-06): user screen-records their own 「国家政务服务平台」 婚姻登记信息查询 (or screenshots).
+//    Short video mp4/mov/webm ≤30MB via a raw-body route; no third-party API, no ID number collected.
+//    Admin picks 未婚(无登记记录) / 已婚 / 离异(有离婚证照) / 无法判断. 无法判断 = not approved. Files deleted after review as above.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 
-const VERIFY_FIELDS=Object.freeze(['education','occupation','income','assets']);
-const VERIFY_LABELS=Object.freeze({education:'学历',occupation:'职业/在职',income:'年收入',assets:'资产'});
+const VERIFY_FIELDS=Object.freeze(['education','occupation','income','assets','marital']);
+const VERIFY_LABELS=Object.freeze({education:'学历',occupation:'职业/在职',income:'年收入',assets:'资产',marital:'婚况·政务平台自查'});
+// Admin choices for 婚况. Only the first three approve; the stored value is the key, shown to members on the 认证条.
+const MARITAL_RESULTS=Object.freeze({unmarried:'未婚(无登记记录)',married:'已婚',divorced:'离异(有离婚证照)'});
+const MARITAL_CHOICES=Object.freeze({...MARITAL_RESULTS,unclear:'无法判断'});
+const MARITAL_HINT='全国数据尚未完全联网，查无记录不等于法律意义上的未婚证明';
+const MARITAL_GUIDE='在支付宝或微信打开「国家政务服务平台」→ 实名 → 我的证照/婚姻登记信息查询，录屏（从打开到结果页，含实名姓名）上传。已婚显示结婚证电子证照，未婚显示「无关联数据」。';
+const MAX_VIDEO_BYTES=30*1024*1024;
 const MAX_FILES=3,MAX_BYTES=5*1024*1024,DRAFT_TTL_MS=7*86400000,ORPHAN_GRACE_MS=10*60000;
-const EXT={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','application/pdf':'pdf'};
+const EXT={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','application/pdf':'pdf','video/mp4':'mp4','video/quicktime':'mov','video/webm':'webm'};
+// Video by magic bytes: ISO-BMFF 'ftyp' (qt brand => mov) or EBML header (webm). Only accepted for 婚况.
+function sniffVideo(buf){
+  if(!Buffer.isBuffer(buf)||buf.length<12)return null;
+  if(buf.toString('latin1',4,8)==='ftyp')return buf.toString('latin1',8,12)==='qt  '?'video/quicktime':'video/mp4';
+  if(buf[0]===0x1a&&buf[1]===0x45&&buf[2]===0xdf&&buf[3]===0xa3)return 'video/webm';
+  return null;
+}
 const fail=(status,message)=>{const e=Error(message);e.status=status;throw e;};
 
 // Type is decided by content, never by file name or client-declared MIME.
@@ -74,19 +90,7 @@ function createVerificationService({store,dir,key,clock=()=>Date.now(),repoRoot=
     return out;
   };
 
-  return {
-    VERIFY_FIELDS,
-    // Owner-only status: 审核中 / 已核验 / 未通过+原因.
-    status(uid){
-      const s=store.read(),p=(s.profiles||[]).find(x=>x.userId===uid),list=s.verificationRequests||[];
-      const fields={};
-      for(const f of VERIFY_FIELDS){const r=list.find(x=>x.userId===uid&&x.field===f);fields[f]={...ownerView(r),verified:p?.verified?.[f]===true,...(p?.verified?.[f]===true?{verifiedAt:p.verifiedAt?.[f]||null}:{})};}
-      return {fields,labels:VERIFY_LABELS,limits:{maxFiles:MAX_FILES,maxBytes:MAX_BYTES,types:Object.keys(EXT)},hasProfile:!!p};
-    },
-    upload(uid,{field,name,data}={}){
-      checkField(field);
-      const buf=decode(data),mime=sniff(buf);
-      if(!mime)fail(415,'只支持 JPG、PNG、WEBP 图片或 PDF 文件');
+  function addFile(uid,field,name,buf,mime){
       const pre=store.read();
       if(!(pre.profiles||[]).some(p=>p.userId===uid))fail(400,'请先保存个人资料，再申请核验');
       const id=crypto.randomBytes(16).toString('hex');
@@ -104,6 +108,32 @@ function createVerificationService({store,dir,key,clock=()=>Date.now(),repoRoot=
           return ownerView(r);
         });
       }catch(e){unlink([id]);throw e;}
+  }
+
+  return {
+    VERIFY_FIELDS,
+    // Owner-only status: 审核中 / 已核验 / 未通过+原因.
+    status(uid){
+      const s=store.read(),p=(s.profiles||[]).find(x=>x.userId===uid),list=s.verificationRequests||[];
+      const fields={};
+      for(const f of VERIFY_FIELDS){const r=list.find(x=>x.userId===uid&&x.field===f);fields[f]={...ownerView(r),verified:p?.verified?.[f]===true,...(p?.verified?.[f]===true?{verifiedAt:p.verifiedAt?.[f]||null}:{})};}
+      if(p?.verified?.marital===true&&MARITAL_RESULTS[p.verifiedDetail?.marital])fields.marital.result=MARITAL_RESULTS[p.verifiedDetail.marital];
+      return {fields,labels:VERIFY_LABELS,limits:{maxFiles:MAX_FILES,maxBytes:MAX_BYTES,maxVideoBytes:MAX_VIDEO_BYTES,types:Object.keys(EXT)},marital:{guide:MARITAL_GUIDE,hint:MARITAL_HINT},hasProfile:!!p};
+    },
+    upload(uid,{field,name,data}={}){
+      checkField(field);
+      const buf=decode(data),mime=sniff(buf);
+      if(!mime)fail(415,field==='marital'?'图片请用 JPG/PNG/WEBP；录屏请用「上传录屏」':'只支持 JPG、PNG、WEBP 图片或 PDF 文件');
+      if(field==='marital'&&mime==='application/pdf')fail(415,'婚况请上传录屏或截图');
+      return addFile(uid,field,name,buf,mime);
+    },
+    // Raw-body upload for the 婚况 screen recording (≤30MB). Route passes the Buffer; type by magic bytes only.
+    uploadVideo(uid,{field,name,buf}={}){
+      if(field!=='marital')fail(400,'只有婚况可以上传录屏');
+      if(!Buffer.isBuffer(buf)||!buf.length)fail(400,'请选择要上传的录屏');
+      if(buf.length>MAX_VIDEO_BYTES)fail(413,'录屏不能超过30MB，请只录从打开到结果页');
+      const mime=sniffVideo(buf);if(!mime)fail(415,'录屏只支持 MP4、MOV、WEBM');
+      return addFile(uid,field,name,buf,mime);
     },
     removeFile(uid,fileId){
       const r=store.transaction(s=>{
@@ -138,7 +168,7 @@ function createVerificationService({store,dir,key,clock=()=>Date.now(),repoRoot=
         const p=(s.profiles||[]).find(x=>x.userId===r.userId);
         return {id:r.id,field:r.field,fieldLabel:VERIFY_LABELS[r.field],submittedAt:r.submittedAt,code:r.code||null,
           profile:p?{shareId:p.shareId,nickname:p.nickname,city:p.city,claimed:p.fields?.[r.field]??null}:null,
-          files:r.files.map(f=>({id:f.id,name:f.name,mime:f.mime,size:f.size}))};
+          files:r.files.map(f=>({id:f.id,name:f.name,mime:f.mime,size:f.size})),...(r.field==='marital'?{choices:MARITAL_CHOICES}:{})};
       });
     },
     // Returns decrypted bytes for an admin-authenticated request only. Never written to a public path.
@@ -148,9 +178,16 @@ function createVerificationService({store,dir,key,clock=()=>Date.now(),repoRoot=
       let body;try{body=readDecrypted(f.id);}catch(_){fail(410,'文件已删除或无法读取');}
       return {mime:f.mime,body,filename:'verify-'+f.id.slice(0,8)+'.'+EXT[f.mime]};
     },
-    decide(requestId,{decision,reason}={},actor='admin-token'){
+    decide(requestId,{decision,reason,result}={},actor='admin-token'){
       if(!['approve','reject'].includes(decision))fail(400,'审核结果无效');
-      const why=typeof reason==='string'?reason.trim().slice(0,200):'';
+      let why=typeof reason==='string'?reason.trim().slice(0,200):'';
+      const target=(store.read().verificationRequests||[]).find(x=>x.id===requestId);
+      if(target?.field==='marital'){
+        // 婚况: the admin must pick one of the four results. 无法判断 never lights the mark.
+        if(!Object.hasOwn(MARITAL_CHOICES,result))fail(400,'请选择婚况结果');
+        if(decision==='approve'&&!Object.hasOwn(MARITAL_RESULTS,result))fail(400,'「无法判断」不能通过，请选未通过并说明原因');
+        if(decision==='reject'&&!why&&result==='unclear')why='录屏无法判断婚况，请按说明从打开到结果页完整录制（含实名姓名）后重新提交';
+      }
       if(decision==='reject'&&!why)fail(400,'请填写未通过原因（会展示给用户）');
       let toDelete=[];
       const out=store.transaction(s=>{
@@ -160,13 +197,14 @@ function createVerificationService({store,dir,key,clock=()=>Date.now(),repoRoot=
         if(decision==='approve'){
           const p=(s.profiles||[]).find(x=>x.userId===r.userId);if(!p)fail(409,'用户资料已删除，无法核验');
           p.verified={...(p.verified||{}),[r.field]:true};p.verifiedAt={...(p.verifiedAt||{}),[r.field]:at};
+          if(r.field==='marital')p.verifiedDetail={...(p.verifiedDetail||{}),marital:result};
           r.status='approved';r.reason=null;
         }else{r.status='rejected';r.reason=why;}
         toDelete=r.files.map(f=>f.id);
         // Only the result is kept: drop file metadata and the 学信网 code together with the files.
         r.files=[];r.code=null;r.reviewedAt=at;r.updatedAt=at;
         if(!Array.isArray(s.auditLogs))s.auditLogs=[];
-        s.auditLogs.push({id:crypto.randomUUID(),actor,action:'verification.'+decision,target:r.id,detail:{field:r.field,...(decision==='reject'?{reason:why}:{}),filesDeleted:toDelete.length},createdAt:at});
+        s.auditLogs.push({id:crypto.randomUUID(),actor,action:'verification.'+decision,target:r.id,detail:{field:r.field,...(r.field==='marital'?{result}:{}),...(decision==='reject'?{reason:why}:{}),filesDeleted:toDelete.length},createdAt:at});
         return {id:r.id,status:r.status,field:r.field,reviewedAt:at};
       });
       const failed=unlink(toDelete);
@@ -194,4 +232,4 @@ function createVerificationService({store,dir,key,clock=()=>Date.now(),repoRoot=
   };
 }
 
-module.exports={createVerificationService,sniff,VERIFY_FIELDS,VERIFY_LABELS,MAX_FILES,MAX_BYTES};
+module.exports={createVerificationService,sniff,sniffVideo,MARITAL_RESULTS,MARITAL_CHOICES,MARITAL_HINT,MARITAL_GUIDE,MAX_VIDEO_BYTES,VERIFY_FIELDS,VERIFY_LABELS,MAX_FILES,MAX_BYTES};
