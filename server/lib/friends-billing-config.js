@@ -9,7 +9,7 @@ function configuredBilling(store,{env=process.env,load=require}={}){
   const registrations=JSON.parse(env.FRIENDS_BILLING_PRODUCTS||'{}');
   if(!registrations||Array.isArray(registrations)||typeof registrations!=='object')return closed();
   const client=load(env.HUB_CLIENT_PATH||path.resolve(__dirname,'../../../shared/pay-hub-client.js'));
-  return createBillingService(store,{enabled:true,salesPaused:env.FRIENDS_BILLING_SALES_PAUSED==='true',merchantVerified:true,merchantName:env.FRIENDS_BILLING_MERCHANT_NAME||'',freshPullVerified:true,adapter:createHubAdapter(client),registrations});
+  return createBillingService(store,{enabled:true,pilotCatalog:env.FRIENDS_PILOT_CATALOG_ENABLED==='true'&&env.FRIENDS_PAIR_REPORT_DELIVERY_VERIFIED==='true',salesPaused:env.FRIENDS_BILLING_SALES_PAUSED==='true',merchantVerified:true,merchantName:env.FRIENDS_BILLING_MERCHANT_NAME||'',freshPullVerified:true,adapter:createHubAdapter(client),registrations});
  }catch(_){return closed();}
 }
 module.exports={configuredBilling};
