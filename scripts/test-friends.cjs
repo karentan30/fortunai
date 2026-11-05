@@ -5,6 +5,8 @@ const files=['server/lib','server/routes'].flatMap(dir=>fs.readdirSync(path.join
 for(const name of ['bazi-full-report.test.js','friends-reports.test.js','friends-report-adapter.test.js','friends-purchase-report.integration.test.js']){const file=path.join(root,'tests',name);if(fs.existsSync(file))files.push(file);}
 files.push(path.join(root,'scripts/friends-poster-invitation.test.cjs'));
 files.push(path.join(root,'scripts/friends-install-files.test.cjs'));
+files.push(path.join(root,'scripts/friends-launch.test.cjs'));
+const updateTest=path.join(root,'scripts/friends-update.test.cjs');if(fs.existsSync(updateTest))files.push(updateTest);
 if(!files.length)throw Error('没有找到交友功能测试');
 const result=spawnSync(process.execPath,['--test',...files],{cwd:root,stdio:'inherit',windowsHide:true});
 if(result.error)throw result.error;process.exitCode=result.status??1;
