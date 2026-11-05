@@ -89,7 +89,7 @@ ${own?`<p class="sp-ownbar">这是你的相亲资料预览。每一块右侧标�
 <header class="sp-head"><h1 id="sp-name">${esc(p.nickname)}</h1>${meta?`<p class="sp-meta">${meta}</p>`:''}${p.purposeLabels?.length?`<ul class="sp-purposes">${p.purposeLabels.map(l=>`<li>${esc(l)}</li>`).join('')}</ul>`:''}</header>
 ${blocks.join('')}
 ${sparse?`<p class="sp-sparse">${own?'还没有填写内容。照片、招呼语音和几段文字都可选，填一两项就够。':'TA还在慢慢补充资料。可以先申请认识，用15分钟语音聊聊。'}</p>`:''}
-<footer class="ps-cta sp-cta">${own?'<button class="ps-apply" disabled>这是你自己的页面</button>':'<button id="sp-apply" class="ps-apply">申请认识 <span aria-hidden="true">→</span> 15分钟语音</button>'}<p class="fine-print">${own?'别人看到的是同一个页面，但只包含TA有权限看的部分。':'TA同意后，先语音15分钟听听声音，聊得来再见面。'}</p>${own?'':'<p class="sp-safety"><button type="button" class="text-button" id="sp-report">举报</button><button type="button" class="text-button" id="sp-block">不再遇见</button></p>'}</footer>
+<footer class="ps-cta sp-cta">${own?'<button class="ps-apply" disabled>这是你自己的页面</button>':p.connected?'<a class="ps-apply" href="#connections">你们已互相认识 <span aria-hidden="true">→</span> 看联系方式</a>':'<button id="sp-apply" class="ps-apply">申请认识 <span aria-hidden="true">→</span> 15分钟语音</button>'}${p.connected&&!own?'':`<p class="fine-print">${own?'别人看到的是同一个页面，但只包含TA有权限看的部分。':'TA同意后，先语音15分钟听听声音，聊得来再见面。'}</p>`}${own?'':'<p class="sp-safety"><button type="button" class="text-button" id="sp-report">举报</button><button type="button" class="text-button" id="sp-block">不再遇见</button></p>'}</footer>
 </article></section>`;
     window.scrollTo({top:0,behavior:'instant'});
     bindVoice(main);
