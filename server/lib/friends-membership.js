@@ -5,12 +5,12 @@ const PILOT_CATALOG=Object.freeze({
  friends_year_v1:{sku:'friends_year_v1',name:'相生年会员',amountMinor:19900,currency:'CNY',reportCredits:2,creditUnit:'pair_report',accessDays:366,accessMonths:12,matchingMembership:true,monthlyReportCredits:2,pilot:true}
 });
 Object.values(PILOT_CATALOG).forEach(Object.freeze);
-// Calendar anniversaries, UTC, clamp Jan31 -> Feb28 without shifting later anniversaries.
+// Asia/Shanghai calendar anniversaries (UTC+8); clamp month-end without drifting.
 function anniversary(paidAt,months){
- const start=new Date(paidAt);if(!Number.isFinite(start.getTime()))throw Error('会员起始时间无效');
+ const start=new Date(Date.parse(paidAt)+8*3600000);if(!Number.isFinite(start.getTime()))throw Error('会员起始时间无效');
  const year=start.getUTCFullYear(),month=start.getUTCMonth()+months;
  const last=new Date(Date.UTC(year,month+1,0)).getUTCDate();
- return Date.UTC(year,month,Math.min(start.getUTCDate(),last),start.getUTCHours(),start.getUTCMinutes(),start.getUTCSeconds(),start.getUTCMilliseconds());
+ return Date.UTC(year,month,Math.min(start.getUTCDate(),last),start.getUTCHours(),start.getUTCMinutes(),start.getUTCSeconds(),start.getUTCMilliseconds())-8*3600000;
 }
 function period(order,now){
  if(!order.matchingMembership||order.status!=='paid'||!Number.isInteger(order.accessMonths)||order.accessMonths<1||order.accessMonths>12)return null;
