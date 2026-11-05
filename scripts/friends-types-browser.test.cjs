@@ -18,9 +18,16 @@ assert.equal(await page.locator('#constellation').inputValue(),'白羊座');
 assert.equal(await page.locator('#mbti').inputValue(),'ENFP');
 assert.equal(await page.locator('[name=scope_mbti]').inputValue(),'private');
 assert.equal(await page.locator('#marriage-questions-note').isVisible(),true);
-await page.locator('#intent').selectOption('找搭子');
+// Legacy intent 认真结婚 migrates to the 认真婚恋 checkbox; purposes are multi-select.
+assert.deepEqual(await page.locator('[name=purposes]:checked').evaluateAll(xs=>xs.map(x=>x.value)),['serious']);
+await page.locator('[name=purposes][value=serious]').uncheck();await page.locator('[name=purposes][value=buddy]').check();
 assert.equal(await page.locator('#marriage-questions-note').isHidden(),true);
-await page.locator('#intent').selectOption('认真结婚');
+await page.locator('[name=purposes][value=serious]').check();
+assert.equal(await page.locator('#marriage-questions-note').isVisible(),true);
+// 我的期待: hard age range, preferred city; sensitive income expectation plus own consent.
+await page.locator('[name=exp_min_age]').fill('24');await page.locator('[name=exp_max_age]').fill('35');await page.locator('[name=exp_level_age]').selectOption('must');
+await page.locator('[name=exp_values_city]').fill('北京，上海');await page.locator('[name=exp_level_city]').selectOption('prefer');
+await page.locator('summary').filter({hasText:'是否用于私密筛选'}).click();await page.locator('[name=match_income]').check();
 await page.locator('summary').filter({hasText:'也通过星座'}).click();
 await page.locator('[data-suggest-type=constellation]').click();
 assert.deepEqual(await page.locator('[name=targetConstellations]:checked').evaluateAll(xs=>xs.map(x=>x.value)),['狮子座','射手座']);
@@ -36,6 +43,9 @@ await page.locator('#publish-dialog button[value=publish]').click();
 await page.waitForURL(/#poster$/);
 assert.equal(saved.mbti,'ENFP');assert.equal(saved.visibility.mbti,'private');assert.equal(saved.constellation,'白羊座');
 assert.deepEqual(saved.targetConstellations,['狮子座','射手座']);
+assert.deepEqual(saved.purposes,['buddy','serious']);
+assert.deepEqual(saved.expectations.age,{level:'must',min:24,max:35});assert.deepEqual(saved.expectations.city,{level:'prefer',values:['北京','上海']});
+assert.equal(saved.matchingConsent.income,true);assert.equal(saved.matchingConsent.assets,false);assert.equal(saved.visibility.income,'private');
 await page.evaluate(()=>location.hash='profile');await page.locator('#profile-form').waitFor();
 assert.equal(await page.locator('#mbti').inputValue(),'ENFP');
 await page.locator('#mbti').selectOption('');assert.equal(await page.locator('#mbti').inputValue(),'');
@@ -48,5 +58,5 @@ assert.equal(new URLSearchParams(discoverQuery).get('constellation'),'狮子座'
 for(const width of [320,390,768,1440]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);}
 assert.deepEqual(errors,[]);
 await page.screenshot({path:path.join(__dirname,'../.review/friends-types-discover.png'),fullPage:true});
-console.log('PASS type preferences, explicit save, hidden MBTI preview, marriage questionnaire entry, discover filters and responsive layout');
+console.log('PASS type preferences, explicit save, hidden MBTI preview, marriage questionnaire entry, purposes/expectations/consent payload, discover filters and responsive layout');
 }finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
