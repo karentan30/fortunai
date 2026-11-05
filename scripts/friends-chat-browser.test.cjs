@@ -5,7 +5,7 @@ const BASE=process.env.FRIENDS_REVIEW_URL||'http://127.0.0.1:4188';
 (async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.EDGE_BINARY||(process.platform==='win32'?'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe':undefined)});try{
  const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[],sent=[];page.on('pageerror',e=>errors.push(e.message));
  let accountId='owner',firstSend=true,revoked=false,held=null,hold=false;
- const pair=id=>({id,status:revoked?'revoked':'ready',peer:{nickname:id==='one'?'甲同学':'乙同学'},recipientClaimed:true,myAuthorized:true,peerAuthorized:true,basicReady:!revoked,direction:'outgoing',mode:'targeted'});
+ const pair=id=>({id,chatReady:!revoked,myChatConsent:true,peerChatConsent:true,status:revoked?'revoked':'ready',peer:{nickname:id==='one'?'甲同学':'乙同学'},recipientClaimed:true,myAuthorized:true,peerAuthorized:true,basicReady:!revoked,direction:'outgoing',mode:'targeted'});
  await page.route('**/api/**',async route=>{
   const url=new URL(route.request().url()),p=url.pathname,body=route.request().postDataJSON();
   if(p==='/api/auth/me')return route.fulfill({json:{user:{id:accountId}}});
