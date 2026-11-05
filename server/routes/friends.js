@@ -34,6 +34,8 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.get('/admin/summary',run(()=>admin.summary()));
   router.get('/admin/reports',run(req=>({reports:admin.reports(req.query.status)})));
   router.get('/admin/profiles',run(()=>({profiles:admin.profiles()})));
+  router.get('/admin/orders',run(()=>({orders:admin.orders()})));
+  router.post('/admin/orders/:id/refund',run(req=>admin.markRefunded(req.params.id,req.body?.note)));
   router.get('/admin/audit',run(()=>({audit:admin.audit()})));
   router.get('/admin/delivery-review',run(req=>admin.deliveryReview({limit:req.query.limit===undefined?100:Number(req.query.limit),offset:req.query.offset===undefined?0:Number(req.query.offset)})));
   router.post('/admin/report-jobs/:id/release',async(req,res,next)=>{try{res.json(await admin.releaseReport(req.params.id,req.body,req.friendsAdminActor));}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e);}});
@@ -58,7 +60,7 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.use(auth);
   router.post('/logout',(req,res,next)=>{try{if(onLogout)onLogout(req,res);else res.clearCookie('sy_token',{path:'/'});res.json({ok:true});}catch(e){next(e);}});
   router.use((req,res,next)=>canAccess(req)?next():res.status(403).json({error:'当前为邀请测试，请联系运营开通账号'}));
-  router.get('/card/:shareId',run(req=>({profile:service.card(req.params.shareId,req.user?.id)})));
+  router.get('/card/:shareId',run(req=>{const profile=service.card(req.params.shareId,req.user?.id);if(req.user?.id!==undefined){try{service.recordView(req.user.id,req.params.shareId);}catch(_){}}return {profile};}));
   router.use((req,res,next)=>req.user?next():res.status(401).json({error:'请先登录 Runae 账号'}));
   router.use(createRateLimit({limit:120}));
   router.get('/quota',run(req=>service.quota(req.user.id)));
@@ -66,6 +68,7 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.get('/collection',run(req=>{const C=require('../lib/friends-collection'),c=C.collectionFor(store.read(),req.user.id);return {collection:c,share:C.shareSummary(c)};}));
   // 想认识TA after sign-up: redeem a guest token; the normal card visibility check (listed/blocked/disabled) still applies.
   router.get('/preview/resolve/:token',run(req=>{const uid=previewDeck.resolve(req.params.token),p=uid&&store.read().profiles.find(x=>x.userId===uid);if(!p){const e=Error('这位朋友暂时看不到了');e.status=404;throw e;}return {shareId:service.card(p.shareId,req.user.id).shareId};}));
+  router.get('/viewers',run(req=>service.viewers(req.user.id)));
   // 校园分享用的个人推荐码：服务器签名派生，不含用户ID/姓名，链接里只带这个码。
   router.get('/referral',run(req=>({code:referralCode(secret,req.user.id)})));
   router.get('/me',run(req=>({profile:service.me(req.user.id)})));
@@ -116,12 +119,18 @@ function productionRouter(){
     if(config.enabled){try{verification=require('../lib/friends-verification').createVerificationService({store,dir:process.env.FRIENDS_VERIFICATION_DIR||path.join(path.dirname(config.file),'friends-verification'),key:process.env.FRIENDS_DATA_KEY});verification.sweep();const v=verification;setInterval(()=>{try{v.sweep();}catch(_){}},3600000).unref();}catch(e){console.error('[friends] Verification storage not ready; verification disabled.');verification=null;}}
     let seriousMedia=null;
     if(config.enabled){try{seriousMedia=require('../lib/friends-serious').createSeriousMediaService({store,dir:process.env.FRIENDS_MEDIA_DIR||path.join(path.dirname(config.file),'friends-media'),key:process.env.FRIENDS_DATA_KEY});}catch(e){console.error('[friends] Media storage not ready; photos/voice disabled.');seriousMedia=null;}}
-    const friends=createRouter({express,auth:authMiddleware,verification,seriousMedia,enabled:config.enabled,mode:config.mode||'disabled',secret:process.env.FRIENDS_SIGNING_KEY,store,requirePolicy:true,quotaOptions:{enabled:process.env.FRIENDS_QUOTAS_ENABLED==='true'},funnel:createFunnelSink({secret:process.env.FRIENDS_SIGNING_KEY}),
+    const friends=createRouter({express,auth:authMiddleware,verification,seriousMedia,enabled:config.enabled,mode:config.mode||'disabled',secret:process.env.FRIENDS_SIGNING_KEY,store,requirePolicy:true,quotaOptions:{enabled:process.env.FRIENDS_QUOTAS_ENABLED!=='false'} /* 免费3次/会员20次认识申请；FRIENDS_QUOTAS_ENABLED=false 为应急关闭 */,funnel:createFunnelSink({secret:process.env.FRIENDS_SIGNING_KEY}),
       canAccess:req=>config.mode==='public'||config.allowedIds?.has(String(req.user?.id)),onLogout});
     if(!config.enabled)return friends;
     const {configuredBilling}=require('../lib/friends-billing-config');
     const {createBillingRouter,createBillingCallbackRouter}=require('./friends-billing');
     const billing=configuredBilling(store),bundle=express.Router();
+    // 相生会员直连收款（支付宝/微信，复用 server/pay.js）。FRIENDS_SALES_OPEN!=='true' 时页面显示「暂未开放购买」。
+    const {configuredMembershipSales}=require('../lib/friends-membership-sales');
+    const {createMembershipNotifyRouter,createMembershipSalesRouter}=require('./friends-membership-sales');
+    const sales=configuredMembershipSales(store);
+    bundle.use('/billing/membership/notify',createMembershipNotifyRouter({express,service:sales}));
+    bundle.use('/billing/membership',createRateLimit({limit:90}),createMembershipSalesRouter({express,auth:(req,res,next)=>billingAuth(req,res,next),service:sales}));
     bundle.use('/billing/callback',createRateLimit({limit:120}),createBillingCallbackRouter({express,service:billing}));
     const billingAuth=(req,res,next)=>authMiddleware(req,res,()=>{
       if(!req.user)return res.status(401).json({error:'请先登录'});

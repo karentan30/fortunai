@@ -52,6 +52,17 @@ for(const action of ['login','register'])app.post('/api/auth/'+action,(req,res)=
 app.get('/api/auth/me',auth,(req,res)=>req.user?res.json({user:req.user}):res.status(401).json({error:'未登录'}));
 // Small review-only request ceiling, separate from production's global rate limiter.
 const buckets=new Map();app.use('/api/friends',(req,res,next)=>{const k=req.ip,now=Date.now(),b=(buckets.get(k)||[]).filter(t=>now-t<60000);if(b.length>=120)return res.status(429).json({error:'操作过于频繁'});b.push(now);buckets.set(k,b);next();});
+// 会员直购：本地只能用假支付（FRIENDS_PREVIEW_MOCK_PAY=1 才开放购买）；默认与线上一样「暂未开放购买」。
+const {createMembershipSales}=require('./lib/friends-membership-sales');
+const {createMembershipSalesRouter}=require('./routes/friends-membership-sales');
+const mockPaid=new Set(),mockPay=process.env.FRIENDS_PREVIEW_MOCK_PAY==='1';
+const mockProvider={ready:()=>true,
+  async create(channel,{outTradeNo}){return channel==='wechat'?{codeUrl:'weixin://wxpay/bizpayurl?pr=preview-'+outTradeNo.slice(-6)}:{qrCode:'https://qr.alipay.com/preview-'+outTradeNo.slice(-6)};},
+  async query(channel,outTradeNo){if(!mockPaid.has(outTradeNo))return null;const o=reviewStore.read().billingOrders.find(o=>o.outTradeNo===outTradeNo);return {outTradeNo,amountMinor:o.amountMinor,currency:'CNY',tradeNo:'mock-'+outTradeNo,appOk:true};},
+  verifyNotify:()=>({ok:false}),reply:(c,ok)=>({type:'text/plain',body:ok?'success':'fail'})};
+const membershipSales=createMembershipSales(reviewStore,{provider:mockPay?mockProvider:null,salesOpen:mockPay,notifyBase:'https://preview.invalid/api/friends/billing/membership/notify'});
+app.use('/api/friends/billing/membership',createMembershipSalesRouter({express,auth,service:membershipSales}));
+if(mockPay)app.post('/api/friends-preview/mock-pay',auth,(req,res)=>{const o=(reviewStore.read().billingOrders||[]).find(o=>o.id===req.body?.orderId&&o.userId===req.user?.id);if(!o)return res.sendStatus(404);mockPaid.add(o.outTradeNo);res.json({ok:true});});
 app.use('/api/friends/billing',createBillingRouter({express,auth,service:billing}));
 const {createPersonalReportsRouter}=require('./routes/friends-personal-reports');
 app.use('/api/friends/personal-reports',createPersonalReportsRouter({express,auth,store:reviewStore,billing,env:{FRIENDS_REPORTS_ENABLED:'false'}}));
@@ -67,7 +78,7 @@ const compatibility=createCompatibilityService({store:reviewStore,questionnaireS
 app.use('/api/friends/compatibility',createCompatibilityRouter({express,auth,service:compatibility}));
 // Encrypted 相亲页 media must live outside the repo; the default preview data dir is inside it, so fall back to a temp dir.
 const seriousMedia=require('./lib/friends-serious').createSeriousMediaService({store:reviewStore,dir:process.env.FRIENDS_MEDIA_DIR||(process.env.FRIENDS_PREVIEW_DATA_DIR?path.join(dir,'friends-media'):path.join(require('node:os').tmpdir(),'runae-preview-media')),key:fs.readFileSync(dataKeyFile,'utf8')});
-app.use('/api/friends',createRouter({express,auth,store:reviewStore,seriousMedia,secret:fs.readFileSync(keyFile,'utf8'),adminToken:fs.readFileSync(reviewAdmin,'utf8'),onLogout(req,res){const token=cookie(req);if(token)sessions.delete(token);res.clearCookie('review_session',{path:'/',httpOnly:true,sameSite:'strict'});}}));
+app.use('/api/friends',createRouter({express,auth,store:reviewStore,quotaOptions:{enabled:process.env.FRIENDS_QUOTAS_ENABLED!=='false'},seriousMedia,secret:fs.readFileSync(keyFile,'utf8'),adminToken:fs.readFileSync(reviewAdmin,'utf8'),onLogout(req,res){const token=cookie(req);if(token)sessions.delete(token);res.clearCookie('review_session',{path:'/',httpOnly:true,sameSite:'strict'});}}));
 app.get('/',(req,res)=>res.redirect('/pages/friends-connect.html'));
 app.use('/pages',express.static(path.join(root,'pages')));
 app.use('/assets',express.static(path.join(root,'assets')));

@@ -31,8 +31,8 @@ function createBillingService(store,{adapter=null,enabled=false,salesPaused=fals
   };
   function refreshBenefits(s,uid){
     for(const o of s.billingOrders.filter(o=>o.userId===uid)){
-      const window=period(o,clock());if(!window)continue;
-      if(!s.creditLedger.some(e=>e.orderId===o.id&&e.type==='monthly_grant'&&e.periodKey===window.key))ledger(s,{orderId:o.id,userId:uid,unit:'pair_report',delta:2,type:'monthly_grant',periodKey:window.key,expiresAt:new Date(window.expiresAt).toISOString()});
+      const window=period(o,clock()),monthly=CATALOG[o.sku]?.monthlyReportCredits||0;if(!window||monthly<1)continue;
+      if(!s.creditLedger.some(e=>e.orderId===o.id&&e.type==='monthly_grant'&&e.periodKey===window.key))ledger(s,{orderId:o.id,userId:uid,unit:'pair_report',delta:monthly,type:'monthly_grant',periodKey:window.key,expiresAt:new Date(window.expiresAt).toISOString()});
     }
   }
   function grantPaid(s,o){

@@ -119,7 +119,7 @@ function _wxPost(url, xmlBody, timeoutMs) {
 }
 
 // 统一下单（NATIVE 扫码）。totalFeeCents=分。返回微信响应 dict（含 code_url）。
-async function wxUnifiedOrder(outTradeNo, totalFeeCents, bodyDesc, clientIp) {
+async function wxUnifiedOrder(outTradeNo, totalFeeCents, bodyDesc, clientIp, notifyUrl) {
   const params = {
     appid: WECHAT_APP_ID,
     mch_id: WECHAT_MCH_ID,
@@ -128,7 +128,7 @@ async function wxUnifiedOrder(outTradeNo, totalFeeCents, bodyDesc, clientIp) {
     out_trade_no: outTradeNo,
     total_fee: String(Math.round(totalFeeCents)),
     spbill_create_ip: clientIp || '127.0.0.1',
-    notify_url: WECHAT_NOTIFY_URL,   // 🔴 善缘自己的域名
+    notify_url: notifyUrl || WECHAT_NOTIFY_URL,   // 🔴 善缘自己的域名；相生会员传自己的回调地址
     trade_type: 'NATIVE',
     product_id: outTradeNo,
   };
@@ -197,12 +197,12 @@ function alipayReady() {
 
 // 当面付预下单：alipay.trade.precreate → 返回 qr_code
 // 返回 { ok, qr_code?, msg? }
-async function alipayPrecreate(outTradeNo, totalAmountYuan, subject) {
+async function alipayPrecreate(outTradeNo, totalAmountYuan, subject, notifyUrl) {
   const client = getAlipay();
   if (!client) return { ok: false, msg: '支付宝未配置' };
   try {
     const res = await client.exec('alipay.trade.precreate', {
-      notifyUrl: ALIPAY_NOTIFY_URL,   // 🔴 善缘自己的域名
+      notifyUrl: notifyUrl || ALIPAY_NOTIFY_URL,   // 🔴 善缘自己的域名；相生会员传自己的回调地址
       bizContent: {
         out_trade_no: outTradeNo,
         total_amount: String(totalAmountYuan),

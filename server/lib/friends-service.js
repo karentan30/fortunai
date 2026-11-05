@@ -26,7 +26,20 @@ const profileOf=(s,uid)=>s.profiles.find(p=>p.userId===uid);
 const activeFor=(s,p,viewer)=>p?.listed&&!isDisabled(s,p.userId)&&!blockedPair(s,p.userId,viewer);
 const connectedFor=(s,p,viewer)=>!!profileOf(s,viewer)?.listed&&!isDisabled(s,viewer)&&connectedPair(s,p.userId,viewer);
 const scopeAllows=(s,p,viewer)=>{const self=p.userId===viewer,connected=!self&&connectedFor(s,p,viewer);return scope=>self||scope==='public'||(connected&&scope==='connected');};
+const viewDay=t=>new Date(t+8*3600000).toISOString().slice(0,10);
+const INCOME_LOWER=new Map(M.INCOME_TIERS.filter(([,lower])=>lower!==null));
+// 会员筛选: 学历(最低) / 收入区间(最低) / 有房 / 有车 / 已核验. Unknown values are rejected, never widened.
+function memberFilters(q){
+  const out=[],bad400=m=>{const e=Error(m);e.status=400;throw e;};
+  if(q.edu){const min=M.EDUCATION_LEVELS.indexOf(q.edu);if(min<0)bad400('学历筛选无效');out.push(c=>M.EDUCATION_LEVELS.indexOf(c.fields?.education)>=min);}
+  if(q.income){if(!INCOME_LOWER.has(q.income))bad400('收入筛选无效');const min=INCOME_LOWER.get(q.income);out.push(c=>INCOME_LOWER.has(c.fields?.income)&&INCOME_LOWER.get(c.fields.income)>=min);}
+  if(q.house){if(q.house!=='有房')bad400('房产筛选无效');out.push(c=>c.fields?.house==='有房');}
+  if(q.car){if(q.car!=='有车')bad400('车产筛选无效');out.push(c=>c.fields?.car==='有车');}
+  if(q.verified){if(q.verified!=='1')bad400('已核验筛选无效');out.push(c=>!!c.verified&&Object.values(c.verified).some(Boolean));}
+  return out;
+}
 function createFriendsService(store,charts,options={}) {
+  const clock=typeof options.clock==='function'?options.clock:()=>Date.now();
   const quotas=require('./friends-quotas').createFriendsQuotas(options);
   // 校园漏斗：事务提交成功后再发事件，回滚的操作不计数。
   const funnel=typeof options.funnel==='function'?options.funnel:()=>{};
@@ -57,7 +70,7 @@ function createFriendsService(store,charts,options={}) {
   }
   // Only fields an admin approved (friends-verification.decide) and the viewer can see. Never derived from user input.
   function verifiedFor(s,p,viewer,self,visible){
-    if(!self&&!isMember(s,viewer))return {};
+    if(!self&&!isMember(s,viewer,clock()))return {};
     return {verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true&&visible(k)).map(k=>[k,true]))};
   }
   const profileRecommendations=p=>{const culture=recommend(p.chart),types=typeSuggestions(p);return {...culture,constellations:types.constellations,mbtis:types.mbtis,basis:{...culture.basis,...types.basis}};};
@@ -95,7 +108,7 @@ function createFriendsService(store,charts,options={}) {
   }
   function seriousPayload(s,p,viewer){
     const self=p.userId===viewer;
-    return SP.buildSeriousPage({row:SP.rowOf(s,p.userId),profile:p,self,allows:scopeAllows(s,p,viewer),fieldVisible:visibleTo(s,p,viewer),member:!self&&isMember(s,viewer),
+    return SP.buildSeriousPage({row:SP.rowOf(s,p.userId),profile:p,self,allows:scopeAllows(s,p,viewer),fieldVisible:visibleTo(s,p,viewer),member:!self&&isMember(s,viewer,clock()),
       ownerRecord:questionnaireOf(s,p.userId),viewerRecord:self?null:questionnaireOf(s,viewer),viewerRow:self?null:SP.rowOf(s,viewer)});
   }
   const needMine=(s,uid)=>{const p=mine(s,uid);if(isDisabled(s,uid))denied();if(!p||!p.listed)bad('请先完善个人资料并同意加入人库');return p;};
@@ -140,7 +153,24 @@ function createFriendsService(store,charts,options={}) {
       });
     },
     quota(uid){return quotas.status(store.read(),uid);},
-    discover(uid,q={}){return store.transaction(s=>{
+    // 「谁看过我的卡片」: one row per (viewer, viewed, Beijing day). Only listed, non-disabled, non-blocked viewers; never self.
+    recordView(uid,shareId){if(uid===undefined||uid===null||uid==='')return {recorded:false};return store.transaction(s=>{
+      const viewer=mine(s,uid),target=s.profiles.find(p=>p.shareId===shareId);
+      if(!viewer?.listed||isDisabled(s,uid)||!target||target.userId===uid||!active(s,target,uid))return {recorded:false};
+      if(!Array.isArray(s.cardViews))s.cardViews=[];
+      const day=viewDay(clock()),keep=viewDay(clock()-30*86400000);s.cardViews=s.cardViews.filter(v=>v.day>=keep);
+      if(s.cardViews.some(v=>v.viewer===uid&&v.viewed===target.userId&&v.day===day))return {recorded:false,duplicate:true};
+      s.cardViews.push({viewer:uid,viewed:target.userId,day});return {recorded:true};});},
+    viewers(uid){const s=store.read(),self=needMine(s,uid),since=viewDay(clock()-6*86400000),latest=new Map();
+      for(const v of s.cardViews||[])if(v.viewed===uid&&v.viewer!==uid&&v.day>=since&&(!latest.has(v.viewer)||latest.get(v.viewer)<v.day))latest.set(v.viewer,v.day);
+      // Count and list use the same rule: viewer's card is still listed, not disabled, not blocked either way.
+      const rows=[...latest].map(([id,day])=>({p:mine(s,id),day})).filter(x=>x.p&&active(s,x.p,self.userId)).sort((a,b)=>b.day.localeCompare(a.day));
+      const member=isMember(s,uid,clock());
+      return {days:7,count:rows.length,member,viewers:member?rows.slice(0,100).map(({p,day})=>{const c=project(s,p,uid);return {shareId:c.shareId,nickname:c.nickname,city:c.city,purposeLabels:c.purposeLabels,...(c.fields.age!==undefined?{age:c.fields.age}:{}),day};}):[]};},
+    discover(uid,q={}){
+      const filters=memberFilters(q);
+      if(filters.length&&!isMember(store.read(),uid,clock())){const e=Error('学历、收入、房车和已核验筛选是会员功能');e.status=403;e.code='member_filter';throw e;}
+      return store.transaction(s=>{
       const self=M.migrateProfile(needMine(s,uid)),myPurposes=M.purposesOf(self);
       const scored=[];
       for(const other of s.profiles){
@@ -151,6 +181,8 @@ function createFriendsService(store,charts,options={}) {
         const mineEval=M.evaluate(self,matchValues(s,p,uid));if(!mineEval.passed)continue;
         const theirEval=M.evaluate(p,matchValues(s,self,p.userId));if(!theirEval.passed)continue;
         const card=project(s,p,uid);
+        // Member filters read only the projected card (fields/verified already limited to what this viewer may see).
+        if(filters.some(f=>!f(card)))continue;
         if((q.city&&card.city!==q.city)||(q.stem&&card.chart.dayMaster!==q.stem)||(q.zodiac&&card.chart.zodiac!==q.zodiac)||(q.constellation&&card.constellation!==q.constellation)||(q.mbti&&card.mbti!==q.mbti)||(q.purpose&&!theirPurposes.includes(q.purpose)))continue;
         const purpose=shared[0],interests=card.hobbies.filter(h=>self.hobbies.includes(h)).length,relation=M.elementRelation(self.chart?.dayMaster,card.chart.dayMaster);
         const samePurpose=myPurposes.some(k=>theirPurposes.includes(k));
@@ -204,7 +236,7 @@ function createFriendsService(store,charts,options={}) {
       if(old)conflict(old.status==='accepted'?'你们已经连接':'已有待处理申请');
       if(s.requests.some(r=>r.from===uid&&r.to===target.userId&&Date.now()-Date.parse(r.createdAt)<86400000))conflict('24小时内请勿重复申请');
       quotas.request(s,uid);
-      const r={id:crypto.randomUUID(),from:self.userId,to:target.userId,status:'pending',createdAt:new Date().toISOString()};s.requests.push(r);metric(s,'request_created',self.acquisition);queue.push(['xs_request_sent',uid,self.acquisition||{}]);return {id:r.id,status:r.status};
+      const r={id:crypto.randomUUID(),from:self.userId,to:target.userId,status:'pending',createdAt:new Date().toISOString()};s.requests.push(r);metric(s,'request_created',self.acquisition);queue.push(['xs_request_sent',uid,self.acquisition||{}]);return {id:r.id,status:r.status,quota:quotas.status(s,uid)};
     });},
     requests(uid){const s=store.read();return s.requests.filter(r=>(r.from===uid||r.to===uid)&&!blocked(s,r.from,r.to)).map(r=>{
       const other=mine(s,r.from===uid?r.to:r.from),self=mine(s,uid);
@@ -233,7 +265,7 @@ function createFriendsService(store,charts,options={}) {
     reports(uid){return store.read().reports.filter(r=>r.by===uid).map(r=>({id:r.id,status:r.status||'open',createdAt:r.createdAt,updatedAt:r.updatedAt}));},
     feedback(uid,id,outcome){if(!['met','helpful','not_helpful','unsafe'].includes(outcome))bad('反馈选项无效');return tx((s,queue)=>{normalize(s);const r=s.requests.find(r=>r.id===id&&[r.from,r.to].includes(uid)&&['accepted','disconnected'].includes(r.status));if(!r)denied();if(s.feedback.some(x=>x.by===uid&&x.requestId===id))conflict('已提交反馈');s.feedback.push({by:uid,requestId:id,outcome,createdAt:new Date().toISOString()});metric(s,'feedback_'+outcome);if(outcome==='met')queue.push(['xs_met_reported',uid,mine(s,uid)?.acquisition||{},{pairWith:r.from===uid?r.to:r.from}]);return {ok:true};});},
     event(event,attribution){if(!['poster_export','share_visit','profile_preview','onboarding_view','chart_done','deck_swipe','want_to_meet_click','signup_done'].includes(event))bad('事件无效');return store.transaction(s=>{metric(s,event,attribution);return {ok:true};});},
-    remove(uid){return store.transaction(s=>{normalize(s);if(s.profiles.some(p=>p.userId===uid)){const mark=s.attributionMarks.find(x=>x.userId===uid);if(mark){mark.deletedAt=new Date().toISOString();mark.expiresAt=new Date(Date.now()+90*86400000).toISOString();}}s.profiles=s.profiles.filter(p=>p.userId!==uid);if(Array.isArray(s.seriousPages))s.seriousPages=s.seriousPages.filter(r=>r.userId!==uid);s.requests=s.requests.filter(r=>r.from!==uid&&r.to!==uid);s.compatibilityPairs=(s.compatibilityPairs||[]).filter(p=>String(p.from)!==String(uid)&&String(p.to)!==String(uid));/* Keep account-level blocks and moderation across profile recreation. */return {ok:true};});}
+    remove(uid){return store.transaction(s=>{normalize(s);if(s.profiles.some(p=>p.userId===uid)){const mark=s.attributionMarks.find(x=>x.userId===uid);if(mark){mark.deletedAt=new Date().toISOString();mark.expiresAt=new Date(Date.now()+90*86400000).toISOString();}}s.profiles=s.profiles.filter(p=>p.userId!==uid);if(Array.isArray(s.seriousPages))s.seriousPages=s.seriousPages.filter(r=>r.userId!==uid);s.requests=s.requests.filter(r=>r.from!==uid&&r.to!==uid);if(Array.isArray(s.cardViews))s.cardViews=s.cardViews.filter(v=>v.viewer!==uid&&v.viewed!==uid);s.compatibilityPairs=(s.compatibilityPairs||[]).filter(p=>String(p.from)!==String(uid)&&String(p.to)!==String(uid));/* Keep account-level blocks and moderation across profile recreation. */return {ok:true};});}
   };
 }
 module.exports={createFriendsService,FIELDS,OPTIONAL_FIELDS,scopeAllows,connectedFor,activeFor};
