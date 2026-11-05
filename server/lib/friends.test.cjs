@@ -16,7 +16,7 @@ for(const input of [{birthday:'1991-02-30'},{birthday:'1991-08-31',calendar:'lun
 const c=calculate({birthday:'1991-08-28'});assert.equal(c.pillars,null);assert.equal(c.complete,false);
 });
 test('signed chart rejects tampering',()=>{const {charts,data}=setup();const token=data().credential;assert.equal(charts.verify(token).dayMaster,'戊');assert.throws(()=>charts.verify(token+'x'));const parts=token.split('.');parts[0]=Buffer.from('{}').toString('base64url');assert.throws(()=>charts.verify(parts.join('.')));});
-test('nine fields required; age cannot be self overridden',()=>{const {service,data}=setup();for(const k of FIELDS.filter(k=>k!=='age')){const b=data();delete b.fields[k];assert.throws(()=>service.save('a',b));}const p=service.save('a',data({fields:{...data().fields,age:'16'}}));assert.ok(Number(p.fields.age)>=18);assert.throws(()=>service.save('b',data({consent:false})));});
+test('core fields required; optional legacy fields and age derivation',()=>{const {service,data}=setup();for(const k of FIELDS.filter(k=>!['age','industry','title','familyAssets'].includes(k))){const b=data();delete b.fields[k];assert.throws(()=>service.save('a',b));}const p=service.save('a',data({fields:{...data().fields,age:'16'}}));assert.ok(Number(p.fields.age)>=18);assert.throws(()=>service.save('b',data({consent:false})));});
 test('privacy, request permissions, contacts, duplicate concurrency and exit',async()=>{
 const {service:s,data}=setup();const a=s.save('a',data()),b=s.save('b',data()),c=s.save('c',data());
 let card=s.card(b.shareId,'a');assert.equal(card.fields.school,'学校');assert.equal(card.fields.income,undefined);assert.equal(card.fields.assets,undefined);assert.equal(card.contact,undefined);
@@ -43,3 +43,14 @@ for(const [protocol,status] of [['http',200],['https',403]]){const response=awai
 }finally{await new Promise(resolve=>server.close(resolve));}
 });
 test('router auth, CSRF and disabled mode',async()=>{let express;try{express=require('express');}catch(e){if(e.code!=='MODULE_NOT_FOUND')throw e;express=require('../../.review/node_modules/express');}const {createRouter}=require('../routes/friends');const {store}=setup();const app=express();app.use(express.json());app.use('/friends',createRouter({express,store,secret,auth:(req,res,next)=>next()}));app.use('/disabled',createRouter({express,enabled:false,auth:(req,res,next)=>next()}));const server=await new Promise(resolve=>{const x=app.listen(0,'127.0.0.1',()=>resolve(x));});try{const base='http://127.0.0.1:'+server.address().port;assert.equal((await fetch(base+'/friends/me')).status,401);assert.equal((await fetch(base+'/friends/profile',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'})).status,403);assert.equal((await fetch(base+'/friends/profile',{method:'POST',headers:{'Content-Type':'application/json','X-Runae-Friends':'1',Origin:'https://evil.example'},body:'{}'})).status,403);assert.equal((await fetch(base+'/friends/profile',{method:'POST',headers:{'Content-Type':'application/json','X-Runae-Friends':'1'},body:'{}'})).status,401);assert.equal((await fetch(base+'/disabled/me')).status,503);}finally{await new Promise(resolve=>server.close(resolve));}});
+
+test('family assets have independent public/connected/private scopes',()=>{
+ const {service:s,data}=setup();s.save('a',data());
+ const make=scope=>data({fields:{...data().fields,familyAssets:'A9.3'},visibility:{...data().visibility,familyAssets:scope}});
+ const b=s.save('b',make('private'));assert.equal(s.card(b.shareId,'a').fields.familyAssets,undefined);
+ s.save('b',make('public'));assert.equal(s.card(b.shareId,'a').fields.familyAssets,'A9.3');
+ s.save('b',make('connected'));assert.equal(s.card(b.shareId,'a').fields.familyAssets,undefined);
+ const r=s.request('a',b.shareId);s.act('b',r.id,'accept');assert.equal(s.card(b.shareId,'a').fields.familyAssets,'A9.3');
+ s.save('b',make('private'));assert.equal(s.card(b.shareId,'a').fields.familyAssets,undefined);
+ const minimal=data();delete minimal.fields.industry;delete minimal.fields.title;assert.doesNotThrow(()=>s.save('c',minimal));
+});
