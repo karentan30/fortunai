@@ -39,7 +39,7 @@ window.openFriendsSamplePreview = function(sample) {
       text('设计评审样例 · 学校收入资产均为虚构 · 五行不保证关系结果',72,h-65,20);
       const section=document.createElement('section'),image=document.createElement('img'),link=document.createElement('a');
       image.src=canvas.toDataURL('image/png');image.width=1080;image.height=h;image.style.width='100%';image.style.height='auto';image.alt='虚构示例 '+platform+' 第'+(page+1)+'张';
-      link.href=image.src;link.download='Runae-虚构样例-'+platform+'-'+(page+1)+'-1080x'+h+'.png';link.className='secondary';link.textContent='保存第'+(page+1)+'张';section.append(image,link);target.append(section);
+      link.href=image.src;link.download='相生-虚构样例-'+platform+'-'+(page+1)+'-1080x'+h+'.png';link.className='secondary';link.textContent='保存第'+(page+1)+'张';section.append(image,link);target.append(section);
     }
   };
   dialog.querySelector('select').onchange=draw;draw();dialog.showModal();

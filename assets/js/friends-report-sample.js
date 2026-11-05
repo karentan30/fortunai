@@ -11,7 +11,7 @@
   function wrap(value,x,y,width,size=28,color=muted,lineHeight=44){c.fillStyle=color;c.font='400 '+size+'px system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif';c.textBaseline='top';let row='';for(const ch of value){if(c.measureText(row+ch).width>width&&row){c.fillText(row,x,y);y+=lineHeight;row=ch;}else row+=ch;}if(row)c.fillText(row,x,y);return y+lineHeight;}
   function box(x,y,w,h,fill){c.fillStyle=fill;c.beginPath();c.roundRect(x,y,w,h,20);c.fill();}
   c.fillStyle=paper;c.fillRect(0,0,1080,1440);
-  text('相生 · RUNAE',72,60,28,ink,700);text('匿名演示 · 非实时测算',690,66,23,muted);
+  text('相生',72,60,28,ink,700);text('匿名演示 · 非实时测算',690,66,23,muted);
   c.fillStyle=line;c.fillRect(72,116,936,2);
   text('你们之间，',72,164,64,ink,700);text('有怎样的相合关系？',72,250,64,ink,700);
   text('同一日主，不同命局。',76,350,32,muted);
