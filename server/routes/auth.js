@@ -41,6 +41,8 @@ router.post('/register', simpleRateLimitMiddleware, (req, res) => {
     tryApplyReferral(ref, result.lastInsertRowid);
 
     const newUser = getUserById.get(result.lastInsertRowid);
+    // 相生校园漏斗：仅当相生页面带了 xs 归因时记一次“注册”（匿名键，不记邮箱）
+    if (req.body.xs) { try { require('../lib/friends-campus').logRegistration(result.lastInsertRowid, req.body.xs); } catch (e) {} }
     // SECURITY FIX: Redact email in logs (PII protection)
     const emailHash = require('crypto').createHash('sha256').update(email).digest('hex').slice(0, 8);
     console.log(`[AUTH] Register: ${emailHash}${ref ? ' (ref:' + ref + ')' : ''}`);

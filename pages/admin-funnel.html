@@ -14,9 +14,11 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}.r{color:#888}.low{color
   <input id="tok" type="password" placeholder="ADMIN_TOKEN" autocomplete="off">
   <select id="days"><option>1</option><option selected>7</option><option>30</option><option>90</option></select>
   <select id="by"><option value="">全部</option><option value="lang">按语言</option><option value="src">按来源</option><option value="m">按方法/页面</option></select>
+  <select id="cby" title="相生校园漏斗分组"><option value="src">相生·按渠道</option><option value="club">相生·按社团</option><option value="ref">相生·按推荐码</option><option value="camp">相生·按活动码</option><option value="cp">相生·按校区</option></select>
+  <label style="display:flex;align-items:center;gap:4px"><input type="checkbox" id="itest">含测试账号</label>
   <button id="go">刷新</button>
 </div>
-<div id="err"></div><div id="out"></div>
+<div id="err"></div><div id="xs"></div><div id="out"></div>
 <script>
 (function(){
   var NAMES={landing_view:'落地页',collect_view:'填资料页',collect_submit:'提交资料',pick_view:'选方法页',method_pick:'选了方法',report_view:'看报告',free_done:'读完免费部分',paywall_view:'看到付费墙',checkout_click:'点付款',checkout_created:'进 Stripe',paid:'付款成功',claim_ok:'自动建号',daily_optin:'订每日运势',invite_create:'发合婚邀请',invite_open:'邀请被打开',invite_done:'对方完成合盘',share_click:'点分享',magic_sent:'发登录链接',magic_ok:'登录链接成功'};
@@ -25,7 +27,7 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}.r{color:#888}.low{color
   function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
   function load(){
     try{ localStorage.setItem('sy_admin_token',tok.value); }catch(e){}
-    var q='?days='+document.getElementById('days').value+'&by='+document.getElementById('by').value;
+    var q='?days='+document.getElementById('days').value+'&by='+document.getElementById('by').value+'&campusBy='+document.getElementById('cby').value+(document.getElementById('itest').checked?'&includeTest=1':'');
     fetch('/api/kpi/funnel'+q,{headers:{'x-admin-token':tok.value}}).then(function(r){
       if(r.status===401) throw new Error('token 不对');
       return r.json();
@@ -46,7 +48,34 @@ td.n{text-align:right;font-variant-numeric:tabular-nums}.r{color:#888}.low{color
         h+='</table>';
       });
       document.getElementById('out').innerHTML=h;
+      renderCampus(d.campus);
     }).catch(function(e){ document.getElementById('err').textContent=e.message; });
+  }
+  // 相生校园漏斗：核心看「双方接受」和「再次联系」，访问/测算次数不是成功指标
+  var XS={xs_landing_view:'校园页访问（设备）',xs_cta_click:'点开始',xs_register:'注册（相生页面）',xs_profile_done:'资料完成（首次建卡）',xs_request_sent:'发出认识申请',xs_mutual_accept:'双方接受',xs_second_contact:'再次联系（平台内两天以上双向消息）',xs_share_create:'生成分享链接',xs_met_reported:'自报已见面/交流'};
+  var CORE={xs_mutual_accept:1,xs_second_contact:1};
+  function renderCampus(c){
+    var box=document.getElementById('xs');
+    if(!c){box.innerHTML='';return;}
+    var keys=Object.keys(c.groups).sort();
+    var h='<h2 style="font-size:17px;margin:16px 0 4px">相生 · 校园试点漏斗（按'+esc({src:'渠道',club:'社团',ref:'推荐码',camp:'活动码',cp:'校区'}[c.by]||c.by)+'）</h2>';
+    h+='<div class="r">数字 = 去重人数；“对”= 去重的两人组合（两人来自不同分组时两边各算一次）。访问按设备会话计，与注册账号不是同一口径，不算转化率。已剔除测试账号行 '+c.excludedTest+' 条。成功看<b>双方接受</b>与<b>再次联系</b>，不看测算次数。</div>';
+    if(!keys.length){box.innerHTML=h+'<p class="r">这段时间还没有相生校园事件。</p>';return;}
+    keys.forEach(function(g){
+      var steps=c.groups[g], reg=null;
+      h+='<div class="g">'+esc(g)+'</div><table><tr><th>步骤</th><th style="text-align:right">人数</th><th style="text-align:right">对数</th><th style="text-align:right">占注册</th></tr>';
+      steps.forEach(function(s){
+        var inF=c.order.indexOf(s.e)>=0;
+        if(!inF && !s.n) return;
+        if(s.e==='xs_register') reg=s.n;
+        var rate='';
+        if(reg && ['xs_profile_done','xs_request_sent','xs_mutual_accept','xs_second_contact'].indexOf(s.e)>=0) rate=s.n+'/'+reg+' · '+Math.round(s.n/reg*100)+'%';
+        var pairs=(s.e==='xs_mutual_accept'||s.e==='xs_second_contact'||s.e==='xs_met_reported')?String(s.pairs):'';
+        h+='<tr'+(CORE[s.e]?' style="background:#f4f8ec;font-weight:600"':'')+'><td>'+(XS[s.e]||esc(s.e))+(inF?'':' <span class="r">(旁路)</span>')+'</td><td class="n">'+s.n+'</td><td class="n">'+pairs+'</td><td class="n">'+rate+'</td></tr>';
+      });
+      h+='</table>';
+    });
+    box.innerHTML=h;
   }
   document.getElementById('go').onclick=load;
   if(tok.value) load();

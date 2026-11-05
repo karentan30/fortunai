@@ -9,9 +9,13 @@ const text=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'';
 const missing=()=>{const e=Error('卡片不存在或已停止公开');e.status=404;throw e;};
 const denied=()=>{const e=Error('没有操作权限');e.status=403;throw e;};
 const conflict=m=>{const e=Error(m);e.status=409;throw e;};
+const {fullAttribution}=require('./friends-campus');
 const array=(v,valid,max=12)=>Array.isArray(v)?[...new Set(v.filter(x=>valid.includes(x)))].slice(0,max):[];
 function createFriendsService(store,charts,options={}) {
   const quotas=require('./friends-quotas').createFriendsQuotas(options);
+  // 校园漏斗：事务提交成功后再发事件，回滚的操作不计数。
+  const funnel=typeof options.funnel==='function'?options.funnel:()=>{};
+  const tx=fn=>{const queue=[];const result=store.transaction(s=>fn(s,queue));for(const q of queue){try{funnel(...q);}catch(_){}}return result;};
   const blocked=(s,a,b)=>s.blocks.some(x=>(x.by===a&&x.target===b)||(x.by===b&&x.target===a));
   const connection=(s,a,b)=>s.requests.some(r=>r.status==='accepted'&&((r.from===a&&r.to===b)||(r.to===a&&r.from===b)));
   const active=(s,p,viewer)=>p?.listed&&!isDisabled(s,p.userId)&&!blocked(s,p.userId,viewer);
@@ -31,10 +35,10 @@ function createFriendsService(store,charts,options={}) {
     me(uid){const p=mine(store.read(),uid);return p?structuredClone({...p,recommendations:profileRecommendations(p)}):null;},
     save(uid,b) {
       if(b.consent!==true)bad('请确认本人资料及展示权限');
-      return store.transaction(s=>{
+      return tx((s,queue)=>{
         normalize(s);
         const prev=mine(s,uid), chart=b.credential?charts.verify(b.credential):prev?.chart;
-        const attributionMark=s.attributionMarks.find(x=>x.userId===uid),acquisition=attributionMark?normalizeAttribution(attributionMark):normalizeAttribution(prev?{}:b.attribution);
+        const attributionMark=s.attributionMarks.find(x=>x.userId===uid),acquisition=attributionMark?fullAttribution(attributionMark):fullAttribution(prev?{}:b.attribution);
         if(!chart || chart.age<18)bad('请先生成日主卡');
         const nickname=text(b.nickname,24),city=text(b.city,24),intent=b.intent;
         if(!nickname||!city||!['交朋友','找搭子','找闺蜜','Dating','认真恋爱','认真结婚'].includes(intent))bad('请补全昵称、城市和认识目的');
@@ -54,7 +58,7 @@ function createFriendsService(store,charts,options={}) {
           chart,recommendations,availability:Object.hasOwn(b,'availability')?normalizeAvailability(b.availability):(prev?.availability||null),residence:Object.hasOwn(b,'residence')?require('./friends-places').normalizeResidence(b.residence):(prev?.residence||null),policyVersion:b.policyVersion==='friends-2026-11-04-v1'?b.policyVersion:(prev?.policyVersion||'legacy-unversioned'),consentAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
         p.acquisition=acquisition;
         if(prev)s.profiles[s.profiles.indexOf(prev)]=p;else s.profiles.push(p);
-        if(!attributionMark){s.attributionMarks.push({userId:uid,...acquisition,firstProfileAt:prev?.consentAt||new Date().toISOString()});if(!prev)metric(s,'first_profile_created',acquisition);}else{delete attributionMark.expiresAt;delete attributionMark.deletedAt;}
+        if(!attributionMark){s.attributionMarks.push({userId:uid,...acquisition,firstProfileAt:prev?.consentAt||new Date().toISOString()});if(!prev){metric(s,'first_profile_created',acquisition);queue.push(['xs_profile_done',uid,acquisition]);}}else{delete attributionMark.expiresAt;delete attributionMark.deletedAt;}
         if(prev)metric(s,'profile_updated',acquisition);
         return structuredClone(p);
       });
@@ -72,14 +76,14 @@ function createFriendsService(store,charts,options={}) {
       return {profiles:available.slice(offset,offset+24),total:available.length,nextOffset:offset+24<available.length?offset+24:null,quota:quotas.status(s,uid),rankingBasis:'按可见日主、生肖、星座、MBTI偏好及共同兴趣推荐；类型不代表关系结论，完整双方合盘需另行授权'};
     });},
     card(id,uid){const s=store.read();return project(s,s.profiles.find(p=>p.shareId===id),uid);},
-    request(uid,shareId){return store.transaction(s=>{
+    request(uid,shareId){return tx((s,queue)=>{
       const self=needMine(s,uid),target=s.profiles.find(p=>p.shareId===shareId);
       if(!active(s,target,uid))missing();if(target.userId===uid)bad('不能向自己申请');
       const old=s.requests.find(r=>((r.from===uid&&r.to===target.userId)||(r.to===uid&&r.from===target.userId))&&['pending','accepted'].includes(r.status));
       if(old)conflict(old.status==='accepted'?'你们已经连接':'已有待处理申请');
       if(s.requests.some(r=>r.from===uid&&r.to===target.userId&&Date.now()-Date.parse(r.createdAt)<86400000))conflict('24小时内请勿重复申请');
       quotas.request(s,uid);
-      const r={id:crypto.randomUUID(),from:self.userId,to:target.userId,status:'pending',createdAt:new Date().toISOString()};s.requests.push(r);metric(s,'request_created',self.acquisition);return {id:r.id,status:r.status};
+      const r={id:crypto.randomUUID(),from:self.userId,to:target.userId,status:'pending',createdAt:new Date().toISOString()};s.requests.push(r);metric(s,'request_created',self.acquisition);queue.push(['xs_request_sent',uid,self.acquisition||{}]);return {id:r.id,status:r.status};
     });},
     requests(uid){const s=store.read();return s.requests.filter(r=>(r.from===uid||r.to===uid)&&!blocked(s,r.from,r.to)).map(r=>{
       const other=mine(s,r.from===uid?r.to:r.from),self=mine(s,uid);
@@ -88,7 +92,7 @@ function createFriendsService(store,charts,options={}) {
       if(r.status==='accepted'&&other?.listed&&self?.listed&&!isDisabled(s,uid)&&!isDisabled(s,other.userId)&&other.contactConsent&&self.contactConsent)out.contact=other.contact;
       return out;
     });},
-    act(uid,id,action){return store.transaction(s=>{
+    act(uid,id,action){return tx((s,queue)=>{
       const r=s.requests.find(x=>x.id===id);if(!r){missing();}if(r.from!==uid&&r.to!==uid)denied();
       if(blocked(s,r.from,r.to))denied();
       if(action==='disconnect'){
@@ -100,13 +104,13 @@ function createFriendsService(store,charts,options={}) {
       else if(['accept','decline'].includes(action)&&r.to===uid){
         if(action==='accept'){needMine(s,r.from);needMine(s,r.to);}r.status=action==='accept'?'accepted':'declined';
       }else denied();
-      metric(s,'request_'+r.status,mine(s,uid)?.acquisition);r.updatedAt=new Date().toISOString();return {id:r.id,status:r.status};
+      metric(s,'request_'+r.status,mine(s,uid)?.acquisition);if(r.status==='accepted')for(const [a,b] of [[r.from,r.to],[r.to,r.from]])queue.push(['xs_mutual_accept',a,mine(s,a)?.acquisition||{},{pairWith:b}]);r.updatedAt=new Date().toISOString();return {id:r.id,status:r.status};
     });},
     block(uid,shareId){return store.transaction(s=>{const p=s.profiles.find(x=>x.shareId===shareId);if(!p)missing();if(p.userId===uid)bad('不能拉黑自己');if(!s.blocks.some(x=>x.by===uid&&x.target===p.userId))s.blocks.push({by:uid,target:p.userId});return {ok:true};});},
     report(uid,shareId,reason){return store.transaction(s=>{const p=s.profiles.find(x=>x.shareId===shareId);if(!p)missing();const why=text(reason,300);if(!why)bad('请填写举报原因');const prior=s.reports.find(r=>r.by===uid&&r.target===p.userId&&r.reason===why&&['open','reviewing'].includes(r.status||'open'));if(prior)return {ok:true,id:prior.id,status:prior.status||'open',message:'已收到相同举报，无需重复提交'};const report={id:crypto.randomUUID(),by:uid,target:p.userId,reason:why,status:'open',createdAt:new Date().toISOString()};s.reports.push(report);metric(s,'report_created');return {ok:true,id:report.id,status:'open',message:'举报已记录，试用期间由管理员人工处理'};});},
     commonSlots(uid,shareId,options){const s=store.read(),self=needMine(s,uid),other=s.profiles.find(p=>p.shareId===shareId);if(!active(s,other,uid))missing();if(!connection(s,uid,other.userId))denied();return {slots:findCommonSlots(self.availability,other.availability,options),note:'仅为候选时间，尚未预约；DST切换当日暂不推荐'};},
     reports(uid){return store.read().reports.filter(r=>r.by===uid).map(r=>({id:r.id,status:r.status||'open',createdAt:r.createdAt,updatedAt:r.updatedAt}));},
-    feedback(uid,id,outcome){if(!['met','helpful','not_helpful','unsafe'].includes(outcome))bad('反馈选项无效');return store.transaction(s=>{normalize(s);const r=s.requests.find(r=>r.id===id&&[r.from,r.to].includes(uid)&&['accepted','disconnected'].includes(r.status));if(!r)denied();if(s.feedback.some(x=>x.by===uid&&x.requestId===id))conflict('已提交反馈');s.feedback.push({by:uid,requestId:id,outcome,createdAt:new Date().toISOString()});metric(s,'feedback_'+outcome);return {ok:true};});},
+    feedback(uid,id,outcome){if(!['met','helpful','not_helpful','unsafe'].includes(outcome))bad('反馈选项无效');return tx((s,queue)=>{normalize(s);const r=s.requests.find(r=>r.id===id&&[r.from,r.to].includes(uid)&&['accepted','disconnected'].includes(r.status));if(!r)denied();if(s.feedback.some(x=>x.by===uid&&x.requestId===id))conflict('已提交反馈');s.feedback.push({by:uid,requestId:id,outcome,createdAt:new Date().toISOString()});metric(s,'feedback_'+outcome);if(outcome==='met')queue.push(['xs_met_reported',uid,mine(s,uid)?.acquisition||{},{pairWith:r.from===uid?r.to:r.from}]);return {ok:true};});},
     event(event,attribution){if(!['poster_export','share_visit','profile_preview'].includes(event))bad('事件无效');return store.transaction(s=>{metric(s,event,attribution);return {ok:true};});},
     remove(uid){return store.transaction(s=>{normalize(s);if(s.profiles.some(p=>p.userId===uid)){const mark=s.attributionMarks.find(x=>x.userId===uid);if(mark){mark.deletedAt=new Date().toISOString();mark.expiresAt=new Date(Date.now()+90*86400000).toISOString();}}s.profiles=s.profiles.filter(p=>p.userId!==uid);s.requests=s.requests.filter(r=>r.from!==uid&&r.to!==uid);s.compatibilityPairs=(s.compatibilityPairs||[]).filter(p=>String(p.from)!==String(uid)&&String(p.to)!==String(uid));/* Keep account-level blocks and moderation across profile recreation. */return {ok:true};});}
   };
