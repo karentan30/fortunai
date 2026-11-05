@@ -8,17 +8,17 @@
   const LOCK='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const st={root:null,reload:null,openCard:null,member:false,picked:{},quota:null,viewers:null,open:false,salesOpen:false};
-  // 会员没开卖时不把人引到死胡同：链接换成「会员即将开放」。
+  // 会员没开卖时不把人引到死胡同：只在会员筛选下方说一次「会员即将开放」。
   const SOON='<span class="xsm-soon">会员即将开放</span>';
   async function get(path){const r=await fetch(path,{credentials:'same-origin',headers:{'X-Runae-Friends':'1'}});if(!r.ok)throw Object.assign(Error('读取失败'),{status:r.status});return r.json();}
   function quotaLine(){
     const q=st.quota;if(!q||!q.enabled||!Number.isInteger(q.remaining?.request))return '';
-    return `<p class="xsm-quota">今天还能申请认识 <b>${q.remaining.request}</b>/${q.limits.request} 次${q.tier==='member'?'':st.salesOpen?` · <a href="/pages/friends-membership.html">会员每天${esc(q.limits.memberRequest)}次</a>`:` · ${SOON}`}</p>`;
+    return `<p class="xsm-quota">今天还能申请认识 <b>${q.remaining.request}</b>/${q.limits.request} 次${q.tier==='member'||!st.salesOpen?'':` · <a href="/pages/friends-membership.html">会员每天${esc(q.limits.memberRequest)}次</a>`}</p>`;
   }
   function viewersLine(){
     const v=st.viewers;if(!v)return '';
     const text=v.count?`最近7天有<b>${v.count}</b>人看过你的卡片`:'最近7天还没有人看过你的卡片';
-    const action=!v.count?'':v.member?`<button type="button" class="text-button" data-xsm-viewers aria-expanded="${st.open}">${st.open?'收起':'看看是谁'}</button>`:st.salesOpen?'<a class="text-button" href="/pages/friends-membership.html">开通会员看是谁</a>':SOON;
+    const action=!v.count?'':v.member?`<button type="button" class="text-button" data-xsm-viewers aria-expanded="${st.open}">${st.open?'收起':'看看是谁'}</button>`:st.salesOpen?'<a class="text-button" href="/pages/friends-membership.html">开通会员看是谁</a>':'';
     const list=v.member&&st.open?`<ul class="xsm-viewers">${v.viewers.map(p=>`<li><button type="button" data-xsm-card="${esc(p.shareId)}"><strong>${esc(p.nickname)}</strong><span>${esc([p.age?p.age+'岁':'',p.city].filter(Boolean).join(' · '))}</span><time>${esc(Number(p.day.slice(5,7))+'月'+Number(p.day.slice(8,10))+'日')}</time></button></li>`).join('')}</ul>`:'';
     return `<div class="xsm-views"><p>${text}</p>${action}</div>${list}`;
   }
