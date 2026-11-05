@@ -6,6 +6,7 @@
   const main=document.getElementById('main');if(!main)return;
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const HINTS={education:'学信网截图（学历/学籍在线验证报告），或只填写学信网在线验证码',occupation:'工牌照片，或劳动合同首页与签字页',income:'个税 App 收入纳税明细，或近期工资条',assets:'银行存款证明、资产证明或理财持仓截图'};
+  const MAX_VIDEO=30*1024*1024,VIDEO_TYPES=/^video\/(mp4|quicktime|webm)$/;
   const STATUS={none:'未申请',draft:'待提交',pending:'审核中',approved:'已核验',rejected:'未通过'};
   const MAX_BYTES=5*1024*1024,MAX_FILES=3;
   let data=null,busy=false,loading=false;
@@ -18,22 +19,24 @@
   const readBase64=file=>new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(String(fr.result).replace(/^data:[^,]*,/,''));fr.onerror=()=>reject(Error('无法读取文件'));fr.readAsDataURL(file);});
   const size=n=>n>=1048576?(n/1048576).toFixed(1)+'MB':Math.max(1,Math.round(n/1024))+'KB';
   function statusLine(f){
-    if(f.verified&&f.status!=='pending'&&f.status!=='draft')return '<span class="vf-status vf-approved">已核验</span>';
+    if(f.verified&&f.status!=='pending'&&f.status!=='draft')return `<span class="vf-status vf-approved">${f.result?esc(f.result):'已核验'}</span>`;
     const s=f.status||'none';
     return `<span class="vf-status vf-${esc(s)}">${esc(STATUS[s]||s)}</span>${s==='rejected'&&f.reason?`<span class="vf-reason">原因：${esc(f.reason)}</span>`:''}${f.verified&&(s==='pending'||s==='draft')?'<span class="vf-reason">当前已核验，新材料审核中不影响原结果</span>':''}`;
   }
   function itemHTML(key,label,f){
     const editable=f.status!=='pending',files=f.status==='draft'?(f.files||[]):[];
-    return `<div class="vf-item" data-field="${key}"><div class="vf-head"><h3>${esc(label)}</h3>${statusLine(f)}</div><p class="fine-print">${esc(HINTS[key])}</p>${
+    const marital=key==='marital';
+    const hint=marital?`<p class="vf-guide">${esc(data.marital?.guide||'')}</p><p class="fine-print">${esc(data.marital?.hint||'')}。不收集身份证号，也不调用任何第三方查询。</p>`:`<p class="fine-print">${esc(HINTS[key])}</p>`;
+    return `<div class="vf-item${marital?' vf-marital':''}" data-field="${key}"><div class="vf-head"><h3>${esc(label)}</h3>${statusLine(f)}</div>${hint}${
       f.status==='pending'?`<p class="muted">已提交 ${(f.files||[]).length} 个文件${f.hasCode?'及学信网验证码':''}，审核完成后会在这里显示结果。</p>`:''}${
       files.length?`<ul class="vf-files">${files.map(x=>`<li><span>${esc(x.name)} · ${size(x.size)}</span><button type="button" class="text-button" data-remove="${esc(x.id)}">移除</button></li>`).join('')}</ul>`:''}${
-      editable?`<div class="vf-actions"><label class="secondary vf-pick">选择文件<input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple data-upload hidden></label>${key==='education'?`<input type="text" class="vf-code" maxlength="32" placeholder="学信网在线验证码（选填）" autocomplete="off" spellcheck="false">`:''}<button type="button" class="primary" data-submit>提交审核</button></div><p class="fine-print">最多 ${MAX_FILES} 个，单个不超过 5MB；支持 JPG / PNG / WEBP / PDF。可以遮挡身份证号等与核验无关的信息。</p>`:''}<p class="error" role="alert" data-error></p></div>`;
+      editable&&marital?`<div class="vf-actions"><label class="secondary vf-pick">上传录屏<input type="file" accept="video/mp4,video/quicktime,video/webm" data-upload hidden></label><label class="secondary vf-pick">或上传截图<input type="file" accept="image/jpeg,image/png,image/webp" multiple data-upload hidden></label><button type="button" class="primary" data-submit>提交审核</button></div><p class="fine-print">录屏不超过 30MB（MP4 / MOV / WEBM），截图单张不超过 5MB；最多 ${MAX_FILES} 个。只有审核人员能查看，审核后立即删除。</p>`:editable?`<div class="vf-actions"><label class="secondary vf-pick">选择文件<input type="file" accept="image/jpeg,image/png,image/webp,application/pdf" multiple data-upload hidden></label>${key==='education'?`<input type="text" class="vf-code" maxlength="32" placeholder="学信网在线验证码（选填）" autocomplete="off" spellcheck="false">`:''}<button type="button" class="primary" data-submit>提交审核</button></div><p class="fine-print">最多 ${MAX_FILES} 个，单个不超过 5MB；支持 JPG / PNG / WEBP / PDF。可以遮挡身份证号等与核验无关的信息。</p>`:''}<p class="error" role="alert" data-error></p></div>`;
   }
   function render(){
     const host=main.querySelector('.profile-layout')||main.querySelector('#profile-form');if(!host||!data)return;
     let section=main.querySelector('#verify-section');
     if(!section){section=document.createElement('section');section.id='verify-section';section.className='surface verify-section';host.after(section);section.addEventListener('click',onClick);section.addEventListener('change',onChange);}
-    const intro=`<div class="eyebrow">OPTIONAL · MANUAL REVIEW</div><h2>申请核验</h2><p class="muted">自愿申请，逐项人工审核。证明文件加密保存，只有审核人员可以查看，不会公开。<strong>审核完成后，无论通过或未通过，原始文件都会立即删除，只保留核验结果。</strong>修改已核验项目的内容后，核验标记会自动取消。</p>`;
+    const intro=`<h2>申请核验</h2><p class="muted">自愿申请，逐项人工审核。证明文件加密保存，只有审核人员可以查看，不会公开。<strong>审核完成后，无论通过或未通过，原始文件都会立即删除，只保留核验结果。</strong>修改已核验项目的内容后，核验标记会自动取消。</p>`;
     if(!data.hasProfile){section.innerHTML=intro+'<p class="notice">先保存个人资料，再申请核验。</p>';return;}
     section.innerHTML=intro+`<div class="vf-grid">${Object.entries(data.labels).map(([k,l])=>itemHTML(k,l,data.fields[k]||{status:'none'})).join('')}</div>`;
   }
@@ -44,9 +47,14 @@
     const item=input.closest('.vf-item'),field=item.dataset.field,err=errorOf(input),files=[...input.files];input.value='';
     const already=(data.fields[field]?.status==='draft'?data.fields[field].files.length:0);
     if(already+files.length>MAX_FILES){err.textContent=`每项最多 ${MAX_FILES} 个文件。`;return;}
-    const big=files.find(f=>f.size>MAX_BYTES);if(big){err.textContent=`「${big.name}」超过 5MB。`;return;}
+    const isVideo=f=>field==='marital'&&VIDEO_TYPES.test(f.type||'');
+    const big=files.find(f=>f.size>(isVideo(f)?MAX_VIDEO:MAX_BYTES));if(big){err.textContent=`「${big.name}」超过 ${isVideo(big)?'30MB，请只录从打开到结果页':'5MB'}。`;return;}
     busy=true;err.textContent='正在加密上传…';
-    try{for(const f of files)await api('/verification/files',{method:'POST',body:JSON.stringify({field,name:f.name,data:await readBase64(f)})});err.textContent='';}
+    try{for(const f of files){
+      if(isVideo(f)){const r=await fetch('/api/friends/verification/video',{method:'POST',credentials:'same-origin',cache:'no-store',headers:{'Content-Type':'application/octet-stream','X-Runae-Friends':'1','X-File-Name':encodeURIComponent(f.name.slice(0,80))},body:f});
+        let b;try{b=await r.json();}catch{throw Error('服务暂时不可用，请稍后再试。');}if(!r.ok)throw Error(b.error||'上传没有完成，请重试。');}
+      else await api('/verification/files',{method:'POST',body:JSON.stringify({field,name:f.name,data:await readBase64(f)})});
+    }err.textContent='';}
     catch(x){err.textContent=x.message;}finally{busy=false;await refresh();}
   }
   async function onClick(e){

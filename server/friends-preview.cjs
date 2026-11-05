@@ -32,6 +32,8 @@ const {createBillingService}=require('./lib/friends-billing');
 const {createBillingRouter,createBillingCallbackRouter}=require('./routes/friends-billing');
 const billing=createBillingService(reviewStore);
 app.use('/api/friends/billing/callback',createBillingCallbackRouter({express,service:billing}));
+// 相亲页照片(≤5MB)和语音按 base64 JSON 上传；只给这一组路由放宽体积上限。
+app.use('/api/friends/serious',express.json({limit:'8mb'}));
 app.use(express.json({limit:'64kb'}));
 app.get('/api/friends-preview/status',(req,res)=>res.json({localReview:true,message:'本地试用环境，账号和人库与线上隔离。请勿填写真实敏感资料。'}));
 for(const action of ['login','register'])app.post('/api/auth/'+action,(req,res)=>{
@@ -63,7 +65,9 @@ const {createCompatibilityRouter}=require('./routes/friends-compatibility');
 const {createFriendsQuestionsService}=require('./lib/friends-questions');
 const compatibility=createCompatibilityService({store:reviewStore,questionnaireService:createFriendsQuestionsService({store:reviewStore}),questionBank:require('../assets/data/friends-relationship-questions.json')});
 app.use('/api/friends/compatibility',createCompatibilityRouter({express,auth,service:compatibility}));
-app.use('/api/friends',createRouter({express,auth,store:reviewStore,secret:fs.readFileSync(keyFile,'utf8'),adminToken:fs.readFileSync(reviewAdmin,'utf8'),onLogout(req,res){const token=cookie(req);if(token)sessions.delete(token);res.clearCookie('review_session',{path:'/',httpOnly:true,sameSite:'strict'});}}));
+// Encrypted 相亲页 media must live outside the repo; the default preview data dir is inside it, so fall back to a temp dir.
+const seriousMedia=require('./lib/friends-serious').createSeriousMediaService({store:reviewStore,dir:process.env.FRIENDS_MEDIA_DIR||(process.env.FRIENDS_PREVIEW_DATA_DIR?path.join(dir,'friends-media'):path.join(require('node:os').tmpdir(),'runae-preview-media')),key:fs.readFileSync(dataKeyFile,'utf8')});
+app.use('/api/friends',createRouter({express,auth,store:reviewStore,seriousMedia,secret:fs.readFileSync(keyFile,'utf8'),adminToken:fs.readFileSync(reviewAdmin,'utf8'),onLogout(req,res){const token=cookie(req);if(token)sessions.delete(token);res.clearCookie('review_session',{path:'/',httpOnly:true,sameSite:'strict'});}}));
 app.get('/',(req,res)=>res.redirect('/pages/friends-connect.html'));
 app.use('/pages',express.static(path.join(root,'pages')));
 app.use('/assets',express.static(path.join(root,'assets')));
