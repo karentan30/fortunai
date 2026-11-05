@@ -375,65 +375,8 @@
   }
   function drawPoster(){
     const canvas=$('#poster-canvas');if(!canvas)return;
-    const format=posterFormat();if(canvas.width!==format.width)canvas.width=format.width;if(canvas.height!==format.height)canvas.height=format.height;
-    carouselCanvas(canvas,state.theme===3?null:posterSubject(),0);return;
-    if(format.portrait){if(state.theme===3)carouselCanvas(canvas,null,carouselCount()-1);else carouselCanvas(canvas,posterSubject(),0,{single:!!posterSubject()});return;}
-    if(state.theme===3){drawInvitePoster(canvas);return;}
-    const ctx=canvas.getContext('2d'),p=posterSubject(),t=state.theme;if(!p)return;
-    const palettes=[{bg:'#f5f4e9',ink:'#2e4c38',soft:'#6d815b',accent:'#e3e9d4',line:'#cbd7b9'},{bg:'#293f35',ink:'#f6f2dd',soft:'#b4c3a0',accent:'#3b5643',line:'#637c5d'},{bg:'#f0e3b9',ink:'#3d4d37',soft:'#727d52',accent:'#e0cf98',line:'#c4bb8b'}];
-    const {bg,ink,soft,accent,line}=palettes[t];
-    const sans='"Microsoft YaHei",sans-serif',serif='SimSun,serif';
-    function text(value,x,y,size=24,color=ink,font=sans){ctx.fillStyle=color;ctx.font=size+'px '+font;ctx.fillText(value,x,y);}
-    function rule(y){ctx.strokeStyle=line;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(84,y);ctx.lineTo(996,y);ctx.stroke();}
-    function rounded(x,y,w,h,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill();}
-    const city=[p.city,p.intent,p.chart.zodiac?'属'+p.chart.zodiac:''].filter(Boolean).join('  ·  ');
-    const invitation=state.caption??defaultPosterCaption(p),target=stemNames(p.targetStems)||'愿意聊聊五行的朋友',zodiac=(p.targetZodiacs||[]).includes('不限')?'不限生肖':(p.targetZodiacs||[]).join(' / ')||'由自己选择';
-    ctx.fillStyle=bg;ctx.fillRect(0,0,1080,1440);
-    if(t===2){ctx.fillStyle='#e0d09c';ctx.beginPath();ctx.arc(1100,0,270,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(-80,1420,200,0,Math.PI*2);ctx.fill();}
-    ctx.strokeStyle=line;ctx.lineWidth=2;ctx.strokeRect(42,42,996,1356);
-    text('runae.',84,111,40,ink,'Georgia');text('相遇有迹  /  A NEW CONNECTION',84,148,15,soft);ctx.textAlign='right';text(['THE ELEMENTS EDITION','THE PERSONAL EDITION','THE GOOD COMPANY EDITION'][t],996,111,14,soft,'Georgia');ctx.textAlign='left';rule(179);
-    if(t===0){
-      ctx.strokeStyle=line;ctx.beginPath();ctx.arc(215,330,136,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(215,330,115,0,Math.PI*2);ctx.stroke();
-      text(p.chart.dayMaster||'遇',139,381,151,ink,serif);text(p.chart.dayMaster?'我 的 日 主':'相 遇 有 迹',162,432,17,soft);
-      text('HELLO, I AM',396,251,18,soft,'Georgia');ctx.font='51px '+serif;ctx.fillStyle=ink;drawText(ctx,p.nickname,396,319,590,61,2);
-      text(city,396,430,24,soft);ctx.font='37px '+serif;ctx.fillStyle=ink;ctx.fillText(fitText(ctx,'想认识 '+target,900),84,507);text('生肖参考：'+zodiac,84,558,24,soft);
-      ctx.font='27px '+sans;ctx.fillStyle=soft;drawText(ctx,invitation,84,640,900,37,2);
-    }else if(t===1){
-      text('HELLO.',78,320,133,ink,'Georgia');text('MORE THAN A PROFILE.',86,356,17,soft,'Georgia');
-      ctx.save();ctx.translate(894,303);ctx.rotate(-0.06);rounded(-101,-96,202,213,3,accent);ctx.strokeStyle=line;ctx.strokeRect(-87,-82,174,185);ctx.textAlign='center';text(p.chart.dayMaster||'遇',0,22,96,ink,serif);text(p.chart.dayMaster?'我的日主':'MEET SOMEONE',0,74,15,soft);ctx.restore();
-      ctx.font='bold 57px '+sans;ctx.fillStyle=ink;ctx.fillText(fitText(ctx,p.nickname,900),84,448);text(city,86,496,24,soft);
-      ctx.font='35px '+serif;ctx.fillStyle=ink;ctx.fillText(fitText(ctx,'想认识 '+target,900),84,568);text('生肖参考：'+zodiac,84,609,22,soft);ctx.font='25px '+sans;ctx.fillStyle=soft;drawText(ctx,invitation,84,663,900,34,2);
-    }else{
-      text('GOOD THINGS ARE BETTER TOGETHER.',84,227,17,soft,'Georgia');text('一起做点',84,307,66,ink,serif);text('有意思的事。',84,384,66,ink,serif);
-      ctx.fillStyle=accent;ctx.beginPath();ctx.arc(895,307,99,0,Math.PI*2);ctx.fill();ctx.textAlign='center';text(p.chart.dayMaster||'遇',895,334,91,ink,serif);ctx.textAlign='left';text('+',748,268,42,soft,'Georgia');text('+',1003,419,34,soft,'Georgia');
-      ctx.font='42px '+serif;ctx.fillStyle=ink;ctx.fillText(fitText(ctx,p.nickname,900),84,460);text(city,84,502,24,soft);
-      let x=84,y=530;ctx.font='24px '+sans;(p.hobbies||[]).slice(0,1).forEach((h,i)=>{const label=fitText(ctx,h,130),w=Math.max(110,ctx.measureText(label).width+44);if(x+w>996){x=84;y+=63;}if(y>600)return;rounded(x,y,w,49,25,i%2?'#d0d7aa':'#e0ce97');text(label,x+22,y+33,24,ink);x+=w+12;});
-      ctx.font='30px '+serif;ctx.fillStyle=ink;ctx.fillText(fitText(ctx,'想认识 '+target,900),84,622);text('生肖参考：'+zodiac,84,657,20,soft);ctx.font='22px '+sans;ctx.fillStyle=soft;drawText(ctx,invitation,84,696,900,26,2);
-    }
-    rule(733);text(state.posterMode==='dayMaster'?'MY ELEMENT CARD  /  我的五行认识卡':t===1?'THE HIGHLIGHTS  /  本人自报':t===2?'关于我，想让你知道这些。 · 本人自报':'关于我的一些亮点 · 本人自报',84,772,17,soft,t===1?'Georgia':sans);
-    const highlightKeys=state.highlightKeys||[],publicFields=orderedPosterFields(p.fields,highlightKeys);
-    publicFields.slice(0,9).forEach(([k,v],i)=>{
-      const x=84+(i%3)*305,y=815+Math.floor(i/3)*83;
-      if(t===2||highlightKeys.includes(k))rounded(x-10,y-22,285,75,8,t===1?'#3b5643':t===2?'#e6d6a4':'#e8eddd');
-      if(t===1){ctx.strokeStyle=line;ctx.lineWidth=1;ctx.strokeRect(x-10,y-22,285,75);}
-      text(fieldCaption(k,v),x,y,15,soft);
-      ctx.font=(highlightKeys.includes(k)?'29px ':'24px ')+sans;ctx.fillStyle=ink;ctx.fillText(fitText(ctx,fieldValue(k,v),270),x,y+32);
-    });
-    if(!publicFields.length){text(state.posterMode==='dayMaster'?'你的交友卡，也可以从五行开始。':'更多关于我的事，留给认识以后。',84,857,26,soft,serif);text(state.posterMode==='dayMaster'?'扫码测自己的日主，生成一张属于你的卡。':'个人亮点可以逐项设置可见范围。',84,908,20,soft);}
-    if(p.fields.age&&state.profile.chart?.ageAsOf)text('年龄计算截至 '+state.profile.chart.ageAsOf,84,1050,13,soft);
-    rule(1074);
-    if(t!==2){text('一起试试',84,1111,16,soft);ctx.font='27px '+serif;ctx.fillStyle=ink;ctx.fillText(fitText(ctx,(p.hobbies||[]).slice(0,1).join('  /  '),900),84,1155);}else{text('想认识你，不如从一个共同爱好开始。',84,1134,27,ink,serif);}
-    ctx.font='19px '+sans;ctx.fillStyle=soft;ctx.fillText(fitText(ctx,'想认识 '+(p.targetStems||[]).join('、')+' 日主的朋友',680),84,1206);
-    ctx.font='17px '+sans;ctx.fillText(fitText(ctx,'生肖偏好：'+(p.targetZodiacs||[]).join('、'),680),84,1240);
-    if(posterDestination()){
-      text('扫码测你的日主，生成自己的交友卡。',84,1290,18,ink);ctx.font='14px '+sans;ctx.fillStyle=soft;drawText(ctx,posterDestination(),84,1320,670,20,2);
-      if(typeof window.qrcode==='function'){
-        const qr=window.qrcode(0,'M');qr.addData(posterDestination());qr.make();const n=qr.getModuleCount(),cell=Math.floor(194/(n+8)),size=cell*(n+8),x=996-size,top=1184;
-        ctx.fillStyle='#fff';ctx.fillRect(x,top,size,size);ctx.fillStyle='#172b20';for(let r=0;r<n;r++)for(let col=0;col<n;col++)if(qr.isDark(r,col))ctx.fillRect(x+(col+4)*cell,top+(r+4)*cell,cell,cell);
-        ctx.textAlign='right';text(location.hostname==='localhost'||location.hostname==='127.0.0.1'?'本地预览 · 仅本机有效':'扫码测日主，生成自己的卡片',996,top+size+19,13,soft);ctx.textAlign='left';
-      }
-    }else{text('在 Runae，生成你自己的五行交友卡。',84,1310,19,ink);}
-    text('五行是了解的入口，真实的相处，由彼此决定。',84,1380,12,soft);
+    const format=posterFormat();canvas.width=format.width;canvas.height=format.height;
+    carouselCanvas(canvas,state.theme===3?null:posterSubject(),0);
   }
   function fitText(ctx,text,max){if(ctx.measureText(text).width<=max)return text;let out='';for(const ch of text){if(ctx.measureText(out+ch+'…').width>max)return out+'…';out+=ch;}return out;}
   function drawText(ctx,text,x,y,maxWidth,lineHeight,maxLines){const lines=[];let line='';for(const char of String(text)){if(ctx.measureText(line+char).width>maxWidth&&line){if(/[，。！？、；：,.!?;:]/.test(char)){lines.push(line+char);line='';}else{lines.push(line);line=char;}}else line+=char;}if(line)lines.push(line);lines.slice(0,maxLines).forEach((l,i)=>ctx.fillText(i===maxLines-1&&lines.length>maxLines?fitText(ctx,l+'…',maxWidth):l,x,y+i*lineHeight));}
