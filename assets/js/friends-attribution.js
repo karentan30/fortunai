@@ -13,7 +13,7 @@
   var KEY = 'xs_attr_v1';
   var TTL = 30 * 864e5;
   var SOURCES = ['wechat', 'xhs', 'douyin', 'channels', 'direct', 'tiktok', 'campus', 'club', 'friend'];
-  var CAMPAIGNS = ['none', 'launch_20261105', 'poster_a', 'poster_b', 'video_a', 'video_b'];
+  var CAMPAIGNS = ['none', 'launch_20261105', 'poster_a', 'poster_b', 'collection', 'video_a', 'video_b'];
   var CAMPUS_CAMPAIGN = /^campus\d{2}_[a-z0-9]{1,16}$/;
   var CODE = /^[a-z0-9][a-z0-9_]{1,23}$/;
   var REF = /^r[0-9a-f]{11}$/;

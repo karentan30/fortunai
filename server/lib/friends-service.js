@@ -236,4 +236,4 @@ function createFriendsService(store,charts,options={}) {
     remove(uid){return store.transaction(s=>{normalize(s);if(s.profiles.some(p=>p.userId===uid)){const mark=s.attributionMarks.find(x=>x.userId===uid);if(mark){mark.deletedAt=new Date().toISOString();mark.expiresAt=new Date(Date.now()+90*86400000).toISOString();}}s.profiles=s.profiles.filter(p=>p.userId!==uid);if(Array.isArray(s.seriousPages))s.seriousPages=s.seriousPages.filter(r=>r.userId!==uid);s.requests=s.requests.filter(r=>r.from!==uid&&r.to!==uid);s.compatibilityPairs=(s.compatibilityPairs||[]).filter(p=>String(p.from)!==String(uid)&&String(p.to)!==String(uid));/* Keep account-level blocks and moderation across profile recreation. */return {ok:true};});}
   };
 }
-module.exports={createFriendsService,FIELDS,OPTIONAL_FIELDS};
+module.exports={createFriendsService,FIELDS,OPTIONAL_FIELDS,scopeAllows,connectedFor,activeFor};

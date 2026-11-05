@@ -2,7 +2,7 @@
 const crypto=require('node:crypto');
 const error=(status,message)=>{const e=Error(message);e.status=status;throw e;};
 const SOURCES=Object.freeze(['wechat','xhs','douyin','channels','direct','tiktok','campus','club','friend']);
-const CAMPAIGNS=Object.freeze(['none','launch_20261105','poster_a','poster_b','video_a','video_b']);
+const CAMPAIGNS=Object.freeze(['none','launch_20261105','poster_a','poster_b','collection','video_a','video_b']);
 // 校园试点活动码按形态放行（如 campus01_d03），不收任意文本。
 const CAMPUS_CAMPAIGN=/^campus\d{2}_[a-z0-9]{1,16}$/;
 function normalizeAttribution(value){const input=value&&typeof value==='object'&&!Array.isArray(value)?value:{};return {source:input.source==='微信'?'wechat':SOURCES.includes(input.source)?input.source:'direct',campaign:CAMPAIGNS.includes(input.campaign)||(typeof input.campaign==='string'&&CAMPUS_CAMPAIGN.test(input.campaign))?input.campaign:'none'};}
