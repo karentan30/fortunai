@@ -175,3 +175,24 @@ test('income/assets are range tiers: lower-bound hard filter, A-slang label, alw
   s.save('legacy',base({fields:{familyAssets:'A9.3'}}));s.save('legacy',base({fields:{familyAssets:'A9.3'},bio:'改简介'}));
   assert.equal(s.me('legacy').fields.familyAssets,'A9.3');
 });
+
+test('serious ranking uses the questionnaire alignment hook only with both opt-ins, and never exposes it',()=>{
+  const Q=require('./friends-questionnaire'),V=Q.BANK.version;
+  assert.equal(M.alignmentFromSignals([]),null);
+  assert.equal(M.alignmentFromSignals([{signal:'close'},{signal:'talk'},{signal:'unknown'}]),0.5);
+  assert.equal(M.alignmentFromSignals([{signal:'talk',essentialDifference:true}]),0);
+  const {store,service:s,base}=setup({alignmentScore:M.questionnaireAlignmentScore});
+  const q=Q.createFriendsQuestionnaireService({store,clock:()=>Date.parse('2026-11-06T00:00:00Z')});
+  const ans=(uid,value,importance)=>q.saveDimension(uid,'family',{version:V,consent:true,status:'done',answers:{'family-kids-wish':{value,...(importance?{importance}:{})}}});
+  s.save('a',base({purposes:['serious']}));
+  const c=s.save('c',base({purposes:['serious']})),b=s.save('b',base({purposes:['serious']}));
+  ans('a','want','essential');ans('b','want');ans('c','nokids');
+  // Without matching opt-in there are no signals → no effect on order.
+  const before=ids(s.discover('a'));
+  for(const uid of ['a','b','c'])q.setMatching(uid,{consent:true});
+  const r=s.discover('a');
+  assert.deepEqual(ids(r),[b.shareId,c.shareId],'aligned candidate ranks first');
+  assert.deepEqual(before,[c.shareId,b.shareId],'tie order before opt-in (so the flip proves the hook)');
+  assert.equal(M.questionnaireAlignmentScore({state:store.read(),viewerId:'a',candidateId:'b',purpose:'friend'}),null,'serious purpose only');
+  const text=JSON.stringify(r);for(const leak of ['alignment','signal','nokids','essential'])assert.ok(!text.includes(leak),'leaked '+leak);
+});

@@ -55,6 +55,8 @@ await page.locator('[name=constellation]').selectOption('狮子座');await page.
 const filtered=page.waitForResponse(response=>{const u=new URL(response.url());return u.pathname==='/api/friends/discover'&&u.searchParams.get('constellation')==='狮子座'&&u.searchParams.get('mbti')==='INFJ';});
 await page.locator('#filter-form button[type=submit]').click();await filtered;
 await page.waitForFunction(()=>document.querySelector('#discover-results')?.textContent.includes('还没有找到'));
+assert.ok((await page.locator('#discover-results').innerText()).includes('虚构示例，不可申请认识'));
+assert.equal(await page.locator('#discover-results [data-detail]').count(),0);
 assert.equal(new URLSearchParams(discoverQuery).get('constellation'),'狮子座');assert.equal(new URLSearchParams(discoverQuery).get('mbti'),'INFJ');
 for(const width of [320,390,768,1440]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);}
 assert.deepEqual(errors,[]);

@@ -178,5 +178,13 @@ function rankScore({purpose,mine,theirs,interests,relation,samePurpose,alignment
   return w.prefer*mine.preferHits.length+w.mutual*theirs.preferHits.length+w.hobby*Math.min(interests,w.hobbyCap)+w.element*(relation?.score||0)+w.samePurpose*(samePurpose?1:0)+w.alignment*(Number.isFinite(alignment)?Math.max(0,Math.min(1,alignment)):0);
 }
 
-module.exports={INCOME_TIERS,ASSET_TIERS,WEALTH_TIERS,isWealthTier,wealthLabel,PURPOSES,PURPOSE_LABELS,LEGACY_INTENT,LEVELS,LEVEL_LABELS,EDUCATION_LEVELS,HOUSE_OPTIONS,CAR_OPTIONS,SENSITIVE_FIELDS,PLAIN_MATCH_FIELDS,TYPE_KEYS,EXPECTATION_KEYS,LABELS,WEIGHTS,
+// Adapter for friends-questionnaire pairAlignment().signals (present only when both users opted in).
+// close dimension = 1, talk = 0, essential difference = -0.5; averaged over compared dimensions, clamped 0..1.
+// null when nothing comparable. Used only as a hidden ranking signal for 认真婚恋; never returned or explained.
+function alignmentFromSignals(signals){const known=(Array.isArray(signals)?signals:[]).filter(d=>d&&(d.signal==='close'||d.signal==='talk'));if(!known.length)return null;const v=known.reduce((sum,d)=>sum+(d.signal==='close'?1:0)-(d.essentialDifference?0.5:0),0)/known.length;return Math.max(0,Math.min(1,v));}
+
+// Ready-made options.alignmentScore for createFriendsService (wired in routes/friends.js). Serious purpose only; fails soft.
+function questionnaireAlignmentScore({state,viewerId,candidateId,purpose}){if(purpose!=='serious'||!state)return null;try{return alignmentFromSignals(require('./friends-questionnaire').pairAlignment(state,viewerId,candidateId).signals);}catch{return null;}}
+
+module.exports={alignmentFromSignals,questionnaireAlignmentScore,INCOME_TIERS,ASSET_TIERS,WEALTH_TIERS,isWealthTier,wealthLabel,PURPOSES,PURPOSE_LABELS,LEGACY_INTENT,LEVELS,LEVEL_LABELS,EDUCATION_LEVELS,HOUSE_OPTIONS,CAR_OPTIONS,SENSITIVE_FIELDS,PLAIN_MATCH_FIELDS,TYPE_KEYS,EXPECTATION_KEYS,LABELS,WEIGHTS,
   purposesOf,normalizePurposes,compatiblePurposes,normalizeExpectations,normalizeMatchingConsent,migrateProfile,amount,evaluate,elementRelation,rankScore};

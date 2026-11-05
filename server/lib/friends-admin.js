@@ -1,9 +1,11 @@
 'use strict';
 const crypto=require('node:crypto');
 const error=(status,message)=>{const e=Error(message);e.status=status;throw e;};
-const SOURCES=Object.freeze(['wechat','xhs','douyin','channels','direct','tiktok']);
+const SOURCES=Object.freeze(['wechat','xhs','douyin','channels','direct','tiktok','campus','club','friend']);
 const CAMPAIGNS=Object.freeze(['none','launch_20261105','poster_a','poster_b','video_a','video_b']);
-function normalizeAttribution(value){const input=value&&typeof value==='object'&&!Array.isArray(value)?value:{};return {source:input.source==='微信'?'wechat':SOURCES.includes(input.source)?input.source:'direct',campaign:CAMPAIGNS.includes(input.campaign)?input.campaign:'none'};}
+// 校园试点活动码按形态放行（如 campus01_d03），不收任意文本。
+const CAMPUS_CAMPAIGN=/^campus\d{2}_[a-z0-9]{1,16}$/;
+function normalizeAttribution(value){const input=value&&typeof value==='object'&&!Array.isArray(value)?value:{};return {source:input.source==='微信'?'wechat':SOURCES.includes(input.source)?input.source:'direct',campaign:CAMPAIGNS.includes(input.campaign)||(typeof input.campaign==='string'&&CAMPUS_CAMPAIGN.test(input.campaign))?input.campaign:'none'};}
 function purgeAttributionMarks(state,now=Date.now()){if(state.attributionMarks===undefined)state.attributionMarks=[];if(!Array.isArray(state.attributionMarks))throw Error('归因标记损坏');state.attributionMarks=state.attributionMarks.filter(mark=>!mark.expiresAt||Date.parse(mark.expiresAt)>now);return state;}
 const normalize=s=>{for(const k of ['moderation','auditLogs','feedback','metrics','attributionMarks']){if(s[k]===undefined)s[k]=[];if(!Array.isArray(s[k]))throw Error('运营快照损坏');}return purgeAttributionMarks(s);};
 const isDisabled=(s,uid)=>(s.moderation||[]).some(x=>x.userId===uid&&x.disabled);
@@ -36,4 +38,4 @@ moderate(id,disabled,reason){if(typeof disabled!=='boolean')error(400,'disabled�
 };}
 function adminAuth(token){return (req,res,next)=>{if(typeof token!=='string'||Buffer.byteLength(token)<32)return res.status(503).json({error:'管理功能未配置'});const raw=req.get('X-Admin-Token')||req.get('Authorization')?.replace(/^Bearer /,'')||'';const a=Buffer.from(raw),b=Buffer.from(token);if(a.length!==b.length||!crypto.timingSafeEqual(a,b))return res.status(401).json({error:'管理凭证无效'});req.friendsAdminActor='admin-token:'+crypto.createHash('sha256').update(token).digest('hex').slice(0,16);next();};}
 function createRateLimit({limit=60,windowMs=60000,maxKeys=10000}={}){const buckets=new Map();return (req,res,next)=>{const now=Date.now();for(const [key,row] of buckets)if(row.until<=now)buckets.delete(key);const keys=['ip:'+req.ip,...(req.user?['user:'+req.user.id]:[])];for(const key of keys){let row=buckets.get(key);if(!row){if(buckets.size>=maxKeys)return res.status(429).json({error:'请求过于频繁'});row={count:0,until:now+windowMs};buckets.set(key,row);}if(++row.count>limit){res.set('Retry-After',String(Math.ceil((row.until-now)/1000)));return res.status(429).json({error:'请求过于频繁，请稍后重试'});}}next();};}
-module.exports={normalize,isDisabled,metric,normalizeAttribution,purgeAttributionMarks,deliveryReview,SOURCES,CAMPAIGNS,createAdminService,adminAuth,createRateLimit};
+module.exports={CAMPUS_CAMPAIGN,normalize,isDisabled,metric,normalizeAttribution,purgeAttributionMarks,deliveryReview,SOURCES,CAMPAIGNS,createAdminService,adminAuth,createRateLimit};

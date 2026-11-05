@@ -43,7 +43,7 @@ async function createPerson(page,slug){
   const me=await page.request.get(base+'/api/friends/me');assert.equal(me.status(),200);return (await me.json()).profile;
 }
 (async()=>{let browser;try{
-  await ready();browser=await chromium.launch({executablePath:'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe',headless:true,args:['--disable-gpu','--no-sandbox']});
+  await ready();browser=await chromium.launch({...(process.env.BROWSER_PATH?{executablePath:process.env.BROWSER_PATH}:{}),headless:true,args:['--disable-gpu','--no-sandbox']});
   const a=await browser.newContext({viewport:{width:1440,height:1000}}),b=await browser.newContext({viewport:{width:390,height:844}}),anon=await browser.newContext({viewport:{width:390,height:844}});
   const pa=await a.newPage(),pb=await b.newPage(),pc=await anon.newPage();
   await pc.goto(base+'/pages/friends-connect.html');await pc.locator('#birth-year').waitFor();
