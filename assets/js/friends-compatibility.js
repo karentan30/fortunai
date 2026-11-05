@@ -45,7 +45,7 @@
  }
  function chatFailure(error,sequence,pairId,accountId){
   if(!chatValid(sequence,pairId,accountId)||error.name==='AbortError')return;
-  if([401,403,404,409,410].includes(error.status)){stopChat(true);$('#report-area').replaceChildren();$('#report-area').hidden=true;$('#pair-state').textContent='本次对话已关闭，请刷新邀请状态。';return;}
+  if([401,403,404,409,410].includes(error.status)){stopChat(true);const closedSequence=chatSequence;$('#pair-state').textContent='本次对话已关闭，请刷新邀请状态。';if(error.status===409){api(PREFIX+'/pairs/'+encodeURIComponent(pairId),{privateRequest:true}).then(pair=>{if(closedSequence!==chatSequence||current?.id!==pairId||String(user?.id)!==accountId)return;current=pair;$('#show-report').disabled=!pair.basicReady;$('#chat-consent-note').hidden=!pair.basicReady||pair.chatReady;if(!pair.basicReady){$('#report-area').replaceChildren();$('#report-area').hidden=true;}}).catch(()=>{if(closedSequence===chatSequence){$('#report-area').replaceChildren();$('#report-area').hidden=true;}});}else{$('#report-area').replaceChildren();$('#report-area').hidden=true;}return;}
   $('#chat-status').textContent=error.message+'，可稍后刷新或重试。';
  }
  async function pollChat(){
