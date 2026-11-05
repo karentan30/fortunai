@@ -56,3 +56,8 @@ test('existing or unresolved membership prevents duplicate charges with a new ke
  f.notify(o.id);await assert.rejects(f.checkout('friends_year_v1'),{status:409});
  f.setNow(Date.parse('2026-02-28T12:00:00Z'));const renewal=await f.checkout('friends_year_v1');assert.equal(renewal.status,'pending');
 });
+
+test('Beijing month boundaries do not drift because UTC date is previous month',()=>{
+ assert.equal(new Date(anniversary('2026-02-28T16:30:00Z',1)).toISOString(),'2026-03-31T16:30:00.000Z');
+ assert.equal(new Date(anniversary('2026-12-31T16:30:00Z',12)).toISOString(),'2027-12-31T16:30:00.000Z');
+});
