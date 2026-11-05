@@ -1,0 +1,48 @@
+Runae交友独立计费模块与支付验收差距
+2026-11-04；本文件记录源码核查与本地测试，不代表真实收单渠道已开通。
+
+更新：已取得Lumee server.py真实blob并确认status含amount/currency/out_ref。已实现legacy已验签回调唤醒+fresh已鉴权查单路线，不再强制要求中台先升级timestamp/nonce。下文旧严格v2说明仅适用于可选的直接v2回调路线，不能作为legacy鲜活查单路线的额外阻断。隔离补丁及证据见.review/hub-v2/README.txt。
+
+一、已找到的真实共享协议
+共享仓库：karentan30/lumee-docs-shared，master分支。
+https://github.com/karentan30/lumee-docs-shared/blob/master/pay-hub-client.js
+https://github.com/karentan30/lumee-docs-shared/blob/master/payment-hub-复用指南.md
+真实client：create(method,商品标题,金额元,out_ref,{currency,success_url,cancel_url})；POST /hub/pay/create，header X-Project-Id和X-Sign=HMAC-SHA256原始JSON字节。
+status(order_no)通过GET /hub/pay/status，签名canonical为project_id=<原值>&order_no=<原值>。verifyCallback(rawBody,xSign)验证原始body HMAC。PROJECT_ID来自HUB_PROJECT_ID，密钥来自对应项目env；模块只检查配置状态，不读取或打印密钥。
+共享订阅接口subCreate(plan_code,out_ref,opts)是另一套/hub/sub。旧Runae支付源码只映射daily_companion_year；不代表新报告或年卡已经注册。新年卡暂为一次性365天，不自动续扣。
+
+二、真实渠道与SKU核查结果
+源码支持wechat/alipay/stripe方法，但无法据此确认当前商户主体、地区、币种或该商品已获准收款。Lumee文档记载支付宝UI曾禁用、Airwallex有后端但Web前端未集成，文档不能代替当前商户实测。
+https://github.com/karentan30/lumee/blob/main/docs/us-launch/payment-changes.md
+旧payment参考源码注释另记Stripe支付宝审核、微信默认未列入；同样不是当前开通证据。不得展示“全渠道可用”。银行卡通过已验收的Stripe结账渠道收取，不另造bank通道。
+候选价格：friends_report_199，CNY19900分，报告次数1；friends_year_399，CNY39900分，一次性365天年卡含报告次数1。这两项尚无中台SKU登记/定价验收证据，不是已批准售价。未承诺无限AI、固定找人数或保证脱单。
+年卡额外门：当前yearAccessUntil只有权益日期输出，尚无实际会员服务消费点；friends_year_399必须在独立会员权益说明、实际服务消费与履约验收后，才允许其registration.benefitsVerified=true。缺此标记即该SKU无可用渠道、checkout拒绝；199报告可独立验收。不能因为报告和付款接通就售卖没有落地服务的399年卡。
+付款按钮须catalog中对应产品enabled且channels包含该渠道才可点；所有金额币种取服务端固定目录，不读取客户端价格。USD/HKD等需要独立审批价表，不自动按汇率换算。
+
+三、已实现的隔离代码
+server/lib/friends-billing.js：真实client adapter契约、默认关闭、服务端SKU、登录账户绑定、订单幂等、严格原始body回调、到账后授报告次数、退款撤权、年卡到期、次数预扣/成功提交/失败返还。
+server/routes/friends-billing.js：createBillingRouter和createBillingCallbackRouter工厂，无生产自动加载或创建收款。
+新增四数组：billingOrders、billingEvents、creditLedger、creditReservations。每个状态更新通过现有同步transaction；跨进程一致性依赖主代理SQLite实现。
+每次服务内部调用reserve(uid,'report',quantity,idempotencyKey)，成功交付后settle(uid,reservationId,'commit')，失败后release。预扣按订单来源分配；退款来源不再返还、不可提交；其他订单不被没收。重复预扣和结算幂等，不允许超额消费。没有客户端授点/任意扣点接口。tokens不面向用户展示。
+服务进程崩溃遗留reserved，需要作业执行器按实际交付状态恢复/释放；模块不会凭超时自动判断是否已交付，也不假称已有报告生成器。
+
+四、阻止启用的实际差距
+1. 必须由运营核验香港Capstone IQ的准确法律名称、商户账户归属、商品描述、退款客服、条款与收单批准。merchantVerified等布尔配置仅是验收门，不构成真实核验，不能为了开启而随意置true。当前代码匹配merchantName='Capstone IQ'；如法律名称不同需审定后更新，不擅称Limited等后缀。
+2. 中台必须登记项目、候选商品和服务器权威价格，并验证对应渠道/币种。旧接口支持传商品名与金额，不等于已完成SKU备案。registrations逐商品包含verified、product、amountMinor、currency、channels。
+3. 现有共享回调没有timestamp、nonce、event_id及currency。freshPullVerified路线已支持legacy raw HMAC回调只作唤醒：主动查本地绑定hubOrderId，核对服务端金额、币种、out_ref和order_no，并只根据fresh paid授予。重放只重复查证，不重复发权益。callbackV2Verified为可选直接v2模式，不能把legacy声称成v2。
+4. 必须核验原始请求体。callback挂载应在express.json之前；缺原始Buffer拒绝，不通过JSON.stringify还原。HMAC必须用项目secret，校验timestamp在±5分钟，event_id及nonce至少8字符。相同事件同digest幂等，不同内容复用nonce拒绝。
+5. 新回调除新增安全字段外，沿用真实payload：project_id、order_no、out_ref、product、amount（元，最多2位小数）、method、status，并强制currency为大写币种。状态paid/refunded/expired/failed。必须匹配本地绑定hubOrderId、商品、金额、币种、渠道，才可开权益。只签名但缺金额币种仍不授予。
+6. 真实create不返回currency，但实际status返回amount/currency/out_ref，故adapter在create后立即fresh status核对再展示支付入口，不猜币种。查证失败标create_unknown，不重新创建远端订单。按本人幂等键查询可找回RF-id，远端超时仍需核对。
+7. 通知失败不重试，已增加本人GET orders/:id的fresh轮询兜底。源码证据是server.py blob d59e6ed19fc1b867266ea66d951d06be714de112中_hub_pay_status（35849行起）；status鉴权限本项目。必须在真实部署验证该契约，源码不代表生产版本。legacy failed同时涵盖refunded/failed/closed，先冻结payment_review，不自动宣称退款完成。精准补单/退款分流运维仍待验收。
+8. 部分退款尚不支持自动撤部分权益。当前仅接受与原订单金额一致的全额退款已完成事件；模块只处理已成功退款的通知，不发起真实退款。已下载交付物无法远程撤回，退款政策和人工审核须先公示。
+
+五、挂载与前端契约
+建议GET /api/friends/billing/catalog→{enabled,merchant,products:[{sku,name,amountMinor,currency,reportCredits,accessDays,enabled,channels,disabledReason}]}。
+POST /api/friends/billing/checkout {sku,channel,idempotencyKey}，必须原有登录身份、JSON和X-Runae-Friends:1。返回{id,sku,status,amountMinor,currency,channel,createdAt,expiresAt,checkout:{url|codeUrl|qrCode}}；创建只为pending，不标成功。
+GET /api/friends/billing/orders/:id只查本人并fresh核验到账；GET /api/friends/billing/orders/by-key/:key只按本人的原购买幂等键恢复本地订单；GET /api/friends/billing/balance→{units:{report},yearAccessUntil}。
+独立POST /api/friends/billing-callback由createBillingCallbackRouter挂到JSON解析之前，免用户登录但强制raw HMAC；fresh模式接legacy字段并主动查证，严格v2模式另要求新字段；缺配置503、错签401、参数错400、冲突409。不得复用旧支付成功页或从URL认定到账。
+生产加载共享client由主集成负责；createHubAdapter只接受HUB_SECRET==='(configured)'，避免旧client '(missing)'真值被误当开通。外部环境与密钥不打印，不向聊天索取。
+
+六、上线前必须完成的真实验证
+商户/HK主体证据→项目/SKU登记与精确价核对→新回调协议部署→沙箱创建、验签、重放、退款与补单→分别对每个获批渠道做经授权真实小额支付和原路退款→确认到账、订单归属、报告交付和权益一致→仅打开已验收渠道。
+本轮只运行本地测试，无生产创建收款、charge、退款或修改旧payment/store逻辑，未合并main。缺差距中任一项应保持付款按钮关闭，不能为了明早目标伪造收款可用。

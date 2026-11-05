@@ -1,0 +1,45 @@
+交友计费生产接线与操作验收（2026-11-04）
+当前为代码与本地隔离验收，未开启真实收费。
+
+一、实际接线
+server/index.js先对/api/friends/billing/callback执行64kb express.raw，再执行通用express.json，最后mount /api/friends productionRouter。原始字节保留给HMAC，不从JSON对象重新序列化。
+productionRouter复用已验证交友配置和SQLite store；/billing/callback独立验签，不要求用户登录；/billing其余业务复用原站auth。邀请测试中/catalog也要求登录及允许账号，避免对未获邀用户展示启用的购买按钮；正式public模式可匿名查看catalog，但下单、查单、余额始终要求真实会话。回调不能信任浏览器传的userId。
+付款缺配置仅关闭付款；交友配置/数据存储错误关闭交友模块，状态与退出入口仍保留。支付/报告开关不应默默开启。
+
+二、共享client路径核对
+默认路径从server/lib/friends-billing-config.js解析../../../shared/pay-hub-client.js，和旧server/routes/payment.js解析的../../../shared/pay-hub-client.js是同一绝对位置：仓库上一级的shared目录，不是仓库内部server/shared。
+HUB_CLIENT_PATH可显式覆盖，部署建议使用绝对路径，避免相对require基准差异。运维只核对文件可读与版本，不输出密钥内容。现有client启动时读env并缓存，改配置后需要受控重启，不认为编辑环境文件即时生效。
+client需要HUB_BASE为HTTPS、HUB_SECRET状态为(configured)、create/status/verifyCallback方法及项目ID。真实secret通过既有HUB_SECRET_<项目大写ID>环境配置，不写前端、URL、仓库或聊天。
+
+三、销售开关与报告交付门
+默认FRIENDS_BILLING_ENABLED不为true时关闭。开启仍同时要求：
+FRIENDS_BILLING_MERCHANT_VERIFIED=true
+FRIENDS_BILLING_FRESH_PULL_VERIFIED=true
+FRIENDS_BILLING_MERCHANT_NAME=Capstone IQ（应先确认实际法律名称及收单归属）
+FRIENDS_REPORT_DELIVERY_VERIFIED=true
+FRIENDS_REPORTS_ENABLED=true
+FRIENDS_BILLING_PRODUCTS为经核对的JSON对象。
+报告关着或交付未验收，即使支付配置存在也不能售卖。两个候选SKU都包含报告，因此必须先验证真实生成、完整性校验、加密保存、本人读取、服务次数预扣与提交、失败返还以及重复请求不重复扣次。DELIVERY_VERIFIED只是操作验收记录，不替代真实验收。
+商品配置形状（示例非已批准商品）：
+{"friends_report_199":{"verified":true,"amountMinor":19900,"currency":"CNY","product":"经中台核对的商品标题","channels":["已实际验收的渠道"]}}
+渠道仅wechat/alipay/stripe；不能复制示例占位值就开通。候选年卡SKU为friends_year_399，39900分，一次性365天含报告，不是自动续费。每个SKU金额、币种、标题、主体、交付范围均需独立核实。现有模块不自动发起真实收款或退款。
+
+四、不要覆盖旧中台回调
+共享项目可能只有一个HUB_CALLBACK_<PROJECT_ID>，原站订阅也可能正在使用。不能为了新交友功能把原回调直接改指/api/friends/billing/callback，否则可能使旧订单通知丢失。
+若复用既有项目，先保留原回调不变；新交友可用本人GET orders/:id的fresh轮询核验。浏览器关闭后的补单仍需后台对账任务或经评审的按out_ref前缀分流方案。也可正式登记独立项目及独立回调，但不能杜撰服务器已支持该新项目。真实生产配置须核实这一路由归属。
+
+五、验收步骤（需运维在获授权环境执行）
+1. 保持所有新收费开关关闭，备份加密SQLite并完成独立恢复，核对Node/ICU版本和文件权限。
+2. 核验共享client绝对路径、真实项目注册及商户主体、商品与对应渠道币种。只检查配置有无，不把密钥打印到日志。
+3. 先在隔离/沙箱验证create后status返回同一order_no/out_ref/amount/currency，网络超时为create_unknown且原幂等键不会重建订单。
+4. 验证callback原始带空白字节不被重序列化，错签/错项目/错金额/错币种不授点；回调只唤醒fresh查单，pending不授点，paid只授一次。旧failed包含退款/失败/关闭歧义，只冻结payment_review，不声称已退款。
+5. 用正式鉴权测试获邀、未获邀、过期会话与跨账号读单；本地测试认证stub不能证明生产登录正确。
+6. 完成报告实际生成/存储/读取/扣次/失败返还交付验收后，再批准报告交付标记与报告开关。未连接生产模型的单元测试不算报告真实交付验收。
+7. 分渠道执行经授权的小额真实支付与原路退款验收、到账对账、客服工单处理；只有通过的渠道加入channels。不得据单个渠道成功宣称全渠道可用。
+8. 确认前端只认catalog启用渠道，pending/create_unknown/payment_review不出成功文案，不换key绕过结果未知订单。Stripe仅跳checkout.stripe.com HTTPS；二维码文本仅编码，不当HTML或图片地址执行。
+9. 设置告警与人工对账值守。仅暂停新销售时设FRIENDS_BILLING_SALES_PAUSED=true并受控重启：目录与checkout关闭，已有订单的验签、fresh核验、余额与后台对账继续。遇验签/资金风险需全停时关闭FRIENDS_BILLING_ENABLED；保留数据和已购记录，不能删除订单来清错。暂停销售不会替代或绕过任何报告交付验收门。
+
+六、本地测试证据与边界
+server/routes/friends-production.test.cjs实际调用productionRouter，隔离临时SQLite，使用内存测试Hub与测试认证，按index相同顺序挂raw/JSON parser，通过HTTP验证邀请拦截、raw签名回调、fresh到账、渠道关闭与故障隔离。另静态核对index的实际raw路径和顺序。测试不启动整个旧站index、不访问商户、不调用生成模型、不证明生产auth或收单已通过。
+friends-billing-config.test.cjs验证默认client路径与原payment一致、显式路径覆盖，以及缺交付标记/报告开关时关闭。
+billing.reservationByKey(uid,key)用于报告租约恢复只读查询，返回本人预扣记录或null，不会创建预扣、重复扣次或暴露他人记录。

@@ -1,0 +1,13 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict');
+const {createFriendsReportAdapter,validateResult,TITLES}=require('../server/lib/friends-report-adapter');
+const {searchCities}=require('../server/lib/friends-location');
+const {calculate}=require('../server/lib/friends-chart');
+const cityId=searchCities('北京')[0].id;
+const input={birthYear:1991,birthMonth:8,birthDay:28,birthHour:6,birthMinute:15,gender:'female',calendar:'lunar',cityId};
+const reading=()=>TITLES.map((t,i)=>`${i+1}. ${t}\n${'这是传统文化解读，未计算的部分明确说明资料不足，并提供一般自我反思问题。'.repeat(3)}。`).join('\n');
+test('lunar is server-validated and normalized to solar without changing supplied verified pillars',async()=>{const a=createFriendsReportAdapter({clock:()=>new Date('2026-11-04T00:00:00Z')});const v=await a.verifyChart(input);assert.equal(v.input.calendar,'solar');assert.equal(v.input.birthMonth,10);assert.equal(v.input.birthDay,5);assert.equal(v.input.birthMinute,15);assert.match(v.chartBlock,/四柱：年/);assert.match(v.chartBlock,/十神/);assert.match(v.chartBlock,/藏干/);assert.match(v.chartBlock,/起始年份/);});
+test('no city, hour, gender, invalid date or underage is rejected before model use',async()=>{const a=createFriendsReportAdapter();for(const patch of [{cityId:''},{birthHour:null},{gender:''},{birthMonth:13},{birthYear:2020}])await assert.rejects(a.verifyChart({...input,...patch}),e=>e.status===400);});
+test('friends adds cultural boundaries without modifying legacy prompt module',async()=>{const a=createFriendsReportAdapter({generate:async(messages)=>{assert.match(messages[0].content,/最高优先级限制/);assert.match(messages[0].content,/禁止虚构师承/);assert.match(messages[0].content,/怀孕时间/);return reading();}});const v=await a.verifyChart(input);assert.equal((await a.generate(v.input,v)).locked,false);});
+test('all numbered titles and substantive final chapter are required',()=>{const r={reading:reading(),tier:'full',locked:false};assert.equal(validateResult(r),true);assert.equal(validateResult({...r,reading:r.reading.replace('16. 命理师私语','16. 其他')}),false);assert.equal(validateResult({...r,reading:r.reading.slice(0,r.reading.indexOf('16. 命理师私语'))+'16. 命理师私语\n未完成'}),false);assert.equal(validateResult({...r,reading:r.reading+'半句话'}),false);});
+test('unsupported birth offsets and conflicting derived pillars close full-report generation',async()=>{for(const modify of [c=>{c.birthLocation.offsetMinutes=-300;},c=>{c.pillars.month='甲子';}]){const a=createFriendsReportAdapter({calculateChart:(i,n)=>{const c=calculate(i,n);modify(c);return c;}});await assert.rejects(a.verifyChart(input),e=>e.status===400);}});

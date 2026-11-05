@@ -1,0 +1,60 @@
+name: Friends feature checks
+on:
+  pull_request:
+    paths:
+      - 'server/lib/friends*'
+      - 'server/lib/bazi-full-report.js'
+      - 'server/routes/divination.js'
+      - 'tests/bazi-full-report.test.js'
+      - 'tests/friends*'
+      - 'server/routes/friends*'
+      - 'server/data/friends*'
+      - 'server/package.json'
+      - 'server/package-lock.json'
+      - 'server/lib/store.js'
+      - 'server/middleware/**'
+      - 'scripts/test-friends*.cjs'
+      - 'scripts/friends*.cjs'
+      - 'pages/friends*'
+      - 'assets/js/friends*'
+      - 'assets/css/friends*'
+      - 'assets/data/friends*'
+      - '.github/workflows/friends-check.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci --prefix server --no-audit --no-fund
+      - run: node scripts/test-friends.cjs
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install isolated browser test dependencies
+        run: npm install --prefix .review --no-save --no-package-lock playwright@1.56.1
+      - name: Install Chromium and system dependencies
+        run: node .review/node_modules/playwright/cli.js install --with-deps chromium
+      - name: Verify mobile layout, first-use entry and share exports
+        run: node scripts/test-friends-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: friends-browser-screenshots
+          path: .review/*.png
+          include-hidden-files: true
+          if-no-files-found: ignore
+          retention-days: 7

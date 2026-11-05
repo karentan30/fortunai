@@ -1,0 +1,27 @@
+注册授权建档 · 2026-11-04 · 实现与边界
+
+目标：第一阶段让愿意的成年用户注册后，将本人生辰与介绍草稿交给平台加密保存；允许拒绝保存生辰，继续原匿名免费工具。保存不是自动发布或加入人库，也不是自动授权一次具体双人合盘。
+
+已实现独立页面 /pages/friends-intake.html：登录或注册，中文年月日、公农历、出生城市实际搜索选择、小时分钟可不详；个人年龄/身高/体重/学校/职业/行业/职务/收入/资产等自填草稿；生辰保存、后台匹配用途分别勾选，均默认不选；保存前本人核对确认。当前交友城市不同于私密出生城市。收入为个人年收入、资产为个人净资产，人民币万元区间，可暂不提供。
+九项在既有讨论中指个人核心资料；本模块另收职业/行业/职务、昵称城市等可选草稿，不将“九项”当强制采集要求，所有草稿可空。年龄为本人自报，公开建档时仍须按有效出生计算核对，不能拿自报年龄绕成年验证。
+
+截图：可选PNG/JPEG/WebP，最多8MB，仅本设备blob预览，不发送服务器；离开或移除即撤销URL。明确显示“当前可参考截图手动填写，自动识别未接通”。不生成假OCR结果，不把图片当已核实认证，不接收他人证件、聊天记录。服务器拒绝图片字段、base64与文件路径。
+
+本人接口 /api/friends/intake/
+GET → {intake:null|{recordId,revision,birthInput,draft,saveBirthConsent,matchingConsent,consentVersion,purpose,updatedAt,visibility:'private'}}。
+PUT → {birthInput:null|{birthday:'YYYY-MM-DD',calendar:'solar'|'lunar',cityId,time:null|'HH:mm',leapMonth:boolean,disambiguation?:'earlier'|'later'},draft:{nickname?,city?,intent?,fields?:{age,height,weight,school,occupation,industry,title,income,assets},hobbies?:[],bio?},saveBirthConsent:boolean,matchingConsent:boolean,consentVersion:'private-intake-2026-11-04-v1',purpose:'private_profile_and_optional_matching',expectedRevision:初次0}。
+服务器用现有calculate核对日期城市与成年，保存白名单规范输入，不保存额外原文。saveBirthConsent=false时birthInput必须null；matchingConsent=true需要有效已同意保存生辰。两个布尔必须显式提交；拒绝pairDefault、userId、图片与未知字段。expectedRevision冲突409，防旧页面覆盖。
+DELETE请求体 {expectedRevision:当前版本}，旧版本返回409；成功 → {deleted:true}，仅删除当前登录本人intake，不删除已发布交友档案、问卷、报告或订单，UI明确说明。删除再建分配新recordId。所有原始生辰仅owner GET返回；不加入discover/card/report公开投影，不进日志与埋点。
+复用现有store.transaction及加密SQLite集合privateIntakes，不另建明文数据库；根模块统一挂载。鉴权只用现有session，写入要求本站JSON、X-Runae-Friends:1，跨站拒绝。没有导出API，不声称已物理清除所有备份。
+
+后续使用：保存有效生辰后，可点“使用建档资料继续制作分享卡”进入 /pages/friends-connect.html#intake；根模块读取本人私密输入再计算，并把本人草稿放入可核对表单。公开字段、contact、listed须另选；不将matchingConsent解释为具体pair授权。
+后台完整生辰持续匹配尚须独立实现及验收，本轮记录用户用途授权不等于已提供该服务。当前推荐仍按公开日主/生肖偏好。双人报告仍要双方针对本次关系单独授权。拒绝匹配用途不得阻止保存私密个人草稿或使用免费工具。
+
+验收：登录/注册错误中文可理解；生辰不保存时可只留草稿；保存前本人勾选；有效生辰18+；非法日期/城市/时间失败不落盘；双账号隔离/跨站/身份注入/未知字段/超长及图片字段拒绝；过时revision409；删除A不影响B；截图不出现在任何网络POST；无localStorage/sessionStorage保存敏感资料；主页面公开须再次选择。
+当前交付包含独立页面、服务与HTTP测试；root统一挂载与跨模块联调。未新增收费、OCR、自动发布或完整生辰推荐算法。
+
+流程呈现补充：先在免费工具输入出生信息，查看日主与认识方向，再进入本人介绍及可选私密关系问卷。建档页明确为测完后的补充步骤，未测者可返回免费工具；已测者补资料不必重输生辰。可选另存生辰不作为填写资料前提。页内提供10主题私密问卷入口，说明AI聊天/语音访谈未接通。跨页面不传URL生辰、不自动读取匿名页面内存。主页面可在结果页增加‘补充我的资料’入口指向friends-intake.html，保留现有#profile直接制卡；#intake仅用于读取已同意保存的建档后制卡。
+
+
+实际出生日期与证件日期说明
+出生信息填写实际日期，明确选择公历或农历，允许与身份证登记日期不同。计算信息不作为身份或年龄认证。未来身份核验须单独处理证件日期，不自动覆盖实际生辰；公开年龄不得借此伪造。首页、私密建档、双人授权页统一提示。当前未新增身份证上传或核验功能。

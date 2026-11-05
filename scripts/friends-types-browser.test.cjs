@@ -1,0 +1,54 @@
+'use strict';
+const assert=require('node:assert/strict'),path=require('node:path');
+const {chromium}=require('../.review/node_modules/playwright-core');
+(async()=>{const browser=await chromium.launch({headless:true});try{
+const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[];
+page.on('pageerror',e=>errors.push(e.message));
+let saved=null,discoverQuery='';
+const profile={shareId:'types-fixture',nickname:'测试同学',city:'北京',intent:'认真结婚',listed:true,constellation:'白羊座',mbti:'ENFP',targetConstellations:[],targetMbtis:[],fields:{age:'25',height:'170',weight:'60',school:'测试大学',occupation:'学生',income:'暂不提供',assets:'暂不提供',familyAssets:'暂不提供'},visibility:{dayMaster:'public',constellation:'private',mbti:'private'},chart:{dayMaster:'戊',element:'土',zodiac:'羊',age:25},hobbies:['羽毛球'],targetStems:['丁'],targetZodiacs:['马'],bio:'希望认识一起运动的朋友',policyVersion:'friends-2026-11-04-v1'};
+await page.route('**/api/**',async route=>{const url=new URL(route.request().url());let data={};
+if(url.pathname==='/api/auth/me')data={user:{id:'fixture',email:'fixture@example.invalid'}};
+else if(url.pathname==='/api/friends/me')data={profile};
+else if(url.pathname==='/api/friends/profile'){saved=route.request().postDataJSON();Object.assign(profile,saved);data={profile};}
+else if(url.pathname==='/api/friends/discover'){discoverQuery=url.search;data={profiles:[]};}
+await route.fulfill({json:data});});
+await page.goto(process.env.FRIENDS_REVIEW_URL+'/pages/friends-connect.html#profile');
+await page.locator('#profile-form').waitFor();
+assert.equal(await page.locator('#constellation').inputValue(),'白羊座');
+assert.equal(await page.locator('#mbti').inputValue(),'ENFP');
+assert.equal(await page.locator('[name=scope_mbti]').inputValue(),'private');
+assert.equal(await page.locator('#marriage-questions-note').isVisible(),true);
+await page.locator('#intent').selectOption('找搭子');
+assert.equal(await page.locator('#marriage-questions-note').isHidden(),true);
+await page.locator('#intent').selectOption('认真结婚');
+await page.locator('summary').filter({hasText:'也通过星座'}).click();
+await page.locator('[data-suggest-type=constellation]').click();
+assert.deepEqual(await page.locator('[name=targetConstellations]:checked').evaluateAll(xs=>xs.map(x=>x.value)),['狮子座','射手座']);
+await page.locator('[data-suggest-type=mbti]').click();
+assert.deepEqual((await page.locator('[name=targetMbtis]:checked').evaluateAll(xs=>xs.map(x=>x.value))).sort(),['ENFJ','INFJ','INFP']);
+await page.locator('[name=scope_constellation]').selectOption('public');
+await page.locator('[name=consent]').check();await page.locator('[name=policyConsent]').check();
+await page.locator('#profile-form button[type=submit]').click();
+await page.locator('#publish-dialog[open]').waitFor();
+const preview=await page.locator('#publish-content').innerText();
+assert.ok(preview.includes('白羊座'));assert.ok(!preview.includes('ENFP'));assert.equal(saved,null);
+await page.locator('#publish-dialog button[value=publish]').click();
+await page.waitForURL(/#poster$/);
+assert.equal(saved.mbti,'ENFP');assert.equal(saved.visibility.mbti,'private');assert.equal(saved.constellation,'白羊座');
+assert.deepEqual(saved.targetConstellations,['狮子座','射手座']);
+await page.evaluate(()=>location.hash='profile');await page.locator('#profile-form').waitFor();
+assert.equal(await page.locator('#mbti').inputValue(),'ENFP');
+await page.locator('#mbti').selectOption('');assert.equal(await page.locator('#mbti').inputValue(),'');
+await page.evaluate(()=>location.hash='discover');await page.locator('#filter-form').waitFor();
+await page.locator('[name=constellation]').selectOption('狮子座');await page.locator('[name=mbti]').selectOption('INFJ');
+const filtered=page.waitForResponse(response=>{const u=new URL(response.url());return u.pathname==='/api/friends/discover'&&u.searchParams.get('constellation')==='狮子座'&&u.searchParams.get('mbti')==='INFJ';});
+await page.locator('#filter-form button[type=submit]').click();await filtered;
+await page.waitForFunction(()=>document.querySelector('#discover-results')?.textContent.includes('还没有找到'));
+assert.ok((await page.locator('#discover-results').innerText()).includes('虚构示例，不可申请认识'));
+assert.equal(await page.locator('#discover-results [data-detail]').count(),0);
+assert.equal(new URLSearchParams(discoverQuery).get('constellation'),'狮子座');assert.equal(new URLSearchParams(discoverQuery).get('mbti'),'INFJ');
+for(const width of [320,390,768,1440]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);}
+assert.deepEqual(errors,[]);
+await page.screenshot({path:path.join(__dirname,'../.review/friends-types-discover.png'),fullPage:true});
+console.log('PASS type preferences, explicit save, hidden MBTI preview, marriage questionnaire entry, discover filters and responsive layout');
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

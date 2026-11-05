@@ -140,6 +140,17 @@ const updateUserFields = {
 };
 // 改密码后让「其他设备」下线。保留 keepToken 这一条（当前会话），
 // 否则用户改完密码当场被踢出，而页面上只弹「密码已修改」，体验是「刚改完就登录失效」。
+// Revoke exactly the current device session and flush before acknowledging logout.
+const deleteUserToken = {
+  run(uid, token) {
+    if (!uid || !token) return 0;
+    const before = _M.tokens.length;
+    _M.tokens = _M.tokens.filter(t => !(t.user_id === uid && t.token === token));
+    const removed = before - _M.tokens.length;
+    if (removed) { _persist(); _flushStore(); }
+    return removed;
+  }
+};
 const deleteUserTokens = {
   run(uid, keepToken) {
     const before = _M.tokens.length;
@@ -1111,7 +1122,7 @@ module.exports = {
   _uidFromReq,
   // 数据访问对象
   normEmail, insertUser, getUserByEmail, getUserById, getUserByRefCode,
-  getUserPrivateById, updateUserFields, deleteUserTokens,
+  getUserPrivateById, updateUserFields, deleteUserTokens, deleteUserToken,
   getUserByGoogleSub, findOrCreateGoogleUser,
   insertToken, getToken,
   getUserOrders, insertOrder, insertReading, getReadingsByUser,
@@ -1138,3 +1149,4 @@ module.exports = {
   // 按次问事 credit
   questionCreditsRemaining, grantQuestionCredits, consumeQuestionCredit,
 };
+
