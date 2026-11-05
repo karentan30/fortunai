@@ -55,6 +55,7 @@ const {createPersonalReportsRouter}=require('./routes/friends-personal-reports')
 app.use('/api/friends/personal-reports',createPersonalReportsRouter({express,auth,store:reviewStore,billing,env:{FRIENDS_REPORTS_ENABLED:'false'}}));
 const {createFriendsQuestionsRouter}=require('./routes/friends-questions');
 app.use('/api/friends/questions',createFriendsQuestionsRouter({express,auth,store:reviewStore}));
+app.use('/api/friends/questionnaire',require('./routes/friends-questionnaire').createFriendsQuestionnaireRouter({express,auth,store:reviewStore}));
 const {createFriendsIntakeRouter}=require('./routes/friends-intake');
 app.use('/api/friends/intake',createFriendsIntakeRouter({express,auth,store:reviewStore}));
 const {createCompatibilityService}=require('./lib/friends-compatibility');
