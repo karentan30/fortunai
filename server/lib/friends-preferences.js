@@ -2,6 +2,32 @@
 const STEMS=[...'甲乙丙丁戊己庚辛壬癸'],ANIMALS=[...'鼠牛虎兔龙蛇马羊猴鸡狗猪'];
 const PAIRS=[[0,1],[2,11],[3,10],[4,9],[5,8],[6,7]],GROUPS=[[8,0,4],[11,3,7],[2,6,10],[5,9,1]];
 const fail=m=>{const e=Error(m);e.status=400;throw e;};
+
+const CONSTELLATIONS=['白羊座','金牛座','双子座','巨蟹座','狮子座','处女座','天秤座','天蝎座','射手座','摩羯座','水瓶座','双鱼座'];
+const MBTIS=['INTJ','INTP','ENTJ','ENTP','INFJ','INFP','ENFJ','ENFP','ISTJ','ISFJ','ESTJ','ESFJ','ISTP','ISFP','ESTP','ESFP'];
+const ELEMENT_GROUPS=[['白羊座','狮子座','射手座'],['金牛座','处女座','摩羯座'],['双子座','天秤座','水瓶座'],['巨蟹座','天蝎座','双鱼座']];
+function typeSuggestions({constellation='',mbti=''}={}){
+  return {constellations:(ELEMENT_GROUPS.find(g=>g.includes(constellation))||[]).filter(x=>x!==constellation),
+    mbtis:MBTIS.includes(mbti)?MBTIS.filter(x=>x!==mbti&&x.slice(1,3)===mbti.slice(1,3)):[],
+    basis:{constellations:'按传统星座元素同组提供认识方向，可自行修改；不是科学匹配结论。',mbtis:'按自填类型中间两个字母相同提供探索方向，可自行修改；不代表性格相同或关系适合。'},kind:'conversation_reference'};
+}
+function normalizeTypes(body,previous={}){
+  const out={};
+  for(const [key,valid] of [['constellation',CONSTELLATIONS],['mbti',MBTIS]]){
+    const raw=Object.hasOwn(body,key)?body[key]:(previous[key]||'');
+    if(typeof raw!=='string')fail('请从选项中选择星座或MBTI，也可暂不填写');
+    const value=key==='mbti'?raw.trim().toUpperCase():raw.trim();
+    if(value&&!valid.includes(value))fail('星座或MBTI选项无效');
+    out[key]=value;
+  }
+  for(const [key,valid] of [['targetConstellations',CONSTELLATIONS],['targetMbtis',MBTIS]]){
+    const raw=Object.hasOwn(body,key)?body[key]:(previous[key]||[]);
+    if(!Array.isArray(raw)||raw.length>valid.length+1||raw.some(x=>!valid.includes(x)&&x!=='不限'))fail('请选择有效的星座或MBTI认识方向');
+    out[key]=raw.includes('不限')?['不限']:[...new Set(raw)];
+  }
+  return out;
+}
+
 function recommend(chart={}){const index=STEMS.indexOf(chart.dayMaster),animal=ANIMALS.indexOf(chart.zodiac),mother=index<0?-1:(Math.floor(index/2)+4)%5;const pair=PAIRS.find(p=>p.includes(animal)),group=GROUPS.find(p=>p.includes(animal));return {stems:mother<0?[]:STEMS.slice(mother*2,mother*2+2),zodiacs:animal<0?[]:[...new Set([...pair,...group].filter(i=>i!==animal))].map(i=>ANIMALS[i]),basis:{stems:'按日主五行的“生我”关系提供两个认识方向；不是完整八字喜用神，也不代表最佳对象。',zodiacs:'按传统地支六合及三合取同组生肖作为文化认识话题；不表示两人已成三合局，不保证关系结果。'},kind:'cultural_reference'};}
 function normalizeAvailability(value){
   if(value===null||value===undefined)return null;
@@ -39,4 +65,4 @@ function findCommonSlots(a,b,{now=new Date(),days=14,durationMinutes=15}={}){
   const results=[];for(const r of runs){for(let t=r.start;t+durationMinutes*60000<=r.end;t+=durationMinutes*60000){const finish=t+durationMinutes*60000;results.push({start:new Date(t).toISOString(),end:new Date(finish).toISOString(),localLabel:{a:label(af,t,finish,a.timeZone),b:label(bf,t,finish,b.timeZone)}});if(results.length>=200)return results;}}
   return results;
 }
-module.exports={recommend,normalizeAvailability,findCommonSlots};
+module.exports={recommend,typeSuggestions,normalizeTypes,CONSTELLATIONS,MBTIS,normalizeAvailability,findCommonSlots};
