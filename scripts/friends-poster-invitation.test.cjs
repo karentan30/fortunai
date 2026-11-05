@@ -54,3 +54,24 @@ test('wanted types reach the poster only while "海报上显示我想认识的�
   // Other privacy filtering is unchanged either way.
   for (const out of [on, off]) { assert.equal(out.fields.income, undefined); assert.equal(out.fields.age, '29'); }
 });
+test('profile sheet: money only for 认真婚恋, 已核验 only from server verified data, own preview has no CTA', () => {
+  const lines = source.split('\n');
+  const pick = prefix => { const l = lines.find(x => x.trimStart().startsWith(prefix)); assert.ok(l, prefix); return l; };
+  const start = lines.findIndex(l => l.trimStart().startsWith('function profileSheetHTML('));
+  const end = lines.findIndex((l, i) => i > start && l === '  }');
+  const code = [pick('const SENSITIVE='), pick('const verifiedMark='), pick('const POSTER_ELEMENTS='), pick('function posterPurposes('), pick('const HOBBY_ICONS='), pick('function hobbyIcon('), ...lines.slice(start, end + 1)].join('\n');
+  const esc = v => String(v ?? '').replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';');
+  const context = vm.createContext({esc, fieldLabels:{age:'年龄',height:'身高 / cm',income:'年收入 / 万元人民币',assets:'个人净资产 / 万元人民币'}, fieldValue:(k, v) => String(v), shownValue:(k, v) => String(v), purposeText:() => ''});
+  vm.runInContext(code, context);
+  const card = {nickname:'测试', chart:{dayMaster:'丙'}, fields:{age:'28', height:'166', income:'100–300万'}, hobbies:['羽毛球']};
+  const friend = context.profileSheetHTML({...card, purposes:['friend']});
+  assert.doesNotMatch(friend, /年收入|100–300万/, 'income must stay off non-marriage profiles even when public');
+  assert.match(friend, /身高/);
+  const serious = context.profileSheetHTML({...card, purposes:['serious']});
+  assert.match(serious, /年收入/);
+  assert.doesNotMatch(serious, /已核验/, 'no verified data from the server means no 已核验');
+  assert.match(context.profileSheetHTML({...card, purposes:['serious'], verified:{income:true}}), /已核验/);
+  const own = context.profileSheetHTML({...card, purposes:['friend'], explanation:{forYou:['x']}}, true);
+  assert.doesNotMatch(own, /为什么推荐你们|apply-person/);
+  assert.match(own, /只在「认真婚恋」目的下展示/);
+});
