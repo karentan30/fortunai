@@ -1,0 +1,53 @@
+Windows PowerShell 手动连接阿里云香港服务器
+核对日期：2026-11-04。本文是用户在自己电脑上的操作指引；本轮仅只读检查本地部署文档与阿里云官方帮助，没有执行远程命令或修改服务器。
+
+已知旧记录：公网IP 47.242.80.65，曾使用root账号、SSH默认端口22；应用目录/opt/shenyuan，Caddy和PM2。这些来自仓库部署交接记录，不证明当前账号、端口、实例和认证方式仍相同。当前Codex环境此前连接被拒绝，不代表用户电脑一定无法连接，也不能把环境拒绝当作已经验证密码或密钥错误。
+
+三步最小操作
+
+1 在阿里云ECS控制台确认香港目标实例处于运行中，公网IP确为47.242.80.65，并确认当前Linux登录用户名、实际SSH端口及密码/密钥认证方式。若不确定，使用本人授权的Workbench/管理终端按阿里云控制台流程核对，不猜账号或反复试密码。Windows按Win+R，输入powershell后回车，在自己的PowerShell中运行：
+
+ssh -V
+
+若提示ssh不是命令，检查Windows‘可选功能’是否已安装OpenSSH客户端；无权限时由本机管理员安装，或使用阿里云控制台官方Workbench。无需向助手提供任何密码、私钥文件或云账号凭证。
+
+2 在同一个PowerShell窗口输入已确认的用户名和端口，先检查网络：
+
+$sshServer = '47.242.80.65'
+$sshUser = Read-Host '请输入控制台确认的Linux用户名'
+$sshPort = [int](Read-Host '请输入已确认的SSH端口，旧记录为22')
+Test-NetConnection -ComputerName $sshServer -Port $sshPort
+
+重点看TcpTestSucceeded；Ping失败不等于SSH端口不可用。若为False，先核实例IP/运行状态/实际端口、当前网络，以及安全组是否仅允许你当前公网IP访问该实际SSH端口。若需要调整，按阿里云控制台授权只开放当前管理员公网IPv4/32或受信任固定IP范围；不要对0.0.0.0/0或::/0开放SSH，不要关掉防火墙，不要批量放开端口。安全组不等于实例内部防火墙或SSH监听，二者需要在本人授权的控制台会话分别核对。
+
+3 若端口可连，按已确认的认证方式选一条连接：
+
+密码认证：
+ssh -p $sshPort "${sshUser}@${sshServer}"
+
+密钥认证（只在本人电脑选择已绑定此实例的私钥文件，不上传）：
+$sshKeyPath = Read-Host '请输入本机私钥文件完整路径'
+ssh -i $sshKeyPath -o IdentitiesOnly=yes -p $sshPort "${sshUser}@${sshServer}"
+
+第一次连接会询问主机密钥指纹。通过阿里云控制台或可信管理员获取当前实例的主机指纹，比对无误再输入yes。不要直接忽略指纹、关闭StrictHostKeyChecking，或在指纹变化时不经核对删除known_hosts。密码输入时不显示字符是正常现象；私钥口令与服务器登录密码也不是同一项。
+
+看到服务器欢迎文字和Linux命令提示符即完成登录。先停在这个界面，不必执行部署、覆盖文件或重启服务；后续部署应使用另行审阅的发布步骤。输入exit可退出SSH会话。
+
+常见错误分支
+• Connection timed out / TcpTestSucceeded=False：优先检查IP、实例运行状态、端口、来源IP、安全组及网络路径；它不是密码错误证据。
+• Connection refused：目标或中间设备拒绝了端口连接。核实际SSH监听端口、服务状态及防火墙拒绝规则；不要直接关防火墙。
+• Permission denied (publickey) / Permission denied (publickey,password)：通常已到认证阶段。核用户名、此实例绑定公钥、选择的本机私钥，以及是否允许该认证方式；别猜root一定可用。需要账号恢复时走本人阿里云控制台官方流程，避免无准备的重启或重置影响线上应用。
+• Host key verification failed / REMOTE HOST IDENTIFICATION HAS CHANGED：停止登录，通过可信控制台核对实例是否更换/重装、IP是否变化及当前指纹；未核实前不删缓存也不接受新指纹。
+• UNPROTECTED PRIVATE KEY FILE / bad permissions：按OpenSSH对本机私钥权限的要求限制到本人账户；不要把私钥粘到聊天、公开共享或在群里求修复。当前账户和文件ACL不同，不能盲目复制会删除全部访问权的权限命令。
+• 密码一直失败或账号不存在：停止反复尝试，避免触发锁定；用本人控制台确认或走正式恢复流程。
+• 想进一步诊断：可在自己电脑用ssh -vv -p $sshPort "${sshUser}@${sshServer}"查看阶段；分享时只提供脱敏后的最终错误行，不发完整调试日志、用户名、本机路径、密钥、公钥材料或云控制台凭证。
+
+给协作者的最少反馈：端口检测True/False，以及最后一行脱敏错误；若登录成功，只说‘已看到Linux命令提示符’即可。不要发送密码、私钥内容、私钥口令、验证码或AccessKey。
+
+官方来源（2026-11-04已核对）
+阿里云：使用OpenSSH/Xshell远程连接Linux实例
+https://help.aliyun.com/zh/ecs/user-guide/connect-to-a-linux-instance-by-using-an-ssh-key-pair
+阿里云：安全组应用指导和案例（最小端口和来源IP范围）
+https://help.aliyun.com/zh/ecs/user-guide/security-groups-for-different-use-cases
+阿里云：选择ECS远程连接方式
+https://help.aliyun.com/zh/ecs/user-guide/connect-to-instance
