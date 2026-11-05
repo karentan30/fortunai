@@ -311,6 +311,7 @@
   function fieldCaption(key,value){if(key==='assets'&&/^A\d/i.test(String(value)))return '个人资产标签';return ({income:'个人年收入 / 万元人民币',assets:'个人净资产 / 万元人民币'})[key]||fields[key]?.split(' / ')[0]||key;}
   function fieldValue(key,value){return String(value)+(key==='height'?' cm':key==='weight'?' kg':key==='age'?' 岁':'');}
   function numericField(key,value){return ['age','height','weight','income','assets'].includes(key)&&/\d/.test(String(value))&&!/暂不提供|暂无|未知|未填/.test(String(value));}
+  function orderedPosterFields(values,preferred=[]){const entries=Object.entries(values||{}),keys=[...new Set(['age','height','weight',...preferred,...entries.map(([key])=>key)])];return keys.map(key=>entries.find(([field])=>field===key)).filter(Boolean);}
   function carouselCanvas(canvas,p,index,{single=false}={}){
     const ctx=canvas.getContext('2d'),palette=posterPalette(),tall=canvas.height===1920,{bg,ink,soft,accent,line}=palette,max=tall?776:900,right=84+max,offset=tall?100:0,bottom=tall?1620:1360,sans='"Microsoft YaHei",sans-serif',serif='SimSun,serif';
     const txt=(value,x,y,size=26,color=ink,font=sans)=>{ctx.fillStyle=color;ctx.font=size+'px '+font;ctx.fillText(value,x,y);};
@@ -326,7 +327,7 @@
       txt(p?.nickname||'我的五行交友卡',84,320,49,ink,serif);paragraph([p?.city,p?.chart?.zodiac?'属'+p.chart.zodiac:''].filter(Boolean).join(' · '),84,369,23,520,2,31);
       ctx.beginPath();ctx.arc(750,340,90,0,Math.PI*2);ctx.fillStyle=accent;ctx.fill();txt(p?.chart?.dayMaster||'遇',704,372,87,ink,serif);
       ctx.font='35px '+serif;ctx.fillStyle=ink;ctx.fillText(fitText(ctx,'想认识 '+(stemNames(p?.targetStems)||'愿意聊聊的朋友'),max),84,505);paragraph('生肖参考：'+((p?.targetZodiacs||[]).join(' / ')||'由自己选择'),84,548,22,max,1);paragraph(caption,84,615,27,max,2,38);paragraph((p?.hobbies||[]).slice(0,4).join(' / '),84,740,29,max,1,40,ink);
-      const entries=Object.entries(p?.fields||{}),selected=[...highlights,...entries.filter(([key])=>!highlights.some(([active])=>active===key))];txt(entries.length?'本人愿意分享的资料 · 自报':'从五行话题开始认识新朋友',84,832,17,soft);if(entries.length)cards(selected,859,118);else paragraph('无需先注册，也无需先填写九项资料。',84,960,28,max,3);
+      const entries=Object.entries(p?.fields||{}),selected=orderedPosterFields(p?.fields,highlights.map(([key])=>key));txt(entries.length?'本人愿意分享的资料 · 自报':'从五行话题开始认识新朋友',84,832,17,soft);if(entries.length)cards(selected,859,118);else paragraph('无需先注册，也无需先填写九项资料。',84,960,28,max,3);
       txt('测测你的日主',84,1370,34,ink,serif);txt('生成自己的交友卡。',84,1422,30,ink,serif);if(tailQrEnabled()){paragraph(posterDestination(),84,1493,13,470,3,21);paintQr(ctx,posterDestination(),622,1325,224);}else{txt('Runae · 相遇有迹',84,1493,27,ink,serif);}txt('建议竖屏版式 · 当前导出 PNG，不是视频文件',84,1582,15,soft);
     }else if(!p&&index===0){
       txt('你是什么日主？',84,316+offset,65,ink,serif);paragraph('测测你的日主，看看想认识谁。',84,420+offset,40,max,3,57,ink);
@@ -338,7 +339,7 @@
     }else if(index===0){
       txt(fitText(ctx,p?.nickname||'我的五行交友卡',max-270),84,292+offset,44,ink,serif);paragraph([p?.city,p?.chart?.zodiac?'属'+p.chart.zodiac:''].filter(Boolean).join(' · '),84,348+offset,24,max-270,2,33);txt('日主 '+(p?.chart?.dayMaster||'未公开'),84,423+offset,48,ink,serif);ctx.strokeStyle=line;ctx.strokeRect(right-230,235+offset,230,230);if(!paintPosterPhoto(ctx,right-230,235+offset,230)){txt('个人照片',right-195,345+offset,30,soft);txt('可选上传',right-185,390+offset,23,soft);}
       ctx.font='38px '+serif;ctx.fillStyle=ink;ctx.fillText(fitText(ctx,'想认识 '+(stemNames(p?.targetStems)||'有共同话题的朋友'),max),84,554+offset);paragraph('生肖参考：'+((p?.targetZodiacs||[]).join(' / ')||'由自己选择'),84,612+offset,25,max,1);
-      const entries=Object.entries(p?.fields||{}),ordered=[...highlights,...entries.filter(([key])=>!highlights.some(([active])=>active===key))];txt('个人亮点 · 仅展示本人公开资料',84,675+offset,19,soft);if(ordered.length)cards(ordered,705+offset,118);else paragraph('更多关于我的事，留给认识以后。',84,780+offset,30,max,3);
+      const entries=Object.entries(p?.fields||{}),ordered=orderedPosterFields(p?.fields,highlights.map(([key])=>key));txt('个人亮点 · 仅展示本人公开资料',84,675+offset,19,soft);if(ordered.length)cards(ordered,705+offset,118);else paragraph('更多关于我的事，留给认识以后。',84,780+offset,30,max,3);
       txt('你是什么日主？',84,1165+offset,36,ink,serif);paragraph('测测自己的日主，生成你的交友卡。',84,1215+offset,24,max-230,2,34);paragraph('从了解自己，开始认识新朋友。',84,1290+offset,20,max-230,1,28);
       if(tailQrEnabled())paintQr(ctx,posterDestination(),right-185,1120+offset,185);else txt('Runae · 相遇有迹',84,1324+offset,20,ink,serif);
     }else{
@@ -415,7 +416,7 @@
       ctx.font='30px '+serif;ctx.fillStyle=ink;ctx.fillText(fitText(ctx,'想认识 '+target,900),84,622);text('生肖参考：'+zodiac,84,657,20,soft);ctx.font='22px '+sans;ctx.fillStyle=soft;drawText(ctx,invitation,84,696,900,26,2);
     }
     rule(733);text(state.posterMode==='dayMaster'?'MY ELEMENT CARD  /  我的五行认识卡':t===1?'THE HIGHLIGHTS  /  本人自报':t===2?'关于我，想让你知道这些。 · 本人自报':'关于我的一些亮点 · 本人自报',84,772,17,soft,t===1?'Georgia':sans);
-    const entries=Object.entries(p.fields),highlightKeys=state.highlightKeys||[],publicFields=[...highlightKeys.map(key=>entries.find(([field])=>field===key)).filter(Boolean),...entries.filter(([key])=>!highlightKeys.includes(key))];
+    const highlightKeys=state.highlightKeys||[],publicFields=orderedPosterFields(p.fields,highlightKeys);
     publicFields.slice(0,9).forEach(([k,v],i)=>{
       const x=84+(i%3)*305,y=815+Math.floor(i/3)*83;
       if(t===2||highlightKeys.includes(k))rounded(x-10,y-22,285,75,8,t===1?'#3b5643':t===2?'#e6d6a4':'#e8eddd');
