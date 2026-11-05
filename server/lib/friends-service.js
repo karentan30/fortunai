@@ -90,7 +90,7 @@ function createFriendsService(store,charts,options={}) {
       if(blocked(s,r.from,r.to))denied();
       if(action==='disconnect'){
         if(r.status!=='accepted')conflict('只有已连接的双方可以解除连接');
-        r.status='disconnected';r.updatedAt=new Date().toISOString();return {id:r.id,status:r.status};
+        r.status='disconnected';r.updatedAt=new Date().toISOString();for(const pair of s.compatibilityPairs||[]){if([pair.from,pair.to].some(x=>String(x)===String(r.from))&&[pair.from,pair.to].some(x=>String(x)===String(r.to))){pair.status='revoked';pair.authorizations={};pair.messages=[];pair.revision=(pair.revision||0)+1;pair.updatedAt=r.updatedAt;}}return {id:r.id,status:r.status};
       }
       if(r.status!=='pending')conflict('申请已经处理');
       if(action==='withdraw'&&r.from===uid)r.status='withdrawn';
@@ -105,7 +105,7 @@ function createFriendsService(store,charts,options={}) {
     reports(uid){return store.read().reports.filter(r=>r.by===uid).map(r=>({id:r.id,status:r.status||'open',createdAt:r.createdAt,updatedAt:r.updatedAt}));},
     feedback(uid,id,outcome){if(!['met','helpful','not_helpful','unsafe'].includes(outcome))bad('反馈选项无效');return store.transaction(s=>{normalize(s);const r=s.requests.find(r=>r.id===id&&[r.from,r.to].includes(uid)&&['accepted','disconnected'].includes(r.status));if(!r)denied();if(s.feedback.some(x=>x.by===uid&&x.requestId===id))conflict('已提交反馈');s.feedback.push({by:uid,requestId:id,outcome,createdAt:new Date().toISOString()});metric(s,'feedback_'+outcome);return {ok:true};});},
     event(event,attribution){if(!['poster_export','share_visit','profile_preview'].includes(event))bad('事件无效');return store.transaction(s=>{metric(s,event,attribution);return {ok:true};});},
-    remove(uid){return store.transaction(s=>{normalize(s);if(s.profiles.some(p=>p.userId===uid)){const mark=s.attributionMarks.find(x=>x.userId===uid);if(mark){mark.deletedAt=new Date().toISOString();mark.expiresAt=new Date(Date.now()+90*86400000).toISOString();}}s.profiles=s.profiles.filter(p=>p.userId!==uid);s.requests=s.requests.filter(r=>r.from!==uid&&r.to!==uid);/* Keep account-level blocks and moderation across profile recreation. */return {ok:true};});}
+    remove(uid){return store.transaction(s=>{normalize(s);if(s.profiles.some(p=>p.userId===uid)){const mark=s.attributionMarks.find(x=>x.userId===uid);if(mark){mark.deletedAt=new Date().toISOString();mark.expiresAt=new Date(Date.now()+90*86400000).toISOString();}}s.profiles=s.profiles.filter(p=>p.userId!==uid);s.requests=s.requests.filter(r=>r.from!==uid&&r.to!==uid);s.compatibilityPairs=(s.compatibilityPairs||[]).filter(p=>String(p.from)!==String(uid)&&String(p.to)!==String(uid));/* Keep account-level blocks and moderation across profile recreation. */return {ok:true};});}
   };
 }
 module.exports={createFriendsService,FIELDS};
