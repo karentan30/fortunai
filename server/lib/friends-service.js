@@ -59,10 +59,11 @@ function createFriendsService(store,charts) {
       const s=store.read(),self=needMine(s,uid);
       const all=s.profiles.filter(p=>p.userId!==uid&&active(s,p,uid)).map(p=>project(s,p,uid))
         .filter(p=>(!q.city||p.city===q.city)&&(!q.stem||p.chart.dayMaster===q.stem)&&(!q.zodiac||p.chart.zodiac===q.zodiac))
-        .map(p=>{const reasons=[];if(p.chart.dayMaster&&self.targetStems.includes(p.chart.dayMaster))reasons.push('符合你选择的日主方向');if(p.chart.zodiac&&self.targetZodiacs.includes(p.chart.zodiac))reasons.push('符合你选择的生肖方向');for(const hobby of p.hobbies.filter(h=>self.hobbies.includes(h)).slice(0,2))reasons.push('都喜欢'+hobby);if(p.intent===self.intent)reasons.push('认识意图相同');return {...p,reasons};})
-        .sort((a,b)=>b.reasons.length-a.reasons.length);
+        .map(p=>{const reasons=[];let directions=0;if(!self.targetStems.includes('不限')&&p.chart.dayMaster&&self.targetStems.includes(p.chart.dayMaster)){directions++;reasons.push('符合你选择的日主方向');}if(!self.targetZodiacs.includes('不限')&&p.chart.zodiac&&self.targetZodiacs.includes(p.chart.zodiac)){directions++;reasons.push('符合你选择的生肖方向');}const interests=p.hobbies.filter(h=>self.hobbies.includes(h));for(const hobby of interests.slice(0,2))reasons.push('都喜欢'+hobby);const intent=p.intent===self.intent;if(intent)reasons.push('认识意图相同');return {card:{...p,reasons},directions,interests:interests.length,intent:Number(intent)};})
+        .sort((a,b)=>b.directions-a.directions||b.interests-a.interests||b.intent-a.intent)
+        .map(item=>item.card);
       const offset=Math.max(0,Math.min(10000,Number(q.offset)||0));
-      return {profiles:all.slice(offset,offset+24),total:all.length,nextOffset:offset+24<all.length?offset+24:null};
+      return {profiles:all.slice(offset,offset+24),total:all.length,nextOffset:offset+24<all.length?offset+24:null,rankingBasis:'公开日主生肖偏好优先，完整双方合盘需另行授权'};
     },
     card(id,uid){const s=store.read();return project(s,s.profiles.find(p=>p.shareId===id),uid);},
     request(uid,shareId){return store.transaction(s=>{

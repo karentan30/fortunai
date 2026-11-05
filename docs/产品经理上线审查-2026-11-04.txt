@@ -1,0 +1,45 @@
+Runae 产品经理上线审查（2026-11-04，最终本地交付口径）
+
+结论：免费朋友探索和生辰关系指南的本地闭环已经具备；正式获客上线仍以真实部署、注册授权建档、隐私主体与运营值守验收为前提。详细双人AI报告、完整婚恋精准推荐与持续匹配会员尚未交付，不应收费或宣传已完成。未调用真实支付、不部署；旧核对文档的113等测试数属于历史检查点，不代表本轮最终全套计数。
+
+一、当前本地代码证据
+1 免费日主直接海报：assets/js/friends.js从chart结果进入daycard，三页轮播为个人亮点/想一起做的活动/CTA，照片本机处理；支持四平台建议PNG尺寸（朋友圈、小红书1080×1440；抖音、视频号1080×1920）。root报告直接生成、照片与尺寸浏览器复验PASS；这不是平台官方审核许可，PNG也不是MP4。二维码外站规则未核实，默认无QR尾页，朋友圈QR版仅审样。
+2 九项完整资料：年龄、身高、体重、学校、职业、行业、title、收入、资产；完整建档需有效回答但不强制公开，允许财务暂不提供。年龄来自签名chart，其余本人自报，不等于身份、学历或资产认证。初次获客应先注册和独立授权建档，避免用户以为海报自动入库。
+3 100虚构人设：docs/100人虚构资料样例.txt和100人样例营销使用要求.txt已交付，只可作样例/营销创作参考，不伪装真人、人库、真实申请或成功案例。
+4 私密问卷：10主题35题、独立页friends-questions.html，默认本人私密，可跳过、保存、读取、删除；服务/HTTP/真实双账号及加密SQLite重启测试PASS。recordId避免删除重建恢复旧授权。没有全人库自动读私密问卷匹配的隐含同意。
+5 免费关系指南：friends-compatibility服务/路由/页面已实现无既有账户接收者的邀请：本人填生辰授权→复制随机链接→对方注册、显式认领和独立授权→发起人核对自报昵称→双方指南。保留公开卡?target入口。API不返回任一方四柱、个人五行或原始生日城市；后台按双方四柱给四类关系文化提示，未知时辰标有限参考，不是AI完整合盘。不存在保证关系结果的总分。
+6 验收：compat独立12项测试PASS，含真实SQLite两Worker原子认领；新无目标邀请与旧公开卡入口两套真实隔离HTTP/Edge/加密SQLite流程PASS，包括注册、双方授权、第三人权限、撤回、问卷变化、重启和移动布局。完整suite由root最终统一运行，不将分项相加冒充最终统计。
+7 注册私密intake由frontend agent独立实现/验收：应区分匿名instant不存原始出生输入，与注册用户另行saveBirthConsent后加密保存原始出生资料。本人截图初版仅本机预览+手填，不宣称OCR或平台资料真实性。此项尚须以该agent最终测试和root集成为准，不因本文描述即视为全部完成。matchingConsent不替代具体pair双人授权。
+
+二、P0：放行真实免费获客前必须验收
+P0-01 生产部署与身份链路：正式HTTPS域名、cookie/CSRF、邀请准入开关、注册登录退出、跨账号访问拒绝、手机端海报下载和链接回流真实复验。验收应有部署版本/日志和本人测试账号证据；当前本地preview不等于已上线。
+P0-02 注册授权建档：先解释获得什么、保存什么；出生保存与推荐用途分别勾选，不默认公开九项，不借截图导入扩大授权；拒绝可跳过非必要功能。验收注册→私密草稿→自愿公开建档→真实人库/空态→对方申请或专属邀请，原始生日不进入海报/二维码/事件日志，跨账号读取拒绝。
+P0-03 真实主体与隐私运营：确认Runae运营主体、客服/举报/删除负责人、数据及备份地区和保留期限。Lumee公开文本出现Capstone IQ Group Limited（香港）仅是线索，本次未完成查册/商户归属验证，不能自动用作Runae已核验主体或启用收款。真实举报、删除、停用恢复、异常队列和备份还原需要指定值守人演练。
+P0-04 双人权限与清理：仅双方本次明确授权且接收者绑定确认才出指南；不公开个人盘，不向第三人读问卷原文；撤回即时收回。ops已具备purgeExpiredCompatibility入口，生产须实际安排维护任务并验证7天到期清理。若对方转发链接认领错误，发起人不确认并撤回重建，不允许自动改绑。
+P0-05 诚实供给：仅真实自愿公开用户进人库，最多3位真实候选、无候选明确空态；100样例绝不充数。不承诺全球找人、每周固定人数或脱单。未建档者先自愿建档，不强迫拉群/分享。
+
+三、P1：可后置，但宣传和收费不能越界
+P1-01 婚恋精确筛选尚不完整：九项尚未明确自述性别/希望认识的性别；认识目的、年龄范围、城市的完整筛选用途需自愿填写与权限设计，不得猜测。免费朋友探索可先开放，不能称完整婚恋精准推荐。隐藏四柱后台全人库匹配需另行用途授权，当前未实现。
+P1-02 匹配解释：日主/生肖方向只作文化偏好可改不限，不强制排除其他人；公开可见文化方向排序、共同兴趣与意图辅助，不拿隐藏字段排序造成推断，不用财富颜值总分。四柱指南不承诺数学匿名或关系结果。
+P1-03 商业化后置：详细双人报告须独立pairId SKU、双方授权、一方付费、失败返还和交付验收；不能挪用本人single_report199。持续匹配月/年费需明确服务内容和真实供给，当前没有足够交付证据不得售卖，价格未定。现有年卡benefitsVerified门应保持；免费基础指南不扣次。
+P1-04 AI、语音、活动：AI完整双人报告未接通；15分钟语音、居中地点、线下活动仍须分别验收真实服务，不把建议候选当预约成功。父母资料、多人大群和声音克隆后置，不能抢首轮注册获客主线。
+P1-05 平台投放：四平台导出是素材能力，二维码/外链/商业内容规则需运营核验，不给规避审核方案。渠道统计明确事件次数非UV，首次建档非账号注册；不采生日收入资产做归因。
+
+四、Lumee可复用与限制（已读真实源码）
+可复用pay-hub-client.js/hub_pay.py的真实fresh查单协议和项目隔离，不能复制密钥或把共享通道当新商户SKU已获准。可借鉴_capture_intake的同意门、_clone_consent的版本与主体记录、_consent_xborder的独立用途设计，但克隆授权不等于双人关系授权，best-effort审计不等于可靠记录。
+03-questions-content.md的一屏一问/可跳过可借鉴；_quiz实际上是短文本反思而非10维匹配API；_astro_match星座规则分不可混五行问卷总分；relationship-report-demo.html是展示样稿，不能冒充后台。Runae旧/hehun/stream直接接受双方生日、缺时默认0且失败回退72分，不可原样用于新双人授权服务。
+
+五、需要用户集中确认（不索取密钥）
+正式域名和部署授权通道；主体登记证据及与Runae/商户关系；客服/隐私/举报值守；实际数据、备份和日志地区及留存；首城首批真实招募来源；四平台官方账号和允许入口。付费双人内容、持续匹配服务与退款承诺及价格可后续另定，未确认前关闭。无需在聊天提供支付/模型密钥、服务器密码、身份证或真实用户完整生辰问卷。
+
+六、交付与放行顺序
+第一期注册获客与独立授权私密建档→海报与邀请回流→免费真实朋友探索及双方基础关系指南；完成生产受控验收后再放量。随后验证详细报告内容和履约，最后才考虑持续匹配订阅。基础指南、问卷和海报本地实现不证明AI、收费、真实运营或全部新intake需求已上线。
+
+七、本次证据路径/来源
+本地：docs/最终交付核对与继续条件-2026-11-04.txt；assets/js/friends.js；pages/friends-connect.html；server/lib/friends-service.js；server/routes/friends.js；server/lib/friends-chart.js；server/lib/friends-report-adapter.js；server/lib/friends-billing.js；server/lib/friends-billing-config.js；docs/上线准入核查-2026-11-04.txt。
+Lumee真实源码： https://github.com/karentan30/lumee/blob/main/server.py （本次读取blob d59e6ed19fc1b867266ea66d951d06be714de112；_quiz约24061行、_capture_intake约23907行、_consent_xborder约29902行、_clone_consent约29949行、_hub_pay_status约35849行）。
+Lumee公开法律文本仓库： https://github.com/karentan30/lumee/blob/main/terms.html 和 https://github.com/karentan30/lumee/blob/main/privacy.html 。只证明这些文件公示Capstone IQ Group Limited，不是公司查册或实时网页核验结果。
+Lumee设计资料： https://github.com/karentan30/lumee/blob/main/docs/mockups/03-questions-content.md 及 https://github.com/karentan30/lumee/blob/main/docs/relationship-report-demo.html 。区分设计样稿与实际接口。
+共享client： https://github.com/karentan30/lumee-docs-shared/blob/master/pay-hub-client.js 。
+Runae旧合盘： https://github.com/karentan30/fortunai/blob/feature/friends-web-2026-11-04/server/routes/divination.js （本次blob 9edb868b5da1169735f07b2d9430f73a123145cb，/hehun/stream约2485行起）。
+香港注册处官方查册说明： https://www.cr.gov.hk/en/electronic/e-servicesportal/e-search.htm 和 https://www.cr.gov.hk/en/electronic/e-servicesportal/faq/e-search.htm 。本次未完成Capstone公司的实际查册，未核定登记状态或商户归属。

@@ -1,0 +1,36 @@
+Runae 双人关系指南 PRD（2026-11-04，最终本地实现口径）
+
+一、主线与边界
+邀请TA一起测：本人注册→填写本人出生资料并明确本次授权→复制专属链接→对方注册、明确认领并独立填写授权→发起人核对对方自报昵称→双方查看免费基础关系指南。接收者在创建邀请时可以没有账户、公开卡或九项完整资料。保留从公开卡?target=shareId进入的兼容路径。
+基础指南后台参考双方四柱的确定性文化关系，输出成长背景、日常节奏、相处表达、未来安排四类关系提示与互动建议；不是只按日主判断。双方均看不到对方原始生辰、出生城市、四柱值、个人五行；API也不返回这些字段。不提供合适总分、脱单保证或互旺保证。关系描述仍可能提供间接线索，不承诺数学匿名。
+
+二、资料与授权
+公历/农历显式选择；中文年/月/日分栏；出生时间HH:mm或明确未知；城市离线匹配IANA时区，使用当地历史民用时间处理。合法日期、成年限制与DST冲突由friends-chart验证。年龄与出生信息均自报，不是身份或年龄认证。未知时辰不推算时柱，指南标partial和信息不足。
+授权version为compatibility-guide-v2，双方分别consent:true；旧版本授权不能自动恢复为新用途同意。存储仅保存本次计算所需派生盘摘要，不保存此次输入的birthday/time/city/instant。派生盘仍是私密敏感数据，使用现有加密存储。
+匿名即时测算不保存原始出生输入。另行注册私密建档如取得saveBirthConsent，可以在privateIntakes加密保存本人出生输入；这与双人本次授权严格分开。matchingConsent或建档同意不能自动授权某个pair，不能绕过独立授权。
+
+三、邀请与状态
+无目标创建：pending_recipient。随机32字节base64url链接凭据只在创建响应返回一次；数据库仅保存SHA256。链接不含生辰、姓名、地址、问卷。仅内存暂存，不写浏览器storage，刷新丢失且未发送时须撤回后重新创建。
+本人先授权，其他已认证用户才可明确consent认领。本人禁止认领；同一邀请只能原子绑定一位接收者，不得改绑，真实SQLite双Worker竞争测试只能一人成功。认领昵称为自报。
+认领后pending_recipient_confirmation；仅发起人确认昵称。双方分别授权后且接收者已确认才ready。公开卡定向模式目标已确定，无新增接收者确认步骤。
+任一方撤回revoked、婉拒declined或7天到期expired，清空双方派生授权摘要并立即撤销报告读取；重新授权不能复用旧同意。第三人获取pairId仍404。拉黑、停用、关联公开卡退出/删除使相应邀请不可用。
+
+四、私密问卷补充
+10主题35题默认本人私密、允许跳过。仅双方本次各自勾选后，报告可使用主题级中性摘要；不返回对方答案、自由文本、具体不能接受的选项或哪一方拒绝。授权快照绑定recordId/version/revision/updatedAt，修改或删除重建即要求重新授权；基础关系指南仍可单独查看。
+
+五、接口（挂载/api/friends/compatibility）
+GET /status；认证GET /pairs、POST /pairs {ownerNickname?,targetShareId?}；POST /claim {inviteToken,nickname,consent:true}；GET /pairs/:id；POST /pairs/:id/confirm-recipient {consent:true}；POST /pairs/:id/authorize {version,consent:true,input,includeQuestionnaire:false}；POST /pairs/:id/revoke、/decline；GET /pairs/:id/report。
+写请求沿用cookie认证、邀请准入、X-Runae-Friends:1、JSON和同源检查；不接受body冒充用户。页/pages/friends-compatibility.html默认无参数；?invite=一次性凭据用于新接收者；?pair=本次邀请用于已参与人；?target=公开shareId仅兼容入口。界面不要求用户理解或手填实现标识。
+
+六、留存、撤回与清理
+授权到期7天，读取时清理并有ops maintenance调用purgeExpiredCompatibility。撤回立即清除摘要。关联资料删除后不能读取；尚未触发清理的派生摘要可能保留至到期清理，不承诺跨集合同步物理删除。运营须安装并验证定期maintenance；本地代码不是调度已安装证据。
+
+七、收费与交付
+本版基础指南免费、不扣本人报告次数。完整版准备中，暂不收费，无可点击假购买。AI双人完整报告尚未接通和真实验收。
+未来付费详细双人报告须独立SKU绑定pairId、一方购买且双方有效授权；不能把single_report199冒充双人服务。持续匹配月费/年费须明确可交付的服务频次、范围、缺人处理和退款，验收后才能售卖；价格未确认，当前不新增付款或自动扣款。
+
+八、验收与交付证据
+friends-compatibility.test.cjs共12项PASS：双方授权、原始输入不落盘/不回传、未知时辰、撤回到期、权限、认领确认、真实SQLite并发、问卷版本与HTTP防护。
+scripts/friends-compatibility-invite.integration.cjs：真实隔离HTTP/注册cookie/加密SQLite/Edge浏览器；先创建后对方注册、显式认领、双方输入、昵称确认、隐藏个人盘、第三方拒绝、链接不可改绑、撤回与390px页面PASS。
+scripts/friends-compatibility-e2e.cjs：旧公开卡入口、真实账号、双方授权、问卷版本变化、加密SQLite重启、撤回及无浏览器storage PASS。
+这些均为本地隔离验证，不是正式生产上线、真实身份验证、付费模型接通或真实用户获客证据。

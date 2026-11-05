@@ -44,8 +44,9 @@ async function main(){
       console.log(JSON.stringify(deliveryReview(store.read(),{limit:args.limit===undefined?100:Number(args.limit),offset:args.offset===undefined?0:Number(args.offset)}),null,2));return;
     }
     if(action==='maintenance'){
-      const removed=store.transaction(state=>{const before=state.attributionMarks.length;purgeAttributionMarks(state);return before-state.attributionMarks.length;});
-      console.log(JSON.stringify({ok:true,expiredAttributionMarksRemoved:removed}));return;
+      const {purgeExpiredCompatibility}=require('../server/lib/friends-compatibility');
+      const counts=store.transaction(state=>{const before=state.attributionMarks.length,expiredBefore=(state.compatibilityPairs||[]).filter(pair=>pair.status==='expired').length;purgeAttributionMarks(state);purgeExpiredCompatibility(state);return {expiredAttributionMarksRemoved:before-state.attributionMarks.length,expiredCompatibilityAuthorizationsCleared:(state.compatibilityPairs||[]).filter(pair=>pair.status==='expired').length-expiredBefore};});
+      console.log(JSON.stringify({ok:true,...counts}));return;
     }
     if(action==='backup'){await store.backup(absolute(args.out,'备份目标'));console.log('加密备份已完成，并通过独立恢复读取验证。');return;}
     if(action==='migrate-json'){

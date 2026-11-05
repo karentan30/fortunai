@@ -89,6 +89,15 @@ function productionRouter(){
     bundle.use('/billing',createRateLimit({limit:60}),(req,res,next)=>config.mode==='public'?next():billingAuth(req,res,next),createBillingRouter({express,auth:billingAuth,service:billing}));
     const {createPersonalReportsRouter}=require('./friends-personal-reports');
     bundle.use('/personal-reports',createRateLimit({limit:20}),billingAuth,createPersonalReportsRouter({express,auth:billingAuth,store,billing}));
+    const {createFriendsQuestionsRouter}=require('./friends-questions');
+    bundle.use('/questions',createRateLimit({limit:60}),billingAuth,createFriendsQuestionsRouter({express,auth:billingAuth,store}));
+    const {createFriendsIntakeRouter}=require('./friends-intake');
+    bundle.use('/intake',createRateLimit({limit:40}),billingAuth,createFriendsIntakeRouter({express,auth:billingAuth,store}));
+    const {createCompatibilityService}=require('../lib/friends-compatibility');
+    const {createCompatibilityRouter}=require('./friends-compatibility');
+    const {createFriendsQuestionsService}=require('../lib/friends-questions');
+    const compatibility=createCompatibilityService({store,questionnaireService:createFriendsQuestionsService({store}),questionBank:require('../../assets/data/friends-relationship-questions.json')});
+    bundle.use('/compatibility',billingAuth,createCompatibilityRouter({express,auth:billingAuth,service:compatibility}));
     bundle.use(friends);return bundle;
   }catch(e){console.error('[friends] Storage not ready; feature disabled. Run protected preflight.');return createRouter({express,auth:authMiddleware,enabled:false,mode:'storage_error',onLogout});}
 }

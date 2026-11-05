@@ -53,6 +53,15 @@ const buckets=new Map();app.use('/api/friends',(req,res,next)=>{const k=req.ip,n
 app.use('/api/friends/billing',createBillingRouter({express,auth,service:billing}));
 const {createPersonalReportsRouter}=require('./routes/friends-personal-reports');
 app.use('/api/friends/personal-reports',createPersonalReportsRouter({express,auth,store:reviewStore,billing,env:{FRIENDS_REPORTS_ENABLED:'false'}}));
+const {createFriendsQuestionsRouter}=require('./routes/friends-questions');
+app.use('/api/friends/questions',createFriendsQuestionsRouter({express,auth,store:reviewStore}));
+const {createFriendsIntakeRouter}=require('./routes/friends-intake');
+app.use('/api/friends/intake',createFriendsIntakeRouter({express,auth,store:reviewStore}));
+const {createCompatibilityService}=require('./lib/friends-compatibility');
+const {createCompatibilityRouter}=require('./routes/friends-compatibility');
+const {createFriendsQuestionsService}=require('./lib/friends-questions');
+const compatibility=createCompatibilityService({store:reviewStore,questionnaireService:createFriendsQuestionsService({store:reviewStore}),questionBank:require('../assets/data/friends-relationship-questions.json')});
+app.use('/api/friends/compatibility',createCompatibilityRouter({express,auth,service:compatibility}));
 app.use('/api/friends',createRouter({express,auth,store:reviewStore,secret:fs.readFileSync(keyFile,'utf8'),adminToken:fs.readFileSync(reviewAdmin,'utf8'),onLogout(req,res){const token=cookie(req);if(token)sessions.delete(token);res.clearCookie('review_session',{path:'/',httpOnly:true,sameSite:'strict'});}}));
 app.get('/',(req,res)=>res.redirect('/pages/friends-connect.html'));
 app.use('/pages',express.static(path.join(root,'pages')));

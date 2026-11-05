@@ -16,7 +16,7 @@ async function fillBirthday(page){await page.locator('#birth-year').fill('1990')
 async function createPerson(page,slug){
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto(base+'/pages/friends-connect.html');await fillBirthday(page);await chooseBirthCity(page);await page.locator('[name=adult]').check();
-  await page.getByRole('button',{name:'免费查我的日主'}).click();await page.waitForURL(/#result$/);
+  await page.locator('#birth-form button[type=submit]').click();await page.waitForURL(/#daycard$/);await page.waitForSelector('#poster-canvas');await page.evaluate(()=>location.hash='result');
   await page.locator('.day-master').waitFor();assert.equal((await page.locator('.day-master').innerText()).trim(),'辛');
   assert.match(await page.locator('main').innerText(),/对方对我/);assert.match(await page.locator('main').innerText(),/我对对方/);
   await page.locator('#account-button').click();await page.locator('[data-auth-mode=register]').click();
@@ -25,7 +25,7 @@ async function createPerson(page,slug){
   await page.locator('#auth-form button[type=submit]').click();await page.locator('#auth-dialog').waitFor({state:'hidden'});
   await page.goto(base+'/pages/friends-connect.html#profile');
   // Calculation state intentionally stays in memory, so use result from the authenticated chart endpoint after a navigation.
-  if(await page.locator('#profile-form').count()===0){await page.goto(base+'/pages/friends-connect.html');await fillBirthday(page);await chooseBirthCity(page);await page.locator('[name=adult]').check();await page.getByRole('button',{name:'免费查我的日主'}).click();await page.locator('.day-master').waitFor();await page.locator('a[href="#profile"]').last().click();}
+  if(await page.locator('#profile-form').count()===0){await page.goto(base+'/pages/friends-connect.html');await fillBirthday(page);await chooseBirthCity(page);await page.locator('[name=adult]').check();await page.locator('#birth-form button[type=submit]').click();await page.locator('#poster-canvas').waitFor();await page.locator('a[href="#profile"]').last().click();}
   await page.locator('#profile-form').waitFor();
   await page.locator('#nickname').fill('测试样本'+slug);await page.locator('#city').fill('北京');await page.locator('#bio').fill('虚构测试样本：喜欢羽毛球，愿意分享入门经验。');
   const fields={height:'172',weight:'62',school:'示例大学（测试）',occupation:'工程师（测试）',industry:'软件（测试）',title:'开发人员（测试）',income:'20–30',assets:'100–300'};
@@ -50,6 +50,8 @@ async function createPerson(page,slug){
   assert.equal(await pc.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'mobile horizontal overflow');
   await pc.screenshot({path:path.join(root,'preview-mobile.png'),fullPage:true});
   const ap=await createPerson(pa,'alice'),bp=await createPerson(pb,'bob');
+  assert.equal(await pa.locator('#carousel-counter').innerText(),'1 / 2');
+  assert.equal(await pa.locator('.sample-export').count(),0);
   for(let theme=0;theme<3;theme++){
     if(!await pa.locator('#poster-adjustments').evaluate(el=>el.open))await pa.locator('#poster-adjustments > summary').click();
     await pa.locator('[data-theme="'+theme+'"]').click();const info=await pa.locator('#poster-canvas').evaluate(c=>({w:c.width,h:c.height,qr:typeof window.qrcode==='function'}));assert.deepEqual(info,{w:1080,h:1440,qr:true});
@@ -67,5 +69,5 @@ async function createPerson(page,slug){
   assert.equal((await (await a.request.get(base+'/api/friends/requests')).json()).requests[0].contact,undefined);
   // Shared-card URL resolves anonymously and never returns a private birthday.
   await pc.goto(base+'/pages/friends-connect.html?card='+ap.shareId);await pc.locator('#detail-dialog h2').waitFor();assert.match(await pc.locator('#detail-dialog').innerText(),/测试样本alice/);
-  assert.deepEqual(errors,[]);console.log('E2E PASS: birthday → account → nine fields → three 1080x1440 posters + QR → discovery → request → accept → disconnect → privacy.');
+  assert.deepEqual(errors,[]);console.log('E2E PASS: birthday → account → nine fields → three visual themes, two-page carousel → discovery → request → accept → disconnect → privacy.');
 }finally{if(browser)await browser.close();server.kill();}})().catch(e=>{console.error(e);process.exitCode=1;});

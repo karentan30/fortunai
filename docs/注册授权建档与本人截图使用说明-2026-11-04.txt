@@ -1,0 +1,34 @@
+注册授权建档与本人截图参考：一期使用及联调说明
+日期：2026-11-04；依据frontend实现者提供的当前后端契约。
+状态：私密intake后端已写，独立手机UI和正式入口挂载待联调，不能当已上线能力宣传；本说明不替代正式隐私政策。
+
+给用户的流程说明
+1 先注册或登录自己的账号，选择手动填写，或在自己的设备上预览本人其他软件的资料截图作为填写参考。
+2 只用本人有权使用的资料。截图含旁人的姓名、头像、聊天、住址或联系方式时，请先裁剪或遮挡；一期不收旁人聊天与联系方式。图片只在本机预览，不上传服务器，没有自动OCR，也不会自动验证原平台资料。
+3 手工填入并复核本人的生辰、九项资料、简介、兴趣。九项为年龄、身高、体重、学校、职业、行业、title、年收入、个人净资产。公开范围须在后续生成/发布交友卡时单独确认，私密草稿不是公开档案。
+4 单独决定是否保存本人生辰；拒绝时不保存birthInput。再单独决定是否允许后台匹配；允许匹配要求先明确同意保存生辰，不代表具体对象的关系分析已获授权，也不允许别人查看出生原值。
+5 保存私密草稿后继续制作分享卡或进入发现/邀请。另有匿名即时查日主路径：不用注册或同意保存也可查，不能混称所有人生日都会进入平台人库。
+6 可删除自己的私密intake。目前没有intake导出API，不能以旧profile导出代替新intake导出承诺。删除该草稿不自动等于删除已经创建的公开档案、订单、报告或必要审计记录，各业务须按真实删除功能处理。
+
+当前接口与字段契约（供联调，不作为用户必须理解的技术说明）
+本人GET /api/friends/intake/：返回 {intake:null|record}。
+本人PUT /api/friends/intake/：
+{
+ birthInput:null|{
+  birthday:'YYYY-MM-DD', calendar:'solar'|'lunar', cityId,
+  time:null|'HH:mm', leapMonth:boolean, disambiguation?:'earlier'|'later'|'reject'
+ },
+ draft:{nickname?,city?,intent?,fields?:{age,height,weight,school,occupation,industry,title,income,assets},hobbies?:[],bio?},
+ saveBirthConsent:boolean,
+ matchingConsent:boolean,
+ consentVersion:'private-intake-2026-11-04-v1',
+ purpose:'private_profile_and_optional_matching',
+ expectedRevision:0
+}
+首次保存expectedRevision=0，编辑应携带当前revision，冲突让本人复核再提交，不能无提示覆盖。GET记录含recordId/revision/updatedAt/visibility:'private'及允许保存字段。birthInput先由calculate校验成年与合法日期，仅保存规范化允许字段，不保存任意额外原文。saveBirthConsent=false时birthInput=null；matchingConsent=true必须已允许保存。本人DELETE /api/friends/intake/只删自己的intake。
+
+生辰处理范围变更说明
+此前‘不保存原生日’仅适用于匿名即时计算以及现有profile chart不含raw输入的范围。新的一期注册建档允许用户主动保存本人私密birthInput到privateIntakes，前提是单独明确同意。生产应使用已配置的加密SQLite及加密备份覆盖新集合，不能在JSON开发存储下也宣称加密。匹配用途matchingConsent、公开个人卡字段、具体pair分析分别控制，不打包冒充彼此授权。
+
+上线前验收
+检查手填与图片本机预览、账号隔离、revision冲突、拒绝存生辰、拒绝匹配、撤回/删除、生日成年校验及规范字段过滤。网络面板确认没有原截图上传；静态目录和公开API不得出现privateIntakes或原生日。确认生产加密持久化确实覆盖新集合、备份与删除处理真实可行，更新隐私说明。完整AI报告和收费保持后阶段，不能靠这张建档表声称自动OCR、完整合盘或持续匹配服务已可售。
