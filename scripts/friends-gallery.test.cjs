@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict'),path=require('node:path');
 const {chromium}=require(path.join(__dirname,'../.review/node_modules/playwright-core'));
 const BASE=process.env.FRIENDS_REVIEW_URL||'http://127.0.0.1:4188';
-const EDGE=process.env.EDGE_BINARY||'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe';
+const EDGE=process.env.EDGE_BINARY||(process.platform==='win32'?'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe':undefined);
 function fixture(){return {id:'fixture',shareId:'fixture-not-published',nickname:'测试示例',city:'北京',intent:'交朋友',listed:false,bio:'本人填写的公开介绍，喜欢摄影与羽毛球。',chart:{dayMaster:'戊',zodiac:'羊',age:32,ageAsOf:'2026-11-04'},fields:{age:32,height:'168',weight:'52',school:'示例学校',occupation:'工程师',industry:'技术',title:'工程师',income:'PRIVATE-INCOME',assets:'PRIVATE-ASSETS'},visibility:{age:'public',height:'public',weight:'public',school:'public',occupation:'public',industry:'public',title:'public',income:'private',assets:'private',dayMaster:'public',zodiac:'public'},hobbies:['羽毛球','摄影'],targetStems:['丙','丁'],targetZodiacs:['马','兔','猪']};}
 async function captureImages(page){return page.locator('#gallery-items img').evaluateAll(images=>Promise.all(images.map(async image=>{const blob=await(await fetch(image.src)).blob();return new Promise(resolve=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.readAsDataURL(blob);});})));}
 (async()=>{const browser=await chromium.launch({executablePath:EDGE,headless:true,args:['--no-sandbox','--disable-gpu']});try{
