@@ -22,8 +22,9 @@ window.openFriendsSamplePreview = function(sample) {
         text('我是'+sample.stem+sample.element,72,285+off,64);
         text(fit(sample.tags.join(' · '),650,28),72,350+off,28);
         text(fit('想认识 '+sample.target,650,31),72,418+off,31);
-        const names=['年龄','身高','体重','学校 / 学历','职业','行业','职务','个人年收入','个人净资产'];
-        sample.facts.forEach((value,i)=>{const x=72+i%3*316,y=495+off+Math.floor(i/3)*155;ctx.fillStyle='#e6ebdb';ctx.fillRect(x,y,296,145);text(names[i],x+18,y+40,21,'#65735f');text(fit(value,260,30),x+18,y+103,30);});
+        const names=['年龄','身高','体重','学校 / 学历','职业 / 职务','年收入','个人净资产','家庭资产'];
+        const facts=[...sample.facts.slice(0,5),String(sample.facts[7]).replace(/\s*[/／]\s*年\s*$/,''),sample.facts[8],'暂不提供'];
+        facts.forEach((value,i)=>{const x=72+i%3*316,y=495+off+Math.floor(i/3)*155;ctx.fillStyle='#e6ebdb';ctx.fillRect(x,y,296,145);text(names[i],x+18,y+40,21,'#65735f');text(fit(value,260,30),x+18,y+103,30);});
         wrap(sample.bio,72,1010+off,32,930,2);
         ctx.fillStyle='#e2e8d7';ctx.fillRect(72,h-300,936,195);
         text('你是什么日主？想认识怎样的朋友？',96,h-244,37);
