@@ -7,7 +7,7 @@ const {chromium}=require('../.review/node_modules/playwright-core');
  await page.route('**/api/friends/cities?*',r=>r.fulfill({json:{cities:[{id:'test',label:'测试城市'}]}}));
  await page.route('**/api/friends/chart',r=>r.fulfill({json:{chart:{dayMaster:'戊',element:'土',zodiac:'羊',recommendations:{stems:['丙','丁'],zodiacs:['马']}},credential:'fixture'}}));
  await page.goto((process.env.FRIENDS_REVIEW_URL||'http://127.0.0.1:4188')+'/pages/friends-connect.html');
- for(const width of [320,390,768,1440]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.equal(await page.locator('.hero-title-line').count(),3);}
+ for(const width of [320,390,768,1440]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);assert.equal(await page.locator('.hero-title-line').count(),2);}
  await page.setViewportSize({width:390,height:844});
  assert.equal(await page.locator('.sample-export').count(),0);
  await page.locator('#start-free-reading').click();assert.equal(await page.locator('#birth-year').evaluate(el=>el===document.activeElement),true);
@@ -44,6 +44,20 @@ const {chromium}=require('../.review/node_modules/playwright-core');
  await page.evaluate(()=>location.hash='discover');
  assert.equal(new URL(page.url()).searchParams.get('card'),'inviter-fixture');
  await page.locator('.invitation-return button').click();await page.waitForSelector('#apply-person');
+ const BASE_FOR_TEST=process.env.FRIENDS_REVIEW_URL||'http://127.0.0.1:4188';
+
+ // A saved public profile shares itself, while the incoming inviter remains accessible.
+ const own={shareId:'own-fixture',nickname:'本人测试',city:'北京',intent:'交朋友',listed:true,fields:{age:29,height:'180',weight:'75',school:'本人填写学校',occupation:'工程师',income:'50',assets:'A8.2',familyAssets:'PRIVATE-FAMILY'},visibility:{age:'public',height:'public',weight:'public',school:'public',occupation:'public',income:'public',assets:'public',familyAssets:'private',dayMaster:'public',zodiac:'private'},chart:{dayMaster:'戊',zodiac:'羊'},hobbies:['羽毛球','陶艺'],targetStems:['丁'],targetZodiacs:[]};
+ await page.route('**/api/auth/me',r=>r.fulfill({json:{user:{id:'new-fixture',email:'new@example.invalid'}}}));
+ await page.route('**/api/friends/me',r=>r.fulfill({json:{profile:own}}));
+ await page.route('**/api/friends/discover?*',r=>r.fulfill({json:{profiles:[{shareId:'inviter-fixture',nickname:'邀请人样例',city:'北京',intent:'交朋友',fields:{},chart:{dayMaster:'丁'},hobbies:['羽毛球']}]}}));
+ await page.goto((process.env.FRIENDS_REVIEW_URL||'http://127.0.0.1:4188')+'/pages/friends-connect.html?card=inviter-fixture#poster');
+ await page.waitForSelector('#poster-canvas');await page.locator('#poster-adjustments summary').click();
+ const personalLink=await page.locator('#poster-link-content .link-box').innerText();assert.equal(new URL(personalLink).searchParams.get('card'),'own-fixture');assert.equal(personalLink.includes('PRIVATE'),false);
+ await page.locator('.poster-next a[href="#discover"]').click();await page.locator('[data-detail="inviter-fixture"]').click();
+ const pairLink=await page.locator('#invite-pair-report').getAttribute('href');assert.equal(new URL(pairLink,BASE_FOR_TEST).searchParams.get('target'),'inviter-fixture');
+ await page.locator('#invite-pair-report').click();await page.waitForURL(/friends-compatibility.html\?target=inviter-fixture/);
+
  for(const route of ['friends-report-sample.html','friends-design-review.html']){
   await page.goto((process.env.FRIENDS_REVIEW_URL||'http://127.0.0.1:4188')+'/pages/'+route);
   for(const width of [320,390]){await page.setViewportSize({width,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,route+' at '+width);}
