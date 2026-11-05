@@ -12,7 +12,7 @@ const {chromium}=require('../.review/node_modules/playwright-core');
  assert.equal(await page.locator('.sample-export').count(),0);
  await page.locator('#start-free-reading').click();assert.equal(await page.locator('#birth-year').evaluate(el=>el===document.activeElement),true);
  await page.locator('#birth-year').fill('1991');await page.locator('#birth-month').selectOption('8');await page.locator('#birth-day').selectOption('28');await page.locator('#birth-city-search').fill('测试');await page.locator('.city-result').click();await page.locator('[name=adult]').check();await page.locator('#birth-form button[type=submit]').click();
- await page.waitForURL(/#daycard$/);await page.waitForSelector('#poster-canvas');assert.ok((await page.locator('#poster-invite-summary').innerText()).includes('不会把你加入人库'));
+ await page.waitForURL(/#daycard$/);await page.waitForSelector('#poster-canvas');assert.ok((await page.locator('#poster-invite-summary').innerText()).includes('不会公开你的卡片'));
  const photo=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=c.height=32;const ctx=c.getContext('2d');ctx.fillStyle='#ff0000';ctx.fillRect(0,0,32,32);return c.toDataURL('image/png').split(',')[1];});
  await page.locator('#poster-photo').setInputFiles({name:'synthetic-test.png',mimeType:'image/png',buffer:Buffer.from(photo,'base64')});
  await page.waitForFunction(()=>document.querySelector('#poster-photo-status').textContent.includes('照片已放入'));

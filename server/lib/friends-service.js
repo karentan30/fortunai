@@ -111,7 +111,7 @@ function createFriendsService(store,charts,options={}) {
     return SP.buildSeriousPage({row:SP.rowOf(s,p.userId),profile:p,self,allows:scopeAllows(s,p,viewer),fieldVisible:visibleTo(s,p,viewer),member:!self&&isMember(s,viewer,clock()),
       ownerRecord:questionnaireOf(s,p.userId),viewerRecord:self?null:questionnaireOf(s,viewer),viewerRow:self?null:SP.rowOf(s,viewer)});
   }
-  const needMine=(s,uid)=>{const p=mine(s,uid);if(isDisabled(s,uid))denied();if(!p||!p.listed)bad('请先完善个人资料并同意加入人库');return p;};
+  const needMine=(s,uid)=>{const p=mine(s,uid);if(isDisabled(s,uid))denied();if(!p||!p.listed)bad('请先完善个人资料并公开你的卡片');return p;};
   return {
     me(uid){const p=mine(store.read(),uid);return p?structuredClone({...M.migrateProfile(p),verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true).map(k=>[k,true])),recommendations:profileRecommendations(p)}):null;},
     save(uid,b) {

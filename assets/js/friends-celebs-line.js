@@ -25,7 +25,7 @@
     for(const p of all)if(list.length<3&&!list.includes(p))list.push(p);
     if(!list.length)return;
     const sv=t.stem+EL[STEMS.indexOf(t.stem)];
-    t2.after.insertAdjacentHTML('afterend',`<p class="celeb-line">和你同是${sv}的明星：${list.map(p=>`<a href="/pages/friends-celebs/${encodeURIComponent(p.slug)}.html">${esc(p.name)}</a>`).join('、')}<a class="celeb-more" href="/pages/friends-celebs.html#stem-${ID[t.stem]}">看全部</a></p>`);
+    t2.after.insertAdjacentHTML('afterend',`<p class="celeb-line"><span class="celeb-names">和你同是${sv}的明星：${list.map(p=>`<a href="/pages/friends-celebs/${encodeURIComponent(p.slug)}.html">${esc(p.name)}</a>`).join('、')}</span><a class="celeb-more" href="/pages/friends-celebs.html#stem-${ID[t.stem]}">看全部 →</a></p>`);
   }
   let queued=false;
   new MutationObserver(()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;run();});}).observe(main,{childList:true,subtree:true});

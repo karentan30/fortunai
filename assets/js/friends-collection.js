@@ -43,7 +43,7 @@
     const stats=cats.map(c=>`<a class="xc-stat" href="#xc-${c.key}"><span>${c.label}</span><b>${c.litCount}<small>/${c.total}</small></b></a>`).join('');
     const sections=cats.map(c=>{
       const missing=c.cells.filter(x=>!x.lit).map(x=>x.name);
-      const hint=!c.litCount?'认识第一位朋友，就亮起第一格':missing.length?'还差'+missing.slice(0,4).map(n=>`<span class="xc-nw">${esc(n)}</span>`).join('、')+(missing.length>4?`<span class="xc-nw"> 等 ${missing.length} 种</span>`:''):'全部点亮';
+      const hint=!c.litCount?'认识第一位朋友，就亮起第一格':missing.length>3?`还差 ${missing.length} 种，点格子看看`:missing.length?'还差'+missing.map(n=>`<span class="xc-nw">${esc(n)}</span>`).join('、'):'全部点亮';
       const cells=c.cells.map((x,i)=>{const t=x.element?EL[x.element]:BRAND;
         return `<button type="button" class="xc-cell${x.lit?' is-lit':''}" data-cat="${c.key}" data-i="${i}" style="--c:${t[0]};--cs:${t[1]}" aria-label="${esc(x.name)}${x.lit?'，已认识 '+x.count+' 位':'，还没认识'}"><span class="xc-cell-name">${esc(cellText(c.key,x))}</span>${x.lit?`<span class="xc-cell-n">${x.count}位</span>`:''}</button>`;}).join('');
       return `<section class="xc-block" id="xc-${c.key}"><div class="xc-block-head"><h2>${c.label}</h2><span class="xc-count"><b>${c.litCount}</b>/${c.total}</span></div>
@@ -51,7 +51,7 @@
         <div class="xc-grid" style="--cols:${COLS[c.key]}">${cells}</div><p class="xc-hint">${hint}</p></section>`;
     }).join('');
     shell(`<header class="xc-head" style="--c:${tone[0]};--cs:${tone[1]}">
-        <div class="xc-me"><span class="xc-me-stem">${esc(data.owner?.dayMasterName||'')}</span><div><h1>${esc(data.owner?.nickname||'')}的相生图鉴</h1><p>认识一位，点亮一格。只算互相接受认识的朋友。</p></div></div>
+        <div class="xc-me"><span class="xc-me-stem">${esc(data.owner?.dayMasterName||'')}</span><div><h1>${esc(data.owner?.nickname||'')}的相生图鉴</h1><p>认识一位，点亮一格。只算互相接受认识的朋友。</p><p class="xc-legend"><span class="xc-legend-lit" aria-hidden="true"></span>亮的格子 = 你认识的朋友是这一类（不算你自己）<span class="xc-legend-off" aria-hidden="true"></span>暗的 = 还没认识</p></div></div>
         <p class="xc-headline">${esc(dm.headline)}</p>
         <div class="xc-stats">${stats}</div></header>
       ${sections}

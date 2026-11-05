@@ -42,7 +42,7 @@
     const types=[c.mbti,c.constellation,c.zodiac&&'属'+c.zodiac].filter(Boolean);
     const action=c.sample?`<p class="onb-sample-label">${esc(c.label)}</p>`:`<button type="button" class="primary onb-meet" data-index="${i}">想认识TA</button>`;
     return `<article class="onb-card${c.sample?' is-sample':''}" data-element="${tone}" role="group" aria-roledescription="卡片" aria-label="第${i+1}张，共${total}张">
-      ${c.sample?'<span class="onb-badge">虚构示例</span>':''}
+      ${c.sample?'<span class="onb-badge">虚构示例</span>':'<span class="onb-badge is-real">真实用户</span>'}
       <div class="onb-card-head"><div class="onb-glyph">${esc(c.dayMaster)}<small>${esc(c.element)}</small></div>
         <div class="onb-card-meta">${rel?`<p class="onb-rel">${rel==='同类'?'和你同属'+esc(c.element):esc(rel==='生你'?c.element+'生你':'你生'+c.element)}</p>`:''}
         <p class="onb-facts">${facts.map(f=>'<span>'+esc(f)+'</span>').join('<i aria-hidden="true"> · </i>')||'资料未公开'}</p></div></div>
@@ -81,7 +81,7 @@
     box.innerHTML=cards.map((c,i)=>cardHTML(c,i,cards.length)).join('');
     const count=document.getElementById('onb-count'),items=[...box.children];
     const current=()=>Math.round(box.scrollLeft/Math.max(1,items[0].offsetWidth+12));
-    const update=()=>{const n=Math.min(items.length-1,current());count.textContent=(n+1)+' / '+items.length+(data.real<cards.length?' · 含虚构示例':'');document.querySelector('.onb-prev').disabled=n<=0;document.querySelector('.onb-next').disabled=n>=items.length-1;};
+    const update=()=>{const n=Math.min(items.length-1,current());count.textContent=(n+1)+' / '+items.length;document.querySelector('.onb-prev').disabled=n<=0;document.querySelector('.onb-next').disabled=n>=items.length-1;};
     const go=d=>{const n=Math.max(0,Math.min(items.length-1,current()+d));box.scrollTo({left:items[n].offsetLeft-items[0].offsetLeft,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});markSwipe();};
     const markSwipe=()=>{if(!swiped){swiped=true;b.event('deck_swipe');}};
     let t;box.addEventListener('scroll',()=>{clearTimeout(t);t=setTimeout(()=>{update();if(box.scrollLeft>8)markSwipe();},80);},{passive:true});
@@ -117,7 +117,7 @@
       s.guestProfileDraft={ownerId:s.user?.id||null,data:{city:p.city||'',purposes:p.purpose?[p.purpose]:[],fields:{},visibility:{},hobbies:[],listed:true,contactConsent:false}};
     }
     if(location.hash==='#profile')b.showProfile();else location.hash='profile';
-    b.toast('补全你的卡片并加入人库，就能向TA申请认识。');
+    b.toast('补全并公开你的卡片，就能向TA申请认识。');
   }
 
   async function openPending(){

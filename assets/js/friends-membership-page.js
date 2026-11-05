@@ -26,7 +26,8 @@
   }
   function renderBuy(){
     const s=st.status,box=$('#xp-buy-body');
-    if(!s?.open){box.innerHTML='<p class="xp-closed">暂未开放购买</p><p class="xp-muted">开放后会在这里购买。免费功能照常可用。</p>';return;}
+    if(!s?.open||!s.channels?.length||!s.products?.length){document.body.classList.add('xp-sales-closed');box.innerHTML='<div class="xp-closed-box" role="status"><p class="xp-closed">暂未开放购买</p><p class="xp-muted">会员即将开放，现在不能付款，也不会扣费。免费功能都能照常用。</p><a class="secondary xp-closed-back" href="/pages/friends-connect.html#discover">先去找朋友</a></div>';return;}
+    document.body.classList.remove('xp-sales-closed');
     if(!st.channel||!s.channels.includes(st.channel))st.channel=s.channels[0];
     box.innerHTML=`<div class="xp-skus" role="radiogroup" aria-label="选择会员时长">${s.products.map(p=>`<label class="xp-sku${st.sku===p.sku?' is-on':''}"><input type="radio" name="xp-sku" value="${esc(p.sku)}"${st.sku===p.sku?' checked':''}><span>${p.accessMonths>=12?'年会员':'月会员'}</span><b>${yuan(p.amountMinor)} 元</b><small>${p.accessMonths>=12?'约 16.6 元/月':'按月购买'}</small></label>`).join('')}</div>
       <div class="xp-channels" role="radiogroup" aria-label="付款方式">${s.channels.map(c=>`<label class="xp-ch${st.channel===c?' is-on':''}"><input type="radio" name="xp-ch" value="${c}"${st.channel===c?' checked':''}>${CH[c]||c}</label>`).join('')}</div>

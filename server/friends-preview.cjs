@@ -35,7 +35,7 @@ app.use('/api/friends/billing/callback',createBillingCallbackRouter({express,ser
 // 相亲页照片(≤5MB)和语音按 base64 JSON 上传；只给这一组路由放宽体积上限。
 app.use('/api/friends/serious',express.json({limit:'8mb'}));
 app.use(express.json({limit:'64kb'}));
-app.get('/api/friends-preview/status',(req,res)=>res.json({localReview:true,message:'本地试用环境，账号和人库与线上隔离。请勿填写真实敏感资料。'}));
+app.get('/api/friends-preview/status',(req,res)=>res.json({localReview:true,message:'本地试用环境，账号和资料与线上隔离。请勿填写真实敏感资料。'}));
 for(const action of ['login','register'])app.post('/api/auth/'+action,(req,res)=>{
   if(req.get('Sec-Fetch-Site')==='cross-site')return res.sendStatus(403);
   const email=String(req.body.email||'').toLowerCase().trim(),password=String(req.body.password||'');
