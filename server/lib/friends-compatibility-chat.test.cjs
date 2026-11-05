@@ -82,3 +82,18 @@ test('chat endpoints enforce auth CSRF and server sender identity',async()=>{
   const result=await(await fetch(url,{headers:{'X-Test-User':'b'}})).json();assert.equal(result.messages[0].mine,false);
  }finally{await new Promise(resolve=>server.close(resolve));}
 });
+
+test('chat persists across encrypted SQLite reopen without plaintext message in storage',async()=>{
+ const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto'),{createSqliteFriendsStore}=require('./friends-sqlite');
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'runae-chat-')),file=path.join(dir,'state.sqlite'),key=crypto.randomBytes(32).toString('hex');
+ let store=createSqliteFriendsStore(file,{key});
+ try{
+  const f=fixture(store),p=await f.ready(),text='private-chat-'+crypto.randomUUID();
+  f.service.sendMessage('a',p.id,{text,clientMessageId:'persistent_msg_01'});store.close();store=null;
+  assert.equal(fs.readFileSync(file).includes(Buffer.from(text)),false);
+  store=createSqliteFriendsStore(file,{key,create:false});
+  const service=createCompatibilityService({store,clock:()=>f.now()});
+  assert.equal(service.messages('b',p.id).messages[0].text,text);
+  service.revoke('b',p.id);assert.deepEqual(store.read().compatibilityPairs[0].messages,[]);
+ }finally{store?.close();if(path.resolve(dir).startsWith(path.resolve(os.tmpdir())+path.sep)&&path.basename(dir).startsWith('runae-chat-'))fs.rmSync(dir,{recursive:true,force:true});}
+});
