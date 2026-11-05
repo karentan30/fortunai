@@ -66,7 +66,7 @@ test('profile sheet: money only for 认真婚恋, 已核验 only from server ver
   const card = {nickname:'测试', chart:{dayMaster:'丙'}, fields:{age:'28', height:'166', income:'100–300万'}, hobbies:['羽毛球']};
   const friend = context.profileSheetHTML({...card, purposes:['friend']});
   assert.doesNotMatch(friend, /年收入|100–300万/, 'income must stay off non-marriage profiles even when public');
-  assert.match(friend, /身高/);
+  assert.match(friend, /166cm/);
   const serious = context.profileSheetHTML({...card, purposes:['serious']});
   assert.match(serious, /年收入/);
   assert.doesNotMatch(serious, /已核验/, 'no verified data from the server means no 已核验');
