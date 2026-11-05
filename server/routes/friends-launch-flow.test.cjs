@@ -36,7 +36,7 @@ test('real registration -> chart -> private/public profiles -> QR destination ->
    inbox=await call('/api/friends/requests',{cookie:b.cookie});assert.equal(inbox.body.requests[0].contact,undefined);
    assert.equal((await call('/api/friends/logout',{cookie:a.cookie,body:{}})).status,200);assert.equal((await call('/api/auth/me',{cookie:a.cookie})).status,401);
    const login=await call('/api/auth/login',{body:{email:'alice@example.test',password:'Local-only-password-2026'}});assert.equal(login.status,200);assert.equal((await call('/api/friends/me',{cookie:login.cookie})).body.profile.shareId,share);
-   assert.equal((await call('/api/friends/profile',{cookie:login.cookie,method:'DELETE'})).status,200);assert.equal((await call('/api/friends/card/'+share,{cookie:b.cookie})).status,404);
+   assert.equal((await call('/api/friends/profile',{cookie:login.cookie,method:'DELETE',body:{}})).status,200);assert.equal((await call('/api/friends/card/'+share,{cookie:b.cookie})).status,404);
    accounts._flushStore();const disk=JSON.parse(fs.readFileSync(process.env.DATA_FILE,'utf8'));assert.equal(disk.users.length,2);
    assert.equal(fs.readFileSync(path.join(dir,'friends.sqlite')).includes(Buffer.from(birthday)),false);
  }finally{await new Promise(resolve=>server.close(resolve));accounts._flushStore();store.close();if(originalData===undefined)delete process.env.DATA_FILE;else process.env.DATA_FILE=originalData;fs.rmSync(dir,{recursive:true,force:true});}
