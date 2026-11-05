@@ -5,7 +5,7 @@ const DEFAULT_LIMITS=Object.freeze({free:{discover:5,request:3},member:{discover
 function createFriendsQuotas({enabled=false,clock=()=>Date.now(),limits=DEFAULT_LIMITS}={}){
  for(const tier of ['free','member'])for(const action of ['discover','request'])if(!Number.isInteger(limits[tier]?.[action])||limits[tier][action]<1||limits[tier][action]>1000)throw Error('交友额度配置无效');
  const day=()=>new Date(clock()+8*3600000).toISOString().slice(0,10);
- const member=(s,uid)=>(s.billingOrders||[]).some(o=>o.userId===uid&&o.status==='paid'&&Number.isFinite(Date.parse(o.paidAt))&&Date.parse(o.paidAt)<=clock()&&Number.isFinite(Date.parse(o.accessUntil))&&Date.parse(o.accessUntil)>clock());
+ const member=(s,uid)=>(s.billingOrders||[]).some(o=>o.userId===uid&&o.matchingMembership===true&&o.benefitsVerified===true&&o.status==='paid'&&Number.isFinite(Date.parse(o.paidAt))&&Date.parse(o.paidAt)<=clock()&&Number.isFinite(Date.parse(o.accessUntil))&&Date.parse(o.accessUntil)>clock());
  const limit=(s,uid,action)=>limits[member(s,uid)?'member':'free'][action];
  function record(s,uid){
   if(s.dailyQuotas===undefined)s.dailyQuotas=[];
