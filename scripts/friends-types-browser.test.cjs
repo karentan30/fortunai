@@ -28,6 +28,7 @@ assert.equal(await page.locator('#marriage-questions-note').isVisible(),true);
 await page.locator('[name=exp_min_age]').fill('24');await page.locator('[name=exp_max_age]').fill('35');await page.locator('[name=exp_level_age]').selectOption('must');
 await page.locator('[name=exp_values_city]').fill('北京，上海');await page.locator('[name=exp_level_city]').selectOption('prefer');
 await page.locator('summary').filter({hasText:'是否用于私密筛选'}).click();await page.locator('[name=match_income]').check();
+assert.ok((await page.locator('#field_assets option').allTextContents()).includes('A8 · 1000–2000万'));await page.locator('#field_assets').selectOption('1000–2000万');await page.locator('[name=exp_min_familyAssets]').selectOption('1000');
 await page.locator('summary').filter({hasText:'也通过星座'}).click();
 await page.locator('[data-suggest-type=constellation]').click();
 assert.deepEqual(await page.locator('[name=targetConstellations]:checked').evaluateAll(xs=>xs.map(x=>x.value)),['狮子座','射手座']);
@@ -45,7 +46,7 @@ assert.equal(saved.mbti,'ENFP');assert.equal(saved.visibility.mbti,'private');as
 assert.deepEqual(saved.targetConstellations,['狮子座','射手座']);
 assert.deepEqual(saved.purposes,['buddy','serious']);
 assert.deepEqual(saved.expectations.age,{level:'must',min:24,max:35});assert.deepEqual(saved.expectations.city,{level:'prefer',values:['北京','上海']});
-assert.equal(saved.matchingConsent.income,true);assert.equal(saved.matchingConsent.assets,false);assert.equal(saved.visibility.income,'private');
+assert.equal(saved.matchingConsent.income,true);assert.equal(saved.fields.assets,'1000–2000万');assert.equal(saved.expectations.familyAssets.min,1000);assert.equal(saved.matchingConsent.assets,false);assert.equal(saved.visibility.income,'private');
 await page.evaluate(()=>location.hash='profile');await page.locator('#profile-form').waitFor();
 assert.equal(await page.locator('#mbti').inputValue(),'ENFP');
 await page.locator('#mbti').selectOption('');assert.equal(await page.locator('#mbti').inputValue(),'');
