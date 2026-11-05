@@ -32,6 +32,7 @@ const RATE_LIMIT_EXEMPT_PREFIXES = [
   // 名单里**。写成不带尾斜杠才正确：既匹配 '/api/pay' 自身，也匹配 '/api/pay/xxx'。
   // 这是 rate-limit-scope.test.js 写完后立刻抓到的（见该文件第一条用例）。
   '/api/pay',              // 微信/支付宝/中台的 notify + query + create 全在钱路上
+  '/api/friends/billing/membership/notify', // 相生会员 微信/支付宝回调（验签+幂等），限流会导致付了钱不开通
   '/api/orders',           // 订单查询（付款页会轮询）
   '/api/success',          // 付款成功落地页
   '/api/health',           // 健康检查

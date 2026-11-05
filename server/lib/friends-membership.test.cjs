@@ -17,25 +17,18 @@ test('pilot products hidden and unsellable by default; benefits must be verified
  await assert.rejects(f.checkout('friends_month_v1'),{status:400});
  const g=fixture({benefitsVerified:false});await assert.rejects(g.checkout('friends_year_v1'),{status:400});
 });
-test('annual membership grants only two in current month, never 24, repeated paid and reads do not duplicate',async()=>{
+test('membership carries no pair-report credits while 双人详细报告 is not delivered; tier follows the access window',async()=>{
  const f=fixture(),o=await f.checkout('friends_year_v1');f.notify(o.id);f.notify(o.id);
- assert.equal(f.billing.balance('a').units.pair_report,2);assert.equal(f.billing.balance('a').units.report,0);
- assert.equal(f.quota().tier,'member');
- const reservation=f.billing.reserve('a','pair_report',1,'first_report_01');assert.equal(f.billing.balance('a').units.pair_report,1);
- f.setNow(Date.parse('2026-02-28T12:00:00Z'));assert.equal(f.billing.balance('a').units.pair_report,2);
- f.billing.settle('a',reservation.id,'release');assert.equal(f.billing.balance('a').units.pair_report,2);
- assert.equal(f.billing.balance('a').units.pair_report,2);
- assert.equal(f.store.read().creditLedger.filter(e=>e.type==='monthly_grant').length,2);
- f.setNow(Date.parse('2026-05-31T12:00:00Z'));assert.equal(f.billing.balance('a').units.pair_report,2);
- assert.equal(f.store.read().creditLedger.filter(e=>e.type==='monthly_grant').length,3);
- f.setNow(Date.parse('2027-01-31T12:00:00Z'));assert.equal(f.billing.balance('a').units.pair_report,0);assert.equal(f.quota().tier,'free');
+ assert.deepEqual(f.billing.balance('a').units,{report:0,pair_report:0});assert.equal(f.quota().tier,'member');
+ assert.throws(()=>f.billing.reserve('a','pair_report',1,'first_report_01'),{status:402});
+ f.setNow(Date.parse('2026-05-31T12:00:00Z'));assert.equal(f.billing.balance('a').units.pair_report,0);assert.equal(f.quota().tier,'member');
+ assert.equal(f.store.read().creditLedger.filter(e=>e.type==='monthly_grant').length,0);
+ f.setNow(Date.parse('2027-01-31T12:00:00Z'));assert.equal(f.quota().tier,'free');
 });
-test('refund revokes membership and in-flight credits without resurrection',async()=>{
- const f=fixture(),o=await f.checkout('friends_month_v1');f.notify(o.id);
- const r=f.billing.reserve('a','pair_report',1,'pending_report_01');f.notify(o.id,'refunded');
- assert.equal(f.billing.balance('a').units.pair_report,0);assert.equal(f.quota().tier,'free');
- assert.throws(()=>f.billing.settle('a',r.id,'commit'),{status:409});
- f.billing.settle('a',r.id,'release');assert.equal(f.billing.balance('a').units.pair_report,0);
+test('refund revokes membership without resurrection',async()=>{
+ const f=fixture(),o=await f.checkout('friends_month_v1');f.notify(o.id);assert.equal(f.quota().tier,'member');
+ f.notify(o.id,'refunded');assert.equal(f.quota().tier,'free');assert.throws(()=>f.notify(o.id),{status:409});assert.equal(f.quota().tier,'free');
+ assert.equal(f.billing.balance('a').units.pair_report,0);
 });
 test('single pair report and legacy personal/year credits cannot grant matching privileges or cross-spend',async()=>{
  const f=fixture();
