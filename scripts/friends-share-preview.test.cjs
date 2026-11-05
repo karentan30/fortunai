@@ -19,13 +19,13 @@ const {chromium}=require('../.review/node_modules/playwright-core');
  assert.deepEqual(await page.locator('#poster-canvas').evaluate(c=>Array.from(c.getContext('2d').getImageData(869,350,1,1).data)),[255,0,0,255]);
  for(const platform of ['wechat','xiaohongshu','douyin','channels']){
   await page.locator('#poster-platform').selectOption(platform);await page.locator('#poster-confirm').check();await page.locator('#generate-gallery').click();
-  await page.waitForFunction(()=>document.querySelectorAll('#gallery-items img').length===2&&[...document.querySelectorAll('#gallery-items img')].every(i=>i.complete&&i.naturalWidth));
-  assert.deepEqual(await page.locator('#gallery-items img').evaluateAll(imgs=>imgs.map(i=>[i.naturalWidth,i.naturalHeight])),Array(2).fill([1080,['douyin','channels'].includes(platform)?1920:1440]));
+  await page.waitForFunction(()=>document.querySelectorAll('#gallery-items img').length===1&&[...document.querySelectorAll('#gallery-items img')].every(i=>i.complete&&i.naturalWidth));
+  assert.deepEqual(await page.locator('#gallery-items img').evaluateAll(imgs=>imgs.map(i=>[i.naturalWidth,i.naturalHeight])),Array(1).fill([1080,['douyin','channels'].includes(platform)?1920:1440]));
   await page.locator('#gallery-close').click();
  }
  await page.locator('#remove-poster-photo').click();assert.equal(await page.locator('#poster-confirm').isChecked(),false);
  await page.screenshot({path:path.join(__dirname,'../.review/share-preview-mobile.png'),fullPage:true});
  await page.goto((process.env.FRIENDS_REVIEW_URL||'http://127.0.0.1:4188')+'/pages/friends-profile-library.html');assert.equal(await page.locator('article').count(),100);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
  await page.screenshot({path:path.join(__dirname,'../.review/profile-library-top.png')});
- assert.deepEqual(errors,[]);console.log('PASS: responsive heading; removed sample preview button; direct birth-to-poster; local photo pixels; real 2-page x 4-platform PNGs; remove photo resets consent; 100-profile document.');
+ assert.deepEqual(errors,[]);console.log('PASS: responsive heading; removed sample preview button; direct birth-to-poster; local photo pixels; real 1-page x 4-platform PNGs; remove photo resets consent; 100-profile document.');
 }finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
