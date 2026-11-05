@@ -1,5 +1,5 @@
 'use strict';
-// 认真婚恋十方向问卷：一次一个方向，服务端逐方向保存，可续填；跳过/待讨论都是正常答案。
+// 认真结婚十方向问卷：一次一个方向，服务端逐方向保存，可续填；跳过/待讨论都是正常答案。
 (()=>{
  const $=s=>document.querySelector(s);
  const API='/api/friends/questionnaire';

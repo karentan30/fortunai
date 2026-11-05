@@ -1,6 +1,6 @@
 'use strict';
 const {createFriendsQuestionnaireService}=require('../lib/friends-questionnaire');
-// 认真婚恋十方向问卷 API（挂载在 /api/friends/questionnaire）。全部需要登录，答案仅本人可见。
+// 认真结婚十方向问卷 API（挂载在 /api/friends/questionnaire）。全部需要登录，答案仅本人可见。
 function createFriendsQuestionnaireRouter({express,auth,store,service=createFriendsQuestionnaireService({store})}={}){
  const router=express.Router();
  router.use(auth,(req,res,next)=>{res.set('Cache-Control','no-store');if(req.user?.id===undefined||req.user.id===null)return res.status(401).json({error:'请先登录'});next();});

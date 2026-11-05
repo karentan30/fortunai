@@ -42,7 +42,7 @@ test('purposes gate: platonic purposes bridge, romantic purposes do not; multi-s
   assert.deepEqual(new Set(ids(s.discover('a'))),new Set([friend.shareId,multi.shareId]));
   assert.deepEqual(ids(s.discover('d')),[]);
   assert.deepEqual(multi.purposes,['serious','buddy']);
-  assert.equal(multi.intent,'认真婚恋');
+  assert.equal(multi.intent,'认真结婚');
   for(const bad of [[],['x'],['buddy','friend','dating','serious','buddy']])assert.throws(()=>s.save('a',base({purposes:bad})));
   // Purpose expectation as 必须 narrows beyond the gate.
   s.save('a',base({purposes:['buddy','friend'],expectations:{purpose:{level:'must',values:['buddy']}}}));
@@ -137,7 +137,7 @@ test('per-purpose ranking: 搭子 favours shared hobbies, 婚恋 favours 优先 
   viewer(['buddy']);assert.deepEqual(ids(s.discover('v')),[hobbies.shareId,prefer.shareId]);
   for(const p of ['friend','dating','serious']){viewer([p]);assert.deepEqual(ids(s.discover('v')),[prefer.shareId,hobbies.shareId],p);}
   viewer(['serious']);alignment={hobbies:1,prefer:0};
-  assert.deepEqual(ids(s.discover('v')),[hobbies.shareId,prefer.shareId],'alignment hook affects 认真婚恋');
+  assert.deepEqual(ids(s.discover('v')),[hobbies.shareId,prefer.shareId],'alignment hook affects 认真结婚');
   viewer(['friend']);assert.deepEqual(ids(s.discover('v')),[prefer.shareId,hobbies.shareId],'alignment ignored for other purposes');
   const out=s.discover('v');assert.ok(out.profiles.every(p=>p.score===undefined&&p.directions===undefined&&!('alignment' in p)));
   assert.notDeepEqual(M.WEIGHTS.buddy,M.WEIGHTS.serious);

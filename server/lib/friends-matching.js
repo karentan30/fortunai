@@ -6,9 +6,9 @@ const fail=m=>{const e=Error(m);e.status=400;throw e;};
 
 // Four meeting purposes. Keys are stored; labels are display text.
 const PURPOSES=['buddy','friend','dating','serious'];
-const PURPOSE_LABELS={buddy:'找搭子',friend:'交朋友·闺蜜',dating:'约会',serious:'认真婚恋'};
+const PURPOSE_LABELS={buddy:'找搭子',friend:'交朋友·闺蜜',dating:'享受恋爱',serious:'认真结婚'};
 // Legacy single-value intent (stored before 2026-11-06) → purpose key. Legacy profiles keep working without a rewrite.
-const LEGACY_INTENT={'找搭子':'buddy','交朋友':'friend','找闺蜜':'friend','交朋友·闺蜜':'friend','Dating':'dating','约会':'dating','认真恋爱':'serious','认真结婚':'serious','认真婚恋':'serious'};
+const LEGACY_INTENT={'找搭子':'buddy','交朋友':'friend','找闺蜜':'friend','交朋友·闺蜜':'friend','Dating':'dating','约会':'dating','认真恋爱':'serious','认真结婚':'serious','认真婚恋':'serious','享受恋爱':'dating'};
 // Platonic purposes may meet each other; romantic purposes only meet the same purpose (serious users do not get casual dating).
 const BRIDGES=[['buddy','friend']];
 const LEVELS=['must','prefer','any'];
@@ -28,7 +28,7 @@ const LABELS={age:'年龄',height:'身高',education:'学历',school:'学校',oc
 
 // Per-purpose ranking weights. prefer = my 优先 hits on them; mutual = their 优先 hits on me (internal only, never explained);
 // hobby = shared hobbies (capped); element = five-element relation; samePurpose = exact same purpose; alignment = external
-// questionnaire alignment in [0,1] (认真婚恋 only, supplied by the questionnaire service).
+// questionnaire alignment in [0,1] (认真结婚 only, supplied by the questionnaire service).
 const WEIGHTS={
   buddy:{prefer:3,mutual:1,hobby:2,hobbyCap:4,element:0.5,samePurpose:0.5,alignment:0},
   friend:{prefer:4,mutual:1.5,hobby:1,hobbyCap:3,element:1,samePurpose:0.5,alignment:0},
@@ -180,7 +180,7 @@ function rankScore({purpose,mine,theirs,interests,relation,samePurpose,alignment
 
 // Adapter for friends-questionnaire pairAlignment().signals (present only when both users opted in).
 // close dimension = 1, talk = 0, essential difference = -0.5; averaged over compared dimensions, clamped 0..1.
-// null when nothing comparable. Used only as a hidden ranking signal for 认真婚恋; never returned or explained.
+// null when nothing comparable. Used only as a hidden ranking signal for 认真结婚; never returned or explained.
 function alignmentFromSignals(signals){const known=(Array.isArray(signals)?signals:[]).filter(d=>d&&(d.signal==='close'||d.signal==='talk'));if(!known.length)return null;const v=known.reduce((sum,d)=>sum+(d.signal==='close'?1:0)-(d.essentialDifference?0.5:0),0)/known.length;return Math.max(0,Math.min(1,v));}
 
 // Ready-made options.alignmentScore for createFriendsService (wired in routes/friends.js). Serious purpose only; fails soft.

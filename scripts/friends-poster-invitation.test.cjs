@@ -54,7 +54,7 @@ test('wanted types reach the poster only while "海报上显示我想认识的�
   // Other privacy filtering is unchanged either way.
   for (const out of [on, off]) { assert.equal(out.fields.income, undefined); assert.equal(out.fields.age, '29'); }
 });
-test('profile sheet: money only for 认真婚恋, 已核验 only from server verified data, own preview has no CTA', () => {
+test('profile sheet: money only for 认真结婚, 已核验 only from server verified data, own preview has no CTA', () => {
   const lines = source.split('\n');
   const pick = prefix => { const l = lines.find(x => x.trimStart().startsWith(prefix)); assert.ok(l, prefix); return l; };
   const start = lines.findIndex(l => l.trimStart().startsWith('function profileSheetHTML('));
@@ -73,5 +73,5 @@ test('profile sheet: money only for 认真婚恋, 已核验 only from server ver
   assert.match(context.profileSheetHTML({...card, purposes:['serious'], verified:{income:true}}), /已核验/);
   const own = context.profileSheetHTML({...card, purposes:['friend'], explanation:{forYou:['x']}}, true);
   assert.doesNotMatch(own, /为什么推荐你们|apply-person/);
-  assert.match(own, /只在「认真婚恋」目的下展示/);
+  assert.match(own, /只在「认真结婚」目的下展示/);
 });

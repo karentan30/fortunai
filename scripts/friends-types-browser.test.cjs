@@ -18,7 +18,7 @@ assert.equal(await page.locator('#constellation').inputValue(),'白羊座');
 assert.equal(await page.locator('#mbti').inputValue(),'ENFP');
 assert.equal(await page.locator('[name=scope_mbti]').inputValue(),'private');
 assert.equal(await page.locator('#marriage-questions-note').isVisible(),true);
-// Legacy intent 认真结婚 migrates to the 认真婚恋 checkbox; purposes are multi-select.
+// Legacy intent 认真结婚 migrates to the 认真结婚 checkbox; purposes are multi-select.
 assert.deepEqual(await page.locator('[name=purposes]:checked').evaluateAll(xs=>xs.map(x=>x.value)),['serious']);
 await page.locator('[name=purposes][value=serious]').uncheck();await page.locator('[name=purposes][value=buddy]').check();
 assert.equal(await page.locator('#marriage-questions-note').isHidden(),true);

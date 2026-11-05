@@ -12,7 +12,7 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   const router=express.Router();
   const charts=enabled?createChartService(secret):null;
   const service=enabled?createFriendsService(store,charts,{...quotaOptions,funnel,
-    // Hidden 认真婚恋 ranking signal from the marriage questionnaire (both users must have opted in). Never exposed.
+    // Hidden 认真结婚 ranking signal from the marriage questionnaire (both users must have opted in). Never exposed.
     alignmentScore:require('../lib/friends-matching').questionnaireAlignmentScore}):null;
   router.use((req,res,next)=>{
     res.set('Cache-Control','no-store').set('Referrer-Policy','no-referrer').set('X-Content-Type-Options','nosniff');
