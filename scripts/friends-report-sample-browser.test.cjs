@@ -6,7 +6,7 @@ const {chromium}=require('../.review/node_modules/playwright-core');
  page.on('pageerror',e=>errors.push(e.message));page.on('request',r=>requests.push(r.url()));
  await page.goto((process.env.FRIENDS_REVIEW_URL||'http://127.0.0.1:4188')+'/pages/friends-report-sample.html');
  const body=await page.locator('body').innerText();
- assert.ok(body.includes('你们的两个合，'));for(const text of ['午未相合','卯戌相合','申亥相害','酉戌相害','匿名演示','没有完成喜用判断'])assert.ok(body.includes(text),text);
+ assert.equal((await page.locator('h1').innerText()).replace(/\s+/g,''),'双人八字关系分析');for(const text of ['午未相合','卯戌相合','申亥相害','酉戌相害','匿名演示','没有完成喜用判断'])assert.ok(body.includes(text),text);
  assert.equal(/1991|1995|06:00|15:45|榆树|徐州/.test(body),false);
  assert.equal(await page.locator('a.primary').getAttribute('href'),'/pages/friends-compatibility.html');
  for(const width of [320,390,768,1440]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'overflow '+width);}
