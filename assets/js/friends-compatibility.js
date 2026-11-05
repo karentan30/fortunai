@@ -38,7 +38,7 @@
   for(const message of messages){if(chatIds.has(message.id))continue;chatIds.add(message.id);const node=el('article',undefined,'chat-message'+(message.mine?' mine':''));node.dataset.messageId=message.id;node.append(el('p',message.text));const date=new Date(message.createdAt),stamp=Number.isNaN(date.getTime())?'':date.toLocaleString('zh-CN',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});node.append(el('small',(message.mine?'你':'对方')+(stamp?' · '+stamp:'')));area.append(node);}
   if(atEnd)area.scrollTop=area.scrollHeight;
  }
- async function checkChatAccount(sequence,pairId,accountId,signal){
+ async function checkChatAccount(sequence,pairId,accountId,signal=AbortSignal.timeout(15000)){
   const actual=await api('/api/auth/me',{privateRequest:true,signal});
   if(!chatValid(sequence,pairId,accountId))return false;
   if(String(actual.user?.id)!==accountId){clearPrivate();$('#compat-auth').hidden=false;$('#account-state').textContent='账号已变化，请刷新账号后继续。';return false;}return true;
@@ -50,7 +50,7 @@
  }
  async function pollChat(){
   if(!user||current?.status!=='ready'||document.hidden||chatBusy||chatRounds>=120)return;
-  const sequence=chatSequence,pairId=current.id,accountId=String(user.id),controller=new AbortController();chatAbort=controller;chatBusy=true;chatRounds++;
+  const sequence=chatSequence,pairId=current.id,accountId=String(user.id),controller=new AbortController();chatAbort=controller;chatBusy=true;chatRounds++;const deadline=setTimeout(()=>controller.abort(),15000);
   try{
    if(!await checkChatAccount(sequence,pairId,accountId,controller.signal))return;
    for(let page=0;page<4;page++){
@@ -63,7 +63,7 @@
     if(!v.hasMore)break;
    }
   }catch(error){chatFailure(error,sequence,pairId,accountId);}
-  finally{if(chatValid(sequence,pairId,accountId)){chatBusy=false;chatAbort=null;if(!document.hidden&&chatRounds<120)chatTimer=setTimeout(pollChat,5000);else if(chatRounds>=120)$('#chat-status').textContent='已暂停自动刷新，点击刷新消息继续。';}}
+  finally{clearTimeout(deadline);if(chatValid(sequence,pairId,accountId)){chatBusy=false;chatAbort=null;if(!document.hidden&&chatRounds<120)chatTimer=setTimeout(pollChat,5000);else if(chatRounds>=120)$('#chat-status').textContent='已暂停自动刷新，点击刷新消息继续。';}}
  }
  function startChat(){if(current?.status!=='ready'||!user)return;$('#pair-chat').hidden=false;chatRounds=0;pollChat();}
  $('#chat-refresh').addEventListener('click',()=>{if(current?.status!=='ready')return;chatRounds=0;clearTimeout(chatTimer);pollChat();});
@@ -75,7 +75,7 @@
   const pending=chatPending,sequence=chatSequence,pairId=current.id,accountId=String(user.id);chatSending=true;$('#chat-send').disabled=true;
   try{
    if(!await checkChatAccount(sequence,pairId,accountId))return;
-   const response=await api(PREFIX+'/pairs/'+encodeURIComponent(pairId)+'/messages',{method:'POST',body:pending,privateRequest:true});
+   const response=await api(PREFIX+'/pairs/'+encodeURIComponent(pairId)+'/messages',{method:'POST',body:pending,privateRequest:true,signal:AbortSignal.timeout(15000)});
    if(!chatValid(sequence,pairId,accountId))return;
    if(!await checkChatAccount(sequence,pairId,accountId))return;
    // Poll in server order; never jump the cursor to a sent message and skip an unseen peer message.
