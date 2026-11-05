@@ -17,7 +17,7 @@ test('poster QR supports all four channels without disclosing private birth data
   for (const [platform, channel] of Object.entries({wechat:'wechat',xiaohongshu:'xhs',douyin:'douyin',channels:'channels'})) {
     const state = {platform, theme:0, posterMode:'profile', tailQr:null, profile:{listed:true,shareId:'public-card',birthDate:'1991-10-05',birthTime:'06:00',email:'private@example.test'}};
     const h = helpers(state), url = new URL(h.posterDestination());
-    assert.equal(h.tailQrEnabled(), platform === 'wechat');
+    assert.equal(h.tailQrEnabled(), true); // owner decision 2026-11-06: QR next to the CTA on every platform, user can turn it off
     state.tailQr = true;
     assert.equal(h.tailQrEnabled(), true);
     assert.equal(url.origin, 'https://runae.app');

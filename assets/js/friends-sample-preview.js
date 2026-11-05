@@ -15,7 +15,7 @@ window.openFriendsSamplePreview = function(sample) {
       const text=(s,x,y,size=28,color='#2e4c38')=>{ctx.fillStyle=color;ctx.font=size+'px "Microsoft YaHei",sans-serif';ctx.fillText(s,x,y);};
       const fit=(s,max,size=28)=>{ctx.font=size+'px "Microsoft YaHei",sans-serif';while(ctx.measureText(s).width>max&&s.length>2)s=s.slice(0,-2)+'…';return s;};
       const wrap=(s,x,y,size,width,lines=3)=>{let row='',n=0;for(const c of s){ctx.font=size+'px "Microsoft YaHei",sans-serif';if(ctx.measureText(row+c).width>width){text(row,x,y+n*size*1.5,size);row='';if(++n>=lines)return;}row+=c;}if(row)text(row,x,y+n*size*1.5,size);};
-      text('相生 · Runae',72,100+off,40);text('虚构样例 · 非真实用户',72,147+off,23);
+      text('相生',72,100+off,40);text('虚构样例 · 非真实用户',72,147+off,23);
       if(page===0){
         ctx.strokeStyle='#b7c5ad';ctx.lineWidth=2;ctx.strokeRect(790,205+off,210,250);
         text('本人照片',832,325+off,30);text('可选上传',840,370+off,23);

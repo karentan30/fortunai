@@ -342,13 +342,13 @@
   function defaultPosterCaption(p){if(!p)return '测测你的日主，生成自己的交友卡。';if(p.bio)return p.bio.slice(0,60);return (p.chart?.dayMaster?'我是'+stemNames([p.chart.dayMaster])+'，':'')+'从五行聊起，认识真实的彼此。';}
   function hobbyPosterCaption(p){return p?.hobbies?.length?'想一起'+p.hobbies.slice(0,1).join('、')+'，聊得来再约一次新的体验。':'写下你的爱好，认识愿意一起体验的新朋友。';}
   function paintQr(ctx,url,x,top,maxSize){if(typeof window.qrcode!=='function')return 0;const qr=window.qrcode(0,'M');qr.addData(url);qr.make();const n=qr.getModuleCount(),cell=Math.floor(maxSize/(n+8)),size=cell*(n+8);ctx.fillStyle='#fff';ctx.fillRect(x,top,size,size);ctx.fillStyle='#172b20';for(let row=0;row<n;row++)for(let column=0;column<n;column++)if(qr.isDark(row,column))ctx.fillRect(x+(column+4)*cell,top+(row+4)*cell,cell,cell);return size;}
-  function drawInvitePoster(canvas){const ctx=canvas.getContext('2d');ctx.fillStyle='#eff2e5';ctx.fillRect(0,0,1080,1440);ctx.strokeStyle='#c6d4b5';ctx.lineWidth=2;ctx.strokeRect(42,42,996,1356);ctx.fillStyle='#2f4c38';ctx.font='40px Georgia';ctx.fillText('runae.',84,112);ctx.font='17px "Microsoft YaHei",sans-serif';ctx.fillStyle='#7c9068';ctx.fillText('邀请测试 · 不代表现有人库或匹配结果',84,156);ctx.fillStyle='#2f4c38';ctx.font='79px SimSun,serif';ctx.fillText('你是什么日主？',84,317);ctx.font='49px SimSun,serif';ctx.fillText('想认识五行合拍的人？',84,402);const words=['木','火','土','金','水'];words.forEach((word,index)=>{const x=154+index*194;ctx.beginPath();ctx.arc(x,575,66,0,Math.PI*2);ctx.fillStyle=['#dce8cc','#e5d8c7','#e7dfba','#dce0d3','#d8e5df'][index];ctx.fill();ctx.fillStyle='#566f49';ctx.font='53px SimSun,serif';ctx.textAlign='center';ctx.fillText(word,x,594);});ctx.textAlign='left';ctx.fillStyle='#6c835a';ctx.font='30px "Microsoft YaHei",sans-serif';ctx.fillText('输入生日，认识你的日主与文化参考方向。',84,758);ctx.fillText('生成自己的交友卡，分享真实的你。',84,811);ctx.font='18px "Microsoft YaHei",sans-serif';ctx.fillText('不必先注册，不必先填写个人资料。',84,865);const url=posterDestination(),size=paintQr(ctx,url,414,972,270);ctx.font='26px "Microsoft YaHei",sans-serif';ctx.fillStyle='#2f4c38';ctx.textAlign='center';ctx.fillText('扫码测自己的日主',540,972+size+55);ctx.font='15px "Microsoft YaHei",sans-serif';ctx.fillStyle='#7a8d66';ctx.fillText(fitText(ctx,url,890),540,972+size+94);ctx.font='18px "Microsoft YaHei",sans-serif';ctx.fillText(location.hostname==='localhost'||location.hostname==='127.0.0.1'?'本地预览码 · 仅本机有效，请勿发布':'五行兴趣是认识的入口，实际相处由彼此决定。',540,1364);ctx.textAlign='left';}
+  function drawInvitePoster(canvas){const ctx=canvas.getContext('2d');ctx.fillStyle='#eff2e5';ctx.fillRect(0,0,1080,1440);ctx.strokeStyle='#c6d4b5';ctx.lineWidth=2;ctx.strokeRect(42,42,996,1356);ctx.fillStyle='#2f4c38';ctx.font='40px Georgia';ctx.fillText(POSTER_BRAND,84,112);ctx.font='17px "Microsoft YaHei",sans-serif';ctx.fillStyle='#7c9068';ctx.fillText('邀请测试 · 不代表现有人库或匹配结果',84,156);ctx.fillStyle='#2f4c38';ctx.font='79px SimSun,serif';ctx.fillText('你是什么日主？',84,317);ctx.font='49px SimSun,serif';ctx.fillText('想认识五行合拍的人？',84,402);const words=['木','火','土','金','水'];words.forEach((word,index)=>{const x=154+index*194;ctx.beginPath();ctx.arc(x,575,66,0,Math.PI*2);ctx.fillStyle=['#dce8cc','#e5d8c7','#e7dfba','#dce0d3','#d8e5df'][index];ctx.fill();ctx.fillStyle='#566f49';ctx.font='53px SimSun,serif';ctx.textAlign='center';ctx.fillText(word,x,594);});ctx.textAlign='left';ctx.fillStyle='#6c835a';ctx.font='30px "Microsoft YaHei",sans-serif';ctx.fillText('输入生日，认识你的日主与文化参考方向。',84,758);ctx.fillText('生成自己的交友卡，分享真实的你。',84,811);ctx.font='18px "Microsoft YaHei",sans-serif';ctx.fillText('不必先注册，不必先填写个人资料。',84,865);const url=posterDestination(),size=paintQr(ctx,url,414,972,270);ctx.font='26px "Microsoft YaHei",sans-serif';ctx.fillStyle='#2f4c38';ctx.textAlign='center';ctx.fillText('扫码测自己的日主',540,972+size+55);ctx.font='15px "Microsoft YaHei",sans-serif';ctx.fillStyle='#7a8d66';ctx.fillText(fitText(ctx,url,890),540,972+size+94);ctx.font='18px "Microsoft YaHei",sans-serif';ctx.fillText(location.hostname==='localhost'||location.hostname==='127.0.0.1'?'本地预览码 · 仅本机有效，请勿发布':'五行兴趣是认识的入口，实际相处由彼此决定。',540,1364);ctx.textAlign='left';}
   function posterFormat(){return ['douyin','channels'].includes(state.platform)?{width:1080,height:1920,portrait:true}:{width:1080,height:1440,portrait:false};}
   function platformLabel(){return ({wechat:'朋友圈',xiaohongshu:'小红书',douyin:'抖音',channels:'视频号'})[state.platform]||'小红书';}
-  function tailQrEnabled(){return state.tailQr??(state.platform==='wechat');}
+  function tailQrEnabled(){return state.tailQr??true;}
   function carouselCount(){return 1;}
   function posterFileName(index=0){const format=posterFormat(),style=['五行交友','个人亮点','兴趣搭子','邀请测试'][state.theme];return 'Runae-'+platformLabel()+'-'+style+'-'+String(index+1).padStart(2,'0')+'-'+format.width+'x'+format.height+'.png';}
-  function posterPalette(){return [{bg:'#f7f3ea',ink:'#1f2a26',soft:'#5d665e',accent:'#ece6d6',line:'#ddd4c0'},{bg:'#17211d',ink:'#f4efe2',soft:'#b3bcb0',accent:'#24312b',line:'#3a4a42'},{bg:'#f3e6c8',ink:'#2d281c',soft:'#665c43',accent:'#ead9ad',line:'#d6c391'}][state.theme%3];}
+  function posterPalette(){return [{bg:'#f8f5ec',ink:'#1d3a2a',soft:'#55645a',accent:'#e3e9da',line:'#1d3a2a'},{bg:'#16261e',ink:'#f3eedf',soft:'#b6c1b4',accent:'#22362b',line:'#cfd8c8'},{bg:'#f6ecd6',ink:'#33291a',soft:'#6a5a3e',accent:'#ecdcb5',line:'#33291a'}][state.theme%3];}
   function fieldCaption(key,value){if(['age','height','weight','school','occupation'].includes(key))return '';if(key==='assets'&&/^A\d/i.test(String(value)))return '个人资产标签';return ({income:'个人年收入 / 万元人民币',assets:'个人净资产 / 万元人民币'})[key]||fields[key]?.split(' / ')[0]||key;}
   function fieldValue(key,value){return (key==='income'?String(value).replace(/\s*[/／]\s*年\s*$/,''):String(value))+(key==='height'?' cm':key==='weight'?' kg':key==='age'?' 岁':'');}
   function numericField(key,value){return ['age','height','weight','income','assets'].includes(key)&&/\d/.test(String(value))&&!/暂不提供|暂无|未知|未填/.test(String(value));}
@@ -356,76 +356,128 @@
   function orderedPosterFields(values,preferred=[]){const entries=Object.entries(values||{}).filter(([key])=>Object.hasOwn(fields,key)),keys=[...new Set(['age','height','weight',...preferred,...entries.map(([key])=>key)])];return keys.map(key=>entries.find(([field])=>field===key)).filter(Boolean);}
   // One public-only card at every platform size. Private profile fields never enter this renderer.
   // Inputs are exactly the public projection from posterSubject() plus the user's own caption; no birth data.
-  function posterTone(stem){const element={甲:'wood',乙:'wood',丙:'fire',丁:'fire',戊:'earth',己:'earth',庚:'metal',辛:'metal',壬:'water',癸:'water'}[stem]||'none';return {wood:{name:'木',strong:'#2f6e55',soft:'#e1ede4',glow:'#9fcfb6'},fire:{name:'火',strong:'#ad3f2c',soft:'#f6e1d9',glow:'#f2a790'},earth:{name:'土',strong:'#94661a',soft:'#f1e5c8',glow:'#e3c27b'},metal:{name:'金',strong:'#58616c',soft:'#eaecee',glow:'#cdd3db'},water:{name:'水',strong:'#1d3550',soft:'#dfe6ee',glow:'#a2bbd8'},none:{name:'',strong:'#24473a',soft:'#e4ebe2',glow:'#a9c6b6'}}[element];}
+  // Layout follows the owner reference (docs/design-xiangsheng-2026-11-06/owner-poster-reference.jpeg).
+  const POSTER_BRAND='相生',POSTER_BRAND_LINE='相遇有迹';
+  const POSTER_ELEMENTS={甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'};
+  function posterTone(stem){return {木:'#2f6e55',火:'#ad3f2c',土:'#8a5f17',金:'#56606b',水:'#1d3550'}[POSTER_ELEMENTS[stem]]||'#1d3a2a';}
   function posterImagery(stem){return {甲:'参天之木 · 向上生长',乙:'花草藤萝 · 柔韧生长',丙:'太阳之火 · 明亮温暖',丁:'灯烛之火 · 细腻照亮',戊:'高山厚土 · 沉稳可靠',己:'田园之土 · 包容滋养',庚:'刀剑之金 · 果断利落',辛:'珠玉之金 · 精致清透',壬:'江河之水 · 开阔流动',癸:'雨露之水 · 温润细腻'}[stem]||'';}
+  function posterPurposes(p){const names={buddy:'找搭子',friend:'交朋友',dating:'约会',serious:'认真婚恋'},list=Array.isArray(p?.purposes)&&p.purposes.length?p.purposes:[];const labels=list.map(k=>names[k]||String(k)).slice(0,2);return {label:labels.length?labels.join(' · '):String(p?.intent||''),serious:list.includes('serious')||/认真/.test(String(p?.intent||''))};}
+  function posterFieldText(value){if(value&&typeof value==='object')return [value.code,value.label||value.range||value.text].filter(Boolean).join(' · ');return String(value??'').replace(/\s*[/／]\s*年\s*$/,'').trim();}
+  function posterVerified(p,key){const value=p?.fields?.[key];return Boolean((value&&typeof value==='object'&&value.verified===true)||p?.verified?.[key]===true);}
   function carouselCanvas(canvas,p,index=0){
     const ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height,tall=H>=1900,{bg,ink,soft,accent:panel,line}=posterPalette(),dark=state.theme%3===1;
-    const stem=p?.chart?.dayMaster||'',tone=posterTone(stem),accent=dark?tone.glow:tone.strong,chipFill=dark?panel:tone.soft;
+    const stem=p?.chart?.dayMaster||'',element=POSTER_ELEMENTS[stem]||'',tone=dark?ink:posterTone(stem);
     const SERIF='"Noto Serif SC","Source Han Serif SC","Songti SC","STSong","SimSun",serif',SANS='"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif';
     const setFont=(size,weight=400,family=SANS)=>{ctx.font=weight+' '+size+'px '+family;};
     const put=(value,x,y,size,color=ink,width=920,weight=400,family=SANS,align='left')=>{setFont(size,weight,family);ctx.fillStyle=color;ctx.textAlign=align;const out=fitText(ctx,String(value||''),width);ctx.fillText(out,x,y);ctx.textAlign='left';return ctx.measureText(out).width;};
+    // Shrink before truncating, so long names and schools stay whole whenever possible.
+    const fitSize=(value,size,min,width,weight,family)=>{let s=size;setFont(s,weight,family);while(s>min&&ctx.measureText(String(value)).width>width){s-=2;setFont(s,weight,family);}return s;};
+    const putFit=(value,x,y,size,min,width,color=ink,weight=400,family=SANS,align='left')=>put(value,x,y,fitSize(value,size,min,width,weight,family),color,width,weight,family,align);
     const wrap=(value,size,width,maxLines,family=SANS,weight=400)=>{setFont(size,weight,family);const lines=[];let row='';for(const char of String(value||'')){if(ctx.measureText(row+char).width>width&&row){lines.push(row);row=char;}else row+=char;}if(row)lines.push(row);if(lines.length>maxLines){lines.length=maxLines;lines[maxLines-1]=fitText(ctx,lines[maxLines-1]+'…',width);}return lines;};
-    const pill=(label,x,y,h,size,fill,color,stroke)=>{setFont(size,500);const w=ctx.measureText(label).width+h*0.9;ctx.beginPath();ctx.roundRect(x,y,w,h,h/2);if(fill){ctx.fillStyle=fill;ctx.fill();}if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}ctx.fillStyle=color;ctx.textBaseline='middle';ctx.fillText(label,x+h*0.45,y+h/2+1);ctx.textBaseline='alphabetic';return w;};
-    const ring=(cx,cy,r,dot,showChars)=>{ctx.save();ctx.strokeStyle=accent;ctx.globalAlpha=0.28;ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=0.16;ctx.beginPath();ctx.arc(cx,cy,r*0.72,0,Math.PI*2);ctx.stroke();ctx.restore();['木','火','土','金','水'].forEach((name,i)=>{const a=-Math.PI/2+i*Math.PI*2/5,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r,on=name===tone.name;ctx.beginPath();ctx.arc(x,y,dot,0,Math.PI*2);ctx.fillStyle=on?accent:bg;ctx.fill();ctx.strokeStyle=on?accent:line;ctx.lineWidth=2;ctx.stroke();if(showChars){setFont(Math.round(dot*1.05),500,SERIF);ctx.fillStyle=on?bg:soft;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(name,x,y+2);ctx.textAlign='left';ctx.textBaseline='alphabetic';}});};
-    // Paper, a soft element wash and a thin inset frame.
+    const rule=(x1,x2,y,width=2,alpha=0.85)=>{ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle=line;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x1,y);ctx.lineTo(x2,y);ctx.stroke();ctx.restore();};
+    const vrule=(x,y1,y2)=>{ctx.save();ctx.globalAlpha=0.6;ctx.strokeStyle=line;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,y1);ctx.lineTo(x,y2);ctx.stroke();ctx.restore();};
+    const box=(x,y,w,h,r)=>{ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fillStyle=panel;ctx.fill();};
+    const tag=(label,x,y)=>{setFont(20,500);const w=ctx.measureText(label).width+20;ctx.save();ctx.globalAlpha=0.75;ctx.strokeStyle=soft;ctx.lineWidth=1.5;ctx.beginPath();ctx.roundRect(x,y-22,w,30,15);ctx.stroke();ctx.restore();ctx.fillStyle=soft;ctx.fillText(label,x+10,y);return w;};
+    const chip=(label,x,y,h,size)=>{setFont(size,600);const w=ctx.measureText(label).width+h*0.8;ctx.beginPath();ctx.roundRect(x,y,w,h,h/2);ctx.strokeStyle=ink;ctx.globalAlpha=0.55;ctx.lineWidth=2;ctx.stroke();ctx.globalAlpha=1;ctx.fillStyle=ink;ctx.textBaseline='middle';ctx.fillText(label,x+h*0.4,y+h/2+1);ctx.textBaseline='alphabetic';return w;};
+    const ring=(cx,cy,r,dot)=>{ctx.save();ctx.strokeStyle=tone;ctx.globalAlpha=0.3;ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.stroke();ctx.restore();['木','火','土','金','水'].forEach((name,i)=>{const a=-Math.PI/2+i*Math.PI*2/5,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r,on=name===element;ctx.beginPath();ctx.arc(x,y,dot,0,Math.PI*2);ctx.fillStyle=on?tone:bg;ctx.fill();ctx.strokeStyle=on?tone:line;ctx.globalAlpha=on?1:0.35;ctx.lineWidth=2;ctx.stroke();ctx.globalAlpha=1;setFont(Math.round(dot*1.05),600,SERIF);ctx.fillStyle=on?bg:soft;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(name,x,y+2);ctx.textAlign='left';ctx.textBaseline='alphabetic';});};
+    // Simple original line icons for the "想一起" strip.
+    const icon=(label,x,y,s)=>{ctx.save();ctx.strokeStyle=ink;ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';ctx.beginPath();const t=String(label);
+      if(/羽毛球|网球|匹克/.test(t)){ctx.moveTo(x+s*0.36,y+s*0.74);ctx.arc(x+s*0.5,y+s*0.74,s*0.14,Math.PI,0,true);ctx.closePath();ctx.moveTo(x+s*0.37,y+s*0.72);ctx.lineTo(x+s*0.14,y+s*0.1);ctx.moveTo(x+s*0.63,y+s*0.72);ctx.lineTo(x+s*0.86,y+s*0.1);ctx.moveTo(x+s*0.14,y+s*0.1);ctx.quadraticCurveTo(x+s*0.5,y-s*0.02,x+s*0.86,y+s*0.1);ctx.moveTo(x+s*0.45,y+s*0.72);ctx.lineTo(x+s*0.38,y+s*0.06);ctx.moveTo(x+s*0.55,y+s*0.72);ctx.lineTo(x+s*0.62,y+s*0.06);ctx.moveTo(x+s*0.26,y+s*0.42);ctx.quadraticCurveTo(x+s*0.5,y+s*0.36,x+s*0.74,y+s*0.42);}
+      else if(/陶|杯|咖啡|茶|烘焙|饭|吃|美食|甜/.test(t)){ctx.moveTo(x+s*0.12,y+s*0.3);ctx.lineTo(x+s*0.88,y+s*0.3);ctx.quadraticCurveTo(x+s*0.86,y+s*0.9,x+s*0.5,y+s*0.9);ctx.quadraticCurveTo(x+s*0.14,y+s*0.9,x+s*0.12,y+s*0.3);ctx.moveTo(x+s*0.2,y+s*0.52);ctx.lineTo(x+s*0.8,y+s*0.52);ctx.moveTo(x+s*0.26,y+s*0.7);ctx.lineTo(x+s*0.74,y+s*0.7);}
+      else if(/展|画|摄影|拍|博物/.test(t)){ctx.rect(x+s*0.1,y+s*0.2,s*0.8,s*0.62);ctx.moveTo(x+s*0.18,y+s*0.72);ctx.lineTo(x+s*0.4,y+s*0.46);ctx.lineTo(x+s*0.56,y+s*0.62);ctx.lineTo(x+s*0.68,y+s*0.52);ctx.lineTo(x+s*0.82,y+s*0.72);}
+      else if(/徒步|爬山|散步|走|骑|露营/.test(t)){ctx.moveTo(x+s*0.05,y+s*0.85);ctx.lineTo(x+s*0.38,y+s*0.3);ctx.lineTo(x+s*0.56,y+s*0.58);ctx.lineTo(x+s*0.7,y+s*0.42);ctx.lineTo(x+s*0.95,y+s*0.85);ctx.closePath();}
+      else if(/书|读|阅|写/.test(t)){ctx.moveTo(x+s*0.5,y+s*0.25);ctx.quadraticCurveTo(x+s*0.3,y+s*0.12,x+s*0.08,y+s*0.2);ctx.lineTo(x+s*0.08,y+s*0.82);ctx.quadraticCurveTo(x+s*0.3,y+s*0.74,x+s*0.5,y+s*0.86);ctx.quadraticCurveTo(x+s*0.7,y+s*0.74,x+s*0.92,y+s*0.82);ctx.lineTo(x+s*0.92,y+s*0.2);ctx.quadraticCurveTo(x+s*0.7,y+s*0.12,x+s*0.5,y+s*0.25);ctx.lineTo(x+s*0.5,y+s*0.86);}
+      else if(/音乐|唱|琴|吉他|歌/.test(t)){ctx.arc(x+s*0.3,y+s*0.76,s*0.13,0,Math.PI*2);ctx.moveTo(x+s*0.43,y+s*0.76);ctx.lineTo(x+s*0.43,y+s*0.14);ctx.lineTo(x+s*0.82,y+s*0.06);ctx.lineTo(x+s*0.82,y+s*0.6);ctx.moveTo(x+s*0.95,y+s*0.6);ctx.arc(x+s*0.82,y+s*0.6,s*0.13,0,Math.PI*2);}
+      else if(/跑|健身|游泳|球|运动|瑜伽|舞/.test(t)){ctx.arc(x+s*0.5,y+s*0.5,s*0.36,0,Math.PI*2);ctx.moveTo(x+s*0.14,y+s*0.5);ctx.quadraticCurveTo(x+s*0.5,y+s*0.3,x+s*0.86,y+s*0.5);ctx.moveTo(x+s*0.5,y+s*0.14);ctx.quadraticCurveTo(x+s*0.32,y+s*0.5,x+s*0.5,y+s*0.86);}
+      else{ctx.moveTo(x+s*0.5,y+s*0.08);ctx.quadraticCurveTo(x+s*0.56,y+s*0.44,x+s*0.92,y+s*0.5);ctx.quadraticCurveTo(x+s*0.56,y+s*0.56,x+s*0.5,y+s*0.92);ctx.quadraticCurveTo(x+s*0.44,y+s*0.56,x+s*0.08,y+s*0.5);ctx.quadraticCurveTo(x+s*0.44,y+s*0.44,x+s*0.5,y+s*0.08);}
+      ctx.stroke();ctx.restore();};
     ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-    const wash=ctx.createLinearGradient(0,0,0,H*0.6);wash.addColorStop(0,dark?panel:tone.soft);wash.addColorStop(1,bg);ctx.fillStyle=wash;ctx.fillRect(0,0,W,H*0.6);
-    ctx.strokeStyle=line;ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(36,36,W-72,H-72,28);ctx.stroke();
-    // Brand seal and purpose.
-    ctx.fillStyle=accent;ctx.beginPath();ctx.roundRect(80,72,72,72,14);ctx.fill();
-    setFont(26,700,SERIF);ctx.fillStyle=dark?bg:'#fffdf8';ctx.textAlign='center';ctx.fillText('相',116,104);ctx.fillText('生',116,134);ctx.textAlign='left';
-    put('五行交友卡',172,118,24,soft,300,500);
-    if(p?.intent){setFont(26,500);const w=ctx.measureText(p.intent).width+52;pill(p.intent,W-80-w,78,60,26,null,accent,accent);}
-    const cta=(top)=>{
-      const qr=tailQrEnabled(),boxH=H-top-110;ctx.fillStyle=dark?panel:'#fffdf8';ctx.beginPath();ctx.roundRect(72,top,W-144,boxH,24);ctx.fill();ctx.strokeStyle=line;ctx.lineWidth=2;ctx.stroke();
-      const textW=qr?560:W-200,mid=top+boxH/2;
-      put(qr?'扫码，测测你的日主':'测测你的日主',108,mid-34,40,ink,textW,700,SERIF);
-      put('看看我们是不是相生的人',108,mid+16,27,ink,textW);
-      put(qr?'生日只用于计算，不会出现在卡片上':'打开 '+location.host+' · 生日不会出现在卡片上',108,mid+60,21,soft,textW);
-      if(qr){const size=Math.min(196,boxH-40),drawn=paintQr(ctx,posterDestination(),W-108-size,top+(boxH-size)/2,size);if(drawn){ctx.strokeStyle=line;ctx.lineWidth=2;ctx.strokeRect(W-108-size,top+(boxH-size)/2,drawn,drawn);}}
-      put('资料由本人提供 · 五行是文化参考，不预测关系结果',W/2,H-62,19,soft,W-200,400,SANS,'center');
+    // Masthead: brand left, card owner (or card type) right, one ink rule.
+    put(POSTER_BRAND,60,96,56,ink,320,700,SERIF);
+    const owner=p?.nickname&&p.nickname!=='我的五行交友卡'?p.nickname:'五行交友卡';putFit(owner,W-60,90,30,22,520,soft,500,SANS,'right');
+    rule(60,W-60,126);
+    // Bottom CTA: "你是什么日主？" with the QR next to it, then the footer line.
+    const ctaH=tall?230:206,ctaTop=H-96-ctaH;
+    const cta=()=>{
+      box(40,ctaTop,W-80,ctaH,28);const qr=tailQrEnabled(),split=qr?700:640,mid=ctaTop+ctaH/2;
+      putFit('你是什么日主？',80,mid-6,tall?74:68,48,split-110,ink,700,SERIF);
+      put('测测你的，看看我们怎么搭。',82,mid+56,32,ink,split-110,500);
+      vrule(split,ctaTop+34,ctaTop+ctaH-34);
+      if(qr){const size=Math.min(ctaH-56,150),drawn=paintQr(ctx,posterDestination(),W-80-size,ctaTop+(ctaH-size)/2,size);
+        if(drawn){put(POSTER_BRAND,split+28,mid-8,40,ink,W-80-size-split-40,700,SERIF);put('扫码测一测',split+28,mid+36,22,soft,W-80-size-split-40,500);}
+        else put(POSTER_BRAND+' · '+POSTER_BRAND_LINE,(split+W-40)/2,mid+12,32,ink,W-split-100,500,SERIF,'center');}
+      else{put(POSTER_BRAND+' · '+POSTER_BRAND_LINE,(split+W-40)/2,mid-4,34,ink,W-split-100,500,SERIF,'center');put(location.host,(split+W-40)/2,mid+40,22,soft,W-split-100,400,SANS,'center');}
+      rule(60,W-60,H-70,1.5,0.5);
+      put('资料由本人提供 · 五行是文化参考，不预测关系结果',60,H-32,22,soft,W-120,400);
     };
-    const ctaTop=H-(tall?360:330);
     if(!p){
-      // Invitation poster: no person, only the question and the five-element ring.
-      const cy=tall?900:650,titleY=tall?400:316;
-      put('你是什么日主？',W/2,titleY,tall?92:78,ink,900,700,SERIF,'center');put('测一测，认识五行合拍的人',W/2,titleY+(tall?76:66),30,soft,800,400,SANS,'center');
-      ring(W/2,cy,tall?230:165,tall?46:38,true);
-      put('木 · 火 · 土 · 金 · 水，你是哪一种？',W/2,(tall?1260:980),30,ink,900,500,SANS,'center');
-      cta(ctaTop);return;
+      // Invitation poster: no person, only the question, the five-element ring and the CTA.
+      // One question, one ring, one large QR in the middle of the ring. No duplicate CTA box.
+      put('你是什么日主？',W/2,tall?380:320,tall?110:100,ink,960,700,SERIF,'center');
+      put('约会不必约饭，一起打场球',W/2,tall?460:395,34,soft,900,500,SANS,'center');
+      const rcx=W/2,rcy=tall?880:730,rr=tall?270:225,dot=tall?54:48;ring(rcx,rcy,rr,dot);
+      const qrSize=tall?300:256,drawn=tailQrEnabled()?paintQr(ctx,posterDestination(),rcx-qrSize/2,rcy-qrSize/2,qrSize):0;
+      if(!drawn){put(POSTER_BRAND,rcx,rcy+10,96,ink,400,700,SERIF,'center');put(POSTER_BRAND_LINE,rcx,rcy+70,30,soft,400,500,SANS,'center');}
+      const ty=Math.round(rcy+rr*0.81+dot+(tall?90:62));put(drawn?'扫码 · 测测你的日主':'搜索「相生」· 测测你的日主',W/2,ty,42,ink,W-160,700,SERIF,'center');
+      // Positioning in three steps: 按性格认识 → 先语音15分钟 → 按爱好见面.
+      const sy=ty+(tall?80:56),sh=tall?220:190,steps=[['按性格认识','日主 · MBTI · 星座'],['先语音15分钟','不开盲盒'],['按爱好见面','越约越健康']],sw=(W-80)/3;box(40,sy,W-80,sh,28);
+      steps.forEach(([t,sub],i)=>{const cx=40+sw*i+sw/2;ctx.beginPath();ctx.arc(cx,sy+(tall?52:44),tall?22:20,0,Math.PI*2);ctx.fillStyle=tone;ctx.fill();put(String(i+1),cx,sy+(tall?61:52),tall?26:24,dark?'#16261e':bg,40,700,SANS,'center');
+        putFit(t,cx,sy+(tall?126:108),tall?40:36,26,sw-36,ink,700,SERIF,'center');put(sub,cx,sy+(tall?172:146),tall?26:24,soft,sw-30,500,SANS,'center');if(i)put('→',40+sw*i,sy+(tall?128:110),30,soft,40,500,SANS,'center');});
+      rule(60,W-60,H-70,1.5,0.5);put(POSTER_BRAND+' · 五行是文化参考，不预测关系结果',60,H-32,22,soft,W-120,400);return;
     }
-    // Photo or motif occupies the top-right square; the test fixture checks a pixel inside it.
-    const px=790,py=180,ps=210,hasPhoto=paintPosterPhoto(ctx,px,py,ps);
-    if(hasPhoto){ctx.strokeStyle=accent;ctx.lineWidth=5;ctx.beginPath();ctx.arc(px+ps/2,py+ps/2,ps/2+6,0,Math.PI*2);ctx.stroke();}
-    else ring(px+ps/2,py+ps/2+6,94,22,true);
-    // Name shrinks before truncating so long nicknames stay readable and never run under the photo.
-    const name=p.nickname||'我的五行交友卡';let nameSize=54;setFont(nameSize,700,SERIF);while(nameSize>34&&ctx.measureText(name).width>640){nameSize-=2;setFont(nameSize,700,SERIF);}
-    put(name,80,236,nameSize,ink,640,700,SERIF);
-    put([p.city,p.chart?.zodiac?'属'+p.chart.zodiac:''].filter(Boolean).join(' · '),80,286,27,soft,640);
-    // Content blocks, measured first so space is shared instead of leaving a hole.
-    const values=p.fields||{},blocks=[];
-    const chips=[p.mbti,p.constellation,p.chart?.zodiac?'生肖 '+p.chart.zodiac:''].filter(Boolean);
-    const targets=stemNames(p.targetStems),targetText=(targets?targets:'')+(p.targetZodiacs?.length?(targets?'　':'')+'生肖 '+p.targetZodiacs.join(' · '):'');
-    const caption=String(state.caption??defaultPosterCaption(p)).trim();
-    const captionLines=caption?wrap('“'+caption+'”',31,W-160,2,SERIF):[];
-    const basics=['age','height','weight'].filter(k=>values[k]!==undefined).map(k=>fieldValue(k,values[k])).join('  ·  ');
-    const role=['school','occupation'].filter(k=>values[k]).map(k=>fieldValue(k,values[k])).join('  ·  ');
-    const money=[['income','年收入'],['assets','个人净资产'],['familyAssets','家庭资产']].filter(([k])=>values[k]!==undefined);
-    const hobbies=(p.hobbies||[]).slice(0,3);
-    let stemSize=tall?300:250;
-    const heroH=()=>stem?stemSize*0.98:110;
-    blocks.push({h:heroH,draw:y=>{if(stem){setFont(stemSize,600,SERIF);ctx.fillStyle=accent;ctx.fillText(stem,70,y+stemSize*0.86);const lx=80+stemSize*1.06;put(tone.name+' · 日主',lx,y+stemSize*0.40,44,accent,W-lx-90,700,SERIF);put(posterImagery(stem),lx,y+stemSize*0.40+58,29,ink,W-lx-90);put('传统意象，不代表性格结论',lx,y+stemSize*0.40+100,20,soft,W-lx-90);}else{put('从五行，认识新朋友',80,y+70,60,ink,920,700,SERIF);}}});
-    if(chips.length)blocks.push({h:()=>60,draw:y=>{let x=80;for(const chip of chips){if(x>W-200)break;x+=pill(chip,x,y,60,27,chipFill,ink)+14;}}});
-    if(targetText)blocks.push({h:()=>40,draw:y=>{const w=put('想认识',80,y+32,28,soft,200);put(targetText,80+w+18,y+32,30,ink,W-160-w-18,600);}});
-    if(captionLines.length)blocks.push({h:()=>captionLines.length*48-6,draw:y=>{setFont(31,400,SERIF);ctx.fillStyle=ink;captionLines.forEach((row,i)=>ctx.fillText(row,80,y+34+i*48));}});
-    if(basics||role||money.length)blocks.push({h:()=>24+(basics?52:0)+(role?50:0)+(money.length?84:0),draw:y=>{ctx.strokeStyle=line;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(80,y+2);ctx.lineTo(W-80,y+2);ctx.stroke();let c=y+24;if(basics){put(basics,80,c+38,36,ink,920,700);c+=52;}if(role){put(role,80,c+38,30,ink,920,500);c+=50;}if(money.length){const colW=(W-160)/money.length;money.forEach(([k,label],i)=>{const x=80+i*colW;put(label,x,c+30,21,soft,colW-20);put(fieldValue(k,values[k]),x,c+70,31,ink,colW-24,700);});}}});
-    if(hobbies.length)blocks.push({h:()=>44,draw:y=>{const w=put('想一起',80,y+32,28,soft,200);put(hobbies.join(' · '),80+w+18,y+32,30,ink,W-160-w-18,600);}});
-    const top=318,avail=ctaTop-34-top,sum=()=>blocks.reduce((t,b)=>t+b.h(),0);
-    while(blocks.length>1&&sum()+(blocks.length-1)*22>avail)blocks.splice(blocks.length-1,1);
-    if(stem&&avail-sum()-(blocks.length-1)*34>260)stemSize+=60;
-    const gap=Math.max(22,Math.min(tall?96:46,(avail-sum())/Math.max(1,blocks.length)));
-    let y=top;for(const block of blocks){block.draw(y);y+=block.h()+gap;}
-    cta(ctaTop);
+    const f=p.fields||{},{label:purpose,serious}=posterPurposes(p);
+    // Right panel: the user's photo (rounded), or the 日主 motif — never an empty placeholder.
+    const money=[['income','年收入'],['assets','个人净资产'],['familyAssets','家庭资产']].filter(([k])=>f[k]).map(([k,l])=>({label:l,value:posterFieldText(f[k]),tag:posterVerified(p,k)?'已核验':''}));
+    const good=Array.isArray(p.goodAt)?p.goodAt[0]:p.goodAt||(Array.isArray(p.skills)?p.skills[0]:p.skills)||'';
+    const cols=serious?money:[p.mbti&&{label:'MBTI',value:p.mbti},p.constellation&&{label:'星座',value:p.constellation},good&&{label:'我擅长',value:String(good)}].filter(Boolean);
+    const fixedBottom=ctaTop-30;let rowH=tall?190:170,stripH=tall?150:136,lead=40;
+    // Sparse cards: no big row, so the panel grows down to the 想一起 strip instead of leaving a hole.
+    const px=600,py=156,pw=420,hasPhoto=Boolean(posterPhoto);let ph=tall?660:560;
+    if(!cols.length)ph=Math.max(ph,fixedBottom-stripH-lead-py);
+    if(hasPhoto){const src=posterPhoto,scale=Math.max(pw/src.width,ph/src.height),sw=pw/scale,sh=ph/scale;ctx.save();ctx.beginPath();ctx.roundRect(px,py,pw,ph,32);ctx.clip();ctx.drawImage(src,(src.width-sw)/2,(src.height-sh)/2,sw,sh,px,py,pw,ph);ctx.restore();}
+    else{box(px,py,pw,ph,32);const cx=px+pw/2,cy=py+Math.max(tall?270:230,(ph-480)/2+180),capY=Math.min(py+ph-(tall?120:96),cy+(tall?300:250));ring(cx,cy,tall?170:150,tall?34:30);
+      if(stem){setFont(tall?190:170,700,SERIF);ctx.fillStyle=tone;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(stem,cx,cy+8);ctx.textAlign='left';ctx.textBaseline='alphabetic';
+        put(posterImagery(stem),cx,capY,30,ink,pw-60,600,SERIF,'center');put('传统意象，不代表性格结论',cx,capY+(tall?48:44),20,soft,pw-60,400,SANS,'center');}
+      else put('五行交友',cx,cy+18,56,ink,pw-60,700,SERIF,'center');}
+    // Left column flows top-down; each line shrinks to fit 500px before it would truncate.
+    const LX=60,LW=500;let y=208;
+    const where=[p.city,purpose].filter(Boolean).join(' · ');if(where){putFit(where,LX,y,36,26,LW,ink,500);y+=20;}
+    const hero=stem?stem+element:'交个朋友';y+=tall?150:136;putFit(hero,LX-6,y,tall?160:148,90,LW,dark?ink:tone,700,SERIF);
+    // Own types are chips beside the hero; in buddy/friend mode they move to the big row below instead.
+    const chips=[...(serious?[p.mbti,p.constellation]:[]),p.chart?.zodiac?'属'+p.chart.zodiac:''].filter(Boolean);
+    if(chips.length){y+=44;let cx=LX;for(const c of chips){if(cx>LX+LW-80)break;cx+=chip(c,cx,y,50,26)+12;}y+=50;}
+    const wanted=(p.targetStems||[]).includes('不限')?'不限日主':[...new Set((p.targetStems||[]).map(s=>POSTER_ELEMENTS[s]).filter(Boolean))].join(' · ');
+    const wantedZodiac=(p.targetZodiacs||[]).slice(0,3).join('·');
+    if(wanted||wantedZodiac){y+=74;const w=put('想认识',LX,y,38,soft,200,500);putFit(wanted||'属'+wantedZodiac,LX+w+28,y,50,30,LW-w-28,ink,700,SERIF);}
+    const stats=[f.age&&posterFieldText(f.age)+(/\d$/.test(posterFieldText(f.age))?'岁':''),f.height&&posterFieldText(f.height)+(/\d$/.test(posterFieldText(f.height))?'cm':''),f.weight&&posterFieldText(f.weight)+(/\d$/.test(posterFieldText(f.weight))?'kg':'')].filter(Boolean);
+    if(stats.length){y+=34;rule(LX,LX+LW,y,2,0.5);y+=70;putFit(stats.join('    '),LX,y,46,30,LW,ink,500,SERIF);y+=8;}
+    const school=[f.school,f.education].filter(Boolean).map(posterFieldText).join(' · '),job=[f.occupation].filter(Boolean).map(posterFieldText).join(' · ');
+    if(school||job){y+=26;rule(LX,LX+LW,y,2,0.5);
+      if(school){y+=68;const label=posterVerified(p,'school')?'已核验':'';setFont(20,500);const room=label?LW-ctx.measureText(label).width-36:LW;const w=putFit(school,LX,y,46,28,room,ink,700);if(label)tag(label,LX+w+14,y-8);}
+      if(job){y+=school?66:68;putFit(job,LX,y,46,28,LW,ink,700);}}
+    const yTop=y;
+    // Big three-column row. 认真婚恋: public income/assets as plain ranges; 已核验 only when we verified it. Other purposes: MBTI / 星座 / 我擅长.
+    // The caption sits in the left column when it has room beside the panel; otherwise it fills leftover space below.
+    const caption=String(state.caption??defaultPosterCaption(p)).trim();let captionDone=false;
+    if(caption&&py+ph-y>=150){const lines=wrap('“'+caption+'”',32,LW,3,SERIF,500);const top=py+ph-12-(lines.length-1)*48;rule(LX,LX+60,top-60,3,0.9);lines.forEach((l,i)=>put(l,LX,top+i*48,32,soft,LW,500,SERIF));captionDone=true;}
+    // Compact sizes so the three-column row and 想一起 both fit on 3:4 instead of dropping the row.
+    if(cols.length&&Math.max(yTop+lead,py+ph+lead)+rowH+20+stripH>fixedBottom){rowH=150;stripH=108;lead=24;}
+    const compact=rowH===150;y=Math.max(yTop+lead,py+ph+lead);
+    if(cols.length&&y+rowH+stripH+20<=fixedBottom){rule(60,W-60,y,2,0.85);const cw=(W-120)/cols.length;
+      cols.forEach((c,i)=>{const x=60+i*cw+(i?28:4),inner=cw-(i?40:20);if(i)vrule(60+i*cw,y+30,y+rowH-20);
+        const lw=put(c.label,x,y+(compact?46:56),compact?28:30,soft,inner,500);if(c.tag)tag(c.tag,x+lw+10,y+(compact?42:52));
+        const [main,...rest]=String(c.value).split(/\s*·\s*/);const sub=rest.join(' · ');
+        putFit(main,x,y+(compact?(sub?104:112):(sub?128:136)),compact?58:(tall?72:68),30,inner,ink,700,SERIF);if(sub)put(sub,x,y+(compact?136:164),compact?24:26,soft,inner,500);});
+      y+=rowH+20;}
+    // "想一起" strip with line icons. Positioning: 按爱好约会, so the fallback is something active, not another dinner.
+    const acts=(p.hobbies||[]).filter(Boolean).slice(0,2);const list=acts.length?acts:['打场羽毛球','城市徒步'];
+    if(y+stripH<=fixedBottom){box(40,y,W-80,stripH,24);const mid=y+stripH/2;put('想一起',80,mid+(compact?14:16),compact?40:44,ink,200,700,SERIF);vrule(270,y+30,y+stripH-30);
+      const slot=(W-80-270)/list.length;list.forEach((a,i)=>{const sx=270+i*slot+30,s=compact?54:(tall?72:64);if(i)vrule(270+i*slot,y+30,y+stripH-30);icon(a,sx,mid-s/2,s);putFit(a,sx+s+20,mid+(compact?13:15),compact?38:42,26,slot-s-70,ink,700);});
+      y+=stripH+24;}
+    // The user's own caption fills leftover space (taller formats), centered and quoted.
+    const gap=fixedBottom-y;
+    if(caption&&!captionDone&&gap>=110){const lines=wrap('“'+caption+'”',34,W-200,gap>=170?2:1,SERIF,500);const top=y+(gap-lines.length*52)/2+34;lines.forEach((l,i)=>put(l,W/2,top+i*52,34,soft,W-200,500,SERIF,'center'));}
+    cta();
   }
   async function downloadPosterGroup(){
     if(!$('#poster-confirm').checked){toast('请先检查各页，并确认公开内容。');return;}
