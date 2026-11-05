@@ -1,0 +1,44 @@
+'use strict';
+const assert=require('node:assert/strict'),path=require('node:path');
+const {chromium}=require('../.review/node_modules/playwright-core');
+const BASE=process.env.FRIENDS_REVIEW_URL||'http://127.0.0.1:4188';
+(async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.EDGE_BINARY||(process.platform==='win32'?'C:/Program Files (x86)/Microsoft/Edge/Application/msedge.exe':undefined)});try{
+ const page=await browser.newPage({viewport:{width:390,height:844}}),errors=[],sent=[];page.on('pageerror',e=>errors.push(e.message));
+ let accountId='owner',firstSend=true,revoked=false,held=null,hold=false;
+ const pair=id=>({id,status:revoked?'revoked':'ready',peer:{nickname:id==='one'?'甲同学':'乙同学'},recipientClaimed:true,myAuthorized:true,peerAuthorized:true,basicReady:!revoked,direction:'outgoing',mode:'targeted'});
+ await page.route('**/api/**',async route=>{
+  const url=new URL(route.request().url()),p=url.pathname,body=route.request().postDataJSON();
+  if(p==='/api/auth/me')return route.fulfill({json:{user:{id:accountId}}});
+  if(p.endsWith('/status'))return route.fulfill({json:{note:'内测'}});if(p.endsWith('/pairs'))return route.fulfill({json:{pairs:[pair('one'),pair('two')]}});
+  if(p.endsWith('/messages')){
+   if(route.request().method()==='POST'){sent.push(body);if(firstSend){firstSend=false;return route.fulfill({status:500,json:{error:'测试网络故障'}});}return route.fulfill({json:{message:{id:'sent-1',text:body.text,mine:true,createdAt:'2026-11-05T10:00:00Z'},duplicate:sent.length>1}});}
+   if(hold){held=route;return;}
+   if(revoked)return route.fulfill({status:409,json:{error:'已撤回'}});
+   return route.fulfill({json:{messages:url.searchParams.has('after')?[]:[{id:p.includes('/one/')?'m-one':'m-two',text:p.includes('/one/')?'<img src=x onerror=alert(1)>':'第二个邀请的消息',mine:false,createdAt:'2026-11-05T09:00:00Z'}],nextCursor:p.includes('/one/')?'m-one':'m-two',hasMore:false}});
+  }
+  if(p.endsWith('/revoke')){revoked=true;return route.fulfill({json:pair('one')});}
+  if(/\/pairs\/(one|two)$/.test(p))return route.fulfill({json:pair(p.split('/').pop())});
+  return route.fulfill({status:404,json:{error:'未模拟接口'}});
+ });
+ await page.goto(BASE+'/pages/friends-compatibility.html?pair=one');
+ await page.waitForSelector('#chat-messages .chat-message');
+ assert.equal(await page.locator('#chat-messages img').count(),0);assert.ok((await page.locator('#chat-messages').innerText()).includes('<img'));
+ for(const width of [320,390]){await page.setViewportSize({width,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);}
+ await page.locator('[data-chat-topic]').first().click();assert.equal(sent.length,0);const draft=await page.locator('#chat-draft').inputValue();assert.ok(draft.length);
+ await page.locator('#chat-send').click();await page.waitForFunction(()=>document.querySelector('#chat-status').textContent.includes('测试网络故障'));
+ assert.equal(await page.locator('#chat-draft').inputValue(),draft);
+ await page.locator('#chat-send').click();await page.waitForFunction(()=>document.querySelector('#chat-draft').value==='');
+ assert.equal(sent.length,2);assert.equal(sent[0].clientMessageId,sent[1].clientMessageId);assert.equal(sent[0].text,sent[1].text);
+ // A delayed prior-pair read must not appear after switching pairs.
+ hold=true;await page.locator('#chat-refresh').click();await page.waitForTimeout(100);await page.locator('#pair-list button').nth(1).click();hold=false;
+ if(held){await held.fulfill({json:{messages:[{id:'late',text:'STALE-PRIVATE',mine:false,createdAt:'2026-11-05T09:00:00Z'}],nextCursor:'late',hasMore:false}}).catch(()=>{});held=null;}
+ await page.locator('#chat-refresh').click();await page.waitForFunction(()=>document.querySelector('#chat-messages').textContent.includes('第二个'));
+ assert.equal((await page.locator('#chat-messages').innerText()).includes('STALE-PRIVATE'),false);
+ // Session switch clears both conversations, drafts and report.
+ await page.locator('#chat-draft').fill('PRIVATE-DRAFT');accountId='other-account';await page.locator('#chat-refresh').click();
+ await page.waitForFunction(()=>document.querySelector('#pair-chat').hidden);
+ assert.equal(await page.locator('#chat-draft').inputValue(),'');assert.equal(await page.locator('#chat-messages').innerText(),'');
+ // Revocation clears the visible thread.
+ accountId='owner';await page.reload();await page.waitForSelector('#chat-messages .chat-message');page.once('dialog',dialog=>dialog.accept());await page.locator('#revoke-pair').click();await page.waitForFunction(()=>document.querySelector('#pair-chat').hidden);assert.equal(await page.locator('#chat-messages').innerText(),'');
+ assert.deepEqual(errors,[]);console.log('PASS: private chat mobile layout, escaped text, draft-only topics, idempotent retry, pair/session isolation and revoke cleanup');
+}finally{await browser.close();}})().catch(error=>{console.error(error);process.exitCode=1;});
