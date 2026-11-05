@@ -65,7 +65,7 @@ test('profile sheet: money only for 认真结婚, 已核验 only from server ver
   vm.runInContext(code, context);
   const card = {nickname:'测试', chart:{dayMaster:'丙'}, fields:{age:'28', height:'166', income:'100–300万'}, hobbies:['羽毛球']};
   const friend = context.profileSheetHTML({...card, purposes:['friend']});
-  assert.doesNotMatch(friend, /年收入|100–300万/, 'income must stay off non-marriage profiles even when public');
+  assert.match(friend, /年收入/, 'one card shows every field the owner made public, whatever the purposes');
   assert.match(friend, /166cm/);
   const serious = context.profileSheetHTML({...card, purposes:['serious']});
   assert.match(serious, /年收入/);
@@ -73,5 +73,5 @@ test('profile sheet: money only for 认真结婚, 已核验 only from server ver
   assert.match(context.profileSheetHTML({...card, purposes:['serious'], verified:{income:true}}), /已核验/);
   const own = context.profileSheetHTML({...card, purposes:['friend'], explanation:{forYou:['x']}}, true);
   assert.doesNotMatch(own, /为什么推荐你们|apply-person/);
-  assert.match(own, /只在「认真结婚」目的下展示/);
+  
 });

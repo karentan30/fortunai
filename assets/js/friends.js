@@ -121,7 +121,7 @@
   function needAccount(){ if(state.user)return true;openAuth();return false; }
   function empty(title,text,button='开始建卡',href='#start'){return `<div class="empty-state"><div class="empty-symbol">缘</div><h2>${title}</h2><p>${text}</p><a class="secondary" href="${href}">${button} ↗</a></div>`;}
   function checkOptions(name,values,selected=[]){return values.map(v=>`<label class="chip-option"><input type="checkbox" name="${name}" value="${esc(v)}" ${selected.includes(v)?'checked':''}><span>${esc(v)}</span></label>`).join('');}
-  function scopeSelect(key,vis={}) {return `<select name="scope_${key}" class="scope" aria-label="${fields[key]||typeLabels[key]||key}的可见范围"><option value="private" ${!vis[key]||vis[key]==='private'?'selected':''}>仅自己可见</option><option value="connected" ${vis[key]==='connected'?'selected':''}>互相认识后</option><option value="public" ${vis[key]==='public'?'selected':''}>公开展示</option></select>`;}
+  function scopeSelect(key,vis={}) {const v=vis[key]||(SENSITIVE.includes(key)?'private':'public');return `<select name="scope_${key}" class="scope" aria-label="${fields[key]||typeLabels[key]||key}的可见范围"><option value="private" ${v==='private'?'selected':''}>仅自己可见</option><option value="connected" ${v==='connected'?'selected':''}>互相认识后</option><option value="public" ${v==='public'?'selected':''}>公开展示</option></select>`;}
   function normalizeBirthTime(value){
     const raw=String(value??'').normalize('NFKC').replace(/\s+/g,'');
     let match=/^(\d{1,2})$/.exec(raw);
@@ -352,7 +352,7 @@
     const wantEls=(p.targetStems||[]).includes('不限')?['不限日主']:[...new Set(pick(p.targetStems).map(x=>POSTER_ELEMENTS[x]).filter(Boolean))];
     const wantTypes=[...pick(p.targetMbtis),...pick(p.targetConstellations),...pick(p.targetZodiacs).map(z=>'属'+z)];
     // Income, assets, 房车户籍: shown only when the person is here for 认真结婚, even if the field itself is public.
-    const money=serious?SENSITIVE.filter(k=>f[k]&&f[k]!=='暂不提供'):[],moneyHidden=!serious&&SENSITIVE.some(k=>f[k]&&f[k]!=='暂不提供');
+    const money=SENSITIVE.filter(k=>f[k]&&f[k]!=='暂不提供'),moneyHidden=false;
     const label=k=>esc((fieldLabels[k]||k).split(' / ')[0]);
     const moneyCell=k=>{const [a,b]=String(shownValue(k,f[k])).split(/\s*·\s*/);return `<div><span class="ps-label">${label(k)}</span><b>${esc(b||a)}</b>${b?`<small>${esc(a)}</small>`:''}${verifiedMark(p,k)}</div>`;};
     const e=p.explanation||{},why=[...new Set((e.forYou||p.reasons||[]).map(r=>String(r).replace(/^认识目的相同：/,'都想').replace(/^都喜欢/,'都喜欢')))].slice(0,3);
