@@ -326,20 +326,20 @@
       ctx.beginPath();ctx.arc(750,340,90,0,Math.PI*2);ctx.fillStyle=accent;ctx.fill();txt(p?.chart?.dayMaster||'遇',704,372,87,ink,serif);
       ctx.font='35px '+serif;ctx.fillStyle=ink;ctx.fillText(fitText(ctx,'想认识 '+(stemNames(p?.targetStems)||'愿意聊聊的朋友'),max),84,505);paragraph('生肖参考：'+((p?.targetZodiacs||[]).join(' / ')||'由自己选择'),84,548,22,max,1);paragraph(caption,84,615,27,max,2,38);paragraph((p?.hobbies||[]).slice(0,4).join(' / '),84,740,29,max,1,40,ink);
       const entries=Object.entries(p?.fields||{}),selected=[...highlights,...entries.filter(([key])=>!highlights.some(([active])=>active===key))];txt(entries.length?'本人愿意分享的资料 · 自报':'从五行话题开始认识新朋友',84,832,17,soft);if(entries.length)cards(selected,859,118);else paragraph('无需先注册，也无需先填写九项资料。',84,960,28,max,3);
-      txt('测测你的日主',84,1370,34,ink,serif);txt('生成自己的交友卡。',84,1422,30,ink,serif);paragraph(posterDestination(),84,1493,13,470,3,21);paintQr(ctx,posterDestination(),622,1325,224);txt('建议竖屏版式 · 当前导出 PNG，不是视频文件',84,1582,15,soft);
+      txt('测测你的日主',84,1370,34,ink,serif);txt('生成自己的交友卡。',84,1422,30,ink,serif);if(tailQrEnabled()){paragraph(posterDestination(),84,1493,13,470,3,21);paintQr(ctx,posterDestination(),622,1325,224);}else{txt('Runae · 相遇有迹',84,1493,27,ink,serif);}txt('建议竖屏版式 · 当前导出 PNG，不是视频文件',84,1582,15,soft);
     }else if(!p&&index===0){
       txt('你是什么日主？',84,316+offset,65,ink,serif);paragraph('测测你的日主，看看想认识谁。',84,420+offset,40,max,3,57,ink);
       txt('01  认识自己的日主',84,620+offset,34,ink,serif);txt('02  看看可以认识的方向',84,686+offset,34,ink,serif);txt('03  做一张自己的交友卡',84,752+offset,34,ink,serif);
       paragraph('不必先注册。资料公开多少，由你决定。',84,832+offset,27,max,2,39);
       if(state.theme!==3&&state.profile?.listed&&state.posterMode!=='dayMaster')paragraph('也可通过公开卡片申请认识本人，双方同意后再交流。',84,911+offset,23,max,2,34);
       if(tailQrEnabled()){const top=tall?1120:1000,size=paintQr(ctx,posterDestination(),tall?340:414,top,tall?285:252);ctx.textAlign='center';txt('扫码生成你的交友卡',tall?480:540,top-32,31,ink,serif);txt('从了解自己，开始认识新朋友。',tall?480:540,top+size+46,23,soft);ctx.textAlign='left';}
-      else{paragraph('从了解自己，开始认识新朋友。',84,tall?1230:1060,38,max,2,54,ink);txt('Runae · 相遇有迹',84,tall?1370:1180,25,soft);paragraph('平台内入口待配置 · 当前为设计预览',84,tall?1450:1250,21,max,2,31);}
+      else{paragraph('从了解自己，开始认识新朋友。',84,tall?1230:1060,38,max,2,54,ink);txt('Runae · 相遇有迹',84,tall?1370:1180,25,soft);paragraph('认识五行合拍的人',84,tall?1450:1250,21,max,2,31);}
     }else if(index===0){
       txt(fitText(ctx,p?.nickname||'我的五行交友卡',max-270),84,292+offset,44,ink,serif);paragraph([p?.city,p?.chart?.zodiac?'属'+p.chart.zodiac:''].filter(Boolean).join(' · '),84,348+offset,24,max-270,2,33);txt('日主 '+(p?.chart?.dayMaster||'未公开'),84,423+offset,48,ink,serif);ctx.strokeStyle=line;ctx.strokeRect(right-230,235+offset,230,230);if(!paintPosterPhoto(ctx,right-230,235+offset,230)){txt('个人照片',right-195,345+offset,30,soft);txt('可选上传',right-185,390+offset,23,soft);}
       ctx.font='38px '+serif;ctx.fillStyle=ink;ctx.fillText(fitText(ctx,'想认识 '+(stemNames(p?.targetStems)||'有共同话题的朋友'),max),84,554+offset);paragraph('生肖参考：'+((p?.targetZodiacs||[]).join(' / ')||'由自己选择'),84,612+offset,25,max,1);
       const entries=Object.entries(p?.fields||{}),ordered=[...highlights,...entries.filter(([key])=>!highlights.some(([active])=>active===key))];txt('个人亮点 · 仅展示本人公开资料',84,675+offset,19,soft);if(ordered.length)cards(ordered,705+offset,118);else paragraph('更多关于我的事，留给认识以后。',84,780+offset,30,max,3);
       txt('你是什么日主？',84,1165+offset,36,ink,serif);paragraph('测测自己的日主，生成你的交友卡。',84,1215+offset,24,max-230,2,34);paragraph('从了解自己，开始认识新朋友。',84,1290+offset,20,max-230,1,28);
-      if(tailQrEnabled())paintQr(ctx,posterDestination(),right-185,1120+offset,185);
+      if(tailQrEnabled())paintQr(ctx,posterDestination(),right-185,1120+offset,185);else txt('Runae · 相遇有迹',84,1324+offset,20,ink,serif);
     }else{
       txt('第一次见面，一起做点什么？',84,300+offset,47,ink,serif);paragraph('从我的兴趣里，挑一个你也想尝试的。',84,361+offset,26,max,2,36);
       interests(420+offset,4);
