@@ -59,6 +59,8 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.use((req,res,next)=>req.user?next():res.status(401).json({error:'请先登录 Runae 账号'}));
   router.use(createRateLimit({limit:120}));
   router.get('/quota',run(req=>service.quota(req.user.id)));
+  // 打卡图鉴: owner-only (no id parameter). `share` is the types-and-counts-only payload used for the share image.
+  router.get('/collection',run(req=>{const C=require('../lib/friends-collection'),c=C.collectionFor(store.read(),req.user.id);return {collection:c,share:C.shareSummary(c)};}));
   // 校园分享用的个人推荐码：服务器签名派生，不含用户ID/姓名，链接里只带这个码。
   router.get('/referral',run(req=>({code:referralCode(secret,req.user.id)})));
   router.get('/me',run(req=>({profile:service.me(req.user.id)})));
