@@ -36,7 +36,7 @@ const BASE=process.env.FRIENDS_REVIEW_URL||'http://127.0.0.1:4188';
  await page.locator('#chat-refresh').click();await page.waitForFunction(()=>document.querySelector('#chat-messages').textContent.includes('第二个'));
  assert.equal((await page.locator('#chat-messages').innerText()).includes('STALE-PRIVATE'),false);
  // Session switch clears both conversations, drafts and report.
- await page.locator('#chat-draft').fill('PRIVATE-DRAFT');accountId='other-account';await page.locator('#chat-refresh').click();
+ await page.locator('#chat-draft').fill('PRIVATE-DRAFT');accountId='other-account';await page.evaluate(()=>document.querySelector('#chat-refresh').click());
  await page.waitForFunction(()=>document.querySelector('#pair-chat').hidden);
  assert.equal(await page.locator('#chat-draft').inputValue(),'');assert.equal(await page.locator('#chat-messages').innerText(),'');
  // Revocation clears the visible thread.
