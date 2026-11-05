@@ -10,7 +10,8 @@ const missing=()=>{const e=Error('卡片不存在或已停止公开');e.status=4
 const denied=()=>{const e=Error('没有操作权限');e.status=403;throw e;};
 const conflict=m=>{const e=Error(m);e.status=409;throw e;};
 const array=(v,valid,max=12)=>Array.isArray(v)?[...new Set(v.filter(x=>valid.includes(x)))].slice(0,max):[];
-function createFriendsService(store,charts) {
+function createFriendsService(store,charts,options={}) {
+  const quotas=require('./friends-quotas').createFriendsQuotas(options);
   const blocked=(s,a,b)=>s.blocks.some(x=>(x.by===a&&x.target===b)||(x.by===b&&x.target===a));
   const connection=(s,a,b)=>s.requests.some(r=>r.status==='accepted'&&((r.from===a&&r.to===b)||(r.to===a&&r.from===b)));
   const active=(s,p,viewer)=>p?.listed&&!isDisabled(s,p.userId)&&!blocked(s,p.userId,viewer);
@@ -55,16 +56,18 @@ function createFriendsService(store,charts) {
         return structuredClone(p);
       });
     },
-    discover(uid,q={}){
-      const s=store.read(),self=needMine(s,uid);
+    quota(uid){return quotas.status(store.read(),uid);},
+    discover(uid,q={}){return store.transaction(s=>{
+      const self=needMine(s,uid);
       const all=s.profiles.filter(p=>p.userId!==uid&&active(s,p,uid)).map(p=>project(s,p,uid))
         .filter(p=>(!q.city||p.city===q.city)&&(!q.stem||p.chart.dayMaster===q.stem)&&(!q.zodiac||p.chart.zodiac===q.zodiac))
         .map(p=>{const reasons=[];let directions=0;if(!self.targetStems.includes('不限')&&p.chart.dayMaster&&self.targetStems.includes(p.chart.dayMaster)){directions++;reasons.push('符合你选择的日主方向');}if(!self.targetZodiacs.includes('不限')&&p.chart.zodiac&&self.targetZodiacs.includes(p.chart.zodiac)){directions++;reasons.push('符合你选择的生肖方向');}const interests=p.hobbies.filter(h=>self.hobbies.includes(h));for(const hobby of interests.slice(0,2))reasons.push('都喜欢'+hobby);const intent=p.intent===self.intent;if(intent)reasons.push('认识意图相同');return {card:{...p,reasons},directions,interests:interests.length,intent:Number(intent)};})
         .sort((a,b)=>b.directions-a.directions||b.interests-a.interests||b.intent-a.intent)
         .map(item=>item.card);
       const offset=Math.max(0,Math.min(10000,Number(q.offset)||0));
-      return {profiles:all.slice(offset,offset+24),total:all.length,nextOffset:offset+24<all.length?offset+24:null,rankingBasis:'公开日主生肖偏好优先，完整双方合盘需另行授权'};
-    },
+      const available=quotas.discover(s,uid,all);
+      return {profiles:available.slice(offset,offset+24),total:available.length,nextOffset:offset+24<available.length?offset+24:null,quota:quotas.status(s,uid),rankingBasis:'公开日主生肖偏好优先，完整双方合盘需另行授权'};
+    });},
     card(id,uid){const s=store.read();return project(s,s.profiles.find(p=>p.shareId===id),uid);},
     request(uid,shareId){return store.transaction(s=>{
       const self=needMine(s,uid),target=s.profiles.find(p=>p.shareId===shareId);
@@ -72,6 +75,7 @@ function createFriendsService(store,charts) {
       const old=s.requests.find(r=>((r.from===uid&&r.to===target.userId)||(r.to===uid&&r.from===target.userId))&&['pending','accepted'].includes(r.status));
       if(old)conflict(old.status==='accepted'?'你们已经连接':'已有待处理申请');
       if(s.requests.some(r=>r.from===uid&&r.to===target.userId&&Date.now()-Date.parse(r.createdAt)<86400000))conflict('24小时内请勿重复申请');
+      quotas.request(s,uid);
       const r={id:crypto.randomUUID(),from:self.userId,to:target.userId,status:'pending',createdAt:new Date().toISOString()};s.requests.push(r);metric(s,'request_created',self.acquisition);return {id:r.id,status:r.status};
     });},
     requests(uid){const s=store.read();return s.requests.filter(r=>(r.from===uid||r.to===uid)&&!blocked(s,r.from,r.to)).map(r=>{
