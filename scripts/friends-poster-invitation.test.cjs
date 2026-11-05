@@ -34,7 +34,7 @@ test('anonymous, invitation and unlisted exports lead to the free tool without i
     const h=helpers({platform:'wechat',theme:0,posterMode:'profile',tailQr:null,...scenario});
     const url=new URL(h.posterDestination());
     assert.equal(url.pathname,'/pages/friends-connect.html');
-    assert.equal(url.hash,'#start');
+    assert.equal(url.hash,'#hello');
     assert.equal(url.searchParams.has('card'),false);
     assert.equal(url.searchParams.get('source'),'wechat');
   }

@@ -80,7 +80,7 @@
   function destination(){
     const u=new URL(location.origin+'/pages/friends-connect.html');
     u.searchParams.set('source','xhs');u.searchParams.set('campaign','collection');if(referral)u.searchParams.set('xref',referral);
-    u.hash='start';return u.toString();
+    u.hash='hello';return u.toString();
   }
   function paintQr(ctx,url,x,y,max){
     if(typeof window.qrcode!=='function')return 0;
