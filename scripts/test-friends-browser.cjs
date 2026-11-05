@@ -28,7 +28,7 @@ async function run(file,base){
     const base='http://127.0.0.1:'+server.address().port;
     await run('friends-share-preview.test.cjs',base);
     await run('friends-gallery.test.cjs',base);
-    await run('friends-chat-browser.test.cjs',base);
     await run('friends-report-sample-browser.test.cjs',base);
+    await run('friends-chat-browser.test.cjs',base);
   }finally{server.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
