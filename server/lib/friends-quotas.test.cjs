@@ -12,7 +12,7 @@ test('daily discovery is distinct and replay/filter cannot exceed allowance',()=
 });
 test('China midnight resets; expiration/refund removes paid permissions without resetting usage',()=>{
  let now=Date.parse('2026-11-05T15:59:00Z');const q=createFriendsQuotas({enabled:true,clock:()=>now});
- const s={billingOrders:[{userId:1,status:'paid',paidAt:'2026-11-01T00:00:00Z',accessUntil:'2026-12-01T00:00:00Z'}]};
+ const s={billingOrders:[{userId:1,matchingMembership:true,benefitsVerified:true,status:'paid',paidAt:'2026-11-01T00:00:00Z',accessUntil:'2026-12-01T00:00:00Z'}]};
  assert.equal(q.discover(s,1,cards).length,15);
  for(let i=0;i<10;i++)q.request(s,1);
  assert.throws(()=>q.request(s,1),e=>e.status===429);
