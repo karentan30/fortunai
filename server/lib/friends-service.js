@@ -8,7 +8,7 @@ const {isMember}=require('./friends-membership');
 const {VERIFY_FIELDS}=require('./friends-verification');
 const FIELDS=['age','height','weight','school','occupation','industry','title','income','assets','familyAssets','education','house','car','hukou'];
 // Optional profile fields. Income/assets/family assets/house/car/hukou may be left empty ("收入资产允许不提供").
-const OPTIONAL_FIELDS=['industry','title','income','assets','familyAssets','education','house','car','hukou'];
+const OPTIONAL_FIELDS=['height','weight','school','occupation','industry','title','income','assets','familyAssets','education','house','car','hukou'];
 const ENUM_FIELDS={education:M.EDUCATION_LEVELS,house:M.HOUSE_OPTIONS,car:M.CAR_OPTIONS};
 const SCOPES=['public','connected','private'];
 const text=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'';
@@ -106,7 +106,7 @@ function createFriendsService(store,charts,options={}) {
         // readable as-is; matching reads tiers by lower bound and legacy text via M.amount().
         const expectations=M.normalizeExpectations(b.expectations,prev?.expectations),matchingConsent=M.normalizeMatchingConsent(b.matchingConsent,prev?.matchingConsent);
         const height=Number(fields.height),weight=Number(fields.weight);
-        if(!Number.isFinite(height)||height<80||height>250||!Number.isFinite(weight)||weight<25||weight>300)bad('身高用厘米、体重用公斤，请检查数值');
+        if((fields.height&&(!Number.isFinite(height)||height<80||height>250))||(fields.weight&&(!Number.isFinite(weight)||weight<25||weight>300)))bad('身高用厘米、体重用公斤，请检查数值');
         const visibility={};for(const k of [...FIELDS,'dayMaster','zodiac']) visibility[k]=SCOPES.includes(b.visibility?.[k])?b.visibility[k]:'private';
         const types=normalizeTypes(b,prev);
         for(const k of ['constellation','mbti'])visibility[k]=Object.hasOwn(b.visibility||{},k)?(SCOPES.includes(b.visibility[k])?b.visibility[k]:'private'):(prev?.visibility?.[k]||'private');
