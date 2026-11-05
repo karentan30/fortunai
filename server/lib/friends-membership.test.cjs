@@ -49,3 +49,10 @@ test('calendar anniversaries clamp without drifting and monthly access ends at n
  assert.equal(new Date(anniversary('2026-01-31T12:00:00Z',2)).toISOString(),'2026-03-31T12:00:00.000Z');
  const f=fixture(),o=await f.checkout('friends_month_v1');f.notify(o.id);f.setNow(Date.parse('2026-02-28T12:00:00Z'));assert.equal(f.billing.balance('a').units.pair_report,0);assert.equal(f.quota().tier,'free');
 });
+
+test('existing or unresolved membership prevents duplicate charges with a new key',async()=>{
+ const f=fixture(),o=await f.checkout('friends_month_v1');
+ await assert.rejects(f.checkout('friends_year_v1'),{status:409});assert.equal(f.store.read().billingOrders.length,1);
+ f.notify(o.id);await assert.rejects(f.checkout('friends_year_v1'),{status:409});
+ f.setNow(Date.parse('2026-02-28T12:00:00Z'));const renewal=await f.checkout('friends_year_v1');assert.equal(renewal.status,'pending');
+});
