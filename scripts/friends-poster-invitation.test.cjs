@@ -39,3 +39,18 @@ test('anonymous, invitation and unlisted exports lead to the free tool without i
     assert.equal(url.searchParams.get('source'),'wechat');
   }
 });
+test('wanted types reach the poster only while "海报上显示我想认识的类型" is on', () => {
+  const line = source.split('\n').find(l => l.trimStart().startsWith('function publicOwn('));
+  const context = vm.createContext({fieldLabels:{age:'年龄',income:'年收入'}});
+  vm.runInContext(line, context);
+  const own = {nickname:'测试', visibility:{age:'public',income:'private',mbti:'public',dayMaster:'public'}, mbti:'INFJ', fields:{age:'29',income:'50–100万'}, chart:{dayMaster:'丙'},
+    targetStems:['甲'], targetZodiacs:['马'], targetMbtis:['ENFP','ENTP'], targetConstellations:['狮子座']};
+  const on = context.publicOwn({...own});
+  assert.deepEqual([...on.targetMbtis], ['ENFP','ENTP']);
+  assert.deepEqual([...on.targetConstellations], ['狮子座']);
+  assert.deepEqual([...on.targetZodiacs], ['马']);
+  const off = context.publicOwn({...own, posterShowTargets:false});
+  for (const key of ['targetStems','targetZodiacs','targetMbtis','targetConstellations']) assert.equal(off[key], undefined, key + ' must stay off the poster when the toggle is off');
+  // Other privacy filtering is unchanged either way.
+  for (const out of [on, off]) { assert.equal(out.fields.income, undefined); assert.equal(out.fields.age, '29'); }
+});

@@ -2,7 +2,7 @@
 // Node 24 pilot persistence. WAL + an IMMEDIATE transaction prevents lost updates across workers.
 // The state payload is authenticated/encrypted; neither user profiles nor contacts appear as plaintext in the database or backups.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
-const COLLECTIONS=['profiles','requests','blocks','reports','moderation','auditLogs','feedback','metrics','billingOrders','billingEvents','creditLedger','creditReservations','attributionMarks','personalReportJobs','relationshipQuestionnaires','compatibilityPairs','privateIntakes'];
+const COLLECTIONS=['profiles','requests','blocks','reports','moderation','auditLogs','feedback','metrics','billingOrders','billingEvents','creditLedger','creditReservations','attributionMarks','personalReportJobs','relationshipQuestionnaires','marriageQuestionnaires','questionnaireShares','compatibilityPairs','privateIntakes','pairReportJobs','verificationRequests'];
 function normalize(state){
   if(!state||state.version!==1)throw Error('交友数据版本无效');
   for(const key of COLLECTIONS){if(state[key]===undefined)state[key]=[];if(!Array.isArray(state[key]))throw Error('交友数据结构损坏');}

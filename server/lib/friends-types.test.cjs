@@ -27,6 +27,14 @@ test('public type preferences guide discovery without leaking desired types or f
  const p=s.discover('a').profiles[0];assert.equal(p.shareId,match.shareId);assert.ok(p.reasons.some(x=>/MBTI/.test(x)));assert.ok(p.reasons.some(x=>/星座/.test(x)));assert.equal(p.targetMbtis,undefined);assert.equal(p.targetConstellations,undefined);assert.equal(p.score,undefined);
  s.save('a',{...data,targetMbtis:['不限','INFJ'],targetConstellations:[]});assert.ok(!s.discover('a').profiles.some(p=>p.reasons.some(x=>/MBTI|星座/.test(x))));
 });
+test('poster wanted-types toggle defaults on, persists off, survives saves that omit it, and never leaks to others',()=>{
+ const {service:s,data}=setup();
+ assert.equal(s.save('a',data).posterShowTargets,true);
+ assert.equal(s.save('a',{...data,targetMbtis:['ENFP'],posterShowTargets:false}).posterShowTargets,false);
+ assert.equal(s.save('a',{...data,targetMbtis:['ENFP']}).posterShowTargets,false);assert.equal(s.me('a').posterShowTargets,false);
+ assert.equal(s.save('a',{...data,posterShowTargets:true}).posterShowTargets,true);
+ s.save('b',data);const seen=s.discover('b').profiles.find(p=>p.nickname===data.nickname);assert.ok(seen);assert.equal(seen.targetMbtis,undefined);assert.equal(seen.posterShowTargets,undefined);
+});
 test('new relationship purposes and legacy serious relationship remain accepted',()=>{
  const {service:s,data}=setup();for(const intent of ['交朋友','找搭子','找闺蜜','Dating','认真恋爱','认真结婚'])assert.equal(s.save('a',{...data,intent}).intent,intent);
 });

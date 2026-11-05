@@ -19,4 +19,10 @@ function period(order,now){
  for(let i=order.accessMonths-1;i>=0;i--)if(now>=anniversary(order.paidAt,i))return {key:String(i),startsAt:anniversary(order.paidAt,i),expiresAt:Math.min(end,anniversary(order.paidAt,i+1))};
  return null;
 }
-module.exports={PILOT_CATALOG,anniversary,period};
+// Single membership predicate (相生会员 = paid matching membership whose benefits were verified and is inside its access window).
+// Payments are hard-closed in the pilot, so in practice this returns false for everyone until billing is accepted.
+function isMember(state,viewerId,now=Date.now()){
+ if(viewerId===undefined||viewerId===null||viewerId==='')return false;
+ return (state?.billingOrders||[]).some(o=>o.userId===viewerId&&o.matchingMembership===true&&o.benefitsVerified===true&&o.status==='paid'&&Number.isFinite(Date.parse(o.paidAt))&&Date.parse(o.paidAt)<=now&&Number.isFinite(Date.parse(o.accessUntil))&&Date.parse(o.accessUntil)>now);
+}
+module.exports={PILOT_CATALOG,anniversary,period,isMember};

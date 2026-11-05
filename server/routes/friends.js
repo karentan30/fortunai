@@ -7,10 +7,13 @@ const {createFriendsService}=require('../lib/friends-service');
 const {searchCities}=require('../lib/friends-location');
 const {searchAreas,suggestPlaces}=require('../lib/friends-places');
 const {createAdminService,adminAuth,createRateLimit}=require('../lib/friends-admin');
-function createRouter({express,auth,store,secret,enabled=true,adminToken=process.env.FRIENDS_ADMIN_TOKEN||process.env.ADMIN_TOKEN,onLogout,canAccess=()=>true,mode='local_review',requirePolicy=false,quotaOptions={}}) {
+const {referralCode,createFunnelSink,instrumentCompatibility}=require('../lib/friends-campus');
+function createRouter({express,auth,store,secret,enabled=true,adminToken=process.env.FRIENDS_ADMIN_TOKEN||process.env.ADMIN_TOKEN,onLogout,canAccess=()=>true,mode='local_review',requirePolicy=false,quotaOptions={},funnel,verification=null}) {
   const router=express.Router();
   const charts=enabled?createChartService(secret):null;
-  const service=enabled?createFriendsService(store,charts,quotaOptions):null;
+  const service=enabled?createFriendsService(store,charts,{...quotaOptions,funnel,
+    // Hidden 认真婚恋 ranking signal from the marriage questionnaire (both users must have opted in). Never exposed.
+    alignmentScore:require('../lib/friends-matching').questionnaireAlignmentScore}):null;
   router.use((req,res,next)=>{
     res.set('Cache-Control','no-store').set('Referrer-Policy','no-referrer').set('X-Content-Type-Options','nosniff');
     if(!enabled&&!['/logout','/status','/legal'].includes(req.path))return res.status(503).json({error:'交友功能尚未开放，请稍后再来'});
@@ -32,6 +35,11 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.get('/admin/audit',run(()=>({audit:admin.audit()})));
   router.get('/admin/delivery-review',run(req=>admin.deliveryReview({limit:req.query.limit===undefined?100:Number(req.query.limit),offset:req.query.offset===undefined?0:Number(req.query.offset)})));
   router.post('/admin/report-jobs/:id/release',async(req,res,next)=>{try{res.json(await admin.releaseReport(req.params.id,req.body,req.friendsAdminActor));}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e);}});
+  // 人工核验队列. Files are streamed only through this admin-token route; there is no public URL for any proof file.
+  const needVerification=()=>{if(!verification){const e=Error('核验功能未配置');e.status=503;throw e;}return verification;};
+  router.get('/admin/verifications',run(()=>({requests:needVerification().pending()})));
+  router.get('/admin/verifications/:id/files/:fileId',(req,res,next)=>{try{const f=needVerification().file(req.params.id,req.params.fileId);res.set('Content-Type',f.mime).set('Content-Disposition','attachment; filename="'+f.filename+'"').set('Content-Security-Policy',"default-src 'none'; sandbox").set('Cache-Control','no-store, private');res.send(f.body);}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e);}});
+  router.post('/admin/verifications/:id',run(req=>needVerification().decide(req.params.id,req.body,req.friendsAdminActor)));
   router.get('/admin/health',run(()=>store.health?store.health():{ok:true,storage:'review-memory'}));
   router.post('/admin/reports/:id',run(req=>admin.review(req.params.id,req.body.status,req.body.note)));
   router.post('/admin/profiles/:id',run(req=>admin.moderate(req.params.id,req.body.disabled,req.body.reason)));
@@ -49,10 +57,17 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.use((req,res,next)=>req.user?next():res.status(401).json({error:'请先登录 Runae 账号'}));
   router.use(createRateLimit({limit:120}));
   router.get('/quota',run(req=>service.quota(req.user.id)));
+  // 校园分享用的个人推荐码：服务器签名派生，不含用户ID/姓名，链接里只带这个码。
+  router.get('/referral',run(req=>({code:referralCode(secret,req.user.id)})));
   router.get('/me',run(req=>({profile:service.me(req.user.id)})));
   router.post('/profile',run(req=>{if(requirePolicy&&req.body.listed===true&&req.body.policyVersion!=='friends-2026-11-04-v1'){const e=Error('请阅读并同意当前隐私说明与用户条款');e.status=400;throw e;}return{profile:service.save(req.user.id,req.body)};}));
   router.get('/export',run(req=>({profile:service.me(req.user.id),reports:service.reports(req.user.id),exportedAt:new Date().toISOString()})));
-  router.delete('/profile',run(req=>service.remove(req.user.id)));
+  router.delete('/profile',run(req=>{const out=service.remove(req.user.id);if(verification)verification.purgeUser(req.user.id);return out;}));
+  // 申请核验 (owner only). One file per request keeps each JSON body under the global 10MB parser limit.
+  router.get('/verification',run(req=>needVerification().status(req.user.id)));
+  router.post('/verification/files',createRateLimit({limit:30}),run(req=>needVerification().upload(req.user.id,req.body)));
+  router.delete('/verification/files/:fileId',run(req=>needVerification().removeFile(req.user.id,req.params.fileId)));
+  router.post('/verification/submit',createRateLimit({limit:20}),run(req=>needVerification().submit(req.user.id,req.body)));
   router.get('/discover',run(req=>service.discover(req.user.id,req.query)));
   router.get('/requests',run(req=>({requests:service.requests(req.user.id)})));
   router.post('/plan',createRateLimit({limit:10}),run(req=>{const card=service.card(req.body.shareId,req.user.id);if(!card.connected){const e=Error('双方接受认识申请后，再查看共同空档和见面建议');e.status=403;throw e;}const own=service.me(req.user.id),other=store.read().profiles.find(p=>p.shareId===req.body.shareId);const times=service.commonSlots(req.user.id,req.body.shareId,{durationMinutes:req.body.durationMinutes||15,days:14});return{commonSlots:times.slots,...suggestPlaces(own,other),timeNote:times.note};}));
@@ -74,7 +89,10 @@ function productionRouter(){
   if(config.enabled&&!config.ok){console.error('[friends] Configuration incomplete; feature disabled. Run friends-ops preflight.');return createRouter({express,auth:authMiddleware,enabled:false,mode:'configuration_error',onLogout});}
   try{
     const store=config.enabled?createSqliteFriendsStore(config.file,{key:process.env.FRIENDS_DATA_KEY}):null;
-    const friends=createRouter({express,auth:authMiddleware,enabled:config.enabled,mode:config.mode||'disabled',secret:process.env.FRIENDS_SIGNING_KEY,store,requirePolicy:true,quotaOptions:{enabled:process.env.FRIENDS_QUOTAS_ENABLED==='true'},
+    // Proof files live next to the encrypted database (outside the repo; friends-config already rejects in-repo paths).
+    let verification=null;
+    if(config.enabled){try{verification=require('../lib/friends-verification').createVerificationService({store,dir:process.env.FRIENDS_VERIFICATION_DIR||path.join(path.dirname(config.file),'friends-verification'),key:process.env.FRIENDS_DATA_KEY});verification.sweep();const v=verification;setInterval(()=>{try{v.sweep();}catch(_){}},3600000).unref();}catch(e){console.error('[friends] Verification storage not ready; verification disabled.');verification=null;}}
+    const friends=createRouter({express,auth:authMiddleware,verification,enabled:config.enabled,mode:config.mode||'disabled',secret:process.env.FRIENDS_SIGNING_KEY,store,requirePolicy:true,quotaOptions:{enabled:process.env.FRIENDS_QUOTAS_ENABLED==='true'},funnel:createFunnelSink({secret:process.env.FRIENDS_SIGNING_KEY}),
       canAccess:req=>config.mode==='public'||config.allowedIds?.has(String(req.user?.id)),onLogout});
     if(!config.enabled)return friends;
     const {configuredBilling}=require('../lib/friends-billing-config');
@@ -92,12 +110,15 @@ function productionRouter(){
     bundle.use('/personal-reports',createRateLimit({limit:20}),billingAuth,createPersonalReportsRouter({express,auth:billingAuth,store,billing}));
     const {createFriendsQuestionsRouter}=require('./friends-questions');
     bundle.use('/questions',createRateLimit({limit:60}),billingAuth,createFriendsQuestionsRouter({express,auth:billingAuth,store}));
+    const {createFriendsQuestionnaireRouter}=require('./friends-questionnaire');
+    bundle.use('/questionnaire',createRateLimit({limit:120}),billingAuth,createFriendsQuestionnaireRouter({express,auth:billingAuth,store}));
     const {createFriendsIntakeRouter}=require('./friends-intake');
     bundle.use('/intake',createRateLimit({limit:40}),billingAuth,createFriendsIntakeRouter({express,auth:billingAuth,store}));
     const {createCompatibilityService}=require('../lib/friends-compatibility');
     const {createCompatibilityRouter}=require('./friends-compatibility');
     const {createFriendsQuestionsService}=require('../lib/friends-questions');
     const compatibility=createCompatibilityService({store,questionnaireService:createFriendsQuestionsService({store}),questionBank:require('../../assets/data/friends-relationship-questions.json')});
+    instrumentCompatibility(compatibility,store,createFunnelSink({secret:process.env.FRIENDS_SIGNING_KEY}));
     bundle.use('/compatibility',billingAuth,createCompatibilityRouter({express,auth:billingAuth,service:compatibility}));
     bundle.use(friends);return bundle;
   }catch(e){console.error('[friends] Storage not ready; feature disabled. Run protected preflight.');return createRouter({express,auth:authMiddleware,enabled:false,mode:'storage_error',onLogout});}

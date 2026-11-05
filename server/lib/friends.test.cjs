@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');const os=require('node:os');const path=require('node:path');
 const {calculate,createChartService}=require('./friends-chart');
 const {createFriendsStore}=require('./friends-store');
-const {createFriendsService,FIELDS}=require('./friends-service');
+const {createFriendsService,FIELDS,OPTIONAL_FIELDS}=require('./friends-service');
 const secret='test-signing-key-'.repeat(4);
 function setup(file){const store=createFriendsStore(file),charts=createChartService(secret),service=createFriendsService(store,charts);
 const credential=charts.issue({birthday:'1991-08-28',calendar:'lunar',hour:6}).credential;
@@ -16,7 +16,7 @@ for(const input of [{birthday:'1991-02-30'},{birthday:'1991-08-31',calendar:'lun
 const c=calculate({birthday:'1991-08-28'});assert.equal(c.pillars,null);assert.equal(c.complete,false);
 });
 test('signed chart rejects tampering',()=>{const {charts,data}=setup();const token=data().credential;assert.equal(charts.verify(token).dayMaster,'戊');assert.throws(()=>charts.verify(token+'x'));const parts=token.split('.');parts[0]=Buffer.from('{}').toString('base64url');assert.throws(()=>charts.verify(parts.join('.')));});
-test('core fields required; optional legacy fields and age derivation',()=>{const {service,data}=setup();for(const k of FIELDS.filter(k=>!['age','industry','title','familyAssets'].includes(k))){const b=data();delete b.fields[k];assert.throws(()=>service.save('a',b));}const p=service.save('a',data({fields:{...data().fields,age:'16'}}));assert.ok(Number(p.fields.age)>=18);assert.throws(()=>service.save('b',data({consent:false})));});
+test('core fields required; optional legacy fields and age derivation',()=>{const {service,data}=setup();for(const k of FIELDS.filter(k=>k!=='age'&&!OPTIONAL_FIELDS.includes(k))){const b=data();delete b.fields[k];assert.throws(()=>service.save('a',b));}{const b=data();for(const k of ['income','assets','familyAssets'])delete b.fields[k];assert.equal(service.save('a',b).fields.income,'');}const p=service.save('a',data({fields:{...data().fields,age:'16'}}));assert.ok(Number(p.fields.age)>=18);assert.throws(()=>service.save('b',data({consent:false})));});
 test('privacy, request permissions, contacts, duplicate concurrency and exit',async()=>{
 const {service:s,data}=setup();const a=s.save('a',data()),b=s.save('b',data()),c=s.save('c',data());
 let card=s.card(b.shareId,'a');assert.equal(card.fields.school,'学校');assert.equal(card.fields.income,undefined);assert.equal(card.fields.assets,undefined);assert.equal(card.contact,undefined);
