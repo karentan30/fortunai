@@ -27,5 +27,29 @@ const {chromium}=require('../.review/node_modules/playwright-core');
  await page.screenshot({path:path.join(__dirname,'../.review/share-preview-mobile.png'),fullPage:true});
  await page.goto((process.env.FRIENDS_REVIEW_URL||'http://127.0.0.1:4188')+'/pages/friends-profile-library.html');assert.equal(await page.locator('article').count(),100);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
  await page.screenshot({path:path.join(__dirname,'../.review/profile-library-top.png')});
+
+ // Scan-to-register keeps the public invitation target; no application is sent implicitly.
+ let requested=0;
+ await page.route('**/api/friends/card/inviter-fixture',r=>r.fulfill({json:{profile:{shareId:'inviter-fixture',nickname:'邀请人样例',city:'北京',intent:'交朋友',fields:{},chart:{dayMaster:'丁'},hobbies:['羽毛球'],targetStems:['戊']}}}));
+ await page.route('**/api/auth/register',r=>r.fulfill({json:{user:{id:'new-fixture',email:'new@example.invalid'}}}));
+ await page.route('**/api/friends/me',r=>r.fulfill({json:{profile:null}}));
+ await page.route('**/api/friends/requests',r=>{requested++;return r.fulfill({json:{ok:true}});});
+ await page.goto((process.env.FRIENDS_REVIEW_URL||'http://127.0.0.1:4188')+'/pages/friends-connect.html?card=inviter-fixture&source=wechat&campaign=poster_a');
+ await page.locator('#apply-person').click();
+ await page.locator('[data-auth-mode=register]').click();await page.locator('#auth-form [name=email]').fill('new@example.invalid');await page.locator('#auth-form [name=password]').fill('Fixture-pass-123');await page.locator('#auth-form [name=agreement]').check();await page.locator('#auth-form button[type=submit]').click();
+ await page.waitForFunction(()=>!document.querySelector('#auth-dialog').open);
+ assert.equal(new URL(page.url()).searchParams.get('card'),'inviter-fixture');
+ await page.locator('.invitation-return button').click();await page.waitForSelector('#apply-person');assert.equal(await page.locator('#detail-content h2').innerText(),'邀请人样例');assert.equal(requested,0);
+ await page.locator('#detail-dialog .dialog-close').click();
+ await page.evaluate(()=>location.hash='discover');
+ assert.equal(new URL(page.url()).searchParams.get('card'),'inviter-fixture');
+ await page.locator('.invitation-return button').click();await page.waitForSelector('#apply-person');
+ for(const route of ['friends-report-sample.html','friends-design-review.html']){
+  await page.goto((process.env.FRIENDS_REVIEW_URL||'http://127.0.0.1:4188')+'/pages/'+route);
+  for(const width of [320,390]){await page.setViewportSize({width,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,route+' at '+width);}
+  if(route==='friends-design-review.html'){await page.locator('.tabs [data-view=cards]').click();assert.equal(await page.locator('#posters article').count(),1);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);}
+  await page.screenshot({path:path.join(__dirname,'../.review/'+route.replace('.html','')+'-mobile.png'),fullPage:true});
+ }
+
  assert.deepEqual(errors,[]);console.log('PASS: responsive heading; removed sample preview button; direct birth-to-poster; local photo pixels; real 1-page x 4-platform PNGs; remove photo resets consent; 100-profile document.');
 }finally{await b.close();}})().catch(e=>{console.error(e);process.exitCode=1;});
