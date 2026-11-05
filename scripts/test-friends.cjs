@@ -7,6 +7,7 @@ files.push(path.join(root,'scripts/friends-poster-invitation.test.cjs'));
 files.push(path.join(root,'scripts/friends-install-files.test.cjs'));
 files.push(path.join(root,'scripts/friends-launch.test.cjs'));
 const updateTest=path.join(root,'scripts/friends-update.test.cjs');if(fs.existsSync(updateTest))files.push(updateTest);
+files.push(path.join(root,'scripts/friends-update-chat.test.cjs'));
 if(!files.length)throw Error('没有找到交友功能测试');
 const result=spawnSync(process.execPath,['--test',...files],{cwd:root,stdio:'inherit',windowsHide:true});
 if(result.error)throw result.error;process.exitCode=result.status??1;
