@@ -3,7 +3,7 @@ const crypto=require('node:crypto');
 const {STEMS,ZODIACS,bad}=require('./friends-chart');
 const {isDisabled,metric,normalize,normalizeAttribution}=require('./friends-admin');
 const {recommend,normalizeAvailability,findCommonSlots}=require('./friends-preferences');
-const FIELDS=['age','height','weight','school','occupation','industry','title','income','assets'];
+const FIELDS=['age','height','weight','school','occupation','industry','title','income','assets','familyAssets'];
 const SCOPES=['public','connected','private'];
 const text=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'';
 const missing=()=>{const e=Error('卡片不存在或已停止公开');e.status=404;throw e;};
@@ -37,7 +37,7 @@ function createFriendsService(store,charts) {
         const nickname=text(b.nickname,24),city=text(b.city,24),intent=b.intent;
         if(!nickname||!city||!['交朋友','找搭子','认真恋爱'].includes(intent))bad('请补全昵称、城市和认识目的');
         const fields={age:String(chart.age)};
-        for(const k of FIELDS.slice(1)){fields[k]=text(b.fields?.[k],80);if(!fields[k])bad('请补齐九项个人资料');}
+        for(const k of FIELDS.slice(1)){fields[k]=text(b.fields?.[k],80);if(!fields[k]&&!['industry','title','familyAssets'].includes(k))bad('请补齐个人资料');}
         const height=Number(fields.height),weight=Number(fields.weight);
         if(!Number.isFinite(height)||height<80||height>250||!Number.isFinite(weight)||weight<25||weight>300)bad('身高用厘米、体重用公斤，请检查数值');
         const visibility={};for(const k of [...FIELDS,'dayMaster','zodiac']) visibility[k]=SCOPES.includes(b.visibility?.[k])?b.visibility[k]:'private';
