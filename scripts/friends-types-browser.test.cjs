@@ -29,7 +29,7 @@ await page.locator('[name=exp_min_age]').fill('24');await page.locator('[name=ex
 await page.locator('[name=exp_values_city]').fill('北京，上海');await page.locator('[name=exp_level_city]').selectOption('prefer');
 await page.locator('summary').filter({hasText:'是否用于私密筛选'}).click();await page.locator('[name=match_income]').check();
 assert.ok((await page.locator('#field_assets option').allTextContents()).includes('A8 · 1000–2000万'));await page.locator('#field_assets').selectOption('1000–2000万');await page.locator('[name=exp_min_familyAssets]').selectOption('1000');
-await page.locator('summary').filter({hasText:'也通过星座'}).click();
+await page.locator('summary').filter({hasText:'也按星座'}).click();
 await page.locator('[data-suggest-type=constellation]').click();
 assert.deepEqual(await page.locator('[name=targetConstellations]:checked').evaluateAll(xs=>xs.map(x=>x.value)),['狮子座','射手座']);
 await page.locator('[data-suggest-type=mbti]').click();
