@@ -1,5 +1,39 @@
 # 相生交接：代码、产品决策与后续任务
-更新日期：2026-11-05。后续接手先读本文件，再读 xiangsheng-launch-prd-2026-11-05.md。后出现的用户决策优先；本文件区分实现与待开发。
+更新日期：2026-11-06 夜。**先读第 0 节（最新，覆盖下文所有旧状态）**，再读 docs/PRD-相生试运营上线-2026-11-06.md。
+
+## 0. 2026-11-06 最新状态
+**分支**：集成分支 `integrate/xiangsheng-1106`（所有功能都合在这里，未合 main）。Karen 两台电脑都推这个分支，动手前先 fetch。
+
+**已合入（代码已写 + 自动测试过）**
+- 引导页 #hello：不注册填生日→出日主/星座/生肖→左右刷真人（只给日主/年龄段/公开类型/爱好；人少补「虚构示例」卡，不编人数）。
+- MBTI：引导页可选、可跳过；原创 16 题快速小测（不是官方 MBTI，页面有声明，不用官方/16personalities 题目）；星座组合提示（同座/对宫/同象/风火/水土）。
+- 交友卡编辑（分组、相亲项折叠）、认真相亲页（照片≤6、5 秒语音、房车户口、婚况核验）、打卡图鉴+分享图、明星日主库 111 人+小红书内容包（docs/xiangsheng-content/）。
+- 会员：免费 vs 会员 29.9/月·199/年、不自动续费；直购走支付宝/微信（server/lib/friends-membership-sales.js），总开关 `FRIENDS_SALES_OPEN` 默认关。退款：先在商户后台退钱，再到 friends-admin「会员订单」点「标记已退款」（撤会员+审计）。
+- 条款：运营主体 开普斯通智信集团有限公司（Capstone IQ Group Limited），客服 support@runae.app；会员开通后不退款，重复扣款/付了没开通/我方原因停用 7 天以上全额退。
+- 评审：3 轮后 8 页 ≥9；找朋友、双人页小修后未再独立复评；MBTI 小测/星座/条款未独立评审。
+- 测试：`TMPDIR=/private/tmp/xx node scripts/test-friends.cjs` 298 项通过 + server/lib/friends-*.test.cjs；friends-matching.test.cjs 偶发失败一次（疑似不稳）。
+
+**测试站（已部署到服务器，等 DNS）**
+- 地址 xiangsheng.mylumee.cn。**DNS 未加**：需在阿里云云解析给 mylumee.cn 加 A 记录 `xiangsheng → 47.242.80.65`，Caddy 会自动签 https。
+- 香港服务器 47.242.80.65，独立 pm2 进程 `xiangsheng`，端口 3031；不碰线上 `shenyuan`(3021)。
+- 代码 `/opt/xiangsheng`（本分支浅克隆）。更新：`cd /opt/xiangsheng && git pull && pm2 restart xiangsheng --update-env`。
+- 专用 Node24：`/opt/node24`（相生用 node:sqlite，需 ≥24；系统 node 仍是 20，别改）。
+- 数据 `/opt/xiangsheng-data`（data.json + 加密 friends.sqlite + 核验/媒体目录），与 shenyuan 完全分开。
+- 环境变量 `/opt/xiangsheng/server/.env`：复制 shenyuan 的再覆盖 PORT/DATA_FILE/FRIENDS_*；三把密钥在服务器上随机生成，后台管理凭证就是其中的 FRIENDS_ADMIN_TOKEN（不写进仓库）。
+- Caddy：/etc/caddy/Caddyfile 末尾 xiangsheng 段（根路径→/pages/friends-connect.html，*.html→/pages/）；改前备份 Caddyfile.bak.1106-xiangsheng。注意 pages/friends.html 是旧善缘页，相生入口是 friends-connect.html。
+- 停用：删 Caddy 那段 + `pm2 stop xiangsheng`。
+- 当前 **closed_beta**：只有账号 ID 1、2（xs-test1 / xs-test2 @mylumee.cn，密码问 Karen）能进相生；新账号要加进 FRIENDS_ALLOWED_USER_IDS 再重启。转 public 需 Karen 确认 4 个旗标（PUBLIC_APPROVED / IDENTITY_REVIEWED / LEGAL_REVIEWED / BACKUP_VERIFIED）。收款关着。
+- 已验：服务器本机各页 200、引导页出结果、测试账号能登录进相生；runae.app / shenyuan / mylumee.cn 仍 200。**未验**：公网 https（等 DNS）、手机真机。
+
+**接下来按顺序**
+1. Karen 加 DNS → 公网逐页检查（必须走公网 URL，不能只看 localhost）。
+2. Karen 手机走一遍；确认 4 旗标后转 public。
+3. 配好支付宝/微信回调地址后开收款，Karen 真付 ¥29.9 一单 + 退一单。
+4. 运营：后台给每个素人/社团生成渠道码；内容用 docs/xiangsheng-content/。
+5. 待定：「共同照护」问卷维度（等 Karen）；明星生日复核结果有问题的要删；浏览器测试脚本里写死了 Windows Edge 路径。
+
+---
+（以下为 11-05 及更早记录，状态以第 0 节为准）
 
 ## 1. 仓库与验证
 - 仓库 karentan30/fortunai；工作分支 feature/friends-web-2026-11-04；草稿 PR https://github.com/karentan30/fortunai/pull/1 。未合并 main。
