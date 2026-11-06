@@ -12,7 +12,7 @@
     const card=main.querySelector('.result-wrap .reading-card');
     if(card)return {stem:(card.querySelector('.day-master')?.textContent||'').trim().charAt(0),after:card.querySelector('.tags')||card.querySelector('.element-line')};
     const me=main.querySelector('.onb-me');
-    if(me)return {stem:(me.querySelector('.onb-me-glyph')?.textContent||'').trim().charAt(0),after:me};
+    if(me)return {stem:(me.querySelector('.onb-me-glyph')?.textContent||'').trim().charAt(0),after:main.querySelector('#onb-mbti')||me};
     return null;
   }
   async function run(){
