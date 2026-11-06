@@ -70,7 +70,7 @@ function calculate(input, now=new Date()) {
   }
   const birthLocation=resolved?{...resolved.location,offsetMinutes:resolved.offsetMinutes}:null;
   const chart={ dayMaster:dayPillar[0],element:stemElement(dayPillar[0]),dayPillar,
-    zodiac:solar.getLunar().getYearShengXiao(),age,ageAsOf:now.toISOString().slice(0,10),
+    zodiac:solar.getLunar().getYearShengXiao(),constellation:solar.getXingZuo()+'座',age,ageAsOf:now.toISOString().slice(0,10),
     complete:known,pillars,birthLocation,directions:directions(dayPillar[0]),calculationVersion:'friends-chart-v2;tzdata='+process.versions.tz,
     convention:resolved?`${resolved.location.label} · ${resolved.location.timeZone}；按出生当地民用日期/时间，23点换日；年/月柱按同一瞬间的节气，生肖按春节。经纬度为城市中心；未校正真太阳时。`:'未填出生城市，暂按UTC+8民用时间；23点换日，生肖按农历春节。未校正真太阳时。',
     note:known?'四柱用于传统文化参考；认识方向仅解释五行关系，不是完整合盘或择偶结论。':'时辰未知：日柱暂按当日中午计算，若可能生于23点后，日主可能变化。没有推算时柱、身强弱或喜用神。' };

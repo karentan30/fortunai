@@ -4,15 +4,32 @@
 // Talks to friends.js only through window.XiangshengFriendsBridge. Guests only ever receive teaser fields
 // (see server/lib/friends-preview-deck.js); tokens are per-response and opaque.
 (() => {
-  const PENDING='xs_onb_pending_v1';
+  const PENDING='xs_onb_pending_v1',MBTI_KEY='xs_onb_mbti_v1';
+  const MBTIS=['INTJ','INTP','ENTJ','ENTP','INFJ','INFP','ENFJ','ENFP','ISTJ','ISFJ','ESTJ','ESFJ','ISTP','ISFP','ESTP','ESFP'];
+  const MBTI_PAIRS=['E/I','N/S','T/F','J/P'];
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const STEMS=[...'甲乙丙丁戊己庚辛壬癸'],ELEMENTS=[...'木火土金水'],TONES=['wood','fire','earth','metal','water'];
   const idx=stem=>Math.floor(STEMS.indexOf(stem)/2);
   const PURPOSE_KEYS={'找搭子':'buddy','交朋友·闺蜜':'friend','享受恋爱':'dating','认真结婚':'serious'};
   const RELATION_TEXT={generates_me:'生你',i_generate:'你生',same:'同类',different:''};
   const CITIES=['北京','上海','广州','深圳','杭州','成都','南京','武汉','西安','苏州','重庆','天津','长沙','厦门','香港'];
-  let lastView='',deckCity='',swiped=false;
+  let lastView='',deckCity='',swiped=false,lastCards=[];
   const B=()=>window.XiangshengFriendsBridge;
+  // Visitor's MBTI pick ('' = skipped / not chosen). Only kept for this browser session.
+  const myMbti={get(){try{const v=sessionStorage.getItem(MBTI_KEY)||'';return MBTIS.includes(v)?v:'';}catch{return '';}},set(v){try{sessionStorage.setItem(MBTI_KEY,MBTIS.includes(v)?v:'skip');}catch{}},picked(){try{return !!sessionStorage.getItem(MBTI_KEY);}catch{return false;}}};
+  // Short, factual type hints for a card: only compares the visitor's own MBTI / 星座 with what the card publicly shows.
+  function mbtiHint(mine,theirs){
+    if(!MBTIS.includes(mine)||!MBTIS.includes(theirs))return '';
+    if(mine===theirs)return '同为'+mine;
+    const diff=[0,1,2,3].filter(k=>mine[k]!==theirs[k]);
+    if(diff.length!==1)return '';
+    return MBTI_PAIRS[diff[0]]+' 互补';
+  }
+  function typeHints(me,card){
+    const out=[],m=mbtiHint(me?.mbti,card?.mbti);if(m)out.push(m);
+    if(me?.constellation&&card?.constellation&&me.constellation===card.constellation)out.push('同为'+card.constellation);
+    return out;
+  }
   const pending={get(){try{return JSON.parse(sessionStorage.getItem(PENDING)||'null');}catch{return null;}},set(v){try{sessionStorage.setItem(PENDING,JSON.stringify(v));}catch{}},clear(){try{sessionStorage.removeItem(PENDING);}catch{}}};
 
   function intro(){
@@ -36,15 +53,15 @@
     main.querySelector('.landing-samples')?.remove();
   }
 
-  function cardHTML(c,i,total){
-    const tone=TONES[idx(c.dayMaster)]||'',rel=RELATION_TEXT[c.relation]||'';
+  function cardHTML(c,i,total,me){
+    const tone=TONES[idx(c.dayMaster)]||'',rel=RELATION_TEXT[c.relation]||'',hints=typeHints(me,c);
     const facts=[c.ageBracket&&c.ageBracket+'岁',c.city,c.jobCategory].filter(Boolean);
     const types=[c.mbti,c.constellation,c.zodiac&&'属'+c.zodiac].filter(Boolean);
     const action=c.sample?`<p class="onb-sample-label">${esc(c.label)}</p>`:`<button type="button" class="primary onb-meet" data-index="${i}">想认识TA</button>`;
     return `<article class="onb-card${c.sample?' is-sample':''}" data-element="${tone}" role="group" aria-roledescription="卡片" aria-label="第${i+1}张，共${total}张">
       ${c.sample?'<span class="onb-badge">虚构示例</span>':'<span class="onb-badge is-real">真实用户</span>'}
       <div class="onb-card-head"><div class="onb-glyph">${esc(c.dayMaster)}<small>${esc(c.element)}</small></div>
-        <div class="onb-card-meta">${rel?`<p class="onb-rel">${rel==='同类'?'和你同属'+esc(c.element):esc(rel==='生你'?c.element+'生你':'你生'+c.element)}</p>`:''}
+        <div class="onb-card-meta">${rel||hints.length?`<p class="onb-rels">${rel?`<span class="onb-rel">${rel==='同类'?'和你同属'+esc(c.element):esc(rel==='生你'?c.element+'生你':'你生'+c.element)}</span>`:''}${hints.map(h=>`<span class="onb-rel onb-hint">${esc(h)}</span>`).join('')}</p>`:''}
         <p class="onb-facts">${facts.map(f=>'<span>'+esc(f)+'</span>').join('<i aria-hidden="true"> · </i>')||'资料未公开'}</p></div></div>
       ${types.length?`<div class="onb-chips">${types.map(t=>`<span>${esc(t)}</span>`).join('')}</div>`:''}
       ${c.purposeLabels?.length?`<p class="onb-purpose">${c.purposeLabels.map(esc).join('、')}</p>`:''}
@@ -61,34 +78,64 @@
     deckCity=deckCity||b.state.profile?.city||'';
     b.setView(`<section class="onb onb-deck-wrap"><p class="onb-step">看看和你相生的人</p>
       <div class="onb-me" data-element="${TONES[i]}"><div class="onb-me-glyph">${esc(stem)}</div>
-        <div><h1 class="onb-me-title">你是${esc(stem+el)}</h1><p class="onb-me-text">${esc(mother)}生${esc(el)}，${esc(el)}生${esc(child)}。下面先排和你相生的人。</p></div></div>
+        <div><h1 class="onb-me-title">你是${esc(stem+el)}</h1>
+          <p class="onb-me-types">${[chart.constellation,chart.zodiac&&'属'+chart.zodiac].filter(Boolean).map(t=>'<span>'+esc(t)+'</span>').join('')}<span id="onb-me-mbti"${myMbti.get()?'':' hidden'}>${esc(myMbti.get())}</span></p>
+          <p class="onb-me-text">${esc(mother)}生${esc(el)}，${esc(el)}生${esc(child)}。下面先排和你相生的人。</p></div></div>
+      <div class="onb-mbti" id="onb-mbti"></div>
       <div class="onb-deck-bar"><label class="onb-city"><span>城市</span><select id="onb-city"><option value="">不限</option>${CITIES.map(c=>`<option ${c===deckCity?'selected':''}>${c}</option>`).join('')}</select></label>
         <span class="onb-count" id="onb-count" aria-live="polite"></span></div>
       <div class="onb-deck" id="onb-deck" tabindex="0" aria-label="和你相生的人，左右滑动"><p class="loading">正在找和你相生的人…</p></div>
       <div class="onb-nav"><button type="button" class="secondary onb-prev" aria-label="上一张">上一张</button><button type="button" class="secondary onb-next" aria-label="下一张">下一张</button></div>
       <p class="onb-note">只显示本人公开的日主、年龄段和爱好，<br>不显示名字、照片和学校。</p></section>`);
     document.getElementById('onb-city').addEventListener('change',e=>{deckCity=e.target.value;loadDeck(stem);});
+    renderMbti(myMbti.picked());
     await loadDeck(stem);
   }
+
+  // Optional MBTI pick: 16 compact chips + skip. Collapses to one line once answered.
+  function renderMbti(collapsed){
+    const box=document.getElementById('onb-mbti');if(!box)return;
+    const cur=myMbti.get(),tag=document.getElementById('onb-me-mbti');
+    if(tag){tag.textContent=cur;tag.hidden=!cur;}
+    if(collapsed){
+      box.innerHTML=`<p class="onb-mbti-done">${cur?'你的 MBTI：<b>'+esc(cur)+'</b>':'没选 MBTI'}<button type="button" class="text-button onb-mbti-edit">${cur?'改':'补选'}</button></p>`;
+      box.querySelector('.onb-mbti-edit').onclick=()=>renderMbti(false);return;
+    }
+    box.innerHTML=`<p class="onb-mbti-q">你的 MBTI？<span>选了会显示和谁同类型，可不选</span></p>
+      <div class="onb-mbti-grid" role="group" aria-label="选择你的 MBTI">${MBTIS.map(t=>`<button type="button" class="onb-mbti-chip" data-mbti="${t}" aria-pressed="${t===cur}">${t}</button>`).join('')}</div>
+      <button type="button" class="text-button onb-mbti-skip">不知道，跳过</button>`;
+    box.querySelectorAll('.onb-mbti-chip').forEach(btn=>btn.addEventListener('click',()=>{myMbti.set(btn.dataset.mbti);renderMbti(true);renderCards();}));
+    box.querySelector('.onb-mbti-skip').onclick=()=>{myMbti.set('');renderMbti(true);renderCards();};
+  }
+  function me(){const b=B(),chart=b.state.chart||b.state.profile?.chart;return {mbti:myMbti.get(),constellation:chart?.constellation||''};}
 
   async function loadDeck(stem){
     const b=B(),box=document.getElementById('onb-deck');if(!box)return;
     let data;
     try{data=await b.api('/api/friends/preview?stem='+encodeURIComponent(stem)+(deckCity?'&city='+encodeURIComponent(deckCity):''));}
     catch(error){box.innerHTML=`<p class="onb-error">${esc(error.message||'暂时打不开，请稍后再试')}</p>`;return;}
-    const cards=data.cards||[];
+    lastCards=data.cards||[];renderCards();
+  }
+
+  // Re-rendered when the visitor picks an MBTI, so handlers always read the live card list.
+  function renderCards(){
+    const b=B(),box=document.getElementById('onb-deck'),cards=lastCards;if(!box)return;
     if(!cards.length){box.innerHTML='<p class="onb-error">这里还没有人公开资料。先建好你的卡片，有人加入时你会排在前面。</p>';return;}
-    box.innerHTML=cards.map((c,i)=>cardHTML(c,i,cards.length)).join('');
-    const count=document.getElementById('onb-count'),items=[...box.children];
-    const current=()=>Math.round(box.scrollLeft/Math.max(1,items[0].offsetWidth+12));
-    const update=()=>{const n=Math.min(items.length-1,current());count.textContent=(n+1)+' / '+items.length;document.querySelector('.onb-prev').disabled=n<=0;document.querySelector('.onb-next').disabled=n>=items.length-1;};
-    const go=d=>{const n=Math.max(0,Math.min(items.length-1,current()+d));box.scrollTo({left:items[n].offsetLeft-items[0].offsetLeft,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});markSwipe();};
+    const keep=box.scrollLeft,mine=me();
+    box.innerHTML=cards.map((c,i)=>cardHTML(c,i,cards.length,mine)).join('');box.scrollLeft=keep;
+    const items=()=>[...box.querySelectorAll('.onb-card')];
+    const current=()=>{const it=items();return it.length?Math.round(box.scrollLeft/Math.max(1,it[0].offsetWidth+12)):0;};
+    const update=()=>{const it=items(),count=document.getElementById('onb-count');if(!it.length||!count)return;const n=Math.min(it.length-1,current());count.textContent=(n+1)+' / '+it.length;document.querySelector('.onb-prev').disabled=n<=0;document.querySelector('.onb-next').disabled=n>=it.length-1;};
     const markSwipe=()=>{if(!swiped){swiped=true;b.event('deck_swipe');}};
-    let t;box.addEventListener('scroll',()=>{clearTimeout(t);t=setTimeout(()=>{update();if(box.scrollLeft>8)markSwipe();},80);},{passive:true});
-    box.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){e.preventDefault();go(1);}else if(e.key==='ArrowLeft'){e.preventDefault();go(-1);}});
+    const go=d=>{const it=items();if(!it.length)return;const n=Math.max(0,Math.min(it.length-1,current()+d));box.scrollTo({left:it[n].offsetLeft-it[0].offsetLeft,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});markSwipe();};
+    if(!box.dataset.bound){
+      box.dataset.bound='1';
+      let t;box.addEventListener('scroll',()=>{clearTimeout(t);t=setTimeout(()=>{update();if(box.scrollLeft>8)markSwipe();},80);},{passive:true});
+      box.addEventListener('keydown',e=>{if(e.key==='ArrowRight'){e.preventDefault();go(1);}else if(e.key==='ArrowLeft'){e.preventDefault();go(-1);}});
+    }
     document.querySelector('.onb-prev').onclick=()=>go(-1);document.querySelector('.onb-next').onclick=()=>go(1);
     box.querySelectorAll('.onb-meet').forEach(btn=>btn.addEventListener('click',()=>wantToMeet(cards[Number(btn.dataset.index)])));
-    box.querySelectorAll('.onb-card:not(.is-sample)').forEach((card,i)=>card.addEventListener('click',e=>{if(!e.target.closest('button'))card.querySelector('.onb-meet')?.click();}));
+    box.querySelectorAll('.onb-card:not(.is-sample)').forEach(card=>card.addEventListener('click',e=>{if(!e.target.closest('button'))card.querySelector('.onb-meet')?.click();}));
     update();
   }
 
@@ -114,7 +161,7 @@
     if(s.profile?.listed){location.hash='discover';return;}
     if(!s.profile&&!s.guestProfileDraft){
       // Reuse the existing guest-draft mechanism: showProfile() reads state.guestProfileDraft for this user.
-      s.guestProfileDraft={ownerId:s.user?.id||null,data:{city:p.city||'',purposes:p.purpose?[p.purpose]:[],fields:{},visibility:{},hobbies:[],listed:true,contactConsent:false}};
+      s.guestProfileDraft={ownerId:s.user?.id||null,data:{city:p.city||'',mbti:myMbti.get(),purposes:p.purpose?[p.purpose]:[],fields:{},visibility:{},hobbies:[],listed:true,contactConsent:false}};
     }
     if(location.hash==='#profile')b.showProfile();else location.hash='profile';
     b.toast('补全并公开你的卡片，就能向TA申请认识。');
@@ -141,5 +188,5 @@
     if(view==='discover'&&s.profile?.listed){await B().showDiscover();await openPending();return true;}
     return false;
   }
-  window.XiangshengOnboarding={route,afterAuth};
+  window.XiangshengOnboarding={route,afterAuth,_test:{mbtiHint,typeHints}};
 })();
