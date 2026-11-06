@@ -28,3 +28,26 @@ test('MBTI / 星座 hints are factual and only from given values',()=>{
   assert.deepEqual([...typeHints({mbti:'',constellation:'双子座'},{constellation:'巨蟹座'})],[]);
   assert.deepEqual([...typeHints({mbti:'ENFP',constellation:'双子座'},{})],[]);
 });
+test('星座 pair hint follows classic element groupings, one short hint only',()=>{
+  const {signHint,signPairText,typeHints}=hints();
+  assert.equal(signHint('双子座','双子座'),'同为双子座');
+  assert.equal(signHint('双子座','天秤座'),'同属风象');
+  assert.equal(signHint('白羊座','射手座'),'同属火象');
+  assert.equal(signHint('金牛座','摩羯座'),'同属土象');
+  assert.equal(signHint('巨蟹','双鱼座'),'同属水象');
+  assert.equal(signHint('白羊座','双子座'),'风火相投');
+  assert.equal(signHint('水瓶座','狮子座'),'对宫星座，互补');
+  assert.equal(signHint('狮子座','天秤座'),'风火相投');
+  assert.equal(signHint('处女座','天蝎座'),'水土相合');
+  assert.equal(signHint('巨蟹座','金牛座'),'水土相合');
+  // opposite signs (6 apart) win over the element pair
+  for(const [a,b] of [['白羊座','天秤座'],['金牛座','天蝎座'],['双子座','射手座'],['巨蟹座','摩羯座'],['狮子座','水瓶座'],['处女座','双鱼座']]){assert.equal(signHint(a,b),'对宫星座，互补');assert.equal(signHint(b,a),'对宫星座，互补');}
+  // fire–earth, fire–water, air–earth, air–water: nothing
+  for(const [a,b] of [['白羊座','金牛座'],['狮子座','巨蟹座'],['双子座','处女座'],['天秤座','双鱼座']])assert.equal(signHint(a,b),'');
+  assert.equal(signHint('','双子座'),'');assert.equal(signHint('双子座','<b>'),'');
+  assert.equal(signPairText('双子座','天秤座'),'双子 × 天秤 · 同属风象');
+  assert.equal(signPairText('双子座','金牛座'),'');
+  assert.deepEqual([...typeHints({mbti:'',constellation:'双子座'},{constellation:'天秤座'})],['同属风象']);
+  const all=['白羊座','金牛座','双子座','巨蟹座','狮子座','处女座','天秤座','天蝎座','射手座','摩羯座','水瓶座','双鱼座'];
+  for(const a of all)for(const b of all){const h=signHint(a,b);assert.equal(h,signHint(b,a));assert.doesNotMatch(h,/配|姻|缘|注定|最佳|天生一对/);}
+});

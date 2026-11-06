@@ -25,9 +25,26 @@
     if(diff.length!==1)return '';
     return MBTI_PAIRS[diff[0]]+' 互补';
   }
+  // 星座 pair hint from classic Western-astrology groupings — a fun culture reference, never a relationship claim.
+  // Same sign → 同为X座; opposite sign (6 apart) → 对宫; same element → 同属X象; fire+air → 风火相投; earth+water → 水土相合; else ''.
+  const SIGNS=['白羊','金牛','双子','巨蟹','狮子','处女','天秤','天蝎','射手','摩羯','水瓶','双鱼'],SIGN_ELEMENTS=['火','土','风','水'];
+  const signIdx=v=>SIGNS.indexOf(String(v||'').replace(/座$/,''));
+  function signHint(mine,theirs){
+    const a=signIdx(mine),b=signIdx(theirs);if(a<0||b<0)return '';
+    if(a===b)return '同为'+SIGNS[a]+'座';
+    if((a+6)%12===b)return '对宫星座，互补';
+    const ea=SIGN_ELEMENTS[a%4],eb=SIGN_ELEMENTS[b%4];
+    if(ea===eb)return '同属'+ea+'象';
+    const pair=ea+eb;
+    if(pair==='火风'||pair==='风火')return '风火相投';
+    if(pair==='土水'||pair==='水土')return '水土相合';
+    return '';
+  }
+  // e.g. 「双子 × 天秤 · 同属风象」 for the card detail; '' when there is no hint.
+  function signPairText(mine,theirs){const h=signHint(mine,theirs);return h?SIGNS[signIdx(mine)]+' × '+SIGNS[signIdx(theirs)]+' · '+h:'';}
   function typeHints(me,card){
     const out=[],m=mbtiHint(me?.mbti,card?.mbti);if(m)out.push(m);
-    if(me?.constellation&&card?.constellation&&me.constellation===card.constellation)out.push('同为'+card.constellation);
+    const c=signHint(me?.constellation,card?.constellation);if(c)out.push(c);
     return out;
   }
   const pending={get(){try{return JSON.parse(sessionStorage.getItem(PENDING)||'null');}catch{return null;}},set(v){try{sessionStorage.setItem(PENDING,JSON.stringify(v));}catch{}},clear(){try{sessionStorage.removeItem(PENDING);}catch{}}};
@@ -103,9 +120,12 @@
     }
     box.innerHTML=`<p class="onb-mbti-q">你的 MBTI？<span>选了会显示和谁同类型，可不选</span></p>
       <div class="onb-mbti-grid" role="group" aria-label="选择你的 MBTI">${MBTIS.map(t=>`<button type="button" class="onb-mbti-chip" data-mbti="${t}" aria-pressed="${t===cur}">${t}</button>`).join('')}</div>
-      <button type="button" class="text-button onb-mbti-skip">不知道，跳过</button>`;
+      ${window.XiangshengMbtiQuiz?'<button type="button" class="secondary onb-mbti-quiz">不知道？1 分钟测一下</button>':''}
+      <button type="button" class="text-button onb-mbti-skip">${window.XiangshengMbtiQuiz?'先跳过':'不知道，跳过'}</button>`;
     box.querySelectorAll('.onb-mbti-chip').forEach(btn=>btn.addEventListener('click',()=>{myMbti.set(btn.dataset.mbti);renderMbti(true);renderCards();}));
     box.querySelector('.onb-mbti-skip').onclick=()=>{myMbti.set('');renderMbti(true);renderCards();};
+    const quiz=box.querySelector('.onb-mbti-quiz');
+    if(quiz)quiz.onclick=()=>window.XiangshengMbtiQuiz.open({onDone:t=>{myMbti.set(t);renderMbti(true);renderCards();},onClose:()=>box.querySelector('.onb-mbti-quiz')?.focus()});
   }
   function me(){const b=B(),chart=b.state.chart||b.state.profile?.chart;return {mbti:myMbti.get(),constellation:chart?.constellation||''};}
 
@@ -188,5 +208,5 @@
     if(view==='discover'&&s.profile?.listed){await B().showDiscover();await openPending();return true;}
     return false;
   }
-  window.XiangshengOnboarding={route,afterAuth,_test:{mbtiHint,typeHints}};
+  window.XiangshengOnboarding={route,afterAuth,signHint,signPairText,_test:{mbtiHint,typeHints,signHint,signPairText}};
 })();
