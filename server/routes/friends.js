@@ -50,7 +50,7 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.use(createRateLimit({limit:180}));
   router.post('/chart',run(req=>charts.issue(req.body)));
   router.get('/status',run(()=>({enabled,mode})));
-  router.get('/legal',run(()=>({operatorName:process.env.FRIENDS_OPERATOR_NAME||'',supportEmail:process.env.FRIENDS_SUPPORT_EMAIL||'',storageRegion:process.env.FRIENDS_STORAGE_REGION||'',retentionPolicy:process.env.FRIENDS_RETENTION_POLICY||'',publicReady:process.env.FRIENDS_PUBLIC_APPROVED==='true'&&enabled&&mode==='public'})));
+  router.get('/legal',run(()=>({operatorName:process.env.FRIENDS_OPERATOR_NAME||'开普斯通智信集团有限公司（Capstone IQ Group Limited）',supportEmail:process.env.FRIENDS_SUPPORT_EMAIL||'support@runae.app',storageRegion:process.env.FRIENDS_STORAGE_REGION||'',retentionPolicy:process.env.FRIENDS_RETENTION_POLICY||'删除交友档案后，档案、申请和聊天记录立即从交友库移除；渠道统计标记 90 天后删除；核验材料审核完即删除原件，只留核验结果；订单记录按财税法规保存。',publicReady:process.env.FRIENDS_PUBLIC_APPROVED==='true'&&enabled&&mode==='public'})));
   router.get('/cities',run(req=>({cities:searchCities(req.query.q)})));
   router.get('/areas',run(req=>({areas:searchAreas(req.query.q)})));
   router.post('/events',createRateLimit({limit:30}),run(req=>service.event(req.body.event,{source:req.body.source,campaign:req.body.campaign})));
