@@ -39,7 +39,7 @@ function createHepanSelfService({store,secret,calculateChart=calculate,generateP
  function readSave(token,uid){
   if(typeof token!=='string'||token.length>8000)fail(400,'保存凭证无效');
   let body;try{const raw=Buffer.from(token,'base64url');if(raw.length<29)throw 0;const d=crypto.createDecipheriv('aes-256-gcm',saveKey,raw.subarray(0,12));d.setAuthTag(raw.subarray(12,28));body=JSON.parse(Buffer.concat([d.update(raw.subarray(28)),d.final()]).toString());}catch{fail(400,'保存凭证无效');}
-  if(body.v!==1||!same(body.u,uid)||body.exp<clock())fail(400,'保存凭证已过期，请重新合盘');
+  if(body.v!==1||typeof body.j!=='string'||!same(body.u,uid)||body.exp<clock())fail(400,'保存凭证已过期，请重新合盘');
   return body;
  }
  function savedView(r){
@@ -74,16 +74,22 @@ function createHepanSelfService({store,secret,calculateChart=calculate,generateP
    let prose=proseCache.get(key);
    if(!prose){
     // 只缓存 AI 文案；回落模板当次直接给、不缓存（也不留 fallbackReason），冷却期过后再试 AI。
-    if(typeof generateProse!=='function'||(aiRetryAt.get(key)||0)>clock())prose=HC.templateProse(analysis,picked);
+    if(typeof generateProse!=='function'||(aiRetryAt.get(key)||0)>clock()||!(inflight.has(key)||HC.takeAiCall(store,uid,clock())))prose=HC.templateProse(analysis,picked);
     else{if(!inflight.has(key))inflight.set(key,HC.writeProse(analysis,picked,{mode:'self',generate:generateProse,charts}).finally(()=>inflight.delete(key)));const {fallbackReason,...written}=await inflight.get(key);prose=written;if(prose.source==='ai'){aiRetryAt.delete(key);remember(key,prose);}else bounded(aiRetryAt,key,clock()+AI_RETRY_MS);}
    }
    const report=HV.buildReport({analysis,picked,prose,charts,mode:'self',viewer:'A',unlocked:false,taNickname:nickname});
    const hits=[...picked.he.map(h=>({kind:'he',...descriptor(h)})),...picked.mohe.map(h=>({kind:'mohe',...descriptor(h)}))];
-   const saveToken=signSave({v:1,u:uid,exp:clock()+TOKEN_TTL,nickname,purpose,limited:analysis.limited,total:analysis.total,tier:analysis.tier,subs:Object.fromEntries(Object.entries(analysis.subs).map(([k,v])=>[k,v.score])),hits});
+   const saveToken=signSave({v:1,j:crypto.randomBytes(12).toString('base64url'),u:uid,exp:clock()+TOKEN_TTL,nickname,purpose,limited:analysis.limited,total:analysis.total,tier:analysis.tier,subs:Object.fromEntries(Object.entries(analysis.subs).map(([k,v])=>[k,v.score])),hits});
    return {...report,remaining:left,saveToken,ownerOnly:true,inPool:false};
    }catch(e){refund();throw e;}
   },
-  save(uid,{saveToken}={}){const b=readSave(saveToken,uid);return store.transaction(s=>{const list=saved(s);if(list.filter(r=>same(r.owner,uid)).length>=SAVED_MAX)fail(429,'最多保存'+SAVED_MAX+'条，请先删除旧的');const r={id:crypto.randomUUID(),owner:uid,nickname:b.nickname,purpose:b.purpose,limited:b.limited,total:b.total,tier:b.tier,subs:b.subs,hits:b.hits,createdAt:new Date(clock()).toISOString()};list.push(r);return savedView(r);});},
+  // 凭证一次性：记下凭证 id（j）。同一凭证再交一次 → 返回已保存的那条（幂等，不重复建）；保存后又删了 → 拒绝，不能靠旧凭证复活。
+  save(uid,{saveToken}={}){const b=readSave(saveToken,uid);return store.transaction(s=>{const list=saved(s),now=clock();
+   if(!Array.isArray(s.hepanSelfSaveUsed))s.hepanSelfSaveUsed=[];s.hepanSelfSaveUsed=s.hepanSelfSaveUsed.filter(x=>x&&x.exp>=now);
+   const prev=list.find(r=>r.tokenId===b.j&&same(r.owner,uid));if(prev)return savedView(prev);
+   if(s.hepanSelfSaveUsed.some(x=>x.j===b.j))fail(409,'这次合盘已经保存过了');
+   if(list.filter(r=>same(r.owner,uid)).length>=SAVED_MAX)fail(429,'最多保存'+SAVED_MAX+'条，请先删除旧的');
+   const r={id:crypto.randomUUID(),owner:uid,tokenId:b.j,nickname:b.nickname,purpose:b.purpose,limited:b.limited,total:b.total,tier:b.tier,subs:b.subs,hits:b.hits,createdAt:new Date(now).toISOString()};list.push(r);s.hepanSelfSaveUsed.push({j:b.j,exp:b.exp});return savedView(r);});},
   list(uid){return {saved:saved(store.read()).filter(r=>same(r.owner,uid)).slice().reverse().map(r=>({id:r.id,nickname:r.nickname,total:r.total,tier:r.tier,tierLabel:HE.TIER[r.tier],createdAt:r.createdAt}))};},
   get(uid,id){const r=saved(store.read()).find(r=>r.id===id&&same(r.owner,uid));if(!r)fail(404,'记录不存在');return savedView(r);},
   remove(uid,id){return store.transaction(s=>{const list=saved(s),i=list.findIndex(r=>r.id===id&&same(r.owner,uid));if(i<0)fail(404,'记录不存在');list.splice(i,1);return {deleted:true};});}
