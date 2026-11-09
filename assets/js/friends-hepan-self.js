@@ -54,7 +54,7 @@
   }catch{}
  }
  function back(){$('#result').hidden=true;$('#result').replaceChildren();$('#entry').hidden=false;$('#page-foot').hidden=false;last=null;quota();scrollTo(0,0);}
- function del(id){return async()=>{if(!confirm('删除这条保存的合盘结果？删除后无法恢复，已付费内容将一并删除。'))return;try{await api(API+'/saved/'+encodeURIComponent(id)+'/delete',{method:'POST',body:{}});back();}catch(e){alert(e.message);}};}
+ function del(id){return async()=>{if(!confirm('删除这条保存的合盘结果？删除后无法恢复，已付费内容将一并删除。完整版还没打开过的，会登记退款或退回会员份数；打开过的不退。'))return;try{await api(API+'/saved/'+encodeURIComponent(id)+'/delete',{method:'POST',body:{}});back();}catch(e){alert(e.message);}};}
 
  // 自己合盘的完整版记在保存的记录上：没保存先保存，再拉保存后的报告开付款弹层。
  let savedId=null;

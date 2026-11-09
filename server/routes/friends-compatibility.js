@@ -18,5 +18,16 @@ function createCompatibilityRouter({express,auth,service,selfService=null,paySer
   router.post('/pay/credit',createRateLimit({limit:10}),run(req=>payService.unlockWithCredit(req.user.id,{type:req.body?.type,id:req.body?.id})));}
  return router;}
 // 收款中台回调：必须挂在任何 JSON 解析之前，按原始字节验签。
-function createHepanPayCallbackRouter({express,service}){const router=express.Router();router.post('/',express.raw({type:'application/json',limit:'16kb'}),async(req,res)=>{res.set('Cache-Control','no-store');try{if(!Buffer.isBuffer(req.body))return res.status(400).json({error:'回调格式无效'});res.json(await service.callback(req.body,req.get('X-Sign'),req.get('X-Project-Id')));}catch(e){res.status(e.status||500).json({error:e.status?e.message:'回调处理失败'});}});return router;}
+// 中台回调：正常回调不限流（中台从本机发，经反代后来源可能都是 127.0.0.1）；只对验签失败的来源计数，10 分钟内失败 30 次就先拒。
+function createHepanPayCallbackRouter({express,service,clock=()=>Date.now(),maxFailures=30,windowMs=10*60000}){
+ const router=express.Router(),fails=new Map();
+ const key=req=>String(req.ip||req.socket?.remoteAddress||'?');
+ const blocked=k=>{const f=fails.get(k);if(!f)return false;if(clock()-f.since>windowMs){fails.delete(k);return false;}return f.n>=maxFailures;};
+ const failed=k=>{const now=clock(),f=fails.get(k);if(!f||now-f.since>windowMs)fails.set(k,{n:1,since:now});else f.n++;if(fails.size>5000)fails.clear();};
+ router.post('/',express.raw({type:'application/json',limit:'16kb'}),async(req,res)=>{res.set('Cache-Control','no-store');const k=key(req);
+  if(blocked(k))return res.status(429).json({error:'请求太频繁'});
+  try{if(!Buffer.isBuffer(req.body))return res.status(400).json({error:'回调格式无效'});res.json(await service.callback(req.body,req.get('X-Sign'),req.get('X-Project-Id')));}
+  catch(e){if(e.status===401)failed(k);res.status(e.status||500).json({error:e.status?e.message:'回调处理失败'});}});
+ return router;
+}
 module.exports={createCompatibilityRouter,createHepanPayCallbackRouter};

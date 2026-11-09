@@ -245,3 +245,67 @@ test('new frontend + copy: forbidden words absent, advisor card has no price, pa
  const rep=fs.readFileSync(path.join(root,'assets/js/friends-hepan-report.js'),'utf8'),card=rep.slice(rep.indexOf('function advisor'),rep.indexOf('function render('));
  assert.ok(card.includes('加顾问微信，进玄学搭子交流群'));assert.ok(!/¥|元|价格|priceMinor|购买/.test(card));
 });
+
+// ---- 复审修正：丢回调对账、删已付费记录、待核对单只由运营处理 ----
+test('lost callback: poll asks the hub before expiring; expired/failed orders keep reconciling for 3 days; sweep covers non-terminal orders',async()=>{
+ const MIN=60000;
+ // 付了款但回调丢了，用户一小时后才回来看 → 仍然解锁
+ const a=await ready(world());const ao=await a.pay.createOrder('a',{...target(a),channel:'alipay'});a.hub.set(hubNo(a,ao.id),{status:'paid'});
+ a.setNow(T0+61*MIN);assert.equal((await a.pay.poll('a',ao.id)).status,'paid');assert.equal((await a.compat.report('b',a.p.id)).full,true);
+ // 中台确认未付才过期；之后用户补付 → 过期单 3 天内对账时补上解锁
+ const b=await ready(world());const bo=await b.pay.createOrder('a',{...target(b),channel:'wechat'});
+ b.setNow(T0+61*MIN);assert.equal((await b.pay.poll('a',bo.id)).status,'expired');
+ b.hub.set(hubNo(b,bo.id),{status:'paid'});b.setNow(T0+2*60*MIN);assert.equal((await b.pay.poll('a',bo.id)).status,'paid');
+ assert.ok(b.store.read().compatibilityPairs[0].v4Unlock);
+ // 定时对账：没人轮询也能补上
+ const c=await ready(world());const co=await c.pay.createOrder('a',{...target(c),channel:'alipay'});c.hub.set(hubNo(c,co.id),{status:'paid'});
+ c.setNow(T0+2*MIN);assert.deepEqual(await c.pay.sweep(),{checked:1});assert.equal(c.store.read().hepanOrders[0].status,'paid');assert.ok(c.store.read().compatibilityPairs[0].v4Unlock);
+ assert.deepEqual(await c.pay.sweep(),{checked:0},'terminal orders are not re-swept');
+ // 超过 3 天的过期单不再对账；开单卡住的 opening 5 分钟后过期
+ const d=await ready(world());const dd=await d.pay.createOrder('a',{...target(d),channel:'alipay'});d.setNow(T0+61*MIN);await d.pay.poll('a',dd.id);
+ d.hub.set(hubNo(d,dd.id),{status:'paid'});d.setNow(T0+4*DAY);assert.deepEqual(await d.pay.sweep(),{checked:0});assert.equal(d.store.read().hepanOrders[0].status,'expired');
+ d.store.transaction(s=>s.hepanOrders.push({id:'hpopening',userId:'a',target:target(d),status:'opening',createdAt:new Date(d.now()-6*MIN).toISOString()}));
+ await d.pay.sweep();assert.equal(d.store.read().hepanOrders.find(o=>o.id==='hpopening').status,'expired');
+ const t=d.pay.startSweeper(1e9);assert.equal(t.hasRef(),false);clearInterval(t);
+});
+
+function selfOn(w){
+ XB.grant(w.store,'a');
+ const self=createHepanSelfService({store:w.store,secret:SELF_SECRET,calculateChart:inp=>({complete:true,pillars:{...(inp.birthday==='1990-01-01'?CLASH.A:CLASH.B).pillars}}),clock:w.clock,pay:w.pay});
+ const body={purpose:'romance',consents:{informed:true,selfOnly:true,adult:true},me:{birthday:'1990-01-01',calendar:'solar',time:'08:00',gender:'male'},ta:{nickname:'阿北',birthday:'1990-02-02',calendar:'solar',time:'08:00',gender:'female'}};
+ return {self,make:async()=>(w.setNow(w.now()+DAY),self.save('a',{saveToken:(await self.run('a',body,{device:'d'.repeat(20)})).saveToken}))};// 每次换一天，避开每日次数上限
+}
+test('deleting an unlocked saved self record leaves a tombstone; unopened → refund request / credit returned; opened → no refund',async()=>{
+ const w=world(),{self,make}=selfOn(w);
+ const s1=await make(),o=await w.pay.createOrder('a',{type:'self',id:s1.id,channel:'alipay'});w.hub.set(hubNo(w,o.id),{status:'paid'});await w.pay.poll('a',o.id);
+ assert.deepEqual(self.remove('a',s1.id),{deleted:true,refund:'request'});
+ assert.equal(w.store.read().hepanOrders.find(x=>x.id===o.id).refundRequest.reason,'target_gone');
+ const tomb=w.store.read().hepanUnlockTombstones[0];assert.equal(tomb.id,s1.id);assert.equal(tomb.unlock.source.orderId,o.id);
+ w.member('a');const s2=await make();w.pay.unlockWithCredit('a',{type:'self',id:s2.id});
+ assert.deepEqual(self.remove('a',s2.id),{deleted:true,refund:'credit_returned'});const s5=await make();assert.equal(w.pay.offer('a',{type:'self',id:s5.id}).memberRemaining,2);
+ const s3=await make(),o3=await w.pay.createOrder('a',{type:'self',id:s3.id,channel:'wechat'});w.hub.set(hubNo(w,o3.id),{status:'paid'});await w.pay.poll('a',o3.id);
+ self.get('a',s3.id);assert.deepEqual(self.remove('a',s3.id),{deleted:true,refund:false});
+ assert.equal(w.store.read().hepanOrders.find(x=>x.id===o3.id).refundRequest,undefined);
+ const s4=await make();assert.deepEqual(self.remove('a',s4.id),{deleted:true},'never unlocked: plain delete');
+ const src=fs.readFileSync(path.join(__dirname,'../../assets/js/friends-hepan-self.js'),'utf8');assert.ok(src.includes('已付费内容将一并删除'));
+});
+
+test('amount mismatch only moves unpaid orders to payment_review; admin approves or refunds it',async()=>{
+ const MIN=60000;
+ // 已到账的单复查时金额异常：不改状态
+ const a=await ready(world());const ao=await paidOrder(a);a.hub.set(hubNo(a,ao.id),{amount:0.01});a.setNow(T0+11*MIN);
+ assert.equal((await a.pay.poll('a',ao.id)).status,'paid');
+ // 待付款 → 待核对；之后中台金额对上也不自动放行
+ const b=await ready(world());const bo=await b.pay.createOrder('a',{...target(b),channel:'alipay'});b.hub.set(hubNo(b,bo.id),{status:'paid',amount:0.01});
+ assert.equal((await b.pay.poll('a',bo.id)).status,'payment_review');b.hub.set(hubNo(b,bo.id),{amount:9.9});
+ const raw=Buffer.from(JSON.stringify({project_id:PID,order_no:hubNo(b,bo.id),out_ref:bo.id,status:'paid'}));await b.pay.callback(raw,sign(raw),PID);
+ assert.equal(b.store.read().hepanOrders[0].status,'payment_review');assert.equal(b.store.read().compatibilityPairs[0].v4Unlock,undefined);
+ const admin=createAdminService(b.store);
+ assert.throws(()=>admin.approveHepanReview(bo.id,''),{status:400});
+ assert.equal(admin.approveHepanReview(bo.id,'中台已核对到账').result,'unlocked');
+ for(const uid of ['a','b'])assert.equal((await b.compat.report(uid,b.p.id)).full,true);
+ assert.throws(()=>admin.approveHepanReview(bo.id,'again'),{status:409});
+ // 另一单待核对 → 运营标记退款
+ const c=await ready(world());const co=await c.pay.createOrder('a',{...target(c),channel:'alipay'});c.hub.set(hubNo(c,co.id),{status:'paid',amount:0.01});await c.pay.poll('a',co.id);
+ assert.equal(createAdminService(c.store).markRefunded(co.id,'金额不符，原路退回').ok,true);assert.equal(c.store.read().hepanOrders[0].status,'refunded');
+});

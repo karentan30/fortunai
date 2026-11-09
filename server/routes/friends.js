@@ -38,6 +38,7 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.get('/admin/profiles',run(()=>({profiles:admin.profiles()})));
   router.get('/admin/orders',run(()=>({orders:admin.orders()})));
   router.post('/admin/orders/:id/refund',run(req=>admin.markRefunded(req.params.id,req.body?.note)));
+  router.post('/admin/orders/:id/approve',run(req=>admin.approveHepanReview(req.params.id,req.body?.note)));
   router.get('/admin/audit',run(()=>({audit:admin.audit()})));
   router.get('/admin/delivery-review',run(req=>admin.deliveryReview({limit:req.query.limit===undefined?100:Number(req.query.limit),offset:req.query.offset===undefined?0:Number(req.query.offset)})));
   router.post('/admin/report-jobs/:id/release',async(req,res,next)=>{try{res.json(await admin.releaseReport(req.params.id,req.body,req.friendsAdminActor));}catch(e){if(e.status)return res.status(e.status).json(xbError(e));next(e);}});
@@ -170,7 +171,8 @@ function productionRouter(){
     const {pairFacts}=require('../lib/friends-compatibility');
     const hepanPay=createHepanPayService({store,config:payConfig(process.env),pairFacts});
     const {createHepanPayCallbackRouter}=require('./friends-compatibility');
-    bundle.use('/hepan-pay/callback',createRateLimit({limit:120}),createHepanPayCallbackRouter({express,service:hepanPay}));
+    bundle.use('/hepan-pay/callback',createHepanPayCallbackRouter({express,service:hepanPay}));// 只对验签失败的来源限流（见路由）
+    if(hepanPay.configured())hepanPay.startSweeper();// 回调丢了也能靠定时对账补上；unref，不挡进程退出
     const compatibility=createCompatibilityService({store,generateProse,pay:hepanPay,questionnaireService:createFriendsQuestionsService({store}),questionBank:require('../../assets/data/friends-relationship-questions.json')});
     instrumentCompatibility(compatibility,store,createFunnelSink({secret:process.env.FRIENDS_SIGNING_KEY}));
     let selfService=null;try{selfService=require('../lib/friends-hepan-self').createHepanSelfService({store,secret:process.env.FRIENDS_SIGNING_KEY,generateProse,pay:hepanPay});}catch(e){console.error('[friends] 自己合盘未启用：',e.message);}

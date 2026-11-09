@@ -38,10 +38,12 @@ orders(){const s=store.read(),nick=uid=>((s.profiles||[]).find(p=>p.userId===uid
 // 直购退款：钱在支付宝/微信商户后台人工退，这里只撤销会员权益并留审计。isMember 只认 status==='paid'。
 markRefunded(id,note){const clean=typeof note==='string'?note.trim().slice(0,300):'';if(!clean)error(400,'请填写退款说明');return store.transaction(s=>{normalize(s);const pay=require('./friends-hepan-pay'),now=Date.now();
   // 合盘完整版单次订单：标记退款 → 双方的完整版一起收回。
-  const h=(s.hepanOrders||[]).find(o=>o.id===id);if(h){if(h.status==='refunded')return {ok:true,duplicate:true};if(h.status!=='paid')error(409,'只有已到账订单可标记退款');const r=pay.refundOrderIn(s,h,'admin',now);audit(s,'order.refund',h.id,clean);return {ok:true,revokedUnlocks:r.revoked};}
+  const h=(s.hepanOrders||[]).find(o=>o.id===id);if(h){if(h.status==='refunded')return {ok:true,duplicate:true};if(h.status!=='paid'&&h.status!=='payment_review')error(409,'只有已到账或待核对订单可标记退款');const r=pay.refundOrderIn(s,h,'admin',now);audit(s,'order.refund',h.id,clean);return {ok:true,revokedUnlocks:r.revoked};}
   const o=(s.billingOrders||[]).find(o=>o.id===id&&o.provider==='direct');if(!o)error(404,'订单不存在');if(o.status==='refunded')return {ok:true,duplicate:true};if(o.status!=='paid')error(409,'只有已到账订单可标记退款');o.status='refunded';o.refundedAt=new Date(now).toISOString();
   // 会员退款：用这笔会员每月份数解锁的合盘完整版一并收回。
   const r=o.matchingMembership?pay.revokeMembershipIn(s,o.id,now):{revoked:0};audit(s,'order.refund',o.id,clean);return r.revoked?{ok:true,revokedUnlocks:r.revoked}:{ok:true};});},
+// 合盘完整版金额待核对的单：运营在中台核对确实收到款后放行（解锁），否则走上面的标记退款。
+approveHepanReview(id,note){const clean=typeof note==='string'?note.trim().slice(0,300):'';if(!clean)error(400,'请填写核对说明');return store.transaction(s=>{normalize(s);const pay=require('./friends-hepan-pay'),h=(s.hepanOrders||[]).find(o=>o.id===id);if(!h)error(404,'订单不存在');const r=pay.approveReviewIn(s,h,Date.now());audit(s,'order.approve',h.id,clean);return r;});},
 audit(){return structuredClone((store.read().auditLogs||[]).slice(-200).reverse());},
 deliveryReview(options){return deliveryReview(store.read(),options);},
 releaseReport(reportId,body,actor){return recovery.release({...body,reportId,actor});},

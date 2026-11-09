@@ -11,6 +11,8 @@ const crypto=require('node:crypto');
 const HE=require('./friends-hepan-v4');
 const {PILOT_CATALOG,isMember}=require('./friends-membership');
 const SKU='friends_pair_report_v2',DAY=86400000,REVOKE_WINDOW_MS=7*DAY,ORDER_TTL_MS=30*60000,RECHECK_PAID_MS=10*60000;
+// 回调丢了也不能丢单：过期/失败但已在中台建单的，3 天内仍去中台对账；开单卡在 opening 超过 5 分钟的视为过期。
+const RECONCILE_MS=3*DAY,OPENING_ORPHAN_MS=5*60000,SWEEP_PENDING_GAP_MS=60000,SWEEP_LATE_GAP_MS=15*60000;
 const CHANNELS=['alipay','wechat'];
 const PRODUCT='相生合盘完整报告';
 const REFUND_RULE='7 天内、完整版还没打开过，可申请原路退款；打开后不退。';
@@ -79,6 +81,25 @@ function consentRevokedIn(s,p,revokerId,now){
  if(u.source.kind==='order'){const o=orders(s).find(o=>o.id===u.source.orderId);if(o&&o.status==='paid'&&!o.refundRequest)o.refundRequest={at:iso(now),reason:'peer_revoked_unopened'};revokeUnlock(s,'pair',p,'peer_revoked_unopened',now);return {refund:'request'};}
  const c=credits(s).find(c=>c.id===u.source.creditId);if(c&&c.status==='used'){c.status='returned';c.returnedAt=iso(now);}revokeUnlock(s,'pair',p,'peer_revoked_unopened',now);return {refund:'credit_returned'};
 }
+// 到账后落解锁：目标已删/已失效 → 记待退款；对方已解锁（两边同时付）→ 后到的记待退款。
+function settlePaidIn(s,o,now,apply=(type,row,uid,source)=>setUnlock(type,row,{unlockedAt:iso(now),unlockedBy:uid,source,payerFirstOpenedFullAt:null})){
+ const row=targetRow(s,o.target.type,o.target.id),alive=row&&(o.target.type==='pair'?(same(row.from,o.userId)||same(row.to,o.userId))&&row.status==='ready':same(row.owner,o.userId));
+ if(!alive){o.refundRequest={at:iso(now),reason:'target_gone'};return 'refund_request';}
+ if(isUnlockedIn(s,o.target.type,row)){o.refundRequest={at:iso(now),reason:'already_unlocked'};return 'refund_request';}
+ try{apply(o.target.type,row,o.userId,{kind:'order',orderId:o.id,orderNo:o.hubOrderId});return 'unlocked';}catch{o.refundRequest={at:iso(now),reason:'unlock_failed'};return 'refund_request';}
+}
+// 运营核对后放行金额待核对的单（中台已收款）。
+function approveReviewIn(s,o,now){if(o.status!=='payment_review')fail(409,'只有待核对订单可放行');o.status='paid';o.paidAt=o.paidAt||iso(now);o.updatedAt=iso(now);o.reviewResolvedAt=iso(now);return {ok:true,result:settlePaidIn(s,o,now)};}
+// 已解锁的保存记录被删：留墓碑；付款人还没打开过完整版 → 单次记待退款、会员退回份数；打开过就不退。
+function targetRemovedIn(s,type,row,now){
+ const u=unlockOf(type,row);if(!u||!unlockValid(s,u))return null;
+ const unopened=!u.payerFirstOpenedFullAt;let refund=false;
+ if(unopened&&u.source.kind==='order'){const o=orders(s).find(o=>o.id===u.source.orderId);if(o&&o.status==='paid'&&!o.refundRequest){o.refundRequest={at:iso(now),reason:'target_gone'};refund='request';}}
+ if(unopened&&u.source.kind==='credit'){const c=credits(s).find(c=>c.id===u.source.creditId);if(c&&c.status==='used'){c.status='returned';c.returnedAt=iso(now);refund='credit_returned';}}
+ if(!Array.isArray(s.hepanUnlockTombstones))s.hepanUnlockTombstones=[];
+ s.hepanUnlockTombstones.push({type,id:row.id,owner:row.owner??null,unlock:{...u},deletedAt:iso(now),refund});
+ return {refund};
+}
 const publicOrder=o=>({id:o.id,status:o.status,channel:o.channel,amountMinor:o.amountMinor,currency:o.currency,target:{type:o.target.type,id:o.target.id},createdAt:o.createdAt,expiresAt:o.expiresAt,paidAt:o.paidAt||null,checkout:o.status==='pending'?o.checkout:null,name:PRODUCT});
 function createHepanPayService({store,config=payConfig(),hub=null,pairFacts,clock=()=>Date.now(),hooks={}}={}){
  if(!store?.read||!store?.transaction)throw Error('合盘付费需要存储');
@@ -120,33 +141,33 @@ function createHepanPayService({store,config=payConfig(),hub=null,pairFacts,cloc
   if(typeof hooks.beforeUnlockWrite==='function')hooks.beforeUnlockWrite({type,row,uid,source});
   setUnlock(type,row,{unlockedAt:iso(now),unlockedBy:uid,source,payerFirstOpenedFullAt:null});
  }
- // 核对中台查单结果并落账（轮询和回调共用）。只信中台查单，不信回调正文里的金额。
+ // 核对中台查单结果并落账（轮询、回调、定时对账共用）。只信中台查单，不信回调正文里的金额。
  async function confirm(orderId){
   const s0=store.read(),o0=orders(s0).find(o=>o.id===orderId);if(!o0||!o0.hubOrderId)fail(404,'订单不存在');
   const r=await client.status(o0.hubOrderId);
   if(r.order_no!==o0.hubOrderId||r.out_ref!==o0.id||!['paid','pending','failed'].includes(r.status))fail(502,'支付通道返回的订单对不上');
-  if(r.status==='paid'&&toMinor(r.amount)!==o0.amountMinor)return store.transaction(s=>{const o=orders(s).find(o=>o.id===orderId);if(o.status!=='paid'){o.status='payment_review';o.reviewReason='amount_mismatch';o.updatedAt=iso(clock());}return publicOrder(o);});
   return store.transaction(s=>{
    const now=clock(),o=orders(s).find(o=>o.id===orderId);o.lastHubCheckAt=iso(now);
    if(r.status==='paid'){
-    if(o.status==='paid'||o.status==='refunded')return publicOrder(o);
+    if(['paid','refunded','payment_review'].includes(o.status))return publicOrder(o);// 待核对的单只由运营处理
+    if(toMinor(r.amount)!==o.amountMinor){if(['pending','opening','expired'].includes(o.status)){o.status='payment_review';o.reviewReason='amount_mismatch';o.updatedAt=iso(now);}return publicOrder(o);}
     o.status='paid';o.paidAt=iso(now);o.updatedAt=iso(now);
-    const row=targetRow(s,o.target.type,o.target.id),alive=row&&(o.target.type==='pair'?(same(row.from,o.userId)||same(row.to,o.userId))&&row.status==='ready':same(row.owner,o.userId));
-    if(!alive)o.refundRequest={at:iso(now),reason:'target_gone'};
-    else if(isUnlockedIn(s,o.target.type,row))o.refundRequest={at:iso(now),reason:'already_unlocked'};// 两边同时付了：后到的那笔退
-    else{try{applyUnlockIn(s,o.target.type,row,o.userId,{kind:'order',orderId:o.id,orderNo:o.hubOrderId},now);}catch(e){o.refundRequest={at:iso(now),reason:'unlock_failed'};}}
+    settlePaidIn(s,o,now,(type,row,uid,source)=>applyUnlockIn(s,type,row,uid,source,now));
     return publicOrder(o);
    }
    if(r.status==='failed'){
     if(o.status==='paid')refundOrderIn(s,o,'hub_failed_after_paid',now);
     else if(o.status==='pending'){o.status='failed';o.updatedAt=iso(now);}
-   }
+   }else if(o.status==='pending'&&Date.parse(o.expiresAt)<now-ORDER_TTL_MS){o.status='expired';o.updatedAt=iso(now);}// 中台确认仍未付才过期
    return publicOrder(o);
   });
  }
+ const lateCheckable=(o,now)=>['expired','failed'].includes(o.status)&&!!o.hubOrderId&&now-Date.parse(o.createdAt)<RECONCILE_MS;
+ function expireOrphansIn(s,now){for(const o of orders(s))if(o.status==='opening'&&now-Date.parse(o.createdAt)>OPENING_ORPHAN_MS){o.status='expired';o.reviewReason='opening_orphan';o.updatedAt=iso(now);}}
  return {
   config:{priceMinor:config.priceMinor,advisorQrUrl:config.advisorQrUrl},
   enabled,
+  configured:()=>!!client,
   offerFor(uid,type,row,s=store.read()){try{return offerIn(s,uid,type,row);}catch{return null;}},
   offerPreview(uid){const bal=memberBalance(store.read(),uid,clock());return {payEnabled:enabled(),creditEnabled:bal.member&&bal.remaining>0};},
   isUnlocked(type,row,s=store.read()){return isUnlockedIn(s,type,row);},
@@ -156,6 +177,7 @@ function createHepanPayService({store,config=payConfig(),hub=null,pairFacts,cloc
    if(!CHANNELS.includes(channel))fail(400,'请选择支付宝或微信支付');
    const now=clock();
    const local=store.transaction(s=>{
+    expireOrphansIn(s,now);
     const t=target(s,uid,type,id);
     if(t.moheCount<=1)fail(409,'你们的报告已全部展示，不用解锁');
     if(isUnlockedIn(s,type,t.row))fail(409,'这份报告已经解锁了');
@@ -179,14 +201,25 @@ function createHepanPayService({store,config=payConfig(),hub=null,pairFacts,cloc
    if(!out)fail(502,'支付通道返回的订单对不上，请稍后再试');
    return out;
   },
-  // 前端轮询：待付款就去中台查一次；已付款的每 10 分钟最多复查一次（中台退款后会显示 failed）。
+  // 前端轮询：待付款就去中台查；已付款的每 10 分钟最多复查一次（中台退款后会显示 failed）；
+  // 过期/失败但中台有单号的，3 天内每分钟最多对一次账（回调丢了也能补上）。先问中台，再决定过期。
   async poll(uid,orderId){
    const s=store.read(),o=orders(s).find(o=>o.id===orderId&&same(o.userId,uid));if(!o)fail(404,'订单不存在');
-   const recheck=o.status==='paid'&&clock()-Date.parse(o.lastHubCheckAt||o.paidAt)>RECHECK_PAID_MS;
-   if(!enabled()||!o.hubOrderId||!(o.status==='pending'||recheck))return publicOrder(o);
-   if(o.status==='pending'&&Date.parse(o.expiresAt)<clock()-ORDER_TTL_MS)return store.transaction(n=>{const x=orders(n).find(x=>x.id===orderId);if(x.status==='pending'){x.status='expired';x.updatedAt=iso(clock());}return publicOrder(x);});
+   const now=clock(),since=t=>now-Date.parse(t||0);
+   const recheck=o.status==='paid'&&since(o.lastHubCheckAt||o.paidAt)>RECHECK_PAID_MS;
+   const late=lateCheckable(o,now)&&since(o.lastHubCheckAt)>SWEEP_PENDING_GAP_MS;
+   if(!client||!o.hubOrderId||!(o.status==='pending'||recheck||late))return publicOrder(o);
    return confirm(orderId);
   },
+  // 定时对账：没到终态的单逐个去中台查（每轮最多 limit 个），开单卡住的直接过期。
+  async sweep({limit=20}={}){
+   if(!client)return {checked:0};
+   const now=clock();store.transaction(s=>expireOrphansIn(s,now));
+   const due=orders(store.read()).filter(o=>o.hubOrderId&&(o.status==='pending'&&now-Date.parse(o.lastHubCheckAt||o.createdAt)>=SWEEP_PENDING_GAP_MS||lateCheckable(o,now)&&now-Date.parse(o.lastHubCheckAt||o.createdAt)>=SWEEP_LATE_GAP_MS)).slice(0,limit);
+   let checked=0;for(const o of due){try{await confirm(o.id);checked++;}catch{}}
+   return {checked};
+  },
+  startSweeper(intervalMs=60000){const t=setInterval(()=>{this.sweep().catch(()=>{});},intervalMs);t.unref?.();return t;},
   // 中台回调：先验签（原始字节），再核对项目与单号，最后主动查单确认。重复回调无副作用。
   async callback(raw,signature,projectHeader){
    if(!client||!config.ready)fail(503,'未配置');
@@ -225,4 +258,4 @@ function createHepanPayService({store,config=payConfig(),hub=null,pairFacts,cloc
   }
  };
 }
-module.exports={createHepanPayService,createHubClient,payConfig,advisorQr,consentRevokedIn,refundOrderIn,revokeMembershipIn,unlockValid,isUnlockedIn,monthKey,toMinor,SKU,REFUND_RULE,REVOKE_WINDOW_MS,PRODUCT};
+module.exports={createHepanPayService,settlePaidIn,approveReviewIn,targetRemovedIn,createHubClient,payConfig,advisorQr,consentRevokedIn,refundOrderIn,revokeMembershipIn,unlockValid,isUnlockedIn,monthKey,toMinor,SKU,REFUND_RULE,REVOKE_WINDOW_MS,PRODUCT};

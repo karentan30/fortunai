@@ -96,7 +96,10 @@ function createHepanSelfService({store,secret,calculateChart=calculate,generateP
    const r={id:crypto.randomUUID(),owner:uid,tokenId:b.j,nickname:b.nickname,purpose:b.purpose,limited:b.limited,total:b.total,tier:b.tier,subs:b.subs,hits:b.hits,createdAt:new Date(now).toISOString()};list.push(r);s.hepanSelfSaveUsed.push({j:b.j,exp:b.exp});return savedView(r,uid,s);});},
   list(uid){return {saved:saved(store.read()).filter(r=>same(r.owner,uid)).slice().reverse().map(r=>({id:r.id,nickname:r.nickname,total:r.total,tier:r.tier,tierLabel:HE.TIER[r.tier],createdAt:r.createdAt,unlocked:!!pay&&pay.isUnlocked('self',r)}))};},
   get(uid,id){const s=store.read(),r=saved(s).find(r=>r.id===id&&same(r.owner,uid));if(!r)fail(404,'记录不存在');const v=savedView(r,uid,s);if(pay&&v.unlocked&&!v.allShown)pay.markOpened(uid,'self',r.id);return v;},
-  remove(uid,id){return store.transaction(s=>{const list=saved(s),i=list.findIndex(r=>r.id===id&&same(r.owner,uid));if(i<0)fail(404,'记录不存在');list.splice(i,1);return {deleted:true};});}
+  remove(uid,id){return store.transaction(s=>{const list=saved(s),i=list.findIndex(r=>r.id===id&&same(r.owner,uid));if(i<0)fail(404,'记录不存在');
+   // 已解锁的记录：留墓碑；完整版还没打开过 → 单次记待退款、会员退回份数（与弹层退款规则一致）。
+   const gone=list[i].unlock?require('./friends-hepan-pay').targetRemovedIn(s,'self',list[i],clock()):null;
+   list.splice(i,1);return gone?{deleted:true,refund:gone.refund}:{deleted:true};});}
  };
 }
 // 保存用的条目描述：只有柱位、关系类别、方向和五行名，不含干支。
