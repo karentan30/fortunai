@@ -10,10 +10,10 @@ const {searchCities}=require('../lib/friends-location');
 const {searchAreas,suggestPlaces}=require('../lib/friends-places');
 const {createAdminService,adminAuth,createRateLimit}=require('../lib/friends-admin');
 const {referralCode,createFunnelSink,instrumentCompatibility}=require('../lib/friends-campus');
-function createRouter({express,auth,store,secret,enabled=true,adminToken=process.env.FRIENDS_ADMIN_TOKEN||process.env.ADMIN_TOKEN,onLogout,canAccess=()=>true,mode='local_review',requirePolicy=false,quotaOptions={},funnel,verification=null,seriousMedia=null}) {
+function createRouter({express,auth,store,secret,enabled=true,adminToken=process.env.FRIENDS_ADMIN_TOKEN||process.env.ADMIN_TOKEN,onLogout,canAccess=()=>true,mode='local_review',requirePolicy=false,quotaOptions={},funnel,verification=null,seriousMedia=null,reviewGate=false}) {
   const router=express.Router();
   const charts=enabled?createChartService(secret):null;
-  const service=enabled?createFriendsService(store,charts,{...quotaOptions,funnel,
+  const service=enabled?createFriendsService(store,charts,{...quotaOptions,funnel,reviewGate,
     // Hidden 认真结婚 ranking signal from the marriage questionnaire (both users must have opted in). Never exposed.
     alignmentScore:require('../lib/friends-matching').questionnaireAlignmentScore}):null;
   router.use((req,res,next)=>{
@@ -47,6 +47,11 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.get('/admin/verifications',run(()=>({requests:needVerification().pending()})));
   router.get('/admin/verifications/:id/files/:fileId',(req,res,next)=>{try{const f=needVerification().file(req.params.id,req.params.fileId);res.set('Content-Type',f.mime).set('Content-Disposition','attachment; filename="'+f.filename+'"').set('Content-Security-Policy',"default-src 'none'; sandbox").set('Cache-Control','no-store, private');res.send(f.body);}catch(e){if(e.status)return res.status(e.status).json(xbError(e));next(e);}});
   router.post('/admin/verifications/:id',run(req=>needVerification().decide(req.params.id,req.body,req.friendsAdminActor)));
+  // 首批审核制队列: pending cards (photo/nickname/city/purposes/fields) → 通过 / 不通过(固定原因). Same admin token as above.
+  const reviews=enabled?require('../lib/friends-review').createReviewAdmin(store):null;
+  router.get('/admin/reviews',run(req=>({profiles:reviews.queue(req.query.status||'pending'),reasons:reviews.REVIEW_REASONS})));
+  router.get('/admin/reviews/:shareId/photos/:photoId',(req,res,next)=>{try{reviews.photo(req.params.shareId,req.params.photoId);const f=needMedia().open(req.params.photoId);res.set('Content-Type',f.mime).set('Content-Disposition','inline').set('Content-Security-Policy',"default-src 'none'; sandbox").set('Cache-Control','no-store, private').set('Cross-Origin-Resource-Policy','same-origin');res.send(f.body);}catch(e){if(e.status)return res.status(e.status).json(xbError(e));next(e);}});
+  router.post('/admin/reviews/:shareId',run(req=>reviews.decide(req.params.shareId,req.body||{},req.friendsAdminActor)));
   // 站内「联系我们」留言：运营查看（可按 待处理/已处理 筛）、回复并改状态，每次操作写操作记录。
   const support=enabled?createSupportService({store}):null;
   router.get('/admin/support',run(req=>({messages:support.list(req.query.status)})));
@@ -138,7 +143,7 @@ function productionRouter(){
     if(config.enabled){try{verification=require('../lib/friends-verification').createVerificationService({store,dir:process.env.FRIENDS_VERIFICATION_DIR||path.join(path.dirname(config.file),'friends-verification'),key:process.env.FRIENDS_DATA_KEY});verification.sweep();const v=verification;setInterval(()=>{try{v.sweep();}catch(_){}},3600000).unref();}catch(e){console.error('[friends] Verification storage not ready; verification disabled.');verification=null;}}
     let seriousMedia=null;
     if(config.enabled){try{seriousMedia=require('../lib/friends-serious').createSeriousMediaService({store,dir:process.env.FRIENDS_MEDIA_DIR||path.join(path.dirname(config.file),'friends-media'),key:process.env.FRIENDS_DATA_KEY});}catch(e){console.error('[friends] Media storage not ready; photos/voice disabled.');seriousMedia=null;}}
-    const friends=createRouter({express,auth:authMiddleware,verification,seriousMedia,enabled:config.enabled,mode:config.mode||'disabled',secret:process.env.FRIENDS_SIGNING_KEY,store,requirePolicy:true,quotaOptions:{enabled:process.env.FRIENDS_QUOTAS_ENABLED!=='false'} /* 免费3次/会员20次认识申请；FRIENDS_QUOTAS_ENABLED=false 为应急关闭 */,funnel:createFunnelSink({secret:process.env.FRIENDS_SIGNING_KEY}),
+    const friends=createRouter({express,auth:authMiddleware,verification,seriousMedia,enabled:config.enabled,mode:config.mode||'disabled',secret:process.env.FRIENDS_SIGNING_KEY,store,requirePolicy:true,reviewGate:process.env.FRIENDS_REVIEW_GATE!=='false' /* 首批审核制，默认开；应急可设 false */,quotaOptions:{enabled:process.env.FRIENDS_QUOTAS_ENABLED!=='false'} /* 免费3次/会员20次认识申请；FRIENDS_QUOTAS_ENABLED=false 为应急关闭 */,funnel:createFunnelSink({secret:process.env.FRIENDS_SIGNING_KEY}),
       canAccess:req=>config.mode==='public'||config.allowedIds?.has(String(req.user?.id)),onLogout});
     if(!config.enabled)return friends;
     const {configuredBilling}=require('../lib/friends-billing-config');

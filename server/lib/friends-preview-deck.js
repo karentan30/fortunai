@@ -38,7 +38,7 @@ const SAMPLES=[
 
 const pub=(p,k)=>p.visibility?.[k]==='public';
 function eligible(s,p){
-  if(!p||p.listed!==true||isDisabled(s,p.userId))return false;
+  if(!p||p.listed!==true||isDisabled(s,p.userId)||!require('./friends-review').reviewVisible(p))return false; // 首批审核制
   if(!pub(p,'dayMaster')||!STEMS.includes(p.chart?.dayMaster))return false;
   const age=Number(p.chart?.age);if(!Number.isFinite(age)||age<18)return false;
   return true;
