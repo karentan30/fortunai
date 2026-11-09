@@ -6,11 +6,11 @@
 // Hard-closed by default (`enabled:false`); production wiring must not pass true until real
 // delivery, model and payment acceptance are done (see docs/交友计费生产接线与操作验收).
 const crypto=require('node:crypto');
-const {VERSION:COMPAT_VERSION}=require('./friends-compatibility');
+const {ACCEPTED_VERSIONS:COMPAT_VERSIONS}=require('./friends-compatibility');
 const {buildPairFacts,collectForbiddenStrings,PURPOSES,STAGES}=require('./friends-pair-report-adapter');
 
 const UNIT='pair_report';
-const ACCEPTED_CONSENT_VERSIONS=Object.freeze([COMPAT_VERSION]);
+const ACCEPTED_CONSENT_VERSIONS=Object.freeze([...COMPAT_VERSIONS]);
 const ACTIVE=['reserving','generating'];
 const fail=(status,message,code)=>{throw Object.assign(Error(message),{status,code});};
 const same=(a,b)=>String(a)===String(b);
@@ -83,11 +83,11 @@ function createPairReportsService({store,billing,compatibility,adapter,questionn
   catch(e){return update(id,x=>{x.status=e.status===409?'manual_review':'result_saved';x.failureCode='settlement_review';});}
  }
  // Access check for any read: participant, live compatibility pair (blocks/disable/expiry are
- // enforced by compatibility.report), unchanged binding, questionnaire stamps still valid.
+ // enforced by compatibility.report; legacyGuide keeps the topic-level v3 guide shape even for v4 pairs), unchanged binding, questionnaire stamps still valid.
  async function accessible(uid,j){
   if(j.status!=='delivered')return j;
   let guide;
-  try{guide=await compatibility.report(uid,j.pairId);}
+  try{guide=await compatibility.report(uid,j.pairId,{legacyGuide:true});}
   catch(e){if([404,409,410].includes(e.status))return revokeAccess(j.id);throw e;}
   const s=store.read(),latest=jobs(s).find(x=>x.id===j.id);
   if(!bindingValid(s,latest)||latest.usedQuestionnaire&&guide?.questionnaireSupplement?.status!=='available')return revokeAccess(j.id);
@@ -106,7 +106,7 @@ function createPairReportsService({store,billing,compatibility,adapter,questionn
   if(existing){if(existing.requestHash!==requestHash)fail(409,'该幂等键已用于另一份双人报告请求');return get(uid,existing.id);}
   // Permission + readiness via the existing compatibility service (participant, both v3 consents,
   // recipient confirmed, not blocked/disabled/expired). Throws before any credit is touched.
-  const guide=await compatibility.report(uid,pairId);
+  const guide=await compatibility.report(uid,pairId,{legacyGuide:true});
   let claimed=false;
   const job=store.transaction(s=>{
    const a=jobs(s),old=a.find(j=>same(j.purchaserId,uid)&&j.key===idempotencyKey);
