@@ -106,7 +106,8 @@ function fixture({generate=null,isUnlocked,clock=()=>Date.parse('2026-11-09T04:0
  const service=createCompatibilityService({store,calculateChart,generateProse:gen,clock,...(isUnlocked?{isUnlocked}:{})});
  const p=service.create('a',{targetShareId:'card-b'});
  const auth=(uid,birthday,extra={})=>service.authorize(uid,p.id,{version:VERSION_V4,consent:true,inferenceConsent:true,poolOptIn:false,crossBorderConsent:true,input:{birthday,calendar:'solar',cityId:'x',time:'08:00',gender:uid==='a'?'male':'female'},...extra});
- return {store,service,p,auth,calls};
+ const restart=()=>createCompatibilityService({store,calculateChart,generateProse:gen,clock,...(isUnlocked?{isUnlocked}:{})});
+ return {store,service,p,auth,calls,restart};
 }
 const stripAllowed=r=>{const c=structuredClone(r);delete c.people.me.pillars;delete c.people.me.dayMaster;delete c.people.me.nickname;delete c.people.ta.nickname;return c;};
 
@@ -401,4 +402,42 @@ test('mixed v3/v4 pair: v3 guide and paid pair-report facts use only the day pil
  await f.auth('a','1990-01-01');const v4=await f.service.report('a',f.p.id);assert.equal(v4.kind,'hepan_v4');assert.equal(v4.limited,true);assert.equal(v4.relations.length,3);
  // 付费报告的禁止字串也覆盖三柱
  const forbidden=A.collectForbiddenStrings({pair:f.store.read().compatibilityPairs[0]});for(const k of ['year','month','day'])assert.ok(forbidden.has?forbidden.has(CLASH.B.pillars[k]):forbidden.includes(CLASH.B.pillars[k]),k);
+});
+
+// ===== 复审第三轮 =====
+test('invite AI cooldown is stored on the pair (survives a restart) and each user has an hourly model-call cap',async()=>{
+ let now=Date.parse('2026-11-09T04:00:00Z');const f=fixture({generate:()=>'not json',clock:()=>now});await f.auth('a','1990-01-01');await f.auth('b','1990-02-02');
+ await f.service.report('a',f.p.id);const n=f.calls.length;assert.ok(n>0);
+ const rec=f.store.read().compatibilityPairs[0].v4AiRetry;assert.ok(rec&&rec.at===now+10*60000,'cooldown persisted on the pair');
+ await f.restart().report('b',f.p.id);assert.equal(f.calls.length,n,'new process: still cooling down, no model call');
+ now+=11*60000;await f.restart().report('b',f.p.id);assert.ok(f.calls.length>n,'after cooldown the model is retried');
+ // 每人每小时上限：上限用完后不调模型，直接模板；一小时后恢复
+ const g=fixture({generate:()=>'not json',clock:()=>now});await g.auth('a','1990-01-01');await g.auth('b','1990-02-02');
+ g.store.transaction(s=>{s.hepanAiCalls={a:Array.from({length:C.AI_CALLS_PER_HOUR},()=>now-1000)};});
+ const r=await g.service.report('a',g.p.id);assert.equal(g.calls.length,0,'capped: no model call');assert.equal(r.aiAssisted,false);
+ assert.equal(g.store.read().compatibilityPairs[0].v4AiRetry,undefined,'cap does not start the pair cooldown');
+ await g.service.report('b',g.p.id);assert.ok(g.calls.length>0,'other user has own budget');
+ assert.equal(g.store.read().hepanAiCalls.b.length,1);
+ // 自己合盘共用同一个桶
+ let t=Date.parse('2026-11-09T04:00:00Z');const s=clashSelf({generate:goodProse,clock:()=>t});s.store.transaction(x=>{x.hepanAiCalls={me:Array.from({length:C.AI_CALLS_PER_HOUR},()=>t)};});
+ assert.equal((await s.service.run('me',s.body())).aiAssisted,false);assert.equal(s.calls.length,0);
+ t+=3600001;assert.equal((await s.service.run('me',s.body())).aiAssisted,true);assert.equal(s.calls.length>0,true);
+});
+test('paid pair-report forbidden strings include the v4 three-pillar values (time unknown)',async()=>{
+ const A=require('./friends-pair-report-adapter'),f=fixture();await f.auth('a','1990-01-01');await f.auth('b','1990-02-02',{input:{birthday:'1990-02-02',calendar:'solar',cityId:'x',time:null,gender:'female'}});
+ const pair=f.store.read().compatibilityPairs[0],chart=pair.authorizations.b.chart;assert.deepEqual(Object.keys(chart.pillars),['day']);
+ const forbidden=[...A.collectForbiddenStrings({pair})];
+ for(const k of ['year','month','day'])assert.ok(forbidden.includes(CLASH.B.pillars[k]),'b.'+k);
+ // 自证：只看 chart.pillars 的话年柱月柱会漏掉
+ const onlyPillars=new Set(Object.values(chart.pillars));assert.ok(!onlyPillars.has(CLASH.B.pillars.year));
+});
+test('self save token is single-use: replay returns the same saved record; replay after delete is rejected',async()=>{
+ const f=clashSelf(),r=await f.service.run('me',f.body());
+ const a=f.service.save('me',{saveToken:r.saveToken}),b=f.service.save('me',{saveToken:r.saveToken});
+ assert.equal(b.id,a.id);assert.deepEqual(b,a);assert.equal(f.service.list('me').saved.length,1);
+ assert.ok(!JSON.stringify(a).includes('tokenId'));
+ f.service.remove('me',a.id);assert.throws(()=>f.service.save('me',{saveToken:r.saveToken}),e=>e.status===409);assert.equal(f.service.list('me').saved.length,0);
+ // 新的一次合盘有新凭证，可以正常保存
+ const r2=await f.service.run('me',f.body());assert.notEqual(f.service.save('me',{saveToken:r2.saveToken}).id,a.id);
+ assert.throws(()=>f.service.save('other',{saveToken:r2.saveToken}),e=>e.status===400,'token bound to owner');
 });
