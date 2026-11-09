@@ -1,4 +1,5 @@
 'use strict';
+const XB=require('./friends-cross-border');
 // 相生会员直连收款（支付宝当面付 / 微信 Native），复用 server/pay.js，不另写支付客户端。
 // 红线：总开关 FRIENDS_SALES_OPEN 默认关；回调必验签 + 订单归属 + 金额/币种/SKU 对 PILOT_CATALOG + 幂等，只发一次会员。
 // Orders live in the same billingOrders collection, so isMember()/quotas read them with no special case.
@@ -75,7 +76,7 @@ function createMembershipSales(store,{provider=null,salesOpen=false,notifyBase='
         products:SALE_SKUS.map(sku=>{const p=PILOT_CATALOG[sku];return {sku,name:p.name,amountMinor:p.amountMinor,currency:p.currency,accessMonths:p.accessMonths};}),
         member:until?{active:true,until:new Date(until).toISOString()}:{active:false,until:null}};
     },
-    async checkout(uid,{sku,channel}={},{clientIp}={}){
+    async checkout(uid,{sku,channel}={},{clientIp}={}){XB.check(store,uid);
       if(uid===undefined||uid===null||uid==='')fail(401,'请先登录');
       if(!open())fail(503,'暂未开放购买');
       if(!SALE_SKUS.includes(sku))fail(400,'该商品暂不可购买');

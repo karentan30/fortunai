@@ -3,11 +3,11 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const {createFriendsStore}=require('./friends-store');
 const {createCompatibilityService,relationshipSummary,VERSION}=require('./friends-compatibility');
 const input={birthday:'1991-01-01',cityId:'test-city',time:'06:00'};
-function fixture(store=createFriendsStore()){
+function fixture(store=require('./friends-cross-border').grant(createFriendsStore(),'a','b','c','owner','recipient','third','new-owner','new-recipient','another-recipient','new-visitor','viewer','real-minor','real-adult','outside',1,2,3)){
  let now=Date.parse('2026-11-05T12:00:00Z');
  store.transaction(s=>{s.profiles=[{userId:'a',shareId:'a-card',listed:true},{userId:'b',shareId:'b-card',listed:true},{userId:'c',shareId:'c-card',listed:true}];});
  const service=createCompatibilityService({store,clock:()=>now,calculateChart:()=>({birthLocation:{},complete:true,pillars:{year:'甲子',month:'丙寅',day:'戊辰',hour:'庚午'}})});
- const authorize=(uid,id)=>service.authorize(uid,id,{version:VERSION,consent:true,input,allowChat:true});
+ const authorize=(uid,id)=>service.authorize(uid,id,{version:VERSION,consent:true,crossBorderConsent:true,input,allowChat:true});
  async function ready(){const p=service.create('a',{targetShareId:'b-card'});await authorize('a',p.id);await authorize('b',p.id);return p;}
  return {store,service,authorize,ready,now:()=>now,setNow:n=>now=n};
 }
@@ -86,7 +86,7 @@ test('chat endpoints enforce auth CSRF and server sender identity',async()=>{
 test('chat persists across encrypted SQLite reopen without plaintext message in storage',async()=>{
  const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto'),{createSqliteFriendsStore}=require('./friends-sqlite');
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'runae-chat-')),file=path.join(dir,'state.sqlite'),key=crypto.randomBytes(32).toString('hex');
- let store=createSqliteFriendsStore(file,{key});
+ let store=require('./friends-cross-border').grant(createSqliteFriendsStore(file,{key}),'a','b','c','owner','recipient','third','new-owner','new-recipient','another-recipient','new-visitor','viewer','real-minor','real-adult','outside',1,2,3);
  try{
   const f=fixture(store),p=await f.ready(),text='private-chat-'+crypto.randomUUID();
   f.service.sendMessage('a',p.id,{text,clientMessageId:'persistent_msg_01'});store.close();store=null;
@@ -103,23 +103,23 @@ test('legacy report consent never grants chat; optional chat consent can be revo
  f.store.transaction(s=>{for(const auth of Object.values(s.compatibilityPairs[0].authorizations))auth.version='compatibility-guide-v2';});
  assert.equal(f.service.get('a',p.id).chatReady,false);
  assert.throws(()=>f.service.sendMessage('a',p.id,{text:'no',clientMessageId:'legacy_msg_01'}),{status:409});
- await f.service.authorize('a',p.id,{version:VERSION,consent:true,input});
- await f.service.authorize('b',p.id,{version:VERSION,consent:true,input});
+ await f.service.authorize('a',p.id,{version:VERSION,consent:true,crossBorderConsent:true,input});
+ await f.service.authorize('b',p.id,{version:VERSION,consent:true,crossBorderConsent:true,input});
  assert.equal((await f.service.report('a',p.id)).kind,'relationship_guide_basic');
  assert.equal(f.service.get('a',p.id).basicReady,true);assert.equal(f.service.get('a',p.id).chatReady,false);
  await f.authorize('a',p.id);assert.throws(()=>f.service.messages('a',p.id),{status:409});
  await f.authorize('b',p.id);assert.equal(f.service.get('a',p.id).chatReady,true);
  f.service.sendMessage('a',p.id,{text:'temporary',clientMessageId:'consent_msg_01'});
- await f.service.authorize('b',p.id,{version:VERSION,consent:true,input,allowChat:false});
+ await f.service.authorize('b',p.id,{version:VERSION,consent:true,crossBorderConsent:true,input,allowChat:false});
  assert.equal(f.service.get('a',p.id).chatReady,false);assert.equal(f.service.get('a',p.id).peerChatConsent,false);
  assert.deepEqual(f.store.read().compatibilityPairs[0].messages,[]);
  assert.equal((await f.service.report('a',p.id)).kind,'relationship_guide_basic');
- await assert.rejects(f.service.authorize('b',p.id,{version:VERSION,consent:true,input,allowChat:'true'}),{status:400});
+ await assert.rejects(f.service.authorize('b',p.id,{version:VERSION,consent:true,crossBorderConsent:true,input,allowChat:'true'}),{status:400});
 });
 
 test('concurrent SQLite workers retry the same message without duplicate delivery',async()=>{
  const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto'),{Worker}=require('node:worker_threads'),{createSqliteFriendsStore}=require('./friends-sqlite');
- const dir=fs.mkdtempSync(path.join(os.tmpdir(),'runae-chat-race-')),file=path.join(dir,'state.sqlite'),key=crypto.randomBytes(32).toString('hex'),store=createSqliteFriendsStore(file,{key});
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'runae-chat-race-')),file=path.join(dir,'state.sqlite'),key=crypto.randomBytes(32).toString('hex'),store=require('./friends-cross-border').grant(createSqliteFriendsStore(file,{key}),'a','b','c','owner','recipient','third','new-owner','new-recipient','another-recipient','new-visitor','viewer','real-minor','real-adult','outside',1,2,3);
  try{
   const f=fixture(store),p=await f.ready();
   const results=await Promise.all([1,2].map(()=>new Promise((resolve,reject)=>{

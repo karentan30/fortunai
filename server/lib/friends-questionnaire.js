@@ -1,4 +1,5 @@
 'use strict';
+const XB=require('./friends-cross-border');
 // 认真结婚「十方向」问卷（v2）。与旧版 friends-questions.js（35题私密答卷，仍被双人关系指南引用）并存。
 // 隐私规则：
 //  1. 答案只属于本人，默认谁都看不到。
@@ -157,7 +158,7 @@ function createFriendsQuestionnaireService({store,clock=()=>Date.now(),bank=BANK
  return {
   bank,
   get(uid){uidCheck(uid);return result(recordOf(store.read(),uid));},
-  saveDimension(uid,dimensionId,body){
+  saveDimension(uid,dimensionId,body){XB.check(store,uid);
    uidCheck(uid);
    if(!plain(body)||Object.keys(body).some(k=>!['version','consent','status','answers','expectedRevision'].includes(k)))fail(400,'请求格式无效');
    if(body.version!==bank.version||body.consent!==true)fail(400,'请核对问卷版本，并同意保存本人私密答卷');
@@ -171,7 +172,7 @@ function createFriendsQuestionnaireService({store,clock=()=>Date.now(),bank=BANK
     return result(r);
    });
   },
-  setMatching(uid,body){
+  setMatching(uid,body){XB.check(store,uid);
    uidCheck(uid);if(!plain(body)||typeof body.consent!=='boolean'||Object.keys(body).length!==1)fail(400,'请明确选择是否允许辅助推荐');
    return store.transaction(s=>{if(!recordOf(s,uid)&&!body.consent)return result(null);return result(touch(s,uid,r=>{r.matchingConsent=body.consent;}));});
   },
@@ -181,7 +182,7 @@ function createFriendsQuestionnaireService({store,clock=()=>Date.now(),bank=BANK
    const peers=(s.profiles||[]).filter(p=>ids.has(String(p.userId))&&pairUsable(s,uid,p.userId)).map(p=>({shareId:p.shareId,nickname:p.nickname,myOffered:offered(s,uid,p.userId),theirOffered:offered(s,p.userId,uid),mutualDimensions:mutualDimensions(s,uid,p.userId)}));
    return {peers,hasQuestionnaire:!!mine};
   },
-  setShare(uid,shareId,body){
+  setShare(uid,shareId,body){XB.check(store,uid);
    uidCheck(uid);
    if(!plain(body)||Object.keys(body).some(k=>!['dimensions','consent'].includes(k))||!Array.isArray(body.dimensions)||body.dimensions.length>bank.dimensions.length||new Set(body.dimensions).size!==body.dimensions.length||body.dimensions.some(id=>!dimensionOf(bank,id)))fail(400,'请选择要开放的方向');
    if(body.dimensions.length&&body.consent!==true)fail(400,'请确认愿意向对方开放所选方向的原始答案');

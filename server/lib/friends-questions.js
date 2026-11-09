@@ -1,4 +1,5 @@
 'use strict';
+const XB=require('./friends-cross-border');
 const crypto=require('node:crypto');
 const bank=require('../../assets/data/friends-relationship-questions.json');
 const fail=(status,message)=>{throw Object.assign(Error(message),{status});};
@@ -27,7 +28,7 @@ function createFriendsQuestionsService({store,clock=()=>Date.now()}={}){
  const view=row=>row?{recordId:row.recordId,version:row.version,answers:structuredClone(row.answers),updatedAt:row.updatedAt,revision:row.revision,visibility:'private'}:null;
  return {
   get(uid){uidCheck(uid);return {questionnaire:view(rows(store.read()).find(r=>r.userId===uid))};},
-  save(uid,body){uidCheck(uid);if(!plain(body)||Object.keys(body).some(k=>!['version','answers','consent','expectedRevision'].includes(k))||body.version!==bank.version||body.consent!==true)fail(400,'请核对题库版本并同意保存本人私密答卷');const answers=normalizeAnswers(body.answers);if(body.expectedRevision!==undefined&&(!Number.isInteger(body.expectedRevision)||body.expectedRevision<0))fail(400,'答卷版本无效');return store.transaction(s=>{const a=rows(s),old=a.find(r=>r.userId===uid);if(body.expectedRevision!==undefined&&body.expectedRevision!==(old?.revision||0))fail(409,'答卷已在其他页面更新，请重新读取后修改');const row={recordId:old?.recordId||crypto.randomUUID(),userId:uid,version:bank.version,answers,revision:(old?.revision||0)+1,updatedAt:new Date(clock()).toISOString(),consentVersion:'questions-private-v1'};if(old)a[a.indexOf(old)]=row;else a.push(row);return {questionnaire:view(row)};});},
+  save(uid,body){uidCheck(uid);XB.check(store,uid);if(!plain(body)||Object.keys(body).some(k=>!['version','answers','consent','expectedRevision'].includes(k))||body.version!==bank.version||body.consent!==true)fail(400,'请核对题库版本并同意保存本人私密答卷');const answers=normalizeAnswers(body.answers);if(body.expectedRevision!==undefined&&(!Number.isInteger(body.expectedRevision)||body.expectedRevision<0))fail(400,'答卷版本无效');return store.transaction(s=>{const a=rows(s),old=a.find(r=>r.userId===uid);if(body.expectedRevision!==undefined&&body.expectedRevision!==(old?.revision||0))fail(409,'答卷已在其他页面更新，请重新读取后修改');const row={recordId:old?.recordId||crypto.randomUUID(),userId:uid,version:bank.version,answers,revision:(old?.revision||0)+1,updatedAt:new Date(clock()).toISOString(),consentVersion:'questions-private-v1'};if(old)a[a.indexOf(old)]=row;else a.push(row);return {questionnaire:view(row)};});},
   remove(uid){uidCheck(uid);return store.transaction(s=>{s.relationshipQuestionnaires=rows(s).filter(r=>r.userId!==uid);return {deleted:true};});}
  };
 }

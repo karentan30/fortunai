@@ -5,7 +5,7 @@ const {createFriendsStore}=require('./friends-store');
 const {anniversary}=require('./friends-membership');
 const {createFriendsQuotas}=require('./friends-quotas');
 function fixture({pilotCatalog=true,benefitsVerified=true}={}){
- const store=createFriendsStore();let now=Date.parse('2026-01-31T12:00:00Z');
+ const store=require('./friends-cross-border').grant(createFriendsStore(),'a','b');let now=Date.parse('2026-01-31T12:00:00Z');
  const registrations=Object.fromEntries(Object.values(CATALOG).map(p=>[p.sku,{verified:true,benefitsVerified,amountMinor:p.amountMinor,currency:p.currency,product:p.sku,channels:['stripe']}]));
  const billing=createBillingService(store,{enabled:true,merchantVerified:true,merchantName:'Capstone IQ',callbackV2Verified:true,pilotCatalog,registrations,clock:()=>now,adapter:{ready:true,projectId:'test',verify:()=>true,create:async o=>({hubOrderId:'H-'+o.id,amountMinor:o.amountMinor,currency:o.currency,channel:o.channel,checkout:{url:'https://checkout.stripe.com/c/pay/'+o.id}})}});
  const checkout=sku=>billing.checkout('a',{sku,channel:'stripe',idempotencyKey:crypto.randomUUID()});

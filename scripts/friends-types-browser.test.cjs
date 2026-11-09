@@ -35,7 +35,7 @@ assert.deepEqual(await page.locator('[name=targetConstellations]:checked').evalu
 await page.locator('[data-suggest-type=mbti]').click();
 assert.deepEqual((await page.locator('[name=targetMbtis]:checked').evaluateAll(xs=>xs.map(x=>x.value))).sort(),['ENFJ','INFJ','INFP']);
 await page.locator('[name=scope_constellation]').selectOption('public');
-await page.locator('[name=consent]').check();await page.locator('[name=policyConsent]').check();
+await page.locator('[name=consent]').check();await page.locator('[name=crossBorderConsent]').check();await page.locator('[name=policyConsent]').check();
 await page.locator('#profile-form button[type=submit]').click();
 await page.locator('#publish-dialog[open]').waitFor();
 const preview=await page.locator('#publish-content').innerText();

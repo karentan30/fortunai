@@ -1,4 +1,5 @@
 'use strict';
+const XB=require('./friends-cross-border');
 // 相生 manual verification (人工核验). Owner decision 2026-11-06:
 //  - Users upload proof for 学历 / 职业(在职) / 年收入 / 资产. Max 3 files per item, 5MB each, JPEG/PNG/WEBP/PDF by magic bytes.
 //  - Files are AES-256-GCM encrypted at rest in a private directory (never under the repo / static roots).
@@ -120,7 +121,7 @@ function createVerificationService({store,dir,key,clock=()=>Date.now(),repoRoot=
       if(p?.verified?.marital===true&&MARITAL_RESULTS[p.verifiedDetail?.marital])fields.marital.result=MARITAL_RESULTS[p.verifiedDetail.marital];
       return {fields,labels:VERIFY_LABELS,limits:{maxFiles:MAX_FILES,maxBytes:MAX_BYTES,maxVideoBytes:MAX_VIDEO_BYTES,types:Object.keys(EXT)},marital:{guide:MARITAL_GUIDE,hint:MARITAL_HINT},hasProfile:!!p};
     },
-    upload(uid,{field,name,data}={}){
+    upload(uid,{field,name,data}={}){XB.check(store,uid);
       checkField(field);
       const buf=decode(data),mime=sniff(buf);
       if(!mime)fail(415,field==='marital'?'图片请用 JPG/PNG/WEBP；录屏请用「上传录屏」':'只支持 JPG、PNG、WEBP 图片或 PDF 文件');
@@ -128,7 +129,7 @@ function createVerificationService({store,dir,key,clock=()=>Date.now(),repoRoot=
       return addFile(uid,field,name,buf,mime);
     },
     // Raw-body upload for the 婚况 screen recording (≤30MB). Route passes the Buffer; type by magic bytes only.
-    uploadVideo(uid,{field,name,buf}={}){
+    uploadVideo(uid,{field,name,buf}={}){XB.check(store,uid);
       if(field!=='marital')fail(400,'只有婚况可以上传录屏');
       if(!Buffer.isBuffer(buf)||!buf.length)fail(400,'请选择要上传的录屏');
       if(buf.length>MAX_VIDEO_BYTES)fail(413,'录屏不能超过30MB，请只录从打开到结果页');
@@ -143,7 +144,7 @@ function createVerificationService({store,dir,key,clock=()=>Date.now(),repoRoot=
       });
       unlink([fileId]);return r;
     },
-    submit(uid,{field,code}={}){
+    submit(uid,{field,code}={}){XB.check(store,uid);
       checkField(field);const clean=cleanCode(code);
       if(clean&&field!=='education')fail(400,'只有学历可以填写学信网验证码');
       const result=store.transaction(s=>{

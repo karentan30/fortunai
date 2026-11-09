@@ -7,7 +7,7 @@ const {createFriendsQuestionnaireRouter}=require('../routes/friends-questionnair
 const bank=Q.BANK,V=bank.version;
 const save=(svc,uid,dim,answers,status='done',extra={})=>svc.saveDimension(uid,dim,{version:V,consent:true,status,answers,...extra});
 function fixture({connect=true}={}){
- const store=createFriendsStore();
+ const store=require('./friends-cross-border').grant(createFriendsStore(),'a','b','c','owner','recipient','third','new-owner','new-recipient','another-recipient','new-visitor','viewer','real-minor','real-adult','outside',1,2,3);
  store.transaction(s=>{s.profiles=[{userId:'a',shareId:'card-a',nickname:'阿安',listed:true},{userId:'b',shareId:'card-b',nickname:'小北',listed:true},{userId:'c',shareId:'card-c',nickname:'陌生人',listed:true}];if(connect)s.requests=[{id:'r1',from:'a',to:'b',status:'accepted'}];});
  return {store,svc:Q.createFriendsQuestionnaireService({store,clock:()=>Date.parse('2026-11-06T00:00:00Z')})};
 }

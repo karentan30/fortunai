@@ -8,7 +8,7 @@ const {createFriendsService,FIELDS,OPTIONAL_FIELDS}=require('./friends-service')
 const secret='test-signing-key-'.repeat(4);
 function setup(file){const store=createFriendsStore(file),charts=createChartService(secret),service=createFriendsService(store,charts);
 const credential=charts.issue({birthday:'1991-08-28',calendar:'lunar',hour:6}).credential;
-const data=(extra={})=>({credential,consent:true,nickname:'测试',city:'上海',intent:'交朋友',fields:{height:'170',weight:'60',school:'学校',occupation:'职员',industry:'科技',title:'工程师',income:'自报个人暂无收入',assets:'自报个人暂无资产'},visibility:{school:'public',income:'connected'},hobbies:['羽毛球'],targetStems:['不限'],targetZodiacs:['不限'],listed:true,contact:'private-contact',contactConsent:true,...extra});
+const data=(extra={})=>({credential,consent:true,crossBorderConsent:true,nickname:'测试',city:'上海',intent:'交朋友',fields:{height:'170',weight:'60',school:'学校',occupation:'职员',industry:'科技',title:'工程师',income:'自报个人暂无收入',assets:'自报个人暂无资产'},visibility:{school:'public',income:'connected'},hobbies:['羽毛球'],targetStems:['不限'],targetZodiacs:['不限'],listed:true,contact:'private-contact',contactConsent:true,...extra});
 return {store,charts,service,data};}
 test('calendar validation, known regression and unknown time',()=>{
 assert.equal(calculate({birthday:'1991-08-28',calendar:'lunar',hour:6}).dayPillar,'戊申');

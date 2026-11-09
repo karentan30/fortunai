@@ -1,4 +1,5 @@
 'use strict';
+const XB=require('./friends-cross-border');
 const crypto=require('node:crypto');
 const fail=(status,message)=>{throw Object.assign(Error(message),{status});};
 const canonical=v=>Array.isArray(v)?'['+v.map(canonical).join(',')+']':v&&typeof v==='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}':JSON.stringify(v);
@@ -15,7 +16,7 @@ function createFriendsReportsService({store,billing,verifyChart,generate,clock=(
  async function recoverExpired(uid,id){let j=own(store.read(),uid,id);if(['reserving','generating'].includes(j.status)&&j.leaseUntil<=clock()){j=update(uid,id,x=>{if(['reserving','generating'].includes(x.status)&&x.leaseUntil<=clock()){x.status='manual_review';x.failureCode='expired_execution_lease';}});if(!j.reservationId&&typeof billing.reservationByKey==='function'){const r=await billing.reservationByKey(uid,'report_'+j.id);if(r)j=update(uid,id,x=>{x.reservationId=r.id;});}}return j;}
  async function finalize(uid,id){const j=own(store.read(),uid,id);if(j.status!=='result_saved')return view(j);try{await billing.settle(uid,j.reservationId,'commit');return view(update(uid,id,x=>{x.status='delivered';}));}catch(e){return view(update(uid,id,x=>{x.status=e.status===409?'manual_review':'result_saved';x.failureCode='settlement_review';}));}}
  return {
-  async create(uid,{idempotencyKey,input,consentRetainReport=false}={}){
+  async create(uid,{idempotencyKey,input,consentRetainReport=false}={}){XB.check(store,uid);
    if(uid===undefined||uid===null||uid==='')fail(401,'请先登录');
    if(!/^[A-Za-z0-9_-]{8,100}$/.test(idempotencyKey||''))fail(400,'报告幂等键无效');
    if(consentRetainReport!==true)fail(400,'请明确同意保存本人报告结果及必要任务记录');

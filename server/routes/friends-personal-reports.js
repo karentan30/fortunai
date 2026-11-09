@@ -9,7 +9,7 @@ function createPersonalReportsRouter({express,auth,store,billing,env=process.env
    if(req.user?.id===undefined)return res.status(401).json({error:'请先登录'});
    if(!req.is('application/json')||req.get('X-Runae-Friends')!=='1'||req.get('Sec-Fetch-Site')==='cross-site'||(req.get('Origin')&&req.get('Origin')!==`${req.protocol}://${req.get('Host')}`))return res.status(403).json({error:'请从本站操作'});
    try{const selected=adapter||require('../lib/friends-report-adapter').createFriendsReportAdapter();await selected.verifyChart(req.body?.input,req.user.id);res.json({eligible:true,generationEnabled:enabled,note:'输入在当前完整版支持范围内；本次仅检查适用性，未保存出生输入，也未扣次。'});}
-   catch(e){res.status(e.status||503).json({eligible:false,error:e.status?e.message:'暂时无法检查报告适用性'});}
+   catch(e){res.status(e.status||503).json({eligible:false,...(e.code?{code:e.code}:{}),error:e.status?e.message:'暂时无法检查报告适用性'});}
  });
  if(!enabled){
    const {reportView}=require('../lib/friends-reports');

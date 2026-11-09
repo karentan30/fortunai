@@ -35,7 +35,7 @@ function setup(t){
   const store=createFriendsStore(),charts=createChartService(secret),service=createFriendsService(store,charts);
   const media=SP.createSeriousMediaService({store,dir:path.join(dir,'media'),key:KEY});
   const credential=charts.issue({birthday:'1992-03-14',calendar:'solar',hour:9}).credential;
-  const save=(uid,extra={})=>service.save(uid,{credential,consent:true,nickname:'用户'+uid,city:'上海',purposes:['serious'],fields:{height:'170',education:'本科',occupation:'工程师',house:'有房',car:'无车',hukou:'上海'},
+  const save=(uid,extra={})=>service.save(uid,{credential,consent:true,crossBorderConsent:true,nickname:'用户'+uid,city:'上海',purposes:['serious'],fields:{height:'170',education:'本科',occupation:'工程师',house:'有房',car:'无车',hukou:'上海'},
     visibility:{age:'public',height:'public',education:'public',occupation:'public',house:'public',car:'private',hukou:'connected'},hobbies:['徒步'],targetStems:['不限'],targetZodiacs:['不限'],listed:true,...extra});
   const connect=(a,b)=>store.transaction(s=>{s.requests.push({id:'r-'+a+b,from:a,to:b,status:'accepted',createdAt:new Date().toISOString()});});
   const files=()=>fs.existsSync(path.join(dir,'media'))?fs.readdirSync(path.join(dir,'media')).filter(n=>n.endsWith('.bin')):[];
