@@ -153,7 +153,7 @@ function validatePairReport(raw,facts,{forbiddenStrings=[]}={}){
 // answer text (option labels and free text) of both sides, whether or not they were shared.
 function collectForbiddenStrings({pair,questionnaires=[],questionBank=null}){
  const out=new Set();
- for(const uid of [pair.from,pair.to]){const pillars=pair.authorizations?.[String(uid)]?.chart?.pillars||{};for(const v of Object.values(pillars))if(typeof v==='string')out.add(v);}
+ for(const uid of [pair.from,pair.to]){const chart=pair.authorizations?.[String(uid)]?.chart,pillars={...chart?.pillars,...chart?.v4Pillars};for(const v of Object.values(pillars))if(typeof v==='string')out.add(v);}
  for(const q of questionnaires){
   if(!q?.answers)continue;
   for(const [id,answer]of Object.entries(q.answers)){
