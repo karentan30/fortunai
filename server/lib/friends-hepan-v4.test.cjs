@@ -97,13 +97,13 @@ test('leakScan flags forbidden chars in values and keys, skips whitelisted words
 });
 
 // —— 邀请合盘（服务层）——
-function fixture({generate=null,isUnlocked}={}){
+function fixture({generate=null,isUnlocked,clock=()=>Date.parse('2026-11-09T04:00:00Z')}={}){
  const store=XB.grant(createFriendsStore(),'a','b');
  store.transaction(s=>{s.profiles=[{userId:'a',shareId:'card-a',nickname:'阿甲',listed:true},{userId:'b',shareId:'card-b',nickname:'小庚',listed:true}];});
  const charts={'1990-01-01':CLASH.A,'1990-02-02':CLASH.B,'1991-01-01':HARMONY.A,'1991-02-02':HARMONY.B};
  const calculateChart=inp=>{const c=charts[inp.birthday];if(!c)throw Object.assign(Error('bad'),{status:400});const known=inp.time!==null;return {complete:known,pillars:known?{...c.pillars}:null,basePillars:known?undefined:{...c.pillars,hour:null},dayPillar:c.pillars.day,birthLocation:{id:'x'},calculationVersion:'test'};};
  const calls=[];const gen=generate?async(messages,opts)=>{calls.push(messages);return generate(messages,calls.length);}:null;
- const service=createCompatibilityService({store,calculateChart,generateProse:gen,clock:()=>Date.parse('2026-11-09T04:00:00Z'),...(isUnlocked?{isUnlocked}:{})});
+ const service=createCompatibilityService({store,calculateChart,generateProse:gen,clock,...(isUnlocked?{isUnlocked}:{})});
  const p=service.create('a',{targetShareId:'card-b'});
  const auth=(uid,birthday,extra={})=>service.authorize(uid,p.id,{version:VERSION_V4,consent:true,inferenceConsent:true,poolOptIn:false,crossBorderConsent:true,input:{birthday,calendar:'solar',cityId:'x',time:'08:00',gender:uid==='a'?'male':'female'},...extra});
  return {store,service,p,auth,calls};
@@ -132,12 +132,11 @@ test('free invite truncation: 天干/夫妻星 shown, 地支/五行 locked; 1 �
  assert.equal(r.unlocked,false);assert.equal(r.full,false);
  assert.deepEqual(r.subs.map(s=>[s.key,s.locked]),[['stem',false],['branch',true],['wuxing',true],['star',false]]);
  assert.equal(r.subs.find(s=>s.key==='branch').score,null);assert.equal(r.subs.find(s=>s.key==='wuxing').score,null);
- assert.ok(r.moheTotal>=2);assert.equal(r.mohe.length,1);assert.ok(r.mohe[0].advice.length>=2&&r.mohe[0].advice.length<=3);
- assert.equal(r.moreCount,r.moheTotal-1);assert.match(r.lock.text,new RegExp('还有'+r.moreCount+'条'));assert.equal(r.lock.available,false);
+ assert.equal('moheTotal' in r,false,'free tier returns only the locked count');assert.ok(r.moreCount>=1);assert.equal(r.mohe.length,1);assert.ok(r.mohe[0].advice.length>=2&&r.mohe[0].advice.length<=3);assert.match(r.lock.text,new RegExp('还有'+r.moreCount+'条'));assert.equal(r.lock.available,false);
  assert.equal(r.allShown,false);assert.equal(r.basis,null);assert.equal(r.wuxing,null);assert.equal(r.star,null);
  assert.deepEqual(r.footer,['按传统合婚规则计分，仅供参考','传统文化参考，不预测关系结果']);
  const g=fixture({isUnlocked:()=>true});await g.auth('a','1990-01-01');await g.auth('b','1990-02-02');
- const full=await g.service.report('a',g.p.id);assert.equal(full.full,true);assert.equal(full.mohe.length,full.moheTotal);assert.ok(full.basis.length);assert.ok(full.subs.every(s=>!s.locked&&Number.isInteger(s.score)));
+ const full=await g.service.report('a',g.p.id);assert.equal(full.full,true);assert.equal(full.mohe.length,full.moheTotal);assert.equal(full.moheTotal,r.moreCount+1);assert.ok(full.basis.length);assert.ok(full.subs.every(s=>!s.locked&&Number.isInteger(s.score)));
  assert.deepEqual(V.assertNoLeak(full,CLASH.B.pillars),[]);
 });
 
@@ -247,7 +246,7 @@ test('self mode never stores TA; save keeps only tier/score/item ids; owner-only
  assert.equal(f.calls.length,2,'mocked model rejected twice → template');assert.equal(r.aiAssisted,false);
  assert.ok(JSON.parse(f.calls[0][1].content).charts,'self mode may send both charts (own data), but no birthday');assert.ok(!JSON.stringify(f.calls[0]).includes('1990-11-23'));
  await assert.rejects(Promise.resolve().then(()=>f.service.save('me2',{saveToken:r.saveToken})),{status:400});
- const [data,sig]=r.saveToken.split('.');await assert.rejects(Promise.resolve().then(()=>f.service.save('me',{saveToken:Buffer.from(JSON.stringify({...JSON.parse(Buffer.from(data,'base64url')),total:100})).toString('base64url')+'.'+sig})),{status:400});
+ const tampered=Buffer.from(r.saveToken,'base64url');tampered[tampered.length-1]^=1;await assert.rejects(Promise.resolve().then(()=>f.service.save('me',{saveToken:tampered.toString('base64url')})),{status:400});
  const saved=f.service.save('me',{saveToken:r.saveToken});
  assert.equal(saved.total,r.total);assert.equal(saved.tier,r.tier);
  const rawSaved=JSON.stringify(f.store.read().hepanSelfSaved);assert.deepEqual(C.ganzhiIn(rawSaved),[],'no 干支 in saved record');assert.ok(!rawSaved.includes('1990'));
@@ -311,4 +310,95 @@ test('no false positives: template invite reports for 400 real random pairs pass
  const an=E.analyze(CLASH.A,CLASH.B),picked=E.items(an),r=V.buildReport({analysis:an,picked,prose:{...C.templateProse(an,picked),items:{}},charts:CLASH,mode:'invite',viewer:'A'});
  r.summary+=CLASH.B.pillars.hour;
  assert.ok(V.assertNoLeak(r,CLASH.B.pillars).some(h=>h.path==='summary'));
+});
+
+// ===== 复审修正（1109 第二轮）=====
+// 免费版锁住的东西，返回里一个字都不能有：锁住分项的分数、moheTotal、锁住磨合点的关系/标签/依据。
+function lockedLeaks(r,analysis,picked){
+ const out=[],json=JSON.stringify(r),locked=picked.mohe.slice(1);
+ if('moheTotal' in r)out.push('moheTotal');
+ for(const s of r.subs)if(s.locked&&s.score!==null)out.push('score:'+s.key);
+ if(r.basis!==null)out.push('basis');if(r.wuxing!==null)out.push('wuxing');if(r.star!==null)out.push('star');
+ for(const h of locked){if(json.includes('"'+h.id+'"'))out.push('id:'+h.id);if(h.pillar){const rel=r.relations.find(x=>x.pillar===h.pillar)[h.part];if(rel.type!==null||rel.locked!==true)out.push('relation:'+h.id);}}
+ // 地支分项锁住：没在已展示条目里出现的地支关系都不给
+ const shown=new Set([...r.he,...r.mohe].map(x=>x.id));
+ for(const x of r.relations)if(!shown.has(x.pillar+'_branch')&&x.branch.type!==null)out.push('branch:'+x.pillar);
+ return out;
+}
+test('free tier (invite, both viewers): locked subs, moheTotal, locked 磨合点 relations/tags and all unshown 地支 relations are absent; full tier has them all',async()=>{
+ const an=E.analyze(CLASH.A,CLASH.B),picked=E.items(an);assert.ok(picked.mohe.length>=2,'fixture must have locked 磨合点');
+ const f=fixture();await f.auth('a','1990-01-01');await f.auth('b','1990-02-02');
+ for(const uid of ['a','b']){const r=await f.service.report(uid,f.p.id);assert.equal(r.full,false);assert.deepEqual(lockedLeaks(r,an,picked),[]);
+  assert.equal(r.moreCount,picked.mohe.length-1);assert.ok(r.relations.some(x=>x.stem.type!==null),'天干 sub is free, so unlocked 天干 relations stay');
+  const visible=r.subs.filter(s=>!s.locked).reduce((n,s)=>n+s.score,0);assert.ok(r.total-visible>=0,'total − visible only reveals the locked sum');}
+ const g=fixture({isUnlocked:()=>true});await g.auth('a','1990-01-01');await g.auth('b','1990-02-02');
+ const full=await g.service.report('a',g.p.id);assert.equal(full.moheTotal,picked.mohe.length);assert.ok(full.relations.every(x=>x.stem.type!==null&&x.branch.type!==null&&!x.stem.locked&&!x.branch.locked));assert.ok(full.star&&full.wuxing&&full.basis);
+ // 自证：如果把锁住的磨合点关系塞回去，检查会报
+ const r=await f.service.report('a',f.p.id),h=picked.mohe.find((x,i)=>i>0&&x.pillar);if(h){r.relations.find(x=>x.pillar===h.pillar)[h.part]={type:h.type};assert.ok(lockedLeaks(r,an,picked).includes('relation:'+h.id));}
+});
+function clashSelf({generate=null,clock}={}){
+ let now=Date.parse('2026-11-09T04:00:00Z');const store=XB.grant(createFriendsStore(),'me','me2','other'),calls=[];
+ const charts={'1990-01-01':CLASH.A,'1990-02-02':CLASH.B,'1991-01-01':HARMONY.A,'1991-02-02':HARMONY.B};
+ const calculateChart=inp=>{const c=charts[inp.birthday];return {complete:true,pillars:{...c.pillars},dayPillar:c.pillars.day};};
+ const service=createHepanSelfService({store,secret:SECRET,calculateChart,clock:clock||(()=>now),generateProse:generate?async m=>{calls.push(m);return generate(m,calls.length);}:null});
+ const body=(a='1990-01-01',b='1990-02-02')=>({purpose:'romance',consents:{informed:true,selfOnly:true,adult:true},me:{birthday:a,calendar:'solar',time:'08:00',gender:'male'},ta:{nickname:'阿北',birthday:b,calendar:'solar',time:'08:00',gender:'female'}});
+ return {store,service,body,calls,setNow:v=>now=v};
+}
+test('self mode uses the same free/full locking for the live result, the save token and savedView',async()=>{
+ const an=E.analyze(CLASH.A,CLASH.B),picked=E.items(an),f=clashSelf();
+ const r=await f.service.run('me',f.body(),{device:'d'.repeat(20)});assert.equal(r.full,false);assert.deepEqual(lockedLeaks(r,an,picked),[]);
+ assert.ok(r.people.ta.pillars,'self mode still shows both charts (own input)');
+ // 保存凭证是密文：解码看不到分项和磨合点
+ const decoded=Buffer.from(r.saveToken,'base64url').toString('latin1');assert.throws(()=>JSON.parse(decoded));for(const w of ['subs','hits','mohe','total','"score"'])assert.ok(!decoded.includes(w),w);
+ const saved=f.service.save('me',{saveToken:r.saveToken}),v=f.service.get('me',saved.id);
+ assert.deepEqual(v.subs.map(s=>[s.key,s.locked,s.score===null]),[['stem',false,false],['branch',true,true],['wuxing',true,true],['star',false,false]]);
+ assert.equal(v.mohe.length,1);assert.equal(v.moreCount,picked.mohe.length-1);assert.equal('moheTotal' in v,false);assert.equal(v.full,false);
+ for(const h of picked.mohe.slice(1))assert.ok(!JSON.stringify(v).includes('"'+h.id+'"'),h.id);
+ // ≤1 条磨合点：全部展示，四项分都有
+ const g=clashSelf(),r2=await g.service.run('me',g.body('1991-01-01','1991-02-02'));assert.equal(r2.full,true);assert.ok(r2.subs.every(s=>!s.locked&&Number.isInteger(s.score)));
+ const v2=g.service.get('me',g.service.save('me',{saveToken:r2.saveToken}).id);assert.ok(v2.subs.every(s=>!s.locked&&Number.isInteger(s.score)));
+});
+test('self quota is reserved atomically before the model call: 10 parallel requests → exactly 3 succeed; failures refund',async()=>{
+ const f=clashSelf({generate:async m=>{await new Promise(r=>setTimeout(r,25));return goodProse(m);}}),ctx={device:'p'.repeat(20),ip:'203.0.113.9'};
+ const results=await Promise.allSettled(Array.from({length:10},()=>f.service.run('me',f.body(),ctx)));
+ assert.equal(results.filter(x=>x.status==='fulfilled').length,LIMITS.account);
+ assert.ok(results.filter(x=>x.status==='rejected').every(x=>x.reason.status===429));
+ assert.equal(f.calls.length,1,'concurrent identical requests share one model call');assert.equal(f.service.quota('me',ctx).remaining,0);
+ // 预占之后出错要退回：模拟组装报告时抛错
+ const g=clashSelf(),orig=V.buildReport;V.buildReport=()=>{throw Error('boom');};
+ try{await assert.rejects(g.service.run('me',g.body(),ctx),/boom/);}finally{V.buildReport=orig;}
+ assert.equal(g.service.quota('me',ctx).remaining,LIMITS.account,'refunded');
+ await g.service.run('me',g.body(),ctx);assert.equal(g.service.quota('me',ctx).remaining,LIMITS.account-1);
+});
+test('only AI prose is cached; template fallback is served uncached (no fallbackReason stored) and AI is retried after a cooldown',async()=>{
+ let now=Date.parse('2026-11-09T04:00:00Z'),ok=false;const gen=m=>ok?goodProse(m):'not json';
+ const f=fixture({generate:gen,clock:()=>now});await f.auth('a','1990-01-01');await f.auth('b','1990-02-02');
+ const r1=await f.service.report('a',f.p.id);assert.equal(r1.aiAssisted,false);assert.equal(f.calls.length,2);
+ const stored=()=>JSON.stringify(f.store.read());assert.ok(!stored().includes('fallbackReason'));assert.equal(f.store.read().compatibilityPairs[0].v4Cache,undefined,'template is not cached');
+ ok=true;const r2=await f.service.report('a',f.p.id);assert.equal(f.calls.length,2,'within cooldown: no model call');assert.equal(r2.aiAssisted,false);
+ now+=11*60000;const r3=await f.service.report('a',f.p.id);assert.equal(f.calls.length,3,'after cooldown: AI retried');assert.equal(r3.aiAssisted,true);
+ assert.equal(f.store.read().compatibilityPairs[0].v4Cache.prose.source,'ai');
+ ok=false;const r4=await f.service.report('b',f.p.id);assert.equal(f.calls.length,3,'AI prose served from cache');assert.equal(r4.aiAssisted,true);
+ // 自己合盘同一规则
+ let t=Date.parse('2026-11-09T04:00:00Z'),okS=false;const s=clashSelf({generate:m=>okS?goodProse(m):'not json',clock:()=>t});
+ assert.equal((await s.service.run('me',s.body())).aiAssisted,false);assert.equal(s.calls.length,2);
+ okS=true;assert.equal((await s.service.run('me',s.body())).aiAssisted,false);assert.equal(s.calls.length,2,'cooldown');
+ t+=11*60000;assert.equal((await s.service.run('me',s.body())).aiAssisted,true);assert.equal(s.calls.length,3);
+ okS=false;assert.equal((await s.service.run('me2',s.body())).aiAssisted,true);assert.equal(s.calls.length,3,'cached AI prose');
+ assert.ok(!JSON.stringify(s.store.read()).includes('fallbackReason'));
+});
+test('mixed v3/v4 pair: v3 guide and paid pair-report facts use only the day pillar when time is unknown (as before v4)',async()=>{
+ const A=require('./friends-pair-report-adapter');
+ const f=fixture();await f.service.authorize('a',f.p.id,{version:VERSION,consent:true,crossBorderConsent:true,input:{birthday:'1990-01-01',calendar:'solar',cityId:'x',time:'08:00'}});
+ await f.auth('b','1990-02-02',{input:{birthday:'1990-02-02',calendar:'solar',cityId:'x',time:null,gender:'female'}});
+ const pair=f.store.read().compatibilityPairs[0],chart=pair.authorizations.b.chart;
+ assert.deepEqual(Object.keys(chart.pillars),['day'],'stored pillars keep the v3 shape');assert.deepEqual(Object.keys(chart.v4Pillars).filter(k=>chart.v4Pillars[k]),['year','month','day']);
+ const guide=await f.service.report('a',f.p.id);assert.equal(guide.kind,'relationship_guide_basic');assert.equal(guide.completeFourPillars,false);
+ assert.deepEqual(guide.themes.map(t=>t.available),[false,false,true,false]);
+ const facts=A.buildPairFacts({pair,guide,purpose:Object.keys(A.PURPOSES)[0],stage:Object.keys(A.STAGES)[0]});
+ assert.deepEqual(facts.traditional.filter(x=>/^t_(year|month|day|hour)$/.test(x.id)).map(x=>x.id),['t_day']);
+ // 两边都升级到 v4 后，新版报告用上三柱
+ await f.auth('a','1990-01-01');const v4=await f.service.report('a',f.p.id);assert.equal(v4.kind,'hepan_v4');assert.equal(v4.limited,true);assert.equal(v4.relations.length,3);
+ // 付费报告的禁止字串也覆盖三柱
+ const forbidden=A.collectForbiddenStrings({pair:f.store.read().compatibilityPairs[0]});for(const k of ['year','month','day'])assert.ok(forbidden.has?forbidden.has(CLASH.B.pillars[k]):forbidden.includes(CLASH.B.pillars[k]),k);
 });
