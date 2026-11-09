@@ -9,20 +9,22 @@
 
   // 01 日主
   const pick=$('mg-pick'),list=$('mg-stems'),cards={};
+  // 一律带五行显示（甲木、癸水…），方便记。
+  const EL=Object.fromEntries(D.STEMS.map(x=>[x.stem,D.ELEMENTS[x.element]])),full=st=>st+(EL[st]||'');
   for(const s of D.STEMS){
     const elName=D.ELEMENTS[s.element];
-    const b=el('button',s.stem,'mg-chip');b.type='button';b.dataset.stem=s.stem;b.setAttribute('aria-pressed','false');b.setAttribute('aria-label',s.stem+(s.yin?'（阴':'（阳')+elName+'）');
+    const b=el('button',full(s.stem),'mg-chip');b.type='button';b.dataset.stem=s.stem;b.setAttribute('aria-pressed','false');b.setAttribute('aria-label',s.stem+(s.yin?'（阴':'（阳')+elName+'）');
     b.addEventListener('click',()=>choose(s.stem,true));pick.append(b);
 
     const d=el('details',null,'mg-card');d.id='stem-'+s.stem;d.dataset.element=s.element;
     const sum=el('summary',null,'mg-sum');
-    sum.append(el('span',s.stem,'mg-glyph'),(()=>{const t=el('span',null,'mg-sum-txt');t.append(el('b',s.stem+(s.yin?'阴':'阳')+elName),el('small',s.image));return t;})(),el('span','+','mg-plus'));
+    sum.append(el('span',s.stem,'mg-glyph'),(()=>{const t=el('span',null,'mg-sum-txt');t.append(el('b',full(s.stem)+' · '+(s.yin?'阴':'阳')+elName),el('small',s.image));return t;})(),el('span','+','mg-plus'));
     d.append(sum);
     const body=el('div',null,'mg-card-body');
     body.append(el('p',s.portrait,'mg-portrait'));
     for(const g of D.groupsFor(s.stem)){
       const row=el('div',null,'mg-group');row.dataset.key=g.key;
-      const h=el('h4',null);h.append(el('span',g.label,'mg-g-label'),el('span',g.stems.join(' '),'mg-g-stems'));
+      const h=el('h4',null);h.append(el('span',g.label,'mg-g-label'),el('span',g.stems.map(full).join(' '),'mg-g-stems'));
       row.append(h,el('p',g.feel));body.append(row);
     }
     d.append(body);list.append(d);cards[s.stem]=d;
