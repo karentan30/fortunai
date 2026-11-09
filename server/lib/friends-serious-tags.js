@@ -3,7 +3,7 @@
 // The owner may pick a few of their OWN marriage-questionnaire answers to show as short tags. Rules:
 //  - Default: nothing shown. Only answers the owner actually gave can become a tag, and only tags the owner ticked are shown.
 //  - Raw answers, notes, importance, scores and alignment numbers are never shown. Text questions offer no tag.
-//  - Intimacy pace (bound-pace), professional-help and "not ready yet" answers never become tags (too sensitive for a page).
+//  - Intimacy pace (pace-intimate / pace-touch, formerly bound-pace), professional-help and "not ready yet" answers never become tags (too sensitive for a page).
 //  - Tags are re-derived from the current answers at every render: change the answer and the old tag disappears.
 const BANK=require('../../assets/data/friends-marriage-questionnaire.json');
 
@@ -59,7 +59,7 @@ const isKnownKey=k=>{if(typeof k!=='string')return false;const i=k.indexOf(':'),
 
 // Every tag the owner COULD show, derived only from their own current answers. [{key,dimensionId,dimension,label}]
 function availableTags(record){
-  if(!record||record.version!==BANK.version)return [];
+  if(!record||record.version!==BANK.version&&!(BANK.upgradeFrom||[]).includes(record.version))return [];
   const out=[];
   for(const qid of ORDER){
     const q=QUESTIONS.get(qid),map=TAGS[qid];if(!map)continue;

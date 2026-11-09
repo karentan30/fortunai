@@ -25,9 +25,9 @@ test('save per dimension, resume at next unfinished dimension, revision guard',(
  assert.equal(svc.get('a').questionnaire,null);assert.equal(svc.get('a').progress.nextDimension,'family');
  let r=save(svc,'a','family',{'family-marry-timing':{value:'1to3',importance:'important'}},'in_progress');
  assert.equal(r.questionnaire.revision,1);assert.equal(r.progress.nextDimension,'family');assert.equal(r.progress.settled,0);
- r=save(svc,'a','family',{'family-marry-timing':{value:'1to3'},'family-kids-timing':{value:'mid'},'family-note':{value:'  想离父母近一点 '}},'done',{expectedRevision:1});
+ r=save(svc,'a','family',{'family-marry-timing':{value:'1to3'},'family-kids-timing':{value:'mid'},'family-topics':{value:['near'],note:'  想离父母近一点 '}},'done',{expectedRevision:1});
  assert.equal(r.progress.nextDimension,'finance');assert.equal(r.progress.settled,1);
- const resumed=svc.get('a');assert.equal(resumed.questionnaire.dimensions.family.answers['family-note'].value,'想离父母近一点');assert.equal(resumed.questionnaire.visibility,'private');
+ const resumed=svc.get('a');assert.equal(resumed.questionnaire.dimensions.family.answers['family-topics'].note,'想离父母近一点');assert.equal(resumed.questionnaire.visibility,'private');
  assert.throws(()=>save(svc,'a','finance',{},'in_progress',{expectedRevision:1}),e=>e.status===409);
  save(svc,'a','future',{},'in_progress');assert.equal(svc.get('a').progress.nextDimension,'future','in-progress dimension resumes first');
  assert.equal(svc.get('b').questionnaire,null,'other users see nothing');
@@ -44,24 +44,29 @@ test('skip and 待讨论 are valid answers; whole-dimension skip clears answers;
  const skipped=save(svc,'a','history',{'hist-share':{value:'brief'}},'skipped');
  assert.deepEqual(skipped.questionnaire.dimensions.history.answers,{});assert.equal(skipped.progress.dimensions.find(d=>d.id==='history').status,'skipped');
  assert.equal(save(svc,'a','habits',{},'discuss').progress.settled,3);
- for(const answers of [{'finance-split':{value:'nope'}},{'finance-split':{state:'skip',value:'aa'}},{'finance-split':{state:'maybe'}},{'finance-split':{value:'aa',userId:'b'}},{'finance-style':{value:6}},{'conflict-heard':{value:['listen','solve','space']}},{'finance-note':{value:'x'.repeat(301)}},{'finance-note':{value:'ok',importance:'essential'}},{'unknown':{value:1}}])
+ for(const answers of [{'finance-split':{value:'nope'}},{'finance-split':{state:'skip',value:'aa'}},{'finance-split':{state:'maybe'}},{'finance-split':{value:'aa',userId:'b'}},{'finance-style':{value:6}},{'conflict-heard':{value:['listen','solve','space']}},{'finance-care':{value:'自由文字'}},{'finance-care':{value:['save'],note:'x'.repeat(121)}},{'finance-care':{value:['save','fun','house','debt']}},{'finance-care':{value:['save','save']}},{'finance-care':{value:[]}},{'finance-care':{value:['nope']}},{'finance-split':{value:'aa',note:'我们去算命吧'}},{'finance-split':{value:'aa',note:'大概80%'}},{'unknown':{value:1}}])
   assert.throws(()=>save(svc,'a',Object.keys(answers)[0].startsWith('conflict')?'conflict':'finance',answers),e=>e.status===400,JSON.stringify(answers));
+ assert.throws(()=>save(svc,'a','family',{'family-topics':{value:['near'],importance:'essential'}}),e=>e.status===400,'compare:none has no importance');
+ assert.equal(save(svc,'a','finance',{'finance-care':{value:['save'],note:'y'.repeat(120)}}).questionnaire.dimensions.finance.answers['finance-care'].note.length,120);
  assert.throws(()=>svc.saveDimension('a','finance',{version:V,consent:true,status:'whatever',answers:{}}),e=>e.status===400);
 });
 
-test('unshared answers never leak; only mutually opened dimensions are visible and explained',()=>{
+// 把记录变回「改版前的旧记录」：没有新规则标记、答案上没有 open 标记。
+const legacy=store=>store.transaction(s=>{for(const r of s.marriageQuestionnaires){delete r.visibility;for(const d of Object.values(r.dimensions))for(const a of Object.values(d.answers))delete a.open;}});
+test('old records: unshared answers never leak; only mutually opened dimensions are visible and explained',()=>{
  const {svc,store}=fixture();
- save(svc,'a','family',{'family-kids-wish':{value:'want'},'family-note':{value:'SECRET-A-FAMILY'}});
- save(svc,'a','finance',{'finance-split':{value:'ratio'},'finance-style':{value:2},'finance-big':{value:'medium'},'finance-note':{value:'MARKER-A-FIN'}});
- save(svc,'b','family',{'family-kids-wish':{value:'nokids'},'family-note':{value:'SECRET-B-FAMILY'}});
+ save(svc,'a','family',{'family-kids-wish':{value:'want'},'family-topics':{value:['near'],note:'SECRET-A-FAMILY'}});
+ save(svc,'a','finance',{'finance-split':{value:'ratio'},'finance-style':{value:2},'finance-big':{value:'medium'},'finance-care':{value:['save'],note:'MARKER-A-FIN'}});
+ save(svc,'b','family',{'family-kids-wish':{value:'nokids'},'family-topics':{value:['care'],note:'SECRET-B-FAMILY'}});
  save(svc,'b','finance',{'finance-split':{value:'ratio'},'finance-style':{value:3},'finance-big':{value:'month'}});
+ legacy(store);
  // 只有一方开放：对方什么都看不到
  svc.setShare('a','card-b',{dimensions:['family','finance'],consent:true});
  let seen=svc.shared('b','card-a');assert.deepEqual(seen.mutualDimensions,[]);assert.deepEqual(seen.peer.dimensions,{});assert.deepEqual(seen.explanations,[]);
  assert.doesNotMatch(JSON.stringify(seen),/SECRET|MARKER|ratio|want/);
  // B 只开放财务：双方只互看财务
  svc.setShare('b','card-a',{dimensions:['finance'],consent:true});
- seen=svc.shared('b','card-a');assert.deepEqual(seen.mutualDimensions,['finance']);assert.equal(seen.peer.dimensions.finance.answers['finance-note'].value,'MARKER-A-FIN');
+ seen=svc.shared('b','card-a');assert.deepEqual(seen.mutualDimensions,['finance']);assert.equal(seen.peer.dimensions.finance.answers['finance-care'].note,'MARKER-A-FIN');
  const text=JSON.stringify(seen);assert.doesNotMatch(text,/SECRET-A-FAMILY|family-kids-wish|家庭与生育分工/);
  assert.deepEqual(seen.explanations,[{dimensionId:'finance',signal:'close',text:'在财务方面想法接近'}]);
  assert.deepEqual(svc.shared('a','card-b').explanations.map(e=>e.text),['在财务方面想法接近']);
@@ -104,7 +109,8 @@ test('questionnaireAlignment pure function semantics',()=>{
  assert.deepEqual(Q.questionnaireAlignment(P('family',{'family-marry-timing':A('1to3')}),P('family',{'family-marry-timing':A('1to3')})).explanations,[]);
  // 多选有交集即接近；文本从不比较；待讨论算需要聊聊；跳过不比较
  assert.equal(Q.questionnaireAlignment(P('conflict',{'conflict-heard':A(['listen','space'])}),P('conflict',{'conflict-heard':A(['space'])})).dimensions[3].signal,'close');
- assert.equal(Q.questionnaireAlignment(P('family',{'family-note':A('x')}),P('family',{'family-note':A('y')})).dimensions[0].signal,'unknown');
+ assert.equal(Q.questionnaireAlignment(P('family',{'family-topics':A(['near'])}),P('family',{'family-topics':A(['care'])})).dimensions[0].signal,'unknown');
+ assert.equal(Q.questionnaireAlignment(P('family',{'family-topics':A('旧的文字答案')}),P('family',{'family-topics':A(['care'])})).dimensions[0].signal,'unknown','old text in a multi slot never compares or throws');
  assert.equal(Q.questionnaireAlignment(P('habits',{'hab-tidy':{state:'discuss'}}),P('habits',{'hab-tidy':A(5)})).dimensions[9].signal,'talk');
  assert.equal(Q.questionnaireAlignment(P('habits',{'hab-tidy':{state:'skip'}}),P('habits',{'hab-tidy':A(5)})).dimensions[9].signal,'unknown');
  assert.equal(Q.questionnaireAlignment(P('habits',{'hab-tidy':A(1)},'skipped'),P('habits',{'hab-tidy':A(1)})).dimensions[9].signal,'unknown');
