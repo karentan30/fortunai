@@ -14,6 +14,11 @@ const MANIFEST={
       "after": "4500f18b4e62bfab03112cd207c60ce44b36dda7"
     },
     {
+      "path": "assets/css/friends-hepan-v4.css",
+      "before": null,
+      "after": "73fe64fc7b65ef947be2b7b27a715f4641f59751"
+    },
+    {
       "path": "assets/css/friends-marketing.css",
       "before": null,
       "after": "d4ae07e285d6d2cc35976fa41fdb0680c288b277"
@@ -89,6 +94,16 @@ const MANIFEST={
       "after": "33c1af91f768c67edd11399e89758edaea1da21c"
     },
     {
+      "path": "assets/js/friends-hepan-report.js",
+      "before": null,
+      "after": "cfb5a6474d0410d3733a71402905a56aec0e431b"
+    },
+    {
+      "path": "assets/js/friends-hepan-self.js",
+      "before": null,
+      "after": "f7ec7983a329993584be3c85028f4f9e1331f482"
+    },
+    {
       "path": "assets/js/friends-intake.js",
       "before": null,
       "after": "dc6d2ffeee5b75f22d64fefb2b92cd139e40adfc"
@@ -152,6 +167,11 @@ const MANIFEST={
       "path": "pages/friends-help.html",
       "before": null,
       "after": "ffa3b19977313a529e9532776adbac4dd246be94"
+    },
+    {
+      "path": "pages/friends-hepan-self.html",
+      "before": null,
+      "after": "35d5cf49e76dbf98ccead3acf21f87c3f56416f7"
     },
     {
       "path": "pages/friends-intake.html",

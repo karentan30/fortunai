@@ -68,10 +68,13 @@ function calculate(input, now=new Date()) {
       pillars.year=seasonal.getYear();pillars.month=seasonal.getMonth();
     }
   }
+  // 时辰未知时仍可得到年/月/日三柱（按当日中午），供合盘「有限参考」使用；不推时柱。
+  let basePillars=null;
+  if(!known){const noon=(resolved?(()=>{const b=new Date(Date.parse(resolved.instant)+8*3600000);return Solar.fromYmdHms(b.getUTCFullYear(),b.getUTCMonth()+1,b.getUTCDate(),b.getUTCHours(),b.getUTCMinutes(),0);})():timed).getLunar().getEightChar();basePillars={year:noon.getYear(),month:noon.getMonth(),day:dayPillar,hour:null};}
   const birthLocation=resolved?{...resolved.location,offsetMinutes:resolved.offsetMinutes}:null;
   const chart={ dayMaster:dayPillar[0],element:stemElement(dayPillar[0]),dayPillar,
     zodiac:solar.getLunar().getYearShengXiao(),constellation:solar.getXingZuo()+'座',age,ageAsOf:now.toISOString().slice(0,10),
-    complete:known,pillars,birthLocation,directions:directions(dayPillar[0]),calculationVersion:'friends-chart-v2;tzdata='+process.versions.tz,
+    complete:known,pillars,...(basePillars?{basePillars}:{}),birthLocation,directions:directions(dayPillar[0]),calculationVersion:'friends-chart-v2;tzdata='+process.versions.tz,
     convention:resolved?`${resolved.location.label} · ${resolved.location.timeZone}；按出生当地民用日期/时间，23点换日；年/月柱按同一瞬间的节气，生肖按春节。经纬度为城市中心；未校正真太阳时。`:'未填出生城市，暂按UTC+8民用时间；23点换日，生肖按农历春节。未校正真太阳时。',
     note:known?'四柱用于传统文化参考；认识方向仅解释五行关系，不是完整合盘或择偶结论。':'时辰未知：日柱暂按当日中午计算，若可能生于23点后，日主可能变化。没有推算时柱、身强弱或喜用神。' };
   chart.recommendations=recommend(chart);return chart;

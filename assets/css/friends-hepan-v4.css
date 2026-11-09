@@ -1,0 +1,275 @@
+/* 相生合盘 v4 · 墨金样式（设计稿 docs/design-xiangsheng-2026-11-09 c2 / c2-self / c4-*）
+   全部规则挂在 .hv4 下，和旧版浅色页面共存不打架。
+   变量同时挂在 body.hv-page 上：旧合盘页只有 hv-page，没有 hv4，否则下面整层旧页皮肤的 var() 全落空成透明。 */
+.hv4,body.hv-page{
+  --bg:#0c1214;--bg-2:#111a1c;--ink:#ebe5d6;--ink-2:#c3bfb3;--muted:#8f958f;
+  --gold:#c8ae7d;--gold-2:#a8916a;--hair:rgba(200,174,125,.32);--hair-2:rgba(200,174,125,.16);
+  --red:#b5503c;--red-ink:#e0937f;
+  --serif:"Noto Serif SC","Source Han Serif SC","Songti SC","STSong",serif;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",sans-serif;
+  color:var(--ink);font:300 14px/1.85 var(--sans);letter-spacing:.04em
+}
+body.hv4{margin:0;min-height:100vh;background:var(--bg);background-image:radial-gradient(ellipse at 50% 14%,rgba(40,70,72,.36),transparent 55%)}
+.hv4 *{box-sizing:border-box}
+.hv4 [hidden]{display:none!important}
+.hv4 a{color:var(--gold)}
+.hv4 .wrap{max-width:430px;margin:0 auto;padding:0 24px 40px}
+.hv4 .hv-head{display:flex;justify-content:space-between;align-items:center;height:64px}
+.hv4 .brand{font:500 20px/1 var(--serif);letter-spacing:.4em;color:var(--ink);text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
+.hv4 .back{font-size:12px;color:var(--muted);text-decoration:none;min-height:44px;display:inline-flex;align-items:center;letter-spacing:.12em}
+.hv4 .eyebrow{margin:24px 0 6px;text-align:center;font-size:11px;letter-spacing:.5em;color:var(--gold)}
+.hv4 .title{margin:0;text-align:center;font:400 24px/1.55 var(--serif);letter-spacing:.14em}
+.hv4 .title em{font-style:normal;color:var(--gold)}
+.hv4 .lede{margin:12px auto 0;max-width:320px;text-align:center;font:400 13px/2 var(--serif);color:var(--ink-2);letter-spacing:.06em}
+.hv4 .lede:before{content:"";display:block;width:28px;height:1px;background:var(--hair);margin:0 auto 10px}
+.hv4 .private{display:flex;justify-content:center;margin:8px 0 0}
+.hv4 .private span{font-size:11px;letter-spacing:.3em;color:var(--gold);border:1px solid var(--hair);padding:3px 12px}
+.hv4 h2.hv-h{margin:48px 0 16px;font:400 12px var(--sans);letter-spacing:.5em;color:var(--gold);display:flex;align-items:center;gap:14px}
+.hv4 h2.hv-h:after{content:"";flex:1;height:1px;background:var(--hair-2)}
+.hv4 .note{font-size:11.5px;color:var(--muted);margin:8px 0 0;letter-spacing:.1em;line-height:1.8}
+.hv4 .note.c{text-align:center}
+.hv4 .err{color:var(--red-ink);font-size:13px;margin:10px 0 0;min-height:1em}
+.hv4 .frame{position:relative;border:1px solid var(--hair);padding:18px 16px}
+.hv4 .frame:before{content:"";position:absolute;inset:5px;border:1px solid var(--hair-2);pointer-events:none}
+.hv4 .and{text-align:center;font:400 13px var(--serif);color:var(--gold);letter-spacing:.4em;margin:12px 0}
+.hv4 .counter{display:flex;justify-content:center;margin:14px 0 0}
+.hv4 .counter span{font-size:12px;letter-spacing:.2em;color:var(--ink-2)}
+.hv4 .counter b{font:400 18px var(--serif);color:var(--gold);margin:0 4px}
+.hv4 .who-f{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 14px}
+.hv4 .who-f b{font:400 17px var(--serif);letter-spacing:.3em}
+.hv4 .who-f span{font-size:11px;color:var(--muted);letter-spacing:.12em}
+
+/* 表单 */
+.hv4 .fl{margin:0 0 18px;position:relative}
+.hv4 .fl>.lb{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:.35em;color:var(--muted);margin:0 0 8px}
+.hv4 .fl>.lb small{letter-spacing:.1em;font-size:10.5px}
+.hv4 .seg{display:inline-flex;border:1px solid var(--hair)}
+.hv4 .seg button{min-width:56px;min-height:32px;display:flex;align-items:center;justify-content:center;font:300 12px var(--sans);letter-spacing:.15em;color:var(--muted);background:none;border:0;cursor:pointer}
+.hv4 .seg button[aria-pressed=true]{background:var(--gold);color:#14191a}
+.hv4 .row3{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:8px}
+.hv4 .mini{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hv4 .in,.hv4 select.in,.hv4 input.in{width:100%;min-height:46px;padding:0 12px;border:1px solid var(--hair-2);border-bottom-color:var(--hair);background:transparent;font:400 16px var(--serif);color:var(--ink);letter-spacing:.08em;border-radius:0;-webkit-appearance:none;appearance:none}
+.hv4 select.in{background-image:linear-gradient(45deg,transparent 50%,var(--gold-2) 50%),linear-gradient(135deg,var(--gold-2) 50%,transparent 50%);background-position:calc(100% - 15px) 50%,calc(100% - 10px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:26px}
+.hv4 select.in option{background:var(--bg-2);color:var(--ink)}
+.hv4 .in::placeholder{color:var(--muted);font:300 14px var(--sans)}
+.hv4 .in:focus,.hv4 button:focus-visible,.hv4 input:focus-visible+.box{outline:1px solid var(--gold);outline-offset:1px}
+.hv4 .hours{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.hv4 .hours button{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:46px;border:1px solid var(--hair-2);background:none;font:400 15px/1.2 var(--serif);color:var(--ink);cursor:pointer;padding:0}
+.hv4 .hours button small{font:300 9.5px var(--sans);color:var(--muted);letter-spacing:.04em;margin-top:2px}
+.hv4 .hours button[aria-pressed=true]{border-color:var(--gold);background:rgba(200,174,125,.07);color:var(--gold)}
+.hv4 .unk{display:flex;width:100%;align-items:center;justify-content:space-between;margin:6px 0 0;min-height:44px;padding:0 12px;border:1px dashed var(--hair);background:none;font:300 13px var(--sans);color:var(--ink-2);letter-spacing:.12em;cursor:pointer}
+.hv4 .unk b{font-weight:300;font-size:10.5px;color:var(--gold);border:1px solid var(--hair);padding:0 6px;letter-spacing:.15em}
+.hv4 .unk[aria-pressed=true]{border-style:solid;border-color:var(--gold);color:var(--gold)}
+.hv4 .two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hv4 .opt{display:flex;align-items:center;justify-content:center;min-height:44px;border:1px solid var(--hair-2);background:none;font:400 15px var(--serif);letter-spacing:.3em;color:var(--muted);cursor:pointer}
+.hv4 .opt[aria-pressed=true]{border-color:var(--gold);color:var(--gold);background:rgba(200,174,125,.06)}
+.hv4 .city-results{display:grid;gap:4px;margin:6px 0 0}
+.hv4 .city-results button{display:flex;justify-content:space-between;min-height:44px;align-items:center;padding:0 12px;border:1px solid var(--hair-2);background:var(--bg-2);color:var(--ink);font:400 14px var(--serif);cursor:pointer;text-align:left}
+.hv4 .city-results small{color:var(--muted);font:300 11px var(--sans)}
+/* 勾选项：真 checkbox 视觉隐藏，.box 画样式 */
+.hv4 .chk{display:grid;grid-template-columns:22px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid var(--hair-2);align-items:start;cursor:pointer}
+.hv4 .chk.first{border-top:1px solid var(--hair-2)}
+.hv4 .chk input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.hv4 .box{width:20px;height:20px;border:1px solid var(--gold-2);margin-top:3px;position:relative}
+.hv4 .chk input:checked+.box{background:var(--gold);border-color:var(--gold)}
+.hv4 .chk input:checked+.box:after{content:"";position:absolute;left:6px;top:2px;width:5px;height:10px;border-right:2px solid #14191a;border-bottom:2px solid #14191a;transform:rotate(45deg)}
+.hv4 .chk .t{margin:0;font-size:13px;line-height:1.8;color:var(--ink);letter-spacing:.04em}
+.hv4 .chk .t small{display:block;font-size:11px;color:var(--muted);letter-spacing:.06em;margin-top:2px}
+.hv4 .chk .t a{color:var(--gold);text-decoration:none;white-space:nowrap}
+.hv4 .req{display:inline-block;font-size:10px;letter-spacing:.15em;padding:0 5px;margin-right:6px;border:1px solid rgba(181,80,60,.6);color:var(--red-ink);vertical-align:1px;line-height:1.6}
+.hv4 .req.o{border-color:var(--hair);color:var(--muted)}
+/* 按钮 */
+.hv4 .btn-p{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;min-height:56px;background:var(--gold);border:0;color:#14191a;font:500 16px/1.3 var(--serif);letter-spacing:.2em;cursor:pointer}
+.hv4 .btn-p small{font:300 11px var(--sans);letter-spacing:.12em;color:rgba(20,25,26,.75);margin-top:2px}
+.hv4 .btn-p:disabled{opacity:.42;cursor:not-allowed}
+.hv4 .btn-o{display:flex;align-items:center;justify-content:center;width:100%;min-height:50px;background:transparent;border:1px solid var(--gold);color:var(--gold);font:400 15px var(--serif);letter-spacing:.2em;cursor:pointer;text-decoration:none}
+.hv4 .btn-o:disabled{opacity:.5;cursor:not-allowed}
+.hv4 .btn-o small{font:300 12px var(--sans);letter-spacing:.15em;color:var(--ink-2);margin-left:10px}
+.hv4 .ghost-btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 22px;border:1px solid var(--hair);background:none;color:var(--ink-2);font:300 13px var(--sans);letter-spacing:.15em;cursor:pointer;text-decoration:none}
+.hv4 .ghost-btn.del{color:var(--muted);border-color:var(--hair-2)}
+.hv4 .hint{text-align:center;font-size:11px;color:var(--muted);letter-spacing:.12em;margin:10px 0 0}
+.hv4 .foot{margin:40px 0 0;text-align:center;font-size:10.5px;color:var(--muted);letter-spacing:.2em;line-height:2}
+
+/* ===== 报告 ===== */
+.hv4 .rp-names{margin:0;text-align:center;font:400 22px var(--serif);letter-spacing:.3em}
+.hv4 .rp-names .pp{display:inline-block;text-align:center;vertical-align:top}
+.hv4 .rp-names .and2{color:var(--muted);font-size:13px;letter-spacing:.3em;margin:0 10px;vertical-align:top;display:inline-block;padding-top:6px}
+.hv4 .rp-names em{display:block;font:300 11px var(--sans);letter-spacing:.3em;color:var(--gold);font-style:normal;margin-top:2px}
+.hv4 .lead{margin:30px 0 0;font:400 20px/1.75 var(--serif);text-align:center;letter-spacing:.06em}
+.hv4 .epi{margin:22px auto 0;text-align:center;font:400 13px/2 var(--serif);color:var(--ink-2);letter-spacing:.2em}
+.hv4 .epi:before,.hv4 .epi:after{content:"";display:block;width:28px;height:1px;background:var(--hair);margin:0 auto 12px}
+.hv4 .epi:after{margin:12px auto 0}
+.hv4 .epi cite{display:block;font-style:normal;font-size:11px;color:var(--muted);letter-spacing:.2em}
+.hv4 .limited{margin:18px 0 0;padding:10px 14px;border:1px dashed var(--hair);font-size:12px;color:var(--ink-2);letter-spacing:.06em}
+.hv4 .limited b{font-weight:400;color:var(--gold);margin-right:6px}
+.hv4 .upgrade{margin:0 0 18px;padding:12px 14px;border:1px solid var(--hair);font-size:13px;color:var(--ink-2)}
+.hv4 .upgrade b{color:var(--gold);font-weight:400}
+/* 姻缘分 */
+.hv4 .score{margin:34px 0 0;padding:22px 18px 16px;border:1px solid var(--hair);position:relative}
+.hv4 .score:before{content:"";position:absolute;inset:5px;border:1px solid var(--hair-2);pointer-events:none}
+.hv4 .sc-top{display:grid;grid-template-columns:132px 1fr;gap:16px;align-items:center}
+.hv4 .medal{position:relative;width:132px;height:132px}
+.hv4 .medal svg{position:absolute;inset:0;width:100%;height:100%}
+.hv4 .medal svg circle{fill:none}
+.hv4 .medal .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.hv4 .medal .num b{font:400 50px/1 var(--serif);color:var(--gold);letter-spacing:0}
+.hv4 .medal .num small{font:300 11px/1 var(--sans);color:var(--muted);letter-spacing:.2em;margin-top:6px}
+.hv4 .sc-eb{font-size:10.5px;letter-spacing:.45em;color:var(--gold);margin:0}
+.hv4 .sc-tier{margin:2px 0 6px;font:400 22px/1.4 var(--serif);letter-spacing:.2em}
+.hv4 .tiers{display:flex;gap:4px;margin:0 0 8px}
+.hv4 .tiers span{flex:1;text-align:center;font-size:10px;letter-spacing:.1em;color:var(--muted);border-top:2px solid var(--hair-2);padding-top:3px;white-space:nowrap}
+.hv4 .tiers span.on{border-color:var(--gold);color:var(--gold)}
+.hv4 .sc-sum{margin:0;font:400 13px/1.8 var(--serif);color:var(--ink-2);letter-spacing:.04em}
+.hv4 .subs{list-style:none;margin:18px 0 0;padding:14px 0 0;border-top:1px solid var(--hair-2)}
+.hv4 .subs li{padding:0 0 12px}
+.hv4 .subs .r1{display:flex;justify-content:space-between;align-items:center;white-space:nowrap;font-size:12px;letter-spacing:.2em;color:var(--ink)}
+.hv4 .subs .r1 b{font:400 16px var(--serif);color:var(--gold);letter-spacing:.04em}
+.hv4 .subs .r1 b small{font:300 10px var(--sans);color:var(--muted);margin-left:2px}
+.hv4 .bar{height:2px;background:var(--hair-2);margin:5px 0 4px}
+.hv4 .bar i{display:block;height:100%;background:var(--gold)}
+.hv4 .subs .why{font-size:11.5px;color:var(--muted);letter-spacing:.06em}
+.hv4 .subs li.lkd .r1 b{color:transparent;text-shadow:0 0 7px rgba(200,174,125,.6)}
+.hv4 .subs li.lkd .bar i{background:var(--hair);filter:blur(1.5px)}
+.hv4 .subs li.lkd .why2{display:flex;justify-content:flex-end;align-items:center}
+.hv4 .subs li.lkd .why2 em{font-style:normal;font-size:10.5px;letter-spacing:.15em;color:var(--gold);border:1px solid var(--hair);padding:0 6px;white-space:nowrap;line-height:1.7}
+.hv4 .sc-rule{margin:4px 0 0;text-align:center;font-size:10.5px;color:var(--muted);letter-spacing:.2em}
+/* 命盘 */
+.hv4 .who{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 10px;font-size:12px;color:var(--muted);letter-spacing:.2em}
+.hv4 .who b{font:400 15px var(--serif);color:var(--ink);letter-spacing:.3em}
+.hv4 .who.ta{margin-top:28px}
+.hv4 .sx{font:300 11px var(--sans);color:var(--gold);letter-spacing:.15em;margin-left:8px}
+.hv4 .pillars{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--hair-2);border-bottom:1px solid var(--hair-2)}
+.hv4 .col{text-align:center;padding:12px 0;position:relative}
+.hv4 .col+.col{border-left:1px solid var(--hair-2)}
+.hv4 .col .pos{font-size:10px;letter-spacing:.3em;color:var(--muted)}
+.hv4 .col .gz{font:400 28px/1.35 var(--serif);margin:6px 0 4px;color:var(--ink)}
+.hv4 .col .wx{font-size:10px;letter-spacing:.25em;color:var(--muted)}
+.hv4 .col.day{outline:1px solid var(--gold);outline-offset:-1px;background:rgba(200,174,125,.05)}
+.hv4 .col.day .gz span:first-child,.hv4 .col.day .pos{color:var(--gold)}
+.hv4 .gz span{display:block}
+.hv4 .q{display:flex;width:28px;height:28px;border:1px solid var(--hair);border-radius:50%;align-items:center;justify-content:center;font:300 14px var(--sans);color:var(--muted);margin:4px auto 6px;letter-spacing:0;line-height:1;text-indent:0;padding:3px 0 0;box-sizing:border-box}
+/* 生克合冲 */
+.hv4 .pos4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;font-size:10px;letter-spacing:.3em;color:var(--muted);margin:0 0 4px}
+.hv4 .rlab{display:flex;justify-content:space-between;font-size:11px;letter-spacing:.2em;color:var(--muted);margin:0 0 6px}
+.hv4 .rrow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.hv4 .pc{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--hair-2);text-align:center;padding:6px 0;font:400 22px/1.4 var(--serif)}
+.hv4 .pc.day{border-color:var(--gold)}
+.hv4 .pc.day span:first-child{color:var(--gold)}
+.hv4 .pc span{display:flex;justify-content:center;align-items:center}
+.hv4 .pc .q{width:24px;height:24px;margin:3px auto;font-size:12px}
+.hv4 .pc.none{opacity:.35}
+.hv4 .links{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;height:66px}
+.hv4 .lk{display:grid;grid-template-columns:1fr 1fr}
+.hv4 .ln{position:relative;display:flex;justify-content:center;align-items:center}
+.hv4 .ln:before{content:"";position:absolute;top:0;bottom:0;left:50%;width:1px;background:var(--gold)}
+.hv4 .ln.k:before{background:var(--red)}
+.hv4 .ln.n:before{background:none;border-left:1px dotted rgba(143,149,143,.45)}
+.hv4 .ln b{position:relative;font:400 13px/1 var(--serif);padding:5px 4px;background:var(--bg);border:1px solid var(--gold);color:var(--gold)}
+.hv4 .ln.k b{border-color:var(--red);color:var(--red-ink)}
+.hv4 .ln.n b{border-color:var(--hair-2);color:var(--muted)}
+.hv4 .legend{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:14px 0 0;font-size:11px;color:var(--muted);letter-spacing:.12em}
+.hv4 .legend i{display:inline-block;width:18px;height:1px;background:var(--gold);vertical-align:middle;margin-right:6px}
+.hv4 .legend i.k{background:var(--red)}
+.hv4 .legend i.n{background:none;border-top:1px dotted var(--muted)}
+.hv4 .legend i.lkd{display:none}
+.hv4 .ln.lkd b{border-style:dashed;border-color:var(--hair);color:var(--muted);font-family:var(--sans);font-weight:300}
+/* 条目 */
+.hv4 .it{display:grid;grid-template-columns:30px 1fr;gap:10px;padding:0 0 22px;margin:0 0 22px;border-bottom:1px solid var(--hair-2)}
+.hv4 .it:last-child{border:0;margin:0}
+.hv4 .it .no{font:400 15px var(--serif);color:var(--gold)}
+.hv4 .it .no.k{color:var(--red-ink)}
+.hv4 .it h3{margin:0 0 6px;font:400 17px/1.5 var(--serif);letter-spacing:.12em;color:var(--ink)}
+.hv4 .tagrel{display:inline-block;font:400 11px/1 var(--sans);letter-spacing:.2em;color:var(--gold);border:1px solid var(--hair);padding:4px 8px;margin:0 0 8px}
+.hv4 .tagrel.k{color:var(--red-ink);border-color:rgba(181,80,60,.6)}
+.hv4 .trio{margin:8px 0 0;padding:0}
+.hv4 .trio dt{font-size:11px;letter-spacing:.3em;color:var(--muted);margin:10px 0 2px}
+.hv4 .trio dd{margin:0;color:var(--ink-2)}
+.hv4 .trio dd.adv{color:var(--ink)}
+.hv4 .trio ul{margin:0;padding:0;list-style:none}
+.hv4 .trio ul li{padding:4px 0 4px 14px;border-left:1px solid var(--hair);margin:0 0 4px}
+.hv4 .empty{font:400 13px/1.9 var(--serif);color:var(--ink-2);text-align:center;margin:0}
+/* 夫妻星 */
+.hv4 .couple{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
+.hv4 .couple div{border:1px solid var(--hair-2);padding:12px;text-align:center}
+.hv4 .couple b{display:block;font:400 11px var(--sans);letter-spacing:.3em;color:var(--gold)}
+.hv4 .couple span{display:block;font:400 15px/1.7 var(--serif);margin-top:4px}
+.hv4 .fq{margin:0 0 18px;padding:12px 14px;border:1px solid var(--hair-2);font-size:12px;color:var(--muted);letter-spacing:.08em;line-height:1.8}
+/* 依据 */
+.hv4 .basis{margin:0;padding:0;list-style:none;font-size:12px}
+.hv4 .basis li{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px dashed var(--hair-2);color:var(--ink-2);letter-spacing:.12em}
+.hv4 .basis li span:last-child{color:var(--gold-2)}
+.hv4 .basis li.m span:last-child{color:var(--red-ink)}
+/* 锁 / 全部展示 */
+.hv4 .lock{margin:40px 0 0;padding:24px 22px 14px;border:1px solid var(--hair);position:relative}
+.hv4 .lock:before{content:"";position:absolute;inset:5px;border:1px solid var(--hair-2);pointer-events:none}
+.hv4 .lock h3{margin:0;font:400 18px/1.6 var(--serif);letter-spacing:.12em;text-align:center}
+.hv4 .lock .sub{text-align:center;margin:4px 0 18px;font-size:12px;color:var(--muted);letter-spacing:.15em}
+.hv4 .lock .ghostlines{margin:0 0 18px;padding:0;list-style:none}
+.hv4 .lock .ghostlines li{height:12px;margin:10px 0;background:linear-gradient(90deg,var(--hair-2),transparent);filter:blur(2px)}
+.hv4 .lock .ghostlines li:nth-child(2){width:80%}.hv4 .lock .ghostlines li:nth-child(3){width:62%}
+.hv4 .allshown{margin:40px 0 0;padding:18px 16px;border:1px solid var(--hair);text-align:center;position:relative}
+.hv4 .allshown:before{content:"";position:absolute;inset:5px;border:1px solid var(--hair-2);pointer-events:none}
+.hv4 .allshown b{display:block;font:400 16px var(--serif);letter-spacing:.2em;color:var(--gold)}
+.hv4 .allshown span{font-size:12px;color:var(--muted);letter-spacing:.1em}
+.hv4 .save{display:flex;gap:10px;justify-content:center;margin:24px 0 0;flex-wrap:wrap}
+.hv4 .invite{margin:40px 0 0;padding:22px 0 0;border-top:1px solid var(--hair);text-align:center}
+.hv4 .invite p{margin:0 0 4px;font:400 17px var(--serif);letter-spacing:.12em}
+.hv4 .invite small{display:block;font-size:12px;color:var(--muted);margin:0 0 14px;letter-spacing:.1em}
+.hv4 .invite .btn-o{max-width:320px;margin:0 auto}
+.hv4 .ai{display:inline-block;margin:0 0 4px;font-size:10.5px;letter-spacing:.2em;color:var(--gold);border:1px solid var(--hair);padding:0 8px}
+.hv4 .saved-list{list-style:none;margin:0;padding:0}
+.hv4 .saved-list li{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--hair-2);font-size:13px}
+.hv4 .saved-list li b{font:400 15px var(--serif);color:var(--ink);font-weight:400}
+.hv4 .saved-list li span{color:var(--muted);font-size:11px}
+@media (max-width:360px){.hv4 .sc-top{grid-template-columns:1fr;justify-items:center;text-align:center}.hv4 .wrap{padding:0 16px 40px}}
+
+/* ===== 旧合盘页换墨金皮（friends-compatibility.html，body.hv-page）=====
+   只覆盖颜色、边框和字体，不动旧页面的结构和 id。 */
+html:has(>body.hv-page){background:#0c1214}
+html body.hv-page{background:var(--bg);background-image:radial-gradient(ellipse at 50% 8%,rgba(40,70,72,.36),transparent 50%);color:var(--ink)}
+html body.hv-page header,html body.hv-page main,html body.hv-page footer{max-width:640px}
+html body.hv-page header{border-bottom:1px solid var(--hair-2)}
+html body.hv-page .brand{font:500 20px/1 var(--serif);letter-spacing:.4em;color:var(--ink)}
+html body.hv-page a{color:var(--gold)}
+html body.hv-page .muted,html body.hv-page footer{color:var(--muted)}
+html body.hv-page .error{color:var(--red-ink)}
+html body.hv-page .hero{grid-template-columns:1fr;gap:18px;padding:28px 0 8px}
+html body.hv-page .hero h1{font:400 28px/1.5 var(--serif);letter-spacing:.14em;color:var(--ink);margin:6px 0 10px}
+html body.hv-page .hero aside{background:transparent;border:1px solid var(--hair);border-radius:0;padding:18px 20px}
+html body.hv-page .badge{border-color:var(--hair);color:var(--gold);border-radius:0}
+html body.hv-page .panel{background:transparent;border:1px solid var(--hair);border-radius:0;color:var(--ink);position:relative}
+html body.hv-page .panel h2,html body.hv-page .panel h3{font-family:var(--serif);font-weight:400;letter-spacing:.12em;color:var(--ink)}
+html body.hv-page label{color:var(--ink-2)}
+html body.hv-page input:not([type=checkbox]):not([type=radio]),html body.hv-page select,html body.hv-page textarea{background:transparent;color:var(--ink);border:1px solid var(--hair-2);border-bottom-color:var(--hair);border-radius:0}
+html body.hv-page select option{background:var(--bg-2);color:var(--ink)}
+html body.hv-page button{background:transparent;color:var(--ink-2);border:1px solid var(--hair);border-radius:0}
+html body.hv-page button.primary{background:var(--gold);color:#14191a;border-color:var(--gold);font-family:var(--serif);letter-spacing:.15em}
+html body.hv-page .danger{color:var(--red-ink)}
+html body.hv-page .pair-item,html body.hv-page .pillar-card{background:var(--bg-2);border:1px solid var(--hair-2);border-radius:0}
+html body.hv-page .city-results{border-color:var(--hair-2);border-radius:0}
+html body.hv-page .chat-messages{background:var(--bg-2)}
+html body.hv-page .chat-message{background:var(--bg);border-color:var(--hair-2)}
+html body.hv-page .chat-message.mine{background:rgba(200,174,125,.1)}
+html body.hv-page #birth-authorize,html body.hv-page #report-area,html body.hv-page .supplement,html body.hv-page .pair-chat{border-top-color:var(--hair-2)}
+html body.hv-page dialog{background:var(--bg-2);color:var(--ink);border:1px solid var(--hair)}
+/* 被邀请人填写区（c4-invitee-fill）：用 .hv4 组件，下面只补旧样式里会串进来的部分 */
+html body.hv-page #birth-authorize label.chk{display:grid;margin:0;min-width:0;font-size:13px;color:var(--ink)}
+html body.hv-page #birth-authorize .hours label{margin:0;min-width:0}
+html body.hv-page #birth-authorize .fl label{margin:0;min-width:0}
+html body.hv-page #birth-authorize input.in,html body.hv-page #birth-authorize select.in{margin:0;padding:0 12px;min-height:46px;font:400 16px var(--serif)}
+.hv4 .hours label{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:46px;border:1px solid var(--hair-2);font:400 15px/1.2 var(--serif);color:var(--ink);cursor:pointer}
+.hv4 .hours label small{font:300 9.5px var(--sans);color:var(--muted);letter-spacing:.04em;margin-top:2px}
+.hv4 .hours input,.hv4 .two input,.hv4 .unk input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.hv4 .hours label:has(input:checked){border-color:var(--gold);background:rgba(200,174,125,.07);color:var(--gold)}
+.hv4 .two label.opt:has(input:checked){border-color:var(--gold);color:var(--gold);background:rgba(200,174,125,.06)}
+.hv4 label.unk:has(input:checked){border-style:solid;border-color:var(--gold);color:var(--gold)}
+.hv4 .hours label:has(input:focus-visible),.hv4 .two label:has(input:focus-visible),.hv4 label.unk:has(input:focus-visible){outline:1px solid var(--gold);outline-offset:1px}
+html body.hv-page #birth-authorize label.opt,html body.hv-page #birth-authorize label.unk{margin:0;min-width:0}
+.hv4 .fill-head{margin:0 0 6px;text-align:center}
+.hv4 details.more{margin:14px 0 0;font-size:12px;color:var(--muted)}
+.hv4 details.more summary{cursor:pointer;min-height:44px;display:flex;align-items:center;letter-spacing:.12em}
+html body.hv-page #report-area.hv4{border-top:0;padding-top:0}
+html body.hv-page .self-entry{display:flex;justify-content:space-between;align-items:center;gap:12px;text-decoration:none;padding:14px 16px;border:1px dashed var(--hair);color:var(--ink-2);margin:12px 0 0}
+html body.hv-page .self-entry b{font:400 15px var(--serif);color:var(--gold);letter-spacing:.12em}
+html body.hv-page #birth-authorize select.in.cal{width:auto;min-height:32px;font:300 12px var(--sans);letter-spacing:.15em;padding:0 26px 0 10px;border-color:var(--hair);color:var(--gold)}
+.hv4 .btn-p.sp{margin-top:28px}
