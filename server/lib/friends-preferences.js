@@ -6,10 +6,23 @@ const fail=m=>{const e=Error(m);e.status=400;throw e;};
 const CONSTELLATIONS=['白羊座','金牛座','双子座','巨蟹座','狮子座','处女座','天秤座','天蝎座','射手座','摩羯座','水瓶座','双鱼座'];
 const MBTIS=['INTJ','INTP','ENTJ','ENTP','INFJ','INFP','ENFJ','ENFP','ISTJ','ISFJ','ESTJ','ESFJ','ISTP','ISFP','ESTP','ESFP'];
 const ELEMENT_GROUPS=[['白羊座','狮子座','射手座'],['金牛座','处女座','摩羯座'],['双子座','天秤座','水瓶座'],['巨蟹座','天蝎座','双鱼座']];
+// 星座：同元素=同频，火↔风、土↔水=互补。MBTI：常见「性格相配表」(类 Boo) 的最佳搭档 + 中间两字母相同=同频。只是认识方向，其余类型也都可以认识。
+const CONST_ELEM_NAMES=['火象','土象','风象','水象'],CONST_COMPLEMENT=[2,3,0,1];
+const MBTI_BEST={INFJ:['ENFP','ENTP'],INTJ:['ENFP','ENTP'],INFP:['ENFJ','ENTJ'],INTP:['ENTJ','ESTJ'],ENFP:['INFJ','INTJ'],ENTP:['INFJ','INTJ'],ENFJ:['INFP','ISFP'],ENTJ:['INFP','INTP'],ISFJ:['ESFP','ESTP'],ISTJ:['ESFP','ESTP'],ESFJ:['ISFP','ISTP'],ESTJ:['ISTP','INTP'],ISFP:['ENFJ','ESFJ'],ISTP:['ESFJ','ESTJ'],ESFP:['ISFJ','ISTJ'],ESTP:['ISFJ','ISTJ']};
+function typeGroups(constellation,mbti){
+  const gi=ELEMENT_GROUPS.findIndex(g=>g.includes(constellation)),constellationGroups=gi<0?[]:[
+    {key:'same',label:'同频·同为'+CONST_ELEM_NAMES[gi]+'星座',items:ELEMENT_GROUPS[gi].filter(x=>x!==constellation)},
+    {key:'complement',label:'互补·'+CONST_ELEM_NAMES[CONST_COMPLEMENT[gi]]+'星座',items:ELEMENT_GROUPS[CONST_COMPLEMENT[gi]]}];
+  const best=MBTI_BEST[mbti]||[],mbtiGroups=!MBTIS.includes(mbti)?[]:[
+    {key:'best',label:'性格相配·常见最佳搭档',items:best},
+    {key:'same',label:'同频·想法相近',items:MBTIS.filter(x=>x!==mbti&&!best.includes(x)&&x.slice(1,3)===mbti.slice(1,3))}];
+  return {constellationGroups,mbtiGroups};
+}
 function typeSuggestions({constellation='',mbti=''}={}){
-  return {constellations:(ELEMENT_GROUPS.find(g=>g.includes(constellation))||[]).filter(x=>x!==constellation),
-    mbtis:MBTIS.includes(mbti)?MBTIS.filter(x=>x!==mbti&&x.slice(1,3)===mbti.slice(1,3)):[],
-    basis:{constellations:'按传统星座元素同组提供认识方向，可自行修改；不是科学匹配结论。',mbtis:'按自填类型中间两个字母相同提供探索方向，可自行修改；不代表性格相同或关系适合。'},kind:'conversation_reference'};
+  const g=typeGroups(constellation,mbti);
+  return {...g,constellations:g.constellationGroups.flatMap(x=>x.items),
+    mbtis:g.mbtiGroups.flatMap(x=>x.items),
+    basis:{constellations:'按传统星座元素：同元素同频，火象配风象、土象配水象互补；可自行修改，不是科学匹配结论。',mbtis:'按网络流行的MBTI相配表和中间两个字母相同提供方向；每种性格都可以认识，不代表关系结果，可自行修改。'},kind:'conversation_reference'};
 }
 function normalizeTypes(body,previous={}){
   const out={};

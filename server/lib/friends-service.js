@@ -74,7 +74,7 @@ function createFriendsService(store,charts,options={}) {
     if(!self&&!isMember(s,viewer,clock()))return {};
     return {verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true&&visible(k)).map(k=>[k,true]))};
   }
-  const profileRecommendations=p=>{const culture=recommend(p.chart),types=typeSuggestions({...p,constellation:p.constellation||p.chart?.constellation||''});return {...culture,constellations:types.constellations,mbtis:types.mbtis,basis:{...culture.basis,...types.basis}};};
+  const profileRecommendations=p=>{const culture=recommend(p.chart),types=typeSuggestions({...p,constellation:p.constellation||p.chart?.constellation||''});return {...culture,constellations:types.constellations,mbtis:types.mbtis,constellationGroups:types.constellationGroups,mbtiGroups:types.mbtiGroups,basis:{...culture.basis,...types.basis}};};
   const mine=(s,uid)=>s.profiles.find(p=>p.userId===uid);
   // Per-side explanation for viewer `self` looking at `p`. Uses only what p made visible to self, self's own data/expectations,
   // and p's public card. Never uses p's expectations, p's hidden fields or opted-in hidden values.
