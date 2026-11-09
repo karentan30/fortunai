@@ -54,8 +54,11 @@ function createFriendsService(store,charts,options={}) {
     const visible=visibleTo(s,p,viewer),consent=p.matchingConsent||{},fields={},types={};
     for(const k of M.PLAIN_MATCH_FIELDS)if(visible(k)||consent[k]===true)fields[k]=p.fields?.[k];
     for(const k of M.SENSITIVE_FIELDS)if(consent[k]===true)fields[k]=p.fields?.[k];
-    for(const k of ['dayMaster','zodiac'])if(visible(k))types[k]=p.chart?.[k];
-    for(const k of ['constellation','mbti'])if(visible(k)&&p[k])types[k]=p[k];
+    // 日主/生肖/星座/MBTI: visible, or hidden-but-consented (「仅自己，用于后台匹配」). A hidden value is only usable by a
+    // viewer who shares the same kind of value themselves (public or consented) — same reciprocity as sensitive fields.
+    const me=profileOf(s,viewer),typeOf=(x,k)=>['dayMaster','zodiac'].includes(k)?x?.chart?.[k]:x?.[k];
+    const reciprocal=k=>!!me&&!!typeOf(me,k)&&(me.visibility?.[k]==='public'||me.matchingConsent?.[k]===true);
+    for(const k of M.TYPE_MATCH_FIELDS){const v=typeOf(p,k);if(v&&(visible(k)||(consent[k]===true&&reciprocal(k))))types[k]=v;}
     return {city:p.city,purposes:M.purposesOf(p),fields,types};
   }
   function project(s,p,viewer) {
@@ -131,6 +134,12 @@ function createFriendsService(store,charts,options={}) {
         // Income/assets: the UI offers only range tiers (M.WEALTH_TIERS). Older/legacy free text is still accepted and stays
         // readable as-is; matching reads tiers by lower bound and legacy text via M.amount().
         const expectations=M.normalizeExpectations(b.expectations,prev?.expectations),matchingConsent=M.normalizeMatchingConsent(b.matchingConsent,prev?.matchingConsent);
+        // visibility 'match' = 「仅自己（用于后台匹配）」: stored as private + matchingConsent. A NEW profile that says nothing about
+        // 星座/MBTI gets this option by default; existing profiles keep whatever they had.
+        for(const k of M.TYPE_MATCH_FIELDS){
+          if(b.visibility?.[k]==='match')matchingConsent[k]=true;
+          else if(!prev&&['constellation','mbti'].includes(k)&&!Object.hasOwn(b.visibility||{},k)&&!Object.hasOwn(b.matchingConsent||{},k))matchingConsent[k]=true;
+        }
         const height=Number(fields.height),weight=Number(fields.weight);
         if((fields.height&&(!Number.isFinite(height)||height<80||height>250))||(fields.weight&&(!Number.isFinite(weight)||weight<25||weight>300)))bad('身高用厘米、体重用公斤，请检查数值');
         const visibility={};for(const k of [...FIELDS,'dayMaster','zodiac']) visibility[k]=SCOPES.includes(b.visibility?.[k])?b.visibility[k]:'private';

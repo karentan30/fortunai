@@ -23,6 +23,9 @@ const RANGE_KEYS=['age','height','income','assets','familyAssets'];
 const MIN_KEYS=['education'];
 const LIST_KEYS=['school','occupation','city','purpose','house','car','hukou'];
 const TYPE_KEYS={dayMaster:'targetStems',zodiac:'targetZodiacs',constellation:'targetConstellations',mbti:'targetMbtis'};
+// 日主/生肖/星座/MBTI can also be hidden yet opted into matching (UI: 「仅自己（用于后台匹配）」 = visibility private + consent).
+// Same treatment as SENSITIVE_FIELDS: never shown or explained, and only usable by someone who shares their own value too.
+const TYPE_MATCH_FIELDS=Object.keys(TYPE_KEYS);
 const EXPECTATION_KEYS=[...RANGE_KEYS,...MIN_KEYS,...LIST_KEYS.filter(k=>!RANGE_KEYS.includes(k)),...Object.keys(TYPE_KEYS)];
 const LABELS={age:'年龄',height:'身高',education:'学历',school:'学校',occupation:'职业',city:'城市',purpose:'认识目的',income:'年收入',assets:'个人净资产',familyAssets:'家庭资产',house:'本人房产',car:'车辆',hukou:'户籍',dayMaster:'日主',zodiac:'生肖',constellation:'星座',mbti:'MBTI'};
 
@@ -95,7 +98,10 @@ function normalizeExpectations(input,prev={}){
 function normalizeMatchingConsent(input,prev={}){
   if(input===undefined)return {...(prev||{})};
   if(!input||typeof input!=='object'||Array.isArray(input))fail('资料用于匹配的授权格式无效');
-  const out={};for(const k of [...SENSITIVE_FIELDS,...PLAIN_MATCH_FIELDS])out[k]=input[k]===true;return out;
+  const out={};for(const k of [...SENSITIVE_FIELDS,...PLAIN_MATCH_FIELDS])out[k]=input[k]===true;
+  // Type keys: an older client that omits them keeps the stored choice instead of silently revoking it.
+  for(const k of TYPE_MATCH_FIELDS)out[k]=Object.hasOwn(input,k)?input[k]===true:prev?.[k]===true;
+  return out;
 }
 // Profile view stored before purposes/expectations existed. Read-time migration only: never rewrites the store implicitly.
 function migrateProfile(p){
@@ -186,5 +192,5 @@ function alignmentFromSignals(signals){const known=(Array.isArray(signals)?signa
 // Ready-made options.alignmentScore for createFriendsService (wired in routes/friends.js). Serious purpose only; fails soft.
 function questionnaireAlignmentScore({state,viewerId,candidateId,purpose}){if(purpose!=='serious'||!state)return null;try{return alignmentFromSignals(require('./friends-questionnaire').pairAlignment(state,viewerId,candidateId).signals);}catch{return null;}}
 
-module.exports={alignmentFromSignals,questionnaireAlignmentScore,INCOME_TIERS,ASSET_TIERS,WEALTH_TIERS,isWealthTier,wealthLabel,PURPOSES,PURPOSE_LABELS,LEGACY_INTENT,LEVELS,LEVEL_LABELS,EDUCATION_LEVELS,HOUSE_OPTIONS,CAR_OPTIONS,SENSITIVE_FIELDS,PLAIN_MATCH_FIELDS,TYPE_KEYS,EXPECTATION_KEYS,LABELS,WEIGHTS,
+module.exports={alignmentFromSignals,questionnaireAlignmentScore,INCOME_TIERS,ASSET_TIERS,WEALTH_TIERS,isWealthTier,wealthLabel,PURPOSES,PURPOSE_LABELS,LEGACY_INTENT,LEVELS,LEVEL_LABELS,EDUCATION_LEVELS,HOUSE_OPTIONS,CAR_OPTIONS,SENSITIVE_FIELDS,PLAIN_MATCH_FIELDS,TYPE_KEYS,TYPE_MATCH_FIELDS,EXPECTATION_KEYS,LABELS,WEIGHTS,
   purposesOf,normalizePurposes,compatiblePurposes,normalizeExpectations,normalizeMatchingConsent,migrateProfile,amount,evaluate,elementRelation,rankScore};
