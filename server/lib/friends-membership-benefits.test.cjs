@@ -33,8 +33,6 @@ test('member filters are member-only and only match fields the candidate made vi
   f.save('low',{fields:{education:'大专',income:'10万以下',house:'无房',car:'无车'},visibility:{education:'public',income:'public',house:'public',car:'public'}});
   assert.throws(()=>f.service.discover('me',{edu:'本科'}),e=>e.status===403&&/会员功能/.test(e.message));
   assert.equal(f.service.discover('me',{}).total,3,'free browsing unaffected');
-  // 学历要核验通过才对别人可见（含会员筛选）。
-  f.store.transaction(s=>{s.profiles.find(p=>p.shareId===open.shareId).verified={education:true};});
   f.member('me');
   for(const q of [{edu:'本科'},{income:'30–50万'},{house:'有房'},{car:'有车'}]){
     assert.deepEqual(f.service.discover('me',q).profiles.map(p=>p.shareId),[open.shareId],JSON.stringify(q)+' must not leak hidden values');

@@ -11,7 +11,6 @@ const {VERIFY_FIELDS}=require('./friends-verification');
 const FIELDS=['age','height','weight','school','occupation','industry','title','income','assets','familyAssets','education','house','car','hukou'];
 // Optional profile fields. Income/assets/family assets/house/car/hukou may be left empty ("收入资产允许不提供").
 const WORK_REQUIRED=['education','school','occupation'];
-const VERIFY_GATED={education:'education',school:'education',occupation:'occupation',title:'occupation'};
 const OPTIONAL_FIELDS=['height','weight','school','occupation','industry','title','income','assets','familyAssets','education','house','car','hukou'];
 const ENUM_FIELDS={education:M.EDUCATION_LEVELS,house:M.HOUSE_OPTIONS,car:M.CAR_OPTIONS};
 const SCOPES=['public','connected','private'];
@@ -64,8 +63,7 @@ function createFriendsService(store,charts,options={}) {
   const tx=fn=>{const queue=[];const result=store.transaction(s=>fn(s,queue));for(const q of queue){try{funnel(...q);}catch(_){}}return result;};
   const blocked=blockedPair,connection=connectedPair,active=activeFor,isConnected=connectedFor;
   // Single visibility rule shared by projection, matching, explanations and the long page.
-  // 学历/学校、职业/职务要先核验通过才给别人看（本人始终看得到）；没核验时对别人等同于不公开。
-  const visibleTo=(s,p,viewer)=>{const allows=scopeAllows(s,p,viewer),self=p.userId===viewer;return k=>allows(p.visibility?.[k])&&(self||!VERIFY_GATED[k]||p.verified?.[VERIFY_GATED[k]]===true);};
+  const visibleTo=(s,p,viewer)=>{const allows=scopeAllows(s,p,viewer);return k=>allows(p.visibility?.[k]);};
   // Values the viewer's expectations may be tested against: visible fields, plus fields the owner opted into private matching.
   // Sensitive fields (income/assets/house/car/hukou) need the owner's opt-in even when public.
   function matchValues(s,p,viewer){
