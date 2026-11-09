@@ -51,16 +51,52 @@
     return svg;
   }
 
+  // 八 / 面 / 观 / 见面三步：一块一个形状（圆、九宫格、十边形、时间线），只画真用到的。设计稿 docs/design-xiangsheng-2026-11-10/bamianguan-polygons.html
+  const sv=(tag,attrs)=>{const n=document.createElementNS(NS,tag);for(const [k,v] of Object.entries(attrs))n.setAttribute(k,v);return n;};
+  const ptOn=(n,r,i,cx=170,cy=165)=>{const a=-Math.PI/2+i*2*Math.PI/n;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];};
+  function wheelSvg(){
+    const svg=sv('svg',{viewBox:'0 0 340 330',class:'xh-dg',role:'img','aria-label':'十天干五合：甲己、乙庚、丙辛、丁壬、戊癸'}),R=104;
+    svg.append(sv('circle',{cx:170,cy:165,r:R,class:'xh-dg-face'}),sv('circle',{cx:170,cy:165,r:R*.62,class:'xh-dg-ring'}));
+    for(let i=0;i<5;i++){const [x1,y1]=ptOn(10,R,i),[x2,y2]=ptOn(10,R,i+5);svg.append(sv('line',{x1,y1,x2,y2,class:'xh-dg-he'}));}
+    STEMS.forEach(([st,el],i)=>{const [x,y]=ptOn(10,R,i),[lx,ly]=ptOn(10,R+30,i);svg.append(sv('circle',{cx:x,cy:y,r:15,class:'xh-dg-node'}));const t=sv('text',{x,y:y+5.5,class:'xh-dg-stem'});t.textContent=st;const e=sv('text',{x:lx,y:ly+4,class:'xh-dg-el'});e.textContent=el;svg.append(t,e);});
+    svg.append(sv('circle',{cx:170,cy:165,r:18,class:'xh-dg-hub'}));const c=sv('text',{x:170,y:172,class:'xh-dg-stem xh-dg-c'});c.textContent='合';svg.append(c);
+    return svg;
+  }
+  function polySvg(labels){
+    const n=labels.length,R=104,svg=sv('svg',{viewBox:'0 0 340 330',class:'xh-dg',role:'img','aria-label':labels.join('、')});
+    for(const k of [1,.66,.33])svg.append(sv('polygon',{points:labels.map((_,i)=>ptOn(n,R*k,i).join(',')).join(' '),class:k===1?'xh-dg-face':'xh-dg-ring'}));
+    labels.forEach((l,i)=>{const [x,y]=ptOn(n,R,i),[lx,ly]=ptOn(n,R+20,i);svg.append(sv('line',{x1:170,y1:165,x2:x,y2:y,class:'xh-dg-spoke'}),sv('circle',{cx:x,cy:y,r:3.2,class:'xh-dg-dot'}));const t=sv('text',{x:lx,y:ly+4,class:'xh-dg-lbl','text-anchor':Math.abs(lx-170)<8?'middle':lx>170?'start':'end'});t.textContent=l;svg.append(t);});
+    const c=sv('text',{x:170,y:174,class:'xh-dg-n'});c.textContent=String(n);svg.append(c);
+    return svg;
+  }
+  const NINE=['年龄','身高','体重','学校学历','职业','年收入','个人资产','家庭资产','房车户籍'];
+  const TEN=['家庭生育','财务','未来规划','沟通冲突','亲密边界','亲友关系','过往经历','自我认识','兴趣解压','生活习惯'];
+
+  function pain(){
+    const s=h('section',{class:'xh-mkt xh-pain','aria-labelledby':'xh-pain-title'}),w=h('div',{class:'xh-wrap'});
+    const ul=h('ul',{class:'xh-pain-list'});
+    for(const t of ['照片和真人，判若两人。','一开口，就知道不喜欢这个声音。','坐下聊了十分钟，就再也接不上话。','一顿饭吃完，还是没有感觉。','穿过半个城赴约，只换来一句「下次再说」。'])ul.append(h('li',{text:t}));
+    const cmp=h('div',{class:'xh-cmp'},
+      h('div',{},h('small',{text:'直接见面'}),h('b',{text:'约半天'}),h('span',{text:'路上来回、见面、准备，花费 200–500 元'})),
+      h('div',{class:'on'},h('small',{text:'先语音视频'}),h('b',{text:'约二十分钟'}),h('span',{text:'文字几句、语音十五分钟、视频一两分钟，不花钱'})));
+    w.append(h('h2',{class:'xh-pain-h',id:'xh-pain-title',text:'相亲最累的，不是见面，是白跑。'}),ul,cmp,h('p',{class:'xh-pain-big',text:'二十分钟的语音视频，省下一次白跑的半天。'}),h('p',{class:'xh-pain-fn',text:'按一次见面的常见花费估算，仅供参考。'}));
+    s.append(w);return s;
+  }
+
   function what(){
     const s=h('section',{class:'xh-mkt xh-band xh-what','aria-labelledby':'xh-what-title'});
     const w=h('div',{class:'xh-wrap'});
     w.append(h('h2',{class:'xh-eyebrow',id:'xh-what-title',text:'相生是什么'}));
     const cols=h('div',{class:'xh-what-cols'});
-    const item=(glyph,lead,rest)=>h('div',{class:'xh-what-item'},h('div',{class:'xh-glyph','aria-hidden':'true',text:glyph}),h('p',{},h('b',{text:lead}),rest));
+    const item=(glyph,lead,sub,fig,rest)=>h('div',{class:'xh-what-item'},h('div',{class:'xh-what-hd'},h('div',{class:'xh-glyph','aria-hidden':'true',text:glyph}),h('p',{},h('b',{text:lead}),h('small',{text:sub}))),fig,rest?h('p',{class:'xh-what-note',text:rest}):null);
+    const grid=h('ol',{class:'xh-g9','aria-label':'九项资料'});NINE.forEach((t,i)=>grid.append(h('li',{},h('small',{text:String(i+1).padStart(2,'0')}),t)));
+    const steps=h('ol',{class:'xh-steps'});
+    for(const [t,d] of [['文字','先看资料、对底线题。是否同频，先在字里行间看出来，不必寒暄。'],['语音十五分钟 · 视频一两分钟','先听声音、听说话的节奏；聊得来，再开一两分钟视频。照片是不是本人，一眼便知，告别照骗。'],['见面','前两步都走过，彼此有意，再约相见。白天、公共场所，从一杯咖啡、一顿饭开始。']])steps.append(h('li',{},h('b',{text:t}),h('span',{text:d})));
     cols.append(
-      item('八','先合八字','。日主相合、相生的人，先来到你面前。'),
-      item('面','再看照片资料','。照片之外，九项资料坦诚相见：年龄、身高、体重、学校学历、职业、年收入、个人资产、家庭资产、房车户籍。'),
-      item('观','再聊三观','。相亲十问，底线先对齐。语音十五分钟，视频一两分钟，彼此有意，再约相见。看得见五官，也看得见三观。'));
+      item('八','先合日主','十天干，五对相合',wheelSvg(),'甲己、乙庚、丙辛、丁壬、戊癸，五对相合。双人合盘，再看完整四柱。'),
+      item('面','再看照片资料','九项资料，坦诚相见',grid,null),
+      item('观','再聊三观','十个方向，底线先对齐',polySvg(TEN),'底线题十四道，三分钟答完；其余选填，慢慢来。'),
+      item('步','见面三步','一步一步，越走越安心',steps,'为什么是这个顺序：先在线上把该确认的确认好，见面就少一分意外，也省下约会的花费和路上的时间。每一步都要两个人都点头才往前走，谁想停下都可以。'));
     w.append(cols);s.append(w);return s;
   }
 
@@ -131,7 +167,7 @@
   function mount(main){
     const form=main.querySelector('.landing');if(!form)return;
     form.classList.add('xh-start');form.id='xh-start';
-    form.before(hero(),what(),people(),stems(),more(),tagline());
+    form.before(hero(),pain(),what(),people(),stems(),more(),tagline());
     const toForm=()=>{form.scrollIntoView({behavior:reduced()?'instant':'smooth',block:'start'});document.getElementById('birth-year')?.focus({preventScroll:true});};
     document.getElementById('start-free-reading')?.addEventListener('click',toForm);
   }
