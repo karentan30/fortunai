@@ -35,7 +35,7 @@ async function createPerson(page,slug){
   await page.locator('label.chip-option').filter({has:page.locator('input[name=targetStems]')}).first().click();
   await page.locator('label.chip-option').filter({has:page.locator('input[name=targetZodiacs]')}).first().click();
   await page.locator('label.chip-option').filter({has:page.locator('input[name=hobbies][value="羽毛球"]')}).click();
-  await page.locator('#contact').fill('test-contact-'+slug);for(const n of ['contactConsent','listed','consent'])await page.locator('[name='+n+']').check();
+  await page.locator('#contact').fill('test-contact-'+slug);for(const n of ['contactConsent','listed','consent','crossBorderConsent'])await page.locator('[name='+n+']').check();
   if(await page.locator('[name=policyConsent]').count())await page.locator('[name=policyConsent]').check();
   await page.locator('#profile-form button[type=submit]').click();
   if(await page.locator('#publish-dialog').isVisible())await page.locator('#publish-dialog button[value=publish]').click();

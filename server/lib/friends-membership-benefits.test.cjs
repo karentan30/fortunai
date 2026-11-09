@@ -5,7 +5,7 @@ const {createFriendsStore}=require('./friends-store'),{createFriendsService}=req
 function setup(){
   const store=createFriendsStore();let now=Date.parse('2026-11-06T04:00:00Z');
   const service=createFriendsService(store,{verify:()=>({age:30,dayMaster:'丙',zodiac:'马'})},{enabled:true,clock:()=>now});
-  const base={credential:'c',consent:true,nickname:'虚构测试',city:'北京',intent:'交朋友',fields:{height:'170',weight:'60',school:'暂无',occupation:'暂无',industry:'暂无',title:'暂无',income:'暂不提供',assets:'暂不提供'},hobbies:['阅读'],visibility:{},listed:true};
+  const base={credential:'c',consent:true,crossBorderConsent:true,nickname:'虚构测试',city:'北京',intent:'交朋友',fields:{height:'170',weight:'60',school:'暂无',occupation:'暂无',industry:'暂无',title:'暂无',income:'暂不提供',assets:'暂不提供'},hobbies:['阅读'],visibility:{},listed:true};
   const save=(uid,extra={})=>service.save(uid,{...base,...extra,fields:{...base.fields,...(extra.fields||{})}});
   const member=uid=>store.transaction(s=>{s.billingOrders=s.billingOrders||[];s.billingOrders.push({id:'XS-'+uid,userId:uid,provider:'direct',matchingMembership:true,benefitsVerified:true,status:'paid',paidAt:new Date(now-1000).toISOString(),accessUntil:new Date(now+30*86400000).toISOString()});});
   return {store,service,save,member,setNow:t=>now=t,now:()=>now};

@@ -5,7 +5,7 @@ const M=require('./friends-matching');
 const charts={verify:c=>{const [stem,zodiac,age]=String(c).split(':');return {age:Number(age||30),dayMaster:stem||'丙',zodiac:zodiac||'马'};}};
 function setup(options){
   const store=createFriendsStore(),service=createFriendsService(store,charts,options);
-  const base=(extra={})=>({credential:'丙:马:30',consent:true,listed:true,nickname:'虚构测试',city:'北京',purposes:['friend'],bio:'虚构',
+  const base=(extra={})=>({credential:'丙:马:30',consent:true,crossBorderConsent:true,listed:true,nickname:'虚构测试',city:'北京',purposes:['friend'],bio:'虚构',
     fields:{height:'170',weight:'60',school:'测试大学',occupation:'工程师',income:'',assets:''},
     hobbies:['阅读'],targetStems:['不限'],targetZodiacs:['不限'],visibility:{age:'public',height:'public',dayMaster:'public',zodiac:'public'},...extra,
     ...(extra.fields?{fields:{height:'170',weight:'60',school:'测试大学',occupation:'工程师',...extra.fields}}:{})});

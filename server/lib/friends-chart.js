@@ -92,4 +92,6 @@ function createChartService(secret) {
     }
   };
 }
-module.exports={calculate,createChartService,directions,STEMS,ZODIACS,bad};
+// 个人信息出境（PIPL）单独同意版本：文案或接收方/存储地变更时升版本，旧同意即失效需重新勾选。
+const CROSS_BORDER_VERSION='xb-2026-11-09';
+module.exports={calculate,createChartService,directions,STEMS,ZODIACS,bad,CROSS_BORDER_VERSION};

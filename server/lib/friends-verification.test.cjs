@@ -21,7 +21,7 @@ function setup(t){
   const store=createFriendsStore(),charts=createChartService(secret),service=createFriendsService(store,charts);
   const files=path.join(dir,'files'),v=createVerificationService({store,dir:files,key:KEY});
   const credential=charts.issue({birthday:'1991-08-28',calendar:'lunar',hour:6}).credential;
-  const data=(extra={})=>({credential,consent:true,nickname:'测试',city:'上海',intent:'交朋友',fields:{height:'170',weight:'60',school:'学校',occupation:'工程师',industry:'科技',title:'工程师',income:'30–50万',assets:'100–500万',education:'硕士'},
+  const data=(extra={})=>({credential,consent:true,crossBorderConsent:true,nickname:'测试',city:'上海',intent:'交朋友',fields:{height:'170',weight:'60',school:'学校',occupation:'工程师',industry:'科技',title:'工程师',income:'30–50万',assets:'100–500万',education:'硕士'},
     visibility:{school:'public',occupation:'public',income:'public',assets:'public',education:'public'},hobbies:['羽毛球'],targetStems:['不限'],targetZodiacs:['不限'],listed:true,...extra});
   const onDisk=()=>fs.readdirSync(files).filter(n=>n.endsWith('.bin'));
   // A paid, benefit-verified, in-window matching membership: the only thing isMember() accepts.

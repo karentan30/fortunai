@@ -42,7 +42,7 @@ function fixture({generate,enabled=true,store=createFriendsStore(),seed=true,bil
  const service=createPairReportsService(options);
  const seedCredit=(uid,unit,n=1)=>store.transaction(s=>{for(const k of ['billingOrders','creditLedger'])s[k]=s[k]||[];const id='RF-'+crypto.randomUUID();s.billingOrders.push({id,userId:uid,sku:unit==='report'?'friends_report_199':'friends_pair_report_v1',status:'paid',amountMinor:unit==='report'?19900:2990,currency:'CNY',channel:'wechat',createdAt:new Date(now).toISOString(),paidAt:new Date(now).toISOString()});s.creditLedger.push({id:crypto.randomUUID(),orderId:id,userId:uid,unit,delta:n,type:'grant',createdAt:new Date(now).toISOString()});});
  if(seed)seedCredit('a','pair_report',1);
- async function readyPair(extra={}){const p=compatibility.create('a',{targetShareId:'card-b'});await compatibility.authorize('a',p.id,{version:'compatibility-guide-v3',consent:true,input,...extra});await compatibility.authorize('b',p.id,{version:'compatibility-guide-v3',consent:true,input:inputB,...extra});return p;}
+ async function readyPair(extra={}){const p=compatibility.create('a',{targetShareId:'card-b'});await compatibility.authorize('a',p.id,{version:'compatibility-guide-v3',consent:true,crossBorderConsent:true,input,...extra});await compatibility.authorize('b',p.id,{version:'compatibility-guide-v3',consent:true,crossBorderConsent:true,input:inputB,...extra});return p;}
  const body=(pairId,key='pair-key-0001')=>({pairId,idempotencyKey:key,purpose:'dating',stage:'chatting',consentRetainReport:true});
  return {store,questions,compatibility,billing:realBilling,counts,prompts,service,options,seedCredit,readyPair,body,setNow:v=>now=v,now:clock};
 }
@@ -110,7 +110,7 @@ test('revoke, decline, expiry or re-authorization cut access and purge the saved
   if(action==='revoke')f.compatibility.revoke('b',p.id);
   else if(action==='decline')f.compatibility.decline('b',p.id);
   else if(action==='expire')f.setNow(f.now()+8*86400000);
-  else await f.compatibility.authorize('b',p.id,{version:'compatibility-guide-v3',consent:true,input:{...inputB,birthday:'1992-03-03'}});
+  else await f.compatibility.authorize('b',p.id,{version:'compatibility-guide-v3',consent:true,crossBorderConsent:true,input:{...inputB,birthday:'1992-03-03'}});
   for(const uid of ['a','b']){const v=await f.service.get(uid,r.reportId);assert.equal(v.status,'access_revoked',action);assert.equal(v.report,undefined);}
   assert.equal(f.store.read().pairReportJobs[0].result,undefined,action+' purged');
   assert.equal(f.counts.release,0,'delivered credit is not silently refunded');
@@ -153,7 +153,7 @@ test('hard-closed by default; unauthorized pair or missing consent never reserve
  await assert.rejects(closed.service.create('a',closed.body(cp.id)),{status:503});
  assert.throws(()=>createPairReportsService({...closed.options,bindingKey:'short'}));
  const f=fixture(),p=f.compatibility.create('a',{targetShareId:'card-b'});
- await f.compatibility.authorize('a',p.id,{version:'compatibility-guide-v3',consent:true,input});
+ await f.compatibility.authorize('a',p.id,{version:'compatibility-guide-v3',consent:true,crossBorderConsent:true,input});
  await assert.rejects(f.service.create('a',f.body(p.id)),{status:409});
  await assert.rejects(f.service.create('third',f.body(p.id)),{status:404});
  await assert.rejects(f.service.create('a',{...f.body(p.id),consentRetainReport:false}),{status:400});

@@ -37,7 +37,7 @@ async function userChecks(browser){
   assert.match(await page.locator('#profile-form').innerText(),/年龄截至 2026-11-04/);
   assert.equal(await page.locator('#field_income').getAttribute('list'),'finance-options');
   assert.ok((await page.locator('#finance-options').innerHTML()).includes('暂不提供'));
-  await page.locator('[name=consent]').check();await page.locator('[name=policyConsent]').check();
+  await page.locator('[name=consent]').check();await page.locator('[name=crossBorderConsent]').check();await page.locator('[name=policyConsent]').check();
   await page.locator('#profile-form button[type=submit]').click();await page.waitForSelector('#publish-dialog[open]');
   assert.equal((await page.locator('#publish-content').innerText()).includes(PRIVATE),false);
   assert.match(await page.locator('#publish-content').innerText(),/171/);
@@ -51,7 +51,7 @@ async function userChecks(browser){
   assert.equal(await page.locator('#logout-button').isVisible(),false);assert.equal((await page.content()).includes('OTHER-PRIVATE'),false);
   assert.equal(await page.locator('#birthday').inputValue(),'');
   state.loggedIn=true;state.profile=fixture();state.expireProfile=true;
-  await page.goto(BASE+'/pages/friends-connect.html?fixture-expiry=1#profile');await page.waitForSelector('#profile-form');await page.locator('[name=consent]').check();await page.locator('[name=policyConsent]').check();await page.locator('#profile-form button[type=submit]').click();await page.waitForSelector('#publish-dialog[open]');await page.locator('#publish-dialog button[value=publish]').click();await page.waitForSelector('#auth-dialog[open]');
+  await page.goto(BASE+'/pages/friends-connect.html?fixture-expiry=1#profile');await page.waitForSelector('#profile-form');await page.locator('[name=consent]').check();await page.locator('[name=crossBorderConsent]').check();await page.locator('[name=policyConsent]').check();await page.locator('#profile-form button[type=submit]').click();await page.waitForSelector('#publish-dialog[open]');await page.locator('#publish-dialog button[value=publish]').click();await page.waitForSelector('#auth-dialog[open]');
   assert.match(await page.locator('#auth-dialog .muted').innerText(),/登录已过期/);assert.equal(await page.locator('#profile-form').count(),0);assert.equal((await page.content()).includes(PRIVATE),false);
   assert.equal(state.posts.at(-1).policyVersion,POLICY);assert.equal('userId' in state.posts.at(-1),false);assert.equal('birthLocation' in state.posts.at(-1),false);
   assert.equal(await page.locator('#auth-agreement').isVisible(),false);
