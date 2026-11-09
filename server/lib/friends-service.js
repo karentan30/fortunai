@@ -115,7 +115,7 @@ function createFriendsService(store,charts,options={}) {
     if(sharedForThem.length)forThem.push('TA公开选择的认识目的里也有「'+sharedForThem.map(k=>M.PURPOSE_LABELS[k]).join('、')+'」');
     if(mineVisibleToThem('dayMaster')&&Array.isArray(p.targetStems)&&!p.targetStems.includes('不限')&&p.targetStems.includes(self.chart?.dayMaster))forThem.push('TA公开写了想认识'+self.chart.dayMaster+'日主，你的日主正是'+self.chart.dayMaster);
     if(mineVisibleToThem('zodiac')&&Array.isArray(p.targetZodiacs)&&!p.targetZodiacs.includes('不限')&&p.targetZodiacs.includes(self.chart?.zodiac))forThem.push('TA公开写了想认识属'+self.chart.zodiac+'的人，你正好属'+self.chart.zodiac);
-    if(interests.length)forThem.push('你填写的'+interests.slice(0,2).join('、')+'也是TA写下的爱好，可以作为TA认识你的话题');
+    if(interests.length)forThem.push('你填写的'+interests.slice(0,2).join('、')+'TA也写了，可以作为TA认识你的话题');
     const r=s.requests.filter(x=>((x.from===self.userId&&x.to===p.userId)||(x.to===self.userId&&x.from===p.userId))).sort((a,b)=>String(b.updatedAt||b.createdAt).localeCompare(String(a.updatedAt||a.createdAt)))[0];
     // Only an accepted request lets us say TA也想认识你. Matching someone's preferences is not consent.
     const status=r?.status==='accepted'&&isConnected(s,p,self.userId)?{state:'accepted',text:'TA也想认识你：你们已互相接受认识。'}:
