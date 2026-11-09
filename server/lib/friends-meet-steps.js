@@ -75,6 +75,8 @@ function step(s,r,uid,body,now=Date.now()){
 function decide(s,r,uid,body,now){
   const choice=body?.choice;if(!Object.hasOwn(CHOICES,choice||''))fail('选择无效');
   const rec=ensure(s,r);if(!canDecide(rec))fail('先语音或视频聊过，再来选',409);
+  // Once the pair-level outcome exists it is final: flipping a choice afterwards could reveal what the other side picked.
+  if(outcome(rec,now))fail('这一步已经有结果了，不能再改',409);
   rec.decisions||={};rec.decisions[id(uid)]={choice,at:new Date(now).toISOString()};rec.updatedAt=new Date(now).toISOString();
   return {};
 }

@@ -43,6 +43,19 @@ function memberFilters(q){
   if(q.verified){if(q.verified!=='1')bad400('已核验筛选无效');out.push(c=>!!c.verified&&Object.values(c.verified).some(Boolean));}
   return out;
 }
+// 年龄/身高范围筛选（免费）：ageMin/ageMax 18–99，heightMin/heightMax 100–250，整数，最小不大于最大；不合法 400，绝不放宽。
+// 只按投影后的卡片（对这位访客可见的资料）比较；对方没公开年龄/身高的，范围筛选打开时不会出现。
+const RANGE_FILTERS={age:['ageMin','ageMax',18,99,'年龄'],height:['heightMin','heightMax',100,250,'身高']};
+function rangeFilters(q){
+  const out=[],bad400=m=>{const e=Error(m);e.status=400;throw e;};
+  for(const [field,[lo,hi,floor,ceil,label]] of Object.entries(RANGE_FILTERS)){
+    const read=k=>{const v=q[k];if(v===undefined||v==='')return null;if(typeof v!=='string'||!/^\d{1,3}$/.test(v))bad400(label+'范围需为整数');const n=Number(v);if(n<floor||n>ceil)bad400(label+'范围应在 '+floor+'–'+ceil+' 之间');return n;};
+    const min=read(lo),max=read(hi);if(min===null&&max===null)continue;
+    if(min!==null&&max!==null&&min>max)bad400(label+'范围的最小值不能大于最大值');
+    out.push(c=>{const raw=c.fields?.[field];if(raw===undefined||raw===null||String(raw).trim()==='')return false;const n=Number(raw);return Number.isFinite(n)&&(min===null||n>=min)&&(max===null||n<=max);});
+  }
+  return out;
+}
 // 约会想一起做的事：传了就必须是固定清单里的 1–8 项；没传时，老资料（无此字段）原样保留，新资料必须填。
 // 双方都勾了的「约会想一起做的事」，按对方卡片可见的列表算。
 function sharedActivities(self,card){const mine=self?.dateActivities||[];return (card?.dateActivities||[]).filter(a=>mine.includes(a));}
@@ -77,13 +90,17 @@ function createFriendsService(store,charts,options={}) {
     for(const k of M.TYPE_MATCH_FIELDS){const v=typeOf(p,k);if(v&&(visible(k)||(consent[k]===true&&reciprocal(k))))types[k]=v;}
     return {city:p.city,purposes:M.purposesOf(p),fields,types};
   }
+  // Same gate as verifiedFor's 婚况 mark. Labels for anyone else come from M.shownPurposes so admin-verified 婚况
+  // (which forces married_buddy for isolation) is never revealed through the 认识目的 text.
+  const maritalShown=(s,p,viewer)=>p.userId===viewer||(p.verified?.marital===true&&isMember(s,viewer,clock())&&visibleTo(s,p,viewer)('marital'));
+  const shownPurposes=(s,p,viewer)=>M.shownPurposes(p,maritalShown(s,p,viewer));
   function project(s,p,viewer) {
     if(!p || !active(s,p,viewer)) missing();
     const connected=isConnected(s,p,viewer),self=p.userId===viewer;
-    const visible=visibleTo(s,p,viewer),purposes=M.purposesOf(p);
+    const visible=visibleTo(s,p,viewer),purposes=shownPurposes(s,p,viewer),hideIntent=M.verifiedMarried(p)&&!maritalShown(s,p,viewer);
     const fields=Object.fromEntries(FIELDS.filter(visible).map(k=>[k,p.fields[k]]));
     const chart=Object.fromEntries(['dayMaster','zodiac'].filter(visible).map(k=>[k,p.chart[k]]));
-    return {id:p.shareId,shareId:p.shareId,nickname:p.nickname,city:p.city,intent:p.intent||M.PURPOSE_LABELS[purposes[0]],purposes,purposeLabels:purposes.map(k=>M.PURPOSE_LABELS[k]),fields,chart,
+    return {id:p.shareId,shareId:p.shareId,nickname:p.nickname,city:p.city,intent:(!hideIntent&&p.intent)||M.PURPOSE_LABELS[purposes[0]],purposes,purposeLabels:purposes.map(k=>M.PURPOSE_LABELS[k]),fields,chart,
       // 已核验 蓝标：所有人可见（2026-11-10），只含该看者能看到的字段。
       ...verifiedFor(s,p,viewer,self,visible),
       ...(visible('age')?{ageAsOf:p.chart.ageAsOf}:{}),...(visible('constellation')&&p.constellation?{constellation:p.constellation}:{}),...(visible('mbti')&&p.mbti?{mbti:p.mbti}:{}),...(self?{recommendations:profileRecommendations(p),targetConstellations:p.targetConstellations||[],targetMbtis:p.targetMbtis||[],expectations:structuredClone(p.expectations||{}),matchingConsent:{...(p.matchingConsent||{})}}: {}),...((self||connected)&&p.availability?{availability:structuredClone(p.availability)}:{}),hobbies:p.hobbies,...(p.dateActivities?.length?{dateActivities:p.dateActivities}:{}),targetStems:p.targetStems,targetZodiacs:p.targetZodiacs,bio:p.bio||'',connected};
@@ -99,7 +116,8 @@ function createFriendsService(store,charts,options={}) {
   // and p's public card. Never uses p's expectations, p's hidden fields or opted-in hidden values.
   function explain(s,self,p,card,mineEval){
     const visible=visibleTo(s,p,self.userId),forYou=[],forThem=[];
-    const myPurposes=M.purposesOf(self),theirPurposes=M.purposesOf(p),same=myPurposes.filter(k=>theirPurposes.includes(k));
+    // Text only: their purposes as this viewer may see them (never the verified-婚况 override).
+    const myPurposes=M.purposesOf(self),theirPurposes=shownPurposes(s,p,self.userId),same=myPurposes.filter(k=>theirPurposes.includes(k));
     if(same.length)forYou.push('认识目的相同：'+same.map(k=>M.PURPOSE_LABELS[k]).join('、'));
     const typeReason={dayMaster:'符合你选择的日主方向',zodiac:'符合你选择的生肖方向',constellation:'符合你选择的星座方向（自填）',mbti:'符合你选择的MBTI方向（自填）'};
     for(const key of [...mineEval.mustHits,...mineEval.preferHits]){
@@ -125,7 +143,7 @@ function createFriendsService(store,charts,options={}) {
       r?.status==='pending'&&r.from===p.userId?{state:'incoming',text:'TA向你发出了认识申请，等你决定是否接受。'}:
       r?.status==='pending'?{state:'outgoing',text:'你已发出申请，TA还没有回应。'}:
       {state:'none',text:'这只是推荐：TA还没有表示是否想认识你，要等TA自己回应。'};
-    return {forYou,forThem,element:relation?relation.text:null,status,sharedPurposes:M.compatiblePurposes(myPurposes,theirPurposes).map(k=>M.PURPOSE_LABELS[k]),note:'推荐只依据双方可见资料与你自己的期待；不代表对方已同意，也不是关系结论或评分。'};
+    return {forYou,forThem,element:relation?relation.text:null,status,sharedPurposes:M.compatiblePurposes(myPurposes,M.purposesOf(p)).map(k=>M.PURPOSE_LABELS[k]),note:'推荐只依据双方可见资料与你自己的期待；不代表对方已同意，也不是关系结论或评分。'};
   }
   function seriousPayload(s,p,viewer){
     const self=p.userId===viewer;
@@ -134,11 +152,13 @@ function createFriendsService(store,charts,options={}) {
   }
   const needMine=(s,uid)=>{const p=mine(s,uid);if(isDisabled(s,uid))denied();if(!p||!p.listed)bad('请先完善个人资料并公开你的卡片');return p;};
   // 见面四步: only the two people of a live, accepted connection. Blocked/unlisted/disabled → 404, not connected → 403.
-  const meetPair=(s,uid,shareId)=>{const target=s.profiles.find(p=>p.shareId===shareId);if(!target||target.userId===uid||!active(s,target,uid))missing();
+  // Purposes can change after a connection was accepted (re-save, or admin-verified 婚况): isolated pairs are hidden like blocked.
+  const isolatedPair=(s,a,b)=>{const x=mine(s,a),y=mine(s,b);return !!x&&!!y&&M.purposesIsolated(M.purposesOf(x),M.purposesOf(y));};
+  const meetPair=(s,uid,shareId)=>{const target=s.profiles.find(p=>p.shareId===shareId);if(!target||target.userId===uid||!active(s,target,uid)||isolatedPair(s,uid,target.userId))missing();
     const r=s.requests.find(x=>x.status==='accepted'&&((x.from===uid&&x.to===target.userId)||(x.to===uid&&x.from===target.userId)));if(!r||!isConnected(s,target,uid))denied();return {r,self:mine(s,uid),target};};
   const meetView=(s,uid,shareId)=>{const {r,self,target}=meetPair(s,uid,shareId);return MS.view(s,r,uid,{now:clock(),mineAvail:self.availability,theirAvail:target.availability,shared:sharedActivities(self,target)});};
   return {
-    me(uid){const p=mine(store.read(),uid);return p?structuredClone({...M.migrateProfile(p),verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true).map(k=>[k,true])),recommendations:profileRecommendations(p)}):null;},
+    me(uid){const p=mine(store.read(),uid);return p?structuredClone({...M.migrateProfile(p),purposes:M.purposesOf(p),verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true).map(k=>[k,true])),recommendations:profileRecommendations(p)}):null;},
     save(uid,b) {
       if(b.consent!==true)bad('请确认本人资料及展示权限');
       return tx((s,queue)=>{
@@ -205,7 +225,7 @@ function createFriendsService(store,charts,options={}) {
       const member=isMember(s,uid,clock());
       return {days:7,count:rows.length,member,viewers:member?rows.slice(0,100).map(({p,day})=>{const c=project(s,p,uid);return {shareId:c.shareId,nickname:c.nickname,city:c.city,purposeLabels:c.purposeLabels,...(c.fields.age!==undefined?{age:c.fields.age}:{}),day};}):[]};},
     discover(uid,q={}){
-      const filters=memberFilters(q);
+      const ranges=rangeFilters(q),filters=memberFilters(q);
       if(filters.length&&!isMember(store.read(),uid,clock())){const e=Error('学历、收入、房车和已核验筛选是会员功能');e.status=403;e.code='member_filter';throw e;}
       return store.transaction(s=>{
       const self=M.migrateProfile(needMine(s,uid)),myPurposes=M.purposesOf(self);
@@ -219,8 +239,8 @@ function createFriendsService(store,charts,options={}) {
         const theirEval=M.evaluate(p,matchValues(s,self,p.userId));if(!theirEval.passed)continue;
         const card=project(s,p,uid);
         // Member filters read only the projected card (fields/verified already limited to what this viewer may see).
-        if(filters.some(f=>!f(card)))continue;
-        if((q.city&&card.city!==q.city)||(q.stem&&card.chart.dayMaster!==q.stem)||(q.zodiac&&card.chart.zodiac!==q.zodiac)||(q.constellation&&card.constellation!==q.constellation)||(q.mbti&&card.mbti!==q.mbti)||(q.purpose&&!theirPurposes.includes(q.purpose==='friend'?'buddy':q.purpose))||(q.activity&&!(card.dateActivities||[]).includes(q.activity)))continue;
+        if(filters.some(f=>!f(card))||ranges.some(f=>!f(card)))continue;
+        if((q.city&&card.city!==q.city)||(q.stem&&card.chart.dayMaster!==q.stem)||(q.zodiac&&card.chart.zodiac!==q.zodiac)||(q.constellation&&card.constellation!==q.constellation)||(q.mbti&&card.mbti!==q.mbti)||(q.purpose&&!card.purposes.includes(q.purpose==='friend'?'buddy':q.purpose))||(q.activity&&!(card.dateActivities||[]).includes(q.activity)))continue;
         const purpose=shared[0],interests=new Set([...sharedActivities(self,card),...card.hobbies.filter(h=>self.hobbies.includes(h))]).size,relation=M.elementRelation(self.chart?.dayMaster,card.chart.dayMaster);
         const samePurpose=myPurposes.some(k=>theirPurposes.includes(k));
         const alignment=purpose==='serious'&&typeof options.alignmentScore==='function'?options.alignmentScore({state:s,viewerId:uid,candidateId:p.userId,purpose}):null;
@@ -257,7 +277,7 @@ function createFriendsService(store,charts,options={}) {
     // Viewer must be logged in (route). Same 404 for missing / unlisted / blocked / not eligible: nothing leaks.
     seriousPage(shareId,uid){const s=store.read(),p=s.profiles.find(x=>x.shareId===shareId);
       if(!p||!(p.userId===uid||active(s,p,uid))||!SP.eligible(p))missing();
-      return {shareId:p.shareId,nickname:p.nickname,city:p.city,purposeLabels:M.purposesOf(p).map(k=>M.PURPOSE_LABELS[k]),
+      return {shareId:p.shareId,nickname:p.nickname,city:p.city,purposeLabels:shownPurposes(s,p,uid).map(k=>M.PURPOSE_LABELS[k]),
         ...(visibleTo(s,p,uid)('age')?{age:p.fields?.age}:{}),...(visibleTo(s,p,uid)('dayMaster')?{dayMaster:p.chart?.dayMaster}:{}),
         own:p.userId===uid,connected:p.userId!==uid&&isConnected(s,p,uid),...seriousPayload(s,p,uid)};},
     // Returns true only if this exact media id is currently visible to the viewer on that page; route streams bytes after.
@@ -300,7 +320,7 @@ function createFriendsService(store,charts,options={}) {
     });},
     block(uid,shareId){return store.transaction(s=>{const p=s.profiles.find(x=>x.shareId===shareId);if(!p)missing();if(p.userId===uid)bad('不能拉黑自己');if(!s.blocks.some(x=>x.by===uid&&x.target===p.userId))s.blocks.push({by:uid,target:p.userId});return {ok:true};});},
     report(uid,shareId,reason){return store.transaction(s=>{const p=s.profiles.find(x=>x.shareId===shareId);if(!p)missing();const why=text(reason,300);if(!why)bad('请填写举报原因');const prior=s.reports.find(r=>r.by===uid&&r.target===p.userId&&r.reason===why&&['open','reviewing'].includes(r.status||'open'));if(prior)return {ok:true,id:prior.id,status:prior.status||'open',message:'已收到相同举报，无需重复提交'};const report={id:crypto.randomUUID(),by:uid,target:p.userId,reason:why,status:'open',createdAt:new Date().toISOString()};s.reports.push(report);metric(s,'report_created');return {ok:true,id:report.id,status:'open',message:'举报已记录，试用期间由管理员人工处理'};});},
-    commonSlots(uid,shareId,options){const s=store.read(),self=needMine(s,uid),other=s.profiles.find(p=>p.shareId===shareId);if(!active(s,other,uid))missing();if(!connection(s,uid,other.userId))denied();return {slots:findCommonSlots(self.availability,other.availability,options),note:'仅为候选时间，尚未预约；DST切换当日暂不推荐'};},
+    commonSlots(uid,shareId,options){const s=store.read(),self=needMine(s,uid),other=s.profiles.find(p=>p.shareId===shareId);if(!active(s,other,uid)||isolatedPair(s,uid,other.userId))missing();if(!connection(s,uid,other.userId))denied();return {slots:findCommonSlots(self.availability,other.availability,options),note:'仅为候选时间，尚未预约；DST切换当日暂不推荐'};},
     meet(uid,shareId){return meetView(store.read(),uid,shareId);},
     meetStep(uid,shareId,body){return store.transaction(s=>{const {r}=meetPair(s,uid,shareId);const out=MS.step(s,r,uid,body,clock());return {...meetView(s,uid,shareId),reminder:out.reminder};});},
     meetAppointment(uid,shareId,body){return store.transaction(s=>{const {r}=meetPair(s,uid,shareId);const out=MS.appointment(s,r,uid,body,clock());return {...meetView(s,uid,shareId),reminder:out.reminder};});},

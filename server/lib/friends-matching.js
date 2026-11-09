@@ -53,10 +53,21 @@ const WEIGHTS={
   serious:{prefer:6,mutual:3,hobby:0.5,hobbyCap:3,element:1,samePurpose:0.5,alignment:6}
 };
 
-function purposesOf(p){
-  if(verifiedMarried(p))return ['married_buddy'];
+// What the owner chose themselves (ignores admin-verified 婚况).
+function chosenPurposes(p){
   if(Array.isArray(p?.purposes)){const valid=settle(p.purposes.map(toKey).filter(Boolean));if(valid?.length)return valid;}
   const legacy=LEGACY_INTENT[p?.intent];return legacy?[legacy]:['buddy'];
+}
+// Effective purposes for isolation/matching/eligibility. Verified 已婚 always counts as married_buddy (strict isolation).
+// NEVER use this for labels shown to someone else: use shownPurposes.
+function purposesOf(p){return verifiedMarried(p)?['married_buddy']:chosenPurposes(p);}
+// Labels/keys another viewer may see. maritalShown = that viewer may see the 婚况 mark (same gate as verifiedFor).
+// Without it, a verified-married profile shows only what the owner chose themselves, minus dating/serious
+// (those are not in effect): married_buddy if self-chosen, otherwise 找搭子. Verified 婚况 is never inferable from this.
+function shownPurposes(p,maritalShown){
+  if(!verifiedMarried(p)||maritalShown)return purposesOf(p);
+  const own=chosenPurposes(p);if(own.includes('married_buddy'))return ['married_buddy'];
+  const rest=own.filter(k=>!ROMANTIC.includes(k));return rest.length?rest:['buddy'];
 }
 // Accepts body.purposes (keys or labels, multi-select) or legacy body.intent. Returns {purposes,intent}.
 // Old clients may still send 'friend' / 交朋友·闺蜜: both become buddy.
@@ -125,10 +136,12 @@ function normalizeMatchingConsent(input,prev={}){
 // Profile view stored before purposes/expectations existed. Read-time migration only: never rewrites the store implicitly.
 function migrateProfile(p){
   if(!p)return p;
-  const out={...p,purposes:purposesOf(p)};
+  // chosenPurposes, not purposesOf: the stored choice must survive so shownPurposes can label it. Isolation still
+  // goes through purposesOf(out), which re-applies the verified-婚况 override.
+  const out={...p,purposes:chosenPurposes(p)};
   if(!out.expectations||typeof out.expectations!=='object')out.expectations={};else out.expectations=migratePurposeExpectation(out.expectations);
   if(!out.matchingConsent||typeof out.matchingConsent!=='object')out.matchingConsent={};
-  if(!out.intent)out.intent=PURPOSE_LABELS[out.purposes[0]];
+  if(!out.intent)out.intent=PURPOSE_LABELS[purposesOf(out)[0]];
   return out;
 }
 
@@ -212,4 +225,4 @@ function alignmentFromSignals(signals){const known=(Array.isArray(signals)?signa
 function questionnaireAlignmentScore({state,viewerId,candidateId,purpose}){if(purpose!=='serious'||!state)return null;try{return alignmentFromSignals(require('./friends-questionnaire').pairAlignment(state,viewerId,candidateId).signals);}catch{return null;}}
 
 module.exports={alignmentFromSignals,questionnaireAlignmentScore,INCOME_TIERS,ASSET_TIERS,WEALTH_TIERS,isWealthTier,wealthLabel,PURPOSES,PURPOSE_LABELS,PURPOSE_OPTION_LABELS,LEGACY_INTENT,MARRIED_MIX,LEVELS,LEVEL_LABELS,EDUCATION_LEVELS,HOUSE_OPTIONS,CAR_OPTIONS,SENSITIVE_FIELDS,PLAIN_MATCH_FIELDS,TYPE_KEYS,TYPE_MATCH_FIELDS,EXPECTATION_KEYS,LABELS,WEIGHTS,
-  purposesOf,normalizePurposes,compatiblePurposes,purposesIsolated,verifiedMarried,normalizeExpectations,normalizeMatchingConsent,migrateProfile,amount,evaluate,elementRelation,rankScore};
+  purposesOf,shownPurposes,normalizePurposes,compatiblePurposes,purposesIsolated,verifiedMarried,normalizeExpectations,normalizeMatchingConsent,migrateProfile,amount,evaluate,elementRelation,rankScore};

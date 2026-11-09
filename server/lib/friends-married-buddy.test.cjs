@@ -124,6 +124,18 @@ test('合盘 invite from a public card is refused between married_buddy and dati
   assert.equal(c.create('married',{targetShareId:ids.buddy}).status,'pending_authorizations');
 });
 
+test('合盘 open invite: claim is refused between married_buddy and dating/serious (same rule as create)',()=>{
+  const {store}=population();
+  XB.grant(store,'married','buddyDating','serious','buddy');
+  const c=createCompatibilityService({store});
+  // Owner birth confirmation is out of scope here: mark it authorized directly so claim reaches the isolation check.
+  const open=uid=>{const p=c.create(uid,{});store.transaction(st=>{st.compatibilityPairs.find(x=>x.id===p.id).authorizations[uid]={version:'x'};});return p.inviteToken;};
+  const claim=(uid,token)=>c.claim(uid,{inviteToken:token,consent:true,nickname:'自报'});
+  assert.throws(()=>claim('buddyDating',open('married')),{status:403});
+  assert.throws(()=>claim('married',open('serious')),{status:403});
+  const t=open('married');assert.equal(claim('buddy',t).status,'pending_recipient_confirmation');
+});
+
 test('admin-verified 已婚 is read as married_buddy and cannot choose dating or serious',()=>{
   const {store,service:s,base,ids}=population();
   store.transaction(st=>{const p=st.profiles.find(x=>x.userId==='dating');p.verified={marital:true};p.verifiedDetail={marital:'married'};});
@@ -132,4 +144,36 @@ test('admin-verified 已婚 is read as married_buddy and cannot choose dating or
   assert.equal(SP.eligible(store.read().profiles.find(x=>x.userId==='dating')),false);
   assert.throws(()=>s.save('dating',base({purposes:['dating']})),{status:400,message:/婚况核验为已婚/});
   assert.deepEqual(s.save('dating',base({purposes:['married_buddy']})).purposes,['married_buddy']);
+});
+
+// P1 privacy: admin-verified 婚况 forces married_buddy for isolation, but must never leak through the 认识目的 label
+// to someone who cannot see the 婚况 mark (verifiedFor gate). Isolation stays exactly as strict.
+test('verified 已婚 never leaks via purpose labels/intent/explanations/guest deck/purpose filter; isolation unchanged',()=>{
+  const {store,service:s,base,ids}=population();
+  ids.vb=s.save('vb',base({purposes:['buddy']})).shareId;   // picked 找搭子 themselves
+  // vd picked dating before the 婚况 review came back; verification overrides it for matching only.
+  ids.vd=s.save('vd',base({purposes:['dating']})).shareId;
+  store.transaction(st=>{for(const uid of ['vb','vd']){const p=st.profiles.find(x=>x.userId===uid);p.verified={marital:true};p.verifiedDetail={marital:'married'};}
+    st.billingOrders=st.billingOrders||[];st.billingOrders.push({id:'XS-m',userId:'buddy',provider:'direct',matchingMembership:true,benefitsVerified:true,status:'paid',paidAt:new Date(Date.now()-1000).toISOString(),accessUntil:new Date(Date.now()+30*86400000).toISOString()});});
+  const mine=c=>[ids.vb,ids.vd].includes(c.shareId);
+  for(const viewer of ['buddy','married']){   // 'buddy' is a member: members still cannot see the 婚况 mark on cards
+    const cards=s.discover(viewer).profiles.filter(mine);
+    assert.equal(cards.length,2,viewer+' still meets both (buddy-style)');
+    for(const c of cards){assert.deepEqual(c.purposeLabels,['找搭子'],viewer);assert.deepEqual(c.purposes,['buddy']);assert.equal(c.intent,'找搭子');}
+    // explanation.sharedPurposes lists the VIEWER's own purposes (a married_buddy viewer sees their own label): excluded.
+    const about=c=>JSON.stringify({...c,explanation:{...c.explanation,sharedPurposes:undefined}});
+    for(const c of cards)assert.ok(!about(c).includes('已婚'),viewer+' discover');
+    for(const id of [ids.vb,ids.vd])assert.ok(!about(s.card(id,viewer)).includes('已婚'),viewer+' card '+id);
+  }
+  // Purpose filter cannot be used to probe for verified-married people.
+  assert.ok(!s.discover('married',{purpose:'married_buddy'}).profiles.some(mine));
+  // Isolation exactly as strict: dating/serious/buddy+dating never see them; requests refused both ways.
+  for(const viewer of ['dating','serious','buddyDating'])assert.ok(!s.discover(viewer).profiles.some(mine),viewer);
+  assert.throws(()=>s.request('buddyDating',ids.vb),{status:409});assert.throws(()=>s.request('vd',ids.dating),{status:409});
+  // Guest deck: only a self-chosen married_buddy shows that label.
+  const deck=D.createPreviewDeck(store);store.transaction(st=>{for(const p of st.profiles)p.visibility.dayMaster='public';});
+  const labels=deck.deck({purposes:'married_buddy'}).cards.filter(c=>!c.sample).map(c=>c.purposeLabels.join('|')).sort();
+  assert.deepEqual(labels,[MARRIED_LABEL,MARRIED_LABEL,'找搭子','找搭子','找搭子'].sort());
+  // Owner still sees their real effective purposes.
+  assert.deepEqual(s.me('vb').purposes,['married_buddy']);assert.deepEqual(s.me('vd').purposes,['married_buddy']);
 });
