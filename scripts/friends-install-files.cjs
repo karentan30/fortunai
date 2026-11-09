@@ -4,6 +4,31 @@ const MANIFEST={
   "release": "adf46ced8e53ec1649a158a6def3944f685bfcb0",
   "files": [
     {
+      "path": "assets/js/friends-admin-support.js",
+      "before": null,
+      "after": "06ad30e0d4c313740bc0d0375b59d38488884854"
+    },
+    {
+      "path": "assets/js/friends-contact.js",
+      "before": null,
+      "after": "7a1358bcc1f6602386d3aca1de602314a22a3a7f"
+    },
+    {
+      "path": "pages/friends-admin-support.html",
+      "before": null,
+      "after": "bb24d092c3c61da1b80d4d90e97b71d97b4ad327"
+    },
+    {
+      "path": "pages/friends-contact.html",
+      "before": null,
+      "after": "462238fa472f1ca93a9123586ff7d4cfa77a1665"
+    },
+    {
+      "path": "server/lib/friends-support.js",
+      "before": null,
+      "after": "15c67795471d2166b139a70b2febf54c50f80909"
+    },
+    {
       "path": "assets/css/friends-admin.css",
       "before": null,
       "after": "c4ca6da2f1d86cc004dae02295340bf4398c13b3"
