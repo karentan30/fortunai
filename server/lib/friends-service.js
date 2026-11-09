@@ -8,6 +8,7 @@ const {recommend,typeSuggestions,normalizeTypes,normalizeAvailability,findCommon
 const M=require('./friends-matching');
 const {isMember}=require('./friends-membership');
 const {VERIFY_FIELDS}=require('./friends-verification');
+const R=require('./friends-review');
 const FIELDS=['age','height','weight','school','occupation','industry','title','income','assets','familyAssets','education','house','car','hukou'];
 // Optional profile fields. Income/assets/family assets/house/car/hukou may be left empty ("收入资产允许不提供").
 const WORK_REQUIRED=['education','school','occupation'];
@@ -28,7 +29,9 @@ const questionnaireOf=(s,uid)=>(s.marriageQuestionnaires||[]).find(r=>r.userId!=
 const blockedPair=(s,a,b)=>s.blocks.some(x=>(x.by===a&&x.target===b)||(x.by===b&&x.target===a));
 const connectedPair=(s,a,b)=>s.requests.some(r=>r.status==='accepted'&&((r.from===a&&r.to===b)||(r.to===a&&r.from===b)));
 const profileOf=(s,uid)=>s.profiles.find(p=>p.userId===uid);
-const activeFor=(s,p,viewer)=>p?.listed&&!isDisabled(s,p.userId)&&!blockedPair(s,p.userId,viewer);
+// 首批审核制: others only see an approved card (grandfathered if listed before review existed); the owner always sees it,
+// and an existing accepted connection keeps seeing it. See friends-review.js.
+const activeFor=(s,p,viewer)=>p?.listed&&!isDisabled(s,p.userId)&&!blockedPair(s,p.userId,viewer)&&(p.userId===viewer||R.reviewVisible(p)||connectedPair(s,p.userId,viewer));
 const connectedFor=(s,p,viewer)=>!!profileOf(s,viewer)?.listed&&!isDisabled(s,viewer)&&connectedPair(s,p.userId,viewer);
 const scopeAllows=(s,p,viewer)=>{const self=p.userId===viewer,connected=!self&&connectedFor(s,p,viewer);return scope=>self||scope==='public'||(connected&&scope==='connected');};
 const viewDay=t=>new Date(t+8*3600000).toISOString().slice(0,10);
@@ -57,6 +60,8 @@ function normalizeDateActivities(b,prev){
 }
 function createFriendsService(store,charts,options={}) {
   const clock=typeof options.clock==='function'?options.clock:()=>Date.now();
+  // 首批审核制: new/resubmitted cards start 'pending'. Library default off (tests, emergency); productionRouter turns it on.
+  const reviewGate=options.reviewGate===true;
   const quotas=require('./friends-quotas').createFriendsQuotas(options);
   // 校园漏斗：事务提交成功后再发事件，回滚的操作不计数。
   const funnel=typeof options.funnel==='function'?options.funnel:()=>{};
@@ -138,7 +143,7 @@ function createFriendsService(store,charts,options={}) {
     const r=s.requests.find(x=>x.status==='accepted'&&((x.from===uid&&x.to===target.userId)||(x.to===uid&&x.from===target.userId)));if(!r||!isConnected(s,target,uid))denied();return {r,self:mine(s,uid),target};};
   const meetView=(s,uid,shareId)=>{const {r,self,target}=meetPair(s,uid,shareId);return MS.view(s,r,uid,{now:clock(),mineAvail:self.availability,theirAvail:target.availability,shared:sharedActivities(self,target)});};
   return {
-    me(uid){const p=mine(store.read(),uid);return p?structuredClone({...M.migrateProfile(p),verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true).map(k=>[k,true])),recommendations:profileRecommendations(p)}):null;},
+    me(uid){const p=mine(store.read(),uid);return p?structuredClone({...M.migrateProfile(p),verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true).map(k=>[k,true])),recommendations:profileRecommendations(p),review:R.ownerReview(p)}):null;},
     save(uid,b) {
       if(b.consent!==true)bad('请确认本人资料及展示权限');
       return tx((s,queue)=>{
@@ -182,11 +187,12 @@ function createFriendsService(store,charts,options={}) {
         const keep=VERIFY_FIELDS.filter(k=>prev?.verified?.[k]===true&&prev.fields?.[k]===fields[k]);
         if(keep.length){p.verified=Object.fromEntries(keep.map(k=>[k,true]));p.verifiedAt=Object.fromEntries(keep.map(k=>[k,prev.verifiedAt?.[k]||null]));}
         if(keep.includes('marital')&&prev.verifiedDetail?.marital)p.verifiedDetail={marital:prev.verifiedDetail.marital}; // 婚况 result (admin-set), members-only via 认证条
+        Object.assign(p,R.nextReview(prev,{gate:reviewGate,now:p.updatedAt}));
         p.acquisition=acquisition;
         if(prev)s.profiles[s.profiles.indexOf(prev)]=p;else s.profiles.push(p);
         if(!attributionMark){s.attributionMarks.push({userId:uid,...acquisition,firstProfileAt:prev?.consentAt||new Date().toISOString()});if(!prev){metric(s,'first_profile_created',acquisition);queue.push(['xs_profile_done',uid,acquisition]);}}else{delete attributionMark.expiresAt;delete attributionMark.deletedAt;}
         if(prev)metric(s,'profile_updated',acquisition);
-        return structuredClone(p);
+        return {...structuredClone(p),review:R.ownerReview(p)};
       });
     },
     quota(uid){return quotas.status(store.read(),uid);},
@@ -227,7 +233,9 @@ function createFriendsService(store,charts,options={}) {
         const explanation=explain(s,self,p,card,mineEval);
         // [HOOK questionnaire-alignment] 默认关闭。传入 options.questionnaireReasons=require('./friends-questionnaire').discoverReasons 后，只追加双方互相开放方向的「在X方面想法接近/需要聊聊」，不改排序；后台排序信号见 friends-questionnaire.pairAlignment().signals。
         if(typeof options.questionnaireReasons==='function')for(const r of options.questionnaireReasons(s,uid,p.userId).slice(0,2))explanation.forYou.push(r);
-        scored.push({card:{...card,reasons:explanation.forYou,explanation,rankingPurpose:purpose},score:M.rankScore({purpose,mine:mineEval,theirs:theirEval,interests,relation,samePurpose,alignment})});
+        scored.push({card:{...card,reasons:explanation.forYou,explanation,rankingPurpose:purpose},score:M.rankScore({purpose,mine:mineEval,theirs:theirEval,interests,relation,samePurpose,alignment,
+          // Modest boost for any admin-approved verification this viewer can see (card.verified is already scope-limited). Never explained.
+          verified:!!card.verified&&Object.values(card.verified).some(Boolean)})});
       }
       // Score stays server-side: no per-person value or compatibility number is returned.
       const all=scored.sort((a,b)=>b.score-a.score).map(x=>x.card);
@@ -269,6 +277,7 @@ function createFriendsService(store,charts,options={}) {
     request(uid,shareId){return tx((s,queue)=>{
       const self=needMine(s,uid),target=s.profiles.find(p=>p.shareId===shareId);
       if(!active(s,target,uid))missing();if(target.userId===uid)bad('不能向自己申请');
+      if(!R.reviewVisible(self))conflict('资料审核通过后就可以申请认识，一般 24 小时内');
       if(M.purposesIsolated(M.purposesOf(self),M.purposesOf(target)))conflict(ISOLATED);
       const old=s.requests.find(r=>((r.from===uid&&r.to===target.userId)||(r.to===uid&&r.from===target.userId))&&['pending','accepted'].includes(r.status));
       if(old)conflict(old.status==='accepted'?'你们已经连接':'已有待处理申请');

@@ -45,12 +45,13 @@ const LABELS={age:'年龄',height:'身高',education:'学历',school:'学校',oc
 
 // Per-purpose ranking weights. prefer = my 优先 hits on them; mutual = their 优先 hits on me (internal only, never explained);
 // hobby = shared hobbies (capped); element = five-element relation; samePurpose = exact same purpose; alignment = external
-// questionnaire alignment in [0,1] (认真结婚 only, supplied by the questionnaire service).
+// questionnaire alignment in [0,1] (认真结婚 only, supplied by the questionnaire service); verified = any admin-approved
+// verification the viewer can see (modest: below one 优先 hit, never explained).
 const WEIGHTS={
-  buddy:{prefer:3,mutual:1,hobby:2,hobbyCap:4,element:0.5,samePurpose:0.5,alignment:0},
-  married_buddy:{prefer:3,mutual:1,hobby:2,hobbyCap:4,element:0.5,samePurpose:0.5,alignment:0},
-  dating:{prefer:5,mutual:2.5,hobby:1,hobbyCap:3,element:1.5,samePurpose:0.5,alignment:0},
-  serious:{prefer:6,mutual:3,hobby:0.5,hobbyCap:3,element:1,samePurpose:0.5,alignment:6}
+  buddy:{prefer:3,mutual:1,hobby:2,hobbyCap:4,element:0.5,samePurpose:0.5,alignment:0,verified:1},
+  married_buddy:{prefer:3,mutual:1,hobby:2,hobbyCap:4,element:0.5,samePurpose:0.5,alignment:0,verified:1},
+  dating:{prefer:5,mutual:2.5,hobby:1,hobbyCap:3,element:1.5,samePurpose:0.5,alignment:0,verified:1.5},
+  serious:{prefer:6,mutual:3,hobby:0.5,hobbyCap:3,element:1,samePurpose:0.5,alignment:6,verified:2}
 };
 
 function purposesOf(p){
@@ -198,9 +199,9 @@ function elementRelation(own,other){
   return {kind:'different',score:0,text:'你们的日主五行不同，可以先了解彼此的节奏与边界；单凭日主不能判断是否适合。'};
 }
 
-function rankScore({purpose,mine,theirs,interests,relation,samePurpose,alignment}){
+function rankScore({purpose,mine,theirs,interests,relation,samePurpose,alignment,verified}){
   const w=WEIGHTS[purpose]||WEIGHTS.buddy;
-  return w.prefer*mine.preferHits.length+w.mutual*theirs.preferHits.length+w.hobby*Math.min(interests,w.hobbyCap)+w.element*(relation?.score||0)+w.samePurpose*(samePurpose?1:0)+w.alignment*(Number.isFinite(alignment)?Math.max(0,Math.min(1,alignment)):0);
+  return w.prefer*mine.preferHits.length+w.mutual*theirs.preferHits.length+w.hobby*Math.min(interests,w.hobbyCap)+w.element*(relation?.score||0)+w.samePurpose*(samePurpose?1:0)+w.alignment*(Number.isFinite(alignment)?Math.max(0,Math.min(1,alignment)):0)+(w.verified||0)*(verified===true?1:0);
 }
 
 // Adapter for friends-questionnaire pairAlignment().signals (present only when both users opted in).

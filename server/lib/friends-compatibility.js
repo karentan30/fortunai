@@ -42,7 +42,8 @@ function createCompatibilityService({store,calculateChart=calculate,questionnair
  const uidCheck=uid=>{if(uid===undefined||uid===null||uid==='')fail(401,'请先登录');};
  const profile=(s,uid)=>(s.profiles||[]).find(p=>same(p.userId,uid));
  const blocked=(s,a,b)=>(s.blocks||[]).some(x=>same(x.by,a)&&same(x.target,b)||same(x.by,b)&&same(x.target,a));
- const liveProfile=(s,p)=>!!p?.listed&&!isDisabled(s,p.userId);
+ // 首批审核制: a card still under review (or not passed) can't be a 合盘 target or requester.
+ const liveProfile=(s,p)=>!!p?.listed&&!isDisabled(s,p.userId)&&require('./friends-review').reviewVisible(p);
  function usable(s,p){const target=profile(s,p.to),requester=profile(s,p.from);if(isDisabled(s,p.from)||p.to!==null&&isDisabled(s,p.to)||p.to!==null&&blocked(s,p.from,p.to))return false;if(p.mode==='open_invite')return (!p.requesterShareId||requester?.shareId===p.requesterShareId)&&(!p.recipientShareId||target?.shareId===p.recipientShareId);return liveProfile(s,target)&&target.shareId===p.targetShareId&&(!p.requesterShareId||requester?.shareId===p.requesterShareId&&liveProfile(s,requester))&&(!requester||liveProfile(s,requester));}
  function snapshot(){const s=store.read();if(rows(s).some(p=>Date.parse(p.expiresAt)<=clock()&&!['revoked','declined','expired'].includes(p.status)))return store.transaction(next=>{purgeExpiredCompatibility(next,clock());return structuredClone(next);});return s;}
  function own(s,uid,id){uidCheck(uid);const p=rows(s).find(p=>p.id===id&&(same(p.from,uid)||same(p.to,uid)));if(!p)fail(404,'邀请不存在');return p;}

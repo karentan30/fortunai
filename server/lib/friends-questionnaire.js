@@ -351,7 +351,7 @@ function createFriendsQuestionnaireService({store,clock=()=>Date.now(),bank=BANK
    uidCheck(uid);
    if(typeof shareId!=='string'||!shareId||shareId.length>100)fail(400,'对象编号无效');
    const s=store.read(),p=(s.profiles||[]).find(p=>p.shareId===shareId);
-   if(!p||same(p.userId,uid)||blocked(s,uid,p.userId)||isDisabled(s,p.userId)||isDisabled(s,uid)||p.listed===false&&!connected(s,uid,p.userId))fail(404,'暂时看不到这位会员的问卷');
+   if(!p||same(p.userId,uid)||blocked(s,uid,p.userId)||isDisabled(s,p.userId)||isDisabled(s,uid)||(p.listed===false||!require('./friends-review').reviewVisible(p))&&!connected(s,uid,p.userId))fail(404,'暂时看不到这位会员的问卷');
    const mine=readOf(s,uid),visible=memberView(s,p.userId,uid,{bank});
    const {highlights,notes}=pairNotes(mine,visible,{bank});
    return {shareId:p.shareId,nickname:p.nickname,peer:visible,highlights,notes,viewerQuickReady:quickReady(mine,bank),romance:romanceOverlap(s,uid,p.userId),connected:pairUsable(s,uid,p.userId)};
