@@ -6,7 +6,7 @@ const C=require('./friends-collection');
 
 const charts={verify:c=>{const [,stem,zodiac]=String(c).split(':');return {age:28,dayMaster:stem,zodiac};}};
 const base={consent:true,crossBorderConsent:true,city:'北京',intent:'交朋友',fields:{height:'170',weight:'60',school:'暂无',occupation:'暂无',industry:'暂无',title:'暂无'},
-  hobbies:['羽毛球'],targetStems:['不限'],targetZodiacs:['不限'],listed:true};
+  dateActivities:['羽毛球'],hobbies:['羽毛球'],targetStems:['不限'],targetZodiacs:['不限'],listed:true};
 const allPublic={dayMaster:'public',zodiac:'public',mbti:'public',constellation:'public'};
 function setup(){
   const store=createFriendsStore(),service=createFriendsService(store,charts);

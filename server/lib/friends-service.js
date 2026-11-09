@@ -3,6 +3,7 @@ const crypto=require('node:crypto');
 const {STEMS,ZODIACS,bad}=require('./friends-chart');
 const XB=require('./friends-cross-border');
 const {isDisabled,metric,normalize,normalizeAttribution}=require('./friends-admin');
+const {DATE_ACTIVITIES,DATE_ACTIVITY_MAX}=require('../../assets/js/friends-date-activities');
 const {recommend,typeSuggestions,normalizeTypes,normalizeAvailability,findCommonSlots}=require('./friends-preferences');
 const M=require('./friends-matching');
 const {isMember}=require('./friends-membership');
@@ -39,6 +40,16 @@ function memberFilters(q){
   if(q.verified){if(q.verified!=='1')bad400('已核验筛选无效');out.push(c=>!!c.verified&&Object.values(c.verified).some(Boolean));}
   return out;
 }
+// 约会想一起做的事：传了就必须是固定清单里的 1–8 项；没传时，老资料（无此字段）原样保留，新资料必须填。
+function normalizeDateActivities(b,prev){
+  if(!Object.hasOwn(b,'dateActivities')){if(prev)return prev.dateActivities;bad('请至少选择一项约会想一起做的事');}
+  const raw=b.dateActivities;
+  if(!Array.isArray(raw)||raw.some(x=>typeof x!=='string'||!DATE_ACTIVITIES.includes(x)))bad('约会想做的事选项无效');
+  const list=[...new Set(raw)];
+  if(!list.length)bad('请至少选择一项约会想一起做的事');
+  if(list.length>DATE_ACTIVITY_MAX)bad('约会想做的事最多选 '+DATE_ACTIVITY_MAX+' 项');
+  return list;
+}
 function createFriendsService(store,charts,options={}) {
   const clock=typeof options.clock==='function'?options.clock:()=>Date.now();
   const quotas=require('./friends-quotas').createFriendsQuotas(options);
@@ -67,7 +78,7 @@ function createFriendsService(store,charts,options={}) {
     return {id:p.shareId,shareId:p.shareId,nickname:p.nickname,city:p.city,intent:p.intent||M.PURPOSE_LABELS[purposes[0]],purposes,purposeLabels:purposes.map(k=>M.PURPOSE_LABELS[k]),fields,chart,
       // 已核验 marks: only the owner and members receive this key at all. Non-members get no verified data in JSON.
       ...verifiedFor(s,p,viewer,self,visible),
-      ...(visible('age')?{ageAsOf:p.chart.ageAsOf}:{}),...(visible('constellation')&&p.constellation?{constellation:p.constellation}:{}),...(visible('mbti')&&p.mbti?{mbti:p.mbti}:{}),...(self?{recommendations:profileRecommendations(p),targetConstellations:p.targetConstellations||[],targetMbtis:p.targetMbtis||[],expectations:structuredClone(p.expectations||{}),matchingConsent:{...(p.matchingConsent||{})}}: {}),...((self||connected)&&p.availability?{availability:structuredClone(p.availability)}:{}),hobbies:p.hobbies,targetStems:p.targetStems,targetZodiacs:p.targetZodiacs,bio:p.bio,connected};
+      ...(visible('age')?{ageAsOf:p.chart.ageAsOf}:{}),...(visible('constellation')&&p.constellation?{constellation:p.constellation}:{}),...(visible('mbti')&&p.mbti?{mbti:p.mbti}:{}),...(self?{recommendations:profileRecommendations(p),targetConstellations:p.targetConstellations||[],targetMbtis:p.targetMbtis||[],expectations:structuredClone(p.expectations||{}),matchingConsent:{...(p.matchingConsent||{})}}: {}),...((self||connected)&&p.availability?{availability:structuredClone(p.availability)}:{}),hobbies:p.hobbies,...(p.dateActivities?.length?{dateActivities:p.dateActivities}:{}),targetStems:p.targetStems,targetZodiacs:p.targetZodiacs,bio:p.bio||'',connected};
   }
   // Only fields an admin approved (friends-verification.decide) and the viewer can see. Never derived from user input.
   function verifiedFor(s,p,viewer,self,visible){
@@ -139,10 +150,11 @@ function createFriendsService(store,charts,options={}) {
         if(!types.constellation&&chart.constellation)types.constellation=chart.constellation;
         for(const k of ['constellation','mbti'])visibility[k]=Object.hasOwn(b.visibility||{},k)?(SCOPES.includes(b.visibility[k])?b.visibility[k]:'private'):(prev?.visibility?.[k]||'private');
         const hobbies=Array.isArray(b.hobbies)?[...new Set(b.hobbies.map(x=>text(x,24)).filter(Boolean))].slice(0,10):[];
+        const dateActivities=normalizeDateActivities(b,prev);
         const recommendations=profileRecommendations({chart,...types});
         const targetStems=array(b.targetStems?.length?b.targetStems:recommendations.stems,[...STEMS,'不限']);const targetZodiacs=array(b.targetZodiacs?.length?b.targetZodiacs:recommendations.zodiacs,[...ZODIACS,'不限']);
         if(!hobbies.length||!targetStems.length||!targetZodiacs.length)bad('请选择爱好及想认识的日主、生肖；也可选不限');
-        const p={userId:uid,shareId:prev?.shareId||crypto.randomBytes(18).toString('hex'),nickname,city,intent,purposes,expectations,matchingConsent,fields,visibility,hobbies,targetStems,targetZodiacs,...types,
+        const p={userId:uid,shareId:prev?.shareId||crypto.randomBytes(18).toString('hex'),nickname,city,intent,purposes,expectations,matchingConsent,fields,visibility,hobbies,...(dateActivities?{dateActivities}:{}),targetStems,targetZodiacs,...types,
           bio:text(b.bio,240),contact:text(b.contact,120),contactConsent:b.contactConsent===true,listed:b.listed===true,posterShowTargets:Object.hasOwn(b,'posterShowTargets')?b.posterShowTargets!==false:prev?.posterShowTargets!==false,
           chart,recommendations,availability:Object.hasOwn(b,'availability')?normalizeAvailability(b.availability):(prev?.availability||null),residence:Object.hasOwn(b,'residence')?require('./friends-places').normalizeResidence(b.residence):(prev?.residence||null),policyVersion:b.policyVersion==='friends-2026-11-04-v1'?b.policyVersion:(prev?.policyVersion||'legacy-unversioned'),consentAt:new Date().toISOString(),crossBorderConsentVersion:xb.version,crossBorderConsentAt:xb.at,updatedAt:new Date().toISOString()};
         // Keep admin-approved verification only while the verified value is unchanged; editing the value drops the mark.

@@ -14,7 +14,7 @@ const page=require('../../assets/js/friends-campus.js');
 const SECRET='s'.repeat(40);
 after(()=>fs.rmSync(TMP,{recursive:true,force:true}));
 const withClub=fn=>{const before=campus.CONFIG.clubs;campus.CONFIG.clubs=[{code:'badminton_club',label:'测试社团'}];try{return fn();}finally{campus.CONFIG.clubs=before;}};
-const profileBody=attribution=>({credential:'t',consent:true,crossBorderConsent:true,nickname:'自报',city:'北京',intent:'交朋友',fields:{height:'170',weight:'60',school:'某校（自填）',occupation:'学生',income:'不填',assets:'不填'},hobbies:['羽毛球'],targetStems:['不限'],targetZodiacs:['不限'],listed:true,contact:'wx-test',contactConsent:true,...(attribution?{attribution}:{})});
+const profileBody=attribution=>({credential:'t',consent:true,crossBorderConsent:true,nickname:'自报',city:'北京',intent:'交朋友',fields:{height:'170',weight:'60',school:'某校（自填）',occupation:'学生',income:'不填',assets:'不填'},dateActivities:['羽毛球'],hobbies:['羽毛球'],targetStems:['不限'],targetZodiacs:['不限'],listed:true,contact:'wx-test',contactConsent:true,...(attribution?{attribution}:{})});
 function fixture(tests=new Set()){const rows=[],log=r=>{rows.push(r);return true;};const funnel=campus.createFunnelSink({secret:SECRET,log,tests});const store=createFriendsStore();const service=createFriendsService(store,{verify:()=>({age:20,dayMaster:'甲',zodiac:'龙'})},{funnel});return {rows,log,funnel,store,service};}
 
 test('client first-touch: params persist, later visits/other params do not overwrite, direct visit never creates a record',()=>{

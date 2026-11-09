@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const {createFriendsStore}=require('./friends-store'),{createFriendsService}=require('./friends-service');
 const {typeSuggestions,normalizeTypes,CONSTELLATIONS,MBTIS}=require('./friends-preferences');
-function setup(){const store=createFriendsStore(),service=createFriendsService(store,{verify:()=>({age:30,dayMaster:'戊',zodiac:'羊'})});const data={credential:'test',consent:true,crossBorderConsent:true,nickname:'测试',city:'北京',intent:'交朋友',fields:{height:'170',weight:'60',school:'学校',occupation:'职员',income:'暂不提供',assets:'暂不提供'},hobbies:['阅读'],targetStems:['不限'],targetZodiacs:['不限'],listed:true};service.save('a',data);return {service,store,data};}
+function setup(){const store=createFriendsStore(),service=createFriendsService(store,{verify:()=>({age:30,dayMaster:'戊',zodiac:'羊'})});const data={credential:'test',consent:true,crossBorderConsent:true,nickname:'测试',city:'北京',intent:'交朋友',fields:{height:'170',weight:'60',school:'学校',occupation:'职员',income:'暂不提供',assets:'暂不提供'},dateActivities:['羽毛球'],hobbies:['阅读'],targetStems:['不限'],targetZodiacs:['不限'],listed:true};service.save('a',data);return {service,store,data};}
 test('type suggestions are bounded, explanatory and support unknown types without inventing results',()=>{
  for(const constellation of CONSTELLATIONS){const r=typeSuggestions({constellation});assert.equal(r.constellations.length,2);assert.ok(!r.constellations.includes(constellation));assert.match(r.basis.constellations,/不是科学/);}
  for(const mbti of MBTIS){const r=typeSuggestions({mbti});assert.equal(r.mbtis.length,3);assert.ok(r.mbtis.every(x=>x!==mbti&&x.slice(1,3)===mbti.slice(1,3)));assert.match(r.basis.mbtis,/不代表/);}
