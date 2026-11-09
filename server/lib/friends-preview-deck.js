@@ -31,9 +31,9 @@ function ageBracket(age){const n=Number(age);if(!Number.isFinite(n)||n<18)return
 // Clearly-labelled fictional samples (same three personas as the landing samples). Never requestable, never tokens.
 const SAMPLE_LABEL='虚构示例，不可申请认识';
 const SAMPLES=[
-  {dayMaster:'戊',ageBracket:'25-29',city:'北京',jobCategory:'互联网/科技',hobbies:['展览','羽毛球'],purposeLabels:['享受恋爱']},
+  {dayMaster:'戊',ageBracket:'25-29',city:'北京',jobCategory:'互联网/科技',hobbies:['展览','羽毛球'],purposeLabels:['享受甜甜的恋爱']},
   {dayMaster:'甲',ageBracket:'30-34',city:'上海',jobCategory:'互联网/科技',hobbies:['羽毛球','游泳'],purposeLabels:['找搭子']},
-  {dayMaster:'癸',ageBracket:'25-29',city:'深圳',jobCategory:'设计/创意',hobbies:['徒步','音乐'],purposeLabels:['交朋友·闺蜜']}
+  {dayMaster:'癸',ageBracket:'25-29',city:'深圳',jobCategory:'设计/创意',hobbies:['徒步','音乐'],purposeLabels:['找搭子']}
 ].map(s=>({...s,element:elementOf(s.dayMaster),sample:true,label:SAMPLE_LABEL}));
 
 const pub=(p,k)=>p.visibility?.[k]==='public';
@@ -61,9 +61,12 @@ function createPreviewDeck(store,{now=()=>Date.now(),random=()=>crypto.randomByt
   return {
     deck(q={}){
       const stem=STEMS.includes(q.stem)?q.stem:null,city=typeof q.city==='string'?q.city.trim().slice(0,20):'';
+      // Guest purposes are optional (?purposes=buddy,dating). Unknown guest = treated as possibly dating, so married_buddy
+      // cards are left out; a guest who says dating/serious never sees them, a married_buddy guest never sees daters.
+      const said=String(q.purposes||'').split(',').map(x=>M.LEGACY_INTENT[x]||x).filter(k=>M.PURPOSES.includes(k)),viewer=said.length?said:['dating'];
       const s=store.read(),scored=[];
       for(const p of s.profiles||[]){
-        if(!eligible(s,p))continue;
+        if(!eligible(s,p)||M.purposesIsolated(viewer,M.purposesOf(p)))continue;
         const relation=stem?M.elementRelation(stem,p.chart.dayMaster):null;
         // 相生 first (生我 / 我生), then same element, then same city. Random tie-break: order is not a stable fingerprint.
         scored.push({p,score:(relation?.score||0)*10+(city&&p.city===city?1:0),tie:Math.random(),relation:relation?.kind||null});

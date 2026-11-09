@@ -130,7 +130,7 @@ ${own.availableTags.length?[...groups].map(([d,list])=>`<div class="se-qrow"><h4
     let sec=main.querySelector('#serious-editor');
     if(!sec){sec=document.createElement('section');sec.id='serious-editor';sec.className='surface serious-editor';host.after(sec);sec.addEventListener('click',onClick);sec.addEventListener('change',onChange);sec.addEventListener('input',onInput);sec.addEventListener('submit',onSubmit);}
     if(!own.hasProfile){sec.innerHTML='<div class="se-intro"><h2>认真相亲页</h2><p class="notice">先保存交友卡，再填写相亲资料。</p></div>';return;}
-    if(!own.eligible){sec.innerHTML='<div class="se-intro"><h2>认真相亲页</h2><p class="notice">认识目的选「享受恋爱」或「认真结婚」后，可以多写一页相亲资料：照片、招呼语音和几段文字。</p><button type="button" class="secondary pe-goto-purpose" data-goto-purpose>去选认识目的</button></div>';return;}
+    if(!own.eligible){sec.innerHTML='<div class="se-intro"><h2>认真相亲页</h2><p class="notice">认识目的选「享受甜甜的恋爱」或「认真考虑婚恋」后，可以多写一页相亲资料：照片、招呼语音和几段文字。</p><button type="button" class="secondary pe-goto-purpose" data-goto-purpose>去选认识目的</button></div>';return;}
     sec.innerHTML=editorHTML();bindVoice(sec);
   }
   async function refreshEditor(){if(loading)return;loading=true;try{own=await api('/serious');renderEditor();}catch(_){own=null;main.querySelector('#serious-editor')?.remove();}finally{loading=false;}}

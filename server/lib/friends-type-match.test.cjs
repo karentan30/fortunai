@@ -9,7 +9,7 @@ const HIDDEN={dayMaster:'壬',zodiac:'猴',mbti:'ENTP',constellation:'天蝎座'
 const SECRET_TOKENS=[...Object.values(HIDDEN),'天蝎'];
 function setup(){
   const store=createFriendsStore(),service=createFriendsService(store,charts);
-  const base=(extra={})=>({credential:'丙:马:30',consent:true,crossBorderConsent:true,listed:true,nickname:'虚构测试',city:'北京',purposes:['friend'],bio:'虚构',dateActivities:['羽毛球'],
+  const base=(extra={})=>({credential:'丙:马:30',consent:true,crossBorderConsent:true,listed:true,nickname:'虚构测试',city:'北京',purposes:['buddy'],bio:'虚构',dateActivities:['羽毛球'],
     fields:{height:'170',weight:'60',school:'测试大学',occupation:'工程师'},hobbies:['阅读'],targetStems:['不限'],targetZodiacs:['不限'],
     visibility:{age:'public',height:'public',dayMaster:'public',zodiac:'public',constellation:'public',mbti:'public'},...extra});
   return {store,service,base};

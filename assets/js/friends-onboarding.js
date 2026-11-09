@@ -10,7 +10,7 @@
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const STEMS=[...'甲乙丙丁戊己庚辛壬癸'],ELEMENTS=[...'木火土金水'],TONES=['wood','fire','earth','metal','water'];
   const idx=stem=>Math.floor(STEMS.indexOf(stem)/2);
-  const PURPOSE_KEYS={'找搭子':'buddy','交朋友·闺蜜':'friend','享受恋爱':'dating','认真结婚':'serious'};
+  const PURPOSE_KEYS={'找搭子':'buddy','交朋友·闺蜜':'buddy','享受恋爱':'dating','认真结婚':'serious','享受甜甜的恋爱':'dating','认真考虑婚恋':'serious','已婚 · 只找搭子':'married_buddy'};
   const RELATION_TEXT={generates_me:'生你',i_generate:'你生',same:'同类',different:''};
   const CITIES=['北京','上海','广州','深圳','杭州','成都','南京','武汉','西安','苏州','重庆','天津','长沙','厦门','香港'];
   let lastView='',deckCity='',swiped=false,lastCards=[];

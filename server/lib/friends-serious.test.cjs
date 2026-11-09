@@ -80,14 +80,14 @@ test('media route enforces section scope: stranger / connected / public / anonym
 });
 
 test('page needs 享受恋爱 or 认真结婚; friends-only profiles get 404 and cannot upload',async t=>{
-  const f=setup(t);f.save('owner',{purposes:['friend']});f.save('viewer');
-  assert.throws(()=>f.media.addPhoto('owner',{data:b64(jpeg())}),/享受恋爱/);
-  assert.throws(()=>f.service.seriousSave('owner',{about:'x'}),/享受恋爱/);
+  const f=setup(t);f.save('owner',{purposes:['buddy']});f.save('viewer');
+  assert.throws(()=>f.media.addPhoto('owner',{data:b64(jpeg())}),/享受甜甜的恋爱/);
+  assert.throws(()=>f.service.seriousSave('owner',{about:'x'}),/享受甜甜的恋爱/);
   const req=await listen(t,f);assert.equal((await req('/serious/'+f.shareOf('owner'),'viewer')).status,404);
-  f.save('owner',{purposes:['friend','dating']});f.service.seriousSave('owner',{about:'认真了解'});
+  f.save('owner',{purposes:['buddy','dating']});f.service.seriousSave('owner',{about:'认真了解'});
   assert.equal((await req('/serious/'+f.shareOf('owner'),'viewer')).status,200);
   assert.equal(f.service.card(f.shareOf('owner'),'viewer').seriousPage,true,'card links to the page when it has visible content');
-  f.save('owner',{purposes:['friend']});
+  f.save('owner',{purposes:['buddy']});
   assert.equal(f.service.card(f.shareOf('owner'),'viewer').seriousPage,undefined,'no link once purposes no longer include dating/serious');
 });
 

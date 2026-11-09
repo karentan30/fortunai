@@ -5,7 +5,7 @@ const M=require('./friends-matching');
 const charts={verify:c=>{const [stem,zodiac,age]=String(c).split(':');return {age:Number(age||30),dayMaster:stem||'丙',zodiac:zodiac||'马'};}};
 function setup(options){
   const store=createFriendsStore(),service=createFriendsService(store,charts,options);
-  const base=(extra={})=>({credential:'丙:马:30',consent:true,crossBorderConsent:true,listed:true,nickname:'虚构测试',city:'北京',purposes:['friend'],bio:'虚构',
+  const base=(extra={})=>({credential:'丙:马:30',consent:true,crossBorderConsent:true,listed:true,nickname:'虚构测试',city:'北京',purposes:['buddy'],bio:'虚构',
     fields:{height:'170',weight:'60',school:'测试大学',occupation:'工程师',income:'',assets:''},
     dateActivities:['羽毛球'],hobbies:['阅读'],targetStems:['不限'],targetZodiacs:['不限'],visibility:{age:'public',height:'public',dayMaster:'public',zodiac:'public'},...extra,
     ...(extra.fields?{fields:{height:'170',weight:'60',school:'测试大学',occupation:'工程师',...extra.fields}}:{})});
@@ -42,10 +42,11 @@ test('purposes gate: platonic purposes bridge, romantic purposes do not; multi-s
   assert.deepEqual(new Set(ids(s.discover('a'))),new Set([friend.shareId,multi.shareId]));
   assert.deepEqual(ids(s.discover('d')),[]);
   assert.deepEqual(multi.purposes,['serious','buddy']);
-  assert.equal(multi.intent,'认真结婚');
-  for(const bad of [[],['x'],['buddy','friend','dating','serious','buddy']])assert.throws(()=>s.save('a',base({purposes:bad})));
+  assert.equal(multi.intent,'认真考虑婚恋');
+  assert.deepEqual(friend.purposes,['buddy'],'legacy friend key from old clients is stored as buddy');
+  for(const bad of [[],['x'],['married_buddy','dating']])assert.throws(()=>s.save('a',base({purposes:bad})));
   // Purpose expectation as 必须 narrows beyond the gate.
-  s.save('a',base({purposes:['buddy','friend'],expectations:{purpose:{level:'must',values:['buddy']}}}));
+  s.save('a',base({purposes:['buddy','friend'],expectations:{purpose:{level:'must',values:['serious']}}}));
   assert.deepEqual(ids(s.discover('a')),[multi.shareId]);
 });
 
@@ -122,23 +123,23 @@ test('legacy profiles (single intent, no purposes/expectations) keep working and
   // Store was not rewritten by reads.
   assert.equal(store.read().profiles.find(p=>p.userId==='old-friend').purposes,undefined);
   // Re-saving with only the legacy intent still works and records purposes.
-  const saved=s.save('old-friend',{...base(),intent:'找闺蜜',purposes:undefined});assert.deepEqual(saved.purposes,['friend']);assert.equal(saved.intent,'找闺蜜');
+  const saved=s.save('old-friend',{...base(),intent:'找闺蜜',purposes:undefined});assert.deepEqual(saved.purposes,['buddy']);assert.equal(saved.intent,'找闺蜜');
   // Re-saving without any purpose keeps the previous one.
-  const kept=s.save('old-friend',{...base(),purposes:undefined});assert.deepEqual(kept.purposes,['friend']);
+  const kept=s.save('old-friend',{...base(),purposes:undefined});assert.deepEqual(kept.purposes,['buddy']);
 });
 
 test('per-purpose ranking: 搭子 favours shared hobbies, 婚恋 favours 优先 hits and questionnaire alignment',()=>{
   let alignment={};
   const {service:s,base}=setup({alignmentScore:({candidateId})=>alignment[candidateId]??null});
-  const all=['buddy','friend','dating','serious'];
+  const all=['buddy','dating','serious'];
   const hobbies=s.save('hobbies',base({purposes:all,credential:'壬:鼠:30',hobbies:['羽毛球','徒步','摄影','阅读']}));
   const prefer=s.save('prefer',base({purposes:all,credential:'壬:鼠:30',fields:{height:'185'},hobbies:['新爱好']}));
   const viewer=purposes=>s.save('v',base({purposes,hobbies:['羽毛球','徒步','摄影','阅读'],expectations:{height:{level:'prefer',min:180}}}));
   viewer(['buddy']);assert.deepEqual(ids(s.discover('v')),[hobbies.shareId,prefer.shareId]);
-  for(const p of ['friend','dating','serious']){viewer([p]);assert.deepEqual(ids(s.discover('v')),[prefer.shareId,hobbies.shareId],p);}
+  for(const p of ['dating','serious']){viewer([p]);assert.deepEqual(ids(s.discover('v')),[prefer.shareId,hobbies.shareId],p);}
   viewer(['serious']);alignment={hobbies:1,prefer:0};
   assert.deepEqual(ids(s.discover('v')),[hobbies.shareId,prefer.shareId],'alignment hook affects 认真结婚');
-  viewer(['friend']);assert.deepEqual(ids(s.discover('v')),[prefer.shareId,hobbies.shareId],'alignment ignored for other purposes');
+  viewer(['dating']);assert.deepEqual(ids(s.discover('v')),[prefer.shareId,hobbies.shareId],'alignment ignored for other purposes');
   const out=s.discover('v');assert.ok(out.profiles.every(p=>p.score===undefined&&p.directions===undefined&&!('alignment' in p)));
   assert.notDeepEqual(M.WEIGHTS.buddy,M.WEIGHTS.serious);
 });
@@ -193,6 +194,6 @@ test('serious ranking uses the questionnaire alignment hook only with both opt-i
   const r=s.discover('a');
   assert.deepEqual(ids(r),[b.shareId,c.shareId],'aligned candidate ranks first');
   assert.deepEqual(before,[c.shareId,b.shareId],'tie order before opt-in (so the flip proves the hook)');
-  assert.equal(M.questionnaireAlignmentScore({state:store.read(),viewerId:'a',candidateId:'b',purpose:'friend'}),null,'serious purpose only');
+  assert.equal(M.questionnaireAlignmentScore({state:store.read(),viewerId:'a',candidateId:'b',purpose:'buddy'}),null,'serious purpose only');
   const text=JSON.stringify(r);for(const leak of ['alignment','signal','nokids','essential'])assert.ok(!text.includes(leak),'leaked '+leak);
 });

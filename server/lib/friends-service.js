@@ -17,6 +17,7 @@ const text=(v,n)=>typeof v==='string'?v.trim().slice(0,n):'';
 const missing=()=>{const e=Error('卡片不存在或已停止公开');e.status=404;throw e;};
 const denied=()=>{const e=Error('没有操作权限');e.status=403;throw e;};
 const conflict=m=>{const e=Error(m);e.status=409;throw e;};
+const ISOLATED='「婚后找搭子」和选了恋爱或婚恋的人不互相推荐，也不能申请认识';
 const {fullAttribution}=require('./friends-campus');
 const array=(v,valid,max=12)=>Array.isArray(v)?[...new Set(v.filter(x=>valid.includes(x)))].slice(0,max):[];
 const SP=require('./friends-serious'),SPT=require('./friends-serious-tags');
@@ -245,7 +246,7 @@ function createFriendsService(store,charts,options={}) {
         // Owner-only: the tags they could tick, from their own current answers. Never sent to anyone else.
         availableTags:SPT.availableTags(questionnaireOf(s,uid)).map(({key,dimensionId,dimension,label})=>({key,dimensionId,dimension,label})),
         planTags:[...SP.PLAN_TAGS],preview:seriousPayload(s,p,uid)};},
-    seriousSave(uid,body){return store.transaction(s=>{XB.ensure(s,uid);const p=mine(s,uid);if(!p)bad('请先保存交友卡');if(!SP.eligible(p))bad('认识目的选了「享受恋爱」或「认真结婚」，才能填写相亲资料');
+    seriousSave(uid,body){return store.transaction(s=>{XB.ensure(s,uid);const p=mine(s,uid);if(!p)bad('请先保存交友卡');if(!SP.eligible(p))bad('认识目的选了「享受甜甜的恋爱」或「认真考虑婚恋」，才能填写相亲资料');
       const list=SP.rows(s);let r=SP.rowOf(s,uid);const next=SP.normalizeSerious(body,r);
       // Only tags backed by the owner's own current answers can be ticked.
       const allowed=new Set(SPT.availableTags(questionnaireOf(s,uid)).map(t=>t.key));if(next.qtags.some(k=>!allowed.has(k)))bad('只能选择你自己问卷里的回答');
@@ -265,6 +266,7 @@ function createFriendsService(store,charts,options={}) {
     request(uid,shareId){return tx((s,queue)=>{
       const self=needMine(s,uid),target=s.profiles.find(p=>p.shareId===shareId);
       if(!active(s,target,uid))missing();if(target.userId===uid)bad('不能向自己申请');
+      if(M.purposesIsolated(M.purposesOf(self),M.purposesOf(target)))conflict(ISOLATED);
       const old=s.requests.find(r=>((r.from===uid&&r.to===target.userId)||(r.to===uid&&r.from===target.userId))&&['pending','accepted'].includes(r.status));
       if(old)conflict(old.status==='accepted'?'你们已经连接':'已有待处理申请');
       if(s.requests.some(r=>r.from===uid&&r.to===target.userId&&Date.now()-Date.parse(r.createdAt)<86400000))conflict('24小时内请勿重复申请');
@@ -289,7 +291,7 @@ function createFriendsService(store,charts,options={}) {
       if(r.status!=='pending')conflict('申请已经处理');
       if(action==='withdraw'&&r.from===uid)r.status='withdrawn';
       else if(['accept','decline'].includes(action)&&r.to===uid){
-        if(action==='accept'){needMine(s,r.from);needMine(s,r.to);}r.status=action==='accept'?'accepted':'declined';
+        if(action==='accept'){needMine(s,r.from);needMine(s,r.to);if(M.purposesIsolated(M.purposesOf(mine(s,r.from)),M.purposesOf(mine(s,r.to))))conflict(ISOLATED);}r.status=action==='accept'?'accepted':'declined';
       }else denied();
       metric(s,'request_'+r.status,mine(s,uid)?.acquisition);if(r.status==='accepted')for(const [a,b] of [[r.from,r.to],[r.to,r.from]])queue.push(['xs_mutual_accept',a,mine(s,a)?.acquisition||{},{pairWith:b}]);r.updatedAt=new Date().toISOString();return {id:r.id,status:r.status};
     });},

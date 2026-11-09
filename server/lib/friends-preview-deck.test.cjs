@@ -6,7 +6,7 @@ const {createFriendsStore}=require('./friends-store');
 const PUBLIC_ALL={dayMaster:'public',zodiac:'public',age:'public',mbti:'public',constellation:'public',occupation:'public',industry:'public',school:'public',income:'public',assets:'public',familyAssets:'public',house:'public',car:'public',hukou:'public',height:'public'};
 const SECRETS=['张秘密','北京大学','13800001111','wx_secret_id','我的自我介绍很长','A9.3','有房','有车','上海户籍','photo.jpg','voice.m4a','shareid_secret_0001','27岁','500万'];
 function person(i,over={}){
-  return {userId:'u'+i,shareId:'shareid_secret_000'+i,nickname:'张秘密',city:'北京',purposes:['friend'],listed:true,
+  return {userId:'u'+i,shareId:'shareid_secret_000'+i,nickname:'张秘密',city:'北京',purposes:['buddy'],listed:true,
     chart:{dayMaster:'丙',zodiac:'马',age:27,ageAsOf:'2026-11-06',birthday:'1999-01-01'},
     fields:{age:'27',school:'北京大学',occupation:'AI算法工程师',industry:'互联网',income:'500万',assets:'A9.3',house:'有房',car:'有车',hukou:'上海户籍',height:'175'},
     visibility:{...PUBLIC_ALL},dateActivities:['羽毛球'],hobbies:['羽毛球','徒步','我家楼下的私人球馆','游泳'],mbti:'INTJ',constellation:'白羊座',

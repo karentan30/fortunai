@@ -26,7 +26,7 @@ const ASSET_FIELDS=['house','car','hukou'];
 const MAX_PHOTOS=6,MAX_PHOTO_BYTES=5*1024*1024,MAX_PHOTO_EDGE=1600;
 const MAX_VOICE_BYTES=200*1024,MAX_VOICE_MS=6000;
 const fail=(status,message)=>{const e=Error(message);e.status=status;throw e;};
-const eligible=p=>Array.isArray(p?.purposes)&&p.purposes.some(k=>k==='dating'||k==='serious');
+const eligible=p=>Array.isArray(p?.purposes)&&require('./friends-matching').purposesOf(p).some(k=>k==='dating'||k==='serious'); // purposesOf: a verified-married profile is never eligible
 const clean=(v,n)=>typeof v==='string'?v.replace(/\r\n?/g,'\n').replace(/[\u0000-\u0008\u000b-\u001f\u007f]/g,'').trim().slice(0,n):'';
 
 function rows(s){if(s.seriousPages===undefined)s.seriousPages=[];if(!Array.isArray(s.seriousPages))throw Error('相亲资料存储格式异常');return s.seriousPages;}
@@ -216,7 +216,7 @@ function createSeriousMediaService({store,dir,key,clock=()=>Date.now(),repoRoot=
   function read(id){const b=fs.readFileSync(fileOf(id));if(b[0]!==1||b.length<29)throw Error('文件格式无效');const d=crypto.createDecipheriv('aes-256-gcm',secret,b.subarray(1,13));d.setAAD(aad(id));d.setAuthTag(b.subarray(13,29));return Buffer.concat([d.update(b.subarray(29)),d.final()]);}
   const unlink=ids=>{for(const id of ids){try{fs.rmSync(fileOf(id),{force:true});}catch(_){}}};
   const now=()=>new Date(clock()).toISOString();
-  const needEligible=(s,uid)=>{const p=(s.profiles||[]).find(x=>x.userId===uid);if(!p)fail(400,'请先保存交友卡');if(!eligible(p))fail(400,'认识目的选了「享受恋爱」或「认真结婚」，才能填写相亲资料');return p;};
+  const needEligible=(s,uid)=>{const p=(s.profiles||[]).find(x=>x.userId===uid);if(!p)fail(400,'请先保存交友卡');if(!eligible(p))fail(400,'认识目的选了「享受甜甜的恋爱」或「认真考虑婚恋」，才能填写相亲资料');return p;};
   const own=(s,uid)=>{let r=rowOf(s,uid);if(!r){r=blankRow(uid);rows(s).push(r);}return r;};
   const view=r=>({photos:(r?.photos||[]).map(x=>({id:x.id,w:x.w,h:x.h})),voice:r?.voice?{id:r.voice.id,durationMs:r.voice.durationMs}:null});
   // Write the encrypted file first, then commit the reference; on any failure the new file is removed.

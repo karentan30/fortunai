@@ -29,13 +29,15 @@
   const verifiedMark=(p,key)=>p?.verified?.[key]===true?'<span class="verified-mark">已核验</span>':'';
   const shownValue=(key,v)=>WEALTH_TIERS[key]?wealthText(key,v):v;
   function wealthSelect(key,value){const s=String(value??''),legacy=s&&!WEALTH_TIERS[key].some(([label])=>label===s)&&s===String(state.profile?.fields?.[key]??'');return `<select id="field_${key}" name="field_${key}"><option value="">暂不填写</option>${legacy?`<option value="${esc(s)}" selected>${esc(s)}（原填写）</option>`:''}${WEALTH_TIERS[key].map(([label,slang])=>`<option value="${label}" ${s===label?'selected':''}>${slang?slang+' · ':''}${label}</option>`).join('')}</select>`;}
-  const purposeOptions=[['buddy','找搭子'],['friend','交朋友·闺蜜'],['dating','享受恋爱'],['serious','认真结婚']];
-  const legacyPurpose={'找搭子':'buddy','交朋友':'friend','找闺蜜':'friend','Dating':'dating','认真恋爱':'serious','认真结婚':'serious','交朋友·闺蜜':'friend','约会':'dating','认真结婚':'serious','认真婚恋':'serious','享受恋爱':'dating'};
-  const purposesOf=p=>Array.isArray(p?.purposes)&&p.purposes.length?p.purposes:(legacyPurpose[p?.intent]?[legacyPurpose[p.intent]]:['friend']);
-  const purposeText=p=>purposesOf(p).map(k=>(purposeOptions.find(o=>o[0]===k)||[k,k])[1]).join('、');
+  // Four 认识目的 (2026-11-10), in this order. The old 交朋友·闺蜜 (friend) is merged into 找搭子. 婚后找搭子 cannot be combined with 恋爱/婚恋.
+  const purposeOptions=[['buddy','找搭子','一起运动、吃饭、看展，不谈恋爱'],['dating','享受甜甜的恋爱','先谈着，开心最重要'],['serious','认真考虑婚恋','奔着结婚去，想先聊清楚三观'],['married_buddy','婚后找搭子','已婚，只找一起玩的搭子']];
+  const purposeCardLabels={buddy:'找搭子',dating:'享受甜甜的恋爱',serious:'认真考虑婚恋',married_buddy:'已婚 · 只找搭子'};
+  const legacyPurpose={'friend':'buddy','找搭子':'buddy','交朋友':'buddy','找闺蜜':'buddy','交朋友·闺蜜':'buddy','Dating':'dating','约会':'dating','享受恋爱':'dating','享受甜甜的恋爱':'dating','认真恋爱':'serious','认真结婚':'serious','认真婚恋':'serious','认真考虑婚恋':'serious','婚后找搭子':'married_buddy','已婚 · 只找搭子':'married_buddy'};
+  const purposesOf=p=>{const raw=Array.isArray(p?.purposes)&&p.purposes.length?p.purposes:(legacyPurpose[p?.intent]?[legacyPurpose[p.intent]]:['buddy']);return [...new Set(raw.map(k=>purposeCardLabels[k]?k:legacyPurpose[k]||k))];};
+  const purposeText=p=>purposesOf(p).map(k=>purposeCardLabels[k]||k).join('、');
   const levelOptions=[['any','不介意'],['prefer','优先'],['must','必须满足']];
   const expectationLabels={age:'年龄',height:'身高 / cm',education:'最低学历',school:'学校',occupation:'职业',city:'城市',purpose:'认识目的',income:'年收入至少',assets:'个人净资产至少',familyAssets:'家庭资产至少',house:'本人房产',car:'车辆',hukou:'户籍',dayMaster:'日主方向',zodiac:'生肖方向',constellation:'星座方向',mbti:'MBTI方向'};
-  function labeledOptions(name,pairs,selected=[]){return pairs.map(([value,label])=>`<label class="chip-option"><input type="checkbox" name="${name}" value="${esc(value)}" ${selected.includes(value)?'checked':''}><span>${esc(label)}</span></label>`).join('');}
+  function labeledOptions(name,pairs,selected=[]){return pairs.map(([value,label,desc])=>`<label class="chip-option"><input type="checkbox" name="${name}" value="${esc(value)}" ${selected.includes(value)?'checked':''}><span>${esc(label)}${desc?`<small class="chip-desc">${esc(desc)}</small>`:''}</span></label>`).join('');}
   function levelSelect(key,ex={}){const level=ex[key]?.level||(['dayMaster','zodiac','constellation','mbti'].includes(key)?'prefer':'any');return `<select name="exp_level_${key}" class="scope" aria-label="${esc(expectationLabels[key])}的要求程度">${levelOptions.map(([v,l])=>`<option value="${v}" ${level===v?'selected':''}>${l}</option>`).join('')}</select>`;}
   function expectationsSection(p){
     const ex=p.expectations||{},vals=k=>esc((ex[k]?.values||[]).join('，')),num=(k,b)=>ex[k]?.[b]??'';
@@ -48,7 +50,7 @@
     return `<div class="expectations" id="my-expectations"><p class="fine-print">「必须」双方互相核对，不满足就不推荐；「优先」只影响排序。收入资产房车户籍的条件，需下方同意用于私密筛选才生效。</p><div class="form-grid">`+
       row('age',range('age',18,99))+row('height',range('height',100,250))+row('education',`<select name="exp_min_education" aria-label="最低学历"><option value="">不限</option>${extraOptions.education.map(o=>`<option ${ex.education?.min===o?'selected':''}>${o}</option>`).join('')}</select>`)+
       row('school',text('school','用逗号分隔，如 北京大学'))+row('occupation',text('occupation','用逗号分隔，如 工程师、医生'))+row('city',text('city','用逗号分隔，如 北京'))+
-      `<div class="field full-width"><span class="field-label">${esc(expectationLabels.purpose)}</span><div class="field-row"><div class="chip-options">${labeledOptions('exp_values_purpose',purposeOptions,ex.purpose?.values||[])}</div>${levelSelect('purpose',ex)}</div><small>认识目的不相容的人本来就不会互相推荐；这里可以进一步收窄。</small></div>`+
+      `<div class="field full-width"><span class="field-label">${esc(expectationLabels.purpose)}</span><div class="field-row"><div class="chip-options">${labeledOptions('exp_values_purpose',purposeOptions.map(o=>o.slice(0,2)),ex.purpose?.values||[])}</div>${levelSelect('purpose',ex)}</div><small>认识目的不相容的人本来就不会互相推荐；这里可以进一步收窄。</small></div>`+
       row('income',minOnly('income'),sensitiveNote)+row('assets',minOnly('assets'),sensitiveNote)+row('familyAssets',minOnly('familyAssets'),sensitiveNote)+row('house',pick('house',['有房']),sensitiveNote)+row('car',pick('car',['有车']),sensitiveNote)+row('hukou',text('hukou','如 北京'),sensitiveNote)+
       ['dayMaster','zodiac','constellation','mbti'].map(k=>row(k,'<span class="fine-print">在上方选择方向</span>')).join('')+
       `</div></div>`;
@@ -279,8 +281,8 @@
   }
   function bindProfileEditor(){
     const form=$('#profile-form'),wealth=$('#pe-wealth');profileProgress(form);form.addEventListener('input',()=>profileProgress(form));form.addEventListener('change',()=>profileProgress(form));
-    form.addEventListener('change',e=>{const t=e.target;if(t.matches('.pe-scope select'))t.parentElement.dataset.v=t.value;if(t.name==='purposes'&&t.checked&&(t.value==='dating'||t.value==='serious')&&wealth)wealth.open=true;});
-    $('#pe-serious-row')?.addEventListener('click',()=>{const ed=$('#serious-editor'),row=$('#pe-serious-row'),msg=$('#pe-serious-msg'),saved=state.profile,ok=saved&&purposesOf(saved).some(k=>k==='dating'||k==='serious');if(msg)msg.hidden=true;if(!ok){if(msg){msg.innerHTML=`<span>${saved?'先选好并保存「享受恋爱」或「认真结婚」，就能开相亲页。':'先保存交友卡，并在认识目的里选好「享受恋爱」或「认真结婚」，就能开相亲页。'}</span><button type="button" class="secondary pe-goto-purpose" data-goto-purpose>去选认识目的</button>`;msg.hidden=false;}row.setAttribute('aria-expanded','false');ed?.classList.remove('pe-open');return;}if(!ed){toast(state.user?'正在加载，稍后再点一次。':'先保存交友卡，再填写相亲资料。');return;}const open=!ed.classList.contains('pe-open');ed.classList.toggle('pe-open',open);row.setAttribute('aria-expanded',String(open));if(open)ed.scrollIntoView({behavior:'smooth',block:'start'});});
+    form.addEventListener('change',e=>{const t=e.target;if(t.matches('.pe-scope select'))t.parentElement.dataset.v=t.value;if(t.name==='purposes'&&t.checked&&(t.value==='dating'||t.value==='serious')&&wealth)wealth.open=true;if(t.name==='purposes'&&t.checked){const off=t.value==='married_buddy'?['buddy','dating','serious']:['married_buddy'];form.querySelectorAll('input[name=purposes]').forEach(x=>{if(off.includes(x.value))x.checked=false;});}});
+    $('#pe-serious-row')?.addEventListener('click',()=>{const ed=$('#serious-editor'),row=$('#pe-serious-row'),msg=$('#pe-serious-msg'),saved=state.profile,ok=saved&&purposesOf(saved).some(k=>k==='dating'||k==='serious');if(msg)msg.hidden=true;if(!ok){if(msg){msg.innerHTML=`<span>${saved?'先选好并保存「享受甜甜的恋爱」或「认真考虑婚恋」，就能开相亲页。':'先保存交友卡，并在认识目的里选好「享受甜甜的恋爱」或「认真考虑婚恋」，就能开相亲页。'}</span><button type="button" class="secondary pe-goto-purpose" data-goto-purpose>去选认识目的</button>`;msg.hidden=false;}row.setAttribute('aria-expanded','false');ed?.classList.remove('pe-open');return;}if(!ed){toast(state.user?'正在加载，稍后再点一次。':'先保存交友卡，再填写相亲资料。');return;}const open=!ed.classList.contains('pe-open');ed.classList.toggle('pe-open',open);row.setAttribute('aria-expanded',String(open));if(open)ed.scrollIntoView({behavior:'smooth',block:'start'});});
   }
   function showProfile(){
 
@@ -420,7 +422,7 @@
       (p.bio?`<p class="ps-bio">${esc(p.bio)}</p>`:'')+
       (facts.length?`<dl class="ps-row ps-facts">${facts.map(k=>`<div><dt>${label(k)}</dt><dd>${esc(fieldValue(k,f[k]))}${verifiedMark(p,k)}</dd></div>`).join('')}</dl>`:'')+
       (money.length?`<div class="ps-row ps-money">${money.map(moneyCell).join('')}</div>`:'')+
-      (own&&moneyHidden?'<p class="fine-print">收入、资产、房车户籍只在「认真结婚」目的下展示。</p>':'')+
+      (own&&moneyHidden?'<p class="fine-print">收入、资产、房车户籍只在「认真考虑婚恋」目的下展示。</p>':'')+
       (hobbies.length?`<div class="ps-together"><span class="ps-label">想一起</span><ul>${hobbies.map(h=>`<li>${hobbyIcon(h)}${esc(h)}</li>`).join('')}</ul></div>`:'')+
       (!own&&why.length?`<p class="ps2-why" aria-label="为什么推荐你们"><span>推荐理由</span>${why.map(esc).join(' · ')}</p>`:'')+'</article>';
   }
@@ -512,7 +514,7 @@
   const POSTER_BRAND='相生',POSTER_BRAND_LINE='相遇有迹';
   const POSTER_ELEMENTS={甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'};
   function posterTone(stem){return {木:'#2f6e55',火:'#ad3f2c',土:'#8a5f17',金:'#56606b',水:'#1d3550'}[POSTER_ELEMENTS[stem]]||'#1d3a2a';}
-  function posterPurposes(p){const names={buddy:'找搭子',friend:'交朋友',dating:'享受恋爱',serious:'认真结婚'},list=Array.isArray(p?.purposes)&&p.purposes.length?p.purposes:[];const labels=list.map(k=>names[k]||String(k)).slice(0,2);return {label:labels.length?labels.join(' · '):String(p?.intent||''),serious:list.includes('serious')||/认真/.test(String(p?.intent||''))};}
+  function posterPurposes(p){const names=purposeCardLabels,list=Array.isArray(p?.purposes)&&p.purposes.length?purposesOf(p):[];const labels=list.map(k=>names[k]||String(k)).slice(0,2);return {label:labels.length?labels.join(' · '):String(p?.intent||''),serious:list.includes('serious')||/认真/.test(String(p?.intent||''))};}
   // Plain public text. Wealth tiers read as "range · code" (e.g. "1亿以上 · A9") using the same WEALTH_TIERS labels as the form.
   function posterFieldText(value,key){let s=value&&typeof value==='object'?[value.label||value.range||value.text,value.code].filter(Boolean).join(' · '):String(value??'').replace(/\s*[/／]\s*年\s*$/,'').trim();
     const legacy=/^(A\d)\s*·\s*(.+)$/.exec(s);if(legacy)s=legacy[2]+' · '+legacy[1];const tier=WEALTH_TIERS[key]?.find(([label])=>label===s);return tier?.[1]?s+' · '+tier[1]:s;}
