@@ -120,7 +120,7 @@ ${TEXTS.map(([k,l,h])=>`<div class="se-block">${edHead(l,k)}<textarea name="${k}
 <div class="se-block">${edHead('接下来的打算','plans','每组最多选一个。')}<div class="chip-options">${own.planTags.map(t=>`<label class="chip-option"><input type="checkbox" name="plan" value="${esc(t)}"${pg.plans.includes(t)?' checked':''}><span>${esc(t)}</span></label>`).join('')}</div></div>
 <div class="se-block">${edHead('我们在这些事上的想法','qtags','从你自己的婚恋问卷回答里挑几条，默认一条都不展示。只显示你勾的这几个词，不显示分数和匹配度。')}
 ${own.availableTags.length?[...groups].map(([d,list])=>`<div class="se-qrow"><h4>${esc(d)}</h4><div class="chip-options">${list.map(t=>`<label class="chip-option"><input type="checkbox" name="qtag" value="${esc(t.key)}"${picked.has(t.key)?' checked':''}><span>${esc(t.label)}</span></label>`).join('')}</div></div>`).join(''):'<p class="notice">填完婚恋问卷后，这里会出现可以挑选的词。<a href="/pages/friends-questions.html">去填问卷</a></p>'}</div>
-<div class="se-block se-row">${edHead('核验情况','verify','已核验的项目点亮，只有会员能看到每一项；其他人只看到一行「核验状态·会员可见」。')}</div>
+<div class="se-block se-row">${edHead('核验情况','verify','已核验的项目亮蓝标，登录用户都看得到。')}</div>
 <p class="error" role="alert" id="se-error"></p>
 <div class="se-actions"><button type="submit" class="primary">保存相亲资料</button><a class="secondary" href="#serious/${esc(sid)}">预览我的相亲页</a></div>
 </form>`;

@@ -81,9 +81,9 @@ test('婚况: only admin reads the upload; mark lights only after approval with 
   assert.deepEqual(f.onDisk(),[]);assert.deepEqual(f.store.read().verificationRequests.find(x=>x.userId==='u1').files,[]);
   assert.equal(strip().verified,true);assert.equal(strip().result,'未婚(无登记记录)');
   assert.equal(f.v.status('u1').fields.marital.result,'未婚(无登记记录)');
-  // Non-members only see the one line; the result never leaks to them.
+  // 蓝标所有登录用户可见（2026-11-10）。
   f.service.save('plain',f.data());const plain=f.service.seriousPage(sid,'plain');
-  assert.deepEqual(plain.sections.verify,{membersOnly:true});assert.ok(!JSON.stringify(plain).includes('未婚'));
+  assert.ok(Array.isArray(plain.sections.verify.items));
   // Editing the profile keeps the 婚况 result (no profile field backs it).
   f.service.save('u1',f.data({nickname:'改名'}));assert.equal(strip().result,'未婚(无登记记录)');
 });

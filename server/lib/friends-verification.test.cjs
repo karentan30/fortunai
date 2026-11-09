@@ -117,13 +117,13 @@ test('verified marks survive unrelated saves, drop when the value changes, and c
   f.service.save('a',f.data({fields:{...f.data().fields,income:'50–100万'}}));assert.equal(f.service.me('a').verified.income,undefined,'changed value loses the mark');
 });
 
-test('API: non-member gets no verified data anywhere; member and owner do',async t=>{
+test('API: 蓝标 logged-in viewers (member or not) and owner see it; anonymous share link does not',async t=>{
   const f=setup(t);const a=f.service.save('a',f.data());f.service.save('viewer',f.data({nickname:'看的人'}));
   f.v.upload('a',{field:'income',name:'p.png',data:b64(PNG)});f.v.submit('a',{field:'income'});f.v.decide(f.v.pending()[0].id,{decision:'approve'});
   const base=await listen(t,app(f));
   const get=async(p,u)=>{const r=await fetch(base+p,{headers:H(u)});return {status:r.status,text:await r.text()};};
   for(const p of ['/card/'+a.shareId,'/discover']){
-    const r=await get(p,'viewer');assert.equal(r.status,200);assert.equal(/verified|已核验/.test(r.text),false,'non-member leak on '+p+': '+r.text.slice(0,200));
+    const r=await get(p,'viewer');assert.equal(r.status,200);assert.match(r.text,/"verified":\{"income":true\}/,'non-member sees 蓝标 on '+p);
   }
   const anon=await get('/card/'+a.shareId);assert.equal(/verified/.test(anon.text),false,'anonymous share link leaks nothing');
   f.makeMember('viewer');

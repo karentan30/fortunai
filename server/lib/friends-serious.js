@@ -74,11 +74,11 @@ function buildSeriousPage({row,profile,self,allows,fieldVisible,member,ownerReco
     const mine=self?new Set():new Set(T.pickedTags(viewerRecord,viewerRow?.qtags).map(t=>t.key));
     if(tags.length)sections.qtags=tags.map(t=>({dimensionId:t.dimensionId,dimension:t.dimension,label:t.label,...(mine.has(t.key)?{same:true}:{})}));
   }
-  // 是否已核验: owner and members only (existing rule). Everyone else gets one line, no per-item data at all.
-  if(can('verify'))sections.verify=self||member?{items:VERIFY_STRIP.map(([key,label,field])=>{
+  // 是否已核验: 蓝标所有人可见（2026-11-10 Karen）；仍按各字段可见范围。
+  if(can('verify'))sections.verify={items:VERIFY_STRIP.map(([key,label,field])=>{
     // 婚况 has no profile field of its own: it follows this section's scope. Result text only when admin-approved.
     const on=!!field&&profile.verified?.[field]===true&&(field==='marital'||fieldVisible(field));
-    return {key,label,verified:on,...(field==='marital'?{hint:MARITAL_HINT,...(on&&MARITAL_RESULTS[profile.verifiedDetail?.marital]?{result:MARITAL_RESULTS[profile.verifiedDetail.marital]}:{})}:{})};})}:{membersOnly:true};
+    return {key,label,verified:on,...(field==='marital'?{hint:MARITAL_HINT,...(on&&MARITAL_RESULTS[profile.verifiedDetail?.marital]?{result:MARITAL_RESULTS[profile.verifiedDetail.marital]}:{})}:{})};})};
   const assets=ASSET_FIELDS.filter(k=>fieldVisible(k)&&profile.fields?.[k]&&profile.fields[k]!=='暂不提供').map(k=>[k,profile.fields[k]]);
   if(assets.length)sections.assets=Object.fromEntries(assets);
   const out={sections};

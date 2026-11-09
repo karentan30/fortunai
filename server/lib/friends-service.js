@@ -84,13 +84,13 @@ function createFriendsService(store,charts,options={}) {
     const fields=Object.fromEntries(FIELDS.filter(visible).map(k=>[k,p.fields[k]]));
     const chart=Object.fromEntries(['dayMaster','zodiac'].filter(visible).map(k=>[k,p.chart[k]]));
     return {id:p.shareId,shareId:p.shareId,nickname:p.nickname,city:p.city,intent:p.intent||M.PURPOSE_LABELS[purposes[0]],purposes,purposeLabels:purposes.map(k=>M.PURPOSE_LABELS[k]),fields,chart,
-      // 已核验 marks: only the owner and members receive this key at all. Non-members get no verified data in JSON.
+      // 已核验 蓝标：所有人可见（2026-11-10），只含该看者能看到的字段。
       ...verifiedFor(s,p,viewer,self,visible),
       ...(visible('age')?{ageAsOf:p.chart.ageAsOf}:{}),...(visible('constellation')&&p.constellation?{constellation:p.constellation}:{}),...(visible('mbti')&&p.mbti?{mbti:p.mbti}:{}),...(self?{recommendations:profileRecommendations(p),targetConstellations:p.targetConstellations||[],targetMbtis:p.targetMbtis||[],expectations:structuredClone(p.expectations||{}),matchingConsent:{...(p.matchingConsent||{})}}: {}),...((self||connected)&&p.availability?{availability:structuredClone(p.availability)}:{}),hobbies:p.hobbies,...(p.dateActivities?.length?{dateActivities:p.dateActivities}:{}),targetStems:p.targetStems,targetZodiacs:p.targetZodiacs,bio:p.bio||'',connected};
   }
   // Only fields an admin approved (friends-verification.decide) and the viewer can see. Never derived from user input.
   function verifiedFor(s,p,viewer,self,visible){
-    if(!self&&!isMember(s,viewer,clock()))return {};
+    if(!self&&!viewer)return {}; // 未登录的分享链接不带核验数据
     return {verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true&&visible(k)).map(k=>[k,true]))};
   }
   const profileRecommendations=p=>{const culture=recommend(p.chart),types=typeSuggestions({...p,constellation:p.constellation||p.chart?.constellation||''});return {...culture,constellations:types.constellations,mbtis:types.mbtis,constellationGroups:types.constellationGroups,mbtiGroups:types.mbtiGroups,basis:{...culture.basis,...types.basis}};};

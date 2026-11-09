@@ -178,7 +178,7 @@ test('认证条: per-item status only for members; others get one line; house/ca
   f.store.transaction(s=>{const p=s.profiles.find(x=>x.userId==='owner');p.verified={education:true,occupation:true};});
   f.service.seriousSave('owner',{about:'hi'});
   let page=f.service.seriousPage(f.shareOf('owner'),'viewer');
-  assert.deepEqual(page.sections.verify,{membersOnly:true});assert.ok(!JSON.stringify(page).includes('"verified"'));
+  assert.ok(Array.isArray(page.sections.verify.items),'蓝标所有登录用户可见');
   assert.deepEqual(page.sections.assets,{house:'有房'},'car private, hukou connected-only');
   f.makeMember('viewer');page=f.service.seriousPage(f.shareOf('owner'),'viewer');
   assert.deepEqual(page.sections.verify.items.filter(x=>x.verified).map(x=>x.label),['学历','工作']);

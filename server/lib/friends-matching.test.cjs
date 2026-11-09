@@ -168,9 +168,9 @@ test('income/assets are range tiers: lower-bound hard filter, A-slang label, no 
   s.save('a7',base({fields:{familyAssets:'500–1000万'},matchingConsent:{familyAssets:true}}));
   s.save('noconsent',base({fields:{familyAssets:'1亿以上'}}));
   assert.deepEqual(ids(s.discover('a')),[rich.shareId]);
-  // Client cannot set verified; a non-member viewer gets no verified key at all.
+  // Client cannot set verified: input verified is ignored, so the card carries no marks.
   const pub=s.save('pub',base({fields:{assets:'1亿以上'},visibility:{age:'public',height:'public',dayMaster:'public',zodiac:'public',assets:'public'},verified:{assets:true}}));
-  const card=s.card(pub.shareId,'a');assert.equal(card.fields.assets,'1亿以上');assert.equal('verified' in card,false);
+  const card=s.card(pub.shareId,'a');assert.equal(card.fields.assets,'1亿以上');assert.deepEqual(card.verified||{},{});
   assert.equal(s.me('pub').verified.assets,undefined);
   // Legacy free-text value saved earlier is kept as-is on re-save.
   s.save('legacy',base({fields:{familyAssets:'A9.3'}}));s.save('legacy',base({fields:{familyAssets:'A9.3'},bio:'改简介'}));
