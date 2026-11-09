@@ -115,6 +115,7 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   // 见面四步 + 约时间 (pair-only; see friends-meet-steps.js).
   router.get('/meet/:shareId',run(req=>service.meet(req.user.id,req.params.shareId)));
   router.post('/meet/:shareId',createRateLimit({limit:60}),run(req=>service.meetStep(req.user.id,req.params.shareId,req.body)));
+  router.post('/meet/:shareId/decision',createRateLimit({limit:60}),run(req=>service.meetDecide(req.user.id,req.params.shareId,req.body)));
   router.post('/meet/:shareId/appointment',createRateLimit({limit:60}),run(req=>service.meetAppointment(req.user.id,req.params.shareId,req.body)));
   router.post('/block',run(req=>service.block(req.user.id,req.body.shareId)));
   router.post('/report',run(req=>service.report(req.user.id,req.body.shareId,req.body.reason)));

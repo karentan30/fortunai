@@ -6,7 +6,7 @@
 //   qAgree / qDiffer —— 婚恋问卷里想法接近 / 不同或标了底线的方向，填 {q}；拿不到数据时用 fallback（见 friends-meet-steps.js 的 HOOK）。
 (function(root){
   const TOPICS={
-    2:{hint:'20 分钟，轻松一点，看看聊不聊得来',topics:[
+    2:{hint:'15 分钟，轻松一点，看看聊不聊得来',topics:[
       {topic:'工作忙不忙、周末怎么过',opener:'最近工作忙吗？周末一般怎么安排？'},
       {slot:'activity',topic:'你们都想一起做的「{a}」',opener:'看到你也选了{a}，你接触多久了？平时常去哪儿？',fallback:{topic:'平时喜欢做点什么',opener:'不上班的时候，你最喜欢做点什么？'}},
       {topic:'最近去过、想去的地方',opener:'最近有没有去哪儿玩？有没有一直想去的地方？'}

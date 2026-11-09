@@ -4,9 +4,11 @@
 // connection starts fresh. Confirmations are mutual self-report, never platform verification.
 const {findCommonSlots}=require('./friends-preferences');
 const {findForbidden}=require('./friends-copy-guard');
-const {STEPS,COPY,KINDS}=require('../../assets/js/friends-meet-steps');
+const {STEPS,COPY,KINDS,CHOICES,MEALS,MEET_LENGTHS,meetMinutes,activityOptions}=require('../../assets/js/friends-meet-steps');
+const {DATE_ACTIVITIES}=require('../../assets/js/friends-date-activities');
 const KEYS=STEPS.map(s=>s.key);
-const MAX_DAYS=14,MAX_SLOTS=3,BJ=8*3600000,GRID=30*60000,PLACE_MAX=40;
+const MAX_DAYS=14,MAX_SLOTS=3,BJ=8*3600000,GRID=30*60000,PLACE_MAX=40,QUIET_DAYS=7;
+const ACTIVITY_OK=new Set([...MEALS,...DATE_ACTIVITIES]);
 const fail=(m,status=400)=>{const e=Error(m);e.status=status;throw e;};
 const id=v=>String(v);
 const list=s=>{if(!Array.isArray(s.meetSteps))s.meetSteps=[];return s.meetSteps;};
@@ -26,16 +28,32 @@ function suggest(a,b,now,minutes){
   }
   return out.map(start=>({start,label:label(start)}));
 }
+const lenOf=(a,k)=>Number.isInteger(a?.minutes)?a.minutes:k.minutes;
 function apptView(a,kind,me,now){
   const k=KINDS[kind];if(!a)return null;
   if(a.status==='booked'){
-    if(Date.parse(a.start)+k.minutes*60000<=now)return null; // past bookings drop off
-    return {status:'booked',start:a.start,end:new Date(Date.parse(a.start)+k.minutes*60000).toISOString(),label:label(a.start),...(a.place?{place:a.place}:{}),text:'已约好：'+label(a.start)+' '+k.word+(a.place?' · '+a.place:'')};
+    const len=lenOf(a,k);if(Date.parse(a.start)+len*60000<=now)return null; // past bookings drop off
+    return {status:'booked',start:a.start,end:new Date(Date.parse(a.start)+len*60000).toISOString(),minutes:len,label:label(a.start),...(a.place?{place:a.place}:{}),...(a.activity?{activity:a.activity}:{}),text:'已约好：'+label(a.start)+(a.activity?' · '+a.activity:' '+k.word)+(a.place?' · '+a.place:'')};
   }
   const proposals=a.proposals.filter(t=>Date.parse(t)>now).map(start=>({start,label:label(start)}));
-  return proposals.length?{status:'proposed',byMe:a.by===me,proposals,...(a.place?{place:a.place}:{})}:null;
+  return proposals.length?{status:'proposed',byMe:a.by===me,proposals,minutes:lenOf(a,k),...(a.activity?{activity:a.activity}:{}),...(a.place?{place:a.place}:{})}:null;
 }
-function view(s,r,uid,{now,mineAvail,theirAvail}={}){
+// 想不想见面：each side picks privately. The other side's own choice is NEVER put in a view; only two pair-level outcomes are:
+//   mutual —— both picked 想见面; closed —— someone picked 到这里就好 and (both have answered, or that pick is 7+ days old).
+// Neither outcome says who picked what. Available once step 2 or step 3 is done by both.
+const canDecide=rec=>done(rec,'voice')||done(rec,'video');
+function outcome(rec,now){
+  const d=rec?.decisions||{},all=rec?rec.pair.map(u=>d[u]).filter(Boolean):[];
+  if(all.length===2&&all.every(x=>x.choice==='meet'))return 'mutual';
+  const ends=all.filter(x=>x.choice==='end');
+  if(ends.length&&(all.length===2||ends.some(x=>now-Date.parse(x.at)>=QUIET_DAYS*86400000)))return 'closed';
+  return null;
+}
+function decisionView(rec,me,now){
+  const out=outcome(rec,now);
+  return {available:!!rec&&canDecide(rec),mine:rec?.decisions?.[me]?.choice||null,outcome:out,message:out==='mutual'?COPY.mutual:out==='closed'?COPY.closed:null};
+}
+function view(s,r,uid,{now,mineAvail,theirAvail,shared=[]}={}){
   const rec=find(s,r),me=id(uid);
   const steps=KEYS.map((k,i)=>{const c=rec?.confirms[k]||[];return {step:i+1,key:k,mine:c.includes(me),theirs:c.some(u=>u!==me),done:done(rec,k)};});
   const videoMet=steps[2].done,appointments={};
@@ -43,16 +61,22 @@ function view(s,r,uid,{now,mineAvail,theirAvail}={}){
   // Don't suggest a time that overlaps something this pair already booked.
   const busy=Object.values(appointments).map(x=>x.schedule).filter(x=>x?.status==='booked').map(x=>[Date.parse(x.start),Date.parse(x.end)]);
   for(const x of Object.values(appointments))x.suggested=x.suggested.filter(g=>{const t=Date.parse(g.start),e=t+x.minutes*60000;return !busy.some(([b0,b1])=>t<b1&&e>b0);});
-  const offlineTouched=steps[3].mine||steps[3].theirs||!!appointments.meet.schedule;
-  return {steps,videoMet,skipReminder:!videoMet&&offlineTouched?COPY.skipReminder:null,appointments,timeZone:'北京时间',note:COPY.badgeNote};
+  const decision=decisionView(rec,me,now);
+  return {steps,videoMet,decision,skipReminder:decision.outcome==='mutual'?null:COPY.skipReminder,appointments,activities:{shared:activityOptions(shared).filter(x=>shared.includes(x)),options:activityOptions(shared)},timeZone:'北京时间',note:COPY.badgeNote};
 }
-function step(s,r,uid,body){
+function step(s,r,uid,body,now=Date.now()){
   const n=Number(body?.step),k=KEYS[n-1];if(!Number.isInteger(n)||!k)fail('步骤无效');
   if(!['confirm','undo'].includes(body?.action))fail('操作无效');
   const rec=ensure(s,r),me=id(uid),c=rec.confirms[k];
   if(body.action==='confirm'){if(!c.includes(me))c.push(me);}else rec.confirms[k]=c.filter(u=>u!==me);
-  rec.updatedAt=new Date().toISOString();
-  return {reminder:k==='offline'&&body.action==='confirm'&&!done(rec,'video')?COPY.skipReminder:null};
+  rec.updatedAt=new Date(now).toISOString();
+  return {reminder:k==='offline'&&body.action==='confirm'&&outcome(rec,now)!=='mutual'?COPY.skipReminder:null};
+}
+function decide(s,r,uid,body,now){
+  const choice=body?.choice;if(!Object.hasOwn(CHOICES,choice||''))fail('选择无效');
+  const rec=ensure(s,r);if(!canDecide(rec))fail('先语音或视频聊过，再来选',409);
+  rec.decisions||={};rec.decisions[id(uid)]={choice,at:new Date(now).toISOString()};rec.updatedAt=new Date(now).toISOString();
+  return {};
 }
 // slots: [{date:'2026-11-12',time:'20:00'}] in Beijing time. Only from now up to 14 days ahead.
 function parseSlot(x,now){
@@ -60,6 +84,13 @@ function parseSlot(x,now){
   const t=Date.parse(x.date+'T'+x.time+':00+08:00');if(!Number.isFinite(t))fail('时间无效');
   if(t<=now)fail('只能约之后的时间');if(t>now+MAX_DAYS*86400000)fail('最多约 14 天以内的时间');
   return new Date(t).toISOString();
+}
+function parseActivity(v){
+  if(v===undefined||v===null||v==='')return '';if(typeof v!=='string'||!ACTIVITY_OK.has(v))fail('请从列表里选一起做什么');return v;
+}
+// 见面时长：没传就按一起做什么给默认（喝咖啡 1 小时、吃饭 1.5 小时、运动和其他 2 小时、没选 1 小时）；传了必须是可选档之一。
+function parseMinutes(v,activity){
+  if(v===undefined||v===null||v==='')return meetMinutes(activity);const n=Number(v);if(!Object.hasOwn(MEET_LENGTHS,String(n)))fail('见面时长无效');return n;
 }
 function parsePlace(v){
   if(v===undefined||v===null||v==='')return '';if(typeof v!=='string')fail('地点无效');
@@ -72,20 +103,20 @@ function appointment(s,r,uid,body,now){
   const rec=ensure(s,r),me=id(uid),a=body.action;
   if(a==='propose'){
     const raw=Array.isArray(body.slots)?body.slots:[];if(raw.length<1||raw.length>MAX_SLOTS)fail('请给 1 到 3 个时间');
-    if(kind!=='meet'&&body.place)fail('只有线下见面可以写地点');
-    const proposals=[...new Set(raw.map(x=>parseSlot(x,now)))].sort(),place=kind==='meet'?parsePlace(body.place):'';
-    rec.appts[kind]={status:'proposed',by:me,proposals,...(place?{place}:{})};
+    if(kind!=='meet'&&(body.place||body.activity||body.minutes))fail('只有线下见面可以写地点、一起做什么和时长');
+    const proposals=[...new Set(raw.map(x=>parseSlot(x,now)))].sort(),place=kind==='meet'?parsePlace(body.place):'',activity=kind==='meet'?parseActivity(body.activity):'';
+    rec.appts[kind]={status:'proposed',by:me,proposals,...(kind==='meet'?{minutes:parseMinutes(body.minutes,activity)}:{}),...(activity?{activity}:{}),...(place?{place}:{})};
   }else if(a==='pick'){
     const v=rec.appts[kind];if(!v||v.status!=='proposed')fail('现在没有待选的时间',409);if(v.by===me)fail('请等TA选一个时间，或者取消后重新约',409);
     const start=v.proposals.find(t=>t===body.start&&Date.parse(t)>now);if(!start)fail('这个时间已经过了或不在可选里，请换个时间');
-    rec.appts[kind]={status:'booked',by:v.by,pickedBy:me,start,...(v.place?{place:v.place}:{})};
+    rec.appts[kind]={status:'booked',by:v.by,pickedBy:me,start,...(v.minutes?{minutes:v.minutes}:{}),...(v.activity?{activity:v.activity}:{}),...(v.place?{place:v.place}:{})};
   }else if(a==='cancel'){delete rec.appts[kind];}
   else fail('操作无效');
-  rec.updatedAt=new Date().toISOString();
-  return {};
+  rec.updatedAt=new Date(now).toISOString();
+  return {reminder:kind==='meet'&&a==='propose'&&outcome(rec,now)!=='mutual'?COPY.skipReminder:null};
 }
 const purgeRequest=(s,requestId)=>{if(Array.isArray(s.meetSteps))s.meetSteps=s.meetSteps.filter(x=>x.requestId!==requestId);};
 const purgeUser=(s,uid)=>{if(Array.isArray(s.meetSteps))s.meetSteps=s.meetSteps.filter(x=>!x.pair.includes(id(uid)));};
 // Connections list marker: the next booked appointment for this pair (only in the pair's own list).
-function upcoming(s,r,now){const rec=find(s,r);let best=null;for(const [kind,k] of Object.entries(KINDS)){const a=rec?.appts?.[kind];if(a?.status==='booked'&&Date.parse(a.start)+k.minutes*60000>now&&(!best||a.start<best.start))best={kind,start:a.start,tag:'待'+k.word};}return best;}
-module.exports={view,step,appointment,purgeRequest,purgeUser,upcoming,label,KEYS,KINDS};
+function upcoming(s,r,now){const rec=find(s,r);let best=null;for(const [kind,k] of Object.entries(KINDS)){const a=rec?.appts?.[kind];if(a?.status==='booked'&&Date.parse(a.start)+lenOf(a,k)*60000>now&&(!best||a.start<best.start))best={kind,start:a.start,tag:'待'+k.word};}return best;}
+module.exports={view,step,decide,appointment,purgeRequest,purgeUser,upcoming,label,KEYS,KINDS};
