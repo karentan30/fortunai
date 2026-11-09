@@ -217,7 +217,7 @@ function createFriendsService(store,charts,options={}) {
         const card=project(s,p,uid);
         // Member filters read only the projected card (fields/verified already limited to what this viewer may see).
         if(filters.some(f=>!f(card)))continue;
-        if((q.city&&card.city!==q.city)||(q.stem&&card.chart.dayMaster!==q.stem)||(q.zodiac&&card.chart.zodiac!==q.zodiac)||(q.constellation&&card.constellation!==q.constellation)||(q.mbti&&card.mbti!==q.mbti)||(q.purpose&&!theirPurposes.includes(q.purpose))||(q.activity&&!(card.dateActivities||[]).includes(q.activity)))continue;
+        if((q.city&&card.city!==q.city)||(q.stem&&card.chart.dayMaster!==q.stem)||(q.zodiac&&card.chart.zodiac!==q.zodiac)||(q.constellation&&card.constellation!==q.constellation)||(q.mbti&&card.mbti!==q.mbti)||(q.purpose&&!theirPurposes.includes(q.purpose==='friend'?'buddy':q.purpose))||(q.activity&&!(card.dateActivities||[]).includes(q.activity)))continue;
         const purpose=shared[0],interests=new Set([...sharedActivities(self,card),...card.hobbies.filter(h=>self.hobbies.includes(h))]).size,relation=M.elementRelation(self.chart?.dayMaster,card.chart.dayMaster);
         const samePurpose=myPurposes.some(k=>theirPurposes.includes(k));
         const alignment=purpose==='serious'&&typeof options.alignmentScore==='function'?options.alignmentScore({state:s,viewerId:uid,candidateId:p.userId,purpose}):null;
