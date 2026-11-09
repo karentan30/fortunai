@@ -67,7 +67,7 @@
     const b=B();b.showStart();
     const main=document.getElementById('main');main.classList.add('onb-birth-mode');
     const hero=main.querySelector('.landing');if(hero)hero.insertAdjacentHTML('afterbegin','<p class="onb-step onb-step-inline">第 1 步，共 2 步 · 先测日主</p>');
-    main.querySelector('.landing-samples')?.remove();
+    main.querySelectorAll('.landing-samples,.xh-mkt').forEach(n=>n.remove());
   }
 
   function cardHTML(c,i,total,me){
