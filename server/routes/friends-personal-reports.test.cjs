@@ -4,7 +4,7 @@ let express;try{express=require('express');}catch(_){express=require('../../.rev
 const {createPersonalReportsRouter}=require('./friends-personal-reports');
 const {createFriendsStore}=require('../lib/friends-store');
 test('personal report HTTP enforces closed mode, auth, CSRF and owner-only delivery',async()=>{
- const app=express(),store=createFriendsStore();let generated=0,reserved=0;
+ const app=express(),store=require('../lib/friends-cross-border').grant(createFriendsStore(),'alice','bob');let generated=0,reserved=0;
  const auth=(req,res,next)=>{if(req.get('X-Test-User'))req.user={id:req.get('X-Test-User')};next();};
  const billing={reserve(){reserved++;return{id:'reservation',status:'reserved'};},settle(){return{status:'committed'};}};
  const adapter={verifyChart:async()=>({chartBlock:'verified fixture'}),generate:async()=>{generated++;return {reading:'Fixture result only.',tier:'full',locked:false};},validateResult:()=>true};

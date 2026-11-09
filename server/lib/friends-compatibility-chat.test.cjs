@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict');
 const {createFriendsStore}=require('./friends-store');
 const {createCompatibilityService,relationshipSummary,VERSION}=require('./friends-compatibility');
 const input={birthday:'1991-01-01',cityId:'test-city',time:'06:00'};
-function fixture(store=createFriendsStore()){
+function fixture(store=require('./friends-cross-border').grant(createFriendsStore(),'a','b','c','owner','recipient','third','new-owner','new-recipient','another-recipient','new-visitor','viewer','real-minor','real-adult','outside',1,2,3)){
  let now=Date.parse('2026-11-05T12:00:00Z');
  store.transaction(s=>{s.profiles=[{userId:'a',shareId:'a-card',listed:true},{userId:'b',shareId:'b-card',listed:true},{userId:'c',shareId:'c-card',listed:true}];});
  const service=createCompatibilityService({store,clock:()=>now,calculateChart:()=>({birthLocation:{},complete:true,pillars:{year:'甲子',month:'丙寅',day:'戊辰',hour:'庚午'}})});
@@ -86,7 +86,7 @@ test('chat endpoints enforce auth CSRF and server sender identity',async()=>{
 test('chat persists across encrypted SQLite reopen without plaintext message in storage',async()=>{
  const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto'),{createSqliteFriendsStore}=require('./friends-sqlite');
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'runae-chat-')),file=path.join(dir,'state.sqlite'),key=crypto.randomBytes(32).toString('hex');
- let store=createSqliteFriendsStore(file,{key});
+ let store=require('./friends-cross-border').grant(createSqliteFriendsStore(file,{key}),'a','b','c','owner','recipient','third','new-owner','new-recipient','another-recipient','new-visitor','viewer','real-minor','real-adult','outside',1,2,3);
  try{
   const f=fixture(store),p=await f.ready(),text='private-chat-'+crypto.randomUUID();
   f.service.sendMessage('a',p.id,{text,clientMessageId:'persistent_msg_01'});store.close();store=null;
@@ -119,7 +119,7 @@ test('legacy report consent never grants chat; optional chat consent can be revo
 
 test('concurrent SQLite workers retry the same message without duplicate delivery',async()=>{
  const fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto'),{Worker}=require('node:worker_threads'),{createSqliteFriendsStore}=require('./friends-sqlite');
- const dir=fs.mkdtempSync(path.join(os.tmpdir(),'runae-chat-race-')),file=path.join(dir,'state.sqlite'),key=crypto.randomBytes(32).toString('hex'),store=createSqliteFriendsStore(file,{key});
+ const dir=fs.mkdtempSync(path.join(os.tmpdir(),'runae-chat-race-')),file=path.join(dir,'state.sqlite'),key=crypto.randomBytes(32).toString('hex'),store=require('./friends-cross-border').grant(createSqliteFriendsStore(file,{key}),'a','b','c','owner','recipient','third','new-owner','new-recipient','another-recipient','new-visitor','viewer','real-minor','real-adult','outside',1,2,3);
  try{
   const f=fixture(store),p=await f.ready();
   const results=await Promise.all([1,2].map(()=>new Promise((resolve,reject)=>{

@@ -27,7 +27,7 @@ function goodOutput(over={}){return {
  nextSteps:[item('先各自说说本次了解目的，再决定是否见面。','本人填写','s_purpose')],
  ...over};}
 
-function fixture({generate,enabled=true,store=createFriendsStore(),seed=true,billingWrap}={}){
+function fixture({generate,enabled=true,store=require('../server/lib/friends-cross-border').grant(createFriendsStore(),'a','b','c','owner','recipient','third','new-owner','new-recipient','another-recipient','new-visitor','viewer','real-minor','real-adult','outside',1,2,3),seed=true,billingWrap}={}){
  let now=Date.parse('2026-11-04T12:00:00Z');const clock=()=>now;
  store.transaction(s=>{s.profiles=[{userId:'a',shareId:'card-a',nickname:'A',listed:true},{userId:'b',shareId:'card-b',nickname:'B',listed:true}];});
  const questions=createFriendsQuestionsService({store,clock});
@@ -214,7 +214,7 @@ test('persisted in encrypted SQLite; saved result settles after restart without 
  let sqlite;try{sqlite=require('../server/lib/friends-sqlite');require('node:sqlite');}catch(_){t.skip('node:sqlite unavailable');return;}
  const fs=require('node:fs'),os=require('node:os'),path=require('node:path');
  const dir=fs.mkdtempSync(path.join(os.tmpdir(),'pair-report-')),file=path.join(dir,'s.sqlite'),key=crypto.randomBytes(32).toString('hex');
- const store=sqlite.createSqliteFriendsStore(file,{key});
+ const store=require('../server/lib/friends-cross-border').grant(sqlite.createSqliteFriendsStore(file,{key}),'a','b','c','owner','recipient','third','new-owner','new-recipient','another-recipient','new-visitor','viewer','real-minor','real-adult','outside',1,2,3);
  try{
   const f=fixture({store}),p=await f.readyPair();
   const r=await f.service.create('a',f.body(p.id));assert.equal(r.status,'delivered');

@@ -18,7 +18,7 @@ const b64=b=>b.toString('base64');
 
 function setup(t){
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'xs-verify-'));t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
-  const store=createFriendsStore(),charts=createChartService(secret),service=createFriendsService(store,charts);
+  const store=require('./friends-cross-border').grant(createFriendsStore(),'a','b','c','owner','recipient','third','new-owner','new-recipient','another-recipient','new-visitor','viewer','real-minor','real-adult','outside',1,2,3),charts=createChartService(secret),service=createFriendsService(store,charts);
   const files=path.join(dir,'files'),v=createVerificationService({store,dir:files,key:KEY});
   const credential=charts.issue({birthday:'1991-08-28',calendar:'lunar',hour:6}).credential;
   const data=(extra={})=>({credential,consent:true,crossBorderConsent:true,nickname:'测试',city:'上海',intent:'交朋友',fields:{height:'170',weight:'60',school:'学校',occupation:'工程师',industry:'科技',title:'工程师',income:'30–50万',assets:'100–500万',education:'硕士'},

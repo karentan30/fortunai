@@ -1,4 +1,5 @@
 'use strict';
+const {errorBody:xbError}=require('../lib/friends-cross-border');
 // 相生会员直连收款路由。notify 路由必须挂在任何鉴权/CSRF 中间件之前（支付平台服务器直接回调）。
 function createMembershipNotifyRouter({express,service}){
   const router=express.Router();
@@ -14,7 +15,7 @@ function createMembershipNotifyRouter({express,service}){
 function createMembershipSalesRouter({express,auth,service}){
   const router=express.Router();
   router.use((req,res,next)=>{res.set('Cache-Control','no-store');next();});
-  const run=fn=>async(req,res)=>{try{res.json(await fn(req));}catch(e){res.status(e.status||500).json({error:e.status?e.message:'支付服务暂不可用，请稍后再试'});}};
+  const run=fn=>async(req,res)=>{try{res.json(await fn(req));}catch(e){res.status(e.status||500).json(e.status?xbError(e):{error:'支付服务暂不可用，请稍后再试'});}};
   // Public: whether sales are open + prices. Shows the signed-in user's own membership only if an upstream optional auth set req.user.
   router.get('/status',run(req=>service.status(req.user?.id)));
   router.use(auth);

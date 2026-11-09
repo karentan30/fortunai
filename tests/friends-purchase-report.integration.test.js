@@ -11,7 +11,7 @@ const {searchCities}=require('../server/lib/friends-location');
 test('encrypted SQLite purchase -> fresh paid grant -> original report delivery -> restart and failure refund',async()=>{
  const directory=fs.mkdtempSync(path.join(os.tmpdir(),'runae-report-integration-'));
  const file=path.join(directory,'friends.sqlite'),key=crypto.randomBytes(32).toString('hex');
- let store=createSqliteFriendsStore(file,{key});
+ let store=require('../server/lib/friends-cross-border').grant(createSqliteFriendsStore(file,{key}),'integration-user-one');
  const remote=new Map();let sequence=0,statusCalls=0,modelCalls=0,failModel=false;
  const now=Date.parse('2026-11-04T12:00:00Z'),clock=()=>now;
  const client={HUB_BASE:'https://hub.example.test',HUB_SECRET:'(configured)',PROJECT_ID:'test-friends-project',

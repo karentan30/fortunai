@@ -1,6 +1,7 @@
 'use strict';
 const crypto=require('node:crypto');
-const {STEMS,ZODIACS,bad,CROSS_BORDER_VERSION}=require('./friends-chart');
+const {STEMS,ZODIACS,bad}=require('./friends-chart');
+const XB=require('./friends-cross-border');
 const {isDisabled,metric,normalize,normalizeAttribution}=require('./friends-admin');
 const {recommend,typeSuggestions,normalizeTypes,normalizeAvailability,findCommonSlots}=require('./friends-preferences');
 const M=require('./friends-matching');
@@ -116,9 +117,9 @@ function createFriendsService(store,charts,options={}) {
     me(uid){const p=mine(store.read(),uid);return p?structuredClone({...M.migrateProfile(p),verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true).map(k=>[k,true])),recommendations:profileRecommendations(p)}):null;},
     save(uid,b) {
       if(b.consent!==true)bad('请确认本人资料及展示权限');
-      if(b.crossBorderConsent!==true)bad('请单独确认同意资料存储在香港服务器');
       return tx((s,queue)=>{
         normalize(s);
+        const xb=XB.ensure(s,uid,b);
         const prev=mine(s,uid), chart=b.credential?charts.verify(b.credential):prev?.chart;
         const attributionMark=s.attributionMarks.find(x=>x.userId===uid),acquisition=attributionMark?fullAttribution(attributionMark):fullAttribution(prev?{}:b.attribution);
         if(!chart || chart.age<18)bad('请先生成日主卡');
@@ -141,7 +142,7 @@ function createFriendsService(store,charts,options={}) {
         if(!hobbies.length||!targetStems.length||!targetZodiacs.length)bad('请选择爱好及想认识的日主、生肖；也可选不限');
         const p={userId:uid,shareId:prev?.shareId||crypto.randomBytes(18).toString('hex'),nickname,city,intent,purposes,expectations,matchingConsent,fields,visibility,hobbies,targetStems,targetZodiacs,...types,
           bio:text(b.bio,240),contact:text(b.contact,120),contactConsent:b.contactConsent===true,listed:b.listed===true,posterShowTargets:Object.hasOwn(b,'posterShowTargets')?b.posterShowTargets!==false:prev?.posterShowTargets!==false,
-          chart,recommendations,availability:Object.hasOwn(b,'availability')?normalizeAvailability(b.availability):(prev?.availability||null),residence:Object.hasOwn(b,'residence')?require('./friends-places').normalizeResidence(b.residence):(prev?.residence||null),policyVersion:b.policyVersion==='friends-2026-11-04-v1'?b.policyVersion:(prev?.policyVersion||'legacy-unversioned'),consentAt:new Date().toISOString(),crossBorderConsentVersion:CROSS_BORDER_VERSION,crossBorderConsentAt:prev?.crossBorderConsentVersion===CROSS_BORDER_VERSION&&prev.crossBorderConsentAt?prev.crossBorderConsentAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+          chart,recommendations,availability:Object.hasOwn(b,'availability')?normalizeAvailability(b.availability):(prev?.availability||null),residence:Object.hasOwn(b,'residence')?require('./friends-places').normalizeResidence(b.residence):(prev?.residence||null),policyVersion:b.policyVersion==='friends-2026-11-04-v1'?b.policyVersion:(prev?.policyVersion||'legacy-unversioned'),consentAt:new Date().toISOString(),crossBorderConsentVersion:xb.version,crossBorderConsentAt:xb.at,updatedAt:new Date().toISOString()};
         // Keep admin-approved verification only while the verified value is unchanged; editing the value drops the mark.
         const keep=VERIFY_FIELDS.filter(k=>prev?.verified?.[k]===true&&prev.fields?.[k]===fields[k]);
         if(keep.length){p.verified=Object.fromEntries(keep.map(k=>[k,true]));p.verifiedAt=Object.fromEntries(keep.map(k=>[k,prev.verifiedAt?.[k]||null]));}
@@ -213,7 +214,7 @@ function createFriendsService(store,charts,options={}) {
         // Owner-only: the tags they could tick, from their own current answers. Never sent to anyone else.
         availableTags:SPT.availableTags(questionnaireOf(s,uid)).map(({key,dimensionId,dimension,label})=>({key,dimensionId,dimension,label})),
         planTags:[...SP.PLAN_TAGS],preview:seriousPayload(s,p,uid)};},
-    seriousSave(uid,body){return store.transaction(s=>{const p=mine(s,uid);if(!p)bad('请先保存交友卡');if(!SP.eligible(p))bad('认识目的选了「享受恋爱」或「认真结婚」，才能填写相亲资料');
+    seriousSave(uid,body){return store.transaction(s=>{XB.ensure(s,uid);const p=mine(s,uid);if(!p)bad('请先保存交友卡');if(!SP.eligible(p))bad('认识目的选了「享受恋爱」或「认真结婚」，才能填写相亲资料');
       const list=SP.rows(s);let r=SP.rowOf(s,uid);const next=SP.normalizeSerious(body,r);
       // Only tags backed by the owner's own current answers can be ticked.
       const allowed=new Set(SPT.availableTags(questionnaireOf(s,uid)).map(t=>t.key));if(next.qtags.some(k=>!allowed.has(k)))bad('只能选择你自己问卷里的回答');

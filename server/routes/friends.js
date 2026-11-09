@@ -1,4 +1,5 @@
 'use strict';
+const XB=require('../lib/friends-cross-border'),xbError=XB.errorBody;
 const path=require('node:path');
 const {createSqliteFriendsStore}=require('../lib/friends-sqlite');
 const {getFriendsConfig}=require('../lib/friends-config');
@@ -28,7 +29,7 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
     }
     next();
   });
-  const run=fn=>(req,res,next)=>{try{res.json(fn(req));}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e);}};
+  const run=fn=>(req,res,next)=>{try{res.json(fn(req));}catch(e){if(e.status)return res.status(e.status).json(xbError(e));next(e);}};
   const admin=enabled?createAdminService(store):null;
   router.use('/admin',createRateLimit({limit:60}),adminAuth(adminToken));
   router.get('/admin/summary',run(()=>admin.summary()));
@@ -38,11 +39,11 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.post('/admin/orders/:id/refund',run(req=>admin.markRefunded(req.params.id,req.body?.note)));
   router.get('/admin/audit',run(()=>({audit:admin.audit()})));
   router.get('/admin/delivery-review',run(req=>admin.deliveryReview({limit:req.query.limit===undefined?100:Number(req.query.limit),offset:req.query.offset===undefined?0:Number(req.query.offset)})));
-  router.post('/admin/report-jobs/:id/release',async(req,res,next)=>{try{res.json(await admin.releaseReport(req.params.id,req.body,req.friendsAdminActor));}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e);}});
+  router.post('/admin/report-jobs/:id/release',async(req,res,next)=>{try{res.json(await admin.releaseReport(req.params.id,req.body,req.friendsAdminActor));}catch(e){if(e.status)return res.status(e.status).json(xbError(e));next(e);}});
   // 人工核验队列. Files are streamed only through this admin-token route; there is no public URL for any proof file.
   const needVerification=()=>{if(!verification){const e=Error('核验功能未配置');e.status=503;throw e;}return verification;};
   router.get('/admin/verifications',run(()=>({requests:needVerification().pending()})));
-  router.get('/admin/verifications/:id/files/:fileId',(req,res,next)=>{try{const f=needVerification().file(req.params.id,req.params.fileId);res.set('Content-Type',f.mime).set('Content-Disposition','attachment; filename="'+f.filename+'"').set('Content-Security-Policy',"default-src 'none'; sandbox").set('Cache-Control','no-store, private');res.send(f.body);}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e);}});
+  router.get('/admin/verifications/:id/files/:fileId',(req,res,next)=>{try{const f=needVerification().file(req.params.id,req.params.fileId);res.set('Content-Type',f.mime).set('Content-Disposition','attachment; filename="'+f.filename+'"').set('Content-Security-Policy',"default-src 'none'; sandbox").set('Cache-Control','no-store, private');res.send(f.body);}catch(e){if(e.status)return res.status(e.status).json(xbError(e));next(e);}});
   router.post('/admin/verifications/:id',run(req=>needVerification().decide(req.params.id,req.body,req.friendsAdminActor)));
   router.get('/admin/health',run(()=>store.health?store.health():{ok:true,storage:'review-memory'}));
   router.post('/admin/reports/:id',run(req=>admin.review(req.params.id,req.body.status,req.body.note)));
@@ -72,6 +73,10 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   // 校园分享用的个人推荐码：服务器签名派生，不含用户ID/姓名，链接里只带这个码。
   router.get('/referral',run(req=>({code:referralCode(secret,req.user.id)})));
   router.get('/me',run(req=>({profile:service.me(req.user.id)})));
+  // 账号级出境同意（相生资料存储在香港服务器）：一次同意、带版本；写接口未同意时返回 code=XS_CROSS_BORDER_CONSENT_REQUIRED。
+  router.get('/cross-border-consent',run(req=>XB.status(store.read(),req.user.id)));
+  router.post('/cross-border-consent',run(req=>{if(req.body?.consent!==true||req.body?.version!==XB.VERSION){const e=Error('请勾选同意当前版本的出境说明');e.status=400;e.code=XB.CODE;e.version=XB.VERSION;throw e;}return store.transaction(s=>{XB.record(s,req.user.id);return XB.status(s,req.user.id);});}));
+  router.delete('/cross-border-consent',run(req=>store.transaction(s=>XB.withdraw(s,req.user.id))));
   router.post('/profile',run(req=>{if(requirePolicy&&req.body.listed===true&&req.body.policyVersion!=='friends-2026-11-04-v1'){const e=Error('请阅读并同意当前隐私说明与用户条款');e.status=400;throw e;}return{profile:service.save(req.user.id,req.body)};}));
   router.get('/export',run(req=>({profile:service.me(req.user.id),reports:service.reports(req.user.id),exportedAt:new Date().toISOString()})));
   // Owner's own delete: photos/voice files of the 相亲页 go with the profile.
@@ -86,7 +91,7 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.delete('/serious/voice',run(req=>needMedia().removeVoice(req.user.id)));
   router.get('/serious/:shareId',run(req=>({page:service.seriousPage(req.params.shareId,req.user.id)})));
   router.get('/serious/:shareId/media/:mediaId',(req,res,next)=>{try{service.seriousMedia(req.params.shareId,req.user.id,req.params.mediaId);const f=needMedia().open(req.params.mediaId);
-    res.set('Content-Type',f.mime).set('Content-Disposition','inline').set('Content-Security-Policy',"default-src 'none'; sandbox").set('Cache-Control','no-store, private').set('Cross-Origin-Resource-Policy','same-origin');res.send(f.body);}catch(e){if(e.status)return res.status(e.status).json({error:e.message});next(e);}});
+    res.set('Content-Type',f.mime).set('Content-Disposition','inline').set('Content-Security-Policy',"default-src 'none'; sandbox").set('Cache-Control','no-store, private').set('Cross-Origin-Resource-Policy','same-origin');res.send(f.body);}catch(e){if(e.status)return res.status(e.status).json(xbError(e));next(e);}});
   // 申请核验 (owner only). One file per request keeps each JSON body under the global 10MB parser limit.
   router.get('/verification',run(req=>needVerification().status(req.user.id)));
   router.post('/verification/files',createRateLimit({limit:30}),run(req=>needVerification().upload(req.user.id,req.body)));

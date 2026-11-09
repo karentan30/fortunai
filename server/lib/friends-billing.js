@@ -1,4 +1,5 @@
 'use strict';
+const XB=require('./friends-cross-border');
 const crypto=require('node:crypto');
 const {PILOT_CATALOG,anniversary,period}=require('./friends-membership');
 const COLLECTIONS=['billingOrders','billingEvents','creditLedger','creditReservations'];
@@ -70,7 +71,7 @@ function createBillingService(store,{adapter=null,enabled=false,salesPaused=fals
     reservationByKey(uid,key){if(!validKey(key))fail(400,'服务幂等键无效');const r=(store.read().creditReservations||[]).find(r=>r.userId===uid&&r.key===key);return r?structuredClone(r):null;},
     refresh:reconcile,
     balance(uid){return store.transaction(s=>{normalize(s);refreshBenefits(s,uid);return {units:{report:balanceIn(s,uid,'report'),pair_report:balanceIn(s,uid,'pair_report')},yearAccessUntil:(s.billingOrders||[]).filter(o=>o.userId===uid&&live(o)&&o.accessUntil).map(o=>o.accessUntil).sort().at(-1)||null};});},
-    async checkout(uid,{sku,channel,idempotencyKey}={}){
+    async checkout(uid,{sku,channel,idempotencyKey}={}){XB.check(store,uid);
       if(uid===undefined||uid===null||uid==='')fail(401,'请先登录');
       if(!ready()||salesPaused)fail(503,salesPaused?'新购买暂时暂停，请查询已有订单':'支付尚未完成验收，暂不可购买');
       const r=registration(sku,channel),p=CATALOG[sku];if(!r)fail(400,'该商品或支付方式尚不可用');if(!validKey(idempotencyKey))fail(400,'请提供有效幂等键');

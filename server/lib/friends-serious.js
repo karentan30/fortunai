@@ -1,4 +1,5 @@
 'use strict';
+const XB=require('./friends-cross-border');
 // 相生 · 认真相亲页 (long personal page). Owner decision 2026-11-06:
 //  - Only for people whose purposes include 享受恋爱(dating) or 认真结婚(serious). The short 交友卡 is unchanged.
 //  - Every section is optional and has its own owner scope: private / connected / public (same model as profile fields).
@@ -221,7 +222,7 @@ function createSeriousMediaService({store,dir,key,clock=()=>Date.now(),repoRoot=
   // Write the encrypted file first, then commit the reference; on any failure the new file is removed.
   function commit(id,fn){try{return store.transaction(fn);}catch(e){unlink([id]);throw e;}}
   return {
-    addPhoto(uid,{data}={}){
+    addPhoto(uid,{data}={}){XB.check(store,uid);
       needEligible(store.read(),uid);
       const img=cleanImage(decode(data,MAX_PHOTO_BYTES,'照片')),id=crypto.randomBytes(16).toString('hex');
       write(id,img.body);
@@ -231,7 +232,7 @@ function createSeriousMediaService({store,dir,key,clock=()=>Date.now(),repoRoot=
       const out=store.transaction(s=>{const r=rowOf(s,uid);if(!r||!r.photos.some(x=>x.id===id))fail(404,'照片不存在');r.photos=r.photos.filter(x=>x.id!==id);r.updatedAt=now();return view(r);});
       unlink([id]);return out;
     },
-    setVoice(uid,{data,durationMs,peaks}={}){
+    setVoice(uid,{data,durationMs,peaks}={}){XB.check(store,uid);
       needEligible(store.read(),uid);
       const raw=decode(data,MAX_VOICE_BYTES,'语音'),mime=sniffAudio(raw);if(!mime)fail(415,'语音格式不支持，请用页面录音');
       const claimed=Number(durationMs),known=audioDurationMs(raw,mime);

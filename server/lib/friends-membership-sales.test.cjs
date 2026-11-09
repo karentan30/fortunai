@@ -17,7 +17,7 @@ function mockProvider(){
     reply:(channel,ok)=>({type:'text/plain',body:ok?'success':'fail'})};
 }
 function fixture({salesOpen=true,notifyBase='https://xs.example.com/api/friends/billing/membership/notify',provider=mockProvider()}={}){
-  const store=createFriendsStore();let now=Date.parse('2026-11-06T04:00:00Z');const clock=()=>now;
+  const store=require('./friends-cross-border').grant(createFriendsStore(),'u1','a','b');let now=Date.parse('2026-11-06T04:00:00Z');const clock=()=>now;
   const sales=createMembershipSales(store,{provider,salesOpen,notifyBase,clock});
   const notifyFor=(order,extra={})=>{const o=store.read().billingOrders.find(x=>x.id===order.id);const payload={outTradeNo:o.outTradeNo,amountMinor:o.amountMinor,tradeNo:'T-'+o.outTradeNo,...extra};return {payload,sig:sign(payload)};};
   return {store,sales,provider,clock,setNow:t=>now=t,now:()=>now,notifyFor,quota:uid=>createFriendsQuotas({enabled:true,clock}).status(store.read(),uid)};
@@ -29,8 +29,8 @@ test('sales off or unconfigured: status closed and checkout refused with 暂未�
     const f=fixture(opts);assert.equal(f.sales.status('u1').open,false);
     await assert.rejects(buy(f),{status:503,message:'暂未开放购买'});assert.equal((f.store.read().billingOrders||[]).length,0);
   }
-  const env=configuredMembershipSales(createFriendsStore(),{env:{},load:()=>mockProvider()});assert.equal(env.status().open,false,'FRIENDS_SALES_OPEN defaults off');
-  const on=configuredMembershipSales(createFriendsStore(),{env:{FRIENDS_SALES_OPEN:'true',FRIENDS_PAY_NOTIFY_BASE:'https://xs.example.com/n'},load:()=>mockProvider()});assert.equal(on.status().open,true);
+  const env=configuredMembershipSales(require('./friends-cross-border').grant(createFriendsStore(),'u1','a','b'),{env:{},load:()=>mockProvider()});assert.equal(env.status().open,false,'FRIENDS_SALES_OPEN defaults off');
+  const on=configuredMembershipSales(require('./friends-cross-border').grant(createFriendsStore(),'u1','a','b'),{env:{FRIENDS_SALES_OPEN:'true',FRIENDS_PAY_NOTIFY_BASE:'https://xs.example.com/n'},load:()=>mockProvider()});assert.equal(on.status().open,true);
 });
 
 test('paid notify → member with 20 requests/day; order has no checkout after payment; notify URL per channel',async()=>{
