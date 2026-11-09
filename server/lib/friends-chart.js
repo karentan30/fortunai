@@ -12,11 +12,13 @@ const stemElement = stem => ELEMENTS[Math.floor(STEMS.indexOf(stem) / 2)];
 const bad = message => { const e = new Error(message); e.status = 400; throw e; };
 function directions(stem) {
   const e = ELEMENTS.indexOf(stemElement(stem));
+  const he=STEMS[(STEMS.indexOf(stem)+5)%10];
   return [
+    {he,label:'天干五合',relation:'五合',forMe:'传统上日干五合被视为“天生一对”的组合，彼此容易被对方吸引、默契自然。',forThem:'对方视角同样是五合；合得来之外，也要各自保留空间。'},
     {index:(e+4)%5,label:'对方生我',relation:'相生',forMe:'传统五行中，对方的五行生我的五行，可作为支持与滋养的文化意象。',forThem:'从对方视角是“我生对方”；真实相处中，也需要你回应、关心与付出。'},
     {index:e,label:'同五行',relation:'同类',forMe:'传统五行中属于同类，可作为寻找共同语言的认识入口。',forThem:'双方互为同类；是否聊得来，还要看兴趣、边界和相处方式。'},
     {index:(e+1)%5,label:'我生对方',relation:'相生',forMe:'从你的视角是“我生对方”，可作为表达、分享与支持的文化意象。',forThem:'对方视角是“对方生我”；并不意味着你必须单方面照顾或承担。'}
-  ].map(({index,...d})=>({...d,element:ELEMENTS[index],stems:STEMS.slice(index*2,index*2+2)}));
+  ].map(({index,he,...d})=>he?{...d,element:stemElement(he),stems:[he]}:({...d,element:ELEMENTS[index],stems:STEMS.slice(index*2,index*2+2)}));
 }
 function calculate(input, now=new Date()) {
   if (!input || typeof input.birthday !== 'string') bad('请填写出生日期');

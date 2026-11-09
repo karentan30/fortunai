@@ -74,7 +74,7 @@ function createFriendsService(store,charts,options={}) {
     if(!self&&!isMember(s,viewer,clock()))return {};
     return {verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true&&visible(k)).map(k=>[k,true]))};
   }
-  const profileRecommendations=p=>{const culture=recommend(p.chart),types=typeSuggestions(p);return {...culture,constellations:types.constellations,mbtis:types.mbtis,basis:{...culture.basis,...types.basis}};};
+  const profileRecommendations=p=>{const culture=recommend(p.chart),types=typeSuggestions({...p,constellation:p.constellation||p.chart?.constellation||''});return {...culture,constellations:types.constellations,mbtis:types.mbtis,basis:{...culture.basis,...types.basis}};};
   const mine=(s,uid)=>s.profiles.find(p=>p.userId===uid);
   // Per-side explanation for viewer `self` looking at `p`. Uses only what p made visible to self, self's own data/expectations,
   // and p's public card. Never uses p's expectations, p's hidden fields or opted-in hidden values.
@@ -135,6 +135,8 @@ function createFriendsService(store,charts,options={}) {
         if((fields.height&&(!Number.isFinite(height)||height<80||height>250))||(fields.weight&&(!Number.isFinite(weight)||weight<25||weight>300)))bad('身高用厘米、体重用公斤，请检查数值');
         const visibility={};for(const k of [...FIELDS,'dayMaster','zodiac']) visibility[k]=SCOPES.includes(b.visibility?.[k])?b.visibility[k]:'private';
         const types=normalizeTypes(b,prev);
+        // 星座由生日直接算出：用户没选时自动带上（和日主卡同一个生日）
+        if(!types.constellation&&chart.constellation)types.constellation=chart.constellation;
         for(const k of ['constellation','mbti'])visibility[k]=Object.hasOwn(b.visibility||{},k)?(SCOPES.includes(b.visibility[k])?b.visibility[k]:'private'):(prev?.visibility?.[k]||'private');
         const hobbies=Array.isArray(b.hobbies)?[...new Set(b.hobbies.map(x=>text(x,24)).filter(Boolean))].slice(0,10):[];
         const recommendations=profileRecommendations({chart,...types});

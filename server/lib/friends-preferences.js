@@ -28,7 +28,11 @@ function normalizeTypes(body,previous={}){
   return out;
 }
 
-function recommend(chart={}){const index=STEMS.indexOf(chart.dayMaster),animal=ANIMALS.indexOf(chart.zodiac),mother=index<0?-1:(Math.floor(index/2)+4)%5;const pair=PAIRS.find(p=>p.includes(animal)),group=GROUPS.find(p=>p.includes(animal));return {stems:mother<0?[]:STEMS.slice(mother*2,mother*2+2),zodiacs:animal<0?[]:[...new Set([...pair,...group].filter(i=>i!==animal))].map(i=>ANIMALS[i]),basis:{stems:'按日主五行的“生我”关系提供两个认识方向；不是完整八字喜用神，也不代表最佳对象。',zodiacs:'按传统地支六合及三合取同组生肖作为文化认识话题；不表示两人已成三合局，不保证关系结果。'},kind:'cultural_reference'};}
+// 按传统五行给日主分组：五合=天生一对，相生/同类=推荐，相克=磨合型（只告知，不默认推荐）
+function stemGroups(index){if(index<0)return [];const e=Math.floor(index/2),pick=k=>STEMS.slice(k*2,k*2+2);
+  return [{key:'he',label:'天生一对·天干五合',stems:[STEMS[(index+5)%10]]},{key:'shengWo',label:'相生·对方生我',stems:pick((e+4)%5)},{key:'same',label:'同频·同五行',stems:pick(e)},{key:'woSheng',label:'相生·我生对方',stems:pick((e+1)%5)},
+    {key:'ke',label:'相克·磨合型（互补成长，默认不预选）',stems:[...pick((e+2)%5),...pick((e+3)%5)].filter(x=>x!==STEMS[(index+5)%10])}];}
+function recommend(chart={}){const index=STEMS.indexOf(chart.dayMaster),animal=ANIMALS.indexOf(chart.zodiac),mother=index<0?-1:(Math.floor(index/2)+4)%5;const pair=PAIRS.find(p=>p.includes(animal)),group=GROUPS.find(p=>p.includes(animal));return {stemGroups:stemGroups(index),stems:mother<0?[]:[STEMS[(index+5)%10],...STEMS.slice(mother*2,mother*2+2),...STEMS.slice(Math.floor(index/2)*2,Math.floor(index/2)*2+2),...STEMS.slice(((Math.floor(index/2)+1)%5)*2,((Math.floor(index/2)+1)%5)*2+2)],zodiacs:animal<0?[]:[...new Set([...pair,...group].filter(i=>i!==animal))].map(i=>ANIMALS[i]),basis:{stems:'按日主的天干五合、相生（生我/我生）与同五行关系提供认识方向；不是完整八字喜用神，也不代表最佳对象。',zodiacs:'按传统地支六合及三合取同组生肖作为文化认识话题；不表示两人已成三合局，不保证关系结果。'},kind:'cultural_reference'};}
 function normalizeAvailability(value){
   if(value===null||value===undefined)return null;
   if(typeof value!=='object'||Array.isArray(value)||typeof value.paused!=='boolean'||typeof value.timeZone!=='string')fail('请填写空闲时段、暂停状态及IANA时区');
