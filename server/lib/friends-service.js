@@ -156,7 +156,7 @@ function createFriendsService(store,charts,options={}) {
       ownerRecord:questionnaireOf(s,p.userId),viewerRecord:self?null:questionnaireOf(s,viewer),viewerRow:self?null:SP.rowOf(s,viewer)});
   }
   const needMine=(s,uid)=>{const p=mine(s,uid);if(isDisabled(s,uid))denied();if(!p||!p.listed)bad('请先完善个人资料并公开你的卡片');return p;};
-  // 见面四步: only the two people of a live, accepted connection. Blocked/unlisted/disabled → 404, not connected → 403.
+  // 见面三步: only the two people of a live, accepted connection. Blocked/unlisted/disabled → 404, not connected → 403.
   // Purposes can change after a connection was accepted (re-save, or admin-verified 婚况): isolated pairs are hidden like blocked.
   const isolatedPair=(s,a,b)=>{const x=mine(s,a),y=mine(s,b);return !!x&&!!y&&M.purposesIsolated(M.purposesOf(x),M.purposesOf(y));};
   const meetPair=(s,uid,shareId)=>{const target=s.profiles.find(p=>p.shareId===shareId);if(!target||target.userId===uid||!active(s,target,uid)||isolatedPair(s,uid,target.userId))missing();

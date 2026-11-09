@@ -1,12 +1,18 @@
 'use strict';
-// 相生 · 「见面四步」per connected pair. Pure state helpers; access control (pair-only, blocked/disabled hidden) is done by
+// 相生 · 「见面三步」per connected pair. Pure state helpers; access control (pair-only, blocked/disabled hidden) is done by
 // friends-service before any of these run. One record per accepted request id: a disconnect deletes it, a later new
 // connection starts fresh. Confirmations are mutual self-report, never platform verification.
 const {findCommonSlots}=require('./friends-preferences');
 const {findForbidden}=require('./friends-copy-guard');
 const {STEPS,COPY,KINDS,CHOICES,MEALS,MEET_LENGTHS,meetMinutes,activityOptions}=require('../../assets/js/friends-meet-steps');
 const {DATE_ACTIVITIES}=require('../../assets/js/friends-date-activities');
-const KEYS=STEPS.map(s=>s.key);
+const KEYS=STEPS.map(s=>s.key); // chat, call, offline
+// Records written before the 3-step change (2026-11-10) used chat/voice/video/offline. They are read as-is, never rewritten:
+// a person counts as having confirmed step 2 if they are in call, voice OR video. Only an explicit undo of step 2 removes
+// them from those legacy lists too (otherwise undo would be impossible). Old booked/proposed 'video' appointments stay
+// under KINDS.video (legacy: shown, pickable, cancellable, no new proposals).
+const ALIASES={call:['call','voice','video']};
+const keysOf=k=>ALIASES[k]||[k];
 const MAX_DAYS=14,MAX_SLOTS=3,BJ=8*3600000,GRID=30*60000,PLACE_MAX=40,QUIET_DAYS=7;
 const ACTIVITY_OK=new Set([...MEALS,...DATE_ACTIVITIES]);
 const fail=(m,status=400)=>{const e=Error(m);e.status=status;throw e;};
@@ -16,7 +22,12 @@ const find=(s,r)=>(s.meetSteps||[]).find(x=>x.requestId===r.id)||null;
 function ensure(s,r){let rec=find(s,r);if(!rec){rec={requestId:r.id,pair:[id(r.from),id(r.to)],confirms:Object.fromEntries(KEYS.map(k=>[k,[]])),appts:{}};list(s).push(rec);}rec.appts||={};return rec;}
 // 「11月12日（周三）20:00」 in Beijing time, same as the rest of the app.
 function label(iso){const d=new Date(Date.parse(iso)+BJ),p=n=>String(n).padStart(2,'0');return `${d.getUTCMonth()+1}月${d.getUTCDate()}日（周${'日一二三四五六'[d.getUTCDay()]}）${p(d.getUTCHours())}:${p(d.getUTCMinutes())}`;}
-const done=(rec,k)=>!!rec&&rec.pair.every(u=>rec.confirms[k].includes(u));
+const confirmed=(rec,k,u)=>!!rec&&keysOf(k).some(x=>(rec.confirms?.[x]||[]).includes(u));
+const confirmers=(rec,k)=>rec?[...new Set(keysOf(k).flatMap(x=>rec.confirms?.[x]||[]))]:[];
+const done=(rec,k)=>!!rec&&rec.pair.every(u=>confirmed(rec,k,u));
+// 已视频见过: both confirmed the new 语音 · 视频 step (it includes a short video) or the old video step. An old voice-only
+// confirmation does not count, so this badge never claims a video that did not happen.
+const videoMet=rec=>!!rec&&rec.pair.every(u=>['call','video'].some(x=>(rec.confirms?.[x]||[]).includes(u)));
 // Suggested slots (on the half hour, long enough for this kind) from the overlap of both availabilities.
 // Connected people can already see each other's availability (friends-service project()), so nothing new is revealed.
 function suggest(a,b,now,minutes){
@@ -40,8 +51,8 @@ function apptView(a,kind,me,now){
 }
 // 想不想见面：each side picks privately. The other side's own choice is NEVER put in a view; only two pair-level outcomes are:
 //   mutual —— both picked 想见面; closed —— someone picked 到这里就好 and (both have answered, or that pick is 7+ days old).
-// Neither outcome says who picked what. Available once step 2 or step 3 is done by both.
-const canDecide=rec=>done(rec,'voice')||done(rec,'video');
+// Neither outcome says who picked what. Available once step 2 (语音 · 视频, incl. legacy voice/video) is done by both.
+const canDecide=rec=>done(rec,'call');
 function outcome(rec,now){
   const d=rec?.decisions||{},all=rec?rec.pair.map(u=>d[u]).filter(Boolean):[];
   if(all.length===2&&all.every(x=>x.choice==='meet'))return 'mutual';
@@ -55,26 +66,27 @@ function decisionView(rec,me,now){
 }
 function view(s,r,uid,{now,mineAvail,theirAvail,shared=[]}={}){
   const rec=find(s,r),me=id(uid);
-  const steps=KEYS.map((k,i)=>{const c=rec?.confirms[k]||[];return {step:i+1,key:k,mine:c.includes(me),theirs:c.some(u=>u!==me),done:done(rec,k)};});
-  const videoMet=steps[2].done,appointments={};
-  for(const [kind,k] of Object.entries(KINDS)){const a=apptView(rec?.appts?.[kind],kind,me,now);appointments[kind]={kind,step:k.step,minutes:k.minutes,schedule:a,suggested:a?.status==='booked'||steps[k.step-1].done?[]:suggest(mineAvail,theirAvail,now,k.minutes)};}
+  const steps=KEYS.map((k,i)=>{const c=confirmers(rec,k);return {step:i+1,key:k,mine:c.includes(me),theirs:c.some(u=>u!==me),done:done(rec,k)};});
+  const appointments={};
+  for(const [kind,k] of Object.entries(KINDS)){const a=apptView(rec?.appts?.[kind],kind,me,now);appointments[kind]={kind,step:k.step,minutes:k.minutes,...(k.legacy?{legacy:true}:{}),schedule:a,suggested:k.legacy||a?.status==='booked'||steps[k.step-1].done?[]:suggest(mineAvail,theirAvail,now,k.minutes)};}
   // Don't suggest a time that overlaps something this pair already booked.
   const busy=Object.values(appointments).map(x=>x.schedule).filter(x=>x?.status==='booked').map(x=>[Date.parse(x.start),Date.parse(x.end)]);
   for(const x of Object.values(appointments))x.suggested=x.suggested.filter(g=>{const t=Date.parse(g.start),e=t+x.minutes*60000;return !busy.some(([b0,b1])=>t<b1&&e>b0);});
   const decision=decisionView(rec,me,now);
-  return {steps,videoMet,decision,skipReminder:decision.outcome==='mutual'?null:COPY.skipReminder,appointments,activities:{shared:activityOptions(shared).filter(x=>shared.includes(x)),options:activityOptions(shared)},timeZone:'北京时间',note:COPY.badgeNote};
+  return {steps,videoMet:videoMet(rec),decision,skipReminder:decision.outcome==='mutual'?null:COPY.skipReminder,appointments,activities:{shared:activityOptions(shared).filter(x=>shared.includes(x)),options:activityOptions(shared)},timeZone:'北京时间',note:COPY.badgeNote};
 }
 function step(s,r,uid,body,now=Date.now()){
   const n=Number(body?.step),k=KEYS[n-1];if(!Number.isInteger(n)||!k)fail('步骤无效');
   if(!['confirm','undo'].includes(body?.action))fail('操作无效');
-  const rec=ensure(s,r),me=id(uid),c=rec.confirms[k];
-  if(body.action==='confirm'){if(!c.includes(me))c.push(me);}else rec.confirms[k]=c.filter(u=>u!==me);
+  const rec=ensure(s,r),me=id(uid);rec.confirms[k]||=[];
+  if(body.action==='confirm'){if(!confirmed(rec,k,me))rec.confirms[k].push(me);}
+  else for(const x of keysOf(k))if(Array.isArray(rec.confirms[x]))rec.confirms[x]=rec.confirms[x].filter(u=>u!==me);
   rec.updatedAt=new Date(now).toISOString();
   return {reminder:k==='offline'&&body.action==='confirm'&&outcome(rec,now)!=='mutual'?COPY.skipReminder:null};
 }
 function decide(s,r,uid,body,now){
   const choice=body?.choice;if(!Object.hasOwn(CHOICES,choice||''))fail('选择无效');
-  const rec=ensure(s,r);if(!canDecide(rec))fail('先语音或视频聊过，再来选',409);
+  const rec=ensure(s,r);if(!canDecide(rec))fail('先语音视频聊过，再来选',409);
   // Once the pair-level outcome exists it is final: flipping a choice afterwards could reveal what the other side picked.
   if(outcome(rec,now))fail('这一步已经有结果了，不能再改',409);
   rec.decisions||={};rec.decisions[id(uid)]={choice,at:new Date(now).toISOString()};rec.updatedAt=new Date(now).toISOString();
@@ -104,6 +116,7 @@ function appointment(s,r,uid,body,now){
   const kind=body?.kind,k=Object.hasOwn(KINDS,kind||'')?KINDS[kind]:null;if(!k)fail('预约类型无效');
   const rec=ensure(s,r),me=id(uid),a=body.action;
   if(a==='propose'){
+    if(k.legacy)fail('视频已并入「语音 · 视频」，请约个通话时间');
     const raw=Array.isArray(body.slots)?body.slots:[];if(raw.length<1||raw.length>MAX_SLOTS)fail('请给 1 到 3 个时间');
     if(kind!=='meet'&&(body.place||body.activity||body.minutes))fail('只有线下见面可以写地点、一起做什么和时长');
     const proposals=[...new Set(raw.map(x=>parseSlot(x,now)))].sort(),place=kind==='meet'?parsePlace(body.place):'',activity=kind==='meet'?parseActivity(body.activity):'';
