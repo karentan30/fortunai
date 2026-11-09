@@ -112,6 +112,10 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.post('/plan',createRateLimit({limit:10}),run(req=>{const card=service.card(req.body.shareId,req.user.id);if(!card.connected){const e=Error('双方接受认识申请后，再查看共同空档和见面建议');e.status=403;throw e;}const own=service.me(req.user.id),other=store.read().profiles.find(p=>p.shareId===req.body.shareId);const times=service.commonSlots(req.user.id,req.body.shareId,{durationMinutes:req.body.durationMinutes||15,days:14});return{commonSlots:times.slots,...suggestPlaces(own,other),timeNote:times.note};}));
   router.post('/requests',createRateLimit({limit:10,windowMs:3600000}),run(req=>service.request(req.user.id,req.body.shareId)));
   router.post('/requests/:id',run(req=>service.act(req.user.id,req.params.id,req.body.action)));
+  // 见面四步 + 约时间 (pair-only; see friends-meet-steps.js).
+  router.get('/meet/:shareId',run(req=>service.meet(req.user.id,req.params.shareId)));
+  router.post('/meet/:shareId',createRateLimit({limit:60}),run(req=>service.meetStep(req.user.id,req.params.shareId,req.body)));
+  router.post('/meet/:shareId/appointment',createRateLimit({limit:60}),run(req=>service.meetAppointment(req.user.id,req.params.shareId,req.body)));
   router.post('/block',run(req=>service.block(req.user.id,req.body.shareId)));
   router.post('/report',run(req=>service.report(req.user.id,req.body.shareId,req.body.reason)));
   router.get('/reports',run(req=>({reports:service.reports(req.user.id)})));

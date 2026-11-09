@@ -20,6 +20,7 @@ const conflict=m=>{const e=Error(m);e.status=409;throw e;};
 const {fullAttribution}=require('./friends-campus');
 const array=(v,valid,max=12)=>Array.isArray(v)?[...new Set(v.filter(x=>valid.includes(x)))].slice(0,max):[];
 const SP=require('./friends-serious'),SPT=require('./friends-serious-tags');
+const MS=require('./friends-meet-steps');
 const questionnaireOf=(s,uid)=>(s.marriageQuestionnaires||[]).find(r=>r.userId!==undefined&&r.userId!==null&&String(r.userId)===String(uid))||null;
 // Visibility rule shared by the 交友卡, matching, explanations and the 认真相亲页 (one definition, used everywhere).
 const blockedPair=(s,a,b)=>s.blocks.some(x=>(x.by===a&&x.target===b)||(x.by===b&&x.target===a));
@@ -130,6 +131,10 @@ function createFriendsService(store,charts,options={}) {
       ownerRecord:questionnaireOf(s,p.userId),viewerRecord:self?null:questionnaireOf(s,viewer),viewerRow:self?null:SP.rowOf(s,viewer)});
   }
   const needMine=(s,uid)=>{const p=mine(s,uid);if(isDisabled(s,uid))denied();if(!p||!p.listed)bad('请先完善个人资料并公开你的卡片');return p;};
+  // 见面四步: only the two people of a live, accepted connection. Blocked/unlisted/disabled → 404, not connected → 403.
+  const meetPair=(s,uid,shareId)=>{const target=s.profiles.find(p=>p.shareId===shareId);if(!target||target.userId===uid||!active(s,target,uid))missing();
+    const r=s.requests.find(x=>x.status==='accepted'&&((x.from===uid&&x.to===target.userId)||(x.to===uid&&x.from===target.userId)));if(!r||!isConnected(s,target,uid))denied();return {r,self:mine(s,uid),target};};
+  const meetView=(s,uid,shareId)=>{const {r,self,target}=meetPair(s,uid,shareId);return MS.view(s,r,uid,{now:clock(),mineAvail:self.availability,theirAvail:target.availability});};
   return {
     me(uid){const p=mine(store.read(),uid);return p?structuredClone({...M.migrateProfile(p),verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true).map(k=>[k,true])),recommendations:profileRecommendations(p)}):null;},
     save(uid,b) {
@@ -271,6 +276,7 @@ function createFriendsService(store,charts,options={}) {
       const person=other&&active(s,other,uid)?project(s,other,uid):{nickname:'对方暂不可见',shareId:null};
       const out={id:r.id,status:r.status,createdAt:r.createdAt,direction:r.to===uid?'incoming':'outgoing',person};
       if(r.status==='accepted'&&other?.listed&&self?.listed&&!isDisabled(s,uid)&&!isDisabled(s,other.userId)&&other.contactConsent&&self.contactConsent)out.contact=other.contact;
+      if(r.status==='accepted'&&other&&active(s,other,uid)&&isConnected(s,other,uid)){const next=MS.upcoming(s,r,clock());if(next)out.upcoming={tag:next.tag,label:MS.label(next.start)};}
       return out;
     });},
     act(uid,id,action){return tx((s,queue)=>{
@@ -278,7 +284,7 @@ function createFriendsService(store,charts,options={}) {
       if(blocked(s,r.from,r.to))denied();
       if(action==='disconnect'){
         if(r.status!=='accepted')conflict('只有已连接的双方可以解除连接');
-        r.status='disconnected';r.updatedAt=new Date().toISOString();for(const pair of s.compatibilityPairs||[]){if([pair.from,pair.to].some(x=>String(x)===String(r.from))&&[pair.from,pair.to].some(x=>String(x)===String(r.to))){pair.status='revoked';pair.authorizations={};pair.messages=[];pair.revision=(pair.revision||0)+1;pair.updatedAt=r.updatedAt;}}return {id:r.id,status:r.status};
+        r.status='disconnected';r.updatedAt=new Date().toISOString();for(const pair of s.compatibilityPairs||[]){if([pair.from,pair.to].some(x=>String(x)===String(r.from))&&[pair.from,pair.to].some(x=>String(x)===String(r.to))){pair.status='revoked';pair.authorizations={};pair.messages=[];pair.revision=(pair.revision||0)+1;pair.updatedAt=r.updatedAt;}}MS.purgeRequest(s,r.id);return {id:r.id,status:r.status};
       }
       if(r.status!=='pending')conflict('申请已经处理');
       if(action==='withdraw'&&r.from===uid)r.status='withdrawn';
@@ -290,10 +296,13 @@ function createFriendsService(store,charts,options={}) {
     block(uid,shareId){return store.transaction(s=>{const p=s.profiles.find(x=>x.shareId===shareId);if(!p)missing();if(p.userId===uid)bad('不能拉黑自己');if(!s.blocks.some(x=>x.by===uid&&x.target===p.userId))s.blocks.push({by:uid,target:p.userId});return {ok:true};});},
     report(uid,shareId,reason){return store.transaction(s=>{const p=s.profiles.find(x=>x.shareId===shareId);if(!p)missing();const why=text(reason,300);if(!why)bad('请填写举报原因');const prior=s.reports.find(r=>r.by===uid&&r.target===p.userId&&r.reason===why&&['open','reviewing'].includes(r.status||'open'));if(prior)return {ok:true,id:prior.id,status:prior.status||'open',message:'已收到相同举报，无需重复提交'};const report={id:crypto.randomUUID(),by:uid,target:p.userId,reason:why,status:'open',createdAt:new Date().toISOString()};s.reports.push(report);metric(s,'report_created');return {ok:true,id:report.id,status:'open',message:'举报已记录，试用期间由管理员人工处理'};});},
     commonSlots(uid,shareId,options){const s=store.read(),self=needMine(s,uid),other=s.profiles.find(p=>p.shareId===shareId);if(!active(s,other,uid))missing();if(!connection(s,uid,other.userId))denied();return {slots:findCommonSlots(self.availability,other.availability,options),note:'仅为候选时间，尚未预约；DST切换当日暂不推荐'};},
+    meet(uid,shareId){return meetView(store.read(),uid,shareId);},
+    meetStep(uid,shareId,body){return store.transaction(s=>{const {r}=meetPair(s,uid,shareId);const out=MS.step(s,r,uid,body);return {...meetView(s,uid,shareId),reminder:out.reminder};});},
+    meetAppointment(uid,shareId,body){return store.transaction(s=>{const {r}=meetPair(s,uid,shareId);MS.appointment(s,r,uid,body,clock());return meetView(s,uid,shareId);});},
     reports(uid){return store.read().reports.filter(r=>r.by===uid).map(r=>({id:r.id,status:r.status||'open',createdAt:r.createdAt,updatedAt:r.updatedAt}));},
     feedback(uid,id,outcome){if(!['met','helpful','not_helpful','unsafe'].includes(outcome))bad('反馈选项无效');return tx((s,queue)=>{normalize(s);const r=s.requests.find(r=>r.id===id&&[r.from,r.to].includes(uid)&&['accepted','disconnected'].includes(r.status));if(!r)denied();if(s.feedback.some(x=>x.by===uid&&x.requestId===id))conflict('已提交反馈');s.feedback.push({by:uid,requestId:id,outcome,createdAt:new Date().toISOString()});metric(s,'feedback_'+outcome);if(outcome==='met')queue.push(['xs_met_reported',uid,mine(s,uid)?.acquisition||{},{pairWith:r.from===uid?r.to:r.from}]);return {ok:true};});},
     event(event,attribution){if(!['poster_export','share_visit','profile_preview','onboarding_view','chart_done','deck_swipe','want_to_meet_click','signup_done','mbti_quiz_done'].includes(event))bad('事件无效');return store.transaction(s=>{metric(s,event,attribution);return {ok:true};});},
-    remove(uid){return store.transaction(s=>{normalize(s);if(s.profiles.some(p=>p.userId===uid)){const mark=s.attributionMarks.find(x=>x.userId===uid);if(mark){mark.deletedAt=new Date().toISOString();mark.expiresAt=new Date(Date.now()+90*86400000).toISOString();}}s.profiles=s.profiles.filter(p=>p.userId!==uid);if(Array.isArray(s.seriousPages))s.seriousPages=s.seriousPages.filter(r=>r.userId!==uid);s.requests=s.requests.filter(r=>r.from!==uid&&r.to!==uid);if(Array.isArray(s.cardViews))s.cardViews=s.cardViews.filter(v=>v.viewer!==uid&&v.viewed!==uid);s.compatibilityPairs=(s.compatibilityPairs||[]).filter(p=>String(p.from)!==String(uid)&&String(p.to)!==String(uid));/* Keep account-level blocks and moderation across profile recreation. */return {ok:true};});}
+    remove(uid){return store.transaction(s=>{normalize(s);if(s.profiles.some(p=>p.userId===uid)){const mark=s.attributionMarks.find(x=>x.userId===uid);if(mark){mark.deletedAt=new Date().toISOString();mark.expiresAt=new Date(Date.now()+90*86400000).toISOString();}}s.profiles=s.profiles.filter(p=>p.userId!==uid);if(Array.isArray(s.seriousPages))s.seriousPages=s.seriousPages.filter(r=>r.userId!==uid);s.requests=s.requests.filter(r=>r.from!==uid&&r.to!==uid);if(Array.isArray(s.cardViews))s.cardViews=s.cardViews.filter(v=>v.viewer!==uid&&v.viewed!==uid);s.compatibilityPairs=(s.compatibilityPairs||[]).filter(p=>String(p.from)!==String(uid)&&String(p.to)!==String(uid));MS.purgeUser(s,uid);/* Keep account-level blocks and moderation across profile recreation. */return {ok:true};});}
   };
 }
 module.exports={createFriendsService,FIELDS,OPTIONAL_FIELDS,scopeAllows,connectedFor,activeFor};
