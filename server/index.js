@@ -81,6 +81,8 @@ app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }));
 app.use('/api/hub-callback', express.raw({ type: 'application/json' }));
 // Friends hub callbacks retain signed bytes; the isolated router verifies and reconciles them.
 app.use('/api/friends/billing/callback', express.raw({ type: 'application/json', limit: '64kb' }));
+// 合盘完整版：收款中台回调同样按原始字节验签
+app.use('/api/friends/hepan-pay/callback', express.raw({ type: 'application/json', limit: '16kb' }));
 // 微信支付回调是 XML(text)
 app.use('/api/pay/wechat/notify', express.text({ type: '*/*', limit: '1mb' }));
 // 支付宝回调是 application/x-www-form-urlencoded

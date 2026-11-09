@@ -1,10 +1,14 @@
 'use strict';
-// 双人详细报告尚未接通 AI 解读：不卖、会员也不含报告次数（reportCredits/monthlyReportCredits=0）。
-// friends_pair_report_v1 has no `sellable` flag, so direct membership sales can never sell it.
+// friends_pair_report_v1（旧双人详细报告）不卖。friends_pair_report_v2 = 合盘 v4 完整版单次解锁，走收款中台
+// （friends-hepan-pay，FRIENDS_HEPAN_PAY_ENABLED 默认关），价格以 FRIENDS_HEPAN_PRICE 为准（默认 9.9 元）。
+// 两者都没有 `sellable`，会员直连收款永远卖不到它们。
+// 会员每自然月含 2 份合盘完整版（monthlyReportCredits，单位 hepan_v4，记在 hepanCredits）；
+// 旧计费的 pair_report 月度发放只认 monthlyCreditUnit 为 pair_report 的商品，所以这里不会多发旧次数。
 const PILOT_CATALOG=Object.freeze({
  friends_pair_report_v1:{sku:'friends_pair_report_v1',name:'双人详细报告',amountMinor:2990,currency:'CNY',reportCredits:1,creditUnit:'pair_report',accessDays:0,pilot:true},
- friends_month_v1:{sku:'friends_month_v1',name:'相生月会员',amountMinor:2990,currency:'CNY',reportCredits:0,creditUnit:'pair_report',accessDays:31,accessMonths:1,matchingMembership:true,monthlyReportCredits:0,autoRenew:false,sellable:true,pilot:true},
- friends_year_v1:{sku:'friends_year_v1',name:'相生年会员',amountMinor:19900,currency:'CNY',reportCredits:0,creditUnit:'pair_report',accessDays:366,accessMonths:12,matchingMembership:true,monthlyReportCredits:0,autoRenew:false,sellable:true,pilot:true}
+ friends_pair_report_v2:{sku:'friends_pair_report_v2',name:'合盘完整报告',amountMinor:990,currency:'CNY',reportCredits:0,creditUnit:'hepan_v4',accessDays:0,pilot:true},
+ friends_month_v1:{sku:'friends_month_v1',name:'相生月会员',amountMinor:2990,currency:'CNY',reportCredits:0,creditUnit:'pair_report',accessDays:31,accessMonths:1,matchingMembership:true,monthlyReportCredits:2,monthlyCreditUnit:'hepan_v4',autoRenew:false,sellable:true,pilot:true},
+ friends_year_v1:{sku:'friends_year_v1',name:'相生年会员',amountMinor:19900,currency:'CNY',reportCredits:0,creditUnit:'pair_report',accessDays:366,accessMonths:12,matchingMembership:true,monthlyReportCredits:2,monthlyCreditUnit:'hepan_v4',autoRenew:false,sellable:true,pilot:true}
 });
 // Benefits actually enforced in code (quotas, card viewers, member filters, 已核验/婚况). Shown on the membership page.
 const MEMBER_BENEFITS=Object.freeze({free:{requestsPerDay:3},member:{requestsPerDay:20}});

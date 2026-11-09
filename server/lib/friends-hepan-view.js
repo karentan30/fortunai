@@ -26,7 +26,7 @@ function flipDir(dir,viewer){if(!dir)return null;const mine=viewer==='A'?'AB':'B
  * 锁住的东西不能从返回里看出来：锁住的分项不给分数，不给 moheTotal，关系图只留
  * 天干（未锁分项）和已展示条目对应的地支关系，夫妻星、五行明细、计分依据都不给。
  */
-function buildReport({analysis,picked,prose,charts,mode,viewer='A',unlocked=false,taNickname=null,meNickname=null}){
+function buildReport({analysis,picked,prose,charts,mode,viewer='A',unlocked=false,offer=null,taNickname=null,meNickname=null}){
  const other=viewer==='A'?'B':'A',names=sideNames(viewer);
  const allShown=picked.mohe.length<=1,full=unlocked||allShown;
  const lockSub=k=>!full&&(k==='branch'||k==='wuxing');
@@ -52,18 +52,23 @@ function buildReport({analysis,picked,prose,charts,mode,viewer='A',unlocked=fals
   star:full?C.fill(starView(analysis,viewer),names):null,
   wuxing:full?{bu:analysis.wuxing.bu,que:analysis.wuxing.que,mine:analysis.counts[viewer],...(mode==='self'?{ta:analysis.counts[other]}:{})}:null,
   basis:full?analysis.hits.filter(h=>h.points!==0).map(h=>({id:h.id,tag:tagOf(h,charts,mode),points:h.points,sub:h.sub})):null,
-  lock:full?null:{moreCount:Math.max(0,moheAll.length-1),text:'还有'+Math.max(0,moheAll.length-1)+'条磨合点和对应的相处建议',cta:'完整版即将开放',available:false},
+  lock:full?null:lockOf(moheAll.length-1,offer),
+  pay:payView(offer,full),
   footer:FOOTER
  };
  return report;
 }
+// 锁区按钮：能付款或有会员份数才可点；否则维持「即将开放」。
+function lockOf(more,offer){const n=Math.max(0,more),open=!!offer&&offer.sellable&&!offer.unlocked&&(offer.payEnabled||offer.creditEnabled);return {moreCount:n,text:'还有'+n+'条磨合点和对应的相处建议',cta:open?'解锁完整报告':'完整版即将开放',available:open};}
+// 给前端付款弹层的公开信息：价格、渠道、会员余量、退款规则；不含任何锁住的内容。
+function payView(offer,full){if(!offer)return null;const {advisorQrUrl,...rest}=offer;return {...rest,advisorQrUrl:full?advisorQrUrl||null:null};}
 function starView(analysis,viewer){const t=C.starText(analysis),other=viewer==='A'?'B':'A';return {mode:t.mode,heading:t.heading,mine:t[viewer],theirs:t[other]};}
 // 邀请合盘：每个返回给看报告者的字段都扫一遍，对方四柱里除日主以外的干支字一个都不能出现。
 // 允许的路径只有：本人四柱、双方昵称（用户自填，不由命盘派生），以及只随档位变化的固定文字（古语题记、页脚、档位名表）。
 // 题记「君子和而不同」《论语·子路》里的「子」不是命盘字，不能因此误判泄露、把整份报告挡掉。
-const FIXED_PATHS=['epigraph.text','epigraph.cite','footer','tiers'];
+const FIXED_PATHS=['epigraph.text','epigraph.cite','footer','tiers','pay'];// pay：价格、退款规则等固定文字，不由命盘派生
 function assertNoLeak(report,otherPillars){
  const hits=C.leakScan(report,C.forbiddenFor(otherPillars,{alsoAllow:[report.people?.me?.dayMaster].filter(Boolean)}),{allow:['people.me.pillars','people.me.dayMaster','people.me.nickname','people.ta.nickname',...FIXED_PATHS]});
  return hits;
 }
-module.exports={buildReport,assertNoLeak,tagOf,FOOTER,SUBS};
+module.exports={buildReport,assertNoLeak,tagOf,lockOf,payView,FOOTER,SUBS};

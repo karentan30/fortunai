@@ -165,10 +165,16 @@ function productionRouter(){
     const {createFriendsQuestionsService}=require('../lib/friends-questions');
     // 合盘 v4 文案：DeepSeek 只收干支与规则命中；FRIENDS_HEPAN_AI=false 时全部走固定模板。
     const generateProse=process.env.FRIENDS_HEPAN_AI==='false'?null:(messages,opts)=>require('../lib/llm').deepseekChat(messages,opts);
-    const compatibility=createCompatibilityService({store,generateProse,questionnaireService:createFriendsQuestionsService({store}),questionBank:require('../../assets/data/friends-relationship-questions.json')});
+    // 合盘完整版付费：FRIENDS_HEPAN_PAY_ENABLED=true 且中台三项（FRIENDS_HUB_BASE 本机地址 / PROJECT_ID / SECRET）都配好才卖；否则只是「即将开放」。
+    const {createHepanPayService,payConfig}=require('../lib/friends-hepan-pay');
+    const {pairFacts}=require('../lib/friends-compatibility');
+    const hepanPay=createHepanPayService({store,config:payConfig(process.env),pairFacts});
+    const {createHepanPayCallbackRouter}=require('./friends-compatibility');
+    bundle.use('/hepan-pay/callback',createRateLimit({limit:120}),createHepanPayCallbackRouter({express,service:hepanPay}));
+    const compatibility=createCompatibilityService({store,generateProse,pay:hepanPay,questionnaireService:createFriendsQuestionsService({store}),questionBank:require('../../assets/data/friends-relationship-questions.json')});
     instrumentCompatibility(compatibility,store,createFunnelSink({secret:process.env.FRIENDS_SIGNING_KEY}));
-    let selfService=null;try{selfService=require('../lib/friends-hepan-self').createHepanSelfService({store,secret:process.env.FRIENDS_SIGNING_KEY,generateProse});}catch(e){console.error('[friends] 自己合盘未启用：',e.message);}
-    bundle.use('/compatibility',billingAuth,createCompatibilityRouter({express,auth:billingAuth,service:compatibility,selfService}));
+    let selfService=null;try{selfService=require('../lib/friends-hepan-self').createHepanSelfService({store,secret:process.env.FRIENDS_SIGNING_KEY,generateProse,pay:hepanPay});}catch(e){console.error('[friends] 自己合盘未启用：',e.message);}
+    bundle.use('/compatibility',billingAuth,createCompatibilityRouter({express,auth:billingAuth,service:compatibility,selfService,payService:hepanPay}));
     bundle.use(friends);return bundle;
   }catch(e){console.error('[friends] Storage not ready; feature disabled. Run protected preflight.');return createRouter({express,auth:authMiddleware,enabled:false,mode:'storage_error',onLogout});}
 }

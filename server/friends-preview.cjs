@@ -74,11 +74,18 @@ app.use('/api/friends/intake',createFriendsIntakeRouter({express,auth,store:revi
 const {createCompatibilityService}=require('./lib/friends-compatibility');
 const {createCompatibilityRouter}=require('./routes/friends-compatibility');
 const {createFriendsQuestionsService}=require('./lib/friends-questions');
-const compatibility=createCompatibilityService({store:reviewStore,generateProse:process.env.HEPAN_PREVIEW_AI==='1'?(m,o)=>require('./lib/llm').deepseekChat(m,o):null,questionnaireService:createFriendsQuestionsService({store:reviewStore}),questionBank:require('../assets/data/friends-relationship-questions.json')});
+// 合盘完整版付费预览：HEPAN_PREVIEW_PAY=1 时用假中台（下单给假二维码，第二次查单即到账），不碰任何真实收款。
+const hepanPayLib=require('./lib/friends-hepan-pay');
+const fakeHubSeen=new Map();
+const fakeHub={create:async({method,amount,outRef})=>{const no='XSPREVIEW'+outRef.slice(-10);fakeHubSeen.set(no,{n:0,outRef,amount});return method==='wechat'?{ok:true,order_no:no,code_url:'weixin://wxpay/bizpayurl?pr=preview',amount,method}:{ok:true,order_no:no,qr_code:'https://qr.alipay.com/preview',amount,method};},
+ status:async no=>{const x=fakeHubSeen.get(no);x.n++;return {ok:true,order_no:no,out_ref:x.outRef,amount:x.amount,currency:'cny',status:x.n>=2?'paid':'pending'};},verify:()=>false};
+const previewPay=process.env.HEPAN_PREVIEW_PAY==='1';
+const hepanPay=hepanPayLib.createHepanPayService({store:reviewStore,config:{...hepanPayLib.payConfig(process.env),enabled:previewPay,ready:previewPay},hub:previewPay?fakeHub:null,pairFacts:require('./lib/friends-compatibility').pairFacts});
+const compatibility=createCompatibilityService({pay:hepanPay,store:reviewStore,generateProse:process.env.HEPAN_PREVIEW_AI==='1'?(m,o)=>require('./lib/llm').deepseekChat(m,o):null,questionnaireService:createFriendsQuestionsService({store:reviewStore}),questionBank:require('../assets/data/friends-relationship-questions.json')});
 // 本地预览默认不调真实模型（走固定模板）；HEPAN_PREVIEW_AI=1 才接 DeepSeek。
 const hepanGenerate=process.env.HEPAN_PREVIEW_AI==='1'?(m,o)=>require('./lib/llm').deepseekChat(m,o):null;
-const hepanSelf=require('./lib/friends-hepan-self').createHepanSelfService({store:reviewStore,secret:fs.readFileSync(keyFile,'utf8'),generateProse:hepanGenerate});
-app.use('/api/friends/compatibility',createCompatibilityRouter({express,auth,service:compatibility,selfService:hepanSelf}));
+const hepanSelf=require('./lib/friends-hepan-self').createHepanSelfService({store:reviewStore,secret:fs.readFileSync(keyFile,'utf8'),generateProse:hepanGenerate,pay:hepanPay});
+app.use('/api/friends/compatibility',createCompatibilityRouter({express,auth,service:compatibility,selfService:hepanSelf,payService:hepanPay}));
 // Encrypted 相亲页 media must live outside the repo; the default preview data dir is inside it, so fall back to a temp dir.
 const seriousMedia=require('./lib/friends-serious').createSeriousMediaService({store:reviewStore,dir:process.env.FRIENDS_MEDIA_DIR||(process.env.FRIENDS_PREVIEW_DATA_DIR?path.join(dir,'friends-media'):path.join(require('node:os').tmpdir(),'runae-preview-media')),key:fs.readFileSync(dataKeyFile,'utf8')});
 app.use('/api/friends',createRouter({express,auth,store:reviewStore,quotaOptions:{enabled:process.env.FRIENDS_QUOTAS_ENABLED!=='false'},seriousMedia,secret:fs.readFileSync(keyFile,'utf8'),adminToken:fs.readFileSync(reviewAdmin,'utf8'),onLogout(req,res){const token=cookie(req);if(token)sessions.delete(token);res.clearCookie('review_session',{path:'/',httpOnly:true,sameSite:'strict'});}}));
