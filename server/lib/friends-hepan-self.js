@@ -6,7 +6,7 @@ const {calculate}=require('./friends-chart');
 const XB=require('./friends-cross-border');
 const {isDisabled}=require('./friends-admin');
 const HE=require('./friends-hepan-v4'),HC=require('./friends-hepan-copy'),HV=require('./friends-hepan-view');
-const LIMITS=Object.freeze({account:3,device:3,ip:10}),SAVED_MAX=30,TOKEN_TTL=86400000;
+const LIMITS=Object.freeze({account:3,device:3,ip:10}),SAVED_MAX=30,TOKEN_TTL=86400000,AI_RETRY_MS=10*60000;
 const CONSENT_VERSION='hepan-self-v4-2026-11-09';
 const fail=(status,message)=>{throw Object.assign(Error(message),{status});};
 const same=(a,b)=>String(a)===String(b);
@@ -22,7 +22,8 @@ function createHepanSelfService({store,secret,calculateChart=calculate,generateP
  function remaining(s,uid,ctx){const d=dayKey(clock()),list=usage(s);let left=LIMITS.account;for(const [kind,k] of buckets(uid,ctx)){const n=list.find(x=>x.k===k&&x.day===d)?.n||0;left=Math.min(left,LIMITS[kind]-n);}return Math.max(0,left);}
  const proseCache=new Map();// 只在内存：键是 HMAC，进程重启即清空
  const remember=(k,v)=>{proseCache.delete(k);proseCache.set(k,v);while(proseCache.size>cacheSize)proseCache.delete(proseCache.keys().next().value);};
- const inflight=new Map();
+ const inflight=new Map(),aiRetryAt=new Map();
+ const bounded=(m,k,v)=>{m.delete(k);m.set(k,v);while(m.size>cacheSize)m.delete(m.keys().next().value);};
  function chartOf(person,who){
   if(!person||typeof person!=='object'||Array.isArray(person))fail(400,'请填写'+who+'的出生资料');
   if(!['male','female'].includes(person.gender))fail(400,'请选择'+who+'的性别');
@@ -32,20 +33,22 @@ function createHepanSelfService({store,secret,calculateChart=calculate,generateP
   if(!pillars||!HE.split(pillars.day))fail(400,'排盘结果不完整');
   return {gender:person.gender,pillars:{year:pillars.year,month:pillars.month,day:pillars.day,hour:r.complete?pillars.hour:null}};
  }
- function signSave(payload){const data=Buffer.from(JSON.stringify(payload)).toString('base64url');return data+'.'+mac('save',data);}
+ // 保存凭证要加密（AES-256-GCM），不能只签名：里面有锁住的分项分数和全部磨合点，免费版不能靠解码凭证看到。
+ const saveKey=crypto.createHmac('sha256',secret).update('hepan-self-save-key').digest();
+ function signSave(payload){const iv=crypto.randomBytes(12),c=crypto.createCipheriv('aes-256-gcm',saveKey,iv),ct=Buffer.concat([c.update(JSON.stringify(payload)),c.final()]);return Buffer.concat([iv,c.getAuthTag(),ct]).toString('base64url');}
  function readSave(token,uid){
   if(typeof token!=='string'||token.length>8000)fail(400,'保存凭证无效');
-  const [data,sig,...rest]=token.split('.'),a=Buffer.from(sig||''),b=Buffer.from(mac('save',data||''));
-  if(rest.length||a.length!==b.length||!crypto.timingSafeEqual(a,b))fail(400,'保存凭证无效');
-  const body=JSON.parse(Buffer.from(data,'base64url').toString());
+  let body;try{const raw=Buffer.from(token,'base64url');if(raw.length<29)throw 0;const d=crypto.createDecipheriv('aes-256-gcm',saveKey,raw.subarray(0,12));d.setAuthTag(raw.subarray(12,28));body=JSON.parse(Buffer.concat([d.update(raw.subarray(28)),d.final()]).toString());}catch{fail(400,'保存凭证无效');}
   if(body.v!==1||!same(body.u,uid)||body.exp<clock())fail(400,'保存凭证已过期，请重新合盘');
   return body;
  }
  function savedView(r){
   const analysis={purpose:r.purpose,tier:r.tier,tierLabel:HE.TIER[r.tier]},picked={he:r.hits.filter(h=>h.kind==='he'),mohe:r.hits.filter(h=>h.kind==='mohe')};
+  // 和当场结果同一套免费/完整截断：磨合点不超过 1 条才算全部展示；否则地支、五行两项分不给数字。
+  const full=picked.mohe.length<=1,subs=HV.SUBS.map(([key,label])=>{const locked=!full&&(key==='branch'||key==='wuxing');return {key,label:key==='star'&&r.purpose==='buddy'?'相处星':label,max:25,locked,score:locked?null:r.subs[key]};});
   const prose=HC.fill(HC.templateProse(analysis,picked),{A:'你',B:'TA'});
   const item=h=>{const t=HC.fill(HC.template(h,h.kind),{A:'你',B:'TA'});return {id:h.id,kind:h.kind,tag:HV.tagOf(h,null,'invite'),title:t.title,meaning:t.meaning,life:t.life,...(h.kind==='mohe'?{advice:t.advice||[]}:{})};};
-  return {id:r.id,kind:'hepan_v4_saved',mode:'self',nickname:r.nickname,purpose:r.purpose,limited:r.limited,total:r.total,tier:r.tier,tierLabel:HE.TIER[r.tier],subs:r.subs,summary:prose.summary,lead:prose.lead,epigraph:HC.EPIGRAPHS[r.tier],he:picked.he.map(item),mohe:picked.mohe.slice(0,1).map(item),moreCount:Math.max(0,picked.mohe.length-1),allShown:picked.mohe.length<=1,createdAt:r.createdAt,note:'保存只记档位和解读条目，不存任何一方的生辰。',footer:HV.FOOTER};
+  return {id:r.id,kind:'hepan_v4_saved',mode:'self',nickname:r.nickname,purpose:r.purpose,limited:r.limited,total:r.total,tier:r.tier,tierLabel:HE.TIER[r.tier],subs,summary:prose.summary,lead:prose.lead,epigraph:HC.EPIGRAPHS[r.tier],he:picked.he.map(item),mohe:(full?picked.mohe:picked.mohe.slice(0,1)).map(item),moreCount:full?0:picked.mohe.length-1,allShown:full,full,createdAt:r.createdAt,note:'保存只记档位和解读条目，不存任何一方的生辰。',footer:HV.FOOTER};
  }
  return {
   limits:LIMITS,consentVersion:CONSENT_VERSION,
@@ -62,14 +65,23 @@ function createHepanSelfService({store,secret,calculateChart=calculate,generateP
    if(remaining(store.read(),uid,ctx)<=0)fail(429,'今天的自己合盘次数已用完，明天再来');
    const charts={A:chartOf(body.me,'你'),B:chartOf(body.ta,'TA')};
    const analysis=HE.analyze(charts.A,charts.B,{purpose}),picked=HE.items(analysis),key=mac('prose',HE.cacheKey(charts.A,charts.B,purpose));
+   // 先在一个事务里占掉 1 次（核对与扣减不可分），再去调模型；之后任何一步失败都退回这 1 次。
+   // 这样并发请求不会都通过「还有次数」的检查、各自打一遍模型。
+   const day=dayKey(clock()),reserved=buckets(uid,ctx);
+   const left=store.transaction(s=>{if(remaining(s,uid,ctx)<=0)fail(429,'今天的自己合盘次数已用完，明天再来');s.hepanSelfUsage=usage(s).filter(x=>x.day===day);for(const [,k] of reserved){const row=s.hepanSelfUsage.find(x=>x.k===k);if(row)row.n++;else s.hepanSelfUsage.push({k,day,n:1});}return remaining(s,uid,ctx);});
+   const refund=()=>{try{store.transaction(s=>{for(const [,k] of reserved){const row=usage(s).find(x=>x.k===k&&x.day===day);if(row&&row.n>0)row.n--;}});}catch{}};
+   try{
    let prose=proseCache.get(key);
-   if(!prose){if(!inflight.has(key))inflight.set(key,HC.writeProse(analysis,picked,{mode:'self',generate:generateProse,charts}).finally(()=>inflight.delete(key)));prose=await inflight.get(key);remember(key,prose);}
-   // 成功后才扣次数；事务里再核一次，防并发多扣。
-   const left=store.transaction(s=>{if(remaining(s,uid,ctx)<=0)fail(429,'今天的自己合盘次数已用完，明天再来');const d=dayKey(clock()),list=usage(s);s.hepanSelfUsage=list.filter(x=>x.day===d);for(const [,k] of buckets(uid,ctx)){const row=s.hepanSelfUsage.find(x=>x.k===k);if(row)row.n++;else s.hepanSelfUsage.push({k,day:d,n:1});}return remaining(s,uid,ctx);});
+   if(!prose){
+    // 只缓存 AI 文案；回落模板当次直接给、不缓存（也不留 fallbackReason），冷却期过后再试 AI。
+    if(typeof generateProse!=='function'||(aiRetryAt.get(key)||0)>clock())prose=HC.templateProse(analysis,picked);
+    else{if(!inflight.has(key))inflight.set(key,HC.writeProse(analysis,picked,{mode:'self',generate:generateProse,charts}).finally(()=>inflight.delete(key)));const {fallbackReason,...written}=await inflight.get(key);prose=written;if(prose.source==='ai'){aiRetryAt.delete(key);remember(key,prose);}else bounded(aiRetryAt,key,clock()+AI_RETRY_MS);}
+   }
    const report=HV.buildReport({analysis,picked,prose,charts,mode:'self',viewer:'A',unlocked:false,taNickname:nickname});
    const hits=[...picked.he.map(h=>({kind:'he',...descriptor(h)})),...picked.mohe.map(h=>({kind:'mohe',...descriptor(h)}))];
    const saveToken=signSave({v:1,u:uid,exp:clock()+TOKEN_TTL,nickname,purpose,limited:analysis.limited,total:analysis.total,tier:analysis.tier,subs:Object.fromEntries(Object.entries(analysis.subs).map(([k,v])=>[k,v.score])),hits});
    return {...report,remaining:left,saveToken,ownerOnly:true,inPool:false};
+   }catch(e){refund();throw e;}
   },
   save(uid,{saveToken}={}){const b=readSave(saveToken,uid);return store.transaction(s=>{const list=saved(s);if(list.filter(r=>same(r.owner,uid)).length>=SAVED_MAX)fail(429,'最多保存'+SAVED_MAX+'条，请先删除旧的');const r={id:crypto.randomUUID(),owner:uid,nickname:b.nickname,purpose:b.purpose,limited:b.limited,total:b.total,tier:b.tier,subs:b.subs,hits:b.hits,createdAt:new Date(clock()).toISOString()};list.push(r);return savedView(r);});},
   list(uid){return {saved:saved(store.read()).filter(r=>same(r.owner,uid)).slice().reverse().map(r=>({id:r.id,nickname:r.nickname,total:r.total,tier:r.tier,tierLabel:HE.TIER[r.tier],createdAt:r.createdAt}))};},
