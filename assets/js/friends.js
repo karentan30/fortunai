@@ -26,7 +26,7 @@
   const WEALTH_TIERS={income:INCOME_TIERS,assets:ASSET_TIERS,familyAssets:ASSET_TIERS},WEALTH_MIN={income:[['10万以上',10],['30万以上',30],['50万以上',50],['100万以上',100],['300万以上',300]],assets:[['A7 · 100万以上',100],['500万以上',500],['A8 · 1000万以上',1000],['2000万以上',2000],['A9 · 1亿以上',10000]]};WEALTH_MIN.familyAssets=WEALTH_MIN.assets;
   function wealthText(key,v){const s=String(v??'').trim();if(!s||s==='暂不提供')return s;const tier=WEALTH_TIERS[key]?.find(([label])=>label===s);return (tier?.[1]?tier[1]+' · ':'')+s;}
   // 已核验 mark: the server only sends p.verified to the owner and to members, so non-members never see any status.
-  const verifiedMark=(p,key)=>p?.verified?.[key]===true?'<span class="verified-mark">已核验</span>':'';
+  const verifiedMark=(p,key)=>p?.verified?.[key]===true?'<span class="verified-mark"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><circle cx="8" cy="8" r="8" fill="#1d7bf2"/><path d="M4.6 8.3l2.2 2.2 4.6-4.8" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>已核验</span>':'';
   const shownValue=(key,v)=>WEALTH_TIERS[key]?wealthText(key,v):v;
   function wealthSelect(key,value){const s=String(value??''),legacy=s&&!WEALTH_TIERS[key].some(([label])=>label===s)&&s===String(state.profile?.fields?.[key]??'');return `<select id="field_${key}" name="field_${key}"><option value="">暂不填写</option>${legacy?`<option value="${esc(s)}" selected>${esc(s)}（原填写）</option>`:''}${WEALTH_TIERS[key].map(([label,slang])=>`<option value="${label}" ${s===label?'selected':''}>${slang?slang+' · ':''}${label}</option>`).join('')}</select>`;}
   // Four 认识目的 (2026-11-10), in this order. The old 交朋友·闺蜜 (friend) is merged into 找搭子. 婚后找搭子 cannot be combined with 恋爱/婚恋.
