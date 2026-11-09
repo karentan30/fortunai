@@ -2,7 +2,8 @@
 const XB=require('../lib/friends-cross-border'),xbError=XB.errorBody;
 const path=require('node:path');
 const {createSqliteFriendsStore}=require('../lib/friends-sqlite');
-const {getFriendsConfig}=require('../lib/friends-config');
+const {getFriendsConfig,supportInfo}=require('../lib/friends-config');
+const {createSupportService}=require('../lib/friends-support');
 const {createChartService}=require('../lib/friends-chart');
 const {createFriendsService}=require('../lib/friends-service');
 const {searchCities}=require('../lib/friends-location');
@@ -45,13 +46,17 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.get('/admin/verifications',run(()=>({requests:needVerification().pending()})));
   router.get('/admin/verifications/:id/files/:fileId',(req,res,next)=>{try{const f=needVerification().file(req.params.id,req.params.fileId);res.set('Content-Type',f.mime).set('Content-Disposition','attachment; filename="'+f.filename+'"').set('Content-Security-Policy',"default-src 'none'; sandbox").set('Cache-Control','no-store, private');res.send(f.body);}catch(e){if(e.status)return res.status(e.status).json(xbError(e));next(e);}});
   router.post('/admin/verifications/:id',run(req=>needVerification().decide(req.params.id,req.body,req.friendsAdminActor)));
+  // 站内「联系我们」留言：运营查看（可按 待处理/已处理 筛）、回复并改状态，每次操作写操作记录。
+  const support=enabled?createSupportService({store}):null;
+  router.get('/admin/support',run(req=>({messages:support.list(req.query.status)})));
+  router.post('/admin/support/:id',run(req=>({message:support.reply(req.params.id,req.body||{},req.friendsAdminActor)})));
   router.get('/admin/health',run(()=>store.health?store.health():{ok:true,storage:'review-memory'}));
   router.post('/admin/reports/:id',run(req=>admin.review(req.params.id,req.body.status,req.body.note)));
   router.post('/admin/profiles/:id',run(req=>admin.moderate(req.params.id,req.body.disabled,req.body.reason)));
   router.use(createRateLimit({limit:180}));
   router.post('/chart',run(req=>charts.issue(req.body)));
   router.get('/status',run(()=>({enabled,mode})));
-  router.get('/legal',run(()=>({operatorName:process.env.FRIENDS_OPERATOR_NAME||'开普斯通智信集团有限公司（Capstone IQ Group Limited）',supportEmail:process.env.FRIENDS_SUPPORT_EMAIL||'support@runae.app',storageRegion:process.env.FRIENDS_STORAGE_REGION||'',retentionPolicy:process.env.FRIENDS_RETENTION_POLICY||'删除交友档案后，档案、申请和聊天记录立即从交友库移除；渠道统计标记 90 天后删除；核验材料审核完即删除原件，只留核验结果；订单记录按财税法规保存。',publicReady:process.env.FRIENDS_PUBLIC_APPROVED==='true'&&enabled&&mode==='public'})));
+  router.get('/legal',run(()=>({operatorName:process.env.FRIENDS_OPERATOR_NAME||'开普斯通智信集团有限公司（Capstone IQ Group Limited）',...(()=>{const x=supportInfo(process.env);return x.channel==='inapp'?{supportEmail:'',supportChannel:'inapp',supportInapp:'站内留言：我的卡片 → 联系我们',supportUrl:'/pages/friends-contact.html'}:{supportEmail:x.email||(process.env.FRIENDS_SUPPORT_EMAIL?'':'support@runae.app'),supportChannel:'email'};})(),storageRegion:process.env.FRIENDS_STORAGE_REGION||'',retentionPolicy:process.env.FRIENDS_RETENTION_POLICY||'删除交友档案后，档案、申请和聊天记录立即从交友库移除；渠道统计标记 90 天后删除；核验材料审核完即删除原件，只留核验结果；订单记录按财税法规保存。',publicReady:process.env.FRIENDS_PUBLIC_APPROVED==='true'&&enabled&&mode==='public'})));
   router.get('/cities',run(req=>({cities:searchCities(req.query.q)})));
   router.get('/areas',run(req=>({areas:searchAreas(req.query.q)})));
   router.post('/events',createRateLimit({limit:30}),run(req=>service.event(req.body.event,{source:req.body.source,campaign:req.body.campaign})));
@@ -73,6 +78,9 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   // 校园分享用的个人推荐码：服务器签名派生，不含用户ID/姓名，链接里只带这个码。
   router.get('/referral',run(req=>({code:referralCode(secret,req.user.id)})));
   router.get('/me',run(req=>({profile:service.me(req.user.id)})));
+  // 站内「联系我们」：只能看自己的留言和回复；不需要出境同意（撤回出境同意本身也要能走这里）。每人每天最多 5 条。
+  router.get('/support',run(req=>({types:support.TYPES,dailyLimit:support.DAILY_LIMIT,maxLength:support.MAX_TEXT,messages:support.mine(req.user.id)})));
+  router.post('/support',run(req=>({message:support.submit(req.user.id,req.body||{})})));
   // 账号级出境同意（相生资料存储在香港服务器）：一次同意、带版本；写接口未同意时返回 code=XS_CROSS_BORDER_CONSENT_REQUIRED。
   router.get('/cross-border-consent',run(req=>XB.status(store.read(),req.user.id)));
   router.post('/cross-border-consent',run(req=>{if(req.body?.consent!==true||req.body?.version!==XB.VERSION){const e=Error('请勾选同意当前版本的出境说明');e.status=400;e.code=XB.CODE;e.version=XB.VERSION;throw e;}return store.transaction(s=>{XB.record(s,req.user.id);return XB.status(s,req.user.id);});}));
