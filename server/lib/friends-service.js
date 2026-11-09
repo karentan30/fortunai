@@ -41,6 +41,8 @@ function memberFilters(q){
   return out;
 }
 // 约会想一起做的事：传了就必须是固定清单里的 1–8 项；没传时，老资料（无此字段）原样保留，新资料必须填。
+// 双方都勾了的「约会想一起做的事」，按对方卡片可见的列表算。
+function sharedActivities(self,card){const mine=self?.dateActivities||[];return (card?.dateActivities||[]).filter(a=>mine.includes(a));}
 function normalizeDateActivities(b,prev){
   if(!Object.hasOwn(b,'dateActivities')){if(prev)return prev.dateActivities;bad('请至少选择一项约会想一起做的事');}
   const raw=b.dateActivities;
@@ -103,8 +105,9 @@ function createFriendsService(store,charts,options={}) {
       // A hit found through an opted-in hidden value is never explained.
       if(visible(key)&&card.fields?.[key]!==undefined)forYou.push('TA展示的'+M.LABELS[key]+'符合你的期待');
     }
-    const interests=card.hobbies.filter(h=>self.hobbies.includes(h));
-    for(const hobby of interests.slice(0,2))forYou.push('都喜欢'+hobby);
+    const sharedActs=sharedActivities(self,card),interests=[...sharedActs,...card.hobbies.filter(h=>self.hobbies.includes(h)&&!sharedActs.includes(h))];
+    if(sharedActs.length)forYou.push('都想约着一起'+sharedActs.slice(0,2).join('、'));
+    for(const hobby of interests.filter(h=>!sharedActs.includes(h)).slice(0,sharedActs.length?1:2))forYou.push('都喜欢'+hobby);
     const relation=card.chart.dayMaster&&self.chart?.dayMaster?M.elementRelation(self.chart.dayMaster,card.chart.dayMaster):null;
     // Why TA might want to meet you: only from TA's public card, and only about your data TA can actually see.
     const mineVisibleToThem=visibleTo(s,self,p.userId);
@@ -208,8 +211,8 @@ function createFriendsService(store,charts,options={}) {
         const card=project(s,p,uid);
         // Member filters read only the projected card (fields/verified already limited to what this viewer may see).
         if(filters.some(f=>!f(card)))continue;
-        if((q.city&&card.city!==q.city)||(q.stem&&card.chart.dayMaster!==q.stem)||(q.zodiac&&card.chart.zodiac!==q.zodiac)||(q.constellation&&card.constellation!==q.constellation)||(q.mbti&&card.mbti!==q.mbti)||(q.purpose&&!theirPurposes.includes(q.purpose)))continue;
-        const purpose=shared[0],interests=card.hobbies.filter(h=>self.hobbies.includes(h)).length,relation=M.elementRelation(self.chart?.dayMaster,card.chart.dayMaster);
+        if((q.city&&card.city!==q.city)||(q.stem&&card.chart.dayMaster!==q.stem)||(q.zodiac&&card.chart.zodiac!==q.zodiac)||(q.constellation&&card.constellation!==q.constellation)||(q.mbti&&card.mbti!==q.mbti)||(q.purpose&&!theirPurposes.includes(q.purpose))||(q.activity&&!(card.dateActivities||[]).includes(q.activity)))continue;
+        const purpose=shared[0],interests=new Set([...sharedActivities(self,card),...card.hobbies.filter(h=>self.hobbies.includes(h))]).size,relation=M.elementRelation(self.chart?.dayMaster,card.chart.dayMaster);
         const samePurpose=myPurposes.some(k=>theirPurposes.includes(k));
         const alignment=purpose==='serious'&&typeof options.alignmentScore==='function'?options.alignmentScore({state:s,viewerId:uid,candidateId:p.userId,purpose}):null;
         const explanation=explain(s,self,p,card,mineEval);

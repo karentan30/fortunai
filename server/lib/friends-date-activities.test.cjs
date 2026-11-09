@@ -59,3 +59,17 @@ test('copy guard: new copy has no forbidden words or percentages',()=>{
   const all=[...DA.DATE_ACTIVITIES,'约会除了吃饭喝咖啡，还想一起做什么','想多说一句（选填）','羽毛球打了三年，可以带新手'].join(' ');
   assert.deepEqual(findForbidden(all),[]);
 });
+
+test('shared activities: reason 「都想约着一起…」, filter by activity, ranks above non-shared',()=>{
+  const {service:s,data}=setup();
+  s.save('me',data({dateActivities:['健身','攀岩'],hobbies:['读书']}));
+  s.save('gym',data({nickname:'健身搭子',dateActivities:['健身'],hobbies:['电影']}));
+  s.save('other',data({nickname:'不健身',dateActivities:['看展'],hobbies:['电影']}));
+  const all=s.discover('me').profiles;
+  assert.equal(all[0].nickname,'健身搭子');
+  assert.ok(all[0].reasons.includes('都想约着一起健身'));
+  assert.ok(!all[1].reasons.some(r=>r.startsWith('都想约着一起')));
+  const only=s.discover('me',{activity:'健身'}).profiles;
+  assert.deepEqual(only.map(p=>p.nickname),['健身搭子']);
+  assert.equal(s.discover('me',{activity:'游泳'}).profiles.length,0);
+});
