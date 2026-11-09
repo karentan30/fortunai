@@ -1,6 +1,9 @@
 'use strict';
 const path=require('node:path');
 const PLACEHOLDERS=/^(test|example|change|replace|todo|your[-_ ]|待)/i;
+const EMAIL=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// 对外公示的联系渠道。channel=inapp 时一律不公示邮箱（运营方不想公开邮箱）；否则只认格式有效、不是占位的邮箱。
+function supportInfo(env=process.env){const channel=env.FRIENDS_SUPPORT_CHANNEL==='inapp'?'inapp':'email',raw=String(env.FRIENDS_SUPPORT_EMAIL||'').trim(),email=channel==='email'&&EMAIL.test(raw)&&!PLACEHOLDERS.test(raw)?raw:'';return {channel,email};}
 function getFriendsConfig(env=process.env){
   const enabled=env.FRIENDS_ENABLED==='true';if(!enabled)return{enabled:false};
   const errors=[];
@@ -15,8 +18,11 @@ function getFriendsConfig(env=process.env){
   const allowedIds=new Set(String(env.FRIENDS_ALLOWED_USER_IDS||'').split(',').map(x=>x.trim()).filter(Boolean));
   if(mode==='closed_beta'&&!allowedIds.size)errors.push('邀请测试须配置允许进入的账号ID');
   if(mode==='public'){
-    for(const k of ['FRIENDS_OPERATOR_NAME','FRIENDS_SUPPORT_EMAIL','FRIENDS_STORAGE_REGION','FRIENDS_RETENTION_POLICY'])if(!env[k]||PLACEHOLDERS.test(env[k]))errors.push(k+'尚未配置');
-    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(env.FRIENDS_SUPPORT_EMAIL||''))errors.push('客服邮箱格式无效');
+    for(const k of ['FRIENDS_OPERATOR_NAME','FRIENDS_STORAGE_REGION','FRIENDS_RETENTION_POLICY'])if(!env[k]||PLACEHOLDERS.test(env[k]))errors.push(k+'尚未配置');
+    // 法定联系渠道：有效客服邮箱，或 FRIENDS_SUPPORT_CHANNEL=inapp（站内「联系我们」留言）二选一。选站内留言时邮箱可留空/占位，页面不公示邮箱。
+    const support=supportInfo(env);
+    if(env.FRIENDS_SUPPORT_CHANNEL&&!['email','inapp'].includes(env.FRIENDS_SUPPORT_CHANNEL))errors.push('FRIENDS_SUPPORT_CHANNEL只能是 email 或 inapp');
+    else if(support.channel!=='inapp'&&!support.email)errors.push('请配置有效的 FRIENDS_SUPPORT_EMAIL，或设 FRIENDS_SUPPORT_CHANNEL=inapp 使用站内留言');
     for(const k of ['FRIENDS_PUBLIC_APPROVED','FRIENDS_IDENTITY_REVIEWED','FRIENDS_LEGAL_REVIEWED','FRIENDS_BACKUP_VERIFIED'])if(env[k]!=='true')errors.push(k+'尚未确认');
   }
   const file=env.FRIENDS_DB_FILE||path.join(__dirname,'../private/friends.sqlite');
@@ -27,4 +33,4 @@ function getFriendsConfig(env=process.env){
   return {enabled,mode,file,allowedIds,errors,ok:!errors.length};
 }
 function requireFriendsConfig(env){const config=getFriendsConfig(env);if(config.enabled&&!config.ok)throw Error('交友上线配置未就绪：'+config.errors.join('；'));return config;}
-module.exports={getFriendsConfig,requireFriendsConfig};
+module.exports={getFriendsConfig,requireFriendsConfig,supportInfo};

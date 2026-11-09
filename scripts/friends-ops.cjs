@@ -2,7 +2,7 @@
 // No secrets are printed or accepted as CLI arguments. Supply keys via the server environment.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const {createSqliteFriendsStore}=require('../server/lib/friends-sqlite');
-const {getFriendsConfig}=require('../server/lib/friends-config');
+const {getFriendsConfig,supportInfo}=require('../server/lib/friends-config');
 const {purgeAttributionMarks}=require('../server/lib/friends-admin');
 const args=Object.fromEntries(process.argv.slice(3).map(x=>{const i=x.indexOf('=');return i<0?[x.replace(/^--/,''),true]:[x.slice(0,i).replace(/^--/,''),x.slice(i+1)];}));
 const action=process.argv[2];
@@ -26,7 +26,7 @@ async function main(){
         if(!billing.catalog().enabled&&!billing.reconciliationReady())errors.push('计费配置未就绪：请核验共享客户端、商户与报告交付配置');
       }
     }finally{s.close();}}
-    console.log(JSON.stringify({ready:!errors.length,mode:c.mode||'disabled',errors},null,2));if(errors.length)process.exitCode=1;return;
+    console.log(JSON.stringify({ready:!errors.length,mode:c.mode||'disabled',supportChannel:supportInfo(process.env).channel,errors},null,2));if(errors.length)process.exitCode=1;return;
   }
   const key=process.env.FRIENDS_DATA_KEY;
   if(action==='restore'){
