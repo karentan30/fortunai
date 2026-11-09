@@ -3,7 +3,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),crypto=require('node:crypto');
 const {createFriendsStore}=require('./friends-store'),{createFriendsService}=require('./friends-service'),{createCompatibilityService}=require('./friends-compatibility'),{searchCities}=require('./friends-location'),{CROSS_BORDER_VERSION}=require('./friends-chart');
 const XB=require('./friends-cross-border');
-const data={credential:'test',consent:true,nickname:'测试',city:'北京',intent:'交朋友',fields:{height:'170',weight:'60',school:'学校',occupation:'职员',income:'暂不提供',assets:'暂不提供'},dateActivities:['羽毛球'],hobbies:['阅读'],targetStems:['不限'],targetZodiacs:['不限'],listed:true};
+const data={credential:'test',consent:true,nickname:'测试',city:'北京',intent:'交朋友',fields:{height:'170',weight:'60',education:'本科',school:'学校',occupation:'职员',income:'暂不提供',assets:'暂不提供'},dateActivities:['羽毛球'],hobbies:['阅读'],targetStems:['不限'],targetZodiacs:['不限'],listed:true};
 const isXB=e=>e&&e.status===400&&e.code===XB.CODE&&e.version===CROSS_BORDER_VERSION&&/香港服务器/.test(e.message);
 const setup=()=>{const store=createFriendsStore();return {store,service:createFriendsService(store,{verify:()=>({age:30,dayMaster:'戊',zodiac:'羊'})})};};
 const tmp=()=>fs.mkdtempSync(path.join(os.tmpdir(),'xb-'));

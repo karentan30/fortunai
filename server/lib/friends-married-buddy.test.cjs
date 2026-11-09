@@ -10,7 +10,7 @@ const charts={verify:c=>{const [stem,zodiac,age]=String(c).split(':');return {ag
 function setup(){
   const store=createFriendsStore(),service=createFriendsService(store,charts);
   const base=(extra={})=>({credential:'丙:马:30',consent:true,crossBorderConsent:true,listed:true,nickname:'虚构测试',city:'北京',purposes:['buddy'],bio:'虚构',
-    fields:{height:'170',weight:'60',school:'测试大学',occupation:'工程师',income:'',assets:''},dateActivities:['羽毛球'],hobbies:['阅读'],
+    fields:{height:'170',weight:'60',education:'本科',school:'测试大学',occupation:'工程师',income:'',assets:''},dateActivities:['羽毛球'],hobbies:['阅读'],
     targetStems:['不限'],targetZodiacs:['不限'],visibility:{age:'public',height:'public',dayMaster:'public',zodiac:'public'},...extra});
   return {store,service,base};
 }

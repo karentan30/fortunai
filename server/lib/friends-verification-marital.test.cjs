@@ -22,7 +22,7 @@ function setup(t){
   const store=createFriendsStore(),charts=createChartService(secret),service=createFriendsService(store,charts);
   const files=path.join(dir,'files'),v=createVerificationService({store,dir:files,key:KEY});
   const credential=charts.issue({birthday:'1991-08-28',calendar:'lunar',hour:6}).credential;
-  const data=(extra={})=>({credential,consent:true,crossBorderConsent:true,nickname:'测试',city:'上海',purposes:['serious'],fields:{height:'170',education:'硕士'},visibility:{education:'public'},dateActivities:['羽毛球'],hobbies:['羽毛球'],targetStems:['不限'],targetZodiacs:['不限'],listed:true,...extra});
+  const data=(extra={})=>({credential,consent:true,crossBorderConsent:true,nickname:'测试',city:'上海',purposes:['serious'],fields:{height:'170',education:'硕士',school:'测试大学',occupation:'工程师'},visibility:{education:'public'},dateActivities:['羽毛球'],hobbies:['羽毛球'],targetStems:['不限'],targetZodiacs:['不限'],listed:true,...extra});
   const onDisk=()=>fs.existsSync(files)?fs.readdirSync(files).filter(n=>n.endsWith('.bin')):[];
   const makeMember=uid=>store.transaction(s=>{s.billingOrders=[...(s.billingOrders||[]),{id:'o-'+uid,userId:uid,status:'paid',matchingMembership:true,benefitsVerified:true,paidAt:new Date(Date.now()-86400000).toISOString(),accessUntil:new Date(Date.now()+30*86400000).toISOString()}];});
   return {files,store,service,v,data,onDisk,makeMember};

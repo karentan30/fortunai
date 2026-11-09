@@ -5,7 +5,7 @@ const {createFriendsStore}=require('./friends-store'),{createFriendsService}=req
 function setup(){
   const store=createFriendsStore();let now=Date.parse('2026-11-06T04:00:00Z');
   const service=createFriendsService(store,{verify:()=>({age:30,dayMaster:'丙',zodiac:'马'})},{enabled:true,clock:()=>now});
-  const base={credential:'c',consent:true,crossBorderConsent:true,nickname:'虚构测试',city:'北京',intent:'交朋友',fields:{height:'170',weight:'60',school:'暂无',occupation:'暂无',industry:'暂无',title:'暂无',income:'暂不提供',assets:'暂不提供'},dateActivities:['羽毛球'],hobbies:['阅读'],visibility:{},listed:true};
+  const base={credential:'c',consent:true,crossBorderConsent:true,nickname:'虚构测试',city:'北京',intent:'交朋友',fields:{height:'170',weight:'60',education:'本科',school:'暂无',occupation:'暂无',industry:'暂无',title:'暂无',income:'暂不提供',assets:'暂不提供'},dateActivities:['羽毛球'],hobbies:['阅读'],visibility:{},listed:true};
   const save=(uid,extra={})=>service.save(uid,{...base,...extra,fields:{...base.fields,...(extra.fields||{})}});
   const member=uid=>store.transaction(s=>{s.billingOrders=s.billingOrders||[];s.billingOrders.push({id:'XS-'+uid,userId:uid,provider:'direct',matchingMembership:true,benefitsVerified:true,status:'paid',paidAt:new Date(now-1000).toISOString(),accessUntil:new Date(now+30*86400000).toISOString()});});
   return {store,service,save,member,setNow:t=>now=t,now:()=>now};
@@ -33,6 +33,8 @@ test('member filters are member-only and only match fields the candidate made vi
   f.save('low',{fields:{education:'大专',income:'10万以下',house:'无房',car:'无车'},visibility:{education:'public',income:'public',house:'public',car:'public'}});
   assert.throws(()=>f.service.discover('me',{edu:'本科'}),e=>e.status===403&&/会员功能/.test(e.message));
   assert.equal(f.service.discover('me',{}).total,3,'free browsing unaffected');
+  // 学历要核验通过才对别人可见（含会员筛选）。
+  f.store.transaction(s=>{s.profiles.find(p=>p.shareId===open.shareId).verified={education:true};});
   f.member('me');
   for(const q of [{edu:'本科'},{income:'30–50万'},{house:'有房'},{car:'有车'}]){
     assert.deepEqual(f.service.discover('me',q).profiles.map(p=>p.shareId),[open.shareId],JSON.stringify(q)+' must not leak hidden values');

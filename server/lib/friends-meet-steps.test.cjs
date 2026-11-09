@@ -15,7 +15,7 @@ const NOW=Date.parse('2026-11-10T10:00:00+08:00');
 function setup(){
   const clock={now:NOW},store=createFriendsStore(),charts=createChartService('test-signing-key-'.repeat(4)),service=createFriendsService(store,charts,{clock:()=>clock.now});
   const credential=charts.issue({birthday:'1991-08-28',calendar:'lunar',hour:6}).credential;
-  const data=(extra={})=>({credential,consent:true,crossBorderConsent:true,nickname:'测试',city:'上海',intent:'交朋友',fields:{height:'170',weight:'60',school:'学校',occupation:'职员'},visibility:{school:'public'},dateActivities:['羽毛球'],hobbies:['羽毛球'],targetStems:['不限'],targetZodiacs:['不限'],listed:true,contact:'wx',contactConsent:true,...extra});
+  const data=(extra={})=>({credential,consent:true,crossBorderConsent:true,nickname:'测试',city:'上海',intent:'交朋友',fields:{height:'170',weight:'60',education:'本科',school:'学校',occupation:'职员'},visibility:{school:'public'},dateActivities:['羽毛球'],hobbies:['羽毛球'],targetStems:['不限'],targetZodiacs:['不限'],listed:true,contact:'wx',contactConsent:true,...extra});
   const a=service.save('a',data()),b=service.save('b',data()),c=service.save('c',data());
   const r=service.request('a',b.shareId);service.act('b',r.id,'accept');
   return {s:service,store,a,b,c,r,data,clock};

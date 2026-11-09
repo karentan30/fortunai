@@ -6,9 +6,9 @@ const charts={verify:c=>{const [stem,zodiac,age]=String(c).split(':');return {ag
 function setup(options){
   const store=createFriendsStore(),service=createFriendsService(store,charts,options);
   const base=(extra={})=>({credential:'丙:马:30',consent:true,crossBorderConsent:true,listed:true,nickname:'虚构测试',city:'北京',purposes:['buddy'],bio:'虚构',
-    fields:{height:'170',weight:'60',school:'测试大学',occupation:'工程师',income:'',assets:''},
+    fields:{height:'170',weight:'60',education:'本科',school:'测试大学',occupation:'工程师',income:'',assets:''},
     dateActivities:['羽毛球'],hobbies:['阅读'],targetStems:['不限'],targetZodiacs:['不限'],visibility:{age:'public',height:'public',dayMaster:'public',zodiac:'public'},...extra,
-    ...(extra.fields?{fields:{height:'170',weight:'60',school:'测试大学',occupation:'工程师',...extra.fields}}:{})});
+    ...(extra.fields?{fields:{height:'170',weight:'60',education:'本科',school:'测试大学',occupation:'工程师',...extra.fields}}:{})});
   return {store,service,base};
 }
 const ids=r=>r.profiles.map(p=>p.shareId);
@@ -109,7 +109,7 @@ test('explanations: TA也想认识你 only after acceptance; forThem only from T
 test('legacy profiles (single intent, no purposes/expectations) keep working and migrate on read',()=>{
   const {store,service:s,base}=setup();
   const legacy=(userId,intent,extra={})=>({userId,shareId:'legacy-'+userId,nickname:'旧资料',city:'北京',intent,
-    fields:{age:'30',height:'170',weight:'60',school:'学校',occupation:'职员',industry:'',title:'',income:'暂不提供',assets:'暂不提供',familyAssets:''},
+    fields:{age:'30',height:'170',weight:'60',education:'本科',school:'学校',occupation:'职员',industry:'',title:'',income:'暂不提供',assets:'暂不提供',familyAssets:''},
     visibility:{age:'public',height:'public',weight:'private',school:'private',occupation:'private',industry:'private',title:'private',income:'private',assets:'private',familyAssets:'private',dayMaster:'public',zodiac:'public'},
     hobbies:['阅读'],targetStems:['不限'],targetZodiacs:['不限'],bio:'旧',contact:'',contactConsent:false,listed:true,chart:{age:30,dayMaster:'丙',zodiac:'马'},policyVersion:'legacy-unversioned',...extra});
   store.transaction(st=>{st.profiles.push(legacy('old-friend','交朋友'),legacy('old-girl','找闺蜜'),legacy('old-serious','认真恋爱'),legacy('old-dating','Dating'));});

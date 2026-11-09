@@ -8,7 +8,7 @@ const {createFriendsService,FIELDS,OPTIONAL_FIELDS}=require('./friends-service')
 const secret='test-signing-key-'.repeat(4);
 function setup(file){const store=createFriendsStore(file),charts=createChartService(secret),service=createFriendsService(store,charts);
 const credential=charts.issue({birthday:'1991-08-28',calendar:'lunar',hour:6}).credential;
-const data=(extra={})=>({credential,consent:true,crossBorderConsent:true,nickname:'测试',city:'上海',intent:'交朋友',fields:{height:'170',weight:'60',school:'学校',occupation:'职员',industry:'科技',title:'工程师',income:'自报个人暂无收入',assets:'自报个人暂无资产'},visibility:{school:'public',income:'connected'},dateActivities:['羽毛球'],hobbies:['羽毛球'],targetStems:['不限'],targetZodiacs:['不限'],listed:true,contact:'private-contact',contactConsent:true,...extra});
+const data=(extra={})=>({credential,consent:true,crossBorderConsent:true,nickname:'测试',city:'上海',intent:'交朋友',fields:{height:'170',weight:'60',education:'本科',school:'学校',occupation:'职员',industry:'科技',title:'工程师',income:'自报个人暂无收入',assets:'自报个人暂无资产'},visibility:{school:'public',income:'connected'},dateActivities:['羽毛球'],hobbies:['羽毛球'],targetStems:['不限'],targetZodiacs:['不限'],listed:true,contact:'private-contact',contactConsent:true,...extra});
 return {store,charts,service,data};}
 test('calendar validation, known regression and unknown time',()=>{
 assert.equal(calculate({birthday:'1991-08-28',calendar:'lunar',hour:6}).dayPillar,'戊申');
@@ -18,8 +18,9 @@ const c=calculate({birthday:'1991-08-28'});assert.equal(c.pillars,null);assert.e
 test('signed chart rejects tampering',()=>{const {charts,data}=setup();const token=data().credential;assert.equal(charts.verify(token).dayMaster,'戊');assert.throws(()=>charts.verify(token+'x'));const parts=token.split('.');parts[0]=Buffer.from('{}').toString('base64url');assert.throws(()=>charts.verify(parts.join('.')));});
 test('core fields required; optional legacy fields and age derivation',()=>{const {service,data}=setup();for(const k of FIELDS.filter(k=>k!=='age'&&!OPTIONAL_FIELDS.includes(k))){const b=data();delete b.fields[k];assert.throws(()=>service.save('a',b));}{const b=data();for(const k of ['income','assets','familyAssets'])delete b.fields[k];assert.equal(service.save('a',b).fields.income,'');}const p=service.save('a',data({fields:{...data().fields,age:'16'}}));assert.ok(Number(p.fields.age)>=18);assert.throws(()=>service.save('b',data({consent:false})));});
 test('privacy, request permissions, contacts, duplicate concurrency and exit',async()=>{
-const {service:s,data}=setup();const a=s.save('a',data()),b=s.save('b',data()),c=s.save('c',data());
-let card=s.card(b.shareId,'a');assert.equal(card.fields.school,'学校');assert.equal(card.fields.income,undefined);assert.equal(card.fields.assets,undefined);assert.equal(card.contact,undefined);
+const {service:s,data,store}=setup();const a=s.save('a',data()),b=s.save('b',data()),c=s.save('c',data());
+let card=s.card(b.shareId,'a');assert.equal(card.fields.school,undefined,'学校未核验不给别人看');assert.equal(card.fields.occupation,undefined,'职业未核验不给别人看');assert.equal(s.card(b.shareId,'b').fields.school,'学校','本人看得到');
+store.transaction(st=>{st.profiles.find(p=>p.shareId===b.shareId).verified={education:true};});card=s.card(b.shareId,'a');assert.equal(card.fields.school,'学校','学历核验后学校可见');assert.equal(card.fields.income,undefined);assert.equal(card.fields.assets,undefined);assert.equal(card.contact,undefined);
 const results=await Promise.allSettled([Promise.resolve().then(()=>s.request('a',b.shareId)),Promise.resolve().then(()=>s.request('a',b.shareId))]);assert.equal(results.filter(r=>r.status==='fulfilled').length,1);
 const id=results.find(r=>r.status==='fulfilled').value.id;assert.throws(()=>s.act('c',id,'accept'));assert.throws(()=>s.act('a',id,'accept'));s.act('b',id,'accept');assert.throws(()=>s.act('b',id,'accept'));
 assert.equal(s.card(b.shareId,'a').fields.income,'自报个人暂无收入');assert.equal(s.requests('a')[0].contact,'private-contact');
