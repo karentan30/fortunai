@@ -45,7 +45,7 @@ function eligible(s,p){
 }
 // The ONLY place a guest card is built. Add a field here only after checking the owner's scope for it.
 function teaser(p){
-  const card={dayMaster:p.chart.dayMaster,element:elementOf(p.chart.dayMaster),city:String(p.city||'').slice(0,12),purposeLabels:M.purposesOf(p).map(k=>M.PURPOSE_LABELS[k])};
+  const card={dayMaster:p.chart.dayMaster,element:elementOf(p.chart.dayMaster),city:String(p.city||'').slice(0,12),purposeLabels:M.shownPurposes(p,false).map(k=>M.PURPOSE_LABELS[k])};
   if(pub(p,'age')){const b=ageBracket(p.chart.age);if(b)card.ageBracket=b;}
   if(pub(p,'zodiac')&&p.chart.zodiac)card.zodiac=p.chart.zodiac;
   if(pub(p,'mbti')&&p.mbti)card.mbti=p.mbti;

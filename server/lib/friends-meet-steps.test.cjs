@@ -196,7 +196,36 @@ test('both 想见面 → 你们都想见面 to both; step 4 reminder goes away',
   assert.equal(v.decision.outcome,'mutual');assert.equal(v.decision.message,'你们都想见面');assert.equal(v.skipReminder,null);
   assert.equal(s.meet('a',b.shareId).decision.message,'你们都想见面');
   assert.match(UI.html(s.meet('a',b.shareId)),/你们都想见面/);
-  s.meetDecide('a',b.shareId,{choice:'more'});assert.equal(s.meet('b',a.shareId).decision.outcome,null,'再聊聊 can be re-chosen later');
+  // Before an outcome a choice can still be changed; after it, the outcome is final (no probing by flipping).
+  assert.equal(code(()=>s.meetDecide('a',b.shareId,{choice:'more'})),409);assert.equal(s.meet('b',a.shareId).decision.outcome,'mutual');
+  const y=setup();talked(y);y.s.meetDecide('a',y.b.shareId,{choice:'more'});y.s.meetDecide('a',y.b.shareId,{choice:'meet'});
+  assert.equal(y.s.meet('a',y.b.shareId).decision.mine,'meet','re-choosing before any outcome still works');
+});
+
+test('decide is final once the outcome is closed: neither side can flip to learn the other choice',()=>{
+  const x=setup();talked(x);const {s,a,b,clock}=x;
+  s.meetDecide('b',a.shareId,{choice:'end'});s.meetDecide('a',b.shareId,{choice:'meet'});
+  for(const [u,t] of [['a',b],['b',a]])for(const choice of ['meet','more','end'])assert.equal(code(()=>s.meetDecide(u,t.shareId,{choice})),409,u+' '+choice);
+  assert.equal(s.meet('a',b.shareId).decision.mine,'meet');
+  // closed by the 7-day quiet rule: also final
+  const y=setup();talked(y);y.s.meetDecide('a',y.b.shareId,{choice:'end'});y.clock.now=NOW+7*86400000;
+  assert.equal(code(()=>y.s.meetDecide('b',y.a.shareId,{choice:'meet'})),409);assert.equal(code(()=>y.s.meetDecide('a',y.b.shareId,{choice:'more'})),409);
+});
+
+test('connection whose purposes became isolated: meet routes 404 like blocked (married_buddy vs dating)',()=>{
+  const x=setup();const {s,a,b,store,data}=x;
+  assert.equal(code(()=>s.meet('a',b.shareId)),200);
+  s.save('a',data({purposes:['married_buddy']}));s.save('b',data({purposes:['buddy','dating']}));
+  assert.equal(code(()=>s.meet('a',b.shareId)),404);assert.equal(code(()=>s.meet('b',a.shareId)),404);
+  assert.equal(code(()=>s.meetStep('a',b.shareId,{step:2,action:'confirm'})),404);
+  assert.equal(code(()=>s.meetAppointment('b',a.shareId,{kind:'voice',action:'cancel'})),404);
+  assert.equal(code(()=>s.meetDecide('a',b.shareId,{choice:'meet'})),404);
+  assert.equal(code(()=>s.commonSlots('a',b.shareId,{})),404);
+  // admin-verified 婚况 has the same effect even if the stored choice is 找搭子
+  const y=setup();y.s.save('b',y.data({purposes:['dating']}));
+  assert.equal(code(()=>y.s.meet('a',y.b.shareId)),200);
+  y.store.transaction(st=>{const p=st.profiles.find(p=>p.userId==='a');p.verified={marital:true};p.verifiedDetail={marital:'married'};});
+  assert.equal(code(()=>y.s.meet('b',y.a.shareId)),404);
 });
 
 test('到这里就好: neutral close only after the other answers or after 7 days; never says who; no auto-disconnect',()=>{
