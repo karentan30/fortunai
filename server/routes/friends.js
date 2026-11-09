@@ -177,6 +177,15 @@ function productionRouter(){
     instrumentCompatibility(compatibility,store,createFunnelSink({secret:process.env.FRIENDS_SIGNING_KEY}));
     let selfService=null;try{selfService=require('../lib/friends-hepan-self').createHepanSelfService({store,secret:process.env.FRIENDS_SIGNING_KEY,generateProse,pay:hepanPay});}catch(e){console.error('[friends] 自己合盘未启用：',e.message);}
     bundle.use('/compatibility',billingAuth,createCompatibilityRouter({express,auth:billingAuth,service:compatibility,selfService,payService:hepanPay}));
+    // 我的命盘：免费本人命盘 + 付费完整报告（Runae 八字完整报告引擎）。付费开关 FRIENDS_MYCHART_PAY_ENABLED，默认关。
+    try{
+     const {createMyChartService}=require('../lib/friends-my-chart');
+     const {createMyChartRouter}=require('./friends-my-chart');
+     const key=process.env.FRIENDS_SIGNING_KEY;
+     const inputHashKey=typeof key==='string'&&key.length>=32?require('node:crypto').createHmac('sha256',key).update('friends-mychart-input-v1').digest('hex'):undefined;
+     const myChart=createMyChartService({store,pay:hepanPay,adapter:require('../lib/friends-report-adapter').createFriendsReportAdapter(),inputHashKey});
+     bundle.use('/my-chart',createRateLimit({limit:60}),billingAuth,createMyChartRouter({express,auth:billingAuth,service:myChart}));
+    }catch(e){console.error('[friends] 我的命盘未启用：',e.message);}
     bundle.use(friends);return bundle;
   }catch(e){console.error('[friends] Storage not ready; feature disabled. Run protected preflight.');return createRouter({express,auth:authMiddleware,enabled:false,mode:'storage_error',onLogout});}
 }
