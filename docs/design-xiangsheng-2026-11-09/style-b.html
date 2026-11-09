@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>合拍卡 · 相生</title>
+<style>
+:root{--bg:#121019;--bg2:#1c1926;--card:#221e2e;--ink:#f6f2ff;--ink2:#c9c2dc;--muted:#a49cba;
+  --lime:#c8ff3e;--pink:#ff5aa8;--blue:#5b8cff;--orange:#ff8a3d;--cyan:#3ee6d0;
+  --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB",sans-serif;
+  --display:"PingFang SC",-apple-system,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.65 var(--sans);
+  background-image:radial-gradient(circle at 20% 0%,rgba(255,90,168,.18),transparent 40%),radial-gradient(circle at 100% 30%,rgba(91,140,255,.16),transparent 40%),
+  radial-gradient(rgba(255,255,255,.06) 1px,transparent 1px);background-size:auto,auto,16px 16px}
+.wrap{max-width:430px;margin:0 auto;padding:0 18px 36px}
+header{display:flex;justify-content:space-between;align-items:center;height:60px}
+.brand{font:800 22px/1 var(--display);letter-spacing:.1em;color:var(--ink);text-decoration:none;min-height:44px;display:inline-flex;align-items:center}
+.brand b{color:var(--lime)}
+.back{color:var(--ink2);font-size:13px;min-height:44px;display:inline-flex;align-items:center;padding:0 14px;border:1px solid #3a3450;border-radius:999px;text-decoration:none}
+.kicker{display:inline-block;margin:6px 0 10px;font:800 12px var(--sans);letter-spacing:.18em;color:#121019;background:var(--lime);padding:3px 10px;border-radius:4px;transform:rotate(-2deg)}
+
+/* player cards */
+.duo{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:4px 0 0}
+.pc{border-radius:16px;padding:12px 12px 14px;color:#121019;position:relative;border:2px solid #121019;box-shadow:4px 4px 0 #000}
+.pc.a{background:var(--pink);transform:rotate(-3deg)}
+.pc.b{background:var(--blue);color:#fff;transform:rotate(3deg)}
+.pc .av{height:76px;border-radius:10px;background:rgba(255,255,255,.35);display:grid;place-items:center;font:900 34px var(--display);border:2px solid #121019;margin-bottom:8px}
+.pc.b .av{background:rgba(18,16,25,.25)}
+.pc h3{margin:0;font:900 19px/1.2 var(--display)}
+.pc .row{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-top:6px;border-top:1.5px solid currentColor;padding-top:5px}
+.pc .tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.pc .tags span{font-size:12px;font-weight:700;padding:1px 7px;border-radius:999px;border:1.5px solid currentColor}
+.vs{position:absolute;left:50%;top:58px;transform:translate(-50%,-50%) rotate(-8deg);width:54px;height:54px;border-radius:50%;background:var(--lime);color:#121019;display:grid;place-items:center;font:900 22px var(--display);border:3px solid #121019;box-shadow:3px 3px 0 #000;z-index:2}
+
+/* match card */
+.match{margin:26px 0 0;border-radius:20px;padding:20px 18px 18px;background:linear-gradient(135deg,#2a2240,#1b2a3a);border:2px solid var(--lime);position:relative;overflow:hidden;box-shadow:0 0 0 4px rgba(200,255,62,.12)}
+.match:after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.10) 45%,transparent 55%);pointer-events:none}
+.match .top{display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:800;letter-spacing:.14em;color:var(--lime)}
+.match .tier{font:900 40px/1.1 var(--display);margin:10px 0 4px;letter-spacing:.02em}
+.match .tier span{color:var(--lime)}
+.meter{display:flex;gap:6px;margin:10px 0 12px}
+.meter i{flex:1;height:10px;border-radius:3px;background:#3a3450;display:block}
+.meter i.on{background:var(--lime)}
+.meter-lab{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:-6px}
+.match p.sum{margin:12px 0 0;font-size:16px;font-weight:600;color:var(--ink)}
+
+h2{font:900 20px var(--display);margin:30px 0 12px;display:flex;align-items:center;gap:10px}
+h2 .n{font-size:12px;font-weight:800;color:#121019;background:var(--cyan);padding:2px 8px;border-radius:999px}
+h2 .n.p{background:var(--orange)}
+
+.buff{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:start;background:var(--card);border:1.5px solid #3a3450;border-left:5px solid var(--cyan);border-radius:14px;padding:14px;margin:0 0 10px}
+.buff .ic{width:44px;height:44px;border-radius:12px;background:rgba(62,230,208,.15);display:grid;place-items:center;font-size:22px}
+.buff h3{margin:0;font:800 16px var(--display)}
+.buff p{margin:2px 0 0;color:var(--ink2);font-size:14px}
+
+/* skill card */
+.skill{background:var(--card);border:2px solid var(--orange);border-radius:18px;overflow:hidden}
+.skill .hd{background:var(--orange);color:#121019;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+.skill .hd b{font:900 17px var(--display)}
+.skill .hd small{font-size:12px;font-weight:800;border:1.5px solid #121019;border-radius:999px;padding:0 8px}
+.skill .bd{padding:14px 16px 16px}
+.skill .bd>p{margin:0 0 12px;color:var(--ink2);font-size:14px}
+.move{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;padding:10px 12px;border-radius:12px;background:#2c2640;margin:0 0 8px;font-size:14px}
+.move .tag{font-size:12px;font-weight:900;color:#121019;background:var(--lime);border-radius:6px;padding:2px 7px;white-space:nowrap}
+
+/* locked */
+.locked{margin:22px 0 0;position:relative}
+.ghosts{position:relative;height:118px}
+.ghost{position:absolute;left:0;right:0;height:96px;border-radius:18px;border:2px dashed #4a4366;background:repeating-linear-gradient(135deg,#1e1a2a 0 10px,#231e31 10px 20px)}
+.ghost.g2{top:22px;transform:rotate(2deg);left:10px;right:-4px}
+.ghost .q{position:absolute;right:16px;top:12px;font:900 28px var(--display);color:#4a4366}
+.lockcard{position:relative;margin-top:-58px;background:var(--bg2);border:2px solid var(--pink);border-radius:20px;padding:18px 16px 12px;box-shadow:0 -10px 30px rgba(0,0,0,.5)}
+.lockcard h3{margin:0;font:900 18px/1.4 var(--display)}
+.lockcard p{margin:4px 0 14px;color:var(--ink2);font-size:13px}
+.btn{display:flex;align-items:center;justify-content:center;width:100%;min-height:54px;border-radius:14px;border:2px solid #121019;background:var(--lime);color:#121019;font:900 16px var(--display);box-shadow:4px 4px 0 var(--pink)}
+.btn small{font-weight:700;font-size:13px;margin-left:4px}
+.member{display:flex;justify-content:center;align-items:center;min-height:44px;color:var(--ink2);font-size:13px;text-decoration:underline;text-underline-offset:4px;text-decoration-color:#4a4366}
+.foot{margin:26px 0 0;text-align:center;font-size:12px;color:var(--muted);border-top:1px solid #2f2a40;padding-top:14px}
+</style></head><body><div class="wrap">
+<header><a class="brand" href="#">相<b>生</b></a><a class="back" href="#">← 我的邀请</a></header>
+<span class="kicker">搭子卡 · 免费版</span>
+
+<div class="duo">
+  <div class="pc a"><div class="av">满</div><h3>小满</h3>
+    <div class="row"><span>年龄段</span><span>25-29</span></div>
+    <div class="tags"><span>徒步</span><span>胶片</span><span>猫</span></div></div>
+  <div class="vs" aria-hidden="true">×</div>
+  <div class="pc b"><div class="av">屿</div><h3>阿屿</h3>
+    <div class="row"><span>年龄段</span><span>25-29</span></div>
+    <div class="tags"><span>桌游</span><span>做饭</span><span>乐队</span></div></div>
+</div>
+
+<section class="match" aria-label="合拍卡">
+  <div class="top"><span>合拍卡</span><span>相生 · 五行相处报告</span></div>
+  <div class="tier"><span>大体</span>合拍</div>
+  <div class="meter" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i></div>
+  <div class="meter-lab"><span>需要磨合</span><span>大体合拍</span><span>很合拍</span></div>
+  <p class="sum">节奏不同，却能互相补位；把话说开，会越处越顺。</p>
+</section>
+
+<h2>合的地方 <span class="n">2</span></h2>
+<div class="buff"><div class="ic">🤝</div><div><h3>彼此能托底</h3><p>一个擅长往前推，一个擅长收尾，一起做事容易自然分工。</p></div></div>
+<div class="buff"><div class="ic">💬</div><div><h3>聊天不费劲</h3><p>对很多事的第一反应相近，不用解释太多就能接上话。</p></div></div>
+
+<h2>要磨合的地方 <span class="n p">1 / 3</span></h2>
+<div class="skill">
+  <div class="hd"><b>⚡ 做决定的节奏不一样</b><small>磨合点</small></div>
+  <div class="bd"><p>容易在「什么时候定下来」上起摩擦：一个想马上定，一个想再想想。</p>
+    <div class="move"><span class="tag">招式 1</span><span>大事先各列三条理由，再坐下来谈</span></div>
+    <div class="move"><span class="tag">招式 2</span><span>约好答复时间：明晚九点前给答复</span></div>
+    <div class="move"><span class="tag">招式 3</span><span>一吵起来先暂停 20 分钟，再回来聊</span></div>
+  </div>
+</div>
+
+<section class="locked" aria-labelledby="lk">
+  <div class="ghosts" aria-hidden="true"><div class="ghost"><span class="q">?</span></div><div class="ghost g2"><span class="q">?</span></div></div>
+  <div class="lockcard">
+    <h3 id="lk">🔒 还有 2 张磨合卡未翻开</h3>
+    <p>还有 2 条要磨合的地方 + 相处建议 + 依据</p>
+    <button class="btn" type="button">解锁完整版 ¥9.9<small>（你们俩都能看）</small></button>
+    <a class="member" href="#">会员每月含 2 份 · 了解会员</a>
+  </div>
+</section>
+
+<p class="foot">传统文化参考，不预测关系结果，不替代你们的真实相处。</p>
+</div></body></html>
