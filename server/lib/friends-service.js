@@ -43,6 +43,19 @@ function memberFilters(q){
   if(q.verified){if(q.verified!=='1')bad400('已核验筛选无效');out.push(c=>!!c.verified&&Object.values(c.verified).some(Boolean));}
   return out;
 }
+// 年龄/身高范围筛选（免费）：ageMin/ageMax 18–99，heightMin/heightMax 100–250，整数，最小不大于最大；不合法 400，绝不放宽。
+// 只按投影后的卡片（对这位访客可见的资料）比较；对方没公开年龄/身高的，范围筛选打开时不会出现。
+const RANGE_FILTERS={age:['ageMin','ageMax',18,99,'年龄'],height:['heightMin','heightMax',100,250,'身高']};
+function rangeFilters(q){
+  const out=[],bad400=m=>{const e=Error(m);e.status=400;throw e;};
+  for(const [field,[lo,hi,floor,ceil,label]] of Object.entries(RANGE_FILTERS)){
+    const read=k=>{const v=q[k];if(v===undefined||v==='')return null;if(typeof v!=='string'||!/^\d{1,3}$/.test(v))bad400(label+'范围需为整数');const n=Number(v);if(n<floor||n>ceil)bad400(label+'范围应在 '+floor+'–'+ceil+' 之间');return n;};
+    const min=read(lo),max=read(hi);if(min===null&&max===null)continue;
+    if(min!==null&&max!==null&&min>max)bad400(label+'范围的最小值不能大于最大值');
+    out.push(c=>{const raw=c.fields?.[field];if(raw===undefined||raw===null||String(raw).trim()==='')return false;const n=Number(raw);return Number.isFinite(n)&&(min===null||n>=min)&&(max===null||n<=max);});
+  }
+  return out;
+}
 // 约会想一起做的事：传了就必须是固定清单里的 1–8 项；没传时，老资料（无此字段）原样保留，新资料必须填。
 // 双方都勾了的「约会想一起做的事」，按对方卡片可见的列表算。
 function sharedActivities(self,card){const mine=self?.dateActivities||[];return (card?.dateActivities||[]).filter(a=>mine.includes(a));}
@@ -212,7 +225,7 @@ function createFriendsService(store,charts,options={}) {
       const member=isMember(s,uid,clock());
       return {days:7,count:rows.length,member,viewers:member?rows.slice(0,100).map(({p,day})=>{const c=project(s,p,uid);return {shareId:c.shareId,nickname:c.nickname,city:c.city,purposeLabels:c.purposeLabels,...(c.fields.age!==undefined?{age:c.fields.age}:{}),day};}):[]};},
     discover(uid,q={}){
-      const filters=memberFilters(q);
+      const ranges=rangeFilters(q),filters=memberFilters(q);
       if(filters.length&&!isMember(store.read(),uid,clock())){const e=Error('学历、收入、房车和已核验筛选是会员功能');e.status=403;e.code='member_filter';throw e;}
       return store.transaction(s=>{
       const self=M.migrateProfile(needMine(s,uid)),myPurposes=M.purposesOf(self);
@@ -226,7 +239,7 @@ function createFriendsService(store,charts,options={}) {
         const theirEval=M.evaluate(p,matchValues(s,self,p.userId));if(!theirEval.passed)continue;
         const card=project(s,p,uid);
         // Member filters read only the projected card (fields/verified already limited to what this viewer may see).
-        if(filters.some(f=>!f(card)))continue;
+        if(filters.some(f=>!f(card))||ranges.some(f=>!f(card)))continue;
         if((q.city&&card.city!==q.city)||(q.stem&&card.chart.dayMaster!==q.stem)||(q.zodiac&&card.chart.zodiac!==q.zodiac)||(q.constellation&&card.constellation!==q.constellation)||(q.mbti&&card.mbti!==q.mbti)||(q.purpose&&!card.purposes.includes(q.purpose==='friend'?'buddy':q.purpose))||(q.activity&&!(card.dateActivities||[]).includes(q.activity)))continue;
         const purpose=shared[0],interests=new Set([...sharedActivities(self,card),...card.hobbies.filter(h=>self.hobbies.includes(h))]).size,relation=M.elementRelation(self.chart?.dayMaster,card.chart.dayMaster);
         const samePurpose=myPurposes.some(k=>theirPurposes.includes(k));

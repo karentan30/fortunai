@@ -7,7 +7,7 @@
   const TOGGLES=[['house','有房','有房'],['car','有车','有车'],['verified','1','已核验']];
   const LOCK='<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
   const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const st={root:null,reload:null,openCard:null,member:false,picked:{},quota:null,viewers:null,open:false,salesOpen:false};
+  const st={root:null,adv:null,reload:null,openCard:null,member:false,picked:{},quota:null,viewers:null,open:false,salesOpen:false};
   // 会员没开卖时不把人引到死胡同：只在会员筛选下方说一次「会员即将开放」。
   const SOON='<span class="xsm-soon">会员即将开放</span>';
   async function get(path){const r=await fetch(path,{credentials:'same-origin',headers:{'X-Runae-Friends':'1'}});if(!r.ok)throw Object.assign(Error('读取失败'),{status:r.status});return r.json();}
@@ -29,11 +29,14 @@
   }
   function render(){
     const root=st.root;if(!root||!root.isConnected)return;
-    root.className='xsm-bar';root.innerHTML=quotaLine()+viewersLine()+pills();
+    // advRoot (「高级选项」折叠里，friends-discover-filters) gets the member filters; otherwise they stay in the bar.
+    const adv=st.adv?.isConnected?st.adv:null;
+    root.className='xsm-bar';root.innerHTML=quotaLine()+viewersLine()+(adv?'':pills());if(adv)adv.innerHTML=pills();
     root.querySelector('[data-xsm-viewers]')?.addEventListener('click',()=>{st.open=!st.open;render();});
     root.querySelectorAll('[data-xsm-card]').forEach(b=>b.addEventListener('click',()=>st.openCard?.(b.dataset.xsmCard)));
-    root.querySelectorAll('[data-xsm-key]').forEach(s=>s.addEventListener('change',()=>{st.picked[s.dataset.xsmKey]=s.value||undefined;render();st.reload?.();}));
-    root.querySelectorAll('[data-xsm-toggle]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.xsmToggle;st.picked[k]=st.picked[k]?undefined:b.dataset.value;render();st.reload?.();}));
+    const scope=adv||root;
+    scope.querySelectorAll('[data-xsm-key]').forEach(s=>s.addEventListener('change',()=>{st.picked[s.dataset.xsmKey]=s.value||undefined;render();st.reload?.();}));
+    scope.querySelectorAll('[data-xsm-toggle]').forEach(b=>b.addEventListener('click',()=>{const k=b.dataset.xsmToggle;st.picked[k]=st.picked[k]?undefined:b.dataset.value;render();st.reload?.();}));
   }
   async function refresh(){
     const [q,v,m]=await Promise.allSettled([get('/api/friends/quota'),get('/api/friends/viewers'),get('/api/friends/billing/membership/status')]);
@@ -43,7 +46,7 @@
     render();
   }
   window.XSMember={
-    mount(root,{reload,openCard}={}){if(!root)return;st.root=root;st.reload=reload;st.openCard=openCard;st.open=false;refresh().catch(()=>{});},
+    mount(root,{reload,openCard,advRoot}={}){if(!root)return;st.root=root;st.adv=advRoot||null;st.reload=reload;st.openCard=openCard;st.open=false;refresh().catch(()=>{});},
     params(){return st.member?Object.entries(st.picked).filter(([,v])=>v):[];},
     refresh(){return refresh().catch(()=>{});},
     upsell(){const u=st.root?.querySelector('.xsm-quota');if(u){u.classList.add('is-flash');setTimeout(()=>u.classList.remove('is-flash'),1600);}}
