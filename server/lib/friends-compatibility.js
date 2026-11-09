@@ -10,8 +10,7 @@ const okAuth=a=>ACCEPTED_VERSIONS.includes(a?.version),isV4=a=>a?.version===VERS
 const HE=require('./friends-hepan-v4'),HC=require('./friends-hepan-copy'),HV=require('./friends-hepan-view');
 const PURPOSES=['romance','buddy'];
 // AI 文案失败后，同一对盘多久再试一次（期间直接给固定模板，不打模型）。
-const AI_RETRY_MS=10*60000,AI_RETRY_KEYS=500;
-const remember=(map,k,v)=>{map.delete(k);map.set(k,v);while(map.size>AI_RETRY_KEYS)map.delete(map.keys().next().value);};
+const AI_RETRY_MS=10*60000;
 const STEMS=[...'甲乙丙丁戊己庚辛壬癸'],ELEMENTS=[...'木火土金水'],BRANCHES=[...'子丑寅卯辰巳午未申酉戌亥'];
 const SIX_HE=['子丑','寅亥','卯戌','辰酉','巳申','午未'],TRIPLES=['申子辰','亥卯未','寅午戌','巳酉丑'];
 const fail=(status,message)=>{throw Object.assign(Error(message),{status});};
@@ -27,7 +26,7 @@ function relationshipSummary(a,b){
  return {available:true,sixHarmonyGroupCount:he.size,hasSameDayMaster:[...a.pillars.day][0]===[...b.pillars.day][0],hasDifferentMonthPillar:a.pillars.month!==b.pillars.month,hasHarm,note:'后台比较双方四柱的16组跨柱关系，相同六合分组只计一次；这些是文化规则线索，不是关系好坏或成功率。'};
 }
 function createCompatibilityService({store,calculateChart=calculate,questionnaireService=null,questionBank=null,clock=()=>Date.now(),generateProse=null,isUnlocked=()=>false}={}){
- const proseInflight=new Map(),aiRetryAt=new Map();
+ const proseInflight=new Map();
  if(!store?.read||!store?.transaction)throw Error('双人文化对照需要加密存储');
  const uidCheck=uid=>{if(uid===undefined||uid===null||uid==='')fail(401,'请先登录');};
  const profile=(s,uid)=>(s.profiles||[]).find(p=>same(p.userId,uid));
@@ -56,15 +55,16 @@ function createCompatibilityService({store,calculateChart=calculate,questionnair
   const analysis=HE.analyze(charts.A,charts.B,{purpose}),picked=HE.items(analysis),key=HE.cacheKey(charts.A,charts.B,purpose);
   let prose=p.v4Cache?.key===key&&p.v4Cache.prose?.source==='ai'?p.v4Cache.prose:null;
   if(!prose){
-   // 只缓存 AI 文案；回落模板不落库（也不存 fallbackReason），冷却期过后下一次请求再试 AI。
-   const until=aiRetryAt.get(key)||0;
-   if(typeof generateProse!=='function'||until>clock())prose=HC.templateProse(analysis,picked);
-   else{
+   // 只缓存 AI 文案；回落模板不落库（也不存 fallbackReason）。失败后的冷却记在这对邀请上（v4AiRetry），重启/换进程也不会立刻重试；
+   // 另外每人每小时有调用上限（HC.takeAiCall），超了直接给模板。
+   const until=p.v4AiRetry?.key===key?Number(p.v4AiRetry.at)||0:0;
+   if(typeof generateProse==='function'&&until<=clock()&&(proseInflight.has(key)||HC.takeAiCall(store,uid,clock()))){
     if(!proseInflight.has(key))proseInflight.set(key,HC.writeProse(analysis,picked,{mode:'invite',generate:generateProse}).finally(()=>proseInflight.delete(key)));
     const {fallbackReason,...written}=await proseInflight.get(key);prose=written;
-    if(prose.source==='ai'){aiRetryAt.delete(key);store.transaction(next=>{const q=rows(next).find(x=>x.id===id);if(q&&q.v4Cache?.prose?.source!=='ai'&&q.authorizations?.[String(q.from)]&&q.authorizations?.[String(q.to)])q.v4Cache={key,prose,at:new Date(clock()).toISOString()};});s=snapshot();p=active(s,uid,id);}
-    else{remember(aiRetryAt,key,clock()+AI_RETRY_MS);}
-   }
+    const ai=prose.source==='ai';
+    store.transaction(next=>{const q=rows(next).find(x=>x.id===id);if(!q)return;if(ai){delete q.v4AiRetry;if(q.v4Cache?.prose?.source!=='ai'&&q.authorizations?.[String(q.from)]&&q.authorizations?.[String(q.to)])q.v4Cache={key,prose,at:new Date(clock()).toISOString()};}else q.v4AiRetry={key,at:clock()+AI_RETRY_MS};});
+    s=snapshot();p=active(s,uid,id);
+   }else prose=HC.templateProse(analysis,picked);
   }
   const viewer=same(p.from,uid)?'A':'B',other=viewer==='A'?'B':'A',peer=view(s,p,uid).peer.nickname;
   const build=pr=>HV.buildReport({analysis,picked,prose:pr,charts,mode:'invite',viewer,unlocked:isUnlocked(p,uid)===true,taNickname:peer});

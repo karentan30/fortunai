@@ -148,4 +148,7 @@ function fill(value,names){
  if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).map(([k,v])=>[k,fill(v,names)]));
  return value;
 }
-module.exports={leakScan,forbiddenFor,ganzhiIn,template,templateProse,starText,promptFacts,buildMessages,parseOutput,validateProse,writeProse,fill,BANNED,SOFT_BANNED,COMMON_WORDS,EPIGRAPHS,LEADS,PILLAR_AREA};
+// 每人每小时最多真正调用模型 AI_CALLS_PER_HOUR 次（邀请合盘和自己合盘共用一个桶，记在库里，重启不清零）；超了就用模板，不进冷却。
+const AI_CALLS_PER_HOUR=6,HOUR=3600000;
+function takeAiCall(store,uid,now){return store.transaction(s=>{if(!s.hepanAiCalls||typeof s.hepanAiCalls!=='object'||Array.isArray(s.hepanAiCalls))s.hepanAiCalls={};const m=s.hepanAiCalls;for(const k of Object.keys(m)){m[k]=(Array.isArray(m[k])?m[k]:[]).filter(t=>Number.isFinite(t)&&t>now-HOUR);if(!m[k].length)delete m[k];}const u=String(uid),l=m[u]||[];if(l.length>=AI_CALLS_PER_HOUR)return false;l.push(now);m[u]=l;return true;});}
+module.exports={takeAiCall,AI_CALLS_PER_HOUR,leakScan,forbiddenFor,ganzhiIn,template,templateProse,starText,promptFacts,buildMessages,parseOutput,validateProse,writeProse,fill,BANNED,SOFT_BANNED,COMMON_WORDS,EPIGRAPHS,LEADS,PILLAR_AREA};
