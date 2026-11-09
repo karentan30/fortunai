@@ -289,3 +289,26 @@ test('relation tables agree with mingyu-core (vendor) for all 144 branch pairs a
   assert.equal(E.stemRelation(a,b).type,v,a+b);
  }
 });
+
+// 回归：真实排盘的随机配对，固定模板报告从两个视角都不该被泄露扫描误判。
+// 曾经的坑：题记「君子和而不同」《论语·子路》里的「子」撞上对方命盘的子，整份报告 500。
+test('no false positives: template invite reports for 400 real random pairs pass the leak scan from both sides',()=>{
+ const {calculate}=require('./friends-chart');
+ let s=20261109;const rand=()=>{s=(s*1103515245+12345)%2147483648;return s/2147483648;};
+ const pick=()=>{const y=1975+Math.floor(rand()*30),m=1+Math.floor(rand()*12),d=1+Math.floor(rand()*28),unknown=rand()<0.15;
+  const r=calculate({birthday:y+'-'+String(m).padStart(2,'0')+'-'+String(d).padStart(2,'0'),calendar:'solar',time:unknown?null:String(Math.floor(rand()*24)).padStart(2,'0')+':30'},new Date('2026-11-09T00:00:00Z'));
+  return {gender:rand()<0.5?'male':'female',pillars:r.complete?r.pillars:r.basePillars};};
+ const tiers=new Set();
+ for(let i=0;i<400;i++){
+  const A=pick(),B=pick(),an=E.analyze(A,B,{purpose:rand()<0.1?'buddy':'romance'}),picked=E.items(an),prose={...C.templateProse(an,picked),items:{}};tiers.add(an.tier);
+  for(const viewer of ['A','B']){
+   const r=V.buildReport({analysis:an,picked,prose,charts:{A,B},mode:'invite',viewer,taNickname:'阿屿',meNickname:'小满'});
+   assert.deepEqual(V.assertNoLeak(r,(viewer==='A'?B:A).pillars),[],'pair '+i+' viewer '+viewer);
+  }
+ }
+ assert.equal(tiers.size,3,'sample should cover all three tiers (incl. 大体合拍 whose 题记 has 子)');
+ // 自证：真把对方的时柱塞进报告，扫描仍然要报。
+ const an=E.analyze(CLASH.A,CLASH.B),picked=E.items(an),r=V.buildReport({analysis:an,picked,prose:{...C.templateProse(an,picked),items:{}},charts:CLASH,mode:'invite',viewer:'A'});
+ r.summary+=CLASH.B.pillars.hour;
+ assert.ok(V.assertNoLeak(r,CLASH.B.pillars).some(h=>h.path==='summary'));
+});

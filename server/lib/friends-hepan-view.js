@@ -52,9 +52,11 @@ function buildReport({analysis,picked,prose,charts,mode,viewer='A',unlocked=fals
 }
 function starView(analysis,viewer){const t=C.starText(analysis),other=viewer==='A'?'B':'A';return {mode:t.mode,heading:t.heading,mine:t[viewer],theirs:t[other]};}
 // 邀请合盘：每个返回给看报告者的字段都扫一遍，对方四柱里除日主以外的干支字一个都不能出现。
-// 允许的路径只有：本人四柱、双方昵称（用户自填，不由命盘派生）。
+// 允许的路径只有：本人四柱、双方昵称（用户自填，不由命盘派生），以及只随档位变化的固定文字（古语题记、页脚、档位名表）。
+// 题记「君子和而不同」《论语·子路》里的「子」不是命盘字，不能因此误判泄露、把整份报告挡掉。
+const FIXED_PATHS=['epigraph.text','epigraph.cite','footer','tiers'];
 function assertNoLeak(report,otherPillars){
- const hits=C.leakScan(report,C.forbiddenFor(otherPillars,{alsoAllow:[report.people?.me?.dayMaster].filter(Boolean)}),{allow:['people.me.pillars','people.me.dayMaster','people.me.nickname','people.ta.nickname']});
+ const hits=C.leakScan(report,C.forbiddenFor(otherPillars,{alsoAllow:[report.people?.me?.dayMaster].filter(Boolean)}),{allow:['people.me.pillars','people.me.dayMaster','people.me.nickname','people.ta.nickname',...FIXED_PATHS]});
  return hits;
 }
 module.exports={buildReport,assertNoLeak,tagOf,FOOTER,SUBS};
