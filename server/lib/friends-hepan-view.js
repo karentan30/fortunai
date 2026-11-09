@@ -22,17 +22,24 @@ function flipDir(dir,viewer){if(!dir)return null;const mine=viewer==='A'?'AB':'B
  * mode: 'invite' | 'self'
  * viewer: 'A' | 'B'（自己合盘恒为 A）
  * unlocked: 完整版标志（第 1 批恒为 false，付费在后续批次）
+ * 免费版（邀请和自己合盘一样）：总分、档位、天干/夫妻星两项分、合之处、第一条磨合点、锁住的条数。
+ * 锁住的东西不能从返回里看出来：锁住的分项不给分数，不给 moheTotal，关系图只留
+ * 天干（未锁分项）和已展示条目对应的地支关系，夫妻星、五行明细、计分依据都不给。
  */
 function buildReport({analysis,picked,prose,charts,mode,viewer='A',unlocked=false,taNickname=null,meNickname=null}){
  const other=viewer==='A'?'B':'A',names=sideNames(viewer);
  const allShown=picked.mohe.length<=1,full=unlocked||allShown;
- const lockSub=k=>mode==='invite'&&!full&&(k==='branch'||k==='wuxing');
+ const lockSub=k=>!full&&(k==='branch'||k==='wuxing');
  const subs=SUBS.map(([key,label])=>({key,label:key==='star'&&analysis.starMode==='companion'?'相处星':label,max:25,locked:lockSub(key),score:lockSub(key)?null:analysis.subs[key].score}));
  const item=(h,kind)=>{const t=prose.items[h.id]||C.template(h,kind);return {id:h.id,kind,tag:tagOf(h,charts,mode),title:t.title,meaning:t.meaning,life:t.life,...(kind==='mohe'?{advice:t.advice||C.template(h,kind).advice||[]}:{})};};
  const he=picked.he.map(h=>item(h,'he')),moheAll=picked.mohe.map(h=>item(h,'mohe'));
  const mohe=full?moheAll:moheAll.slice(0,1);
+ const shownIds=new Set([...picked.he,...picked.mohe.slice(0,full?Infinity:1)].map(h=>h.id)),lockedIds=new Set(full?[]:picked.mohe.slice(1).map(h=>h.id));
+ const hitAt=(pillar,part)=>analysis.hits.find(h=>h.pillar===pillar&&h.part===part);
+ // 免费版：天干关系属于未锁的天干分项，照给（除非它就是锁住的磨合点）；地支关系属于锁住的地支分项，只给已展示条目里出现过的。
+ const stemOpen=p=>{const h=hitAt(p,'stem');return full||!h||!lockedIds.has(h.id);},branchOpen=p=>{const h=hitAt(p,'branch');return full||!!h&&shownIds.has(h.id);};
  const person=(side)=>{const c=charts[side],showAll=mode==='self'||side===viewer;return {label:side===viewer?'你':'TA',gender:c.gender,zao:ZAO[c.gender],dayMaster:analysis.dayMasters[side],hidden:!showAll,pillars:showAll?{...c.pillars}:null};};
- const relations=analysis.relations.map(r=>({pillar:r.pillar,label:PILLAR_NAME[r.pillar]+'柱',stem:{type:r.stem.type,dir:flipDir(r.stem.dir,viewer)},branch:{type:r.branch.type},spousePalace:r.pillar==='day'}));
+ const relations=analysis.relations.map(r=>({pillar:r.pillar,label:PILLAR_NAME[r.pillar]+'柱',stem:stemOpen(r.pillar)?{type:r.stem.type,dir:flipDir(r.stem.dir,viewer)}:{type:null,locked:true},branch:branchOpen(r.pillar)?{type:r.branch.type}:{type:null,locked:true},spousePalace:r.pillar==='day'}));
  const report={
   kind:'hepan_v4',version:'compatibility-guide-v4',engine:analysis.engine,mode,purpose:analysis.purpose,limited:analysis.limited,
   limitedNote:analysis.limited?'至少一方不知道时辰，只按年、月、日三柱计算，是有限参考。':null,
@@ -41,8 +48,8 @@ function buildReport({analysis,picked,prose,charts,mode,viewer='A',unlocked=fals
   aiAssisted:prose.source==='ai',aiLabel:prose.source==='ai'?'AI 辅助生成':null,
   people:{me:{...person(viewer),nickname:meNickname},ta:{...person(other),nickname:taNickname}},
   subs,relations,
-  he:C.fill(he,names),mohe:C.fill(mohe,names),moheTotal:moheAll.length,moreCount:full?0:Math.max(0,moheAll.length-1),allShown,unlocked:!!unlocked,full,
-  star:full||mode==='self'?C.fill(starView(analysis,viewer),names):null,
+  he:C.fill(he,names),mohe:C.fill(mohe,names),...(full?{moheTotal:moheAll.length}:{}),moreCount:full?0:Math.max(0,moheAll.length-1),allShown,unlocked:!!unlocked,full,
+  star:full?C.fill(starView(analysis,viewer),names):null,
   wuxing:full?{bu:analysis.wuxing.bu,que:analysis.wuxing.que,mine:analysis.counts[viewer],...(mode==='self'?{ta:analysis.counts[other]}:{})}:null,
   basis:full?analysis.hits.filter(h=>h.points!==0).map(h=>({id:h.id,tag:tagOf(h,charts,mode),points:h.points,sub:h.sub})):null,
   lock:full?null:{moreCount:Math.max(0,moheAll.length-1),text:'还有'+Math.max(0,moheAll.length-1)+'条磨合点和对应的相处建议',cta:'完整版即将开放',available:false},

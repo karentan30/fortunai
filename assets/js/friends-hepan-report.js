@@ -68,7 +68,7 @@
  }
  function relationSection(r){
   const wrap=el('div',undefined,'rel');wrap.setAttribute('role','img');
-  const label=r.relations.map(x=>x.label+'：干'+(x.stem.type||'无')+'，支'+(x.branch.type||'无')).join('；');
+  const word=x=>x.locked?'完整版查看':x.type||'无',label=r.relations.map(x=>x.label+'：干'+word(x.stem)+'，支'+word(x.branch)).join('；');
   wrap.setAttribute('aria-label','双方逐柱关系：'+label);
   const pos=el('div',undefined,'pos4');for(const [,l] of PILLARS)pos.append(el('span',l==='日主'?'日柱':l));
   const lab=n=>{const d=el('div',undefined,'rlab');d.append(el('span',n),el('span'));return d;};
@@ -79,10 +79,10 @@
    rr.append(pc);}return rr;};
   const links=el('div',undefined,'links');
   for(const [k] of PILLARS){const lk=el('div',undefined,'lk'),rel=r.relations.find(x=>x.pillar===k);
-   for(const t of [rel?.stem?.type,rel?.branch?.type]){const kind=GOOD.has(t)?'':BAD.has(t)?' k':' n',ln=el('div',undefined,'ln'+kind),txt=!t||t==='无'?'—':t.length>1?t.replace(/^六|^三/,m=>m):t;ln.append(el('b',txt));lk.append(ln);}
+   for(const x of [rel?.stem,rel?.branch]){const t=x?.type;if(x?.locked){const ln=el('div',undefined,'ln n lkd');ln.append(el('b','?'));lk.append(ln);continue;}const kind=GOOD.has(t)?'':BAD.has(t)?' k':' n',ln=el('div',undefined,'ln'+kind),txt=!t||t==='无'?'—':t;ln.append(el('b',txt));lk.append(ln);}
    links.append(lk);}
   wrap.append(pos,lab('你'),row(r.people.me),links,row(r.people.ta),lab('TA'));
-  const lg=el('div',undefined,'legend');for(const [c,t] of [['','生 · 合（金线）'],['k','克 · 冲 · 刑 · 害（朱线）'],['n','无关系']]){const s=el('span'),i=el('i');if(c)i.className=c;s.append(i,t);lg.append(s);}
+  const lg=el('div',undefined,'legend');const anyLocked=r.relations.some(x=>x.stem.locked||x.branch.locked);for(const [c,t] of [['','生 · 合（金线）'],['k','克 · 冲 · 刑 · 害（朱线）'],['n','无关系'],...(anyLocked?[['n lkd','? 完整版查看']]:[])]){const s=el('span'),i=el('i');if(c)i.className=c;s.append(i,t);lg.append(s);}
   wrap.append(lg);
   return wrap;
  }
@@ -152,7 +152,7 @@
   root.append(el('p','已 保 存 的 合 盘','eyebrow'));const p=el('div',undefined,'private');p.append(el('span','仅 自 己 可 见'));root.append(p);
   const names=el('p',undefined,'rp-names');names.append(el('span','你','pp'),el('span','与','and2'),el('span',r.nickname,'pp'));root.append(names);
   root.append(el('p',r.lead,'lead'));
-  const sub=Object.entries({stem:'天干',branch:'地支 · 配偶宫',wuxing:'五行互补',star:r.purpose==='buddy'?'相处星':'夫妻星'}).map(([key,label])=>({key,label,max:25,locked:false,score:r.subs[key]}));
+  const sub=r.subs;// 服务端已按免费/完整截断，锁住的分项不带分数
   root.append(scoreSection({...r,tiers:['很合拍','大体合拍','磨合型'],subs:sub,footer:r.footer}));
   if(r.limited)root.append(el('p','当时至少一方不知道时辰，是有限参考。','note'));
   root.append(h2('合之处'));if(r.he.length)r.he.forEach((x,i)=>root.append(item(x,i,'he')));else root.append(el('p','这次没有特别突出的相合之处。','empty'));
