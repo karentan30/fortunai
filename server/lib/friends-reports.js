@@ -4,10 +4,11 @@ const crypto=require('node:crypto');
 const fail=(status,message)=>{throw Object.assign(Error(message),{status});};
 const canonical=v=>Array.isArray(v)?'['+v.map(canonical).join(',')+']':v&&typeof v==='object'?'{'+Object.keys(v).sort().map(k=>JSON.stringify(k)+':'+canonical(v[k])).join(',')+'}':JSON.stringify(v);
 const reportView=j=>({reportId:j.id,status:j.status,createdAt:j.createdAt,updatedAt:j.updatedAt,...(j.status==='delivered'?{report:j.result}:{}),...(j.status==='failed'?{error:'报告未完成，服务次数已释放或待核对'}:{}),...(j.status==='manual_review'?{error:'报告执行状态待人工核对，请勿重复购买'}:{})});
-function createFriendsReportsService({store,billing,verifyChart,generate,clock=()=>Date.now(),inputHashKey,validateResult,leaseMs=180000,heartbeatMs=30000}={}){
+function createFriendsReportsService({store,billing,verifyChart,generate,clock=()=>Date.now(),inputHashKey,validateResult,leaseMs=180000,heartbeatMs=30000,collection='personalReportJobs'}={}){
  if(!store||!billing||typeof verifyChart!=='function'||typeof generate!=='function'||typeof inputHashKey!=='string'||inputHashKey.length<32)throw Error('报告服务缺少存储、权益、排盘或私密哈希配置');
  const bootId=crypto.randomUUID();
- const jobs=s=>{if(!s.personalReportJobs)s.personalReportJobs=[];if(!Array.isArray(s.personalReportJobs))throw Error('报告作业资料损坏');return s.personalReportJobs;};
+ // collection：作业存放位置。默认是会员次数买的本人报告；「我的命盘」付费报告用自己的集合，互不混看。
+ const jobs=s=>{if(!s[collection])s[collection]=[];if(!Array.isArray(s[collection]))throw Error('报告作业资料损坏');return s[collection];};
  const own=(s,uid,id)=>{const j=jobs(s).find(j=>j.id===id&&j.userId===uid);if(!j)fail(404,'报告不存在');return j;};
  const view=reportView;
  const update=(uid,id,fn)=>store.transaction(s=>{const j=own(s,uid,id);fn(j);j.updatedAt=new Date(clock()).toISOString();return structuredClone(j);});

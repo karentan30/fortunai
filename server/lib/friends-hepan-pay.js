@@ -16,20 +16,28 @@ const RECONCILE_MS=3*DAY,OPENING_ORPHAN_MS=5*60000,SWEEP_PENDING_GAP_MS=60000,SW
 const CHANNELS=['alipay','wechat'];
 const PRODUCT='相生合盘完整报告';
 const REFUND_RULE='7 天内、完整版还没打开过，可申请原路退款；打开后不退。';
+// 第二个商品：「我的命盘」完整个人报告（复用 Runae 八字完整报告引擎）。同一套中台下单/验签/对账/退款，只是目标和价格不同。
+const MYCHART_SKU='friends_mychart_report_v1',MYCHART_PRODUCT='相生·我的命盘完整报告';
+const MYCHART_REFUND_RULE='完整报告生成前可申请原路退款；生成后不退。';
+const PRODUCTS={hepan:{sku:SKU,name:PRODUCT,refundRule:REFUND_RULE},mychart:{sku:MYCHART_SKU,name:MYCHART_PRODUCT,refundRule:MYCHART_REFUND_RULE}};
+const productOf=type=>type==='mychart'?PRODUCTS.mychart:PRODUCTS.hepan;
+const nameOfSku=sku=>sku===MYCHART_SKU?MYCHART_PRODUCT:PRODUCT;
 const fail=(status,message)=>{throw Object.assign(Error(message),{status});};
 const same=(a,b)=>a!==undefined&&a!==null&&b!==undefined&&b!==null&&String(a)===String(b);
 const iso=t=>new Date(t).toISOString();
 // 北京时间自然月，会员份数按它重置。
 const monthKey=now=>new Date(now+8*3600000).toISOString().slice(0,7);
 function toMinor(value){const text=String(value);if(!/^\d+(?:\.\d{1,2})?$/.test(text))return NaN;const [w,f='']=text.split('.');return Number(w)*100+Number(f.padEnd(2,'0'));}
+function minorPrice(raw,fallback){const v=raw===undefined||raw===''?fallback:toMinor(raw);return Number.isSafeInteger(v)&&v>=100&&v<=100000?v:fallback;}
 function payConfig(env=process.env){
  const base=String(env.FRIENDS_HUB_BASE||'').trim().replace(/\/+$/,''),projectId=String(env.FRIENDS_HUB_PROJECT_ID||'').trim(),secret=String(env.FRIENDS_HUB_SECRET||'').trim();
  // 中台只走本机内网（http://127.0.0.1:8765）；不接受任意外网 http 地址。
  let baseOk=false;try{const u=new URL(base);baseOk=u.protocol==='http:'&&['127.0.0.1','localhost'].includes(u.hostname)&&!u.username&&!u.password;}catch{}
- const price=env.FRIENDS_HEPAN_PRICE===undefined||env.FRIENDS_HEPAN_PRICE===''?990:toMinor(env.FRIENDS_HEPAN_PRICE);
- const priceMinor=Number.isSafeInteger(price)&&price>=100&&price<=100000?price:990;
+ const priceMinor=minorPrice(env.FRIENDS_HEPAN_PRICE,990);
+ // 我的命盘：FRIENDS_MYCHART_PRICE（默认 19.9 元），FRIENDS_MYCHART_PAY_ENABLED=true 且中台配好才卖。
+ const mychartPriceMinor=minorPrice(env.FRIENDS_MYCHART_PRICE,1990);
  const ready=baseOk&&/^[a-z][a-z0-9_-]{1,31}$/.test(projectId)&&secret.length>=32;
- return {enabled:env.FRIENDS_HEPAN_PAY_ENABLED==='true'&&ready,ready,base,projectId,secret,priceMinor,advisorQrUrl:advisorQr(env.FRIENDS_ADVISOR_QR_URL)};
+ return {enabled:env.FRIENDS_HEPAN_PAY_ENABLED==='true'&&ready,mychartEnabled:env.FRIENDS_MYCHART_PAY_ENABLED==='true'&&ready,ready,base,projectId,secret,priceMinor,mychartPriceMinor,advisorQrUrl:advisorQr(env.FRIENDS_ADVISOR_QR_URL)};
 }
 // 顾问微信二维码图片：只接受 https 或站内路径；没配就不显示那张卡。
 function advisorQr(v){const s=String(v||'').trim();if(!s)return null;if(/^\/(?!\/)[\w./-]+\.(png|jpe?g|webp)$/i.test(s))return s;try{const u=new URL(s);return u.protocol==='https:'&&!u.username&&!u.password?u.href:null;}catch{return null;}}
@@ -52,8 +60,9 @@ const orders=s=>{if(!Array.isArray(s.hepanOrders))s.hepanOrders=[];return s.hepa
 const credits=s=>{if(!Array.isArray(s.hepanCredits))s.hepanCredits=[];return s.hepanCredits;};
 const pairsOf=s=>Array.isArray(s.compatibilityPairs)?s.compatibilityPairs:[];
 const savedOf=s=>Array.isArray(s.hepanSelfSaved)?s.hepanSelfSaved:[];
+const myChartsOf=s=>Array.isArray(s.myChartRows)?s.myChartRows:[];
 // 解锁标记所在的对象：邀请合盘 → 邀请本身；自己合盘 → 已保存的那条。
-function targetRow(s,type,id){if(type==='pair')return pairsOf(s).find(p=>p.id===id)||null;if(type==='self')return savedOf(s).find(r=>r.id===id)||null;return null;}
+function targetRow(s,type,id){if(type==='pair')return pairsOf(s).find(p=>p.id===id)||null;if(type==='self')return savedOf(s).find(r=>r.id===id)||null;if(type==='mychart')return myChartsOf(s).find(r=>r.id===id)||null;return null;}
 const unlockOf=(type,row)=>type==='pair'?row?.v4Unlock:row?.unlock;
 function setUnlock(type,row,u){if(type==='pair'){if(u)row.v4Unlock=u;else delete row.v4Unlock;}else{if(u)row.unlock=u;else delete row.unlock;}}
 const memberOrderLive=(o,now)=>o&&o.matchingMembership===true&&o.benefitsVerified===true&&o.status==='paid'&&Date.parse(o.paidAt)<=now&&Date.parse(o.accessUntil)>now;
@@ -67,7 +76,7 @@ function unlockValid(s,u){
 function isUnlockedIn(s,type,row){const u=unlockOf(type,row);return unlockValid(s,u);}
 // 收回解锁（退款）：保留历史，清掉当前标记。
 function revokeUnlock(s,type,row,reason,now){const u=unlockOf(type,row);if(!u)return false;if(!Array.isArray(row.v4UnlockHistory))row.v4UnlockHistory=[];row.v4UnlockHistory.push({...u,revokedAt:iso(now),revokeReason:reason});setUnlock(type,row,null);return true;}
-function eachUnlock(s,fn){for(const p of pairsOf(s))if(p.v4Unlock)fn('pair',p,p.v4Unlock);for(const r of savedOf(s))if(r.unlock)fn('self',r,r.unlock);}
+function eachUnlock(s,fn){for(const p of pairsOf(s))if(p.v4Unlock)fn('pair',p,p.v4Unlock);for(const r of savedOf(s))if(r.unlock)fn('self',r,r.unlock);for(const r of myChartsOf(s))if(r.unlock)fn('mychart',r,r.unlock);}
 // 单次订单退款（运营标记或中台查到已退）：双方一起收回。
 function refundOrderIn(s,order,reason,now){if(order.status==='refunded')return {duplicate:true};order.status='refunded';order.refundedAt=iso(now);order.refundReason=reason;if(order.refundRequest&&!order.refundRequest.resolvedAt)order.refundRequest.resolvedAt=iso(now);let revoked=0;eachUnlock(s,(type,row,u)=>{if(u.source?.kind==='order'&&u.source.orderId===order.id&&revokeUnlock(s,type,row,'order_refunded',now))revoked++;});return {revoked};}
 // 会员退款：用这笔会员份数解锁的全部收回。
@@ -100,26 +109,34 @@ function targetRemovedIn(s,type,row,now){
  s.hepanUnlockTombstones.push({type,id:row.id,owner:row.owner??null,unlock:{...u},deletedAt:iso(now),refund});
  return {refund};
 }
-const publicOrder=o=>({id:o.id,status:o.status,channel:o.channel,amountMinor:o.amountMinor,currency:o.currency,target:{type:o.target.type,id:o.target.id},createdAt:o.createdAt,expiresAt:o.expiresAt,paidAt:o.paidAt||null,checkout:o.status==='pending'?o.checkout:null,name:PRODUCT});
+const publicOrder=o=>({id:o.id,status:o.status,channel:o.channel,amountMinor:o.amountMinor,currency:o.currency,target:{type:o.target.type,id:o.target.id},createdAt:o.createdAt,expiresAt:o.expiresAt,paidAt:o.paidAt||null,checkout:o.status==='pending'?o.checkout:null,name:nameOfSku(o.sku)});
 function createHepanPayService({store,config=payConfig(),hub=null,pairFacts,clock=()=>Date.now(),hooks={}}={}){
  if(!store?.read||!store?.transaction)throw Error('合盘付费需要存储');
  if(typeof pairFacts!=='function')throw Error('合盘付费需要邀请合盘的磨合点计算');
  const client=hub||(config.ready?createHubClient(config):null);
  const enabled=()=>config.enabled===true&&!!client;
+ const enabledFor=type=>type==='mychart'?config.mychartEnabled===true&&!!client:enabled();
+ const priceFor=type=>type==='mychart'?(Number.isSafeInteger(config.mychartPriceMinor)?config.mychartPriceMinor:1990):config.priceMinor;
  const memberMonthly=()=>Math.max(0,...Object.values(PILOT_CATALOG).filter(p=>p.matchingMembership&&p.monthlyCreditUnit==='hepan_v4').map(p=>p.monthlyReportCredits||0));
  // 读目标、核对权限、算能不能卖。只在服务端算，客户端只给 type+id。
  function target(s,uid,type,id){
   if(uid===undefined||uid===null||uid==='')fail(401,'请先登录');
-  if(!['pair','self'].includes(type)||typeof id!=='string'||!id||id.length>100)fail(400,'报告编号无效');
+  if(!['pair','self','mychart'].includes(type)||typeof id!=='string'||!id||id.length>100)fail(400,'报告编号无效');
   const row=targetRow(s,type,id);
   if(type==='pair'){
    if(!row||!(same(row.from,uid)||same(row.to,uid)))fail(404,'报告不存在');
    const facts=pairFacts(row,clock());if(!facts)fail(409,'双方都授权新版合盘后才能解锁');
-   return {type,row,moheCount:facts.moheCount,basisCount:facts.basisCount,keepUntil:row.expiresAt};
+   return {type,row,moheCount:facts.moheCount,basisCount:facts.basisCount,keepUntil:row.expiresAt,sellable:facts.moheCount>1,notSellable:'你们的报告已全部展示，不用解锁'};
+  }
+  // 我的命盘：只有本人；先免费核对过出生资料（eligibleAt）、且这次购买还没生成过报告，才可卖。
+  if(type==='mychart'){
+   if(!row||!same(row.owner,uid))fail(404,'报告不存在');
+   const sellable=!!row.eligibleAt&&!row.reportId;
+   return {type,row,moheCount:null,basisCount:null,keepUntil:null,sellable,notSellable:row.reportId?'这份完整报告已经生成':'请先免费核对出生资料，确认支持后再解锁'};
   }
   if(!row||!same(row.owner,uid))fail(404,'请先保存这次合盘，再解锁完整版');
   const mohe=(row.hits||[]).filter(h=>h.kind==='mohe').length;
-  return {type,row,moheCount:mohe,basisCount:null,keepUntil:null};
+  return {type,row,moheCount:mohe,basisCount:null,keepUntil:null,sellable:mohe>1,notSellable:'你们的报告已全部展示，不用解锁'};
  }
  function memberBalance(s,uid,now){
   if(!isMember(s,uid,now))return {member:false,remaining:0,monthly:0};
@@ -129,13 +146,13 @@ function createHepanPayService({store,config=payConfig(),hub=null,pairFacts,cloc
  }
  // 报告里附带的购买信息：前端据此决定是否显示付款按钮。≤1 处磨合点 → sellable:false，不出付款入口。
  function offerIn(s,uid,type,row){
-  const now=clock(),t=target(s,uid,type,row.id),unlocked=isUnlockedIn(s,type,t.row),sellable=t.moheCount>1;
+  const now=clock(),t=target(s,uid,type,row.id),unlocked=isUnlockedIn(s,type,t.row),sellable=t.sellable,mychart=type==='mychart';
   const bal=memberBalance(s,uid,now);
-  return {sellable,unlocked,payEnabled:enabled()&&sellable&&!unlocked,creditEnabled:sellable&&!unlocked&&bal.member&&bal.remaining>0,
-   priceMinor:config.priceMinor,currency:'CNY',channels:enabled()?CHANNELS:[],moheCount:sellable?t.moheCount:null,basisCount:sellable?t.basisCount:null,
-   member:bal.member,memberRemaining:bal.remaining,memberMonthly:bal.member?bal.monthly:memberMonthly(),
-   keepUntil:t.keepUntil,refundRule:REFUND_RULE,unlockedBy:unlocked?(same(unlockOf(type,t.row).unlockedBy,uid)?'me':'peer'):null,
-   advisorQrUrl:unlocked||!sellable?config.advisorQrUrl:null};
+  return {sellable,unlocked,payEnabled:enabledFor(type)&&sellable&&!unlocked,creditEnabled:!mychart&&sellable&&!unlocked&&bal.member&&bal.remaining>0,
+   priceMinor:priceFor(type),currency:'CNY',channels:enabledFor(type)?CHANNELS:[],moheCount:sellable?t.moheCount:null,basisCount:sellable?t.basisCount:null,
+   member:bal.member,memberRemaining:mychart?0:bal.remaining,memberMonthly:bal.member?bal.monthly:memberMonthly(),
+   keepUntil:t.keepUntil,refundRule:productOf(type).refundRule,unlockedBy:unlocked?(same(unlockOf(type,t.row).unlockedBy,uid)?'me':'peer'):null,
+   advisorQrUrl:!mychart&&(unlocked||!sellable)?config.advisorQrUrl:null};
  }
  function applyUnlockIn(s,type,row,uid,source,now){
   if(typeof hooks.beforeUnlockWrite==='function')hooks.beforeUnlockWrite({type,row,uid,source});
@@ -167,30 +184,31 @@ function createHepanPayService({store,config=payConfig(),hub=null,pairFacts,cloc
  return {
   config:{priceMinor:config.priceMinor,advisorQrUrl:config.advisorQrUrl},
   enabled,
+  enabledFor,
   configured:()=>!!client,
   offerFor(uid,type,row,s=store.read()){try{return offerIn(s,uid,type,row);}catch{return null;}},
   offerPreview(uid){const bal=memberBalance(store.read(),uid,clock());return {payEnabled:enabled(),creditEnabled:bal.member&&bal.remaining>0};},
   isUnlocked(type,row,s=store.read()){return isUnlockedIn(s,type,row);},
   offer(uid,{type,id}={}){const s=store.read();const t=target(s,uid,type,id);return offerIn(s,uid,type,t.row);},
   async createOrder(uid,{type,id,channel}={}){
-   if(!enabled())fail(503,'完整版暂未开放购买');
+   if(!enabledFor(type))fail(503,'完整版暂未开放购买');
    if(!CHANNELS.includes(channel))fail(400,'请选择支付宝或微信支付');
    const now=clock();
    const local=store.transaction(s=>{
     expireOrphansIn(s,now);
     const t=target(s,uid,type,id);
-    if(t.moheCount<=1)fail(409,'你们的报告已全部展示，不用解锁');
+    if(!t.sellable)fail(409,t.notSellable);
     if(isUnlockedIn(s,type,t.row))fail(409,'这份报告已经解锁了');
     const mine=orders(s).filter(o=>same(o.userId,uid));
     const open=mine.find(o=>o.status==='pending'&&o.target.type===type&&o.target.id===id&&o.channel===channel&&Date.parse(o.expiresAt)>now+5*60000);
     if(open)return {reuse:publicOrder(open)};
     if(mine.filter(o=>now-Date.parse(o.createdAt)<10*60000).length>=5||mine.filter(o=>now-Date.parse(o.createdAt)<DAY).length>=20)fail(429,'下单太频繁，请稍后再试');
-    const o={id:'hp'+crypto.randomBytes(12).toString('hex'),provider:'hub_hepan',sku:SKU,userId:uid,target:{type,id},amountMinor:config.priceMinor,currency:'CNY',channel,status:'opening',createdAt:iso(now),updatedAt:iso(now),expiresAt:iso(now+ORDER_TTL_MS)};
+    const o={id:'hp'+crypto.randomBytes(12).toString('hex'),provider:'hub_hepan',sku:productOf(type).sku,userId:uid,target:{type,id},amountMinor:priceFor(type),currency:'CNY',channel,status:'opening',createdAt:iso(now),updatedAt:iso(now),expiresAt:iso(now+ORDER_TTL_MS)};
     orders(s).push(o);return {order:o};
    });
    if(local.reuse)return local.reuse;
    const o=local.order;let r;
-   try{r=await client.create({method:channel,product:PRODUCT,amount:o.amountMinor/100,outRef:o.id});}
+   try{r=await client.create({method:channel,product:productOf(type).name,amount:o.amountMinor/100,outRef:o.id});}
    catch(e){store.transaction(s=>{const x=orders(s).find(x=>x.id===o.id);x.status='failed';x.updatedAt=iso(clock());});throw e;}
    const payload=channel==='wechat'?r.code_url:r.qr_code;
    const okPayload=channel==='wechat'?/^weixin:\/\/[\x21-\x7e]{4,500}$/.test(payload||''):/^https:\/\/[\x21-\x7e]{4,500}$/.test(payload||'');
@@ -233,9 +251,10 @@ function createHepanPayService({store,config=payConfig(),hub=null,pairFacts,cloc
   },
   // 会员用份数解锁：幂等键 = 目标 + 用户 + v4；同一事务里扣份数和写解锁，写解锁失败就退回份数。
   unlockWithCredit(uid,{type,id}={}){
+   if(type==='mychart')fail(400,'我的命盘完整报告不使用会员份数');
    return store.transaction(s=>{
     const now=clock(),t=target(s,uid,type,id);
-    if(t.moheCount<=1)fail(409,'你们的报告已全部展示，不用解锁');
+    if(!t.sellable)fail(409,t.notSellable);
     const key=type+':'+id+':'+uid+':v4',prev=credits(s).find(c=>c.key===key&&c.status==='used');
     if(isUnlockedIn(s,type,t.row))return {unlocked:true,duplicate:true,remaining:memberBalance(s,uid,now).remaining};
     const bal=memberBalance(s,uid,now);
@@ -258,4 +277,4 @@ function createHepanPayService({store,config=payConfig(),hub=null,pairFacts,cloc
   }
  };
 }
-module.exports={createHepanPayService,settlePaidIn,approveReviewIn,targetRemovedIn,createHubClient,payConfig,advisorQr,consentRevokedIn,refundOrderIn,revokeMembershipIn,unlockValid,isUnlockedIn,monthKey,toMinor,SKU,REFUND_RULE,REVOKE_WINDOW_MS,PRODUCT};
+module.exports={createHepanPayService,settlePaidIn,approveReviewIn,targetRemovedIn,createHubClient,payConfig,advisorQr,consentRevokedIn,refundOrderIn,revokeMembershipIn,unlockValid,isUnlockedIn,monthKey,toMinor,SKU,REFUND_RULE,REVOKE_WINDOW_MS,PRODUCT,MYCHART_SKU,MYCHART_PRODUCT,MYCHART_REFUND_RULE};

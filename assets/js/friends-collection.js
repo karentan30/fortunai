@@ -165,6 +165,9 @@
     const a=document.createElement('a');a.id='xc-entry';a.className='xc-entry';a.href='#collection';
     a.innerHTML='<span class="xc-entry-title">我的相生图鉴</span><span class="xc-entry-sub">认识一位，点亮一格</span><span class="xc-entry-go" aria-hidden="true">›</span>';
     host.after(a);
+    // 我的命盘入口（只本人可见的页面）：紧跟在图鉴入口后面，复用同一套入口样式。
+    if(!main.querySelector('#xmc-entry')){const m=document.createElement('a');m.id='xmc-entry';m.className='xc-entry';m.href='/pages/friends-my-chart.html';
+      m.innerHTML='<span class="xc-entry-title">我的命盘</span><span class="xc-entry-sub">四柱 · 五行性格 · 只你自己可见</span><span class="xc-entry-go" aria-hidden="true">›</span>';a.after(m);}
     try{const r=await api('/collection');const c=r.collection;if(c.listed){const dm=c.categories.find(x=>x.key==='dayMaster');a.querySelector('.xc-entry-sub').textContent=`日主 ${dm.litCount}/${dm.total} · 已认识 ${c.knownCount} 位`;}}catch{}
   }
   new MutationObserver(()=>{if(main.querySelector('#profile-form')&&!main.querySelector('#xc-entry'))addEntry();}).observe(main,{childList:true});
