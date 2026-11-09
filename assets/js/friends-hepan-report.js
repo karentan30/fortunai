@@ -107,7 +107,35 @@
   if(r.star.mode!=='spouse')frag.append(el('p','同性合盘，或以交朋友、找搭子为目的时，不看夫妻星，只看相处。','fq'));
   return frag;
  }
- function render(r,{upgrade}={}){
+
+ // 磨合点之后：锁住时给解锁按钮（只有服务端说能卖才可点，点了交给 opts.onUnlock 开付款弹层）；磨合点不超过 1 处时不卖，直接说已全部展示。
+ function tail(r,opts={}){
+  if(r.lock){
+   const lk=el('section',undefined,'lock');lk.append(el('h3','另有 '+r.lock.moreCount+' 处需磨合'),el('p',r.lock.text,'sub'));
+   const g=el('ul',undefined,'ghostlines');g.setAttribute('aria-hidden','true');g.append(el('li'),el('li'),el('li'));lk.append(g);
+   const b=el('button',r.lock.cta,'btn-o');b.type='button';b.disabled=!r.lock.available||typeof opts.onUnlock!=='function';
+   if(!b.disabled)b.addEventListener('click',()=>opts.onUnlock(r));
+   lk.append(b);
+   if(r.lock.available&&r.pay?.refundRule)lk.append(el('p',r.pay.refundRule,'note'));
+   return [lk];
+  }
+  if(r.allShown&&!r.unlocked){
+   const a=el('section',undefined,'allshown end');a.append(el('span','◎','knot'),el('h3','你们的报告已全部展示'),el('p','只有一处需要磨合，上面已经写完。没有隐藏内容，不用再解锁。'));
+   if(opts.endActions?.length){const acts=el('div',undefined,'acts');for(const [label,fn] of opts.endActions){const b=el('button',label,'ghost-btn');b.type='button';b.addEventListener('click',fn);acts.append(b);}a.append(acts);}
+   return [a];
+  }
+  if(r.unlocked){const u=el('p',r.pay?.unlockedBy==='peer'?'这份完整报告由对方解锁，你们都能看。':'完整报告已解锁。','note');return [u];}
+  return [];
+ }
+ // 完整报告看完后的私域入口：只有配置了顾问二维码才出现；不写价格、不卖东西。
+ function advisor(r){
+  const url=r.full&&r.pay?.advisorQrUrl;if(!url)return [];
+  const c=el('section',undefined,'advisor');c.append(el('h3','加顾问微信，进玄学搭子交流群'),el('p','扫码添加，备注「相生」。','sub'));
+  const img=el('img');img.src=url;img.alt='顾问微信二维码';img.width=img.height=160;img.loading='lazy';img.referrerPolicy='no-referrer';c.append(img);
+  return [c];
+ }
+ function render(r,opts={}){
+  const {upgrade}=opts;
   const root=el('article',undefined,'hv-report');
   if(upgrade){const u=el('p',undefined,'upgrade');u.append(el('b',upgrade+'　'),'对方或你还在旧版授权，重新授权后能看新版姻缘分。');root.append(u);}
   root.append(el('p',r.mode==='self'?'自 己 合 盘':(r.purpose==='buddy'?'相 处 报 告':'合 盘 报 告'),'eyebrow'));
@@ -127,14 +155,7 @@
   if(r.he.length)r.he.forEach((x,i)=>root.append(item(x,i,'he')));else root.append(el('p','这次没有特别突出的相合之处，相处更多靠彼此经营。','empty'));
   root.append(h2('需磨合'));
   if(r.mohe.length)r.mohe.forEach((x,i)=>root.append(item(x,i,'mohe')));else root.append(el('p','没有明显需要磨合的地方。','empty'));
-  if(r.lock){
-   const lk=el('section',undefined,'lock');lk.append(el('h3','另有 '+r.lock.moreCount+' 处需磨合'),el('p',r.lock.text,'sub'));
-   const g=el('ul',undefined,'ghostlines');g.setAttribute('aria-hidden','true');g.append(el('li'),el('li'),el('li'));lk.append(g);
-   const b=el('button',r.lock.cta,'btn-o');b.type='button';b.disabled=!r.lock.available;lk.append(b);
-   root.append(lk);
-  }else if(r.allShown&&!r.unlocked){
-   const a=el('div',undefined,'allshown');a.append(el('b','以上就是全部'),el('span','你们需要磨合的地方不多，这份报告已全部展示。'));root.append(a);
-  }
+  root.append(...tail(r,opts));
   if(r.basis?.length){
    root.append(h2('计分依据'));const ul=el('ul',undefined,'basis');
    for(const b of r.basis){const li=el('li',undefined,b.points<0?'m':'');li.append(el('span',b.tag),el('span',(b.points>0?'+':'')+b.points*4));ul.append(li);}
@@ -143,11 +164,11 @@
   const foot=el('p',undefined,'foot');
   if(r.aiLabel)foot.append(el('span',r.aiLabel,'ai'),el('br'));
   foot.append(r.footer.join(' · '));
-  root.append(foot);
+  root.append(...advisor(r),foot);
   return root;
  }
  // 保存的自己合盘：只有档位、分数和解读条目（服务端不存干支），所以不画命盘和逐柱关系。
- function renderSaved(r){
+ function renderSaved(r,opts={}){
   const root=el('article',undefined,'hv-report');
   root.append(el('p','已 保 存 的 合 盘','eyebrow'));const p=el('div',undefined,'private');p.append(el('span','仅 自 己 可 见'));root.append(p);
   const names=el('p',undefined,'rp-names');names.append(el('span','你','pp'),el('span','与','and2'),el('span',r.nickname,'pp'));root.append(names);
@@ -157,8 +178,8 @@
   if(r.limited)root.append(el('p','当时至少一方不知道时辰，是有限参考。','note'));
   root.append(h2('合之处'));if(r.he.length)r.he.forEach((x,i)=>root.append(item(x,i,'he')));else root.append(el('p','这次没有特别突出的相合之处。','empty'));
   root.append(h2('需磨合'));if(r.mohe.length)r.mohe.forEach((x,i)=>root.append(item(x,i,'mohe')));else root.append(el('p','没有明显需要磨合的地方。','empty'));
-  if(r.moreCount)root.append(el('p','还有 '+r.moreCount+' 条磨合点含在完整版（即将开放）。','note'));
-  root.append(el('p',r.note,'note'),el('p',r.footer.join(' · '),'foot'));
+  root.append(...tail(r,opts));
+  root.append(...advisor(r),el('p',r.note,'note'),el('p',r.footer.join(' · '),'foot'));
   return root;
  }
  window.XsHepanReport={render,renderSaved};

@@ -54,17 +54,30 @@
   }catch{}
  }
  function back(){$('#result').hidden=true;$('#result').replaceChildren();$('#entry').hidden=false;$('#page-foot').hidden=false;last=null;quota();scrollTo(0,0);}
- function del(id){return async()=>{if(!confirm('删除这条保存的合盘结果？删除后无法恢复。'))return;try{await api(API+'/saved/'+encodeURIComponent(id)+'/delete',{method:'POST',body:{}});back();}catch(e){alert(e.message);}};}
+ function del(id){return async()=>{if(!confirm('删除这条保存的合盘结果？删除后无法恢复，已付费内容将一并删除。'))return;try{await api(API+'/saved/'+encodeURIComponent(id)+'/delete',{method:'POST',body:{}});back();}catch(e){alert(e.message);}};}
+
+ // 自己合盘的完整版记在保存的记录上：没保存先保存，再拉保存后的报告开付款弹层。
+ let savedId=null;
+ async function saveOnce(keep,leave,save){
+  if(savedId)return savedId;keep.disabled=true;
+  try{const s=await api(API+'/saved',{method:'POST',body:{saveToken:last.saveToken}});savedId=s.id;keep.textContent='已保存';leave.textContent='返回';const d=el('button','删除这条记录','ghost-btn del');d.type='button';d.addEventListener('click',del(s.id));save.append(d);return savedId;}
+  catch(e){keep.disabled=false;throw e;}
+ }
+ const reopen=id=>async()=>{try{showSaved(await api(API+'/saved/'+encodeURIComponent(id)));}catch(e){alert(e.message);}};
+ function payFor(id,pay){window.XsHepanPay?.open({target:{type:'self',id},pay,onUnlocked:reopen(id)});}
+ async function saveThenPay(keep,leave,save){
+  try{const id=await saveOnce(keep,leave,save),r=await api(API+'/saved/'+encodeURIComponent(id));showSaved(r);if(r.lock?.available)payFor(id,r.pay);}catch(e){alert(e.message);}
+ }
  function showSaved(r){
-  const area=$('#result');area.replaceChildren(window.XsHepanReport.renderSaved(r));
+  const area=$('#result');area.replaceChildren(window.XsHepanReport.renderSaved(r,{onUnlock:x=>payFor(r.id,x.pay)}));
   const row=el('div',undefined,'save'),b1=el('button','返回','ghost-btn'),b2=el('button','删除这条记录','ghost-btn del');b1.type=b2.type='button';
   b1.addEventListener('click',back);b2.addEventListener('click',del(r.id));row.append(b1,b2);area.append(row);
   $('#entry').hidden=true;$('#page-foot').hidden=true;area.hidden=false;scrollTo(0,0);
  }
  function showResult(r){
-  last=r;const area=$('#result');area.replaceChildren(window.XsHepanReport.render(r));
   const save=el('div',undefined,'save'),keep=el('button','保存这次结果','ghost-btn'),leave=el('button','不保存，离开','ghost-btn del');keep.type=leave.type='button';
-  keep.addEventListener('click',async()=>{keep.disabled=true;try{const s=await api(API+'/saved',{method:'POST',body:{saveToken:last.saveToken}});keep.textContent='已保存';leave.textContent='返回';const d=el('button','删除这条记录','ghost-btn del');d.type='button';d.addEventListener('click',del(s.id));save.append(d);}catch(e){keep.disabled=false;alert(e.message);}});
+  last=r;savedId=null;const area=$('#result');area.replaceChildren(window.XsHepanReport.render(r,{onUnlock:()=>saveThenPay(keep,leave,save)}));
+  keep.addEventListener('click',async()=>{try{await saveOnce(keep,leave,save);}catch(e){alert(e.message);}});
   leave.addEventListener('click',back);
   save.append(keep,leave);
   const inv=el('div',undefined,'invite'),a=el('a','发邀请链接给 TA 本人填','btn-o');a.href='/pages/friends-compatibility.html';
