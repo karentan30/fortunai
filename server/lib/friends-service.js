@@ -6,6 +6,7 @@ const {isDisabled,metric,normalize,normalizeAttribution}=require('./friends-admi
 const {DATE_ACTIVITIES,DATE_ACTIVITY_MAX}=require('../../assets/js/friends-date-activities');
 const {recommend,typeSuggestions,normalizeTypes,normalizeAvailability,findCommonSlots}=require('./friends-preferences');
 const M=require('./friends-matching');
+const ENN=require('../../assets/js/friends-enneagram-data.js');
 const {isMember}=require('./friends-membership');
 const {VERIFY_FIELDS}=require('./friends-verification');
 const FIELDS=['age','height','weight','school','occupation','industry','title','income','assets','familyAssets','education','house','car','hukou'];
@@ -103,14 +104,14 @@ function createFriendsService(store,charts,options={}) {
     return {id:p.shareId,shareId:p.shareId,nickname:p.nickname,city:p.city,intent:(!hideIntent&&p.intent)||M.PURPOSE_LABELS[purposes[0]],purposes,purposeLabels:purposes.map(k=>M.PURPOSE_LABELS[k]),fields,chart,
       // 已核验 蓝标：所有人可见（2026-11-10），只含该看者能看到的字段。
       ...verifiedFor(s,p,viewer,self,visible),
-      ...(visible('age')?{ageAsOf:p.chart.ageAsOf}:{}),...(visible('constellation')&&p.constellation?{constellation:p.constellation}:{}),...(visible('mbti')&&p.mbti?{mbti:p.mbti}:{}),...(self?{recommendations:profileRecommendations(p),targetConstellations:p.targetConstellations||[],targetMbtis:p.targetMbtis||[],expectations:structuredClone(p.expectations||{}),matchingConsent:{...(p.matchingConsent||{})}}: {}),...((self||connected)&&p.availability?{availability:structuredClone(p.availability)}:{}),hobbies:p.hobbies,...(p.dateActivities?.length?{dateActivities:p.dateActivities}:{}),targetStems:p.targetStems,targetZodiacs:p.targetZodiacs,bio:p.bio||'',connected};
+      ...(visible('age')?{ageAsOf:p.chart.ageAsOf}:{}),...(visible('constellation')&&p.constellation?{constellation:p.constellation}:{}),...(visible('mbti')&&p.mbti?{mbti:p.mbti}:{}),...(visible('enneagram')&&p.enneagram?{enneagram:p.enneagram}:{}),...(self?{recommendations:profileRecommendations(p),targetConstellations:p.targetConstellations||[],targetMbtis:p.targetMbtis||[],targetEnneagrams:p.targetEnneagrams||[],expectations:structuredClone(p.expectations||{}),matchingConsent:{...(p.matchingConsent||{})}}: {}),...((self||connected)&&p.availability?{availability:structuredClone(p.availability)}:{}),hobbies:p.hobbies,...(p.dateActivities?.length?{dateActivities:p.dateActivities}:{}),targetStems:p.targetStems,targetZodiacs:p.targetZodiacs,bio:p.bio||'',connected};
   }
   // Only fields an admin approved (friends-verification.decide) and the viewer can see. Never derived from user input.
   function verifiedFor(s,p,viewer,self,visible){
     if(!self&&!viewer)return {}; // 未登录的分享链接不带核验数据
     return {verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true&&visible(k)).map(k=>[k,true]))};
   }
-  const profileRecommendations=p=>{const culture=recommend(p.chart),types=typeSuggestions({...p,constellation:p.constellation||p.chart?.constellation||''});return {...culture,constellations:types.constellations,mbtis:types.mbtis,constellationGroups:types.constellationGroups,mbtiGroups:types.mbtiGroups,basis:{...culture.basis,...types.basis}};};
+  const profileRecommendations=p=>{const culture=recommend(p.chart),types=typeSuggestions({...p,constellation:p.constellation||p.chart?.constellation||''});return {...culture,constellations:types.constellations,mbtis:types.mbtis,enneagrams:types.enneagrams,constellationGroups:types.constellationGroups,mbtiGroups:types.mbtiGroups,enneagramGroups:types.enneagramGroups,basis:{...culture.basis,...types.basis}};};
   const mine=(s,uid)=>s.profiles.find(p=>p.userId===uid);
   // Per-side explanation for viewer `self` looking at `p`. Uses only what p made visible to self, self's own data/expectations,
   // and p's public card. Never uses p's expectations, p's hidden fields or opted-in hidden values.
@@ -119,13 +120,15 @@ function createFriendsService(store,charts,options={}) {
     // Text only: their purposes as this viewer may see them (never the verified-婚况 override).
     const myPurposes=M.purposesOf(self),theirPurposes=shownPurposes(s,p,self.userId),same=myPurposes.filter(k=>theirPurposes.includes(k));
     if(same.length)forYou.push('认识目的相同：'+same.map(k=>M.PURPOSE_LABELS[k]).join('、'));
-    const typeReason={dayMaster:'符合你选择的日主方向',zodiac:'符合你选择的生肖方向',constellation:'符合你选择的星座方向（自填）',mbti:'符合你选择的MBTI方向（自填）'};
+    const typeReason={dayMaster:'符合你选择的日主方向',zodiac:'符合你选择的生肖方向',constellation:'符合你选择的星座方向（自填）',mbti:'符合你选择的MBTI方向（自填）',enneagram:'符合你选择的九型人格方向（自填）'};
     for(const key of [...mineEval.mustHits,...mineEval.preferHits]){
       if(M.TYPE_KEYS[key]){if(visible(key))forYou.push(typeReason[key]);continue;}
       if(['city','purpose'].includes(key)){forYou.push('TA的'+M.LABELS[key]+'符合你的期待');continue;}
       // A hit found through an opted-in hidden value is never explained.
       if(visible(key)&&card.fields?.[key]!==undefined)forYou.push('TA展示的'+M.LABELS[key]+'符合你的期待');
     }
+    // 九型人格同频/互补：只用这位看者能看到的卡片号码（card.enneagram）和看者自己的号码；不打分。已因方向命中写过理由就不重复。
+    if(card.enneagram&&self.enneagram&&!forYou.includes(typeReason.enneagram)){const line=ENN.matchLine(self.enneagram,card.enneagram);if(line)forYou.push(line);}
     const sharedActs=sharedActivities(self,card),interests=[...sharedActs,...card.hobbies.filter(h=>self.hobbies.includes(h)&&!sharedActs.includes(h))];
     if(sharedActs.length)forYou.push('都想约着一起'+sharedActs.slice(0,2).join('、'));
     for(const hobby of interests.filter(h=>!sharedActs.includes(h)).slice(0,sharedActs.length?1:2))forYou.push('都喜欢'+hobby);
@@ -181,7 +184,7 @@ function createFriendsService(store,charts,options={}) {
         // 星座/MBTI gets this option by default; existing profiles keep whatever they had.
         for(const k of M.TYPE_MATCH_FIELDS){
           if(b.visibility?.[k]==='match')matchingConsent[k]=true;
-          else if(!prev&&['constellation','mbti'].includes(k)&&!Object.hasOwn(b.visibility||{},k)&&!Object.hasOwn(b.matchingConsent||{},k))matchingConsent[k]=true;
+          else if(!prev&&['constellation','mbti','enneagram'].includes(k)&&!Object.hasOwn(b.visibility||{},k)&&!Object.hasOwn(b.matchingConsent||{},k))matchingConsent[k]=true;
         }
         const height=Number(fields.height),weight=Number(fields.weight);
         if((fields.height&&(!Number.isFinite(height)||height<80||height>250))||(fields.weight&&(!Number.isFinite(weight)||weight<25||weight>300)))bad('身高用厘米、体重用公斤，请检查数值');
@@ -189,7 +192,7 @@ function createFriendsService(store,charts,options={}) {
         const types=normalizeTypes(b,prev);
         // 星座由生日直接算出：用户没选时自动带上（和日主卡同一个生日）
         if(!types.constellation&&chart.constellation)types.constellation=chart.constellation;
-        for(const k of ['constellation','mbti'])visibility[k]=Object.hasOwn(b.visibility||{},k)?(SCOPES.includes(b.visibility[k])?b.visibility[k]:'private'):(prev?.visibility?.[k]||'private');
+        for(const k of ['constellation','mbti','enneagram'])visibility[k]=Object.hasOwn(b.visibility||{},k)?(SCOPES.includes(b.visibility[k])?b.visibility[k]:'private'):(prev?.visibility?.[k]||'private');
         const hobbies=Array.isArray(b.hobbies)?[...new Set(b.hobbies.map(x=>text(x,24)).filter(Boolean))].slice(0,10):[];
         const dateActivities=normalizeDateActivities(b,prev);
         const recommendations=profileRecommendations({chart,...types});
@@ -226,6 +229,8 @@ function createFriendsService(store,charts,options={}) {
       return {days:7,count:rows.length,member,viewers:member?rows.slice(0,100).map(({p,day})=>{const c=project(s,p,uid);return {shareId:c.shareId,nickname:c.nickname,city:c.city,purposeLabels:c.purposeLabels,...(c.fields.age!==undefined?{age:c.fields.age}:{}),day};}):[]};},
     discover(uid,q={}){
       const ranges=rangeFilters(q),filters=memberFilters(q);
+      // 九型人格筛选：和 MBTI 筛选一样免费、只看对这位看者可见的卡片；只收 1–9，其他值一律 400，绝不放宽。
+      if(q.enneagram!==undefined&&q.enneagram!==''&&!ENN.ENNEAGRAMS.includes(q.enneagram)){const e=Error('九型人格筛选无效');e.status=400;throw e;}
       if(filters.length&&!isMember(store.read(),uid,clock())){const e=Error('学历、收入、房车和已核验筛选是会员功能');e.status=403;e.code='member_filter';throw e;}
       return store.transaction(s=>{
       const self=M.migrateProfile(needMine(s,uid)),myPurposes=M.purposesOf(self);
@@ -240,7 +245,7 @@ function createFriendsService(store,charts,options={}) {
         const card=project(s,p,uid);
         // Member filters read only the projected card (fields/verified already limited to what this viewer may see).
         if(filters.some(f=>!f(card))||ranges.some(f=>!f(card)))continue;
-        if((q.city&&card.city!==q.city)||(q.stem&&card.chart.dayMaster!==q.stem)||(q.zodiac&&card.chart.zodiac!==q.zodiac)||(q.constellation&&card.constellation!==q.constellation)||(q.mbti&&card.mbti!==q.mbti)||(q.purpose&&!card.purposes.includes(q.purpose==='friend'?'buddy':q.purpose))||(q.activity&&!(card.dateActivities||[]).includes(q.activity)))continue;
+        if((q.city&&card.city!==q.city)||(q.stem&&card.chart.dayMaster!==q.stem)||(q.zodiac&&card.chart.zodiac!==q.zodiac)||(q.constellation&&card.constellation!==q.constellation)||(q.mbti&&card.mbti!==q.mbti)||(q.enneagram&&card.enneagram!==q.enneagram)||(q.purpose&&!card.purposes.includes(q.purpose==='friend'?'buddy':q.purpose))||(q.activity&&!(card.dateActivities||[]).includes(q.activity)))continue;
         const purpose=shared[0],interests=new Set([...sharedActivities(self,card),...card.hobbies.filter(h=>self.hobbies.includes(h))]).size,relation=M.elementRelation(self.chart?.dayMaster,card.chart.dayMaster);
         const samePurpose=myPurposes.some(k=>theirPurposes.includes(k));
         const alignment=purpose==='serious'&&typeof options.alignmentScore==='function'?options.alignmentScore({state:s,viewerId:uid,candidateId:p.userId,purpose}):null;
@@ -327,7 +332,7 @@ function createFriendsService(store,charts,options={}) {
     meetDecide(uid,shareId,body){return store.transaction(s=>{const {r}=meetPair(s,uid,shareId);MS.decide(s,r,uid,body,clock());return meetView(s,uid,shareId);});},
     reports(uid){return store.read().reports.filter(r=>r.by===uid).map(r=>({id:r.id,status:r.status||'open',createdAt:r.createdAt,updatedAt:r.updatedAt}));},
     feedback(uid,id,outcome){if(!['met','helpful','not_helpful','unsafe'].includes(outcome))bad('反馈选项无效');return tx((s,queue)=>{normalize(s);const r=s.requests.find(r=>r.id===id&&[r.from,r.to].includes(uid)&&['accepted','disconnected'].includes(r.status));if(!r)denied();if(s.feedback.some(x=>x.by===uid&&x.requestId===id))conflict('已提交反馈');s.feedback.push({by:uid,requestId:id,outcome,createdAt:new Date().toISOString()});metric(s,'feedback_'+outcome);if(outcome==='met')queue.push(['xs_met_reported',uid,mine(s,uid)?.acquisition||{},{pairWith:r.from===uid?r.to:r.from}]);return {ok:true};});},
-    event(event,attribution){if(!['poster_export','share_visit','profile_preview','onboarding_view','chart_done','deck_swipe','want_to_meet_click','signup_done','mbti_quiz_done'].includes(event))bad('事件无效');return store.transaction(s=>{metric(s,event,attribution);return {ok:true};});},
+    event(event,attribution){if(!['poster_export','share_visit','profile_preview','onboarding_view','chart_done','deck_swipe','want_to_meet_click','signup_done','mbti_quiz_done','enneagram_quiz_done'].includes(event))bad('事件无效');return store.transaction(s=>{metric(s,event,attribution);return {ok:true};});},
     remove(uid){return store.transaction(s=>{normalize(s);if(s.profiles.some(p=>p.userId===uid)){const mark=s.attributionMarks.find(x=>x.userId===uid);if(mark){mark.deletedAt=new Date().toISOString();mark.expiresAt=new Date(Date.now()+90*86400000).toISOString();}}s.profiles=s.profiles.filter(p=>p.userId!==uid);if(Array.isArray(s.seriousPages))s.seriousPages=s.seriousPages.filter(r=>r.userId!==uid);s.requests=s.requests.filter(r=>r.from!==uid&&r.to!==uid);if(Array.isArray(s.cardViews))s.cardViews=s.cardViews.filter(v=>v.viewer!==uid&&v.viewed!==uid);s.compatibilityPairs=(s.compatibilityPairs||[]).filter(p=>String(p.from)!==String(uid)&&String(p.to)!==String(uid));MS.purgeUser(s,uid);/* Keep account-level blocks and moderation across profile recreation. */return {ok:true};});}
   };
 }

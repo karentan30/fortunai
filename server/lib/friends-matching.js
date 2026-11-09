@@ -36,12 +36,12 @@ const PLAIN_MATCH_FIELDS=['age','height','education','school','occupation'];
 const RANGE_KEYS=['age','height','income','assets','familyAssets'];
 const MIN_KEYS=['education'];
 const LIST_KEYS=['school','occupation','city','purpose','house','car','hukou'];
-const TYPE_KEYS={dayMaster:'targetStems',zodiac:'targetZodiacs',constellation:'targetConstellations',mbti:'targetMbtis'};
-// 日主/生肖/星座/MBTI can also be hidden yet opted into matching (UI: 「仅自己（用于后台匹配）」 = visibility private + consent).
+const TYPE_KEYS={dayMaster:'targetStems',zodiac:'targetZodiacs',constellation:'targetConstellations',mbti:'targetMbtis',enneagram:'targetEnneagrams'};
+// 日主/生肖/星座/MBTI/九型人格 can also be hidden yet opted into matching (UI: 「仅自己（用于后台匹配）」 = visibility private + consent).
 // Same treatment as SENSITIVE_FIELDS: never shown or explained, and only usable by someone who shares their own value too.
 const TYPE_MATCH_FIELDS=Object.keys(TYPE_KEYS);
 const EXPECTATION_KEYS=[...RANGE_KEYS,...MIN_KEYS,...LIST_KEYS.filter(k=>!RANGE_KEYS.includes(k)),...Object.keys(TYPE_KEYS)];
-const LABELS={age:'年龄',height:'身高',education:'学历',school:'学校',occupation:'职业',city:'城市',purpose:'认识目的',income:'年收入',assets:'个人净资产',familyAssets:'家庭资产',house:'本人房产',car:'车辆',hukou:'户籍',dayMaster:'日主',zodiac:'生肖',constellation:'星座',mbti:'MBTI'};
+const LABELS={age:'年龄',height:'身高',education:'学历',school:'学校',occupation:'职业',city:'城市',purpose:'认识目的',income:'年收入',assets:'个人净资产',familyAssets:'家庭资产',house:'本人房产',car:'车辆',hukou:'户籍',dayMaster:'日主',zodiac:'生肖',constellation:'星座',mbti:'MBTI',enneagram:'九型人格'};
 
 // Per-purpose ranking weights. prefer = my 优先 hits on them; mutual = their 优先 hits on me (internal only, never explained);
 // hobby = shared hobbies (capped); element = five-element relation; samePurpose = exact same purpose; alignment = external

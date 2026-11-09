@@ -5,23 +5,27 @@ const fail=m=>{const e=Error(m);e.status=400;throw e;};
 
 const CONSTELLATIONS=['白羊座','金牛座','双子座','巨蟹座','狮子座','处女座','天秤座','天蝎座','射手座','摩羯座','水瓶座','双鱼座'];
 const {MBTIS,MBTI_BEST}=require('../../assets/js/friends-mbti-data.js');
+const ENN=require('../../assets/js/friends-enneagram-data.js'),ENNEAGRAMS=ENN.ENNEAGRAMS;
 const ELEMENT_GROUPS=[['白羊座','狮子座','射手座'],['金牛座','处女座','摩羯座'],['双子座','天秤座','水瓶座'],['巨蟹座','天蝎座','双鱼座']];
 // 星座：同元素=同频，火↔风、土↔水=互补。MBTI：常见「性格相配表」(类 Boo) 的最佳搭档 + 中间两字母相同=同频。只是认识方向，其余类型也都可以认识。
 const CONST_ELEM_NAMES=['火象','土象','风象','水象'],CONST_COMPLEMENT=[2,3,0,1];
-function typeGroups(constellation,mbti){
+function typeGroups(constellation,mbti,enneagram){
   const gi=ELEMENT_GROUPS.findIndex(g=>g.includes(constellation)),constellationGroups=gi<0?[]:[
     {key:'same',label:'同频·同为'+CONST_ELEM_NAMES[gi]+'星座',items:ELEMENT_GROUPS[gi].filter(x=>x!==constellation)},
     {key:'complement',label:'互补·'+CONST_ELEM_NAMES[CONST_COMPLEMENT[gi]]+'星座',items:ELEMENT_GROUPS[CONST_COMPLEMENT[gi]]}];
   const best=MBTI_BEST[mbti]||[],mbtiGroups=!MBTIS.includes(mbti)?[]:[
     {key:'best',label:'性格相配·常见最佳搭档',items:best},
     {key:'same',label:'同频·想法相近',items:MBTIS.filter(x=>x!==mbti&&!best.includes(x)&&x.slice(1,3)===mbti.slice(1,3))}];
-  return {constellationGroups,mbtiGroups};
+  // 九型人格：同组=同频，九型图相连且不同组=互补（friends-enneagram-data.js）。
+  const enneagramGroups=ENNEAGRAMS.includes(enneagram)?ENN.groupsFor(enneagram).filter(g=>g.key!=='explore').map(g=>({key:g.key,label:g.label+(g.key==='same'?'·同属'+ENN.centerOf(enneagram).name:'·九型图相连'),items:g.items.map(x=>x.type)})):[];
+  return {constellationGroups,mbtiGroups,enneagramGroups};
 }
-function typeSuggestions({constellation='',mbti=''}={}){
-  const g=typeGroups(constellation,mbti);
+function typeSuggestions({constellation='',mbti='',enneagram=''}={}){
+  const g=typeGroups(constellation,mbti,enneagram);
   return {...g,constellations:g.constellationGroups.flatMap(x=>x.items),
     mbtis:g.mbtiGroups.flatMap(x=>x.items),
-    basis:{constellations:'按传统星座元素：同元素同频，火象配风象、土象配水象互补；可自行修改，不是科学匹配结论。',mbtis:'按网络流行的MBTI相配表和中间两个字母相同提供方向；每种性格都可以认识，不代表关系结果，可自行修改。'},kind:'conversation_reference'};
+    enneagrams:g.enneagramGroups.flatMap(x=>x.items),
+    basis:{constellations:'按传统星座元素：同元素同频，火象配风象、土象配水象互补；可自行修改，不是科学匹配结论。',mbtis:'按网络流行的MBTI相配表和中间两个字母相同提供方向；每种性格都可以认识，不代表关系结果，可自行修改。',enneagrams:'九型人格按同组同频、九型图相连互补给出方向；任何两个号码都可以好好相处，不代表关系结果，可自行修改。'},kind:'conversation_reference'};
 }
 function normalizeTypes(body,previous={}){
   const out={};
@@ -37,6 +41,13 @@ function normalizeTypes(body,previous={}){
     if(!Array.isArray(raw)||raw.length>valid.length+1||raw.some(x=>!valid.includes(x)&&x!=='不限'))fail('请选择有效的星座或MBTI认识方向');
     out[key]=raw.includes('不限')?['不限']:[...new Set(raw)];
   }
+  // 九型人格：只收字符串 '1'..'9'（或空 = 暂不填写）；认识方向同 targetMbtis。
+  {const raw=Object.hasOwn(body,'enneagram')?body.enneagram:(previous.enneagram||'');
+    if(typeof raw!=='string'||(raw!==''&&!ENNEAGRAMS.includes(raw.trim())))fail('九型人格请选择 1–9 号，也可暂不填写');
+    out.enneagram=raw.trim();
+    const list=Object.hasOwn(body,'targetEnneagrams')?body.targetEnneagrams:(previous.targetEnneagrams||[]);
+    if(!Array.isArray(list)||list.length>ENNEAGRAMS.length+1||list.some(x=>!ENNEAGRAMS.includes(x)&&x!=='不限'))fail('请选择有效的九型人格认识方向');
+    out.targetEnneagrams=list.includes('不限')?['不限']:[...new Set(list)];}
   return out;
 }
 
@@ -81,4 +92,4 @@ function findCommonSlots(a,b,{now=new Date(),days=14,durationMinutes=15}={}){
   const results=[];for(const r of runs){for(let t=r.start;t+durationMinutes*60000<=r.end;t+=durationMinutes*60000){const finish=t+durationMinutes*60000;results.push({start:new Date(t).toISOString(),end:new Date(finish).toISOString(),localLabel:{a:label(af,t,finish,a.timeZone),b:label(bf,t,finish,b.timeZone)}});if(results.length>=200)return results;}}
   return results;
 }
-module.exports={recommend,typeSuggestions,normalizeTypes,CONSTELLATIONS,MBTIS,normalizeAvailability,findCommonSlots};
+module.exports={recommend,typeSuggestions,normalizeTypes,CONSTELLATIONS,MBTIS,ENNEAGRAMS,normalizeAvailability,findCommonSlots};

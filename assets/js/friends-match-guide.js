@@ -5,7 +5,7 @@
   const $=id=>document.getElementById(id);
   const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text!=null)n.textContent=text;if(cls)n.className=cls;return n;};
   const C=D.COPY;
-  for(const [id,key] of [['mg-lead','lead'],['mg-stem-intro','stemIntro'],['mg-pick-label','pickerLabel'],['mg-pick-hint','pickerHint'],['mg-pick-link','pickerLink'],['mg-sign-intro','signIntro'],['mg-mbti','mbti'],['mg-mbti-link','mbtiLink'],['mg-close','close'],['mg-q-link','questionsLink'],['mg-d-link','discoverLink'],['mg-foot','fine']])$(id).textContent=C[key];
+  for(const [id,key] of [['mg-lead','lead'],['mg-stem-intro','stemIntro'],['mg-pick-label','pickerLabel'],['mg-pick-hint','pickerHint'],['mg-pick-link','pickerLink'],['mg-sign-intro','signIntro'],['mg-mbti','mbti'],['mg-mbti-link','mbtiLink'],['mg-enn','enn'],['mg-enn-link','ennLink'],['mg-close','close'],['mg-q-link','questionsLink'],['mg-d-link','discoverLink'],['mg-foot','fine']])$(id).textContent=C[key];
 
   // 01 日主
   const pick=$('mg-pick'),list=$('mg-stems'),cards={};
@@ -57,4 +57,10 @@
     out.textContent='';out.append(document.createTextNode('你的类型参考：'),el('b',t),document.createTextNode('。'));
     const a=el('a','看 '+t+' 和谁聊得来','mg-arrow');a.href='/pages/friends-mbti-chart.html?type='+encodeURIComponent(t);out.append(a);out.hidden=false;a.focus();
   },onClose:()=>quiz.focus()}));}
+  // 04 九型人格小测：同样只给参考结果 + 直达相配表（?type=1..9）
+  const eq=$('mg-enn-quiz'),eout=$('mg-enn-result'),ED=window.XiangshengEnneagramData;
+  if(window.XiangshengEnneagramQuiz?.open&&ED){eq.hidden=false;eq.addEventListener('click',()=>window.XiangshengEnneagramQuiz.open({onDone:t=>{
+    eout.textContent='';eout.append(document.createTextNode('你的号码参考：'),el('b',ED.label(t)),document.createTextNode('。'));
+    const a=el('a','看 '+t+' 号和谁同频、和谁互补','mg-arrow');a.href='/pages/friends-enneagram-chart.html?type='+encodeURIComponent(t);eout.append(a);eout.hidden=false;a.focus();
+  },onClose:()=>eq.focus()}));}
 })();
