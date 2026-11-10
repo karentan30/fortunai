@@ -12,6 +12,8 @@ const {VERIFY_FIELDS}=require('./friends-verification');
 const R=require('./friends-review');
 const FIELDS=['age','height','weight','school','occupation','industry','title','income','assets','familyAssets','education','house','car','hukou'];
 // Optional profile fields. Income/assets/family assets/house/car/hukou may be left empty ("收入资产允许不提供").
+// 名片的邀请授权快照/哈希只在服务端用，不随资料、导出、保存结果返回。
+const noCardSecrets=p=>{if(p?.shareCard){delete p.shareCard.mint;delete p.shareCard.invite;delete p.shareCard.mintLog;}return p;};
 const WORK_REQUIRED=['education','school','occupation'];
 const OPTIONAL_FIELDS=['height','weight','school','occupation','industry','title','income','assets','familyAssets','education','house','car','hukou'];
 const ENUM_FIELDS={education:M.EDUCATION_LEVELS,house:M.HOUSE_OPTIONS,car:M.CAR_OPTIONS};
@@ -166,7 +168,7 @@ function createFriendsService(store,charts,options={}) {
     const r=s.requests.find(x=>x.status==='accepted'&&((x.from===uid&&x.to===target.userId)||(x.to===uid&&x.from===target.userId)));if(!r||!isConnected(s,target,uid))denied();return {r,self:mine(s,uid),target};};
   const meetView=(s,uid,shareId)=>{const {r,self,target}=meetPair(s,uid,shareId);return MS.view(s,r,uid,{now:clock(),mineAvail:self.availability,theirAvail:target.availability,shared:sharedActivities(self,target)});};
   return {
-    me(uid){const p=mine(store.read(),uid);return p?structuredClone({...M.migrateProfile(p),purposes:M.purposesOf(p),verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true).map(k=>[k,true])),recommendations:profileRecommendations(p),review:R.ownerReview(p)}):null;},
+    me(uid){const p=mine(store.read(),uid);return p?noCardSecrets(structuredClone({...M.migrateProfile(p),purposes:M.purposesOf(p),verified:Object.fromEntries(VERIFY_FIELDS.filter(k=>p.verified?.[k]===true).map(k=>[k,true])),recommendations:profileRecommendations(p),review:R.ownerReview(p)})):null;},
     save(uid,b) {
       if(b.consent!==true)bad('请确认本人资料及展示权限');
       return tx((s,queue)=>{
@@ -206,8 +208,10 @@ function createFriendsService(store,charts,options={}) {
         const recommendations=profileRecommendations({chart,...types});
         const targetStems=array(b.targetStems?.length?b.targetStems:recommendations.stems,[...STEMS,'不限']);const targetZodiacs=array(b.targetZodiacs?.length?b.targetZodiacs:recommendations.zodiacs,[...ZODIACS,'不限']);
         if((!hobbies.length&&!joinForm)||!targetStems.length||!targetZodiacs.length)bad('请选择爱好及想认识的日主、生肖；也可选不限');
+        // 登记表放宽了城市/工作学习/爱好；这些补齐之前不进发现页（listed 强制 false）。名片不依赖 listed，照样可用。
+        const joinComplete=!!city&&!WORK_REQUIRED.some(k=>!fields[k])&&hobbies.length>0;
         const p={userId:uid,shareId:prev?.shareId||crypto.randomBytes(18).toString('hex'),nickname,city,intent,purposes,expectations,matchingConsent,fields,visibility,hobbies,...(dateActivities?{dateActivities}:{}),targetStems,targetZodiacs,...types,
-          bio:text(b.bio,240),contact:text(b.contact,120),contactConsent:b.contactConsent===true,listed:b.listed===true,posterShowTargets:Object.hasOwn(b,'posterShowTargets')?b.posterShowTargets!==false:prev?.posterShowTargets!==false,
+          bio:text(b.bio,240),contact:text(b.contact,120),contactConsent:b.contactConsent===true,listed:b.listed===true&&(!joinForm||joinComplete),posterShowTargets:Object.hasOwn(b,'posterShowTargets')?b.posterShowTargets!==false:prev?.posterShowTargets!==false,
           chart,recommendations,availability:Object.hasOwn(b,'availability')?normalizeAvailability(b.availability):(prev?.availability||null),residence:Object.hasOwn(b,'residence')?require('./friends-places').normalizeResidence(b.residence):(prev?.residence||null),policyVersion:b.policyVersion==='friends-2026-11-04-v1'?b.policyVersion:(prev?.policyVersion||'legacy-unversioned'),consentAt:new Date().toISOString(),crossBorderConsentVersion:xb.version,crossBorderConsentAt:xb.at,updatedAt:new Date().toISOString()};
         // Keep admin-approved verification only while the verified value is unchanged; editing the value drops the mark.
         const keep=VERIFY_FIELDS.filter(k=>prev?.verified?.[k]===true&&prev.fields?.[k]===fields[k]);
@@ -215,12 +219,13 @@ function createFriendsService(store,charts,options={}) {
         if(keep.includes('marital')&&prev.verifiedDetail?.marital)p.verifiedDetail={marital:prev.verifiedDetail.marital}; // 婚况 result (admin-set), members-only via 认证条
         if(joinForm||prev?.joinForm)p.joinForm=true;
         if(prev?.shareCard)p.shareCard=structuredClone(prev.shareCard);
+        else if(joinForm)p.shareCard={enabled:true}; // 通过登记表创建名片
         Object.assign(p,R.nextReview(prev,{gate:reviewGate,now:p.updatedAt}));
         p.acquisition=acquisition;
         if(prev)s.profiles[s.profiles.indexOf(prev)]=p;else s.profiles.push(p);
         if(!attributionMark){s.attributionMarks.push({userId:uid,...acquisition,firstProfileAt:prev?.consentAt||new Date().toISOString()});if(!prev){metric(s,'first_profile_created',acquisition);queue.push(['xs_profile_done',uid,acquisition]);}}else{delete attributionMark.expiresAt;delete attributionMark.deletedAt;}
         if(prev)metric(s,'profile_updated',acquisition);
-        return {...structuredClone(p),review:R.ownerReview(p)};
+        return {...noCardSecrets(structuredClone(p)),review:R.ownerReview(p)};
       });
     },
     quota(uid){return quotas.status(store.read(),uid);},
