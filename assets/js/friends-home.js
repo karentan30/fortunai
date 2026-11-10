@@ -30,9 +30,11 @@
     w.append(lines('h1',{class:'xh-hero-line',id:'xh-hero-title'},['古法相亲，新式见面。','先合八字，再看照片，再聊三观。']));
     w.append(wheel());
     w.append(h('p',{class:'xh-wheel-note',text:'实线 相生 · 虚线 磨合'}));
-    const cta=h('button',{type:'button',class:'xh-btn',id:'start-free-reading',text:'测我的日主，看看谁和我合拍'});
+    const cta=h('button',{type:'button',class:'xh-btn',id:'start-free-reading',text:'先测你的日主，看看和谁相合'});
     w.append(h('div',{class:'xh-hero-cta'},cta));
     w.append(h('p',{class:'xh-sub',text:'不用注册 · 一分钟 · 生日不公开'}));
+    w.append(h('p',{class:'xh-sub xh-early',text:'首批成员审核入驻中'}));
+    w.append(h('a',{class:'xh-pair',href:'/pages/friends-compatibility.html?start=friend'},h('b',{text:'测测我们是否相配'}),h('span',{text:'朋友、暧昧对象，或在考虑结婚的你们'})));
     w.append(h('p',{class:'xh-login'},'已有账号？',h('a',{href:'#login',text:'登录'})));
     s.append(w);return s;
   }
