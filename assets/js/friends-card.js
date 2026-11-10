@@ -8,10 +8,15 @@
  const PERS={mbti:'MBTI',enneagram:'九型',constellation:'星座'};
  const row=(k,v)=>h('li',{},h('b',{text:k}),v);
  // 按钮打开名片主人发起的那条链接邀请（主人是发起人）；邀请被用掉或到期后，名片不再给入口。
- let inviteToken=null;
- function pairButton(){return inviteToken?h('a',{class:'cd-cta',href:'/pages/friends-compatibility.html?invite='+encodeURIComponent(inviteToken),text:'测测我们是否相配'}):h('p',{class:'cd-fine',text:'这张名片的邀请已用过或已到期，可以请 TA 重新发一张。'});}
+ let canPair=false;
+ // 打开页面不发邀请；点按钮时才向服务器要一条（当前的还能用就给当前的，否则给主人补发）。
+ function pairButton(){if(!canPair)return h('p',{class:'cd-fine',text:'这张名片暂时不能发起测试。'});
+  const note=h('p',{class:'cd-fine',role:'status'});
+  const b=h('button',{class:'cd-cta',type:'button',text:'测测我们是否相配'});
+  b.addEventListener('click',async()=>{b.disabled=true;note.textContent='';try{const r=await fetch('/api/friends/public-card/'+encodeURIComponent(id)+'/invite',{method:'POST',cache:'no-store',referrerPolicy:'no-referrer',headers:{'X-Runae-Friends':'1'}});const v=await r.json().catch(()=>({}));if(!r.ok||!v.inviteToken)throw Error(v.error||'暂时发不了邀请，请稍后再试');location.href='/pages/friends-compatibility.html?invite='+encodeURIComponent(v.inviteToken);}catch(x){note.textContent=x.message;b.disabled=false;}});
+  return h('div',{},b,note);}
  function render(c){
-  inviteToken=typeof c.inviteToken==='string'?c.inviteToken:null;
+  canPair=c.canPair===true;
   const card=h('section',{class:'cd-card'},h('p',{class:'cd-eyebrow',text:'相 生 · 相 亲 名 片'}),h('h1',{class:'cd-name',text:c.nickname}));
   if(c.status!=='approved'){card.append(h('p',{class:'cd-pending',text:c.note||'资料审核中'}));host.replaceChildren(card,pairButton());return;}
   const rows=h('ul',{class:'cd-rows'});

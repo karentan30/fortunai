@@ -18,7 +18,9 @@ const PENDING_NOTE='资料审核中';
 const fail=(status,message)=>{const e=Error(message);e.status=status;throw e;};
 
 const showOf=p=>({...SHOW_DEFAULTS,...Object.fromEntries(SHOW_KEYS.filter(k=>typeof p?.shareCard?.show?.[k]==='boolean').map(k=>[k,p.shareCard.show[k]]))});
-const live=(s,p)=>!!p&&!!p.listed&&!isDisabled(s,p.userId);
+// 主人把名片分享关掉（shareCard.enabled=false）或删掉资料后，名片 404，也不再发新邀请。
+const live=(s,p)=>!!p&&!!p.listed&&!isDisabled(s,p.userId)&&p.shareCard?.enabled!==false;
+const MINT_PER_DAY=20,DAY_MS=86400000;
 const same=(a,b)=>String(a)===String(b);
 
 function directionsOf(s,uid){
@@ -50,7 +52,8 @@ const birthOk=b=>b&&typeof b.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(b.date)
 // 公开名片内容。返回 null = 不存在或已停用（路由给 404）。
 function publicPayload(s,p){
   if(!live(s,p))return null;
-  const invite=inviteUsable(s,p)?{inviteToken:p.shareCard.invite.token}:{};
+  // 只告诉页面「能不能测」，不在打开页面时给邀请；点按钮才由 POST 发邀请。
+  const invite=(inviteUsable(s,p)||p.shareCard?.mint)?{canPair:true}:{};
   if(!R.reviewVisible(p))return {nickname:p.nickname,status:'pending',note:PENDING_NOTE,...invite};
   const show=showOf(p),card=p.shareCard||{},out={nickname:p.nickname,status:'approved',...invite};
   if(p.chart?.dayMaster)out.dayMaster=p.chart.dayMaster+(p.chart.element||'');
@@ -67,10 +70,27 @@ function publicPayload(s,p){
 }
 
 function createJoinCard(store){
+  let compat=null;
   const byShare=(s,id)=>typeof id==='string'&&id.length<=100?(s.profiles||[]).find(p=>p.shareId===id):null;
   const mineOf=(s,uid)=>(s.profiles||[]).find(p=>same(p.userId,uid));
   return {
     SHOW_DEFAULTS,
+    useCompat(c){compat=c;},
+    // 访客点「测测我们是否相配」：当前邀请还能用就直接给；被认领或到期了就给主人补发一条（每张名片每天最多 20 条）。
+    mintInvite(shareId){
+      let auth=null,nick='';
+      const cur=store.transaction(s=>{const p=byShare(s,shareId);if(!live(s,p))fail(404,'这张名片暂时看不到了');
+        if(inviteUsable(s,p))return {token:p.shareCard.invite.token};
+        const m=p.shareCard?.mint;if(!m||!compat)fail(409,'这张名片暂时不能发邀请');
+        const now=Date.now(),log=(p.shareCard.mintLog||[]).filter(t=>now-t<DAY_MS);
+        if(log.length>=MINT_PER_DAY){p.shareCard.mintLog=log;fail(429,'今天这张名片的邀请已经发完了，请明天再试');}
+        log.push(now);p.shareCard.mintLog=log;auth=m.auth;nick=m.nickname;return null;});
+      if(cur)return {inviteToken:cur.token};
+      const uid=store.read().profiles.find(p=>p.shareId===shareId).userId;
+      const made=compat.mintCardInvite(uid,{auth,nickname:nick});
+      store.transaction(s=>{const p=byShare(s,shareId);if(p)p.shareCard={...p.shareCard,invite:{pairId:made.pairId,token:made.inviteToken}};});
+      return {inviteToken:made.inviteToken};
+    },
     publicCard(shareId){const s=store.read(),out=publicPayload(s,byShare(s,shareId));if(!out)fail(404,'这张名片暂时看不到了');return out;},
     // 名片上公开的某张照片：必须已通过审核、开关打开、照片确实属于这张名片。
     photoAllowed(shareId,photoId){const s=store.read(),p=byShare(s,shareId);
@@ -91,7 +111,8 @@ function createJoinCard(store){
           card.birth={date:d,hour:HOURS.includes(h)?h:null};}
         if(b.invite!==undefined){const t=b.invite?.token,id=b.invite?.pairId;
           const row=typeof id==='string'&&TOKEN_RE.test(t||'')?(s.compatibilityPairs||[]).find(r=>r.id===id&&r.mode==='open_invite'&&same(r.from,uid)&&r.inviteTokenHash===hashOf(t)):null;
-          if(!row)fail(400,'邀请无效');card.invite={pairId:id,token:t};}
+          if(!row)fail(400,'邀请无效');card.invite={pairId:id,token:t};const au=row.authorizations?.[String(uid)];if(au?.chart)card.mint={auth:structuredClone(au),nickname:row.ownerNickname||p.nickname||''};}
+        if(b.enabled!==undefined){if(typeof b.enabled!=='boolean')fail(400,'名片开关无效');card.enabled=b.enabled;}
         if(b.gender!==undefined){if(!['female','male'].includes(b.gender))fail(400,'性别无效');card.gender=b.gender;}
         return {ok:true,inviteOk:inviteUsable(s,p),show:showOf(p),contact:card.contact||''};});}
   };

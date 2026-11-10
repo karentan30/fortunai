@@ -71,6 +71,7 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.get('/preview',createRateLimit({limit:30}),run(req=>previewDeck.deck(req.query)));
   // 相亲名片（公开，不用登录）：审核通过前只给昵称+「资料审核中」。见 lib/friends-join-card.js。
   const joinCard=enabled?require('../lib/friends-join-card').createJoinCard(store):null;
+  router.post('/public-card/:shareId/invite',createRateLimit({limit:10}),run(req=>joinCard.mintInvite(req.params.shareId)));
   router.get('/public-card/:shareId',createRateLimit({limit:60}),run(req=>({card:joinCard.publicCard(req.params.shareId)})));
   router.get('/public-card/:shareId/photos/:photoId',createRateLimit({limit:120}),(req,res,next)=>{try{joinCard.photoAllowed(req.params.shareId,req.params.photoId);const f=needMedia().open(req.params.photoId);res.set('Content-Type',f.mime).set('Content-Disposition','inline').set('Content-Security-Policy',"default-src 'none'; sandbox").set('Cache-Control','no-store, private').set('Cross-Origin-Resource-Policy','same-origin');res.send(f.body);}catch(e){if(e.status)return res.status(e.status).json(xbError(e));next(e);}});
   router.use(auth);
@@ -133,7 +134,7 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.get('/reports',run(req=>({reports:service.reports(req.user.id)})));
   router.post('/feedback',run(req=>service.feedback(req.user.id,req.body.requestId,req.body.outcome)));
   router.use((err,req,res,next)=>{console.error('[friends]',err.name);res.status(500).json({error:'交友服务暂时不可用，请稍后重试'});});
-  return router;
+  router.joinCard=joinCard;return router;
 }
 function productionRouter(){
   const config=getFriendsConfig(process.env);
@@ -191,6 +192,7 @@ function productionRouter(){
     if(hepanPay.configured())hepanPay.startSweeper();// 回调丢了也能靠定时对账补上；unref，不挡进程退出
     const compatibility=createCompatibilityService({store,generateProse,pay:hepanPay,questionnaireService:createFriendsQuestionsService({store}),questionBank:require('../../assets/data/friends-relationship-questions.json')});
     instrumentCompatibility(compatibility,store,createFunnelSink({secret:process.env.FRIENDS_SIGNING_KEY}));
+    friends.joinCard?.useCompat(compatibility);
     let selfService=null;try{selfService=require('../lib/friends-hepan-self').createHepanSelfService({store,secret:process.env.FRIENDS_SIGNING_KEY,generateProse,pay:hepanPay});}catch(e){console.error('[friends] 自己合盘未启用：',e.message);}
     bundle.use('/compatibility',billingAuth,createCompatibilityRouter({express,auth:billingAuth,service:compatibility,selfService,payService:hepanPay}));
     // 我的命盘：免费本人命盘 + 付费完整报告（Runae 八字完整报告引擎）。付费开关 FRIENDS_MYCHART_PAY_ENABLED，默认关。
