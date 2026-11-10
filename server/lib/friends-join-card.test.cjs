@@ -5,6 +5,8 @@ const {createFriendsStore}=require('./friends-store'),{createFriendsService}=req
 const {createReviewAdmin}=require('./friends-review'),{createJoinCard,publicPayload,SHOW_DEFAULTS,PENDING_NOTE}=require('./friends-join-card');
 const {createFriendsQuestionnaireService,BANK}=require('./friends-questionnaire');
 const GUARD=require('./friends-copy-guard');
+const {createCompatibilityService,VERSION_V4}=require('./friends-compatibility');
+const XB=require('./friends-cross-border');
 
 function setup({reviewGate=true}={}){
   const store=createFriendsStore(),charts={verify:()=>({age:30,dayMaster:'丙',element:'火',zodiac:'马'})};
@@ -33,7 +35,7 @@ test('默认开关：照片/城市/生日开，时辰关，联系方式关',()=>
 test('审核中：公开名片只有昵称 + 资料审核中，联系方式/照片/生日一个都没有',()=>{
   const f=setup(),p=f.join('u1',{city:'杭州'});f.shared('u1',{show:{contact:true,hour:true}});f.addPhoto('u1');
   const out=f.card.publicCard(p.shareId);
-  assert.deepEqual(out,{nickname:'阿青',status:'pending',note:PENDING_NOTE});
+  assert.deepEqual(out,{nickname:'阿青',status:'pending',note:PENDING_NOTE},'没有邀请时只有这三项');
   assert.equal(JSON.stringify(out).includes('wx-secret-123'),false);
   assert.throws(()=>f.card.photoAllowed(p.shareId,'ph1'),{status:404});
 });
@@ -107,4 +109,38 @@ test('新文案没有禁用词、没有分数和百分号',()=>{
   const nudge=fs.readFileSync(path.join(root,'assets/js/friends-invite-match.js'),'utf8');
   assert.ok(nudge.includes('把资料填完整，以后遇到和你五行相合的人，我们会推给你。'));
   assert.ok(fs.readFileSync(path.join(root,'assets/js/friends-join.js'),'utf8').includes('已登记。首批成员审核入驻中，遇到和你相合的人，第一时间告诉你。'));
+});
+
+const IN={birthday:'1991-08-28',calendar:'solar',time:'06:00',gender:'female'},IN_B={birthday:'1990-03-12',calendar:'solar',time:'14:00',gender:'male'};
+const authBody=input=>({version:VERSION_V4,consent:true,inferenceConsent:true,poolOptIn:false,crossBorderConsent:true,input});
+
+test('审核中的名片也能走完合盘：名片给出主人发起的链接邀请，访客能提交；被认领后名片不再给入口',async()=>{
+  const f=setup(),p=f.join('u1',{city:'杭州'});f.shared('u1',{show:{contact:true}});f.addPhoto('u1');
+  assert.equal(f.card.publicCard(p.shareId).status,'pending');
+  const compat=createCompatibilityService({store:f.store});
+  assert.equal(f.card.publicCard(p.shareId).inviteToken,undefined,'没有邀请时不给入口');
+  const pair=compat.create('u1',{ownerNickname:'阿青',relation:'friend'});
+  assert.equal(f.card.publicCard(p.shareId).inviteToken,undefined,'主人还没授权生辰时邀请不可用');
+  await compat.authorize('u1',pair.id,authBody(IN));
+  assert.throws(()=>f.card.save('u2',{invite:{pairId:pair.id,token:pair.inviteToken}}),{status:400});
+  f.card.save('u1',{invite:{pairId:pair.id,token:pair.inviteToken}});
+  assert.throws(()=>f.card.save('u1',{invite:{pairId:pair.id,token:'x'.repeat(43)}}),{status:400});
+  const out=f.card.publicCard(p.shareId);
+  assert.equal(out.status,'pending');assert.equal(out.inviteToken,pair.inviteToken);
+  assert.deepEqual(Object.keys(out).sort(),['inviteToken','nickname','note','status'],'审核中仍然不给照片、联系方式、生日等');
+  assert.equal(f.card.own('u1').inviteOk,true);
+  XB.grant(f.store,'visitor');
+  assert.deepEqual(compat.invitePreview(out.inviteToken),{ownerNickname:'阿青',relation:'friend'});
+  const j=await compat.join('visitor',{inviteToken:out.inviteToken,nickname:'阿木',claimConsent:true,...authBody(IN_B)});
+  assert.ok(j.id);
+  assert.equal(f.card.publicCard(p.shareId).inviteToken,undefined,'邀请被认领后名片不再给入口');
+  assert.equal(f.card.own('u1').inviteOk,false);
+});
+
+test('审核中可以发起和被邀请合盘，但仍不能发认识申请',()=>{
+  const f=setup(),a=f.join('u1'),b=f.join('u2',{nickname:'阿木'});
+  const compat=createCompatibilityService({store:f.store});
+  assert.ok(compat.create('u1',{targetShareId:b.shareId}).id,'审核中的人对审核中的名片可以发起合盘');
+  approve(f,b);
+  assert.throws(()=>f.service.request('u1',b.shareId),{status:409},'审核中不能发认识申请，即使对方已通过');
 });

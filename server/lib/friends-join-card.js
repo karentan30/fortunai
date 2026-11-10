@@ -4,6 +4,7 @@
 //  · 通过之后：昵称、日主、自我介绍、性格参考（沿用资料里各项的可见设置，只有设为公开的才给）、
 //    回答过的问卷方向名称（只有方向名，没有任何答案），以及主人在名片上打开的开关：照片/城市/生日/时辰/联系方式。
 //  · 开关只管这张名片，不改发现页和资料里的可见设置。永远不给：用户 ID、四柱、其他资料字段、原始问卷答案。
+const crypto=require('node:crypto');
 const {isDisabled}=require('./friends-admin');
 const R=require('./friends-review');
 const XB=require('./friends-cross-border');
@@ -35,13 +36,23 @@ function photosOf(s,uid){
   const row=(s.seriousPages||[]).find(r=>r.userId===uid);
   return (row?.photos||[]).map(x=>({id:x.id,w:x.w,h:x.h}));
 }
+// 名片上的邀请：主人自己发起的「链接邀请」（和「测测我们是否相配」同一套 compat 邀请，主人就是发起人）。
+// 链接邀请不要求主人资料已通过审核，所以审核中的名片也能走完整个流程。邀请被认领或到期后名片上不再给入口。
+const TOKEN_RE=/^[A-Za-z0-9_-]{43}$/;
+const hashOf=t=>crypto.createHash('sha256').update(t).digest('hex');
+function inviteUsable(s,p){
+  const inv=p?.shareCard?.invite;if(!inv||!TOKEN_RE.test(inv.token||''))return false;
+  const row=(s.compatibilityPairs||[]).find(r=>r.id===inv.pairId);
+  return !!row&&row.mode==='open_invite'&&same(row.from,p.userId)&&row.inviteTokenHash===hashOf(inv.token)&&row.status==='pending_recipient'&&Date.parse(row.expiresAt)>Date.now()&&!!row.authorizations?.[String(row.from)];
+}
 const birthOk=b=>b&&typeof b.date==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(b.date);
 
 // 公开名片内容。返回 null = 不存在或已停用（路由给 404）。
 function publicPayload(s,p){
   if(!live(s,p))return null;
-  if(!R.reviewVisible(p))return {nickname:p.nickname,status:'pending',note:PENDING_NOTE};
-  const show=showOf(p),card=p.shareCard||{},out={nickname:p.nickname,status:'approved'};
+  const invite=inviteUsable(s,p)?{inviteToken:p.shareCard.invite.token}:{};
+  if(!R.reviewVisible(p))return {nickname:p.nickname,status:'pending',note:PENDING_NOTE,...invite};
+  const show=showOf(p),card=p.shareCard||{},out={nickname:p.nickname,status:'approved',...invite};
   if(p.chart?.dayMaster)out.dayMaster=p.chart.dayMaster+(p.chart.element||'');
   if(p.bio)out.intro=p.bio;
   const personality={};
@@ -66,7 +77,7 @@ function createJoinCard(store){
       if(!live(s,p)||!R.reviewVisible(p)||!showOf(p).photo||!photosOf(s,p.userId).some(x=>x.id===photoId))fail(404,'照片不存在');return true;},
     // 主人自己的设置页：开关 + 联系方式 + 已有照片数 + 审核状态。
     own(uid){const s=store.read(),p=mineOf(s,uid);if(!p)return {hasProfile:false,show:{...SHOW_DEFAULTS}};
-      return {hasProfile:true,shareId:p.shareId,show:showOf(p),contact:p.shareCard?.contact||'',hasBirth:birthOk(p.shareCard?.birth),birthHour:!!HOURS.includes(p.shareCard?.birth?.hour),photoCount:photosOf(s,uid).length,review:R.ownerReview(p),intro:p.bio||''};},
+      return {hasProfile:true,shareId:p.shareId,show:showOf(p),contact:p.shareCard?.contact||'',hasBirth:birthOk(p.shareCard?.birth),birthHour:!!HOURS.includes(p.shareCard?.birth?.hour),inviteOk:inviteUsable(s,p),photoCount:photosOf(s,uid).length,review:R.ownerReview(p),intro:p.bio||''};},
     save(uid,b={}){XB.check(store,uid);
       return store.transaction(s=>{const p=mineOf(s,uid);if(!p)fail(400,'请先保存登记表');
         const card=p.shareCard={...(p.shareCard||{})};
@@ -78,8 +89,11 @@ function createJoinCard(store){
           if(typeof d!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(d)||!Number.isFinite(t)||new Date(t).toISOString().slice(0,10)!==d||t>Date.now()||d<'1900-01-01')fail(400,'生日格式无效');
           if(h!==null&&h!==undefined&&!HOURS.includes(h))fail(400,'时辰无效');
           card.birth={date:d,hour:HOURS.includes(h)?h:null};}
+        if(b.invite!==undefined){const t=b.invite?.token,id=b.invite?.pairId;
+          const row=typeof id==='string'&&TOKEN_RE.test(t||'')?(s.compatibilityPairs||[]).find(r=>r.id===id&&r.mode==='open_invite'&&same(r.from,uid)&&r.inviteTokenHash===hashOf(t)):null;
+          if(!row)fail(400,'邀请无效');card.invite={pairId:id,token:t};}
         if(b.gender!==undefined){if(!['female','male'].includes(b.gender))fail(400,'性别无效');card.gender=b.gender;}
-        return {ok:true,show:showOf(p),contact:card.contact||''};});}
+        return {ok:true,inviteOk:inviteUsable(s,p),show:showOf(p),contact:card.contact||''};});}
   };
 }
 module.exports={createJoinCard,publicPayload,SHOW_DEFAULTS,SHOW_KEYS,PENDING_NOTE};

@@ -131,10 +131,13 @@
 
  // 「把资料填完整」提示：登记表成功页、发现页空状态、邀请结果页共用。own = GET /share-card 的返回（可为空）。
  const NUDGE='把资料填完整，以后遇到和你五行相合的人，我们会推给你。';
- function nudgeItems(own){const miss=[];if(!own?.photoCount)miss.push('照片');if(!own?.intro)miss.push('自我介绍');miss.push('其余三观题');return {miss,done:3-miss.length};}
+ function nudgeItems(own){const miss=[];if(!own?.photoCount)miss.push('照片');if(!own?.intro)miss.push('自我介绍');return {miss,done:2-miss.length};}
  function profileNudge(own){
   const {miss,done}=nudgeItems(own);
-  return h('div',{class:'im-nudge'},h('p',{class:'im-nudge-t',text:NUDGE}),h('p',{class:'im-nudge-p',text:'资料完成度 '+done+' / 3 项，还差：'+miss.join('、')+'。首批成员还在陆续加入，什么时候遇到说不准。'}),h('a',{class:'jn-btn',href:'/pages/friends-connect.html#profile',text:'去完善资料'}));
+  return h('div',{class:'im-nudge'},h('p',{class:'im-nudge-t',text:NUDGE}),
+   h('p',{class:'im-nudge-p',text:(miss.length?'资料完成度 '+done+' / 2 项，还差：'+miss.join('、')+'。':'照片和自我介绍都填好了，资料已完整。')+'首批成员还在陆续加入，什么时候遇到说不准。'}),
+   h('p',{class:'im-nudge-p'},'其余三观题也可以慢慢补，',h('a',{href:'/pages/friends-questions.html',text:'选填，去看看'}),'。'),
+   miss.length?h('a',{class:'jn-btn',href:'/pages/friends-connect.html#profile',text:'去完善资料'}):null);
  }
  async function showNudge(host){if(!host)return;let own=null;try{own=await api('/api/friends/share-card');}catch{}host.replaceChildren(profileNudge(own));}
 

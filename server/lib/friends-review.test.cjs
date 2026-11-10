@@ -28,8 +28,9 @@ test('pending card is hidden from others everywhere they find people, but fully 
   assert.throws(()=>s.request('viewer',p.shareId),{status:404});
   assert.equal(createPreviewDeck(store).deck({}).real,1,'only the approved viewer card is in the guest deck');
   const compat=require('./friends-compatibility').createCompatibilityService({store});
-  assert.throws(()=>compat.create('viewer',{targetShareId:p.shareId}),{status:404},'no 合盘 invite to a card under review');
-  assert.throws(()=>compat.create('new',{targetShareId:viewer.shareId}),{status:404},'a card under review cannot send targeted 合盘 invites either');
+  // 合盘用的是真实生日，不看资料声明：审核期间可以发起，也可以被邀请；认识申请仍然不行（见下面 s.request）。
+  assert.ok(compat.create('viewer',{targetShareId:p.shareId}).id,'合盘 invite to a card under review is allowed');
+  assert.ok(compat.create('new',{targetShareId:viewer.shareId}).id,'a card under review can send targeted 合盘 invites');
   // owner: sees own card and status, can browse others, cannot send requests until approved
   assert.equal(s.card(p.shareId,'new').shareId,p.shareId);
   assert.deepEqual(s.me('new').review,{status:'pending'});

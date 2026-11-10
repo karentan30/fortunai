@@ -71,7 +71,8 @@ function createCompatibilityService({store,calculateChart=calculate,questionnair
  const profile=(s,uid)=>(s.profiles||[]).find(p=>same(p.userId,uid));
  const blocked=(s,a,b)=>(s.blocks||[]).some(x=>same(x.by,a)&&same(x.target,b)||same(x.by,b)&&same(x.target,a));
  // 首批审核制: a card still under review (or not passed) can't be a 合盘 target or requester.
- const liveProfile=(s,p)=>!!p?.listed&&!isDisabled(s,p.userId)&&require('./friends-review').reviewVisible(p);
+ // 审核只管资料里的声明（学历、照片等）；合盘用的是本人填的真实生日，审核期间也可以发起和使用（认识申请仍要等通过）。
+ const liveProfile=(s,p)=>!!p?.listed&&!isDisabled(s,p.userId);
  function usable(s,p){const target=profile(s,p.to),requester=profile(s,p.from);if(isDisabled(s,p.from)||p.to!==null&&isDisabled(s,p.to)||p.to!==null&&blocked(s,p.from,p.to))return false;if(p.mode==='open_invite')return (!p.requesterShareId||requester?.shareId===p.requesterShareId)&&(!p.recipientShareId||target?.shareId===p.recipientShareId);return liveProfile(s,target)&&target.shareId===p.targetShareId&&(!p.requesterShareId||requester?.shareId===p.requesterShareId&&liveProfile(s,requester))&&(!requester||liveProfile(s,requester));}
  function snapshot(){const s=store.read();if(rows(s).some(p=>Date.parse(p.expiresAt)<=clock()&&!['revoked','declined','expired'].includes(p.status)))return store.transaction(next=>{purgeExpiredCompatibility(next,clock());return structuredClone(next);});return s;}
  function own(s,uid,id){uidCheck(uid);const p=rows(s).find(p=>p.id===id&&(same(p.from,uid)||same(p.to,uid)));if(!p)fail(404,'邀请不存在');return p;}

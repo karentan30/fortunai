@@ -53,7 +53,8 @@ function starOf(chart,mode){
  return {kind:'印比',label:'相处星',elements:[ELEMENTS[(ei(me)+4)%5],me]};// 印星（生我）、比劫（同我）
 }
 const clamp=(v,lo,hi)=>Math.max(lo,Math.min(hi,v));
-const TIER={great:'很合拍',fine:'大体合拍',grind:'磨合型'};
+// 类型名，不是排名词：只描述相处的样子。
+const TIER={great:'相合型',fine:'平和型',grind:'互补·磨合型'};
 function tierOf(total,cfg=CONFIG){return total>=cfg.thresholds.great?'great':total>=cfg.thresholds.fine?'fine':'grind';}
 
 function analyze(rawA,rawB,{purpose='romance',config=CONFIG}={}){

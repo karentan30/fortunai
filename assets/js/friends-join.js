@@ -7,6 +7,7 @@
  const POLICY='friends-2026-11-04-v1',SUCCESS='已登记。首批成员审核入驻中，遇到和你相合的人，第一时间告诉你。';
  const HOURS=['子','丑','寅','卯','辰','巳','午','未','申','酉','戌','亥'];
  const SWITCHES=[['photo','照片'],['city','城市'],['birthday','生日（只显示日期）'],['hour','时辰'],['contact','联系方式']];
+ const MAX_PHOTOS=6,MAX_EDGE=1600;
  let user=null,q=null;
  const chk=(id,text)=>h('label',{class:'chk'},h('input',{id,type:'checkbox'}),h('span',{class:'box'}),h('span',{class:'t'},h('span',{class:'req',text:'必选'}),...text));
  function buildForm(){
@@ -20,6 +21,7 @@
    qs,
    h('h2',{class:'hv-h',text:'三 · 一 句 自 我 介 绍'}),
    h('div',{class:'fl'},h('div',{class:'lb'},h('span',{text:'自我介绍'}),h('small',{text:'可不填，别写联系方式'})),h('textarea',{class:'in',id:'jn-intro',maxlength:'240',rows:'3',placeholder:'例如 在杭州做设计，周末爱爬山，想认识认真谈感情的人。'})),
+   h('div',{class:'fl'},h('div',{class:'lb'},h('span',{text:'照片'}),h('small',{text:'选填，最多 '+MAX_PHOTOS+' 张'})),h('input',{class:'in',id:'jn-photos',type:'file',accept:'image/jpeg,image/png,image/webp',multiple:true}),h('p',{class:'hint',id:'jn-photo-note',text:'上传前会在本机压缩，并去掉拍摄地点等信息。审核通过后，名片才会显示照片。'})),
    h('h2',{class:'hv-h',text:'四 · 提 交 前 请 确 认'}),
    chk('jn-cross',['出境告知：相生由香港公司运营，你的资料（含生辰）会存储在香港服务器并在香港处理。',h('a',{href:'/pages/friends-privacy.html#cross-border',target:'_blank',rel:'noopener',text:'查看详情 ›'})]),
    chk('jn-adult',['我已满 18 岁，所填是我本人的真实生辰。']),
@@ -39,6 +41,26 @@
     $('#jn-password').value='';$('#jn-account').textContent='';await refresh();}
    catch(x){$('#jn-account').textContent=x.message;}finally{b.disabled=false;}});
  }
+ // 和相亲页（friends-serious.js）同一条处理：本机重新编码、最长边 1600、去掉 EXIF；上传走同一个 /serious/photos 接口。
+ const blobToBase64=b=>new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).replace(/^data:[^,]*,/,''));fr.onerror=()=>rej(Error('无法读取文件'));fr.readAsDataURL(b);});
+ async function photoToBase64(file){
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type))throw Error('只支持 JPG、PNG、WEBP 照片');
+  if(file.size>20*1024*1024)throw Error('照片太大了，请换一张');
+  const bmp=await createImageBitmap(file,{imageOrientation:'from-image'}).catch(()=>{throw Error('这张照片打不开，请换一张');});
+  const k=Math.min(1,MAX_EDGE/Math.max(bmp.width,bmp.height)),w=Math.round(bmp.width*k),hh=Math.round(bmp.height*k);
+  const c=document.createElement('canvas');c.width=w;c.height=hh;c.getContext('2d').drawImage(bmp,0,0,w,hh);bmp.close?.();
+  let qv=.86,blob;do{blob=await new Promise(r=>c.toBlob(r,'image/jpeg',qv));qv-=.12;}while(blob&&blob.size>4.5*1024*1024&&qv>.4);
+  if(!blob)throw Error('照片处理失败，请换一张');return blobToBase64(blob);
+ }
+ async function uploadPhotos(files){let ok=0,fail=null;for(const file of files.slice(0,MAX_PHOTOS)){try{await api('/api/friends/serious/photos',{method:'POST',body:{data:await photoToBase64(file)}});ok++;}catch(x){fail=x;}}return {ok,fail};}
+ // 名片上的邀请：主人自己发起一条链接邀请并授权自己的生辰，名片按钮就打开它（主人是发起人）。审核中也能用。
+ async function ensureInvite(nickname,input){
+  const own=await api('/api/friends/share-card').catch(()=>null);if(own?.inviteOk)return true;
+  const pair=await api('/api/friends/compatibility/pairs',{method:'POST',body:{purpose:'romance',relation:'friend',ownerNickname:nickname}});
+  if(!pair.inviteToken)return false;
+  await api('/api/friends/compatibility/pairs/'+encodeURIComponent(pair.id)+'/authorize',{method:'POST',body:{version:'compatibility-guide-v4',consent:true,inferenceConsent:true,poolOptIn:false,crossBorderConsent:true,input,includeQuestionnaire:false,allowChat:false}});
+  await api('/api/friends/share-card',{method:'POST',body:{invite:{pairId:pair.id,token:pair.inviteToken}}});return true;
+ }
  async function submit(f,btn){
   const nickname=f.querySelector('#jn-nickname').value.trim();if(!nickname)throw Error('请填一个昵称。');
   const input=readBirth(f);
@@ -50,7 +72,9 @@
   let saved=0,saveError=null;if(q)try{saved=await q.save();}catch(x){saveError=x;}
   const hour=input.time?HOURS[Math.floor(((+input.time.slice(0,2)+1)%24)/2)]:null;
   await api('/api/friends/share-card',{method:'POST',body:{birth:{date:input.birthday,hour},gender:input.gender}});
-  return {profile:r.profile,saved,saveError};
+  const files=[...(f.querySelector('#jn-photos').files||[])];let photos={ok:0,fail:null};if(files.length)photos=await uploadPhotos(files);
+  let inviteError=null;try{await ensureInvite(nickname,input);}catch(x){inviteError=x;}
+  return {profile:r.profile,saved,saveError,photos,inviteError};
  }
  function share(link,btn,note){
   btn.addEventListener('click',async()=>{
@@ -77,6 +101,9 @@
    h('p',{class:'im-eyebrow',text:'登 记 完 成'}),h('h2',{id:'jn-success',text:SUCCESS}),
    result.saved?h('p',{class:'muted',text:'你答了 '+result.saved+' 道底线题，已存进你自己的问卷。'}):null,
    result.saveError?h('p',{class:'error',text:'底线题暂未保存：'+result.saveError.message}):null,
+   result.photos?.ok?h('p',{class:'muted',text:'已上传 '+result.photos.ok+' 张照片，审核通过后名片才显示。'}):null,
+   result.photos?.fail?h('p',{class:'error',text:'有照片没传上：'+result.photos.fail.message}):null,
+   result.inviteError?h('p',{class:'error',text:'名片上的邀请暂时没建好：'+result.inviteError.message}):null,
    h('a',{class:'jn-pair',href:'/pages/friends-compatibility.html?start=friend',text:'测测我们是否相配'}),
    profileNudge(own),
    h('h3',{text:'名片上给 TA 看什么'}),h('p',{class:'muted',text:'这些开关只管名片链接，不改你在发现页和资料里的可见设置。审核通过前，名片只显示昵称和「资料审核中」。'}),

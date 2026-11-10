@@ -306,7 +306,7 @@ test('no false positives: template invite reports for 400 real random pairs pass
    assert.deepEqual(V.assertNoLeak(r,(viewer==='A'?B:A).pillars),[],'pair '+i+' viewer '+viewer);
   }
  }
- assert.equal(tiers.size,3,'sample should cover all three tiers (incl. 大体合拍 whose 题记 has 子)');
+ assert.equal(tiers.size,3,'sample should cover all three tiers (incl. 平和型 whose 题记 has 子)');
  // 自证：真把对方的时柱塞进报告，扫描仍然要报。
  const an=E.analyze(CLASH.A,CLASH.B),picked=E.items(an),r=V.buildReport({analysis:an,picked,prose:{...C.templateProse(an,picked),items:{}},charts:CLASH,mode:'invite',viewer:'A'});
  r.summary+=CLASH.B.pillars.hour;

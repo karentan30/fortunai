@@ -7,8 +7,11 @@
  const id=new URLSearchParams(location.search).get('c')||'';
  const PERS={mbti:'MBTI',enneagram:'九型',constellation:'星座'};
  const row=(k,v)=>h('li',{},h('b',{text:k}),v);
- function pairButton(){return h('a',{class:'cd-cta',href:'/pages/friends-compatibility.html?start=friend&target='+encodeURIComponent(id),text:'测测我们是否相配'});}
+ // 按钮打开名片主人发起的那条链接邀请（主人是发起人）；邀请被用掉或到期后，名片不再给入口。
+ let inviteToken=null;
+ function pairButton(){return inviteToken?h('a',{class:'cd-cta',href:'/pages/friends-compatibility.html?invite='+encodeURIComponent(inviteToken),text:'测测我们是否相配'}):h('p',{class:'cd-fine',text:'这张名片的邀请已用过或已到期，可以请 TA 重新发一张。'});}
  function render(c){
+  inviteToken=typeof c.inviteToken==='string'?c.inviteToken:null;
   const card=h('section',{class:'cd-card'},h('p',{class:'cd-eyebrow',text:'相 生 · 相 亲 名 片'}),h('h1',{class:'cd-name',text:c.nickname}));
   if(c.status!=='approved'){card.append(h('p',{class:'cd-pending',text:c.note||'资料审核中'}));host.replaceChildren(card,pairButton());return;}
   const rows=h('ul',{class:'cd-rows'});
