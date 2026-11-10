@@ -175,13 +175,16 @@ function createFriendsService(store,charts,options={}) {
         const prev=mine(s,uid), chart=b.credential?charts.verify(b.credential):prev?.chart;
         const attributionMark=s.attributionMarks.find(x=>x.userId===uid),acquisition=attributionMark?fullAttribution(attributionMark):fullAttribution(prev?{}:b.attribution);
         if(!chart || chart.age<18)bad('请先生成日主卡');
+        // 相亲登记表（friends-join）：只填昵称/生日/底线题，城市、工作学习、爱好、约会活动都可以先空着。
+        const joinForm=b.joinForm===true;
+        if(joinForm&&prev&&!prev.joinForm)bad('你已经有交友卡了，请在「我的卡片」里修改');
         const nickname=text(b.nickname,24),city=text(b.city,24);
-        if(!nickname||!city)bad('请补全昵称、城市和认识目的');
+        if(!nickname||(!city&&!joinForm))bad('请补全昵称、城市和认识目的');
         const {purposes,intent}=M.normalizePurposes(b,prev);
         const fields={age:String(chart.age)};
         for(const k of FIELDS.slice(1)){fields[k]=text(b.fields?.[k],80);if(!fields[k]&&!OPTIONAL_FIELDS.includes(k))bad('请补齐个人资料');if(fields[k]&&ENUM_FIELDS[k]&&!ENUM_FIELDS[k].includes(fields[k]))bad('学历、房产或车辆选项无效');}
         // 工作学习必填；只在公开交友卡时要求，退出公开不拦。
-        if(b.listed!==false&&WORK_REQUIRED.some(k=>!fields[k]))bad('请补齐工作学习：学历、学校、职业');
+        if(!joinForm&&b.listed!==false&&WORK_REQUIRED.some(k=>!fields[k]))bad('请补齐工作学习：学历、学校、职业');
         // Income/assets: the UI offers only range tiers (M.WEALTH_TIERS). Older/legacy free text is still accepted and stays
         // readable as-is; matching reads tiers by lower bound and legacy text via M.amount().
         const expectations=M.normalizeExpectations(b.expectations,prev?.expectations),matchingConsent=M.normalizeMatchingConsent(b.matchingConsent,prev?.matchingConsent);
@@ -199,10 +202,10 @@ function createFriendsService(store,charts,options={}) {
         if(!types.constellation&&chart.constellation)types.constellation=chart.constellation;
         for(const k of ['constellation','mbti','enneagram'])visibility[k]=Object.hasOwn(b.visibility||{},k)?(SCOPES.includes(b.visibility[k])?b.visibility[k]:'private'):(prev?.visibility?.[k]||'private');
         const hobbies=Array.isArray(b.hobbies)?[...new Set(b.hobbies.map(x=>text(x,24)).filter(Boolean))].slice(0,10):[];
-        const dateActivities=normalizeDateActivities(b,prev);
+        const dateActivities=joinForm&&!Object.hasOwn(b,'dateActivities')&&!prev?[]:normalizeDateActivities(b,prev);
         const recommendations=profileRecommendations({chart,...types});
         const targetStems=array(b.targetStems?.length?b.targetStems:recommendations.stems,[...STEMS,'不限']);const targetZodiacs=array(b.targetZodiacs?.length?b.targetZodiacs:recommendations.zodiacs,[...ZODIACS,'不限']);
-        if(!hobbies.length||!targetStems.length||!targetZodiacs.length)bad('请选择爱好及想认识的日主、生肖；也可选不限');
+        if((!hobbies.length&&!joinForm)||!targetStems.length||!targetZodiacs.length)bad('请选择爱好及想认识的日主、生肖；也可选不限');
         const p={userId:uid,shareId:prev?.shareId||crypto.randomBytes(18).toString('hex'),nickname,city,intent,purposes,expectations,matchingConsent,fields,visibility,hobbies,...(dateActivities?{dateActivities}:{}),targetStems,targetZodiacs,...types,
           bio:text(b.bio,240),contact:text(b.contact,120),contactConsent:b.contactConsent===true,listed:b.listed===true,posterShowTargets:Object.hasOwn(b,'posterShowTargets')?b.posterShowTargets!==false:prev?.posterShowTargets!==false,
           chart,recommendations,availability:Object.hasOwn(b,'availability')?normalizeAvailability(b.availability):(prev?.availability||null),residence:Object.hasOwn(b,'residence')?require('./friends-places').normalizeResidence(b.residence):(prev?.residence||null),policyVersion:b.policyVersion==='friends-2026-11-04-v1'?b.policyVersion:(prev?.policyVersion||'legacy-unversioned'),consentAt:new Date().toISOString(),crossBorderConsentVersion:xb.version,crossBorderConsentAt:xb.at,updatedAt:new Date().toISOString()};
@@ -210,6 +213,8 @@ function createFriendsService(store,charts,options={}) {
         const keep=VERIFY_FIELDS.filter(k=>prev?.verified?.[k]===true&&prev.fields?.[k]===fields[k]);
         if(keep.length){p.verified=Object.fromEntries(keep.map(k=>[k,true]));p.verifiedAt=Object.fromEntries(keep.map(k=>[k,prev.verifiedAt?.[k]||null]));}
         if(keep.includes('marital')&&prev.verifiedDetail?.marital)p.verifiedDetail={marital:prev.verifiedDetail.marital}; // 婚况 result (admin-set), members-only via 认证条
+        if(joinForm||prev?.joinForm)p.joinForm=true;
+        if(prev?.shareCard)p.shareCard=structuredClone(prev.shareCard);
         Object.assign(p,R.nextReview(prev,{gate:reviewGate,now:p.updatedAt}));
         p.acquisition=acquisition;
         if(prev)s.profiles[s.profiles.indexOf(prev)]=p;else s.profiles.push(p);

@@ -132,12 +132,12 @@ test('free invite truncation: 天干/夫妻星 shown, 地支/五行 locked; 1 �
  const r=await f.service.report('a',f.p.id);
  assert.equal(r.unlocked,false);assert.equal(r.full,false);
  assert.deepEqual(r.subs.map(s=>[s.key,s.locked]),[['stem',false],['branch',true],['wuxing',true],['star',false]]);
- assert.equal(r.subs.find(s=>s.key==='branch').score,null);assert.equal(r.subs.find(s=>s.key==='wuxing').score,null);
+ assert.ok(r.subs.every(s=>!('score' in s)&&!('max' in s)),'no per-sub score in the payload');assert.equal('total' in r,false);
  assert.equal('moheTotal' in r,false,'free tier returns only the locked count');assert.ok(r.moreCount>=1);assert.equal(r.mohe.length,1);assert.ok(r.mohe[0].advice.length>=2&&r.mohe[0].advice.length<=3);assert.match(r.lock.text,new RegExp('还有'+r.moreCount+'条'));assert.equal(r.lock.available,false);
  assert.equal(r.allShown,false);assert.equal(r.basis,null);assert.equal(r.wuxing,null);assert.equal(r.star,null);
- assert.deepEqual(r.footer,['按传统合婚规则计分，仅供参考','传统文化参考，不预测关系结果']);
+ assert.deepEqual(r.footer,['传统文化参考，不预测关系结果。']);
  const g=fixture({isUnlocked:()=>true});await g.auth('a','1990-01-01');await g.auth('b','1990-02-02');
- const full=await g.service.report('a',g.p.id);assert.equal(full.full,true);assert.equal(full.mohe.length,full.moheTotal);assert.equal(full.moheTotal,r.moreCount+1);assert.ok(full.basis.length);assert.ok(full.subs.every(s=>!s.locked&&Number.isInteger(s.score)));
+ const full=await g.service.report('a',g.p.id);assert.equal(full.full,true);assert.equal(full.mohe.length,full.moheTotal);assert.equal(full.moheTotal,r.moreCount+1);assert.ok(full.basis.length);assert.ok(full.subs.every(s=>!s.locked&&!('score' in s)));
  assert.deepEqual(V.assertNoLeak(full,CLASH.B.pillars),[]);
 });
 
@@ -249,7 +249,7 @@ test('self mode never stores TA; save keeps only tier/score/item ids; owner-only
  await assert.rejects(Promise.resolve().then(()=>f.service.save('me2',{saveToken:r.saveToken})),{status:400});
  const tampered=Buffer.from(r.saveToken,'base64url');tampered[tampered.length-1]^=1;await assert.rejects(Promise.resolve().then(()=>f.service.save('me',{saveToken:tampered.toString('base64url')})),{status:400});
  const saved=f.service.save('me',{saveToken:r.saveToken});
- assert.equal(saved.total,r.total);assert.equal(saved.tier,r.tier);
+ assert.equal('total' in r,false);assert.equal(saved.tier,r.tier);
  const rawSaved=JSON.stringify(f.store.read().hepanSelfSaved);assert.deepEqual(C.ganzhiIn(rawSaved),[],'no 干支 in saved record');assert.ok(!rawSaved.includes('1990'));
  assert.equal(f.service.list('me').saved.length,1);assert.equal(f.service.list('me2').saved.length,0);
  assert.throws(()=>f.service.get('me2',saved.id),{status:404});assert.throws(()=>f.service.remove('me2',saved.id),{status:404});
@@ -267,7 +267,7 @@ test('self HTTP endpoints sit behind auth + same-origin JSON and pass device/IP 
   const res=await fetch(base+'/self',{method:'POST',headers:h,body:JSON.stringify(f.body)});assert.equal(res.status,200);const r=await res.json();assert.equal(r.remaining,2);
   assert.equal((await (await fetch(base+'/self/quota',{headers:h})).json()).remaining,2);
   const saved=await (await fetch(base+'/self/saved',{method:'POST',headers:h,body:JSON.stringify({saveToken:r.saveToken})})).json();
-  assert.equal((await (await fetch(base+'/self/saved/'+saved.id,{headers:h})).json()).total,r.total);
+  assert.equal('total' in (await (await fetch(base+'/self/saved/'+saved.id,{headers:h})).json()),false);
   assert.equal((await fetch(base+'/self/saved/'+saved.id+'/delete',{method:'POST',headers:h,body:'{}'})).status,200);
  }finally{await new Promise(r=>server.close(r));}
 });
@@ -318,7 +318,7 @@ test('no false positives: template invite reports for 400 real random pairs pass
 function lockedLeaks(r,analysis,picked){
  const out=[],json=JSON.stringify(r),locked=picked.mohe.slice(1);
  if('moheTotal' in r)out.push('moheTotal');
- for(const s of r.subs)if(s.locked&&s.score!==null)out.push('score:'+s.key);
+ for(const s of r.subs)if('score' in s||'max' in s)out.push('score:'+s.key);
  if(r.basis!==null)out.push('basis');if(r.wuxing!==null)out.push('wuxing');if(r.star!==null)out.push('star');
  for(const h of locked){if(json.includes('"'+h.id+'"'))out.push('id:'+h.id);if(h.pillar){const rel=r.relations.find(x=>x.pillar===h.pillar)[h.part];if(rel.type!==null||rel.locked!==true)out.push('relation:'+h.id);}}
  // 地支分项锁住：没在已展示条目里出现的地支关系都不给
@@ -331,7 +331,7 @@ test('free tier (invite, both viewers): locked subs, moheTotal, locked 磨合点
  const f=fixture();await f.auth('a','1990-01-01');await f.auth('b','1990-02-02');
  for(const uid of ['a','b']){const r=await f.service.report(uid,f.p.id);assert.equal(r.full,false);assert.deepEqual(lockedLeaks(r,an,picked),[]);
   assert.equal(r.moreCount,picked.mohe.length-1);assert.ok(r.relations.some(x=>x.stem.type!==null),'天干 sub is free, so unlocked 天干 relations stay');
-  const visible=r.subs.filter(s=>!s.locked).reduce((n,s)=>n+s.score,0);assert.ok(r.total-visible>=0,'total − visible only reveals the locked sum');}
+  assert.equal('total' in r,false,'no numeric total in the payload');}
  const g=fixture({isUnlocked:()=>true});await g.auth('a','1990-01-01');await g.auth('b','1990-02-02');
  const full=await g.service.report('a',g.p.id);assert.equal(full.moheTotal,picked.mohe.length);assert.ok(full.relations.every(x=>x.stem.type!==null&&x.branch.type!==null&&!x.stem.locked&&!x.branch.locked));assert.ok(full.star&&full.wuxing&&full.basis);
  // 自证：如果把锁住的磨合点关系塞回去，检查会报
@@ -352,12 +352,12 @@ test('self mode uses the same free/full locking for the live result, the save to
  // 保存凭证是密文：解码看不到分项和磨合点
  const decoded=Buffer.from(r.saveToken,'base64url').toString('latin1');assert.throws(()=>JSON.parse(decoded));for(const w of ['subs','hits','mohe','total','"score"'])assert.ok(!decoded.includes(w),w);
  const saved=f.service.save('me',{saveToken:r.saveToken}),v=f.service.get('me',saved.id);
- assert.deepEqual(v.subs.map(s=>[s.key,s.locked,s.score===null]),[['stem',false,false],['branch',true,true],['wuxing',true,true],['star',false,false]]);
+ assert.deepEqual(v.subs.map(s=>[s.key,s.locked,'score' in s]),[['stem',false,false],['branch',true,false],['wuxing',true,false],['star',false,false]]);
  assert.equal(v.mohe.length,1);assert.equal(v.moreCount,picked.mohe.length-1);assert.equal('moheTotal' in v,false);assert.equal(v.full,false);
  for(const h of picked.mohe.slice(1))assert.ok(!JSON.stringify(v).includes('"'+h.id+'"'),h.id);
  // ≤1 条磨合点：全部展示，四项分都有
- const g=clashSelf(),r2=await g.service.run('me',g.body('1991-01-01','1991-02-02'));assert.equal(r2.full,true);assert.ok(r2.subs.every(s=>!s.locked&&Number.isInteger(s.score)));
- const v2=g.service.get('me',g.service.save('me',{saveToken:r2.saveToken}).id);assert.ok(v2.subs.every(s=>!s.locked&&Number.isInteger(s.score)));
+ const g=clashSelf(),r2=await g.service.run('me',g.body('1991-01-01','1991-02-02'));assert.equal(r2.full,true);assert.ok(r2.subs.every(s=>!s.locked&&!('score' in s)));
+ const v2=g.service.get('me',g.service.save('me',{saveToken:r2.saveToken}).id);assert.ok(v2.subs.every(s=>!s.locked&&!('score' in s)));
 });
 test('self quota is reserved atomically before the model call: 10 parallel requests → exactly 3 succeed; failures refund',async()=>{
  const f=clashSelf({generate:async m=>{await new Promise(r=>setTimeout(r,25));return goodProse(m);}}),ctx={device:'p'.repeat(20),ip:'203.0.113.9'};

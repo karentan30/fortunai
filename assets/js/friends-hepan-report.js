@@ -11,36 +11,12 @@
  const PILLARS=[['year','年柱'],['month','月柱'],['day','日主'],['hour','时柱']];
  const GOOD=new Set(['生','合','六合','三合','同']),BAD=new Set(['克','冲','刑','害']);
  const h2=t=>el('h2',[...t].join(' '),'hv-h');
- function medal(total){
-  const box=el('div',undefined,'medal');box.setAttribute('role','img');box.setAttribute('aria-label','姻缘分 '+total+' 分，满分 100');
-  const s=svg('svg',{viewBox:'0 0 132 132','aria-hidden':'true'});
-  s.append(svg('circle',{cx:66,cy:66,r:64,stroke:'rgba(200,174,125,.32)','stroke-width':1}));
-  s.append(svg('circle',{cx:66,cy:66,r:52,stroke:'rgba(200,174,125,.16)','stroke-width':3}));
-  const c=2*Math.PI*52,arc=svg('circle',{cx:66,cy:66,r:52,stroke:'#c8ae7d','stroke-width':3,'stroke-linecap':'round','stroke-dasharray':(c*Math.max(0,Math.min(100,total))/100).toFixed(1)+' '+c.toFixed(1),transform:'rotate(-90 66 66)'});
-  s.append(arc);
-  for(let i=0;i<60;i++){const a=i*6*Math.PI/180,r1=47,r2=i%5===0?43:45;s.append(svg('line',{x1:66+r1*Math.sin(a),y1:66-r1*Math.cos(a),x2:66+r2*Math.sin(a),y2:66-r2*Math.cos(a),stroke:'rgba(200,174,125,.35)','stroke-width':1}));}
-  const num=el('div',undefined,'num');num.append(el('b',String(total)),el('small','/ 100'));
-  box.append(s,num);return box;
- }
+ // 不显示任何分数、百分比或排名：只给类型名、一句总结，以及被锁分项的提示。
  function scoreSection(r){
-  const sec=el('section',undefined,'score');sec.setAttribute('aria-label',(r.purpose==='buddy'?'相处分':'姻缘分'));
-  const top=el('div',undefined,'sc-top'),side=el('div');
-  const tiers=el('div',undefined,'tiers');for(const t of r.tiers){const s=el('span',t);if(t===r.tierLabel)s.className='on';tiers.append(s);}
-  side.append(el('p',[...(r.purpose==='buddy'?'相处分':'姻缘分')].join(' '),'sc-eb'),el('p',r.tierLabel,'sc-tier'),tiers,el('p',r.summary,'sc-sum'));
-  top.append(medal(r.total),side);sec.append(top);
-  const ul=el('ul',undefined,'subs');let anyLocked=false;
-  for(const s of r.subs){
-   const li=el('li'),r1=el('div',undefined,'r1'),b=el('b');
-   if(s.locked){anyLocked=true;li.className='lkd';b.append('00',el('small','/'+s.max));}
-   else b.append(String(s.score),el('small','/'+s.max));
-   r1.append(el('span',s.label),b);
-   const bar=el('div',undefined,'bar'),i=el('i');i.style.width=(s.locked?60:Math.round(s.score/s.max*100))+'%';bar.append(i);
-   li.append(r1,bar);
-   if(s.locked){const w=el('div',undefined,'why2');w.append(el('em','完整版查看'));li.append(w);}
-   ul.append(li);
-  }
-  sec.append(ul);
-  if(anyLocked)sec.append(el('p','总分免费 · 分项与依据含在完整版','sc-rule'));
+  const label=r.purpose==='buddy'?'相处类型':'相合类型';
+  const sec=el('section',undefined,'score tier-only');sec.setAttribute('aria-label',label);
+  sec.append(el('p',[...label].join(' '),'sc-eb'),el('p',r.tierLabel,'sc-tier'),el('p',r.summary,'sc-sum'));
+  if((r.subs||[]).some(s=>s.locked))sec.append(el('p','更细的分项解读含在完整版','sc-rule'));
   sec.append(el('p',r.footer[0],'sc-rule'));
   return sec;
  }
@@ -137,7 +113,7 @@
  function render(r,opts={}){
   const {upgrade}=opts;
   const root=el('article',undefined,'hv-report');
-  if(upgrade){const u=el('p',undefined,'upgrade');u.append(el('b',upgrade+'　'),'对方或你还在旧版授权，重新授权后能看新版姻缘分。');root.append(u);}
+  if(upgrade){const u=el('p',undefined,'upgrade');u.append(el('b',upgrade+'　'),'对方或你还在旧版授权，重新授权后能看新版报告。');root.append(u);}
   root.append(el('p',r.mode==='self'?'自 己 合 盘':(r.purpose==='buddy'?'相 处 报 告':'合 盘 报 告'),'eyebrow'));
   if(r.mode==='self'){const p=el('div',undefined,'private');p.append(el('span','仅 自 己 可 见'));root.append(p);}
   const names=el('p',undefined,'rp-names');
@@ -157,9 +133,9 @@
   if(r.mohe.length)r.mohe.forEach((x,i)=>root.append(item(x,i,'mohe')));else root.append(el('p','没有明显需要磨合的地方。','empty'));
   root.append(...tail(r,opts));
   if(r.basis?.length){
-   root.append(h2('计分依据'));const ul=el('ul',undefined,'basis');
-   for(const b of r.basis){const li=el('li',undefined,b.points<0?'m':'');li.append(el('span',b.tag),el('span',(b.points>0?'+':'')+b.points*4));ul.append(li);}
-   root.append(ul,el('p','每条规则分 ×4 计入对应分项，分项以 15 为基础、封顶 25。','note'));
+   root.append(h2('解读依据'));const ul=el('ul',undefined,'basis');
+   for(const b of r.basis){const li=el('li',undefined,b.negative?'m':'');li.append(el('span',b.tag),el('span',b.negative?'需磨合':'相合'));ul.append(li);}
+   root.append(ul);
   }
   const foot=el('p',undefined,'foot');
   if(r.aiLabel)foot.append(el('span',r.aiLabel,'ai'),el('br'));
@@ -167,14 +143,14 @@
   root.append(...advisor(r),foot);
   return root;
  }
- // 保存的自己合盘：只有档位、分数和解读条目（服务端不存干支），所以不画命盘和逐柱关系。
+ // 保存的自己合盘：只有类型和解读条目（服务端不存干支），所以不画命盘和逐柱关系。
  function renderSaved(r,opts={}){
   const root=el('article',undefined,'hv-report');
   root.append(el('p','已 保 存 的 合 盘','eyebrow'));const p=el('div',undefined,'private');p.append(el('span','仅 自 己 可 见'));root.append(p);
   const names=el('p',undefined,'rp-names');names.append(el('span','你','pp'),el('span','与','and2'),el('span',r.nickname,'pp'));root.append(names);
   root.append(el('p',r.lead,'lead'));
   const sub=r.subs;// 服务端已按免费/完整截断，锁住的分项不带分数
-  root.append(scoreSection({...r,tiers:['很合拍','大体合拍','磨合型'],subs:sub,footer:r.footer}));
+  root.append(scoreSection({...r,subs:sub,footer:r.footer}));
   if(r.limited)root.append(el('p','当时至少一方不知道时辰，是有限参考。','note'));
   root.append(h2('合之处'));if(r.he.length)r.he.forEach((x,i)=>root.append(item(x,i,'he')));else root.append(el('p','这次没有特别突出的相合之处。','empty'));
   root.append(h2('需磨合'));if(r.mohe.length)r.mohe.forEach((x,i)=>root.append(item(x,i,'mohe')));else root.append(el('p','没有明显需要磨合的地方。','empty'));

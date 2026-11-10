@@ -1,7 +1,7 @@
 'use strict';
 // 相生 MBTI 相配数据（浏览器 window.XiangshengMbtiData / 服务端 require 共用）。
 // 规则：4=天生一对（网络流行的相配说法）；3=很合拍（S/N 相同）；2=可以试试（S/N 不同、T/F 相同）；1=磨合型·互补成长。
-// 不给任何组合贴「不合」标签：每种性格都可以认识，仅供娱乐参考。
+// 不给任何组合贴负面标签：每种性格都可以认识，仅供娱乐参考。
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.XiangshengMbtiData=api;})(typeof self!=='undefined'?self:this,function(){
   const MBTIS=['INTJ','INTP','ENTJ','ENTP','INFJ','INFP','ENFJ','ENFP','ISTJ','ISFJ','ESTJ','ESFJ','ISTP','ISFP','ESTP','ESFP'];
   const MBTI_BEST={INFJ:['ENFP','ENTP'],INTJ:['ENFP','ENTP'],INFP:['ENFJ','ENTJ'],INTP:['ENTJ','ESTJ'],ENFP:['INFJ','INTJ'],ENTP:['INFJ','INTJ'],ENFJ:['INFP','ISFP'],ENTJ:['INFP','INTP'],ISFJ:['ESFP','ESTP'],ISTJ:['ESFP','ESTP'],ESFJ:['ISFP','ISTP'],ESTJ:['ISTP','INTP'],ISFP:['ENFJ','ESFJ'],ISTP:['ESFJ','ESTJ'],ESFP:['ISFJ','ISTJ'],ESTP:['ISFJ','ISTJ']};

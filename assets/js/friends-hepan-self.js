@@ -48,7 +48,7 @@
  }
  async function loadSaved(){
   try{const {saved}=await api(API+'/saved');const ul=$('#saved-list');ul.replaceChildren();$('#saved-area').hidden=!saved.length;
-   for(const s of saved){const li=el('li'),info=el('div');info.append(el('b','你与 '+s.nickname+' · '+s.tierLabel+' '+s.total),el('br'),el('span',s.createdAt.slice(0,10)));
+   for(const s of saved){const li=el('li'),info=el('div');info.append(el('b','你与 '+s.nickname+' · '+s.tierLabel),el('br'),el('span',s.createdAt.slice(0,10)));
     const open=el('button','查看','ghost-btn');open.type='button';open.addEventListener('click',async()=>{try{showSaved(await api(API+'/saved/'+encodeURIComponent(s.id)));}catch(e){$('#form-error').textContent=e.message;}});
     li.append(info,open);ul.append(li);}
   }catch{}

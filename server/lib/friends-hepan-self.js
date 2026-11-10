@@ -46,10 +46,10 @@ function createHepanSelfService({store,secret,calculateChart=calculate,generateP
   const analysis={purpose:r.purpose,tier:r.tier,tierLabel:HE.TIER[r.tier]},picked={he:r.hits.filter(h=>h.kind==='he'),mohe:r.hits.filter(h=>h.kind==='mohe')};
   // 和当场结果同一套免费/完整截断：磨合点不超过 1 条才算全部展示；否则地支、五行两项分不给数字。
   // 付费解锁（记在这条保存记录上）后给全部分项分和全部磨合点。
-  const allShown=picked.mohe.length<=1,unlocked=!!pay&&pay.isUnlocked('self',r,s),offer=pay?pay.offerFor(uid,'self',r,s):null,full=allShown||unlocked,subs=HV.SUBS.map(([key,label])=>{const locked=!full&&(key==='branch'||key==='wuxing');return {key,label:key==='star'&&r.purpose==='buddy'?'相处星':label,max:25,locked,score:locked?null:r.subs[key]};});
+  const allShown=picked.mohe.length<=1,unlocked=!!pay&&pay.isUnlocked('self',r,s),offer=pay?pay.offerFor(uid,'self',r,s):null,full=allShown||unlocked,subs=HV.SUBS.map(([key,label])=>{const locked=!full&&(key==='branch'||key==='wuxing');return {key,label:key==='star'&&r.purpose==='buddy'?'相处星':label,locked};});
   const prose=HC.fill(HC.templateProse(analysis,picked),{A:'你',B:'TA'});
   const item=h=>{const t=HC.fill(HC.template(h,h.kind),{A:'你',B:'TA'});return {id:h.id,kind:h.kind,tag:HV.tagOf(h,null,'invite'),title:t.title,meaning:t.meaning,life:t.life,...(h.kind==='mohe'?{advice:t.advice||[]}:{})};};
-  return {id:r.id,kind:'hepan_v4_saved',mode:'self',nickname:r.nickname,purpose:r.purpose,limited:r.limited,total:r.total,tier:r.tier,tierLabel:HE.TIER[r.tier],subs,summary:prose.summary,lead:prose.lead,epigraph:HC.EPIGRAPHS[r.tier],he:picked.he.map(item),mohe:(full?picked.mohe:picked.mohe.slice(0,1)).map(item),moreCount:full?0:picked.mohe.length-1,allShown,unlocked,full,lock:full?null:HV.lockOf(picked.mohe.length-1,offer),pay:HV.payView(offer,full),createdAt:r.createdAt,note:'保存只记档位和解读条目，不存任何一方的生辰。',footer:HV.FOOTER};
+  return {id:r.id,kind:'hepan_v4_saved',mode:'self',nickname:r.nickname,purpose:r.purpose,limited:r.limited,tier:r.tier,tierLabel:HE.TIER[r.tier],subs,summary:prose.summary,lead:prose.lead,epigraph:HC.EPIGRAPHS[r.tier],he:picked.he.map(item),mohe:(full?picked.mohe:picked.mohe.slice(0,1)).map(item),moreCount:full?0:picked.mohe.length-1,allShown,unlocked,full,lock:full?null:HV.lockOf(picked.mohe.length-1,offer),pay:HV.payView(offer,full),createdAt:r.createdAt,note:'保存只记档位和解读条目，不存任何一方的生辰。',footer:HV.FOOTER};
  }
  return {
   limits:LIMITS,consentVersion:CONSENT_VERSION,
@@ -94,7 +94,7 @@ function createHepanSelfService({store,secret,calculateChart=calculate,generateP
    if(s.hepanSelfSaveUsed.some(x=>x.j===b.j))fail(409,'这次合盘已经保存过了');
    if(list.filter(r=>same(r.owner,uid)).length>=SAVED_MAX)fail(429,'最多保存'+SAVED_MAX+'条，请先删除旧的');
    const r={id:crypto.randomUUID(),owner:uid,tokenId:b.j,nickname:b.nickname,purpose:b.purpose,limited:b.limited,total:b.total,tier:b.tier,subs:b.subs,hits:b.hits,createdAt:new Date(now).toISOString()};list.push(r);s.hepanSelfSaveUsed.push({j:b.j,exp:b.exp});return savedView(r,uid,s);});},
-  list(uid){return {saved:saved(store.read()).filter(r=>same(r.owner,uid)).slice().reverse().map(r=>({id:r.id,nickname:r.nickname,total:r.total,tier:r.tier,tierLabel:HE.TIER[r.tier],createdAt:r.createdAt,unlocked:!!pay&&pay.isUnlocked('self',r)}))};},
+  list(uid){return {saved:saved(store.read()).filter(r=>same(r.owner,uid)).slice().reverse().map(r=>({id:r.id,nickname:r.nickname,tier:r.tier,tierLabel:HE.TIER[r.tier],createdAt:r.createdAt,unlocked:!!pay&&pay.isUnlocked('self',r)}))};},
   get(uid,id){const s=store.read(),r=saved(s).find(r=>r.id===id&&same(r.owner,uid));if(!r)fail(404,'记录不存在');const v=savedView(r,uid,s);if(pay&&v.unlocked&&!v.allShown)pay.markOpened(uid,'self',r.id);return v;},
   remove(uid,id){return store.transaction(s=>{const list=saved(s),i=list.findIndex(r=>r.id===id&&same(r.owner,uid));if(i<0)fail(404,'记录不存在');
    // 已解锁的记录：留墓碑；完整版还没打开过 → 单次记待退款、会员退回份数（与弹层退款规则一致）。

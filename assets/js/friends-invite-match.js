@@ -55,14 +55,21 @@
 
  // ---------- 被邀请的朋友：一屏加入 ----------
  const req=(id,text)=>h('label',{class:'chk'},h('input',{id,type:'checkbox'}),h('span',{class:'box'}),h('span',{class:'t'},h('span',{class:'req',text:'必选'}),...text));
- function joinForm(preview){
-  const c=COPY[rel(preview.relation)],f=h('form',{id:'im-join',class:'hv4 im-join',novalidate:true});
+ // 生日 / 时辰（含「不确定」）/ 性别三块：邀请加入表和独立登记表共用，readBirth(form) 读取。
+ function birthBlocks(){
   const year=h('input',{class:'in',id:'im-year',type:'text',inputmode:'numeric',placeholder:'年',maxlength:'4',autocomplete:'off','aria-label':'出生年'});
   const month=h('select',{class:'in',id:'im-month','aria-label':'出生月'},h('option',{value:'',text:'月'})),day=h('select',{class:'in',id:'im-day','aria-label':'出生日'},h('option',{value:'',text:'日'}));
   for(let n=1;n<=12;n++)month.append(h('option',{value:String(n),text:n+' 月'}));for(let n=1;n<=31;n++)day.append(h('option',{value:String(n),text:n+' 日'}));
   const hours=h('div',{class:'hours im-hours',role:'radiogroup','aria-label':'出生时辰'});
   HOURS.forEach((z,i)=>hours.append(h('label',{},h('input',{type:'radio',name:'im-hour',value:String(i)}),z+'时',h('small',{text:String((i*2+23)%24).padStart(2,'0')+'–'+String(i*2+1).padStart(2,'0')}))));
   hours.append(h('label',{class:'im-unk'},h('input',{type:'radio',name:'im-hour',value:'unknown'}),'不确定',h('small',{text:'按三柱看'})));
+  return [
+   h('div',{class:'fl'},h('div',{class:'lb'},h('span',{text:'出生日期'}),h('select',{class:'in cal',id:'im-calendar','aria-label':'日期类型'},h('option',{value:'solar',text:'公历'}),h('option',{value:'lunar',text:'农历'}))),h('div',{class:'row3'},year,month,day)),
+   h('div',{class:'fl'},h('div',{class:'lb'},h('span',{text:'出生时辰'}),h('small',{text:'按当地时间，不确定也可以'})),hours),
+   h('div',{class:'fl'},h('div',{class:'lb'},h('span',{text:'性别'}),h('small',{text:'用来定乾造/坤造'})),h('div',{class:'two'},h('label',{class:'opt'},h('input',{type:'radio',name:'im-gender',value:'female'}),'女'),h('label',{class:'opt'},h('input',{type:'radio',name:'im-gender',value:'male'}),'男')))];
+ }
+ function joinForm(preview){
+  const c=COPY[rel(preview.relation)],f=h('form',{id:'im-join',class:'hv4 im-join',novalidate:true});
   const qs=h('div',{class:'im-qs-wrap'},h('p',{class:'note',text:'正在读取底线题…'}));
   f.append(
    h('p',{class:'eyebrow fill-head',text:'测 测 我 们 是 否 相 配'}),
@@ -70,9 +77,7 @@
    h('p',{class:'lede',text:c.lede}),
    h('h2',{class:'hv-h',text:'一 · 你 的 生 日'}),
    h('div',{class:'fl'},h('div',{class:'lb'},h('span',{text:'你的称呼'}),h('small',{text:'给 TA 核对是你'})),h('input',{class:'in',id:'im-nickname',maxlength:'24',autocomplete:'nickname',placeholder:'例如 阿青'})),
-   h('div',{class:'fl'},h('div',{class:'lb'},h('span',{text:'出生日期'}),h('select',{class:'in cal',id:'im-calendar','aria-label':'日期类型'},h('option',{value:'solar',text:'公历'}),h('option',{value:'lunar',text:'农历'}))),h('div',{class:'row3'},year,month,day)),
-   h('div',{class:'fl'},h('div',{class:'lb'},h('span',{text:'出生时辰'}),h('small',{text:'按当地时间，不确定也可以'})),hours),
-   h('div',{class:'fl'},h('div',{class:'lb'},h('span',{text:'性别'}),h('small',{text:'用来定乾造/坤造'})),h('div',{class:'two'},h('label',{class:'opt'},h('input',{type:'radio',name:'im-gender',value:'female'}),'女'),h('label',{class:'opt'},h('input',{type:'radio',name:'im-gender',value:'male'}),'男'))),
+   ...birthBlocks(),
    h('h2',{class:'hv-h',text:'二 · 14 道 底 线 题'}),
    h('p',{class:'note',text:'婚育、城市、见家长节奏这些最影响能不能走下去的事。每题都可以先不答。'}),
    qs,
@@ -124,6 +129,15 @@
   return true;
  }
 
+ // 「把资料填完整」提示：登记表成功页、发现页空状态、邀请结果页共用。own = GET /share-card 的返回（可为空）。
+ const NUDGE='把资料填完整，以后遇到和你五行相合的人，我们会推给你。';
+ function nudgeItems(own){const miss=[];if(!own?.photoCount)miss.push('照片');if(!own?.intro)miss.push('自我介绍');miss.push('其余三观题');return {miss,done:3-miss.length};}
+ function profileNudge(own){
+  const {miss,done}=nudgeItems(own);
+  return h('div',{class:'im-nudge'},h('p',{class:'im-nudge-t',text:NUDGE}),h('p',{class:'im-nudge-p',text:'资料完成度 '+done+' / 3 项，还差：'+miss.join('、')+'。首批成员还在陆续加入，什么时候遇到说不准。'}),h('a',{class:'jn-btn',href:'/pages/friends-connect.html#profile',text:'去完善资料'}));
+ }
+ async function showNudge(host){if(!host)return;let own=null;try{own=await api('/api/friends/share-card');}catch{}host.replaceChildren(profileNudge(own));}
+
  // ---------- 发起人：本次邀请里的补充 ----------
  function shareText(relation,link){return COPY[rel(relation)].share+link;}
  async function pairExtras(host,p,{onChanged}){
@@ -152,8 +166,9 @@
    ?h('section',{class:'im-cta'},h('p',{class:'im-cta-lead',text:'值得聊开的方向，不必一次谈完。'}),h('a',{class:'btn-p',href:'/pages/friends-questions.html',text:'去问卷里，一个方向一个方向聊'}),h('p',{class:'muted',text:'其余题都是选填，两个人可以各自慢慢填。'}))
    :h('section',{class:'im-cta'},h('a',{class:'btn-p',href:'/pages/friends-connect.html#profile',text:'留张卡片，遇到和你相合的人，第一时间告诉你'}),h('p',{class:'muted',text:'首批成员审核入驻中。卡片由你决定公开哪些资料。'}));
   out.append(cta);
+  const nh=h('section',{class:'im-nudge-host'});out.append(nh);showNudge(nh);
   return out;
  }
 
- window.XsInviteMatch={quickQuestions,intro,startJoin,pairExtras,renderDirections,shareText};
+ window.XsInviteMatch={NUDGE,profileNudge,showNudge,birthBlocks,readBirth,api,h,quickQuestions,intro,startJoin,pairExtras,renderDirections,shareText};
 })();

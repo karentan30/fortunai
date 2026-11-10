@@ -35,6 +35,7 @@
     w.append(h('p',{class:'xh-sub',text:'不用注册 · 一分钟 · 生日不公开'}));
     w.append(h('p',{class:'xh-sub xh-early',text:'首批成员审核入驻中'}));
     w.append(h('a',{class:'xh-pair',href:'/pages/friends-compatibility.html?start=friend'},h('b',{text:'测测我们是否相配'}),h('span',{text:'朋友、暧昧对象，或在考虑结婚的你们'})));
+    w.append(h('p',{class:'xh-login xh-join'},h('a',{href:'/pages/friends-join.html',text:'直接填登记表'}),'，不用邀请人'));
     w.append(h('p',{class:'xh-login'},'已有账号？',h('a',{href:'#login',text:'登录'})));
     s.append(w);return s;
   }

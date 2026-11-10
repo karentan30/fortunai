@@ -71,7 +71,7 @@ ${foot}<script src="/assets/js/friends-celebs.js" defer></script>
 `<main class="cl-wrap" id="main" data-element="${tone}">
 <nav class="cl-crumb" aria-label="位置"><a href="/pages/friends-celebs.html">明星日主库</a><span aria-hidden="true">/</span><a href="/pages/friends-celebs.html#stem-${STEM_ID[p.dayMaster]}">${sv}</a><span aria-hidden="true">/</span><span class="cl-crumb-current" aria-current="page">${esc(p.name)}</span></nav>
 <section class="cl-hero"><div class="cl-glyph" aria-hidden="true">${p.dayMaster}<small>${p.element}</small></div><div><h1>${esc(p.name)}是什么日主？</h1><p class="cl-answer">按公开生日推算，${esc(p.name)}是<strong>${sv}</strong>。</p></div></section>
-<p class="cl-trait">${esc(stemLine(p.dayMaster))}日主是认识的起点，合不合得来，相处了才知道。</p>
+<p class="cl-trait">${esc(stemLine(p.dayMaster))}日主是认识的起点，是否相合，相处了才知道。</p>
 <a class="cl-primary" href="${CTA_URL}">测测你和TA相不相生</a>
 <p class="cl-cta-note">填生日看自己的日主，不用注册。</p>
 <dl class="cl-facts"><dt>类别</dt><dd>${esc(p.category)}</dd><dt>公开生日</dt><dd>${cnDate(p.birthDate)}</dd><dt>日柱<small class="cl-dt-hint">出生那天的干支</small></dt><dd>${esc(p.dayPillar)}</dd><dt>星座</dt><dd>${esc(p.constellation)}</dd><dt>生肖</dt><dd>${esc(p.zodiac)}</dd></dl>

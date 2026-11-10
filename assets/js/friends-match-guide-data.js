@@ -2,7 +2,7 @@
 // 相生 · 日主/星座相合指南的文案数据（浏览器 window.XiangshengMatchGuideData / 测试 require 共用）。
 // 日主分组照抄 server/lib/friends-preferences.js recommend().stemGroups 的输出（顺序、天干完全一致，测试会逐项比对）；
 // 星座元素照 typeSuggestions() 的 ELEMENT_GROUPS + CONST_COMPLEMENT（同元素=同频，火↔风、土↔水=互补）。
-// 文案红线：不得出现 friends-copy-guard.js 的禁用词、百分比或分数；不写「不合」；相克一律写成互补成长、多沟通。
+// 文案红线：不得出现 friends-copy-guard.js 的禁用词、百分比或分数；不写负面结论；这类关系一律写成互补成长、多沟通。
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.XiangshengMatchGuideData=api;})(typeof self!=='undefined'?self:this,function(){
   const ELEMENTS={wood:'木',fire:'火',earth:'土',metal:'金',water:'水'};
 
@@ -12,7 +12,7 @@
     shengWo:{label:'相生·对方生我',feel:'{other}生{me}。相处中常见的感受是被照顾、被托住：你忙乱的时候TA愿意兜底，会提醒你按时吃饭、早点休息。'},
     same:{label:'同频·同五行',feel:'同为{me}，节奏和想法往往接近，很多事不用多解释就懂。可以聊聊遇到分歧时谁先让一步，免得两个人都想做主。'},
     woSheng:{label:'相生·我生对方',feel:'{me}生{other}。你常是付出、照顾的那一方，看着对方因为你变得更好，会很有成就感；也别忘了说出自己需要什么。'},
-    ke:{label:'相克·磨合型',feel:'五行里互相制约，这里看作互补成长型：做事方式差别较大，常能补上彼此看不到的地方。需要多沟通、把感受说清楚，磨合过后往往更稳。'}
+    ke:{label:'互补·磨合型',feel:'五行里互相制约，这里看作互补成长型：做事方式差别较大，常能补上彼此看不到的地方。需要多沟通、把感受说清楚，磨合过后往往更稳。'}
   };
 
   // groups 与 recommend({dayMaster}).stemGroups 一一对应（key 顺序 + stems 完全一致）。

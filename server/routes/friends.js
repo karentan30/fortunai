@@ -69,6 +69,10 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   // Guest onboarding deck (#hello): teaser fields only, fresh opaque tokens per response. See lib/friends-preview-deck.js.
   const previewDeck=enabled?require('../lib/friends-preview-deck').createPreviewDeck(store):null;
   router.get('/preview',createRateLimit({limit:30}),run(req=>previewDeck.deck(req.query)));
+  // 相亲名片（公开，不用登录）：审核通过前只给昵称+「资料审核中」。见 lib/friends-join-card.js。
+  const joinCard=enabled?require('../lib/friends-join-card').createJoinCard(store):null;
+  router.get('/public-card/:shareId',createRateLimit({limit:60}),run(req=>({card:joinCard.publicCard(req.params.shareId)})));
+  router.get('/public-card/:shareId/photos/:photoId',createRateLimit({limit:120}),(req,res,next)=>{try{joinCard.photoAllowed(req.params.shareId,req.params.photoId);const f=needMedia().open(req.params.photoId);res.set('Content-Type',f.mime).set('Content-Disposition','inline').set('Content-Security-Policy',"default-src 'none'; sandbox").set('Cache-Control','no-store, private').set('Cross-Origin-Resource-Policy','same-origin');res.send(f.body);}catch(e){if(e.status)return res.status(e.status).json(xbError(e));next(e);}});
   router.use(auth);
   router.post('/logout',(req,res,next)=>{try{if(onLogout)onLogout(req,res);else res.clearCookie('sy_token',{path:'/'});res.json({ok:true});}catch(e){next(e);}});
   router.use((req,res,next)=>canAccess(req)?next():res.status(403).json({error:'当前为邀请测试，请联系运营开通账号'}));
@@ -91,6 +95,8 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.get('/cross-border-consent',run(req=>XB.status(store.read(),req.user.id)));
   router.post('/cross-border-consent',run(req=>{if(req.body?.consent!==true||req.body?.version!==XB.VERSION){const e=Error('请勾选同意当前版本的出境说明');e.status=400;e.code=XB.CODE;e.version=XB.VERSION;throw e;}return store.transaction(s=>{XB.record(s,req.user.id);return XB.status(s,req.user.id);});}));
   router.delete('/cross-border-consent',run(req=>store.transaction(s=>XB.withdraw(s,req.user.id))));
+  router.get('/share-card',run(req=>joinCard.own(req.user.id)));
+  router.post('/share-card',createRateLimit({limit:30}),run(req=>joinCard.save(req.user.id,req.body||{})));
   router.post('/profile',run(req=>{if(requirePolicy&&req.body.listed===true&&req.body.policyVersion!=='friends-2026-11-04-v1'){const e=Error('请阅读并同意当前隐私说明与用户条款');e.status=400;throw e;}return{profile:service.save(req.user.id,req.body)};}));
   router.get('/export',run(req=>({profile:service.me(req.user.id),reports:service.reports(req.user.id),exportedAt:new Date().toISOString()})));
   // Owner's own delete: photos/voice files of the 相亲页 go with the profile.

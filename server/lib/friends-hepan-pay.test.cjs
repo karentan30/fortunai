@@ -126,7 +126,7 @@ test('locked content is never returned before unlock (report, offer, order and h
  const locked=await full.report('a',w.p.id),facts=pairFacts(pairRow(),w.now());
  assert.ok(facts.moheCount>1);assert.equal(locked.mohe.length,1);assert.equal(locked.moreCount,facts.moheCount-1);
  assert.ok(!locked.basis?.length,'no basis rows while locked');assert.equal('moheTotal' in locked,false);
- for(const k of ['branch','wuxing'])assert.equal(locked.subs.find(s=>s.key===k).score,null);
+ for(const k of ['branch','wuxing'])assert.equal(locked.subs.find(s=>s.key===k).locked,true);
  const o=await w.pay.createOrder('a',{...target(w),channel:'alipay'}),offer=w.pay.offer('a',target(w));
  const text=JSON.stringify({o,offer,hub:w.hub.seen.map(x=>x.init.body||'')});
  for(const word of ['advice','"score"','meaning','title','"points"'])assert.ok(!text.includes(word),word);

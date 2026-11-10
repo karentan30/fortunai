@@ -30,7 +30,7 @@
   if(mine){row('16 章完整命盘解读','AI 辅助生成');row('只你自己可见','不进卡片、不给任何人看');row('报告长期保存','可随时回看');}
   else row('4 项分项分与理由','全部打开');
   if(!mine&&pay.moheCount)row(pay.moheCount+' 处需磨合 · 逐条解读','每处 2–3 条建议');
-  if(!mine&&pay.basisCount)row('计分与解读依据',pay.basisCount+' 条');
+  if(!mine&&pay.basisCount)row('解读依据',pay.basisCount+' 条');
   if(mine);else if(target.type==='self')row('报告长期保存','可随时回看');
   else row('邀请有效期内可回看',pay.keepUntil?'到 '+new Date(pay.keepUntil).toLocaleDateString('zh-CN',{month:'numeric',day:'numeric'})+'（邀请到期或撤回后关闭）':'邀请到期或撤回后关闭');
   const body=el('div',undefined,'hp-body'),err=el('p','','hp-err');err.setAttribute('role','alert');

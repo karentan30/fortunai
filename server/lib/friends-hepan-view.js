@@ -3,7 +3,7 @@
 const E=require('./friends-hepan-v4');
 const C=require('./friends-hepan-copy');
 const SUBS=[['stem','天干'],['branch','地支 · 配偶宫'],['wuxing','五行互补'],['star','夫妻星']];
-const FOOTER=['按传统合婚规则计分，仅供参考','传统文化参考，不预测关系结果'];
+const FOOTER=['传统文化参考，不预测关系结果。'];
 const ZAO={male:'乾造',female:'坤造'};
 const PILLAR_NAME={year:'年',month:'月',day:'日',hour:'时'};
 function tagOf(h,charts,mode){
@@ -30,7 +30,7 @@ function buildReport({analysis,picked,prose,charts,mode,viewer='A',unlocked=fals
  const other=viewer==='A'?'B':'A',names=sideNames(viewer);
  const allShown=picked.mohe.length<=1,full=unlocked||allShown;
  const lockSub=k=>!full&&(k==='branch'||k==='wuxing');
- const subs=SUBS.map(([key,label])=>({key,label:key==='star'&&analysis.starMode==='companion'?'相处星':label,max:25,locked:lockSub(key),score:lockSub(key)?null:analysis.subs[key].score}));
+ const subs=SUBS.map(([key,label])=>({key,label:key==='star'&&analysis.starMode==='companion'?'相处星':label,locked:lockSub(key)}));
  const item=(h,kind)=>{const t=prose.items[h.id]||C.template(h,kind);return {id:h.id,kind,tag:tagOf(h,charts,mode),title:t.title,meaning:t.meaning,life:t.life,...(kind==='mohe'?{advice:t.advice||C.template(h,kind).advice||[]}:{})};};
  const he=picked.he.map(h=>item(h,'he')),moheAll=picked.mohe.map(h=>item(h,'mohe'));
  const mohe=full?moheAll:moheAll.slice(0,1);
@@ -43,7 +43,7 @@ function buildReport({analysis,picked,prose,charts,mode,viewer='A',unlocked=fals
  const report={
   kind:'hepan_v4',version:'compatibility-guide-v4',engine:analysis.engine,mode,purpose:analysis.purpose,limited:analysis.limited,
   limitedNote:analysis.limited?'至少一方不知道时辰，只按年、月、日三柱计算，是有限参考。':null,
-  total:analysis.total,tier:analysis.tier,tierLabel:analysis.tierLabel,tiers:['很合拍','大体合拍','磨合型'],
+  tier:analysis.tier,tierLabel:analysis.tierLabel,
   lead:prose.lead,summary:C.fill(prose.summary,names),epigraph:C.EPIGRAPHS[analysis.tier],
   aiAssisted:prose.source==='ai',aiLabel:prose.source==='ai'?'AI 辅助生成':null,
   people:{me:{...person(viewer),nickname:meNickname},ta:{...person(other),nickname:taNickname}},
@@ -51,7 +51,7 @@ function buildReport({analysis,picked,prose,charts,mode,viewer='A',unlocked=fals
   he:C.fill(he,names),mohe:C.fill(mohe,names),...(full?{moheTotal:moheAll.length}:{}),moreCount:full?0:Math.max(0,moheAll.length-1),allShown,unlocked:!!unlocked,full,
   star:full?C.fill(starView(analysis,viewer),names):null,
   wuxing:full?{bu:analysis.wuxing.bu,que:analysis.wuxing.que,mine:analysis.counts[viewer],...(mode==='self'?{ta:analysis.counts[other]}:{})}:null,
-  basis:full?analysis.hits.filter(h=>h.points!==0).map(h=>({id:h.id,tag:tagOf(h,charts,mode),points:h.points,sub:h.sub})):null,
+  basis:full?analysis.hits.filter(h=>h.points!==0).map(h=>({id:h.id,tag:tagOf(h,charts,mode),negative:h.points<0,sub:h.sub})):null,
   lock:full?null:lockOf(moheAll.length-1,offer),
   pay:payView(offer,full),
   footer:FOOTER
@@ -66,7 +66,7 @@ function starView(analysis,viewer){const t=C.starText(analysis),other=viewer==='
 // 邀请合盘：每个返回给看报告者的字段都扫一遍，对方四柱里除日主以外的干支字一个都不能出现。
 // 允许的路径只有：本人四柱、双方昵称（用户自填，不由命盘派生），以及只随档位变化的固定文字（古语题记、页脚、档位名表）。
 // 题记「君子和而不同」《论语·子路》里的「子」不是命盘字，不能因此误判泄露、把整份报告挡掉。
-const FIXED_PATHS=['epigraph.text','epigraph.cite','footer','tiers','pay'];// pay：价格、退款规则等固定文字，不由命盘派生
+const FIXED_PATHS=['epigraph.text','epigraph.cite','footer','pay'];// pay：价格、退款规则等固定文字，不由命盘派生
 function assertNoLeak(report,otherPillars){
  const hits=C.leakScan(report,C.forbiddenFor(otherPillars,{alsoAllow:[report.people?.me?.dayMaster].filter(Boolean)}),{allow:['people.me.pillars','people.me.dayMaster','people.me.nickname','people.ta.nickname',...FIXED_PATHS]});
  return hits;
