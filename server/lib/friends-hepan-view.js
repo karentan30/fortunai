@@ -9,7 +9,7 @@ const PILLAR_NAME={year:'年',month:'月',day:'日',hour:'时'};
 function tagOf(h,charts,mode){
  if(!h.pillar)return h.id==='star'?'夫妻星':'五行';
  const part=h.part==='stem'?'干':'支',head=PILLAR_NAME[h.pillar]+part;
- const typeWord=h.type==='六合'||h.type==='三合'?h.type:h.part==='stem'?'相'+h.type:'相'+h.type;
+ const typeWord=h.type==='六合'||h.type==='三合'?h.type:h.type==='克'?'互补·磨合':'相'+h.type;
  const extra=h.pillar==='day'&&h.part==='branch'?'（配偶宫）':'';
  if(mode!=='self')return head+' · '+typeWord+extra;
  const idx=h.part==='stem'?0:1,a=[...charts.A.pillars[h.pillar]][idx],b=[...charts.B.pillars[h.pillar]][idx];
