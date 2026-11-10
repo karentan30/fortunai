@@ -8,6 +8,7 @@
 //   解锁后 7 天内对方撤回授权、且付款人从没打开过完整版 → 单次记「待退款」、会员退回 1 份；否则不退。
 // - 中台没有独立的「已退款」状态（退款/关闭都返回 failed），已付订单查到 failed 按退款处理。
 const crypto=require('node:crypto');
+const {track}=require('./friends-hub-track');
 const HE=require('./friends-hepan-v4');
 const {PILOT_CATALOG,isMember}=require('./friends-membership');
 const SKU='friends_pair_report_v2',DAY=86400000,REVOKE_WINDOW_MS=7*DAY,ORDER_TTL_MS=30*60000,RECHECK_PAID_MS=10*60000;
@@ -49,7 +50,15 @@ function createHubClient({base,projectId,secret,fetchImpl=globalThis.fetch,timeo
   catch(e){if(e.status)throw e;fail(502,'支付通道暂时不可用，请稍后再试');}
   finally{clearTimeout(timer);}
  }
+ // 通用签名 POST（埋点 / 指标）：body 序列化后整体 HMAC；超时更短、不检查 data.ok（指标接口没有 ok 字段）。
+ async function signedPost(path,obj,{timeoutMs:t=2500}={}){
+  const body=JSON.stringify(obj),ctl=new AbortController(),timer=setTimeout(()=>ctl.abort(),t);
+  try{const r=await fetchImpl(base+path,{method:'POST',headers:{'Content-Type':'application/json','X-Project-Id':projectId,'X-Sign':sign(body)},body,signal:ctl.signal,redirect:'error'});const data=await r.json().catch(()=>null);if(!r.ok||!data)fail(502,'中台暂时不可用');return data;}
+  catch(e){if(e.status)throw e;fail(502,'中台暂时不可用');}
+  finally{clearTimeout(timer);}
+ }
  return {
+  signedPost,
   create({method,product,amount,outRef}){const body=JSON.stringify({method,product,amount,out_ref:outRef});return call(base+'/hub/pay/create',{method:'POST',headers:{'Content-Type':'application/json','X-Project-Id':projectId,'X-Sign':sign(body)},body});},
   // 中台对原始 query 串验签：project_id=<pid>&order_no=<no>（两者都只含字母数字，不用转义）。
   status(orderNo){const qs='project_id='+projectId+'&order_no='+orderNo;return call(base+'/hub/pay/status?'+qs,{method:'GET',headers:{'X-Project-Id':projectId,'X-Sign':sign(qs)}});},
@@ -163,13 +172,15 @@ function createHepanPayService({store,config=payConfig(),hub=null,pairFacts,cloc
   const s0=store.read(),o0=orders(s0).find(o=>o.id===orderId);if(!o0||!o0.hubOrderId)fail(404,'订单不存在');
   const r=await client.status(o0.hubOrderId);
   if(r.order_no!==o0.hubOrderId||r.out_ref!==o0.id||!['paid','pending','failed'].includes(r.status))fail(502,'支付通道返回的订单对不上');
-  return store.transaction(s=>{
+  let newlyPaid=null;
+  const out=store.transaction(s=>{
    const now=clock(),o=orders(s).find(o=>o.id===orderId);o.lastHubCheckAt=iso(now);
    if(r.status==='paid'){
     if(['paid','refunded','payment_review'].includes(o.status))return publicOrder(o);// 待核对的单只由运营处理
     if(toMinor(r.amount)!==o.amountMinor){if(['pending','opening','expired'].includes(o.status)){o.status='payment_review';o.reviewReason='amount_mismatch';o.updatedAt=iso(now);}return publicOrder(o);}
     o.status='paid';o.paidAt=iso(now);o.updatedAt=iso(now);
     settlePaidIn(s,o,now,(type,row,uid,source)=>applyUnlockIn(s,type,row,uid,source,now));
+    newlyPaid={uid:o.userId,kind:o.target.type};
     return publicOrder(o);
    }
    if(r.status==='failed'){
@@ -178,6 +189,8 @@ function createHepanPayService({store,config=payConfig(),hub=null,pairFacts,cloc
    }else if(o.status==='pending'&&Date.parse(o.expiresAt)<now-ORDER_TTL_MS){o.status='expired';o.updatedAt=iso(now);}// 中台确认仍未付才过期
    return publicOrder(o);
   });
+  if(newlyPaid)track('compat_paid',{uid:newlyPaid.uid,props:{via:'order',kind:newlyPaid.kind}});
+  return out;
  }
  const lateCheckable=(o,now)=>['expired','failed'].includes(o.status)&&!!o.hubOrderId&&now-Date.parse(o.createdAt)<RECONCILE_MS;
  function expireOrphansIn(s,now){for(const o of orders(s))if(o.status==='opening'&&now-Date.parse(o.createdAt)>OPENING_ORPHAN_MS){o.status='expired';o.reviewReason='opening_orphan';o.updatedAt=iso(now);}}

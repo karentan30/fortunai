@@ -1,4 +1,5 @@
 'use strict';
+const {track}=require('./friends-hub-track');
 // 相亲名片（登记表 friends-join 的分享页）。一张可以发给相亲对象或媒人的公开名片，不需要登录就能看。
 //  · 审核没通过之前：只给「昵称 + 资料审核中」，别的一个字段都不给（联系方式、照片、生日更不给）。
 //  · 通过之后：昵称、日主、自我介绍、性格参考（沿用资料里各项的可见设置，只有设为公开的才给）、
@@ -89,18 +90,19 @@ function createJoinCard(store){
         const now=Date.now(),log=(p.shareCard.mintLog||[]).filter(t=>now-t<DAY_MS);
         if(log.length>=MINT_PER_DAY){p.shareCard.mintLog=log;fail(429,'今天这张名片的邀请已经发完了，请明天再试');}
         log.push(now);p.shareCard.mintLog=log;auth=m.auth;nick=m.nickname;uid=p.userId;});
-      const made=compat.mintCardInvite(uid,{auth,nickname:nick}); // 补发的邀请标 viaCard，不覆盖主人自己那条（shareCard.invite）
+      const made=compat.mintCardInvite(uid,{auth,nickname:nick});track('invite_created',{uid,props:{via:'card'}}); // 补发的邀请标 viaCard，不覆盖主人自己那条（shareCard.invite）
       return {inviteToken:made.inviteToken};
     },
-    publicCard(shareId){const s=store.read(),out=publicPayload(s,byShare(s,shareId));if(!out)fail(404,'这张名片暂时看不到了');return out;},
+    publicCard(shareId){const s=store.read(),out=publicPayload(s,byShare(s,shareId));if(!out)fail(404,'这张名片暂时看不到了');track('card_opened',{uid:'card:'+shareId,dedupe:shareId});return out;},
     // 名片上公开的某张照片：必须已通过审核、开关打开、照片确实属于这张名片。
     photoAllowed(shareId,photoId){const s=store.read(),p=byShare(s,shareId);
       if(!live(s,p)||!R.reviewVisible(p)||!showOf(p).photo||!photosOf(s,p.userId).some(x=>x.id===photoId))fail(404,'照片不存在');return true;},
     // 主人自己的设置页：开关 + 联系方式 + 已有照片数 + 审核状态。
     own(uid){const s=store.read(),p=mineOf(s,uid);if(!p)return {hasProfile:false,show:{...SHOW_DEFAULTS}};
       return {hasProfile:true,shareId:p.shareId,show:showOf(p),contact:p.shareCard?.contact||'',hasBirth:birthOk(p.shareCard?.birth),birthHour:!!HOURS.includes(p.shareCard?.birth?.hour),inviteOk:inviteUsable(s,p),photoCount:photosOf(s,uid).length,review:R.ownerReview(p),intro:p.bio||''};},
-    save(uid,b={}){XB.check(store,uid);
-      return store.transaction(s=>{const p=mineOf(s,uid);if(!p)fail(400,'请先保存登记表');
+    save(uid,b={}){XB.check(store,uid);let justEnabled=false;
+      const out=store.transaction(s=>{const p=mineOf(s,uid);if(!p)fail(400,'请先保存登记表');
+        const wasOn=p.shareCard?.enabled===true;
         const card=p.shareCard={...(p.shareCard||{})};
         // 创建名片：第一次保存（登记表或 POST /share-card）就算主人主动创建，除非明确传 enabled:false。
         if(card.enabled!==true&&b.enabled===undefined)card.enabled=true;
@@ -117,7 +119,10 @@ function createJoinCard(store){
           if(!row)fail(400,'邀请无效');card.invite={pairId:id,tokenHash:hashOf(t)};const au=row.authorizations?.[String(uid)];if(au?.chart)card.mint={pairId:id,auth:structuredClone(au),nickname:row.ownerNickname||p.nickname||''};}
         if(b.enabled!==undefined){if(typeof b.enabled!=='boolean')fail(400,'名片开关无效');card.enabled=b.enabled;}
         if(b.gender!==undefined){if(!['female','male'].includes(b.gender))fail(400,'性别无效');card.gender=b.gender;}
-        return {ok:true,inviteOk:inviteUsable(s,p),show:showOf(p),contact:card.contact||''};});}
+        justEnabled=!wasOn&&card.enabled===true;
+        return {ok:true,inviteOk:inviteUsable(s,p),show:showOf(p),contact:card.contact||''};});
+      if(justEnabled)track('card_enabled',{uid});
+      return out;}
   };
 }
 module.exports={createJoinCard,publicPayload,SHOW_DEFAULTS,SHOW_KEYS,PENDING_NOTE};
