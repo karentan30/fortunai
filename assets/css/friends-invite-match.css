@@ -1,0 +1,58 @@
+/* 「测测我们是否相配」邀请闭环：朋友一屏填写 + 结果里的三观方向。沿用 friends-hepan-v4 的变量与组件。 */
+/* 带邀请进来时只留一屏：隐藏通用 hero、其它面板和底部说明 */
+body.im-invite main>.hero,body.im-invite main>section.panel.muted,body.im-invite #private-area>:not(#im-join-host){display:none!important}
+.im-intro{border:1px solid var(--hair);padding:18px 16px;margin:0 0 14px}
+.im-intro h1{font:400 21px/1.5 var(--serif);color:var(--ink);margin:4px 0 8px}
+.im-intro h1 em,.im-join .title em{font-style:normal;color:var(--gold)}
+.im-eyebrow{font:300 11px var(--sans);letter-spacing:.3em;color:var(--gold);margin:0}
+.im-join{padding:4px 0 8px}
+/* 发起时选关系 */
+.im-rel{border:0;padding:0;margin:12px 0;display:grid;gap:8px}
+.im-rel legend{font-size:13px;color:var(--muted);margin-bottom:6px}
+.im-rel label{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 12px;border:1px solid var(--hair-2);cursor:pointer;margin:0}
+.im-rel input{width:auto;min-height:0;margin:0;flex:none;accent-color:var(--gold)}
+.im-rel label:has(input:checked){border-color:var(--gold);color:var(--gold)}
+/* 时辰：12 格 + 「不确定」占一整行 */
+.hv4 .im-hours label.im-unk{grid-column:1/-1;flex-direction:row;gap:8px;border-style:dashed}
+.hv4 .im-hours label.im-unk:has(input:checked){border-style:solid;border-color:var(--gold);color:var(--gold);background:rgba(200,174,125,.07)}
+.hv4 .im-hours label.im-unk small{margin:0}
+/* 14 道底线题 */
+.im-qs{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:14px}
+.im-q{border:0;border-top:1px solid var(--hair-2);margin:0;padding:12px 0 0;min-width:0}
+.im-q legend{font:400 15px/1.55 var(--serif);color:var(--ink);padding:0;margin-bottom:8px}
+.im-opts{display:flex;flex-wrap:wrap;gap:6px}
+.im-opt{position:relative;display:inline-flex;align-items:center;min-height:40px;padding:6px 12px;border:1px solid var(--hair-2);font-size:13px;line-height:1.4;color:var(--ink-2);cursor:pointer;margin:0}
+.im-opt input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.im-opt:has(input:checked){border-color:var(--gold);color:var(--gold);background:rgba(200,174,125,.07)}
+.im-opt:has(input:focus-visible){outline:1px solid var(--gold);outline-offset:1px}
+.im-q-note{font-size:12px;color:var(--muted);margin:6px 0 0}
+.hv4 label.chk.im-include{margin-top:16px}
+/* 等待 / 发起人补答 */
+.im-wait{border-left:2px solid var(--gold);padding:8px 12px;color:var(--ink-2);margin:12px 0}
+.im-qline a{margin-left:8px;color:var(--gold)}
+.im-mine{margin:16px 0 0;padding:16px 0 0;border-top:1px solid var(--hair-2)}
+/* 结果：三观方向 */
+.im-result{margin-top:24px}
+.im-dirs h2{font:400 18px var(--serif);color:var(--ink);letter-spacing:.12em;margin:0 0 10px}
+.im-dir-list{list-style:none;margin:0 0 10px;padding:0;display:grid;gap:8px}
+.im-dir{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:baseline;padding:12px;border:1px solid var(--hair-2)}
+.im-dir b{font:400 15px var(--serif);color:var(--ink)}
+.im-dir>span:last-child{grid-column:1/-1;font-size:13px;line-height:1.6;color:var(--ink-2)}
+.im-tag{font-size:12px;padding:2px 8px;border:1px solid var(--hair);color:var(--ink-2);white-space:nowrap}
+.im-dir.same .im-tag{border-color:var(--gold);color:var(--gold)}
+.im-dir.talk .im-tag{border-style:dashed;color:var(--ink)}
+.im-dir.open .im-tag{color:var(--muted)}
+.im-cta{margin:24px 0 8px;text-align:center}
+.im-cta .btn-p{display:block;width:100%;box-sizing:border-box;text-decoration:none;text-align:center;padding:14px 12px;line-height:1.5}
+.im-cta-lead{font:400 15px var(--serif);color:var(--ink)}
+@media (max-width:420px){.im-opt{font-size:12.5px;padding:6px 10px}.im-intro h1{font-size:19px}}
+/* 页面通用 label/input 规则会把 hv4 组件撑宽：与 #birth-authorize 同样处理 */
+html body.hv-page :is(#im-join,.im-mine) label{margin:0;min-width:0}
+html body.hv-page :is(#im-join,.im-mine) label.chk{display:grid;font-size:13px;color:var(--ink)}
+html body.hv-page #im-join input.in,html body.hv-page #im-join select.in{margin:0;padding:0 12px;min-height:46px;font:400 16px var(--serif);width:100%;box-sizing:border-box}
+html body.hv-page #im-join select.in.cal{width:auto;min-height:32px;font:300 12px var(--sans);letter-spacing:.15em;padding:0 26px 0 10px;border-color:var(--hair);color:var(--gold)}
+html body.hv-page :is(#im-join,.im-mine) .im-opt{display:inline-flex;width:auto;flex:0 1 auto;max-width:100%;writing-mode:horizontal-tb}
+/* 未登录打开邀请：只留邀请说明 + 登录框 */
+main:has(#im-intro:not([hidden]))>.hero,body.im-joined main>.hero{display:none}
+.im-q legend small{margin-right:6px;color:var(--gold);font:300 12px var(--sans)}
+body.im-joined #private-area>section:has(#create-pair),body.im-joined main>section.panel:has(#account-title){display:none}
