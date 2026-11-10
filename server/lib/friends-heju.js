@@ -1,4 +1,5 @@
 'use strict';
+const {track}=require('./friends-hub-track');
 // 相生 · 相合局（一期）。报名 → 系统分组 / 自己开局 / 合作俱乐部 → 确认 → 群聊 → 局后互选。
 // 所有状态都在 friends 的 store 里（hejuSignups / hejuGroups / hejuMessages / hejuStrikes / hejuPicks / hejuClubs / hejuNotices）。
 // 站内通知只落在 hejuNotices（用户回来时看到）；对外通知只留一个钩子 notify(userId,event,data)，默认什么也不做。
@@ -40,10 +41,12 @@ const NOTICE_TEXT={
 };
 const STATUS_LABEL={forming:'等大家确认',open:'报名中',confirmed:'已定下来',cancelled:'没凑齐，已取消',done:'已结束'};
 const defaultNotify=()=>{};
+// 站内通知事件 → 增长埋点（提交后才发，回滚的事务不会误报）。
+const HUB_EVENT={group_formed:'heju_grouped',group_confirmed:'heju_confirmed',pick_mutual:'heju_mutual'};
 
 function createHejuService(store,{clock=()=>Date.now(),notify=defaultNotify}={}){
   const ensure=s=>{for(const k of COLLECTIONS)if(!Array.isArray(s[k]))s[k]=[];for(const k of ['profiles','requests','blocks','reports'])if(!Array.isArray(s[k]))s[k]=[];return s;};
-  const tx=fn=>{const queue=[];const out=store.transaction(s=>fn(ensure(s),queue));for(const q of queue){try{notify(...q);}catch(_){}}return out;};
+  const tx=fn=>{const queue=[];const out=store.transaction(s=>fn(ensure(s),queue));for(const q of queue){try{if(HUB_EVENT[q[1]])track(HUB_EVENT[q[1]],{uid:q[0]});if(q[1]==='pick_mutual')track('connection_accepted',{uid:q[0],props:{via:'heju'}});}catch(_){}try{notify(...q);}catch(_){}}return out;};
   const read=()=>ensure(store.read());
   const profileOf=(s,uid)=>s.profiles.find(p=>eq(p.userId,uid));
   const blocked=(s,a,b)=>s.blocks.some(x=>(eq(x.by,a)&&eq(x.target,b))||(eq(x.by,b)&&eq(x.target,a)));
@@ -116,7 +119,7 @@ function createHejuService(store,{clock=()=>Date.now(),notify=defaultNotify}={})
   // ---- 报名 ----
   const signupView=r=>({id:r.id,activity:r.activity,windows:r.windows.map(k=>({key:k,label:D.windowLabel(k)})),area:r.area,sameSchool:r.sameSchool,status:r.status,groupId:r.groupId||null,createdAt:r.createdAt});
   function signup(uid,body={}){
-    return tx((s)=>{
+    const out=tx((s)=>{
       const now=clock(),rd=readiness(s,uid,now);
       if(!rd.ready)throw err(409,rd.hint,rd.code);
       if(body.adult!==true)throw err(400,'请先确认你已年满 18 周岁','need_adult_confirm');
@@ -138,6 +141,8 @@ function createHejuService(store,{clock=()=>Date.now(),notify=defaultNotify}={})
       Object.assign(r,{activity:act.label,activityKey:act.key,windows,area,sameSchool,school:schoolOf(s,uid),consent:true,updatedAt:iso(now)});
       return {signup:signupView(r),waiting:D.COPY.waiting,nudge:D.COPY.nudge,awaitingReview:!rd.approved,note:rd.approved?'':rd.hint};
     });
+    track('heju_signup',{uid,dedupe:uid});
+    return out;
   }
   function cancelSignup(uid,id){
     return tx(s=>{
@@ -478,7 +483,7 @@ function createHejuService(store,{clock=()=>Date.now(),notify=defaultNotify}={})
     }
   }
   function attendance(uid,id,body={}){
-    return tx((s)=>{
+    const out=tx((s)=>{
       const g=groupById(s,id),now=clock(),me=afterGate(s,g,uid,now);
       if(g.settled)throw err(409,'这个局已经结算了。');
       if(typeof body.attended!=='boolean')throw err(400,'请选「我到了」或「我没去」。');
@@ -488,6 +493,8 @@ function createHejuService(store,{clock=()=>Date.now(),notify=defaultNotify}={})
       for(const mid of absent){const t=g.members.find(m=>m.mid===mid&&m.status==='confirmed'&&m.mid!==me.mid);if(t&&!t.flags.includes(me.mid))t.flags.push(me.mid);}
       return {ok:true};
     });
+    if(body.attended===true)track('heju_attended',{uid,dedupe:uid+':'+id});
+    return out;
   }
   function pick(uid,id,mid,on=true){
     return tx((s,q)=>{

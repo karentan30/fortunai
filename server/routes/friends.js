@@ -10,7 +10,7 @@ const {searchCities}=require('../lib/friends-location');
 const {searchAreas,suggestPlaces}=require('../lib/friends-places');
 const {createAdminService,adminAuth,createRateLimit}=require('../lib/friends-admin');
 const {referralCode,createFunnelSink,instrumentCompatibility}=require('../lib/friends-campus');
-function createRouter({express,auth,store,secret,enabled=true,adminToken=process.env.FRIENDS_ADMIN_TOKEN||process.env.ADMIN_TOKEN,onLogout,canAccess=()=>true,mode='local_review',requirePolicy=false,quotaOptions={},funnel,verification=null,seriousMedia=null,reviewGate=false,hejuNotify,hejuClock}) {
+function createRouter({express,auth,store,secret,hubMetrics,enabled=true,adminToken=process.env.FRIENDS_ADMIN_TOKEN||process.env.ADMIN_TOKEN,onLogout,canAccess=()=>true,mode='local_review',requirePolicy=false,quotaOptions={},funnel,verification=null,seriousMedia=null,reviewGate=false,hejuNotify,hejuClock}) {
   const router=express.Router();
   const charts=enabled?createChartService(secret):null;
   const service=enabled?createFriendsService(store,charts,{...quotaOptions,funnel,reviewGate,
@@ -64,6 +64,15 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.post('/admin/heju/clubs',runH(req=>heju.markClub(req.body||{})));
   router.post('/admin/heju/run',runH(()=>heju.run()));
   router.get('/admin/heju/summary',runH(()=>heju.summary()));
+  // 增长看板：服务端代签去问 Lumee 中台，浏览器只拿到整形后的计数；中台密钥不出服务器。
+  router.get('/admin/growth',async(req,res,next)=>{
+    try{
+      const days=req.query.days==='30'?30:7,fetchMetrics=hubMetrics||require('../lib/friends-hub-track').defaultMetricsFetcher();
+      if(!fetchMetrics)return res.status(503).json({error:'增长数据通道未配置（需要 FRIENDS_HUB_BASE / PROJECT_ID / SECRET）'});
+      let hub;try{hub=await fetchMetrics({days:90});}catch(_){return res.status(502).json({error:'中台暂时取不到数据，请稍后再试'});}
+      res.json(require('../lib/friends-growth').shape(hub,days));
+    }catch(e){next(e);}
+  });
   router.get('/admin/health',run(()=>store.health?store.health():{ok:true,storage:'review-memory'}));
   router.post('/admin/reports/:id',run(req=>admin.review(req.params.id,req.body.status,req.body.note)));
   router.post('/admin/profiles/:id',run(req=>admin.moderate(req.params.id,req.body.disabled,req.body.reason)));

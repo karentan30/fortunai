@@ -1,4 +1,5 @@
 'use strict';
+const {track}=require('./friends-hub-track');
 const crypto=require('node:crypto');
 const {STEMS,ZODIACS,bad}=require('./friends-chart');
 const XB=require('./friends-cross-border');
@@ -81,7 +82,7 @@ function createFriendsService(store,charts,options={}) {
   const quotas=require('./friends-quotas').createFriendsQuotas(options);
   // 校园漏斗：事务提交成功后再发事件，回滚的操作不计数。
   const funnel=typeof options.funnel==='function'?options.funnel:()=>{};
-  const tx=fn=>{const queue=[];const result=store.transaction(s=>fn(s,queue));for(const q of queue){try{funnel(...q);}catch(_){}}return result;};
+  const tx=fn=>{const queue=[];const result=store.transaction(s=>fn(s,queue));for(const q of queue){if(q[0]==='hub'){track(q[1],q[2]);continue;}try{funnel(...q);}catch(_){}}return result;};
   const blocked=blockedPair,connection=connectedPair,active=activeFor,isConnected=connectedFor;
   // Single visibility rule shared by projection, matching, explanations and the long page.
   const visibleTo=(s,p,viewer)=>{const allows=scopeAllows(s,p,viewer);return k=>allows(p.visibility?.[k]);};
@@ -219,12 +220,13 @@ function createFriendsService(store,charts,options={}) {
         if(keep.includes('marital')&&prev.verifiedDetail?.marital)p.verifiedDetail={marital:prev.verifiedDetail.marital}; // 婚况 result (admin-set), members-only via 认证条
         if(joinForm||prev?.joinForm)p.joinForm=true;
         if(prev?.shareCard)p.shareCard=structuredClone(prev.shareCard);
-        else if(joinForm)p.shareCard={enabled:true}; // 通过登记表创建名片
+        else if(joinForm){p.shareCard={enabled:true};queue.push(['hub','card_enabled',{uid}]);} // 通过登记表创建名片
         Object.assign(p,R.nextReview(prev,{gate:reviewGate,now:p.updatedAt}));
         p.acquisition=acquisition;
         if(prev)s.profiles[s.profiles.indexOf(prev)]=p;else s.profiles.push(p);
-        if(!attributionMark){s.attributionMarks.push({userId:uid,...acquisition,firstProfileAt:prev?.consentAt||new Date().toISOString()});if(!prev){metric(s,'first_profile_created',acquisition);queue.push(['xs_profile_done',uid,acquisition]);}}else{delete attributionMark.expiresAt;delete attributionMark.deletedAt;}
+        if(!attributionMark){s.attributionMarks.push({userId:uid,...acquisition,firstProfileAt:prev?.consentAt||new Date().toISOString()});if(!prev){metric(s,'first_profile_created',acquisition);queue.push(['xs_profile_done',uid,acquisition]);queue.push(['hub','profile_created',{uid,props:{source:acquisition?.source}}]);}}else{delete attributionMark.expiresAt;delete attributionMark.deletedAt;}
         if(prev)metric(s,'profile_updated',acquisition);
+        if(p.listed===true&&prev?.listed!==true)queue.push(['hub','profile_complete',{uid}]);
         return {...noCardSecrets(structuredClone(p)),review:R.ownerReview(p)};
       });
     },
@@ -340,7 +342,7 @@ function createFriendsService(store,charts,options={}) {
       else if(['accept','decline'].includes(action)&&r.to===uid){
         if(action==='accept'){needMine(s,r.from);needMine(s,r.to);if(M.purposesIsolated(M.purposesOf(mine(s,r.from)),M.purposesOf(mine(s,r.to))))conflict(ISOLATED);}r.status=action==='accept'?'accepted':'declined';
       }else denied();
-      metric(s,'request_'+r.status,mine(s,uid)?.acquisition);if(r.status==='accepted')for(const [a,b] of [[r.from,r.to],[r.to,r.from]])queue.push(['xs_mutual_accept',a,mine(s,a)?.acquisition||{},{pairWith:b}]);r.updatedAt=new Date().toISOString();return {id:r.id,status:r.status};
+      metric(s,'request_'+r.status,mine(s,uid)?.acquisition);if(r.status==='accepted')for(const [a,b] of [[r.from,r.to],[r.to,r.from]])queue.push(['xs_mutual_accept',a,mine(s,a)?.acquisition||{},{pairWith:b}]);if(r.status==='accepted')for(const u of [r.from,r.to])queue.push(['hub','connection_accepted',{uid:u,props:{via:'request'}}]);r.updatedAt=new Date().toISOString();return {id:r.id,status:r.status};
     });},
     block(uid,shareId){return store.transaction(s=>{const p=s.profiles.find(x=>x.shareId===shareId);if(!p)missing();if(p.userId===uid)bad('不能拉黑自己');if(!s.blocks.some(x=>x.by===uid&&x.target===p.userId))s.blocks.push({by:uid,target:p.userId});return {ok:true};});},
     report(uid,shareId,reason){return store.transaction(s=>{const p=s.profiles.find(x=>x.shareId===shareId);if(!p)missing();const why=text(reason,300);if(!why)bad('请填写举报原因');const prior=s.reports.find(r=>r.by===uid&&r.target===p.userId&&r.reason===why&&['open','reviewing'].includes(r.status||'open'));if(prior)return {ok:true,id:prior.id,status:prior.status||'open',message:'已收到相同举报，无需重复提交'};const report={id:crypto.randomUUID(),by:uid,target:p.userId,reason:why,status:'open',createdAt:new Date().toISOString()};s.reports.push(report);metric(s,'report_created');return {ok:true,id:report.id,status:'open',message:'举报已记录，试用期间由管理员人工处理'};});},
