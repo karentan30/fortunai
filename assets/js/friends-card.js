@@ -13,7 +13,7 @@
  function pairButton(){if(!canPair)return h('p',{class:'cd-fine',text:'这张名片暂时不能发起测试。'});
   const note=h('p',{class:'cd-fine',role:'status'});
   const b=h('button',{class:'cd-cta',type:'button',text:'测测我们是否相配'});
-  b.addEventListener('click',async()=>{b.disabled=true;note.textContent='';try{const r=await fetch('/api/friends/public-card/'+encodeURIComponent(id)+'/invite',{method:'POST',cache:'no-store',referrerPolicy:'no-referrer',headers:{'X-Runae-Friends':'1'}});const v=await r.json().catch(()=>({}));if(!r.ok||!v.inviteToken)throw Error(v.error||'暂时发不了邀请，请稍后再试');location.href='/pages/friends-compatibility.html?invite='+encodeURIComponent(v.inviteToken);}catch(x){note.textContent=x.message;b.disabled=false;}});
+  b.addEventListener('click',async()=>{b.disabled=true;note.textContent='';try{const r=await fetch('/api/friends/public-card/'+encodeURIComponent(id)+'/invite',{method:'POST',cache:'no-store',referrerPolicy:'no-referrer',headers:{'X-Runae-Friends':'1','Content-Type':'application/json'},body:'{}'});const v=await r.json().catch(()=>({}));if(!r.ok||!v.inviteToken)throw Error(v.error||'暂时发不了邀请，请稍后再试');location.href='/pages/friends-compatibility.html?invite='+encodeURIComponent(v.inviteToken);}catch(x){note.textContent=x.message;b.disabled=false;}});
   return h('div',{},b,note);}
  function render(c){
   canPair=c.canPair===true;
