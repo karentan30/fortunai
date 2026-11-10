@@ -88,7 +88,8 @@ const hepanSelf=require('./lib/friends-hepan-self').createHepanSelfService({stor
 app.use('/api/friends/compatibility',createCompatibilityRouter({express,auth,service:compatibility,selfService:hepanSelf,payService:hepanPay}));
 // Encrypted 相亲页 media must live outside the repo; the default preview data dir is inside it, so fall back to a temp dir.
 const seriousMedia=require('./lib/friends-serious').createSeriousMediaService({store:reviewStore,dir:process.env.FRIENDS_MEDIA_DIR||(process.env.FRIENDS_PREVIEW_DATA_DIR?path.join(dir,'friends-media'):path.join(require('node:os').tmpdir(),'runae-preview-media')),key:fs.readFileSync(dataKeyFile,'utf8')});
-const friendsRouter=createRouter({express,auth,store:reviewStore,reviewGate:process.env.FRIENDS_REVIEW_GATE==='true',quotaOptions:{enabled:process.env.FRIENDS_QUOTAS_ENABLED!=='false'},seriousMedia,secret:fs.readFileSync(keyFile,'utf8'),adminToken:fs.readFileSync(reviewAdmin,'utf8'),onLogout(req,res){const token=cookie(req);if(token)sessions.delete(token);res.clearCookie('review_session',{path:'/',httpOnly:true,sameSite:'strict'});}});
+let hejuOffsetHours=0;app.post('/__preview/heju-offset',express.json(),(req,res)=>{hejuOffsetHours=Number(req.body?.hours)||0;res.json({hours:hejuOffsetHours});}); /* 仅本地预览：把相合局的时钟往后拨，走一遍「活动之后」 */
+const friendsRouter=createRouter({express,auth,store:reviewStore,hejuClock:()=>Date.now()+hejuOffsetHours*3600000,reviewGate:process.env.FRIENDS_REVIEW_GATE==='true',quotaOptions:{enabled:process.env.FRIENDS_QUOTAS_ENABLED!=='false'},seriousMedia,secret:fs.readFileSync(keyFile,'utf8'),adminToken:fs.readFileSync(reviewAdmin,'utf8'),onLogout(req,res){const token=cookie(req);if(token)sessions.delete(token);res.clearCookie('review_session',{path:'/',httpOnly:true,sameSite:'strict'});}});
 friendsRouter.joinCard?.useCompat(compatibility);
 app.use('/api/friends',friendsRouter);
 app.get('/',(req,res)=>res.redirect('/pages/friends-connect.html'));

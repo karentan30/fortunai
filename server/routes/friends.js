@@ -10,7 +10,7 @@ const {searchCities}=require('../lib/friends-location');
 const {searchAreas,suggestPlaces}=require('../lib/friends-places');
 const {createAdminService,adminAuth,createRateLimit}=require('../lib/friends-admin');
 const {referralCode,createFunnelSink,instrumentCompatibility}=require('../lib/friends-campus');
-function createRouter({express,auth,store,secret,enabled=true,adminToken=process.env.FRIENDS_ADMIN_TOKEN||process.env.ADMIN_TOKEN,onLogout,canAccess=()=>true,mode='local_review',requirePolicy=false,quotaOptions={},funnel,verification=null,seriousMedia=null,reviewGate=false}) {
+function createRouter({express,auth,store,secret,enabled=true,adminToken=process.env.FRIENDS_ADMIN_TOKEN||process.env.ADMIN_TOKEN,onLogout,canAccess=()=>true,mode='local_review',requirePolicy=false,quotaOptions={},funnel,verification=null,seriousMedia=null,reviewGate=false,hejuNotify,hejuClock}) {
   const router=express.Router();
   const charts=enabled?createChartService(secret):null;
   const service=enabled?createFriendsService(store,charts,{...quotaOptions,funnel,reviewGate,
@@ -31,6 +31,9 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
     next();
   });
   const run=fn=>(req,res,next)=>{try{res.json(fn(req));}catch(e){if(e.status)return res.status(e.status).json(xbError(e));next(e);}};
+  // 相合局：状态都在同一个 store 里；站内通知只落库，对外通知只留 notify 钩子（默认不做事）。
+  const heju=enabled?require('../lib/friends-heju').createHejuService(store,{notify:hejuNotify,clock:hejuClock}):null;
+  const runH=fn=>(req,res,next)=>{try{res.json(fn(req));}catch(e){if(e.status)return res.status(e.status).json({error:e.message,...(e.code?{code:e.code}:{})});next(e);}};
   const admin=enabled?createAdminService(store):null;
   router.use('/admin',createRateLimit({limit:60}),adminAuth(adminToken));
   router.get('/admin/summary',run(()=>admin.summary()));
@@ -56,6 +59,11 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   const support=enabled?createSupportService({store}):null;
   router.get('/admin/support',run(req=>({messages:support.list(req.query.status)})));
   router.post('/admin/support/:id',run(req=>({message:support.reply(req.params.id,req.body||{},req.friendsAdminActor)})));
+  // 相合局运营：标记合作俱乐部、手动跑分组、只看汇总数字（不返回任何人的资料）。
+  router.get('/admin/heju/clubs',runH(()=>heju.clubs()));
+  router.post('/admin/heju/clubs',runH(req=>heju.markClub(req.body||{})));
+  router.post('/admin/heju/run',runH(()=>heju.run()));
+  router.get('/admin/heju/summary',runH(()=>heju.summary()));
   router.get('/admin/health',run(()=>store.health?store.health():{ok:true,storage:'review-memory'}));
   router.post('/admin/reports/:id',run(req=>admin.review(req.params.id,req.body.status,req.body.note)));
   router.post('/admin/profiles/:id',run(req=>admin.moderate(req.params.id,req.body.disabled,req.body.reason)));
@@ -74,6 +82,8 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.post('/public-card/:shareId/invite',createRateLimit({limit:10}),run(req=>joinCard.mintInvite(req.params.shareId)));
   router.get('/public-card/:shareId',createRateLimit({limit:60}),run(req=>({card:joinCard.publicCard(req.params.shareId)})));
   router.get('/public-card/:shareId/photos/:photoId',createRateLimit({limit:120}),(req,res,next)=>{try{joinCard.photoAllowed(req.params.shareId,req.params.photoId);const f=needMedia().open(req.params.photoId);res.set('Content-Type',f.mime).set('Content-Disposition','inline').set('Content-Security-Policy',"default-src 'none'; sandbox").set('Cache-Control','no-store, private').set('Cross-Origin-Resource-Policy','same-origin');res.send(f.body);}catch(e){if(e.status)return res.status(e.status).json(xbError(e));next(e);}});
+  // 相合局邀请链接（公开，不用登录）：只给活动、时间、片区、发起人昵称。
+  router.get('/heju/public/:token',createRateLimit({limit:60}),runH(req=>heju.invitePublic(req.params.token)));
   router.use(auth);
   router.post('/logout',(req,res,next)=>{try{if(onLogout)onLogout(req,res);else res.clearCookie('sy_token',{path:'/'});res.json({ok:true});}catch(e){next(e);}});
   router.use((req,res,next)=>canAccess(req)?next():res.status(403).json({error:'当前为邀请测试，请联系运营开通账号'}));
@@ -133,8 +143,35 @@ function createRouter({express,auth,store,secret,enabled=true,adminToken=process
   router.post('/report',run(req=>service.report(req.user.id,req.body.shareId,req.body.reason)));
   router.get('/reports',run(req=>({reports:service.reports(req.user.id)})));
   router.post('/feedback',run(req=>service.feedback(req.user.id,req.body.requestId,req.body.outcome)));
+  // 相合局（登录后）。写操作都要带 X-Runae-Friends（上面统一检查）。
+  const H1=createRateLimit({limit:30,windowMs:3600000}),H2=createRateLimit({limit:90,windowMs:60000});
+  router.get('/heju/me',runH(req=>heju.me(req.user.id)));
+  router.post('/heju/seen',runH(req=>heju.seen(req.user.id)));
+  router.post('/heju/signup',H1,runH(req=>heju.signup(req.user.id,req.body||{})));
+  router.post('/heju/signup/:id/cancel',runH(req=>heju.cancelSignup(req.user.id,req.params.id)));
+  router.post('/heju/groups',H1,runH(req=>heju.createGroup(req.user.id,req.body||{})));
+  router.get('/heju/club/groups',runH(req=>heju.clubGroups(req.user.id)));
+  router.get('/heju/invite/:token',runH(req=>heju.inviteFor(req.user.id,req.params.token)));
+  router.post('/heju/invite/:token/join',H1,runH(req=>heju.joinByInvite(req.user.id,req.params.token,req.body||{})));
+  router.get('/heju/groups/:id',runH(req=>heju.groupView(req.user.id,req.params.id)));
+  router.post('/heju/groups/:id/invite',H1,runH(req=>heju.rotateInvite(req.user.id,req.params.id)));
+  router.post('/heju/groups/:id/confirm',runH(req=>heju.confirm(req.user.id,req.params.id)));
+  router.post('/heju/groups/:id/decline',runH(req=>heju.decline(req.user.id,req.params.id)));
+  router.post('/heju/groups/:id/leave',runH(req=>heju.leave(req.user.id,req.params.id)));
+  router.post('/heju/groups/:id/lock',runH(req=>heju.lock(req.user.id,req.params.id)));
+  router.post('/heju/groups/:id/spot',runH(req=>heju.setSpot(req.user.id,req.params.id,req.body?.spot)));
+  router.post('/heju/groups/:id/members/:mid/approve',runH(req=>heju.decideRequest(req.user.id,req.params.id,req.params.mid,true)));
+  router.post('/heju/groups/:id/members/:mid/decline',runH(req=>heju.decideRequest(req.user.id,req.params.id,req.params.mid,false)));
+  router.post('/heju/groups/:id/members/:mid/report',H1,runH(req=>heju.reportMember(req.user.id,req.params.id,req.params.mid,req.body?.reason)));
+  router.post('/heju/groups/:id/members/:mid/block',runH(req=>heju.blockMember(req.user.id,req.params.id,req.params.mid)));
+  router.get('/heju/groups/:id/chat',H2,runH(req=>heju.chatList(req.user.id,req.params.id)));
+  router.post('/heju/groups/:id/chat',H2,runH(req=>heju.chatPost(req.user.id,req.params.id,req.body?.text)));
+  router.post('/heju/groups/:id/chat/:msgId/report',H1,runH(req=>heju.chatReport(req.user.id,req.params.id,req.params.msgId,req.body?.reason)));
+  router.get('/heju/groups/:id/after',runH(req=>heju.after(req.user.id,req.params.id)));
+  router.post('/heju/groups/:id/attendance',runH(req=>heju.attendance(req.user.id,req.params.id,req.body||{})));
+  router.post('/heju/groups/:id/pick',runH(req=>heju.pick(req.user.id,req.params.id,req.body?.mid,req.body?.on!==false)));
   router.use((err,req,res,next)=>{console.error('[friends]',err.name);res.status(500).json({error:'交友服务暂时不可用，请稍后重试'});});
-  router.joinCard=joinCard;return router;
+  router.joinCard=joinCard;router.heju=heju;return router;
 }
 function productionRouter(){
   const config=getFriendsConfig(process.env);
@@ -152,6 +189,11 @@ function productionRouter(){
     if(config.enabled){try{seriousMedia=require('../lib/friends-serious').createSeriousMediaService({store,dir:process.env.FRIENDS_MEDIA_DIR||path.join(path.dirname(config.file),'friends-media'),key:process.env.FRIENDS_DATA_KEY});}catch(e){console.error('[friends] Media storage not ready; photos/voice disabled.');seriousMedia=null;}}
     const friends=createRouter({express,auth:authMiddleware,verification,seriousMedia,enabled:config.enabled,mode:config.mode||'disabled',secret:process.env.FRIENDS_SIGNING_KEY,store,requirePolicy:true,reviewGate:process.env.FRIENDS_REVIEW_GATE!=='false' /* 首批审核制，默认开；应急可设 false */,quotaOptions:{enabled:process.env.FRIENDS_QUOTAS_ENABLED!=='false'} /* 免费3次/会员20次认识申请；FRIENDS_QUOTAS_ENABLED=false 为应急关闭 */,funnel:createFunnelSink({secret:process.env.FRIENDS_SIGNING_KEY}),
       canAccess:req=>config.mode==='public'||config.allowedIds?.has(String(req.user?.id)),onLogout});
+    // 相合局每天北京时间 03 点跑一次分组；每小时顺手做一次收尾（确认截止、缺席结算、关群聊）。
+    if(config.enabled&&friends.heju){
+      const job=friends.heju;let lastDay='';
+      try{setInterval(()=>{try{const b=new Date(Date.now()+8*3600000),day=b.toISOString().slice(0,10);if(b.getUTCHours()===3&&day!==lastDay){lastDay=day;job.run();}else if(b.getUTCMinutes()<30&&b.getUTCHours()!==3)job.sweepOnly();}catch(_){console.error('[friends] heju job failed');}},1800000).unref();}catch(_){console.error('[friends] heju scheduler not started');}
+    }
     if(!config.enabled)return friends;
     const {configuredBilling}=require('../lib/friends-billing-config');
     const {createBillingRouter,createBillingCallbackRouter}=require('./friends-billing');

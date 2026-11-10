@@ -37,6 +37,7 @@
     w.append(h('a',{class:'xh-pair',href:'/pages/friends-compatibility.html?start=friend'},h('b',{text:'测测我们是否相配'}),h('span',{text:'朋友、暧昧对象，或在考虑结婚的你们'})));
     w.append(h('p',{class:'xh-login xh-join'},h('a',{href:'/pages/friends-join.html',text:'直接填登记表'}),'，不用邀请人'));
     w.append(h('p',{class:'xh-login'},'已有账号？',h('a',{href:'#login',text:'登录'})));
+    w.append(h('p',{class:'xh-login xh-heju'},'想先一起打球、跑步、吃饭？',h('a',{href:'/pages/friends-heju.html',text:'相合局'})));
     s.append(w);return s;
   }
   function wheel(){

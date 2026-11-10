@@ -187,6 +187,25 @@ function quickReady(r,bank=BANK){
  }
  return true;
 }
+/** 相合局用：14 道底线题里非敏感的都答完了（不要求对别人公开）。 */
+function quickDone(r,bank=BANK){
+ if(!r)return false;
+ for(const id of quickIds(bank)){
+  const q=questionOf(bank,id);if(!q||q.sensitive)continue;
+  const a=r.dimensions?.[q.dimensionId]?.answers?.[id];if(!a||a.state!=='answered')return false;
+ }
+ return true;
+}
+/** 相合局用：两个人在底线题里有「明确不同且至少一方标了很重要」的题。只返回是/否，不返回是哪一题。 */
+function quickConflict(ra,rb,bank=BANK){
+ if(!ra||!rb)return false;
+ for(const id of quickIds(bank)){
+  const q=questionOf(bank,id);if(!q||q.sensitive)continue;
+  const r=compareQuestion(q,ra.dimensions?.[q.dimensionId]?.answers?.[id],rb.dimensions?.[q.dimensionId]?.answers?.[id]);
+  if(r&&r.essential)return true;
+ }
+ return false;
+}
 const publicAnswer=a=>{const o={state:a.state};if(a.value!==undefined)o.value=structuredClone(a.value);if(a.importance)o.importance=a.importance;if(a.note)o.note=a.note;return o;};
 /**
  * memberView(state, ownerId, viewerId) -> {dimensions:{[dimId]:{answers}}}：看的人按新规则能看到 owner 的哪些答案。
@@ -383,4 +402,4 @@ function createFriendsQuestionnaireService({store,clock=()=>Date.now(),bank=BANK
   remove(uid){uidCheck(uid);return store.transaction(s=>{s.marriageQuestionnaires=records(s).filter(r=>!same(r.userId,uid));s.questionnaireShares=shareRows(s).filter(r=>!same(r.ownerId,uid)&&!same(r.peerId,uid));return {deleted:true};});}
  };
 }
-module.exports={BANK,createFriendsQuestionnaireService,questionnaireAlignment,pairAlignment,mutualDimensions,discoverReasons,normalizeDimension,progressOf,upgradeRecord,memberView,quickReady,rhythmOf,pairNotes};
+module.exports={BANK,createFriendsQuestionnaireService,questionnaireAlignment,pairAlignment,mutualDimensions,discoverReasons,normalizeDimension,progressOf,upgradeRecord,memberView,quickReady,quickDone,quickConflict,rhythmOf,pairNotes};
