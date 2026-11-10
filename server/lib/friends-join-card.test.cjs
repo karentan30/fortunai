@@ -15,8 +15,9 @@ function setup({reviewGate=true}={}){
   const shared=(uid='u1',body={})=>card.save(uid,{birth:{date:'1991-08-28',hour:'卯'},gender:'female',contact:'wx-secret-123',...body});
   const addPhoto=uid=>store.transaction(s=>{(s.seriousPages||=[]).push({userId:uid,photos:[{id:'ph1',w:3,h:4}]});});
   const answer=uid=>{const d=BANK.dimensions[0],qs=d.questions.filter(q=>!q.sensitive).slice(0,2),answers={};for(const q of qs){const o=q.options.find(o=>!o.open);answers[q.id]={state:'answered',value:q.type==='multi'?[o.value]:o.value};}mq.saveDimension(uid,d.id,{version:BANK.version,consent:true,status:'in_progress',answers});return d.label;};
-  return {store,service,admin,card,join,shared,addPhoto,answer};
+  return {store,service,admin,card,mq,join,shared,addPhoto,answer};
 }
+const FULL={city:'杭州',hobbies:['爬山'],fields:{education:'本科',school:'浙大',occupation:'设计师'}};
 const approve=(f,p)=>f.admin.decide(p.shareId,{decision:'approve'});
 const FIELD_KEYS=['nickname','status','dayMaster','intro','personality','directions','photos','city','birthday','hour','contact'];
 
@@ -63,7 +64,7 @@ test('每个开关只管自己的字段',()=>{
 });
 
 test('开关只管名片：不改发现页/资料里的可见设置',()=>{
-  const f=setup({reviewGate:false}),p=f.join('u1',{city:'杭州',contact:'private-contact'});f.shared();
+  const f=setup({reviewGate:false}),p=f.join('u1',{...FULL,contact:'private-contact'});f.shared();
   const before=JSON.stringify(f.store.read().profiles[0].visibility),beforeContact=f.store.read().profiles[0].contact;
   f.card.save('u1',{show:{city:false,birthday:true,hour:true,contact:true,photo:false}});
   const after=f.store.read().profiles[0];assert.equal(JSON.stringify(after.visibility),before);assert.equal(after.contact,beforeContact);assert.equal(after.listed,true);
@@ -84,7 +85,7 @@ test('已停用或下架的名片 404；性别只存私有',()=>{
   const f=setup(),p=f.join();f.shared();approve(f,p);
   assert.equal(JSON.stringify(f.card.publicCard(p.shareId)).includes('female'),false);
   assert.throws(()=>f.card.publicCard('nope'),{status:404});
-  f.store.transaction(s=>{s.profiles[0].listed=false;});
+  f.card.save('u1',{enabled:false});
   assert.throws(()=>f.card.publicCard(p.shareId),{status:404});
   assert.equal(publicPayload(f.store.read(),null),null);
 });
@@ -138,12 +139,12 @@ test('审核中的名片也能走完合盘；打开页面不发邀请，点按�
   assert.equal(f.card.own('u1').inviteOk,true);
   XB.grant(f.store,'visitor');
   const t=f.card.mintInvite(p.shareId).inviteToken;
-  assert.equal(t,pair.inviteToken,'当前邀请还能用就直接给当前的');
-  assert.equal(f.store.read().compatibilityPairs.length,before,'没有多发');
+  assert.notEqual(t,pair.inviteToken,'库里没有令牌明文，所以补发新的');
+  assert.equal(f.store.read().compatibilityPairs.length,before+1);
   assert.deepEqual(compat.invitePreview(t),{ownerNickname:'阿青',relation:'friend'});
   const j=await compat.join('visitor',{inviteToken:t,nickname:'阿木',claimConsent:true,...authBody(IN_B)});
   assert.ok(j.id);
-  assert.equal(f.card.own('u1').inviteOk,false);
+  assert.equal(f.card.own('u1').inviteOk,true,'主人自己的原邀请没被认领');
 });
 
 test('同一张名片发给多个人：每个访客各自能走完合盘',async()=>{
@@ -157,8 +158,8 @@ test('同一张名片发给多个人：每个访客各自能走完合盘',async(
     assert.ok(j.id);assert.equal(j.mode,'open_invite');
   }
   assert.equal(new Set(ts).size,3,'每个访客拿到各自的新邀请');
-  const rows=f.store.read().compatibilityPairs.filter(r=>r.from==='u1');
-  assert.equal(rows.length,3,'第一位用掉原来的邀请，后两位各补发一条');assert.ok(rows.every(r=>r.to&&r.authorizations.u1));
+  const rows=f.store.read().compatibilityPairs.filter(r=>r.from==='u1'&&r.viaCard);
+  assert.equal(rows.length,3,'每位访客各补发一条');assert.ok(rows.every(r=>r.to&&r.authorizations.u1));
 });
 
 test('名片过期后点按钮仍能补发；每张名片每天最多 20 条',async()=>{
@@ -185,16 +186,97 @@ test('分享关掉或名片删除后不再发邀请',async()=>{
   assert.throws(()=>f.card.mintInvite(p.shareId),{status:404});
   assert.equal(f.store.read().compatibilityPairs.length,n,'分享关掉后什么都没发');
   f.card.save('u1',{enabled:true});assert.ok(f.card.mintInvite(p.shareId).inviteToken);
-  f.store.transaction(s=>{s.profiles.find(x=>x.shareId===p.shareId).listed=false;});
+  f.store.transaction(s=>{s.profiles.splice(0);});
   assert.throws(()=>f.card.mintInvite(p.shareId),{status:404});
   assert.throws(()=>f.card.mintInvite('nope'),{status:404});
   assert.throws(()=>f.card.save('u1',{enabled:'no'}),{status:400});
 });
 
 test('审核中可以发起和被邀请合盘，但仍不能发认识申请',()=>{
-  const f=setup(),a=f.join('u1'),b=f.join('u2',{nickname:'阿木'});
+  const f=setup(),a=f.join('u1',FULL),b=f.join('u2',{...FULL,nickname:'阿木'});
   const compat=createCompatibilityService({store:f.store});
   assert.ok(compat.create('u1',{targetShareId:b.shareId}).id,'审核中的人对审核中的名片可以发起合盘');
   approve(f,b);
   assert.throws(()=>f.service.request('u1',b.shareId),{status:409},'审核中不能发认识申请，即使对方已通过');
+});
+
+// ---- 上线前复审修复 ----
+test('名片必须主人主动创建：已通过、已公开但没建过名片的资料 404（名片/邀请/照片）',async()=>{
+  const f=setup({reviewGate:false});
+  const p=f.service.save('u1',{credential:'x',consent:true,crossBorderConsent:true,nickname:'阿青',city:'杭州',hobbies:['爬山'],dateActivities:['羽毛球'],purposes:['serious'],visibility:{dayMaster:'public'},fields:FULL.fields,targetStems:['不限'],targetZodiacs:['不限'],listed:true});
+  assert.equal(p.listed,true);f.addPhoto('u1');
+  const compat=createCompatibilityService({store:f.store});f.card.useCompat(compat);
+  assert.throws(()=>f.card.publicCard(p.shareId),{status:404});
+  assert.throws(()=>f.card.mintInvite(p.shareId),{status:404});
+  assert.throws(()=>f.card.photoAllowed(p.shareId,'ph1'),{status:404});
+  // 通过 POST /share-card 创建：照片开关默认关（只有登记表创建默认开）
+  f.shared();
+  const out=f.card.publicCard(p.shareId);assert.equal(out.photos,undefined);assert.equal(out.city,'杭州');
+  assert.throws(()=>f.card.photoAllowed(p.shareId,'ph1'),{status:404});
+  f.card.save('u1',{show:{photo:true}});assert.equal(f.card.photoAllowed(p.shareId,'ph1'),true);
+});
+
+test('日主只有资料里设为公开才上名片',()=>{
+  const f=setup({reviewGate:false}),p=f.join('u1',{...FULL,visibility:{dayMaster:'private'}});f.shared();
+  assert.equal(f.card.publicCard(p.shareId).dayMaster,undefined);
+  f.join('u1',{...FULL,visibility:{dayMaster:'public'}});
+  assert.equal(f.card.publicCard(p.shareId).dayMaster,'丙火');
+});
+
+test('问卷方向设为仅自己（privateTopics）后不上名片',()=>{
+  const f=setup({reviewGate:false}),p=f.join('u1',FULL);f.shared();const label=f.answer('u1');
+  assert.deepEqual(f.card.publicCard(p.shareId).directions,[label]);
+  f.mq.setVisibility('u1',{privateTopics:[BANK.dimensions[0].id]});
+  assert.deepEqual(f.card.publicCard(p.shareId).directions,[]);
+});
+
+test('登记表资料没补全时不进发现页（listed=false），名片照样可用且在审核队列里；补全后才 listed',()=>{
+  const f=setup(),p=f.join('u1');
+  assert.equal(p.listed,false);assert.equal(p.shareCard.enabled,true);
+  assert.deepEqual(f.admin.queue().map(x=>x.shareId),[p.shareId]);
+  f.shared();assert.equal(f.card.publicCard(p.shareId).status,'pending');
+  approve(f,p);assert.equal(f.card.publicCard(p.shareId).status,'approved');
+  assert.equal(f.store.read().profiles[0].listed,false);
+  assert.equal(f.join('u1',FULL).listed,true);
+});
+
+async function cardWithMint(f){
+  const p=f.join('u1',FULL);f.shared();
+  const compat=createCompatibilityService({store:f.store});f.card.useCompat(compat);
+  const pair=compat.create('u1',{ownerNickname:'阿青',relation:'friend'});
+  await compat.authorize('u1',pair.id,authBody(IN));
+  f.card.save('u1',{invite:{pairId:pair.id,token:pair.inviteToken}});
+  return {p,compat,pair};
+}
+
+test('撤回合盘后名片不能再发邀请；补发的邀请保留原授权时间',async()=>{
+  const f=setup(),{p,compat,pair}=await cardWithMint(f);XB.grant(f.store,'v');
+  const at=f.store.read().compatibilityPairs.find(r=>r.id===pair.id).authorizations.u1.at;
+  const t=f.card.mintInvite(p.shareId).inviteToken;
+  const minted=f.store.read().compatibilityPairs.find(r=>r.viaCard);
+  assert.equal(minted.authorizations.u1.at,at,'沿用当初同意的时间');assert.ok(t);
+  compat.revoke('u1',pair.id);
+  assert.equal(f.store.read().profiles[0].shareCard.mint,undefined);
+  assert.throws(()=>f.card.mintInvite(p.shareId),{status:409});
+  assert.equal(f.card.publicCard(p.shareId).canPair,undefined);
+});
+
+test('名片补发的邀请不占主人自己每天 10 次；同一人每天最多认领同一主人的 3 条',async()=>{
+  const f=setup(),{p,compat}=await cardWithMint(f);XB.grant(f.store,'v');
+  const ts=[];for(let i=0;i<12;i++)ts.push(f.card.mintInvite(p.shareId).inviteToken);
+  for(let i=0;i<9;i++)compat.create('u1',{ownerNickname:'阿青'});// 原邀请已 1 条，再 9 条 = 10
+  assert.throws(()=>compat.create('u1',{ownerNickname:'阿青'}),{status:429},'主人自己的上限仍然是 10');
+  for(let i=0;i<3;i++)await compat.join('v',{inviteToken:ts[i],nickname:'阿木',claimConsent:true,...authBody(IN_B)});
+  await assert.rejects(()=>compat.join('v',{inviteToken:ts[3],nickname:'阿木',claimConsent:true,...authBody(IN_B)}),{status:429});
+  XB.grant(f.store,'w');
+  assert.ok((await compat.join('w',{inviteToken:ts[3],nickname:'阿林',claimConsent:true,...authBody(IN_B)})).id,'别的人不受影响');
+});
+
+test('库里、me、导出、保存结果都没有邀请令牌明文，也不带授权快照',async()=>{
+  const f=setup(),{p,pair}=await cardWithMint(f);XB.grant(f.store,'v');
+  const t=f.card.mintInvite(p.shareId).inviteToken;
+  const all=[JSON.stringify(f.store.read().profiles),JSON.stringify(f.service.me('u1')),JSON.stringify(f.join('u1',FULL)),JSON.stringify(f.card.own('u1')),JSON.stringify(f.card.publicCard(p.shareId))];
+  for(const txt of all){assert.equal(txt.includes(pair.inviteToken),false);assert.equal(txt.includes(t),false);}
+  for(const txt of all.slice(1))assert.equal(/"mint"|"invite"|tokenHash/.test(txt),false);
+  assert.equal(f.card.own('u1').inviteOk,true);
 });

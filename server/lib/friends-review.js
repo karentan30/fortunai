@@ -26,7 +26,7 @@ function nextReview(prev,{gate,now}){
   if(before==='approved')return {reviewStatus:'approved',...(prev.reviewedAt?{reviewedAt:prev.reviewedAt}:{})};
   if(!gate)return {reviewStatus:'approved'};
   // Still pending and already submitted: keep the queue position. New, legacy-unlisted or rejected → (re)submitted now.
-  const keep=before==='pending'&&prev.reviewStatus==='pending'&&prev.listed&&prev.reviewSubmittedAt;
+  const keep=before==='pending'&&prev.reviewStatus==='pending'&&(prev.listed||prev.shareCard?.enabled===true)&&prev.reviewSubmittedAt;
   return {reviewStatus:'pending',reviewSubmittedAt:keep?prev.reviewSubmittedAt:now,...(prev?.reviewedAt?{reviewedAt:prev.reviewedAt}:{})};
 }
 
@@ -51,7 +51,7 @@ function createReviewAdmin(store,{clock=()=>Date.now()}={}){
     // status 'pending' (default): listed, not disabled, oldest first. 'approved': most recent 100, so a card can be rejected later.
     queue(status='pending'){
       if(!['pending','approved'].includes(status))fail(400,'审核状态无效');
-      const s=store.read(),list=(s.profiles||[]).filter(p=>p.listed&&!isDisabled(s,p.userId)&&statusOf(p)===status);
+      const s=store.read(),list=(s.profiles||[]).filter(p=>(p.listed||p.shareCard?.enabled===true)&&!isDisabled(s,p.userId)&&statusOf(p)===status);
       if(status==='pending')return list.sort((a,b)=>String(a.reviewSubmittedAt||'').localeCompare(String(b.reviewSubmittedAt||''))).map(p=>row(s,p));
       return list.sort((a,b)=>String(b.reviewedAt||'').localeCompare(String(a.reviewedAt||''))).slice(0,100).map(p=>row(s,p));
     },
