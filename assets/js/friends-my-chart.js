@@ -8,7 +8,7 @@
  const yuan=m=>(m/100).toFixed(m%100?(m%10?2:1):0);
  const STEM_EL={甲:'木',乙:'木',丙:'火',丁:'火',戊:'土',己:'土',庚:'金',辛:'金',壬:'水',癸:'水'};
  const BRANCH_EL={子:'水',丑:'土',寅:'木',卯:'木',辰:'土',巳:'火',午:'火',未:'土',申:'金',酉:'金',戌:'土',亥:'水'};
- const state={view:null,city:null,calendar:'solar',eligibleInput:null,idemKey:null,generating:false,pollTimer:null};
+ const state={view:null,city:null,calendar:'solar',eligibleInput:null,idemKey:null,generating:false,pollTimer:null,prefilled:false};
  async function api(path,{method='GET',body}={}){
   const r=await fetch(path,{method,credentials:'same-origin',cache:'no-store',referrerPolicy:'no-referrer',headers:{'X-Runae-Friends':'1',...(body?{'Content-Type':'application/json'}:{})},...(body?{body:JSON.stringify(body)}:{})});
   const data=await r.json().catch(()=>({}));if(!r.ok)throw Object.assign(Error(data.error||'暂时连不上，请稍后再试'),{status:r.status});return data;
@@ -54,13 +54,13 @@
   $('mc-soon').hidden=true;$('mc-form-wrap').hidden=false;
   $('mc-needs-note').textContent=r.needsNote;
   const needGender=!v.chart.gender;
-  $('mc-check').disabled=needGender;$('mc-check-note').textContent=needGender?'请先在上面选择乾造或坤造':'只核对、不扣费，也不保存你的出生资料';
+  $('mc-check').disabled=needGender;$('mc-check-note').textContent=needGender?'请先在上面选择乾造或坤造':(state.prefilled?'已按你资料里保存的生辰填好，核对无误即可':'只核对、不扣费，也不保存你的出生资料');
   const verified=!!state.eligibleInput;
   $('mc-unlock').hidden=!(r.eligible&&verified&&!r.unlocked&&r.pay?.payEnabled);
   if(r.pay?.priceMinor)$('mc-price').textContent='¥'+yuan(r.pay.priceMinor)+' · '+(r.pay.refundRule||'');
   const canGen=r.unlocked&&!r.generated&&!state.generating;
   $('mc-generate').hidden=!(canGen&&verified);$('mc-retain-wrap').hidden=!(canGen&&verified);
-  if(r.unlocked&&!r.generated&&!verified)$('mc-lock-sub').textContent='已解锁。请再填一次出生资料并核对，就能生成完整报告。';
+  if(r.unlocked&&!r.generated&&!verified)$('mc-lock-sub').textContent=state.prefilled?'已解锁。核对一下资料里的生辰，就能生成完整报告。':'已解锁。请再填一次出生资料并核对，就能生成完整报告。';
   else if(!job)$('mc-lock-sub').textContent='16 章 · AI 辅助生成 · 只你自己可见';
  }
  function schedulePoll(id){clearTimeout(state.pollTimer);if(!id)return;state.pollTimer=setTimeout(async()=>{try{const j=await api(API+'/report/'+encodeURIComponent(id));if(j.report?.reading){$('mc-lock').hidden=true;renderReading(j.report.reading);return;}if(['reserving','generating','result_saved'].includes(j.status))schedulePoll(id);else load();}catch(_){schedulePoll(id);}},5000);}
@@ -76,6 +76,21 @@
   return {birthYear:y,birthMonth:m,birthDay:d,birthHour:Number(tm[1]),birthMinute:Number(tm[2]),calendar:state.calendar,leapMonth:state.calendar==='lunar'&&$('mc-leap').checked,cityId:state.city.id};
  }
  function invalidate(){state.eligibleInput=null;if(state.view)renderReport(state.view);}
+ // 建档时已同意保存生辰的，直接带出来，别再让人填一遍。
+ async function prefillBirth(){
+  if(!window.XsBirthPrefill)return;
+  const b=await XsBirthPrefill.load();if(!b)return;
+  const [y,m,d]=String(b.birthday).split('-');
+  state.calendar=b.calendar==='lunar'?'lunar':'solar';
+  for(const x of $('mc-cal').querySelectorAll('button'))x.setAttribute('aria-pressed',String(x.dataset.v===state.calendar));
+  $('mc-y').value=y;$('mc-m').value=String(Number(m));$('mc-d').value=String(Number(d));
+  $('mc-leap-wrap').hidden=state.calendar!=='lunar';$('mc-leap').checked=state.calendar==='lunar'&&b.leapMonth===true;
+  if(b.time)$('mc-time').value=b.time;
+  const c=await XsBirthPrefill.city(b.cityId);
+  if(c){state.city=c;$('mc-city').value=c.city;$('mc-city-picked').textContent=(c.label||c.city)+' · 已按资料带入';}
+  state.prefilled=true;
+  if(state.view)renderReport(state.view);
+ }
  function bind(){
   for(const b of $('mc-gender').querySelectorAll('button'))b.addEventListener('click',async()=>{$('mc-gender-err').textContent='';try{await api(API+'/gender',{method:'POST',body:{gender:b.dataset.v}});state.eligibleInput=null;await load();}catch(e){$('mc-gender-err').textContent=e.message;}});
   for(const b of $('mc-cal').querySelectorAll('button'))b.addEventListener('click',()=>{state.calendar=b.dataset.v;for(const x of $('mc-cal').querySelectorAll('button'))x.setAttribute('aria-pressed',String(x===b));$('mc-leap-wrap').hidden=state.calendar!=='lunar';invalidate();});
@@ -95,5 +110,5 @@
     if(j.report?.reading){state.eligibleInput=null;$('mc-lock').hidden=true;renderReading(j.report.reading);}else if(j.status==='failed'){err.textContent='报告没有生成成功，这次不算使用，可以再试一次。';state.idemKey=null;}else schedulePoll(j.reportId);}
    catch(e){err.textContent=e.message;}finally{state.generating=false;$('mc-generate').disabled=false;}});
  }
- document.addEventListener('DOMContentLoaded',()=>{bind();load();});
+ document.addEventListener('DOMContentLoaded',()=>{bind();load();prefillBirth();});
 })();

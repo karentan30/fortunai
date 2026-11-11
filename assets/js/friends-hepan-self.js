@@ -41,6 +41,19 @@
   return {birthday:[y,v('month').padStart(2,'0'),v('day').padStart(2,'0')].join('-'),calendar:cal,time:v('hour')==='unknown'?null:String(+v('hour')*2).padStart(2,'0')+':00',gender:v('gender')};
  }
  function clearForm(){for(const f of $$('.frame[data-side]')){f.querySelector('[data-k=year]').value='';for(const k of ['month','day','hour','gender'])f.querySelector('[data-k='+k+']').value='';}$('#ta-nickname').value='';for(const b of boxes)b.checked=false;sync();}
+ // 建档时保存过的生辰，直接带到「你」这一栏；性别和 TA 的信息仍由本人填。
+ async function prefillMe(){
+  if(!window.XsBirthPrefill)return;
+  const b=await window.XsBirthPrefill.load();if(!b)return;
+  const f=$('.frame[data-side=me]');if(!f)return;
+  const [y,m,d]=String(b.birthday).split('-');
+  const cal=b.calendar==='lunar'?'lunar':'solar';
+  for(const x of $$('[data-k=calendar] button',f))x.setAttribute('aria-pressed',String(x.dataset.v===cal));
+  f.querySelector('[data-k=year]').value=y;
+  const mo=f.querySelector('[data-k=month]');mo.value=String(Number(m));mo.dispatchEvent(new Event('change'));
+  f.querySelector('[data-k=day]').value=String(Number(d));
+  f.querySelector('[data-k=hour]').value=b.time?String(Math.floor(Number(String(b.time).slice(0,2))/2)):'unknown';
+ }
  async function quota(){
   try{const q=await api(API+'/quota');user=true;remaining=q.remaining;$('#remaining').textContent=String(q.remaining);$('#counter').hidden=false;$('#login-note').hidden=true;loadSaved();}
   catch(e){if(e.status===401){user=false;$('#login-note').hidden=false;}else $('#form-error').textContent=e.message;}
@@ -97,4 +110,5 @@
   finally{b.textContent='开始合盘';sync();}
  });
  quota();
+ prefillMe();
 })();
